@@ -1,5 +1,4 @@
-from pydantic import BaseModel
-
+from medaillon.models.base import BaseModel
 from medaillon.models.column import Column
 
 

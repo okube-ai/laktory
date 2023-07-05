@@ -1,0 +1,6 @@
+{
+  "name": "airspeed",
+  "type": "double",
+  "unit": "kt",
+  "test": 2
+}

@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
 from pydantic import ConfigDict
+
+from medaillon.models.base import BaseModel
 
 
 class Column(BaseModel):
