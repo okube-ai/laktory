@@ -1,0 +1,25 @@
+from pydantic import BaseModel, Field
+from pydantic import ConfigDict
+
+
+class Column(BaseModel):
+    name: str
+    type: str
+    comment: str = None
+    unit: str = None
+    pii: bool = None
+    udf_name: str = None
+    input_cols: list[str] = []
+    udf_kwargs: dict = {}
+    test: int = Field(...)   # Set as required field, but put at end of list of fields
+
+    model_config = ConfigDict(extra='forbid')
+
+
+if __name__ == "__main__":
+    speed = Column(
+        name="airspeed",
+        type="double",
+        unit="kt",
+        test=2,
+    )
