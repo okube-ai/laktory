@@ -19,7 +19,7 @@ classifiers = [
 ]
 dependencies = [
     "black",
-    "pydantic",
+    "pydantic>=2",
     "pyyaml",
 ]
 dynamic = ["version"]
