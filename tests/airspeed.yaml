@@ -1,0 +1,4 @@
+name: "airspeed"
+type: "double"
+unit: "kt"
+parent_id: "lakehouse.flights.f092"

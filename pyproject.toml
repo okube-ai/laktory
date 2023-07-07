@@ -1,0 +1,35 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "medaillon"
+authors = [
+    {name = "Olivier Soucy", email = "osoucy.transactions@gmail.com"},
+]
+description = "A DataOps framework for building a lakehouse"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["one", "two"]
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dynamic = ["version"]
+dependencies = [
+    "pydantic>=2",
+    "pyyaml",
+    "pyspark",
+]
+[project.optional-dependencies]
+dev = [
+    "black",
+    "pytest",
+    "tox"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/opencubes-ai/medaillon"
+"Bug Tracker" = "https://github.com/opencubes-ai/medaillon/issues"
