@@ -16,9 +16,9 @@ class Column(BaseModel):
     udf_name: str = None
     input_cols: list[str] = []
     udf_kwargs: dict = {}
-    test: int = Field(...)   # Set as required field, but put at end of list of fields
+    test: int = Field(...)  # Set as required field, but put at end of list of fields
 
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra="forbid")
 
 
 if __name__ == "__main__":

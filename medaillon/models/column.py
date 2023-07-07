@@ -1,4 +1,5 @@
 from typing import Literal
+from pydantic import computed_field
 
 from medaillon.contants import SUPPORTED_TYPES
 from medaillon.models.base import BaseModel
@@ -10,9 +11,36 @@ class Column(BaseModel):
     comment: str = None
     unit: str = None
     pii: bool = None
-    udf_name: str = None
+    func_name: str = None
     input_cols: list[str] = []
-    udf_kwargs: dict = {}
+    func_kwargs: dict = {}
+    parent_id: str = None
+
+    @computed_field
+    @property
+    def table_name(self) -> str:
+        if self.parent_id is None:
+            return None
+        return self.parent_id.split(".")[-1]
+
+    @computed_field
+    @property
+    def schema_name(self) -> str:
+        if self.parent_id is None or len(self.parent_id.split(".")) < 2:
+            return None
+        return self.parent_id.split(".")[-2]
+
+    @computed_field
+    @property
+    def database_name(self) -> str:
+        return self.schema_name
+
+    @computed_field
+    @property
+    def catalog_name(self) -> str:
+        if self.parent_id is None or len(self.parent_id.split(".")) < 3:
+            return None
+        return self.parent_id.split(".")[-3]
 
 
 if __name__ == "__main__":
@@ -20,5 +48,7 @@ if __name__ == "__main__":
         name="airspeed",
         type="double",
         unit="kt",
-        test=2,
+        parent_id="lakehouse.flights.f012",
     )
+
+    print(speed)
