@@ -22,15 +22,15 @@ class Table(BaseModel):
 
     @computed_field
     @property
-    def schema_name(self) -> str:
+    def database_name(self) -> str:
         if self.parent_id is None or len(self.parent_id.split(".")) < 1:
             return None
         return self.parent_id.split(".")[-1]
 
     @computed_field
     @property
-    def database_name(self) -> str:
-        return self.schema_name
+    def schema_name(self) -> str:
+        return self.database_name
 
     @computed_field
     @property
