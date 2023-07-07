@@ -4,7 +4,7 @@ AIRSPEED = {
     "name": "airspeed",
     "type": "double",
     "unit": "kt",
-    "parent_id": "lakehouse.flights.f092",
+    "parent_id": "lakehouse.flights.f1549",
 }
 
 
@@ -14,7 +14,7 @@ def test_model():
     assert c1.type == "double"
     assert c1.catalog_name == "lakehouse"
     assert c1.schema_name == "flights"
-    assert c1.table_name == "f092"
+    assert c1.table_name == "f1549"
     assert "func_name" in c1.model_fields
     assert "table_name" in c1.model_computed_fields
     assert c0 == c1

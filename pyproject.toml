@@ -17,13 +17,18 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dynamic = ["version"]
 dependencies = [
-    "black",
     "pydantic>=2",
     "pyyaml",
     "pyspark",
 ]
-dynamic = ["version"]
+[project.optional-dependencies]
+dev = [
+    "black",
+    "pytest",
+    "tox"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/opencubes-ai/medaillon"
