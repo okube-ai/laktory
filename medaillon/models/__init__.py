@@ -1,3 +1,4 @@
+from .catalog import Catalog
 from .column import Column
-from .table import Table
 from .database import Database
+from .table import Table
