@@ -27,6 +27,8 @@ dependencies = [
 dev = [
     "black",
     "flit",
+]
+test = [
     "pytest",
     "pytest-cov",
 #    "tox"
