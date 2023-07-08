@@ -1,0 +1,50 @@
+# --------------------------------------------------------------------------- #
+# Compiled files                                                              #
+# --------------------------------------------------------------------------- #
+
+# Compiled files
+**pytest_cache**
+**/**.pyc
+
+# --------------------------------------------------------------------------- #
+# Environment and configurations                                              #
+# --------------------------------------------------------------------------- #
+
+# PyCharm configuration
+**/.idea/**
+
+# Local settings and environment variables
+#settings_local/*.*
+
+# --------------------------------------------------------------------------- #
+# Installation                                                                #
+# --------------------------------------------------------------------------- #
+
+#**/*.egg-info/**
+#**/build/**
+#**/dist/**
+
+# --------------------------------------------------------------------------- #
+# Testing and coverage                                                        #
+# --------------------------------------------------------------------------- #
+
+# Coverage - global
+_coverage
+.coverage
+coverage.xml
+htmlcov
+
+# Coverage - package specific
+**.coverage
+**coverage.xml
+
+# Test results
+**/junit/**
+
+# Tox files - Global
+#.tox_pip_cache_sdist
+#.tox_pip_cache_whl
+
+# Tox files - Package-specific
+#**/.tox/**
+

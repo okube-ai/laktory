@@ -9,7 +9,7 @@ authors = [
 ]
 description = "A DataOps framework for building a lakehouse"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 keywords = ["one", "two"]
 license = {text = "MIT"}
 classifiers = [
@@ -26,8 +26,12 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "black",
+    "flit",
+]
+test = [
     "pytest",
-    "tox"
+    "pytest-cov",
+#    "tox"
 ]
 
 [project.urls]

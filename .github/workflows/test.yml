@@ -1,0 +1,37 @@
+name: test
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pyVersion:
+          - '3.9'
+          - '3.10'
+          - '3.11'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+#      - name: Unshallow
+#        run: git fetch --prune --unshallow
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.pyVersion }}
+
+      - name: Install flit
+        run: pip install flit
+
+      - name: Run tests
+        run: make dev install test
+
+#      - name: Publish test coverage
+#        uses: codecov/codecov-action@v1
