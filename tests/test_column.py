@@ -1,3 +1,5 @@
+import os
+
 from medaillon.models import Column
 
 AIRSPEED = {
@@ -6,6 +8,8 @@ AIRSPEED = {
     "unit": "kt",
     "parent_id": "lakehouse.flights.f1549",
 }
+
+root_dir = os.path.dirname(__file__)
 
 
 def test_model():
@@ -23,10 +27,10 @@ def test_model():
 def test_read():
     c0 = Column(**AIRSPEED)
 
-    with open("./airspeed.yaml", "r") as fp:
+    with open(f"{root_dir}/airspeed.yaml", "r") as fp:
         c1 = Column.model_validate_yaml(fp)
 
-    with open("./airspeed.json", "r") as fp:
+    with open(f"{root_dir}/airspeed.json", "r") as fp:
         c2 = Column.model_validate_json_file(fp)
 
     assert c1 == c0

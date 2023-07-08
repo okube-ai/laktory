@@ -29,8 +29,11 @@ jobs:
         with:
           python-version: ${{ matrix.pyVersion }}
 
-      - name: Run tests
-        run: make install_dev
+      - name: Install flit
+        run: pip install flit
 
-#      - name: Publish test coverage
-#        uses: codecov/codecov-action@v1
+      - name: Run tests
+        run: make dev install test
+
+      - name: Publish test coverage
+        uses: codecov/codecov-action@v1
