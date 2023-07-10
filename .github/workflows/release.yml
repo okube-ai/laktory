@@ -11,7 +11,7 @@ on:
 jobs:
   release:
     if: |
-        ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
+        ${{ 1 == 0 }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
