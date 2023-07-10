@@ -11,8 +11,7 @@ on:
 
 jobs:
   release:
-    if: |
-        ${{ 1 == 0 }}
+    if: ${{ github.event_name == 'pull_requestasdfasdf'}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
