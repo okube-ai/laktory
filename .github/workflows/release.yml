@@ -9,9 +9,7 @@ on:
 
 jobs:
   release:
-    if: |
-        ${{ github.event.pull_request.merged == true }}
-        && ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
+    if: ${{ github.event.pull_request.merged == true }} && ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,5 +22,5 @@ jobs:
       - name: Install flit
         run: pip install flit
 
-      - name: Build project for distribution
-        run: make build
+      - name: Build and publish medaillon to pypi
+        run: make publish
