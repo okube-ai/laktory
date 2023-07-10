@@ -25,6 +25,6 @@ jobs:
       - name: Build and publish medaillon to pypi
         run: make publish
         env:
-          FLIT_INDEX_URL: ${{ secrets.FLIT_INDEX_URL }}
-          FLIT_USERNAME: ${{ secrets.FLIT_USERNAME }}
+          FLIT_INDEX_URL: ${{ variables.FLIT_INDEX_URL }}
+          FLIT_USERNAME: ${{ variables.FLIT_USERNAME }}
           FLIT_PASSWORD: ${{ secrets.FLIT_PASSWORD }}
