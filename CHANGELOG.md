@@ -2,4 +2,4 @@
 
 ## [0.0.1] - Unreleased
 **Added**
-- Test release workflow
+- Test release local
