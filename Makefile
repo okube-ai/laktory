@@ -9,3 +9,6 @@ test:
 
 coverage:
 	open htmlcov/index.html
+
+build:
+	flit build

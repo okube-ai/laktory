@@ -21,25 +21,20 @@
 # --------------------------------------------------------------------------- #
 
 #**/*.egg-info/**
-#**/build/**
+dist
 #**/dist/**
 
 # --------------------------------------------------------------------------- #
 # Testing and coverage                                                        #
 # --------------------------------------------------------------------------- #
 
-# Coverage - global
-_coverage
+# Coverage
 .coverage
 coverage.xml
 htmlcov
 
-# Coverage - package specific
-**.coverage
-**coverage.xml
-
 # Test results
-**/junit/**
+junit
 
 # Tox files - Global
 #.tox_pip_cache_sdist
