@@ -3,6 +3,7 @@ name: release
 on:
   pull_request:
     types:
+      - opened
       - closed
     branches:
       - main
@@ -10,8 +11,9 @@ on:
 jobs:
   release:
     if: |
-        ${{ github.event.pull_request.merged == true }}
-        && ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
+#        ${{ github.event.pull_request.merged == true }}
+#        &&
+        ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
