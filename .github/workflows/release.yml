@@ -13,7 +13,7 @@ jobs:
     if: |
 #        ${{ github.event.pull_request.merged == true }}
 #        &&
-#          a=1
+#          a=3
         ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
     runs-on: ubuntu-latest
     steps:
