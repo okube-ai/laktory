@@ -3,8 +3,6 @@ name: release
 on:
   pull_request:
     types:
-      - opened
-      - synchronize
       - closed
     branches:
       - main
@@ -24,5 +22,5 @@ jobs:
       - name: Install flit
         run: pip install flit
 
-      - name: Build project for distribution
-        run: make build
+      - name: Build and publish medaillon to pypi
+        run: make publish

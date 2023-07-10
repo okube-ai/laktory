@@ -12,3 +12,6 @@ coverage:
 
 build:
 	flit build
+
+publish:
+	flit publish
