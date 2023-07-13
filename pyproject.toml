@@ -3,7 +3,7 @@ requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "medaillon"
+name = "laktory"
 authors = [
     {name = "Olivier Soucy", email = "osoucy.transactions@gmail.com"},
 ]
@@ -35,5 +35,5 @@ test = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/opencubes-ai/medaillon"
-"Bug Tracker" = "https://github.com/opencubes-ai/medaillon/issues"
+"Homepage" = "https://github.com/opencubes-ai/laktory"
+"Bug Tracker" = "https://github.com/opencubes-ai/laktory/issues"

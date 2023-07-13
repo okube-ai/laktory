@@ -1,4 +1,4 @@
-from medaillon.models import Catalog
+from laktory.models import Catalog
 
 
 def test_model():

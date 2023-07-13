@@ -1,6 +1,6 @@
 import os
 
-from medaillon.models import Column
+from laktory.models import Column
 
 AIRSPEED = {
     "name": "airspeed",

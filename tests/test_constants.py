@@ -1,6 +1,6 @@
 from pyspark.sql.types import DoubleType
 from pyspark.sql.types import StringType
-from medaillon.contants import SUPPORTED_TYPES
+from laktory.contants import SUPPORTED_TYPES
 
 
 def test_constants():

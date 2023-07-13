@@ -1,6 +1,6 @@
-from medaillon.models import Table
-from medaillon.models import Database
-from medaillon.models import Column
+from laktory.models import Table
+from laktory.models import Database
+from laktory.models import Column
 
 
 def test_model():

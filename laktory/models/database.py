@@ -1,7 +1,7 @@
 from pydantic import computed_field
 
-from medaillon.models.base import BaseModel
-from medaillon.models.table import Table
+from laktory.models.base import BaseModel
+from laktory.models.table import Table
 
 
 class Database(BaseModel):
