@@ -2,8 +2,8 @@ from typing import Literal
 
 from pydantic import computed_field
 
-from medaillon.models.base import BaseModel
-from medaillon.models.column import Column
+from laktory.models.base import BaseModel
+from laktory.models.column import Column
 
 
 class Table(BaseModel):

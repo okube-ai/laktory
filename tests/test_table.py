@@ -1,8 +1,8 @@
 import pytest
 from pydantic import ValidationError
 
-from medaillon.models import Column
-from medaillon.models import Table
+from laktory.models import Column
+from laktory.models import Table
 
 
 def test_model():

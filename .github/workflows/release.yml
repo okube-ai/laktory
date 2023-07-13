@@ -22,7 +22,7 @@ jobs:
       - name: Install flit
         run: pip install flit
 
-      - name: Build and publish medaillon to pypi
+      - name: Build and publish laktory to pypi
         run: make publish
         env:
           FLIT_INDEX_URL: ${{ vars.FLIT_INDEX_URL }}

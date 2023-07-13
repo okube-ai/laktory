@@ -1,8 +1,8 @@
 from typing import Literal
 from pydantic import computed_field
 
-from medaillon.contants import SUPPORTED_TYPES
-from medaillon.models.base import BaseModel
+from laktory.contants import SUPPORTED_TYPES
+from laktory.models.base import BaseModel
 
 
 class Column(BaseModel):
