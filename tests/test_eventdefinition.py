@@ -16,6 +16,7 @@ def test_eventdefinition():
     print(event)
     assert event.producer.name == "FDR"
     assert event.ingestion_pattern.source == "STORAGE_EVENTS"
+    assert event.landing_dirpath == "mnt/landing//events/FDR/flight_record/"
 
 
 if __name__ == "__main__":
