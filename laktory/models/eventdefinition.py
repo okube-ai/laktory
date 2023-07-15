@@ -23,4 +23,4 @@ class EventDefinition(BaseModel):
 
     @property
     def landing_dirpath(self):
-        return f"{self.landing_mount_path}/events/{self.producer.name}/{self.name}/"
+        return f"{self.landing_mount_path}events/{self.producer.name}/{self.name}/"
