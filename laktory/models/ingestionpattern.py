@@ -20,4 +20,3 @@ class IngestionPattern(BaseModel):
     read_as_stream: bool = True
     fmt: Literal[FORMATS] = "JSON"
     # tstamp column
-
