@@ -3,6 +3,7 @@ import os
 from laktory.models.base import BaseModel
 from laktory.models.producer import Producer
 from laktory.models.ingestionpattern import IngestionPattern
+from laktory._settings import settings
 
 
 # --------------------------------------------------------------------------- #
@@ -15,7 +16,7 @@ class EventDefinition(BaseModel):
     producer: Producer = None
     ingestion_pattern: IngestionPattern = IngestionPattern()
     tstamp_col: str = "created"
-    landing_mount_path: str = os.getenv("LANDING_MOUNT_PATH", "mnt/landing/")  # TODO: Replace with setting
+    landing_mount_path: str = settings.landing_mount_path
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
