@@ -17,6 +17,11 @@ except ModuleNotFoundError:
 # Classes                                                                     #
 # --------------------------------------------------------------------------- #
 
+# Required to parse version before build?
+try:
+    from ._settings import Settings
+except ModuleNotFoundError:
+    pass
 
 # --------------------------------------------------------------------------- #
 # Objects                                                                     #
