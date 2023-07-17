@@ -15,7 +15,7 @@ class EventDefinition(BaseModel):
     description: str = None
     producer: Producer = None
     ingestion_pattern: IngestionPattern = IngestionPattern()
-    tstamp_col: str = "created"
+    tstamp_col: str = "created_at"
     landing_mount_path: str = settings.landing_mount_path
 
     # ----------------------------------------------------------------------- #

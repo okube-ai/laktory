@@ -13,18 +13,18 @@ class EventData(EventDefinition):
         # Add metadata
         self.data["_name"] = self.name
         self.data["_producer_name"] = self.producer.name
-        tstamp = self.data.get("created", datetime.utcnow())
+        tstamp = self.data.get("created_at", datetime.utcnow())
         if not tstamp.tzinfo:
             tstamp = tstamp.replace(tzinfo=ZoneInfo("utc"))
-        self.data["_created"] = tstamp
+        self.data["_created_at"] = tstamp
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
 
     @property
-    def created(self) -> datetime:
-        return self.data["_created"]
+    def created_at(self) -> datetime:
+        return self.data["_created_at"]
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
@@ -32,11 +32,11 @@ class EventData(EventDefinition):
 
     @property
     def landing_dirpath(self) -> str:
-        t = self.created
+        t = self.created_at
         return f"{super().landing_dirpath}{t.year:04d}/{t.month:02d}/{t.day:02d}"
 
     def get_landing_filename(self, fmt="json", suffix=None) -> str:
-        t = self.created
+        t = self.created_at
         const = {"mus": {"s": 1e-6}, "s": {"ms": 1000}}  # TODO: replace with constants
         total_ms = int((t.second + t.microsecond * const["mus"]["s"]) * const["s"]["ms"])
         time_str = f"{t.hour:02d}{t.minute:02d}{total_ms:05d}Z"
