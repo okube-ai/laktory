@@ -3,7 +3,9 @@ from datetime import datetime
 
 event = EventData(
     name="flight_record",
-    producer_name="FDR",
+    producer={
+        "name": "FDR",
+    },
     data={
         "created": datetime(2023, 7, 1, 1, 0, 0),
         "airspeed": 100.0,
@@ -13,7 +15,7 @@ event = EventData(
 
 
 def test_eventdata():
-    assert event.producer_name == "FDR"
+    assert event.producer.name == "FDR"
     assert event.data["altitude"] == 20000
     assert event.data["_producer_name"] == "FDR"
     assert event.data["_created"] == datetime(2023, 7, 1, 1, 0, 0)

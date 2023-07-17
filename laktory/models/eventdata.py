@@ -1,18 +1,15 @@
 import os
 from datetime import datetime
-from laktory.models.base import BaseModel
 from laktory.models.eventdefinition import EventDefinition
 
 
-class EventData(BaseModel):
-    name: str
+class EventData(EventDefinition):
     data: dict
-    producer_name: str
 
     def model_post_init(self, __context):
         # Add metadata
         self.data["_name"] = self.name
-        self.data["_producer_name"] = self.producer_name
+        self.data["_producer_name"] = self.producer.name
         self.data["_created"] = self.data.get("created", datetime.utcnow())
 
     # ----------------------------------------------------------------------- #
@@ -23,13 +20,6 @@ class EventData(BaseModel):
     def created(self) -> datetime:
         return self.data["_created"]
 
-    @property
-    def event_definition(self):
-        return EventDefinition(
-            name=self.name,
-            producer={"name": self.producer_name}
-        )
-
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
     # ----------------------------------------------------------------------- #
@@ -37,7 +27,7 @@ class EventData(BaseModel):
     @property
     def landing_dirpath(self) -> str:
         t = self.created
-        return f"{self.event_definition.landing_dirpath}/{t.year:04d}/{t.month:02d}/{t.day:02d}"
+        return f"{super().landing_dirpath}/{t.year:04d}/{t.month:02d}/{t.day:02d}"
 
     def get_landing_filename(self, fmt="json", suffix=None) -> str:
         t = self.created
