@@ -34,6 +34,9 @@ test = [
     "pytest-cov",
 #    "tox"
 ]
+azure =[
+    "azure-storage-blob",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/opencubes-ai/laktory"
