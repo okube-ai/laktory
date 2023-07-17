@@ -13,8 +13,8 @@
 # PyCharm configuration
 **/.idea/**
 
-# Local settings and environment variables
-#settings_local/*.*
+# Seecret values
+secrets/*.*
 
 # --------------------------------------------------------------------------- #
 # Installation                                                                #
