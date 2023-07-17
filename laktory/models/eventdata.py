@@ -1,5 +1,8 @@
 import os
+from typing import Any
+
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from laktory.models.eventdefinition import EventDefinition
 
 
@@ -10,7 +13,10 @@ class EventData(EventDefinition):
         # Add metadata
         self.data["_name"] = self.name
         self.data["_producer_name"] = self.producer.name
-        self.data["_created"] = self.data.get("created", datetime.utcnow())
+        tstamp = self.data.get("created", datetime.utcnow())
+        if not tstamp.tzinfo:
+            tstamp = tstamp.replace(tzinfo=ZoneInfo("utc"))
+        self.data["_created"] = tstamp
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -27,7 +33,7 @@ class EventData(EventDefinition):
     @property
     def landing_dirpath(self) -> str:
         t = self.created
-        return f"{super().landing_dirpath}/{t.year:04d}/{t.month:02d}/{t.day:02d}"
+        return f"{super().landing_dirpath}{t.year:04d}/{t.month:02d}/{t.day:02d}"
 
     def get_landing_filename(self, fmt="json", suffix=None) -> str:
         t = self.created
@@ -43,3 +49,19 @@ class EventData(EventDefinition):
 
     def get_landing_filepath(self, fmt="json", suffix=None):
         return os.path.join(self.landing_dirpath, self.get_landing_filename(fmt, suffix))
+
+    # ----------------------------------------------------------------------- #
+    # Output                                                                  #
+    # ----------------------------------------------------------------------- #
+
+    def model_dump(self, *args, **kwargs) -> dict[str, Any]:
+        exclude = kwargs.pop(
+            "exclude",
+            [
+                "ingestion_pattern",
+                "tstamp_col",
+                "landing_mount_path",
+            ]
+        )
+        mode = kwargs.pop("mode", "json")
+        return super().model_dump(*args, exclude=exclude, mode=mode, **kwargs)
