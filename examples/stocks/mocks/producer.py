@@ -1,9 +1,24 @@
 import os
 import json
 from datetime import datetime
+import yfinance as yf
 
 from azure.storage.blob import ContainerClient
 from laktory.models import EventData
+
+# --------------------------------------------------------------------------- #
+# Setup                                                                       #
+# --------------------------------------------------------------------------- #
+
+symbols = [
+    "AAPL",
+    "AMZN",
+    "GOOGL",
+    "MSFT",
+]
+
+t0 = datetime(2023, 7, 1)
+t1 = datetime(2023, 7, 4)
 
 # --------------------------------------------------------------------------- #
 # Container Client                                                            #
@@ -16,30 +31,39 @@ container = ContainerClient.from_connection_string(
 
 
 # --------------------------------------------------------------------------- #
-# Fetch data                                                                  #
+# Fetch events                                                                #
 # --------------------------------------------------------------------------- #
 
-event = EventData(
-    name="stocks",
-    producer={"name": "bank"},
-    data={
-        "created": datetime(2023, 7, 1),
-        "symbol": "x",
-        "value": 1,
-    },
-    landing_mount_path="",
-)
+events = []
+for s in symbols:
+    df = yf.download(s, t0, t1, interval="1m")
+    for _, row in df.iterrows():
+        events += [EventData(
+            name="stocks",
+            producer={"name": "yahoo-finance"},
+            data={
+                "created_at": _,
+                "symbol": s,
+                "open": float(row["Open"]),  # np.float64 are not supported for serialization
+                "close": float(row["Close"]),
+                "high": float(row["High"]),
+                "low": float(row["Low"]),
+            },
+            landing_mount_path="",
+        )]
 
-blob = container.get_blob_client(
-    blob=event.get_landing_filepath()
-)
 
+# --------------------------------------------------------------------------- #
+# Write events                                                                #
+# --------------------------------------------------------------------------- #
 
-data = event.model_dump()
-
-blob.upload_blob(json.dumps(data))
-
-# json.dumps(data)
-# print(cs)
-
-# print(event)
+for event in events:
+    suffix = event.data["symbol"].lower()
+    path = event.get_landing_filepath(suffix=suffix)
+    blob = container.get_blob_client(path)
+    if not blob.exists():
+        print(f"Uploading {path}")
+        blob.upload_blob(
+            json.dumps(event.model_dump_json()),
+            overwrite=False,
+        )
