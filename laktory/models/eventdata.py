@@ -1,8 +1,8 @@
 import os
-from typing import Any
-
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from typing import Any
+
 from laktory.models.eventdefinition import EventDefinition
 
 
@@ -65,3 +65,14 @@ class EventData(EventDefinition):
         )
         mode = kwargs.pop("mode", "json")
         return super().model_dump(*args, exclude=exclude, mode=mode, **kwargs)
+
+    def model_dump_json(self, *args, **kwargs) -> str:
+        exclude = kwargs.pop(
+            "exclude",
+            [
+                "ingestion_pattern",
+                "tstamp_col",
+                "landing_mount_path",
+            ]
+        )
+        return super().model_dump_json(*args, exclude=exclude, **kwargs)
