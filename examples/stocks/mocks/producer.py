@@ -62,8 +62,7 @@ for event in events:
     path = event.get_landing_filepath(suffix=suffix)
     blob = container.get_blob_client(path)
     if not blob.exists():
-        print(f"Uploading {path}")
         blob.upload_blob(
-            json.dumps(event.model_dump_json()),
+            event.model_dump_json(),
             overwrite=False,
         )
