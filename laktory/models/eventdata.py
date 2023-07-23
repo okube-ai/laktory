@@ -15,7 +15,7 @@ class EventData(EventDefinition):
         self.data["_producer_name"] = self.producer.name
         tstamp = self.data.get("created_at", datetime.utcnow())
         if not tstamp.tzinfo:
-            tstamp = tstamp.replace(tzinfo=ZoneInfo("utc"))
+            tstamp = tstamp.replace(tzinfo=ZoneInfo("UTC"))
         self.data["_created_at"] = tstamp
 
     # ----------------------------------------------------------------------- #
