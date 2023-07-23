@@ -19,8 +19,8 @@ def test_eventdata():
     assert event.producer.name == "FDR"
     assert event.data["altitude"] == 20000
     assert event.data["_producer_name"] == "FDR"
-    assert event.data["_created_at"] == datetime(2023, 7, 1, 1, 0, 0, tzinfo=ZoneInfo("utc"))
-    assert event.created_at == datetime(2023, 7, 1, 1, 0, 0, tzinfo=ZoneInfo("utc"))
+    assert event.data["_created_at"] == datetime(2023, 7, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC"))
+    assert event.created_at == datetime(2023, 7, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC"))
     assert event.get_landing_filepath() == "mnt/landing/events/FDR/flight_record/2023/07/01/flight_record_20230701T010000000Z.json"
 
 
