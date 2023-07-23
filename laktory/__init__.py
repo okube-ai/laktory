@@ -7,10 +7,7 @@ __version__ = VERSION
 # --------------------------------------------------------------------------- #
 
 # Required to parse version before build?
-try:
-    from ._settings import settings
-except ModuleNotFoundError:
-    pass
+from ._settings import settings
 
 
 # --------------------------------------------------------------------------- #
@@ -18,10 +15,7 @@ except ModuleNotFoundError:
 # --------------------------------------------------------------------------- #
 
 # Required to parse version before build?
-try:
-    from ._settings import Settings
-except ModuleNotFoundError:
-    pass
+from ._settings import Settings
 
 # --------------------------------------------------------------------------- #
 # Objects                                                                     #
