@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 from pyspark.sql.dataframe import DataFrame
-from laktory.models.ingestion_pattern import IngestionPattern
+from laktory.models.ingestionpattern import IngestionPattern
 
 
 class BaseReader:

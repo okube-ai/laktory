@@ -3,11 +3,11 @@ requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "laktory"
+name = "settus"
 authors = [
     {name = "Olivier Soucy", email = "osoucy.transactions@gmail.com"},
 ]
-description = "A DataOps framework for building a lakehouse"
+description = "Settings management using Pydantic, with ability to retrieve cloud secrets."
 readme = "README.md"
 requires-python = ">=3.9"
 keywords = ["one", "two"]
@@ -19,11 +19,9 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "pydantic>=2",
-    "settus",
-    "pyyaml",
-    "pyspark",
+    "pydantic-settings>=2.0",
 ]
+
 [project.optional-dependencies]
 dev = [
     "black",
@@ -34,10 +32,13 @@ test = [
     "pytest-cov",
 #    "tox"
 ]
-azure =[
-    "azure-storage-blob",
+azure = [
+]
+aws = [
+]
+gcp = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/opencubes-ai/laktory"
-"Bug Tracker" = "https://github.com/opencubes-ai/laktory/issues"
+"Homepage" = "https://github.com/opencubes-ai/settus"
+"Bug Tracker" = "https://github.com/opencubes-ai/settus/issues"
