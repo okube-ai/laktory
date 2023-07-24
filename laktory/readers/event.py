@@ -7,7 +7,7 @@ from laktory.models.eventdefinition import EventDefinition
 class EventReader(BaseReader):
     event: EventDefinition
 
-    def read(self) -> DataFrame:
+    def read(self, spark) -> DataFrame:
         return (
             spark
             .read
@@ -20,5 +20,9 @@ class EventReader(BaseReader):
             # .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
             # .option("cloudFiles.allowOverwrites", True)
             # .option("recursiveFileLookup", True)
-            .load(self.event.landing_dirpath)
+            .load(self.load_path)
         )
+
+    @property
+    def load_path(self):
+        return self.event.landing_dirpath
