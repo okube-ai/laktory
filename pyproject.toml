@@ -19,10 +19,12 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "pydantic>=2",
-    "pyyaml",
     "pyspark",
+    "pyyaml",
+    "pydantic>=2",
+    "settus",
 ]
+
 [project.optional-dependencies]
 dev = [
     "black",
@@ -32,6 +34,12 @@ test = [
     "pytest",
     "pytest-cov",
 #    "tox"
+]
+azure = [
+]
+aws = [
+]
+gcp = [
 ]
 
 [project.urls]
