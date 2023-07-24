@@ -1,12 +1,12 @@
 from abc import abstractmethod
 
 from pyspark.sql.dataframe import DataFrame
+
+from laktory.models.base import BaseModel
 from laktory.models.ingestionpattern import IngestionPattern
 
 
-class BaseReader:
-    def __init__(self, ingestion_pattern: IngestionPattern) -> None:
-        pass
+class BaseReader(BaseModel):
 
     @abstractmethod
     def read(self) -> DataFrame:
@@ -25,3 +25,4 @@ class BaseReader:
         #     # .option("recursiveFileLookup", True)
         #     .load(filepath)
         # )
+

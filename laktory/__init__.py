@@ -6,7 +6,6 @@ __version__ = VERSION
 # Packages                                                                    #
 # --------------------------------------------------------------------------- #
 
-# Required to parse version before build?
 from ._settings import settings
 
 
@@ -14,7 +13,6 @@ from ._settings import settings
 # Classes                                                                     #
 # --------------------------------------------------------------------------- #
 
-# Required to parse version before build?
 from ._settings import Settings
 
 # --------------------------------------------------------------------------- #
