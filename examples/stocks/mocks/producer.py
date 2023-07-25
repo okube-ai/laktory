@@ -1,10 +1,9 @@
 import os
-import json
 from datetime import datetime
 import yfinance as yf
 
 from azure.storage.blob import ContainerClient
-from laktory.models import EventData
+from laktory._testing import StockPriceData
 
 # --------------------------------------------------------------------------- #
 # Setup                                                                       #
@@ -38,9 +37,7 @@ events = []
 for s in symbols:
     df = yf.download(s, t0, t1, interval="1m")
     for _, row in df.iterrows():
-        events += [EventData(
-            name="stocks",
-            producer={"name": "yahoo-finance"},
+        events += [StockPriceData(
             data={
                 "created_at": _,
                 "symbol": s,
@@ -49,7 +46,6 @@ for s in symbols:
                 "high": float(row["High"]),
                 "low": float(row["Low"]),
             },
-            landing_mount_path="",
         )]
 
 
