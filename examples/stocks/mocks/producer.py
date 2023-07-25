@@ -3,7 +3,7 @@ from datetime import datetime
 import yfinance as yf
 
 from azure.storage.blob import ContainerClient
-from laktory._testing import StockPriceDefinition
+from laktory._testing import StockPriceData
 
 # --------------------------------------------------------------------------- #
 # Setup                                                                       #
@@ -37,7 +37,7 @@ events = []
 for s in symbols:
     df = yf.download(s, t0, t1, interval="1m")
     for _, row in df.iterrows():
-        events += [StockPriceDefinition(
+        events += [StockPriceData(
             data={
                 "created_at": _,
                 "symbol": s,
