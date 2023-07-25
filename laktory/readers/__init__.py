@@ -1,3 +1,6 @@
+from .awskinesisreader import AWSKinesisReader
+from .azureeventshubreader import AzureEventHubsReader
 from .basereader import BaseReader
+from .kafkareader import KafkaReader
 from .eventsreader import EventsReader
-from .streameventsreader import StreamEventsReader
+from .eventsstreamreader import EventsStreamReader

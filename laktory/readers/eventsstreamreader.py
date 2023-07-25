@@ -4,16 +4,16 @@ from pyspark.sql.dataframe import DataFrame
 from laktory.readers.eventsreader import EventsReader
 
 
-class StreamEventsReader(EventsReader):
+class EventsStreamReader(EventsReader):
 
     def read(self, spark) -> DataFrame:
         return (
             spark
             .readStream.format("cloudFiles")
-            .option("multiLine", False)
+            .option("multiLine", self.multiline)
             .option("mergeSchema", True)
             .option("recursiveFileLookup", True)
-            .option("cloudFiles.format", self.event.ingestion_pattern.fmt)
+            .option("cloudFiles.format", self.fmt)
             .option("cloudFiles.schemaLocation", self.load_path)
             .option("cloudFiles.inferColumnTypes", True)
             .option("cloudFiles.schemaEvolutionMode", "addNewColumns")

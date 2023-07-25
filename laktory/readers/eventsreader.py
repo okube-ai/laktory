@@ -1,23 +1,18 @@
 from pyspark.sql.dataframe import DataFrame
 
 from laktory.readers.basereader import BaseReader
-from laktory.models.eventdefinition import EventDefinition
 
 
 class EventsReader(BaseReader):
-    event: EventDefinition
+    load_path: str = ""
 
     def read(self, spark) -> DataFrame:
         return (
             spark
             .read
-            .option("multiLine", False)
+            .option("multiLine", self.multiline)
             .option("mergeSchema", True)
             .option("recursiveFileLookup", True)
-            .format(self.event.ingestion_pattern.fmt)
+            .format(self.fmt)
             .load(self.load_path)
         )
-
-    @property
-    def load_path(self):
-        return self.event.landing_dirpath
