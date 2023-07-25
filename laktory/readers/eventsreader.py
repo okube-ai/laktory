@@ -4,7 +4,7 @@ from laktory.readers.basereader import BaseReader
 from laktory.models.eventdefinition import EventDefinition
 
 
-class EventReader(BaseReader):
+class EventsReader(BaseReader):
     event: EventDefinition
 
     def read(self, spark) -> DataFrame:

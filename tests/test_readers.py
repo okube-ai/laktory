@@ -1,10 +1,10 @@
-from laktory.readers import EventReader
+from laktory.readers import EventsReader
 
 from laktory._testing.stockprice import StockPriceDefinition
 
 
 def test_reader_event():
-    reader = EventReader(
+    reader = EventsReader(
         event=StockPriceDefinition(),
     )
 

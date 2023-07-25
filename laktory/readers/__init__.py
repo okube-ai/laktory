@@ -1,3 +1,3 @@
 from .basereader import BaseReader
-from .eventreader import EventReader
-from .streameventreader import StreamEventReader
+from .eventsreader import EventsReader
+from .streameventsreader import StreamEventsReader

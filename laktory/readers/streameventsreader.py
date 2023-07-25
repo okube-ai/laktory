@@ -1,10 +1,10 @@
 import pyspark.sql.functions as F
 from pyspark.sql.dataframe import DataFrame
 
-from laktory.readers.eventreader import EventReader
+from laktory.readers.eventsreader import EventsReader
 
 
-class StreamEventReader(EventReader):
+class StreamEventsReader(EventsReader):
 
     def read(self, spark) -> DataFrame:
         return (
