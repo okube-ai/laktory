@@ -1,6 +1,17 @@
+# The preference build system would have been flit, but setuptools had to be
+# used to support `pip install git+http...` within Databricks. When trying
+# to parse the version using flit, it needs to import the full package
+# and some dependencies might be missing in the virtual environment.
+# Setuptools allow to explicitly set the location of the version without
+# having to import the package.
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = [
+#    "flit_core >=3.2,<4",
+    "setuptools",
+    "setuptools-scm",
+]
+#build-backend = "flit_core.buildapi"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "laktory"
@@ -45,3 +56,10 @@ gcp = [
 [project.urls]
 "Homepage" = "https://github.com/opencubes-ai/laktory"
 "Bug Tracker" = "https://github.com/opencubes-ai/laktory/issues"
+
+[tool.setuptools.packages.find]
+include = ["laktory*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "laktory._version.VERSION"}
+

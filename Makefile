@@ -1,8 +1,8 @@
 install:
-	flit install
+	pip install ./
 
 dev:
-	flit install -s
+	pip install -e './[dev,test]'
 
 test:
 	pytest --junitxml=junit/test-results.xml --cov=laktory --cov-report=xml --cov-report=html tests
@@ -11,7 +11,10 @@ coverage:
 	open htmlcov/index.html
 
 build:
-	flit build
+	pip install build
+	python -m build
 
 publish:
-	flit publish
+	pip install build twine
+	python -m build
+	twine upload dist/*
