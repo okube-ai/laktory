@@ -30,11 +30,8 @@ jobs:
         with:
           python-version: ${{ matrix.pyVersion }}
 
-      - name: Install flit
-        run: pip install flit
-
       - name: Run tests
-        run: make dev install test
+        run: make dev test
 
 #      - name: Publish test coverage
 #        uses: codecov/codecov-action@v1
