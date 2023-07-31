@@ -7,7 +7,7 @@ logger = get_logger(__name__)
 # Readers                                                                     #
 # --------------------------------------------------------------------------- #
 
-def read(*args, database=None, **kwargs):
+def read(*args, catalog=None, database=None, **kwargs):
     try:
         import dlt
         return dlt.read(*args, **kwargs)
@@ -15,10 +15,12 @@ def read(*args, database=None, **kwargs):
         table_name = args[0]
         if database is not None:
             table_name = f"{database}.{table_name}"
+        if catalog is not None:
+            table_name = f"{catalog}.{table_name}"
         return spark.read.table(table_name)
 
 
-def read_stream(*args, database=None, fmt="delta", **kwargs):
+def read_stream(*args, catalog=None, database=None, fmt="delta", **kwargs):
     try:
         import dlt
         return dlt.read_stream(*args, **kwargs)
@@ -26,6 +28,8 @@ def read_stream(*args, database=None, fmt="delta", **kwargs):
         table_name = args[0]
         if database is not None:
             table_name = f"{database}.{table_name}"
+        if catalog is not None:
+            table_name = f"{catalog}.{table_name}"
         return spark.readStream.format(fmt).table(table_name)
 
 
@@ -106,21 +110,3 @@ except (ModuleNotFoundError, FileNotFoundError):
                 return func(*args, **kwargs)
             return wrapper
         return decorator
-
-
-# --------------------------------------------------------------------------- #
-# Helpers                                                                     #
-# --------------------------------------------------------------------------- #
-
-def write_sdf(sdf, table_name, database=None):
-
-    logger.info(f"Writing temporary table")
-    if database is not None:
-        table_name = f"{database}.{table_name}"
-
-    sdf \
-        .write \
-        .mode("overwrite") \
-        .format("parquet") \
-        .option("overwriteSchema", "true") \
-        .saveAsTable(table_name)
