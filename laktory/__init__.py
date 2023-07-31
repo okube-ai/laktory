@@ -7,7 +7,7 @@ __version__ = VERSION
 # --------------------------------------------------------------------------- #
 
 from ._settings import settings
-import deltalivetables as dlt
+from . import deltalivetables as dlt
 
 # --------------------------------------------------------------------------- #
 # Classes                                                                     #
