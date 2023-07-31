@@ -1,14 +1,10 @@
 from pyspark.sql.dataframe import DataFrame
-from pydantic import field_validator
+from typing import Optional
+from pydantic import Field, field_validator
 from pydantic_core.core_schema import FieldValidationInfo
-
-from typing_extensions import Annotated
 
 from laktory.readers.basereader import BaseReader
 from laktory._settings import settings
-
-from pydantic import Field, field_validator
-from typing import Optional
 
 
 class EventsReader(BaseReader):
