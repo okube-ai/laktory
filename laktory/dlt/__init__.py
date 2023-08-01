@@ -1,4 +1,7 @@
 try:
     from dlt import *
 except (ModuleNotFoundError, FileNotFoundError):
-    from laktory._databricks_dlt import *
+    try:
+        from laktory._databricks_dlt import *
+    except RuntimeError:
+        pass
