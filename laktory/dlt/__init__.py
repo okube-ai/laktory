@@ -14,7 +14,7 @@ except (ModuleNotFoundError, FileNotFoundError):
 # Utilities                                                                   #
 # --------------------------------------------------------------------------- #
 
-def is_pipeline():
+def is_pipeline(spark):
     try:
         import dlt
     except (ModuleNotFoundError, FileNotFoundError):
