@@ -4,6 +4,21 @@ logger = get_logger(__name__)
 
 
 # --------------------------------------------------------------------------- #
+# Utilities                                                                   #
+# --------------------------------------------------------------------------- #
+
+def is_pipeline():
+    try:
+        import dlt
+    except (ModuleNotFoundError, FileNotFoundError):
+        return False
+    dbr_version = spark.conf.get("pipelines.dbrVersion", None)
+    if dbr_version is None:
+        return False
+    return True
+
+
+# --------------------------------------------------------------------------- #
 # Readers                                                                     #
 # --------------------------------------------------------------------------- #
 
