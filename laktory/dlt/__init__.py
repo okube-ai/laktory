@@ -48,4 +48,4 @@ def read_stream(*args, fmt="delta", **kwargs):
         args[0] = args[0].split(".")[-1]
         return _read_stream(*args, **kwargs)
     else:
-        return spark.readStream.format(fmt).table(table_name)
+        return spark.readStream.format(fmt).table(args[0])
