@@ -2,6 +2,7 @@ try:
     # Import databricks dlt module, only available for DBR >= 13
     from dlt import *
     from dlt import read as _read
+    from dlt import read_stream as _read_stream
 except (ModuleNotFoundError, FileNotFoundError):
     try:
         # Import local copy for dlt for DBR < 13
@@ -30,7 +31,6 @@ def is_pipeline():
 # Overwrite                                                                   #
 # --------------------------------------------------------------------------- #
 
-
 def read(*args, **kwargs):
     if is_pipeline():
         # Remove catalog and database from naming space
@@ -39,3 +39,13 @@ def read(*args, **kwargs):
         return _read(*args, **kwargs)
     else:
         return spark.read.table(args[0])
+
+
+def read_stream(*args, fmt="delta", **kwargs):
+    if is_pipeline():
+        # Remove catalog and database from naming space
+        args = list(args)
+        args[0] = args[0].split(".")[-1]
+        return _read_stream(*args, **kwargs)
+    else:
+        return spark.readStream.format(fmt).table(table_name)
