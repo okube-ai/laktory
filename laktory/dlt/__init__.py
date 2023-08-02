@@ -15,7 +15,7 @@ except (ModuleNotFoundError, FileNotFoundError):
 # Utilities                                                                   #
 # --------------------------------------------------------------------------- #
 
-def is_pipeline(spark):
+def is_pipeline():
     try:
         import dlt
     except (ModuleNotFoundError, FileNotFoundError):
@@ -31,8 +31,8 @@ def is_pipeline(spark):
 # --------------------------------------------------------------------------- #
 
 
-def read(*args, spark=None, **kwargs):
-    if is_pipeline(spark):
+def read(*args, **kwargs):
+    if is_pipeline():
         # Remove catalog and database from naming space
         args = list(args)
         args[0] = args[0].split(".")[-1]
