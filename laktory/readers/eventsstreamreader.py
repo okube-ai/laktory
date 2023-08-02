@@ -19,4 +19,7 @@ class EventsStreamReader(EventsReader):
             .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
             .option("cloudFiles.allowOverwrites", True)
             .load(self.load_path)
-        ).withColumn("file", F.input_file_name())
+        )
+
+        # Not supported by UC
+        # .withColumn("file", F.input_file_name())
