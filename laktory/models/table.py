@@ -4,6 +4,7 @@ from pydantic import computed_field
 
 from laktory.models.base import BaseModel
 from laktory.models.column import Column
+from laktory.models.eventdefinition import EventDefinition
 
 
 class Table(BaseModel):
@@ -14,8 +15,7 @@ class Table(BaseModel):
     parent_id: str = None
 
     # Lakehouse
-    # event_name: str = None
-    # pipeline_name: str = None
+    event: EventDefinition = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     # joins
     # expectations
