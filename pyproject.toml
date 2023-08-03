@@ -30,6 +30,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
+    "databricks-sdk",
     "pyspark",
     "pyyaml",
     "pydantic>=2",
