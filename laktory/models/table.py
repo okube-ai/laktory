@@ -15,7 +15,8 @@ class Table(BaseModel):
     parent_id: str = None
 
     # Lakehouse
-    event: EventDefinition = None
+    input_event: str = None
+    input_table: str = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     # joins
     # expectations

@@ -14,3 +14,11 @@ class Pipeline(BaseModel):
     target: str = "default"
 
     tables: list[Table] = []
+
+    def tables_dump(self, *args, **kwargs):
+        cols = []
+        for c in self.tables:
+            cols += [
+                c.model_dump(*args, **kwargs)
+            ]
+        return cols

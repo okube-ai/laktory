@@ -21,13 +21,15 @@ class StockPricesPipeline(Pipeline):
     name: str = "pl-stock-prices"
     tables: list[Table] = [
         Table(**{
-            "name": "brz_stocks",
-            "event": {
-                "name": "stock_price",
-                "producer": {
-                    "name": "yahoo-finance",
-                },
-            },
+            "name": "brz_stock_prices",
+            "input_event": "yahoo-finance/stock_price",
             "zone": "BRONZE",
+        }),
+        Table(**{
+            "name": "slv_stock_prices",
+            "input_table": "brz_stock_prices",
+            "zone": "SILVER",
+            "columns": [
+            ]
         }),
     ]
