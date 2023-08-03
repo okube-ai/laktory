@@ -55,7 +55,7 @@ for s in symbols:
 
 for event in events:
     suffix = event.data["symbol"].lower()
-    path = event.get_landing_filepath(suffix=suffix)
+    path = event.get_filepath(suffix=suffix)
     blob = container.get_blob_client(path)
     if not blob.exists():
         blob.upload_blob(
