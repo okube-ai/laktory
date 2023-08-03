@@ -4,7 +4,7 @@ from pydantic import computed_field
 
 from laktory.models.base import BaseModel
 from laktory.models.column import Column
-from laktory.models.eventdefinition import EventDefinition
+from laktory.models.ingestionpattern import IngestionPattern
 
 
 class Table(BaseModel):
@@ -16,6 +16,7 @@ class Table(BaseModel):
 
     # Lakehouse
     input_event: str = None
+    ingestion_pattern: IngestionPattern = None
     input_table: str = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     # joins

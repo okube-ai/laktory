@@ -23,6 +23,10 @@ class StockPricesPipeline(Pipeline):
         Table(**{
             "name": "brz_stock_prices",
             "input_event": "yahoo-finance/stock_price",
+            "ingestion_pattern": {
+                "source": "STORAGE_EVENTS",
+                "read_as_stream": True,
+            },
             "zone": "BRONZE",
         }),
         Table(**{
