@@ -4,5 +4,6 @@ from .database import Database
 from .eventdata import EventData
 from .eventdefinition import EventDefinition
 from .ingestionpattern import IngestionPattern
+from .pipeline import Pipeline
 from .producer import Producer
 from .table import Table
