@@ -29,6 +29,24 @@ class StockPricesPipeline(Pipeline):
             "table_source": {"name": "brz_stock_prices"},
             "zone": "SILVER",
             "columns": [
+                {
+                    "name": "created_at",
+                    "type": "timestamp",
+                    "func_name": "coalesce",
+                    "input_cols": ["_created_at"],
+                },
+                {
+                    "name": "low",
+                    "type": "double",
+                    "func_name": "coalesce",
+                    "input_cols": ["data.low"],
+                },
+                {
+                    "name": "high",
+                    "type": "double",
+                    "func_name": "coalesce",
+                    "input_cols": ["data.high"],
+                },
             ]
         }),
     ]

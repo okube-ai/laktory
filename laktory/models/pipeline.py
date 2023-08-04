@@ -16,9 +16,18 @@ class Pipeline(BaseModel):
     tables: list[Table] = []
 
     def tables_dump(self, *args, **kwargs):
-        cols = []
-        for c in self.tables:
-            cols += [
-                c.model_dump(*args, **kwargs)
+        tables = []
+        for t in self.tables:
+            tables += [
+                t.model_dump(*args, **kwargs)
             ]
+        return tables
+
+    def columns_dump(self, *args, **kwargs):
+        cols = []
+        for t in self.tables:
+            for c in t.columns:
+                cols += [
+                    c.model_dump(*args, **kwargs)
+                ]
         return cols
