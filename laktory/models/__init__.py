@@ -2,8 +2,9 @@ from .catalog import Catalog
 from .column import Column
 from .database import Database
 from .eventdata import EventData
-from .ingestionpattern import IngestionPattern
+from .eventheader import EventHeader
 from .pipeline import Pipeline
 from .producer import Producer
+from .sources import EventSource
+from .sources import TableSource
 from .table import Table
-from .sourceevent import SourceEvent
