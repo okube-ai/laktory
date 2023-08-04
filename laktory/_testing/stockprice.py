@@ -1,20 +1,19 @@
-from laktory.models import EventDefinition
 from laktory.models import EventData
 from laktory.models import Producer
 from laktory.models import Pipeline
 from laktory.models import Table
+from laktory.models import EventSource
 
 
-class StockPriceDefinition(EventDefinition):
+class StockPriceSource(EventSource):
     name: str = "stock_price"
     producer: Producer = Producer(name="yahoo-finance")
-    landing_mount_path: str = ""
 
 
 class StockPriceData(EventData):
     name: str = "stock_price"
     producer: Producer = Producer(name="yahoo-finance")
-    landing_mount_path: str = ""
+    # landing_mount_path: str = ""
 
 
 class StockPricesPipeline(Pipeline):
@@ -22,16 +21,12 @@ class StockPricesPipeline(Pipeline):
     tables: list[Table] = [
         Table(**{
             "name": "brz_stock_prices",
-            "input_event": "yahoo-finance/stock_price",
-            "ingestion_pattern": {
-                "source": "STORAGE_EVENTS",
-                "read_as_stream": True,
-            },
+            "event_source": StockPriceSource(),
             "zone": "BRONZE",
         }),
         Table(**{
             "name": "slv_stock_prices",
-            "input_table": "brz_stock_prices",
+            "table_source": {"name": "brz_stock_prices"},
             "zone": "SILVER",
             "columns": [
             ]
