@@ -4,7 +4,6 @@ from laktory._logger import get_logger
 
 
 def test_get_logger():
-
     # Get logger
     logger = get_logger(__name__)
 

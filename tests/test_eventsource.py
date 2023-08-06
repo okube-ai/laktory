@@ -2,7 +2,6 @@ from laktory._testing import StockPriceSource
 
 
 def test_eventsource():
-
     source = StockPriceSource()
     print(source)
 

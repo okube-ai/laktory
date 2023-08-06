@@ -4,7 +4,6 @@ from laktory import Settings
 
 
 def test_settings():
-
     settings0 = Settings()
     settings1 = Settings(landing_mount_path="mnt")
     os.environ["LANDING_MOUNT_PATH"] = "staging"
