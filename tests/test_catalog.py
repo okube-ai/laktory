@@ -7,7 +7,17 @@ def test_model():
     )
 
     assert cat.name == "lakehouse"
+    assert cat.full_name == "lakehouse"
+
+
+def test_create():
+    cat = Catalog(name="laktory_testing",)
+    cat.create(if_not_exists=True)
+    assert cat.exists()
+    cat.delete(force=True)
+    assert not cat.exists()
 
 
 if __name__ == "__main__":
     test_model()
+    test_create()
