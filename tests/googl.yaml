@@ -1,0 +1,4 @@
+name: "price"
+type: "double"
+unit: "USD"
+parent_full_name: "lakehouse.markets.googl"
