@@ -1,39 +1,72 @@
 import pytest
 from pydantic import ValidationError
 
+from laktory.models import Catalog
+from laktory.models import Database
 from laktory.models import Column
 from laktory.models import Table
 
 
-def test_model():
-    table = Table(
-        name="f1549",
+table = Table(
+        name="googl",
         columns=[
             {
-                "name": "airspeed",
+                "name": "open",
                 "type": "double",
             },
             {
-                "name": "altitude",
+                "name": "close",
                 "type": "double",
             },
         ],
         zone="SILVER",
-        parent_id="lakehouse.flights",
+        catalog_name="lakehouse",
+        database_name="markets",
     )
 
+
+def test_model():
     assert table.columns == [
-        Column(name="airspeed", type="double"),
-        Column(name="altitude", type="double"),
+        Column(name="open", type="double"),
+        Column(name="close", type="double"),
     ]
     assert table.catalog_name == "lakehouse"
-    assert table.schema_name == "flights"
+    assert table.schema_name == "markets"
+    assert table.parent_full_name == "lakehouse.markets"
+    assert table.full_name == "lakehouse.markets.googl"
     assert table.zone == "SILVER"
 
     # Invalid zone
     with pytest.raises(ValidationError):
-        Table(name="f0001", zone="ROUGE")
+        Table(name="googl", zone="ROUGE")
+
+
+def test_create():
+
+    cat = Catalog(name="laktory_testing",)
+    cat.create(if_not_exists=True)
+    db = Database(name="default", catalog_name="laktory_testing")
+    db.create()
+    table = Table(
+        catalog_name="laktory_testing",
+        database_name="default",
+        name="stocks",
+    )
+    table.create(or_replace=True)
+    table.delete(force=True)
+    cat.delete(force=True)
+
+
+def test_meta():
+    meta = table.meta_table()
+    meta.catalog_name = "main"
+
+    meta.sql_create()
+    # print(meta)
 
 
 if __name__ == "__main__":
     test_model()
+    test_create()
+    # test_meta()
+
