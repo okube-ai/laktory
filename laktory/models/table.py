@@ -79,6 +79,9 @@ class Table(BaseModel):
 
     def create(self, if_not_exists: bool = True, or_replace: bool = False):
 
+        if len(self.columns) == 0:
+            raise ValueError()
+
         w = self.workspace_client
 
         if or_replace:
@@ -92,6 +95,12 @@ class Table(BaseModel):
             statement += "IF NOT EXISTS "
 
         statement += f"{self.schema_name}.{self.name}"
+
+        statement += "("
+        for c in self.columns:
+            statement += f"{c.name} {c.type},"
+        statement = statement[:-1]
+        statement += ")"
 
         w.statement_execution.execute_statement(
             statement=statement,

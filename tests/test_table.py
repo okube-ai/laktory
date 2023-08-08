@@ -51,8 +51,19 @@ def test_create():
         catalog_name="laktory_testing",
         database_name="default",
         name="stocks",
+        columns=[
+            {
+                "name": "open",
+                "type": "double",
+            },
+            {
+                "name": "close",
+                "type": "double",
+            },
+        ],
     )
     table.create(or_replace=True)
+    assert table.exists()
     table.delete(force=True)
     cat.delete(force=True)
 
