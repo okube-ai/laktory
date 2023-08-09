@@ -35,9 +35,6 @@ def test_read():
     with open(f"{root_dir}/googl.json", "r") as fp:
         c2 = Column.model_validate_json_file(fp)
 
-    print(c1)
-    print(c0)
-
     assert c1 == c0
     assert c2 == c0
 

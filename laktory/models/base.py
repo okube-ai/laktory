@@ -10,14 +10,6 @@ from laktory import settings
 class BaseModel(_BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    @computed_field
-    @property
-    def full_name(self) -> str:
-        _id = self.name
-        if self.parent_full_name is not None:
-            _id = f"{self.parent_full_name}.{_id}"
-        return _id
-
     @property
     def workspace_client(self):
         from databricks.sdk import WorkspaceClient

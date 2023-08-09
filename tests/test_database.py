@@ -22,7 +22,6 @@ def test_model():
                     },
                 ],
                 zone="SILVER",
-                parent_full_name="lakehouse.flights",
             ),
             Table(
                 name="f0002",
@@ -37,7 +36,6 @@ def test_model():
                     },
                 ],
                 zone="SILVER",
-                parent_full_name="lakehouse.flights",
             ),
         ],
     )
