@@ -11,6 +11,10 @@ class Catalog(BaseModel):
     databases: list[Database] = []
     is_unity: bool = True
 
+    # ----------------------------------------------------------------------- #
+    # Computed fields                                                         #
+    # ----------------------------------------------------------------------- #
+
     @computed_field
     @property
     def full_name(self) -> str:

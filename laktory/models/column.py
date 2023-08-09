@@ -20,7 +20,7 @@ class Column(BaseModel):
     parent_full_name: str = None
 
     # ----------------------------------------------------------------------- #
-    # Properties                                                              #
+    # Computed fields                                                         #
     # ----------------------------------------------------------------------- #
 
     @computed_field

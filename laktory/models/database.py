@@ -10,6 +10,10 @@ class Database(BaseModel):
     tables: list[Table] = []
     catalog_name: str = None
 
+    # ----------------------------------------------------------------------- #
+    # Computed fields                                                         #
+    # ----------------------------------------------------------------------- #
+
     @computed_field
     @property
     def parent_full_name(self) -> str:

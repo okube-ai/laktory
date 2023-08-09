@@ -27,7 +27,7 @@ class Table(BaseModel):
     # expectations
 
     # ----------------------------------------------------------------------- #
-    # Properties                                                              #
+    # Computed fields                                                         #
     # ----------------------------------------------------------------------- #
 
     @computed_field
@@ -57,6 +57,10 @@ class Table(BaseModel):
     @property
     def schema_name(self) -> str:
         return self.database_name
+
+    # ----------------------------------------------------------------------- #
+    # Properties                                                              #
+    # ----------------------------------------------------------------------- #
 
     @property
     def column_names(self):
