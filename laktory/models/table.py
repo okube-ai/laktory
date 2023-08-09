@@ -1,3 +1,4 @@
+import time
 from typing import Literal
 
 from pydantic import computed_field
@@ -24,6 +25,10 @@ class Table(BaseModel):
     pipeline_name: str = None
     # joins
     # expectations
+
+    # ----------------------------------------------------------------------- #
+    # Properties                                                              #
+    # ----------------------------------------------------------------------- #
 
     @computed_field
     @property
@@ -53,6 +58,14 @@ class Table(BaseModel):
     def schema_name(self) -> str:
         return self.database_name
 
+    @property
+    def column_names(self):
+        return [c.name for c in self.columns]
+
+    # ----------------------------------------------------------------------- #
+    # Class Methods                                                           #
+    # ----------------------------------------------------------------------- #
+
     @classmethod
     def meta_table(cls):
         columns = []
@@ -79,6 +92,8 @@ class Table(BaseModel):
 
     def create(self, if_not_exists: bool = True, or_replace: bool = False):
 
+        from databricks.sdk.service.sql import StatementState
+
         if len(self.columns) == 0:
             raise ValueError()
 
@@ -102,81 +117,26 @@ class Table(BaseModel):
         statement = statement[:-1]
         statement += ")"
 
-        w.statement_execution.execute_statement(
+        r = w.statement_execution.execute_statement(
             statement=statement,
             catalog=self.catalog_name,
             warehouse_id="faeced4d6221b239",
         )
-        #
-        # exists = self.exists()
-        #
-        # if if_not_exists and exists:
-        #     return w.tables.get(self.name)
-        #
-        # return w.catalogs.create(
-        #     name=self.name,
-        #     comment=self.comment,
-        # )
+        statement_id = r.statement_id
+        state = r.status.state
+
+        while state in [StatementState.PENDING, StatementState.RUNNING]:
+            r = w.statement_execution.get_statement(statement_id)
+            time.sleep(1)
+            state = r.status.state
+
+        if state != StatementState.SUCCEEDED:
+            raise ValueError()
+
+        return r
 
     def delete(self, force: bool = False):
         self.workspace_client.tables.delete(self.full_name, force=force)
-
-
-    #
-    # def sql_create(
-    #         self,
-    #         or_replace: bool = True,
-    #         create_catalog: bool = True,
-    #         create_database: bool = True,
-    # ):
-    #     from databricks.sdk import WorkspaceClient
-    #
-    #     catalog_name = self.catalog_name
-    #     database_name = self.database_name
-    #     if catalog_name is None:
-    #         raise ValueError(f"Catalog name for table {self.name} is not defined.")
-    #     if database_name is None:
-    #         raise ValueError(f"Database name for table {self.name} is not defined.")
-    #
-    #     w = WorkspaceClient(
-    #         host=settings.databricks_host,
-    #         token=settings.databricks_token,
-    #     )
-    #
-    #     # catalog_exists = catalog_name in [c.name for w.catalogs.list()]
-    #     # if not catalog_exists:
-    #     #     w.catalogs.create(catalog_name)
-    #     # else:
-    #
-    #
-    #     # if create_catalog:
-    #     # catalog = w.catalogs.get(catalog_name)
-    #
-    #     # # List schemas
-    #     # schemas = w.schemas.list(catalog_name=catalog.name)
-    #     # for s in schemas:
-    #     #     print(s.name)
-    #     #
-    #     # # Create laktory schema
-    #     # schema_exists = database_name in [s.name for s in schemas]
-    #     # if schema_exists:
-    #     #     w.schemas.delete(f"{catalog_name}.{database_name}")
-    #     # w.schemas.create(
-    #     #     database_name,
-    #     #     catalog_name=catalog_name,
-    #     #     force=True,
-    #     # )
-    #     #
-    #     # # --------------------------------------------------------------------------- #
-    #     # # Create Tables Table                                                         #
-    #     # # --------------------------------------------------------------------------- #
-    #     #
-    #     # table_name = "tables"
-    #     # w.statement_execution.execute_statement(
-    #     #     statement=f"CREATE OR REPLACE TABLE {database_name}.{table_name}",
-    #     #     catalog=catalog_name,
-    #     #     warehouse_id="faeced4d6221b239",
-    #     # )
 
 
 if __name__ == "__main__":

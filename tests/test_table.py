@@ -72,12 +72,14 @@ def test_meta():
     meta = table.meta_table()
     meta.catalog_name = "main"
 
-    meta.sql_create()
-    # print(meta)
+    assert "catalog_name" in meta.column_names
+    assert "database_name" in meta.column_names
+    assert "name" in meta.column_names
+    assert "comment" in meta.column_names
+    assert "columns" in meta.column_names
 
 
 if __name__ == "__main__":
     test_model()
     test_create()
-    # test_meta()
-
+    test_meta()
