@@ -17,7 +17,6 @@ class Column(BaseModel):
     func_name: str = None
     input_cols: list[str] = []
     func_kwargs: dict = {}
-    parent_full_name: str = None
 
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #
