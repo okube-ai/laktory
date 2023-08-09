@@ -2,36 +2,41 @@ import os
 
 from laktory.models import Column
 
-AIRSPEED = {
-    "name": "airspeed",
+GOOGL = {
+    "name": "close",
     "type": "double",
-    "unit": "kt",
-    "parent_id": "lakehouse.flights.f1549",
+    "unit": "USD",
+    "catalog_name": "lakehouse",
+    "database_name": "markets",
+    "table_name": "googl",
 }
 
 root_dir = os.path.dirname(__file__)
 
 
 def test_model():
-    c0 = Column(**AIRSPEED)
-    c1 = Column.model_validate(AIRSPEED)
+    c0 = Column(**GOOGL)
+    c1 = Column.model_validate(GOOGL)
     assert c1.type == "double"
     assert c1.catalog_name == "lakehouse"
-    assert c1.schema_name == "flights"
-    assert c1.table_name == "f1549"
+    assert c1.schema_name == "markets"
+    assert c1.table_name == "googl"
     assert "func_name" in c1.model_fields
-    assert "table_name" in c1.model_computed_fields
+    assert "full_name" in c1.model_computed_fields
     assert c0 == c1
 
 
 def test_read():
-    c0 = Column(**AIRSPEED)
+    c0 = Column(**GOOGL)
 
-    with open(f"{root_dir}/airspeed.yaml", "r") as fp:
+    with open(f"{root_dir}/googl.yaml", "r") as fp:
         c1 = Column.model_validate_yaml(fp)
 
-    with open(f"{root_dir}/airspeed.json", "r") as fp:
+    with open(f"{root_dir}/googl.json", "r") as fp:
         c2 = Column.model_validate_json_file(fp)
+
+    print(c1)
+    print(c0)
 
     assert c1 == c0
     assert c2 == c0

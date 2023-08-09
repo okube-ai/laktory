@@ -9,46 +9,50 @@ class Column(BaseModel):
     name: str
     type: Literal[tuple(SUPPORTED_TYPES.keys())] = "string"
     comment: str = None
+    catalog_name: str = None
+    database_name: str = None
+    table_name: str = None
     unit: str = None
     pii: bool = None
     func_name: str = None
     input_cols: list[str] = []
     func_kwargs: dict = {}
-    parent_id: str = None
+    parent_full_name: str = None
+
+    # ----------------------------------------------------------------------- #
+    # Properties                                                              #
+    # ----------------------------------------------------------------------- #
 
     @computed_field
     @property
-    def table_name(self) -> str:
-        if self.parent_id is None:
-            return None
-        return self.parent_id.split(".")[-1]
+    def parent_full_name(self) -> str:
+        _id = ""
+        if self.catalog_name:
+            _id += self.catalog_name
+
+        if self.database_name:
+            if _id == "":
+                _id = self.database_name
+            else:
+                _id += f".{self.database_name}"
+
+        if self.table_name:
+            if _id == "":
+                _id = self.table_name
+            else:
+                _id += f".{self.table_name}"
+
+        return _id
+
+    @computed_field
+    @property
+    def full_name(self) -> str:
+        _id = self.name
+        if self.parent_full_name is not None:
+            _id = f"{self.parent_full_name}.{_id}"
+        return _id
 
     @computed_field
     @property
     def schema_name(self) -> str:
-        if self.parent_id is None or len(self.parent_id.split(".")) < 2:
-            return None
-        return self.parent_id.split(".")[-2]
-
-    @computed_field
-    @property
-    def database_name(self) -> str:
-        return self.schema_name
-
-    @computed_field
-    @property
-    def catalog_name(self) -> str:
-        if self.parent_id is None or len(self.parent_id.split(".")) < 3:
-            return None
-        return self.parent_id.split(".")[-3]
-
-
-if __name__ == "__main__":
-    speed = Column(
-        name="airspeed",
-        type="double",
-        unit="kt",
-        parent_id="lakehouse.flights.f012",
-    )
-
-    print(speed)
+        return self.database_name

@@ -1,6 +1,8 @@
 {
-  "name": "price",
+  "name": "close",
   "type": "double",
   "unit": "USD",
-  "parent_full_name": "lakehouse.markets.googl"
+  "catalog_name": "lakehouse",
+  "database_name": "markets",
+  "table_name": "googl"
 }

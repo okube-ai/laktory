@@ -137,21 +137,3 @@ class Table(BaseModel):
 
     def delete(self, force: bool = False):
         self.workspace_client.tables.delete(self.full_name, force=force)
-
-
-if __name__ == "__main__":
-    table = Table(
-        name="f1549",
-        columns=[
-            {
-                "name": "airspeed",
-                "type": "double",
-            },
-            {
-                "name": "altitude",
-                "type": "double",
-            },
-        ],
-    )
-
-    print(table)

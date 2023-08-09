@@ -2,11 +2,13 @@ import yaml
 import json
 from pydantic import BaseModel as _BaseModel
 from pydantic import computed_field
+from pydantic import ConfigDict
 
 from laktory import settings
 
 
 class BaseModel(_BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
     @computed_field
     @property
