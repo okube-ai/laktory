@@ -3,39 +3,33 @@ from laktory._testing import StockPricesPipeline
 
 def test_pipeline():
     pl = StockPricesPipeline()
-    tables = pl.tables_dump()
-    columns = pl.columns_dump()
 
     assert pl.tables[0].zone == "BRONZE"
     assert pl.model_dump()["tables"][0]["zone"] == "BRONZE"
-    assert tables[0]["name"] == "brz_stock_prices"
-    assert tables[0]["event_source"]["name"] == "stock_price"
-    assert tables[0]["event_source"]["producer"]["name"] == "yahoo-finance"
-    assert (
-        tables[0]["event_source"]["dirpath"]
-        == "mnt/landing/events/yahoo-finance/stock_price/"
-    )
-    assert tables[0]["event_source"]["read_as_stream"]
-    assert tables[1]["name"] == "slv_stock_prices"
-    assert tables[1]["table_source"]["name"] == "brz_stock_prices"
 
-    assert columns[0]["name"] == "created_at"
-    assert columns[0]["type"] == "timestamp"
-    assert columns[0]["func_name"] == "coalesce"
-    assert columns[0]["input_cols"] == ["_created_at"]
 
-    assert columns[1]["name"] == "low"
-    assert columns[1]["type"] == "double"
-    assert columns[1]["func_name"] == "coalesce"
-    assert columns[1]["input_cols"] == ["data.low"]
+def test_tables_meta():
+    pl = StockPricesPipeline()
 
-    assert columns[2]["name"] == "high"
-    assert columns[2]["type"] == "double"
-    assert columns[2]["func_name"] == "coalesce"
-    assert columns[2]["input_cols"] == ["data.high"]
+    table = pl.get_tables_meta()
+    df = table.df
+    assert df["name"].tolist() == ["brz_stock_prices", "slv_stock_prices"]
+    assert df["zone"].tolist() == ["BRONZE", "SILVER"]
+    assert df["pipeline_name"].tolist() == ["pl-stock-prices", "pl-stock-prices"]
+    assert df["comment"].tolist() == [None, None]
+    assert isinstance(df["columns"].iloc[-1], list)
 
-    assert len(columns) == 3
+
+def test_columns_meta():
+    pl = StockPricesPipeline()
+
+    table = pl.get_columns_meta()
+    df = table.df
+    assert df["name"].tolist() == ["created_at", "low", "high"]
+    assert df["type"].tolist() == ["timestamp", "double", "double"]
 
 
 if __name__ == "__main__":
     test_pipeline()
+    test_tables_meta()
+    test_columns_meta()

@@ -55,3 +55,22 @@ class Column(BaseModel):
     @property
     def schema_name(self) -> str:
         return self.database_name
+
+    # ----------------------------------------------------------------------- #
+    # Class Methods                                                           #
+    # ----------------------------------------------------------------------- #
+
+    @classmethod
+    def meta_table(cls):
+        from laktory.models.table import Table
+        columns = []
+        for c in cls.model_fields.keys():
+            columns += [
+                Column(name=c, type="string")
+            ]
+
+        return Table(
+            name="columns",
+            database_name="laktory",
+            columns=columns,
+        )
