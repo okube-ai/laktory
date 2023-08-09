@@ -1,5 +1,6 @@
 import time
 from typing import Literal
+from typing import Any
 
 from pydantic import computed_field
 
@@ -17,6 +18,9 @@ class Table(BaseModel):
     comment: str = None
     catalog_name: str = None
     database_name: str = None
+
+    # Data
+    data: list[list[Any]] = None
 
     # Lakehouse
     event_source: EventSource = None
@@ -65,6 +69,11 @@ class Table(BaseModel):
     @property
     def column_names(self):
         return [c.name for c in self.columns]
+
+    @property
+    def df(self):
+        import pandas as pd
+        return pd.DataFrame(data=self.data, columns=self.column_names)
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #

@@ -1,5 +1,6 @@
 import pytest
 from pydantic import ValidationError
+import pandas as pd
 
 from laktory.models import Catalog
 from laktory.models import Database
@@ -19,9 +20,19 @@ table = Table(
                 "type": "double",
             },
         ],
+        data=[[1, 2], [3, 4], [5, 6]],
         zone="SILVER",
         catalog_name="lakehouse",
         database_name="markets",
+    )
+
+
+def test_data():
+    assert table.df.equals(
+        pd.DataFrame({
+            "open": [1, 3, 5],
+            "close": [2, 4, 6],
+        })
     )
 
 
@@ -81,5 +92,6 @@ def test_meta():
 
 if __name__ == "__main__":
     test_model()
+    test_data()
     test_create()
     test_meta()
