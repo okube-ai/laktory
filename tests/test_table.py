@@ -2,6 +2,7 @@ import pytest
 from pydantic import ValidationError
 import pandas as pd
 
+from laktory import settings
 from laktory.models import Catalog
 from laktory.models import Database
 from laktory.models import Column
@@ -52,7 +53,7 @@ def test_model():
         Table(name="googl", zone="ROUGE")
 
 
-def test_create():
+def test_create_and_insert():
 
     cat = Catalog(name="laktory_testing",)
     cat.create(if_not_exists=True)
@@ -71,10 +72,17 @@ def test_create():
                 "name": "close",
                 "type": "double",
             },
+            {
+                "name": "symbol",
+                "type": "string",
+            }
         ],
+        data=[[1, 2, "googl"], [3, 4, "googl"], [5, 6, "googl"]],
     )
-    table.create(or_replace=True)
+    table.create(or_replace=True, insert_data=True)
     assert table.exists()
+    data = table.select()
+    assert data == [['1.0', '2.0', 'googl'], ['3.0', '4.0', 'googl'], ['5.0', '6.0', 'googl']]
     table.delete(force=True)
     cat.delete(force=True)
 
@@ -93,5 +101,5 @@ def test_meta():
 if __name__ == "__main__":
     test_model()
     test_data()
-    test_create()
+    test_create_and_insert()
     test_meta()
