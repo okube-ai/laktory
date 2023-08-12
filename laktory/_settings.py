@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     databricks_host: str = ""
     databricks_token: str = ""
     databricks_account_id: str = ""
+    databricks_warehouse_id: str = ""
 
 
 settings = Settings()
