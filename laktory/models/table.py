@@ -3,6 +3,7 @@ from typing import Literal
 from typing import Any
 
 from pydantic import computed_field
+from pydantic import model_validator
 
 from laktory import settings
 from laktory.models.base import BaseModel
@@ -29,6 +30,17 @@ class Table(BaseModel):
     pipeline_name: str = None
     # joins
     # expectations
+
+    # ----------------------------------------------------------------------- #
+    # Validators                                                              #
+    # ----------------------------------------------------------------------- #
+
+    @model_validator(mode="after")
+    def assign_table_to_columns(self) -> Any:
+        for c in self.columns:
+            c.table_name = self.name
+            c.catalog_name = self.catalog_name
+            c.database_name = self.database_name
 
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #
@@ -190,6 +202,7 @@ class Table(BaseModel):
 
         if state != StatementState.SUCCEEDED:
             # TODO: Create specific error
+            print(r.status.error.message)
             raise Exception(r.status.error)
 
         return r

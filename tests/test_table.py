@@ -39,8 +39,8 @@ def test_data():
 
 def test_model():
     assert table.columns == [
-        Column(name="open", type="double"),
-        Column(name="close", type="double"),
+        Column(name="open", type="double", catalog_name="lakehouse", database_name="markets", table_name="googl"),
+        Column(name="close", type="double", catalog_name="lakehouse", database_name="markets", table_name="googl"),
     ]
     assert table.catalog_name == "lakehouse"
     assert table.schema_name == "markets"

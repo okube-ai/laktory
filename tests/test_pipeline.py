@@ -1,3 +1,5 @@
+from laktory.models import Catalog
+from laktory.models import Table
 from laktory._testing import StockPricesPipeline
 
 
@@ -16,8 +18,8 @@ def test_tables_meta():
     assert df["name"].tolist() == ["brz_stock_prices", "slv_stock_prices"]
     assert df["zone"].tolist() == ["BRONZE", "SILVER"]
     assert df["pipeline_name"].tolist() == ["pl-stock-prices", "pl-stock-prices"]
-    assert df["comment"].tolist() == [None, None]
-    assert isinstance(df["columns"].iloc[-1], list)
+    assert df["comment"].tolist() == ["null", "null"]
+    assert isinstance(df["columns"].iloc[-1], str)
 
 
 def test_columns_meta():
@@ -29,7 +31,27 @@ def test_columns_meta():
     assert df["type"].tolist() == ["timestamp", "double", "double"]
 
 
+def test_publish_meta():
+
+    catalog_name = "laktory_testing"
+
+    pl = StockPricesPipeline()
+    pl.publish_tables_meta(catalog_name=catalog_name)
+
+    tables = Table(name="tables", database_name="laktory", catalog_name=catalog_name)
+    data = tables.select()
+    assert data[0][0] == "brz_stock_prices"
+
+    columns = Table(name="columns", database_name="laktory", catalog_name=catalog_name)
+    data = columns.select()
+    assert data[1][0] == "low"
+
+    # Cleanup
+    Catalog(name="laktory_testing").delete(force=True)
+
+
 if __name__ == "__main__":
     test_pipeline()
     test_tables_meta()
     test_columns_meta()
+    test_publish_meta()
