@@ -2,7 +2,6 @@ import yaml
 import json
 import time
 from pydantic import BaseModel as _BaseModel
-from pydantic import computed_field
 from pydantic import ConfigDict
 
 from laktory import settings
