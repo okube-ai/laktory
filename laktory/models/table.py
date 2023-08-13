@@ -122,12 +122,8 @@ class Table(BaseModel):
                warehouse_id: str = None,
                ):
 
-        from databricks.sdk.service.sql import StatementState
-
         if len(self.columns) == 0:
             raise ValueError()
-
-        w = self.workspace_client
 
         if or_replace:
             if_not_exists = False
@@ -147,24 +143,7 @@ class Table(BaseModel):
         statement = statement[:-1]
         statement += ")"
 
-        if warehouse_id is None:
-            warehouse_id = settings.databricks_warehouse_id
-        r = w.statement_execution.execute_statement(
-            statement=statement,
-            catalog=self.catalog_name,
-            warehouse_id=warehouse_id,
-        )
-        statement_id = r.statement_id
-        state = r.status.state
-
-        while state in [StatementState.PENDING, StatementState.RUNNING]:
-            r = w.statement_execution.get_statement(statement_id)
-            time.sleep(1)
-            state = r.status.state
-
-        if state != StatementState.SUCCEEDED:
-            # TODO: Create specific error
-            raise Exception(r.status.error)
+        r = self.execute_statement_and_wait(statement, warehouse_id=warehouse_id)
 
         if insert_data:
             self.insert()
@@ -176,63 +155,19 @@ class Table(BaseModel):
 
     def insert(self, warehouse_id: str = None):
 
-        from databricks.sdk.service.sql import StatementState
-
-        w = self.workspace_client
-
         statement = f"INSERT INTO {self.full_name} VALUES\n"
         for row in self.data:
             statement += f"   {tuple(row)},\n"
         statement = statement[:-2]
 
-        if warehouse_id is None:
-            warehouse_id = settings.databricks_warehouse_id
-        r = w.statement_execution.execute_statement(
-            statement=statement,
-            catalog=self.catalog_name,
-            warehouse_id=warehouse_id,
-        )
-        statement_id = r.statement_id
-        state = r.status.state
-
-        while state in [StatementState.PENDING, StatementState.RUNNING]:
-            r = w.statement_execution.get_statement(statement_id)
-            time.sleep(1)
-            state = r.status.state
-
-        if state != StatementState.SUCCEEDED:
-            # TODO: Create specific error
-            print(r.status.error.message)
-            raise Exception(r.status.error)
+        r = self.execute_statement_and_wait(statement, warehouse_id=warehouse_id)
 
         return r
 
-    # def get(self):
-    #     return self.workspace_client.tables.get(self.full_name)
-
     def select(self, limit=10, warehouse_id: str = None):
 
-        from databricks.sdk.service.sql import StatementState
+        statement = f"SELECT * from {self.full_name} limit {limit}"
 
-        w = self.workspace_client
-
-        if warehouse_id is None:
-            warehouse_id = settings.databricks_warehouse_id
-        r = w.statement_execution.execute_statement(
-            statement=f"SELECT * from {self.full_name} limit {limit}",
-            # catalog=self.catalog_name,
-            warehouse_id=warehouse_id,
-        )
-        statement_id = r.statement_id
-        state = r.status.state
-
-        while state in [StatementState.PENDING, StatementState.RUNNING]:
-            r = w.statement_execution.get_statement(statement_id)
-            time.sleep(1)
-            state = r.status.state
-
-        if state != StatementState.SUCCEEDED:
-            # TODO: Create specific error
-            raise Exception(r.status.error)
+        r = self.execute_statement_and_wait(statement, warehouse_id=warehouse_id)
 
         return r.result.data_array
