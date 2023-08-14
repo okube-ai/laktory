@@ -1,5 +1,6 @@
 import yaml
 import json
+import jsonref
 import time
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
@@ -60,3 +61,44 @@ class BaseModel(_BaseModel):
     def model_validate_json_file(cls, fp):
         data = json.load(fp)
         return cls.model_validate(data)
+
+    @classmethod
+    def model_sql_schema(cls):
+
+        def parse(field):
+            t = field.get("type")
+            p1 = field.get("allOf", [])
+            p2 = field.get("anyOf", [])
+
+            if t == "array":
+                items_field = field['items']
+                if len(items_field) == 0:
+                    return None
+                else:
+                    return f"array({parse(items_field)})"
+
+            elif isinstance(t, str):
+                return t.upper()
+
+            elif len(p1) == 1:
+                _schema = {}
+                for _k, _field in p1[0]["properties"].items():
+                    _schema[_k] = parse(_field)
+                return _schema
+
+            elif len(p2) > 0:
+                _schema = {}
+                return parse(p2[0])
+
+            else:
+                raise ValueError(field)
+
+        json_schema = jsonref.loads(json.dumps(cls.model_json_schema()))
+
+        schema = {}
+        for k, f in json_schema["properties"].items():
+            schema[k] = parse(f)
+
+        print(schema)
+
+        return str(schema)
