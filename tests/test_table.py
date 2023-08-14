@@ -2,7 +2,6 @@ import pytest
 from pydantic import ValidationError
 import pandas as pd
 
-from laktory import settings
 from laktory.models import Catalog
 from laktory.models import Database
 from laktory.models import Column
