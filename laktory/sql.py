@@ -1,3 +1,18 @@
+def _dict_to_statement(d):
+    statement = "named_struct("
+    for key, value in d.items():
+        statement += f"'{key}', {value_to_statement(value)}, "
+    statement = statement.rstrip(", ") + ")"
+    return statement
+
+
+def _list_to_statement(l):
+    statement = "array("
+    for value in l:
+        statement += f"{value_to_statement(value)}, "
+    statement = statement.rstrip(", ") + ")"
+    return statement
+
 
 def value_to_statement(value):
 
@@ -5,18 +20,13 @@ def value_to_statement(value):
         return f"'{value}'"
     elif value is None:
         return f"null"
+    elif isinstance(value, list):
+        return _list_to_statement(value)
     elif isinstance(value, dict):
         return _dict_to_statement(value)
     else:
         return f"{value}"
 
-
-def _dict_to_statement(d):
-    statement = "named_struct("
-    for key, value in d.items():
-        statement += f"'{key}', {value_to_statement(value)}, "
-    statement = statement.rstrip(", ") + ")"
-    return statement
 
 #
 # def dict_to_schema(input_dict):

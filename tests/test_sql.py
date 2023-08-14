@@ -27,6 +27,23 @@ def test_sql():
     })
     assert s == "named_struct('name', 'John', 'surname', 'Doe', 'address', named_struct('number', 0, 'street', 'Main'), 'verified', True)"
 
+    # List
+    s = value_to_statement([1, "test", True])
+    assert s == "array(1, 'test', True)"
+
+    # List of dicts
+    s = value_to_statement([
+        {
+            "numbers": [1, 2, 3],
+            "address": {
+                "number": 0,
+                "street": "Main"
+            }
+        },
+        True,
+        ])
+    assert s == "array(named_struct('numbers', array(1, 2, 3), 'address', named_struct('number', 0, 'street', 'Main')), True)"
+
 
 if __name__ == "__main__":
     test_sql()
