@@ -157,7 +157,10 @@ class Table(BaseModel):
 
         statement = f"INSERT INTO {self.full_name} VALUES\n"
         for row in self.data:
-            statement += f"   {tuple(row)},\n"
+            statement += "   ("
+            statement += ', '.join([value_to_statement(v) for v in row])
+            statement += "),\n"
+
         statement = statement[:-2]
 
         r = self.execute_statement_and_wait(statement, warehouse_id=warehouse_id)
