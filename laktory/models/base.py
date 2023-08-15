@@ -65,7 +65,7 @@ class BaseModel(_BaseModel):
     @classmethod
     def model_sql_schema(cls):
 
-        def parse(field):
+        def parse(k, field):
             t = field.get("type")
             p1 = field.get("allOf", [])
             p2 = field.get("anyOf", [])
@@ -73,9 +73,16 @@ class BaseModel(_BaseModel):
             if t == "array":
                 items_field = field['items']
                 if len(items_field) == 0:
-                    return None
+                    raise ValueError(f"Type for field {k} is undefined")
                 else:
-                    return f"array({parse(items_field)})"
+                    if "properties" in items_field:
+                        _schema = {}
+                        for _k, _field in items_field["properties"].items():
+                            print(_k, _field)
+                            _schema[_k] = parse(_k, _field)
+                        return f"array({_schema})"
+                    else:
+                        return f"array({parse(k, items_field)})"
 
             elif isinstance(t, str):
                 return t.upper()
@@ -83,12 +90,12 @@ class BaseModel(_BaseModel):
             elif len(p1) == 1:
                 _schema = {}
                 for _k, _field in p1[0]["properties"].items():
-                    _schema[_k] = parse(_field)
+                    _schema[_k] = parse(_k, _field)
                 return _schema
 
             elif len(p2) > 0:
                 _schema = {}
-                return parse(p2[0])
+                return parse(k, p2[0])
 
             else:
                 raise ValueError(field)
@@ -97,7 +104,9 @@ class BaseModel(_BaseModel):
 
         schema = {}
         for k, f in json_schema["properties"].items():
-            schema[k] = parse(f)
+            if not f.get("to_sql", True):
+                continue
+            schema[k] = parse(k, f)
 
         print(schema)
 
