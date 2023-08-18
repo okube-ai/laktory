@@ -1,29 +1,48 @@
-def _dict_to_statement(d):
-    statement = "named_struct("
-    for key, value in d.items():
-        statement += f"'{key}', {value_to_statement(value)}, "
-    statement = statement.rstrip(", ") + ")"
+def _dict_to_statement(d, mode="data"):
+
+    if mode == "data":
+        statement = "named_struct("
+        for key, value in d.items():
+            statement += f"'{key}', {value_to_statement(value, mode=mode)}, "
+        statement = statement.rstrip(", ") + ")"
+
+    elif mode == "schema":
+        statement = "STRUCT<"
+        for key, value in d.items():
+            statement += f"{key}: {value_to_statement(value, mode=mode)}, "
+        statement = statement.rstrip(", ") + ">"
+
     return statement
 
 
-def _list_to_statement(l):
-    statement = "array("
-    for value in l:
-        statement += f"{value_to_statement(value)}, "
-    statement = statement.rstrip(", ") + ")"
+def _list_to_statement(l, mode="data"):
+    if mode == "data":
+        statement = "ARRAY("
+        for value in l:
+            statement += f"{value_to_statement(value, mode=mode)}, "
+        statement = statement.rstrip(", ") + ")"
+    elif mode == "schema":
+        statement = "ARRAY<"
+        for value in l:
+            statement += f"{value_to_statement(value, mode=mode)}, "
+        statement = statement.rstrip(", ") + ">"
+
     return statement
 
 
-def value_to_statement(value):
+def value_to_statement(value, mode="data"):
 
     if isinstance(value, str):
-        return f"'{value}'"
+        if mode == "data":
+            return f"'{value}'"
+        elif mode == "schema":
+            return f"{value}"
     elif value is None:
         return f"null"
     elif isinstance(value, list):
-        return _list_to_statement(value)
+        return _list_to_statement(value, mode=mode)
     elif isinstance(value, dict):
-        return _dict_to_statement(value)
+        return _dict_to_statement(value, mode=mode)
     else:
         return f"{value}"
 
