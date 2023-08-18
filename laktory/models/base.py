@@ -6,6 +6,7 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 
 from laktory import settings
+from laktory.sql import value_to_statement
 
 
 class BaseModel(_BaseModel):
@@ -63,51 +64,50 @@ class BaseModel(_BaseModel):
         return cls.model_validate(data)
 
     @classmethod
-    def model_sql_schema(cls):
+    def model_serialized_types(cls):
 
-        def parse(k, field):
-            t = field.get("type")
-            p1 = field.get("allOf", [])
-            p2 = field.get("anyOf", [])
+        def parse(schema_data):
+            data_type = schema_data.get("type", None)
+            all_of = schema_data.get("allOf", None)
+            any_of = schema_data.get("anyOf", None)
 
-            if t == "array":
-                items_field = field['items']
-                if len(items_field) == 0:
-                    raise ValueError(f"Type for field {k} is undefined")
-                else:
-                    if "properties" in items_field:
-                        _schema = {}
-                        for _k, _field in items_field["properties"].items():
-                            print(_k, _field)
-                            _schema[_k] = parse(_k, _field)
-                        return f"array({_schema})"
-                    else:
-                        return f"array({parse(k, items_field)})"
+            if data_type is None and all_of is not None:
+                return parse(all_of[0])
 
-            elif isinstance(t, str):
-                return t.upper()
+            elif data_type is None and any_of is not None:
+                return parse(any_of[0])
 
-            elif len(p1) == 1:
-                _schema = {}
-                for _k, _field in p1[0]["properties"].items():
-                    _schema[_k] = parse(_k, _field)
-                return _schema
+            elif data_type == "object":
+                properties = schema_data.get("properties", {})
+                prop_mapping = {}
+                for prop, prop_data in properties.items():
+                    prop_mapping[prop] = parse(prop_data)
+                return prop_mapping
 
-            elif len(p2) > 0:
-                _schema = {}
-                return parse(k, p2[0])
+            elif data_type == "array":
+                items = schema_data.get("items", {})
+                return [parse(items)]
 
             else:
-                raise ValueError(field)
+                return data_type
 
         json_schema = jsonref.loads(json.dumps(cls.model_json_schema()))
 
-        schema = {}
-        for k, f in json_schema["properties"].items():
-            if not f.get("to_sql", True):
-                continue
-            schema[k] = parse(k, f)
+        types = parse(json_schema)
 
-        print(schema)
+        return types
 
-        return str(schema)
+    @classmethod
+    def model_sql_schema(cls, types: dict = None, overwrites: dict = None):
+        if types is None:
+            types = cls.model_serialized_types()
+
+        schema = "(" + ", ".join(f"{k} {value_to_statement(v, mode='schema')}" for k, v in types.items()) + ")"
+
+        if "<>" in schema:
+            raise ValueError("Some types are undefined sql schema can't be defined")
+
+        if "null" in schema:
+            raise ValueError("Some types are undefined sql schema can't be defined")
+
+        return schema
