@@ -52,6 +52,74 @@ def test_model():
         Table(name="googl", zone="ROUGE")
 
 
+def test_sql_schema():
+    types = Table.model_serialized_types()
+    assert types == {
+        'name': 'string',
+        'columns': [
+            {
+                'name': 'string',
+                'type': 'string',
+                'comment': 'string',
+                'catalog_name': 'string',
+                'database_name': 'string',
+                'table_name': 'string',
+                'unit': 'string',
+                'pii': 'boolean',
+                'func_name': 'string',
+                'input_cols': ['string'],
+                'func_kwargs': {},
+                'jsonize': 'boolean'
+            }
+        ],
+        'primary_key': 'string',
+        'comment': 'string',
+        'catalog_name': 'string',
+        'database_name': 'string',
+        'data': [[None]],
+        'event_source': {
+            'name': 'string',
+            'description': 'string',
+            'producer': {
+                'name': 'string',
+                'description': 'string',
+                'party': 'integer'
+            },
+            'landing_mount_path': 'string',
+            'dirpath': 'string',
+            'read_as_stream': 'boolean',
+            'type': 'string',
+            'fmt': 'string'
+        },
+        'table_source': {
+            'read_as_stream': 'boolean',
+            'name': 'string'
+        },
+        'zone': 'string',
+        'pipeline_name': 'string'
+    }
+
+    types = Column.model_serialized_types()
+    assert types == {
+        'name': 'string',
+        'type': 'string',
+        'comment': 'string',
+        'catalog_name': 'string',
+        'database_name': 'string',
+        'table_name': 'string',
+        'unit': 'string',
+        'pii': 'boolean',
+        'func_name': 'string',
+        'input_cols': ['string'],
+        'func_kwargs': {},
+        'jsonize': 'boolean'
+    }
+
+    types["func_kwargs"] = "string"
+    schema = Column.model_sql_schema(types)
+    assert schema == "(name string, type string, comment string, catalog_name string, database_name string, table_name string, unit string, pii boolean, func_name string, input_cols ARRAY<string>, func_kwargs string, jsonize boolean)"
+
+
 def test_create_and_insert():
 
     cat = Catalog(name="laktory_testing",)
@@ -74,20 +142,30 @@ def test_create_and_insert():
             {
                 "name": "symbol",
                 "type": "string",
-            }
+            },
+            {
+                "name": "d",
+                "type": "string",
+                "jsonize": True,
+            },
         ],
-        data=[[1, 2, "googl"], [3, 4, "googl"], [5, 6, "googl"]],
+        data=[[1, 2, "googl", {"a": 1}], [3, 4, "googl", {"b": 2}], [5, 6, "googl", {"c": 3}]],
     )
     table.create(or_replace=True, insert_data=True)
     assert table.exists()
-    data = table.select()
-    assert data == [['1.0', '2.0', 'googl'], ['3.0', '4.0', 'googl'], ['5.0', '6.0', 'googl']]
+    data = table.select(load_json=True)
+    assert data == [
+        ['1.0', '2.0', 'googl', {"a": 1}],
+        ['3.0', '4.0', 'googl', {"b": 2}],
+        ['5.0', '6.0', 'googl', {"c": 3}]
+    ]
     table.delete(force=True)
     cat.delete(force=True)
 
 
 def test_meta():
     meta = table.meta_table()
+
     meta.catalog_name = "main"
 
     assert "catalog_name" in meta.column_names
@@ -100,5 +178,6 @@ def test_meta():
 if __name__ == "__main__":
     test_model()
     test_data()
+    test_sql_schema()
     test_create_and_insert()
     test_meta()

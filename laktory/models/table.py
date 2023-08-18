@@ -1,15 +1,18 @@
-import time
+import json
 from typing import Literal
 from typing import Any
 
 from pydantic import computed_field
 from pydantic import model_validator
 
-from laktory import settings
+from laktory._logger import get_logger
+from laktory.sql import value_to_statement
 from laktory.models.base import BaseModel
 from laktory.models.column import Column
 from laktory.models.sources.tablesource import TableSource
 from laktory.models.sources.eventsource import EventSource
+
+logger = get_logger(__name__)
 
 
 class Table(BaseModel):
@@ -93,12 +96,23 @@ class Table(BaseModel):
 
     @classmethod
     def meta_table(cls):
+
+        # Build columns
         columns = []
-        for c in cls.model_fields.keys():
+        for k, t in cls.model_serialized_types().items():
+            jsonize = False
+            if k in ["columns", "event_source", "table_source"]:
+                t = "string"
+                jsonize = True
+
+            elif k in ["data"]:
+                continue
+
             columns += [
-                Column(name=c, type="string")
+                Column(name=k, type=t, jsonize=jsonize)
             ]
 
+        # Set table
         return Table(
             name="tables",
             database_name="laktory",
@@ -128,7 +142,7 @@ class Table(BaseModel):
         if or_replace:
             if_not_exists = False
 
-        statement = f"CREATE  "
+        statement = f"CREATE "
         if or_replace:
             statement += "OR REPLACE "
         statement += "TABLE "
@@ -137,12 +151,16 @@ class Table(BaseModel):
 
         statement += f"{self.schema_name}.{self.name}"
 
-        statement += "("
+        statement += "\n   ("
         for c in self.columns:
-            statement += f"{c.name} {c.type},"
+            t = c.type
+            if c.jsonize:
+                t = "string"
+            statement += f"{c.name} {t},"
         statement = statement[:-1]
         statement += ")"
 
+        logger.info(statement)
         r = self.execute_statement_and_wait(statement, warehouse_id=warehouse_id)
 
         if insert_data:
@@ -158,19 +176,32 @@ class Table(BaseModel):
         statement = f"INSERT INTO {self.full_name} VALUES\n"
         for row in self.data:
             statement += "   ("
-            statement += ', '.join([value_to_statement(v) for v in row])
+            values = [json.dumps(v) if c.jsonize else v for c, v in zip(self.columns, row)]
+            values = [value_to_statement(v) for v in values]
+            statement += ", ".join(values)
             statement += "),\n"
 
         statement = statement[:-2]
 
+        logger.info(statement)
         r = self.execute_statement_and_wait(statement, warehouse_id=warehouse_id)
 
         return r
 
-    def select(self, limit=10, warehouse_id: str = None):
+    def select(self, limit=10, warehouse_id: str = None, load_json=True):
 
         statement = f"SELECT * from {self.full_name} limit {limit}"
 
         r = self.execute_statement_and_wait(statement, warehouse_id=warehouse_id)
 
-        return r.result.data_array
+        data = r.result.data_array
+
+        if load_json:
+            for i in range(len(data)):
+                j = -1
+                for c, v in zip(self.columns, data[i]):
+                    j += 1
+                    if c.jsonize:
+                        data[i][j] = json.loads(data[i][j])
+
+        return data
