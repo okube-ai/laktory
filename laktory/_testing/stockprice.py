@@ -50,3 +50,10 @@ class StockPricesPipeline(Pipeline):
             ]
         }),
     ]
+
+
+if __name__ == "__main__":
+    # Publish Metadata
+    pl = StockPricesPipeline()
+    pl.publish_tables_meta()
+
