@@ -1,36 +1,36 @@
-def _dict_to_statement(d, mode="data"):
+def _dict_to_sql(d, mode="data"):
 
     if mode == "data":
         statement = "named_struct("
         for key, value in d.items():
-            statement += f"'{key}', {value_to_statement(value, mode=mode)}, "
+            statement += f"'{key}', {py_to_sql(value, mode=mode)}, "
         statement = statement.rstrip(", ") + ")"
 
     elif mode == "schema":
         statement = "STRUCT<"
         for key, value in d.items():
-            statement += f"{key}: {value_to_statement(value, mode=mode)}, "
+            statement += f"{key}: {py_to_sql(value, mode=mode)}, "
         statement = statement.rstrip(", ") + ">"
 
     return statement
 
 
-def _list_to_statement(l, mode="data"):
+def _list_to_sql(l, mode="data"):
     if mode == "data":
         statement = "ARRAY("
         for value in l:
-            statement += f"{value_to_statement(value, mode=mode)}, "
+            statement += f"{py_to_sql(value, mode=mode)}, "
         statement = statement.rstrip(", ") + ")"
     elif mode == "schema":
         statement = "ARRAY<"
         for value in l:
-            statement += f"{value_to_statement(value, mode=mode)}, "
+            statement += f"{py_to_sql(value, mode=mode)}, "
         statement = statement.rstrip(", ") + ">"
 
     return statement
 
 
-def value_to_statement(value, mode="data"):
+def py_to_sql(value, mode="data"):
 
     if isinstance(value, str):
         if mode == "data":
@@ -40,9 +40,9 @@ def value_to_statement(value, mode="data"):
     elif value is None:
         return f"null"
     elif isinstance(value, list):
-        return _list_to_statement(value, mode=mode)
+        return _list_to_sql(value, mode=mode)
     elif isinstance(value, dict):
-        return _dict_to_statement(value, mode=mode)
+        return _dict_to_sql(value, mode=mode)
     else:
         return f"{value}"
 
