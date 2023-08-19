@@ -53,8 +53,8 @@ class Pipeline(BaseModel):
             _data = []
             for c in table.column_names:
                 v = _dump[c]
-                if not isinstance(v, str):
-                    v = json.dumps(v)
+                # if not isinstance(v, str):
+                #     v = json.dumps(v)
                 _data += [v]
             data += [_data]
         table.data = data
@@ -73,10 +73,7 @@ class Pipeline(BaseModel):
                 _dump = c.model_dump(mode="json")
                 _data = []
                 for k in table.column_names:
-                    v = _dump[k]
-                    if not isinstance(v, str):
-                        v = json.dumps(v)
-                    _data += [v]
+                    _data += [_dump[k]]
                 data += [_data]
         table.data = data
 

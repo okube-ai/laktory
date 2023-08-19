@@ -174,6 +174,13 @@ def test_meta():
     assert "comment" in meta.column_names
     assert "columns" in meta.column_names
 
+    is_found = False
+    for c in meta.columns:
+        if c.name == "event_source":
+            is_found = True
+            assert c.type == "STRUCT<name: string, description: string, producer: STRUCT<name: string, description: string, party: integer>, landing_mount_path: string, dirpath: string, read_as_stream: boolean, type: string, fmt: string>"
+    assert is_found
+
 
 if __name__ == "__main__":
     test_model()

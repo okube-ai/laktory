@@ -6,7 +6,7 @@ from pydantic import computed_field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
-from laktory.sql import value_to_statement
+from laktory.sql import py_to_sql
 from laktory.models.base import BaseModel
 from laktory.models.column import Column
 from laktory.models.sources.tablesource import TableSource
@@ -101,7 +101,8 @@ class Table(BaseModel):
         columns = []
         for k, t in cls.model_serialized_types().items():
             jsonize = False
-            if k in ["columns", "event_source", "table_source"]:
+            # if k in ["columns", "event_source", "table_source"]:
+            if k in ["columns"]:
                 t = "string"
                 jsonize = True
 
@@ -109,7 +110,7 @@ class Table(BaseModel):
                 continue
 
             columns += [
-                Column(name=k, type=t, jsonize=jsonize)
+                Column(name=k, type=py_to_sql(t, mode="schema"), jsonize=jsonize)
             ]
 
         # Set table
@@ -181,7 +182,7 @@ class Table(BaseModel):
         for row in self.data:
             statement += "   ("
             values = [json.dumps(v) if c.jsonize else v for c, v in zip(self.columns, row)]
-            values = [value_to_statement(v) for v in values]
+            values = [py_to_sql(v) for v in values]
             statement += ", ".join(values)
             statement += "),\n"
 

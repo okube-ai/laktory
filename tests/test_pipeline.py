@@ -18,8 +18,7 @@ def test_tables_meta():
     assert df["name"].tolist() == ["brz_stock_prices", "slv_stock_prices"]
     assert df["zone"].tolist() == ["BRONZE", "SILVER"]
     assert df["pipeline_name"].tolist() == ["pl-stock-prices", "pl-stock-prices"]
-    assert df["comment"].tolist() == ["null", "null"]
-    assert isinstance(df["columns"].iloc[-1], str)
+    assert df["comment"].tolist() == [None, None]
 
 
 def test_columns_meta():

@@ -4,7 +4,7 @@ import jsonref
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 
-from laktory.sql import value_to_statement
+from laktory.sql import py_to_sql
 from laktory.databricks.workspaceclient import WorkspaceClient
 
 
@@ -64,7 +64,7 @@ class BaseModel(_BaseModel):
         if types is None:
             types = cls.model_serialized_types()
 
-        schema = "(" + ", ".join(f"{k} {value_to_statement(v, mode='schema')}" for k, v in types.items()) + ")"
+        schema = "(" + ", ".join(f"{k} {py_to_sql(v, mode='schema')}" for k, v in types.items()) + ")"
 
         if "<>" in schema:
             raise ValueError(f"Some types are undefined sql schema can't be defined\n{schema}")
