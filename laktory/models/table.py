@@ -161,7 +161,11 @@ class Table(BaseModel):
         statement += ")"
 
         logger.info(statement)
-        r = self.execute_statement_and_wait(statement, warehouse_id=warehouse_id)
+        r = self.workspace_client.execute_statement_and_wait(
+            statement,
+            warehouse_id=warehouse_id,
+            catalog_name=self.catalog_name
+        )
 
         if insert_data:
             self.insert()
@@ -184,7 +188,11 @@ class Table(BaseModel):
         statement = statement[:-2]
 
         logger.info(statement)
-        r = self.execute_statement_and_wait(statement, warehouse_id=warehouse_id)
+        r = self.workspace_client.execute_statement_and_wait(
+            statement,
+            warehouse_id=warehouse_id,
+            catalog_name=self.catalog_name
+        )
 
         return r
 
@@ -192,7 +200,11 @@ class Table(BaseModel):
 
         statement = f"SELECT * from {self.full_name} limit {limit}"
 
-        r = self.execute_statement_and_wait(statement, warehouse_id=warehouse_id)
+        r = self.workspace_client.execute_statement_and_wait(
+            statement,
+            warehouse_id=warehouse_id,
+            catalog_name=self.catalog_name
+        )
 
         data = r.result.data_array
 
