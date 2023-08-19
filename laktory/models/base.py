@@ -98,16 +98,16 @@ class BaseModel(_BaseModel):
         return types
 
     @classmethod
-    def model_sql_schema(cls, types: dict = None, overwrites: dict = None):
+    def model_sql_schema(cls, types: dict = None):
         if types is None:
             types = cls.model_serialized_types()
 
         schema = "(" + ", ".join(f"{k} {value_to_statement(v, mode='schema')}" for k, v in types.items()) + ")"
 
         if "<>" in schema:
-            raise ValueError("Some types are undefined sql schema can't be defined")
+            raise ValueError(f"Some types are undefined sql schema can't be defined\n{schema}")
 
         if "null" in schema:
-            raise ValueError("Some types are undefined sql schema can't be defined")
+            raise ValueError(f"Some types are undefined sql schema can't be defined\n{schema}")
 
         return schema
