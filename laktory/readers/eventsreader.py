@@ -9,8 +9,8 @@ from laktory._settings import settings
 
 class EventsReader(BaseReader):
     events_root_path: str = settings.landing_mount_path + "events"
-    producer_name: str = None
-    event_name: str = None
+    producer_name: str | None = None
+    event_name: str | None = None
     load_path: Optional[str] = Field(validate_default=True, default=None)
 
     @field_validator("load_path")

@@ -10,7 +10,7 @@ from laktory.models.producer import Producer
 
 class EventHeader(BaseModel):
     name: str
-    description: str = None
+    description: str | None = None
     producer: Producer = None
     landing_mount_path: str = settings.landing_mount_path
     dirpath: Optional[str] = Field(validate_default=True, default=None)

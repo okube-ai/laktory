@@ -10,10 +10,10 @@ from laktory.models.base import BaseModel
 class Column(BaseModel):
     name: str
     type: Literal[tuple(SUPPORTED_TYPES.keys())] = "string"
-    comment: str = None
-    unit: str = None
-    pii: bool = None
-    udf_name: str = None
+    comment: str | None = None
+    unit: str | None = None
+    pii: bool | None = None
+    udf_name: str | None = None
     input_cols: list[str] = []
     udf_kwargs: dict = {}
     test: int = Field(...)  # Set as required field, but put at end of list of fields

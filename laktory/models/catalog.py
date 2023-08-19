@@ -7,7 +7,7 @@ from laktory.models.database import Database
 
 class Catalog(BaseModel):
     name: str
-    comment: str = None
+    comment: str | None = None
     databases: list[Database] = []
     is_unity: bool = True
 

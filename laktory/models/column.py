@@ -10,13 +10,13 @@ from laktory.sql import py_to_sql
 class Column(BaseModel):
     name: str
     type: str = "string"
-    comment: str = None
-    catalog_name: str = None
-    database_name: str = None
-    table_name: str = None
-    unit: str = None
-    pii: bool = None
-    func_name: str = None
+    comment: str | None = None
+    catalog_name: str | None = None
+    database_name: str | None = None
+    table_name: str | None = None
+    unit: str | None = None
+    pii: bool | None = None
+    func_name: str | None = None
     input_cols: list[str] = []
     func_kwargs: dict[str, str] = {}
     jsonize: bool = False

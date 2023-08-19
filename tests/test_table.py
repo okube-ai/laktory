@@ -159,7 +159,7 @@ def test_create_and_insert():
         ['3.0', '4.0', 'googl', {"b": 2}],
         ['5.0', '6.0', 'googl', {"c": 3}]
     ]
-    table.delete(force=True)
+    table.delete()
     cat.delete(force=True)
 
 

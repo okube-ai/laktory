@@ -6,9 +6,9 @@ from laktory.models.table import Table
 
 class Database(BaseModel):
     name: str
-    comment: str = None
+    comment: str | None = None
     tables: list[Table] = []
-    catalog_name: str = None
+    catalog_name: str | None = None
 
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #

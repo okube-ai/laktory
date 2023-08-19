@@ -4,6 +4,7 @@ from typing import Any
 
 from pydantic import computed_field
 from pydantic import model_validator
+from pydantic import Field
 
 from laktory._logger import get_logger
 from laktory.sql import py_to_sql
@@ -18,10 +19,10 @@ logger = get_logger(__name__)
 class Table(BaseModel):
     name: str
     columns: list[Column] = []
-    primary_key: str = None
-    comment: str = None
-    catalog_name: str = None
-    database_name: str = None
+    primary_key: str | None = None
+    comment: str | None = None
+    catalog_name: str | None = None
+    database_name: str | None = None
 
     # Data
     data: list[list[Any]] = None
@@ -30,7 +31,7 @@ class Table(BaseModel):
     event_source: EventSource = None
     table_source: TableSource = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
-    pipeline_name: str = None
+    pipeline_name: str | None = None
     # joins
     # expectations
 
@@ -173,8 +174,8 @@ class Table(BaseModel):
 
         return r
 
-    def delete(self, force: bool = False):
-        self.workspace_client.tables.delete(self.full_name, force=force)
+    def delete(self):
+        self.workspace_client.tables.delete(self.full_name)
 
     def insert(self, warehouse_id: str = None):
 
