@@ -4,4 +4,4 @@ from laktory.models.sources.basesource import BaseSource
 
 
 class TableSource(BaseSource):
-    name: str
+    name: str | None
