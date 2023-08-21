@@ -2,7 +2,7 @@ from settus import BaseSettings
 
 
 class Settings(BaseSettings):
-    landing_mount_path: str = "mnt/landing/"
+    landing_mount_path: str = "/mnt/landing/"
 
     # https://learn.microsoft.com/en-ca/azure/databricks/dev-tools/auth#general-host-token-and-account-id-environment-variables-and-fields
     databricks_host: str = ""
