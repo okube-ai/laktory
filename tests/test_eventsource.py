@@ -7,7 +7,7 @@ def test_eventsource():
 
     assert source.producer.name == "yahoo-finance"
     assert source.read_as_stream
-    assert source.dirpath == "mnt/landing/events/yahoo-finance/stock_price/"
+    assert source.dirpath == "/mnt/landing/events/yahoo-finance/stock_price/"
     assert source.fmt == "JSON"
 
 
