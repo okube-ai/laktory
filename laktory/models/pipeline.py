@@ -89,5 +89,5 @@ class Pipeline(BaseModel):
         tables.create(or_replace=True, insert_data=True)
 
         # Get and create tables
-        # columns = self.get_columns_meta(catalog_name=catalog_name, database_name=database_name)
-        # columns.create(or_replace=True, insert_data=True)
+        columns = self.get_columns_meta(catalog_name=catalog_name, database_name=database_name)
+        columns.create(or_replace=True, insert_data=True)
