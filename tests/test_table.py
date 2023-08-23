@@ -56,22 +56,20 @@ def test_sql_schema():
     types = Table.model_serialized_types()
     assert types == {
         'name': 'string',
-        'columns': [
-            {
-                'name': 'string',
-                'type': 'string',
-                'comment': 'string',
-                'catalog_name': 'string',
-                'database_name': 'string',
-                'table_name': 'string',
-                'unit': 'string',
-                'pii': 'boolean',
-                'func_name': 'string',
-                'input_cols': ['string'],
-                'func_kwargs': {},
-                'jsonize': 'boolean'
-            }
-        ],
+        'columns': [{
+            'name': 'string',
+            'type': 'string',
+            'comment': 'string',
+            'catalog_name': 'string',
+            'database_name': 'string',
+            'table_name': 'string',
+            'unit': 'string',
+            'pii': 'boolean',
+            'func_name': 'string',
+            'input_cols': ['string'],
+            'func_kwargs': {},
+            'jsonize': 'boolean'
+        }],
         'primary_key': 'string',
         'comment': 'string',
         'catalog_name': 'string',
@@ -80,12 +78,8 @@ def test_sql_schema():
         'event_source': {
             'name': 'string',
             'description': 'string',
-            'producer': {
-                'name': 'string',
-                'description': 'string',
-                'party': 'integer'
-            },
-            'landing_mount_path': 'string',
+            'producer': {'name': 'string', 'description': 'string', 'party': 'integer'},
+            'events_root_path': 'string',
             'dirpath': 'string',
             'read_as_stream': 'boolean',
             'type': 'string',
@@ -93,7 +87,9 @@ def test_sql_schema():
         },
         'table_source': {
             'read_as_stream': 'boolean',
-            'name': 'string'
+            'name': 'string',
+            'database_name': 'string',
+            'catalog_name': 'string'
         },
         'zone': 'string',
         'pipeline_name': 'string'
@@ -178,7 +174,7 @@ def test_meta():
     for c in meta.columns:
         if c.name == "event_source":
             is_found = True
-            assert c.type == "STRUCT<name: string, description: string, producer: STRUCT<name: string, description: string, party: integer>, landing_mount_path: string, dirpath: string, read_as_stream: boolean, type: string, fmt: string>"
+            assert c.type == "STRUCT<name: string, description: string, producer: STRUCT<name: string, description: string, party: integer>, events_root_path: string, dirpath: string, read_as_stream: boolean, type: string, fmt: string>"
     assert is_found
 
 
