@@ -12,7 +12,7 @@ class EventHeader(BaseModel):
     name: str
     description: str | None = None
     producer: Producer = None
-    landing_mount_path: str = settings.landing_mount_path
+    events_root_path: str = settings.landing_mount_path + "events/"
     dirpath: Optional[str] = Field(validate_default=True, default=None)
 
     # ----------------------------------------------------------------------- #
@@ -26,5 +26,5 @@ class EventHeader(BaseModel):
             producer = ""
             if data["producer"] is not None:
                 producer = data["producer"].name + "/"
-            v = f'{data["landing_mount_path"]}events/{producer}{data["name"]}/'
+            v = f'{data["events_root_path"]}{producer}{data["name"]}/'
         return v

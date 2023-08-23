@@ -24,17 +24,6 @@ class EventSource(BaseSource, EventHeader):
     type: Literal[TYPES] = "STORAGE_EVENTS"
     fmt: Literal[FORMATS] = "JSON"
     # tstamp_col: str = "created_at"
-    event_name: str | None = None
-    producer_name: str | None = None
-    events_root_path: str = settings.landing_mount_path + "events"
-    load_path: str | None = None
-
-    @property
-    def _load_path(self) -> str:
-        if self.load_path is not None:
-            return self.load_path
-
-        return f"{self.events_root_path}/{self.producer_name}/{self.event_name}"
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
@@ -50,7 +39,7 @@ class EventSource(BaseSource, EventHeader):
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
                 .format(self.fmt)
-                .load(self._load_path)
+                .load(self.dirpath)
             )
         else:
 
@@ -61,11 +50,11 @@ class EventSource(BaseSource, EventHeader):
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
                 .option("cloudFiles.format", self.fmt)
-                .option("cloudFiles.schemaLocation", self._load_path)
+                .option("cloudFiles.schemaLocation", self.dirpath)
                 .option("cloudFiles.inferColumnTypes", True)
                 .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
                 .option("cloudFiles.allowOverwrites", True)
-                .load(self._load_path)
+                .load(self.dirpath)
             )
 
             # Not supported by UC

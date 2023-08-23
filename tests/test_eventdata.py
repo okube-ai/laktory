@@ -25,7 +25,7 @@ def test_eventdata():
     assert event.created_at == datetime(2023, 7, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC"))
     assert (
         event.get_filepath()
-        == "mnt/landing/events/FDR/flight_record/2023/07/01/flight_record_20230701T010000000Z.json"
+        == "/mnt/landing/events/FDR/flight_record/2023/07/01/flight_record_20230701T010000000Z.json"
     )
 
 
@@ -38,7 +38,8 @@ def test_model_dump():
         "name": "flight_record",
         "description": None,
         "producer": {"name": "FDR", "description": None, "party": 1},
-        "dirpath": "mnt/landing/events/FDR/flight_record/",
+        "events_root_path": "/mnt/landing/events/",
+        "dirpath": "/mnt/landing/events/FDR/flight_record/",
         "data": {
             "created_at": "2023-07-01T01:00:00",
             "airspeed": 100.0,
