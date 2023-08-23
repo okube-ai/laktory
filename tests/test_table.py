@@ -88,7 +88,8 @@ def test_sql_schema():
             'dirpath': 'string',
             'read_as_stream': 'boolean',
             'type': 'string',
-            'fmt': 'string'
+            'fmt': 'string',
+            'multiline': 'boolean',
         },
         'table_source': {
             'read_as_stream': 'boolean',
@@ -185,7 +186,7 @@ def test_meta():
 
 if __name__ == "__main__":
     test_model()
-    # test_data()
-    # test_sql_schema()
-    # test_create_and_insert()
-    # test_meta()
+    test_data()
+    test_sql_schema()
+    test_create_and_insert()
+    test_meta()
