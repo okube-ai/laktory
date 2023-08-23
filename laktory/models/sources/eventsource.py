@@ -23,6 +23,8 @@ FORMATS = (
 class EventSource(BaseSource, EventHeader):
     type: Literal[TYPES] = "STORAGE_EVENTS"
     fmt: Literal[FORMATS] = "JSON"
+    multiline: bool = False
+
     # tstamp_col: str = "created_at"
 
     # ----------------------------------------------------------------------- #
