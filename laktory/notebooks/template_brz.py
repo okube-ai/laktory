@@ -4,11 +4,7 @@ import pyspark.sql.functions as F
 
 from laktory import dlt
 from laktory import models
-from laktory import readers
 from laktory import settings
-# from laktory.readers import EventsReader
-# from laktory.readers import EventsStreamReader
-# from laktory._testing import StockPriceDefinition
 dlt.spark = spark
 
 pl_name = "pl-stock-prices"
@@ -24,15 +20,9 @@ def define_bronze_table(table):
     )
     def get_df():
 
-        print(table)
-
-        reader = readers.EventsReader(
-            event_name=table.event_source.name,
-            producer_name=table.event_source.producer.name,
-        )
-        df = reader.read(spark)
-
-        display(df)
+        # Read Source
+        source = table.source
+        df = source.read(spark)
 
         return df
 
