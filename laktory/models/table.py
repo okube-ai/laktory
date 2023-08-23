@@ -91,6 +91,13 @@ class Table(BaseModel):
         import pandas as pd
         return pd.DataFrame(data=self.data, columns=self.column_names)
 
+    @property
+    def source(self):
+        if self.event_source is not None and self.event_source.name is not None:
+            return self.event_source
+        elif self.table_source is not None and self.table_source.name is not None:
+            return self.table_source
+
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
     # ----------------------------------------------------------------------- #

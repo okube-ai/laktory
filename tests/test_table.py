@@ -6,6 +6,7 @@ from laktory.models import Catalog
 from laktory.models import Database
 from laktory.models import Column
 from laktory.models import Table
+from laktory.models import EventSource
 
 
 table = Table(
@@ -24,6 +25,9 @@ table = Table(
         zone="SILVER",
         catalog_name="lakehouse",
         database_name="markets",
+        event_source=EventSource(
+            name="stock_price",
+        ),
     )
 
 
@@ -46,6 +50,7 @@ def test_model():
     assert table.parent_full_name == "lakehouse.markets"
     assert table.full_name == "lakehouse.markets.googl"
     assert table.zone == "SILVER"
+    assert table.source.name == "stock_price"
 
     # Invalid zone
     with pytest.raises(ValidationError):
@@ -180,7 +185,7 @@ def test_meta():
 
 if __name__ == "__main__":
     test_model()
-    test_data()
-    test_sql_schema()
-    test_create_and_insert()
-    test_meta()
+    # test_data()
+    # test_sql_schema()
+    # test_create_and_insert()
+    # test_meta()
