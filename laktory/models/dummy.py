@@ -1,4 +1,5 @@
 from typing import Literal
+from typing import Union
 
 from pydantic import Field
 from pydantic import ConfigDict
@@ -10,10 +11,10 @@ from laktory.models.base import BaseModel
 class Column(BaseModel):
     name: str
     type: Literal[tuple(SUPPORTED_TYPES.keys())] = "string"
-    comment: str | None = None
-    unit: str | None = None
+    comment: Union[str, None] = None
+    unit: Union[str, None] = None
     pii: bool | None = None
-    udf_name: str | None = None
+    udf_name: Union[str, None] = None
     input_cols: list[str] = []
     udf_kwargs: dict = {}
     test: int = Field(...)  # Set as required field, but put at end of list of fields
