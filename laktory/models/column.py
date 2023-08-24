@@ -15,7 +15,7 @@ class Column(BaseModel):
     database_name: Union[str, None] = None
     table_name: Union[str, None] = None
     unit: Union[str, None] = None
-    pii: bool | None = None
+    pii: Union[bool, None] = None
     func_name: Union[str, None] = None
     input_cols: list[str] = []
     func_kwargs: dict[str, str] = {}
