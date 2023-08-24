@@ -1,3 +1,4 @@
+from typing import Union
 from pydantic import computed_field
 
 from laktory import settings
@@ -7,7 +8,7 @@ from laktory.models.database import Database
 
 class Catalog(BaseModel):
     name: str
-    comment: str | None = None
+    comment: Union[str, None] = None
     databases: list[Database] = []
     is_unity: bool = True
 

@@ -1,4 +1,5 @@
 from typing import Optional
+from typing import Union
 from pydantic import Field
 from pydantic import field_validator
 from pydantic_core.core_schema import FieldValidationInfo
@@ -10,7 +11,7 @@ from laktory.models.producer import Producer
 
 class EventHeader(BaseModel):
     name: str
-    description: str | None = None
+    description: Union[str, None] = None
     producer: Producer = None
     events_root_path: str = settings.landing_mount_path + "events/"
     dirpath: Optional[str] = Field(validate_default=True, default=None)

@@ -1,4 +1,5 @@
 from pyspark.sql import DataFrame
+from typing import Union
 
 from laktory.dlt import read
 from laktory.dlt import read_stream
@@ -6,9 +7,9 @@ from laktory.models.sources.basesource import BaseSource
 
 
 class TableSource(BaseSource):
-    name: str | None
-    database_name: str | None = None
-    catalog_name: str | None = None
+    name: Union[str, None]
+    database_name: Union[str, None] = None
+    catalog_name: Union[str, None] = None
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

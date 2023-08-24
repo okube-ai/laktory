@@ -1,3 +1,4 @@
+from typing import Union
 from pydantic import computed_field
 
 from laktory.models.base import BaseModel
@@ -6,9 +7,9 @@ from laktory.models.table import Table
 
 class Database(BaseModel):
     name: str
-    comment: str | None = None
+    comment: Union[str, None] = None
     tables: list[Table] = []
-    catalog_name: str | None = None
+    catalog_name: Union[str, None] = None
 
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #

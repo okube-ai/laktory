@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Union
 from pydantic import computed_field
 from pydantic import field_validator
 
@@ -10,13 +10,13 @@ from laktory.sql import py_to_sql
 class Column(BaseModel):
     name: str
     type: str = "string"
-    comment: str | None = None
-    catalog_name: str | None = None
-    database_name: str | None = None
-    table_name: str | None = None
-    unit: str | None = None
+    comment: Union[str, None] = None
+    catalog_name: Union[str, None] = None
+    database_name: Union[str, None] = None
+    table_name: Union[str, None] = None
+    unit: Union[str, None] = None
     pii: bool | None = None
-    func_name: str | None = None
+    func_name: Union[str, None] = None
     input_cols: list[str] = []
     func_kwargs: dict[str, str] = {}
     jsonize: bool = False

@@ -1,6 +1,7 @@
 import json
 from typing import Literal
 from typing import Any
+from typing import Union
 
 from pydantic import computed_field
 from pydantic import model_validator
@@ -19,10 +20,10 @@ logger = get_logger(__name__)
 class Table(BaseModel):
     name: str
     columns: list[Column] = []
-    primary_key: str | None = None
-    comment: str | None = None
-    catalog_name: str | None = None
-    database_name: str | None = None
+    primary_key: Union[str, None] = None
+    comment: Union[str, None] = None
+    catalog_name: Union[str, None] = None
+    database_name: Union[str, None] = None
 
     # Data
     data: list[list[Any]] = None
@@ -31,7 +32,7 @@ class Table(BaseModel):
     event_source: EventSource = None
     table_source: TableSource = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
-    pipeline_name: str | None = None
+    pipeline_name: Union[str, None] = None
     # joins
     # expectations
 
