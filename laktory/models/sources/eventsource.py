@@ -36,17 +36,6 @@ class EventSource(BaseSource, EventHeader):
         if self.read_as_stream:
             df = (
                 spark
-                .read
-                .option("multiLine", self.multiline)
-                .option("mergeSchema", True)
-                .option("recursiveFileLookup", True)
-                .format(self.fmt)
-                .load(self.dirpath)
-            )
-        else:
-
-            df = (
-                spark
                 .readStream.format("cloudFiles")
                 .option("multiLine", self.multiline)
                 .option("mergeSchema", True)
@@ -58,7 +47,16 @@ class EventSource(BaseSource, EventHeader):
                 .option("cloudFiles.allowOverwrites", True)
                 .load(self.dirpath)
             )
-
+        else:
+            df = (
+                spark
+                .read
+                .option("multiLine", self.multiline)
+                .option("mergeSchema", True)
+                .option("recursiveFileLookup", True)
+                .format(self.fmt)
+                .load(self.dirpath)
+            )
             # Not supported by UC
             # .withColumn("file", F.input_file_name())
 
