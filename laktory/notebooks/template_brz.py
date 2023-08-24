@@ -9,7 +9,7 @@ from laktory._logger import get_logger
 dlt.spark = spark
 logger = get_logger(__name__)
 
-pl_name = "pl-stock-prices"
+pl_name = spark.conf.get("pipeline_name", "pl-stocks")
 
 
 # TODO: Add supports for DBR 12.2? Or Not?
