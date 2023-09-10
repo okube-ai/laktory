@@ -1,0 +1,85 @@
+# yaml-language-server: $schema=bundle_config_schema.json
+bundle:
+  name: stocks
+
+workspace:
+  host: https://adb-1341496199493842.2.azuredatabricks.net/
+
+resources:
+
+  pipelines:
+    # Our DLT pipeline
+    pl_stocks:
+      name: "[${bundle.environment}]pl-stocks"
+      catalog: "main"
+      target: "default"
+      libraries:
+        - file:
+            path: ./template_brz.py
+#        - file:
+#            path: ./get_metrics.py
+      channel: preview
+      configuration:
+        "bundle.file_path": "/Workspace/${workspace.file_path}"
+      clusters:
+        - node_type_id: "Standard_DS3_v2"
+          driver_node_type_id: "Standard_DS3_v2"
+
+  jobs:
+    # A two-task Databricks Workflow - dlt + notebook report
+    fe_medium_metrics:
+      name: "[${bundle.environment}]job-pl-stocks"
+      tasks:
+        - task_key: "${bundle.environment}task-pl-stocks"
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.pl_stocks.id}
+#        - task_key: "${bundle.environment}_medium_notebook_report"
+#          depends_on:
+#            - task_key: dlt_medium_pipeline
+#          notebook_task:
+#            base_parameters:
+#              dbname: "medium_post_report_${bundle.environment}"
+#            notebook_path: ./fe_medium_report.py
+#          new_cluster:
+#            spark_version: 13.1.x-scala2.12
+#            num_workers: 2
+#            node_type_id: Standard_DS3_v2
+
+environments:
+  dev:
+    default: true
+    resources:
+      pipelines:
+        pl_stocks:
+          development: true
+#          clusters:
+#            - autoscale:
+#                min_workers: 1
+#                max_workers: 2
+
+  qa: # This environment is when deploying test runs from a pull request on GitHub.
+    workspace:
+      host: https://adb-1341496199493842.2.azuredatabricks.net/
+    resources:
+      pipelines:
+        pl_stocks:
+          development: true
+          permissions:
+            - level: CAN_VIEW
+              group_name: users
+
+  production:
+    workspace:
+      host: https://adb-1341496199493842.2.azuredatabricks.net/
+    resources:
+      pipelines:
+        pl_stocks:
+          permissions:
+          - level: CAN_VIEW
+            group_name: users
+          development: false
+          photon: true
+#          clusters:
+#            - autoscale:
+#                min_workers: 2
+#                max_workers: 8
