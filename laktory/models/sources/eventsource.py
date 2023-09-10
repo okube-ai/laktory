@@ -25,8 +25,6 @@ class EventSource(BaseSource, EventHeader):
     fmt: Literal[FORMATS] = "JSON"
     multiline: bool = False
 
-    # tstamp_col: str = "created_at"
-
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
