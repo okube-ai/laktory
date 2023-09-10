@@ -5,6 +5,7 @@ from laktory.models import Column
 
 
 def test_model():
+
     db = Database(
         name="flights",
         catalog_name="laktory_testing",
@@ -52,7 +53,7 @@ def test_create():
     db = Database(name="default", catalog_name="laktory_testing")
     db.create()
     assert db.exists()
-    db.delete(force=True)
+    db.delete()
     assert not db.exists()
     cat.delete(force=True)
 

@@ -49,5 +49,5 @@ class Database(BaseModel):
             comment=self.comment,
         )
 
-    def delete(self, force: bool = False):
-        self.workspace_client.schemas.delete(self.full_name, force=force)
+    def delete(self):
+        self.workspace_client.schemas.delete(self.full_name)

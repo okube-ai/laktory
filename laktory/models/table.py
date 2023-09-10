@@ -49,6 +49,7 @@ class Table(BaseModel):
             c.table_name = self.name
             c.catalog_name = self.catalog_name
             c.database_name = self.database_name
+        return self
 
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #
