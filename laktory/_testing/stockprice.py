@@ -21,6 +21,7 @@ class StockPricesPipeline(Pipeline):
     tables: list[Table] = [
         Table(**{
             "name": "brz_stock_prices",
+            "timestamp_key": "data.created_at",
             "event_source": StockPriceSource(),
             "zone": "BRONZE",
         }),
@@ -57,3 +58,9 @@ if __name__ == "__main__":
     pl = StockPricesPipeline()
     pl.publish_tables_meta()
 
+    print(pl)
+
+    # from laktory import models
+
+    # table = models.Table(name="test", primary_key=None)
+    # print(table)

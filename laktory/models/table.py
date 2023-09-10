@@ -5,7 +5,9 @@ from typing import Union
 
 from pydantic import computed_field
 from pydantic import model_validator
-from pydantic import Field
+
+from pyspark.sql import DataFrame
+import pyspark.sql.functions as F
 
 from laktory._logger import get_logger
 from laktory.sql import py_to_sql
@@ -29,6 +31,7 @@ class Table(BaseModel):
     data: list[list[Any]] = None
 
     # Lakehouse
+    timestamp_key: Union[str, None] = None
     event_source: EventSource = None
     table_source: TableSource = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
@@ -130,7 +133,7 @@ class Table(BaseModel):
         )
 
     # ----------------------------------------------------------------------- #
-    # Methods                                                                 #
+    # SQL Methods                                                             #
     # ----------------------------------------------------------------------- #
 
     def exists(self):
@@ -227,3 +230,21 @@ class Table(BaseModel):
                         data[i][j] = json.loads(data[i][j])
 
         return data
+
+    # ----------------------------------------------------------------------- #
+    # Pipeline Methods                                                        #
+    # ----------------------------------------------------------------------- #
+
+    def read_source(self, spark) -> DataFrame:
+        return self.source.read(spark)
+
+    def process_bronze(self, df) -> DataFrame:
+        df = df.withColumn("bronze_at", F.current_timestamp())
+        return df
+
+    def process_silver(self, df) -> DataFrame:
+        df = df.withColumn("silver_at", F.current_timestamp())
+        return df
+
+    def process_silver_star(self, df) -> DataFrame:
+        return df
