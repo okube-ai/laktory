@@ -22,8 +22,7 @@ def define_bronze_table(table):
         logger.info(f"Building {table.name} table")
 
         # Read Source
-        table.event_source.read_as_stream = False
-        df = table.read_source()
+        df = table.read_source(spark)
 
         # Process
         df = table.process_bronze(df)
