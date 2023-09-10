@@ -12,7 +12,6 @@ logger = get_logger(__name__)
 pl_name = spark.conf.get("pipeline_name", "pl-stock-prices")
 
 
-# TODO: Add supports for DBR 12.2? Or Not?
 def define_bronze_table(table):
     @dlt.table(
         name=table.name,
@@ -23,8 +22,11 @@ def define_bronze_table(table):
         logger.info(f"Building {table.name} table")
 
         # Read Source
-        source = table.source
-        df = source.read(spark)
+        table.event_source.read_as_stream = False
+        df = table.read_source()
+
+        # Process
+        df = table.process_bronze(df)
 
         return df
 
