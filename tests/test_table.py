@@ -1,39 +1,198 @@
 import pytest
+from datetime import datetime
 from pydantic import ValidationError
+import pandas as pd
 
+from laktory.models import Catalog
+from laktory.models import Database
 from laktory.models import Column
 from laktory.models import Table
+from laktory.models import EventSource
 
 
-def test_model():
-    table = Table(
-        name="f1549",
+table = Table(
+        name="googl",
         columns=[
             {
-                "name": "airspeed",
+                "name": "open",
                 "type": "double",
             },
             {
-                "name": "altitude",
+                "name": "close",
                 "type": "double",
             },
         ],
+        data=[[1, 2], [3, 4], [5, 6]],
         zone="SILVER",
-        parent_id="lakehouse.flights",
+        catalog_name="lakehouse",
+        database_name="markets",
+        event_source=EventSource(
+            name="stock_price",
+        ),
     )
 
+
+def test_data():
+    assert table.df.equals(
+        pd.DataFrame({
+            "open": [1, 3, 5],
+            "close": [2, 4, 6],
+        })
+    )
+
+
+def test_model():
     assert table.columns == [
-        Column(name="airspeed", type="double"),
-        Column(name="altitude", type="double"),
+        Column(name="open", type="double", catalog_name="lakehouse", database_name="markets", table_name="googl"),
+        Column(name="close", type="double", catalog_name="lakehouse", database_name="markets", table_name="googl"),
     ]
     assert table.catalog_name == "lakehouse"
-    assert table.schema_name == "flights"
+    assert table.schema_name == "markets"
+    assert table.parent_full_name == "lakehouse.markets"
+    assert table.full_name == "lakehouse.markets.googl"
     assert table.zone == "SILVER"
+    assert table.source.name == "stock_price"
 
     # Invalid zone
     with pytest.raises(ValidationError):
-        Table(name="f0001", zone="ROUGE")
+        Table(name="googl", zone="ROUGE")
+
+
+def test_sql_schema():
+    types = Table.model_serialized_types()
+    assert types == {
+        'name': 'string',
+        'columns': [{
+            'name': 'string',
+            'type': 'string',
+            'comment': 'string',
+            'catalog_name': 'string',
+            'database_name': 'string',
+            'table_name': 'string',
+            'unit': 'string',
+            'pii': 'boolean',
+            'func_name': 'string',
+            'input_cols': ['string'],
+            'func_kwargs': {},
+            'jsonize': 'boolean'
+        }],
+        'primary_key': 'string',
+        'comment': 'string',
+        'catalog_name': 'string',
+        'database_name': 'string',
+        'data': [[None]],
+        'timestamp_key': 'string',
+        'event_source': {
+            'name': 'string',
+            'description': 'string',
+            'producer': {'name': 'string', 'description': 'string', 'party': 'integer'},
+            'events_root_path': 'string',
+            'dirpath': 'string',
+            'read_as_stream': 'boolean',
+            'type': 'string',
+            'fmt': 'string',
+            'multiline': 'boolean',
+        },
+        'table_source': {
+            'read_as_stream': 'boolean',
+            'name': 'string',
+            'database_name': 'string',
+            'catalog_name': 'string'
+        },
+        'zone': 'string',
+        'pipeline_name': 'string'
+    }
+
+    types = Column.model_serialized_types()
+    assert types == {
+        'name': 'string',
+        'type': 'string',
+        'comment': 'string',
+        'catalog_name': 'string',
+        'database_name': 'string',
+        'table_name': 'string',
+        'unit': 'string',
+        'pii': 'boolean',
+        'func_name': 'string',
+        'input_cols': ['string'],
+        'func_kwargs': {},
+        'jsonize': 'boolean'
+    }
+
+    types["func_kwargs"] = "string"
+    schema = Column.model_sql_schema(types)
+    assert schema == "(name string, type string, comment string, catalog_name string, database_name string, table_name string, unit string, pii boolean, func_name string, input_cols ARRAY<string>, func_kwargs string, jsonize boolean)"
+
+
+def test_create_and_insert():
+
+    # Timestamp is included in catalog name to prevent conflicts when running
+    # multiple tests in parallel
+    cat_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")
+
+    cat = Catalog(name=cat_name,)
+    cat.create(if_not_exists=True)
+    db = Database(name="default", catalog_name=cat_name)
+    db.create()
+    table = Table(
+        catalog_name=cat_name,
+        database_name="default",
+        name="stocks",
+        columns=[
+            {
+                "name": "open",
+                "type": "double",
+            },
+            {
+                "name": "close",
+                "type": "double",
+            },
+            {
+                "name": "symbol",
+                "type": "string",
+            },
+            {
+                "name": "d",
+                "type": "string",
+                "jsonize": True,
+            },
+        ],
+        data=[[1, 2, "googl", {"a": 1}], [3, 4, "googl", {"b": 2}], [5, 6, "googl", {"c": 3}]],
+    )
+    table.create(or_replace=True, insert_data=True)
+    assert table.exists()
+    data = table.select(load_json=True)
+    assert data == [
+        ['1.0', '2.0', 'googl', {"a": 1}],
+        ['3.0', '4.0', 'googl', {"b": 2}],
+        ['5.0', '6.0', 'googl', {"c": 3}]
+    ]
+    table.delete()
+    cat.delete(force=True)
+
+
+def test_meta():
+    meta = table.meta_table()
+
+    meta.catalog_name = "main"
+
+    assert "catalog_name" in meta.column_names
+    assert "database_name" in meta.column_names
+    assert "name" in meta.column_names
+    assert "comment" in meta.column_names
+    assert "columns" in meta.column_names
+
+    is_found = False
+    for c in meta.columns:
+        if c.name == "event_source":
+            is_found = True
+            assert c.type == "STRUCT<name: string, description: string, producer: STRUCT<name: string, description: string, party: integer>, events_root_path: string, dirpath: string, read_as_stream: boolean, type: string, fmt: string, multiline: boolean>"
+    assert is_found
 
 
 if __name__ == "__main__":
     test_model()
+    test_data()
+    test_sql_schema()
+    test_create_and_insert()
+    test_meta()

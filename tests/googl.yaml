@@ -1,0 +1,6 @@
+name: "close"
+type: "double"
+unit: "USD"
+catalog_name: "lakehouse"
+database_name: "markets"
+table_name: "googl"

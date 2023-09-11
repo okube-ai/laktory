@@ -3,17 +3,18 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any
 
-from laktory.models.eventdefinition import EventDefinition
+from laktory.models.eventheader import EventHeader
 
 
-class EventData(EventDefinition):
+class EventData(EventHeader):
     data: dict
+    tstamp_col: str = "created_at"
 
     def model_post_init(self, __context):
         # Add metadata
         self.data["_name"] = self.name
         self.data["_producer_name"] = self.producer.name
-        tstamp = self.data.get("created_at", datetime.utcnow())
+        tstamp = self.data.get(self.tstamp_col, datetime.utcnow())
         if not tstamp.tzinfo:
             tstamp = tstamp.replace(tzinfo=ZoneInfo("UTC"))
         self.data["_created_at"] = tstamp
@@ -31,11 +32,11 @@ class EventData(EventDefinition):
     # ----------------------------------------------------------------------- #
 
     @property
-    def landing_dirpath(self) -> str:
+    def subdirpath(self) -> str:
         t = self.created_at
-        return f"{super().landing_dirpath}{t.year:04d}/{t.month:02d}/{t.day:02d}"
+        return f"{self.dirpath}{t.year:04d}/{t.month:02d}/{t.day:02d}/"
 
-    def get_landing_filename(self, fmt="json", suffix=None) -> str:
+    def get_filename(self, fmt="json", suffix=None) -> str:
         t = self.created_at
         const = {"mus": {"s": 1e-6}, "s": {"ms": 1000}}  # TODO: replace with constants
         total_ms = int((t.second + t.microsecond * const["mus"]["s"]) * const["s"]["ms"])
@@ -47,8 +48,8 @@ class EventData(EventDefinition):
             fmt = "txt"
         return f"{prefix}_{t.year:04d}{t.month:02d}{t.day:02d}T{time_str}.{fmt}"
 
-    def get_landing_filepath(self, fmt="json", suffix=None):
-        return os.path.join(self.landing_dirpath, self.get_landing_filename(fmt, suffix))
+    def get_filepath(self, fmt="json", suffix=None):
+        return os.path.join(self.subdirpath, self.get_filename(fmt, suffix))
 
     # ----------------------------------------------------------------------- #
     # Output                                                                  #

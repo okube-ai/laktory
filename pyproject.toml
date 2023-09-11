@@ -30,6 +30,8 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
+    "databricks-sdk",
+    "jsonref",
     "pyspark",
     "pyyaml",
     "pydantic>=2",
@@ -40,6 +42,8 @@ dependencies = [
 dev = [
     "black",
     "flit",
+    "databricks-sdk",
+    "databricks-sql-connector",
 ]
 test = [
     "pytest",
