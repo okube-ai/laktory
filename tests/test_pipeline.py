@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from laktory.models import Catalog
 from laktory.models import Table
 from laktory._testing import StockPricesPipeline
@@ -32,7 +34,9 @@ def test_columns_meta():
 
 def test_publish_meta():
 
-    catalog_name = "laktory_testing"
+    # Timestamp is included in catalog name to prevent conflicts when running
+    # multiple tests in parallel
+    catalog_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")
 
     pl = StockPricesPipeline()
     pl.publish_tables_meta(catalog_name=catalog_name)
