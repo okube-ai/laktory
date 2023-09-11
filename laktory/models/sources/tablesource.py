@@ -1,8 +1,6 @@
 from pyspark.sql import DataFrame
 from typing import Union
 
-from laktory.dlt import read
-from laktory.dlt import read_stream
 from laktory.models.sources.basesource import BaseSource
 
 
@@ -39,6 +37,8 @@ class TableSource(BaseSource):
     # ----------------------------------------------------------------------- #
 
     def read(self, spark) -> DataFrame:
+        from laktory.dlt import read
+        from laktory.dlt import read_stream
 
         if self.read_as_stream:
             df = read_stream(self.full_name)
