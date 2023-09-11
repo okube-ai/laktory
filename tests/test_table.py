@@ -80,6 +80,7 @@ def test_sql_schema():
         'catalog_name': 'string',
         'database_name': 'string',
         'data': [[None]],
+        'timestamp_key': 'string',
         'event_source': {
             'name': 'string',
             'description': 'string',
@@ -180,7 +181,7 @@ def test_meta():
     for c in meta.columns:
         if c.name == "event_source":
             is_found = True
-            assert c.type == "STRUCT<name: string, description: string, producer: STRUCT<name: string, description: string, party: integer>, events_root_path: string, dirpath: string, read_as_stream: boolean, type: string, fmt: string>"
+            assert c.type == "STRUCT<name: string, description: string, producer: STRUCT<name: string, description: string, party: integer>, events_root_path: string, dirpath: string, read_as_stream: boolean, type: string, fmt: string, multiline: boolean>"
     assert is_found
 
 
