@@ -4,13 +4,7 @@ try:
     from dlt import read as _read
     from dlt import read_stream as _read_stream
 except (ModuleNotFoundError, FileNotFoundError):
-    pass
-    # try:
-    #     # Import local copy for dlt for DBR < 13
-    #     from laktory._databricks_dlt import *
-    # except RuntimeError:
-    #     # Fail if spark context not available
-    #     pass
+    raise ModuleNotFoundError("dlt module requires a cluster with Databricks Runtime >= 13.* or to be run from Delta Live Tables")
 
 
 # --------------------------------------------------------------------------- #
