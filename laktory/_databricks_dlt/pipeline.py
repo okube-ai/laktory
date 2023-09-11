@@ -11,6 +11,7 @@ from .dataset import ViolationAction
 
 python_graph_load_test = os.getenv('DB_PYTHON_GRAPH_LOAD_TEST')
 
+
 class Pipeline:
     """
     Pipeline class that can be used to define Delta Live Tables. Pipeline is a Singleton across the

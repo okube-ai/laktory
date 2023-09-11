@@ -4,12 +4,13 @@ try:
     from dlt import read as _read
     from dlt import read_stream as _read_stream
 except (ModuleNotFoundError, FileNotFoundError):
-    try:
-        # Import local copy for dlt for DBR < 13
-        from laktory._databricks_dlt import *
-    except RuntimeError:
-        # Fail if spark context not available
-        pass
+    pass
+    # try:
+    #     # Import local copy for dlt for DBR < 13
+    #     from laktory._databricks_dlt import *
+    # except RuntimeError:
+    #     # Fail if spark context not available
+    #     pass
 
 
 # --------------------------------------------------------------------------- #
