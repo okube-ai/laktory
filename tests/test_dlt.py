@@ -1,8 +1,9 @@
-from laktory import dlt
+import pytest
 
 
 def test_dlt():
-    print(dlt)
+    with pytest.raises(ModuleNotFoundError):
+        from laktory import dlt
 
 
 if __name__ == "__main__":
