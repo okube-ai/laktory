@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime
 from pydantic import ValidationError
 import pandas as pd
 
@@ -125,12 +126,16 @@ def test_sql_schema():
 
 def test_create_and_insert():
 
-    cat = Catalog(name="laktory_testing",)
+    # Timestamp is included in catalog name to prevent conflicts when running
+    # multiple tests in parallel
+    cat_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")
+
+    cat = Catalog(name=cat_name,)
     cat.create(if_not_exists=True)
-    db = Database(name="default", catalog_name="laktory_testing")
+    db = Database(name="default", catalog_name=cat_name)
     db.create()
     table = Table(
-        catalog_name="laktory_testing",
+        catalog_name=cat_name,
         database_name="default",
         name="stocks",
         columns=[
