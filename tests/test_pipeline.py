@@ -50,7 +50,7 @@ def test_publish_meta():
     assert data[1][0] == "low"
 
     # Cleanup
-    Catalog(name="laktory_testing").delete(force=True)
+    Catalog(name=catalog_name).delete(force=True)
 
 
 if __name__ == "__main__":

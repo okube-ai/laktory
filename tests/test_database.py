@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from laktory.models import Table
 from laktory.models import Database
 from laktory.models import Catalog
@@ -48,9 +50,14 @@ def test_model():
 
 
 def test_create():
-    cat = Catalog(name="laktory_testing",)
+
+    # Timestamp is included in catalog name to prevent conflicts when running
+    # multiple tests in parallel
+    catalog_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")
+
+    cat = Catalog(name=catalog_name)
     cat.create(if_not_exists=True)
-    db = Database(name="default", catalog_name="laktory_testing")
+    db = Database(name="default", catalog_name=catalog_name)
     db.create()
     assert db.exists()
     db.delete()
