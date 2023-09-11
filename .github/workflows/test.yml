@@ -32,6 +32,10 @@ jobs:
 
       - name: Run tests
         run: make dev test
+        env:
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+          DATABRICKS_WAREHOUSE_ID: ${{ vars.DATABRICKS_WAREHOUSE_ID }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
 #      - name: Publish test coverage
 #        uses: codecov/codecov-action@v1
