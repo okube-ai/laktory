@@ -16,7 +16,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "laktory"
 authors = [
-    {name = "Olivier Soucy", email = "osoucy.transactions@gmail.com"},
+    {name = "Olivier Soucy", email = "olivier.soucy@okube.ai"},
 ]
 description = "A DataOps framework for building a lakehouse"
 readme = "README.md"
