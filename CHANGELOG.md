@@ -1,5 +1,18 @@
 # Release History
 
+## [0.0.3]
+**Fixed**
+-
+
+**Updated**
+-
+
+**Added**
+-
+
+**Breaking Change**
+-
+
 ## [0.0.2] - 2023-09-24
 **Added**
 - Data Event class
