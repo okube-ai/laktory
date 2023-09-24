@@ -1,8 +1,8 @@
-from laktory.models import EventData
+from laktory.models import DataEvent
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-event = EventData(
+event = DataEvent(
     name="flight_record",
     producer={
         "name": "FDR",

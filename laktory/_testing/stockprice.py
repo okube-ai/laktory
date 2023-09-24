@@ -1,4 +1,4 @@
-from laktory.models import EventData
+from laktory.models import DataEvent
 from laktory.models import Producer
 from laktory.models import Pipeline
 from laktory.models import Table
@@ -10,7 +10,7 @@ class StockPriceSource(EventSource):
     producer: Producer = Producer(name="yahoo-finance")
 
 
-class StockPriceData(EventData):
+class StockPriceData(DataEvent):
     name: str = "stock_price"
     producer: Producer = Producer(name="yahoo-finance")
     # landing_mount_path: str = ""

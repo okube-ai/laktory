@@ -3,10 +3,10 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any
 
-from laktory.models.eventheader import EventHeader
+from laktory.models.dataeventheader import DataEventHeader
 
 
-class EventData(EventHeader):
+class DataEvent(DataEventHeader):
     data: dict
     tstamp_col: str = "created_at"
 

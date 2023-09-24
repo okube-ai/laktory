@@ -9,7 +9,7 @@ from laktory.models.base import BaseModel
 from laktory.models.producer import Producer
 
 
-class EventHeader(BaseModel):
+class DataEventHeader(BaseModel):
     name: str
     description: Union[str, None] = None
     producer: Producer = None
