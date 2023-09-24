@@ -2,8 +2,8 @@ from pyspark.sql import DataFrame
 from typing import Literal
 
 from laktory import settings
-from laktory.models.eventheader import EventHeader
-from laktory.models.sources.basesource import BaseSource
+from laktory.models.dataeventheader import DataEventHeader
+from laktory.models.datasources.basedatasource import BaseDataSource
 
 
 TYPES = (
@@ -20,7 +20,7 @@ FORMATS = (
 )
 
 
-class EventSource(BaseSource, EventHeader):
+class EventDataSource(BaseDataSource, DataEventHeader):
     type: Literal[TYPES] = "STORAGE_EVENTS"
     fmt: Literal[FORMATS] = "JSON"
     multiline: bool = False

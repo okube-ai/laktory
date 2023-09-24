@@ -13,8 +13,8 @@ from laktory._logger import get_logger
 from laktory.sql import py_to_sql
 from laktory.models.base import BaseModel
 from laktory.models.column import Column
-from laktory.models.sources.tablesource import TableSource
-from laktory.models.sources.eventsource import EventSource
+from laktory.models.datasources.tabledatasource import TableDataSource
+from laktory.models.datasources.eventdatasource import EventDataSource
 
 logger = get_logger(__name__)
 
@@ -32,8 +32,8 @@ class Table(BaseModel):
 
     # Lakehouse
     timestamp_key: Union[str, None] = None
-    event_source: EventSource = None
-    table_source: TableSource = None
+    event_source: EventDataSource = None
+    table_source: TableDataSource = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     pipeline_name: Union[str, None] = None
     # joins

@@ -1,19 +1,13 @@
-from laktory.models import EventData
+from laktory.models import DataEvent
 from laktory.models import Producer
 from laktory.models import Pipeline
 from laktory.models import Table
-from laktory.models import EventSource
+from laktory.models import EventDataSource
 
 
-class StockPriceSource(EventSource):
+class StockPriceSource(EventDataSource):
     name: str = "stock_price"
     producer: Producer = Producer(name="yahoo-finance")
-
-
-class StockPriceData(EventData):
-    name: str = "stock_price"
-    producer: Producer = Producer(name="yahoo-finance")
-    # landing_mount_path: str = ""
 
 
 class StockPricesPipeline(Pipeline):
@@ -54,13 +48,10 @@ class StockPricesPipeline(Pipeline):
 
 
 if __name__ == "__main__":
+
     # Publish Metadata
     pl = StockPricesPipeline()
     pl.publish_tables_meta()
-
     print(pl)
 
-    # from laktory import models
-
-    # table = models.Table(name="test", primary_key=None)
-    # print(table)
+    # TODO: push pipeline with Pulumi

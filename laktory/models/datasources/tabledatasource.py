@@ -1,10 +1,10 @@
 from pyspark.sql import DataFrame
 from typing import Union
 
-from laktory.models.sources.basesource import BaseSource
+from laktory.models.datasources.basedatasource import BaseDataSource
 
 
-class TableSource(BaseSource):
+class TableDataSource(BaseDataSource):
     name: Union[str, None]
     database_name: Union[str, None] = None
     catalog_name: Union[str, None] = None

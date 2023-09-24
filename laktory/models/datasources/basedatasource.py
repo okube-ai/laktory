@@ -5,7 +5,7 @@ from pyspark.sql import DataFrame
 from laktory.models.base import BaseModel
 
 
-class BaseSource(BaseModel):
+class BaseDataSource(BaseModel):
     read_as_stream: Union[bool, None] = True
 
     @abstractmethod
