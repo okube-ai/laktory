@@ -1,8 +1,8 @@
-from laktory.models.sources import EventSource
+from laktory.models.datasources import EventDataSource
 
 
 def test_source_event():
-    reader = EventSource(
+    reader = EventDataSource(
         name="stock_price",
         producer={"name": "yahoo_finance"},
     )

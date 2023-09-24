@@ -73,7 +73,7 @@ class StockPricesPipeline(models.Pipeline):
         models.Table(
             name="brz_stock_prices",
             timestamp_key="data.created_at",
-            event_source=models.EventSource(
+            event_source=models.EventDataSource(
                 name="stock_price",
                 producer=models.Producer(
                     name="yahoo-finance",
