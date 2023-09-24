@@ -7,7 +7,7 @@ from laktory.models import Catalog
 from laktory.models import Database
 from laktory.models import Column
 from laktory.models import Table
-from laktory.models import EventSource
+from laktory.models import EventDataSource
 
 
 table = Table(
@@ -26,7 +26,7 @@ table = Table(
         zone="SILVER",
         catalog_name="lakehouse",
         database_name="markets",
-        event_source=EventSource(
+        event_source=EventDataSource(
             name="stock_price",
         ),
     )
