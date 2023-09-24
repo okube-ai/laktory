@@ -1,7 +1,7 @@
 from laktory.models.datasources import EventDataSource
 
 
-def test_source_event():
+def test_event_data_source():
     reader = EventDataSource(
         name="stock_price",
         producer={"name": "yahoo_finance"},
@@ -10,4 +10,4 @@ def test_source_event():
 
 
 if __name__ == "__main__":
-    test_source_event()
+    test_event_data_source()

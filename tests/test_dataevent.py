@@ -15,7 +15,7 @@ event = DataEvent(
 )
 
 
-def test_eventdata():
+def test_dataevent():
     assert event.producer.name == "FDR"
     assert event.data["altitude"] == 20000
     assert event.data["_producer_name"] == "FDR"
@@ -52,5 +52,5 @@ def test_model_dump():
 
 
 if __name__ == "__main__":
-    test_eventdata()
+    test_dataevent()
     test_model_dump()
