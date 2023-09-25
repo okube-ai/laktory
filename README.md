@@ -26,7 +26,7 @@ data pipeline defining the tables transformation layers.
 
 ### Generate data events
 A data event class defines specifications of an event and provides the methods
-for writing that event to a storage.
+for writing that event to a databricks mount or a cloud storage.
 
 ```py
 from laktory import models
@@ -58,7 +58,7 @@ events = [
 ]
 
 for event in events:
-    event.to_azure_storage_container(container_name="landing")
+    event.to_databricks_mount()
 
 ```
 These events may now be sent to your cloud storage of choice.
