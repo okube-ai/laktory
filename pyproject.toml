@@ -52,7 +52,7 @@ test = [
 ]
 azure = [
     "azure-identity",
-    "azure-storage"
+    "azure-storage-blob"
 ]
 aws = [
     "boto3",
