@@ -2,8 +2,13 @@ import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any
+from typing import Literal
 
 from laktory.models.dataeventheader import DataEventHeader
+from laktory._settings import settings
+from laktory._logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class DataEvent(DataEventHeader):
@@ -48,8 +53,13 @@ class DataEvent(DataEventHeader):
             fmt = "txt"
         return f"{prefix}_{t.year:04d}{t.month:02d}{t.day:02d}T{time_str}.{fmt}"
 
-    def get_filepath(self, fmt="json", suffix=None):
+    def get_mount_filepath(self, fmt="json", suffix=None):
         return os.path.join(self.subdirpath, self.get_filename(fmt, suffix))
+
+    def get_storage_filepath(self, fmt="json", suffix=None):
+        path = self.get_mount_filepath(fmt=fmt, suffix=suffix)
+        path = path.replace(settings.landing_mount_path, "/")
+        return path
 
     # ----------------------------------------------------------------------- #
     # Output                                                                  #
@@ -77,3 +87,72 @@ class DataEvent(DataEventHeader):
             ]
         )
         return super().model_dump_json(*args, exclude=exclude, **kwargs)
+
+    def to_cloud_storage(
+            self,
+            cloud: Literal["azure", "aws", "gcp"],
+            suffix: str = None,
+            fmt: str = "json",
+            container_client: Any = None,
+            container_name: str = "landing",
+            overwrite: bool = False,
+            skip_if_exists: bool = False,
+    ):
+        if cloud == "azure":
+            self.to_azure_storage_container(
+                suffix=suffix,
+                fmt=fmt,
+                container_client=container_client,
+                container_name=container_name,
+                overwrite=overwrite,
+                skip_if_exists=skip_if_exists,
+            )
+        elif cloud == "aws":
+            self.to_aws_s3_bucket()
+        elif cloud == "gcp":
+            self.to_gcp_storage_bucket()
+        else:
+            raise ValueError(f"cloud {cloud} is not supported.")
+
+    def to_azure_storage_container(
+            self,
+            suffix: str = None,
+            fmt: str = "json",
+            container_client: Any = None,
+            container_name: str = "landing",
+            overwrite: bool = False,
+            skip_if_exists: bool = False,
+    ) -> None:
+
+        # Set container
+        if container_client is None:
+            from azure.storage.blob import ContainerClient
+            container_client = ContainerClient.from_connection_string(
+                conn_str=settings.lakehouse_sa_conn_str,
+                container_name=container_name,
+            )
+
+        path = self.get_storage_filepath(suffix=suffix, fmt=fmt)
+        blob = container_client.get_blob_client(path)
+
+        blob_exists = blob.exists()
+        if blob_exists:
+            if skip_if_exists:
+                logger.info(f"Event {self.name} ({path}) already exists. Skipping.")
+            else:
+                logger.info(f"Writing event {self.name} to {path}")
+                blob.upload_blob(
+                    self.model_dump_json(),
+                    overwrite=overwrite,
+                )
+        else:
+            logger.info(f"Writing event {self.name} to {path}")
+            blob.upload_blob(
+                self.model_dump_json(),
+            )
+
+    def to_aws_s3_bucket(self):
+        raise NotImplementedError()
+
+    def to_gcp_storage_bucket(self):
+        raise NotImplementedError()

@@ -1,3 +1,5 @@
+import pytest
+
 from laktory.models import DataEvent
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -24,7 +26,7 @@ def test_dataevent():
     )
     assert event.created_at == datetime(2023, 7, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC"))
     assert (
-        event.get_filepath()
+        event.get_mount_filepath()
         == "/mnt/landing/events/FDR/flight_record/2023/07/01/flight_record_20230701T010000000Z.json"
     )
 
@@ -51,6 +53,37 @@ def test_model_dump():
     }
 
 
+def test_to_azure_storage_container():
+
+    try:
+        import azure.storage
+    except ModuleNotFoundError:
+        return
+
+    from azure.core.exceptions import ResourceExistsError
+
+    event.to_cloud_storage("azure", container_name="unit-testing", overwrite=True)
+    with pytest.raises(ResourceExistsError):
+        event.to_cloud_storage("azure", container_name="unit-testing")
+    event.to_cloud_storage("azure", container_name="unit-testing", skip_if_exists=True)
+
+
+def test_to_aws_s3_bucket():
+
+    try:
+        import boto3
+    except ModuleNotFoundError:
+        return
+
+    from azure.core.exceptions import ResourceExistsError
+
+    event.to_azure_storage_container(container_name="unit-testing", overwrite=True)
+    with pytest.raises(ResourceExistsError):
+        event.to_azure_storage_container(container_name="unit-testing")
+    event.to_azure_storage_container(container_name="unit-testing", skip_if_exists=True)
+
+
 if __name__ == "__main__":
-    test_dataevent()
-    test_model_dump()
+    # test_dataevent()
+    # test_model_dump()
+    test_to_azure_storage_container()

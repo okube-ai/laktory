@@ -1,6 +1,7 @@
 import logging
-import os
 import sys
+
+from ._settings import settings
 
 # --------------------------------------------------------------------------- #
 # Get logger                                                                  #
@@ -22,7 +23,7 @@ def get_logger(name, stream=True):
     logger = logging.getLogger(name)
 
     # Set level
-    logger.setLevel(os.getenv("LAKTORY_LOGLEVEL", "INFO"))
+    logger.setLevel(settings.log_level)
 
     # Set options
     _options = {
