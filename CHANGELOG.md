@@ -1,6 +1,19 @@
 # Release History
 
-## [0.0.3]
+## [0.0.4] - 2023-09-25
+**Added**
+-
+
+**Updated**
+- 
+
+**Fixed**
+-
+
+**Breaking Change**
+-
+
+## [0.0.3] - 2023-09-25
 **Added**
 - Data Event cloud storage writers (Azure, AWS and Databricks mount)
 
