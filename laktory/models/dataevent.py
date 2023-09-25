@@ -1,4 +1,5 @@
 import os
+import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any
@@ -88,6 +89,22 @@ class DataEvent(DataEventHeader):
         )
         return super().model_dump_json(*args, exclude=exclude, **kwargs)
 
+    def _overwrite_or_skip(self, f: callable, path: str, exists: bool, overwrite: bool, skip: bool):
+        if exists:
+            if skip:
+                logger.info(f"Event {self.name} ({path}) already exists. Skipping.")
+
+            else:
+                if overwrite:
+                    logger.info(f"Writing event {self.name} to {path}")
+                    f()
+                else:
+                    raise FileExistsError(f"Object {path} already exists.")
+
+        else:
+            logger.info(f"Writing event {self.name} to {path}")
+            f()
+
     def to_azure_storage_container(
             self,
             suffix: str = None,
@@ -126,21 +143,17 @@ class DataEvent(DataEventHeader):
         path = self.get_storage_filepath(suffix=suffix, fmt=fmt)
         blob = container_client.get_blob_client(path)
 
-        blob_exists = blob.exists()
-        if blob_exists:
-            if skip_if_exists:
-                logger.info(f"Event {self.name} ({path}) already exists. Skipping.")
-            else:
-                logger.info(f"Writing event {self.name} to {path}")
-                blob.upload_blob(
-                    self.model_dump_json(),
-                    overwrite=overwrite,
-                )
-        else:
-            logger.info(f"Writing event {self.name} to {path}")
-            blob.upload_blob(
+        self._overwrite_or_skip(
+            f=lambda: blob.upload_blob(
                 self.model_dump_json(),
-            )
+                overwrite=overwrite,
+            ),
+            path=path,
+            exists=blob.exists(),
+            overwrite=overwrite,
+            skip=skip_if_exists,
+
+        )
 
     def to_aws_s3_bucket(
             self,
@@ -176,25 +189,17 @@ class DataEvent(DataEventHeader):
             else:
                 raise e
 
-        if object_exists:
-            if skip_if_exists:
-                logger.info(f"Event {self.name} ({path}) already exists. Skipping.")
-            else:
-
-                if overwrite:
-                    logger.info(f"Writing event {self.name} to {path}")
-                    bucket.put_object(
-                        Key=path,
-                        Body=self.model_dump_json(),
-                    )
-                else:
-                    raise FileExistsError(f"Object {path} already exists.")
-        else:
-            logger.info(f"Writing event {self.name} to {path}")
-            bucket.put_object(
+        self._overwrite_or_skip(
+            f=lambda: bucket.put_object(
                 Key=path,
                 Body=self.model_dump_json(),
-            )
+            ),
+            path=path,
+            exists=object_exists,
+            overwrite=overwrite,
+            skip=skip_if_exists,
+
+        )
 
     def to_gcp_storage_bucket(self):
         raise NotImplementedError()
