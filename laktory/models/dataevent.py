@@ -225,7 +225,7 @@ class DataEvent(DataEventHeader):
             skip_if_exists: bool = False,
     ) -> None:
 
-        path = "/dbfs" + self.get_storage_filepath(suffix=suffix, fmt=fmt)
+        path = "/dbfs" + self.get_mount_filepath(suffix=suffix, fmt=fmt)
         dirpath = os.path.dirname(path)
 
         if not os.path.exists(dirpath):
