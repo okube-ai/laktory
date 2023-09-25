@@ -30,15 +30,6 @@ if __name__ == "__main__":
     t1 = datetime(2023, 9, 4)
 
     # ----------------------------------------------------------------------- #
-    # Container Client                                                        #
-    # ----------------------------------------------------------------------- #
-
-    container = ContainerClient.from_connection_string(
-        conn_str=os.getenv("LAKTORY_SA_CONN_STR"),
-        container_name="landing",
-    )
-
-    # ----------------------------------------------------------------------- #
     # Fetch events                                                            #
     # ----------------------------------------------------------------------- #
 
@@ -62,11 +53,4 @@ if __name__ == "__main__":
     # --------------------------------------------------------------------------- #
 
     for event in events:
-        suffix = event.data["symbol"].lower()
-        path = event.get_filepath(suffix=suffix)
-        blob = container.get_blob_client(path)
-        if not blob.exists():
-            blob.upload_blob(
-                event.model_dump_json(),
-                overwrite=False,
-            )
+        event.to_azure_storage_container(skip_if_exists=True)

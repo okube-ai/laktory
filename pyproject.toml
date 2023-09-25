@@ -51,8 +51,11 @@ test = [
 #    "tox"
 ]
 azure = [
+    "azure-identity",
+    "azure-storage-blob"
 ]
 aws = [
+    "boto3",
 ]
 gcp = [
 ]
