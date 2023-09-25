@@ -143,11 +143,18 @@ class DataEvent(DataEventHeader):
         path = self.get_storage_filepath(suffix=suffix, fmt=fmt)
         blob = container_client.get_blob_client(path)
 
-        self._overwrite_or_skip(
-            f=lambda: blob.upload_blob(
+        def _write():
+
+            if fmt != "json":
+                raise NotImplementedError()
+
+            blob.upload_blob(
                 self.model_dump_json(),
                 overwrite=overwrite,
-            ),
+            )
+
+        self._overwrite_or_skip(
+            f=_write,
             path=path,
             exists=blob.exists(),
             overwrite=overwrite,
@@ -189,17 +196,53 @@ class DataEvent(DataEventHeader):
             else:
                 raise e
 
-        self._overwrite_or_skip(
-            f=lambda: bucket.put_object(
+        def _write():
+
+            if fmt != "json":
+                raise NotImplementedError()
+
+            bucket.put_object(
                 Key=path,
                 Body=self.model_dump_json(),
-            ),
+            )
+
+        self._overwrite_or_skip(
+            f=_write,
             path=path,
             exists=object_exists,
             overwrite=overwrite,
             skip=skip_if_exists,
-
         )
 
     def to_gcp_storage_bucket(self):
         raise NotImplementedError()
+
+    def to_databricks_mount(
+            self,
+            suffix: str = None,
+            fmt: str = "json",
+            overwrite: bool = False,
+            skip_if_exists: bool = False,
+    ) -> None:
+
+        path = "/dbfs" + self.get_storage_filepath(suffix=suffix, fmt=fmt)
+        dirpath = os.path.dirname(path)
+
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+
+        def _write():
+
+            if fmt != "json":
+                raise NotImplementedError()
+
+            with open(path, "w") as fp:
+                fp.write(self.model_dump_json())
+
+        self._overwrite_or_skip(
+            f=_write,
+            path=path,
+            exists=os.path.exists(path),
+            overwrite=overwrite,
+            skip=skip_if_exists,
+        )

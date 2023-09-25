@@ -60,12 +60,10 @@ def test_to_azure_storage_container():
     except ModuleNotFoundError:
         return
 
-    from azure.core.exceptions import ResourceExistsError
-
-    event.to_azure_storage_container( container_name="unit-testing", overwrite=True)
-    with pytest.raises(ResourceExistsError):
-        event.to_azure_storage_container( container_name="unit-testing")
-    event.to_azure_storage_container( container_name="unit-testing", skip_if_exists=True)
+    event.to_azure_storage_container(container_name="unit-testing", overwrite=True)
+    with pytest.raises(FileExistsError):
+        event.to_azure_storage_container(container_name="unit-testing")
+    event.to_azure_storage_container(container_name="unit-testing", skip_if_exists=True)
 
 
 def test_to_aws_s3_bucket():
@@ -81,8 +79,15 @@ def test_to_aws_s3_bucket():
     event.to_aws_s3_bucket(bucket_name="okube-unit-testing", skip_if_exists=True)
 
 
+def test_to_databricks_mount():
+    # TODO: add tests
+    pass
+    # event.to_databricks_mount()
+
+
 if __name__ == "__main__":
-    # test_dataevent()
-    # test_model_dump()
-    # test_to_azure_storage_container()
+    test_dataevent()
+    test_model_dump()
+    test_to_azure_storage_container()
     test_to_aws_s3_bucket()
+    test_to_databricks_mount()
