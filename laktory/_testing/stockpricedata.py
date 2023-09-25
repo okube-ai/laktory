@@ -53,4 +53,4 @@ if __name__ == "__main__":
     # --------------------------------------------------------------------------- #
 
     for event in events:
-        event.to_cloud_storage("azure", skip_if_exists=True)
+        event.to_azure_storage_container(skip_if_exists=True)

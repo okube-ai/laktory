@@ -58,7 +58,7 @@ events = [
 ]
 
 for event in events:
-    event.to_cloud_storage("azure")
+    event.to_azure_storage_container(container_name="landing")
 
 ```
 These events may now be sent to your cloud storage of choice.

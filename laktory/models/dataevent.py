@@ -88,49 +88,40 @@ class DataEvent(DataEventHeader):
         )
         return super().model_dump_json(*args, exclude=exclude, **kwargs)
 
-    def to_cloud_storage(
-            self,
-            cloud: Literal["azure", "aws", "gcp"],
-            suffix: str = None,
-            fmt: str = "json",
-            container_client: Any = None,
-            container_name: str = "landing",
-            overwrite: bool = False,
-            skip_if_exists: bool = False,
-    ):
-        if cloud == "azure":
-            self.to_azure_storage_container(
-                suffix=suffix,
-                fmt=fmt,
-                container_client=container_client,
-                container_name=container_name,
-                overwrite=overwrite,
-                skip_if_exists=skip_if_exists,
-            )
-        elif cloud == "aws":
-            self.to_aws_s3_bucket()
-        elif cloud == "gcp":
-            self.to_gcp_storage_bucket()
-        else:
-            raise ValueError(f"cloud {cloud} is not supported.")
-
     def to_azure_storage_container(
             self,
             suffix: str = None,
             fmt: str = "json",
             container_client: Any = None,
+            account_url: str = None,
             container_name: str = "landing",
             overwrite: bool = False,
             skip_if_exists: bool = False,
     ) -> None:
 
-        # Set container
+        # Set container client
         if container_client is None:
             from azure.storage.blob import ContainerClient
-            container_client = ContainerClient.from_connection_string(
-                conn_str=settings.lakehouse_sa_conn_str,
-                container_name=container_name,
-            )
+            from azure.identity import DefaultAzureCredential
+
+            if account_url:
+                # From account URL
+                # TODO: test
+                container_client = ContainerClient(
+                    account_url,
+                    credential=DefaultAzureCredential(),
+                    container_name=container_name,
+                )
+
+            elif settings.lakehouse_sa_conn_str is not None:
+                # From connection string
+                container_client = ContainerClient.from_connection_string(
+                    conn_str=settings.lakehouse_sa_conn_str,
+                    container_name=container_name,
+                )
+
+            else:
+                raise ValueError("Provide a valid container client, an account url or a connection string in LAKEHOUSE_SA_CONN_STR")
 
         path = self.get_storage_filepath(suffix=suffix, fmt=fmt)
         blob = container_client.get_blob_client(path)
@@ -151,8 +142,59 @@ class DataEvent(DataEventHeader):
                 self.model_dump_json(),
             )
 
-    def to_aws_s3_bucket(self):
-        raise NotImplementedError()
+    def to_aws_s3_bucket(
+            self,
+            bucket_name,
+            suffix: str = None,
+            fmt: str = "json",
+            s3_resource: Any = None,
+            overwrite: bool = False,
+            skip_if_exists: bool = False,
+    ) -> None:
+
+        import boto3
+
+        if s3_resource is None:
+            s3_resource = boto3.resource(
+                service_name="s3",
+                aws_access_key_id=settings.aws_access_key_id,
+                aws_secret_access_key=settings.aws_secret_access_key,
+                region_name=settings.aws_region,
+            )
+
+        bucket = s3_resource.Bucket(bucket_name)
+
+        path = self.get_storage_filepath(suffix=suffix, fmt=fmt)[1:]
+
+        object_exists = True
+        try:
+            o = bucket.Object(path)
+            o.load()
+        except Exception as e:
+            if "404" in str(e):
+                object_exists = False
+            else:
+                raise e
+
+        if object_exists:
+            if skip_if_exists:
+                logger.info(f"Event {self.name} ({path}) already exists. Skipping.")
+            else:
+
+                if overwrite:
+                    logger.info(f"Writing event {self.name} to {path}")
+                    bucket.put_object(
+                        Key=path,
+                        Body=self.model_dump_json(),
+                    )
+                else:
+                    raise FileExistsError(f"Object {path} already exists.")
+        else:
+            logger.info(f"Writing event {self.name} to {path}")
+            bucket.put_object(
+                Key=path,
+                Body=self.model_dump_json(),
+            )
 
     def to_gcp_storage_bucket(self):
         raise NotImplementedError()
