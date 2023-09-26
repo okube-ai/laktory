@@ -36,6 +36,7 @@ class Pipeline(BaseModel):
                 c.table_name = t.name
                 c.catalog_name = t.catalog_name
                 c.database_name = t.database_name
+        return self
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #

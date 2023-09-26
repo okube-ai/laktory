@@ -1,6 +1,6 @@
 # Release History
 
-## [0.0.4] - 2023-09-25
+## [0.0.4] - 
 **Added**
 -
 
@@ -8,7 +8,7 @@
 - 
 
 **Fixed**
--
+- model_validate_yaml() for Pipeline model
 
 **Breaking Change**
 -
