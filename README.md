@@ -33,13 +33,12 @@ from laktory import models
 from datetime import datetime
 
 
-class StockPriceData(models.DataEvent):
-    name: str = "stock_price"
-    producer: models.Producer = models.Producer(name="yahoo-finance")
-
-
 events = [
-    StockPriceData(
+    models.DataEvent(
+        name="stock_price",
+        producer={
+            "name": "yahoo-finance",
+        },
         data={
             "created_at": datetime(2023, 8, 23),
             "symbol": "GOOGL",
@@ -47,7 +46,11 @@ events = [
             "close": 132.33,
         },
     ),
-    StockPriceData(
+    models.DataEvent(
+        name="stock_price",
+        producer={
+            "name": "yahoo-finance",
+        },
         data={
             "created_at": datetime(2023, 8, 24),
             "symbol": "GOOGL",
@@ -70,9 +73,9 @@ A pipeline class defines the transformations of a raw data event into curated
 ```py
 from laktory import models
 
-class StockPricesPipeline(models.Pipeline):
-    name: str = "pl-stock-prices"
-    tables: list[models.Table] = [
+pl = models.Pipeline(
+    name="pl-stock-prices",
+    tables=[
         models.Table(
             name="brz_stock_prices",
             timestamp_key="data.created_at",
@@ -112,6 +115,7 @@ class StockPricesPipeline(models.Pipeline):
             ]
         ),
     ]
+)
 ```
 Laktory will provide the required framework for deploying this pipeline as a 
 delta live tables in Databricks and all the associated notebooks and jobs. 
