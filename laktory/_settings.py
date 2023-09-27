@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     # )
 
     # Azure
-    lakehouse_sa_conn_str: Union[str, None] = Field(None, alias="lakehouse-sa-conn-str")
+    lakehouse_sa_conn_str: Union[str, None] = Field(None, alias="LAKEHOUSE_SA_CONN_STR")
 
     # AWS
     aws_access_key_id: Union[str, None] = Field(None, alias="AWS_ACCESS_KEY_ID")
