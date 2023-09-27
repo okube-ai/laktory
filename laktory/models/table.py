@@ -32,8 +32,8 @@ class Table(BaseModel):
 
     # Lakehouse
     timestamp_key: Union[str, None] = None
-    event_source: EventDataSource = None
-    table_source: TableDataSource = None
+    event_source: Union[EventDataSource, None] = None
+    table_source: Union[TableDataSource, None] = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     pipeline_name: Union[str, None] = None
     # joins

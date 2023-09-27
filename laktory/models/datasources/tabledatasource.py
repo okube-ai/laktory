@@ -26,7 +26,7 @@ class TableDataSource(BaseDataSource):
                 name += f".{self.database_name}"
 
         if name == "":
-            name = self.table_name
+            name = self.name
         else:
             name += f".{self.name}"
 
