@@ -241,7 +241,7 @@ class Table(BaseModel):
     def process_bronze(self, df) -> DataFrame:
         import pyspark.sql.functions as F
 
-        df = df.withColumn("bronze_at", F.current_timestamp())
+        df = df.withColumn("_bronze_at", F.current_timestamp())
         return df
 
     def process_silver(self, df) -> DataFrame:
