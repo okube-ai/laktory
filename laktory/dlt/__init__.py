@@ -1,22 +1,37 @@
 from laktory._logger import get_logger
+from pyspark.sql import DataFrame
 
 logger = get_logger(__name__)
-
-dlt_available = False
-try:
-    from dlt import *
-    from dlt import read as _read
-    from dlt import read_stream as _read_stream
-    dlt_available = True
-except Exception:
-    pass
 
 
 # --------------------------------------------------------------------------- #
 # Utilities                                                                   #
 # --------------------------------------------------------------------------- #
 
-def is_debug():
+def is_mocked() -> bool:
+    """
+    DLT module mock flag. If True, native Databricks DLT functions are mocked
+    to allow debugging by running a pipeline notebook against an arbitrary
+    cluster even when the native DLT module is not available.
+
+    DLT is mocked in the following situations:
+        - notebook ran outside a DLT pipeline and DBR < 13
+        - notebook ran outside a DLT pipeline and DBR >= 13 with shared access mode cluster
+    """
+    try:
+        from dlt import *
+        from dlt import read as _read
+        from dlt import read_stream as _read_stream
+        return False
+    except Exception:
+        return True
+
+
+def is_debug() -> bool:
+    """
+    Debug flag. If True, DLT readers are replaced with laktory functions allowing to run a notebook outside of a
+    pipeline and preview the content of the output DataFrame.
+    """
     try:
         import dlt
     except Exception:
@@ -26,13 +41,17 @@ def is_debug():
     return False
 
 
-def get_df(df_wrapper):
+def get_df(df_wrapper) -> DataFrame:
+    """
+    When executed in debug mode (ref `dlt.is_debug`), executes and returns the output DataFrame of a function decorated
+     with `@dlt.table` or `@dlt.view`. Returns None when `is_debug()` is `False`.
+    """
     df = None
     if is_debug():
-        if dlt_available:
-            df = df_wrapper().func()
-        else:
+        if is_mocked():
             df = df_wrapper()
+        else:
+            df = df_wrapper().func()
     return df
 
 
@@ -64,7 +83,7 @@ def read_stream(*args, fmt="delta", **kwargs):
 # Mocks                                                                       #
 # --------------------------------------------------------------------------- #
 
-if not dlt_available:
+if is_mocked():
     def table(*table_args, **table_kwargs):
         def decorator(func):
             def wrapper(*args, **kwargs):
