@@ -16,15 +16,12 @@ except Exception:
 # Utilities                                                                   #
 # --------------------------------------------------------------------------- #
 
-dbr_version = spark.conf.get("pipelines.dbrVersion", None)
-
-
 def is_debug():
     try:
         import dlt
     except Exception:
         return True
-    if dbr_version is None:
+    if spark.conf.get("pipelines.dbrVersion", None) is None:
         return True
     return False
 
