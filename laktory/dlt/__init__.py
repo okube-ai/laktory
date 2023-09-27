@@ -3,8 +3,11 @@ try:
     from dlt import *
     from dlt import read as _read
     from dlt import read_stream as _read_stream
-except (ModuleNotFoundError, FileNotFoundError):
+except (ModuleNotFoundError, FileNotFoundError, ):
     raise ModuleNotFoundError("dlt module requires a cluster with Databricks Runtime >= 13.* or to be run from Delta Live Tables")
+except ImportError:
+    # This may occur when running a pipeline notebook from a shared cluster in debug mode.
+    pass
 
 
 # --------------------------------------------------------------------------- #
