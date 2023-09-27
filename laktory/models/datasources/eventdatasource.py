@@ -4,7 +4,9 @@ from typing import Literal
 from laktory import settings
 from laktory.models.dataeventheader import DataEventHeader
 from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory._logger import get_logger
 
+logger = get_logger(__name__)
 
 TYPES = (
     "STORAGE_DUMPS",
@@ -32,6 +34,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
     def _read_storage(self, spark) -> DataFrame:
 
         if self.read_as_stream:
+            logger.info(f"Reading {self.dirpath} as stream")
             df = (
                 spark
                 .readStream.format("cloudFiles")
@@ -46,6 +49,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
                 .load(self.dirpath)
             )
         else:
+            logger.info(f"Reading {self.dirpath} as static")
             df = (
                 spark
                 .read

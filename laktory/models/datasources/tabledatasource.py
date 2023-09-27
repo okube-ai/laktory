@@ -2,6 +2,9 @@ from pyspark.sql import DataFrame
 from typing import Union
 
 from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory._logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class TableDataSource(BaseDataSource):
@@ -41,8 +44,10 @@ class TableDataSource(BaseDataSource):
         from laktory.dlt import read_stream
 
         if self.read_as_stream:
+            logger.info(f"Reading {self.full_name} as stream")
             df = read_stream(self.full_name)
         else:
+            logger.info(f"Reading {self.full_name} as static")
             df = read(self.full_name)
 
         return df
