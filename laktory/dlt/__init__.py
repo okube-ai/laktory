@@ -26,6 +26,16 @@ def is_debug():
     return False
 
 
+def get_df(df_wrapper):
+    df = None
+    if is_debug():
+        if dlt_available:
+            df = df_wrapper().func()
+        else:
+            df = df_wrapper()
+    return df
+
+
 # --------------------------------------------------------------------------- #
 # Overwrite                                                                   #
 # --------------------------------------------------------------------------- #
