@@ -1,9 +1,14 @@
 import pytest
+from laktory import dlt
 
 
 def test_dlt():
-    with pytest.raises(ModuleNotFoundError):
-        from laktory import dlt
+    assert dlt.is_mocked()
+    assert dlt.is_debug()
+
+    assert hasattr(dlt, 'table')
+    assert hasattr(dlt, 'read')
+    assert hasattr(dlt, 'read_stream')
 
 
 if __name__ == "__main__":
