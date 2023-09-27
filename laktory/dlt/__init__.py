@@ -1,5 +1,12 @@
 from laktory._logger import get_logger
 from pyspark.sql import DataFrame
+try:
+    from dlt import *
+    from dlt import read as _read
+    from dlt import read_stream as _read_stream
+except Exception:
+    pass
+
 
 logger = get_logger(__name__)
 
@@ -19,9 +26,7 @@ def is_mocked() -> bool:
         - notebook ran outside a DLT pipeline and DBR >= 13 with shared access mode cluster
     """
     try:
-        from dlt import *
-        from dlt import read as _read
-        from dlt import read_stream as _read_stream
+        import dlt
         return False
     except Exception:
         return True
