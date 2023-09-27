@@ -1,9 +1,12 @@
+import os
 from datetime import datetime
 
 from laktory.models import Catalog
 from laktory.models import Table
 from laktory.models import Pipeline
 from laktory._testing import StockPricesPipeline
+
+root_dir = os.path.dirname(__file__)
 
 
 def test_pipeline():
@@ -14,7 +17,7 @@ def test_pipeline():
 
 
 def test_read_yaml():
-    with open("pl-stocks.yaml", "r") as fp:
+    with open(f"{root_dir}/pl-stocks.yaml", "r") as fp:
         pl = Pipeline.model_validate_yaml(fp)
 
     assert pl.name == "pl-stocks"
