@@ -11,6 +11,12 @@ from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
+EXCLUDES = [
+    "events_root_path",
+    "dirpath",
+    "tstamp_col",
+]
+
 
 class DataEvent(DataEventHeader):
     data: dict
@@ -69,27 +75,17 @@ class DataEvent(DataEventHeader):
     # ----------------------------------------------------------------------- #
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
-        exclude = kwargs.pop(
-            "exclude",
-            [
-                "ingestion_pattern",
-                "tstamp_col",
-                "landing_mount_path",
-            ],
-        )
-        mode = kwargs.pop("mode", "json")
-        return super().model_dump(*args, exclude=exclude, mode=mode, **kwargs)
+        kwargs["exclude"] = kwargs.pop("exclude", EXCLUDES)
+        kwargs["by_alias"] = kwargs.pop("by_alias", True)
+        kwargs["mode"] = kwargs.pop("mode", "json")
+        return super().model_dump(*args, **kwargs)
 
     def model_dump_json(self, *args, **kwargs) -> str:
-        exclude = kwargs.pop(
+        kwargs["exclude"] = kwargs.pop(
             "exclude",
-            [
-                "ingestion_pattern",
-                "tstamp_col",
-                "landing_mount_path",
-            ],
+            EXCLUDES,
         )
-        return super().model_dump_json(*args, exclude=exclude, **kwargs)
+        return super().model_dump_json(*args, **kwargs)
 
     def _overwrite_or_skip(
         self, f: callable, path: str, exists: bool, overwrite: bool, skip: bool
