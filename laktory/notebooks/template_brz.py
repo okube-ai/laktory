@@ -44,8 +44,7 @@ for row in tables.collect():
     if d["event_source"] is None:
         del d["event_source"]
     table = models.Table(**d)
-    get_df = define_bronze_table(table)
+    df_wrapper = define_bronze_table(table)
 
-    if dlt.is_debug():
-        df = get_df()
-        display(df)
+    df = dlt.get_df(df_wrapper)
+    display(df)
