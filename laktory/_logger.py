@@ -14,7 +14,6 @@ stream_handler.setFormatter(format)
 
 
 def get_logger(name, stream=True):
-
     # Change logger class
     # TODO: Place Holder if we need to customize logger class
     # logging.setLoggerClass(LaktoryLogger)
@@ -38,7 +37,6 @@ def get_logger(name, stream=True):
 
     # Update handlers
     if not _initialized or _options_changed:
-
         handlers = list(logger.handlers)
         for handler in handlers:
             logger.removeHandler(handler)

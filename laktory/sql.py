@@ -1,5 +1,4 @@
 def _dict_to_sql(d, mode="data"):
-
     if mode == "data":
         statement = "named_struct("
         for key, value in d.items():
@@ -31,7 +30,6 @@ def _list_to_sql(l, mode="data"):
 
 
 def py_to_sql(value, mode="data"):
-
     if isinstance(value, str):
         if mode == "data":
             return f"'{value}'"

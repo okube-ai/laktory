@@ -6,8 +6,7 @@ from typing import Union
 from pydantic import computed_field
 from pydantic import model_validator
 
-from pyspark.sql import DataFrame
-import pyspark.sql.functions as F
+from laktory.spark import DataFrame
 
 from laktory._logger import get_logger
 from laktory.sql import py_to_sql
@@ -32,8 +31,8 @@ class Table(BaseModel):
 
     # Lakehouse
     timestamp_key: Union[str, None] = None
-    event_source: EventDataSource = None
-    table_source: TableDataSource = None
+    event_source: Union[EventDataSource, None] = None
+    table_source: Union[TableDataSource, None] = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     pipeline_name: Union[str, None] = None
     # joins
@@ -94,6 +93,7 @@ class Table(BaseModel):
     @property
     def df(self):
         import pandas as pd
+
         return pd.DataFrame(data=self.data, columns=self.column_names)
 
     @property
@@ -109,7 +109,6 @@ class Table(BaseModel):
 
     @classmethod
     def meta_table(cls):
-
         # Build columns
         columns = []
         for k, t in cls.model_serialized_types().items():
@@ -138,18 +137,21 @@ class Table(BaseModel):
     # ----------------------------------------------------------------------- #
 
     def exists(self):
-        return self.name in [c.name for c in self.workspace_client.tables.list(
-            catalog_name=self.catalog_name,
-            schema_name=self.schema_name,
-        )]
+        return self.name in [
+            c.name
+            for c in self.workspace_client.tables.list(
+                catalog_name=self.catalog_name,
+                schema_name=self.schema_name,
+            )
+        ]
 
-    def create(self,
-               if_not_exists: bool = True,
-               or_replace: bool = False,
-               insert_data: bool = False,
-               warehouse_id: str = None,
-               ):
-
+    def create(
+        self,
+        if_not_exists: bool = True,
+        or_replace: bool = False,
+        insert_data: bool = False,
+        warehouse_id: str = None,
+    ):
         if len(self.columns) == 0:
             raise ValueError()
 
@@ -176,9 +178,7 @@ class Table(BaseModel):
 
         logger.info(statement)
         r = self.workspace_client.execute_statement_and_wait(
-            statement,
-            warehouse_id=warehouse_id,
-            catalog_name=self.catalog_name
+            statement, warehouse_id=warehouse_id, catalog_name=self.catalog_name
         )
 
         if insert_data:
@@ -190,11 +190,15 @@ class Table(BaseModel):
         self.workspace_client.tables.delete(self.full_name)
 
     def insert(self, warehouse_id: str = None):
+        if self.data is None or len(self.data) == 0:
+            return
 
         statement = f"INSERT INTO {self.full_name} VALUES\n"
         for row in self.data:
             statement += "   ("
-            values = [json.dumps(v) if c.jsonize else v for c, v in zip(self.columns, row)]
+            values = [
+                json.dumps(v) if c.jsonize else v for c, v in zip(self.columns, row)
+            ]
             values = [py_to_sql(v) for v in values]
             statement += ", ".join(values)
             statement += "),\n"
@@ -203,21 +207,16 @@ class Table(BaseModel):
 
         logger.info(statement)
         r = self.workspace_client.execute_statement_and_wait(
-            statement,
-            warehouse_id=warehouse_id,
-            catalog_name=self.catalog_name
+            statement, warehouse_id=warehouse_id, catalog_name=self.catalog_name
         )
 
         return r
 
     def select(self, limit=10, warehouse_id: str = None, load_json=True):
-
         statement = f"SELECT * from {self.full_name} limit {limit}"
 
         r = self.workspace_client.execute_statement_and_wait(
-            statement,
-            warehouse_id=warehouse_id,
-            catalog_name=self.catalog_name
+            statement, warehouse_id=warehouse_id, catalog_name=self.catalog_name
         )
 
         data = r.result.data_array
@@ -240,10 +239,14 @@ class Table(BaseModel):
         return self.source.read(spark)
 
     def process_bronze(self, df) -> DataFrame:
+        import pyspark.sql.functions as F
+
         df = df.withColumn("bronze_at", F.current_timestamp())
         return df
 
     def process_silver(self, df) -> DataFrame:
+        import pyspark.sql.functions as F
+
         df = df.withColumn("silver_at", F.current_timestamp())
         return df
 

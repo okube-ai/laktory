@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from typing import Union
-from pyspark.sql import DataFrame
+from laktory.spark import DataFrame
 
 from laktory.models.base import BaseModel
 

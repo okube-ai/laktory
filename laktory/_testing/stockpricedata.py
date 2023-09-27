@@ -11,7 +11,6 @@ class StockPriceData(DataEvent):
 
 
 if __name__ == "__main__":
-
     import yfinance as yf
     from azure.storage.blob import ContainerClient
 
@@ -37,16 +36,20 @@ if __name__ == "__main__":
     for s in symbols:
         df = yf.download(s, t0, t1, interval="1m")
         for _, row in df.iterrows():
-            events += [StockPriceData(
-                data={
-                    "created_at": _,
-                    "symbol": s,
-                    "open": float(row["Open"]),  # np.float64 are not supported for serialization
-                    "close": float(row["Close"]),
-                    "high": float(row["High"]),
-                    "low": float(row["Low"]),
-                },
-            )]
+            events += [
+                StockPriceData(
+                    data={
+                        "created_at": _,
+                        "symbol": s,
+                        "open": float(
+                            row["Open"]
+                        ),  # np.float64 are not supported for serialization
+                        "close": float(row["Close"]),
+                        "high": float(row["High"]),
+                        "low": float(row["Low"]),
+                    },
+                )
+            ]
 
     # --------------------------------------------------------------------------- #
     # Write events                                                                #

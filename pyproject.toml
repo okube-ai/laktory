@@ -32,7 +32,6 @@ dynamic = ["version"]
 dependencies = [
     "databricks-sdk",
     "jsonref",
-    "pyspark",
     "pyyaml",
     "pydantic>=2",
     "settus",
@@ -41,9 +40,10 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "black",
-    "flit",
     "databricks-sdk",
     "databricks-sql-connector",
+    "flit",
+#    "pyspark",
 ]
 test = [
     "pytest",

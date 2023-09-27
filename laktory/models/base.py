@@ -27,7 +27,6 @@ class BaseModel(_BaseModel):
 
     @classmethod
     def model_serialized_types(cls):
-
         def parse(schema_data):
             data_type = schema_data.get("type", None)
             all_of = schema_data.get("allOf", None)
@@ -64,12 +63,20 @@ class BaseModel(_BaseModel):
         if types is None:
             types = cls.model_serialized_types()
 
-        schema = "(" + ", ".join(f"{k} {py_to_sql(v, mode='schema')}" for k, v in types.items()) + ")"
+        schema = (
+            "("
+            + ", ".join(f"{k} {py_to_sql(v, mode='schema')}" for k, v in types.items())
+            + ")"
+        )
 
         if "<>" in schema:
-            raise ValueError(f"Some types are undefined sql schema can't be defined\n{schema}")
+            raise ValueError(
+                f"Some types are undefined sql schema can't be defined\n{schema}"
+            )
 
         if "null" in schema:
-            raise ValueError(f"Some types are undefined sql schema can't be defined\n{schema}")
+            raise ValueError(
+                f"Some types are undefined sql schema can't be defined\n{schema}"
+            )
 
         return schema

@@ -1,8 +1,12 @@
+import os
 from datetime import datetime
 
 from laktory.models import Catalog
 from laktory.models import Table
+from laktory.models import Pipeline
 from laktory._testing import StockPricesPipeline
+
+root_dir = os.path.dirname(__file__)
 
 
 def test_pipeline():
@@ -10,6 +14,13 @@ def test_pipeline():
 
     assert pl.tables[0].zone == "BRONZE"
     assert pl.model_dump()["tables"][0]["zone"] == "BRONZE"
+
+
+def test_read_yaml():
+    with open(f"{root_dir}/pl-stocks.yaml", "r") as fp:
+        pl = Pipeline.model_validate_yaml(fp)
+
+    assert pl.name == "pl-stocks"
 
 
 def test_tables_meta():
@@ -55,6 +66,7 @@ def test_publish_meta():
 
 if __name__ == "__main__":
     test_pipeline()
+    test_read_yaml()
     test_tables_meta()
     test_columns_meta()
     test_publish_meta()

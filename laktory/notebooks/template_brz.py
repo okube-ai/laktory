@@ -1,9 +1,12 @@
+# Databricks notebook source
+# MAGIC %pip install laktory
+
+# COMMAND ----------
 import json
 import pyspark.sql.functions as F
 
 from laktory import dlt
 from laktory import models
-from laktory import settings
 from laktory._logger import get_logger
 
 dlt.spark = spark
@@ -16,7 +19,6 @@ def define_bronze_table(table):
     @dlt.table(
         name=table.name,
         comment=table.comment,
-        # path=TODO,
     )
     def get_df():
         logger.info(f"Building {table.name} table")
@@ -41,9 +43,19 @@ tables = (
 for row in tables.collect():
     d = row.asDict(recursive=True)
     d["columns"] = json.loads(d["columns"])
+    if d["table_source"] is None:
+        del d["table_source"]
+    if d["event_source"] is None:
+        del d["event_source"]
     table = models.Table(**d)
-    dataset = define_bronze_table(table)()
+    wrapper = define_bronze_table(table)
 
-    if not dlt.is_pipeline():
-        df = dataset.func()
-        display(df)
+    df = dlt.get_df(wrapper)
+    display(df)
+
+
+# TESTING:
+# brz with shared -> GOOD
+# slv with shared -> GOOD
+# brz with single user -> GOOD
+# slv with single user -> from an Assigned or No isolation shared cluster, please use a SHARED cluster or a Databricks SQL warehouse instead.

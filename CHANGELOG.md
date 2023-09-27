@@ -1,17 +1,15 @@
 # Release History
 
-## [0.0.4] - 2023-09-25
-**Added**
--
-
+## [0.0.4] - 2023-09-27
 **Updated**
-- 
+- Refactored dlt module to support DBR < 13 and clusters in shared access mode
 
 **Fixed**
--
+- model_validate_yaml() for Pipeline model
+- table data insert when no data is available
 
 **Breaking Change**
--
+- Removed spark from required dependencies
 
 ## [0.0.3] - 2023-09-25
 **Added**

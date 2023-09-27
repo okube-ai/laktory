@@ -36,13 +36,13 @@ class Pipeline(BaseModel):
                 c.table_name = t.name
                 c.catalog_name = t.catalog_name
                 c.database_name = t.database_name
+        return self
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
     def get_tables_meta(self, catalog_name="main", database_name="laktory") -> Table:
-
         table = Table.meta_table()
         table.catalog_name = catalog_name
         table.database_name = database_name
@@ -59,7 +59,6 @@ class Pipeline(BaseModel):
         return table
 
     def get_columns_meta(self, catalog_name="main", database_name="laktory") -> Table:
-
         table = Column.meta_table()
         table.catalog_name = catalog_name
         table.database_name = database_name
@@ -77,7 +76,6 @@ class Pipeline(BaseModel):
         return table
 
     def publish_tables_meta(self, catalog_name="main", database_name="laktory"):
-
         # Create catalog
         Catalog(name=catalog_name).create(if_not_exists=True)
 
@@ -85,9 +83,13 @@ class Pipeline(BaseModel):
         Database(name=database_name, catalog_name=catalog_name).create()
 
         # Get and create tables
-        tables = self.get_tables_meta(catalog_name=catalog_name, database_name=database_name)
+        tables = self.get_tables_meta(
+            catalog_name=catalog_name, database_name=database_name
+        )
         tables.create(or_replace=True, insert_data=True)
 
         # Get and create tables
-        columns = self.get_columns_meta(catalog_name=catalog_name, database_name=database_name)
+        columns = self.get_columns_meta(
+            catalog_name=catalog_name, database_name=database_name
+        )
         columns.create(or_replace=True, insert_data=True)
