@@ -1,12 +1,14 @@
+from laktory._logger import get_logger
+
+logger = get_logger(__name__)
+
+dlt_available = False
 try:
-    # Import databricks dlt module, only available for DBR >= 13
     from dlt import *
     from dlt import read as _read
     from dlt import read_stream as _read_stream
-except (ModuleNotFoundError, FileNotFoundError, ):
-    raise ModuleNotFoundError("dlt module requires a cluster with Databricks Runtime >= 13.* or to be run from Delta Live Tables")
-except ImportError:
-    # This may occur when running a pipeline notebook from a shared cluster in debug mode.
+    dlt_available = True
+except Exception:
     pass
 
 
@@ -14,15 +16,17 @@ except ImportError:
 # Utilities                                                                   #
 # --------------------------------------------------------------------------- #
 
-def is_pipeline():
+dbr_version = spark.conf.get("pipelines.dbrVersion", None)
+
+
+def is_debug():
     try:
         import dlt
-    except (ModuleNotFoundError, FileNotFoundError):
-        return False
-    dbr_version = spark.conf.get("pipelines.dbrVersion", None)
+    except Exception:
+        return True
     if dbr_version is None:
-        return False
-    return True
+        return True
+    return False
 
 
 # --------------------------------------------------------------------------- #
@@ -30,20 +34,92 @@ def is_pipeline():
 # --------------------------------------------------------------------------- #
 
 def read(*args, **kwargs):
-    if is_pipeline():
+    if is_debug():
+        return spark.read.table(args[0])
+    else:
         # Remove catalog and database from naming space
         args = list(args)
         args[0] = args[0].split(".")[-1]
         return _read(*args, **kwargs)
-    else:
-        return spark.read.table(args[0])
 
 
 def read_stream(*args, fmt="delta", **kwargs):
-    if is_pipeline():
+    if is_debug():
+        return spark.readStream.format(fmt).table(args[0])
+    else:
         # Remove catalog and database from naming space
         args = list(args)
         args[0] = args[0].split(".")[-1]
         return _read_stream(*args, **kwargs)
-    else:
-        return spark.readStream.format(fmt).table(args[0])
+
+
+# --------------------------------------------------------------------------- #
+# Mocks                                                                       #
+# --------------------------------------------------------------------------- #
+
+if not dlt_available:
+    def table(*table_args, **table_kwargs):
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                logger.info(f"Running {func.__name__}")
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+
+    def view(*view_args, **view_kwargs):
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                logger.info(f"Running {func.__name__}")
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+
+    def expect(*table_args, **table_kwargs):
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+
+    def expect_or_drop(*table_args, **table_kwargs):
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+
+    def expect_or_fail(*table_args, **table_kwargs):
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+
+    def expect_all(*table_args, **table_kwargs):
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+
+    def expect_all_or_drop(*table_args, **table_kwargs):
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+
+    def expect_all_or_fail(*table_args, **table_kwargs):
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+

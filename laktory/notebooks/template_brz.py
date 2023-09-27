@@ -44,6 +44,6 @@ for row in tables.collect():
     table = models.Table(**d)
     dataset = define_bronze_table(table)()
 
-    if not dlt.is_pipeline():
+    if dlt.is_debug():
         df = dataset.func()
         display(df)
