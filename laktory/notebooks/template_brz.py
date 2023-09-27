@@ -1,3 +1,7 @@
+# Databricks notebook source
+# MAGIC %pip install laktory
+
+# COMMAND ----------
 import json
 import pyspark.sql.functions as F
 
@@ -44,7 +48,14 @@ for row in tables.collect():
     if d["event_source"] is None:
         del d["event_source"]
     table = models.Table(**d)
-    df_wrapper = define_bronze_table(table)
+    wrapper = define_bronze_table(table)
 
-    df = dlt.get_df(df_wrapper)
+    df = dlt.get_df(wrapper)
     display(df)
+
+
+# TESTING:
+# brz with shared -> GOOD
+# slv with shared -> GOOD
+# brz with single user -> GOOD
+# slv with single user -> from an Assigned or No isolation shared cluster, please use a SHARED cluster or a Databricks SQL warehouse instead.
