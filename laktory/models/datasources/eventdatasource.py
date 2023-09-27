@@ -32,12 +32,10 @@ class EventDataSource(BaseDataSource, DataEventHeader):
     # ----------------------------------------------------------------------- #
 
     def _read_storage(self, spark) -> DataFrame:
-
         if self.read_as_stream:
             logger.info(f"Reading {self.dirpath} as stream")
             df = (
-                spark
-                .readStream.format("cloudFiles")
+                spark.readStream.format("cloudFiles")
                 .option("multiLine", self.multiline)
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
@@ -51,9 +49,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
         else:
             logger.info(f"Reading {self.dirpath} as static")
             df = (
-                spark
-                .read
-                .option("multiLine", self.multiline)
+                spark.read.option("multiLine", self.multiline)
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
                 .format(self.fmt)

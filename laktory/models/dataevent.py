@@ -45,7 +45,9 @@ class DataEvent(DataEventHeader):
     def get_filename(self, fmt="json", suffix=None) -> str:
         t = self.created_at
         const = {"mus": {"s": 1e-6}, "s": {"ms": 1000}}  # TODO: replace with constants
-        total_ms = int((t.second + t.microsecond * const["mus"]["s"]) * const["s"]["ms"])
+        total_ms = int(
+            (t.second + t.microsecond * const["mus"]["s"]) * const["s"]["ms"]
+        )
         time_str = f"{t.hour:02d}{t.minute:02d}{total_ms:05d}Z"
         prefix = self.name
         if suffix is not None:
@@ -73,7 +75,7 @@ class DataEvent(DataEventHeader):
                 "ingestion_pattern",
                 "tstamp_col",
                 "landing_mount_path",
-            ]
+            ],
         )
         mode = kwargs.pop("mode", "json")
         return super().model_dump(*args, exclude=exclude, mode=mode, **kwargs)
@@ -85,11 +87,13 @@ class DataEvent(DataEventHeader):
                 "ingestion_pattern",
                 "tstamp_col",
                 "landing_mount_path",
-            ]
+            ],
         )
         return super().model_dump_json(*args, exclude=exclude, **kwargs)
 
-    def _overwrite_or_skip(self, f: callable, path: str, exists: bool, overwrite: bool, skip: bool):
+    def _overwrite_or_skip(
+        self, f: callable, path: str, exists: bool, overwrite: bool, skip: bool
+    ):
         if exists:
             if skip:
                 logger.info(f"Event {self.name} ({path}) already exists. Skipping.")
@@ -106,16 +110,15 @@ class DataEvent(DataEventHeader):
             f()
 
     def to_azure_storage_container(
-            self,
-            suffix: str = None,
-            fmt: str = "json",
-            container_client: Any = None,
-            account_url: str = None,
-            container_name: str = "landing",
-            overwrite: bool = False,
-            skip_if_exists: bool = False,
+        self,
+        suffix: str = None,
+        fmt: str = "json",
+        container_client: Any = None,
+        account_url: str = None,
+        container_name: str = "landing",
+        overwrite: bool = False,
+        skip_if_exists: bool = False,
     ) -> None:
-
         # Set container client
         if container_client is None:
             from azure.storage.blob import ContainerClient
@@ -138,13 +141,14 @@ class DataEvent(DataEventHeader):
                 )
 
             else:
-                raise ValueError("Provide a valid container client, an account url or a connection string in LAKEHOUSE_SA_CONN_STR")
+                raise ValueError(
+                    "Provide a valid container client, an account url or a connection string in LAKEHOUSE_SA_CONN_STR"
+                )
 
         path = self.get_storage_filepath(suffix=suffix, fmt=fmt)
         blob = container_client.get_blob_client(path)
 
         def _write():
-
             if fmt != "json":
                 raise NotImplementedError()
 
@@ -159,19 +163,17 @@ class DataEvent(DataEventHeader):
             exists=blob.exists(),
             overwrite=overwrite,
             skip=skip_if_exists,
-
         )
 
     def to_aws_s3_bucket(
-            self,
-            bucket_name,
-            suffix: str = None,
-            fmt: str = "json",
-            s3_resource: Any = None,
-            overwrite: bool = False,
-            skip_if_exists: bool = False,
+        self,
+        bucket_name,
+        suffix: str = None,
+        fmt: str = "json",
+        s3_resource: Any = None,
+        overwrite: bool = False,
+        skip_if_exists: bool = False,
     ) -> None:
-
         import boto3
 
         if s3_resource is None:
@@ -197,7 +199,6 @@ class DataEvent(DataEventHeader):
                 raise e
 
         def _write():
-
             if fmt != "json":
                 raise NotImplementedError()
 
@@ -218,13 +219,12 @@ class DataEvent(DataEventHeader):
         raise NotImplementedError()
 
     def to_databricks_mount(
-            self,
-            suffix: str = None,
-            fmt: str = "json",
-            overwrite: bool = False,
-            skip_if_exists: bool = False,
+        self,
+        suffix: str = None,
+        fmt: str = "json",
+        overwrite: bool = False,
+        skip_if_exists: bool = False,
     ) -> None:
-
         path = "/dbfs" + self.get_mount_filepath(suffix=suffix, fmt=fmt)
         dirpath = os.path.dirname(path)
 
@@ -232,7 +232,6 @@ class DataEvent(DataEventHeader):
             os.makedirs(dirpath)
 
         def _write():
-
             if fmt != "json":
                 raise NotImplementedError()
 

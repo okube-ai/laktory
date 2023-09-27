@@ -1,32 +1,27 @@
-from pyspark.sql import types
-
-
-SUPPORTED_TYPES = {}
-for t in [
-    types.DataType(),
-    types.NullType(),
-    types.AtomicType(),
-    types.NumericType(),
-    types.IntegralType(),
-    types.FractionalType(),
-    types.StringType(),
-    types.BinaryType(),
-    types.BooleanType(),
-    types.DateType(),
-    types.TimestampType(),
-    types.TimestampNTZType(),
-    types.DecimalType(10, 0),
-    types.DoubleType(),
-    types.FloatType(),
-    types.ByteType(),
-    types.IntegerType(),
-    types.LongType(),
-    types.DayTimeIntervalType(0, 3),
-    types.ShortType(),
-    types.StructType([]),
-    types.UserDefinedType()
-]:
-    SUPPORTED_TYPES[t.simpleString()] = t
+SUPPORTED_TYPES = [
+    "data",
+    "void",
+    "atomic",
+    "numeric",
+    "integral",
+    "fractional",
+    "string",
+    "binary",
+    "boolean",
+    "date",
+    "timestamp",
+    "timestamp_ntz",
+    "decimal(10,0)",
+    "double",
+    "float",
+    "tinyint",
+    "int",
+    "bigint",
+    "interval day to second",
+    "smallint",
+    "struct<>",
+    "udt",
+]
 
 
 # for k in vars(types):

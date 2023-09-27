@@ -26,8 +26,10 @@ class Column(BaseModel):
         if "<" in v:
             return v
         else:
-            if v not in list(SUPPORTED_TYPES.keys()):
-                raise ValueError(f"Type {v} is not supported. Select one of {list(SUPPORTED_TYPES.keys())}")
+            if v not in SUPPORTED_TYPES:
+                raise ValueError(
+                    f"Type {v} is not supported. Select one of {SUPPORTED_TYPES}"
+                )
         return v
 
     # ----------------------------------------------------------------------- #

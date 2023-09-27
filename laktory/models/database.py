@@ -33,10 +33,12 @@ class Database(BaseModel):
     # ----------------------------------------------------------------------- #
 
     def exists(self):
-        return self.name in [c.name for c in self.workspace_client.schemas.list(catalog_name=self.catalog_name)]
+        return self.name in [
+            c.name
+            for c in self.workspace_client.schemas.list(catalog_name=self.catalog_name)
+        ]
 
     def create(self, if_not_exists: bool = True):
-
         w = self.workspace_client
         exists = self.exists()
 

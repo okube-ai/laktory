@@ -29,7 +29,6 @@ class Catalog(BaseModel):
         return self.name in [c.name for c in self.workspace_client.catalogs.list()]
 
     def create(self, if_not_exists: bool = True):
-
         w = self.workspace_client
         exists = self.exists()
 

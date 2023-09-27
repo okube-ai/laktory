@@ -1,5 +1,6 @@
 from laktory._logger import get_logger
 from laktory.spark import DataFrame
+
 try:
     from dlt import *
     from dlt import read as _read
@@ -15,6 +16,7 @@ logger = get_logger(__name__)
 # Utilities                                                                   #
 # --------------------------------------------------------------------------- #
 
+
 def is_mocked() -> bool:
     """
     DLT module mock flag. If True, native Databricks DLT functions are mocked
@@ -28,6 +30,7 @@ def is_mocked() -> bool:
     """
     try:
         import dlt
+
         return False
     except Exception:
         return True
@@ -69,6 +72,7 @@ def get_df(df_wrapper) -> DataFrame:
 # Overwrite                                                                   #
 # --------------------------------------------------------------------------- #
 
+
 def read(*args, **kwargs):
     if is_debug():
         return spark.read.table(args[0])
@@ -94,68 +98,77 @@ def read_stream(*args, fmt="delta", **kwargs):
 # --------------------------------------------------------------------------- #
 
 if is_mocked():
+
     def table(*table_args, **table_kwargs):
         def decorator(func):
             def wrapper(*args, **kwargs):
                 logger.info(f"Running {func.__name__}")
                 return func(*args, **kwargs)
-            return wrapper
-        return decorator
 
+            return wrapper
+
+        return decorator
 
     def view(*view_args, **view_kwargs):
         def decorator(func):
             def wrapper(*args, **kwargs):
                 logger.info(f"Running {func.__name__}")
                 return func(*args, **kwargs)
-            return wrapper
-        return decorator
 
+            return wrapper
+
+        return decorator
 
     def expect(*table_args, **table_kwargs):
         def decorator(func):
             def wrapper(*args, **kwargs):
                 return func(*args, **kwargs)
-            return wrapper
-        return decorator
 
+            return wrapper
+
+        return decorator
 
     def expect_or_drop(*table_args, **table_kwargs):
         def decorator(func):
             def wrapper(*args, **kwargs):
                 return func(*args, **kwargs)
-            return wrapper
-        return decorator
 
+            return wrapper
+
+        return decorator
 
     def expect_or_fail(*table_args, **table_kwargs):
         def decorator(func):
             def wrapper(*args, **kwargs):
                 return func(*args, **kwargs)
-            return wrapper
-        return decorator
 
+            return wrapper
+
+        return decorator
 
     def expect_all(*table_args, **table_kwargs):
         def decorator(func):
             def wrapper(*args, **kwargs):
                 return func(*args, **kwargs)
-            return wrapper
-        return decorator
 
+            return wrapper
+
+        return decorator
 
     def expect_all_or_drop(*table_args, **table_kwargs):
         def decorator(func):
             def wrapper(*args, **kwargs):
                 return func(*args, **kwargs)
-            return wrapper
-        return decorator
 
+            return wrapper
+
+        return decorator
 
     def expect_all_or_fail(*table_args, **table_kwargs):
         def decorator(func):
             def wrapper(*args, **kwargs):
                 return func(*args, **kwargs)
-            return wrapper
-        return decorator
 
+            return wrapper
+
+        return decorator

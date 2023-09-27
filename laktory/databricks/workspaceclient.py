@@ -6,14 +6,14 @@ from laktory import settings
 
 
 class WorkspaceClient(_WorkspaceClient):
-
     def __init__(self, *args, **kwargs):
         kwargs["host"] = kwargs.get("host", settings.databricks_host)
         kwargs["token"] = kwargs.get("token", settings.databricks_token)
         super().__init__(*args, **kwargs)
 
-    def execute_statement_and_wait(self, statement, warehouse_id=None, catalog_name=None):
-
+    def execute_statement_and_wait(
+        self, statement, warehouse_id=None, catalog_name=None
+    ):
         # Settings
         if warehouse_id is None:
             warehouse_id = settings.databricks_warehouse_id
