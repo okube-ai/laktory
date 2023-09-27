@@ -1,4 +1,4 @@
-from pyspark.sql import DataFrame
+from laktory.spark import DataFrame
 from typing import Literal
 
 from laktory import settings

@@ -1,5 +1,5 @@
 from laktory._logger import get_logger
-from pyspark.sql import DataFrame
+from laktory.spark import DataFrame
 try:
     from dlt import *
     from dlt import read as _read
@@ -23,7 +23,8 @@ def is_mocked() -> bool:
 
     DLT is mocked in the following situations:
         - notebook ran outside a DLT pipeline and DBR < 13
-        - notebook ran outside a DLT pipeline and DBR >= 13 with shared access mode cluster
+        - notebook ran outside a DLT pipeline and DBR >= 13 with shared access
+          mode cluster
     """
     try:
         import dlt
@@ -34,8 +35,9 @@ def is_mocked() -> bool:
 
 def is_debug() -> bool:
     """
-    Debug flag. If True, DLT readers are replaced with laktory functions allowing to run a notebook outside of a
-    pipeline and preview the content of the output DataFrame.
+    Debug flag. If True, DLT readers are replaced with laktory functions
+    allowing to run a notebook outside of a pipeline and preview the content
+    of the output DataFrame.
     """
     try:
         import dlt
@@ -48,8 +50,11 @@ def is_debug() -> bool:
 
 def get_df(df_wrapper) -> DataFrame:
     """
-    When executed in debug mode (ref `dlt.is_debug`), executes and returns the output DataFrame of a function decorated
-     with `@dlt.table` or `@dlt.view`. Returns None when `is_debug()` is `False`.
+    When executed in debug mode (ref `dlt.is_debug`), executes and returns
+    the output DataFrame of a function decorated with `@dlt.table` or
+    `@dlt.view`. Returns None when `is_debug()` is `False`.
+
+    This method is not supported when a table using DLT views as input.
     """
     df = None
     if is_debug():

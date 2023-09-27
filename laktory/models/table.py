@@ -6,8 +6,7 @@ from typing import Union
 from pydantic import computed_field
 from pydantic import model_validator
 
-from pyspark.sql import DataFrame
-import pyspark.sql.functions as F
+from laktory.spark import DataFrame
 
 from laktory._logger import get_logger
 from laktory.sql import py_to_sql
@@ -243,10 +242,12 @@ class Table(BaseModel):
         return self.source.read(spark)
 
     def process_bronze(self, df) -> DataFrame:
+        import pyspark.sql.functions as F
         df = df.withColumn("bronze_at", F.current_timestamp())
         return df
 
     def process_silver(self, df) -> DataFrame:
+        import pyspark.sql.functions as F
         df = df.withColumn("silver_at", F.current_timestamp())
         return df
 

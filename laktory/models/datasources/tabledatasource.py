@@ -1,4 +1,4 @@
-from pyspark.sql import DataFrame
+from laktory.spark import DataFrame
 from typing import Union
 
 from laktory.models.datasources.basedatasource import BaseDataSource
