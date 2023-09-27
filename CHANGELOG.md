@@ -2,13 +2,14 @@
 
 ## [0.0.4] - 
 **Added**
--
+- Keyvault support for Settings
 
 **Updated**
 - 
 
 **Fixed**
 - model_validate_yaml() for Pipeline model
+- table data insert when no data is available
 
 **Breaking Change**
 -

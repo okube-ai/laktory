@@ -191,6 +191,9 @@ class Table(BaseModel):
 
     def insert(self, warehouse_id: str = None):
 
+        if self.data is None or len(self.data) == 0:
+            return
+
         statement = f"INSERT INTO {self.full_name} VALUES\n"
         for row in self.data:
             statement += "   ("

@@ -1,12 +1,16 @@
 from typing import Union
 from settus import BaseSettings
 from settus import Field
+from settus import SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    # model_config = SettingsConfigDict(
+    #     keyvault_url="LAKTORY_KEYVAULT_URL"
+    # )
 
     # Azure
-    lakehouse_sa_conn_str: Union[str, None] = Field(None, alias="LAKEHOUSE_SA_CONN_STR")
+    lakehouse_sa_conn_str: Union[str, None] = Field(None, alias="lakehouse-sa-conn-str")
 
     # AWS
     aws_access_key_id: Union[str, None] = Field(None, alias="AWS_ACCESS_KEY_ID")
@@ -20,10 +24,14 @@ class Settings(BaseSettings):
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")
 
     # https://learn.microsoft.com/en-ca/azure/databricks/dev-tools/auth#general-host-token-and-account-id-environment-variables-and-fields
-    databricks_host: str = ""
-    databricks_token: str = ""
-    databricks_account_id: str = ""
-    databricks_warehouse_id: str = ""
+    # databricks_host: Union[str, None] = Field(None, alias="databricks_host")
+    # databricks_token: Union[str, None] = Field(None, alias="databricks_token")
+    # databricks_account_id: Union[str, None] = Field(None, alias="databricks_account_id")
+    # databricks_warehouse_id: Union[str, None] = Field(None, alias="databricks_warehouse_id")
+    databricks_host: Union[str, None] = Field(None)
+    databricks_token: Union[str, None] = Field(None)
+    databricks_account_id: Union[str, None] = Field(None)
+    databricks_warehouse_id: Union[str, None] = Field(None)
 
 
 settings = Settings()
