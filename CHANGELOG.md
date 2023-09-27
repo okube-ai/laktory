@@ -2,6 +2,16 @@
 
 ## [0.0.4] - 2023-09-27
 **Updated**
+- 
+
+**Fixed**
+- 
+
+**Breaking Change**
+-
+
+## [0.0.4] - 2023-09-27
+**Updated**
 - Refactored dlt module to support DBR < 13 and clusters in shared access mode
 
 **Fixed**
