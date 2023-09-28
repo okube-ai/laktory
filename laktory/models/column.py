@@ -18,7 +18,7 @@ class Column(BaseModel):
     pii: Union[bool, None] = None
     func_name: Union[str, None] = None
     input_cols: list[str] = []
-    func_kwargs: dict[str, str] = {}
+    func_kwargs: dict[str, Union[str, None]] = {}
     jsonize: bool = False
 
     @field_validator("type")
