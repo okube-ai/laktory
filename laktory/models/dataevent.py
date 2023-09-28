@@ -89,10 +89,7 @@ class DataEvent(DataEventHeader):
         return super().model_dump(*args, **kwargs)
 
     def model_dump_json(self, *args, **kwargs) -> str:
-        kwargs["exclude"] = kwargs.pop(
-            "exclude",
-            EXCLUDES,
-        )
+        kwargs["exclude"] = kwargs.pop("exclude", EXCLUDES)
         return super().model_dump_json(*args, **kwargs)
 
     def _overwrite_or_skip(

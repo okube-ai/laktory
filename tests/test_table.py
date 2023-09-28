@@ -118,8 +118,6 @@ def test_sql_schema():
         "zone": "string",
         "pipeline_name": "string",
     }
-    schema = Table.model_sql_schema(types)
-    print(schema)
 
     types = Column.model_serialized_types()
     assert types == {
@@ -237,8 +235,8 @@ def test_meta():
 
 
 if __name__ == "__main__":
-    test_model()
-    test_data()
+    # test_model()
+    # test_data()
     test_sql_schema()
-    test_create_and_insert()
-    test_meta()
+    # test_create_and_insert()
+    # test_meta()
