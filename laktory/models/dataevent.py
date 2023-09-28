@@ -3,9 +3,13 @@ import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any
-from typing import Literal
+from typing import Union
+
+from pydantic import Field
+from pydantic import ConfigDict
 
 from laktory.models.dataeventheader import DataEventHeader
+from laktory.models.producer import Producer
 from laktory._settings import settings
 from laktory._logger import get_logger
 
@@ -19,6 +23,10 @@ EXCLUDES = [
 
 
 class DataEvent(DataEventHeader):
+    model_config = ConfigDict(populate_by_name=True)
+    name: str = Field(..., alias="event_name")
+    description: Union[str, None] = Field(None, alias="event_description")
+    producer: Producer = Field(None, alias="event_producer")
     data: dict
     tstamp_col: str = "created_at"
 

@@ -3,7 +3,6 @@ from typing import Union
 from pydantic import Field
 from pydantic import field_validator
 from pydantic_core.core_schema import FieldValidationInfo
-from pydantic import ConfigDict
 
 from laktory._settings import settings
 from laktory.models.base import BaseModel
@@ -11,10 +10,9 @@ from laktory.models.producer import Producer
 
 
 class DataEventHeader(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-    name: str = Field(..., alias="event_name")
-    description: Union[str, None] = Field(None, alias="event_description")
-    producer: Producer = Field(None, alias="event_producer")
+    name: str = Field(...)
+    description: Union[str, None] = Field(None)
+    producer: Producer = Field(None)
     events_root_path: str = settings.landing_mount_path + "events/"
     dirpath: Optional[str] = Field(validate_default=True, default=None)
 
