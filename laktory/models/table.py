@@ -362,6 +362,27 @@ class Table(BaseModel):
             if col_name in cols0:
                 cols0.remove(col_name)
 
+        # Drop previous columns
+        logger.info(f"Dropping bronze columns...")
+        df = df.select(new_col_names)
+
+        # ------------------------------------------------------------------- #
+        # Setting Watermark                                                   #
+        # ------------------------------------------------------------------- #
+
+        # TODO:
+        # if watermark is not None:
+        #     sdf = sdf.withWatermark(watermark["column"], watermark["threshold"])
+
+        # ------------------------------------------------------------------- #
+        # Drop duplicates                                                     #
+        # ------------------------------------------------------------------- #
+
+        pk = table.primary_key
+        if pk:
+            logger.info(f"Removing duplicates with {pk}")
+            df = df.dropDuplicates([pk])
+
         return df
 
     def process_silver_star(self, df) -> DataFrame:
