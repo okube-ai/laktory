@@ -118,6 +118,8 @@ def test_sql_schema():
         "zone": "string",
         "pipeline_name": "string",
     }
+    schema = Table.model_sql_schema(types)
+    print(schema)
 
     types = Column.model_serialized_types()
     assert types == {
@@ -215,6 +217,23 @@ def test_meta():
                 == "STRUCT<name: string, description: string, producer: STRUCT<name: string, description: string, party: integer>, events_root_path: string, dirpath: string, read_as_stream: boolean, type: string, fmt: string, multiline: boolean>"
             )
     assert is_found
+
+    dump = meta.model_dump()
+    col_dump = dump["columns"][0]
+    assert list(col_dump.keys()) == [
+        "name",
+        "type",
+        "comment",
+        "catalog_name",
+        "database_name",
+        "table_name",
+        "unit",
+        "pii",
+        "func_name",
+        "input_cols",
+        "func_kwargs",
+        "jsonize",
+    ]
 
 
 if __name__ == "__main__":

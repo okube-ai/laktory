@@ -16,7 +16,6 @@ class Catalog(BaseModel):
     # Computed fields                                                         #
     # ----------------------------------------------------------------------- #
 
-    @computed_field
     @property
     def full_name(self) -> str:
         return self.name

@@ -8,7 +8,7 @@
 - `df_hascolumn` function to support Spark 3.5
 
 **Fixed**
-- 
+- Table Metadata included derived properties for the columns 
 
 **Breaking Change**
 -

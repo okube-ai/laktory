@@ -36,7 +36,6 @@ class Column(BaseModel):
     # Computed fields                                                         #
     # ----------------------------------------------------------------------- #
 
-    @computed_field
     @property
     def parent_full_name(self) -> str:
         _id = ""
@@ -57,7 +56,6 @@ class Column(BaseModel):
 
         return _id
 
-    @computed_field
     @property
     def full_name(self) -> str:
         _id = self.name
@@ -65,7 +63,6 @@ class Column(BaseModel):
             _id = f"{self.parent_full_name}.{_id}"
         return _id
 
-    @computed_field
     @property
     def schema_name(self) -> str:
         return self.database_name
