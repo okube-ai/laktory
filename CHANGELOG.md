@@ -1,5 +1,18 @@
 # Release History
 
+## [0.0.6]
+**Added**
+-
+
+**Updated**
+-
+
+**Fixed**
+-
+
+**Breaking Changes**
+-
+
 ## [0.0.5] - 2023-09-28
 **Added**
 - Processing method for silver tables
