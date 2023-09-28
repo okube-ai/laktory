@@ -15,12 +15,10 @@ class Database(BaseModel):
     # Computed fields                                                         #
     # ----------------------------------------------------------------------- #
 
-    @computed_field
     @property
     def parent_full_name(self) -> str:
         return self.catalog_name
 
-    @computed_field
     @property
     def full_name(self) -> str:
         _id = self.name

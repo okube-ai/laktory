@@ -15,7 +15,7 @@ resources:
       target: "default"
       libraries:
         - file:
-            path: ./template_brz.py
+            path: ./dlt_template_brz.py
 #        - file:
 #            path: ./get_metrics.py
       channel: preview

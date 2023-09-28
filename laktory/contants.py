@@ -1,4 +1,5 @@
 SUPPORTED_TYPES = [
+    "_any",
     "data",
     "void",
     "atomic",

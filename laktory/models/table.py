@@ -7,6 +7,7 @@ from pydantic import computed_field
 from pydantic import model_validator
 
 from laktory.spark import DataFrame
+from laktory.spark import df_has_column
 
 from laktory._logger import get_logger
 from laktory.sql import py_to_sql
@@ -54,7 +55,6 @@ class Table(BaseModel):
     # Computed fields                                                         #
     # ----------------------------------------------------------------------- #
 
-    @computed_field
     @property
     def parent_full_name(self) -> str:
         _id = ""
@@ -69,7 +69,6 @@ class Table(BaseModel):
 
         return _id
 
-    @computed_field
     @property
     def full_name(self) -> str:
         _id = self.name
@@ -77,7 +76,6 @@ class Table(BaseModel):
             _id = f"{self.parent_full_name}.{_id}"
         return _id
 
-    @computed_field
     @property
     def schema_name(self) -> str:
         return self.database_name
@@ -241,13 +239,152 @@ class Table(BaseModel):
     def process_bronze(self, df) -> DataFrame:
         import pyspark.sql.functions as F
 
-        df = df.withColumn("bronze_at", F.current_timestamp())
+        logger.info(f"Applying bronze transformations")
+
+        df = df.withColumn("_bronze_at", F.current_timestamp())
+
         return df
 
-    def process_silver(self, df) -> DataFrame:
+    def process_silver(self, df, table) -> DataFrame:
         import pyspark.sql.functions as F
 
-        df = df.withColumn("silver_at", F.current_timestamp())
+        logger.info(f"Applying silver transformations")
+
+        columns = []
+
+        # User defined columns
+        columns += table.columns
+
+        if table.timestamp_key is not None:
+            columns += [
+                Column(
+                    **{
+                        "name": "_tstamp",
+                        "type": "timestamp",
+                        "func_name": "coalesce",
+                        "input_cols": [table.timestamp_key],
+                    }
+                )
+            ]
+
+        # Timestamps
+        if df_has_column(df, "bronze_at"):
+            columns += [
+                Column(
+                    **{
+                        "name": "_bronze_at",
+                        "type": "timestamp",
+                        "func_name": "coalesce",
+                        "input_cols": ["_bronze_at", "bronze_at"],
+                    }
+                )
+            ]
+        columns += [
+            Column(
+                **{
+                    "name": "_silver_at",
+                    "type": "timestamp",
+                    "func_name": "current_timestamp",
+                    "input_cols": [],
+                }
+            )
+        ]
+
+        # Saved existing column names
+        cols0 = [v[0] for v in df.dtypes]
+
+        # Build new columns
+        logger.info(f"Setting silver columns...")
+        new_col_names = []
+        for col in columns:
+            # Get column definition
+            col_name = col.name
+            col_type = col.type
+            func_name = col.func_name
+
+            #     # TODO: Support customer functions
+            #     # if udf_name in udfuncs.keys():
+            #     #     f = udfuncs[udf_name]
+            #     # else:
+            #     #     f = getattr(F, udf_name)
+
+            f = getattr(F, func_name)
+            new_col_names += [col_name]
+
+            input_cols = col.input_cols
+            kwargs = col.func_kwargs
+
+            #     # Issue when setting strings
+            #     # if "format" in kwargs and udf_name == "date_format":
+            #     #     kwargs["format"] = kwargs["format"].replace("T", "'T'").replace("''T''", "'T'")
+
+            logger.info(
+                f"   {col_name}[{col_type}] as {func_name}({input_cols}, {kwargs})"
+            )
+
+            # Cast inputs
+            tmp_input_cols = []
+            for i, input_col in enumerate(input_cols):
+                if func_name == "coalesce" and not df_has_column(df, input_col):
+                    # Because the `coalesce` function supports multiple
+                    # optional input columns, we can skip the ones not
+                    # available in the dataframe
+                    logger.warning(f"Column '{input_col}' not available")
+                    continue
+
+                tmp_input_cols += [f"__{i}"]
+                _icol = tmp_input_cols[-1]
+                df = df.withColumn(_icol, F.expr(input_col))
+                if input_col.startswith("data.") or func_name == "coalesce":
+                    input_type = dict(df.dtypes)[_icol]
+                    if input_type in ["double"]:
+                        # Some bronze NaN data will be converted to 0 if cast to int
+                        sdf = df.withColumn(
+                            _icol, F.when(F.isnan(_icol), None).otherwise(F.col(_icol))
+                        )
+                    if col_type not in ["_any"] and func_name not in [
+                        "to_safe_timestamp"
+                    ]:
+                        df = df.withColumn(_icol, F.col(_icol).cast(col_type))
+
+            # Set output
+            df = df.withColumn(
+                col_name,
+                f(
+                    *tmp_input_cols,
+                    **kwargs,
+                ),
+            )
+
+            # Drop temp inputs
+            if len(tmp_input_cols) > 0:
+                df = df.drop(*tmp_input_cols)
+
+            # Remove from drop list
+            if col_name in cols0:
+                cols0.remove(col_name)
+
+        # Drop previous columns
+        logger.info(f"Dropping bronze columns...")
+        df = df.select(new_col_names)
+
+        # ------------------------------------------------------------------- #
+        # Setting Watermark                                                   #
+        # ------------------------------------------------------------------- #
+
+        # TODO:
+        # if watermark is not None:
+        #     sdf = sdf.withWatermark(watermark["column"], watermark["threshold"])
+
+        # ------------------------------------------------------------------- #
+        # Drop duplicates                                                     #
+        # ------------------------------------------------------------------- #
+
+        pk = table.primary_key
+        if pk:
+            logger.info(f"Removing duplicates with {pk}")
+            df = df.dropDuplicates([pk])
+
         return df
 
     def process_silver_star(self, df) -> DataFrame:

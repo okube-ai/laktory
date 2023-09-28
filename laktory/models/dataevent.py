@@ -3,16 +3,30 @@ import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any
-from typing import Literal
+from typing import Union
+
+from pydantic import Field
+from pydantic import ConfigDict
 
 from laktory.models.dataeventheader import DataEventHeader
+from laktory.models.producer import Producer
 from laktory._settings import settings
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
+EXCLUDES = [
+    "events_root_path",
+    "dirpath",
+    "tstamp_col",
+]
+
 
 class DataEvent(DataEventHeader):
+    model_config = ConfigDict(populate_by_name=True)
+    name: str = Field(..., alias="event_name")
+    description: Union[str, None] = Field(None, alias="event_description")
+    producer: Producer = Field(None, alias="event_producer")
     data: dict
     tstamp_col: str = "created_at"
 
@@ -69,27 +83,14 @@ class DataEvent(DataEventHeader):
     # ----------------------------------------------------------------------- #
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
-        exclude = kwargs.pop(
-            "exclude",
-            [
-                "ingestion_pattern",
-                "tstamp_col",
-                "landing_mount_path",
-            ],
-        )
-        mode = kwargs.pop("mode", "json")
-        return super().model_dump(*args, exclude=exclude, mode=mode, **kwargs)
+        kwargs["exclude"] = kwargs.pop("exclude", EXCLUDES)
+        kwargs["by_alias"] = kwargs.pop("by_alias", True)
+        kwargs["mode"] = kwargs.pop("mode", "json")
+        return super().model_dump(*args, **kwargs)
 
     def model_dump_json(self, *args, **kwargs) -> str:
-        exclude = kwargs.pop(
-            "exclude",
-            [
-                "ingestion_pattern",
-                "tstamp_col",
-                "landing_mount_path",
-            ],
-        )
-        return super().model_dump_json(*args, exclude=exclude, **kwargs)
+        kwargs["exclude"] = kwargs.pop("exclude", EXCLUDES)
+        return super().model_dump_json(*args, **kwargs)
 
     def _overwrite_or_skip(
         self, f: callable, path: str, exists: bool, overwrite: bool, skip: bool

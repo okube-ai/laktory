@@ -21,8 +21,8 @@ def test_model():
     assert c1.catalog_name == "lakehouse"
     assert c1.schema_name == "markets"
     assert c1.table_name == "googl"
+    assert c1.full_name == "lakehouse.markets.googl.close"
     assert "func_name" in c1.model_fields
-    assert "full_name" in c1.model_computed_fields
     assert c0 == c1
 
 

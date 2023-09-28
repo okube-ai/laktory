@@ -10,9 +10,9 @@ from laktory.models.producer import Producer
 
 
 class DataEventHeader(BaseModel):
-    name: str
-    description: Union[str, None] = None
-    producer: Producer = None
+    name: str = Field(...)
+    description: Union[str, None] = Field(None)
+    producer: Producer = Field(None)
     events_root_path: str = settings.landing_mount_path + "events/"
     dirpath: Optional[str] = Field(validate_default=True, default=None)
 
@@ -25,7 +25,7 @@ class DataEventHeader(BaseModel):
         if v is None:
             data = info.data
             producer = ""
-            if data["producer"] is not None:
+            if data.get("producer") is not None:
                 producer = data["producer"].name + "/"
-            v = f'{data["events_root_path"]}{producer}{data["name"]}/'
+            v = f'{data.get("events_root_path", "")}{producer}{data.get("name", "")}/'
         return v
