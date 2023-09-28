@@ -1,17 +1,18 @@
 # Release History
 
-## [0.0.4] - 2023-09-27
+## [0.0.5] - 2023-09-28
 **Added**
+- Processing method for silver tables
+- Silver DLT pipeline template notebook
 - `df_schema_flat` function
+- `_any` as as supported type for Spark functions
 
 **Updated**
+- Excluded fields for `DataEvent` model_dump
 - `df_hascolumn` function to support Spark 3.5
 
 **Fixed**
-- Table Metadata included derived properties for the columns 
-
-**Breaking Change**
--
+- Table Metadata included derived properties for the columns
 
 ## [0.0.4] - 2023-09-27
 **Updated**
