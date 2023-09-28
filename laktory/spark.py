@@ -1,4 +1,5 @@
 import json
+import re
 
 spark_installed = False
 try:
@@ -14,18 +15,22 @@ except ModuleNotFoundError:
 
 
 def df_schema_flat(df):
-    # TODO: Manage list of dicts
-
     def get_fields(json_schema):
         field_names = []
         for f in json_schema.get("fields", []):
             f_name = f["name"]
-            if isinstance(f["type"], dict):
-                _field_names = get_fields(f["type"])
-                if len(_field_names) == 0:
+            f_type = f["type"]
+            if isinstance(f_type, dict):
+                if f_type["type"] == "array":
+                    _field_names = get_fields(f_type["elementType"])
                     field_names += [f_name]
-                else:
+                    field_names += [f"{f_name}[*].{v}" for v in _field_names]
+                elif f_type["type"] == "struct":
+                    _field_names = get_fields(f["type"])
+                    field_names += [f_name]
                     field_names += [f"{f_name}.{v}" for v in _field_names]
+                else:
+                    raise ValueError(f_type["type"])
             else:
                 field_names += [f_name]
         return field_names
@@ -34,4 +39,5 @@ def df_schema_flat(df):
 
 
 def df_has_column(df, col):
-    return col in df_schema_flat(df)
+    _col = re.sub(r"\d+", "*", col)
+    return _col in df_schema_flat(df)

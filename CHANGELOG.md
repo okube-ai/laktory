@@ -1,8 +1,11 @@
 # Release History
 
 ## [0.0.4] - 2023-09-27
+**Added**
+- `df_schema_flat` function
+
 **Updated**
-- 
+- `df_hascolumn` function to support Spark 3.5
 
 **Fixed**
 - 
