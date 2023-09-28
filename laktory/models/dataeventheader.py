@@ -25,7 +25,7 @@ class DataEventHeader(BaseModel):
         if v is None:
             data = info.data
             producer = ""
-            if data["producer"] is not None:
+            if data.get("producer") is not None:
                 producer = data["producer"].name + "/"
-            v = f'{data["events_root_path"]}{producer}{data["name"]}/'
+            v = f'{data.get("events_root_path", "")}{producer}{data.get("name", "")}/'
         return v

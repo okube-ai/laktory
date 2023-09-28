@@ -1,6 +1,7 @@
 import pytest
 
 from laktory.models import DataEvent
+from laktory.models import DataEventHeader
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -15,6 +16,24 @@ event = DataEvent(
         "altitude": 20000.0,
     },
 )
+
+
+def test_dataevent_header():
+    header = DataEventHeader(
+        name="flight_record",
+        description=None,
+        producer={
+            "name": "FDR",
+            "party": 1,
+        },
+    )
+    assert header.model_dump() == {
+        "name": "flight_record",
+        "description": None,
+        "producer": {"name": "FDR", "description": None, "party": 1},
+        "events_root_path": "/mnt/landing/events/",
+        "dirpath": "/mnt/landing/events/FDR/flight_record/",
+    }
 
 
 def test_dataevent():
@@ -97,6 +116,7 @@ def test_to_databricks_mount():
 
 
 if __name__ == "__main__":
+    test_dataevent_header()
     test_dataevent()
     test_model_dump()
     test_to_azure_storage_container()
