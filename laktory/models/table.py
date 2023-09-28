@@ -238,6 +238,7 @@ class Table(BaseModel):
 
     def process_bronze(self, df) -> DataFrame:
         import pyspark.sql.functions as F
+
         logger.info(f"Applying bronze transformations")
 
         df = df.withColumn("_bronze_at", F.current_timestamp())
@@ -246,6 +247,7 @@ class Table(BaseModel):
 
     def process_silver(self, df, table) -> DataFrame:
         import pyspark.sql.functions as F
+
         logger.info(f"Applying silver transformations")
 
         columns = []
