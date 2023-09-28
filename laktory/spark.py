@@ -22,9 +22,11 @@ def df_schema_flat(df):
             f_type = f["type"]
             if isinstance(f_type, dict):
                 if f_type["type"] == "array":
-                    _field_names = get_fields(f_type["elementType"])
+                    e_type = f_type["elementType"]
                     field_names += [f_name]
-                    field_names += [f"{f_name}[*].{v}" for v in _field_names]
+                    if isinstance(e_type, dict):
+                        _field_names = get_fields(f_type["elementType"])
+                        field_names += [f"{f_name}[*].{v}" for v in _field_names]
                 elif f_type["type"] == "struct":
                     _field_names = get_fields(f["type"])
                     field_names += [f_name]
