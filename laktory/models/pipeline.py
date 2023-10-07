@@ -75,21 +75,22 @@ class Pipeline(BaseModel):
 
         return table
 
-    def publish_tables_meta(self, catalog_name="main", database_name="laktory"):
+    def publish_tables_meta(self, catalog_name="main", database_name="laktory", init=True):
+
         # Create catalog
         Catalog(name=catalog_name).create(if_not_exists=True)
 
         # Create database
-        Database(name=database_name, catalog_name=catalog_name).create()
+        Database(name=database_name, catalog_name=catalog_name).create(if_not_exists=True)
 
         # Get and create tables
         tables = self.get_tables_meta(
             catalog_name=catalog_name, database_name=database_name
         )
-        tables.create(or_replace=True, insert_data=True)
+        tables.create(or_replace=init, insert_data=True)
 
         # Get and create tables
         columns = self.get_columns_meta(
             catalog_name=catalog_name, database_name=database_name
         )
-        columns.create(or_replace=True, insert_data=True)
+        columns.create(or_replace=init, insert_data=True)

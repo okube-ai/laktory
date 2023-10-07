@@ -4,6 +4,7 @@ from pydantic import computed_field
 from laktory import settings
 from laktory.models.base import BaseModel
 from laktory.models.database import Database
+from laktory.models.grants.cataloggrant import CatalogGrant
 
 
 class Catalog(BaseModel):
@@ -11,6 +12,10 @@ class Catalog(BaseModel):
     comment: Union[str, None] = None
     databases: list[Database] = []
     is_unity: bool = True
+    grants: list[CatalogGrant] = None
+
+    storage_root: str = None
+    isolation_mode: str = "OPEN"
 
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #

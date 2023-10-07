@@ -2,10 +2,11 @@
 
 ## [0.0.6]
 **Added**
--
+- Databricks Users models
+- Grants models
 
 **Updated**
--
+- Pipeline metadata publishing to include init option
 
 **Fixed**
 -

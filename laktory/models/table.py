@@ -15,6 +15,7 @@ from laktory.models.base import BaseModel
 from laktory.models.column import Column
 from laktory.models.datasources.tabledatasource import TableDataSource
 from laktory.models.datasources.eventdatasource import EventDataSource
+from laktory.models.grants.tablegrant import TableGrant
 
 logger = get_logger(__name__)
 
@@ -26,6 +27,7 @@ class Table(BaseModel):
     comment: Union[str, None] = None
     catalog_name: Union[str, None] = None
     database_name: Union[str, None] = None
+    grants: list[TableGrant] = None
 
     # Data
     data: list[list[Any]] = None
