@@ -2,17 +2,9 @@
 
 ## [0.0.6]
 **Added**
-- Databricks Users models
+- User, service principal and users group models
 - Grants models
-
-**Updated**
-- Pipeline metadata publishing to include init option
-
-**Fixed**
--
-
-**Breaking Changes**
--
+- Pulumi resrouces for user, service principal and group models
 
 ## [0.0.5] - 2023-09-28
 **Added**

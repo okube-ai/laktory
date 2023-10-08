@@ -1,6 +1,9 @@
 from .catalog import Catalog
 from .column import Column
 from .database import Database
+from .group import Group
+from .serviceprincipal import ServicePrincipal
+from .user import User
 from .dataevent import DataEvent
 from .dataeventheader import DataEventHeader
 from .datasources import *
@@ -8,5 +11,4 @@ from .grants import *
 from .pipeline import Pipeline
 from .producer import Producer
 from .table import Table
-from .users import *
 from .volume import Volume
