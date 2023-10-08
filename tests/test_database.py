@@ -1,13 +1,13 @@
 from datetime import datetime
 
 from laktory.models import Table
-from laktory.models import Database
+from laktory.models import Schema
 from laktory.models import Catalog
 from laktory.models import Column
 
 
 def test_model():
-    db = Database(
+    db = Schema(
         name="flights",
         catalog_name="laktory_testing",
         tables=[
@@ -55,7 +55,7 @@ def test_create():
 
     cat = Catalog(name=catalog_name)
     cat.create(if_not_exists=True)
-    db = Database(name="default", catalog_name=catalog_name)
+    db = Schema(name="default", catalog_name=catalog_name)
     db.create()
     assert db.exists()
     db.delete()

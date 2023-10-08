@@ -17,6 +17,6 @@ PRIVILEGES = TABLE_PRIVILEGES + VOLUME_PRIVILEGES + FUNCTION_PRIVILEGES + MODEL_
     "USE_SCHEMA",
 ]
 
-class DatabaseGrant(BaseModel):
+class SchemaGrant(BaseModel):
     principal: str
     privileges: list[Literal[tuple(PRIVILEGES)]]

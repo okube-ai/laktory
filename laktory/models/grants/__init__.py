@@ -1,6 +1,6 @@
 from laktory.models.grants.cataloggrant import CatalogGrant
 from laktory.models.grants.connectiongrant import ConnectionGrant
-from laktory.models.grants.databasegrant import DatabaseGrant
+from laktory.models.grants.schemagrant import SchemaGrant
 from laktory.models.grants.externallocationgrant import ExternalLocationGrant
 from laktory.models.grants.functiongrant import FunctionGrant
 from laktory.models.grants.metastoregrant import MetastoreGrant

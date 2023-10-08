@@ -1,6 +1,6 @@
 from .catalog import Catalog
 from .column import Column
-from .database import Database
+from .schema import Schema
 from .group import Group
 from .serviceprincipal import ServicePrincipal
 from .user import User

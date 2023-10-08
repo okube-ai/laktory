@@ -3,15 +3,15 @@ from pydantic import computed_field
 
 from laktory.models.base import BaseModel
 from laktory.models.table import Table
-from laktory.models.grants.databasegrant import DatabaseGrant
+from laktory.models.grants.schemagrant import SchemaGrant
 
 
-class Database(BaseModel):
+class Schema(BaseModel):
     name: str
     comment: Union[str, None] = None
     tables: list[Table] = []
     catalog_name: Union[str, None] = None
-    grants: list[DatabaseGrant] = None
+    grants: list[SchemaGrant] = None
 
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #

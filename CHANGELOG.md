@@ -6,6 +6,9 @@
 - Grants models
 - Pulumi resrouces for user, service principal and group models
 
+**Breaking Change**
+- Renamed database objects to schema to be aligned with Databricks recommendations
+
 ## [0.0.5] - 2023-09-28
 **Added**
 - Processing method for silver tables

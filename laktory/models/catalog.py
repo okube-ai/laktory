@@ -3,14 +3,14 @@ from pydantic import computed_field
 
 from laktory import settings
 from laktory.models.base import BaseModel
-from laktory.models.database import Database
+from laktory.models.schema import Schema
 from laktory.models.grants.cataloggrant import CatalogGrant
 
 
 class Catalog(BaseModel):
     name: str
     comment: Union[str, None] = None
-    databases: list[Database] = []
+    schemas: list[Schema] = []
     is_unity: bool = True
     grants: list[CatalogGrant] = None
 

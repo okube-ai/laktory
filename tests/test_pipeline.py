@@ -51,11 +51,11 @@ def test_publish_meta():
     pl = StockPricesPipeline()
     pl.publish_tables_meta(catalog_name=catalog_name)
 
-    tables = Table(name="tables", database_name="laktory", catalog_name=catalog_name)
+    tables = Table(name="tables", schema_name="laktory", catalog_name=catalog_name)
     data = tables.select()
     assert data[0][0] == "brz_stock_prices"
 
-    columns = Table(name="columns", database_name="laktory", catalog_name=catalog_name)
+    columns = Table(name="columns", schema_name="laktory", catalog_name=catalog_name)
     data = columns.select()
     assert data[1][0] == "low"
 

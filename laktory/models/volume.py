@@ -5,7 +5,7 @@ from laktory.models.grants.volumegrant import VolumeGrant
 class Volume(BaseModel):
     name: str
     catalog_name: str = None
-    database_name: str = None
+    schema_name: str = None
     volume_type: str = "MANAGED"
     storage_location: str = None
     grants: list[VolumeGrant] = None
@@ -20,11 +20,11 @@ class Volume(BaseModel):
         if self.catalog_name:
             _id += self.catalog_name
 
-        if self.database_name:
+        if self.schema_name:
             if _id == "":
-                _id = self.database_name
+                _id = self.schema_name
             else:
-                _id += f".{self.database_name}"
+                _id += f".{self.schema_name}"
 
         return _id
 
