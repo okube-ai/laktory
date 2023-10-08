@@ -20,7 +20,7 @@ class DatabricksServicePrincipal(BaseComponentResource):
 
     def set_resources(self, groups: Union[list[Group], dict] = None, **kwargs):
         kwargs["opts"].delete_before_replace = getattr(kwargs["opts"], "delete_before_replace", True)
-        self.user = databricks.ServicePrincipal(
+        self.sp = databricks.ServicePrincipal(
             f"service-principal-{self.model.display_name}",
             display_name=self.model.display_name,
             application_id=self.model.application_id,
@@ -28,9 +28,9 @@ class DatabricksServicePrincipal(BaseComponentResource):
         )
 
         for role in self.model.roles:
-            databricks.UserRole(
+            databricks.ServicePrincipalRole(
                 f"service-principal-role-{self.model.display_name}-{role}",
-                user_id=self.user.id,
+                service_principal_id=self.sp.id,
                 role=role,
                 **kwargs,
             )
@@ -61,6 +61,6 @@ class DatabricksServicePrincipal(BaseComponentResource):
             databricks.GroupMember(
                 f"group-member-{self.model.display_name}-{g}",
                 group_id=group_id,
-                member_id=self.user.id,
+                member_id=self.sp.id,
                 **kwargs,
             )
