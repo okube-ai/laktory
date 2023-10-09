@@ -1,42 +1,54 @@
+import pulumi
 from typing import Union
 import pulumi_databricks as databricks
-from laktory.resources.basecomponentresource import BaseComponentResource
+from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
 from laktory.models.group import Group
+from laktory.models.user import User
 
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class DatabricksUser(BaseComponentResource):
+class PulumiUser(PulumiResourcesEngine):
 
     @property
     def provider(self):
         return "databricks"
 
-    @property
-    def default_name(self) -> str:
-        return f"user-{self.model.user_name}"
+    def __init__(
+            self,
+            name=None,
+            user: User = None,
+            groups: Union[list[Group], dict] = None,
+            opts=None,
+            **kwargs
+    ):
+        if name is None:
+            name = f"user-{user.user_name}"
+        super().__init__(self.t, name, {}, opts)
 
-    def set_resources(self, groups: Union[list[Group], dict] = None, **kwargs):
+        kwargs["opts"] = kwargs.get("opts", pulumi.ResourceOptions())
+        kwargs["opts"].parent = self
         kwargs["opts"].delete_before_replace = getattr(kwargs["opts"], "delete_before_replace", True)
+
         self.user = databricks.User(
-            f"user-{self.model.user_name}",
-            user_name=self.model.user_name,
-            display_name=self.model.display_name,
+            f"user-{user.user_name}",
+            user_name=user.user_name,
+            display_name=user.display_name,
             **kwargs,
         )
 
-        for role in self.model.roles:
+        for role in user.roles:
             databricks.UserRole(
-                f"user-role-{self.model.user_name}-{role}",
+                f"user-role-{user.user_name}-{role}",
                 user_id=self.user.id,
                 role=role,
                 **kwargs,
             )
 
         if not groups:
-            if self.model.groups:
+            if user.groups:
                 logger.warning(
                     "User is member of groups, but groups have not been provided. Group member resources will "
                     "be skipped."
@@ -44,7 +56,7 @@ class DatabricksUser(BaseComponentResource):
             return
 
         # Group Member
-        for g in self.model.groups:
+        for g in user.groups:
 
             # Find matching group
             group_id = None
@@ -59,7 +71,7 @@ class DatabricksUser(BaseComponentResource):
                 group_id = groups[g]
 
             databricks.GroupMember(
-                f"group-member-{self.model.user_name}-{g}",
+                f"group-member-{user.user_name}-{g}",
                 group_id=group_id,
                 member_id=self.user.id,
                 **kwargs,
