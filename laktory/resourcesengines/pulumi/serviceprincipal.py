@@ -1,5 +1,8 @@
 from typing import Union
+
+import pulumi
 import pulumi_databricks as databricks
+
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
 from laktory.models.group import Group
 from laktory.models.serviceprincipal import ServicePrincipal
@@ -32,6 +35,8 @@ class PulumiServicePrincipal(PulumiResourcesEngine):
             name = f"service-principal-{sp.display_name}"
         super().__init__(self.t, name, {}, opts)
 
+        kwargs["opts"] = kwargs.get("opts", pulumi.ResourceOptions())
+        kwargs["opts"].parent = self
         kwargs["opts"].delete_before_replace = getattr(kwargs["opts"], "delete_before_replace", True)
 
         self.sp = databricks.ServicePrincipal(
