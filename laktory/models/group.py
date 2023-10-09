@@ -1,20 +1,17 @@
 from laktory.models.base import BaseModel
-from laktory.resources.databricksgroup import DatabricksGroup
+from laktory.models.resources import Resources
 
 
-class Group(BaseModel):
+class Group(BaseModel, Resources):
     display_name: str
     allow_cluster_create: bool = False
     workspace_access: bool = True
     user_names: list[str] = None
-    _resources: DatabricksGroup = None
 
-    @property
-    def resources(self):
-        if self._resources is None:
-            self.set_resources()
-        return self._resources
+    # ----------------------------------------------------------------------- #
+    # Resources Engine Methods                                                #
+    # ----------------------------------------------------------------------- #
 
-    def set_resources(self, name=None, **kwargs):
-        self._resources = DatabricksGroup(model=self, name=name, **kwargs)
-        return self._resources
+    def deploy_with_pulumi(self, name=None, **kwargs):
+        from laktory.resourcesengines.pulumi.group import PulumiGroup
+        return PulumiGroup(name=name, group=self, **kwargs)
