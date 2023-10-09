@@ -5,7 +5,7 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 
 from laktory.sql import py_to_sql
-from laktory.databricks.workspaceclient import WorkspaceClient
+from laktory.workspaceclient import WorkspaceClient
 
 
 class BaseModel(_BaseModel):
@@ -25,6 +25,7 @@ class BaseModel(_BaseModel):
         data = json.load(fp)
         return cls.model_validate(data)
 
+    # TODO: Migrate to Databricks engine
     @classmethod
     def model_serialized_types(cls):
         def parse(schema_data):
@@ -58,6 +59,7 @@ class BaseModel(_BaseModel):
 
         return types
 
+    # TODO: Migrate to Databricks engine
     @classmethod
     def model_sql_schema(cls, types: dict = None):
         if types is None:
