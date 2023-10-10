@@ -7,7 +7,7 @@ GOOGL = {
     "type": "double",
     "unit": "USD",
     "catalog_name": "lakehouse",
-    "database_name": "markets",
+    "schema_name": "markets",
     "table_name": "googl",
 }
 

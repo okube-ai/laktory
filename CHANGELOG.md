@@ -2,16 +2,12 @@
 
 ## [0.0.6]
 **Added**
--
+- User, service principal and users group models
+- Grants models
+- Pulumi resources engine for user, group, catalog, schema, volume and associated grants
 
-**Updated**
--
-
-**Fixed**
--
-
-**Breaking Changes**
--
+**Breaking Change**
+- Renamed database objects to schema to be aligned with Databricks recommendations
 
 ## [0.0.5] - 2023-09-28
 **Added**

@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 
 class TableDataSource(BaseDataSource):
     name: Union[str, None]
-    database_name: Union[str, None] = None
+    schema_name: Union[str, None] = None
     catalog_name: Union[str, None] = None
 
     # ----------------------------------------------------------------------- #
@@ -22,11 +22,11 @@ class TableDataSource(BaseDataSource):
         if self.catalog_name is not None:
             name = self.catalog_name
 
-        if self.database_name is not None:
+        if self.schema_name is not None:
             if name == "":
-                name = self.database_name
+                name = self.schema_name
             else:
-                name += f".{self.database_name}"
+                name += f".{self.schema_name}"
 
         if name == "":
             name = self.name

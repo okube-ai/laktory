@@ -13,7 +13,7 @@ dlt.spark = spark
 
 logger = get_logger(__name__)
 
-pl_name = spark.conf.get("pipeline_name", "pl-ion")
+pl_name = spark.conf.get("pipeline_name", "pl-stock-prices")
 
 
 def define_silver_table(table):

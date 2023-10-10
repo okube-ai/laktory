@@ -6,7 +6,7 @@ from laktory.models.base import BaseModel
 from laktory.models.table import Table
 from laktory.models.table import Column
 from laktory.models.catalog import Catalog
-from laktory.models.database import Database
+from laktory.models.schema import Schema
 
 
 class Pipeline(BaseModel):
@@ -31,21 +31,21 @@ class Pipeline(BaseModel):
         for t in self.tables:
             t.pipeline_name = self.name
             t.catalog_name = self.catalog
-            t.database_name = self.target
+            t.schema_name = self.target
             for c in t.columns:
                 c.table_name = t.name
                 c.catalog_name = t.catalog_name
-                c.database_name = t.database_name
+                c.schema_name = t.schema_name
         return self
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def get_tables_meta(self, catalog_name="main", database_name="laktory") -> Table:
+    def get_tables_meta(self, catalog_name="main", schema_name="laktory") -> Table:
         table = Table.meta_table()
         table.catalog_name = catalog_name
-        table.database_name = database_name
+        table.schema_name = schema_name
 
         data = []
         for t in self.tables:
@@ -58,10 +58,10 @@ class Pipeline(BaseModel):
 
         return table
 
-    def get_columns_meta(self, catalog_name="main", database_name="laktory") -> Table:
+    def get_columns_meta(self, catalog_name="main", schema_name="laktory") -> Table:
         table = Column.meta_table()
         table.catalog_name = catalog_name
-        table.database_name = database_name
+        table.schema_name = schema_name
 
         data = []
         for t in self.tables:
@@ -75,21 +75,22 @@ class Pipeline(BaseModel):
 
         return table
 
-    def publish_tables_meta(self, catalog_name="main", database_name="laktory"):
+    def publish_tables_meta(self, catalog_name="main", schema_name="laktory", init=True):
+
         # Create catalog
         Catalog(name=catalog_name).create(if_not_exists=True)
 
-        # Create database
-        Database(name=database_name, catalog_name=catalog_name).create()
+        # Create schema
+        Schema(name=schema_name, catalog_name=catalog_name).create(if_not_exists=True)
 
         # Get and create tables
         tables = self.get_tables_meta(
-            catalog_name=catalog_name, database_name=database_name
+            catalog_name=catalog_name, schema_name=schema_name
         )
-        tables.create(or_replace=True, insert_data=True)
+        tables.create(or_replace=init, insert_data=True)
 
         # Get and create tables
         columns = self.get_columns_meta(
-            catalog_name=catalog_name, database_name=database_name
+            catalog_name=catalog_name, schema_name=schema_name
         )
-        columns.create(or_replace=True, insert_data=True)
+        columns.create(or_replace=init, insert_data=True)

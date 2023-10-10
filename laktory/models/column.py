@@ -12,7 +12,7 @@ class Column(BaseModel):
     type: str = "string"
     comment: Union[str, None] = None
     catalog_name: Union[str, None] = None
-    database_name: Union[str, None] = None
+    schema_name: Union[str, None] = None
     table_name: Union[str, None] = None
     unit: Union[str, None] = None
     pii: Union[bool, None] = None
@@ -42,11 +42,11 @@ class Column(BaseModel):
         if self.catalog_name:
             _id += self.catalog_name
 
-        if self.database_name:
+        if self.schema_name:
             if _id == "":
-                _id = self.database_name
+                _id = self.schema_name
             else:
-                _id += f".{self.database_name}"
+                _id += f".{self.schema_name}"
 
         if self.table_name:
             if _id == "":
@@ -64,8 +64,8 @@ class Column(BaseModel):
         return _id
 
     @property
-    def schema_name(self) -> str:
-        return self.database_name
+    def database_name(self) -> str:
+        return self.schema_name
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
@@ -90,6 +90,6 @@ class Column(BaseModel):
         # Set table
         return Table(
             name="columns",
-            database_name="laktory",
+            schema_name="laktory",
             columns=columns,
         )

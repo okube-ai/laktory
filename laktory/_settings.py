@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     #     keyvault_url="LAKTORY_KEYVAULT_URL"
     # )
 
+    # Configuration
+    resources_engine: Union[str, None] = Field("pulumi", alias="LAKTORY_RESOURCES_ENGINE")
+
     # Azure
     lakehouse_sa_conn_str: Union[str, None] = Field(None, alias="LAKEHOUSE_SA_CONN_STR")
 

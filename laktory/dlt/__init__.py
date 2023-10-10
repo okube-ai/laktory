@@ -77,7 +77,7 @@ def read(*args, **kwargs):
     if is_debug():
         return spark.read.table(args[0])
     else:
-        # Remove catalog and database from naming space
+        # Remove catalog and schema from naming space
         args = list(args)
         args[0] = args[0].split(".")[-1]
         return _read(*args, **kwargs)
@@ -87,7 +87,7 @@ def read_stream(*args, fmt="delta", **kwargs):
     if is_debug():
         return spark.readStream.format(fmt).table(args[0])
     else:
-        # Remove catalog and database from naming space
+        # Remove catalog and schema from naming space
         args = list(args)
         args[0] = args[0].split(".")[-1]
         return _read_stream(*args, **kwargs)

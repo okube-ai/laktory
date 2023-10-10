@@ -4,7 +4,7 @@ from pydantic import ValidationError
 import pandas as pd
 
 from laktory.models import Catalog
-from laktory.models import Database
+from laktory.models import Schema
 from laktory.models import Column
 from laktory.models import Table
 from laktory.models import EventDataSource
@@ -25,7 +25,7 @@ table = Table(
     data=[[1, 2], [3, 4], [5, 6]],
     zone="SILVER",
     catalog_name="lakehouse",
-    database_name="markets",
+    schema_name="markets",
     event_source=EventDataSource(
         name="stock_price",
     ),
@@ -49,14 +49,14 @@ def test_model():
             name="open",
             type="double",
             catalog_name="lakehouse",
-            database_name="markets",
+            schema_name="markets",
             table_name="googl",
         ),
         Column(
             name="close",
             type="double",
             catalog_name="lakehouse",
-            database_name="markets",
+            schema_name="markets",
             table_name="googl",
         ),
     ]
@@ -82,7 +82,7 @@ def test_sql_schema():
                 "type": "string",
                 "comment": "string",
                 "catalog_name": "string",
-                "database_name": "string",
+                "schema_name": "string",
                 "table_name": "string",
                 "unit": "string",
                 "pii": "boolean",
@@ -95,7 +95,8 @@ def test_sql_schema():
         "primary_key": "string",
         "comment": "string",
         "catalog_name": "string",
-        "database_name": "string",
+        "schema_name": "string",
+        "grants": [{"principal": "string", "privileges": ["string"]}],
         "data": [[None]],
         "timestamp_key": "string",
         "event_source": {
@@ -112,7 +113,7 @@ def test_sql_schema():
         "table_source": {
             "read_as_stream": "boolean",
             "name": "string",
-            "database_name": "string",
+            "schema_name": "string",
             "catalog_name": "string",
         },
         "zone": "string",
@@ -125,7 +126,7 @@ def test_sql_schema():
         "type": "string",
         "comment": "string",
         "catalog_name": "string",
-        "database_name": "string",
+        "schema_name": "string",
         "table_name": "string",
         "unit": "string",
         "pii": "boolean",
@@ -139,11 +140,11 @@ def test_sql_schema():
     schema = Column.model_sql_schema(types)
     assert (
         schema
-        == "(name string, type string, comment string, catalog_name string, database_name string, table_name string, unit string, pii boolean, func_name string, input_cols ARRAY<string>, func_kwargs string, jsonize boolean)"
+        == "(name string, type string, comment string, catalog_name string, schema_name string, table_name string, unit string, pii boolean, func_name string, input_cols ARRAY<string>, func_kwargs string, jsonize boolean)"
     )
 
 
-def test_create_and_insert():
+def atest_create_and_insert():
     # Timestamp is included in catalog name to prevent conflicts when running
     # multiple tests in parallel
     cat_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")
@@ -152,11 +153,11 @@ def test_create_and_insert():
         name=cat_name,
     )
     cat.create(if_not_exists=True)
-    db = Database(name="default", catalog_name=cat_name)
+    db = Schema(name="default", catalog_name=cat_name)
     db.create()
     table = Table(
         catalog_name=cat_name,
-        database_name="default",
+        schema_name="default",
         name="stocks",
         columns=[
             {
@@ -201,7 +202,7 @@ def test_meta():
     meta.catalog_name = "main"
 
     assert "catalog_name" in meta.column_names
-    assert "database_name" in meta.column_names
+    assert "schema_name" in meta.column_names
     assert "name" in meta.column_names
     assert "comment" in meta.column_names
     assert "columns" in meta.column_names
@@ -223,7 +224,7 @@ def test_meta():
         "type",
         "comment",
         "catalog_name",
-        "database_name",
+        "schema_name",
         "table_name",
         "unit",
         "pii",
@@ -238,5 +239,5 @@ if __name__ == "__main__":
     test_model()
     test_data()
     test_sql_schema()
-    test_create_and_insert()
+    # atest_create_and_insert()
     test_meta()

@@ -15,6 +15,7 @@ from laktory.models.base import BaseModel
 from laktory.models.column import Column
 from laktory.models.datasources.tabledatasource import TableDataSource
 from laktory.models.datasources.eventdatasource import EventDataSource
+from laktory.models.grants.tablegrant import TableGrant
 
 logger = get_logger(__name__)
 
@@ -25,7 +26,8 @@ class Table(BaseModel):
     primary_key: Union[str, None] = None
     comment: Union[str, None] = None
     catalog_name: Union[str, None] = None
-    database_name: Union[str, None] = None
+    schema_name: Union[str, None] = None
+    grants: list[TableGrant] = None
 
     # Data
     data: list[list[Any]] = None
@@ -48,7 +50,7 @@ class Table(BaseModel):
         for c in self.columns:
             c.table_name = self.name
             c.catalog_name = self.catalog_name
-            c.database_name = self.database_name
+            c.schema_name = self.schema_name
         return self
 
     # ----------------------------------------------------------------------- #
@@ -61,11 +63,11 @@ class Table(BaseModel):
         if self.catalog_name:
             _id += self.catalog_name
 
-        if self.database_name:
+        if self.schema_name:
             if _id == "":
-                _id = self.database_name
+                _id = self.schema_name
             else:
-                _id += f".{self.database_name}"
+                _id += f".{self.schema_name}"
 
         return _id
 
@@ -77,8 +79,8 @@ class Table(BaseModel):
         return _id
 
     @property
-    def schema_name(self) -> str:
-        return self.database_name
+    def database_name(self) -> str:
+        return self.schema_name
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -126,7 +128,7 @@ class Table(BaseModel):
         # Set table
         return Table(
             name="tables",
-            database_name="laktory",
+            schema_name="laktory",
             columns=columns,
         )
 

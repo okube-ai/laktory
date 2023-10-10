@@ -32,6 +32,8 @@ dynamic = ["version"]
 dependencies = [
     "databricks-sdk",
     "jsonref",
+    "pulumi",
+    "pulumi_databricks",
     "pyyaml",
     "pydantic>=2",
     "settus",
@@ -52,10 +54,13 @@ test = [
 ]
 azure = [
     "azure-identity",
-    "azure-storage-blob"
+    "azure-storage-blob",
+    "pulumi_azure",
+    "pulumi_azure_native",
 ]
 aws = [
     "boto3",
+    "pulumi_aws",
 ]
 gcp = [
 ]
