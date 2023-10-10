@@ -18,12 +18,12 @@ class Resources(_BaseModel):
     @property
     def resources(self):
         if self._resources is None:
-            raise ValueError("Model has not been deployed. Call model.deploy() first")
+            raise ValueError(f"Model ({self}) has not been deployed. Call model.deploy() first")
         return self._resources
 
     def deploy(self, *args, engine: Literal[tuple(ENGINES)]=None, **kwargs):
         if not engine:
-            engine = settings.deployment_engine
+            engine = settings.resources_engine
         engine = engine.lower()
 
         if engine == "pulumi":

@@ -21,16 +21,15 @@ class PulumiCatalog(PulumiResourcesEngine):
             name=None,
             catalog: Catalog = None,
             opts=None,
-            **kwargs
     ):
         if name is None:
             name = f"catalog-{catalog.full_name}"
         super().__init__(self.t, name, {}, opts)
 
-        kwargs["opts"] = kwargs.get("opts", pulumi.ResourceOptions())
-        kwargs["opts"].parent = self
+        opts = pulumi.ResourceOptions(parent=self)
 
         # Catalog
+        print(catalog.name, "STORAGE ROOT!!", catalog.storage_root)
         self.catalog = databricks.Catalog(
             f"catalog-{catalog.full_name}",
             name=catalog.full_name,
@@ -38,22 +37,22 @@ class PulumiCatalog(PulumiResourcesEngine):
             force_destroy=catalog.force_destroy,
             isolation_mode=catalog.isolation_mode,
             storage_root=catalog.storage_root,
-            **kwargs
+            opts=opts,
         )
 
         # Grants
         if catalog.grants:
-            _grants = databricks.Grants(
+            self.grants = databricks.Grants(
                 f"grants-catalog-{catalog.full_name}",
                 catalog=self.catalog.name,
                 grants=[
                     databricks.GrantsGrantArgs(principal=g.principal, privileges=g.privileges) for g in
                     catalog.grants
                 ],
-                **kwargs
+                opts=opts,
             )
 
         # Schemas
         if catalog.schemas:
             for s in catalog.schemas:
-                s.deploy_with_pulumi(opts=pulumi.ResourceOptions(parent=self.catalog))
+                s._resources = s.deploy_with_pulumi(opts=pulumi.ResourceOptions(parent=self.catalog))

@@ -13,6 +13,6 @@ class ServicePrincipal(BaseModel, Resources):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
-    def deploy_with_pulumi(self, name=None, groups=None, **kwargs):
+    def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.serviceprincipal import PulumiServicePrincipal
-        return PulumiServicePrincipal(name=name, service_principal=self, groups=groups, **kwargs)
+        return PulumiServicePrincipal(name=name, service_principal=self, groups=groups, opts=opts)

@@ -13,6 +13,6 @@ class User(BaseModel, Resources):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
-    def deploy_with_pulumi(self, name=None, groups=None, **kwargs):
+    def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.user import PulumiUser
-        return PulumiUser(name=name, user=self, groups=groups, **kwargs)
+        return PulumiUser(name=name, user=self, groups=groups, opts=opts)

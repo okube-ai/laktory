@@ -21,6 +21,11 @@ class Catalog(BaseModel, Resources):
     storage_root: str = None
     isolation_mode: str = "OPEN"
 
+    def model_post_init(self, __context):
+        for schema in self.schemas:
+            schema.catalog_name = self.name
+            schema.model_post_init(None)
+
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #
     # ----------------------------------------------------------------------- #
@@ -55,6 +60,6 @@ class Catalog(BaseModel, Resources):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
-    def deploy_with_pulumi(self, name=None, **kwargs):
+    def deploy_with_pulumi(self, name=None, opts=None):
         from laktory.resourcesengines.pulumi.catalog import PulumiCatalog
-        return PulumiCatalog(name=name, catalog=self, **kwargs)
+        return PulumiCatalog(name=name, catalog=self, opts=opts)

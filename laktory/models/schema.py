@@ -19,6 +19,14 @@ class Schema(BaseModel, Resources):
     # Pulumi Options
     force_destroy: bool = True
 
+    def model_post_init(self, __context):
+        for table in self.tables:
+            table.catalog_name = self.catalog_name
+            table.schema_name = self.name
+        for volume in self.volumes:
+            volume.catalog_name = self.catalog_name
+            volume.schema_name = self.name
+
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #
     # ----------------------------------------------------------------------- #
@@ -64,6 +72,6 @@ class Schema(BaseModel, Resources):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
-    def deploy_with_pulumi(self, name=None, **kwargs):
+    def deploy_with_pulumi(self, name=None, opts=None):
         from laktory.resourcesengines.pulumi.schema import PulumiSchema
-        return PulumiSchema(name=name, schema=self, **kwargs)
+        return PulumiSchema(name=name, schema=self, opts=opts)

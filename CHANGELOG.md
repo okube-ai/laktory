@@ -4,7 +4,7 @@
 **Added**
 - User, service principal and users group models
 - Grants models
-- Pulumi resrouces for user, service principal and group models
+- Pulumi resources engine for user, group, catalog, schema, volume and associated grants
 
 **Breaking Change**
 - Renamed database objects to schema to be aligned with Databricks recommendations

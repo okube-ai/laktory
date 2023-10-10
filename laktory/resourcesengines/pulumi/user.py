@@ -22,30 +22,31 @@ class PulumiUser(PulumiResourcesEngine):
             user: User = None,
             groups: Union[list[Group], dict] = None,
             opts=None,
-            **kwargs
     ):
         if name is None:
             name = f"user-{user.user_name}"
         super().__init__(self.t, name, {}, opts)
 
-        kwargs["opts"] = kwargs.get("opts", pulumi.ResourceOptions())
-        kwargs["opts"].parent = self
-        kwargs["opts"].delete_before_replace = getattr(kwargs["opts"], "delete_before_replace", True)
+        opts = pulumi.ResourceOptions(
+            parent=self,
+            delete_before_replace=True,
+        )
 
         self.user = databricks.User(
             f"user-{user.user_name}",
             user_name=user.user_name,
             display_name=user.display_name,
-            **kwargs,
+            opts=opts,
         )
 
+        self.roles = []
         for role in user.roles:
-            databricks.UserRole(
+            self.roles += [databricks.UserRole(
                 f"user-role-{user.user_name}-{role}",
                 user_id=self.user.id,
                 role=role,
-                **kwargs,
-            )
+                opts=opts,
+            )]
 
         if not groups:
             if user.groups:
@@ -56,6 +57,7 @@ class PulumiUser(PulumiResourcesEngine):
             return
 
         # Group Member
+        self.group_members = []
         for g in user.groups:
 
             # Find matching group
@@ -70,9 +72,9 @@ class PulumiUser(PulumiResourcesEngine):
             elif isinstance(groups, dict):
                 group_id = groups[g]
 
-            databricks.GroupMember(
+            self.group_members += [databricks.GroupMember(
                 f"group-member-{user.user_name}-{g}",
                 group_id=group_id,
                 member_id=self.user.id,
-                **kwargs,
-            )
+                opts=opts,
+            )]

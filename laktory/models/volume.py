@@ -1,8 +1,9 @@
 from laktory.models.base import BaseModel
+from laktory.models.resources import Resources
 from laktory.models.grants.volumegrant import VolumeGrant
 
 
-class Volume(BaseModel):
+class Volume(BaseModel, Resources):
     name: str
     catalog_name: str = None
     schema_name: str = None
@@ -34,3 +35,11 @@ class Volume(BaseModel):
         if self.parent_full_name is not None:
             _id = f"{self.parent_full_name}.{_id}"
         return _id
+
+    # ----------------------------------------------------------------------- #
+    # Resources Engine Methods                                                #
+    # ----------------------------------------------------------------------- #
+
+    def deploy_with_pulumi(self, name=None, **kwargs):
+        from laktory.resourcesengines.pulumi.volume import PulumiVolume
+        return PulumiVolume(name=name, volume=self, **kwargs)

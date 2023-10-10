@@ -21,15 +21,15 @@ class PulumiSchema(PulumiResourcesEngine):
             name=None,
             schema: Schema = None,
             opts=None,
-            **kwargs
     ):
 
         if name is None:
-            name = f"catalog-{schema.full_name}"
+            name = f"schema-{schema.full_name}"
         super().__init__(self.t, name, {}, opts)
 
-        kwargs["opts"] = kwargs.get("opts", pulumi.ResourceOptions())
-        kwargs["opts"].parent = self
+        opts = pulumi.ResourceOptions(
+            parent=self,
+        )
 
         # Schema
         self.schema = databricks.Schema(
@@ -37,23 +37,24 @@ class PulumiSchema(PulumiResourcesEngine):
             name=schema.name,
             catalog_name=schema.catalog_name,
             force_destroy=schema.force_destroy,
-            **kwargs
+            opts=opts,
         )
 
         # Schema grants
+        _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.schema))
         if schema.grants:
-            _grants = databricks.Grants(
+            self.grants = databricks.Grants(
                 f"grants-{schema.full_name}",
-                schema=self.schema.name,
+                schema=schema.full_name,
                 grants=[
                     databricks.GrantsGrantArgs(principal=g.principal, privileges=g.privileges) for g in schema.grants
                 ],
-                **kwargs
+                opts=_opts,
             )
 
         # Schema volumes
         if schema.volumes:
             for v in schema.volumes:
-                v.deploy_with_pulumi(opts=pulumi.ResourceOptions(parent=self))
+                v._resources = v.deploy_with_pulumi(opts=pulumi.ResourceOptions(parent=self.schema))
 
         # TODO: Schema tables
