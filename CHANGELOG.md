@@ -1,6 +1,6 @@
 # Release History
 
-## [0.0.6] - 2023-10-09
+## [0.0.6] - 2023-10-10
 **Added**
 - User, service principal and users group models
 - Grants models
