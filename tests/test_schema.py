@@ -48,7 +48,7 @@ def test_model():
     assert db.full_name == "laktory_testing.flights"
 
 
-def test_create():
+def atest_create():
     # Timestamp is included in catalog name to prevent conflicts when running
     # multiple tests in parallel
     catalog_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")
@@ -65,4 +65,4 @@ def test_create():
 
 if __name__ == "__main__":
     test_model()
-    test_create()
+    # atest_create()

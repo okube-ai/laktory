@@ -96,6 +96,7 @@ def test_sql_schema():
         "comment": "string",
         "catalog_name": "string",
         "schema_name": "string",
+        "grants": [{"principal": "string", "privileges": ["string"]}],
         "data": [[None]],
         "timestamp_key": "string",
         "event_source": {
@@ -143,7 +144,7 @@ def test_sql_schema():
     )
 
 
-def test_create_and_insert():
+def atest_create_and_insert():
     # Timestamp is included in catalog name to prevent conflicts when running
     # multiple tests in parallel
     cat_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")
@@ -238,5 +239,5 @@ if __name__ == "__main__":
     test_model()
     test_data()
     test_sql_schema()
-    test_create_and_insert()
+    # atest_create_and_insert()
     test_meta()

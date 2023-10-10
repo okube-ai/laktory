@@ -2,7 +2,6 @@ from laktory.resourcesengines import PulumiResourcesEngine
 
 
 class PulumiResources(PulumiResourcesEngine):
-
     @property
     def provider(self) -> str:
         return "databricks"

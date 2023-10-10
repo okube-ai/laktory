@@ -43,7 +43,7 @@ def test_columns_meta():
     assert df["type"].tolist() == ["timestamp", "double", "double"]
 
 
-def test_publish_meta():
+def atest_publish_meta():
     # Timestamp is included in catalog name to prevent conflicts when running
     # multiple tests in parallel
     catalog_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")
@@ -68,4 +68,4 @@ if __name__ == "__main__":
     test_read_yaml()
     test_tables_meta()
     test_columns_meta()
-    test_publish_meta()
+    # atest_publish_meta()

@@ -6,16 +6,14 @@ user = User(
     groups=[
         "role-engineers",
     ],
-    roles=[
-        "store-admin"
-    ]
+    roles=["store-admin"],
 )
 
 group = Group(
     display_name="role-engineers",
     user_names=[
         "data.engineer@gmail.moc",
-    ]
+    ],
 )
 
 
