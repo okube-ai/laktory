@@ -29,7 +29,6 @@ class PulumiCatalog(PulumiResourcesEngine):
         opts = pulumi.ResourceOptions(parent=self)
 
         # Catalog
-        print(catalog.name, "STORAGE ROOT!!", catalog.storage_root)
         self.catalog = databricks.Catalog(
             f"catalog-{catalog.full_name}",
             name=catalog.full_name,
