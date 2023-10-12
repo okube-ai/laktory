@@ -8,7 +8,7 @@
 -
 
 **Added**
-- 
+- Init Scripts model
 
 **Breaking Change**
 - 

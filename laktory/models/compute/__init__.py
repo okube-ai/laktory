@@ -1,0 +1,1 @@
+from laktory.models.compute.initscript import InitScript
