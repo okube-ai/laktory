@@ -15,7 +15,7 @@ class Catalog(BaseModel, Resources):
     is_unity: bool = True
     grants: list[CatalogGrant] = None
 
-    # Pulumi Options
+    # Deployment options
     owner: str = None
     force_destroy: bool = True
     storage_root: str = None

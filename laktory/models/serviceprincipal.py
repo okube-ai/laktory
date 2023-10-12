@@ -9,6 +9,9 @@ class ServicePrincipal(BaseModel, Resources):
     groups: list[str] = []
     roles: list[str] = []
 
+    # Deployment options
+    disable_as_user_deletion: bool = False
+
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #

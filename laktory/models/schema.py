@@ -16,7 +16,7 @@ class Schema(BaseModel, Resources):
     catalog_name: Union[str, None] = None
     grants: list[SchemaGrant] = None
 
-    # Pulumi Options
+    # Deployment options
     force_destroy: bool = True
 
     def model_post_init(self, __context):
