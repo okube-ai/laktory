@@ -49,7 +49,7 @@ class PulumiSecretScope(PulumiResourcesEngine):
                 f"secret-{secret_scope.name}-{s.key}",
                 key=s.key,
                 string_value=s.value,
-                scope=self.secret_scope.name,
+                scope=self.secret_scope.id,
                 opts=opts,
             )
 
