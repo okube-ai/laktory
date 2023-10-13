@@ -8,7 +8,8 @@
 -
 
 **Added**
-- Init Scripts model
+- compute.InitScript model
+- compute.Cluster model
 
 **Breaking Change**
 - 

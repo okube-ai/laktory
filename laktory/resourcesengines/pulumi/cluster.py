@@ -89,7 +89,7 @@ class PulumiCluster(PulumiResourcesEngine):
                     whl=l.whl
                 )]
 
-        self.file = databricks.Cluster(
+        self.cluster = databricks.Cluster(
                 f"cluster-{cluster.name}",
                 apply_policy_default_values=cluster.apply_policy_default_values,
                 autoscale=autoscale,
@@ -109,21 +109,21 @@ class PulumiCluster(PulumiResourcesEngine):
                 opts=opts,
             )
 
-        # access_controls = []
-        # for permission in init_script.permissions:
-        #     access_controls += [
-        #         databricks.PermissionsAccessControlArgs(
-        #             permission_level=permission.permission_level,
-        #             group_name="account users",
-        #             service_principal_name=permission.service_principal_name,
-        #             user_name=permission.user_name,
-        #         )
-        #     ]
-        #
-        # if access_controls:
-        #     databricks.Permissions(
-        #         f"permissions-file-{init_script.key}",
-        #         access_controls=access_controls,
-        #         workspace_file_path=self.file.path,
-        #         opts=opts,
-        #     )
+        access_controls = []
+        for permission in cluster.permissions:
+            access_controls += [
+                databricks.PermissionsAccessControlArgs(
+                    permission_level=permission.permission_level,
+                    group_name=permission.group_name,
+                    service_principal_name=permission.service_principal_name,
+                    user_name=permission.user_name,
+                )
+            ]
+
+        if access_controls:
+            self.permissions = databricks.Permissions(
+                f"permissions-cluster-{cluster.name}",
+                access_controls=access_controls,
+                cluster_id=self.cluster.id,
+                opts=opts,
+            )

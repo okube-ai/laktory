@@ -42,14 +42,14 @@ class PulumiInitScript(PulumiResourcesEngine):
             access_controls += [
                 databricks.PermissionsAccessControlArgs(
                     permission_level=permission.permission_level,
-                    group_name="account users",
+                    group_name=permission.group_name,
                     service_principal_name=permission.service_principal_name,
                     user_name=permission.user_name,
                 )
             ]
 
         if access_controls:
-            databricks.Permissions(
+            self.permissions = databricks.Permissions(
                 f"permissions-file-{init_script.key}",
                 access_controls=access_controls,
                 workspace_file_path=self.file.path,
