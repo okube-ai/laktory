@@ -10,6 +10,8 @@
 **Added**
 - compute.InitScript model
 - compute.Cluster model
+- secrets.Secret model
+- secrets.SecretScope model
 
 **Breaking Change**
 - 

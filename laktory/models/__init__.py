@@ -10,6 +10,7 @@ from .pipeline import Pipeline
 from .producer import Producer
 from .schema import Schema
 from .serviceprincipal import ServicePrincipal
+from .secrets import *
 from .table import Table
 from .user import User
 from .volume import Volume
