@@ -8,7 +8,11 @@
 -
 
 **Added**
-- 
+- compute.InitScript model
+- compute.Cluster model
+- compute.Warehouse model
+- secrets.Secret model
+- secrets.SecretScope model
 
 **Breaking Change**
 - 

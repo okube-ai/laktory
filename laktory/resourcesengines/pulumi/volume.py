@@ -37,6 +37,7 @@ class PulumiVolume(PulumiResourcesEngine):
             catalog_name=volume.catalog_name,
             schema_name=volume.schema_name,
             volume_type=volume.volume_type,
+            storage_location=volume.storage_location,
             opts=opts,
         )
 
