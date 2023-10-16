@@ -6,7 +6,6 @@ from .dataeventheader import DataEventHeader
 from .datasources import *
 from .grants import *
 from .group import Group
-from .pipeline import Pipeline
 from .producer import Producer
 from .schema import Schema
 from .serviceprincipal import ServicePrincipal

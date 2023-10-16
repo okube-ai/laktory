@@ -8,8 +8,10 @@
 -
 
 **Added**
-- compute.InitScript model
 - compute.Cluster model
+- compute.InitScript model
+- compute.Notebook model
+- compute.Pipeline model
 - compute.Warehouse model
 - secrets.Secret model
 - secrets.SecretScope model

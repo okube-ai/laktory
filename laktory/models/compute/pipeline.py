@@ -1,32 +1,55 @@
-import json
+import os
 from typing import Any
+from typing import Literal
 from pydantic import model_validator
-
+from pydantic import Field
 from laktory.models.base import BaseModel
+from laktory.models.resources import Resources
+from laktory.models.permission import Permission
+from laktory.models.compute.cluster import Cluster
 from laktory.models.table import Table
-from laktory.models.table import Column
-from laktory.models.catalog import Catalog
+from laktory.models.column import Column
 from laktory.models.schema import Schema
+from laktory.models.catalog import Catalog
 
 
-class Pipeline(BaseModel):
-    name: str
-    clusters: list = []
-    development: bool = True
-    continuous: bool = False
+class PipelineLibraryFile(BaseModel):
+    path: str
+
+
+class PipelineLibraryNotebook(BaseModel):
+    path: str
+
+
+class PipelineLibrary(BaseModel):
+    file: str = None
+    notebook: PipelineLibraryNotebook = None
+
+
+class PipelineNotifications(BaseModel):
+    alerts: list[Literal["on-update-success", "on-update-failure", "on-update-fatal-failure", "on-flow-failure"]]
+    recipients: list[str]
+
+
+class Pipeline(BaseModel, Resources):
+    allow_duplicate_names: bool = None
+    catalog: str = None
     channel: str = "PREVIEW"
-    photon: bool = False
-    libraries: list = []
-    catalog: str = "main"
-    target: str = "default"
-
+    clusters: list[Cluster] = []
+    configuration: dict[str, str] = {}
+    continuous: bool = None
+    development: bool = None
+    edition: str = None
+    # filters
+    libraries: list[PipelineLibrary]
+    name: str = Field(...)
+    notifications: list[PipelineNotifications] = None
+    permissions: list[Permission] = []
+    photon: bool = None
+    serverless: bool = None
+    storage: str = None
     tables: list[Table] = []
-
-    # Deployment options
-
-    # ----------------------------------------------------------------------- #
-    # Validators                                                              #
-    # ----------------------------------------------------------------------- #
+    target: str = None
 
     @model_validator(mode="after")
     def assign_pipeline_to_tables(self) -> Any:
@@ -39,6 +62,14 @@ class Pipeline(BaseModel):
                 c.catalog_name = t.catalog_name
                 c.schema_name = t.schema_name
         return self
+
+    # ----------------------------------------------------------------------- #
+    # Resources Engine Methods                                                #
+    # ----------------------------------------------------------------------- #
+
+    def deploy_with_pulumi(self, name=None, groups=None, opts=None):
+        from laktory.resourcesengines.pulumi.pipeline import PulumiPipeline
+        return PulumiPipeline(name=name, pipeline=self, opts=opts)
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
