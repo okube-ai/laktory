@@ -41,8 +41,8 @@ class Pipeline(BaseModel, Resources):
     development: bool = None
     edition: str = None
     # filters
-    libraries: list[PipelineLibrary]
-    name: str = Field(...)
+    libraries: list[PipelineLibrary] = []
+    name: str
     notifications: list[PipelineNotifications] = None
     permissions: list[Permission] = []
     photon: bool = None
