@@ -32,7 +32,7 @@ class PulumiCluster(PulumiResourcesEngine):
         self.cluster = databricks.Cluster(
                 f"cluster-{cluster.name}",
                 apply_policy_default_values=cluster.apply_policy_default_values,
-                autoscale=cluster.autoscale.pulumi_args if cluster.autoscale else None,
+                autoscale=getattr(cluster.autoscale, "pulumi_args", None),
                 autotermination_minutes=cluster.autotermination_minutes,
                 cluster_name=cluster.name,
                 custom_tags=cluster.custom_tags,

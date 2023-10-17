@@ -9,6 +9,11 @@ class ClusterAutoScale(BaseModel):
     min_workers: int
     max_workers: int
 
+    @property
+    def pulumi_args(self):
+        import pulumi_databricks as databricks
+        return databricks.ClusterAutoscaleArgs(**self.model_dump())
+
 
 class ClusterInitScriptVolumes(BaseModel):
     destination: str = None
@@ -21,6 +26,11 @@ class ClusterInitScriptWorkspace(BaseModel):
 class ClusterInitScript(BaseModel):
     volumes: ClusterInitScriptVolumes = None
     workspace: ClusterInitScriptWorkspace = None
+
+    @property
+    def pulumi_args(self):
+        import pulumi_databricks as databricks
+        return databricks.ClusterInitScriptArgs(**self.model_dump())
 
 
 class ClusterLibraryCran(BaseModel):
@@ -46,6 +56,11 @@ class ClusterLibrary(BaseModel):
     maven: ClusterLibraryMaven = None
     pypi: ClusterLibraryPypi = None
     whl: str = None
+
+    @property
+    def pulumi_args(self):
+        import pulumi_databricks as databricks
+        return databricks.ClusterLibraryArgs(**self.model_dump())
 
 
 class Cluster(BaseModel, Resources):

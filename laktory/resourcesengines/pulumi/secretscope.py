@@ -29,17 +29,10 @@ class PulumiSecretScope(PulumiResourcesEngine):
             # delete_before_replace=True,
         )
 
-        keyvault_metadata = None
-        if secret_scope.keyvault_metadata:
-            keyvault_metadata = databricks.SecretScopeKeyvaultMetadataArgs(
-                dns_name=secret_scope.keyvault_metadata.dns_name,
-                resource_id=secret_scope.keyvault_metadata.resource_id,
-            )
-
         self.secret_scope = databricks.SecretScope(
                 f"secret-scope-{secret_scope.name}",
                 backend_type=secret_scope.backend_type,
-                keyvault_metadata=keyvault_metadata,
+                keyvault_metadata=getattr(secret_scope.keyvault_metadata, "pulumi_args", None),
                 name=secret_scope.name,
                 opts=opts,
             )

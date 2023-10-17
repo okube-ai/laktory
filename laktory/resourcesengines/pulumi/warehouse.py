@@ -29,18 +29,6 @@ class PulumiWarehouse(PulumiResourcesEngine):
             delete_before_replace=True,
         )
 
-        tags = None
-        if warehouse.tags:
-            tags = []
-            for key, value in warehouse.tags.items():
-                tags += [
-                    databricks.SqlEndpointTagsCustomTag(
-                        key=key,
-                        value=value
-                    )
-                ]
-            tags = databricks.SqlEndpointTagsArgs(custom_tags=tags)
-
         self.warehouse = databricks.SqlEndpoint(
             f"warehouse-{warehouse.name}",
             auto_stop_mins=warehouse.auto_stop_mins,
@@ -55,7 +43,7 @@ class PulumiWarehouse(PulumiResourcesEngine):
             name=warehouse.name,
             num_clusters=warehouse.num_clusters,
             spot_instance_policy=warehouse.spot_instance_policy,
-            tags=tags,
+            tags=getattr(warehouse.tags, "pulumi_args", None),
             warehouse_type=warehouse.warehouse_type,
             opts=opts,
         )
