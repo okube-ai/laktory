@@ -29,76 +29,16 @@ class PulumiCluster(PulumiResourcesEngine):
             delete_before_replace=True,
         )
 
-        autoscale = None
-        if cluster.autoscale:
-            autoscale = databricks.ClusterAutoscaleArgs(
-                min_workers=cluster.autoscale.min_workers,
-                max_workers=cluster.autoscale.max_workers,
-            )
-
-        init_scripts = []
-        for i in cluster.init_scripts:
-            if i.volumes:
-                init_scripts += [
-                    databricks.ClusterInitScriptArgs(
-                        volumes=databricks.ClusterInitScriptVolumesArgs(destination=i.volumes.destination)
-                    )
-                ]
-
-            if i.workspace:
-                init_scripts += [
-                    databricks.ClusterInitScriptArgs(
-                        workspace=databricks.ClusterInitScriptWorkspaceArgs(destination=i.volumes.destination)
-                    )
-                ]
-
-        libraries = []
-        for l in cluster.libraries:
-            if l.cran:
-                libraries += [databricks.ClusterLibraryArgs(
-                    cran=databricks.ClusterLibraryCranArgs(
-                        package=l.cran.package,
-                        repo=l.cran.repo,
-                    )
-                )]
-            if l.egg:
-                libraries += [databricks.ClusterLibraryArgs(
-                    egg=l.egg
-                )]
-            if l.jar:
-                libraries += [databricks.ClusterLibraryArgs(
-                    jar=l.jar
-                )]
-            if l.maven:
-                libraries += [databricks.ClusterLibraryArgs(
-                    maven=databricks.ClusterLibraryMavenArgs(
-                        coordinates=l.maven.coordinates,
-                        exclusions=l.maven.exclusions,
-                        repo=l.maven.repo,
-                    )
-                )]
-            if l.pypi:
-                libraries += [databricks.ClusterLibraryArgs(
-                    pypi=databricks.ClusterLibraryPypiArgs(
-                        package=l.pypi.package,
-                        repo=l.pypi.repo,
-                    )
-                )]
-            if l.whl:
-                libraries += [databricks.ClusterLibraryArgs(
-                    whl=l.whl
-                )]
-
         self.cluster = databricks.Cluster(
                 f"cluster-{cluster.name}",
                 apply_policy_default_values=cluster.apply_policy_default_values,
-                autoscale=autoscale,
+                autoscale=cluster.autoscale.pulumi_args if cluster.autoscale else None,
                 autotermination_minutes=cluster.autotermination_minutes,
                 cluster_name=cluster.name,
                 custom_tags=cluster.custom_tags,
                 data_security_mode=cluster.data_security_mode,
-                init_scripts=init_scripts,
-                libraries=libraries,
+                init_scripts=[i.pulumi_args for i in cluster.init_scripts],
+                libraries=[l.pulumi_args for l in cluster.libraries],
                 node_type_id=cluster.node_type_id,
                 num_workers=cluster.num_workers,
                 runtime_engine=cluster.runtime_engine,
