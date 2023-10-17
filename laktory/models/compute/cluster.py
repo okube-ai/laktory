@@ -64,39 +64,40 @@ class ClusterLibrary(BaseModel):
 
 
 class Cluster(BaseModel, Resources):
-    name: str
-    spark_version: str
     apply_policy_default_values: bool = None
     autoscale: ClusterAutoScale = None
     autotermination_minutes: int = None
     # aws_attributes
     # azure_attributes
+    cluster_id: str = None
     # cluster_log_conf
     # cluster_source
+    # cluster_mount_infos
     custom_tags: dict[str, str] = None
     data_security_mode: Literal["NONE", "SINGLE_USER", "USER_ISOLATION"] = "USER_ISOLATION"
     # docker_image
-    # driver_instance_pool_id
-    # driver_node_type_id
-    # enable_elastic_disk
-    # enable_local_disk_encryption
+    driver_instance_pool_id: str = None
+    driver_node_type_id: str = None
+    enable_elastic_disk: bool = None
+    enable_local_disk_encryption: bool = True
     # gcp_attributes
+    idempotency_token: str = None
     init_scripts: list[ClusterInitScript] = []
-    # instance_pool_id
+    instance_pool_id: str = None
+    is_pinned: bool = True
     libraries: list[ClusterLibrary] = []
+    name: str = None
     node_type_id: str = Field(...)
     num_workers: int = None
-    # policy_id
+    permissions: list[Permission] = []
+    policy_id: str = None
     runtime_engine: Literal["Standard", "Photon"] = None
     single_user_name: str = None
-    # spark_conf
-    spark_env_vars: dict[str, str] = None
-    # ssh_public_keys
-    # workload_type
-
-    # Deployment Options
-    is_pinned: bool = True
-    permissions: list[Permission] = []
+    spark_conf: dict[str, str] = {}
+    spark_env_vars: dict[str, str] = {}
+    spark_version: str
+    ssh_public_keys: list[str] = []
+    # workload_type:
 
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #

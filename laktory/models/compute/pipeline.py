@@ -25,17 +25,61 @@ class PipelineLibrary(BaseModel):
     file: str = None
     notebook: PipelineLibraryNotebook = None
 
+    @property
+    def pulumi_args(self):
+        import pulumi_databricks as databricks
+        return databricks.PipelineLibraryArgs(**self.model_dump())
+
 
 class PipelineNotifications(BaseModel):
     alerts: list[Literal["on-update-success", "on-update-failure", "on-update-fatal-failure", "on-flow-failure"]]
     recipients: list[str]
+
+    @property
+    def pulumi_args(self):
+        import pulumi_databricks as databricks
+        return databricks.PipelineNotificationArgs(**self.model_dump())
+
+
+class PipelineCluster(Cluster):
+    autotermination_minutes: int = Field(None)
+    cluster_id: str = Field(None)
+    data_security_mode: str = Field(None)
+    enable_elastic_disk: bool = Field(None)
+    idempotency_token: str = Field(None)
+    is_pinned: bool = Field(None)
+    libraries: list[Any] = Field(None)
+    node_type_id: str = None
+    runtime_engine: str = Field(None)
+    single_user_name: str = Field(None)
+    spark_version: str = Field(None)
+
+    @model_validator(mode="after")
+    def excluded_fields(self) -> Any:
+
+        for f in [
+            "autotermination_minutes",
+            "cluster_id",
+            "data_security_mode",
+            "enable_elastic_disk",
+            "idempotency_token",
+            "is_pinned",
+            "libraries",
+            "runtime_engine",
+            "single_user_name",
+            "spark_version",
+        ]:
+            if getattr(self, f, None) not in [None, [], {}]:
+                raise ValueError(f"Field {f} should be null")
+
+        return self
 
 
 class Pipeline(BaseModel, Resources):
     allow_duplicate_names: bool = None
     catalog: str = None
     channel: str = "PREVIEW"
-    clusters: list[Cluster] = []
+    clusters: list[PipelineCluster] = []
     configuration: dict[str, str] = {}
     continuous: bool = None
     development: bool = None
@@ -43,7 +87,7 @@ class Pipeline(BaseModel, Resources):
     # filters
     libraries: list[PipelineLibrary] = []
     name: str
-    notifications: list[PipelineNotifications] = None
+    notifications: list[PipelineNotifications] = []
     permissions: list[Permission] = []
     photon: bool = None
     serverless: bool = None
