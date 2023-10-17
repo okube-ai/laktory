@@ -30,37 +30,54 @@ class PulumiPipeline(PulumiResourcesEngine):
             delete_before_replace=True,
         )
 
-        # TODO:
         clusters = []
-
-        libraries = []
-        for l in pipeline.libraries:
-            if l.file:
-                libraries += [databricks.PipelineLibraryArgs(
-                    file=databricks.PipelineLibraryFileArgs(path=l.file.path)
-                )]
-            if l.notebook:
-                libraries += [databricks.PipelineLibraryArgs(
-                    notebook=databricks.PipelineLibraryFileArgs(path=l.notebook.path)
-                )]
-
-        # TODO:
-        notifications = []
+        for c in pipeline.clusters:
+            clusters += [
+                databricks.PipelineClusterArgs(
+                    f"cluster-{c.name}",
+                    apply_policy_default_values=c.apply_policy_default_values,
+                    autoscale=getattr(c.autoscale, "pulumi_args", None),
+                    autotermination_minutes=c.autotermination_minutes,
+                    cluster_id=c.cluster_id,
+                    cluster_name=c.name,
+                    custom_tags=c.custom_tags,
+                    data_security_mode=c.data_security_mode,
+                    driver_instance_pool_id=c.driver_instance_pool_id,
+                    driver_node_type_id=c.driver_node_type_id,
+                    enable_elastic_disk=c.enable_elastic_disk,
+                    enable_local_disk_encryption=c.enable_local_disk_encryption,
+                    idempotency_token=c.idempotency_token,
+                    init_scripts=[i.pulumi_args for i in c.init_scripts],
+                    instance_pool_id=c.instance_pool_id,
+                    is_pinned=c.is_pinned,
+                    libraries=[l.pulumi_args for l in c.libraries],
+                    node_type_id=c.node_type_id,
+                    num_workers=c.num_workers,
+                    policy_id=c.policy_id,
+                    runtime_engine=c.runtime_engine,
+                    single_user_name=c.single_user_name,
+                    spark_conf=c.spark_conf,
+                    spark_env_vars=c.spark_env_vars,
+                    spark_version=c.spark_version,
+                    ssh_public_keys=c.ssh_public_keys,
+                    opts=opts,
+                )
+            ]
 
         self.pipeline = databricks.Pipeline(
                 f"pipline-{pipeline.name}",
                 allow_duplicate_names=pipeline.allow_duplicate_names,
                 catalog=pipeline.catalog,
                 channel=pipeline.channel,
-                clusters=clusters,
+                clusters=[c.pulumi_args for c in pipeline.clusters],
                 configuration=pipeline.configuration,
                 continuous=pipeline.continuous,
                 development=pipeline.development,
                 edition=pipeline.edition,
                 # filters=pipeline.filters,
-                libraries=libraries,
+                libraries=[l.pulumi_args for l in pipeline.libraries],
                 name=pipeline.name,
-                notifications=notifications,
+                notifications=[n.pulumi_args for n in pipeline.notifications],
                 photon=pipeline.photon,
                 serverless=pipeline.serverless,
                 storage=pipeline.storage,
