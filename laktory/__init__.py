@@ -20,3 +20,4 @@ from ._settings import Settings
 # --------------------------------------------------------------------------- #
 
 from .metadata import read_metadata
+from ._logger import get_logger
