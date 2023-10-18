@@ -19,4 +19,4 @@ from ._settings import Settings
 # Objects                                                                     #
 # --------------------------------------------------------------------------- #
 
-from metadata import read_metadata
+from .metadata import read_metadata
