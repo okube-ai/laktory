@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     aws_secret_access_key: Union[str, None] = Field(None, alias="AWS_SECRET_ACCESS_KEY")
 
     # Databricks
+    workspace_root: str = Field("/.laktory/", alias="LAKTORY_WORKSPACE_ROOT")
     landing_mount_path: str = Field("/mnt/landing/", alias="LAKTORY_LANDING_MOUNT_PATH")
 
     # Logging

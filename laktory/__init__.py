@@ -2,11 +2,13 @@ from ._version import VERSION
 
 __version__ = VERSION
 
+# Need to be imported first
+from ._settings import settings
+
 # --------------------------------------------------------------------------- #
 # Packages                                                                    #
 # --------------------------------------------------------------------------- #
 
-from ._settings import settings
 import laktory.models
 
 # --------------------------------------------------------------------------- #
@@ -18,3 +20,6 @@ from ._settings import Settings
 # --------------------------------------------------------------------------- #
 # Objects                                                                     #
 # --------------------------------------------------------------------------- #
+
+from ._logger import get_logger
+from .metadata import read_metadata

@@ -24,7 +24,6 @@ SUPPORTED_TYPES = [
     "udt",
 ]
 
-
 # for k in vars(types):
 #     o = getattr(types, k)
 #     if "Type" in k and inspect.isclass(o):

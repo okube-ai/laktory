@@ -17,6 +17,11 @@ class SecretScopeKeyvaultMetadata(BaseModel):
     dns_name: str = None
     resource_id: str = None
 
+    @property
+    def pulumi_args(self):
+        import pulumi_databricks as databricks
+        return databricks.SecretScopeKeyvaultMetadataArgs(**self.model_dump())
+
 
 class SecretScope(BaseModel, Resources):
     backend_type: Literal["DATABRICKS", "AZURE_KEYVAULT"] = "DATABRICKS"
