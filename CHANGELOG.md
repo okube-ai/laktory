@@ -5,7 +5,8 @@
 - 
 
 **Updated**
--
+- Bronze template notebook to leverage configuration file
+- Silver template notebook to leverage configuration file
 
 **Added**
 - compute.Cluster model
@@ -15,6 +16,7 @@
 - compute.Warehouse model
 - secrets.Secret model
 - secrets.SecretScope model
+- Pipeline configuration file management
 
 **Breaking Change**
 - 
