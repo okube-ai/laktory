@@ -34,6 +34,10 @@ class PulumiPipeline(PulumiResourcesEngine):
             delete_before_replace=True,
         )
 
+        # ------------------------------------------------------------------- #
+        # Pipeline                                                            #
+        # ------------------------------------------------------------------- #
+
         clusters = []
         for c in pipeline.clusters:
             clusters += [
@@ -77,20 +81,6 @@ class PulumiPipeline(PulumiResourcesEngine):
                 opts=opts,
             )
 
-        # Pipline configuration
-        filepath = f"./tmp-{pipeline.name}.json"
-        s = pipeline.model_dump_json(indent=4, exclude_none=True)
-        with open(filepath, "w") as fp:
-            fp.write(s)
-        self.conf = databricks.WorkspaceFile(
-            f"file-{pipeline.name}",
-            path=f"{settings.workspace_root}pipelines/{pipeline.name}.json",
-            # md5=hashlib.md5(s.encode('utf-8')).hexdigest(),
-            source=filepath,
-            opts=opts,
-        )
-        # os.remove(filepath)
-
         access_controls = []
         for permission in pipeline.permissions:
             access_controls += [
@@ -107,5 +97,34 @@ class PulumiPipeline(PulumiResourcesEngine):
                 f"permissions-pipeline-{pipeline.key}",
                 access_controls=access_controls,
                 workspace_file_path=self.pipeline.path,
+                opts=opts,
+            )
+
+        # ------------------------------------------------------------------- #
+        # Pipeline Configuration                                              #
+        # ------------------------------------------------------------------- #
+
+        source = f"./tmp-{pipeline.name}.json"
+        s = pipeline.model_dump_json(indent=4, exclude_none=True)
+        with open(source, "w") as fp:
+            fp.write(s)
+        filepath = f"{settings.workspace_root}pipelines/{pipeline.name}.json"
+        self.conf = databricks.WorkspaceFile(
+            f"file-{filepath}",
+            path=filepath,
+            # md5=hashlib.md5(s.encode('utf-8')).hexdigest(),
+            source=source,
+            opts=opts,
+        )
+        # os.remove(filepath)
+
+        if access_controls:
+            self.conf_permissions = databricks.Permissions(
+                f"permissions-file-{filepath}",
+                access_controls=[databricks.PermissionsAccessControlArgs(
+                    permission_level="CAN_READ",
+                    group_name="account users",
+                )],
+                workspace_file_path=filepath,
                 opts=opts,
             )
