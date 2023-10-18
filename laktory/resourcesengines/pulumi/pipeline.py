@@ -4,6 +4,7 @@ import json
 import os
 import pulumi
 import pulumi_databricks as databricks
+from laktory._settings import settings
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
 from laktory.models.compute.pipeline import Pipeline
 
@@ -77,18 +78,18 @@ class PulumiPipeline(PulumiResourcesEngine):
             )
 
         # Pipline configuration
-        filepath = "./tmp.json"
+        filepath = f"./tmp-{pipeline.name}.json"
         s = pipeline.model_dump_json(indent=4)
         with open(filepath, "w") as fp:
             fp.write(s)
         self.conf = databricks.WorkspaceFile(
             f"file-{pipeline.name}",
-            path=f"/.laktory/pipelines/{pipeline.name}.json",
+            path=f"{settings.workspace_root}pipelines/{pipeline.name}.json",
             # md5=hashlib.md5(s.encode('utf-8')).hexdigest(),
             source=filepath,
             opts=opts,
         )
-        os.remove(filepath)
+        # os.remove(filepath)
 
         access_controls = []
         for permission in pipeline.permissions:
