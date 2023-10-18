@@ -79,7 +79,7 @@ class PulumiPipeline(PulumiResourcesEngine):
 
         # Pipline configuration
         filepath = f"./tmp-{pipeline.name}.json"
-        s = pipeline.model_dump_json(indent=4)
+        s = pipeline.model_dump_json(indent=4, exclude_none=True)
         with open(filepath, "w") as fp:
             fp.write(s)
         self.conf = databricks.WorkspaceFile(
