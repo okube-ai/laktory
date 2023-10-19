@@ -11,6 +11,7 @@
 **Added**
 - compute.Cluster model
 - compute.InitScript model
+- compute.Job model
 - compute.Notebook model
 - compute.Pipeline model
 - compute.Warehouse model
