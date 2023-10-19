@@ -34,14 +34,14 @@ class PulumiJob(PulumiResourcesEngine):
         # Job                                                                 #
         # ------------------------------------------------------------------- #
 
-        self.pipeline = databricks.Job(
+        self.job = databricks.Job(
             f"job-{job.name}",
             continuous=job.continuous,
             control_run_state=job.control_run_state,
             email_notifications=getattr(job.email_notifications, "pulumi_args", None),
             format=job.format,
             health=getattr(job.health, "pulumi_args", None),
-            job_clusters=[v.pulumi_args for v in job.job_clusters],
+            job_clusters=[v.pulumi_args for v in job.clusters],
             max_concurrent_runs=job.max_concurrent_runs,
             max_retries=job.max_retries,
             min_retry_interval_millis=job.min_retry_interval_millis,
@@ -53,7 +53,7 @@ class PulumiJob(PulumiResourcesEngine):
             run_as=getattr(job.run_as, "pulumi_args", None),
             schedule=getattr(job.schedule, "pulumi_args", None),
             tags=job.tags,
-            tasks=job.tasks,
+            tasks=[v.pulumi_args for v in job.tasks],
             timeout_seconds=job.timeout_seconds,
             trigger=getattr(job.trigger, "pulumi_args", None),
             webhook_notifications=getattr(job.webhook_notifications, "pulumi_args", None),

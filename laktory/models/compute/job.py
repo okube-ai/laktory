@@ -1,11 +1,43 @@
 from typing import Any
 from typing import Literal
 from pydantic import model_validator
+from pydantic import Field
 from laktory.models.base import BaseModel
 from laktory.models.resources import Resources
 from laktory.models.permission import Permission
 from laktory.models.compute.cluster import Cluster
 from laktory.models.compute.cluster import ClusterLibrary
+
+
+class JobCluster(Cluster):
+    is_pinned: bool = Field(None)
+    libraries: list[Any] = Field(None)
+    permissions: list[Any] = Field(None)
+
+    @model_validator(mode="after")
+    def excluded_fields(self) -> Any:
+
+        for f in [
+            "is_pinned",
+            "libraries",
+            "permissions",
+        ]:
+            if getattr(self, f, None) not in [None, [], {}]:
+                raise ValueError(f"Field {f} should be null")
+
+        return self
+
+    @property
+    def pulumi_args(self):
+        import pulumi_databricks as databricks
+
+        d = self.model_dump(exclude_none=True)
+        if "name" in d:
+            del d["name"]
+        return databricks.JobJobClusterArgs(
+            job_cluster_key=self.name,
+            new_cluster=databricks.JobJobClusterNewClusterArgs(**d)
+        )
 
 
 class JobContinuous(BaseModel):
@@ -44,24 +76,6 @@ class JobHealth(BaseModel):
     def pulumi_args(self):
         import pulumi_databricks as databricks
         return databricks.JobHealthArgs(**self.model_dump())
-
-
-class JobCluster(Cluster):
-
-    @model_validator(mode="after")
-    def excluded_fields(self) -> Any:
-
-        for f in [
-        ]:
-            if getattr(self, f, None) not in [None, [], {}]:
-                raise ValueError(f"Field {f} should be null")
-
-        return self
-
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.JobJobClusterArgs(**self.model_dump())
 
 
 class JobNotificationSettings(BaseModel):
@@ -167,7 +181,7 @@ class JobTaskSQLTask(BaseModel):
 
 
 class JobTask(BaseModel):
-    compute_key: str = None
+    # compute_key: str = None
     condition_task: JobTaskConditionTask = None
     depends_ons: list[JobTaskDependsOn] = None
     description: str = None
@@ -178,7 +192,7 @@ class JobTask(BaseModel):
     libraries: list[ClusterLibrary] = None
     max_retries: int = None
     min_retry_interval_millis: int = None
-    new_cluster: Cluster = None
+    # new_cluster: Cluster = None
     notebook_task: JobTaskNotebookTask = None
     notification_settings: JobNotificationSettings = None
     pipeline_task: JobTaskPipelineTask = None
@@ -244,12 +258,12 @@ class JobWebhookNotifications(BaseModel):
 
 
 class Job(BaseModel, Resources):
+    clusters: list[JobCluster] = []
     continuous: JobContinuous = None
     control_run_state: bool = None
     email_notifications: JobEmailNotifications = None
     format: str = None
     health: JobHealth = None
-    job_clusters: list[JobCluster] = []
     max_concurrent_runs: int = None
     max_retries: int = None
     min_retry_interval_millis: int = None
