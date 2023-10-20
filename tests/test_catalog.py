@@ -12,7 +12,7 @@ def test_model():
     assert cat.full_name == "lakehouse"
 
 
-def atest_create():
+def test_create():
     # Timestamp is included in catalog name to prevent conflicts when running
     # multiple tests in parallel
     catalog_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")
@@ -26,4 +26,4 @@ def atest_create():
 
 if __name__ == "__main__":
     test_model()
-    # atest_create()
+    test_create()
