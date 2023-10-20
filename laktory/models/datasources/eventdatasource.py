@@ -1,7 +1,6 @@
 from laktory.spark import DataFrame
 from typing import Literal
 
-from laktory import settings
 from laktory.models.dataeventheader import DataEventHeader
 from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory._logger import get_logger
@@ -33,27 +32,27 @@ class EventDataSource(BaseDataSource, DataEventHeader):
 
     def _read_storage(self, spark) -> DataFrame:
         if self.read_as_stream:
-            logger.info(f"Reading {self.dirpath} as stream")
+            logger.info(f"Reading {self.event_root} as stream")
             df = (
                 spark.readStream.format("cloudFiles")
                 .option("multiLine", self.multiline)
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
                 .option("cloudFiles.format", self.fmt)
-                .option("cloudFiles.schemaLocation", self.dirpath)
+                .option("cloudFiles.schemaLocation", self.event_root)
                 .option("cloudFiles.inferColumnTypes", True)
                 .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
                 .option("cloudFiles.allowOverwrites", True)
-                .load(self.dirpath)
+                .load(self.event_root)
             )
         else:
-            logger.info(f"Reading {self.dirpath} as static")
+            logger.info(f"Reading {self.event_root} as static")
             df = (
                 spark.read.option("multiLine", self.multiline)
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
                 .format(self.fmt)
-                .load(self.dirpath)
+                .load(self.event_root)
             )
             # Not supported by UC
             # .withColumn("file", F.input_file_name())

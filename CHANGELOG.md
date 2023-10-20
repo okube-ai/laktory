@@ -1,8 +1,6 @@
 # Release History
 
-## [0.0.7]
-**Fixed**
-- 
+## [0.0.7] - 2023-10-20
 
 **Updated**
 - Bronze template notebook to leverage configuration file
@@ -11,6 +9,7 @@
 **Added**
 - compute.Cluster model
 - compute.InitScript model
+- compute.Job model
 - compute.Notebook model
 - compute.Pipeline model
 - compute.Warehouse model
@@ -19,7 +18,7 @@
 - Pipeline configuration file management
 
 **Breaking Change**
-- 
+- Refactored landing mount to landing root and changed default configuration to volumes
 
 
 ## [0.0.6] - 2023-10-10

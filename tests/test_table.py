@@ -74,6 +74,7 @@ def test_model():
 
 def test_sql_schema():
     types = Table.model_serialized_types()
+    print(types)
     assert types == {
         "name": "string",
         "columns": [
@@ -103,8 +104,7 @@ def test_sql_schema():
             "name": "string",
             "description": "string",
             "producer": {"name": "string", "description": "string", "party": "integer"},
-            "events_root_path": "string",
-            "dirpath": "string",
+            "events_root": "string",
             "read_as_stream": "boolean",
             "type": "string",
             "fmt": "string",
@@ -213,7 +213,7 @@ def test_meta():
             is_found = True
             assert (
                 c.type
-                == "STRUCT<name: string, description: string, producer: STRUCT<name: string, description: string, party: integer>, events_root_path: string, dirpath: string, read_as_stream: boolean, type: string, fmt: string, multiline: boolean>"
+                == "STRUCT<name: string, description: string, producer: STRUCT<name: string, description: string, party: integer>, events_root: string, read_as_stream: boolean, type: string, fmt: string, multiline: boolean>"
             )
     assert is_found
 

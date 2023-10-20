@@ -1,7 +1,3 @@
-from typing import Union
-import hashlib
-import json
-import os
 import pulumi
 import pulumi_databricks as databricks
 from laktory._settings import settings
@@ -94,9 +90,9 @@ class PulumiPipeline(PulumiResourcesEngine):
 
         if access_controls:
             self.permissions = databricks.Permissions(
-                f"permissions-pipeline-{pipeline.key}",
+                f"permissions-pipeline-{pipeline.name}",
                 access_controls=access_controls,
-                workspace_file_path=self.pipeline.path,
+                pipeline_id=self.pipeline.id,
                 opts=opts,
             )
 
@@ -108,7 +104,7 @@ class PulumiPipeline(PulumiResourcesEngine):
         s = pipeline.model_dump_json(indent=4, exclude_none=True)
         with open(source, "w") as fp:
             fp.write(s)
-        filepath = f"{settings.workspace_root}pipelines/{pipeline.name}.json"
+        filepath = f"{settings.workspace_laktory_root}pipelines/{pipeline.name}.json"
         self.conf = databricks.WorkspaceFile(
             f"file-{filepath}",
             path=filepath,
