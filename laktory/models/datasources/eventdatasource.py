@@ -1,7 +1,6 @@
 from laktory.spark import DataFrame
 from typing import Literal
 
-from laktory import settings
 from laktory.models.dataeventheader import DataEventHeader
 from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory._logger import get_logger
