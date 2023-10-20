@@ -20,7 +20,7 @@
 - Pipeline configuration file management
 
 **Breaking Change**
-- 
+- Refactored landing mount to landing root and changed default configuration to volumes
 
 
 ## [0.0.6] - 2023-10-10

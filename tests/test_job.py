@@ -12,7 +12,6 @@ def test_job():
                 "name": "main",
                 "spark_version": "14.0.x-scala2.12",
                 "node_type_id": "Standard_DS3_v2",
-
             },
         ],
         tasks=[
@@ -25,12 +24,10 @@ def test_job():
             },
             {
                 "depends_ons": [{"task_key": "ingestion"}],
-                "pipeline_task": {
-                    "pipeline_id": "TBD"
-                },
+                "pipeline_task": {"pipeline_id": "TBD"},
                 "task_key": "pipeline",
-            }
-        ]
+            },
+        ],
     )
 
 

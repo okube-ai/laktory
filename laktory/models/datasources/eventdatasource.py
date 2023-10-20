@@ -33,27 +33,27 @@ class EventDataSource(BaseDataSource, DataEventHeader):
 
     def _read_storage(self, spark) -> DataFrame:
         if self.read_as_stream:
-            logger.info(f"Reading {self.dirpath} as stream")
+            logger.info(f"Reading {self.root_path} as stream")
             df = (
                 spark.readStream.format("cloudFiles")
                 .option("multiLine", self.multiline)
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
                 .option("cloudFiles.format", self.fmt)
-                .option("cloudFiles.schemaLocation", self.dirpath)
+                .option("cloudFiles.schemaLocation", self.root_path)
                 .option("cloudFiles.inferColumnTypes", True)
                 .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
                 .option("cloudFiles.allowOverwrites", True)
-                .load(self.dirpath)
+                .load(self.root_path)
             )
         else:
-            logger.info(f"Reading {self.dirpath} as static")
+            logger.info(f"Reading {self.root_path} as static")
             df = (
                 spark.read.option("multiLine", self.multiline)
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
                 .format(self.fmt)
-                .load(self.dirpath)
+                .load(self.root_path)
             )
             # Not supported by UC
             # .withColumn("file", F.input_file_name())

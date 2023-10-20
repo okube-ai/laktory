@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any
+from typing import Literal
 from typing import Union
 
 from pydantic import Field
@@ -16,8 +17,8 @@ from laktory._logger import get_logger
 logger = get_logger(__name__)
 
 EXCLUDES = [
-    "events_root_path",
-    "dirpath",
+    "events_root",
+    "event_path",
     "tstamp_col",
 ]
 
@@ -52,9 +53,9 @@ class DataEvent(DataEventHeader):
     # ----------------------------------------------------------------------- #
 
     @property
-    def subdirpath(self) -> str:
+    def dirpath(self) -> str:
         t = self.created_at
-        return f"{self.dirpath}{t.year:04d}/{t.month:02d}/{t.day:02d}/"
+        return f"{self.event_root}{t.year:04d}/{t.month:02d}/{t.day:02d}/"
 
     def get_filename(self, fmt="json", suffix=None) -> str:
         t = self.created_at
@@ -70,12 +71,12 @@ class DataEvent(DataEventHeader):
             fmt = "txt"
         return f"{prefix}_{t.year:04d}{t.month:02d}{t.day:02d}T{time_str}.{fmt}"
 
-    def get_mount_filepath(self, fmt="json", suffix=None):
-        return os.path.join(self.subdirpath, self.get_filename(fmt, suffix))
+    def get_landing_filepath(self, fmt="json", suffix=None):
+        return os.path.join(self.dirpath, self.get_filename(fmt, suffix))
 
     def get_storage_filepath(self, fmt="json", suffix=None):
-        path = self.get_mount_filepath(fmt=fmt, suffix=suffix)
-        path = path.replace(settings.landing_mount_path, "/")
+        path = self.get_landing_filepath(fmt=fmt, suffix=suffix)
+        path = path.replace(settings.workspace_landing_root, "/")
         return path
 
     # ----------------------------------------------------------------------- #
@@ -219,14 +220,17 @@ class DataEvent(DataEventHeader):
     def to_gcp_storage_bucket(self):
         raise NotImplementedError()
 
-    def to_databricks_mount(
+    def to_databricks(
         self,
         suffix: str = None,
         fmt: str = "json",
         overwrite: bool = False,
         skip_if_exists: bool = False,
+        storage_type: Literal["VOLUME", "MOUNT"] = "VOLUME",
     ) -> None:
-        path = "/dbfs" + self.get_mount_filepath(suffix=suffix, fmt=fmt)
+        path = self.get_landing_filepath(suffix=suffix, fmt=fmt)
+        if storage_type == "MOUNT":
+            path = "/dbfs" + path
         dirpath = os.path.dirname(path)
 
         if not os.path.exists(dirpath):

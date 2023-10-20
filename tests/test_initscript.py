@@ -4,7 +4,6 @@ from laktory.models import InitScript
 
 
 def test_init_script():
-
     init_script = InitScript(
         source="../libraries/init_scripts/install_laktory.sh",
         permissions=[{"permission_level": "CAN_READ", "group_name": "account users"}],
