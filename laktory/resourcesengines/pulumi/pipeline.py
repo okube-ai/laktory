@@ -90,9 +90,9 @@ class PulumiPipeline(PulumiResourcesEngine):
 
         if access_controls:
             self.permissions = databricks.Permissions(
-                f"permissions-pipeline-{pipeline.key}",
+                f"permissions-pipeline-{pipeline.name}",
                 access_controls=access_controls,
-                workspace_file_path=self.pipeline.path,
+                pipeline_id=self.pipeline.id,
                 opts=opts,
             )
 

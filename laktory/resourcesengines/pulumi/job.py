@@ -59,22 +59,22 @@ class PulumiJob(PulumiResourcesEngine):
             webhook_notifications=getattr(job.webhook_notifications, "pulumi_args", None),
             opts=opts,
         )
-        #
-        # access_controls = []
-        # for permission in pipeline.permissions:
-        #     access_controls += [
-        #         databricks.PermissionsAccessControlArgs(
-        #             permission_level=permission.permission_level,
-        #             group_name=permission.group_name,
-        #             service_principal_name=permission.service_principal_name,
-        #             user_name=permission.user_name,
-        #         )
-        #     ]
-        #
-        # if access_controls:
-        #     self.permissions = databricks.Permissions(
-        #         f"permissions-pipeline-{pipeline.key}",
-        #         access_controls=access_controls,
-        #         workspace_file_path=self.pipeline.path,
-        #         opts=opts,
-        #     )
+
+        access_controls = []
+        for permission in job.permissions:
+            access_controls += [
+                databricks.PermissionsAccessControlArgs(
+                    permission_level=permission.permission_level,
+                    group_name=permission.group_name,
+                    service_principal_name=permission.service_principal_name,
+                    user_name=permission.user_name,
+                )
+            ]
+
+        if access_controls:
+            self.permissions = databricks.Permissions(
+                f"permissions-job-{job.name}",
+                access_controls=access_controls,
+                job_id=self.job.id,
+                opts=opts,
+            )
