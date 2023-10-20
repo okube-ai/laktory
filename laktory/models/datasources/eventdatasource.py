@@ -40,7 +40,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
                 .option("cloudFiles.format", self.fmt)
-                .option("cloudFiles.schemaLocation", self.root_path)
+                .option("cloudFiles.schemaLocation", self.event_root)
                 .option("cloudFiles.inferColumnTypes", True)
                 .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
                 .option("cloudFiles.allowOverwrites", True)
