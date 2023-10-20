@@ -1,8 +1,6 @@
 # Release History
 
-## [0.0.7]
-**Fixed**
-- 
+## [0.0.7] - 2023-10-20
 
 **Updated**
 - Bronze template notebook to leverage configuration file
