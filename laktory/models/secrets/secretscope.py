@@ -17,11 +17,6 @@ class SecretScopeKeyvaultMetadata(BaseModel):
     dns_name: str = None
     resource_id: str = None
 
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.SecretScopeKeyvaultMetadataArgs(**self.model_dump())
-
 
 class SecretScope(BaseModel, Resources):
     backend_type: Literal["DATABRICKS", "AZURE_KEYVAULT"] = "DATABRICKS"
@@ -41,6 +36,10 @@ class SecretScope(BaseModel, Resources):
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return ["permissions", "secrets"]
 
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.secretscope import PulumiSecretScope

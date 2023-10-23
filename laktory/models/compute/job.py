@@ -27,26 +27,9 @@ class JobCluster(Cluster):
 
         return self
 
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-
-        d = self.model_dump(exclude_none=True)
-        if "name" in d:
-            del d["name"]
-        return databricks.JobJobClusterArgs(
-            job_cluster_key=self.name,
-            new_cluster=databricks.JobJobClusterNewClusterArgs(**d)
-        )
-
 
 class JobContinuous(BaseModel):
     pause_status: Literal["PAUSED", "UNPAUSED"] = None
-
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.JobContinuousArgs(**self.model_dump())
 
 
 class JobEmailNotifications(BaseModel):
@@ -56,11 +39,6 @@ class JobEmailNotifications(BaseModel):
     on_failures: list[str] = None
     on_starts: list[str] = None
     on_success: list[str] = None
-
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.JobEmailNotificationsArgs(**self.model_dump())
 
 
 class JobHealthRule(BaseModel):
@@ -72,51 +50,26 @@ class JobHealthRule(BaseModel):
 class JobHealth(BaseModel):
     rules: list[JobHealthRule] = None
 
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.JobHealthArgs(**self.model_dump())
-
 
 class JobNotificationSettings(BaseModel):
     no_alert_for_canceled_runs: bool = None
     no_alert_for_skipped_runs: bool = None
-
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.JobNotificationSettingsArgs(**self.model_dump())
 
 
 class JobParameter(BaseModel):
     default: str = None
     name: str = None
 
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.JobParameterArgs(**self.model_dump())
-
 
 class JobRunAs(BaseModel):
     service_principal_name: str = None
     user_name: str = None
-
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.JobRunAsArgs(**self.model_dump())
 
 
 class JobSchedule(BaseModel):
     quartz_cron_expression: str
     timezone_id: str
     pause_status: str
-
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.JobScheduleArgs(**self.model_dump())
 
 
 class JobTaskConditionTask(BaseModel):
@@ -207,12 +160,6 @@ class JobTask(BaseModel):
     timeout_seconds: int = None
 
 
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.JobTaskArgs(**self.model_dump())
-
-
 class JobTriggerFileArrival(BaseModel):
     url: str = None
     min_time_between_triggers_seconds: int = None
@@ -222,11 +169,6 @@ class JobTriggerFileArrival(BaseModel):
 class JobTrigger(BaseModel):
     file_arrival: JobTriggerFileArrival
     pause_status: Literal["PAUSED", "UNPAUSED"] = None
-
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.JobTriggerArgs(**self.model_dump())
 
 
 class JobWebhookNotificationsOnDurationWarningThresholdExceeded(BaseModel):
@@ -250,11 +192,6 @@ class JobWebhookNotifications(BaseModel):
     on_failures: list[JobWebhookNotificationsOnFailure] = None
     on_starts: list[JobWebhookNotificationsOnStart] = None
     on_successes: list[JobWebhookNotificationsOnSuccess] = None
-
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.JobWebhookNotificationsArgs(**self.model_dump())
 
 
 class Job(BaseModel, Resources):
@@ -285,6 +222,27 @@ class Job(BaseModel, Resources):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
-    def deploy_with_pulumi(self, name=None, groups=None, opts=None):
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return ["permissions"]
+
+    @property
+    def pulumi_renames(self) -> dict[str, str]:
+        return {"clusters": "job_clusters"}
+
+    def model_pulumi_dump(self, *args, **kwargs):
+        d = super().model_pulumi_dump(*args, **kwargs)
+        _clusters = []
+        for c in d.get("job_clusters", []):
+            name = c.pop("name")
+            _clusters += [{
+                "job_cluster_key": name,
+                "new_cluster": c,
+            }]
+        d["job_clusters"] = _clusters
+
+        return d
+
+    def deploy_with_pulumi(self, name=None, pipelines=None, opts=None):
         from laktory.resourcesengines.pulumi.job import PulumiJob
-        return PulumiJob(name=name, job=self, opts=opts)
+        return PulumiJob(name=name, job=self, pipelines=pipelines, opts=opts)

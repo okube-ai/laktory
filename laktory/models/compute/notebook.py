@@ -42,6 +42,10 @@ class Notebook(BaseModel, Resources):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return ["permissions", "dirpath"]
+
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.notebook import PulumiNotebook
         return PulumiNotebook(name=name, notebook=self, opts=opts)

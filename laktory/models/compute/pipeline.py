@@ -25,20 +25,10 @@ class PipelineLibrary(BaseModel):
     file: str = None
     notebook: PipelineLibraryNotebook = None
 
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.PipelineLibraryArgs(**self.model_dump())
-
 
 class PipelineNotifications(BaseModel):
     alerts: list[Literal["on-update-success", "on-update-failure", "on-update-fatal-failure", "on-flow-failure"]]
     recipients: list[str]
-
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.PipelineNotificationArgs(**self.model_dump())
 
 
 class PipelineCluster(Cluster):
@@ -110,6 +100,23 @@ class Pipeline(BaseModel, Resources):
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return {
+            "permissions": True,
+            "tables": True,
+            "clusters": {'__all__': {'permissions'}},
+        }
+
+    def model_pulumi_dump(self, *args, **kwargs):
+        d = super().model_pulumi_dump(*args, **kwargs)
+        _clusters = []
+        for c in d.get("clusters", []):
+            c["label"] = c.pop("name")
+            _clusters += [c]
+        d["clusters"] = _clusters
+        return d
 
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.pipeline import PulumiPipeline

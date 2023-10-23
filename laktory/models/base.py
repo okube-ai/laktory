@@ -24,6 +24,24 @@ class BaseModel(_BaseModel):
     def model_validate_json_file(cls, fp):
         data = json.load(fp)
         return cls.model_validate(data)
+    #
+    # def model_pulumi_dump(self):
+    #     return self.model_dump()
+
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return []
+
+    @property
+    def pulumi_renames(self) -> dict[str, str]:
+        return {}
+
+    def model_pulumi_dump(self, *args, **kwargs):
+        kwargs["exclude"] = self.pulumi_excludes
+        d = super().model_dump(*args, **kwargs)
+        for k, v in self.pulumi_renames.items():
+            d[v] = d.pop(k)
+        return d
 
     # TODO: Migrate to Databricks engine
     @classmethod
