@@ -37,10 +37,8 @@ class PulumiServicePrincipal(PulumiResourcesEngine):
 
         self.sp = databricks.ServicePrincipal(
             f"service-principal-{sp.display_name}",
-            display_name=sp.display_name,
-            application_id=sp.application_id,
-            disable_as_user_deletion=sp.disable_as_user_deletion,
             opts=opts,
+            **sp.model_pulumi_dump(),
         )
 
         self.roles = []

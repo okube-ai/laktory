@@ -34,10 +34,8 @@ class PulumiUser(PulumiResourcesEngine):
 
         self.user = databricks.User(
             f"user-{user.user_name}",
-            user_name=user.user_name,
-            display_name=user.display_name,
-            disable_as_user_deletion=user.disable_as_user_deletion,
             opts=opts,
+            **user.model_pulumi_dump(),
         )
 
         self.roles = []

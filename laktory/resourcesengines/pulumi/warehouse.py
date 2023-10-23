@@ -31,21 +31,8 @@ class PulumiWarehouse(PulumiResourcesEngine):
 
         self.warehouse = databricks.SqlEndpoint(
             f"warehouse-{warehouse.name}",
-            auto_stop_mins=warehouse.auto_stop_mins,
-            channel=databricks.SqlEndpointChannelArgs(name=warehouse.channel_name),
-            cluster_size=warehouse.cluster_size,
-            enable_photon=warehouse.enable_photon,
-            enable_serverless_compute=warehouse.enable_serverless_compute,
-            instance_profile_arn=warehouse.instance_profile_arn,
-            jdbc_url=warehouse.jdbc_url,
-            max_num_clusters=warehouse.max_num_clusters,
-            min_num_clusters=warehouse.min_num_clusters,
-            name=warehouse.name,
-            num_clusters=warehouse.num_clusters,
-            spot_instance_policy=warehouse.spot_instance_policy,
-            tags=getattr(warehouse.tags, "pulumi_args", None),
-            warehouse_type=warehouse.warehouse_type,
             opts=opts,
+            **warehouse.model_pulumi_dump(),
         )
 
         access_controls = []

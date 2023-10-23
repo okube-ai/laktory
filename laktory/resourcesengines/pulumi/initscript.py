@@ -32,9 +32,8 @@ class PulumiInitScript(PulumiResourcesEngine):
 
         self.file = databricks.WorkspaceFile(
                 f"file-{init_script.key}",
-                path=init_script.path,
-                source=init_script.source,
                 opts=opts,
+                **init_script.model_pulumi_dump()
             )
 
         access_controls = []

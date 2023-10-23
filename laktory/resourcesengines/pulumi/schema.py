@@ -34,10 +34,8 @@ class PulumiSchema(PulumiResourcesEngine):
         # Schema
         self.schema = databricks.Schema(
             f"schema-{schema.full_name}",
-            name=schema.name,
-            catalog_name=schema.catalog_name,
-            force_destroy=schema.force_destroy,
             opts=opts,
+            **schema.model_pulumi_dump(),
         )
 
         # Schema grants

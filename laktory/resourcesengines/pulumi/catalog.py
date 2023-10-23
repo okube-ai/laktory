@@ -31,12 +31,8 @@ class PulumiCatalog(PulumiResourcesEngine):
         # Catalog
         self.catalog = databricks.Catalog(
             f"catalog-{catalog.full_name}",
-            name=catalog.full_name,
-            owner=catalog.owner,
-            force_destroy=catalog.force_destroy,
-            isolation_mode=catalog.isolation_mode,
-            storage_root=catalog.storage_root,
             opts=opts,
+            **catalog.model_pulumi_dump(),
         )
 
         # Grants

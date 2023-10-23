@@ -33,12 +33,8 @@ class PulumiVolume(PulumiResourcesEngine):
         # Volume
         self.volume = databricks.Volume(
             f"volume-{volume.full_name}",
-            name=volume.name,
-            catalog_name=volume.catalog_name,
-            schema_name=volume.schema_name,
-            volume_type=volume.volume_type,
-            storage_location=volume.storage_location,
             opts=opts,
+            **volume.model_pulumi_dump(),
         )
 
         # Volume grants

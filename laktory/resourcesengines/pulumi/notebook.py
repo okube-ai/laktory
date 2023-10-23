@@ -32,10 +32,8 @@ class PulumiNotebook(PulumiResourcesEngine):
 
         self.notebook = databricks.Notebook(
                 f"notebook-{notebook.key}",
-                path=notebook.path,
-                source=notebook.source,
-                language=notebook.language,
                 opts=opts,
+                **notebook.model_pulumi_dump(),
             )
 
         access_controls = []

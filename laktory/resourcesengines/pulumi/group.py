@@ -27,7 +27,6 @@ class PulumiGroup(PulumiResourcesEngine):
 
         self.group = databricks.Group(
             f"group-{group.display_name}",
-            display_name=group.display_name,
-            allow_cluster_create=group.allow_cluster_create,
             opts=opts,
+            **group.model_pulumi_dump()
         )
