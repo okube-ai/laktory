@@ -1,10 +1,8 @@
 from typing import Union
-from pydantic import computed_field
 
-from laktory import settings
 from laktory.models.base import BaseModel
 from laktory.models.resources import Resources
-from laktory.models.schema import Schema
+from laktory.models.sql.schema import Schema
 from laktory.models.grants.cataloggrant import CatalogGrant
 
 

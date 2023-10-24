@@ -8,10 +8,7 @@ from laktory.models.base import BaseModel
 from laktory.models.resources import Resources
 from laktory.models.permission import Permission
 from laktory.models.compute.cluster import Cluster
-from laktory.models.table import Table
-from laktory.models.column import Column
-from laktory.models.schema import Schema
-from laktory.models.catalog import Catalog
+from laktory.models.sql.table import Table
 
 
 class PipelineLibraryFile(BaseModel):

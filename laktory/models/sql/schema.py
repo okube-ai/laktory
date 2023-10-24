@@ -2,8 +2,8 @@ from typing import Union
 
 from laktory.models.base import BaseModel
 from laktory.models.resources import Resources
-from laktory.models.table import Table
-from laktory.models.volume import Volume
+from laktory.models.sql.table import Table
+from laktory.models.sql.volume import Volume
 from laktory.models.grants.schemagrant import SchemaGrant
 
 

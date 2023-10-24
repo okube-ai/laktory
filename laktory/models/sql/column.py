@@ -4,7 +4,6 @@ from pydantic import field_validator
 
 from laktory.contants import SUPPORTED_TYPES
 from laktory.models.base import BaseModel
-from laktory.sql import py_to_sql
 
 
 class Column(BaseModel):
@@ -74,7 +73,7 @@ class Column(BaseModel):
     # TODO: Move to Databricks SDK engine
     # @classmethod
     # def meta_table(cls):
-    #     from laktory.models.table import Table
+    #     from laktory.models.sql.table import Table
     #
     #     # Build columns
     #     columns = []

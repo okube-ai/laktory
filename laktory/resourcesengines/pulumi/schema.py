@@ -3,7 +3,7 @@ from typing import Union
 import pulumi
 import pulumi_databricks as databricks
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.schema import Schema
+from laktory.models.sql.schema import Schema
 
 from laktory._logger import get_logger
 

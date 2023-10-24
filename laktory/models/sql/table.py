@@ -10,9 +10,8 @@ from laktory.spark import DataFrame
 from laktory.spark import df_has_column
 
 from laktory._logger import get_logger
-from laktory.sql import py_to_sql
 from laktory.models.base import BaseModel
-from laktory.models.column import Column
+from laktory.models.sql.column import Column
 from laktory.models.datasources.tabledatasource import TableDataSource
 from laktory.models.datasources.eventdatasource import EventDataSource
 from laktory.models.grants.tablegrant import TableGrant
@@ -106,130 +105,130 @@ class Table(BaseModel):
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
     # ----------------------------------------------------------------------- #
-
-    @classmethod
-    def meta_table(cls):
-        # Build columns
-        columns = []
-        for k, t in cls.model_serialized_types().items():
-            jsonize = False
-            # if k in ["columns", "event_source", "table_source"]:
-            if k in ["columns"]:
-                t = "string"
-                jsonize = True
-
-            elif k in ["data"]:
-                continue
-
-            columns += [
-                Column(name=k, type=py_to_sql(t, mode="schema"), jsonize=jsonize)
-            ]
-
-        # Set table
-        return Table(
-            name="tables",
-            schema_name="laktory",
-            columns=columns,
-        )
+    #
+    # @classmethod
+    # def meta_table(cls):
+    #     # Build columns
+    #     columns = []
+    #     for k, t in cls.model_serialized_types().items():
+    #         jsonize = False
+    #         # if k in ["columns", "event_source", "table_source"]:
+    #         if k in ["columns"]:
+    #             t = "string"
+    #             jsonize = True
+    #
+    #         elif k in ["data"]:
+    #             continue
+    #
+    #         columns += [
+    #             Column(name=k, type=py_to_sql(t, mode="schema"), jsonize=jsonize)
+    #         ]
+    #
+    #     # Set table
+    #     return Table(
+    #         name="tables",
+    #         schema_name="laktory",
+    #         columns=columns,
+    #     )
 
     # ----------------------------------------------------------------------- #
     # SQL Methods                                                             #
     # ----------------------------------------------------------------------- #
-
-    def exists(self):
-        return self.name in [
-            c.name
-            for c in self.workspace_client.tables.list(
-                catalog_name=self.catalog_name,
-                schema_name=self.schema_name,
-            )
-        ]
-
-    def create(
-        self,
-        if_not_exists: bool = True,
-        or_replace: bool = False,
-        insert_data: bool = False,
-        warehouse_id: str = None,
-    ):
-        if len(self.columns) == 0:
-            raise ValueError()
-
-        if or_replace:
-            if_not_exists = False
-
-        statement = f"CREATE "
-        if or_replace:
-            statement += "OR REPLACE "
-        statement += "TABLE "
-        if if_not_exists:
-            statement += "IF NOT EXISTS "
-
-        statement += f"{self.schema_name}.{self.name}"
-
-        statement += "\n   ("
-        for c in self.columns:
-            t = c.type
-            if c.jsonize:
-                t = "string"
-            statement += f"{c.name} {t},"
-        statement = statement[:-1]
-        statement += ")"
-
-        logger.info(statement)
-        r = self.workspace_client.execute_statement_and_wait(
-            statement, warehouse_id=warehouse_id, catalog_name=self.catalog_name
-        )
-
-        if insert_data:
-            self.insert()
-
-        return r
-
-    def delete(self):
-        self.workspace_client.tables.delete(self.full_name)
-
-    def insert(self, warehouse_id: str = None):
-        if self.data is None or len(self.data) == 0:
-            return
-
-        statement = f"INSERT INTO {self.full_name} VALUES\n"
-        for row in self.data:
-            statement += "   ("
-            values = [
-                json.dumps(v) if c.jsonize else v for c, v in zip(self.columns, row)
-            ]
-            values = [py_to_sql(v) for v in values]
-            statement += ", ".join(values)
-            statement += "),\n"
-
-        statement = statement[:-2]
-
-        logger.info(statement)
-        r = self.workspace_client.execute_statement_and_wait(
-            statement, warehouse_id=warehouse_id, catalog_name=self.catalog_name
-        )
-
-        return r
-
-    def select(self, limit=10, warehouse_id: str = None, load_json=True):
-        statement = f"SELECT * from {self.full_name} limit {limit}"
-
-        r = self.workspace_client.execute_statement_and_wait(
-            statement, warehouse_id=warehouse_id, catalog_name=self.catalog_name
-        )
-
-        data = r.result.data_array
-
-        if load_json:
-            for i in range(len(data)):
-                j = -1
-                for c, v in zip(self.columns, data[i]):
-                    j += 1
-                    if c.jsonize:
-                        data[i][j] = json.loads(data[i][j])
-
-        return data
+    #
+    # def exists(self):
+    #     return self.name in [
+    #         c.name
+    #         for c in self.workspace_client.tables.list(
+    #             catalog_name=self.catalog_name,
+    #             schema_name=self.schema_name,
+    #         )
+    #     ]
+    #
+    # def create(
+    #     self,
+    #     if_not_exists: bool = True,
+    #     or_replace: bool = False,
+    #     insert_data: bool = False,
+    #     warehouse_id: str = None,
+    # ):
+    #     if len(self.columns) == 0:
+    #         raise ValueError()
+    #
+    #     if or_replace:
+    #         if_not_exists = False
+    #
+    #     statement = f"CREATE "
+    #     if or_replace:
+    #         statement += "OR REPLACE "
+    #     statement += "TABLE "
+    #     if if_not_exists:
+    #         statement += "IF NOT EXISTS "
+    #
+    #     statement += f"{self.schema_name}.{self.name}"
+    #
+    #     statement += "\n   ("
+    #     for c in self.columns:
+    #         t = c.type
+    #         if c.jsonize:
+    #             t = "string"
+    #         statement += f"{c.name} {t},"
+    #     statement = statement[:-1]
+    #     statement += ")"
+    #
+    #     logger.info(statement)
+    #     r = self.workspace_client.execute_statement_and_wait(
+    #         statement, warehouse_id=warehouse_id, catalog_name=self.catalog_name
+    #     )
+    #
+    #     if insert_data:
+    #         self.insert()
+    #
+    #     return r
+    #
+    # def delete(self):
+    #     self.workspace_client.tables.delete(self.full_name)
+    #
+    # def insert(self, warehouse_id: str = None):
+    #     if self.data is None or len(self.data) == 0:
+    #         return
+    #
+    #     statement = f"INSERT INTO {self.full_name} VALUES\n"
+    #     for row in self.data:
+    #         statement += "   ("
+    #         values = [
+    #             json.dumps(v) if c.jsonize else v for c, v in zip(self.columns, row)
+    #         ]
+    #         values = [py_to_sql(v) for v in values]
+    #         statement += ", ".join(values)
+    #         statement += "),\n"
+    #
+    #     statement = statement[:-2]
+    #
+    #     logger.info(statement)
+    #     r = self.workspace_client.execute_statement_and_wait(
+    #         statement, warehouse_id=warehouse_id, catalog_name=self.catalog_name
+    #     )
+    #
+    #     return r
+    #
+    # def select(self, limit=10, warehouse_id: str = None, load_json=True):
+    #     statement = f"SELECT * from {self.full_name} limit {limit}"
+    #
+    #     r = self.workspace_client.execute_statement_and_wait(
+    #         statement, warehouse_id=warehouse_id, catalog_name=self.catalog_name
+    #     )
+    #
+    #     data = r.result.data_array
+    #
+    #     if load_json:
+    #         for i in range(len(data)):
+    #             j = -1
+    #             for c, v in zip(self.columns, data[i]):
+    #                 j += 1
+    #                 if c.jsonize:
+    #                     data[i][j] = json.loads(data[i][j])
+    #
+    #     return data
 
     # ----------------------------------------------------------------------- #
     # Pipeline Methods                                                        #
