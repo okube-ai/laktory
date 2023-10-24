@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def excluded_fields(self) -> Any:
 
-        if self.workspace_landing_root is "":
+        if self.workspace_landing_root == "":
             self.workspace_landing_root = f"/Volumes/{self.workspace_env}/sources/landing/"
 
         return self
