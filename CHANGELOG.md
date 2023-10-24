@@ -1,5 +1,19 @@
 # Release History
 
+## [0.0.9]
+**Fixed**
+-
+
+**Added**
+-
+
+**Updated**
+-
+
+**Breaking Changes**
+-
+
+
 ## [0.0.8] - 2023-10-24
 **Added**
 - Model pulumi dump method
