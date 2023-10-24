@@ -1,6 +1,7 @@
 import yaml
 import json
 import jsonref
+from typing import Any
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 
@@ -10,10 +11,27 @@ from laktory.workspaceclient import WorkspaceClient
 
 class BaseModel(_BaseModel):
     model_config = ConfigDict(extra="forbid")
+    # _vars: dict[str, Any] = {}
+
+    def __init__(self, _vars=None, **kwargs):
+        super().__init__(**kwargs)
+        # Setting a private field does not seem to be propagated to all child
+        # classes. Using the init instead.
+        if _vars is None:
+            _vars = {}
+        self._vars = _vars
 
     @property
     def workspace_client(self):
         return WorkspaceClient()
+
+    @property
+    def vars(self) -> dict[str, Any]:
+        return self._vars
+
+    @vars.setter
+    def vars(self, value):
+        self._vars = value
 
     @classmethod
     def model_validate_yaml(cls, fp):
@@ -36,11 +54,29 @@ class BaseModel(_BaseModel):
     def pulumi_renames(self) -> dict[str, str]:
         return {}
 
+    def inject_vars(self, d) -> dict:
+
+        def search_and_replace(d, old_value, new_val):
+            if isinstance(d, dict):
+                for key, value in d.items():
+                    d[key] = search_and_replace(value, old_value, new_val)
+            elif isinstance(d, list):
+                for i, item in enumerate(d):
+                    d[i] = search_and_replace(item, old_value, new_val)
+            elif d == old_value:
+                d = new_val
+            return d
+
+        for var_key, var_value in self.vars.items():
+            d = search_and_replace(d, f"${{var.{var_key}}}", var_value)
+        return d
+
     def model_pulumi_dump(self, *args, **kwargs):
         kwargs["exclude"] = self.pulumi_excludes
         d = super().model_dump(*args, **kwargs)
         for k, v in self.pulumi_renames.items():
             d[v] = d.pop(k)
+        d = self.inject_vars(d)
         return d
 
     # TODO: Migrate to Databricks engine

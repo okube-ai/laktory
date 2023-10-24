@@ -53,6 +53,7 @@ class PulumiSchema(PulumiResourcesEngine):
         # Schema volumes
         if schema.volumes:
             for v in schema.volumes:
+                v.vars = schema.vars
                 v._resources = v.deploy_with_pulumi(opts=pulumi.ResourceOptions(parent=self.schema))
 
         # TODO: Schema tables

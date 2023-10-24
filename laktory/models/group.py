@@ -5,7 +5,7 @@ from laktory.models.resources import Resources
 class Group(BaseModel, Resources):
     display_name: str
     allow_cluster_create: bool = False
-    workspace_access: bool = True
+    workspace_access: bool = None
     user_names: list[str] = None
 
     # ----------------------------------------------------------------------- #

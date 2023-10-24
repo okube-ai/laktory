@@ -60,6 +60,10 @@ class Catalog(BaseModel, Resources):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return ["schemas", "is_unity", "grants"]
+
     def deploy_with_pulumi(self, name=None, opts=None):
         from laktory.resourcesengines.pulumi.catalog import PulumiCatalog
         return PulumiCatalog(name=name, catalog=self, opts=opts)

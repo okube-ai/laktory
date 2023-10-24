@@ -1,5 +1,4 @@
 from typing import Union
-from pydantic import computed_field
 
 from laktory.models.base import BaseModel
 from laktory.models.resources import Resources
@@ -71,6 +70,10 @@ class Schema(BaseModel, Resources):
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return ["tables", "volumes", "grants"]
 
     def deploy_with_pulumi(self, name=None, opts=None):
         from laktory.resourcesengines.pulumi.schema import PulumiSchema

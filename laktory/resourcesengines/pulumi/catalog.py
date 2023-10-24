@@ -50,4 +50,5 @@ class PulumiCatalog(PulumiResourcesEngine):
         # Schemas
         if catalog.schemas:
             for s in catalog.schemas:
+                s.vars = catalog.vars
                 s._resources = s.deploy_with_pulumi(opts=pulumi.ResourceOptions(parent=self.catalog))

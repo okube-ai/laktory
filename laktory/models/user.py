@@ -5,7 +5,7 @@ from laktory.models.resources import Resources
 class User(BaseModel, Resources):
     user_name: str
     display_name: str = None
-    workspace_access: bool = True
+    workspace_access: bool = None
     groups: list[str] = []
     roles: list[str] = []
 
