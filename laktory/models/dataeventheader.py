@@ -25,7 +25,7 @@ class DataEventHeader(BaseModel):
         producer = ""
         if self.producer is not None:
             producer = self.producer.name + "/"
-        v = f'{self.events_root}{producer}{self.name}/'
+        v = f"{self.events_root}{producer}{self.name}/"
         return v
 
     #

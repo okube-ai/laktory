@@ -11,16 +11,15 @@ logger = get_logger(__name__)
 
 
 class PulumiVolume(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            volume: Volume = None,
-            opts=None,
+        self,
+        name=None,
+        volume: Volume = None,
+        opts=None,
     ):
         if name is None:
             name = f"volume-{volume.full_name}"
@@ -44,7 +43,10 @@ class PulumiVolume(PulumiResourcesEngine):
                 f"grants-{volume.full_name}",
                 volume=volume.full_name,
                 grants=[
-                    databricks.GrantsGrantArgs(principal=g.principal, privileges=g.privileges) for g in volume.grants
+                    databricks.GrantsGrantArgs(
+                        principal=g.principal, privileges=g.privileges
+                    )
+                    for g in volume.grants
                 ],
                 opts=_opts,
             )

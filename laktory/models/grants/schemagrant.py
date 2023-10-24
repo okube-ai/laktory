@@ -7,15 +7,22 @@ from laktory.models.grants.registeredmodelgrant import PRIVILEGES as MODEL_PRIVI
 from laktory.models.grants.viewgrant import PRIVILEGES as VIEWL_PRIVILEGES
 
 
-PRIVILEGES = TABLE_PRIVILEGES + VOLUME_PRIVILEGES + FUNCTION_PRIVILEGES + MODEL_PRIVILEGES + VIEWL_PRIVILEGES + [
-    "ALL_PRIVILEGES",
-    "CREATE_FUNCTION",
-    "CREATE_MATERIALIZED_VIEW",
-    "CREATE_MODEL",
-    "CREATE_TABLE",
-    "CREATE_VOLUME",
-    "USE_SCHEMA",
-]
+PRIVILEGES = (
+    TABLE_PRIVILEGES
+    + VOLUME_PRIVILEGES
+    + FUNCTION_PRIVILEGES
+    + MODEL_PRIVILEGES
+    + VIEWL_PRIVILEGES
+    + [
+        "ALL_PRIVILEGES",
+        "CREATE_FUNCTION",
+        "CREATE_MATERIALIZED_VIEW",
+        "CREATE_MODEL",
+        "CREATE_TABLE",
+        "CREATE_VOLUME",
+        "USE_SCHEMA",
+    ]
+)
 
 
 class SchemaGrant(BaseModel):

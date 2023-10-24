@@ -46,4 +46,5 @@ class Volume(BaseModel, Resources):
 
     def deploy_with_pulumi(self, name=None, **kwargs):
         from laktory.resourcesengines.pulumi.volume import PulumiVolume
+
         return PulumiVolume(name=name, volume=self, **kwargs)

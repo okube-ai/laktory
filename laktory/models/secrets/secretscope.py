@@ -27,7 +27,6 @@ class SecretScope(BaseModel, Resources):
 
     @model_validator(mode="after")
     def set_secrets_scope(self) -> Any:
-
         for s in self.secrets:
             s.scope = self.name
 
@@ -43,4 +42,5 @@ class SecretScope(BaseModel, Resources):
 
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.secretscope import PulumiSecretScope
+
         return PulumiSecretScope(name=name, secret_scope=self, opts=opts)

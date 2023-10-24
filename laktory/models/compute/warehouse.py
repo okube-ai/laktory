@@ -14,7 +14,17 @@ class WarehouseTags(BaseModel):
 
 
 class Warehouse(BaseModel, Resources):
-    cluster_size: Literal["2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large"]
+    cluster_size: Literal[
+        "2X-Small",
+        "X-Small",
+        "Small",
+        "Medium",
+        "Large",
+        "X-Large",
+        "2X-Large",
+        "3X-Large",
+        "4X-Large",
+    ]
     auto_stop_mins: int = None
     channel_name: Literal["CHANNEL_NAME_CURRENT", "CHANNEL_NAME_PREVIEW"] = None
     # data_source_id
@@ -50,4 +60,5 @@ class Warehouse(BaseModel, Resources):
 
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.warehouse import PulumiWarehouse
+
         return PulumiWarehouse(name=name, warehouse=self, opts=opts)

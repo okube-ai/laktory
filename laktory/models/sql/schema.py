@@ -77,4 +77,5 @@ class Schema(BaseModel, Resources):
 
     def deploy_with_pulumi(self, name=None, opts=None):
         from laktory.resourcesengines.pulumi.schema import PulumiSchema
+
         return PulumiSchema(name=name, schema=self, opts=opts)

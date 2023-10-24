@@ -18,10 +18,12 @@ class Resources(_BaseModel):
     @property
     def resources(self):
         if self._resources is None:
-            raise ValueError(f"Model ({self}) has not been deployed. Call model.deploy() first")
+            raise ValueError(
+                f"Model ({self}) has not been deployed. Call model.deploy() first"
+            )
         return self._resources
 
-    def deploy(self, *args, engine: Literal[tuple(ENGINES)]=None, **kwargs):
+    def deploy(self, *args, engine: Literal[tuple(ENGINES)] = None, **kwargs):
         if not engine:
             engine = settings.resources_engine
         engine = engine.lower()
@@ -29,13 +31,17 @@ class Resources(_BaseModel):
         if engine == "pulumi":
             self._resources = self.deploy_with_pulumi(*args, **kwargs)
         elif engine == "databricks-api":
-            raise NotImplementedError("Databricks API deployments are not yet supported")
+            raise NotImplementedError(
+                "Databricks API deployments are not yet supported"
+            )
             self._resources = self.deploy_with_databricks(*args, **kwargs)
         elif engine == "terraform":
             raise NotImplementedError("Terraform deployments are not yet supported")
             self._resources = self.deploy_with_terraform(*args, **kwargs)
         else:
-            raise ValueError(f"Engine {engine} is not supported. Available engines: {ENGINES}")
+            raise ValueError(
+                f"Engine {engine} is not supported. Available engines: {ENGINES}"
+            )
 
         return self._resources
 
@@ -47,4 +53,3 @@ class Resources(_BaseModel):
 
     def deploy_with_terraform(self, *args, **kwargs):
         raise NotImplementedError()
-

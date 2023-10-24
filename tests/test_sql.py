@@ -1,6 +1,7 @@
 # from laktory.sql import py_to_sql
 # TODO: Delete (deprecated)
 
+
 def atest_sql():
     # String
     s = py_to_sql("test")

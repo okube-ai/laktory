@@ -5,6 +5,7 @@ PRIVILEGES = [
     "SELECT",
 ]
 
+
 class ShareGrant(BaseModel):
     principal: str
     privileges: list[Literal[tuple(PRIVILEGES)]]

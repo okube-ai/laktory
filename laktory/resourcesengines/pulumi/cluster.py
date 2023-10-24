@@ -9,16 +9,15 @@ logger = get_logger(__name__)
 
 
 class PulumiCluster(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            cluster: Cluster = None,
-            opts=None,
+        self,
+        name=None,
+        cluster: Cluster = None,
+        opts=None,
     ):
         if name is None:
             name = f"cluster-{cluster.name}"
@@ -30,9 +29,7 @@ class PulumiCluster(PulumiResourcesEngine):
         )
 
         self.cluster = databricks.Cluster(
-            f"cluster-{cluster.name}",
-            opts=opts,
-            **cluster.model_pulumi_dump()
+            f"cluster-{cluster.name}", opts=opts, **cluster.model_pulumi_dump()
         )
 
         access_controls = []

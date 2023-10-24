@@ -10,16 +10,15 @@ logger = get_logger(__name__)
 
 
 class PulumiPipeline(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            pipeline: Pipeline = None,
-            opts=None,
+        self,
+        name=None,
+        pipeline: Pipeline = None,
+        opts=None,
     ):
         if name is None:
             name = f"pipline-{pipeline.name}"
@@ -35,10 +34,10 @@ class PulumiPipeline(PulumiResourcesEngine):
         # ------------------------------------------------------------------- #
 
         self.pipeline = databricks.Pipeline(
-                f"pipline-{pipeline.name}",
-                opts=opts,
-                **pipeline.model_pulumi_dump(),
-            )
+            f"pipline-{pipeline.name}",
+            opts=opts,
+            **pipeline.model_pulumi_dump(),
+        )
 
         access_controls = []
         for permission in pipeline.permissions:
@@ -80,10 +79,12 @@ class PulumiPipeline(PulumiResourcesEngine):
         if access_controls:
             self.conf_permissions = databricks.Permissions(
                 f"permissions-file-{filepath}",
-                access_controls=[databricks.PermissionsAccessControlArgs(
-                    permission_level="CAN_READ",
-                    group_name="account users",
-                )],
+                access_controls=[
+                    databricks.PermissionsAccessControlArgs(
+                        permission_level="CAN_READ",
+                        group_name="account users",
+                    )
+                ],
                 workspace_file_path=filepath,
                 opts=opts,
             )

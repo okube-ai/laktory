@@ -20,5 +20,10 @@ class ServicePrincipal(BaseModel, Resources):
         return ["groups", "roles"]
 
     def deploy_with_pulumi(self, name=None, group_ids=None, opts=None):
-        from laktory.resourcesengines.pulumi.serviceprincipal import PulumiServicePrincipal
-        return PulumiServicePrincipal(name=name, service_principal=self, group_ids=group_ids, opts=opts)
+        from laktory.resourcesengines.pulumi.serviceprincipal import (
+            PulumiServicePrincipal,
+        )
+
+        return PulumiServicePrincipal(
+            name=name, service_principal=self, group_ids=group_ids, opts=opts
+        )

@@ -13,17 +13,16 @@ logger = get_logger(__name__)
 
 
 class PulumiServicePrincipal(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            service_principal: ServicePrincipal = None,
-            group_ids: dict[str, str] = None,
-            opts=None,
+        self,
+        name=None,
+        service_principal: ServicePrincipal = None,
+        group_ids: dict[str, str] = None,
+        opts=None,
     ):
         sp = service_principal
         if name is None:
@@ -43,12 +42,14 @@ class PulumiServicePrincipal(PulumiResourcesEngine):
 
         self.roles = []
         for role in sp.roles:
-            self.roles += [databricks.ServicePrincipalRole(
-                f"service-principal-role-{sp.display_name}-{role}",
-                service_principal_id=self.sp.id,
-                role=role,
-                opts=opts,
-            )]
+            self.roles += [
+                databricks.ServicePrincipalRole(
+                    f"service-principal-role-{sp.display_name}-{role}",
+                    service_principal_id=self.sp.id,
+                    role=role,
+                    opts=opts,
+                )
+            ]
 
         if not group_ids:
             if sp.groups:
@@ -61,14 +62,15 @@ class PulumiServicePrincipal(PulumiResourcesEngine):
         # Group Member
         self.group_members = []
         for g in sp.groups:
-
             # Find matching group
             group_id = group_ids.get(g, None)
 
             if group_id:
-                self.group_members += [databricks.GroupMember(
-                    f"group-member-{sp.display_name}-{g}",
-                    group_id=group_id,
-                    member_id=self.sp.id,
-                    opts=opts,
-                )]
+                self.group_members += [
+                    databricks.GroupMember(
+                        f"group-member-{sp.display_name}-{g}",
+                        group_id=group_id,
+                        member_id=self.sp.id,
+                        opts=opts,
+                    )
+                ]

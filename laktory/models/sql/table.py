@@ -349,7 +349,9 @@ class Table(BaseModel):
                         df = df.withColumn(_icol, F.col(_icol).cast(col_type))
 
             if len(input_cols) > 0 and len(tmp_input_cols) == 0:
-                raise ValueError(f"None of the inputs columns ({input_cols}) for {col_name} have been found")
+                raise ValueError(
+                    f"None of the inputs columns ({input_cols}) for {col_name} have been found"
+                )
 
             # Set output
             df = df.withColumn(

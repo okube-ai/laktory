@@ -65,4 +65,5 @@ class Catalog(BaseModel, Resources):
 
     def deploy_with_pulumi(self, name=None, opts=None):
         from laktory.resourcesengines.pulumi.catalog import PulumiCatalog
+
         return PulumiCatalog(name=name, catalog=self, opts=opts)

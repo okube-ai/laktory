@@ -13,7 +13,7 @@ def test_model():
 
 
 def atest_create():
-    #TODO: Remove - deprecated
+    # TODO: Remove - deprecated
     # Timestamp is included in catalog name to prevent conflicts when running
     # multiple tests in parallel
     catalog_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")

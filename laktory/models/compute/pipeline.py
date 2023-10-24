@@ -25,7 +25,14 @@ class PipelineLibrary(BaseModel):
 
 
 class PipelineNotifications(BaseModel):
-    alerts: list[Literal["on-update-success", "on-update-failure", "on-update-fatal-failure", "on-flow-failure"]]
+    alerts: list[
+        Literal[
+            "on-update-success",
+            "on-update-failure",
+            "on-update-fatal-failure",
+            "on-flow-failure",
+        ]
+    ]
     recipients: list[str]
 
 
@@ -44,7 +51,6 @@ class PipelineCluster(Cluster):
 
     @model_validator(mode="after")
     def excluded_fields(self) -> Any:
-
         for f in [
             "autotermination_minutes",
             "cluster_id",
@@ -110,7 +116,7 @@ class Pipeline(BaseModel, Resources):
         return {
             "permissions": True,
             "tables": True,
-            "clusters": {'__all__': {'permissions'}},
+            "clusters": {"__all__": {"permissions"}},
         }
 
     def model_pulumi_dump(self, *args, **kwargs):
@@ -124,6 +130,7 @@ class Pipeline(BaseModel, Resources):
 
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.pipeline import PulumiPipeline
+
         return PulumiPipeline(name=name, pipeline=self, opts=opts)
 
     # ----------------------------------------------------------------------- #

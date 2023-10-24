@@ -41,6 +41,7 @@ class BaseModel(_BaseModel):
     def model_validate_json_file(cls, fp):
         data = json.load(fp)
         return cls.model_validate(data)
+
     #
     # def model_pulumi_dump(self):
     #     return self.model_dump()
@@ -54,7 +55,6 @@ class BaseModel(_BaseModel):
         return {}
 
     def inject_vars(self, d) -> dict:
-
         def search_and_replace(d, old_value, new_val):
             if isinstance(d, dict):
                 for key, value in d.items():

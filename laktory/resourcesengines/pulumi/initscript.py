@@ -10,16 +10,15 @@ logger = get_logger(__name__)
 
 
 class PulumiInitScript(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            init_script: InitScript = None,
-            opts=None,
+        self,
+        name=None,
+        init_script: InitScript = None,
+        opts=None,
     ):
         if name is None:
             name = f"init-script-{init_script.key}"
@@ -31,10 +30,8 @@ class PulumiInitScript(PulumiResourcesEngine):
         )
 
         self.file = databricks.WorkspaceFile(
-                f"file-{init_script.key}",
-                opts=opts,
-                **init_script.model_pulumi_dump()
-            )
+            f"file-{init_script.key}", opts=opts, **init_script.model_pulumi_dump()
+        )
 
         access_controls = []
         for permission in init_script.permissions:

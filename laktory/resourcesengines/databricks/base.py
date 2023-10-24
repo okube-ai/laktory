@@ -2,7 +2,6 @@ from laktory.workspaceclient import WorkspaceClient
 
 
 class DatabricksResourcesEngine:
-
     def __init__(self):
         pass
 

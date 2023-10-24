@@ -11,17 +11,15 @@ logger = get_logger(__name__)
 
 
 class PulumiJob(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            job: Job = None,
-            pipelines: dict[str, Pipeline] = None,
-            opts=None,
+        self,
+        name=None,
+        job: Job = None,
+        opts=None,
     ):
         if name is None:
             name = f"job-{job.name}"

@@ -5,16 +5,15 @@ from laktory.models.group import Group
 
 
 class PulumiGroup(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            group: Group = None,
-            opts=None,
+        self,
+        name=None,
+        group: Group = None,
+        opts=None,
     ):
         if name is None:
             name = f"group-{group.display_name}"
@@ -26,7 +25,5 @@ class PulumiGroup(PulumiResourcesEngine):
         )
 
         self.group = databricks.Group(
-            f"group-{group.display_name}",
-            opts=opts,
-            **group.model_pulumi_dump()
+            f"group-{group.display_name}", opts=opts, **group.model_pulumi_dump()
         )

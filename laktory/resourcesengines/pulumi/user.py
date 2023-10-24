@@ -11,17 +11,16 @@ logger = get_logger(__name__)
 
 
 class PulumiUser(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            user: User = None,
-            group_ids: dict[str, str] = None,
-            opts=None,
+        self,
+        name=None,
+        user: User = None,
+        group_ids: dict[str, str] = None,
+        opts=None,
     ):
         if name is None:
             name = f"user-{user.user_name}"
@@ -40,12 +39,14 @@ class PulumiUser(PulumiResourcesEngine):
 
         self.roles = []
         for role in user.roles:
-            self.roles += [databricks.UserRole(
-                f"user-role-{user.user_name}-{role}",
-                user_id=self.user.id,
-                role=role,
-                opts=opts,
-            )]
+            self.roles += [
+                databricks.UserRole(
+                    f"user-role-{user.user_name}-{role}",
+                    user_id=self.user.id,
+                    role=role,
+                    opts=opts,
+                )
+            ]
 
         if not group_ids:
             if user.groups:
@@ -58,14 +59,15 @@ class PulumiUser(PulumiResourcesEngine):
         # Group Member
         self.group_members = []
         for g in user.groups:
-
             # Find matching group
             group_id = group_ids.get(g, None)
 
             if group_id:
-                self.group_members += [databricks.GroupMember(
-                    f"group-member-{user.user_name}-{g}",
-                    group_id=group_id,
-                    member_id=self.user.id,
-                    opts=opts,
-                )]
+                self.group_members += [
+                    databricks.GroupMember(
+                        f"group-member-{user.user_name}-{g}",
+                        group_id=group_id,
+                        member_id=self.user.id,
+                        opts=opts,
+                    )
+                ]

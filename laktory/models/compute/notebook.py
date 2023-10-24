@@ -27,9 +27,7 @@ class Notebook(BaseModel, Resources):
 
     @model_validator(mode="after")
     def default_path(self) -> Any:
-
         if self.path is None:
-
             if self.dirpath:
                 self.path = f"{self.dirpath}{self.filename}"
 
@@ -48,4 +46,5 @@ class Notebook(BaseModel, Resources):
 
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.notebook import PulumiNotebook
+
         return PulumiNotebook(name=name, notebook=self, opts=opts)

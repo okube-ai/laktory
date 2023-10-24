@@ -21,4 +21,5 @@ class User(BaseModel, Resources):
 
     def deploy_with_pulumi(self, name=None, group_ids=None, opts=None):
         from laktory.resourcesengines.pulumi.user import PulumiUser
+
         return PulumiUser(name=name, user=self, group_ids=group_ids, opts=opts)

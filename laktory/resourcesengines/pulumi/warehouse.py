@@ -9,16 +9,15 @@ logger = get_logger(__name__)
 
 
 class PulumiWarehouse(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            warehouse: Warehouse = None,
-            opts=None,
+        self,
+        name=None,
+        warehouse: Warehouse = None,
+        opts=None,
     ):
         if name is None:
             name = f"warehouse-{warehouse.name}"

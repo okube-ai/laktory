@@ -16,7 +16,6 @@ class JobCluster(Cluster):
 
     @model_validator(mode="after")
     def excluded_fields(self) -> Any:
-
         for f in [
             "is_pinned",
             "libraries",
@@ -188,7 +187,9 @@ class JobWebhookNotificationsOnSuccess(BaseModel):
 
 
 class JobWebhookNotifications(BaseModel):
-    on_duration_warning_threshold_exceededs: list[JobWebhookNotificationsOnDurationWarningThresholdExceeded] = None
+    on_duration_warning_threshold_exceededs: list[
+        JobWebhookNotificationsOnDurationWarningThresholdExceeded
+    ] = None
     on_failures: list[JobWebhookNotificationsOnFailure] = None
     on_starts: list[JobWebhookNotificationsOnStart] = None
     on_successes: list[JobWebhookNotificationsOnSuccess] = None
@@ -235,14 +236,17 @@ class Job(BaseModel, Resources):
         _clusters = []
         for c in d.get("job_clusters", []):
             name = c.pop("name")
-            _clusters += [{
-                "job_cluster_key": name,
-                "new_cluster": c,
-            }]
+            _clusters += [
+                {
+                    "job_cluster_key": name,
+                    "new_cluster": c,
+                }
+            ]
         d["job_clusters"] = _clusters
 
         return d
 
-    def deploy_with_pulumi(self, name=None, pipelines=None, opts=None):
+    def deploy_with_pulumi(self, name=None, opts=None):
         from laktory.resourcesengines.pulumi.job import PulumiJob
-        return PulumiJob(name=name, job=self, pipelines=pipelines, opts=opts)
+
+        return PulumiJob(name=name, job=self, opts=opts)
