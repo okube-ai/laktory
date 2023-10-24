@@ -22,7 +22,7 @@ class PulumiServicePrincipal(PulumiResourcesEngine):
             self,
             name=None,
             service_principal: ServicePrincipal = None,
-            groups: Union[list[Group], dict] = None,
+            group_ids: dict[str, str] = None,
             opts=None,
     ):
         sp = service_principal
@@ -50,7 +50,7 @@ class PulumiServicePrincipal(PulumiResourcesEngine):
                 opts=opts,
             )]
 
-        if not groups:
+        if not group_ids:
             if sp.groups:
                 logger.warning(
                     "User is member of groups, but groups have not been provided. Group member resources will "
@@ -63,20 +63,12 @@ class PulumiServicePrincipal(PulumiResourcesEngine):
         for g in sp.groups:
 
             # Find matching group
-            group_id = None
+            group_id = group_ids.get(g, None)
 
-            # List of Group models
-            if isinstance(groups, list):
-                for _g in groups:
-                    if g == _g.display_name:
-                        group_id = _g.resources.group.id
-
-            elif isinstance(groups, dict):
-                group_id = groups[g]
-
-            self.group_members += [databricks.GroupMember(
-                f"group-member-{sp.display_name}-{g}",
-                group_id=group_id,
-                member_id=self.sp.id,
-                opts=opts,
-            )]
+            if group_id:
+                self.group_members += [databricks.GroupMember(
+                    f"group-member-{sp.display_name}-{g}",
+                    group_id=group_id,
+                    member_id=self.sp.id,
+                    opts=opts,
+                )]

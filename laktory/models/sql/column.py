@@ -71,25 +71,26 @@ class Column(BaseModel):
     # Class Methods                                                           #
     # ----------------------------------------------------------------------- #
 
-    @classmethod
-    def meta_table(cls):
-        from laktory.models.table import Table
-
-        # Build columns
-        columns = []
-        for k, t in cls.model_serialized_types().items():
-            jsonize = False
-            if k in ["func_kwargs"]:
-                t = "string"
-                jsonize = True
-
-            columns += [
-                Column(name=k, type=py_to_sql(t, mode="schema"), jsonize=jsonize)
-            ]
-
-        # Set table
-        return Table(
-            name="columns",
-            schema_name="laktory",
-            columns=columns,
-        )
+    # TODO: Move to Databricks SDK engine
+    # @classmethod
+    # def meta_table(cls):
+    #     from laktory.models.table import Table
+    #
+    #     # Build columns
+    #     columns = []
+    #     for k, t in cls.model_serialized_types().items():
+    #         jsonize = False
+    #         if k in ["func_kwargs"]:
+    #             t = "string"
+    #             jsonize = True
+    #
+    #         columns += [
+    #             Column(name=k, type=py_to_sql(t, mode="schema"), jsonize=jsonize)
+    #         ]
+    #
+    #     # Set table
+    #     return Table(
+    #         name="columns",
+    #         schema_name="laktory",
+    #         columns=columns,
+    #     )

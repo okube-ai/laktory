@@ -1,5 +1,3 @@
-from .catalog import Catalog
-from .column import Column
 from .compute import *
 from .dataevent import DataEvent
 from .dataeventheader import DataEventHeader
@@ -7,9 +5,7 @@ from .datasources import *
 from .grants import *
 from .group import Group
 from .producer import Producer
-from .schema import Schema
 from .serviceprincipal import ServicePrincipal
 from .secrets import *
-from .table import Table
 from .user import User
-from .volume import Volume
+from .sql import *

@@ -44,28 +44,28 @@ class Schema(BaseModel, Resources):
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
-
-    def exists(self):
-        return self.name in [
-            c.name
-            for c in self.workspace_client.schemas.list(catalog_name=self.catalog_name)
-        ]
-
-    def create(self, if_not_exists: bool = True):
-        w = self.workspace_client
-        exists = self.exists()
-
-        if if_not_exists and exists:
-            return w.schemas.get(self.full_name)
-
-        return w.schemas.create(
-            name=self.name,
-            catalog_name=self.catalog_name,
-            comment=self.comment,
-        )
-
-    def delete(self):
-        self.workspace_client.schemas.delete(self.full_name)
+    # TODO: Move to Databricks SDK engine
+    # def exists(self):
+    #     return self.name in [
+    #         c.name
+    #         for c in self.workspace_client.schemas.list(catalog_name=self.catalog_name)
+    #     ]
+    #
+    # def create(self, if_not_exists: bool = True):
+    #     w = self.workspace_client
+    #     exists = self.exists()
+    #
+    #     if if_not_exists and exists:
+    #         return w.schemas.get(self.full_name)
+    #
+    #     return w.schemas.create(
+    #         name=self.name,
+    #         catalog_name=self.catalog_name,
+    #         comment=self.comment,
+    #     )
+    #
+    # def delete(self):
+    #     self.workspace_client.schemas.delete(self.full_name)
 
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #

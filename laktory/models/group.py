@@ -13,6 +13,12 @@ class Group(BaseModel, Resources):
     # ----------------------------------------------------------------------- #
 
     @property
+    def id(self):
+        if self._resources is None:
+            return None
+        return self.resources.group.id
+
+    @property
     def pulumi_excludes(self) -> list[str]:
         return ["user_names"]
 

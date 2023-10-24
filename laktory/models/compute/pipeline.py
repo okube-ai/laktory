@@ -1,6 +1,7 @@
 import os
 from typing import Any
 from typing import Literal
+from typing import Union
 from pydantic import model_validator
 from pydantic import Field
 from laktory.models.base import BaseModel
@@ -72,7 +73,7 @@ class Pipeline(BaseModel, Resources):
     clusters: list[PipelineCluster] = []
     configuration: dict[str, str] = {}
     continuous: bool = None
-    development: bool = None
+    development: Union[bool, str] = None
     edition: str = None
     # filters
     libraries: list[PipelineLibrary] = []
@@ -102,6 +103,12 @@ class Pipeline(BaseModel, Resources):
     # ----------------------------------------------------------------------- #
 
     @property
+    def id(self):
+        if self._resources is None:
+            return None
+        return self.resources.pipeline.id
+
+    @property
     def pulumi_excludes(self) -> list[str]:
         return {
             "permissions": True,
@@ -125,56 +132,56 @@ class Pipeline(BaseModel, Resources):
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
-
-    def get_tables_meta(self, catalog_name="main", schema_name="laktory") -> Table:
-        table = Table.meta_table()
-        table.catalog_name = catalog_name
-        table.schema_name = schema_name
-
-        data = []
-        for t in self.tables:
-            _dump = t.model_dump(mode="json")
-            _data = []
-            for c in table.column_names:
-                _data += [_dump[c]]
-            data += [_data]
-        table.data = data
-
-        return table
-
-    def get_columns_meta(self, catalog_name="main", schema_name="laktory") -> Table:
-        table = Column.meta_table()
-        table.catalog_name = catalog_name
-        table.schema_name = schema_name
-
-        data = []
-        for t in self.tables:
-            for c in t.columns:
-                _dump = c.model_dump(mode="json")
-                _data = []
-                for k in table.column_names:
-                    _data += [_dump[k]]
-                data += [_data]
-        table.data = data
-
-        return table
-
-    def publish_tables_meta(self, catalog_name="main", schema_name="laktory", init=True):
-
-        # Create catalog
-        Catalog(name=catalog_name).create(if_not_exists=True)
-
-        # Create schema
-        Schema(name=schema_name, catalog_name=catalog_name).create(if_not_exists=True)
-
-        # Get and create tables
-        tables = self.get_tables_meta(
-            catalog_name=catalog_name, schema_name=schema_name
-        )
-        tables.create(or_replace=init, insert_data=True)
-
-        # Get and create tables
-        columns = self.get_columns_meta(
-            catalog_name=catalog_name, schema_name=schema_name
-        )
-        columns.create(or_replace=init, insert_data=True)
+    # TODO: Move to Databricks SDK engine
+    # def get_tables_meta(self, catalog_name="main", schema_name="laktory") -> Table:
+    #     table = Table.meta_table()
+    #     table.catalog_name = catalog_name
+    #     table.schema_name = schema_name
+    #
+    #     data = []
+    #     for t in self.tables:
+    #         _dump = t.model_dump(mode="json")
+    #         _data = []
+    #         for c in table.column_names:
+    #             _data += [_dump[c]]
+    #         data += [_data]
+    #     table.data = data
+    #
+    #     return table
+    #
+    # def get_columns_meta(self, catalog_name="main", schema_name="laktory") -> Table:
+    #     table = Column.meta_table()
+    #     table.catalog_name = catalog_name
+    #     table.schema_name = schema_name
+    #
+    #     data = []
+    #     for t in self.tables:
+    #         for c in t.columns:
+    #             _dump = c.model_dump(mode="json")
+    #             _data = []
+    #             for k in table.column_names:
+    #                 _data += [_dump[k]]
+    #             data += [_data]
+    #     table.data = data
+    #
+    #     return table
+    #
+    # def publish_tables_meta(self, catalog_name="main", schema_name="laktory", init=True):
+    #
+    #     # Create catalog
+    #     Catalog(name=catalog_name).create(if_not_exists=True)
+    #
+    #     # Create schema
+    #     Schema(name=schema_name, catalog_name=catalog_name).create(if_not_exists=True)
+    #
+    #     # Get and create tables
+    #     tables = self.get_tables_meta(
+    #         catalog_name=catalog_name, schema_name=schema_name
+    #     )
+    #     tables.create(or_replace=init, insert_data=True)
+    #
+    #     # Get and create tables
+    #     columns = self.get_columns_meta(
+    #         catalog_name=catalog_name, schema_name=schema_name
+    #     )
+    #     columns.create(or_replace=init, insert_data=True)
