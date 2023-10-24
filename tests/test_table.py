@@ -196,7 +196,8 @@ def atest_create_and_insert():
     cat.delete(force=True)
 
 
-def test_meta():
+def atest_meta():
+    # TODO: Remove - deprecated
     meta = table.meta_table()
 
     meta.catalog_name = "main"
@@ -240,4 +241,4 @@ if __name__ == "__main__":
     test_data()
     test_sql_schema()
     # atest_create_and_insert()
-    test_meta()
+    # atest_meta()
