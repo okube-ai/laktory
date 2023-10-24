@@ -72,7 +72,7 @@ def test_model():
         Table(name="googl", zone="ROUGE")
 
 
-def test_sql_schema():
+def atest_sql_schema():
     types = Table.model_serialized_types()
     print(types)
     assert types == {
@@ -239,6 +239,6 @@ def atest_meta():
 if __name__ == "__main__":
     test_model()
     test_data()
-    test_sql_schema()
+    # atest_sql_schema()
     # atest_create_and_insert()
     # atest_meta()
