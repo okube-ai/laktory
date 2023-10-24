@@ -25,8 +25,8 @@ This example demonstrates how to send data events to a data lake and to set a
 data pipeline defining the tables transformation layers. 
 
 ### Generate data events
-A data event class defines specifications of an event and provides the methods
-for writing that event to a databricks mount or a cloud storage.
+A data event class defines specifications of an event and provides methods
+for writing that event directly to a cloud storage or through a databricks volume or mount.
 
 ```py
 from laktory import models
@@ -61,66 +61,105 @@ events = [
 ]
 
 for event in events:
-    event.to_databricks_mount()
+    event.to_databricks()
 
 ```
-These events may now be sent to your cloud storage of choice.
-
 ### Define data pipeline and data tables
-A pipeline class defines the transformations of a raw data event into curated
+A yaml file define the configuration for a data pipeline, including the transformations of a raw data event into curated
 (silver) and consumption (gold) layers.
 
+```yaml
+name: pl-stock-prices
+
+catalog: ${var.env}
+target: default
+
+clusters:
+  - name : default
+    node_type_id: Standard_DS3_v2
+    autoscale:
+      min_workers: 1
+      max_workers: 2
+
+libraries:
+  - notebook:
+      path: /pipelines/dlt_template_brz.py
+  - notebook:
+      path: /pipelines/dlt_template_slv.py
+
+permissions:
+  - group_name: account users
+    permission_level: CAN_VIEW
+  - group_name: role-engineers
+    permission_level: CAN_RUN
+
+# --------------------------------------------------------------------------- #
+# Tables                                                                      #
+# --------------------------------------------------------------------------- #
+
+tables:
+  - name: brz_stock_prices
+    timestamp_key: data.created_at
+    event_source:
+      name: stock_price
+      producer:
+        name: yahoo-finance
+    zone: BRONZE
+
+
+  - name: slv_stock_prices
+    table_source:
+      catalog_name: dev
+      schema_name: finance
+      name: brz_stock_prices
+    zone: SILVER
+    columns:
+      - name: created_at
+        type: timestamp
+        func_name: coalesce
+        input_cols:
+          - data._created_at
+
+      - name: open
+        type: double
+        func_name: coalesce
+        input_cols:
+          - data.open
+
+      - name: close
+        type: double
+        func_name: coalesce
+        input_cols:
+          - data.close
+
+```
+
+### Deploy your configuration
+Laktory currently support Pulumi for cloud deployement, but more engines will be added in the future (Terraform, Databricks CLI, etc.).
+
 ```py
+import os
+import pulumi
 from laktory import models
 
-pl = models.Pipeline(
-    name="pl-stock-prices",
-    tables=[
-        models.Table(
-            name="brz_stock_prices",
-            timestamp_key="data.created_at",
-            event_source=models.EventDataSource(
-                name="stock_price",
-                producer=models.Producer(
-                    name="yahoo-finance",
-                )
-            ),
-            zone="BRONZE",
-        ),
-        models.Table(
-            name="brz_stock_prices",
-            table_source=models.TableSource(
-                name="brz_stock_prices",
-            ),
-            zone="SILVER",
-            columns = [
-                {
-                    "name": "created_at",
-                    "type": "timestamp",
-                    "func_name": "coalesce",
-                    "input_cols": ["_created_at"],
-                },
-                {
-                    "name": "low",
-                    "type": "double",
-                    "func_name": "coalesce",
-                    "input_cols": ["data.low"],
-                },
-                {
-                    "name": "high",
-                    "type": "double",
-                    "func_name": "coalesce",
-                    "input_cols": ["data.high"],
-                },
-            ]
-        ),
-    ]
-)
+# Read configuration file
+with open("pipeline.yaml", "r") as fp:
+    pipeline = models.Pipeline.model_validate_yaml(fp)
+
+# Set variables
+pipeline.vars = {
+    "env": os.getenv("ENV"),
+}
+    
+# Deploy
+pipeline.deploy_with_pulumi()
 ```
-Laktory will provide the required framework for deploying this pipeline as a 
-delta live tables in Databricks and all the associated notebooks and jobs. 
-TODO: link to help
+## A full Data Ops template
+A comprehensive template on how to deploy a lakehouse as code using Laktory is maintained here:
+https://github.com/okube-ai/lakehouse-as-code.
 
-
-## Contributing
-TODO
+In this template, 4 pulumi projects are used to:
+- `{cloud_provider}_infra`: Deploy the required resources on your cloud provider
+- `unity-catalog`: Setup users, groups, catalogs, schemas and manage grants
+- `workspace-conf`: Setup secrets, clusters and warehouses
+- `workspace`: The data workflows to build your lakehouse.
