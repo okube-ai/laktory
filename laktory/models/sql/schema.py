@@ -1,10 +1,9 @@
 from typing import Union
-from pydantic import computed_field
 
 from laktory.models.base import BaseModel
 from laktory.models.resources import Resources
-from laktory.models.table import Table
-from laktory.models.volume import Volume
+from laktory.models.sql.table import Table
+from laktory.models.sql.volume import Volume
 from laktory.models.grants.schemagrant import SchemaGrant
 
 
@@ -45,33 +44,38 @@ class Schema(BaseModel, Resources):
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
-
-    def exists(self):
-        return self.name in [
-            c.name
-            for c in self.workspace_client.schemas.list(catalog_name=self.catalog_name)
-        ]
-
-    def create(self, if_not_exists: bool = True):
-        w = self.workspace_client
-        exists = self.exists()
-
-        if if_not_exists and exists:
-            return w.schemas.get(self.full_name)
-
-        return w.schemas.create(
-            name=self.name,
-            catalog_name=self.catalog_name,
-            comment=self.comment,
-        )
-
-    def delete(self):
-        self.workspace_client.schemas.delete(self.full_name)
+    # TODO: Move to Databricks SDK engine
+    # def exists(self):
+    #     return self.name in [
+    #         c.name
+    #         for c in self.workspace_client.schemas.list(catalog_name=self.catalog_name)
+    #     ]
+    #
+    # def create(self, if_not_exists: bool = True):
+    #     w = self.workspace_client
+    #     exists = self.exists()
+    #
+    #     if if_not_exists and exists:
+    #         return w.schemas.get(self.full_name)
+    #
+    #     return w.schemas.create(
+    #         name=self.name,
+    #         catalog_name=self.catalog_name,
+    #         comment=self.comment,
+    #     )
+    #
+    # def delete(self):
+    #     self.workspace_client.schemas.delete(self.full_name)
 
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return ["tables", "volumes", "grants"]
+
     def deploy_with_pulumi(self, name=None, opts=None):
         from laktory.resourcesengines.pulumi.schema import PulumiSchema
+
         return PulumiSchema(name=name, schema=self, opts=opts)

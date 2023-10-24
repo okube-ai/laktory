@@ -9,16 +9,15 @@ logger = get_logger(__name__)
 
 
 class PulumiSecretScope(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            secret_scope: SecretScope = None,
-            opts=None,
+        self,
+        name=None,
+        secret_scope: SecretScope = None,
+        opts=None,
     ):
         if name is None:
             name = f"secret-scope-{secret_scope.name}"
@@ -30,12 +29,10 @@ class PulumiSecretScope(PulumiResourcesEngine):
         )
 
         self.secret_scope = databricks.SecretScope(
-                f"secret-scope-{secret_scope.name}",
-                backend_type=secret_scope.backend_type,
-                keyvault_metadata=getattr(secret_scope.keyvault_metadata, "pulumi_args", None),
-                name=secret_scope.name,
-                opts=opts,
-            )
+            f"secret-scope-{secret_scope.name}",
+            opts=opts,
+            **secret_scope.model_pulumi_dump(),
+        )
 
         for s in secret_scope.secrets:
             databricks.Secret(

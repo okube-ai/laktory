@@ -10,16 +10,15 @@ logger = get_logger(__name__)
 
 
 class PulumiNotebook(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            notebook: Notebook = None,
-            opts=None,
+        self,
+        name=None,
+        notebook: Notebook = None,
+        opts=None,
     ):
         if name is None:
             name = f"notebook-{notebook.key}"
@@ -31,12 +30,10 @@ class PulumiNotebook(PulumiResourcesEngine):
         )
 
         self.notebook = databricks.Notebook(
-                f"notebook-{notebook.key}",
-                path=notebook.path,
-                source=notebook.source,
-                language=notebook.language,
-                opts=opts,
-            )
+            f"notebook-{notebook.key}",
+            opts=opts,
+            **notebook.model_pulumi_dump(),
+        )
 
         access_controls = []
         for permission in notebook.permissions:

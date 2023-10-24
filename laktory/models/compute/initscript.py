@@ -25,9 +25,7 @@ class InitScript(BaseModel, Resources):
 
     @model_validator(mode="after")
     def default_path(self) -> Any:
-
         if self.path is None:
-
             if self.dirpath:
                 self.path = f"{self.dirpath}{self.filename}"
 
@@ -37,6 +35,11 @@ class InitScript(BaseModel, Resources):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return ["permissions", "dirpath"]
+
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.initscript import PulumiInitScript
+
         return PulumiInitScript(name=name, init_script=self, opts=opts)

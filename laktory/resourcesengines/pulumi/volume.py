@@ -3,7 +3,7 @@ from typing import Union
 import pulumi
 import pulumi_databricks as databricks
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.volume import Volume
+from laktory.models.sql.volume import Volume
 
 from laktory._logger import get_logger
 
@@ -11,16 +11,15 @@ logger = get_logger(__name__)
 
 
 class PulumiVolume(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            volume: Volume = None,
-            opts=None,
+        self,
+        name=None,
+        volume: Volume = None,
+        opts=None,
     ):
         if name is None:
             name = f"volume-{volume.full_name}"
@@ -33,12 +32,8 @@ class PulumiVolume(PulumiResourcesEngine):
         # Volume
         self.volume = databricks.Volume(
             f"volume-{volume.full_name}",
-            name=volume.name,
-            catalog_name=volume.catalog_name,
-            schema_name=volume.schema_name,
-            volume_type=volume.volume_type,
-            storage_location=volume.storage_location,
             opts=opts,
+            **volume.model_pulumi_dump(),
         )
 
         # Volume grants
@@ -48,7 +43,10 @@ class PulumiVolume(PulumiResourcesEngine):
                 f"grants-{volume.full_name}",
                 volume=volume.full_name,
                 grants=[
-                    databricks.GrantsGrantArgs(principal=g.principal, privileges=g.privileges) for g in volume.grants
+                    databricks.GrantsGrantArgs(
+                        principal=g.principal, privileges=g.privileges
+                    )
+                    for g in volume.grants
                 ],
                 opts=_opts,
             )

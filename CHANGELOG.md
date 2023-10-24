@@ -1,5 +1,13 @@
 # Release History
 
+## [0.0.8] - 2023-10-24
+**Added**
+- Model pulumi dump method
+- Support for variables in yaml files
+
+**Breaking Changes**
+- Deprecated metadata SQL methods
+
 ## [0.0.7] - 2023-10-20
 
 **Updated**

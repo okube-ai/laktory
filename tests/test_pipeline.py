@@ -23,7 +23,8 @@ def test_read_yaml():
     assert pl.name == "pl-stocks"
 
 
-def test_tables_meta():
+def atest_tables_meta():
+    # TODO: Remove - Deprecated
     pl = StockPricesPipeline()
 
     table = pl.get_tables_meta()
@@ -34,7 +35,7 @@ def test_tables_meta():
     assert df["comment"].tolist() == [None, None]
 
 
-def test_columns_meta():
+def atest_columns_meta():
     pl = StockPricesPipeline()
 
     table = pl.get_columns_meta()
@@ -43,7 +44,8 @@ def test_columns_meta():
     assert df["type"].tolist() == ["timestamp", "double", "double"]
 
 
-def test_publish_meta():
+def atest_publish_meta():
+    # TODO: Remove - deprecated
     # Timestamp is included in catalog name to prevent conflicts when running
     # multiple tests in parallel
     catalog_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")
@@ -66,6 +68,6 @@ def test_publish_meta():
 if __name__ == "__main__":
     test_pipeline()
     test_read_yaml()
-    test_tables_meta()
-    test_columns_meta()
-    test_publish_meta()
+    # atest_tables_meta()
+    # atest_columns_meta()
+    # atest_publish_meta()

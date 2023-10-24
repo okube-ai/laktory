@@ -2,10 +2,11 @@ from typing import Literal
 from laktory.models.base import BaseModel
 
 PRIVILEGES = [
-        "ALL_PRIVILEGES",
-        "SELECT",
-        "MODIFY",
+    "ALL_PRIVILEGES",
+    "SELECT",
+    "MODIFY",
 ]
+
 
 class TableGrant(BaseModel):
     principal: str

@@ -12,7 +12,9 @@ class Settings(BaseSettings):
     # )
 
     # Configuration
-    resources_engine: Union[str, None] = Field("pulumi", alias="LAKTORY_RESOURCES_ENGINE")
+    resources_engine: Union[str, None] = Field(
+        "pulumi", alias="LAKTORY_RESOURCES_ENGINE"
+    )
 
     # Azure
     lakehouse_sa_conn_str: Union[str, None] = Field(None, alias="LAKEHOUSE_SA_CONN_STR")
@@ -24,7 +26,9 @@ class Settings(BaseSettings):
 
     # Databricks
     workspace_env: str = Field("dev", alias="LAKTORY_WORKSPACE_ENV")
-    workspace_laktory_root: str = Field("/.laktory/", alias="LAKTORY_WORKSPACE_LAKTORY_ROOT")  # TODO: Review variable name
+    workspace_laktory_root: str = Field(
+        "/.laktory/", alias="LAKTORY_WORKSPACE_LAKTORY_ROOT"
+    )  # TODO: Review variable name
     workspace_landing_root: str = Field("", alias="LAKTORY_WORKSPACE_LANDING_ROOT")
 
     # Logging
@@ -42,9 +46,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def excluded_fields(self) -> Any:
-
-        if self.workspace_landing_root is "":
-            self.workspace_landing_root = f"/Volumes/{self.workspace_env}/sources/landing/"
+        if self.workspace_landing_root == "":
+            self.workspace_landing_root = (
+                f"/Volumes/{self.workspace_env}/sources/landing/"
+            )
 
         return self
 

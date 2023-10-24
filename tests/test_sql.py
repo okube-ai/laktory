@@ -1,7 +1,8 @@
-from laktory.sql import py_to_sql
+# from laktory.sql import py_to_sql
+# TODO: Delete (deprecated)
 
 
-def test_sql():
+def atest_sql():
     # String
     s = py_to_sql("test")
     assert s == "'test'"
@@ -46,4 +47,4 @@ def test_sql():
 
 
 if __name__ == "__main__":
-    test_sql()
+    atest_sql()

@@ -12,14 +12,19 @@ class WarehouseCustomTag(BaseModel):
 class WarehouseTags(BaseModel):
     custom_tags: list[WarehouseCustomTag] = []
 
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.SqlEndpointTagsArgs(**self.model_dump())
-
 
 class Warehouse(BaseModel, Resources):
-    cluster_size: Literal["2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large"]
+    cluster_size: Literal[
+        "2X-Small",
+        "X-Small",
+        "Small",
+        "Medium",
+        "Large",
+        "X-Large",
+        "2X-Large",
+        "3X-Large",
+        "4X-Large",
+    ]
     auto_stop_mins: int = None
     channel_name: Literal["CHANNEL_NAME_CURRENT", "CHANNEL_NAME_PREVIEW"] = None
     # data_source_id
@@ -44,6 +49,16 @@ class Warehouse(BaseModel, Resources):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return ["permissions"]
+
+    def model_pulumi_dump(self, *args, **kwargs):
+        d = super().model_pulumi_dump(*args, **kwargs)
+        d["channel"] = {"name": d.pop("channel_name")}
+        return d
+
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.warehouse import PulumiWarehouse
+
         return PulumiWarehouse(name=name, warehouse=self, opts=opts)

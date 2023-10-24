@@ -15,7 +15,15 @@ class ServicePrincipal(BaseModel, Resources):
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return ["groups", "roles"]
 
-    def deploy_with_pulumi(self, name=None, groups=None, opts=None):
-        from laktory.resourcesengines.pulumi.serviceprincipal import PulumiServicePrincipal
-        return PulumiServicePrincipal(name=name, service_principal=self, groups=groups, opts=opts)
+    def deploy_with_pulumi(self, name=None, group_ids=None, opts=None):
+        from laktory.resourcesengines.pulumi.serviceprincipal import (
+            PulumiServicePrincipal,
+        )
+
+        return PulumiServicePrincipal(
+            name=name, service_principal=self, group_ids=group_ids, opts=opts
+        )

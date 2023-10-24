@@ -40,6 +40,11 @@ class Volume(BaseModel, Resources):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return ["grants"]
+
     def deploy_with_pulumi(self, name=None, **kwargs):
         from laktory.resourcesengines.pulumi.volume import PulumiVolume
+
         return PulumiVolume(name=name, volume=self, **kwargs)

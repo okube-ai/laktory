@@ -9,11 +9,6 @@ class ClusterAutoScale(BaseModel):
     min_workers: int
     max_workers: int
 
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.ClusterAutoscaleArgs(**self.model_dump())
-
 
 class ClusterInitScriptVolumes(BaseModel):
     destination: str = None
@@ -26,11 +21,6 @@ class ClusterInitScriptWorkspace(BaseModel):
 class ClusterInitScript(BaseModel):
     volumes: ClusterInitScriptVolumes = None
     workspace: ClusterInitScriptWorkspace = None
-
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.ClusterInitScriptArgs(**self.model_dump())
 
 
 class ClusterLibraryCran(BaseModel):
@@ -57,11 +47,6 @@ class ClusterLibrary(BaseModel):
     pypi: ClusterLibraryPypi = None
     whl: str = None
 
-    @property
-    def pulumi_args(self):
-        import pulumi_databricks as databricks
-        return databricks.ClusterLibraryArgs(**self.model_dump())
-
 
 class Cluster(BaseModel, Resources):
     apply_policy_default_values: bool = None
@@ -74,7 +59,9 @@ class Cluster(BaseModel, Resources):
     # cluster_source
     # cluster_mount_infos
     custom_tags: dict[str, str] = None
-    data_security_mode: Literal["NONE", "SINGLE_USER", "USER_ISOLATION"] = "USER_ISOLATION"
+    data_security_mode: Literal[
+        "NONE", "SINGLE_USER", "USER_ISOLATION"
+    ] = "USER_ISOLATION"
     # docker_image
     driver_instance_pool_id: str = None
     driver_node_type_id: str = None
@@ -103,6 +90,15 @@ class Cluster(BaseModel, Resources):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def pulumi_renames(self):
+        return {"name": "cluster_name"}
+
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return ["permissions"]
+
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.cluster import PulumiCluster
+
         return PulumiCluster(name=name, cluster=self, opts=opts)

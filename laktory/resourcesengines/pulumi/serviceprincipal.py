@@ -13,17 +13,16 @@ logger = get_logger(__name__)
 
 
 class PulumiServicePrincipal(PulumiResourcesEngine):
-
     @property
     def provider(self):
         return "databricks"
 
     def __init__(
-            self,
-            name=None,
-            service_principal: ServicePrincipal = None,
-            groups: Union[list[Group], dict] = None,
-            opts=None,
+        self,
+        name=None,
+        service_principal: ServicePrincipal = None,
+        group_ids: dict[str, str] = None,
+        opts=None,
     ):
         sp = service_principal
         if name is None:
@@ -37,22 +36,22 @@ class PulumiServicePrincipal(PulumiResourcesEngine):
 
         self.sp = databricks.ServicePrincipal(
             f"service-principal-{sp.display_name}",
-            display_name=sp.display_name,
-            application_id=sp.application_id,
-            disable_as_user_deletion=sp.disable_as_user_deletion,
             opts=opts,
+            **sp.model_pulumi_dump(),
         )
 
         self.roles = []
         for role in sp.roles:
-            self.roles += [databricks.ServicePrincipalRole(
-                f"service-principal-role-{sp.display_name}-{role}",
-                service_principal_id=self.sp.id,
-                role=role,
-                opts=opts,
-            )]
+            self.roles += [
+                databricks.ServicePrincipalRole(
+                    f"service-principal-role-{sp.display_name}-{role}",
+                    service_principal_id=self.sp.id,
+                    role=role,
+                    opts=opts,
+                )
+            ]
 
-        if not groups:
+        if not group_ids:
             if sp.groups:
                 logger.warning(
                     "User is member of groups, but groups have not been provided. Group member resources will "
@@ -63,22 +62,15 @@ class PulumiServicePrincipal(PulumiResourcesEngine):
         # Group Member
         self.group_members = []
         for g in sp.groups:
-
             # Find matching group
-            group_id = None
+            group_id = group_ids.get(g, None)
 
-            # List of Group models
-            if isinstance(groups, list):
-                for _g in groups:
-                    if g == _g.display_name:
-                        group_id = _g.resources.group.id
-
-            elif isinstance(groups, dict):
-                group_id = groups[g]
-
-            self.group_members += [databricks.GroupMember(
-                f"group-member-{sp.display_name}-{g}",
-                group_id=group_id,
-                member_id=self.sp.id,
-                opts=opts,
-            )]
+            if group_id:
+                self.group_members += [
+                    databricks.GroupMember(
+                        f"group-member-{sp.display_name}-{g}",
+                        group_id=group_id,
+                        member_id=self.sp.id,
+                        opts=opts,
+                    )
+                ]
