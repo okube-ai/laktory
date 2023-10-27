@@ -66,7 +66,7 @@ class Cluster(BaseModel, Resources):
     driver_instance_pool_id: str = None
     driver_node_type_id: str = None
     enable_elastic_disk: bool = None
-    enable_local_disk_encryption: bool = True
+    enable_local_disk_encryption: bool = None
     # gcp_attributes
     idempotency_token: str = None
     init_scripts: list[ClusterInitScript] = []
