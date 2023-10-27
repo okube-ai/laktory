@@ -1,5 +1,18 @@
 # Release History
 
+## [0.0.10]
+**Fixed**
+-
+
+**Updated**
+- 
+
+**Added**
+-
+
+**Breaking Change**
+-
+
 ## [0.0.9] - 2023-10-27
 **Updated**
 - df_has_column support for column names with backticks (`)
