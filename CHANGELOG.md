@@ -8,7 +8,7 @@
 - 
 
 **Added**
--
+- Functions library
 
 **Breaking Change**
 -
