@@ -298,77 +298,16 @@ class Table(BaseModel):
         logger.info(f"Setting silver columns...")
         new_col_names = []
         for col in columns:
-            # Get column definition
-            col_name = col.name
-            col_type = col.type
-            func_name = col.func_name
 
-            #     # TODO: Support customer functions
-            #     # if udf_name in udfuncs.keys():
-            #     #     f = udfuncs[udf_name]
-            #     # else:
-            #     #     f = getattr(F, udf_name)
+            # Add to list
+            new_col_names += [col.name]
 
-            f = getattr(F, func_name)
-            new_col_names += [col_name]
-
-            input_cols = col.input_cols
-            kwargs = col.func_kwargs
-
-            #     # Issue when setting strings
-            #     # if "format" in kwargs and udf_name == "date_format":
-            #     #     kwargs["format"] = kwargs["format"].replace("T", "'T'").replace("''T''", "'T'")
-
-            logger.info(
-                f"   {col_name}[{col_type}] as {func_name}({input_cols}, {kwargs})"
-            )
-
-            # Cast inputs
-            tmp_input_cols = []
-            for i, input_col in enumerate(input_cols):
-                if func_name == "coalesce" and not df_has_column(df, input_col):
-                    # Because the `coalesce` function supports multiple
-                    # optional input columns, we can skip the ones not
-                    # available in the dataframe
-                    logger.warning(f"Column '{input_col}' not available")
-                    continue
-
-                tmp_input_cols += [f"__{i}"]
-                _icol = tmp_input_cols[-1]
-                df = df.withColumn(_icol, F.expr(input_col))
-                if input_col.startswith("data.") or func_name == "coalesce":
-                    input_type = dict(df.dtypes)[_icol]
-                    if input_type in ["double"]:
-                        # Some bronze NaN data will be converted to 0 if cast to int
-                        sdf = df.withColumn(
-                            _icol, F.when(F.isnan(_icol), None).otherwise(F.col(_icol))
-                        )
-                    if col_type not in ["_any"] and func_name not in [
-                        "to_safe_timestamp"
-                    ]:
-                        df = df.withColumn(_icol, F.col(_icol).cast(col_type))
-
-            if len(input_cols) > 0 and len(tmp_input_cols) == 0:
-                raise ValueError(
-                    f"None of the inputs columns ({input_cols}) for {col_name} have been found"
-                )
-
-            # Set output
-            df = df.withColumn(
-                col_name,
-                f(
-                    *tmp_input_cols,
-                    **kwargs,
-                ),
-            )
-
-            # Drop temp inputs
-            if len(tmp_input_cols) > 0:
-                df = df.drop(*tmp_input_cols)
+            # Set
+            df = df.withColumn(col.name, col.get())
 
             # Remove from drop list
-            if col_name in cols0:
-                cols0.remove(col_name)
+            if col.name in cols0:
+                cols0.remove(col.name)
 
         # Drop previous columns
         logger.info(f"Dropping bronze columns...")

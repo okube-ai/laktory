@@ -1,24 +1,56 @@
 from typing import Union
+from typing import Any
 from pydantic import computed_field
 from pydantic import field_validator
+import pyspark.sql.functions as F
+from pyspark.sql.connect.column import Column
 
+from laktory._logger import get_logger
+from laktory.spark import df_has_column
 from laktory.contants import SUPPORTED_TYPES
 from laktory.models.base import BaseModel
+from laktory import functions as LF
+
+logger = get_logger(__name__)
+
+
+class SparkFuncArg(BaseModel):
+    value: Any
+    is_column: bool = True
 
 
 class Column(BaseModel):
-    name: str
-    type: str = "string"
-    comment: Union[str, None] = None
     catalog_name: Union[str, None] = None
-    schema_name: Union[str, None] = None
-    table_name: Union[str, None] = None
-    unit: Union[str, None] = None
+    comment: Union[str, None] = None
+    name: str
     pii: Union[bool, None] = None
-    func_name: Union[str, None] = None
-    input_cols: list[str] = []
-    func_kwargs: dict[str, Union[str, None]] = {}
-    jsonize: bool = False
+    schema_name: Union[str, None] = None
+    spark_func_args: list[Union[str, SparkFuncArg]] = []
+    spark_func_kwargs: dict[str, Union[str, SparkFuncArg]] = {}
+    spark_func_name: Union[str, None] = None
+    sql_expression: Union[str, None] = None
+    table_name: Union[str, None] = None
+    type: str = "string"
+    unit: Union[str, None] = None
+
+    @field_validator("spark_func_args")
+    def parse_args(cls, args: list[Union[str, SparkFuncArg]]) -> list[SparkFuncArg]:
+        print("VALIDATING SPARK FUNC ARGS")
+        _args = []
+        for a in args:
+            if isinstance(a, str):
+                a = SparkFuncArg(value=a)
+            _args += [a]
+        return _args
+
+    @field_validator("spark_func_kwargs")
+    def parse_kwargs(cls, kwargs: dict[str, Union[str, SparkFuncArg]]) -> dict[str, SparkFuncArg]:
+        _kwargs = {}
+        for k, a in kwargs.items():
+            if isinstance(a, str):
+                a = SparkFuncArg(value=a)
+            _kwargs[k] = a
+        return _kwargs
 
     @field_validator("type")
     def default_load_path(cls, v: str) -> str:
@@ -70,26 +102,100 @@ class Column(BaseModel):
     # Class Methods                                                           #
     # ----------------------------------------------------------------------- #
 
-    # TODO: Move to Databricks SDK engine
-    # @classmethod
-    # def meta_table(cls):
-    #     from laktory.models.sql.table import Table
-    #
-    #     # Build columns
-    #     columns = []
-    #     for k, t in cls.model_serialized_types().items():
-    #         jsonize = False
-    #         if k in ["func_kwargs"]:
-    #             t = "string"
-    #             jsonize = True
-    #
-    #         columns += [
-    #             Column(name=k, type=py_to_sql(t, mode="schema"), jsonize=jsonize)
-    #         ]
-    #
-    #     # Set table
-    #     return Table(
-    #         name="columns",
-    #         schema_name="laktory",
-    #         columns=columns,
-    #     )
+    def to_spark(self, df=None) -> Column:
+
+        # From SQL expression
+        if self.sql_expression:
+            logger.info(
+                f"   {self.name}[{self.type}] as `{self.sql_expression}`)"
+            )
+            return F.expr(self.sql_expression).alias(self.name).cast(self.type)
+
+        # From Spark Function
+        func_name = self.spark_func_name
+        if func_name is None:
+            func_name = "coalesce"
+
+        # TODO: Add support for custom functions
+        # if udf_name in udfuncs.keys():
+        #     f = udfuncs[udf_name]
+        # else:
+        #     f = getattr(F, udf_name)
+
+        # Get function and args
+        f = getattr(F, func_name, None)
+        if f is None:
+            f = getattr(LF, func_name, None)
+        if f is None:
+            raise ValueError(f"Function {func_name} is not available")
+        _args = self.spark_func_args
+        _kwargs = self.spark_func_kwargs
+
+        logger.info(
+            f"   {self.name}[{self.type}] as {func_name}({_args}, {_kwargs})"
+        )
+
+        # Build args
+        args = []
+        expected_cols = 0
+        found_cols = 0
+        for i, _arg in enumerate(_args):
+            if df is not None:
+                if _arg.is_column:
+                    expected_cols += 1
+                    if not df_has_column(df, _arg.value):
+                        # When columns are not found, they are simply skipped and a
+                        # warning is issued. Some functions, like `coalesce` might list
+                        # multiple arguments, but don't expect all of them to be
+                        # available
+                        logger.warning(f"Column '{_arg.value}' not available")
+                        continue
+                    else:
+                        found_cols += 1
+
+            if _arg.is_column:
+                arg = F.expr(_arg)
+                arg._parent = "test0"
+                arg._alias = "test1"
+                arg._name = "test3"
+            else:
+                arg = _arg
+
+            # TODO: Review if required
+            # if _arg.value.startswith("data.") or func_name == "coalesce":
+            #     pass
+                # input_type = dict(df.dtypes)[input_col_name]
+                # if input_type in ["double"]:
+                #     # Some bronze NaN data will be converted to 0 if cast to int
+                #     input_col = F.when(F.isnan(input_col_name), None).otherwise(F.col(input_col_name))
+                # if self.type not in ["_any"] and func_name not in [
+                #     "to_safe_timestamp"
+                # ]:
+                #     input_col = F.col(input_col_name).cast(self.type)
+
+            args += [arg]
+
+        if expected_cols > 0 and found_cols == 0:
+            raise ValueError(f"None of the inputs columns ({_args}) for {self.name} have been found")
+
+        # Build kwargs
+        kwargs = {}
+        for k, _arg in _kwargs.items():
+            if _arg.is_column:
+                kwargs[k] = F.expr()
+
+        c = f(*args, **kwargs).cast(self.type)
+
+        # c._parent = "test1"
+        # c._name = "test0"
+        # c._alias = "test2"
+
+        for a in args:
+            print(str(a))
+
+        # print("name", c._name)
+        # print("args", c._args)
+        #
+        # print(c)
+
+        return f(*args)
