@@ -41,6 +41,6 @@ def df_schema_flat(df):
 
 
 def df_has_column(df, col):
-    _col = re.sub(r"\d+", "*", col)
+    _col = re.sub(r'\[(\d+)\]', r'[*]', col)
     _col = re.sub(r'`', '', _col)
     return _col in df_schema_flat(df)
