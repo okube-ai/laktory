@@ -2,7 +2,7 @@
 
 ## [0.0.11]
 **Fixed**
-- 
+- Deployment of pipeline configuration file
 
 **Updated**
 -
