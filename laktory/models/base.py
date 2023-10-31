@@ -64,6 +64,8 @@ class BaseModel(_BaseModel):
                     d[i] = search_and_replace(item, old_value, new_val)
             elif d == old_value:
                 d = new_val
+            elif isinstance(d, str) and old_value in d:
+                d = d.replace(old_value, new_val)
             return d
 
         for var_key, var_value in self.vars.items():
