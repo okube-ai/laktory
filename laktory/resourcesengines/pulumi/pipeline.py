@@ -1,10 +1,11 @@
+import json
 import pulumi
 import pulumi_databricks as databricks
-from laktory._settings import settings
-from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.compute.pipeline import Pipeline
 
 from laktory._logger import get_logger
+from laktory._settings import settings
+from laktory.models.compute.pipeline import Pipeline
+from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
 
 logger = get_logger(__name__)
 
@@ -63,7 +64,9 @@ class PulumiPipeline(PulumiResourcesEngine):
         # ------------------------------------------------------------------- #
 
         source = f"./tmp-{pipeline.name}.json"
-        s = pipeline.model_dump_json(indent=4, exclude_none=True)
+        d = pipeline.model_dump(exclude_none=True)
+        d = pipeline.inject_vars(d)
+        s = json.dumps(d, indent=4)
         with open(source, "w") as fp:
             fp.write(s)
         filepath = f"{settings.workspace_laktory_root}pipelines/{pipeline.name}.json"
