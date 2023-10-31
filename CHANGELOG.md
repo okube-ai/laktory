@@ -1,17 +1,21 @@
 # Release History
 
-## [0.0.10]
+## [0.0.11]
 **Fixed**
--
+- 
 
 **Updated**
-- 
+-
 
 **Added**
 - Functions library
 
 **Breaking Change**
 -
+
+## [0.0.10] - 2023-10-31
+**Fixed**
+- `df_has_column` handling of arrays when column name contains a digit
 
 ## [0.0.9] - 2023-10-27
 **Updated**
