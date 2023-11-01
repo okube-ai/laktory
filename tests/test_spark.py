@@ -5,8 +5,6 @@ from pyspark.sql import types as T
 from laktory.spark import df_has_column
 from laktory.spark import df_schema_flat
 
-
-# JAVA_HOME=/opt/homebrew/opt/java;SPARK_HOME=/opt/homebrew/Cellar/apache-spark/3.5.0/libexec
 schema = T.StructType(
     [
         T.StructField("x@x", T.IntegerType()),
