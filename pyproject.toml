@@ -42,8 +42,6 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "black",
-#    "databricks-sdk",
-#    "databricks-sql-connector",
     "flit",
 ]
 spark = [
