@@ -17,15 +17,21 @@ spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 #
 
 
+def test_spark_installed():
+
+    pdf0 = pd.DataFrame({"x": [1, 2, 3], "y": [4, 5, 6]})
+    df = spark.createDataFrame(pdf0)
+
+    pdf1 = df.toPandas()
+    assert pdf1.equals(pdf0)
+
+
 def test_df_schema_flat():
 
     df = spark.createDataFrame(pdf)
-
     df.show()
-
-    # schema = df_schema_flat(df)
-    # print(schema)
 
 
 if __name__ == "__main__":
+    test_spark_installed()
     test_df_schema_flat()
