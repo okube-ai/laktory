@@ -31,6 +31,8 @@ def df_schema_flat(df):
                     _field_names = get_fields(f["type"])
                     field_names += [f_name]
                     field_names += [f"{f_name}.{v}" for v in _field_names]
+                elif f_type["type"] == "map":
+                    field_names += [f_name]
                 else:
                     raise ValueError(f_type["type"])
             else:

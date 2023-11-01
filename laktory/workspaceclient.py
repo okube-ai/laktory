@@ -1,4 +1,5 @@
 import time
+
 # from databricks.sdk import WorkspaceClient as _WorkspaceClient
 # from databricks.sdk.service.sql import StatementState
 
@@ -8,6 +9,8 @@ from laktory import settings
 class WorkspaceClient:
     pass
     # TODO: Implement
+
+
 #
 # class WorkspaceClient(_WorkspaceClient):
 #     def __init__(self, *args, **kwargs):

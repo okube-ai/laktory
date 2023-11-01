@@ -5,13 +5,15 @@
 - Deployment of pipeline configuration file
 
 **Updated**
--
+- 
 
 **Added**
+- Spark optional dependencies
+- Spark unit tests
 - Functions library
 
 **Breaking Change**
--
+- Removed databricks-sdk as dependency
 
 ## [0.0.10] - 2023-10-31
 **Fixed**

@@ -45,11 +45,13 @@ dev = [
 #    "databricks-sdk",
 #    "databricks-sql-connector",
     "flit",
+]
+spark = [
+    "pandas",
     "pyarrow",
     "pyspark",
 ]
 test = [
-    "pandas",
     "pytest",
     "pytest-cov",
 #    "tox"
