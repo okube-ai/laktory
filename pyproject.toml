@@ -30,7 +30,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "databricks-sdk",
+#    "databricks-sdk",
     "jsonref",
     "pulumi",
     "pulumi_databricks",
@@ -42,10 +42,14 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "black",
-    "databricks-sdk",
-    "databricks-sql-connector",
+#    "databricks-sdk",
+#    "databricks-sql-connector",
     "flit",
-#    "pyspark",
+]
+spark = [
+    "pandas",
+    "pyarrow",
+    "pyspark",
 ]
 test = [
     "pytest",

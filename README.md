@@ -20,6 +20,12 @@ Install using `pip install laktory`
 
 TODO: Full installation instructions
 
+### pyspark
+TODO: Add pyspark instructions https://www.machinelearningplus.com/pyspark/install-pyspark-on-mac/
+- JAVA_HOME=/opt/homebrew/opt/java;
+- SPARK_HOME=/opt/homebrew/Cellar/apache-spark/3.5.0/libexec
+
+
 ## A Basic Example
 This example demonstrates how to send data events to a data lake and to set a
 data pipeline defining the tables transformation layers. 
