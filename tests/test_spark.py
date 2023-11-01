@@ -23,6 +23,7 @@ def test_spark_installed():
     df = spark.createDataFrame(pdf0)
 
     pdf1 = df.toPandas()
+    pdf1["z"] = 3
     assert pdf1.equals(pdf0)
 
 
