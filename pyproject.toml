@@ -45,6 +45,7 @@ dev = [
 #    "databricks-sdk",
 #    "databricks-sql-connector",
     "flit",
+    "pyarrow",
     "pyspark",
 ]
 test = [
