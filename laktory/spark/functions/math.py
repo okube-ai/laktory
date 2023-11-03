@@ -1,24 +1,13 @@
-# import pandas as pd
-# import uuid as _uuid
-# import pytz
-# from datetime import datetime
 from typing import Union
-# from typing import Any
-# import pyspark.sql.types as T
 import pyspark.sql.functions as F
 # from pyspark.sql.functions import pandas_udf
 from pyspark.sql.column import Column
-#
-# from newton.core.math import roundp
-# from newton.core.datetime import unix_timestamp as _unix_timestamp
-# from newton.flare.udf import pandas_udf
-# from newton.flare.udf import udfuncs
-#
-#
+
 __all__ = [
     "poly1",
     "poly2",
-    "power"
+    "power",
+    "roundp",
 ]
 
 COLUMN_OR_NAME = Union[Column, str]
@@ -193,31 +182,36 @@ def power(
     """
     return _lit(a) * _col(x) ** _lit(n)
 
-#
-# # --------------------------------------------------------------------------- #
-# # roundp                                                                      #
-# # --------------------------------------------------------------------------- #
-#
-# @pandas_udf(sqlt.DoubleType(), udfuncs)
-# def roundp(s: pd.Series, p: int = 1) -> pd.Series:
-#     """
-#     Create a copy of input series
-#
-#     Parameters
-#     ------
-#     s: pd.Series
-#         Input series
-#     p: int
-#         Precision
-#
-#     Returns
-#     -------
-#     output: pd.Series
-#         Output series
-#     """
-#     return roundp(s, p)
-#
-#
+
+# --------------------------------------------------------------------------- #
+# Rounding                                                                    #
+# --------------------------------------------------------------------------- #
+
+def roundp(
+        x: COLUMN_OR_NAME,
+        p: FLOAT_OR_COLUMN = 1.0,
+) -> Column:
+    """
+    Evenly round to the given precision
+
+    Parameters
+    ------
+    x: pyspark.sql.functions.column.Column or column name
+        Input column
+    p: float or pyspark.sql.functions.column.Column
+        Precision
+
+    Returns
+    -------
+    output: pd.Series
+        Output series
+    """
+    # eps0 = 1.0e-16
+    # precision = float(precision)
+    # if precision < eps0:
+    #     raise ValueError("Precision must be greater than 1.0e-16")
+    return F.round(_col(x) / _lit(p)) * _lit(p)
+
 # # --------------------------------------------------------------------------- #
 # # string_split                                                                #
 # # --------------------------------------------------------------------------- #
