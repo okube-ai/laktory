@@ -1,9 +1,9 @@
 # import pandas as pd
 from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame
 from pyspark.sql import types as T
 
-from laktory.spark import df_has_column
-from laktory.spark import df_schema_flat
+import laktory
 
 schema = T.StructType(
     [
@@ -75,14 +75,14 @@ df = spark.createDataFrame(data, schema=schema)
 def test_df_schema_flat():
     df.show()
     df.printSchema()
-    schema = df_schema_flat(df)
+    schema = df.schema_flat()
     assert schema == ['x@x', 'y', 'z', 'z.id', 'z.email', 'u', 'u[*].a', 'u[*].b', 'u2', 'u2[*].a', 'u2[*].b']
 
 
 def test_df_has_column():
-    assert df_has_column(df, "x@x")
-    assert df_has_column(df, "`x@x`")
-    assert df_has_column(df, "u[0].a")
+    assert df.has_column("x@x")
+    assert df.has_column("`x@x`")
+    assert df.has_column("u[0].a")
 
 
 if __name__ == "__main__":
