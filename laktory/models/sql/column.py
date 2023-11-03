@@ -6,10 +6,9 @@ import pyspark.sql.functions as F
 from pyspark.sql.connect.column import Column
 
 from laktory._logger import get_logger
-from laktory.spark import df_has_column
 from laktory.contants import SUPPORTED_TYPES
 from laktory.models.base import BaseModel
-from laktory import functions as LF
+from laktory.spark import functions as LF
 
 logger = get_logger(__name__)
 
@@ -143,7 +142,7 @@ class Column(BaseModel):
             if df is not None:
                 if _arg.is_column:
                     expected_cols += 1
-                    if not df_has_column(df, _arg.value):
+                    if not df.has_column(_arg.value):
                         # When columns are not found, they are simply skipped and a
                         # warning is issued. Some functions, like `coalesce` might list
                         # multiple arguments, but don't expect all of them to be

@@ -3,11 +3,9 @@ from typing import Literal
 from typing import Any
 from typing import Union
 
-from pydantic import computed_field
 from pydantic import model_validator
 
 from laktory.spark import DataFrame
-from laktory.spark import df_has_column
 
 from laktory._logger import get_logger
 from laktory.models.base import BaseModel
