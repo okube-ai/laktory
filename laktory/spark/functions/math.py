@@ -1,11 +1,12 @@
-import pandas as pd
+# import pandas as pd
 # import uuid as _uuid
 # import pytz
 # from datetime import datetime
 from typing import Union
-from typing import Any
-import pyspark.sql.types as T
-from pyspark.sql.functions import pandas_udf
+# from typing import Any
+# import pyspark.sql.types as T
+import pyspark.sql.functions as F
+# from pyspark.sql.functions import pandas_udf
 from pyspark.sql.column import Column
 #
 # from newton.core.math import roundp
@@ -14,7 +15,32 @@ from pyspark.sql.column import Column
 # from newton.flare.udf import udfuncs
 #
 #
-__all__ = ["poly1"]
+__all__ = [
+    "poly1",
+    "poly2",
+    "power"
+]
+
+COLUMN_OR_NAME = Union[Column, str]
+INT_OR_COLUMN = Union[int, COLUMN_OR_NAME]
+FLOAT_OR_COLUMN = Union[float, COLUMN_OR_NAME]
+STRING_OR_COLUMN = Union[str, Column]
+
+
+def _col(col: str) -> Column:
+    if isinstance(col, Column):
+        return col
+
+    return F.col(col)
+
+
+def _lit(col: str) -> Column:
+    if isinstance(col, Column):
+        return col
+
+    return F.lit(col)
+
+
 # # --------------------------------------------------------------------------- #
 # # compare                                                                     #
 # # --------------------------------------------------------------------------- #
@@ -81,97 +107,92 @@ __all__ = ["poly1"]
 #
 
 # --------------------------------------------------------------------------- #
-# poly1                                                                       #
+# Polynomials                                                                 #
 # --------------------------------------------------------------------------- #
 
 
 def poly1(
-        x: Union[Column],
-        a: Union[Column, float] = 0,
-        b: Union[Column, float] = 0,
+        x: COLUMN_OR_NAME,
+        a: FLOAT_OR_COLUMN = 1.0,
+        b: FLOAT_OR_COLUMN = 0.0,
 ) -> Column:
     """
     Polynomial function of first degree
 
     Parameters
     ----------
-    x: pyspark.sql.functions.column.Column
+    x: pyspark.sql.functions.column.Column, column name
         Input column
-    a: pyspark.sql.functions.column.Column or float
+    a: float or pyspark.sql.functions.column.Column
         Slope
-    b: pyspark.sql.functions.column.Column or float
+    b: float or pyspark.sql.functions.column.Column
         y-intercept
 
     Returns
     -------
     output: pyspark.sql.functions.column.Column
-        Output series
+        Output column
     """
-    return a * x + b
 
-#
-# # --------------------------------------------------------------------------- #
-# # poly2                                                                       #
-# # --------------------------------------------------------------------------- #
-#
-# @pandas_udf(sqlt.DoubleType(), udfuncs)
-# def poly2(
-#         x: pd.Series,
-#         a: Union[float, pd.Series] = 0,
-#         b: Union[float, pd.Series] = 0,
-#         c: Union[float, pd.Series] = 0,
-# ) -> pd.Series:
-#     """
-#     Polynomial function of second degree
-#
-#     Parameters
-#     ------
-#     x: pd.Series
-#         Input series
-#     a: float
-#         x**2 coefficient
-#     b: float
-#         x**1 coefficient
-#     c: float
-#         x**0 coefficient
-#
-#     Returns
-#     -------
-#     output: pd.Series
-#         Output series
-#     """
-#     return a * x ** 2 + b * x + c
-#
-#
-# # --------------------------------------------------------------------------- #
-# # power                                                                       #
-# # --------------------------------------------------------------------------- #
-#
-# @pandas_udf(sqlt.DoubleType(), udfuncs)
-# def power(
-#         x: pd.Series,
-#         a: Union[float, pd.Series] = 1,
-#         n: Union[float, pd.Series] = 1,
-# ) -> pd.Series:
-#     """
-#     Polynomial function of first degree
-#
-#     Parameters
-#     ------
-#     x: pd.Series
-#         Input series
-#     a: float
-#         Coefficient
-#     n: float
-#         Exponent
-#
-#     Returns
-#     -------
-#     output: pd.Series
-#         Output series
-#     """
-#     return a * x ** n
-#
+    return _lit(a) * _col(x) + _lit(b)
+
+
+def poly2(
+        x: COLUMN_OR_NAME,
+        a: FLOAT_OR_COLUMN = 1.0,
+        b: FLOAT_OR_COLUMN = 0.0,
+        c: FLOAT_OR_COLUMN = 0.0,
+) -> Column:
+    """
+    Polynomial function of second degree
+
+    Parameters
+    ------
+    x: pyspark.sql.functions.column.Column or column name
+        Input column
+    a: float or pyspark.sql.functions.column.Column
+        x**2 coefficient
+    b: float or pyspark.sql.functions.column.Column
+        x**1 coefficient
+    c: float or pyspark.sql.functions.column.Column
+        x**0 coefficient
+
+    Returns
+    -------
+    output: pyspark.sql.functions.column.Column
+        Output column
+    """
+    return _lit(a) * _col(x) ** 2 + _lit(b) * _col(x) + _lit(c)
+
+
+# --------------------------------------------------------------------------- #
+# power                                                                       #
+# --------------------------------------------------------------------------- #
+
+def power(
+        x: COLUMN_OR_NAME,
+        a: FLOAT_OR_COLUMN = 1.0,
+        n: FLOAT_OR_COLUMN = 0.0,
+) -> Column:
+    """
+    Polynomial function of first degree
+
+    Parameters
+    ------
+    x: pyspark.sql.functions.column.Column or column name
+        Input column
+    a: float or pyspark.sql.functions.column.Column
+        Coefficient
+    n: float or pyspark.sql.functions.column.Column
+        Exponent
+
+    Returns
+    -------
+    output: pyspark.sql.functions.column.Column
+        Output column
+    """
+    return _lit(a) * _col(x) ** _lit(n)
+
 #
 # # --------------------------------------------------------------------------- #
 # # roundp                                                                      #

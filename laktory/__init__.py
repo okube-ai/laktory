@@ -10,7 +10,7 @@ from ._settings import settings
 # --------------------------------------------------------------------------- #
 
 import laktory.models
-import laktory.functions
+import laktory.spark
 
 # --------------------------------------------------------------------------- #
 # Classes                                                                     #

@@ -2,6 +2,7 @@ from typing import Union
 from typing import Any
 from pydantic import computed_field
 from pydantic import field_validator
+from pydantic import model_validator
 import pyspark.sql.functions as F
 from pyspark.sql.connect.column import Column
 
@@ -15,7 +16,17 @@ logger = get_logger(__name__)
 
 class SparkFuncArg(BaseModel):
     value: Any
-    is_column: bool = True
+    is_column: bool = None
+
+    @model_validator(mode="after")
+    def is_column_default(self) -> Any:
+        if self.is_column is None:
+            if isinstance(self.value, str):
+                self.is_column = True
+            else:
+                self.is_column = False
+
+        return self
 
 
 class Column(BaseModel):
@@ -37,7 +48,7 @@ class Column(BaseModel):
         print("VALIDATING SPARK FUNC ARGS")
         _args = []
         for a in args:
-            if isinstance(a, str):
+            if not isinstance(a, SparkFuncArg):
                 a = SparkFuncArg(value=a)
             _args += [a]
         return _args
@@ -46,7 +57,7 @@ class Column(BaseModel):
     def parse_kwargs(cls, kwargs: dict[str, Union[str, SparkFuncArg]]) -> dict[str, SparkFuncArg]:
         _kwargs = {}
         for k, a in kwargs.items():
-            if isinstance(a, str):
+            if not isinstance(a, SparkFuncArg):
                 a = SparkFuncArg(value=a)
             _kwargs[k] = a
         return _kwargs
