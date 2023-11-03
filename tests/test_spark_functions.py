@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import pytest
+from uuid import UUID
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
@@ -15,6 +16,7 @@ pdf = pd.DataFrame(
         "n": [4, 0, 4],
         "pi": [np.pi]*3,
         "p": [2, 0.2, 0.05],
+        "word": ["dog_cat", "dog_cat_mouse", "dog"],
      },
 )
 spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
@@ -49,8 +51,29 @@ def test_roundp(df0=df0):
     assert pdf["roundp_2"].tolist() == pytest.approx([4, 3.20, 3.15], abs=0.0001)
 
 
+def test_string_split(df0=df0):
+    df = df0.withColumn("split_1", LF.string_split(F.col("word"), "_", 0))
+    df = df.withColumn("split_2", LF.string_split(F.col("word"), "_", 1))
+    pdf = df.toPandas()
+
+    assert pdf["split_1"].tolist() == ["dog", "dog", "dog"]
+    assert pdf["split_2"].tolist() == ["cat", "cat", None]
+
+
+def test_uuid(df0=df0):
+    df = df0.withColumn("uuid", LF.uuid())
+    pdf = df.toPandas()
+
+    for _uuid in pdf["uuid"]:
+        assert str(UUID(_uuid)) == _uuid
+
+    assert pdf["uuid"].nunique() == 3
+
+
 if __name__ == "__main__":
     test_poly()
     test_power()
     test_roundp()
+    test_string_split()
+    test_uuid()
 
