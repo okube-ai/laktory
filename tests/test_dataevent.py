@@ -1,52 +1,39 @@
-import pytest
-
-from laktory.models import DataEvent
-from laktory.models import DataEventHeader
 from datetime import datetime
 from zoneinfo import ZoneInfo
+import pytest
 
-event = DataEvent(
-    name="flight_record",
-    producer={
-        "name": "FDR",
-    },
-    data={
-        "created_at": datetime(2023, 7, 1, 1, 0, 0),
-        "airspeed": 100.0,
-        "altitude": 20000.0,
-    },
-)
+from laktory._testing import StockPriceDataEventHeader
+from laktory._testing import EventsManager
 
 
-def test_dataevent_header():
-    header = DataEventHeader(
-        name="flight_record",
-        description=None,
-        producer={
-            "name": "FDR",
-            "party": 1,
-        },
-    )
+header = StockPriceDataEventHeader()
+events = EventsManager().build_events()
+event = events[0]
+
+
+def test_dataeventheader():
     assert header.model_dump() == {
-        "name": "flight_record",
+        "name": "stock_price",
         "description": None,
-        "producer": {"name": "FDR", "description": None, "party": 1},
+        "producer": {"name": "yahoo-finance", "description": None, "party": 1},
         "events_root": "/Volumes/dev/sources/landing/events/",
     }
-    assert header.event_root == "/Volumes/dev/sources/landing/events/FDR/flight_record/"
+    assert (
+        header.event_root
+        == "/Volumes/dev/sources/landing/events/yahoo-finance/stock_price/"
+    )
 
 
 def test_dataevent():
-    assert event.producer.name == "FDR"
-    assert event.data["altitude"] == 20000
-    assert event.data["_producer_name"] == "FDR"
-    assert event.data["_created_at"] == datetime(
-        2023, 7, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC")
-    )
-    assert event.created_at == datetime(2023, 7, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC"))
+    assert event.producer.name == "yahoo-finance"
+    assert event.data["symbol"] == "AAPL"
+    assert event.data["open"] == pytest.approx(189.49, abs=0.01)
+    assert event.data["_producer_name"] == "yahoo-finance"
+    assert event.data["_created_at"] == datetime(2023, 9, 1, tzinfo=ZoneInfo("UTC"))
+    assert event.created_at == datetime(2023, 9, 1, 0, 0, 0, tzinfo=ZoneInfo("UTC"))
     assert (
         event.get_landing_filepath()
-        == "/Volumes/dev/sources/landing/events/FDR/flight_record/2023/07/01/flight_record_20230701T010000000Z.json"
+        == "/Volumes/dev/sources/landing/events/yahoo-finance/stock_price/2023/09/01/stock_price_20230901T000000000Z.json"
     )
 
 
@@ -54,35 +41,44 @@ def test_model_dump():
     # Without exclusions
     d = event.model_dump(exclude=[])
     print(d)
-    for k, v in d.items():
-        print(k, v)
     assert d == {
-        "event_name": "flight_record",
-        "event_description": None,
-        "event_producer": {"name": "FDR", "description": None, "party": 1},
+        "name": "stock_price",
+        "description": None,
+        "producer": {"name": "yahoo-finance", "description": None, "party": 1},
         "events_root": "/Volumes/dev/sources/landing/events/",
         "data": {
-            "created_at": "2023-07-01T01:00:00",
-            "airspeed": 100.0,
-            "altitude": 20000.0,
-            "_name": "flight_record",
-            "_producer_name": "FDR",
-            "_created_at": "2023-07-01T01:00:00Z",
+            "created_at": "2023-09-01T00:00:00",
+            "symbol": "AAPL",
+            "open": 189.49000549316406,
+            "close": 189.4600067138672,
+            "high": 189.9199981689453,
+            "low": 188.27999877929688,
+            "_name": "stock_price",
+            "_producer_name": "yahoo-finance",
+            "_created_at": "2023-09-01T00:00:00Z",
         },
         "tstamp_col": "created_at",
     }
 
     # With exclusions
     d = event.model_dump()
-    print(d.keys())
-    assert list(d.keys()) == [
-        "event_name",
-        "event_description",
-        "event_producer",
-        "data",
-    ]
-    # for k, v in d.items():
-    #     print(k, v)
+    print(d)
+    assert d == {
+        "name": "stock_price",
+        "description": None,
+        "producer": {"name": "yahoo-finance", "description": None, "party": 1},
+        "data": {
+            "created_at": "2023-09-01T00:00:00",
+            "symbol": "AAPL",
+            "open": 189.49000549316406,
+            "close": 189.4600067138672,
+            "high": 189.9199981689453,
+            "low": 188.27999877929688,
+            "_name": "stock_price",
+            "_producer_name": "yahoo-finance",
+            "_created_at": "2023-09-01T00:00:00Z",
+        },
+    }
 
 
 def test_to_azure_storage_container():
@@ -116,7 +112,7 @@ def test_to_databricks_mount():
 
 
 if __name__ == "__main__":
-    test_dataevent_header()
+    test_dataeventheader()
     test_dataevent()
     test_model_dump()
     test_to_azure_storage_container()
