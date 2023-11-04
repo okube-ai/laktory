@@ -9,37 +9,8 @@ from laktory.models import Column
 from laktory.models import Table
 from laktory.models import EventDataSource
 from laktory.models import TableDataSource
-
-
-table_brz = Table(
-    name="brz_stock_prices",
-    zone="BRONZE",
-    catalog_name="dev",
-    schema_name="markets",
-    event_source=EventDataSource(
-        name="stock_price",
-    ),
-)
-
-table_slv = Table(
-    name="slv_stock_prices",
-    columns=[
-        {
-            "name": "open",
-            "type": "double",
-            "spark_func_name": "coalesce",
-            "spark_func_args": ["data.open"],
-        },
-        {"name": "close", "type": "double", "sql_expression": "data.open"},
-    ],
-    data=[[1, 2], [3, 4], [5, 6]],
-    zone="SILVER",
-    catalog_name="dev",
-    schema_name="markets",
-    table_source=TableDataSource(
-        name="brz_stock_prices",
-    ),
-)
+from laktory._testing import table_brz
+from laktory._testing import table_slv
 
 
 def test_data():
@@ -58,6 +29,22 @@ def test_model():
     assert table_slv.model_dump() == {
         "name": "slv_stock_prices",
         "columns": [
+            {
+                "catalog_name": "dev",
+                "comment": None,
+                "name": "created_at",
+                "pii": None,
+                "schema_name": "markets",
+                "spark_func_args": [
+                    {"value": "_created_at", "to_column": True, "to_lit": None}
+                ],
+                "spark_func_kwargs": {},
+                "spark_func_name": "coalesce",
+                "sql_expression": None,
+                "table_name": "slv_stock_prices",
+                "type": "timestamp",
+                "unit": None,
+            },
             {
                 "catalog_name": "dev",
                 "comment": None,
