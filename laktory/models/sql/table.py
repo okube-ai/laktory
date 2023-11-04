@@ -101,134 +101,6 @@ class Table(BaseModel):
             return self.table_source
 
     # ----------------------------------------------------------------------- #
-    # Class Methods                                                           #
-    # ----------------------------------------------------------------------- #
-    #
-    # @classmethod
-    # def meta_table(cls):
-    #     # Build columns
-    #     columns = []
-    #     for k, t in cls.model_serialized_types().items():
-    #         jsonize = False
-    #         # if k in ["columns", "event_source", "table_source"]:
-    #         if k in ["columns"]:
-    #             t = "string"
-    #             jsonize = True
-    #
-    #         elif k in ["data"]:
-    #             continue
-    #
-    #         columns += [
-    #             Column(name=k, type=py_to_sql(t, mode="schema"), jsonize=jsonize)
-    #         ]
-    #
-    #     # Set table
-    #     return Table(
-    #         name="tables",
-    #         schema_name="laktory",
-    #         columns=columns,
-    #     )
-
-    # ----------------------------------------------------------------------- #
-    # SQL Methods                                                             #
-    # ----------------------------------------------------------------------- #
-    #
-    # def exists(self):
-    #     return self.name in [
-    #         c.name
-    #         for c in self.workspace_client.tables.list(
-    #             catalog_name=self.catalog_name,
-    #             schema_name=self.schema_name,
-    #         )
-    #     ]
-    #
-    # def create(
-    #     self,
-    #     if_not_exists: bool = True,
-    #     or_replace: bool = False,
-    #     insert_data: bool = False,
-    #     warehouse_id: str = None,
-    # ):
-    #     if len(self.columns) == 0:
-    #         raise ValueError()
-    #
-    #     if or_replace:
-    #         if_not_exists = False
-    #
-    #     statement = f"CREATE "
-    #     if or_replace:
-    #         statement += "OR REPLACE "
-    #     statement += "TABLE "
-    #     if if_not_exists:
-    #         statement += "IF NOT EXISTS "
-    #
-    #     statement += f"{self.schema_name}.{self.name}"
-    #
-    #     statement += "\n   ("
-    #     for c in self.columns:
-    #         t = c.type
-    #         if c.jsonize:
-    #             t = "string"
-    #         statement += f"{c.name} {t},"
-    #     statement = statement[:-1]
-    #     statement += ")"
-    #
-    #     logger.info(statement)
-    #     r = self.workspace_client.execute_statement_and_wait(
-    #         statement, warehouse_id=warehouse_id, catalog_name=self.catalog_name
-    #     )
-    #
-    #     if insert_data:
-    #         self.insert()
-    #
-    #     return r
-    #
-    # def delete(self):
-    #     self.workspace_client.tables.delete(self.full_name)
-    #
-    # def insert(self, warehouse_id: str = None):
-    #     if self.data is None or len(self.data) == 0:
-    #         return
-    #
-    #     statement = f"INSERT INTO {self.full_name} VALUES\n"
-    #     for row in self.data:
-    #         statement += "   ("
-    #         values = [
-    #             json.dumps(v) if c.jsonize else v for c, v in zip(self.columns, row)
-    #         ]
-    #         values = [py_to_sql(v) for v in values]
-    #         statement += ", ".join(values)
-    #         statement += "),\n"
-    #
-    #     statement = statement[:-2]
-    #
-    #     logger.info(statement)
-    #     r = self.workspace_client.execute_statement_and_wait(
-    #         statement, warehouse_id=warehouse_id, catalog_name=self.catalog_name
-    #     )
-    #
-    #     return r
-    #
-    # def select(self, limit=10, warehouse_id: str = None, load_json=True):
-    #     statement = f"SELECT * from {self.full_name} limit {limit}"
-    #
-    #     r = self.workspace_client.execute_statement_and_wait(
-    #         statement, warehouse_id=warehouse_id, catalog_name=self.catalog_name
-    #     )
-    #
-    #     data = r.result.data_array
-    #
-    #     if load_json:
-    #         for i in range(len(data)):
-    #             j = -1
-    #             for c, v in zip(self.columns, data[i]):
-    #                 j += 1
-    #                 if c.jsonize:
-    #                     data[i][j] = json.loads(data[i][j])
-    #
-    #     return data
-
-    # ----------------------------------------------------------------------- #
     # Pipeline Methods                                                        #
     # ----------------------------------------------------------------------- #
 
@@ -244,37 +116,35 @@ class Table(BaseModel):
 
         return df
 
-    def process_silver(self, df, table) -> DataFrame:
-        import pyspark.sql.functions as F
-
+    def process_silver(self, df) -> DataFrame:
         logger.info(f"Applying silver transformations")
 
         columns = []
 
         # User defined columns
-        columns += table.columns
+        columns += self.columns
 
-        if table.timestamp_key is not None:
+        if self.timestamp_key is not None:
             columns += [
                 Column(
                     **{
                         "name": "_tstamp",
                         "type": "timestamp",
-                        "func_name": "coalesce",
-                        "input_cols": [table.timestamp_key],
+                        "spark_func_name": "coalesce",
+                        "spark_func_args": [self.timestamp_key],
                     }
                 )
             ]
 
         # Timestamps
-        if df_has_column(df, "bronze_at"):
+        if df.has_column("bronze_at"):
             columns += [
                 Column(
                     **{
                         "name": "_bronze_at",
                         "type": "timestamp",
-                        "func_name": "coalesce",
-                        "input_cols": ["_bronze_at", "bronze_at"],
+                        "spark_func_name": "coalesce",
+                        "spark_func_args": ["_bronze_at", "bronze_at"],
                     }
                 )
             ]
@@ -283,8 +153,7 @@ class Table(BaseModel):
                 **{
                     "name": "_silver_at",
                     "type": "timestamp",
-                    "func_name": "current_timestamp",
-                    "input_cols": [],
+                    "spark_func_name": "current_timestamp",
                 }
             )
         ]
@@ -296,11 +165,12 @@ class Table(BaseModel):
         logger.info(f"Setting silver columns...")
         new_col_names = []
         for col in columns:
+
             # Add to list
             new_col_names += [col.name]
 
             # Set
-            df = df.withColumn(col.name, col.get())
+            df = df.withColumn(col.name, col.to_spark(df))
 
             # Remove from drop list
             if col.name in cols0:
@@ -322,12 +192,13 @@ class Table(BaseModel):
         # Drop duplicates                                                     #
         # ------------------------------------------------------------------- #
 
-        pk = table.primary_key
+        pk = self.primary_key
         if pk:
             logger.info(f"Removing duplicates with {pk}")
             df = df.dropDuplicates([pk])
 
         return df
+
 
     def process_silver_star(self, df) -> DataFrame:
         return df
