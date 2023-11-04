@@ -1,9 +1,15 @@
 from laktory.models import DataEventHeader
 from laktory.models import DataEvent
 from laktory.models import Producer
+from laktory.models import Table
+from laktory.models import TableDataSource
+from laktory.models import EventDataSource
 from datetime import datetime
 
 
+# --------------------------------------------------------------------------- #
+# Events                                                                      #
+# --------------------------------------------------------------------------- #
 class StockPriceDataEventHeader(DataEventHeader):
     name: str = "stock_price"
     producer: Producer = Producer(name="yahoo-finance")
@@ -70,6 +76,7 @@ class EventsManager:
     def to_spark_df(self):
         from pyspark.sql import SparkSession
         import pyspark.sql.types as T
+
         spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
         return spark.createDataFrame(
             [e.model_dump() for e in self.events],
@@ -108,6 +115,46 @@ class EventsManager:
             ),
         )
 
+# --------------------------------------------------------------------------- #
+# Tables                                                                      #
+# --------------------------------------------------------------------------- #
+
+
+table_brz = Table(
+    name="brz_stock_prices",
+    zone="BRONZE",
+    catalog_name="dev",
+    schema_name="markets",
+    event_source=EventDataSource(
+        name="stock_price",
+    ),
+)
+
+table_slv = Table(
+    name="slv_stock_prices",
+    columns=[
+        {
+            "name": "created_at",
+            "type": "timestamp",
+            "spark_func_name": "coalesce",
+            "spark_func_args": ["_created_at"],
+        },
+        {
+            "name": "open",
+            "type": "double",
+            "spark_func_name": "coalesce",
+            "spark_func_args": ["data.open"],
+        },
+        {"name": "close", "type": "double", "sql_expression": "data.open"},
+    ],
+    data=[[1, 2], [3, 4], [5, 6]],
+    zone="SILVER",
+    catalog_name="dev",
+    schema_name="markets",
+    table_source=TableDataSource(
+        name="brz_stock_prices",
+    ),
+)
 
 if __name__ == "__main__":
     manager = EventsManager()
