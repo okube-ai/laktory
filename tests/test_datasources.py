@@ -45,7 +45,6 @@ def test_event_data_source_read():
     df["created_at"] = df["data"].apply(dict.get, args=("_created_at",))
     df = df.sort_values(["symbol", "created_at"])
     row = df.iloc[0]["data"]
-    # print(type(df.iloc[0]["data"]))
     assert row["symbol"] == "AAPL"
     assert row["close"] == pytest.approx(189.46, abs=0.01)
 

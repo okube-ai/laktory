@@ -1,5 +1,6 @@
 from typing import Union
 import pyspark.sql.functions as F
+
 # from pyspark.sql.functions import pandas_udf
 from pyspark.sql.column import Column
 from laktory.spark.functions._common import (
@@ -82,6 +83,7 @@ def poly2(
 # Power                                                                       #
 # --------------------------------------------------------------------------- #
 
+
 def power(
     x: COLUMN_OR_NAME,
     a: FLOAT_OR_COLUMN = 1.0,
@@ -111,6 +113,7 @@ def power(
 # Rounding                                                                    #
 # --------------------------------------------------------------------------- #
 
+
 def roundp(
     x: COLUMN_OR_NAME,
     p: FLOAT_OR_COLUMN = 1.0,
@@ -135,4 +138,3 @@ def roundp(
     # if precision < eps0:
     #     raise ValueError("Precision must be greater than 1.0e-16")
     return F.round(_col(x) / _lit(p)) * _lit(p)
-

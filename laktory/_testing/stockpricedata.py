@@ -14,12 +14,10 @@ class StockPriceDataEvent(StockPriceDataEventHeader, DataEvent):
 
 
 class EventsManager:
-
     def __init__(self):
         self.events = []
 
     def build_events(self, events_root: str = None):
-
         import yfinance as yf
 
         symbols = [
@@ -47,6 +45,7 @@ class EventsManager:
                             "close": float(row["Close"]),
                             "high": float(row["High"]),
                             "low": float(row["Low"]),
+                            "@id": "_id",
                         },
                     )
                 ]
@@ -63,11 +62,55 @@ class EventsManager:
         for event in self.events:
             event.to_azure_storage_container(skip_if_exists=True)
 
+    def to_pandas_df(self):
+        import pandas as pd
+
+        return pd.DataFrame([e.model_dump() for e in self.events])
+
+    def to_spark_df(self):
+        from pyspark.sql import SparkSession
+        import pyspark.sql.types as T
+        spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
+        return spark.createDataFrame(
+            [e.model_dump() for e in self.events],
+            schema=T.StructType(
+                [
+                    T.StructField("name", T.StringType()),
+                    T.StructField("description", T.StringType()),
+                    T.StructField(
+                        "producer",
+                        T.StructType(
+                            [
+                                T.StructField("name", T.StringType()),
+                                T.StructField("description", T.StringType()),
+                                T.StructField("party", T.IntegerType()),
+                            ]
+                        ),
+                    ),
+                    T.StructField(
+                        "data",
+                        T.StructType(
+                            [
+                                # T.StructField("created_at", T.TimestampNTZType()),
+                                T.StructField("symbol", T.StringType()),
+                                T.StructField("open", T.DoubleType()),
+                                T.StructField("close", T.DoubleType()),
+                                T.StructField("high", T.DoubleType()),
+                                T.StructField("low", T.DoubleType()),
+                                T.StructField("_name", T.StringType()),
+                                T.StructField("_producer_name", T.StringType()),
+                                # T.StructField("_created_at", T.TimestampType()),
+                                T.StructField("@id", T.StringType()),
+                            ]
+                        ),
+                    ),
+                ]
+            ),
+        )
+
 
 if __name__ == "__main__":
-
     manager = EventsManager()
     manager.build_events(events_root="./events/")
     manager.to_path()
     # manager.to_azure_storage()
-

@@ -14,10 +14,10 @@ pdf = pd.DataFrame(
         "b": [2, 0, 2],
         "c": [3, 0, 3],
         "n": [4, 0, 4],
-        "pi": [np.pi]*3,
+        "pi": [np.pi] * 3,
         "p": [2, 0.2, 0.05],
         "word": ["dog_cat", "dog_cat_mouse", "dog"],
-     },
+    },
 )
 spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 
@@ -76,4 +76,3 @@ if __name__ == "__main__":
     test_roundp()
     test_string_split()
     test_uuid()
-

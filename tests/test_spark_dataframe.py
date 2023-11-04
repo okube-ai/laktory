@@ -76,7 +76,19 @@ def test_df_schema_flat():
     df.show()
     df.printSchema()
     schema = df.schema_flat()
-    assert schema == ['x@x', 'y', 'z', 'z.id', 'z.email', 'u', 'u[*].a', 'u[*].b', 'u2', 'u2[*].a', 'u2[*].b']
+    assert schema == [
+        "x@x",
+        "y",
+        "z",
+        "z.id",
+        "z.email",
+        "u",
+        "u[*].a",
+        "u[*].b",
+        "u2",
+        "u2[*].a",
+        "u2[*].b",
+    ]
 
 
 def test_df_has_column():

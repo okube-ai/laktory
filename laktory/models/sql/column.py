@@ -16,15 +16,19 @@ logger = get_logger(__name__)
 
 class SparkFuncArg(BaseModel):
     value: Any
-    is_column: bool = None
+    to_column: bool = None
+    to_lit: bool = None
 
     @model_validator(mode="after")
     def is_column_default(self) -> Any:
-        if self.is_column is None:
-            if isinstance(self.value, str):
-                self.is_column = True
+        if self.to_lit is None:
+            if not isinstance(self.value, str):
+                self.to_lit = True
             else:
-                self.is_column = False
+                self.to_column = True
+
+        if self.to_column and self.to_lit:
+            raise ValueError("Only one of `to_column` or `to_lit` can be True")
 
         return self
 
@@ -36,7 +40,7 @@ class Column(BaseModel):
     pii: Union[bool, None] = None
     schema_name: Union[str, None] = None
     spark_func_args: list[Union[str, SparkFuncArg]] = []
-    spark_func_kwargs: dict[str, Union[str, SparkFuncArg]] = {}
+    spark_func_kwargs: dict[str, Union[Any, SparkFuncArg]] = {}
     spark_func_name: Union[str, None] = None
     sql_expression: Union[str, None] = None
     table_name: Union[str, None] = None
@@ -45,7 +49,6 @@ class Column(BaseModel):
 
     @field_validator("spark_func_args")
     def parse_args(cls, args: list[Union[str, SparkFuncArg]]) -> list[SparkFuncArg]:
-        print("VALIDATING SPARK FUNC ARGS")
         _args = []
         for a in args:
             if not isinstance(a, SparkFuncArg):
@@ -54,7 +57,9 @@ class Column(BaseModel):
         return _args
 
     @field_validator("spark_func_kwargs")
-    def parse_kwargs(cls, kwargs: dict[str, Union[str, SparkFuncArg]]) -> dict[str, SparkFuncArg]:
+    def parse_kwargs(
+        cls, kwargs: dict[str, Union[str, SparkFuncArg]]
+    ) -> dict[str, SparkFuncArg]:
         _kwargs = {}
         for k, a in kwargs.items():
             if not isinstance(a, SparkFuncArg):
@@ -112,13 +117,10 @@ class Column(BaseModel):
     # Class Methods                                                           #
     # ----------------------------------------------------------------------- #
 
-    def to_spark(self, df=None) -> Column:
-
+    def to_spark(self, df) -> Column:
         # From SQL expression
         if self.sql_expression:
-            logger.info(
-                f"   {self.name}[{self.type}] as `{self.sql_expression}`)"
-            )
+            logger.info(f"   {self.name}[{self.type}] as `{self.sql_expression}`)")
             return F.expr(self.sql_expression).alias(self.name).cast(self.type)
 
         # From Spark Function
@@ -141,9 +143,7 @@ class Column(BaseModel):
         _args = self.spark_func_args
         _kwargs = self.spark_func_kwargs
 
-        logger.info(
-            f"   {self.name}[{self.type}] as {func_name}({_args}, {_kwargs})"
-        )
+        logger.info(f"   {self.name}[{self.type}] as {func_name}({_args}, {_kwargs})")
 
         # Build args
         args = []
@@ -151,7 +151,7 @@ class Column(BaseModel):
         found_cols = 0
         for i, _arg in enumerate(_args):
             if df is not None:
-                if _arg.is_column:
+                if _arg.to_column:
                     expected_cols += 1
                     if not df.has_column(_arg.value):
                         # When columns are not found, they are simply skipped and a
@@ -163,49 +163,39 @@ class Column(BaseModel):
                     else:
                         found_cols += 1
 
-            if _arg.is_column:
-                arg = F.expr(_arg)
-                arg._parent = "test0"
-                arg._alias = "test1"
-                arg._name = "test3"
-            else:
-                arg = _arg
+            arg = _arg.value
+            if _arg.to_column:
+                arg = F.expr(_arg.value)
+            elif _arg.to_lit:
+                arg = F.lit(_arg.value)
 
             # TODO: Review if required
             # if _arg.value.startswith("data.") or func_name == "coalesce":
             #     pass
-                # input_type = dict(df.dtypes)[input_col_name]
-                # if input_type in ["double"]:
-                #     # Some bronze NaN data will be converted to 0 if cast to int
-                #     input_col = F.when(F.isnan(input_col_name), None).otherwise(F.col(input_col_name))
-                # if self.type not in ["_any"] and func_name not in [
-                #     "to_safe_timestamp"
-                # ]:
-                #     input_col = F.col(input_col_name).cast(self.type)
+            # input_type = dict(df.dtypes)[input_col_name]
+            # if input_type in ["double"]:
+            #     # Some bronze NaN data will be converted to 0 if cast to int
+            #     input_col = F.when(F.isnan(input_col_name), None).otherwise(F.col(input_col_name))
+            # if self.type not in ["_any"] and func_name not in [
+            #     "to_safe_timestamp"
+            # ]:
+            #     input_col = F.col(input_col_name).cast(self.type)
 
             args += [arg]
 
         if expected_cols > 0 and found_cols == 0:
-            raise ValueError(f"None of the inputs columns ({_args}) for {self.name} have been found")
+            raise ValueError(
+                f"None of the inputs columns ({_args}) for {self.name} have been found"
+            )
 
         # Build kwargs
         kwargs = {}
         for k, _arg in _kwargs.items():
-            if _arg.is_column:
-                kwargs[k] = F.expr()
+            arg = _arg.value
+            if _arg.to_column:
+                arg = F.expr(_arg.value)
+            elif _arg.to_lit:
+                arg = F.lit(_arg.value)
+            kwargs[k] = arg
 
-        c = f(*args, **kwargs).cast(self.type)
-
-        # c._parent = "test1"
-        # c._name = "test0"
-        # c._alias = "test2"
-
-        for a in args:
-            print(str(a))
-
-        # print("name", c._name)
-        # print("args", c._args)
-        #
-        # print(c)
-
-        return f(*args)
+        return f(*args, **kwargs).cast(self.type)

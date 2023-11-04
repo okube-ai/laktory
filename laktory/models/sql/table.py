@@ -296,7 +296,6 @@ class Table(BaseModel):
         logger.info(f"Setting silver columns...")
         new_col_names = []
         for col in columns:
-
             # Add to list
             new_col_names += [col.name]
 

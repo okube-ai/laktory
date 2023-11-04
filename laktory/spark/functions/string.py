@@ -1,5 +1,6 @@
 from typing import Union
 import pyspark.sql.functions as F
+
 # from pyspark.sql.functions import pandas_udf
 from pyspark.sql.column import Column
 from laktory.spark.functions._common import (
@@ -20,6 +21,7 @@ __all__ = [
 # --------------------------------------------------------------------------- #
 # string_split                                                                #
 # --------------------------------------------------------------------------- #
+
 
 def string_split(
     x: COLUMN_OR_NAME,
@@ -50,8 +52,8 @@ def string_split(
 # uuid                                                                        #
 # --------------------------------------------------------------------------- #
 
-def uuid(
-) -> Column:
+
+def uuid() -> Column:
     """
     Create a unique id for each row.
 
