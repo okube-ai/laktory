@@ -14,7 +14,6 @@ class DataEventHeader(BaseModel):
     description: Union[str, None] = Field(None)
     producer: Producer = Field(None)
     events_root: str = settings.workspace_landing_root + "events/"
-    # event_root: Optional[str] = Field(validate_default=True, default=None)
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
