@@ -11,6 +11,10 @@ from laktory.models import EventDataSource
 from laktory.models import TableDataSource
 from laktory._testing import table_brz
 from laktory._testing import table_slv
+from laktory._testing import EventsManager
+
+manager = EventsManager()
+manager.build_events()
 
 
 def test_data():
@@ -99,6 +103,23 @@ def test_model():
         Table(name="googl", zone="ROUGE")
 
 
+def test_bronze():
+    df0 = manager.to_spark_df()
+    df1 = table_brz.process_bronze(df0)
+    assert "_bronze_at" in df1.columns
+
+
+def test_silver():
+    df0 = manager.to_spark_df()
+    df1 = table_brz.process_bronze(df0)
+    df2 = table_slv.process_silver(df1)
+    df2.show()
+    # assert "_bronze_at" in df1.columns
+
+
 if __name__ == "__main__":
-    test_model()
-    test_data()
+    # test_model()
+    # test_data()
+    # test_bronze()
+    test_silver()
+
