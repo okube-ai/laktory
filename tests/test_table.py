@@ -8,9 +8,20 @@ from laktory.models import Schema
 from laktory.models import Column
 from laktory.models import Table
 from laktory.models import EventDataSource
+from laktory.models import TableDataSource
 
 
-table = Table(
+table_brz = Table(
+    name="brz_stock_prices",
+    zone="BRONZE",
+    catalog_name="dev",
+    schema_name="markets",
+    event_source=EventDataSource(
+        name="stock_price",
+    ),
+)
+
+table_slv = Table(
     name="slv_stock_prices",
     columns=[
         {
@@ -19,24 +30,20 @@ table = Table(
             "spark_func_name": "coalesce",
             "spark_func_args": ["data.open"],
         },
-        {
-            "name": "close",
-            "type": "double",
-            "sql_expression": "data.open"
-        },
+        {"name": "close", "type": "double", "sql_expression": "data.open"},
     ],
     data=[[1, 2], [3, 4], [5, 6]],
     zone="SILVER",
     catalog_name="dev",
     schema_name="markets",
-    event_source=EventDataSource(
-        name="stock_price",
+    table_source=TableDataSource(
+        name="brz_stock_prices",
     ),
 )
 
 
 def test_data():
-    assert table.df.equals(
+    assert table_slv.df.equals(
         pd.DataFrame(
             {
                 "open": [1, 3, 5],
@@ -47,7 +54,8 @@ def test_data():
 
 
 def test_model():
-    assert table.model_dump() == {
+    print(table_slv.model_dump())
+    assert table_slv.model_dump() == {
         "name": "slv_stock_prices",
         "columns": [
             {
@@ -56,7 +64,9 @@ def test_model():
                 "name": "open",
                 "pii": None,
                 "schema_name": "markets",
-                "spark_func_args": ["data.open"],
+                "spark_func_args": [
+                    {"value": "data.open", "to_column": True, "to_lit": None}
+                ],
                 "spark_func_kwargs": {},
                 "spark_func_name": "coalesce",
                 "sql_expression": None,
@@ -86,17 +96,13 @@ def test_model():
         "grants": None,
         "data": [[1, 2], [3, 4], [5, 6]],
         "timestamp_key": None,
-        "event_source": {
-            "name": "stock_price",
-            "description": None,
-            "producer": None,
-            "events_root": "/Volumes/dev/sources/landing/events/",
+        "event_source": None,
+        "table_source": {
             "read_as_stream": True,
-            "type": "STORAGE_EVENTS",
-            "fmt": "JSON",
-            "multiline": False,
+            "name": "brz_stock_prices",
+            "schema_name": None,
+            "catalog_name": None,
         },
-        "table_source": None,
         "zone": "SILVER",
         "pipeline_name": None,
     }
@@ -104,9 +110,6 @@ def test_model():
     # Invalid zone
     with pytest.raises(ValidationError):
         Table(name="googl", zone="ROUGE")
-
-
-
 
 
 if __name__ == "__main__":
