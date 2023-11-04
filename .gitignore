@@ -34,7 +34,7 @@ coverage.xml
 htmlcov
 
 # Test data
-tests/data/**
+tests/data
 
 # Test results
 junit
