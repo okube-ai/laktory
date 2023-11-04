@@ -54,12 +54,8 @@ def test_read():
 
 
 def test_spark():
-
     with pytest.raises(ValueError):
-        close = Column(
-            name="x",
-            spark_func_args=("x",)
-        ).to_spark(df)
+        close = Column(name="x", spark_func_args=("x",)).to_spark(df)
 
     open = Column(
         name="open",
@@ -75,9 +71,7 @@ def test_spark():
         spark_func_args=[
             "data.open",
         ],
-        spark_func_kwargs={
-            "a": 2.0
-        },
+        spark_func_kwargs={"a": 2.0},
         type="double",
     ).to_spark(df)
     assert open2.__repr__() == "Column<'CAST(((2.0 * data.open) + 0.0) AS DOUBLE)'>"
@@ -87,7 +81,10 @@ def test_spark():
         sql_expression="open*close",
         type="double",
     ).to_spark(df)
-    assert open_close.__repr__() == "Column<'CAST((open * close) AS open_close AS DOUBLE)'>"
+    assert (
+        open_close.__repr__()
+        == "Column<'CAST((open * close) AS open_close AS DOUBLE)'>"
+    )
 
     id = Column(
         name="id",
