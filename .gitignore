@@ -33,6 +33,9 @@ dist
 coverage.xml
 htmlcov
 
+# Test data
+tests/data/**
+
 # Test results
 junit
 
