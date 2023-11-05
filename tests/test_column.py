@@ -118,7 +118,7 @@ def test_spark_udf():
 
 
 if __name__ == "__main__":
-    # test_model()
-    # test_read()
-    # test_spark()
+    test_model()
+    test_read()
+    test_spark()
     test_spark_udf()
