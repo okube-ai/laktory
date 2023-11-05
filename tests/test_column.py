@@ -17,6 +17,7 @@ GOOGL = {
     "table_name": "stock_prices",
 }
 data_dir = os.path.join(os.path.dirname(__file__), "data/")
+os.makedirs(data_dir)
 with open(os.path.join(data_dir, "googl.json"), "w") as fp:
     json.dump(GOOGL, fp)
 with open(os.path.join(data_dir, "googl.yaml"), "w") as fp:
