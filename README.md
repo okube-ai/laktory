@@ -21,6 +21,8 @@ Install using `pip install laktory`
 TODO: Full installation instructions
 
 ### pyspark
+Optionally, you can also install spark locally to test your custom functions.
+
 TODO: Add pyspark instructions https://www.machinelearningplus.com/pyspark/install-pyspark-on-mac/
 - JAVA_HOME=/opt/homebrew/opt/java;
 - SPARK_HOME=/opt/homebrew/Cellar/apache-spark/3.5.0/libexec
@@ -70,6 +72,7 @@ for event in events:
     event.to_databricks()
 
 ```
+
 ### Define data pipeline and data tables
 A yaml file define the configuration for a data pipeline, including the transformations of a raw data event into curated
 (silver) and consumption (gold) layers.
@@ -115,33 +118,37 @@ tables:
 
   - name: slv_stock_prices
     table_source:
-      catalog_name: dev
+      catalog_name: ${var.env}
       schema_name: finance
       name: brz_stock_prices
     zone: SILVER
     columns:
       - name: created_at
         type: timestamp
-        func_name: coalesce
-        input_cols:
+        spark_func_name: coalesce
+        spark_func_args:
           - data._created_at
 
       - name: open
         type: double
-        func_name: coalesce
-        input_cols:
+        spark_func_name: coalesce
+        spark_func_args:
           - data.open
 
       - name: close
         type: double
-        func_name: coalesce
-        input_cols:
+        spark_func_name: coalesce
+        spark_func_args:
           - data.close
+
+      - name: high
+        type: double
+        sql_expression: GREATEST(data.open, data.close)
 
 ```
 
 ### Deploy your configuration
-Laktory currently support Pulumi for cloud deployement, but more engines will be added in the future (Terraform, Databricks CLI, etc.).
+Laktory currently support Pulumi for cloud deployment, but more engines will be added in the future (Terraform, Databricks CLI, etc.).
 
 ```py
 import os

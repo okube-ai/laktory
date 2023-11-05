@@ -2,6 +2,7 @@ import json
 from typing import Literal
 from typing import Any
 from typing import Union
+from typing import Callable
 
 from pydantic import model_validator
 
@@ -10,6 +11,7 @@ from laktory.spark import DataFrame
 from laktory._logger import get_logger
 from laktory.models.base import BaseModel
 from laktory.models.sql.column import Column
+from laktory.spark import Column as SparkColumn
 from laktory.models.datasources.tabledatasource import TableDataSource
 from laktory.models.datasources.eventdatasource import EventDataSource
 from laktory.models.grants.tablegrant import TableGrant
@@ -116,7 +118,9 @@ class Table(BaseModel):
 
         return df
 
-    def process_silver(self, df) -> DataFrame:
+    def process_silver(
+        self, df, udfs: list[Callable[[...], SparkColumn]] = None
+    ) -> DataFrame:
         logger.info(f"Applying silver transformations")
 
         columns = []
@@ -165,12 +169,11 @@ class Table(BaseModel):
         logger.info(f"Setting silver columns...")
         new_col_names = []
         for col in columns:
-
             # Add to list
             new_col_names += [col.name]
 
             # Set
-            df = df.withColumn(col.name, col.to_spark(df))
+            df = df.withColumn(col.name, col.to_spark(df, udfs=udfs))
 
             # Remove from drop list
             if col.name in cols0:
@@ -198,7 +201,6 @@ class Table(BaseModel):
             df = df.dropDuplicates([pk])
 
         return df
-
 
     def process_silver_star(self, df) -> DataFrame:
         return df

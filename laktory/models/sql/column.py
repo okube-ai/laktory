@@ -1,14 +1,15 @@
-from typing import Union
-from typing import Any
-from pydantic import computed_field
 from pydantic import field_validator
 from pydantic import model_validator
-import pyspark.sql.functions as F
 from pyspark.sql.connect.column import Column
+from typing import Any
+from typing import Callable
+from typing import Union
+import pyspark.sql.functions as F
 
 from laktory._logger import get_logger
 from laktory.contants import SUPPORTED_TYPES
 from laktory.models.base import BaseModel
+from laktory.spark import Column as SparkColumn
 from laktory.spark import functions as LF
 
 logger = get_logger(__name__)
@@ -117,7 +118,13 @@ class Column(BaseModel):
     # Class Methods                                                           #
     # ----------------------------------------------------------------------- #
 
-    def to_spark(self, df) -> Column:
+    def to_spark(
+        self, df, udfs: list[Callable[[...], SparkColumn]] = None
+    ) -> Column:
+        if udfs is None:
+            udfs = []
+        udfs = {f.__name__: f for f in udfs}
+
         # From SQL expression
         if self.sql_expression:
             logger.info(f"   {self.name}[{self.type}] as `{self.sql_expression}`)")
@@ -128,18 +135,19 @@ class Column(BaseModel):
         if func_name is None:
             func_name = "coalesce"
 
-        # TODO: Add support for custom functions
-        # if udf_name in udfuncs.keys():
-        #     f = udfuncs[udf_name]
-        # else:
-        #     f = getattr(F, udf_name)
-
-        # Get function and args
-        f = getattr(F, func_name, None)
+        # Get from UDFs
+        f = udfs.get(func_name, None)
         if f is None:
-            f = getattr(LF, func_name, None)
+            # Get from built-in spark functions
+            f = getattr(F, func_name, None)
+
+            if f is None:
+                # Get from laktory functions
+                f = getattr(LF, func_name, None)
+
         if f is None:
             raise ValueError(f"Function {func_name} is not available")
+
         _args = self.spark_func_args
         _kwargs = self.spark_func_kwargs
 
