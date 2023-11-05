@@ -1,5 +1,10 @@
 # Release History
 
+## [0.0.12] - 2023-11-05
+**Fixed**
+- Pyspark imports when pyspark not installed
+
+
 ## [0.0.11] - 2023-11-05
 **Fixed**
 - Deployment of pipeline configuration file
