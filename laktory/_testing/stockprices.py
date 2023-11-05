@@ -46,7 +46,7 @@ class EventsManager:
                 self.events += [
                     StockPriceDataEvent(
                         data={
-                            "created_at": pytz.utc.localize(_),
+                            "created_at": _,
                             "symbol": s,
                             "open": float(
                                 row["Open"]
