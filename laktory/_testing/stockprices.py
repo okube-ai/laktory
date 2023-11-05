@@ -4,12 +4,14 @@ from laktory.models import Producer
 from laktory.models import Table
 from laktory.models import TableDataSource
 from laktory.models import EventDataSource
+from laktory.models import Pipeline
 from datetime import datetime
 
 
 # --------------------------------------------------------------------------- #
 # Events                                                                      #
 # --------------------------------------------------------------------------- #
+
 class StockPriceDataEventHeader(DataEventHeader):
     name: str = "stock_price"
     producer: Producer = Producer(name="yahoo-finance")
@@ -98,7 +100,7 @@ class EventsManager:
                         "data",
                         T.StructType(
                             [
-                                # T.StructField("created_at", T.TimestampNTZType()),
+                                T.StructField("created_at", T.StringType()),
                                 T.StructField("symbol", T.StringType()),
                                 T.StructField("open", T.DoubleType()),
                                 T.StructField("close", T.DoubleType()),
@@ -106,7 +108,7 @@ class EventsManager:
                                 T.StructField("low", T.DoubleType()),
                                 T.StructField("_name", T.StringType()),
                                 T.StructField("_producer_name", T.StringType()),
-                                # T.StructField("_created_at", T.TimestampType()),
+                                T.StructField("_created_at", T.StringType()),
                                 T.StructField("@id", T.StringType()),
                             ]
                         ),
@@ -137,7 +139,13 @@ table_slv = Table(
             "name": "created_at",
             "type": "timestamp",
             "spark_func_name": "coalesce",
-            "spark_func_args": ["_created_at"],
+            "spark_func_args": ["_created_at", "data._created_at"],
+        },
+        {
+            "name": "symbol",
+            "type": "string",
+            "spark_func_name": "coalesce",
+            "spark_func_args": ["data.symbol"],
         },
         {
             "name": "open",
@@ -155,6 +163,19 @@ table_slv = Table(
         name="brz_stock_prices",
     ),
 )
+
+
+# --------------------------------------------------------------------------- #
+# Pipeline                                                                    #
+# --------------------------------------------------------------------------- #
+
+class StockPricesPipeline(Pipeline):
+    name: str = "pl-stock-prices"
+    tables: list[Table] = [
+        table_brz,
+        table_slv,
+    ]
+
 
 if __name__ == "__main__":
     manager = EventsManager()
