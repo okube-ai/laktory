@@ -1,73 +1,141 @@
-import os
-from datetime import datetime
-
-from laktory.models import Catalog
-from laktory.models import Table
-from laktory.models import Pipeline
 from laktory._testing import StockPricesPipeline
-
-root_dir = os.path.dirname(__file__)
 
 
 def test_pipeline():
     pl = StockPricesPipeline()
-
-    assert pl.tables[0].zone == "BRONZE"
-    assert pl.model_dump()["tables"][0]["zone"] == "BRONZE"
-
-
-def test_read_yaml():
-    with open(f"{root_dir}/pl-stocks.yaml", "r") as fp:
-        pl = Pipeline.model_validate_yaml(fp)
-
-    assert pl.name == "pl-stocks"
-
-
-def atest_tables_meta():
-    # TODO: Remove - Deprecated
-    pl = StockPricesPipeline()
-
-    table = pl.get_tables_meta()
-    df = table.df
-    assert df["name"].tolist() == ["brz_stock_prices", "slv_stock_prices"]
-    assert df["zone"].tolist() == ["BRONZE", "SILVER"]
-    assert df["pipeline_name"].tolist() == ["pl-stock-prices", "pl-stock-prices"]
-    assert df["comment"].tolist() == [None, None]
-
-
-def atest_columns_meta():
-    pl = StockPricesPipeline()
-
-    table = pl.get_columns_meta()
-    df = table.df
-    assert df["name"].tolist() == ["created_at", "low", "high"]
-    assert df["type"].tolist() == ["timestamp", "double", "double"]
-
-
-def atest_publish_meta():
-    # TODO: Remove - deprecated
-    # Timestamp is included in catalog name to prevent conflicts when running
-    # multiple tests in parallel
-    catalog_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")
-
-    pl = StockPricesPipeline()
-    pl.publish_tables_meta(catalog_name=catalog_name)
-
-    tables = Table(name="tables", schema_name="laktory", catalog_name=catalog_name)
-    data = tables.select()
-    assert data[0][0] == "brz_stock_prices"
-
-    columns = Table(name="columns", schema_name="laktory", catalog_name=catalog_name)
-    data = columns.select()
-    assert data[1][0] == "low"
-
-    # Cleanup
-    Catalog(name=catalog_name).delete(force=True)
+    assert pl.model_dump() == {
+        "allow_duplicate_names": None,
+        "catalog": None,
+        "channel": "PREVIEW",
+        "clusters": [],
+        "configuration": {},
+        "continuous": None,
+        "development": None,
+        "edition": None,
+        "libraries": [],
+        "name": "pl-stock-prices",
+        "notifications": [],
+        "permissions": [],
+        "photon": None,
+        "serverless": None,
+        "storage": None,
+        "tables": [
+            {
+                "name": "brz_stock_prices",
+                "columns": [],
+                "primary_key": None,
+                "comment": None,
+                "catalog_name": None,
+                "schema_name": None,
+                "grants": None,
+                "data": None,
+                "timestamp_key": None,
+                "event_source": {
+                    "name": "stock_price",
+                    "description": None,
+                    "producer": None,
+                    "events_root": "/Volumes/dev/sources/landing/events/",
+                    "read_as_stream": True,
+                    "type": "STORAGE_EVENTS",
+                    "fmt": "JSON",
+                    "multiline": False,
+                },
+                "table_source": None,
+                "zone": "BRONZE",
+                "pipeline_name": "pl-stock-prices",
+            },
+            {
+                "name": "slv_stock_prices",
+                "columns": [
+                    {
+                        "catalog_name": None,
+                        "comment": None,
+                        "name": "created_at",
+                        "pii": None,
+                        "schema_name": None,
+                        "spark_func_args": [
+                            {"value": "_created_at", "to_column": True, "to_lit": None},
+                            {
+                                "value": "data._created_at",
+                                "to_column": True,
+                                "to_lit": None,
+                            },
+                        ],
+                        "spark_func_kwargs": {},
+                        "spark_func_name": "coalesce",
+                        "sql_expression": None,
+                        "table_name": "slv_stock_prices",
+                        "type": "timestamp",
+                        "unit": None,
+                    },
+                    {
+                        "catalog_name": None,
+                        "comment": None,
+                        "name": "symbol",
+                        "pii": None,
+                        "schema_name": None,
+                        "spark_func_args": [
+                            {"value": "data.symbol", "to_column": True, "to_lit": None}
+                        ],
+                        "spark_func_kwargs": {},
+                        "spark_func_name": "coalesce",
+                        "sql_expression": None,
+                        "table_name": "slv_stock_prices",
+                        "type": "string",
+                        "unit": None,
+                    },
+                    {
+                        "catalog_name": None,
+                        "comment": None,
+                        "name": "open",
+                        "pii": None,
+                        "schema_name": None,
+                        "spark_func_args": [
+                            {"value": "data.open", "to_column": True, "to_lit": None}
+                        ],
+                        "spark_func_kwargs": {},
+                        "spark_func_name": "coalesce",
+                        "sql_expression": None,
+                        "table_name": "slv_stock_prices",
+                        "type": "double",
+                        "unit": None,
+                    },
+                    {
+                        "catalog_name": None,
+                        "comment": None,
+                        "name": "close",
+                        "pii": None,
+                        "schema_name": None,
+                        "spark_func_args": [],
+                        "spark_func_kwargs": {},
+                        "spark_func_name": None,
+                        "sql_expression": "data.open",
+                        "table_name": "slv_stock_prices",
+                        "type": "double",
+                        "unit": None,
+                    },
+                ],
+                "primary_key": None,
+                "comment": None,
+                "catalog_name": None,
+                "schema_name": None,
+                "grants": None,
+                "data": [[1, 2], [3, 4], [5, 6]],
+                "timestamp_key": None,
+                "event_source": None,
+                "table_source": {
+                    "read_as_stream": True,
+                    "name": "brz_stock_prices",
+                    "schema_name": None,
+                    "catalog_name": None,
+                },
+                "zone": "SILVER",
+                "pipeline_name": "pl-stock-prices",
+            },
+        ],
+        "target": None,
+    }
 
 
 if __name__ == "__main__":
     test_pipeline()
-    test_read_yaml()
-    # atest_tables_meta()
-    # atest_columns_meta()
-    # atest_publish_meta()
