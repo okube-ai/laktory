@@ -111,6 +111,34 @@ class DataEvent(DataEventHeader):
             logger.info(f"Writing event {self.name} to {path}")
             f()
 
+    def to_path(
+        self,
+        suffix: str = None,
+        fmt: str = "json",
+        overwrite: bool = False,
+        skip_if_exists: bool = False,
+    ) -> None:
+        path = self.get_landing_filepath(suffix=suffix, fmt=fmt)
+        dirpath = os.path.dirname(path)
+
+        if not os.path.exists(dirpath):
+            os.makedirs(dirpath)
+
+        def _write():
+            if fmt != "json":
+                raise NotImplementedError()
+
+            with open(path, "w") as fp:
+                fp.write(self.model_dump_json())
+
+        self._overwrite_or_skip(
+            f=_write,
+            path=path,
+            exists=os.path.exists(path),
+            overwrite=overwrite,
+            skip=skip_if_exists,
+        )
+
     def to_azure_storage_container(
         self,
         suffix: str = None,

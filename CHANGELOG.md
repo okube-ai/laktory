@@ -10,6 +10,7 @@
 **Added**
 - Spark optional dependencies
 - Spark unit tests
+- Functions library
 
 **Breaking Change**
 - Removed databricks-sdk as dependency

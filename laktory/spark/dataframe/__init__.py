@@ -1,20 +1,9 @@
-import json
 import re
-
-spark_installed = False
-try:
-    from pyspark.sql import DataFrame
-    from pyspark.sql.utils import AnalysisException
-
-    spark_installed = True
-
-except ModuleNotFoundError:
-
-    class DataFrame:
-        pass
+import json
+from pyspark.sql.dataframe import DataFrame
 
 
-def df_schema_flat(df):
+def schema_flat(df: DataFrame) -> list[str]:
     def get_fields(json_schema):
         field_names = []
         for f in json_schema.get("fields", []):
@@ -42,7 +31,12 @@ def df_schema_flat(df):
     return get_fields(json.loads(df.schema.json()))
 
 
-def df_has_column(df, col):
+def has_column(df: DataFrame, col: str) -> bool:
     _col = re.sub(r"\[(\d+)\]", r"[*]", col)
     _col = re.sub(r"`", "", _col)
-    return _col in df_schema_flat(df)
+    return _col in schema_flat(df)
+
+
+# DataFrame Extensions
+DataFrame.schema_flat = schema_flat
+DataFrame.has_column = has_column
