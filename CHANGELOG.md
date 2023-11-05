@@ -1,6 +1,6 @@
 # Release History
 
-## [0.0.11]
+## [0.0.11] - 2023-11-05
 **Fixed**
 - Deployment of pipeline configuration file
 
