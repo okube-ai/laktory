@@ -3,6 +3,7 @@ from laktory._testing import StockPricesPipeline
 
 def test_pipeline():
     pl = StockPricesPipeline()
+    print(pl.model_dump())
     assert pl.model_dump() == {
         "allow_duplicate_names": None,
         "catalog": None,
@@ -120,7 +121,11 @@ def test_pipeline():
                 "catalog_name": None,
                 "schema_name": None,
                 "grants": None,
-                "data": [[1, 2], [3, 4], [5, 6]],
+                "data": [
+                    [None, "AAPL", 1, 2],
+                    [None, "AAPL", 3, 4],
+                    [None, "AAPL", 5, 6],
+                ],
                 "timestamp_key": None,
                 "event_source": None,
                 "table_source": {
