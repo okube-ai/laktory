@@ -13,6 +13,7 @@ import pytz
 # Events                                                                      #
 # --------------------------------------------------------------------------- #
 
+
 class StockPriceDataEventHeader(DataEventHeader):
     name: str = "stock_price"
     producer: Producer = Producer(name="yahoo-finance")
@@ -119,6 +120,7 @@ class EventsManager:
             ),
         )
 
+
 # --------------------------------------------------------------------------- #
 # Tables                                                                      #
 # --------------------------------------------------------------------------- #
@@ -170,6 +172,7 @@ table_slv = Table(
 # --------------------------------------------------------------------------- #
 # Pipeline                                                                    #
 # --------------------------------------------------------------------------- #
+
 
 class StockPricesPipeline(Pipeline):
     name: str = "pl-stock-prices"

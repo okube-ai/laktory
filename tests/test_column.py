@@ -99,7 +99,26 @@ def test_spark():
     assert id.__repr__() == "Column<'CAST(coalesce(data.@id) AS STRING)'>"
 
 
+def test_spark_udf():
+
+    def x2(x):
+        return 2*x
+
+    def x_square(x):
+        return x*x
+
+    m2 = Column(
+        name="m2",
+        spark_func_name="x2",
+        spark_func_args=[
+            "data.open",
+        ],
+    ).to_spark(df, udfs=[x2, x_square])
+    assert m2.__repr__() == "Column<'CAST((data.open * 2) AS STRING)'>"
+
+
 if __name__ == "__main__":
-    test_model()
-    test_read()
-    test_spark()
+    # test_model()
+    # test_read()
+    # test_spark()
+    test_spark_udf()
