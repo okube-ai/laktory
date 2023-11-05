@@ -155,7 +155,7 @@ table_slv = Table(
         },
         {"name": "close", "type": "double", "sql_expression": "data.open"},
     ],
-    data=[[1, 2], [3, 4], [5, 6]],
+    data=[[None, "AAPL", 1, 2], [None, "AAPL", 3, 4], [None, "AAPL", 5, 6]],
     zone="SILVER",
     catalog_name="dev",
     schema_name="markets",

@@ -75,6 +75,7 @@ def test_model_dump():
             "close": 189.4600067138672,
             "high": 189.9199981689453,
             "low": 188.27999877929688,
+            "@id": "_id",
             "_name": "stock_price",
             "_producer_name": "yahoo-finance",
             "_created_at": "2023-09-01T00:00:00Z",

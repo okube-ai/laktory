@@ -12,17 +12,6 @@ manager = EventsManager()
 manager.build_events()
 
 
-def test_data():
-    assert table_slv.df.equals(
-        pd.DataFrame(
-            {
-                "open": [1, 3, 5],
-                "close": [2, 4, 6],
-            }
-        )
-    )
-
-
 def test_model():
     print(table_slv.model_dump())
     assert table_slv.model_dump() == {
@@ -97,7 +86,7 @@ def test_model():
         "catalog_name": "dev",
         "schema_name": "markets",
         "grants": None,
-        "data": [[1, 2], [3, 4], [5, 6]],
+        "data": [[None, "AAPL", 1, 2], [None, "AAPL", 3, 4], [None, "AAPL", 5, 6]],
         "timestamp_key": None,
         "event_source": None,
         "table_source": {
@@ -113,6 +102,20 @@ def test_model():
     # Invalid zone
     with pytest.raises(ValidationError):
         Table(name="googl", zone="ROUGE")
+
+
+def test_data():
+    print(table_slv.df)
+    assert table_slv.df.equals(
+        pd.DataFrame(
+            {
+                "created_at": [None, None, None],
+                "symbol": ["AAPL", "AAPL", "AAPL"],
+                "open": [1, 3, 5],
+                "close": [2, 4, 6],
+            }
+        )
+    )
 
 
 def test_bronze():
@@ -135,13 +138,11 @@ def test_silver():
         ]
     )
     s = df2.toPandas().iloc[0]
-    assert s.to_dict() == {
-        "created_at": pd.Timestamp("2023-08-31 20:00:00"),
-        "symbol": "AAPL",
-        "open": 189.49000549316406,
-        "close": 189.49000549316406,
-        "_silver_at": pd.Timestamp("2023-11-04 22:32:13.219578"),
-    }
+    print(s)
+    assert s["created_at"] == pd.Timestamp("2023-08-31 20:00:00")
+    assert s["symbol"] == "AAPL"
+    assert s["open"] == 189.49000549316406
+    assert s["close"] == 189.49000549316406
 
 
 if __name__ == "__main__":
