@@ -4,13 +4,11 @@
 **Fixed**
 - Deployment of pipeline configuration file
 
-**Updated**
-- 
-
 **Added**
 - Spark optional dependencies
 - Spark unit tests
 - Functions library
+- Support for custom functions in silver processing
 
 **Breaking Change**
 - Removed databricks-sdk as dependency
