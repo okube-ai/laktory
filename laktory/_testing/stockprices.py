@@ -6,6 +6,7 @@ from laktory.models import TableDataSource
 from laktory.models import EventDataSource
 from laktory.models import Pipeline
 from datetime import datetime
+import pytz
 
 
 # --------------------------------------------------------------------------- #
@@ -45,7 +46,7 @@ class EventsManager:
                 self.events += [
                     StockPriceDataEvent(
                         data={
-                            "created_at": _,
+                            "created_at": pytz.utc.localize(_),
                             "symbol": s,
                             "open": float(
                                 row["Open"]
@@ -80,6 +81,7 @@ class EventsManager:
         import pyspark.sql.types as T
 
         spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
+        spark.conf.set("spark.sql.session.timeZone", "UTC")
         return spark.createDataFrame(
             [e.model_dump() for e in self.events],
             schema=T.StructType(

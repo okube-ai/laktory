@@ -126,8 +126,11 @@ def test_bronze():
 
 def test_silver():
     df0 = manager.to_spark_df()
+    df0.show()
     df1 = table_brz.process_bronze(df0)
+    df1.show()
     df2 = table_slv.process_silver(df1)
+    df2.show()
     assert df2.schema == T.StructType(
         [
             T.StructField("created_at", T.TimestampType(), True),
@@ -139,7 +142,7 @@ def test_silver():
     )
     s = df2.toPandas().iloc[0]
     print(s)
-    assert s["created_at"] == pd.Timestamp("2023-08-31 20:00:00")
+    assert s["created_at"] == pd.Timestamp("2023-09-01 00:00:00")
     assert s["symbol"] == "AAPL"
     assert s["open"] == 189.49000549316406
     assert s["close"] == 189.49000549316406
