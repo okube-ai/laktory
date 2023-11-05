@@ -1,16 +1,13 @@
 from pydantic import field_validator
 from pydantic import model_validator
-from pyspark.sql.connect.column import Column
 from typing import Any
 from typing import Callable
 from typing import Union
-import pyspark.sql.functions as F
 
 from laktory._logger import get_logger
 from laktory.contants import SUPPORTED_TYPES
 from laktory.models.base import BaseModel
 from laktory.spark import Column as SparkColumn
-from laktory.spark import functions as LF
 
 logger = get_logger(__name__)
 
@@ -120,7 +117,11 @@ class Column(BaseModel):
 
     def to_spark(
         self, df, udfs: list[Callable[[...], SparkColumn]] = None
-    ) -> Column:
+    ) -> SparkColumn:
+
+        import pyspark.sql.functions as F
+        from laktory.spark import functions as LF
+
         if udfs is None:
             udfs = []
         udfs = {f.__name__: f for f in udfs}
