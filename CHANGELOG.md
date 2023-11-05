@@ -11,6 +11,7 @@
 - Support for custom functions in silver processing
 
 **Breaking Change**
+- Changed API for table columns definition
 - Removed databricks-sdk as dependency
 
 ## [0.0.10] - 2023-10-31
