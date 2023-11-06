@@ -1,6 +1,13 @@
 # Release History
 
-## [0.0.12] - 2023-11-05
+## [0.0.13] - 2023-11-07
+**Fixed**
+- Pyspark imports when pyspark not installed
+
+**Update**
+- Table Data Source to support tables external to the DLT pipeline
+
+## [0.0.12] - 2023-11-06
 **Fixed**
 - Pyspark imports when pyspark not installed
 

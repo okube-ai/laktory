@@ -98,6 +98,16 @@ def test_spark():
     ).to_spark(df)
     assert id.__repr__() == "Column<'CAST(coalesce(data.@id) AS STRING)'>"
 
+    _ = Column(
+        name="no_explicit_type",
+        spark_func_name="coalesce",
+        spark_func_args=[
+            "data.symbol",
+        ],
+        type="_any",
+    ).to_spark(df)
+    assert _.__repr__() == "Column<'coalesce(data.symbol)'>"
+
 
 def test_spark_udf():
 
@@ -118,7 +128,7 @@ def test_spark_udf():
 
 
 if __name__ == "__main__":
-    test_model()
-    test_read()
+    # test_model()
+    # test_read()
     test_spark()
-    test_spark_udf()
+    # test_spark_udf()
