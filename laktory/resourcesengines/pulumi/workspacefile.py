@@ -2,14 +2,14 @@ from typing import Union
 import pulumi
 import pulumi_databricks as databricks
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.compute.initscript import InitScript
+from laktory.models.compute.workspacefile import WorkspaceFile
 
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class PulumiInitScript(PulumiResourcesEngine):
+class PulumiWorkspaceFile(PulumiResourcesEngine):
     @property
     def provider(self):
         return "databricks"
@@ -17,11 +17,11 @@ class PulumiInitScript(PulumiResourcesEngine):
     def __init__(
         self,
         name=None,
-        init_script: InitScript = None,
+        workspace_file: WorkspaceFile = None,
         opts=None,
     ):
         if name is None:
-            name = f"init-script-{init_script.key}"
+            name = f"workspace-file-{workspace_file.key}"
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -30,11 +30,11 @@ class PulumiInitScript(PulumiResourcesEngine):
         )
 
         self.file = databricks.WorkspaceFile(
-            f"file-{init_script.key}", opts=opts, **init_script.model_pulumi_dump()
+            f"workspace-file-{workspace_file.key}", opts=opts, **workspace_file.model_pulumi_dump()
         )
 
         access_controls = []
-        for permission in init_script.permissions:
+        for permission in workspace_file.permissions:
             access_controls += [
                 databricks.PermissionsAccessControlArgs(
                     permission_level=permission.permission_level,
@@ -46,7 +46,7 @@ class PulumiInitScript(PulumiResourcesEngine):
 
         if access_controls:
             self.permissions = databricks.Permissions(
-                f"permissions-file-{init_script.key}",
+                f"permissions-file-{workspace_file.key}",
                 access_controls=access_controls,
                 workspace_file_path=self.file.path,
                 opts=opts,

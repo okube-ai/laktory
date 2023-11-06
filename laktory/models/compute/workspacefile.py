@@ -6,9 +6,9 @@ from laktory.models.resources import Resources
 from laktory.models.permission import Permission
 
 
-class InitScript(BaseModel, Resources):
+class WorkspaceFile(BaseModel, Resources):
     source: str
-    dirpath: str = "/init_scripts/"
+    dirpath: str = None
     path: str = None
     permissions: list[Permission] = []
 
@@ -29,6 +29,12 @@ class InitScript(BaseModel, Resources):
             if self.dirpath:
                 self.path = f"{self.dirpath}{self.filename}"
 
+            elif "/workspacefiles/" in self.source:
+                self.path = "/" + self.source.split("/workspacefiles/")[-1]
+
+            else:
+                raise ValueError("A value for `dirpath` must be specified if the source is not in a `workspacefiles` folder")
+
         return self
 
     # ----------------------------------------------------------------------- #
@@ -40,6 +46,6 @@ class InitScript(BaseModel, Resources):
         return ["permissions", "dirpath"]
 
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):
-        from laktory.resourcesengines.pulumi.initscript import PulumiInitScript
+        from laktory.resourcesengines.pulumi.workspacefile import PulumiWorkspaceFile
 
-        return PulumiInitScript(name=name, init_script=self, opts=opts)
+        return PulumiWorkspaceFile(name=name, workspace_file=self, opts=opts)

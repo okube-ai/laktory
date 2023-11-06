@@ -1,5 +1,9 @@
 # Release History
 
+## [0.0.15]
+**Breaking Change**
+- Refactored InitScript model into the more general WorkspaceFile
+
 ## [0.0.14] - 2023-11-06
 **Fixed**
 - Pyspark imports when pyspark not installed
