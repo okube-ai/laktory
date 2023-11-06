@@ -1,6 +1,10 @@
 # Release History
 
-## [0.0.13] - 2023-11-07
+## [0.0.14] - 2023-11-06
+**Fixed**
+- Pyspark imports when pyspark not installed
+
+## [0.0.13] - 2023-11-06
 **Fixed**
 - Column `spark_func_args` parsing
 - Column `spark_func_kwargs` parsing
