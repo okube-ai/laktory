@@ -141,14 +141,14 @@ class Table(BaseModel):
             ]
 
         # Timestamps
-        if df.has_column("bronze_at"):
+        if df.has_column("_bronze_at"):
             columns += [
                 Column(
                     **{
                         "name": "_bronze_at",
                         "type": "timestamp",
                         "spark_func_name": "coalesce",
-                        "spark_func_args": ["_bronze_at", "bronze_at"],
+                        "spark_func_args": ["_bronze_at"],
                     }
                 )
             ]
