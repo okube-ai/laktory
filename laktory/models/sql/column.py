@@ -220,4 +220,11 @@ class Column(BaseModel):
         for k, _arg in _kwargs.items():
             kwargs[k] = _arg.to_spark()
 
-        return f(*args, **kwargs).cast(self.type)
+        # Function call
+        col = f(*args, **kwargs)
+
+        # Type Casting
+        if self.type not in ["_any"]:
+            col = col.cast(self.type)
+
+        return col
