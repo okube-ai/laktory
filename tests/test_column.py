@@ -110,12 +110,11 @@ def test_spark():
 
 
 def test_spark_udf():
-
     def x2(x):
-        return 2*x
+        return 2 * x
 
     def x_square(x):
-        return x*x
+        return x * x
 
     m2 = Column(
         name="m2",
@@ -128,7 +127,7 @@ def test_spark_udf():
 
 
 if __name__ == "__main__":
-    # test_model()
-    # test_read()
+    test_model()
+    test_read()
     test_spark()
-    # test_spark_udf()
+    test_spark_udf()
