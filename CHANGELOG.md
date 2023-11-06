@@ -1,6 +1,18 @@
 # Release History
 
-## [0.0.12] - 2023-11-05
+## [0.0.13] - 2023-11-07
+**Fixed**
+- Column `spark_func_args` parsing
+- Column `spark_func_kwargs` parsing
+- Support for `_any` column type
+
+**Added**
+- `schema_flat` and `has_column` DataFrame extensions for spark connect 
+
+- **Update**
+- Table Data Source to support tables external to the DLT pipeline
+
+## [0.0.12] - 2023-11-06
 **Fixed**
 - Pyspark imports when pyspark not installed
 

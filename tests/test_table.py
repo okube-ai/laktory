@@ -24,8 +24,8 @@ def test_model():
                 "pii": None,
                 "schema_name": "markets",
                 "spark_func_args": [
-                    {"value": "_created_at", "to_column": True, "to_lit": None},
-                    {"value": "data._created_at", "to_column": True, "to_lit": None},
+                    {"value": "_created_at", "to_column": True, "to_lit": False},
+                    {"value": "data._created_at", "to_column": True, "to_lit": False},
                 ],
                 "spark_func_kwargs": {},
                 "spark_func_name": "coalesce",
@@ -41,7 +41,7 @@ def test_model():
                 "pii": None,
                 "schema_name": "markets",
                 "spark_func_args": [
-                    {"value": "data.symbol", "to_column": True, "to_lit": None}
+                    {"value": "data.symbol", "to_column": True, "to_lit": False}
                 ],
                 "spark_func_kwargs": {},
                 "spark_func_name": "coalesce",
@@ -57,7 +57,7 @@ def test_model():
                 "pii": None,
                 "schema_name": "markets",
                 "spark_func_args": [
-                    {"value": "data.open", "to_column": True, "to_lit": None}
+                    {"value": "data.open", "to_column": True, "to_lit": False}
                 ],
                 "spark_func_kwargs": {},
                 "spark_func_name": "coalesce",
@@ -94,6 +94,7 @@ def test_model():
             "name": "brz_stock_prices",
             "schema_name": None,
             "catalog_name": None,
+            "from_pipeline": True,
         },
         "zone": "SILVER",
         "pipeline_name": None,
@@ -137,6 +138,7 @@ def test_silver():
             T.StructField("symbol", T.StringType(), True),
             T.StructField("open", T.DoubleType(), True),
             T.StructField("close", T.DoubleType(), True),
+            T.StructField("_bronze_at", T.TimestampType(), False),
             T.StructField("_silver_at", T.TimestampType(), False),
         ]
     )

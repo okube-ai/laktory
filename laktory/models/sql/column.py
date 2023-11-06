@@ -19,16 +19,31 @@ class SparkFuncArg(BaseModel):
 
     @model_validator(mode="after")
     def is_column_default(self) -> Any:
-        if self.to_lit is None:
+        if self.to_lit is None and self.to_column is None:
             if not isinstance(self.value, str):
                 self.to_lit = True
             else:
                 self.to_column = True
 
+        if self.to_column is None:
+            self.to_column = False
+
+        if self.to_lit is None:
+            self.to_lit = False
+
         if self.to_column and self.to_lit:
             raise ValueError("Only one of `to_column` or `to_lit` can be True")
 
         return self
+
+    def to_spark(self):
+        import pyspark.sql.functions as F
+        v = self.value
+        if self.to_column:
+            v = F.expr(v)
+        elif self.to_lit:
+            v = F.lit(v)
+        return v
 
 
 class Column(BaseModel):
@@ -49,7 +64,11 @@ class Column(BaseModel):
     def parse_args(cls, args: list[Union[str, SparkFuncArg]]) -> list[SparkFuncArg]:
         _args = []
         for a in args:
-            if not isinstance(a, SparkFuncArg):
+            if isinstance(a, SparkFuncArg):
+                pass
+            elif isinstance(a, dict):
+                a = SparkFuncArg(**a)
+            else:
                 a = SparkFuncArg(value=a)
             _args += [a]
         return _args
@@ -60,7 +79,11 @@ class Column(BaseModel):
     ) -> dict[str, SparkFuncArg]:
         _kwargs = {}
         for k, a in kwargs.items():
-            if not isinstance(a, SparkFuncArg):
+            if isinstance(a, SparkFuncArg):
+                pass
+            elif isinstance(a, dict):
+                a = SparkFuncArg(**a)
+            else:
                 a = SparkFuncArg(value=a)
             _kwargs[k] = a
         return _kwargs
@@ -121,6 +144,7 @@ class Column(BaseModel):
 
         import pyspark.sql.functions as F
         from laktory.spark import functions as LF
+        from laktory.spark.dataframe import has_column
 
         if udfs is None:
             udfs = []
@@ -162,7 +186,7 @@ class Column(BaseModel):
             if df is not None:
                 if _arg.to_column:
                     expected_cols += 1
-                    if not df.has_column(_arg.value):
+                    if not has_column(df, _arg.value):
                         # When columns are not found, they are simply skipped and a
                         # warning is issued. Some functions, like `coalesce` might list
                         # multiple arguments, but don't expect all of them to be
@@ -171,12 +195,6 @@ class Column(BaseModel):
                         continue
                     else:
                         found_cols += 1
-
-            arg = _arg.value
-            if _arg.to_column:
-                arg = F.expr(_arg.value)
-            elif _arg.to_lit:
-                arg = F.lit(_arg.value)
 
             # TODO: Review if required
             # if _arg.value.startswith("data.") or func_name == "coalesce":
@@ -190,7 +208,7 @@ class Column(BaseModel):
             # ]:
             #     input_col = F.col(input_col_name).cast(self.type)
 
-            args += [arg]
+            args += [_arg.to_spark()]
 
         if expected_cols > 0 and found_cols == 0:
             raise ValueError(
@@ -200,11 +218,13 @@ class Column(BaseModel):
         # Build kwargs
         kwargs = {}
         for k, _arg in _kwargs.items():
-            arg = _arg.value
-            if _arg.to_column:
-                arg = F.expr(_arg.value)
-            elif _arg.to_lit:
-                arg = F.lit(_arg.value)
-            kwargs[k] = arg
+            kwargs[k] = _arg.to_spark()
 
-        return f(*args, **kwargs).cast(self.type)
+        # Function call
+        col = f(*args, **kwargs)
+
+        # Type Casting
+        if self.type not in ["_any"]:
+            col = col.cast(self.type)
+
+        return col

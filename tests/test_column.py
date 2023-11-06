@@ -98,14 +98,23 @@ def test_spark():
     ).to_spark(df)
     assert id.__repr__() == "Column<'CAST(coalesce(data.@id) AS STRING)'>"
 
+    _ = Column(
+        name="no_explicit_type",
+        spark_func_name="coalesce",
+        spark_func_args=[
+            "data.symbol",
+        ],
+        type="_any",
+    ).to_spark(df)
+    assert _.__repr__() == "Column<'coalesce(data.symbol)'>"
+
 
 def test_spark_udf():
-
     def x2(x):
-        return 2*x
+        return 2 * x
 
     def x_square(x):
-        return x*x
+        return x * x
 
     m2 = Column(
         name="m2",

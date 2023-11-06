@@ -55,11 +55,15 @@ def test_pipeline():
                         "pii": None,
                         "schema_name": None,
                         "spark_func_args": [
-                            {"value": "_created_at", "to_column": True, "to_lit": None},
+                            {
+                                "value": "_created_at",
+                                "to_column": True,
+                                "to_lit": False,
+                            },
                             {
                                 "value": "data._created_at",
                                 "to_column": True,
-                                "to_lit": None,
+                                "to_lit": False,
                             },
                         ],
                         "spark_func_kwargs": {},
@@ -76,7 +80,7 @@ def test_pipeline():
                         "pii": None,
                         "schema_name": None,
                         "spark_func_args": [
-                            {"value": "data.symbol", "to_column": True, "to_lit": None}
+                            {"value": "data.symbol", "to_column": True, "to_lit": False}
                         ],
                         "spark_func_kwargs": {},
                         "spark_func_name": "coalesce",
@@ -92,7 +96,7 @@ def test_pipeline():
                         "pii": None,
                         "schema_name": None,
                         "spark_func_args": [
-                            {"value": "data.open", "to_column": True, "to_lit": None}
+                            {"value": "data.open", "to_column": True, "to_lit": False}
                         ],
                         "spark_func_kwargs": {},
                         "spark_func_name": "coalesce",
@@ -133,6 +137,7 @@ def test_pipeline():
                     "name": "brz_stock_prices",
                     "schema_name": None,
                     "catalog_name": None,
+                    "from_pipeline": True,
                 },
                 "zone": "SILVER",
                 "pipeline_name": "pl-stock-prices",

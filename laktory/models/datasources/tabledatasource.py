@@ -11,6 +11,7 @@ class TableDataSource(BaseDataSource):
     name: Union[str, None]
     schema_name: Union[str, None] = None
     catalog_name: Union[str, None] = None
+    from_pipeline: Union[bool, None] = True
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -45,9 +46,15 @@ class TableDataSource(BaseDataSource):
 
         if self.read_as_stream:
             logger.info(f"Reading {self.full_name} as stream")
-            df = read_stream(self.full_name)
+            if self.from_pipeline:
+                df = read_stream(self.full_name)
+            else:
+                df = spark.readStream.format("delta").table(self.full_name)
         else:
             logger.info(f"Reading {self.full_name} as static")
-            df = read(self.full_name)
+            if self.from_pipeline:
+                df = read(self.full_name)
+            else:
+                df = spark.read.table(self.full_name)
 
         return df

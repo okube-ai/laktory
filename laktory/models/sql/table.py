@@ -121,6 +121,9 @@ class Table(BaseModel):
     def process_silver(
         self, df, udfs: list[Callable[[...], SparkColumn]] = None
     ) -> DataFrame:
+
+        from laktory.spark.dataframe import has_column
+
         logger.info(f"Applying silver transformations")
 
         columns = []
@@ -141,14 +144,14 @@ class Table(BaseModel):
             ]
 
         # Timestamps
-        if df.has_column("bronze_at"):
+        if has_column(df, "_bronze_at"):
             columns += [
                 Column(
                     **{
                         "name": "_bronze_at",
                         "type": "timestamp",
                         "spark_func_name": "coalesce",
-                        "spark_func_args": ["_bronze_at", "bronze_at"],
+                        "spark_func_args": ["_bronze_at"],
                     }
                 )
             ]
