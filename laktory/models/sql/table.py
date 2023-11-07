@@ -19,14 +19,6 @@ from laktory.models.grants.tablegrant import TableGrant
 logger = get_logger(__name__)
 
 
-class TableSCD(BaseModel):
-    columns: Union[list[str], None] = []
-    except_columns: Union[list[str], None] = []
-    track_history_columns: Union[list[str], None] = None
-    track_history_except_columns: Union[list[str], None] = None
-    type: Literal[1, 2] = None
-
-
 class Table(BaseModel):
     catalog_name: Union[str, None] = None
     columns: list[Column] = []
@@ -37,7 +29,6 @@ class Table(BaseModel):
     name: str
     pipeline_name: Union[str, None] = None
     primary_key: Union[str, None] = None
-    scd: Union[TableSCD, None] = None
     schema_name: Union[str, None] = None
     table_source: Union[TableDataSource, None] = None
     timestamp_key: Union[str, None] = None
@@ -55,10 +46,6 @@ class Table(BaseModel):
             c.table_name = self.name
             c.catalog_name = self.catalog_name
             c.schema_name = self.schema_name
-
-        if self.scd is not None:
-            if self.table_source is None or self.table_source.cdc is None:
-                raise ValueError("For table to be set as SCD, the source must be a table with `cdc` field defined.")
 
         return self
 
@@ -115,6 +102,13 @@ class Table(BaseModel):
     # ----------------------------------------------------------------------- #
     # Pipeline Methods                                                        #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def from_cdc(self):
+        if self.source is None:
+            return False
+        else:
+            return self.source.is_cdc
 
     def read_source(self, spark) -> DataFrame:
         return self.source.read(spark)
@@ -221,18 +215,17 @@ class Table(BaseModel):
     @property
     def apply_changes_kwargs(self):
         cdc = self.source.cdc
-        scd = self.scd
         return {
             "apply_as_deletes": cdc.apply_as_deletes,
             "apply_as_truncates": cdc.apply_as_truncates,
-            "column_list": scd.columns,
-            "except_column_list": scd.except_columns,
+            "column_list": cdc.columns,
+            "except_column_list": cdc.except_columns,
             "ignore_null_updates": cdc.ignore_null_updates,
             "keys": cdc.primary_keys,
             "sequence_by": cdc.sequence_by,
             "source": self.source.name,
-            "stored_as_scd_type": scd.type,
+            "stored_as_scd_type": cdc.scd_type,
             "target": self.name,
-            "track_history_column_list": scd.track_history_columns,
-            "track_history_except_column_list": scd.track_history_except_columns,
+            "track_history_column_list": cdc.track_history_columns,
+            "track_history_except_column_list": cdc.track_history_except_columns,
         }

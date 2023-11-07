@@ -1,5 +1,6 @@
 from laktory.spark import DataFrame
 from typing import Union
+from typing import Literal
 
 from laktory.models.base import BaseModel
 from laktory.models.datasources.basedatasource import BaseDataSource
@@ -11,9 +12,14 @@ logger = get_logger(__name__)
 class TableDataSourceCDC(BaseModel):
     apply_as_deletes: Union[str, None] = None
     apply_as_truncates: Union[str, None] = None
+    columns: Union[list[str], None] = []
+    except_columns: Union[list[str], None] = []
     ignore_null_updates: Union[bool, None] = None
     primary_keys: list[str]
+    scd_type: Literal[1, 2] = None
     sequence_by: str
+    track_history_columns: Union[list[str], None] = None
+    track_history_except_columns: Union[list[str], None] = None
 
 
 class TableDataSource(BaseDataSource):

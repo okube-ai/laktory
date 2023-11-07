@@ -11,3 +11,7 @@ class BaseDataSource(BaseModel):
     @abstractmethod
     def read(self, spark) -> DataFrame:
         raise NotImplementedError()
+
+    @property
+    def is_cdc(self):
+        return getattr(self, "cdc", None) is not None

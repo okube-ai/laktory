@@ -88,7 +88,6 @@ def test_model():
         "name": "slv_stock_prices",
         "pipeline_name": None,
         "primary_key": None,
-        "scd": None,
         "schema_name": "markets",
         "table_source": {
             "read_as_stream": True,
@@ -101,6 +100,7 @@ def test_model():
         "timestamp_key": None,
         "zone": "SILVER",
     }
+    assert not table_slv.from_cdc
 
     # Invalid zone
     with pytest.raises(ValidationError):
@@ -161,11 +161,9 @@ def test_cdc():
                 "primary_keys": ["userId"],
                 "sequence_by": "sequenceNum",
                 "apply_as_deletes": "operation = 'DELETE'",
+                "scd_type": 1,
+                "except_columns": ["operation", "sequenceNum"],
             },
-        },
-        scd={
-            "type": 1,
-            "except_columns": ["operation", "sequenceNum"],
         },
     )
 
@@ -183,6 +181,7 @@ def test_cdc():
         "track_history_column_list": None,
         "track_history_except_column_list": None,
     }
+    assert table.from_cdc
 
     # TODO: Run test with demo data
     # from pyspark.sql import SparkSession
