@@ -134,11 +134,11 @@ def test_pipeline():
                 "schema_name": None,
                 "table_source": {
                     "read_as_stream": True,
-                    "catalog_name": None,
+                    "catalog_name": "dev",
                     "cdc": None,
                     "from_pipeline": True,
                     "name": "brz_stock_prices",
-                    "schema_name": None,
+                    "schema_name": "markets",
                 },
                 "timestamp_key": None,
                 "zone": "SILVER",
