@@ -51,8 +51,10 @@ class Table(BaseModel):
 
         # Assign to sources
         if self.table_source is not None:
-            self.table_source.catalog_name = getattr(self.table_source, "catalog_name", self.catalog_name)
-            self.table_source.schema_name = getattr(self.table_source, "schema_name", self.schema_name)
+            if self.table_source.catalog_name is None:
+                self.table_source.catalog_name = self.catalog_name
+            if self.table_source.schema_name is None:
+                self.table_source.schema_name = self.schema_name
 
         return self
 

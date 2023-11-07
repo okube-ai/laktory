@@ -102,8 +102,10 @@ class Pipeline(BaseModel, Resources):
 
             # Assign to sources
             if t.table_source is not None:
-                t.table_source.catalog_name = getattr(t.table_source, "catalog_name", self.catalog)
-                t.table_source.schema_name = getattr(t.table_source, "schema_name", self.target)
+                if t.table_source.catalog_name is None:
+                    t.table_source.catalog_name = self.catalog
+                if t.table_source.schema_name is None:
+                    t.table_source.schema_name = self.target
 
         return self
 
