@@ -172,3 +172,10 @@ if is_mocked():
             return wrapper
 
         return decorator
+
+
+    def create_streaming_table(*args, **kwargs):
+        pass
+
+    def apply_changes(*args, **kwargs):
+        pass

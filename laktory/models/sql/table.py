@@ -19,24 +19,29 @@ from laktory.models.grants.tablegrant import TableGrant
 logger = get_logger(__name__)
 
 
+class TableSCD(BaseModel):
+    columns: Union[list[str], None] = []
+    except_columns: Union[list[str], None] = []
+    track_history_columns: Union[list[str], None] = None
+    track_history_except_columns: Union[list[str], None] = None
+    type: Literal[1, 2] = None
+
+
 class Table(BaseModel):
-    name: str
-    columns: list[Column] = []
-    primary_key: Union[str, None] = None
-    comment: Union[str, None] = None
     catalog_name: Union[str, None] = None
-    schema_name: Union[str, None] = None
-    grants: list[TableGrant] = None
-
-    # Data
+    columns: list[Column] = []
+    comment: Union[str, None] = None
     data: list[list[Any]] = None
-
-    # Lakehouse
-    timestamp_key: Union[str, None] = None
     event_source: Union[EventDataSource, None] = None
-    table_source: Union[TableDataSource, None] = None
-    zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
+    grants: list[TableGrant] = None
+    name: str
     pipeline_name: Union[str, None] = None
+    primary_key: Union[str, None] = None
+    scd: Union[TableSCD, None] = None
+    schema_name: Union[str, None] = None
+    table_source: Union[TableDataSource, None] = None
+    timestamp_key: Union[str, None] = None
+    zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     # joins
     # expectations
 
@@ -50,6 +55,11 @@ class Table(BaseModel):
             c.table_name = self.name
             c.catalog_name = self.catalog_name
             c.schema_name = self.schema_name
+
+        if self.scd is not None:
+            if self.table_source is None or self.table_source.cdc is None:
+                raise ValueError("For table to be set as SCD, the source must be a table with `cdc` field defined.")
+
         return self
 
     # ----------------------------------------------------------------------- #
@@ -207,3 +217,22 @@ class Table(BaseModel):
 
     def process_silver_star(self, df) -> DataFrame:
         return df
+
+    @property
+    def apply_changes_kwargs(self):
+        cdc = self.source.cdc
+        scd = self.scd
+        return {
+            "apply_as_deletes": cdc.apply_as_deletes,
+            "apply_as_truncates": cdc.apply_as_truncates,
+            "column_list": scd.columns,
+            "except_column_list": scd.except_columns,
+            "ignore_null_updates": cdc.ignore_null_updates,
+            "keys": cdc.primary_keys,
+            "sequence_by": cdc.sequence_by,
+            "source": self.source.name,
+            "stored_as_scd_type": scd.type,
+            "target": self.name,
+            "track_history_column_list": scd.track_history_columns,
+            "track_history_except_column_list": scd.track_history_except_columns,
+        }

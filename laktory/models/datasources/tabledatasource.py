@@ -1,17 +1,27 @@
 from laktory.spark import DataFrame
 from typing import Union
 
+from laktory.models.base import BaseModel
 from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
 
+class TableDataSourceCDC(BaseModel):
+    apply_as_deletes: Union[str, None] = None
+    apply_as_truncates: Union[str, None] = None
+    ignore_null_updates: Union[bool, None] = None
+    primary_keys: list[str]
+    sequence_by: str
+
+
 class TableDataSource(BaseDataSource):
+    catalog_name: Union[str, None] = None
+    cdc: Union[TableDataSourceCDC, None] = None
+    from_pipeline: Union[bool, None] = True
     name: Union[str, None]
     schema_name: Union[str, None] = None
-    catalog_name: Union[str, None] = None
-    from_pipeline: Union[bool, None] = True
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
