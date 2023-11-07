@@ -99,6 +99,8 @@ def apply_changes(*args, table=None, **kwargs):
         if table is None:
             return
         df = table.read_source(spark=spark)
+        # TODO: Apply changes
+        logger.warning("Laktory does not currently support applying CDC changes. Returned DataFrame is CDC source.")
         return df
     else:
         return _apply_changes(*args, **kwargs)
