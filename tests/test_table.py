@@ -15,7 +15,7 @@ manager.build_events()
 def test_model():
     print(table_slv.model_dump())
     assert table_slv.model_dump() == {
-        "name": "slv_stock_prices",
+        "catalog_name": "dev",
         "columns": [
             {
                 "catalog_name": "dev",
@@ -81,24 +81,26 @@ def test_model():
                 "unit": None,
             },
         ],
-        "primary_key": None,
         "comment": None,
-        "catalog_name": "dev",
-        "schema_name": "markets",
-        "grants": None,
         "data": [[None, "AAPL", 1, 2], [None, "AAPL", 3, 4], [None, "AAPL", 5, 6]],
-        "timestamp_key": None,
         "event_source": None,
+        "grants": None,
+        "name": "slv_stock_prices",
+        "pipeline_name": None,
+        "primary_key": None,
+        "schema_name": "markets",
         "table_source": {
             "read_as_stream": True,
-            "name": "brz_stock_prices",
-            "schema_name": None,
-            "catalog_name": None,
+            "catalog_name": "dev",
+            "cdc": None,
             "from_pipeline": True,
+            "name": "brz_stock_prices",
+            "schema_name": "markets",
         },
+        "timestamp_key": None,
         "zone": "SILVER",
-        "pipeline_name": None,
     }
+    assert not table_slv.is_from_cdc
 
     # Invalid zone
     with pytest.raises(ValidationError):
@@ -150,8 +152,55 @@ def test_silver():
     assert s["close"] == 189.49000549316406
 
 
+def test_cdc():
+    table = Table(
+        name="brz_users_type1",
+        table_source={
+            "name": "brz_users_cdc",
+            "cdc": {
+                "primary_keys": ["userId"],
+                "sequence_by": "sequenceNum",
+                "apply_as_deletes": "operation = 'DELETE'",
+                "scd_type": 1,
+                "except_columns": ["operation", "sequenceNum"],
+            },
+        },
+    )
+
+    assert table.apply_changes_kwargs == {
+        "apply_as_deletes": "operation = 'DELETE'",
+        "apply_as_truncates": None,
+        "column_list": [],
+        "except_column_list": ["operation", "sequenceNum"],
+        "ignore_null_updates": None,
+        "keys": ["userId"],
+        "sequence_by": "sequenceNum",
+        "source": "brz_users_cdc",
+        "stored_as_scd_type": 1,
+        "target": "brz_users_type1",
+        "track_history_column_list": None,
+        "track_history_except_column_list": None,
+    }
+    assert table.is_from_cdc
+
+    # TODO: Run test with demo data
+    # from pyspark.sql import SparkSession
+
+    # spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
+    #
+    # df_cdc = spark.createDataFrame(pd.DataFrame({
+    #     "userId": [124, 123, 125, 126, 123, 125, 125, 123],
+    #     "name": ["Raul", "Isabel", "Mercedes", "Lily", None, "Mercedes", "Mercedes", "Isabel"],
+    #     "city": ["Oaxaca", "Monterrey", "Tijuana", "Cancun", None, "Guadalajara", "Mexicali", "Chihuahua"],
+    #     "operation": ["INSERT", "INSERT", "INSERT", "INSERT", "DELETE", "UPDATE", "UPDATE", "UPDATE"],
+    #     "sequenceNum": [1, 1, 2, 2, 6, 6, 5, 5],
+    # }))
+    # df_cdc.show()
+
+
 if __name__ == "__main__":
     test_model()
     test_data()
     test_bronze()
     test_silver()
+    test_cdc()
