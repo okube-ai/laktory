@@ -41,11 +41,18 @@ class Table(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @model_validator(mode="after")
-    def assign_table_to_columns(self) -> Any:
+    def assign_catalog_schema(self) -> Any:
+
+        # Assign to columns
         for c in self.columns:
             c.table_name = self.name
             c.catalog_name = self.catalog_name
             c.schema_name = self.schema_name
+
+        # Assign to sources
+        if self.table_source is not None:
+            self.table_source.catalog_name = getattr(self.table_source, "catalog_name", self.catalog_name)
+            self.table_source.schema_name = getattr(self.table_source, "schema_name", self.schema_name)
 
         return self
 
