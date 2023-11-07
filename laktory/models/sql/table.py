@@ -104,7 +104,7 @@ class Table(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @property
-    def from_cdc(self):
+    def is_from_cdc(self):
         if self.source is None:
             return False
         else:

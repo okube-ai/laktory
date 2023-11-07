@@ -100,7 +100,7 @@ def test_model():
         "timestamp_key": None,
         "zone": "SILVER",
     }
-    assert not table_slv.from_cdc
+    assert not table_slv.is_from_cdc
 
     # Invalid zone
     with pytest.raises(ValidationError):
@@ -181,7 +181,7 @@ def test_cdc():
         "track_history_column_list": None,
         "track_history_except_column_list": None,
     }
-    assert table.from_cdc
+    assert table.is_from_cdc
 
     # TODO: Run test with demo data
     # from pyspark.sql import SparkSession
