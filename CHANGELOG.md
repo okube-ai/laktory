@@ -5,6 +5,9 @@
 - Support for CDC table data source
 - Support for SCD table
 
+**Updated**
+- Automatic catalog and schema assignation to source table from table and pipeline
+
 ## [0.0.14] - 2023-11-06
 **Fixed**
 - Pyspark imports when pyspark not installed
