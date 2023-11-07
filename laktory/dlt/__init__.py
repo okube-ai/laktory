@@ -98,7 +98,7 @@ def apply_changes(*args, table=None, **kwargs):
     if is_debug():
         if table is None:
             return
-        df = table.read_source()
+        df = table.read_source(spark=spark)
         return df
     else:
         return _apply_changes(*args, **kwargs)
