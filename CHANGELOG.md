@@ -1,5 +1,10 @@
 # Release History
 
+## [0.0.15]
+**Added**
+- Support for CDC table data source
+- Support for SCD table
+
 ## [0.0.14] - 2023-11-06
 **Fixed**
 - Pyspark imports when pyspark not installed

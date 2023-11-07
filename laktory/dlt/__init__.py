@@ -5,6 +5,7 @@ try:
     from dlt import *
     from dlt import read as _read
     from dlt import read_stream as _read_stream
+    from dlt import apply_changes as _apply_changes
 except Exception:
     pass
 
@@ -93,6 +94,16 @@ def read_stream(*args, fmt="delta", **kwargs):
         return _read_stream(*args, **kwargs)
 
 
+def apply_changes(*args, table=None, **kwargs):
+    if is_debug():
+        if table is None:
+            return
+        df = table.read_source()
+        return df
+    else:
+        return _apply_changes(*args, **kwargs)
+
+
 # --------------------------------------------------------------------------- #
 # Mocks                                                                       #
 # --------------------------------------------------------------------------- #
@@ -175,7 +186,4 @@ if is_mocked():
 
 
     def create_streaming_table(*args, **kwargs):
-        pass
-
-    def apply_changes(*args, **kwargs):
         pass
