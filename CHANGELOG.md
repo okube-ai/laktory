@@ -1,6 +1,6 @@
 # Release History
 
-## [0.0.16]
+## [0.0.16] - 2023-11-08
 **Added**
 - UDFs property to pipeline model
 
