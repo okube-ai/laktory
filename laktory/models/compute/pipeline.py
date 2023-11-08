@@ -70,8 +70,8 @@ class PipelineCluster(Cluster):
 
 
 class PipelineUDF(BaseModel):
-    module: str
-    function: str
+    module_name: str
+    function_name: str
     module_path: str = None
 
 

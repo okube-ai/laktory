@@ -145,6 +145,7 @@ def test_pipeline():
             },
         ],
         "target": None,
+        "udfs": [{"module_name": "stock_functions", "function_name": "high"}],
     }
 
 

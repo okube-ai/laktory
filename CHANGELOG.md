@@ -1,6 +1,9 @@
 # Release History
 
 ## [0.0.16]
+**Added**
+- UDFs property to pipeline model
+
 **Breaking Change**
 - Refactored InitScript model into the more general WorkspaceFile
 
