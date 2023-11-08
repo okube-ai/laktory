@@ -20,14 +20,15 @@ spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 
 
 def test_event_data_source():
-    reader = EventDataSource(
+    source = EventDataSource(
         name="stock_price",
         producer={"name": "yahoo_finance"},
     )
     assert (
-        reader.event_root
+        source.event_root
         == "/Volumes/dev/sources/landing/events/yahoo_finance/stock_price/"
     )
+    assert not source.is_cdc
 
 
 def test_event_data_source_read():

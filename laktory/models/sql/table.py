@@ -20,23 +20,19 @@ logger = get_logger(__name__)
 
 
 class Table(BaseModel):
-    name: str
-    columns: list[Column] = []
-    primary_key: Union[str, None] = None
-    comment: Union[str, None] = None
     catalog_name: Union[str, None] = None
-    schema_name: Union[str, None] = None
-    grants: list[TableGrant] = None
-
-    # Data
+    columns: list[Column] = []
+    comment: Union[str, None] = None
     data: list[list[Any]] = None
-
-    # Lakehouse
-    timestamp_key: Union[str, None] = None
     event_source: Union[EventDataSource, None] = None
-    table_source: Union[TableDataSource, None] = None
-    zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
+    grants: list[TableGrant] = None
+    name: str
     pipeline_name: Union[str, None] = None
+    primary_key: Union[str, None] = None
+    schema_name: Union[str, None] = None
+    table_source: Union[TableDataSource, None] = None
+    timestamp_key: Union[str, None] = None
+    zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     # joins
     # expectations
 
@@ -45,11 +41,21 @@ class Table(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @model_validator(mode="after")
-    def assign_table_to_columns(self) -> Any:
+    def assign_catalog_schema(self) -> Any:
+
+        # Assign to columns
         for c in self.columns:
             c.table_name = self.name
             c.catalog_name = self.catalog_name
             c.schema_name = self.schema_name
+
+        # Assign to sources
+        if self.table_source is not None:
+            if self.table_source.catalog_name is None:
+                self.table_source.catalog_name = self.catalog_name
+            if self.table_source.schema_name is None:
+                self.table_source.schema_name = self.schema_name
+
         return self
 
     # ----------------------------------------------------------------------- #
@@ -105,6 +111,13 @@ class Table(BaseModel):
     # ----------------------------------------------------------------------- #
     # Pipeline Methods                                                        #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def is_from_cdc(self):
+        if self.source is None:
+            return False
+        else:
+            return self.source.is_cdc
 
     def read_source(self, spark) -> DataFrame:
         return self.source.read(spark)
@@ -207,3 +220,21 @@ class Table(BaseModel):
 
     def process_silver_star(self, df) -> DataFrame:
         return df
+
+    @property
+    def apply_changes_kwargs(self):
+        cdc = self.source.cdc
+        return {
+            "apply_as_deletes": cdc.apply_as_deletes,
+            "apply_as_truncates": cdc.apply_as_truncates,
+            "column_list": cdc.columns,
+            "except_column_list": cdc.except_columns,
+            "ignore_null_updates": cdc.ignore_null_updates,
+            "keys": cdc.primary_keys,
+            "sequence_by": cdc.sequence_by,
+            "source": self.source.name,
+            "stored_as_scd_type": cdc.scd_type,
+            "target": self.name,
+            "track_history_column_list": cdc.track_history_columns,
+            "track_history_except_column_list": cdc.track_history_except_columns,
+        }

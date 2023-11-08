@@ -99,6 +99,14 @@ class Pipeline(BaseModel, Resources):
                 c.table_name = t.name
                 c.catalog_name = t.catalog_name
                 c.schema_name = t.schema_name
+
+            # Assign to sources
+            if t.table_source is not None:
+                if t.table_source.catalog_name is None:
+                    t.table_source.catalog_name = self.catalog
+                if t.table_source.schema_name is None:
+                    t.table_source.schema_name = self.target
+
         return self
 
     # ----------------------------------------------------------------------- #
