@@ -1,4 +1,4 @@
-from laktory.models.compute.initscript import InitScript
+from laktory.models.compute.workspacefile import WorkspaceFile
 from laktory.models.compute.cluster import Cluster
 from laktory.models.compute.warehouse import Warehouse
 from laktory.models.compute.notebook import Notebook

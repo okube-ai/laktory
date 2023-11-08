@@ -69,6 +69,12 @@ class PipelineCluster(Cluster):
         return self
 
 
+class PipelineUDF(BaseModel):
+    module_name: str
+    function_name: str
+    module_path: str = None
+
+
 class Pipeline(BaseModel, Resources):
     allow_duplicate_names: bool = None
     catalog: str = None
@@ -88,6 +94,7 @@ class Pipeline(BaseModel, Resources):
     storage: str = None
     tables: list[Table] = []
     target: str = None
+    udfs: list[PipelineUDF] = []
 
     @model_validator(mode="after")
     def assign_pipeline_to_tables(self) -> Any:
@@ -125,6 +132,7 @@ class Pipeline(BaseModel, Resources):
             "permissions": True,
             "tables": True,
             "clusters": {"__all__": {"permissions"}},
+            "udfs": True,
         }
 
     def model_pulumi_dump(self, *args, **kwargs):

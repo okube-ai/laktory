@@ -5,6 +5,7 @@ from laktory.models import Table
 from laktory.models import TableDataSource
 from laktory.models import EventDataSource
 from laktory.models import Pipeline
+from laktory.models.compute.pipeline import PipelineUDF
 from datetime import datetime
 import pytz
 
@@ -179,6 +180,12 @@ class StockPricesPipeline(Pipeline):
     tables: list[Table] = [
         table_brz,
         table_slv,
+    ]
+    udfs: list[PipelineUDF] = [
+        {
+            "module_name": "stock_functions",
+            "function_name": "high",
+        }
     ]
 
 
