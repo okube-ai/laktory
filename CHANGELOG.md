@@ -4,7 +4,7 @@
 **Breaking Change**
 - Refactored InitScript model into the more general WorkspaceFile
 
-## [0.0.15]
+## [0.0.15] - 2023-11-07
 **Added**
 - Support for CDC table data source
 - Support for SCD table
