@@ -9,7 +9,9 @@ A DataOps framework for building Databricks lakehouse.
 
 ## Okube Company 
 
-Okube is committed to develop open source data and ML engineering tools. This is an open space. Contributions are more than welcome.
+# 
+
+Okube is dedicated to build open source frameworks, the *kubes*, that empower businesses to build and deploy highly scalable data platforms and AI models. Contributions are more than welcome.
 
 
 ## Help
