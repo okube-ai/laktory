@@ -1,5 +1,9 @@
 # Release History
 
+## [0.0.17] - 
+**Added**
+- Option to exclude timestamp from data event filepath
+
 ## [0.0.16] - 2023-11-08
 **Added**
 - UDFs property to pipeline model

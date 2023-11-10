@@ -4,7 +4,7 @@ import pytest
 
 from laktory._testing import StockPriceDataEventHeader
 from laktory._testing import EventsManager
-
+from laktory import models
 
 header = StockPriceDataEventHeader()
 events = EventsManager().build_events()
@@ -83,6 +83,15 @@ def test_model_dump():
     }
 
 
+def test_event_without_tstamp():
+    d = event.model_dump()
+    d["tstamp_in_path"] = False
+    e = models.DataEvent(
+        **d
+    )
+    assert e.get_landing_filepath() == "/Volumes/dev/sources/landing/events/yahoo-finance/stock_price/stock_price.json"
+
+
 def test_to_azure_storage_container():
     try:
         import azure.storage
@@ -117,6 +126,7 @@ if __name__ == "__main__":
     test_dataeventheader()
     test_dataevent()
     test_model_dump()
+    test_event_without_tstamp()
     test_to_azure_storage_container()
     test_to_aws_s3_bucket()
     test_to_databricks_mount()

@@ -30,13 +30,17 @@ class DataEvent(DataEventHeader):
     producer: Producer = Field(None, alias="event_producer")
     data: dict
     tstamp_col: str = "created_at"
-    tstamp_in_path: str = True
+    tstamp_in_path: bool = True
 
     def model_post_init(self, __context):
         # Add metadata
         self.data["_name"] = self.name
         self.data["_producer_name"] = self.producer.name
-        tstamp = self.data.get(self.tstamp_col, datetime.utcnow())
+        tstamp = self.data.get(self.tstamp_col)
+        if isinstance(tstamp, str):
+            tstamp = datetime.fromisoformat(tstamp)
+        elif tstamp is None:
+            tstamp = datetime.utcnow()
         if not tstamp.tzinfo:
             tstamp = tstamp.replace(tzinfo=ZoneInfo("UTC"))
         self.data["_created_at"] = tstamp
