@@ -68,7 +68,7 @@ class DataEvent(DataEventHeader):
     def get_filename(self, fmt: str = "json", suffix: str = None) -> str:
         filename = self.name
         if suffix is not None:
-            filename += f"_{self.suffix}"
+            filename += f"_{suffix}"
         if self.tstamp_in_path:
             t = self.created_at
             const = {"mus": {"s": 1e-6}, "s": {"ms": 1000}}  # TODO: replace with constants
