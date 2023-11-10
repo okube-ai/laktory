@@ -30,6 +30,7 @@ class DataEvent(DataEventHeader):
     producer: Producer = Field(None, alias="event_producer")
     data: dict
     tstamp_col: str = "created_at"
+    tstamp_in_path: str = True
 
     def model_post_init(self, __context):
         # Add metadata
@@ -54,22 +55,28 @@ class DataEvent(DataEventHeader):
 
     @property
     def dirpath(self) -> str:
-        t = self.created_at
-        return f"{self.event_root}{t.year:04d}/{t.month:02d}/{t.day:02d}/"
+        dirpath = self.event_root
+        if self.tstamp_in_path:
+            t = self.created_at
+            dirpath += f"{t.year:04d}/{t.month:02d}/{t.day:02d}/"
+        return dirpath
 
-    def get_filename(self, fmt="json", suffix=None) -> str:
-        t = self.created_at
-        const = {"mus": {"s": 1e-6}, "s": {"ms": 1000}}  # TODO: replace with constants
-        total_ms = int(
-            (t.second + t.microsecond * const["mus"]["s"]) * const["s"]["ms"]
-        )
-        time_str = f"{t.hour:02d}{t.minute:02d}{total_ms:05d}Z"
-        prefix = self.name
+    def get_filename(self, fmt: str = "json", suffix: str = None) -> str:
+        filename = self.name
         if suffix is not None:
-            prefix += f"_{suffix}"
-        if fmt == "json_stream":
-            fmt = "txt"
-        return f"{prefix}_{t.year:04d}{t.month:02d}{t.day:02d}T{time_str}.{fmt}"
+            filename += f"_{self.suffix}"
+        if self.tstamp_in_path:
+            t = self.created_at
+            const = {"mus": {"s": 1e-6}, "s": {"ms": 1000}}  # TODO: replace with constants
+            total_ms = int(
+                (t.second + t.microsecond * const["mus"]["s"]) * const["s"]["ms"]
+            )
+            time_str = f"{t.hour:02d}{t.minute:02d}{total_ms:05d}Z"
+            filename += f"_{t.year:04d}{t.month:02d}{t.day:02d}T{time_str}"
+
+        filename += f".{fmt}"
+
+        return filename
 
     def get_landing_filepath(self, fmt="json", suffix=None):
         return os.path.join(self.dirpath, self.get_filename(fmt, suffix))
