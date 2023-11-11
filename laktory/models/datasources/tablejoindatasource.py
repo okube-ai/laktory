@@ -24,6 +24,8 @@ class TableJoinDataSource(BaseDataSource):
     def read(self, spark) -> DataFrame:
         import pyspark.sql.functions as F
 
+        logger.info(f"Executing {self.left.name} {self.how} JOIN {self.other.name}")
+
         left = self.left.read(spark)
         other = self.other.read(spark)
 
@@ -56,7 +58,7 @@ class TableJoinDataSource(BaseDataSource):
                 ]
         _join = " AND ".join(_join)
 
-        logger.info(f"on statement: {_join}")
+        logger.info(f"   ON {_join}")
 
         df = left.alias("left").join(
             other=other.alias("other"),
