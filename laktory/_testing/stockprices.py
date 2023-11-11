@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from laktory.models import DataEventHeader
 from laktory.models import DataEvent
 from laktory.models import Producer
@@ -160,12 +162,46 @@ table_slv = Table(
         },
         {"name": "close", "type": "double", "sql_expression": "data.open"},
     ],
-    data=[[None, "AAPL", 1, 2], [None, "AAPL", 3, 4], [None, "AAPL", 5, 6]],
+    data=[
+        ["2023-11-01T00:00:00Z", "AAPL", 1, 2],
+        ["2023-11-01T01:00:00Z", "AAPL", 3, 4],
+        ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
+        ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
+    ],
     zone="SILVER",
     catalog_name="dev",
     schema_name="markets",
     table_source=TableDataSource(
         name="brz_stock_prices",
+    ),
+)
+
+table_meta_slv = Table(
+    name="slv_stock_metadata",
+    columns=[
+        {
+            "name": "symbol",
+            "type": "string",
+        },
+        {
+            "name": "currency",
+            "type": "string",
+        },
+        {
+            "name": "first_traded",
+            "type": "timestamp",
+        },
+    ],
+    data=[
+        ["AAPL", "USD", "1980-12-12T14:30:00.000Z"],
+        ["GOOGL", "USD", "2004-08-19T13:30:00.00Z"],
+        ["AMZN", "USD", "1997-05-15T13:30:00.000Z"],
+    ],
+    zone="SILVER",
+    catalog_name="dev",
+    schema_name="markets",
+    table_source=TableDataSource(
+        name="brz_stock_metadata",
     ),
 )
 

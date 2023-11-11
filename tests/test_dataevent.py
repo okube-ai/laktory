@@ -86,10 +86,11 @@ def test_model_dump():
 def test_event_without_tstamp():
     d = event.model_dump()
     d["tstamp_in_path"] = False
-    e = models.DataEvent(
-        **d
+    e = models.DataEvent(**d)
+    assert (
+        e.get_landing_filepath()
+        == "/Volumes/dev/sources/landing/events/yahoo-finance/stock_price/stock_price.json"
     )
-    assert e.get_landing_filepath() == "/Volumes/dev/sources/landing/events/yahoo-finance/stock_price/stock_price.json"
 
 
 def test_to_azure_storage_container():

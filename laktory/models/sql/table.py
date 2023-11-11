@@ -14,6 +14,7 @@ from laktory.models.sql.column import Column
 from laktory.spark import Column as SparkColumn
 from laktory.models.datasources.tabledatasource import TableDataSource
 from laktory.models.datasources.eventdatasource import EventDataSource
+from laktory.models.datasources.tablejoindatasource import TableJoinDataSource
 from laktory.models.grants.tablegrant import TableGrant
 
 logger = get_logger(__name__)
@@ -31,6 +32,7 @@ class Table(BaseModel):
     primary_key: Union[str, None] = None
     schema_name: Union[str, None] = None
     table_source: Union[TableDataSource, None] = None
+    table_join_source: Union[TableJoinDataSource, None] = None
     timestamp_key: Union[str, None] = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     # joins
@@ -101,12 +103,22 @@ class Table(BaseModel):
 
         return pd.DataFrame(data=self.data, columns=self.column_names)
 
+    def to_df(self, spark=None):
+        import pandas as pd
+        df = pd.DataFrame(data=self.data, columns=self.column_names)
+
+        if spark:
+            df = spark.createDataFrame(df)
+        return df
+
     @property
     def source(self):
         if self.event_source is not None and self.event_source.name is not None:
             return self.event_source
         elif self.table_source is not None and self.table_source.name is not None:
             return self.table_source
+        elif self.table_join_source is not None and self.table_join_source.left is not None:
+            return self.table_join_source
 
     # ----------------------------------------------------------------------- #
     # Pipeline Methods                                                        #

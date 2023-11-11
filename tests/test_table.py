@@ -82,7 +82,12 @@ def test_model():
             },
         ],
         "comment": None,
-        "data": [[None, "AAPL", 1, 2], [None, "AAPL", 3, 4], [None, "AAPL", 5, 6]],
+        "data": [
+            ["2023-11-01T00:00:00Z", "AAPL", 1, 2],
+            ["2023-11-01T01:00:00Z", "AAPL", 3, 4],
+            ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
+            ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
+        ],
         "event_source": None,
         "grants": None,
         "name": "slv_stock_prices",
@@ -96,10 +101,14 @@ def test_model():
             "from_pipeline": True,
             "name": "brz_stock_prices",
             "schema_name": "markets",
+            "watermark": None,
+            "where": None,
         },
+        "table_join_source": None,
         "timestamp_key": None,
         "zone": "SILVER",
     }
+
     assert not table_slv.is_from_cdc
 
     # Invalid zone
@@ -108,17 +117,23 @@ def test_model():
 
 
 def test_data():
-    print(table_slv.df)
-    assert table_slv.df.equals(
-        pd.DataFrame(
-            {
-                "created_at": [None, None, None],
-                "symbol": ["AAPL", "AAPL", "AAPL"],
-                "open": [1, 3, 5],
-                "close": [2, 4, 6],
-            }
-        )
-    )
+    data = table_slv.df.to_dict(orient="records")
+    assert data == [
+        {"created_at": "2023-11-01T00:00:00Z", "symbol": "AAPL", "open": 1, "close": 2},
+        {"created_at": "2023-11-01T01:00:00Z", "symbol": "AAPL", "open": 3, "close": 4},
+        {
+            "created_at": "2023-11-01T00:00:00Z",
+            "symbol": "GOOGL",
+            "open": 3,
+            "close": 4,
+        },
+        {
+            "created_at": "2023-11-01T01:00:00Z",
+            "symbol": "GOOGL",
+            "open": 5,
+            "close": 6,
+        },
+    ]
 
 
 def test_bronze():
@@ -128,6 +143,31 @@ def test_bronze():
 
 
 def test_silver():
+    df0 = manager.to_spark_df()
+    df0.show()
+    df1 = table_brz.process_bronze(df0)
+    df1.show()
+    df2 = table_slv.process_silver(df1)
+    df2.show()
+    assert df2.schema == T.StructType(
+        [
+            T.StructField("created_at", T.TimestampType(), True),
+            T.StructField("symbol", T.StringType(), True),
+            T.StructField("open", T.DoubleType(), True),
+            T.StructField("close", T.DoubleType(), True),
+            T.StructField("_bronze_at", T.TimestampType(), False),
+            T.StructField("_silver_at", T.TimestampType(), False),
+        ]
+    )
+    s = df2.toPandas().iloc[0]
+    print(s)
+    assert s["created_at"] == pd.Timestamp("2023-09-01 00:00:00")
+    assert s["symbol"] == "AAPL"
+    assert s["open"] == 189.49000549316406
+    assert s["close"] == 189.49000549316406
+
+
+def test_silver_star():
     df0 = manager.to_spark_df()
     df0.show()
     df1 = table_brz.process_bronze(df0)
@@ -203,4 +243,5 @@ if __name__ == "__main__":
     test_data()
     test_bronze()
     test_silver()
+    # test_silver_star()
     test_cdc()
