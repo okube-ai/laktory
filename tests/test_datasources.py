@@ -8,7 +8,7 @@ from laktory.models.datasources import TableJoinDataSource
 from laktory._testing import StockPriceDataEventHeader
 from laktory._testing import EventsManager
 from laktory._testing import table_slv
-from laktory._testing import table_meta_slv
+from laktory._testing import df_meta
 
 
 # Build and write events
@@ -70,7 +70,7 @@ def test_table_join_data_source():
         ],
     )
     source.left._df = table_slv.to_df(spark)
-    source.other._df = table_meta_slv.to_df(spark)
+    source.other._df = df_meta
 
     df = source.read(spark)
     data = df.toPandas().to_dict(orient="records")
