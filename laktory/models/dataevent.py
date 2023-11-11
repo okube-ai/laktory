@@ -71,7 +71,10 @@ class DataEvent(DataEventHeader):
             filename += f"_{suffix}"
         if self.tstamp_in_path:
             t = self.created_at
-            const = {"mus": {"s": 1e-6}, "s": {"ms": 1000}}  # TODO: replace with constants
+            const = {
+                "mus": {"s": 1e-6},
+                "s": {"ms": 1000},
+            }  # TODO: replace with constants
             total_ms = int(
                 (t.second + t.microsecond * const["mus"]["s"]) * const["s"]["ms"]
             )

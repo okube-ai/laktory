@@ -100,7 +100,9 @@ def apply_changes(*args, table=None, **kwargs):
             return
         df = table.read_source(spark=spark)
         # TODO: Apply changes
-        logger.warning("Laktory does not currently support applying CDC changes. Returned DataFrame is CDC source.")
+        logger.warning(
+            "Laktory does not currently support applying CDC changes. Returned DataFrame is CDC source."
+        )
         return df
     else:
         return _apply_changes(*args, **kwargs)
@@ -185,7 +187,6 @@ if is_mocked():
             return wrapper
 
         return decorator
-
 
     def create_streaming_table(*args, **kwargs):
         pass

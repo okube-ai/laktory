@@ -85,7 +85,6 @@ class TableDataSource(BaseDataSource):
         return df
 
     def read(self, spark) -> DataFrame:
-
         # This is intended only for unit testing
         if self._df:
             df = self._df

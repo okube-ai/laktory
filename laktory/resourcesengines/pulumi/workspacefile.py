@@ -30,7 +30,9 @@ class PulumiWorkspaceFile(PulumiResourcesEngine):
         )
 
         self.file = databricks.WorkspaceFile(
-            f"workspace-file-{workspace_file.key}", opts=opts, **workspace_file.model_pulumi_dump()
+            f"workspace-file-{workspace_file.key}",
+            opts=opts,
+            **workspace_file.model_pulumi_dump(),
         )
 
         access_controls = []

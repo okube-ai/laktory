@@ -38,6 +38,7 @@ class SparkFuncArg(BaseModel):
 
     def to_spark(self):
         import pyspark.sql.functions as F
+
         v = self.value
         if self.to_column:
             v = F.expr(v)
@@ -141,7 +142,6 @@ class Column(BaseModel):
     def to_spark(
         self, df, udfs: list[Callable[[...], SparkColumn]] = None
     ) -> SparkColumn:
-
         import pyspark.sql.functions as F
         from laktory.spark import functions as LF
         from laktory.spark.dataframe import has_column

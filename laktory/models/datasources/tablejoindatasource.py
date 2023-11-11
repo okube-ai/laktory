@@ -22,7 +22,6 @@ class TableJoinDataSource(BaseDataSource):
     # ----------------------------------------------------------------------- #
 
     def read(self, spark) -> DataFrame:
-
         import pyspark.sql.functions as F
 
         left = self.left.read(spark)
@@ -48,9 +47,13 @@ class TableJoinDataSource(BaseDataSource):
             _join += [f"left.{c} == other.{c}"]
         if self.other.watermark is not None:
             if self.time_constraint_interval_lower:
-                _join += [f"left.{self.left.watermark.column} >= other._other_wc - interval {self.time_constraint_interval_lower}"]
+                _join += [
+                    f"left.{self.left.watermark.column} >= other._other_wc - interval {self.time_constraint_interval_lower}"
+                ]
             if self.time_constraint_interval_upper:
-                _join += [f"left.{self.left.watermark.column} <= other._other_wc + interval {self.time_constraint_interval_upper}"]
+                _join += [
+                    f"left.{self.left.watermark.column} <= other._other_wc + interval {self.time_constraint_interval_upper}"
+                ]
         _join = " AND ".join(_join)
 
         logger.info(f"on statement: {_join}")

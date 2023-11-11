@@ -44,7 +44,6 @@ class Table(BaseModel):
 
     @model_validator(mode="after")
     def assign_catalog_schema(self) -> Any:
-
         # Assign to columns
         for c in self.columns:
             c.table_name = self.name
@@ -105,6 +104,7 @@ class Table(BaseModel):
 
     def to_df(self, spark=None):
         import pandas as pd
+
         df = pd.DataFrame(data=self.data, columns=self.column_names)
 
         if spark:
@@ -117,7 +117,10 @@ class Table(BaseModel):
             return self.event_source
         elif self.table_source is not None and self.table_source.name is not None:
             return self.table_source
-        elif self.table_join_source is not None and self.table_join_source.left is not None:
+        elif (
+            self.table_join_source is not None
+            and self.table_join_source.left is not None
+        ):
             return self.table_join_source
 
     # ----------------------------------------------------------------------- #
@@ -146,7 +149,6 @@ class Table(BaseModel):
     def process_silver(
         self, df, udfs: list[Callable[[...], SparkColumn]] = None
     ) -> DataFrame:
-
         from laktory.spark.dataframe import has_column
 
         logger.info(f"Applying silver transformations")
