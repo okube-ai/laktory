@@ -1,8 +1,15 @@
 # Release History
 
 ## [0.0.17] - 
+
+**Fixed**
+- Data Event model to support timestamp from string
+
 **Added**
 - Option to exclude timestamp from data event filepath
+- Columns, filter, watermark options for TableDataSource
+- Support for joins in Table model
+- Silver Star processing function
 
 ## [0.0.16] - 2023-11-08
 **Added**
