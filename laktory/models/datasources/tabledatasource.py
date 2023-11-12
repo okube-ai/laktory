@@ -29,14 +29,15 @@ class TableDataSourceCDC(BaseModel):
 
 
 class TableDataSource(BaseDataSource):
+    _df: Any = None
     catalog_name: Union[str, None] = None
     cdc: Union[TableDataSourceCDC, None] = None
+    columns: Union[list[str], dict[str, str], None] = None
+    filter: Union[str, None] = None
     from_pipeline: Union[bool, None] = True
     name: Union[str, None]
     schema_name: Union[str, None] = None
     watermark: Union[Watermark, None] = None
-    filter: Union[str, None] = None
-    _df: Any = None
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -85,6 +86,9 @@ class TableDataSource(BaseDataSource):
         return df
 
     def read(self, spark) -> DataFrame:
+
+        import pyspark.sql.functions as F
+
         # This is intended only for unit testing
         if self._df:
             df = self._df
@@ -94,6 +98,15 @@ class TableDataSource(BaseDataSource):
         # Apply filter
         if self.filter:
             df = df.filter(self.filter)
+
+        # Columns
+        cols = []
+        if self.columns:
+            if isinstance(self.columns, list):
+                cols += [F.col(c) for c in self.columns]
+            elif isinstance(self.columns, dict):
+                cols += [F.col(k).alias(v) for k, v in self.columns.items()]
+            df = df.select(cols)
 
         # Apply Watermark
         if self.watermark:

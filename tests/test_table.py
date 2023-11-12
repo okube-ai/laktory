@@ -2,6 +2,7 @@ from pydantic import ValidationError
 from pyspark.sql import types as T
 from pyspark.sql import SparkSession
 import pandas as pd
+from pandas import Timestamp
 import pytest
 
 from laktory._testing import EventsManager
@@ -21,100 +22,7 @@ spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 
 def test_model():
     print(table_slv.model_dump())
-    assert table_slv.model_dump() == {
-        "catalog_name": "dev",
-        "columns": [
-            {
-                "catalog_name": "dev",
-                "comment": None,
-                "name": "created_at",
-                "pii": None,
-                "schema_name": "markets",
-                "spark_func_args": [
-                    {"value": "_created_at", "to_column": True, "to_lit": False},
-                    {"value": "data._created_at", "to_column": True, "to_lit": False},
-                ],
-                "spark_func_kwargs": {},
-                "spark_func_name": "coalesce",
-                "sql_expression": None,
-                "table_name": "slv_stock_prices",
-                "type": "timestamp",
-                "unit": None,
-            },
-            {
-                "catalog_name": "dev",
-                "comment": None,
-                "name": "symbol",
-                "pii": None,
-                "schema_name": "markets",
-                "spark_func_args": [
-                    {"value": "data.symbol", "to_column": True, "to_lit": False}
-                ],
-                "spark_func_kwargs": {},
-                "spark_func_name": "coalesce",
-                "sql_expression": None,
-                "table_name": "slv_stock_prices",
-                "type": "string",
-                "unit": None,
-            },
-            {
-                "catalog_name": "dev",
-                "comment": None,
-                "name": "open",
-                "pii": None,
-                "schema_name": "markets",
-                "spark_func_args": [
-                    {"value": "data.open", "to_column": True, "to_lit": False}
-                ],
-                "spark_func_kwargs": {},
-                "spark_func_name": "coalesce",
-                "sql_expression": None,
-                "table_name": "slv_stock_prices",
-                "type": "double",
-                "unit": None,
-            },
-            {
-                "catalog_name": "dev",
-                "comment": None,
-                "name": "close",
-                "pii": None,
-                "schema_name": "markets",
-                "spark_func_args": [],
-                "spark_func_kwargs": {},
-                "spark_func_name": None,
-                "sql_expression": "data.open",
-                "table_name": "slv_stock_prices",
-                "type": "double",
-                "unit": None,
-            },
-        ],
-        "comment": None,
-        "data": [
-            ["2023-11-01T00:00:00Z", "AAPL", 1, 2],
-            ["2023-11-01T01:00:00Z", "AAPL", 3, 4],
-            ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
-            ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
-        ],
-        "event_source": None,
-        "grants": None,
-        "name": "slv_stock_prices",
-        "pipeline_name": None,
-        "primary_key": None,
-        "schema_name": "markets",
-        "table_source": {
-            "read_as_stream": True,
-            "catalog_name": "dev",
-            "cdc": None,
-            "from_pipeline": True,
-            "name": "brz_stock_prices",
-            "schema_name": "markets",
-            "watermark": None,
-            "where": None,
-        },
-        "table_join_source": None,
-        "timestamp_key": None,
-        "zone": "SILVER",
-    }
+    assert table_slv.model_dump() == {'catalog_name': 'dev', 'columns': [{'catalog_name': 'dev', 'comment': None, 'name': 'created_at', 'pii': None, 'schema_name': 'markets', 'spark_func_args': [{'value': '_created_at', 'to_column': True, 'to_lit': False}, {'value': 'data._created_at', 'to_column': True, 'to_lit': False}], 'spark_func_kwargs': {}, 'spark_func_name': 'coalesce', 'sql_expression': None, 'table_name': 'slv_stock_prices', 'type': 'timestamp', 'unit': None}, {'catalog_name': 'dev', 'comment': None, 'name': 'symbol', 'pii': None, 'schema_name': 'markets', 'spark_func_args': [{'value': 'data.symbol', 'to_column': True, 'to_lit': False}], 'spark_func_kwargs': {}, 'spark_func_name': 'coalesce', 'sql_expression': None, 'table_name': 'slv_stock_prices', 'type': 'string', 'unit': None}, {'catalog_name': 'dev', 'comment': None, 'name': 'open', 'pii': None, 'schema_name': 'markets', 'spark_func_args': [{'value': 'data.open', 'to_column': True, 'to_lit': False}], 'spark_func_kwargs': {}, 'spark_func_name': 'coalesce', 'sql_expression': None, 'table_name': 'slv_stock_prices', 'type': 'double', 'unit': None}, {'catalog_name': 'dev', 'comment': None, 'name': 'close', 'pii': None, 'schema_name': 'markets', 'spark_func_args': [], 'spark_func_kwargs': {}, 'spark_func_name': None, 'sql_expression': 'data.open', 'table_name': 'slv_stock_prices', 'type': 'double', 'unit': None}], 'comment': None, 'data': [['2023-11-01T00:00:00Z', 'AAPL', 1, 2], ['2023-11-01T01:00:00Z', 'AAPL', 3, 4], ['2023-11-01T00:00:00Z', 'GOOGL', 3, 4], ['2023-11-01T01:00:00Z', 'GOOGL', 5, 6]], 'event_source': None, 'grants': None, 'joins': [], 'name': 'slv_stock_prices', 'pipeline_name': None, 'primary_key': None, 'schema_name': 'markets', 'table_source': {'read_as_stream': True, 'catalog_name': 'dev', 'cdc': None, 'from_pipeline': True, 'name': 'brz_stock_prices', 'schema_name': 'markets', 'watermark': None, 'filter': None}, 'timestamp_key': None, 'zone': 'SILVER'}
 
     assert not table_slv.is_from_cdc
 
@@ -182,13 +90,13 @@ def test_table_join():
         },
         other={
             "name": "slv_stock_metadata",
+            "columns": {
+                "symbol2": "symbol",
+                "currency": "currency",
+                "first_traded": "first_traded",
+            },
         },
         on=["symbol"],
-        columns=[
-            "symbol",
-            "currency",
-            "first_traded",
-        ],
     )
     join.left._df = table_slv.to_df(spark)
     join.other._df = df_meta
@@ -218,18 +126,19 @@ def test_table_join():
 
 def test_silver_star():
     df = table_slv_star.read_source(spark)
-    df.show()
-    df = table_slv_star.process_silver_star(df, spark)
-    df.show()
-    data = df.toPandas().to_dict("records")
+    df = table_slv_star.process_silver_star(df, spark=spark)
+    assert "_silver_star_at" in df.columns
+    data = df.toPandas().drop("_silver_star_at", axis=1).to_dict("records")
+    print(data)
     assert data == [
         {
             "created_at": "2023-11-01T00:00:00Z",
             "symbol": "AAPL",
             "open": 1,
             "close": 2,
+            "symbol3": "AAPL",
             "currency": "USD",
-            "first_traded": "1980-12-12T14:30:00.000Z",
+            "last_traded": "1980-12-12T14:30:00.000Z",
             "name": "Apple",
         },
         {
@@ -237,8 +146,9 @@ def test_silver_star():
             "symbol": "GOOGL",
             "open": 3,
             "close": 4,
+            "symbol3": "GOOGL",
             "currency": "USD",
-            "first_traded": "2004-08-19T13:30:00.00Z",
+            "last_traded": "2004-08-19T13:30:00.00Z",
             "name": "Google",
         },
     ]
@@ -291,10 +201,10 @@ def test_cdc():
 
 
 if __name__ == "__main__":
-    # test_model()
-    # test_data()
-    # test_bronze()
-    # test_silver()
-    # test_table_join()
+    test_model()
+    test_data()
+    test_bronze()
+    test_silver()
+    test_table_join()
     test_silver_star()
-    # test_cdc()
+    test_cdc()

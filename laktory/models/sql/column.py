@@ -140,7 +140,10 @@ class Column(BaseModel):
     # ----------------------------------------------------------------------- #
 
     def to_spark(
-        self, df, udfs: list[Callable[[...], SparkColumn]] = None
+        self,
+            df,
+            udfs: list[Callable[[...], SparkColumn]] = None,
+            raise_exception: bool = True
     ) -> SparkColumn:
         import pyspark.sql.functions as F
         from laktory.spark import functions as LF
@@ -211,9 +214,13 @@ class Column(BaseModel):
             args += [_arg.to_spark()]
 
         if expected_cols > 0 and found_cols == 0:
-            raise ValueError(
-                f"None of the inputs columns ({_args}) for {self.name} have been found"
-            )
+            if raise_exception:
+                raise ValueError(
+                    f"None of the inputs columns ({_args}) for {self.name} have been found"
+                )
+            else:
+                logger.info("Input columns not available. Skipping")
+                return None
 
         # Build kwargs
         kwargs = {}

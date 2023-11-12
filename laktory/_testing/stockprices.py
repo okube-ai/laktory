@@ -180,7 +180,7 @@ table_slv = Table(
 df_meta = spark.createDataFrame(
     pd.DataFrame(
         {
-            "symbol": ["AAPL", "GOOGL", "AMZN"],
+            "symbol2": ["AAPL", "GOOGL", "AMZN"],
             "currency": ["USD"] * 3,
             "first_traded": [
                 "1980-12-12T14:30:00.000Z",
@@ -193,7 +193,7 @@ df_meta = spark.createDataFrame(
 
 df_name = spark.createDataFrame(
     pd.DataFrame(
-        {"symbol": ["AAPL", "GOOGL", "AMZN"], "name": ["Apple", "Google", "Amazon"]}
+        {"symbol3": ["AAPL", "GOOGL", "AMZN"], "name": ["Apple", "Google", "Amazon"]}
     )
 )
 
@@ -211,25 +211,32 @@ table_slv_star = Table(
         {
             "other": {
                 "name": "slv_stock_metadata",
+                "columns": {
+                    "symbol2": "symbol",
+                    "currency": "currency",
+                    "first_traded": "last_traded",
+                },
             },
             "on": ["symbol"],
-            "columns": [
-                "symbol",
-                "currency",
-                "first_traded",
-            ],
         },
         {
             "other": {
                 "name": "slv_stock_names",
+                "columns": [
+                    "symbol3",
+                    "name",
+                ],
             },
-            "on": ["symbol"],
-            "columns": [
-                "symbol",
-                "name",
-            ],
+            "on": ["symbol3"],
         },
     ],
+    columns=[
+        {
+            "name": "symbol3",
+            "spark_func_name": "coalesce",
+            "spark_func_args": ["symbol"]
+        }
+    ]
 )
 table_slv_star.source._df = table_slv.to_df(spark=spark)
 table_slv_star.joins[0].other._df = df_meta

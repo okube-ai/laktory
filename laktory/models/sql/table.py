@@ -35,6 +35,7 @@ class Table(BaseModel):
     table_source: Union[TableDataSource, None] = None
     timestamp_key: Union[str, None] = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
+    _columns_to_build = []
     # joins
     # expectations
 
@@ -122,39 +123,23 @@ class Table(BaseModel):
     # Pipeline Methods                                                        #
     # ----------------------------------------------------------------------- #
 
-    @property
-    def is_from_cdc(self):
-        if self.source is None:
-            return False
-        else:
-            return self.source.is_cdc
+    def get_bronze_columns(self):
+        return [
+             Column(
+                    **{
+                        "name": "_bronze_at",
+                        "type": "timestamp",
+                        "spark_func_name": "current_timestamp",
+                    }
+                )
+        ]
 
-    def read_source(self, spark) -> DataFrame:
-        return self.source.read(spark)
-
-    def process_bronze(self, df) -> DataFrame:
-        import pyspark.sql.functions as F
-
-        logger.info(f"Applying bronze transformations")
-
-        df = df.withColumn("_bronze_at", F.current_timestamp())
-
-        return df
-
-    def process_silver(
-        self, df, udfs: list[Callable[[...], SparkColumn]] = None
-    ) -> DataFrame:
+    def get_silver_columns(self, df):
         from laktory.spark.dataframe import has_column
+        cols = []
 
-        logger.info(f"Applying silver transformations")
-
-        columns = []
-
-        # User defined columns
-        columns += self.columns
-
-        if self.timestamp_key is not None:
-            columns += [
+        if self.timestamp_key:
+            cols += [
                 Column(
                     **{
                         "name": "_tstamp",
@@ -165,9 +150,8 @@ class Table(BaseModel):
                 )
             ]
 
-        # Timestamps
         if has_column(df, "_bronze_at"):
-            columns += [
+            cols += [
                 Column(
                     **{
                         "name": "_bronze_at",
@@ -177,7 +161,8 @@ class Table(BaseModel):
                     }
                 )
             ]
-        columns += [
+
+        cols += [
             Column(
                 **{
                     "name": "_silver_at",
@@ -187,31 +172,72 @@ class Table(BaseModel):
             )
         ]
 
-        # Saved existing column names
-        cols0 = [v[0] for v in df.dtypes]
+        return cols
 
-        # Build new columns
-        logger.info(f"Setting silver columns...")
-        new_col_names = []
-        for col in columns:
-            # Add to list
-            new_col_names += [col.name]
+    def get_silver_star_columns(self):
+        return [
+            Column(
+                **{
+                    "name": "_silver_star_at",
+                    "type": "timestamp",
+                    "spark_func_name": "current_timestamp",
+                }
+            )
+        ]
 
-            # Set
-            df = df.withColumn(col.name, col.to_spark(df, udfs=udfs))
+    @property
+    def is_from_cdc(self):
+        if self.source is None:
+            return False
+        else:
+            return self.source.is_cdc
 
-            # Remove from drop list
-            if col.name in cols0:
-                cols0.remove(col.name)
+    def read_source(self, spark) -> DataFrame:
+        return self.source.read(spark)
+
+    def build_columns(self, df, udfs=None, raise_exception=True) -> DataFrame:
+        logger.info(f"Setting columns...")
+        built_cols = []
+        for col in self._columns_to_build:
+            print("col...", col.name, [c.name for c in self._columns_to_build])
+            c = col.to_spark(df, udfs=udfs, raise_exception=raise_exception)
+            if c is not None:
+                df = df.withColumn(col.name, c)
+                built_cols += [col]
+
+        for c in built_cols:
+            self._columns_to_build.remove(c)
+
+        return df
+
+    def process_bronze(self, df) -> DataFrame:
+        logger.info(f"Applying bronze transformations")
+
+        # Build columns
+        self._columns_to_build = self.columns + self.get_bronze_columns()
+        df = self.build_columns(df)
+
+        return df
+
+    def process_silver(
+            self,
+            df,
+            udfs: list[Callable[[...], SparkColumn]] = None
+    ) -> DataFrame:
+
+        logger.info(f"Applying silver transformations")
+
+        # Build columns
+        self._columns_to_build = self.columns + self.get_silver_columns(df)
+        print("columns to buid", [c.name for c in self._columns_to_build])
+        column_names = [c.name for c in self._columns_to_build]
+        df = self.build_columns(df, udfs=udfs)
 
         # Drop previous columns
         logger.info(f"Dropping bronze columns...")
-        df = df.select(new_col_names)
+        df = df.select(column_names)
 
-        # ------------------------------------------------------------------- #
-        # Drop duplicates                                                     #
-        # ------------------------------------------------------------------- #
-
+        # Drop duplicates
         pk = self.primary_key
         if pk:
             logger.info(f"Removing duplicates with {pk}")
@@ -219,14 +245,31 @@ class Table(BaseModel):
 
         return df
 
-    def process_silver_star(self, df, spark) -> DataFrame:
+    def process_silver_star(
+            self,
+            df,
+            udfs: list[Callable[[...], SparkColumn]] = None,
+            spark: Any = None
+    ) -> DataFrame:
+
+        logger.info(f"Applying silver star transformations")
+
+        # Build columns
+        self._columns_to_build = self.columns + self.get_silver_star_columns()
+        df = self.build_columns(df, udfs=udfs, raise_exception=False)
+
         for i, join in enumerate(self.joins):
             join.left = self.source
             join.left._df = df
             # TODO: Review if required / desirable
             if i > 0:
                 join.left.watermark = self.joins[i - 1].other.watermark
+            print("SPARK!!", spark)
             df = join.run(spark)
+            df.printSchema()
+
+            # Build columns
+            df = self.build_columns(df, udfs=udfs, raise_exception=i == len(self.joins)-1)
 
         return df
 
