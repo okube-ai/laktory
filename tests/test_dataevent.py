@@ -59,6 +59,7 @@ def test_model_dump():
             "_created_at": "2023-09-01T00:00:00Z",
         },
         "tstamp_col": "created_at",
+        "tstamp_in_path": True,
     }
 
     # With exclusions
