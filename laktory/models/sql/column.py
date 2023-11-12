@@ -141,9 +141,9 @@ class Column(BaseModel):
 
     def to_spark(
         self,
-            df,
-            udfs: list[Callable[[...], SparkColumn]] = None,
-            raise_exception: bool = True
+        df,
+        udfs: list[Callable[[...], SparkColumn]] = None,
+        raise_exception: bool = True,
     ) -> SparkColumn:
         import pyspark.sql.functions as F
         from laktory.spark import functions as LF

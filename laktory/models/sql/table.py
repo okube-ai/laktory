@@ -125,17 +125,18 @@ class Table(BaseModel):
 
     def get_bronze_columns(self):
         return [
-             Column(
-                    **{
-                        "name": "_bronze_at",
-                        "type": "timestamp",
-                        "spark_func_name": "current_timestamp",
-                    }
-                )
+            Column(
+                **{
+                    "name": "_bronze_at",
+                    "type": "timestamp",
+                    "spark_func_name": "current_timestamp",
+                }
+            )
         ]
 
     def get_silver_columns(self, df):
         from laktory.spark.dataframe import has_column
+
         cols = []
 
         if self.timestamp_key:
@@ -220,11 +221,8 @@ class Table(BaseModel):
         return df
 
     def process_silver(
-            self,
-            df,
-            udfs: list[Callable[[...], SparkColumn]] = None
+        self, df, udfs: list[Callable[[...], SparkColumn]] = None
     ) -> DataFrame:
-
         logger.info(f"Applying silver transformations")
 
         # Build columns
@@ -246,12 +244,8 @@ class Table(BaseModel):
         return df
 
     def process_silver_star(
-            self,
-            df,
-            udfs: list[Callable[[...], SparkColumn]] = None,
-            spark: Any = None
+        self, df, udfs: list[Callable[[...], SparkColumn]] = None, spark: Any = None
     ) -> DataFrame:
-
         logger.info(f"Applying silver star transformations")
 
         # Build columns
@@ -269,7 +263,9 @@ class Table(BaseModel):
             df.printSchema()
 
             # Build columns
-            df = self.build_columns(df, udfs=udfs, raise_exception=i == len(self.joins)-1)
+            df = self.build_columns(
+                df, udfs=udfs, raise_exception=i == len(self.joins) - 1
+            )
 
         return df
 

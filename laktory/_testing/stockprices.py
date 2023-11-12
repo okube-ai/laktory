@@ -234,9 +234,9 @@ table_slv_star = Table(
         {
             "name": "symbol3",
             "spark_func_name": "coalesce",
-            "spark_func_args": ["symbol"]
+            "spark_func_args": ["symbol"],
         }
-    ]
+    ],
 )
 table_slv_star.source._df = table_slv.to_df(spark=spark)
 table_slv_star.joins[0].other._df = df_meta

@@ -86,7 +86,6 @@ class TableDataSource(BaseDataSource):
         return df
 
     def read(self, spark) -> DataFrame:
-
         import pyspark.sql.functions as F
 
         # This is intended only for unit testing
