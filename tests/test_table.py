@@ -1,15 +1,22 @@
 from pydantic import ValidationError
 from pyspark.sql import types as T
+from pyspark.sql import SparkSession
 import pandas as pd
 import pytest
 
-from laktory.models import Table
+from laktory._testing import EventsManager
+from laktory._testing import df_meta
 from laktory._testing import table_brz
 from laktory._testing import table_slv
-from laktory._testing import EventsManager
+from laktory._testing import table_slv_star
+from laktory.models import Table
+from laktory.models import TableJoin
 
 manager = EventsManager()
 manager.build_events()
+
+# Spark
+spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 
 
 def test_model():
@@ -165,6 +172,48 @@ def test_silver():
     assert s["symbol"] == "AAPL"
     assert s["open"] == 189.49000549316406
     assert s["close"] == 189.49000549316406
+
+
+def test_table_join():
+    join = TableJoin(
+        left={
+            "name": "slv_stock_prices",
+            "filter": "created_at = '2023-11-01T00:00:00Z'",
+        },
+        other={
+            "name": "slv_stock_metadata",
+        },
+        on=["symbol"],
+        columns=[
+            "symbol",
+            "currency",
+            "first_traded",
+        ],
+    )
+    join.left._df = table_slv.to_df(spark)
+    join.other._df = df_meta
+
+    df = join.run(spark)
+    data = df.toPandas().to_dict(orient="records")
+    print(data)
+    assert data == [
+        {
+            "created_at": "2023-11-01T00:00:00Z",
+            "symbol": "AAPL",
+            "open": 1,
+            "close": 2,
+            "currency": "USD",
+            "first_traded": "1980-12-12T14:30:00.000Z",
+        },
+        {
+            "created_at": "2023-11-01T00:00:00Z",
+            "symbol": "GOOGL",
+            "open": 3,
+            "close": 4,
+            "currency": "USD",
+            "first_traded": "2004-08-19T13:30:00.00Z",
+        },
+    ]
 
 
 def test_silver_star():
