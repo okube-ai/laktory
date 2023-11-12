@@ -20,6 +20,7 @@ EXCLUDES = [
     "events_root",
     "event_path",
     "tstamp_col",
+    "tstamp_in_path",
 ]
 
 
