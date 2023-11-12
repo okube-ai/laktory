@@ -217,28 +217,31 @@ def test_table_join():
 
 
 def test_silver_star():
-    df0 = manager.to_spark_df()
-    df0.show()
-    df1 = table_brz.process_bronze(df0)
-    df1.show()
-    df2 = table_slv.process_silver(df1)
-    df2.show()
-    assert df2.schema == T.StructType(
-        [
-            T.StructField("created_at", T.TimestampType(), True),
-            T.StructField("symbol", T.StringType(), True),
-            T.StructField("open", T.DoubleType(), True),
-            T.StructField("close", T.DoubleType(), True),
-            T.StructField("_bronze_at", T.TimestampType(), False),
-            T.StructField("_silver_at", T.TimestampType(), False),
-        ]
-    )
-    s = df2.toPandas().iloc[0]
-    print(s)
-    assert s["created_at"] == pd.Timestamp("2023-09-01 00:00:00")
-    assert s["symbol"] == "AAPL"
-    assert s["open"] == 189.49000549316406
-    assert s["close"] == 189.49000549316406
+    df = table_slv_star.read_source(spark)
+    df.show()
+    df = table_slv_star.process_silver_star(df, spark)
+    df.show()
+    data = df.toPandas().to_dict("records")
+    assert data == [
+        {
+            "created_at": "2023-11-01T00:00:00Z",
+            "symbol": "AAPL",
+            "open": 1,
+            "close": 2,
+            "currency": "USD",
+            "first_traded": "1980-12-12T14:30:00.000Z",
+            "name": "Apple",
+        },
+        {
+            "created_at": "2023-11-01T00:00:00Z",
+            "symbol": "GOOGL",
+            "open": 3,
+            "close": 4,
+            "currency": "USD",
+            "first_traded": "2004-08-19T13:30:00.00Z",
+            "name": "Google",
+        },
+    ]
 
 
 def test_cdc():
@@ -288,9 +291,10 @@ def test_cdc():
 
 
 if __name__ == "__main__":
-    test_model()
-    test_data()
-    test_bronze()
-    test_silver()
-    # test_silver_star()
-    test_cdc()
+    # test_model()
+    # test_data()
+    # test_bronze()
+    # test_silver()
+    # test_table_join()
+    test_silver_star()
+    # test_cdc()
