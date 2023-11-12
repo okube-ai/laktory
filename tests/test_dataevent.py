@@ -81,7 +81,6 @@ def test_model_dump():
             "_producer_name": "yahoo-finance",
             "_created_at": "2023-09-01T00:00:00Z",
         },
-        "tstamp_in_path": True,
     }
 
 
