@@ -221,11 +221,11 @@ class Table(BaseModel):
 
     def process_silver_star(self, df, spark) -> DataFrame:
         for i, join in enumerate(self.joins):
-            if i == 0:
-                join.left = self.source
-            else:
-                join.left = self.joins[i - 1].other
+            join.left = self.source
             join.left._df = df
+            # TODO: Review if required / desirable
+            if i > 0:
+                join.left.watermark = self.joins[i - 1].other.watermark
             df = join.run(spark)
 
         return df
