@@ -14,8 +14,8 @@ from laktory.models.sql.column import Column
 from laktory.spark import Column as SparkColumn
 from laktory.models.datasources.tabledatasource import TableDataSource
 from laktory.models.datasources.eventdatasource import EventDataSource
-from laktory.models.datasources.tablejoindatasource import TableJoinDataSource
 from laktory.models.grants.tablegrant import TableGrant
+from laktory.models.sql.tablejoin import TableJoin
 
 logger = get_logger(__name__)
 
@@ -27,12 +27,12 @@ class Table(BaseModel):
     data: list[list[Any]] = None
     event_source: Union[EventDataSource, None] = None
     grants: list[TableGrant] = None
+    joins: list[TableJoin] = []
     name: str
     pipeline_name: Union[str, None] = None
     primary_key: Union[str, None] = None
     schema_name: Union[str, None] = None
     table_source: Union[TableDataSource, None] = None
-    table_join_source: Union[TableJoinDataSource, None] = None
     timestamp_key: Union[str, None] = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     # joins
@@ -117,11 +117,6 @@ class Table(BaseModel):
             return self.event_source
         elif self.table_source is not None and self.table_source.name is not None:
             return self.table_source
-        elif (
-            self.table_join_source is not None
-            and self.table_join_source.left is not None
-        ):
-            return self.table_join_source
 
     # ----------------------------------------------------------------------- #
     # Pipeline Methods                                                        #
@@ -212,14 +207,6 @@ class Table(BaseModel):
         # Drop previous columns
         logger.info(f"Dropping bronze columns...")
         df = df.select(new_col_names)
-
-        # ------------------------------------------------------------------- #
-        # Setting Watermark                                                   #
-        # ------------------------------------------------------------------- #
-
-        # TODO:
-        # if watermark is not None:
-        #     sdf = sdf.withWatermark(watermark["column"], watermark["threshold"])
 
         # ------------------------------------------------------------------- #
         # Drop duplicates                                                     #
