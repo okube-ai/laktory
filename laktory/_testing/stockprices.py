@@ -177,16 +177,25 @@ table_slv = Table(
     ),
 )
 
-df_meta = spark.createDataFrame(pd.DataFrame({
-    "symbol": ["AAPL", "GOOGL", "AMZN"],
-    "currency": ["USD"]*3,
-    "first_traded": ["1980-12-12T14:30:00.000Z", "2004-08-19T13:30:00.00Z", "1997-05-15T13:30:00.000Z"]
-}))
+df_meta = spark.createDataFrame(
+    pd.DataFrame(
+        {
+            "symbol": ["AAPL", "GOOGL", "AMZN"],
+            "currency": ["USD"] * 3,
+            "first_traded": [
+                "1980-12-12T14:30:00.000Z",
+                "2004-08-19T13:30:00.00Z",
+                "1997-05-15T13:30:00.000Z",
+            ],
+        }
+    )
+)
 
-df_name = spark.createDataFrame(pd.DataFrame({
-    "symbol": ["AAPL", "GOOGL", "AMZN"],
-    "name": ["Apple", "Google", "Amazon"]
-}))
+df_name = spark.createDataFrame(
+    pd.DataFrame(
+        {"symbol": ["AAPL", "GOOGL", "AMZN"], "name": ["Apple", "Google", "Amazon"]}
+    )
+)
 
 
 table_slv_star = Table(
@@ -194,12 +203,12 @@ table_slv_star = Table(
     zone="SILVER_STAR",
     catalog_name="dev",
     schema_name="markets",
-    table_join_sources=[
+    table_source={
+        "name": "slv_stock_prices",
+        "filter": "created_at = '2023-11-01T00:00:00Z'",
+    },
+    joins=[
         {
-            "left": {
-                "name": "slv_stock_prices",
-                "filter": "created_at = '2023-11-01T00:00:00Z'",
-            },
             "other": {
                 "name": "slv_stock_metadata",
             },
@@ -219,12 +228,12 @@ table_slv_star = Table(
                 "symbol",
                 "name",
             ],
-        }
-    ]
+        },
+    ],
 )
-table_slv_star.table_join_sources[0].left._df = table_slv.to_df(spark=spark)
-table_slv_star.table_join_sources[0].other._df = df_meta
-table_slv_star.table_join_sources[1].other._df = df_name
+table_slv_star.source._df = table_slv.to_df(spark=spark)
+table_slv_star.joins[0].other._df = df_meta
+table_slv_star.joins[1].other._df = df_name
 
 
 # --------------------------------------------------------------------------- #

@@ -219,7 +219,15 @@ class Table(BaseModel):
 
         return df
 
-    def process_silver_star(self, df) -> DataFrame:
+    def process_silver_star(self, df, spark) -> DataFrame:
+        for i, join in enumerate(self.joins):
+            if i == 0:
+                join.left = self.source
+            else:
+                join.left = self.joins[i - 1].other
+            join.left._df = df
+            df = join.run(spark)
+
         return df
 
     @property
