@@ -173,6 +173,7 @@ class TableBuilder(BaseModel):
 
         # Make joins
         for i, join in enumerate(self.joins):
+            print(df)
             join.left = TableDataSource(name=self.source.name)
             join.left._df = df
             df = join.run(spark)
