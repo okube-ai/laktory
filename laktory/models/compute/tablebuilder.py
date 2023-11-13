@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 
 class TableBuilder(BaseModel):
     drop_source_columns: Union[bool, None] = None
+    drop_duplicates: Union[bool, None] = None
     event_source: Union[EventDataSource, None] = None
     joins: list[TableJoin] = []
     pipeline_name: Union[str, None] = None
@@ -30,16 +31,22 @@ class TableBuilder(BaseModel):
     def default_options(self) -> Any:
         # Default values
         if self.zone == "BRONZE":
-            if self.drop_source_columns is not None:
+            if self.drop_source_columns is None:
                 self.drop_source_columns = False
+            if self.drop_duplicates is not None:
+                self.drop_duplicates = False
 
         if self.zone == "SILVER":
-            if self.drop_source_columns is not None:
+            if self.drop_source_columns is None:
                 self.drop_source_columns = True
+            if self.drop_duplicates is not None:
+                self.drop_duplicates = True
 
         if self.zone == "SILVER_STAR":
-            if self.drop_source_columns is not None:
+            if self.drop_source_columns is None:
                 self.drop_source_columns = False
+            if self.drop_duplicates is not None:
+                self.drop_duplicates = False
 
         return self
 
@@ -68,6 +75,10 @@ class TableBuilder(BaseModel):
     @property
     def primary_key(self):
         return self._table.primary_key
+
+    @property
+    def has_joins(self):
+        return len(self.joins) > 0
 
     def get_zone_columns(self, zone, df=None):
         from laktory.spark.dataframe import has_column
@@ -150,50 +161,15 @@ class TableBuilder(BaseModel):
 
         return df
 
-    def process_bronze(self, df) -> DataFrame:
-        logger.info(f"Applying bronze transformations")
+    def process(self, df, udfs=None, spark=None) -> DataFrame:
+        logger.info(f"Applying {self.zone} transformations")
 
         # Build columns
-        self._columns_to_build = self.columns + self.get_zone_columns(zone="BRONZE")
-        df = self.build_columns(df)
-
-        return df
-
-    def process_silver(
-        self, df, udfs: list[Callable[[...], SparkColumn]] = None
-    ) -> DataFrame:
-        logger.info(f"Applying silver transformations")
-
-        # Build columns
-        self._columns_to_build = self.columns + self.get_zone_columns(
-            zone="SILVER", df=df
-        )
+        self._columns_to_build = self.columns + self.get_zone_columns(zone=self.zone, df=df)
         column_names = [c.name for c in self._columns_to_build]
-        df = self.build_columns(df, udfs=udfs)
+        df = self.build_columns(df, udfs=udfs, raise_exception=not self.has_joins)
 
-        # Drop previous columns
-        logger.info(f"Dropping bronze columns...")
-        df = df.select(column_names)
-
-        # Drop duplicates
-        pk = self.primary_key
-        if pk:
-            logger.info(f"Removing duplicates with {pk}")
-            df = df.dropDuplicates([pk])
-
-        return df
-
-    def process_silver_star(
-        self, df, udfs: list[Callable[[...], SparkColumn]] = None, spark: Any = None
-    ) -> DataFrame:
-        logger.info(f"Applying silver star transformations")
-
-        # Build columns
-        self._columns_to_build = self.columns + self.get_zone_columns(
-            zone="SILVER_STAR"
-        )
-        df = self.build_columns(df, udfs=udfs, raise_exception=False)
-
+        # Make joins
         for i, join in enumerate(self.joins):
             join.left = self.source
             join.left._df = df
@@ -203,10 +179,21 @@ class TableBuilder(BaseModel):
             df = join.run(spark)
             df.printSchema()
 
-            # Build columns
+            # Build remaining columns again (in case inputs are found in joins)
             df = self.build_columns(
                 df, udfs=udfs, raise_exception=i == len(self.joins) - 1
             )
+
+        # Drop source columns
+        if self.drop_source_columns:
+            logger.info(f"Dropping source columns...")
+            df = df.select(column_names)
+
+        # Drop duplicates
+        pk = self.primary_key
+        if self.drop_duplicates and pk:
+            logger.info(f"Removing duplicates with {pk}")
+            df = df.dropDuplicates([pk])
 
         return df
 

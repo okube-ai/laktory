@@ -102,7 +102,8 @@ def test_model():
         "schema_name": "markets",
         "timestamp_key": None,
         "builder": {
-            "drop_source_columns": None,
+            "drop_source_columns": True,
+            "drop_duplicates": None,
             "event_source": None,
             "joins": [],
             "pipeline_name": None,
@@ -150,16 +151,16 @@ def test_data():
 
 def test_bronze():
     df0 = manager.to_spark_df()
-    df1 = table_brz.builder.process_bronze(df0)
+    df1 = table_brz.builder.process(df0)
     assert "_bronze_at" in df1.columns
 
 
 def test_silver():
     df0 = manager.to_spark_df()
     df0.show()
-    df1 = table_brz.builder.process_bronze(df0)
+    df1 = table_brz.builder.process(df0)
     df1.show()
-    df2 = table_slv.builder.process_silver(df1)
+    df2 = table_slv.builder.process(df1)
     df2.show()
     assert df2.schema == T.StructType(
         [
@@ -223,7 +224,7 @@ def test_table_join():
 
 def test_silver_star():
     df = table_slv_star.builder.read_source(spark)
-    df = table_slv_star.builder.process_silver_star(df, spark=spark)
+    df = table_slv_star.builder.process(df, spark=spark)
     assert "_silver_star_at" in df.columns
     data = df.toPandas().drop("_silver_star_at", axis=1).to_dict("records")
     print(data)
