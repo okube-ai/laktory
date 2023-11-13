@@ -8,7 +8,7 @@ from laktory.spark import DataFrame
 logger = get_logger(__name__)
 
 
-class TableJoin(BaseModel):
+class CustomTableJoin(BaseModel):
     left: TableDataSource = None
     other: TableDataSource
     on: list[str]
@@ -63,15 +63,11 @@ class TableJoin(BaseModel):
             how=self.how,
         ).drop()
         df.printSchema()
-        print("--------------")
 
         # Drop join columns
         for c in self.on:
-            df = df.drop(getattr(other_df, c))
+            df = df.drop(f"other.{c}")
         if self.other.watermark is not None:
             df = df.drop(getattr(other_df, "_other_wc"))
-
-        df.printSchema()
-        print("*************")
 
         return df
