@@ -1,5 +1,19 @@
 # Release History
 
+## [0.0.18]
+**Fixed**
+- 
+
+**Updated**
+-
+
+**Added**
+-
+
+**Breaking Change**
+-
+
+
 ## [0.0.17] - 2023-11-13
 **Fixed**
 - Data Event model to support timestamp from string
