@@ -1,5 +1,18 @@
 # Release History
 
+## [0.0.17] - 2023-11-13
+**Fixed**
+- Data Event model to support timestamp from string
+
+**Added**
+- Option to exclude timestamp from data event filepath
+- Selects, filter, watermark options for TableDataSource
+- Support for joins in Table model
+- Silver Star builder
+
+**Breaking Change**
+- Refactored Table to move all building configuration into a `TableBuilder` model
+
 ## [0.0.16] - 2023-11-08
 **Added**
 - UDFs property to pipeline model

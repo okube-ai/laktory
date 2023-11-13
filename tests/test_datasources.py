@@ -32,13 +32,13 @@ def test_event_data_source():
 
 
 def test_event_data_source_read():
-    reader = EventDataSource(
+    source = EventDataSource(
         name="stock_price",
         producer={"name": "yahoo-finance"},
         events_root=data_dir,
         read_as_stream=False,
     )
-    df = reader.read(spark).toPandas()
+    df = source.read(spark).toPandas()
     assert len(df) == 80
     assert list(df.columns) == ["data", "description", "name", "producer"]
     df["data"] = df["data"].apply(Row.asDict)

@@ -1,3 +1,8 @@
+from datetime import datetime
+import pandas as pd
+from pyspark.sql import SparkSession
+import pyspark.sql.types as T
+
 from laktory.models import DataEventHeader
 from laktory.models import DataEvent
 from laktory.models import Producer
@@ -8,6 +13,9 @@ from laktory.models import Pipeline
 from laktory.models.compute.pipeline import PipelineUDF
 from datetime import datetime
 import pytz
+
+spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
+spark.conf.set("spark.sql.session.timeZone", "UTC")
 
 
 # --------------------------------------------------------------------------- #
@@ -79,11 +87,6 @@ class EventsManager:
         return pd.DataFrame([e.model_dump() for e in self.events])
 
     def to_spark_df(self):
-        from pyspark.sql import SparkSession
-        import pyspark.sql.types as T
-
-        spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
-        spark.conf.set("spark.sql.session.timeZone", "UTC")
         return spark.createDataFrame(
             [e.model_dump() for e in self.events],
             schema=T.StructType(
@@ -129,12 +132,14 @@ class EventsManager:
 
 table_brz = Table(
     name="brz_stock_prices",
-    zone="BRONZE",
     catalog_name="dev",
     schema_name="markets",
-    event_source=EventDataSource(
-        name="stock_price",
-    ),
+    builder={
+        "event_source": {
+            "name": "stock_price",
+        },
+        "zone": "BRONZE",
+    },
 )
 
 table_slv = Table(
@@ -160,14 +165,88 @@ table_slv = Table(
         },
         {"name": "close", "type": "double", "sql_expression": "data.open"},
     ],
-    data=[[None, "AAPL", 1, 2], [None, "AAPL", 3, 4], [None, "AAPL", 5, 6]],
-    zone="SILVER",
+    data=[
+        ["2023-11-01T00:00:00Z", "AAPL", 1, 2],
+        ["2023-11-01T01:00:00Z", "AAPL", 3, 4],
+        ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
+        ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
+    ],
     catalog_name="dev",
     schema_name="markets",
-    table_source=TableDataSource(
-        name="brz_stock_prices",
-    ),
+    builder={
+        "table_source": {
+            "name": "brz_stock_prices",
+        },
+        "zone": "SILVER",
+    },
 )
+
+
+df_meta = spark.createDataFrame(
+    pd.DataFrame(
+        {
+            "symbol2": ["AAPL", "GOOGL", "AMZN"],
+            "currency": ["USD"] * 3,
+            "first_traded": [
+                "1980-12-12T14:30:00.000Z",
+                "2004-08-19T13:30:00.00Z",
+                "1997-05-15T13:30:00.000Z",
+            ],
+        }
+    )
+)
+
+df_name = spark.createDataFrame(
+    pd.DataFrame(
+        {"symbol3": ["AAPL", "GOOGL", "AMZN"], "name": ["Apple", "Google", "Amazon"]}
+    )
+)
+
+table_slv_star = Table(
+    name="slv_star_stock_prices",
+    catalog_name="dev",
+    schema_name="markets",
+    builder={
+        "zone": "SILVER_STAR",
+        "table_source": {
+            "name": "slv_stock_prices",
+            "filter": "created_at = '2023-11-01T00:00:00Z'",
+        },
+        "joins": [
+            {
+                "other": {
+                    "name": "slv_stock_metadata",
+                    "selects": {
+                        "symbol2": "symbol",
+                        "currency": "currency",
+                        "first_traded": "last_traded",
+                    },
+                },
+                "on": ["symbol"],
+            },
+            {
+                "other": {
+                    "name": "slv_stock_names",
+                    "selects": [
+                        "symbol3",
+                        "name",
+                    ],
+                },
+                "on": ["symbol3"],
+            },
+        ],
+    },
+    columns=[
+        {
+            "name": "symbol3",
+            "spark_func_name": "coalesce",
+            "spark_func_args": ["symbol"],
+        }
+    ],
+)
+table_slv_star.builder.source._df = table_slv.to_df(spark=spark)
+table_slv_star.builder.joins[0].other._df = df_meta
+table_slv_star.builder.joins[1].other._df = df_name
 
 
 # --------------------------------------------------------------------------- #

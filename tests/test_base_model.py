@@ -17,7 +17,6 @@ schema = Schema(
                     "type": "double",
                 },
             ],
-            zone="SILVER",
         ),
         Table(
             name="GOOGL",
@@ -31,7 +30,6 @@ schema = Schema(
                     "type": "double",
                 },
             ],
-            zone="SILVER",
         ),
     ],
     _vars={"dynamic_column": "low"},

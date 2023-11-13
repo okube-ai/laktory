@@ -33,7 +33,9 @@ class WorkspaceFile(BaseModel, Resources):
                 self.path = "/" + self.source.split("/workspacefiles/")[-1]
 
             else:
-                raise ValueError("A value for `dirpath` must be specified if the source is not in a `workspacefiles` folder")
+                raise ValueError(
+                    "A value for `dirpath` must be specified if the source is not in a `workspacefiles` folder"
+                )
 
         return self
 

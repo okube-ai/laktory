@@ -1,12 +1,18 @@
 from laktory.spark import DataFrame
 from typing import Union
 from typing import Literal
+from typing import Any
 
 from laktory.models.base import BaseModel
 from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
+
+
+class Watermark(BaseModel):
+    column: str
+    threshold: str
 
 
 class TableDataSourceCDC(BaseModel):
@@ -23,11 +29,15 @@ class TableDataSourceCDC(BaseModel):
 
 
 class TableDataSource(BaseDataSource):
+    _df: Any = None
     catalog_name: Union[str, None] = None
     cdc: Union[TableDataSourceCDC, None] = None
+    selects: Union[list[str], dict[str, str], None] = None
+    filter: Union[str, None] = None
     from_pipeline: Union[bool, None] = True
     name: Union[str, None]
     schema_name: Union[str, None] = None
+    watermark: Union[Watermark, None] = None
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -56,11 +66,14 @@ class TableDataSource(BaseDataSource):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def read(self, spark) -> DataFrame:
+    def _read(self, spark) -> DataFrame:
         from laktory.dlt import read
         from laktory.dlt import read_stream
 
-        if self.read_as_stream:
+        if self._df is not None:
+            logger.info(f"Reading {self.full_name} from memory")
+            df = self._df
+        elif self.read_as_stream:
             logger.info(f"Reading {self.full_name} as stream")
             if self.from_pipeline:
                 df = read_stream(self.full_name)
@@ -72,5 +85,32 @@ class TableDataSource(BaseDataSource):
                 df = read(self.full_name)
             else:
                 df = spark.read.table(self.full_name)
+
+        return df
+
+    def read(self, spark) -> DataFrame:
+        import pyspark.sql.functions as F
+
+        df = self._read(spark)
+
+        # Apply filter
+        if self.filter:
+            df = df.filter(self.filter)
+
+        # Columns
+        cols = []
+        if self.selects:
+            if isinstance(self.selects, list):
+                cols += [F.col(c) for c in self.selects]
+            elif isinstance(self.selects, dict):
+                cols += [F.col(k).alias(v) for k, v in self.selects.items()]
+            df = df.select(cols)
+
+        # Apply Watermark
+        if self.watermark:
+            df = df.withWatermark(
+                self.watermark.column,
+                self.watermark.threshold,
+            )
 
         return df
