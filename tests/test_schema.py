@@ -23,7 +23,6 @@ def test_model():
                         "type": "double",
                     },
                 ],
-                zone="SILVER",
             ),
             Table(
                 name="f0002",
@@ -37,7 +36,6 @@ def test_model():
                         "type": "double",
                     },
                 ],
-                zone="SILVER",
             ),
         ],
     )
