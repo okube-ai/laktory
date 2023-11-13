@@ -216,7 +216,7 @@ table_slv_star = Table(
             {
                 "other": {
                     "name": "slv_stock_metadata",
-                    "columns": {
+                    "selects": {
                         "symbol2": "symbol",
                         "currency": "currency",
                         "first_traded": "last_traded",
@@ -227,7 +227,7 @@ table_slv_star = Table(
             {
                 "other": {
                     "name": "slv_stock_names",
-                    "columns": [
+                    "selects": [
                         "symbol3",
                         "name",
                     ],

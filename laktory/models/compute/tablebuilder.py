@@ -165,7 +165,9 @@ class TableBuilder(BaseModel):
         logger.info(f"Applying {self.zone} transformations")
 
         # Build columns
-        self._columns_to_build = self.columns + self.get_zone_columns(zone=self.zone, df=df)
+        self._columns_to_build = self.columns + self.get_zone_columns(
+            zone=self.zone, df=df
+        )
         column_names = [c.name for c in self._columns_to_build]
         df = self.build_columns(df, udfs=udfs, raise_exception=not self.has_joins)
 

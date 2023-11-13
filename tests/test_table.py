@@ -111,7 +111,7 @@ def test_model():
                 "read_as_stream": True,
                 "catalog_name": "dev",
                 "cdc": None,
-                "columns": None,
+                "selects": None,
                 "filter": None,
                 "from_pipeline": True,
                 "name": "brz_stock_prices",
@@ -188,7 +188,7 @@ def test_table_join():
         },
         other={
             "name": "slv_stock_metadata",
-            "columns": {
+            "selects": {
                 "symbol2": "symbol",
                 "currency": "currency",
                 "first_traded": "first_traded",

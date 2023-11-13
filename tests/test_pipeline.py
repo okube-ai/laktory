@@ -147,7 +147,7 @@ def test_pipeline():
                         "read_as_stream": True,
                         "catalog_name": "dev",
                         "cdc": None,
-                        "columns": None,
+                        "selects": None,
                         "filter": None,
                         "from_pipeline": True,
                         "name": "brz_stock_prices",

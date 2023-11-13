@@ -32,7 +32,7 @@ class TableDataSource(BaseDataSource):
     _df: Any = None
     catalog_name: Union[str, None] = None
     cdc: Union[TableDataSourceCDC, None] = None
-    columns: Union[list[str], dict[str, str], None] = None
+    selects: Union[list[str], dict[str, str], None] = None
     filter: Union[str, None] = None
     from_pipeline: Union[bool, None] = True
     name: Union[str, None]
@@ -100,11 +100,11 @@ class TableDataSource(BaseDataSource):
 
         # Columns
         cols = []
-        if self.columns:
-            if isinstance(self.columns, list):
-                cols += [F.col(c) for c in self.columns]
-            elif isinstance(self.columns, dict):
-                cols += [F.col(k).alias(v) for k, v in self.columns.items()]
+        if self.selects:
+            if isinstance(self.selects, list):
+                cols += [F.col(c) for c in self.selects]
+            elif isinstance(self.selects, dict):
+                cols += [F.col(k).alias(v) for k, v in self.selects.items()]
             df = df.select(cols)
 
         # Apply Watermark
