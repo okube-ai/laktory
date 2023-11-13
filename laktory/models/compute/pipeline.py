@@ -99,7 +99,7 @@ class Pipeline(BaseModel, Resources):
     @model_validator(mode="after")
     def assign_pipeline_to_tables(self) -> Any:
         for t in self.tables:
-            t.pipeline_name = self.name
+            t.builder.pipeline_name = self.name
             t.catalog_name = self.catalog
             t.schema_name = self.target
             for c in t.columns:
@@ -108,11 +108,11 @@ class Pipeline(BaseModel, Resources):
                 c.schema_name = t.schema_name
 
             # Assign to sources
-            if t.table_source is not None:
-                if t.table_source.catalog_name is None:
-                    t.table_source.catalog_name = self.catalog
-                if t.table_source.schema_name is None:
-                    t.table_source.schema_name = self.target
+            if t.builder.table_source is not None:
+                if t.builder.table_source.catalog_name is None:
+                    t.builder.table_source.catalog_name = self.catalog
+                if t.builder.table_source.schema_name is None:
+                    t.builder.table_source.schema_name = self.target
 
         return self
 
