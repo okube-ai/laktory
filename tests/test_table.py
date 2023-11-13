@@ -223,6 +223,7 @@ def test_table_join():
 
 
 def test_silver_star():
+    print(table_slv_star.model_dump())
     assert table_slv_star.model_dump() == {
         "catalog_name": "dev",
         "columns": [
