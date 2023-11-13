@@ -32,7 +32,8 @@ def test_pipeline():
                 "schema_name": None,
                 "timestamp_key": None,
                 "builder": {
-                    "drop_source_columns": None,
+                    "drop_source_columns": False,
+                    "drop_duplicates": None,
                     "event_source": {
                         "name": "stock_price",
                         "description": None,
@@ -137,7 +138,8 @@ def test_pipeline():
                 "schema_name": None,
                 "timestamp_key": None,
                 "builder": {
-                    "drop_source_columns": None,
+                    "drop_source_columns": True,
+                    "drop_duplicates": None,
                     "event_source": None,
                     "joins": [],
                     "pipeline_name": "pl-stock-prices",
