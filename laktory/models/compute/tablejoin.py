@@ -8,7 +8,7 @@ from laktory.spark import DataFrame
 logger = get_logger(__name__)
 
 
-class CustomTableJoin(BaseModel):
+class TableJoin(BaseModel):
     left: TableDataSource = None
     other: TableDataSource
     on: list[str]
