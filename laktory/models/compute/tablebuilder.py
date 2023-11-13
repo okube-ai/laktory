@@ -28,7 +28,6 @@ class TableBuilder(BaseModel):
 
     @model_validator(mode="after")
     def default_options(self) -> Any:
-
         # Default values
         if self.zone == "BRONZE":
             if self.drop_source_columns is not None:
@@ -71,7 +70,6 @@ class TableBuilder(BaseModel):
         return self._table.primary_key
 
     def get_zone_columns(self, zone, df=None):
-
         from laktory.spark.dataframe import has_column
 
         if zone == "BRONZE":
@@ -86,7 +84,6 @@ class TableBuilder(BaseModel):
             ]
 
         elif zone == "SILVER":
-
             cols = []
 
             if self.timestamp_key:
@@ -168,7 +165,9 @@ class TableBuilder(BaseModel):
         logger.info(f"Applying silver transformations")
 
         # Build columns
-        self._columns_to_build = self.columns + self.get_zone_columns(zone="SILVER", df=df)
+        self._columns_to_build = self.columns + self.get_zone_columns(
+            zone="SILVER", df=df
+        )
         column_names = [c.name for c in self._columns_to_build]
         df = self.build_columns(df, udfs=udfs)
 
@@ -190,7 +189,9 @@ class TableBuilder(BaseModel):
         logger.info(f"Applying silver star transformations")
 
         # Build columns
-        self._columns_to_build = self.columns + self.get_zone_columns(zone="SILVER_STAR")
+        self._columns_to_build = self.columns + self.get_zone_columns(
+            zone="SILVER_STAR"
+        )
         df = self.build_columns(df, udfs=udfs, raise_exception=False)
 
         for i, join in enumerate(self.joins):

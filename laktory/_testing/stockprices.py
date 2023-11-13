@@ -135,12 +135,11 @@ table_brz = Table(
     catalog_name="dev",
     schema_name="markets",
     builder={
-        "event_source":
-            {
-                "name": "stock_price",
-            },
+        "event_source": {
+            "name": "stock_price",
+        },
         "zone": "BRONZE",
-    }
+    },
 )
 
 table_slv = Table(
@@ -179,7 +178,7 @@ table_slv = Table(
             "name": "brz_stock_prices",
         },
         "zone": "SILVER",
-    }
+    },
 )
 
 
@@ -235,7 +234,7 @@ table_slv_star = Table(
                 },
                 "on": ["symbol3"],
             },
-        ]
+        ],
     },
     columns=[
         {
