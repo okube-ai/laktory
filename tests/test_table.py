@@ -223,6 +223,95 @@ def test_table_join():
 
 
 def test_silver_star():
+    assert table_slv_star.model_dump() == {
+        "catalog_name": "dev",
+        "columns": [
+            {
+                "catalog_name": "dev",
+                "comment": None,
+                "name": "symbol3",
+                "pii": None,
+                "schema_name": "markets",
+                "spark_func_args": [
+                    {"value": "symbol", "to_column": True, "to_lit": False}
+                ],
+                "spark_func_kwargs": {},
+                "spark_func_name": "coalesce",
+                "sql_expression": None,
+                "table_name": "slv_star_stock_prices",
+                "type": "string",
+                "unit": None,
+            }
+        ],
+        "comment": None,
+        "data": None,
+        "grants": None,
+        "name": "slv_star_stock_prices",
+        "primary_key": None,
+        "schema_name": "markets",
+        "timestamp_key": None,
+        "builder": {
+            "drop_source_columns": False,
+            "drop_duplicates": None,
+            "event_source": None,
+            "joins": [
+                {
+                    "left": None,
+                    "other": {
+                        "read_as_stream": True,
+                        "catalog_name": "dev",
+                        "cdc": None,
+                        "selects": {
+                            "symbol2": "symbol",
+                            "currency": "currency",
+                            "first_traded": "last_traded",
+                        },
+                        "filter": None,
+                        "from_pipeline": True,
+                        "name": "slv_stock_metadata",
+                        "schema_name": "markets",
+                        "watermark": None,
+                    },
+                    "on": ["symbol"],
+                    "how": "left",
+                    "time_constraint_interval_lower": "60 seconds",
+                    "time_constraint_interval_upper": None,
+                },
+                {
+                    "left": None,
+                    "other": {
+                        "read_as_stream": True,
+                        "catalog_name": "dev",
+                        "cdc": None,
+                        "selects": ["symbol3", "name"],
+                        "filter": None,
+                        "from_pipeline": True,
+                        "name": "slv_stock_names",
+                        "schema_name": "markets",
+                        "watermark": None,
+                    },
+                    "on": ["symbol3"],
+                    "how": "left",
+                    "time_constraint_interval_lower": "60 seconds",
+                    "time_constraint_interval_upper": None,
+                },
+            ],
+            "pipeline_name": None,
+            "table_source": {
+                "read_as_stream": True,
+                "catalog_name": "dev",
+                "cdc": None,
+                "selects": None,
+                "filter": "created_at = '2023-11-01T00:00:00Z'",
+                "from_pipeline": True,
+                "name": "slv_stock_prices",
+                "schema_name": "markets",
+                "watermark": None,
+            },
+            "zone": "SILVER_STAR",
+        },
+    }
+
     df = table_slv_star.builder.read_source(spark)
     df = table_slv_star.builder.process(df, spark=spark)
     assert "_silver_star_at" in df.columns
