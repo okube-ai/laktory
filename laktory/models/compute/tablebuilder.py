@@ -177,7 +177,7 @@ class TableBuilder(BaseModel):
                 name = self.source.name
             else:
                 name = "previous_join"
-            join.left = TableDataSource(name)
+            join.left = TableDataSource(name=name)
             join.left._df = df
             df = join.run(spark)
             df.printSchema()
