@@ -54,7 +54,10 @@ class TableJoin(BaseModel):
 
         logger.info(f"   ON {_join}")
 
+        logger.info(f"Left Schema:")
         left_df.printSchema()
+
+        logger.info(f"Other Schema:")
         other_df.printSchema()
 
         df = left_df.alias("left").join(
@@ -62,12 +65,13 @@ class TableJoin(BaseModel):
             on=F.expr(_join),
             how=self.how,
         ).drop()
-        df.printSchema()
 
         # Drop join columns
         for c in self.on:
-            df = df.drop(f"other.{c}")
+            df = df.drop(F.col(f"other.{c}"))
         if self.other.watermark is not None:
-            df = df.drop(getattr(other_df, "_other_wc"))
+            df = df.drop(F.col(f"other._other_wc"))
+        logger.info(f"Joined Schema:")
+        df.printSchema()
 
         return df

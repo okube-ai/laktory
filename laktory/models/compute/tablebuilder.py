@@ -180,7 +180,6 @@ class TableBuilder(BaseModel):
             join.left = TableDataSource(name=name)
             join.left._df = df
             df = join.run(spark)
-            df.printSchema()
 
             # Build remaining columns again (in case inputs are found in joins)
             df = self.build_columns(
