@@ -49,6 +49,13 @@ class Table(BaseModel):
             if self.builder.table_source.schema_name is None:
                 self.builder.table_source.schema_name = self.schema_name
 
+        # Assign to joins
+        for join in self.builder.joins:
+            if join.other.catalog_name is None:
+                join.other.catalog_name = self.catalog_name
+            if join.other.schema_name is None:
+                join.other.schema_name = self.schema_name
+
         return self
 
     # ----------------------------------------------------------------------- #
