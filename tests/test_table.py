@@ -96,26 +96,29 @@ def test_model():
             ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
             ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
         ],
-        "event_source": None,
         "grants": None,
-        "joins": [],
         "name": "slv_stock_prices",
-        "pipeline_name": None,
         "primary_key": None,
         "schema_name": "markets",
-        "table_source": {
-            "read_as_stream": True,
-            "catalog_name": "dev",
-            "cdc": None,
-            "columns": None,
-            "filter": None,
-            "from_pipeline": True,
-            "name": "brz_stock_prices",
-            "schema_name": "markets",
-            "watermark": None,
-        },
         "timestamp_key": None,
-        "zone": "SILVER",
+        "builder": {
+            "drop_source_columns": None,
+            "event_source": None,
+            "joins": [],
+            "pipeline_name": None,
+            "table_source": {
+                "read_as_stream": True,
+                "catalog_name": "dev",
+                "cdc": None,
+                "columns": None,
+                "filter": None,
+                "from_pipeline": True,
+                "name": "brz_stock_prices",
+                "schema_name": "markets",
+                "watermark": None,
+            },
+            "zone": "SILVER",
+        },
     }
 
     assert not table_slv.is_from_cdc
@@ -147,16 +150,16 @@ def test_data():
 
 def test_bronze():
     df0 = manager.to_spark_df()
-    df1 = table_brz.process_bronze(df0)
+    df1 = table_brz.builder.process_bronze(df0)
     assert "_bronze_at" in df1.columns
 
 
 def test_silver():
     df0 = manager.to_spark_df()
     df0.show()
-    df1 = table_brz.process_bronze(df0)
+    df1 = table_brz.builder.process_bronze(df0)
     df1.show()
-    df2 = table_slv.process_silver(df1)
+    df2 = table_slv.builder.process_silver(df1)
     df2.show()
     assert df2.schema == T.StructType(
         [
@@ -219,8 +222,8 @@ def test_table_join():
 
 
 def test_silver_star():
-    df = table_slv_star.read_source(spark)
-    df = table_slv_star.process_silver_star(df, spark=spark)
+    df = table_slv_star.builder.read_source(spark)
+    df = table_slv_star.builder.process_silver_star(df, spark=spark)
     assert "_silver_star_at" in df.columns
     data = df.toPandas().drop("_silver_star_at", axis=1).to_dict("records")
     print(data)
@@ -251,19 +254,21 @@ def test_silver_star():
 def test_cdc():
     table = Table(
         name="brz_users_type1",
-        table_source={
-            "name": "brz_users_cdc",
-            "cdc": {
-                "primary_keys": ["userId"],
-                "sequence_by": "sequenceNum",
-                "apply_as_deletes": "operation = 'DELETE'",
-                "scd_type": 1,
-                "except_columns": ["operation", "sequenceNum"],
+        builder={
+            "table_source": {
+                "name": "brz_users_cdc",
+                "cdc": {
+                    "primary_keys": ["userId"],
+                    "sequence_by": "sequenceNum",
+                    "apply_as_deletes": "operation = 'DELETE'",
+                    "scd_type": 1,
+                    "except_columns": ["operation", "sequenceNum"],
+                },
             },
         },
     )
 
-    assert table.apply_changes_kwargs == {
+    assert table.builder.apply_changes_kwargs == {
         "apply_as_deletes": "operation = 'DELETE'",
         "apply_as_truncates": None,
         "column_list": [],
@@ -277,7 +282,7 @@ def test_cdc():
         "track_history_column_list": None,
         "track_history_except_column_list": None,
     }
-    assert table.is_from_cdc
+    assert table.builder.is_from_cdc
 
     # TODO: Run test with demo data
     # from pyspark.sql import SparkSession

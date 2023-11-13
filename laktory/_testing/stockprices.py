@@ -132,12 +132,15 @@ class EventsManager:
 
 table_brz = Table(
     name="brz_stock_prices",
-    zone="BRONZE",
     catalog_name="dev",
     schema_name="markets",
-    event_source=EventDataSource(
-        name="stock_price",
-    ),
+    builder={
+        "event_source":
+            {
+                "name": "stock_price",
+            },
+        "zone": "BRONZE",
+    }
 )
 
 table_slv = Table(
@@ -169,13 +172,16 @@ table_slv = Table(
         ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
         ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
     ],
-    zone="SILVER",
     catalog_name="dev",
     schema_name="markets",
-    table_source=TableDataSource(
-        name="brz_stock_prices",
-    ),
+    builder={
+        "table_source": {
+            "name": "brz_stock_prices",
+        },
+        "zone": "SILVER",
+    }
 )
+
 
 df_meta = spark.createDataFrame(
     pd.DataFrame(
@@ -197,39 +203,40 @@ df_name = spark.createDataFrame(
     )
 )
 
-
 table_slv_star = Table(
     name="slv_star_stock_prices",
-    zone="SILVER_STAR",
     catalog_name="dev",
     schema_name="markets",
-    table_source={
-        "name": "slv_stock_prices",
-        "filter": "created_at = '2023-11-01T00:00:00Z'",
-    },
-    joins=[
-        {
-            "other": {
-                "name": "slv_stock_metadata",
-                "columns": {
-                    "symbol2": "symbol",
-                    "currency": "currency",
-                    "first_traded": "last_traded",
+    builder={
+        "zone": "SILVER_STAR",
+        "table_source": {
+            "name": "slv_stock_prices",
+            "filter": "created_at = '2023-11-01T00:00:00Z'",
+        },
+        "joins": [
+            {
+                "other": {
+                    "name": "slv_stock_metadata",
+                    "columns": {
+                        "symbol2": "symbol",
+                        "currency": "currency",
+                        "first_traded": "last_traded",
+                    },
                 },
+                "on": ["symbol"],
             },
-            "on": ["symbol"],
-        },
-        {
-            "other": {
-                "name": "slv_stock_names",
-                "columns": [
-                    "symbol3",
-                    "name",
-                ],
+            {
+                "other": {
+                    "name": "slv_stock_names",
+                    "columns": [
+                        "symbol3",
+                        "name",
+                    ],
+                },
+                "on": ["symbol3"],
             },
-            "on": ["symbol3"],
-        },
-    ],
+        ]
+    },
     columns=[
         {
             "name": "symbol3",
@@ -238,9 +245,9 @@ table_slv_star = Table(
         }
     ],
 )
-table_slv_star.source._df = table_slv.to_df(spark=spark)
-table_slv_star.joins[0].other._df = df_meta
-table_slv_star.joins[1].other._df = df_name
+table_slv_star.builder.source._df = table_slv.to_df(spark=spark)
+table_slv_star.builder.joins[0].other._df = df_meta
+table_slv_star.builder.joins[1].other._df = df_name
 
 
 # --------------------------------------------------------------------------- #
