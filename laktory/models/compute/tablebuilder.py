@@ -173,11 +173,8 @@ class TableBuilder(BaseModel):
 
         # Make joins
         for i, join in enumerate(self.joins):
-            join.left = self.source
+            join.left = TableDataSource(name=self.source.name)
             join.left._df = df
-            # TODO: Review if required / desirable
-            if i > 0:
-                join.left.watermark = self.joins[i - 1].other.watermark
             df = join.run(spark)
             df.printSchema()
 
