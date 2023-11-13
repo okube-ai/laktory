@@ -173,8 +173,11 @@ class TableBuilder(BaseModel):
 
         # Make joins
         for i, join in enumerate(self.joins):
-            print(df)
-            join.left = TableDataSource(name=self.source.name)
+            if i == 0:
+                name = self.source.name
+            else:
+                name = "previous_join"
+            join.left = TableDataSource(name)
             join.left._df = df
             df = join.run(spark)
             df.printSchema()

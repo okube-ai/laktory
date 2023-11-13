@@ -70,7 +70,10 @@ class TableDataSource(BaseDataSource):
         from laktory.dlt import read
         from laktory.dlt import read_stream
 
-        if self.read_as_stream:
+        if self._df is not None:
+            logger.info(f"Reading {self.full_name} from memory")
+            df = self._df
+        elif self.read_as_stream:
             logger.info(f"Reading {self.full_name} as stream")
             if self.from_pipeline:
                 df = read_stream(self.full_name)
@@ -88,11 +91,7 @@ class TableDataSource(BaseDataSource):
     def read(self, spark) -> DataFrame:
         import pyspark.sql.functions as F
 
-        # This is intended only for unit testing
-        if self._df:
-            df = self._df
-        else:
-            df = self._read(spark)
+        df = self._read(spark)
 
         # Apply filter
         if self.filter:
