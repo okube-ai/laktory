@@ -54,16 +54,24 @@ class TableJoin(BaseModel):
 
         logger.info(f"   ON {_join}")
 
+        left_df.printSchema()
+        other_df.printSchema()
+
         df = left_df.alias("left").join(
             other=other_df.alias("other"),
             on=F.expr(_join),
             how=self.how,
-        )
+        ).drop()
+        df.printSchema()
+        print("--------------")
 
         # Drop join columns
         for c in self.on:
             df = df.drop(getattr(other_df, c))
         if self.other.watermark is not None:
             df = df.drop(getattr(other_df, "_other_wc"))
+
+        df.printSchema()
+        print("*************")
 
         return df
