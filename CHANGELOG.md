@@ -4,7 +4,6 @@
 **Added**
 - Support for externally managed users and groups
 
-
 ## [0.0.17] - 2023-11-13
 **Fixed**
 - Data Event model to support timestamp from string
