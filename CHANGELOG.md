@@ -1,17 +1,8 @@
 # Release History
 
-## [0.0.18]
-**Fixed**
-- 
-
-**Updated**
--
-
+## [0.0.18] - 2023-11-14
 **Added**
 - Support for externally managed users and groups
-
-**Breaking Change**
--
 
 
 ## [0.0.17] - 2023-11-13

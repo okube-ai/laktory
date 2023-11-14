@@ -24,9 +24,10 @@ class PulumiGroup(PulumiResourcesEngine):
             delete_before_replace=True,
         )
 
-        if group.provider_id is None:
+        if group.id is None:
             self.group = databricks.Group(
                 f"group-{group.display_name}", opts=opts, **group.model_pulumi_dump()
             )
+            group.id = self.group.id
         else:
-            self.group = databricks.Group.get(f"group-{group.display_name}", id=group.provider_id)
+            self.group = databricks.Group.get(f"group-{group.display_name}", id=group.id)

@@ -9,7 +9,7 @@ class User(BaseModel, Resources):
     workspace_access: bool = None
     groups: list[str] = []
     roles: list[str] = []
-    provider_id: Union[str, None] = None
+    id: Union[str, None] = None
 
     # Deployment options
     disable_as_user_deletion: bool = False
@@ -19,7 +19,7 @@ class User(BaseModel, Resources):
     # ----------------------------------------------------------------------- #
     @property
     def pulumi_excludes(self) -> list[str]:
-        return ["groups", "roles", "provider_id"]
+        return ["groups", "roles", "id"]
 
     def deploy_with_pulumi(self, name=None, group_ids=None, opts=None):
         from laktory.resourcesengines.pulumi.user import PulumiUser

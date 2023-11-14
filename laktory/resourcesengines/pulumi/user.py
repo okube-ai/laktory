@@ -31,16 +31,17 @@ class PulumiUser(PulumiResourcesEngine):
             delete_before_replace=True,
         )
 
-        if user.provider_id is None:
+        if user.id is None:
             self.user = databricks.User(
                 f"user-{user.user_name}",
                 opts=opts,
                 **user.model_pulumi_dump(),
             )
+            user.id = self.user.id
         else:
             self.user = databricks.User.get(
                 f"user-{user.user_name}",
-                id=user.provider_id,
+                id=user.id,
                 opts=opts,
                 **user.model_pulumi_dump(),
             )
