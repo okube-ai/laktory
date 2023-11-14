@@ -8,7 +8,7 @@
 -
 
 **Added**
--
+- Support for externally managed users and groups
 
 **Breaking Change**
 -

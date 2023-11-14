@@ -31,11 +31,19 @@ class PulumiUser(PulumiResourcesEngine):
             delete_before_replace=True,
         )
 
-        self.user = databricks.User(
-            f"user-{user.user_name}",
-            opts=opts,
-            **user.model_pulumi_dump(),
-        )
+        if user.provider_id is None:
+            self.user = databricks.User(
+                f"user-{user.user_name}",
+                opts=opts,
+                **user.model_pulumi_dump(),
+            )
+        else:
+            self.user = databricks.User.get(
+                f"user-{user.user_name}",
+                id=user.provider_id,
+                opts=opts,
+                **user.model_pulumi_dump(),
+            )
 
         self.roles = []
         for role in user.roles:
