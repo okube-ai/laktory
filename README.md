@@ -37,8 +37,7 @@ Install using `pip install laktory`
 TODO: Full installation instructions
 
 ## A Basic Example
-This example demonstrates how to send data events to a data lake and to set a
-data pipeline defining the tables transformation layers. 
+Suppose you need to compare stock prices performance, this example demonstrates how Laktory can help you with each step of the process, from data ingestion to aggregated analytics.
 
 
 ### Generate data events
@@ -81,7 +80,7 @@ for event in events:
     event.to_databricks()
 ```
 
-### Define data pipeline and data tables
+### Declare data pipeline and data tables
 A yaml file define the configuration for a data pipeline, including the transformations of a raw data event into silver (curated) and gold (consumption) layers.
 
 ```yaml
@@ -235,7 +234,7 @@ tables:
             - symbol
 ```
 
-### Deploy your configuration
+### Instantiate and deploy
 Laktory currently support Pulumi for cloud deployment, but more engines will be added in the future (Terraform, Databricks CLI, etc.).
 
 ```py
@@ -264,9 +263,6 @@ pulumi up
 ### Run your pipeline
 Once deployed, you pipeline is ready to be run or will be run automatically if it's part of a scheduled job.
 ![pl-stock-prices](docs/images/pl_stock_prices.png)
-
-In addition, using Unity Catalog from Databricks also means that you get a full description of your data lineage.
-![stock-prices-lineage](docs/images/stock_prices_lineage.png)
 
 ## A full Data Ops template
 A comprehensive template on how to deploy a lakehouse as code using Laktory is maintained here:
