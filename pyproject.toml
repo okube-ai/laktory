@@ -43,6 +43,9 @@ dependencies = [
 dev = [
     "black",
     "flit",
+    "mkdocs",
+    "mkdocstrings[python]",
+    "mkdocs-material",
 ]
 spark = [
     "pandas",

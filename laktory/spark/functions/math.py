@@ -75,6 +75,11 @@ def poly2(
     -------
     output: pyspark.sql.functions.column.Column
         Output column
+
+    Examples
+    --------
+    >>> 1+1.0
+    2.0
     """
     return _lit(a) * _col(x) ** 2 + _lit(b) * _col(x) + _lit(c)
 
