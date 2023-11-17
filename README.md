@@ -5,13 +5,27 @@
 [![versions](https://img.shields.io/pypi/pyversions/laktory.svg)](https://github.com/okube-ai/laktory)
 [![license](https://img.shields.io/github/license/okube-ai/laktory.svg)](https://github.com/okube-ai/laktory/blob/main/LICENSE)
 
-A DataOps framework for building Databricks lakehouse.
+A DataOps framework for building Databricks lakehouse. 
 
-## Okube Company 
+![what_is_laktory](docs/images/what_is_laktory.png)
 
-# 
 
-Okube is dedicated to build open source frameworks, the *kubes*, that empower businesses to build and deploy highly scalable data platforms and AI models. Contributions are more than welcome.
+## What is it?
+Laktory makes it possible to express and bring to life your data vision, from raw data to enriched analytics-ready datasets and finely tuned AI models, while adhering to basic DevOps best practices such as source control, code reviews and CI/CD.
+By taking a declarative approach, you use configuration files or python code to instruct the desired outcome instead of detailing how to get there.
+Such level of abstraction is made possible by the provided model methods, custom spark functions and templates.
+
+Laktory is also your best friend when it comes to prototyping and debugging data pipelines. 
+Within your workspace, you will have access to a custom `dlt` package allowing you to execute and test your notebook outside of a Delta Live Table execution.
+
+Finally, Laktory got your testing and monitoring covered. 
+A data pipeline built with Laktory is shipped with custom hooks enabling fine-grained monitoring of performance and failures [under development]    
+
+## Who is it for?
+Laktory is not web app or a UI that you can use to visually build your data pipeline. 
+We don't promise that you will be up and running within a few clicks.
+You need basic programming or DevOps experience to get started. 
+What we do promise on the other hand is that once you are past the initial setup, you will be able to efficiently scale, deploying hundreds of datasets and models without compromising data governance.   
 
 
 ## Help
@@ -22,17 +36,9 @@ Install using `pip install laktory`
 
 TODO: Full installation instructions
 
-### pyspark
-Optionally, you can also install spark locally to test your custom functions.
-
-TODO: Add pyspark instructions https://www.machinelearningplus.com/pyspark/install-pyspark-on-mac/
-- JAVA_HOME=/opt/homebrew/opt/java;
-- SPARK_HOME=/opt/homebrew/Cellar/apache-spark/3.5.0/libexec
-
-
 ## A Basic Example
-This example demonstrates how to send data events to a data lake and to set a
-data pipeline defining the tables transformation layers. 
+Suppose you need to compare stock prices performance, this example demonstrates how Laktory can help you with each step of the process, from data ingestion to aggregated analytics.
+
 
 ### Generate data events
 A data event class defines specifications of an event and provides methods
@@ -72,12 +78,10 @@ events = [
 
 for event in events:
     event.to_databricks()
-
 ```
 
-### Define data pipeline and data tables
-A yaml file define the configuration for a data pipeline, including the transformations of a raw data event into curated
-(silver) and consumption (gold) layers.
+### Declare data pipeline and data tables
+A yaml file define the configuration for a data pipeline, including the transformations of a raw data event into silver (curated) and gold (consumption) layers.
 
 ```yaml
 name: pl-stock-prices
@@ -94,9 +98,19 @@ clusters:
 
 libraries:
   - notebook:
-      path: /pipelines/dlt_template_brz.py
+      path: /pipelines/dlt_brz_template.py
   - notebook:
-      path: /pipelines/dlt_template_slv.py
+      path: /pipelines/dlt_slv_template.py
+  - notebook:
+      path: /pipelines/dlt_slv_star_template.py
+  - notebook:
+      path: /pipelines/dlt_gld_stock_prices.py
+  - notebook:
+      path: /pipelines/dlt_gld_stock_performances.py
+
+udfs:
+  - module_name: stock_functions
+    function_name: symbol_to_name
 
 permissions:
   - group_name: account users
@@ -111,25 +125,38 @@ permissions:
 tables:
   - name: brz_stock_prices
     timestamp_key: data.created_at
-    event_source:
-      name: stock_price
-      producer:
-        name: yahoo-finance
-    zone: BRONZE
+    builder:
+      zone: BRONZE
+      event_source:
+        name: stock_price
+        producer:
+          name: yahoo-finance
 
 
   - name: slv_stock_prices
-    table_source:
-      catalog_name: ${var.env}
-      schema_name: finance
-      name: brz_stock_prices
-    zone: SILVER
+    timestamp_key: created_at
+    builder:
+      zone: SILVER
+      table_source:
+        name: brz_stock_prices
     columns:
       - name: created_at
         type: timestamp
         spark_func_name: coalesce
         spark_func_args:
           - data._created_at
+
+      - name: symbol
+        type: string
+        spark_func_name: coalesce
+        spark_func_args:
+          - data.symbol
+
+      - name: name
+        type: string
+        spark_func_name: symbol_to_name
+        spark_func_args:
+          - data.symbol
 
       - name: open
         type: double
@@ -143,13 +170,71 @@ tables:
         spark_func_args:
           - data.close
 
+      - name: low
+        type: double
+        spark_func_name: coalesce
+        spark_func_args:
+          - data.low
+
       - name: high
         type: double
-        sql_expression: GREATEST(data.open, data.close)
+        spark_func_name: coalesce
+        spark_func_args:
+          - data.high
 
+  - name: brz_stock_metadata
+    builder:
+      zone: BRONZE
+      event_source:
+        name: stock_metadata
+        read_as_stream: False
+        producer:
+          name: yahoo-finance
+
+  - name: slv_stock_metadata
+    builder:
+      zone: SILVER
+      table_source:
+        name: brz_stock_metadata
+        read_as_stream: False
+    columns:
+      - name: symbol
+        type: string
+        spark_func_name: coalesce
+        spark_func_args:
+          - data.symbol
+
+      - name: currency
+        type: string
+        spark_func_name: coalesce
+        spark_func_args:
+          - data.currency
+
+      - name: first_traded
+        type: timestamp
+        spark_func_name: coalesce
+        spark_func_args:
+          - data.firstTradeDate
+
+  - name: slv_star_stock_prices
+    builder:
+      zone: SILVER_STAR
+      table_source:
+        name: slv_stock_prices
+        read_as_stream: True
+      joins:
+        - other:
+            name: slv_stock_metadata
+            read_as_stream: False
+            selects:
+              - symbol
+              - currency
+              - first_traded
+          "on":
+            - symbol
 ```
 
-### Deploy your configuration
+### Instantiate and deploy
 Laktory currently support Pulumi for cloud deployment, but more engines will be added in the future (Terraform, Databricks CLI, etc.).
 
 ```py
@@ -169,6 +254,16 @@ pipeline.vars = {
 # Deploy
 pipeline.deploy_with_pulumi()
 ```
+
+From the terminal,
+```cmd
+pulumi up
+```
+
+### Run your pipeline
+Once deployed, you pipeline is ready to be run or will be run automatically if it's part of a scheduled job.
+![pl-stock-prices](docs/images/pl_stock_prices.png)
+
 ## A full Data Ops template
 A comprehensive template on how to deploy a lakehouse as code using Laktory is maintained here:
 https://github.com/okube-ai/lakehouse-as-code.
@@ -178,3 +273,7 @@ In this template, 4 pulumi projects are used to:
 - `unity-catalog`: Setup users, groups, catalogs, schemas and manage grants
 - `workspace-conf`: Setup secrets, clusters and warehouses
 - `workspace`: The data workflows to build your lakehouse.
+
+## Okube Company
+Okube is dedicated to build open source frameworks, the *kubes*, that empower businesses to build and deploy highly scalable data platforms and AI models. Contributions are more than welcome.
+
