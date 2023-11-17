@@ -7,6 +7,8 @@
 
 A DataOps framework for building Databricks lakehouse.
 
+![A test image](docs/images/what_is_laktory.png)
+
 ## Okube Company 
 
 # 
