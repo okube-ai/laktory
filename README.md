@@ -29,12 +29,13 @@ What we do promise on the other hand is that once you are past the initial setup
 
 
 ## Help
-TODO: Build full help documentation
+See [documentation](https://www.laktory.ai/) for more details.
 
 ## Installation
-Install using `pip install laktory`
+Install using `pip install laktory[{cloud_provider}]` where `{cloud_provider}` is `azure`, `aws` or `gcp`. 
 
-TODO: Full installation instructions
+For more installation options,
+see the [Install](https://www.laktory.ai/install/) section in the documentation.
 
 ## A Basic Example
 Suppose you need to compare stock prices performance, this example demonstrates how Laktory can help you with each step of the process, from data ingestion to aggregated analytics.

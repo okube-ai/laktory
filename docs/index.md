@@ -1,30 +1,22 @@
-This site contains the project documentation for the
-`calculator` project that is a toy module used in the
-Real Python tutorial
-[Build Your Python Project Documentation With MkDocs](
-    https://realpython.com/python-project-documentation-with-mkdocs/).
-Its aim is to give you a framework to build your
-project documentation using Python, MkDocs,
-mkdocstrings, and the Material for MkDocs theme.
 
-## Table Of Contents
+A DataOps framework for building Databricks lakehouse.
 
-The documentation follows the best practice for
-project documentation as described by Daniele Procida
-in the [Diátaxis documentation framework](https://diataxis.fr/)
-and consists of four separate parts:
+![what_is_laktory](images/what_is_laktory.png)
 
-1. [Tutorials](tutorials.md)
-2. [How-To Guides](how-to-guides.md)
-3. [Reference](reference.md)
-4. [Explanation](explanation.md)
+## What is it?
+Laktory makes it possible to express and bring to life your data vision, from raw data to enriched analytics-ready datasets and finely tuned AI models, while adhering to basic DevOps best practices such as source control, code reviews and CI/CD.
+By taking a declarative approach, you use configuration files or python code to instruct the desired outcome instead of detailing how to get there.
+Such level of abstraction is made possible by the provided model methods, custom spark functions and templates.
 
-Quickly find what you're looking for depending on
-your use case by looking at the different pages.
+Laktory is also your best friend when it comes to prototyping and debugging data pipelines. 
+Within your workspace, you will have access to a custom `dlt` package allowing you to execute and test your notebook outside of a Delta Live Table execution.
 
-## Acknowledgements
+Finally, Laktory got your testing and monitoring covered. 
+A data pipeline built with Laktory is shipped with custom hooks enabling fine-grained monitoring of performance and failures [under development]    
 
-I want to thank my house plants for providing me with
-a negligible amount of oxygen each day. Also, I want
-to thank the sun for providing more than half of their
-nourishment free of charge.
+## Who is it for?
+Laktory is not web app or a UI that you can use to visually build your data pipeline. 
+We don't promise that you will be up and running within a few clicks.
+You need basic programming or DevOps experience to get started. 
+What we do promise on the other hand is that once you are past the initial setup, you will be able to efficiently scale, deploying hundreds of datasets and models without compromising data governance.   
+

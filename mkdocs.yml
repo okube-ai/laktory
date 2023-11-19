@@ -2,15 +2,146 @@ site_name: Laktory
 site_description: A DataOps framework for building Databricks lakehouse
 site_url: https://www.laktory.ai/
 
+extra_css:
+  - stylesheets/extra.css
+
 theme:
-  name: "material"
+  name: material
+#  name: readthedocs
+#  name: bootstrap386
+  palette:
+#    - media: "(prefers-color-scheme)"
+#      toggle:
+#        icon: material/brightness-auto
+#        name: Switch to light mode
+#
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+#    - navigation.sections
+    - navigation.path
+    - search.suggest
+
+#      primary: "#2fe1b9"
+#      accent: green
+#      toggle:
+#        icon: material/lightbulb
+#        name: "Switch to light mode"
+#    - media: "(prefers-color-scheme: light)"
+#      scheme: laktory-light
+##      primary: pink
+##      accent: pink
+#      toggle:
+#        icon: material/lightbulb-outline
+#        name: "Switch to dark mode"
+
 
 plugins:
   - mkdocstrings
+#  - search
 
 nav:
-  - Welcome to Laktory: index.md
-  - tutorials.md
+  - Get Started:
+    - Introduction: index.md
+    - Installation: install.md
+    - Quickstart: quickstart.md
+
+  - Concepts:
+    - Lakehouse: placeholder.md
+    - Pipelines (Delta Live Tables): placeholder.md
+
   - How-To Guides: how-to-guides.md
   - API Reference: reference.md
-  - explanation.md
+  - Release Notes: placeholder.md
+
+
+#Numpy:
+#  - User Guide
+#    - Getting Started (what is, install, quickstart)
+#    - Fundamentals and usage (tutorials, how-tos)
+#    - Advanced usage (building from source, using numpy, etc.)
+#    - Extras (glossary, release notes, license)
+#  - API reference
+#  - Development
+#  - Release Notes
+#
+#Pydantic
+#  - Get Started
+#    - Welcome to Pydantic
+#    - Why use Pydantic
+#    - Help with Pydantic
+#    - Installation
+#    - Version Policy
+#    - Contribution
+#    - Changelog
+#  - Concepts
+#    - Models
+#    - Fields
+#    - JSON Schema
+#    - JSON
+#    - Types
+#    - ...
+#  - API Documentaion
+#  - Example
+#    - Secrets
+#  - Error Messages
+#  - Integrations
+#  - Blod
+#
+#Langchain
+#  - Docs
+#    - Get started
+#      - Intro
+#      - Installation
+#      - Quickstart
+#    - Langchain Expression Language
+#      - Interface
+#      - How to
+#      - Cookbook
+#    - Modules
+#      - Model I/O
+#      - Retrieval
+#      - Agents
+#  - Use Cases
+#    - QA over structured data
+#    - RAG
+#    - Interacting with APIs
+#    - Chatbots
+#  - Integrations
+#  - Guides
+#  - API
+#
+#Pandas
+#  - Getting started
+#    - Installation
+#    - Package overview
+#    - Getting started tutorials
+#      - How do I do x?
+#      - How do I do y?
+#    - Comparison with other tools
+#    - Community tutorials
+#  - User Guide
+#    - 10 min to pandas
+#    - intro do data structures
+#    - essential basic
+#    - IO tools...
+#    - PyArrow functionnality
+#  - API reference
+#  - Development
+#  - Release Notes
+
