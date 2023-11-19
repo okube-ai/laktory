@@ -23,6 +23,7 @@ secrets/*.*
 #**/*.egg-info/**
 build
 dist
+/site/
 
 # --------------------------------------------------------------------------- #
 # Testing and coverage                                                        #
@@ -45,4 +46,5 @@ junit
 
 # Tox files - Package-specific
 #**/.tox/**
+
 
