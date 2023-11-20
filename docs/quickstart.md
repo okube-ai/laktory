@@ -202,6 +202,6 @@ for table in pl.tables:
         display(df)
 ```
 
-Notebook's output:
+Output:
 
 ![pl-stock-prices](images/dlt_debug.png)

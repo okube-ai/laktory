@@ -75,6 +75,7 @@ nav:
     - Pipelines (Delta Live Tables): placeholder.md
 
   - How-To Guides: how-to-guides.md
+  - Lakehouse As Code: lakehouseascode.md
   - API Reference: reference.md
   - Changelog: changelog.md
 
