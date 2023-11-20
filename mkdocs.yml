@@ -8,7 +8,10 @@ extra_css:
 markdown_extensions:
   - pymdownx.snippets  # link between markdown (changelog)
   - pymdownx.superfences  # code blocks titles
-
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 theme:
   name: material
@@ -71,87 +74,13 @@ nav:
     - Quickstart: quickstart.md
 
   - Concepts:
-    - Lakehouse: placeholder.md
-    - Pipelines (Delta Live Tables): placeholder.md
+    - Lakehouse: concepts/lakehouse.md
+    - Models: concepts/models.md
+    - Delta Live Tables (DLT): concepts/dlt.md
+    - Resources Engines: concepts/resources.md
+    - Spark: concepts/spark.md
 
   - How-To Guides: how-to-guides.md
   - Lakehouse As Code: lakehouseascode.md
   - API Reference: reference.md
   - Changelog: changelog.md
-
-
-#Numpy:
-#  - User Guide
-#    - Getting Started (what is, install, quickstart)
-#    - Fundamentals and usage (tutorials, how-tos)
-#    - Advanced usage (building from source, using numpy, etc.)
-#    - Extras (glossary, release notes, license)
-#  - API reference
-#  - Development
-#  - Release Notes
-#
-#Pydantic
-#  - Get Started
-#    - Welcome to Pydantic
-#    - Why use Pydantic
-#    - Help with Pydantic
-#    - Installation
-#    - Version Policy
-#    - Contribution
-#    - Changelog
-#  - Concepts
-#    - Models
-#    - Fields
-#    - JSON Schema
-#    - JSON
-#    - Types
-#    - ...
-#  - API Documentaion
-#  - Example
-#    - Secrets
-#  - Error Messages
-#  - Integrations
-#  - Blod
-#
-#Langchain
-#  - Docs
-#    - Get started
-#      - Intro
-#      - Installation
-#      - Quickstart
-#    - Langchain Expression Language
-#      - Interface
-#      - How to
-#      - Cookbook
-#    - Modules
-#      - Model I/O
-#      - Retrieval
-#      - Agents
-#  - Use Cases
-#    - QA over structured data
-#    - RAG
-#    - Interacting with APIs
-#    - Chatbots
-#  - Integrations
-#  - Guides
-#  - API
-#
-#Pandas
-#  - Getting started
-#    - Installation
-#    - Package overview
-#    - Getting started tutorials
-#      - How do I do x?
-#      - How do I do y?
-#    - Comparison with other tools
-#    - Community tutorials
-#  - User Guide
-#    - 10 min to pandas
-#    - intro do data structures
-#    - essential basic
-#    - IO tools...
-#    - PyArrow functionnality
-#  - API reference
-#  - Development
-#  - Release Notes
-
