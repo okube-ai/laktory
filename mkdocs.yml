@@ -6,7 +6,9 @@ extra_css:
   - stylesheets/extra.css
 
 markdown_extensions:
-  - pymdownx.snippets
+  - pymdownx.snippets  # link between markdown (changelog)
+  - pymdownx.superfences  # code blocks titles
+
 
 theme:
   name: material
@@ -39,6 +41,9 @@ theme:
 #    - navigation.sections
     - navigation.path
     - search.suggest
+    - content.code.copy
+#    - content.code.select  # TODO: Enable
+#    - content.code.annotate  # TODO: Enable
 
 #      primary: "#2fe1b9"
 #      accent: green
@@ -61,7 +66,7 @@ plugins:
 
 nav:
   - Get Started:
-    - Introduction: index.md
+    - About: index.md
     - Installation: install.md
     - Quickstart: quickstart.md
 
