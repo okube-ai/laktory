@@ -56,7 +56,7 @@ theme:
 
 plugins:
   - mkdocstrings
-  - snippets
+#  - snippets
 #  - search
 
 nav:
@@ -71,7 +71,7 @@ nav:
 
   - How-To Guides: how-to-guides.md
   - API Reference: reference.md
-  - Release Notes: changelog.md
+  - Changelog: changelog.md
 
 
 #Numpy:

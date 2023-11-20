@@ -46,7 +46,7 @@ dev = [
     "mkdocs",
     "mkdocstrings[python]",
     "mkdocs-material",
-    "mkdocs-snippets",
+#    "mkdocs-snippets",
 ]
 spark = [
     "pandas",
