@@ -1,10 +1,6 @@
 
 A DataOps framework for building Databricks lakehouse.
 
-[//]: # (![what_is_laktory]&#40;images/what_is_laktory.png&#41;)
-
-[//]: # (<img style="float: right;" src="images/what_is_laktory.png"> tests)
-
 <img src="images/what_is_laktory.png" alt="drawing" width="400"/>
 
 ## What is it?
