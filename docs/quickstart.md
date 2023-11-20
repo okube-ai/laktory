@@ -154,3 +154,54 @@ pulumi up
 ### Run your pipeline
 Once deployed, you pipeline is ready to be run or will be run automatically if it's part of a scheduled job.
 ![pl-stock-prices](images/pl_stock_prices_simple.png)
+
+
+### Debug your pipeline
+If you need to debug or modify one of your pipeline's notebook, Laktory makes it very easy by allowing you to run and inspect (with some limitations) the output data outside of the DLT pipeline.
+
+```py title="dlt_slv_template.py"
+from laktory import dlt
+from laktory import read_metadata
+from laktory import get_logger
+
+dlt.spark = spark
+logger = get_logger(__name__)
+
+# Read pipeline definition
+pl_name = spark.conf.get("pipeline_name", "pl-stock-prices")
+pl = read_metadata(pipeline=pl_name)
+
+# Define table
+def define_table(table):
+    @dlt.table(name=table.name, comment=table.comment)
+    def get_df():
+        logger.info(f"Building {table.name} table")
+
+        # Read Source
+        df = table.builder.read_source(spark)
+        df.printSchema()
+
+        # Process
+        df = table.builder.process(df, spark=spark)
+
+        # Return
+        return df
+
+    return get_df
+
+
+# --------------------------------------------------------------------------- #
+# Execution                                                                   #
+# --------------------------------------------------------------------------- #
+
+# Build tables
+for table in pl.tables:
+    if table.zone == "SILVER":
+        wrapper = define_table(table)
+        df = dlt.get_df(wrapper)
+        display(df)
+```
+
+Notebook's output:
+
+![pl-stock-prices](images/dlt_debug.png)
