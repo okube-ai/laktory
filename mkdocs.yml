@@ -76,8 +76,10 @@ nav:
   - Concepts:
     - Design Principles: concepts/design.md
     - Models: concepts/models.md
-    - Delta Live Tables (DLT): concepts/dlt.md
-    - Resources Engines: concepts/resources.md
+    - Data Event: concepts/dataevent.md
+    - Table: concepts/table.md
+    - Pipeline: concepts/pipeline.md
+    - Deployment: concepts/deployment.md
     - Spark: concepts/spark.md
 
   - How-To Guides: how-to-guides.md

@@ -1,4 +1,5 @@
-Laktory embraces some design and data architecture principles.
+Laktory embraces a few key design and data architecture principles.
+Being familiar with these principles will help understand how Laktory is structured. 
 Although most of them are not enforced, they generally enable scalability in your data management. 
 
 ## Lakehouse
