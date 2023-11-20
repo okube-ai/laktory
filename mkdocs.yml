@@ -5,6 +5,9 @@ site_url: https://www.laktory.ai/
 extra_css:
   - stylesheets/extra.css
 
+markdown_extensions:
+  - pymdownx.snippets
+
 theme:
   name: material
 #  name: readthedocs
@@ -53,6 +56,7 @@ theme:
 
 plugins:
   - mkdocstrings
+  - snippets
 #  - search
 
 nav:
@@ -67,7 +71,7 @@ nav:
 
   - How-To Guides: how-to-guides.md
   - API Reference: reference.md
-  - Release Notes: placeholder.md
+  - Release Notes: changelog.md
 
 
 #Numpy:
