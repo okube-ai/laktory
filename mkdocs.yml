@@ -74,7 +74,7 @@ nav:
     - Quickstart: quickstart.md
 
   - Concepts:
-    - Lakehouse: concepts/lakehouse.md
+    - Design Principles: concepts/design.md
     - Models: concepts/models.md
     - Delta Live Tables (DLT): concepts/dlt.md
     - Resources Engines: concepts/resources.md
