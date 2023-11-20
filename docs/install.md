@@ -47,3 +47,4 @@ If you need or prefer installing Laktory from git, you can use:
 ```bash
 pip install git+https://github.com/okube-ai/laktory.git@main
 ```
+

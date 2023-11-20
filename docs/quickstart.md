@@ -1,9 +1,13 @@
-Suppose you need to compare stock prices performance, this example demonstrates how Laktory can help you with each step of the process, from data ingestion to aggregated analytics.
+Suppose your end goal is to compare Apple and Google stock performances.
+The example below illustrates how Laktory can help with:
+
+* Generating the raw data
+* Declaring the transformation layers (bronze, silver, gold) 
+* Deploying the corresponding data pipeline to Databricks
 
 
 ### Generate data events
-A data event class defines specifications of an event and provides methods
-for writing that event directly to a cloud storage or through a databricks volume or mount.
+A `DataEvent` class helps you set both the metadata (event name, producer, etc.) and the data of an event and provides the methods for writing that event to a cloud storage or databricks volume/mount.
 
 ```py
 from laktory import models
@@ -37,12 +41,17 @@ events = [
     )
 ]
 
+# Export to databricks landing volume / mount.
 for event in events:
     event.to_databricks()
 ```
 
-### Declare data pipeline and data tables
-A yaml file define the configuration for a data pipeline, including the transformations of a raw data event into silver (curated) and gold (consumption) layers.
+### Declare data pipeline and tables
+Once you have data events in your landing storage (they can be generated with any external system), build a yaml file (or python code) to define your data pipeline and the associated transformations. This configuration file may be used to set
+
+* pipeline properties
+* data transformations
+* privileges and grants
 
 ```yaml
 name: pl-stock-prices
@@ -63,15 +72,7 @@ libraries:
   - notebook:
       path: /pipelines/dlt_slv_template.py
   - notebook:
-      path: /pipelines/dlt_slv_star_template.py
-  - notebook:
-      path: /pipelines/dlt_gld_stock_prices.py
-  - notebook:
       path: /pipelines/dlt_gld_stock_performances.py
-
-udfs:
-  - module_name: stock_functions
-    function_name: symbol_to_name
 
 permissions:
   - group_name: account users
@@ -113,12 +114,6 @@ tables:
         spark_func_args:
           - data.symbol
 
-      - name: name
-        type: string
-        spark_func_name: symbol_to_name
-        spark_func_args:
-          - data.symbol
-
       - name: open
         type: double
         spark_func_name: coalesce
@@ -130,77 +125,12 @@ tables:
         spark_func_name: coalesce
         spark_func_args:
           - data.close
-
-      - name: low
-        type: double
-        spark_func_name: coalesce
-        spark_func_args:
-          - data.low
-
-      - name: high
-        type: double
-        spark_func_name: coalesce
-        spark_func_args:
-          - data.high
-
-  - name: brz_stock_metadata
-    builder:
-      zone: BRONZE
-      event_source:
-        name: stock_metadata
-        read_as_stream: False
-        producer:
-          name: yahoo-finance
-
-  - name: slv_stock_metadata
-    builder:
-      zone: SILVER
-      table_source:
-        name: brz_stock_metadata
-        read_as_stream: False
-    columns:
-      - name: symbol
-        type: string
-        spark_func_name: coalesce
-        spark_func_args:
-          - data.symbol
-
-      - name: currency
-        type: string
-        spark_func_name: coalesce
-        spark_func_args:
-          - data.currency
-
-      - name: first_traded
-        type: timestamp
-        spark_func_name: coalesce
-        spark_func_args:
-          - data.firstTradeDate
-
-  - name: slv_star_stock_prices
-    builder:
-      zone: SILVER_STAR
-      table_source:
-        name: slv_stock_prices
-        read_as_stream: True
-      joins:
-        - other:
-            name: slv_stock_metadata
-            read_as_stream: False
-            selects:
-              - symbol
-              - currency
-              - first_traded
-          "on":
-            - symbol
 ```
 
 ### Instantiate and deploy
-Laktory currently support Pulumi for cloud deployment, but more engines will be added in the future (Terraform, Databricks CLI, etc.).
-
+Now that your pipeline definition, you can import it as a python object and deploy it using Pulumi (more IaC tools will be supported in the future).
 ```py
 import os
-import pulumi
 from laktory import models
 
 # Read configuration file
@@ -216,11 +146,11 @@ pipeline.vars = {
 pipeline.deploy_with_pulumi()
 ```
 
-From the terminal,
+Deploy with pulumi
 ```cmd
 pulumi up
 ```
 
 ### Run your pipeline
 Once deployed, you pipeline is ready to be run or will be run automatically if it's part of a scheduled job.
-![pl-stock-prices](docs/images/pl_stock_prices.png)
+![pl-stock-prices](images/pl_stock_prices_simple.png)
