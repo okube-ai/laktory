@@ -4,7 +4,7 @@ A DataOps framework for building Databricks lakehouse.
 <img src="images/what_is_laktory.png" alt="what is laktory" width="400"/>
 
 ## What is it?
-Laktory makes it possible to express and bring to life your data vision, from raw data to enriched analytics-ready datasets and finely tuned AI models, while adhering to basic DevOps best practices such as source control, code reviews and CI/CD.
+Laktory, the lakehouse factory, makes it possible to express and bring to life your data vision, from raw data to enriched analytics-ready datasets and finely tuned AI models, while adhering to basic DevOps best practices such as source control, code reviews and CI/CD.
 
 ### Declare
 Declarative definition of your data platform, from cloud infrastructure to data tables, security and quality monitoring.

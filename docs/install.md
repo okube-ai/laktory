@@ -35,7 +35,7 @@ To benefit from all features, we recommend also installing your cloud provider-s
 
 
 ## Spark installation
-Laktory facilitate building and deploying custom spark functions on the Lakehouse. 
+Laktory facilitate building and deploying custom spark functions. 
 If you wish to test these functions locally, we recommend also installing the spark optional dependency.
 
 ```bash
