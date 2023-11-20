@@ -1,6 +1,8 @@
 site_name: Laktory
 site_description: A DataOps framework for building Databricks lakehouse
 site_url: https://www.laktory.ai/
+repo_url: https://github.com/opencubes-ai/laktory
+repo_name: Laktory
 
 extra_css:
   - stylesheets/extra.css
