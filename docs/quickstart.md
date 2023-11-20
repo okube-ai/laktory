@@ -127,7 +127,7 @@ tables:
           - data.close
 ```
 
-### Instantiate and deploy
+### Validate and deploy
 Now that your pipeline definition, you can import it as a python object and deploy it using Pulumi (more IaC tools will be supported in the future).
 ```py
 import os
