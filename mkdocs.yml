@@ -83,7 +83,12 @@ nav:
     - Deployment: concepts/deployment.md
     - Spark: concepts/spark.md
 
-  - How-To Guides: how-to-guides.md
+  - How-To Guides:
+    - Users: guides/users.md
+    - Data Catalog: guides/catalog.md
+    - Data Table: guides/table.md
+    - Data Pipeline: guides/pipeline.md
+
   - Lakehouse As Code: lakehouseascode.md
   - API Reference: reference.md
   - Changelog: changelog.md
