@@ -20,7 +20,7 @@ secrets/*.*
 # Installation and build                                                      #
 # --------------------------------------------------------------------------- #
 
-#**/*.egg-info/**
+**/*.egg-info
 build
 dist
 /site/
