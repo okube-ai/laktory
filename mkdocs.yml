@@ -86,6 +86,7 @@ nav:
     - Data Source: concepts/datasource.md
     - Table: concepts/table.md
     - Pipeline: concepts/pipeline.md
+    - Data Governance: concepts/governance.md
     - Deployment (IaC): concepts/deployment.md
     - Spark Extension: concepts/spark.md
 
