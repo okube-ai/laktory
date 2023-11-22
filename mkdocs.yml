@@ -82,7 +82,7 @@ nav:
     - Data Source: concepts/datasource.md
     - Table: concepts/table.md
     - Pipeline: concepts/pipeline.md
-    - Deployment: concepts/deployment.md
+    - Deployment (IaC): concepts/deployment.md
     - Spark: concepts/spark.md
 
   - How-To Guides:
