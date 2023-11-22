@@ -1,3 +1,7 @@
+??? "API Documentation"
+    [`laktory.spark.functions`](TODO)<br>
+    [`laktory.spark.dataframe`](TODO)<br>
+
 Apache Spark, an open-source, distributed computing system. Apache Spark is designed for big data processing and analytics and provides a fast and general-purpose cluster-computing framework.
 It supports various programming languages, including Scala, Java, Python, and R.
 
@@ -14,8 +18,6 @@ df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
 df = df.withColumn("y", LF.poly1("x", -1, 1.0))
 ```
 These functions are by default available when declaring a column in a pipeline `Table` model.
-
-Refer to the API Reference for the full list of [functions](TODO)
 
 ## DataFrame
 In this case the methods are designed to be applied directly on a spark dataframe.
@@ -36,5 +38,3 @@ import laktory  # simply importing laktory will make the new methods available f
 df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
 df.has_column("x")
 ```
-
-Refer to the API Reference for the full list of DataFrame [methods](TODO)

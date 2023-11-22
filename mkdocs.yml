@@ -8,12 +8,16 @@ extra_css:
   - stylesheets/extra.css
 
 markdown_extensions:
+  - admonition
   - pymdownx.snippets  # link between markdown (changelog)
   - pymdownx.superfences  # code blocks titles
+  - pymdownx.details
   - attr_list
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+
 
 theme:
   name: material

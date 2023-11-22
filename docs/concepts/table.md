@@ -1,7 +1,8 @@
+??? "API Documentation"
+    [`laktory.models.sql.table`](TODO)<br>
+
 The `Table` model is a fundamental component when building a Lakehouse.
 In the context of Laktory, it can serve a few purposes
-
-Refer to the API Reference for the implementation details of the [`Table`](TODO) model.
 
 ## SQL Object
 The `Table` model may be used to declare a classic SQL object

@@ -1,6 +1,7 @@
-From all the models, `Pipeline` is without a doubt the most critical and fundamental one for building a Lakehouse.
+??? "API Documentation"
+    [`laktory.models.compute.pipeline`](TODO)<br>
 
-Refer to the API Reference for the implementation details of the [`Pipeline`](TODO) model.
+From all the models, `Pipeline` is without a doubt the most critical and fundamental one for building a Lakehouse.
 
 ## Delta Live Tables (DLT)
 The main purpose of the `Pipeline` model is to declare a [Databricks Delta Live Tables](https://www.databricks.com/product/delta-live-tables) object, a declarative ETL framework that helps simplify streaming and batch transformations.
