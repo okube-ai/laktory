@@ -83,7 +83,7 @@ nav:
     - Table: concepts/table.md
     - Pipeline: concepts/pipeline.md
     - Deployment (IaC): concepts/deployment.md
-    - Spark: concepts/spark.md
+    - Spark Extension: concepts/spark.md
 
   - How-To Guides:
     - Users: guides/users.md
