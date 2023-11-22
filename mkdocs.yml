@@ -95,6 +95,9 @@ nav:
     - Data Catalog: guides/catalog.md
     - Data Table: guides/table.md
     - Data Pipeline: guides/pipeline.md
+    - Compute: guides/compute.md
+    - Job: guides/job.md
+    - Secrets: guides/secrets.md
 
   - Lakehouse As Code: lakehouseascode.md
   - API Reference: reference.md
