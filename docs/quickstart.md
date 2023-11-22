@@ -7,6 +7,9 @@ The example below illustrates how Laktory can help with:
 
 
 ### Generate data events
+??? "API Documentation"
+    [`laktory.models.dataevent`](TODO)<br>
+
 A `DataEvent` class helps you set both the metadata (event name, producer, etc.) and the data of an event and provides the methods for writing that event to a cloud storage or databricks volume/mount.
 
 ```py
@@ -47,6 +50,10 @@ for event in events:
 ```
 
 ### Declare data pipeline and tables
+??? "API Documentation"
+    [`laktory.models.sql.table`](TODO)<br>
+    [`laktory.models.compute.pipeline`](TODO)<br>
+
 Once you have data events in your landing storage (they can be generated with any external system), build a yaml file (or python code) to define your data pipeline and the associated transformations. This configuration file may be used to set
 
 * pipeline properties

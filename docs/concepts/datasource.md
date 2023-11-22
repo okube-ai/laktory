@@ -1,5 +1,8 @@
+??? "API Documentation"
+    [`laktory.models.datasources`](TODO)<br>
+
 The `DataSource` models facilitate loading lakehouse data into a spark DataFrame. 
-It provides re-usable mechanisms for reading data of various nature given different configuration. 
+It provides re-usable mechanisms for reading data of various nature given different configuration.
 
 ### Event Data Source
 This type of data source supports reading multiple files stored on a storage container
