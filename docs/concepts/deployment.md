@@ -34,19 +34,20 @@ from laktory import models
 # Read configuration file
 with open("pipeline.yaml", "r") as fp:
     pipeline = models.Pipeline.model_validate_yaml(fp)
-
     
 # Deploy
 pipeline.deploy_with_pulumi()
 ```
 The `deploy_with_pulumi()` will trigger the instantiation of `pulumi_databricks.Pipeline(...)` class with all the required parameters.
-The same apply for all Laktory models that are also Pulumi objects like notebook, grants, jobs, etc.
 
 Once you are ready to run the actual deploy, simply invoke
 ```cmd title="prompt"
 pulumi up
 ```
 as you would with any Pulumi project.
+
+The same generally apply to Laktory models that have an equivalent Pulumi resource like notebook, grants, jobs, etc. 
+A model that is deployable can be identified has having `laktory.models.resources.Resources` in its base classes (`Model.__bases__`)
 
 ## Resources Engines
 Here is the list of resources engines (or IaC tools) that are currently support or will be supported in the future.
