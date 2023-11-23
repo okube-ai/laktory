@@ -81,8 +81,10 @@ class TableBuilder(BaseModel):
     def get_zone_columns(self, zone, df=None):
         from laktory.spark.dataframe import has_column
 
+        cols = []
+
         if zone == "BRONZE":
-            return [
+            cols = [
                 Column(
                     **{
                         "name": "_bronze_at",
@@ -93,7 +95,6 @@ class TableBuilder(BaseModel):
             ]
 
         elif zone == "SILVER":
-            cols = []
 
             if self.timestamp_key:
                 cols += [
@@ -129,10 +130,8 @@ class TableBuilder(BaseModel):
                 )
             ]
 
-            return cols
-
         elif zone == "SILVER_STAR":
-            return [
+            cols = [
                 Column(
                     **{
                         "name": "_silver_star_at",
@@ -141,6 +140,20 @@ class TableBuilder(BaseModel):
                     }
                 )
             ]
+
+        elif zone == "GOLD":
+
+            cols = [
+                Column(
+                    **{
+                        "name": "_gold_at",
+                        "type": "timestamp",
+                        "spark_func_name": "current_timestamp",
+                    }
+                )
+            ]
+
+        return cols
 
     def read_source(self, spark) -> DataFrame:
         return self.source.read(spark)
