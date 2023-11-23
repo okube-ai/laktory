@@ -14,24 +14,22 @@ logger = get_logger(__name__)
 
 class SparkFuncArg(BaseModel):
     value: Any
-    to_column: bool = None
+    is_column: bool = None
     to_lit: bool = None
 
     @model_validator(mode="after")
     def is_column_default(self) -> Any:
-        if self.to_lit is None and self.to_column is None:
-            if not isinstance(self.value, str):
-                self.to_lit = True
-            else:
-                self.to_column = True
+        if self.to_lit is None and self.is_column is None:
+            if isinstance(self.value, str):
+                self.is_column = True
 
-        if self.to_column is None:
-            self.to_column = False
+        if self.is_column is None:
+            self.is_column = False
 
         if self.to_lit is None:
             self.to_lit = False
 
-        if self.to_column and self.to_lit:
+        if self.is_column and self.to_lit:
             raise ValueError("Only one of `to_column` or `to_lit` can be True")
 
         return self
@@ -40,10 +38,10 @@ class SparkFuncArg(BaseModel):
         import pyspark.sql.functions as F
 
         v = self.value
-        if self.to_column:
-            v = F.expr(v)
-        elif self.to_lit:
+        if self.to_lit:
             v = F.lit(v)
+        else:
+            v = F.expr(v)
         return v
 
 
@@ -187,7 +185,7 @@ class Column(BaseModel):
         found_cols = 0
         for i, _arg in enumerate(_args):
             if df is not None:
-                if _arg.to_column:
+                if _arg.is_column:
                     expected_cols += 1
                     if not has_column(df, _arg.value):
                         # When columns are not found, they are simply skipped and a

@@ -4,6 +4,7 @@ from .stockprices import StockPriceDataEventHeader
 from .stockprices import StockPricesPipeline
 from .stockprices import table_brz
 from .stockprices import table_slv
+from .stockprices import table_gld
 from .stockprices import df_meta
 from .stockprices import df_name
 from .stockprices import table_slv_star

@@ -1,11 +1,13 @@
 # Release History
 
-## [0.0.19] - Unreleased
+## [0.0.19] - 2023-11-23
 ###Fixed
+* Gold zone columns in table builder
 ###Added
-###Updated
+* `drop_columns` option in table builder
+* `template` property to table builder, allowing to select a template, independent of the zone.  
 ###Breaking Changes
-
+* Renamed `models.sql.column.Column.to_column` to `models.sql.column.Column.is_column` to clarify that the provided value is a column name.
 
 ## [0.0.18] - 2023-11-14
 ###Added
