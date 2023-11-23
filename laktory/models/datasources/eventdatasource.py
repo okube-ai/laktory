@@ -26,6 +26,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
     fmt: Literal[FORMATS] = "JSON"
     multiline: bool = False
     header: bool = None
+    delimiter: str = None
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
@@ -40,6 +41,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
                 .option("header", self.header)
+                .option("delimiter", self.delimiter)
                 .option("cloudFiles.format", self.fmt)
                 .option("cloudFiles.schemaLocation", self.event_root)
                 .option("cloudFiles.inferColumnTypes", True)
@@ -54,12 +56,10 @@ class EventDataSource(BaseDataSource, DataEventHeader):
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
                 .option("header", self.header)
+                .option("delimiter", self.delimiter)
                 .format(self.fmt)
                 .load(self.event_root)
             )
-
-
-
             # Not supported by UC
             # .withColumn("file", F.input_file_name())
 
