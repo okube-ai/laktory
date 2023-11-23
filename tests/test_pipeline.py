@@ -34,6 +34,7 @@ def test_pipeline():
                 "builder": {
                     "drop_source_columns": False,
                     "drop_duplicates": None,
+                    "drop_columns": [],
                     "event_source": {
                         "name": "stock_price",
                         "description": None,
@@ -47,6 +48,7 @@ def test_pipeline():
                     "joins": [],
                     "pipeline_name": "pl-stock-prices",
                     "table_source": None,
+                    "template": "BRONZE",
                     "zone": "BRONZE",
                 },
             },
@@ -62,12 +64,12 @@ def test_pipeline():
                         "spark_func_args": [
                             {
                                 "value": "_created_at",
-                                "to_column": True,
+                                "is_column": True,
                                 "to_lit": False,
                             },
                             {
                                 "value": "data._created_at",
-                                "to_column": True,
+                                "is_column": True,
                                 "to_lit": False,
                             },
                         ],
@@ -85,7 +87,7 @@ def test_pipeline():
                         "pii": None,
                         "schema_name": None,
                         "spark_func_args": [
-                            {"value": "data.symbol", "to_column": True, "to_lit": False}
+                            {"value": "data.symbol", "is_column": True, "to_lit": False}
                         ],
                         "spark_func_kwargs": {},
                         "spark_func_name": "coalesce",
@@ -101,7 +103,7 @@ def test_pipeline():
                         "pii": None,
                         "schema_name": None,
                         "spark_func_args": [
-                            {"value": "data.open", "to_column": True, "to_lit": False}
+                            {"value": "data.open", "is_column": True, "to_lit": False}
                         ],
                         "spark_func_kwargs": {},
                         "spark_func_name": "coalesce",
@@ -140,6 +142,7 @@ def test_pipeline():
                 "builder": {
                     "drop_source_columns": True,
                     "drop_duplicates": None,
+                    "drop_columns": [],
                     "event_source": None,
                     "joins": [],
                     "pipeline_name": "pl-stock-prices",
@@ -154,6 +157,7 @@ def test_pipeline():
                         "schema_name": "markets",
                         "watermark": None,
                     },
+                    "template": "SILVER",
                     "zone": "SILVER",
                 },
             },
