@@ -25,6 +25,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
     type: Literal[TYPES] = "STORAGE_EVENTS"
     fmt: Literal[FORMATS] = "JSON"
     multiline: bool = False
+    header: bool = None
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
@@ -38,6 +39,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
                 .option("multiLine", self.multiline)
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
+                .option("header", self.header)
                 .option("cloudFiles.format", self.fmt)
                 .option("cloudFiles.schemaLocation", self.event_root)
                 .option("cloudFiles.inferColumnTypes", True)
@@ -51,9 +53,13 @@ class EventDataSource(BaseDataSource, DataEventHeader):
                 spark.read.option("multiLine", self.multiline)
                 .option("mergeSchema", True)
                 .option("recursiveFileLookup", True)
+                .option("header", self.header)
                 .format(self.fmt)
                 .load(self.event_root)
             )
+
+
+
             # Not supported by UC
             # .withColumn("file", F.input_file_name())
 
