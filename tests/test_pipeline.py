@@ -44,6 +44,8 @@ def test_pipeline():
                         "type": "STORAGE_EVENTS",
                         "fmt": "JSON",
                         "multiline": False,
+                        "header": True,
+                        "read_options": {},
                     },
                     "joins": [],
                     "pipeline_name": "pl-stock-prices",
