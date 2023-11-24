@@ -35,33 +35,43 @@ class EventDataSource(BaseDataSource, DataEventHeader):
     def _read_storage(self, spark) -> DataFrame:
         if self.read_as_stream:
             logger.info(f"Reading {self.event_root} as stream")
-            df = (
-                spark.readStream.format("cloudFiles")
-                .option("multiLine", self.multiline)
-                .option("mergeSchema", True)
-                .option("recursiveFileLookup", True)
-                .option("header", self.header)
-                .option("delimiter", self.delimiter)
+
+            # Set reader
+            reader = (
+                spark.readStream
+                .format("cloudFiles")
                 .option("cloudFiles.format", self.fmt)
                 .option("cloudFiles.schemaLocation", self.event_root)
                 .option("cloudFiles.inferColumnTypes", True)
                 .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
                 .option("cloudFiles.allowOverwrites", True)
-                .load(self.event_root)
             )
+
         else:
             logger.info(f"Reading {self.event_root} as static")
-            df = (
-                spark.read.option("multiLine", self.multiline)
-                .option("mergeSchema", True)
-                .option("recursiveFileLookup", True)
-                .option("header", self.header)
-                .option("delimiter", self.delimiter)
+
+            # Set reader
+            reader = (
+                spark.read
                 .format(self.fmt)
-                .load(self.event_root)
             )
-            # Not supported by UC
-            # .withColumn("file", F.input_file_name())
+
+        reader = (
+            reader
+            .option("multiLine", self.multiline)
+            .option("mergeSchema", True)
+            .option("recursiveFileLookup", True)
+        )
+        if self.header:
+            reader = reader.option("header", self.header)
+        if self.delimiter:
+            reader = reader.option("delimiter", self.delimiter)
+
+        # Load
+        df = reader.load(self.event_root)
+
+        # Not supported by UC
+        # .withColumn("file", F.input_file_name())
 
         return df
 
