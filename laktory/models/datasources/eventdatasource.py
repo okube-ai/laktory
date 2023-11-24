@@ -1,5 +1,7 @@
+from pydantic import model_validator
 from laktory.spark import DataFrame
 from typing import Literal
+from typing import Any
 
 from laktory.models.dataeventheader import DataEventHeader
 from laktory.models.datasources.basedatasource import BaseDataSource
@@ -25,7 +27,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
     type: Literal[TYPES] = "STORAGE_EVENTS"
     fmt: Literal[FORMATS] = "JSON"
     multiline: bool = False
-    header: bool = None
+    header: bool = True
     delimiter: str = None
 
     # ----------------------------------------------------------------------- #
@@ -58,14 +60,12 @@ class EventDataSource(BaseDataSource, DataEventHeader):
 
         reader = (
             reader
-            .option("multiLine", self.multiline)
+            .option("multiLine", self.multiline)  # only apply to JSON format
             .option("mergeSchema", True)
             .option("recursiveFileLookup", True)
+            .option("header", self.header)  # only apply to CSV format
+            .option("delimiter", self.delimiter)  # only apply to CSV format
         )
-        if self.header:
-            reader = reader.option("header", self.header)
-        if self.delimiter:
-            reader = reader.option("delimiter", self.delimiter)
 
         # Load
         df = reader.load(self.event_root)
