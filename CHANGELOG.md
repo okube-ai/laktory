@@ -1,5 +1,10 @@
 # Release History
 
+## [0.0.20] - 2023-11-24
+###Added
+* `delimiter` option when reading CSV event data source
+* `header` option when reading CSV event data source 
+
 ## [0.0.19] - 2023-11-23
 ###Fixed
 * Gold zone columns in table builder
