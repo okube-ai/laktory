@@ -66,7 +66,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
             .option("header", self.header)  # only apply to CSV format
         )
         if self.read_options:
-            reader = reader.options(self.read_options)
+            reader = reader.options(**self.read_options)
 
         # Load
         df = reader.load(self.event_root)
