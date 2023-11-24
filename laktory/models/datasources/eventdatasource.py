@@ -64,8 +64,9 @@ class EventDataSource(BaseDataSource, DataEventHeader):
             .option("mergeSchema", True)
             .option("recursiveFileLookup", True)
             .option("header", self.header)  # only apply to CSV format
-            .option("delimiter", self.delimiter)  # only apply to CSV format
         )
+        if self.delimiter is not None:
+            reader = reader.option("delimiter", self.delimiter)  # only apply to CSV format
 
         # Load
         df = reader.load(self.event_root)
