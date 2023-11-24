@@ -1,5 +1,10 @@
 # Release History
 
+## [0.0.20] - 2023-11-24
+###Added
+* `header` option when reading CSV event data source 
+* `read_options` option when reading event data source
+
 ## [0.0.19] - 2023-11-23
 ###Fixed
 * Gold zone columns in table builder
