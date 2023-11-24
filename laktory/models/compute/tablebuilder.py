@@ -17,10 +17,12 @@ logger = get_logger(__name__)
 class TableBuilder(BaseModel):
     drop_source_columns: Union[bool, None] = None
     drop_duplicates: Union[bool, None] = None
+    drop_columns: list[str] = []
     event_source: Union[EventDataSource, None] = None
     joins: list[TableJoin] = []
     pipeline_name: Union[str, None] = None
     table_source: Union[TableDataSource, None] = None
+    template: Union[str, bool, None] = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     _table: Any = None
     _columns_to_build = []
@@ -45,6 +47,15 @@ class TableBuilder(BaseModel):
                 self.drop_source_columns = False
             if self.drop_duplicates is not None:
                 self.drop_duplicates = False
+
+        if self.zone == "GOLD":
+            if self.drop_source_columns is None:
+                self.drop_source_columns = False
+            if self.drop_duplicates is not None:
+                self.drop_duplicates = False
+
+        if self.template is None:
+            self.template = self.zone
 
         return self
 
@@ -81,8 +92,10 @@ class TableBuilder(BaseModel):
     def get_zone_columns(self, zone, df=None):
         from laktory.spark.dataframe import has_column
 
+        cols = []
+
         if zone == "BRONZE":
-            return [
+            cols = [
                 Column(
                     **{
                         "name": "_bronze_at",
@@ -93,7 +106,6 @@ class TableBuilder(BaseModel):
             ]
 
         elif zone == "SILVER":
-            cols = []
 
             if self.timestamp_key:
                 cols += [
@@ -129,10 +141,8 @@ class TableBuilder(BaseModel):
                 )
             ]
 
-            return cols
-
         elif zone == "SILVER_STAR":
-            return [
+            cols = [
                 Column(
                     **{
                         "name": "_silver_star_at",
@@ -141,6 +151,20 @@ class TableBuilder(BaseModel):
                     }
                 )
             ]
+
+        elif zone == "GOLD":
+
+            cols = [
+                Column(
+                    **{
+                        "name": "_gold_at",
+                        "type": "timestamp",
+                        "spark_func_name": "current_timestamp",
+                    }
+                )
+            ]
+
+        return cols
 
     def read_source(self, spark) -> DataFrame:
         return self.source.read(spark)
@@ -188,6 +212,11 @@ class TableBuilder(BaseModel):
         if self.drop_source_columns:
             logger.info(f"Dropping source columns...")
             df = df.select(column_names)
+
+        # Drop columns
+        if self.drop_columns:
+            logger.info(f"Dropping columns {self.drop_columns}...")
+            df = df.drop(*self.drop_columns)
 
         # Drop duplicates
         pk = self.primary_key

@@ -10,6 +10,7 @@ from laktory._testing import df_meta
 from laktory._testing import table_brz
 from laktory._testing import table_slv
 from laktory._testing import table_slv_star
+from laktory._testing import table_gld
 from laktory.models import Table
 from laktory.models import TableJoin
 
@@ -32,8 +33,8 @@ def test_model():
                 "pii": None,
                 "schema_name": "markets",
                 "spark_func_args": [
-                    {"value": "_created_at", "to_column": True, "to_lit": False},
-                    {"value": "data._created_at", "to_column": True, "to_lit": False},
+                    {"value": "_created_at", "is_column": True, "to_lit": False},
+                    {"value": "data._created_at", "is_column": True, "to_lit": False},
                 ],
                 "spark_func_kwargs": {},
                 "spark_func_name": "coalesce",
@@ -49,7 +50,7 @@ def test_model():
                 "pii": None,
                 "schema_name": "markets",
                 "spark_func_args": [
-                    {"value": "data.symbol", "to_column": True, "to_lit": False}
+                    {"value": "data.symbol", "is_column": True, "to_lit": False}
                 ],
                 "spark_func_kwargs": {},
                 "spark_func_name": "coalesce",
@@ -65,7 +66,7 @@ def test_model():
                 "pii": None,
                 "schema_name": "markets",
                 "spark_func_args": [
-                    {"value": "data.open", "to_column": True, "to_lit": False}
+                    {"value": "data.open", "is_column": True, "to_lit": False}
                 ],
                 "spark_func_kwargs": {},
                 "spark_func_name": "coalesce",
@@ -104,6 +105,7 @@ def test_model():
         "builder": {
             "drop_source_columns": True,
             "drop_duplicates": None,
+            "drop_columns": [],
             "event_source": None,
             "joins": [],
             "pipeline_name": None,
@@ -118,6 +120,7 @@ def test_model():
                 "schema_name": "markets",
                 "watermark": None,
             },
+            "template": "SILVER",
             "zone": "SILVER",
         },
     }
@@ -234,7 +237,7 @@ def test_silver_star():
                 "pii": None,
                 "schema_name": "markets",
                 "spark_func_args": [
-                    {"value": "symbol", "to_column": True, "to_lit": False}
+                    {"value": "symbol", "is_column": True, "to_lit": False}
                 ],
                 "spark_func_kwargs": {},
                 "spark_func_name": "coalesce",
@@ -254,6 +257,7 @@ def test_silver_star():
         "builder": {
             "drop_source_columns": False,
             "drop_duplicates": None,
+            "drop_columns": [],
             "event_source": None,
             "joins": [
                 {
@@ -309,6 +313,7 @@ def test_silver_star():
                 "schema_name": "markets",
                 "watermark": None,
             },
+            "template": "SILVER_STAR",
             "zone": "SILVER_STAR",
         },
     }
@@ -340,6 +345,31 @@ def test_silver_star():
             "name": "Google",
         },
     ]
+
+
+def test_gold():
+    assert table_gld.builder.template == "GOLD1"
+    df0 = manager.to_spark_df()
+    df0.show()
+    df1 = table_brz.builder.process(df0)
+    df1.show()
+    df2 = table_slv.builder.process(df1)
+    df2.show()
+    df3 = table_gld.builder.process(df2)
+    df3.show()
+    assert df3.schema == T.StructType(
+        [
+            T.StructField("created_at", T.TimestampType(), True),
+            T.StructField("symbol", T.StringType(), True),
+            T.StructField("_bronze_at", T.TimestampType(), False),
+            T.StructField("_silver_at", T.TimestampType(), False),
+            T.StructField("_gold_at", T.TimestampType(), False),
+        ]
+    )
+    s = df3.toPandas().iloc[0]
+    print(s)
+    assert s["created_at"] == pd.Timestamp("2023-09-01 00:00:00")
+    assert s["symbol"] == "AAPL"
 
 
 def test_cdc():
@@ -397,4 +427,5 @@ if __name__ == "__main__":
     test_silver()
     test_table_join()
     test_silver_star()
+    test_gold()
     test_cdc()

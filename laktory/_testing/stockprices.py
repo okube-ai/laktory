@@ -248,6 +248,27 @@ table_slv_star.builder.source._df = table_slv.to_df(spark=spark)
 table_slv_star.builder.joins[0].other._df = df_meta
 table_slv_star.builder.joins[1].other._df = df_name
 
+table_gld = Table(
+    name="gld_stock_prices",
+    columns=[
+    ],
+    data=[
+        # ["2023-11-01T00:00:00Z", "AAPL", 1, 2],
+        # ["2023-11-01T01:00:00Z", "AAPL", 3, 4],
+        # ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
+        # ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
+    ],
+    catalog_name="dev",
+    schema_name="markets",
+    builder={
+        "table_source": {
+            "name": "slv_stock_prices",
+        },
+        "zone": "GOLD",
+        "drop_columns": ["open", "close"],
+        "template": "GOLD1",
+    },
+)
 
 # --------------------------------------------------------------------------- #
 # Pipeline                                                                    #

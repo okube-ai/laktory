@@ -73,7 +73,7 @@ def test_spark():
         spark_func_args=[
             "data.open",
         ],
-        spark_func_kwargs={"a": 2.0},
+        spark_func_kwargs={"a": {"value": 2.0, "to_lit": True}},
         type="double",
     ).to_spark(df)
     assert open2.__repr__() == "Column<'CAST(((2.0 * data.open) + 0.0) AS DOUBLE)'>"
