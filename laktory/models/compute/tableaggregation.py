@@ -20,6 +20,14 @@ class Window(BaseModel):
     start_time: Union[str, None] = None
 
 
+# TODO: Add support for partition by and drop
+"""
+w = Window.partitionBy("account_id").orderBy(F.col("created_at").desc())
+df = df.withColumn("_row", F.row_number().over(w)).filter(F.col("_row") == 1)
+df = df.drop("_row")
+"""
+
+
 class TableAggregation(BaseModel):
     groupby_window: Union[Window, None] = None
     groupby_columns: Union[list[str], None] = []
