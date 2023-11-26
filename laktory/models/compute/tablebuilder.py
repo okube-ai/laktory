@@ -11,6 +11,7 @@ from laktory.spark import DataFrame
 from laktory.models.datasources import TableDataSource
 from laktory.models.datasources import EventDataSource
 from laktory.models.compute.tableaggregation import TableAggregation
+from laktory.models.compute.tablewindowfilter import TableWindowFilter
 
 logger = get_logger(__name__)
 
@@ -21,11 +22,14 @@ class TableBuilder(BaseModel):
     drop_duplicates: Union[bool, None] = None
     drop_columns: list[str] = []
     event_source: Union[EventDataSource, None] = None
+    filter: Union[str, None] = None
     joins: list[TableJoin] = []
     joins_post_aggregation: list[TableJoin] = []
     pipeline_name: Union[str, None] = None
+    selects: Union[list[str], dict[str, str], None] = None
     table_source: Union[TableDataSource, None] = None
     template: Union[str, bool, None] = None
+    window_filter: Union[TableWindowFilter, None] = None
     zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     _table: Any = None
     _columns_to_build = []
@@ -189,6 +193,8 @@ class TableBuilder(BaseModel):
         return df
 
     def process(self, df, udfs=None, spark=None) -> DataFrame:
+        import pyspark.sql.functions as F
+
         logger.info(f"Applying {self.zone} transformations")
 
         # Build columns
@@ -214,6 +220,10 @@ class TableBuilder(BaseModel):
             df = self.build_columns(
                 df, udfs=udfs, raise_exception=i == len(self.joins) - 1
             )
+
+        # Window filtering
+        if self.window_filter:
+            df = self.window_filter.run(df)
 
         # Drop source columns
         if self.drop_source_columns:
@@ -243,6 +253,19 @@ class TableBuilder(BaseModel):
             df = self.build_columns(
                 df, udfs=udfs, raise_exception=i == len(self.joins) - 1
             )
+
+        # Apply filter
+        if self.filter:
+            df = df.filter(self.filter)
+
+        # Select columns
+        cols = []
+        if self.selects:
+            if isinstance(self.selects, list):
+                cols += [F.col(c) for c in self.selects]
+            elif isinstance(self.selects, dict):
+                cols += [F.col(k).alias(v) for k, v in self.selects.items()]
+            df = df.select(cols)
 
         # Drop columns
         if self.drop_columns:

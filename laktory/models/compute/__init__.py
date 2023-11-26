@@ -6,4 +6,5 @@ from laktory.models.compute.pipeline import Pipeline
 from laktory.models.compute.tablejoin import TableJoin
 from laktory.models.compute.tableaggregation import TableAggregation
 from laktory.models.compute.tablebuilder import TableBuilder
+from laktory.models.compute.tablewindowfilter import TableWindowFilter
 from laktory.models.compute.job import Job
