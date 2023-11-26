@@ -253,7 +253,7 @@ table_gld = Table(
             "spark_func_name": "coalesce",
             "spark_func_args": [
                 "name",
-            ]
+            ],
         }
     ],
     catalog_name="dev",
@@ -271,7 +271,7 @@ table_gld = Table(
                 {
                     "name": "min_open",
                     "spark_func_name": "min",
-                    "spark_func_args": ["open"]
+                    "spark_func_args": ["open"],
                 },
                 {
                     "name": "max_open",

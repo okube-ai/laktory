@@ -1,4 +1,5 @@
 from pyspark.sql import types as T
+from pyspark.sql import functions as F
 from pyspark.sql import SparkSession
 import pandas as pd
 import datetime
@@ -105,28 +106,31 @@ def test_table_agg_window():
     assert df.count() == 4
 
     df1 = agg.run(df=df)
-    df1.show()
+    df1.select("window.start", "window.end").show()
     df1.printSchema()
+
+    # Convert window to string for easier testing
+    df1 = df1.withColumn("start", F.col("window.start").cast("string"))
+    df1 = df1.withColumn("end", F.col("window.end").cast("string"))
+    df1 = df1.drop("window")
+    df1.printSchema()
+
     data = [row.asDict(recursive=True) for row in df1.collect()]
     print(data)
     assert data == [
         {
-            "window": {
-                "start": datetime.datetime(2023, 10, 31, 20, 0),
-                "end": datetime.datetime(2023, 11, 1, 20, 0),
-            },
             "symbol": "AAPL",
             "min_open": 1,
             "max_open": 3,
+            "start": "2023-11-01 00:00:00",
+            "end": "2023-11-02 00:00:00",
         },
         {
-            "window": {
-                "start": datetime.datetime(2023, 10, 31, 20, 0),
-                "end": datetime.datetime(2023, 11, 1, 20, 0),
-            },
             "symbol": "GOOGL",
             "min_open": 3,
             "max_open": 5,
+            "start": "2023-11-01 00:00:00",
+            "end": "2023-11-02 00:00:00",
         },
     ]
 
@@ -165,7 +169,6 @@ def test_silver():
 def test_silver_star():
     df = table_slv_star.builder.read_source(spark)
     df = table_slv_star.builder.process(df, spark=spark)
-
     df.printSchema()
 
     assert "_silver_star_at" in df.columns
@@ -271,11 +274,11 @@ def test_cdc():
 
 
 if __name__ == "__main__":
-    test_table_join()
-    test_table_agg()
+    # test_table_join()
+    # test_table_agg()
     test_table_agg_window()
-    test_bronze()
-    test_silver()
-    test_silver_star()
-    test_gold()
-    test_cdc()
+    # test_bronze()
+    # test_silver()
+    # test_silver_star()
+    # test_gold()
+    # test_cdc()

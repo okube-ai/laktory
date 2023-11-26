@@ -20,5 +20,5 @@ class Group(BaseModel, Resources):
 
     def deploy_with_pulumi(self, name=None, opts=None):
         from laktory.resourcesengines.pulumi.group import PulumiGroup
-        return PulumiGroup(name=name, group=self, opts=opts)
 
+        return PulumiGroup(name=name, group=self, opts=opts)

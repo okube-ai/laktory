@@ -113,7 +113,6 @@ class TableBuilder(BaseModel):
             ]
 
         elif zone == "SILVER":
-
             if self.timestamp_key:
                 cols += [
                     Column(
@@ -160,7 +159,6 @@ class TableBuilder(BaseModel):
             ]
 
         elif zone == "GOLD":
-
             cols = [
                 Column(
                     **{
@@ -198,7 +196,9 @@ class TableBuilder(BaseModel):
             zone=self.zone, df=df
         )
         column_names = [c.name for c in self._columns_to_build]
-        df = self.build_columns(df, udfs=udfs, raise_exception=not (self.has_joins or self.aggregation))
+        df = self.build_columns(
+            df, udfs=udfs, raise_exception=not (self.has_joins or self.aggregation)
+        )
 
         # Make joins
         for i, join in enumerate(self.joins):
@@ -225,7 +225,9 @@ class TableBuilder(BaseModel):
             self._columns_to_build += self.get_zone_columns(zone=self.zone, df=df)
 
         # Build columns after aggregation
-        df = self.build_columns(df, udfs=udfs, raise_exception=not self.has_joins_post_aggregation)
+        df = self.build_columns(
+            df, udfs=udfs, raise_exception=not self.has_joins_post_aggregation
+        )
 
         # Make post-aggregation joins
         for i, join in enumerate(self.joins_post_aggregation):

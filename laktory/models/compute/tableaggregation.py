@@ -36,7 +36,9 @@ class TableAggregation(BaseModel):
     @model_validator(mode="after")
     def groupby(self) -> Any:
         if self.groupby_window is None and len(self.groupby_columns) == 0:
-            raise ValueError("Either `groupby_window` or `groupby_columns` must be specified.")
+            raise ValueError(
+                "Either `groupby_window` or `groupby_columns` must be specified."
+            )
 
         return self
 
@@ -70,10 +72,12 @@ class TableAggregation(BaseModel):
         aggs = []
         for expr in self.agg_exprs:
             expr.type = "_any"
-            aggs += [expr.to_spark(
-                df=df,
-                udfs=udfs,
-                raise_exception=True,
-            ).alias(expr.name)]
+            aggs += [
+                expr.to_spark(
+                    df=df,
+                    udfs=udfs,
+                    raise_exception=True,
+                ).alias(expr.name)
+            ]
 
         return df.groupby(groupby).agg(*aggs)
