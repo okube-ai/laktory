@@ -4,6 +4,7 @@
 ###Added
 * `header` option when reading CSV event data source 
 * `read_options` option when reading event data source
+* `aggregation` option for table builder
 
 ## [0.0.19] - 2023-11-23
 ###Fixed

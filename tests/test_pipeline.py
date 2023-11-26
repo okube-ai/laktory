@@ -32,6 +32,7 @@ def test_pipeline():
                 "schema_name": None,
                 "timestamp_key": None,
                 "builder": {
+                    "aggregation": None,
                     "drop_source_columns": False,
                     "drop_duplicates": None,
                     "drop_columns": [],
@@ -48,6 +49,7 @@ def test_pipeline():
                         "read_options": {},
                     },
                     "joins": [],
+                    "joins_post_aggregation": [],
                     "pipeline_name": "pl-stock-prices",
                     "table_source": None,
                     "template": "BRONZE",
@@ -142,11 +144,13 @@ def test_pipeline():
                 "schema_name": None,
                 "timestamp_key": None,
                 "builder": {
+                    "aggregation": None,
                     "drop_source_columns": True,
                     "drop_duplicates": None,
                     "drop_columns": [],
                     "event_source": None,
                     "joins": [],
+                    "joins_post_aggregation": [],
                     "pipeline_name": "pl-stock-prices",
                     "table_source": {
                         "read_as_stream": True,

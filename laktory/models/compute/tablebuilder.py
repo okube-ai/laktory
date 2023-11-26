@@ -10,16 +10,19 @@ from laktory.models.sql.column import Column
 from laktory.spark import DataFrame
 from laktory.models.datasources import TableDataSource
 from laktory.models.datasources import EventDataSource
+from laktory.models.compute.tableaggregation import TableAggregation
 
 logger = get_logger(__name__)
 
 
 class TableBuilder(BaseModel):
+    aggregation: Union[TableAggregation, None] = None
     drop_source_columns: Union[bool, None] = None
     drop_duplicates: Union[bool, None] = None
     drop_columns: list[str] = []
     event_source: Union[EventDataSource, None] = None
     joins: list[TableJoin] = []
+    joins_post_aggregation: list[TableJoin] = []
     pipeline_name: Union[str, None] = None
     table_source: Union[TableDataSource, None] = None
     template: Union[str, bool, None] = None
@@ -88,6 +91,10 @@ class TableBuilder(BaseModel):
     @property
     def has_joins(self):
         return len(self.joins) > 0
+
+    @property
+    def has_joins_post_aggregation(self):
+        return len(self.joins_post_aggregation) > 0
 
     def get_zone_columns(self, zone, df=None):
         from laktory.spark.dataframe import has_column
@@ -191,7 +198,7 @@ class TableBuilder(BaseModel):
             zone=self.zone, df=df
         )
         column_names = [c.name for c in self._columns_to_build]
-        df = self.build_columns(df, udfs=udfs, raise_exception=not self.has_joins)
+        df = self.build_columns(df, udfs=udfs, raise_exception=not (self.has_joins or self.aggregation))
 
         # Make joins
         for i, join in enumerate(self.joins):
@@ -212,6 +219,28 @@ class TableBuilder(BaseModel):
         if self.drop_source_columns:
             logger.info(f"Dropping source columns...")
             df = df.select(column_names)
+
+        if self.aggregation:
+            df = self.aggregation.run(df, udfs=udfs)
+            self._columns_to_build += self.get_zone_columns(zone=self.zone, df=df)
+
+        # Build columns after aggregation
+        df = self.build_columns(df, udfs=udfs, raise_exception=not self.has_joins_post_aggregation)
+
+        # Make post-aggregation joins
+        for i, join in enumerate(self.joins_post_aggregation):
+            if i == 0:
+                name = self.source.name
+            else:
+                name = "previous_join"
+            join.left = TableDataSource(name=name)
+            join.left._df = df
+            df = join.run(spark)
+
+            # Build remaining columns again (in case inputs are found in joins)
+            df = self.build_columns(
+                df, udfs=udfs, raise_exception=i == len(self.joins) - 1
+            )
 
         # Drop columns
         if self.drop_columns:
