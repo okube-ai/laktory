@@ -1,4 +1,3 @@
-from datetime import datetime
 import pandas as pd
 from pyspark.sql import SparkSession
 import pyspark.sql.types as T
@@ -7,12 +6,9 @@ from laktory.models import DataEventHeader
 from laktory.models import DataEvent
 from laktory.models import Producer
 from laktory.models import Table
-from laktory.models import TableDataSource
-from laktory.models import EventDataSource
 from laktory.models import Pipeline
 from laktory.models.compute.pipeline import PipelineUDF
 from datetime import datetime
-import pytz
 
 spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 spark.conf.set("spark.sql.session.timeZone", "UTC")
@@ -251,12 +247,14 @@ table_slv_star.builder.joins[1].other._df = df_name
 table_gld = Table(
     name="gld_stock_prices",
     columns=[
-    ],
-    data=[
-        # ["2023-11-01T00:00:00Z", "AAPL", 1, 2],
-        # ["2023-11-01T01:00:00Z", "AAPL", 3, 4],
-        # ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
-        # ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
+        {
+            "name": "name2",
+            "type": "string",
+            "spark_func_name": "coalesce",
+            "spark_func_args": [
+                "name",
+            ],
+        }
     ],
     catalog_name="dev",
     schema_name="markets",
@@ -265,10 +263,46 @@ table_gld = Table(
             "name": "slv_stock_prices",
         },
         "zone": "GOLD",
-        "drop_columns": ["open", "close"],
+        "drop_columns": ["max_close"],
         "template": "GOLD1",
+        "aggregation": {
+            "groupby_columns": ["symbol"],
+            "agg_exprs": [
+                {
+                    "name": "min_open",
+                    "spark_func_name": "min",
+                    "spark_func_args": ["open"],
+                },
+                {
+                    "name": "max_open",
+                    "sql_expression": "max(open)",
+                },
+                {
+                    "name": "min_close",
+                    "sql_expression": "max(open)",
+                },
+                {
+                    "name": "max_close",
+                    "sql_expression": "max(open)",
+                },
+            ],
+        },
+        "joins_post_aggregation": [
+            {
+                "other": {
+                    "name": "slv_stock_names",
+                    "selects": {
+                        "symbol3": "symbol",
+                        "name": "name",
+                    },
+                },
+                "on": ["symbol"],
+            }
+        ],
     },
 )
+table_gld.builder.joins_post_aggregation[0].other._df = df_name
+
 
 # --------------------------------------------------------------------------- #
 # Pipeline                                                                    #

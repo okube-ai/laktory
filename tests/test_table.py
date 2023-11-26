@@ -13,6 +13,7 @@ from laktory._testing import table_slv_star
 from laktory._testing import table_gld
 from laktory.models import Table
 from laktory.models import TableJoin
+from laktory.models import TableAggregation
 
 manager = EventsManager()
 manager.build_events()
@@ -103,11 +104,13 @@ def test_model():
         "schema_name": "markets",
         "timestamp_key": None,
         "builder": {
+            "aggregation": None,
             "drop_source_columns": True,
             "drop_duplicates": None,
             "drop_columns": [],
             "event_source": None,
             "joins": [],
+            "joins_post_aggregation": [],
             "pipeline_name": None,
             "table_source": {
                 "read_as_stream": True,
@@ -225,6 +228,29 @@ def test_table_join():
     ]
 
 
+def test_table_agg():
+    agg = TableAggregation(
+        groupby_columns=["symbol"],
+        agg_exprs=[
+            {"name": "min_open", "spark_func_name": "min", "spark_func_args": ["open"]},
+            {
+                "name": "max_open",
+                "sql_expression": "max(open)",
+            },
+        ],
+    )
+    df = table_slv.to_df(spark)
+
+    df1 = agg.run(df=df)
+    df1.show()
+    data = df1.toPandas().to_dict(orient="records")
+    print(data)
+    assert data == [
+        {"symbol": "AAPL", "min_open": 1, "max_open": 3},
+        {"symbol": "GOOGL", "min_open": 3, "max_open": 5},
+    ]
+
+
 def test_silver_star():
     print(table_slv_star.model_dump())
     assert table_slv_star.model_dump() == {
@@ -255,6 +281,7 @@ def test_silver_star():
         "schema_name": "markets",
         "timestamp_key": None,
         "builder": {
+            "aggregation": None,
             "drop_source_columns": False,
             "drop_duplicates": None,
             "drop_columns": [],
@@ -301,6 +328,7 @@ def test_silver_star():
                     "time_constraint_interval_upper": None,
                 },
             ],
+            "joins_post_aggregation": [],
             "pipeline_name": None,
             "table_source": {
                 "read_as_stream": True,
@@ -357,19 +385,21 @@ def test_gold():
     df2.show()
     df3 = table_gld.builder.process(df2)
     df3.show()
+    df3.printSchema()
     assert df3.schema == T.StructType(
         [
-            T.StructField("created_at", T.TimestampType(), True),
             T.StructField("symbol", T.StringType(), True),
-            T.StructField("_bronze_at", T.TimestampType(), False),
-            T.StructField("_silver_at", T.TimestampType(), False),
+            T.StructField("min_open", T.DoubleType(), True),
+            T.StructField("max_open", T.DoubleType(), True),
+            T.StructField("min_close", T.DoubleType(), True),
             T.StructField("_gold_at", T.TimestampType(), False),
+            T.StructField("name", T.StringType(), True),
+            T.StructField("name2", T.StringType(), True),
         ]
     )
     s = df3.toPandas().iloc[0]
     print(s)
-    assert s["created_at"] == pd.Timestamp("2023-09-01 00:00:00")
-    assert s["symbol"] == "AAPL"
+    assert s["name2"] == "Apple"
 
 
 def test_cdc():
@@ -426,6 +456,7 @@ if __name__ == "__main__":
     test_bronze()
     test_silver()
     test_table_join()
+    test_table_agg()
     test_silver_star()
     test_gold()
     test_cdc()

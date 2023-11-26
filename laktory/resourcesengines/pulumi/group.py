@@ -30,4 +30,6 @@ class PulumiGroup(PulumiResourcesEngine):
             )
             group.id = self.group.id
         else:
-            self.group = databricks.Group.get(f"group-{group.display_name}", id=group.id)
+            self.group = databricks.Group.get(
+                f"group-{group.display_name}", id=group.id
+            )

@@ -40,8 +40,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
 
             # Set reader
             reader = (
-                spark.readStream
-                .format("cloudFiles")
+                spark.readStream.format("cloudFiles")
                 .option("cloudFiles.format", self.fmt)
                 .option("cloudFiles.schemaLocation", self.event_root)
                 .option("cloudFiles.inferColumnTypes", True)
@@ -53,14 +52,10 @@ class EventDataSource(BaseDataSource, DataEventHeader):
             logger.info(f"Reading {self.event_root} as static")
 
             # Set reader
-            reader = (
-                spark.read
-                .format(self.fmt)
-            )
+            reader = spark.read.format(self.fmt)
 
         reader = (
-            reader
-            .option("multiLine", self.multiline)  # only apply to JSON format
+            reader.option("multiLine", self.multiline)  # only apply to JSON format
             .option("mergeSchema", True)
             .option("recursiveFileLookup", True)
             .option("header", self.header)  # only apply to CSV format

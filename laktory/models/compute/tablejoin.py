@@ -60,11 +60,15 @@ class TableJoin(BaseModel):
         logger.info(f"Other Schema:")
         other_df.printSchema()
 
-        df = left_df.alias("left").join(
-            other=other_df.alias("other"),
-            on=F.expr(_join),
-            how=self.how,
-        ).drop()
+        df = (
+            left_df.alias("left")
+            .join(
+                other=other_df.alias("other"),
+                on=F.expr(_join),
+                how=self.how,
+            )
+            .drop()
+        )
 
         # Drop join columns
         for c in self.on:

@@ -154,7 +154,10 @@ class Column(BaseModel):
         # From SQL expression
         if self.sql_expression:
             logger.info(f"   {self.name}[{self.type}] as `{self.sql_expression}`)")
-            return F.expr(self.sql_expression).alias(self.name).cast(self.type)
+            col = F.expr(self.sql_expression).alias(self.name)
+            if self.type not in ["_any"]:
+                col = col.cast(self.type)
+            return col
 
         # From Spark Function
         func_name = self.spark_func_name
