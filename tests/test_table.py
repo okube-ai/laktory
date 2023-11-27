@@ -109,9 +109,11 @@ def test_model():
             "drop_duplicates": None,
             "drop_columns": [],
             "event_source": None,
+            "filter": None,
             "joins": [],
             "joins_post_aggregation": [],
             "pipeline_name": None,
+            "selects": None,
             "table_source": {
                 "read_as_stream": True,
                 "catalog_name": "dev",
@@ -124,6 +126,7 @@ def test_model():
                 "watermark": None,
             },
             "template": "SILVER",
+            "window_filter": None,
             "zone": "SILVER",
         },
     }
