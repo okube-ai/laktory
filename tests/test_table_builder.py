@@ -140,7 +140,7 @@ def test_table_window_filter():
     w = TableWindowFilter(
         partition_by=["symbol"],
         order_by=[
-            {"name": "created_at", "desc": True},
+            {"sql_expression": "created_at", "desc": True},
         ],
         drop_row_index=False,
         rows_to_keep=1,

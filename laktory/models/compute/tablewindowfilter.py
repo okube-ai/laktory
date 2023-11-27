@@ -7,7 +7,7 @@ logger = get_logger(__name__)
 
 
 class OrderBy(BaseModel):
-    name: str
+    sql_expression: str
     desc: bool = False
 
 
@@ -30,7 +30,7 @@ class TableWindowFilter(BaseModel):
         if self.order_by:
             order_bys = []
             for o in self.order_by:
-                order_bys += [F.expr(o.name)]
+                order_bys += [F.expr(o.sql_expression)]
                 if o.desc:
                     order_bys[-1] = order_bys[-1].desc()
             w = w.orderBy(*order_bys)
