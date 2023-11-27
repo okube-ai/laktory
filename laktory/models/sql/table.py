@@ -85,8 +85,8 @@ class Table(BaseModel):
         return self.schema_name
 
     @property
-    def zone(self):
-        return self.builder.zone
+    def layer(self):
+        return self.builder.layer
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

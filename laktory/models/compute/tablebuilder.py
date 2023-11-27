@@ -25,44 +25,44 @@ class TableBuilder(BaseModel):
     filter: Union[str, None] = None
     joins: list[TableJoin] = []
     joins_post_aggregation: list[TableJoin] = []
+    layer: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     pipeline_name: Union[str, None] = None
     selects: Union[list[str], dict[str, str], None] = None
     table_source: Union[TableDataSource, None] = None
     template: Union[str, bool, None] = None
     window_filter: Union[TableWindowFilter, None] = None
-    zone: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
     _table: Any = None
     _columns_to_build = []
 
     @model_validator(mode="after")
     def default_options(self) -> Any:
         # Default values
-        if self.zone == "BRONZE":
+        if self.layer == "BRONZE":
             if self.drop_source_columns is None:
                 self.drop_source_columns = False
             if self.drop_duplicates is not None:
                 self.drop_duplicates = False
 
-        if self.zone == "SILVER":
+        if self.layer == "SILVER":
             if self.drop_source_columns is None:
                 self.drop_source_columns = True
             if self.drop_duplicates is not None:
                 self.drop_duplicates = True
 
-        if self.zone == "SILVER_STAR":
+        if self.layer == "SILVER_STAR":
             if self.drop_source_columns is None:
                 self.drop_source_columns = False
             if self.drop_duplicates is not None:
                 self.drop_duplicates = False
 
-        if self.zone == "GOLD":
+        if self.layer == "GOLD":
             if self.drop_source_columns is None:
                 self.drop_source_columns = False
             if self.drop_duplicates is not None:
                 self.drop_duplicates = False
 
         if self.template is None:
-            self.template = self.zone
+            self.template = self.layer
 
         return self
 
@@ -100,12 +100,12 @@ class TableBuilder(BaseModel):
     def has_joins_post_aggregation(self):
         return len(self.joins_post_aggregation) > 0
 
-    def get_zone_columns(self, zone, df=None):
+    def get_layer_columns(self, layer, df=None):
         from laktory.spark.dataframe import has_column
 
         cols = []
 
-        if zone == "BRONZE":
+        if layer == "BRONZE":
             cols = [
                 Column(
                     **{
@@ -116,7 +116,7 @@ class TableBuilder(BaseModel):
                 )
             ]
 
-        elif zone == "SILVER":
+        elif layer == "SILVER":
             if self.timestamp_key:
                 cols += [
                     Column(
@@ -151,7 +151,7 @@ class TableBuilder(BaseModel):
                 )
             ]
 
-        elif zone == "SILVER_STAR":
+        elif layer == "SILVER_STAR":
             cols = [
                 Column(
                     **{
@@ -162,7 +162,7 @@ class TableBuilder(BaseModel):
                 )
             ]
 
-        elif zone == "GOLD":
+        elif layer == "GOLD":
             cols = [
                 Column(
                     **{
@@ -195,11 +195,11 @@ class TableBuilder(BaseModel):
     def process(self, df, udfs=None, spark=None) -> DataFrame:
         import pyspark.sql.functions as F
 
-        logger.info(f"Applying {self.zone} transformations")
+        logger.info(f"Applying {self.layer} transformations")
 
         # Build columns
-        self._columns_to_build = self.columns + self.get_zone_columns(
-            zone=self.zone, df=df
+        self._columns_to_build = self.columns + self.get_layer_columns(
+            layer=self.layer, df=df
         )
         column_names = [c.name for c in self._columns_to_build]
         df = self.build_columns(
@@ -232,7 +232,7 @@ class TableBuilder(BaseModel):
 
         if self.aggregation:
             df = self.aggregation.run(df, udfs=udfs)
-            self._columns_to_build += self.get_zone_columns(zone=self.zone, df=df)
+            self._columns_to_build += self.get_layer_columns(layer=self.layer, df=df)
 
         # Build columns after aggregation
         df = self.build_columns(

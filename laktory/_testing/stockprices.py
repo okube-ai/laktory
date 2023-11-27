@@ -134,7 +134,7 @@ table_brz = Table(
         "event_source": {
             "name": "stock_price",
         },
-        "zone": "BRONZE",
+        "layer": "BRONZE",
     },
 )
 
@@ -173,7 +173,7 @@ table_slv = Table(
         "table_source": {
             "name": "brz_stock_prices",
         },
-        "zone": "SILVER",
+        "layer": "SILVER",
     },
 )
 
@@ -203,7 +203,7 @@ table_slv_star = Table(
     catalog_name="dev",
     schema_name="markets",
     builder={
-        "zone": "SILVER_STAR",
+        "layer": "SILVER_STAR",
         "table_source": {
             "name": "slv_stock_prices",
             "filter": "created_at = '2023-11-01T00:00:00Z'",
@@ -262,7 +262,7 @@ table_gld = Table(
         "table_source": {
             "name": "slv_stock_prices",
         },
-        "zone": "GOLD",
+        "layer": "GOLD",
         "drop_columns": ["max_close"],
         "template": "GOLD1",
         "aggregation": {
