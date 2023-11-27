@@ -289,6 +289,7 @@ def test_silver_star():
             "drop_duplicates": None,
             "drop_columns": [],
             "event_source": None,
+            "filter": None,
             "joins": [
                 {
                     "left": None,
@@ -333,6 +334,7 @@ def test_silver_star():
             ],
             "joins_post_aggregation": [],
             "pipeline_name": None,
+            "selects": None,
             "table_source": {
                 "read_as_stream": True,
                 "catalog_name": "dev",
@@ -345,6 +347,7 @@ def test_silver_star():
                 "watermark": None,
             },
             "template": "SILVER_STAR",
+            "window_filter": None,
             "zone": "SILVER_STAR",
         },
     }
