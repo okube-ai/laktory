@@ -109,9 +109,11 @@ def test_model():
             "drop_duplicates": None,
             "drop_columns": [],
             "event_source": None,
+            "filter": None,
             "joins": [],
             "joins_post_aggregation": [],
             "pipeline_name": None,
+            "selects": None,
             "table_source": {
                 "read_as_stream": True,
                 "catalog_name": "dev",
@@ -124,6 +126,7 @@ def test_model():
                 "watermark": None,
             },
             "template": "SILVER",
+            "window_filter": None,
             "zone": "SILVER",
         },
     }
@@ -231,7 +234,7 @@ def test_table_join():
 def test_table_agg():
     agg = TableAggregation(
         groupby_columns=["symbol"],
-        agg_exprs=[
+        agg_expressions=[
             {"name": "min_open", "spark_func_name": "min", "spark_func_args": ["open"]},
             {
                 "name": "max_open",
@@ -286,6 +289,7 @@ def test_silver_star():
             "drop_duplicates": None,
             "drop_columns": [],
             "event_source": None,
+            "filter": None,
             "joins": [
                 {
                     "left": None,
@@ -330,6 +334,7 @@ def test_silver_star():
             ],
             "joins_post_aggregation": [],
             "pipeline_name": None,
+            "selects": None,
             "table_source": {
                 "read_as_stream": True,
                 "catalog_name": "dev",
@@ -342,6 +347,7 @@ def test_silver_star():
                 "watermark": None,
             },
             "template": "SILVER_STAR",
+            "window_filter": None,
             "zone": "SILVER_STAR",
         },
     }

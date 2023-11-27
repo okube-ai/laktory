@@ -12,6 +12,7 @@ from laktory._testing import table_slv_star
 from laktory._testing import table_gld
 from laktory.models import Table
 from laktory.models import TableJoin
+from laktory.models import TableWindowFilter
 from laktory.models import TableAggregation
 
 manager = EventsManager()
@@ -67,7 +68,7 @@ def test_table_join():
 def test_table_agg():
     agg = TableAggregation(
         groupby_columns=["symbol"],
-        agg_exprs=[
+        agg_expressions=[
             {"name": "min_open", "spark_func_name": "min", "spark_func_args": ["open"]},
             {
                 "name": "max_open",
@@ -94,7 +95,7 @@ def test_table_agg_window():
             # "start_time": "2000-01-01T00:00:00Z"
         },
         groupby_columns=["symbol"],
-        agg_exprs=[
+        agg_expressions=[
             {"name": "min_open", "spark_func_name": "min", "spark_func_args": ["open"]},
             {
                 "name": "max_open",
@@ -131,6 +132,39 @@ def test_table_agg_window():
             "max_open": 5,
             "start": "2023-11-01 00:00:00",
             "end": "2023-11-02 00:00:00",
+        },
+    ]
+
+
+def test_table_window_filter():
+    w = TableWindowFilter(
+        partition_by=["symbol"],
+        order_by=[
+            {"sql_expression": "created_at", "desc": True},
+        ],
+        drop_row_index=False,
+        rows_to_keep=1,
+    )
+    df = table_slv.to_df(spark)
+    df.show()
+    df1 = w.run(df=df)
+    df1.show()
+    data = df1.toPandas().to_dict(orient="records")
+    print(data)
+    assert data == [
+        {
+            "created_at": "2023-11-01T01:00:00Z",
+            "symbol": "AAPL",
+            "open": 3,
+            "close": 4,
+            "_row_index": 1,
+        },
+        {
+            "created_at": "2023-11-01T01:00:00Z",
+            "symbol": "GOOGL",
+            "open": 5,
+            "close": 6,
+            "_row_index": 1,
         },
     ]
 
@@ -274,11 +308,12 @@ def test_cdc():
 
 
 if __name__ == "__main__":
-    # test_table_join()
-    # test_table_agg()
+    test_table_join()
+    test_table_agg()
     test_table_agg_window()
-    # test_bronze()
-    # test_silver()
-    # test_silver_star()
-    # test_gold()
-    # test_cdc()
+    test_table_window_filter()
+    test_bronze()
+    test_silver()
+    test_silver_star()
+    test_gold()
+    test_cdc()
