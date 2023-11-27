@@ -34,37 +34,6 @@ df = table.to_df()
 ```
 
 ## Builder
-However, where things get very interesting is when the builder is used.
-```py
-from laktory import models
-table = models.Table(
-    schema_name="finance",
-    catalog_name="dev",
-    name="slv_stock_prices",
-    comment="Stock Prices",
-    columns=[
-        {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
-        {"name": "open", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.open"]},
-        {"name": "close", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.close"]},
-    ],
-    builder={
-        "layer": "SILVER",
-        "table_source": {
-            "name": "brz_stock_prices",
-        },
-    }
-)
-```
-Given this definition, the builder can be used to read the data source and sets the newly declared columns.
-Note that each column may be defined as an SQL expression or as the output of a spark function.
-The builder `layer` sets predefined settings like dropping source columns or duplicated rows.
-```py
-# Read source data ("brz_stock_prices")
-df = table.builder.read_source(spark)
+However, where things get very interesting is when the builder is used as described in [TableBuilder](tablebuilder.md).
 
-# Build output columns (`symbol`, `open` and `close`)
-df = table.builder.process(df=df, spark=spark)
-```
-The builder also supports more advanced features like sequential joins or CDC definition.
-
-The most frequent use case for the declaration of a `Table` and its associated transformation is as part of a data [pipeline](pipeline.md).
+The most frequent use case for the declaration of a `Table` and its associated transformations is as part of a data [pipeline](pipeline.md).

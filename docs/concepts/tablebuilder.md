@@ -238,4 +238,14 @@ The 2 (`rows_to_keep`) most recent (`created_at`) rows of each symbol (`partitio
 
 
 
-### Data Flow
+### Process
+The `TableBuilder.process` method applies all the transformation mentioned above (and more) and returns  the final DataFrame representation of the table.
+![table_builder](../images/table_builder.png)
+The above flow chart describes the sequence of the different transformations. 
+It is to note that the creation of columns is attempted after
+
+* initial setup
+* each table join
+* aggregation
+
+This allows to create columns that are required for different context (pre-join, post-join, post-aggregation, etc.) in a single declaration.
