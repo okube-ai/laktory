@@ -267,7 +267,7 @@ table_gld = Table(
         "template": "GOLD1",
         "aggregation": {
             "groupby_columns": ["symbol"],
-            "agg_exprs": [
+            "agg_expressions": [
                 {
                     "name": "min_open",
                     "spark_func_name": "min",

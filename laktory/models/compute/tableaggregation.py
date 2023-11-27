@@ -31,7 +31,7 @@ df = df.drop("_row")
 class TableAggregation(BaseModel):
     groupby_window: Union[Window, None] = None
     groupby_columns: Union[list[str], None] = []
-    agg_exprs: list[Column] = []
+    agg_expressions: list[Column] = []
 
     @model_validator(mode="after")
     def groupby(self) -> Any:
@@ -70,7 +70,7 @@ class TableAggregation(BaseModel):
 
         # Agg arguments
         aggs = []
-        for expr in self.agg_exprs:
+        for expr in self.agg_expressions:
             expr.type = "_any"
             aggs += [
                 expr.to_spark(

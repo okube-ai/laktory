@@ -231,7 +231,7 @@ def test_table_join():
 def test_table_agg():
     agg = TableAggregation(
         groupby_columns=["symbol"],
-        agg_exprs=[
+        agg_expressions=[
             {"name": "min_open", "spark_func_name": "min", "spark_func_args": ["open"]},
             {
                 "name": "max_open",
