@@ -83,8 +83,9 @@ nav:
     - Design Principles: concepts/design.md
     - Models: concepts/models.md
     - Data Event: concepts/dataevent.md
-    - Data Source: concepts/datasource.md
+#    - Data Source: concepts/datasource.md
     - Table: concepts/table.md
+    - Table Builder: concepts/tablebuilder.md
     - Pipeline: concepts/pipeline.md
     - Data Governance: concepts/governance.md
     - Deployment (IaC): concepts/deployment.md

@@ -52,7 +52,7 @@ def define_table(table):
 
 # Build tables
 for table in pl.tables:
-    if table.zone == "SILVER":
+    if table.layer == "SILVER":
         wrapper = define_table(table)
         df = dlt.get_df(wrapper)
         display(df)
@@ -100,7 +100,7 @@ tables:
   - name: brz_stock_prices
     timestamp_key: data.created_at
     builder:
-      zone: BRONZE
+      layer: BRONZE
       event_source:
         name: stock_price
         producer:
@@ -110,7 +110,7 @@ tables:
   - name: slv_stock_prices
     timestamp_key: created_at
     builder:
-      zone: SILVER
+      layer: SILVER
       table_source:
         name: brz_stock_prices
         read_as_stream: True

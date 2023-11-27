@@ -37,7 +37,7 @@ table = models.Table(
     schema_name="finance",
     timestamp_key="data.created_at",
     builder={
-        "zone": "SILVER",
+        "layer": "SILVER",
         "table_source": {
             "name": "brz_stock_prices",
         }
@@ -52,7 +52,7 @@ table = models.Table(
 )
 
 print(table)
-#> catalog_name='prod' columns=[Column(catalog_name='prod', comment=None, name='symbol', pii=None, schema_name='finance', spark_func_args=[], spark_func_kwargs={}, spark_func_name=None, sql_expression='data.symbol', table_name='brz_stock_prices', type='string', unit=None)] comment=None data=None grants=None name='brz_stock_prices' primary_key=None schema_name='finance' timestamp_key='data.created_at' builder=TableBuilder(drop_source_columns=True, drop_duplicates=None, event_source=None, joins=[], pipeline_name=None, table_source=TableDataSource(read_as_stream=True, catalog_name='prod', cdc=None, selects=None, filter=None, from_pipeline=True, name='brz_stock_prices', schema_name='finance', watermark=None), zone='SILVER')
+#> catalog_name='prod' columns=[Column(catalog_name='prod', comment=None, name='symbol', pii=None, schema_name='finance', spark_func_args=[], spark_func_kwargs={}, spark_func_name=None, sql_expression='data.symbol', table_name='brz_stock_prices', type='string', unit=None)] comment=None data=None grants=None name='brz_stock_prices' primary_key=None schema_name='finance' timestamp_key='data.created_at' builder=TableBuilder(drop_source_columns=True, drop_duplicates=None, event_source=None, joins=[], pipeline_name=None, table_source=TableDataSource(read_as_stream=True, catalog_name='prod', cdc=None, selects=None, filter=None, from_pipeline=True, name='brz_stock_prices', schema_name='finance', watermark=None), layer='SILVER')
 ```
 
 To get started with a more useful example, jump into the [Quickstart](https://www.laktory.ai/quickstart/).

@@ -48,7 +48,7 @@ table = models.Table(
         {"name": "close", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.close"]},
     ],
     builder={
-        "zone": "SILVER",
+        "layer": "SILVER",
         "table_source": {
             "name": "brz_stock_prices",
         },
@@ -57,7 +57,7 @@ table = models.Table(
 ```
 Given this definition, the builder can be used to read the data source and sets the newly declared columns.
 Note that each column may be defined as an SQL expression or as the output of a spark function.
-The builder `zone` sets predefined settings like dropping source columns or duplicated rows.
+The builder `layer` sets predefined settings like dropping source columns or duplicated rows.
 ```py
 # Read source data ("brz_stock_prices")
 df = table.builder.read_source(spark)

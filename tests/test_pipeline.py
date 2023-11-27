@@ -56,7 +56,7 @@ def test_pipeline():
                     "table_source": None,
                     "template": "BRONZE",
                     "window_filter": None,
-                    "zone": "BRONZE",
+                    "layer": "BRONZE",
                 },
             },
             {
@@ -170,7 +170,7 @@ def test_pipeline():
                     },
                     "template": "SILVER",
                     "window_filter": None,
-                    "zone": "SILVER",
+                    "layer": "SILVER",
                 },
             },
         ],

@@ -1,4 +1,7 @@
 # Release History
+## [0.0.21] - 2023-11-27
+###Breaking Changes
+* Renamed `table.builder.zone` to `table.builder.layer` to be consistent with industry standards. 
 
 ## [0.0.20] - 2023-11-27
 ###Added

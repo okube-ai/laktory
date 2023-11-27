@@ -19,7 +19,7 @@ tables:
   - name: brz_stock_prices
     timestamp_key: data.created_at
     builder:
-      zone: BRONZE
+      layer: BRONZE
       event_source:
         name: stock_price
         producer:

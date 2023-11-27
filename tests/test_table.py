@@ -127,15 +127,15 @@ def test_model():
             },
             "template": "SILVER",
             "window_filter": None,
-            "zone": "SILVER",
+            "layer": "SILVER",
         },
     }
 
     assert not table_slv.is_from_cdc
 
-    # Invalid zone
+    # Invalid layer
     with pytest.raises(ValidationError):
-        Table(name="googl", zone="ROUGE")
+        Table(name="googl", layer="ROUGE")
 
 
 def test_data():
@@ -348,7 +348,7 @@ def test_silver_star():
             },
             "template": "SILVER_STAR",
             "window_filter": None,
-            "zone": "SILVER_STAR",
+            "layer": "SILVER_STAR",
         },
     }
 

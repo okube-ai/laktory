@@ -12,7 +12,7 @@ Declarative definition of your data platform, from cloud infrastructure to data 
 name: slv_stock_prices
 timestamp_key: created_at
 builder:
-  zone: SILVER
+  layer: SILVER
   table_source:
     name: brz_stock_prices
 columns:
