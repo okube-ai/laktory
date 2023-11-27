@@ -1,10 +1,11 @@
 # Release History
 
-## [0.0.20] - 2023-11-24
+## [0.0.20] - 2023-11-27
 ###Added
 * `header` option when reading CSV event data source 
 * `read_options` option when reading event data source
-* `aggregation` option for table builder
+* `aggregation` feature for table builder
+* `window_filter` feature for table builder
 
 ## [0.0.19] - 2023-11-23
 ###Fixed
