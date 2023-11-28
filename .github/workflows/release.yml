@@ -57,21 +57,20 @@ jobs:
         id: get_version
         run: |
           import os
+          from packaging import version
           with open("./laktory/_version.py") as fp:
-            version = fp.read().split("=")[-1].strip().replace('"', '')
+            v0 = fp.read().split("=")[-1].strip().replace('"', '')
+            v1 = version.Version(f"{v0.major}.{v0.minor}.{v0.micro+1}") 
           with open(os.environ['GITHUB_OUTPUT'], 'a') as fp:
-            print(f"version={version}", file=fp)
+            print(f"version0={str(v0)}", file=fp)
+            print(f"version1={str(v1}", file=fp)
         shell: python
 
       - name: Set up Git
         run: git config --global user.email "actions@github.com" && git config --global user.name "GitHub Actions"
 
       - name: Create release tag
-        run: git tag test-v${{ steps.get_version.outputs.version }}
-#        run: git tag test_tag1
+        run: git tag test-v${{ steps.get_version.outputs.version0 }}
 
       - name: Push release tag
-        run: git push origin test-v${{ steps.get_version.outputs.version }}
-#        run: git push origin test_tag1
-
-
+        run: git push origin test-v${{ steps.get_version.outputs.version0 }}
