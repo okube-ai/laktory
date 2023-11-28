@@ -37,9 +37,9 @@ jobs:
 
   tag:
     permissions: # write-all
-      actions: write
-      checks: write
-      contents: write
+#      actions: write
+#      checks: write
+#      contents: write
       deployments: write
       id-token: write
 #      issues: write
