@@ -121,4 +121,4 @@ jobs:
       - name: Merge pull request
         run: gh pr merge --auto --squash --delete-branch
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GIT_ACTIONS_TOKEN }}
