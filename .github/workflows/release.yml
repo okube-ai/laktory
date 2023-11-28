@@ -1,15 +1,21 @@
 name: release
 
 on:
-  pull_request:
-    types:
-      - closed
+  workflow_dispatch:
+    logLevel:
+      description: 'Log level'
+      default: 'warning'
     branches:
       - main
+#  pull_request:
+#    types:
+#      - closed
+#    branches:
+#      - main
 
 jobs:
   release:
-    if: ${{ github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') }}
+#    if: ${{ github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,12 +25,12 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Build and publish laktory to pypi
-        run: make publish
-        env:
-          FLIT_INDEX_URL: ${{ vars.FLIT_INDEX_URL }}
-          FLIT_USERNAME: ${{ vars.FLIT_USERNAME }}
-          FLIT_PASSWORD: ${{ secrets.FLIT_PASSWORD }}
-          TWINE_REPOSITORY_URL: ${{ vars.TWINE_REPOSITORY_URL }}
-          TWINE_USERNAME: ${{ vars.TWINE_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+#      - name: Build and publish laktory to pypi
+#        run: make publish
+#        env:
+#          FLIT_INDEX_URL: ${{ vars.FLIT_INDEX_URL }}
+#          FLIT_USERNAME: ${{ vars.FLIT_USERNAME }}
+#          FLIT_PASSWORD: ${{ secrets.FLIT_PASSWORD }}
+#          TWINE_REPOSITORY_URL: ${{ vars.TWINE_REPOSITORY_URL }}
+#          TWINE_USERNAME: ${{ vars.TWINE_USERNAME }}
+#          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
