@@ -60,6 +60,7 @@ jobs:
           from packaging import version
           with open("./laktory/_version.py") as fp:
             v0 = fp.read().split("=")[-1].strip().replace('"', '')
+            v0 = version.parse(v0)
             v1 = version.Version(f"{v0.major}.{v0.minor}.{v0.micro+1}") 
           with open(os.environ['GITHUB_OUTPUT'], 'a') as fp:
             print(f"version0={str(v0)}", file=fp)
