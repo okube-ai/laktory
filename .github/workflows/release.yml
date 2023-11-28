@@ -5,15 +5,17 @@ on:
     logLevel:
       description: 'Log level'
       default: 'warning'
-  pull_request:
-    types:
-      - closed
     branches:
       - main
+#  pull_request:
+#    types:
+#      - closed
+#    branches:
+#      - main
 
 jobs:
   release:
-    if: ${{ github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') }}
+#    if: ${{ github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
