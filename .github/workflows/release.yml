@@ -37,16 +37,16 @@ jobs:
 
   tag:
     permissions: # write-all
-#      actions: write
-#      checks: read|write|none
-#      contents: read|write|none
-#      deployments: read|write|none
-#      id-token: read|write|none
-      issues: write
-      discussions: write
-      packages: write
-      pages: write
-      pull-requests: write
+      actions: write
+      checks: write
+      contents: write
+      deployments: write
+      id-token: write
+#      issues: write
+#      discussions: write
+#      packages: write
+#      pages: write
+#      pull-requests: write
     runs-on: ubuntu-latest
     needs: publish
     steps:
