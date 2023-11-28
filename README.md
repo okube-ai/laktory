@@ -1,6 +1,7 @@
 # Laktory
 
 [![pypi](https://img.shields.io/pypi/v/laktory.svg)](https://pypi.org/project/laktory/)
+[![test](https://github.com/okube-ai/laktory/actions/workflows/test.yml/badge.svg)](https://github.com/okube-ai/laktory/actions/workflows/test.yml)
 [![downloads](https://static.pepy.tech/badge/laktory/month)](https://pepy.tech/project/laktory)
 [![versions](https://img.shields.io/pypi/pyversions/laktory.svg)](https://github.com/okube-ai/laktory)
 [![license](https://img.shields.io/github/license/okube-ai/laktory.svg)](https://github.com/okube-ai/laktory/blob/main/LICENSE)
