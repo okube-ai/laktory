@@ -116,7 +116,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GIT_ACTIONS_TOKEN }}
 
-      - name: Merge pull request
-        run: gh pr merge --auto --squash --delete-branch version-bump-v${{ steps.bump_version.outputs.version }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Merge pull request
+#        run: gh pr merge --auto --squash --delete-branch version-bump-v${{ steps.bump_version.outputs.version }}
+#        env:
+#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
