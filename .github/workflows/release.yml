@@ -55,17 +55,17 @@ jobs:
 
       - name: Get version
         id: get_version
-        run: echo "::set-output name=version::$(grep -oP "version = \'\K[^\']+" _version.py)"
+        run: echo "version=$(grep -oP "version = \'\K[^\']+" laktory/_version.py)" >> $GITHUB_OUTPUT
 
       - name: Set up Git
         run: git config --global user.email "actions@github.com" && git config --global user.name "GitHub Actions"
 
       - name: Create release tag
-        run: git tag test-v${{ steps.get_version.outputs.version }}
+        run: git tag test-v$GITHUB_OUTPUT
 #        run: git tag test_tag1
 
       - name: Push release tag
-        run: git push origin test-v${{ steps.get_version.outputs.version }}
+        run: git push origin test-v$GITHUB_OUTPUT
 #        run: git push origin test_tag1
 
 
