@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Get versions
-        id: get_versions
+        id: get_version
         run: |
           import os
           with open("./laktory/_version.py") as fp:
@@ -68,10 +68,10 @@ jobs:
         run: git config --global user.email "actions@github.com" && git config --global user.name "GitHub Actions"
 
       - name: Create release tag
-        run: git tag test2-v${{ steps.get_versions.outputs.version }}
+        run: git tag test2-v${{ steps.get_version.outputs.version }}
 
       - name: Push release tag
-        run: git push origin test2-v${{ steps.get_versions.outputs.version }}
+        run: git push origin test2-v${{ steps.get_version.outputs.version }}
 
 
   bump:
@@ -84,6 +84,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Bump version
+        id: bump_version
         run: |
           import os
           from packaging import version
@@ -103,11 +104,11 @@ jobs:
 
       - name: Commit changes
         run: |
-          git checkout -b version-bump-v${{ steps.get_versions.outputs.version }}
+          git checkout -b version-bump-v${{ steps.bump_version.outputs.version }}
           git add ./laktory/_version.py
           git commit -m "version bump [skip ci]"
 
       - name: Push changes
         uses: ad-m/github-push-action@v0.8.0
         with:
-          branch: version-bump-v${{ steps.get_versions.outputs.version }}
+          branch: version-bump-v${{ steps.bump_version.outputs.version }}
