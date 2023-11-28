@@ -113,10 +113,10 @@ jobs:
 #      - name: Set up Git
 #        run: git config --global user.email "okubot-approver@okube.ai" && git config --global user.name "Okube Git Actions Approver bot"
 
-#      - name: Approve pull request
-#        run: gh pr review --approve --body "Automatically approved by GitHub Actions"
-#        env:
-#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Approve pull request
+        run: gh pr review --approve --body "Automatically approved by GitHub Actions"
+        env:
+          GH_TOKEN: ${{ secrets.GIT_ACTIONS_TOKEN }}
 
       - name: Merge pull request
         run: gh pr merge --auto --squash --delete-branch version-bump-v${{ steps.bump_version.outputs.version }}
