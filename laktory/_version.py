@@ -1,1 +1,1 @@
-VERSION = "0.0.21" # test
+VERSION = "0.0.21"
