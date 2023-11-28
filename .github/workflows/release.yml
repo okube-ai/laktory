@@ -64,7 +64,9 @@ jobs:
             v1 = version.Version(f"{v0.major}.{v0.minor}.{v0.micro+1}") 
           with open(os.environ['GITHUB_OUTPUT'], 'a') as fp:
             print(f"version0={str(v0)}", file=fp)
+            print("Releasing laktory {v0}")
             print(f"version1={str(v1)}", file=fp)
+            print("Preparing laktory {v1}")
         shell: python
 
       - name: Set up Git
