@@ -14,7 +14,7 @@ on:
 #      - main
 
 jobs:
-  release:
+  publish:
 #    if: ${{ github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') }}
     runs-on: ubuntu-latest
     steps:
@@ -25,9 +25,30 @@ jobs:
         with:
           python-version: "3.10"
 
+#      - name: Build and publish laktory to pypi
+#        run: make publish
+#        env:
+#          FLIT_INDEX_URL: ${{ vars.FLIT_INDEX_URL }}
+#          FLIT_USERNAME: ${{ vars.FLIT_USERNAME }}
+#          FLIT_PASSWORD: ${{ secrets.FLIT_PASSWORD }}
+#          TWINE_REPOSITORY_URL: ${{ vars.TWINE_REPOSITORY_URL }}
+#          TWINE_USERNAME: ${{ vars.TWINE_USERNAME }}
+#          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+
   tag:
+    permissions: write-all
+#      actions: read|write|none
+#      checks: read|write|none
+#      contents: read|write|none
+#      deployments: read|write|none
+#      id-token: read|write|none
+#      issues: read|write|none
+#      discussions: read|write|none
+#      packages: read|write|none
+#      pages: read|write|none
+#      pull-requests: read|write|none
     runs-on: ubuntu-latest
-    needs: release
+    needs: publish
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -44,12 +65,3 @@ jobs:
         run: git push origin test_tag0
 
 
-#      - name: Build and publish laktory to pypi
-#        run: make publish
-#        env:
-#          FLIT_INDEX_URL: ${{ vars.FLIT_INDEX_URL }}
-#          FLIT_USERNAME: ${{ vars.FLIT_USERNAME }}
-#          FLIT_PASSWORD: ${{ secrets.FLIT_PASSWORD }}
-#          TWINE_REPOSITORY_URL: ${{ vars.TWINE_REPOSITORY_URL }}
-#          TWINE_USERNAME: ${{ vars.TWINE_USERNAME }}
-#          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
