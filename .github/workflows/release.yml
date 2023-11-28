@@ -62,6 +62,6 @@ jobs:
 
       - name: Push release tag
 #        run: git push origin v${{ steps.increment_version.outputs.new_version }}
-        run: git push origin test_tag0
+        run: git push origin test_tag1
 
 
