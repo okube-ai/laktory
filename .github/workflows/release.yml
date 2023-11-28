@@ -106,7 +106,7 @@ jobs:
           branch: version-bump-v${{ steps.bump_version.outputs.version }}
 
       - name: Create pull request
-        run: gh pr create --base main --head version-bump-v${{ steps.bump_version.outputs.version }} --title "Version Bump ${{ steps.bump_version.outputs.version }}" --body "Automated version bump" --no-approve
+        run: gh pr create --base main --head version-bump-v${{ steps.bump_version.outputs.version }} --title "Version Bump ${{ steps.bump_version.outputs.version }}" --body "Automated version bump"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
