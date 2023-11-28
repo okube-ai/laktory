@@ -53,25 +53,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Get version 0
+      - name: Get version
         id: get_version
         run: |
           import os
-          print(os.environ["GITHUB_OUTPUT"])
           with open("./laktory/_version.py") as fp:
             version = fp.read().split("=")[-1].strip().replace('"', '')
           with open(os.environ['GITHUB_OUTPUT'], 'a') as fp:
             print(f"version={version}", file=fp)
         shell: python
-
-      - name: View version
-        run: echo ${{ steps.get_version.outputs.version }}
-
-      - name: Get version
-        run: echo "version=$(grep -oP "version = \'\K[^\']+" .laktory/_version.py)" >> $GITHUB_OUTPUT
-
-      - name: View version
-        run: echo ${{ steps.get_version.outputs.version }}
 
       - name: Set up Git
         run: git config --global user.email "actions@github.com" && git config --global user.name "GitHub Actions"
@@ -81,7 +71,7 @@ jobs:
 #        run: git tag test_tag1
 
       - name: Push release tag
-        run: git push origin test-v$GITHUB_OUTPUT
+        run: git push origin test-v${{ steps.get_version.outputs.version }}
 #        run: git push origin test_tag1
 
 
