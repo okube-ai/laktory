@@ -54,10 +54,11 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Get version 0
+        id: get_version
         run: |
           import os
           with open("./laktory/_version.py") as fp:
-            version = fp.read().split("=")[-1].strip()
+            version = fp.read().split("=")[-1].strip().replace('"', '')
           print(f"version={version} >> $GITHUB_OUTPUT")
         shell: python
 
@@ -65,7 +66,6 @@ jobs:
         run: echo ${{ steps.get_version.outputs.version }}
 
       - name: Get version
-        id: get_version
         run: echo "version=$(grep -oP "version = \'\K[^\']+" .laktory/_version.py)" >> $GITHUB_OUTPUT
 
       - name: View version
