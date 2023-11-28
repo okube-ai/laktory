@@ -84,8 +84,8 @@ jobs:
             v0 = fp.read().split("=")[-1].strip().replace('"', '')
             v0 = version.parse(v0)
             v1 = version.Version(f"{v0.major}.{v0.minor}.{v0.micro+1}")
-          # with open("./laktory/_version.py", "w") as fp:
-          #   fp.write(f'VERSION = "{v1}"')
+          with open("./laktory/_version.py", "w") as fp:
+            fp.write(f'VERSION = "{v0}" # test')
           with open(os.environ['GITHUB_OUTPUT'], 'a') as fp:
             print(f"version={str(v1)}", file=fp)          
           print(f"Bumping laktory to {v1}")
