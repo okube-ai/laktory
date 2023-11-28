@@ -93,17 +93,17 @@ jobs:
 
       - name: Set up Git
         run: git config --global user.email "okubot@okube.ai" && git config --global user.name "Okube Git Actions bot"
-#
-#      - name: Commit changes
-#        run: |
-#          git checkout -b version-bump-v${{ steps.bump_version.outputs.version }}
-#          git add ./laktory/_version.py
-#          git commit -m "version bump"
-#
-#      - name: Push changes
-#        uses: ad-m/github-push-action@v0.8.0
-#        with:
-#          branch: version-bump-v${{ steps.bump_version.outputs.version }}
+
+      - name: Commit changes
+        run: |
+          git checkout -b version-bump-v${{ steps.bump_version.outputs.version }}
+          git add ./laktory/_version.py
+          git commit -m "version bump"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.8.0
+        with:
+          branch: version-bump-v${{ steps.bump_version.outputs.version }}
 
       - name: Create pull request
         run: gh pr create --base main --head version-bump-v${{ steps.bump_version.outputs.version }} --title "Version Bump ${{ steps.bump_version.outputs.version }}" --body "Automated version bump"
