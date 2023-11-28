@@ -57,9 +57,11 @@ jobs:
         id: get_version
         run: |
           import os
+          print(os.environ["GITHUB_OUTPUT"])
           with open("./laktory/_version.py") as fp:
             version = fp.read().split("=")[-1].strip().replace('"', '')
-          print(f'"version={version}" >> "$GITHUB_OUTPUT"')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as fp:
+            print(f"version={version}", file=fp)
         shell: python
 
       - name: View version
