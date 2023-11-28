@@ -90,9 +90,9 @@ jobs:
             print(f"version={str(v1)}", file=fp)
           print(f"Bumping laktory to {v1}")
         shell: python
-#
-#      - name: Set up Git
-#        run: git config --global user.email "okubot@okube.ai" && git config --global user.name "Okube Git Actions bot"
+
+      - name: Set up Git
+        run: git config --global user.email "okubot@okube.ai" && git config --global user.name "Okube Git Actions bot"
 #
 #      - name: Commit changes
 #        run: |
