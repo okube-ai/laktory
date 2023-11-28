@@ -98,7 +98,7 @@ jobs:
         run: |
           git checkout -b version-bump-v${{ steps.bump_version.outputs.version }}
           git add ./laktory/_version.py
-          git commit -m "version bump [skip ci]"
+          git commit -m "version bump"
 
       - name: Push changes
         uses: ad-m/github-push-action@v0.8.0
