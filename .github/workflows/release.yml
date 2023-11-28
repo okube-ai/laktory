@@ -108,14 +108,14 @@ jobs:
       - name: Create pull request
         run: gh pr create --base main --head version-bump-v${{ steps.bump_version.outputs.version }} --title "Version Bump ${{ steps.bump_version.outputs.version }}" --body "Automated version bump"
         env:
-          GH_TOKEN: ${{ secrets.GIT_ACTIONS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # TODO: Setup user for specifically approving PR
-      - name: Approve pull request
-        run: gh pr review --approve --body "Automatically approved by GitHub Actions"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      # TODO: Setup user for specifically approving PR
+#      - name: Approve pull request
+#        run: gh pr review --approve --body "Automatically approved by GitHub Actions"
+#        env:
+#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #          GH_TOKEN: ${{ secrets.GIT_ACTIONS_TOKEN }}
 
 #      - name: Merge pull request
