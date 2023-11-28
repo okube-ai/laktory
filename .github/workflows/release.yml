@@ -92,7 +92,7 @@ jobs:
         shell: python
 
       - name: Set up Git
-        run: git config --global user.email "actions@github.com" && git config --global user.name "GitHub Actions"
+        run: git config --global user.email "okubot@okube.ai" && git config --global user.name "Okube Git Actions bot"
 
       - name: Commit changes
         run: |
@@ -109,6 +109,9 @@ jobs:
         run: gh pr create --base main --head version-bump-v${{ steps.bump_version.outputs.version }} --title "Version Bump ${{ steps.bump_version.outputs.version }}" --body "Automated version bump"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Git
+        run: git config --global user.email "okubot-approver@okube.ai" && git config --global user.name "Okube Git Actions Approver bot"
 
       - name: Approve pull request
         run: gh pr review --approve --body "Automatically approved by GitHub Actions"
