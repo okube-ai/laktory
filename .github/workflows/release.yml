@@ -53,11 +53,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Get version 0
+        run: echo "grep -oP "version = \'\K[^\']+" laktory/_version.py
+
       - name: Get version
         id: get_version
         run: echo "version=$(grep -oP "version = \'\K[^\']+" laktory/_version.py)" >> $GITHUB_OUTPUT
 
-      - name: Get version
+      - name: View version
         run: echo ${{ steps.get_version.outputs.version }}
 
       - name: Set up Git
