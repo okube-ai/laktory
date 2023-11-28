@@ -36,8 +36,8 @@ jobs:
 #          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
 
   tag:
-    permissions: write-all
-#      actions: read|write|none
+    permissions: # write-all
+      actions: write
 #      checks: read|write|none
 #      contents: read|write|none
 #      deployments: read|write|none
