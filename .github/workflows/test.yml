@@ -23,9 +23,9 @@ jobs:
           - '3.10'
           - '3.11'
     steps:
-      - name: Skip tests
+      - name: Check if skip tests
         env:
-          IS_SKIP: ${{ !contains(github.event.pull_request.labels.*.name, 'version-bump') }}
+          IS_SKIP: ${{ "!contains(github.event.pull_request.labels.*.name, 'version-bump')" }}
         run: |
           if ${IS_SKIP} == true; then
             echo "is_skip=true" >> $GITHUB_ENV
@@ -34,13 +34,6 @@ jobs:
             echo "is_skip=false" >> $GITHUB_ENV
             echo "tests will not be skipped"
           fi
-
-      - name: Exit if version bump
-        run: |
-          gh run cancel ${{ github.run_id }}
-          gh run watch ${{ github.run_id }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout
         uses: actions/checkout@v3
