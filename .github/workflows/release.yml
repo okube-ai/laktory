@@ -7,15 +7,9 @@ on:
       default: 'info'
     branches:
       - main
-#  pull_request:
-#    types:
-#      - closed
-#    branches:
-#      - main
 
 jobs:
   publish:
-#    if: ${{ github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,15 +19,15 @@ jobs:
         with:
           python-version: "3.10"
 
-#      - name: Build and publish laktory to pypi
-#        run: make publish
-#        env:
-#          FLIT_INDEX_URL: ${{ vars.FLIT_INDEX_URL }}
-#          FLIT_USERNAME: ${{ vars.FLIT_USERNAME }}
-#          FLIT_PASSWORD: ${{ secrets.FLIT_PASSWORD }}
-#          TWINE_REPOSITORY_URL: ${{ vars.TWINE_REPOSITORY_URL }}
-#          TWINE_USERNAME: ${{ vars.TWINE_USERNAME }}
-#          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      - name: Build and publish laktory to pypi
+        run: make publish
+        env:
+          FLIT_INDEX_URL: ${{ vars.FLIT_INDEX_URL }}
+          FLIT_USERNAME: ${{ vars.FLIT_USERNAME }}
+          FLIT_PASSWORD: ${{ secrets.FLIT_PASSWORD }}
+          TWINE_REPOSITORY_URL: ${{ vars.TWINE_REPOSITORY_URL }}
+          TWINE_USERNAME: ${{ vars.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
 
   tag:
     permissions:
@@ -106,9 +100,9 @@ jobs:
         run: gh pr review --approve --body "Automatically approved by GitHub Actions"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
-#      # TODO: Review why branch is not deleted
-#      - name: Merge pull request
-#        run: gh pr merge --auto --squash --delete-branch
-#        env:
-#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # TODO: Review why branch is not deleted
+      - name: Merge pull request
+        run: gh pr merge --auto --squash --delete-branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -11,10 +11,7 @@ on:
 
 jobs:
   tests:
-    permissions:
-      actions: write
     runs-on: ubuntu-latest
-#    if: !contains(github.event.pull_request.labels, "version-bump")
     strategy:
       fail-fast: false
       matrix:
