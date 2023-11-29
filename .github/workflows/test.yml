@@ -48,7 +48,7 @@ jobs:
           python-version: ${{ matrix.pyVersion }}
 
       - name: Run tests
-        if: {{success() && env.run_tests}}
+        if: env.run_tests
         run: make dev test
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
