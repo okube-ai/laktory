@@ -2,8 +2,9 @@
 
 ## [0.0.22] - Unreleased
 ###Added
-* Git tag for each pypi release
-* Automatic version bump after each pypi release
+* Git tag for each release
+* Automatic version bump after each release
+* Automatic documentation publishing after each release 
 ###Fixed
 * n/a
 ###Updated
