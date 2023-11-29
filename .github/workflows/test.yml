@@ -13,7 +13,6 @@ jobs:
   tests:
     runs-on: ubuntu-latest
 #    if: !contains(github.event.pull_request.labels, "version-bump")
-    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -39,6 +38,7 @@ jobs:
 
       - name: Run tests
         run: make dev test
+        if: false
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
