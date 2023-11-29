@@ -5,12 +5,6 @@
 * Git tag for each release
 * Automatic version bump after each release
 * Automatic documentation publishing after each release 
-###Fixed
-* n/a
-###Updated
-* n/a
-###Breaking Changes
-* n/a
 
 ## [0.0.21] - 2023-11-27
 ###Breaking Changes
