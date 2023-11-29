@@ -48,7 +48,7 @@ jobs:
           python-version: ${{ matrix.pyVersion }}
 
       - name: Check condition
-        run: echo "{{env.run_tests && success()}}"
+        run: echo {{env.run_tests && success()}}
 
       - name: Run tests
         if: env.run_tests && success()
