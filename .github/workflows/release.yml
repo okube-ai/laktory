@@ -114,5 +114,5 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Deploy doc
-        run: mkdocs gh-deploy
+      - name: Publish doc
+        run: make publishdoc
