@@ -109,7 +109,7 @@ jobs:
       # other workflows.
       # TODO: Setup git user for specifically creating PR
       - name: Create pull request
-        run: gh pr create --base main --head version-bump-v${{ steps.bump_version.outputs.version }} --title "version-bump-${{ steps.bump_version.outputs.version }}" --body "Automated version bump"
+        run: gh pr create --base main --head version-bump-v${{ steps.bump_version.outputs.version }} --title "version-bump-${{ steps.bump_version.outputs.version }}" --body "Automated version bump" --label version-bump
         env:
           GH_TOKEN: ${{ secrets.GIT_ACTIONS_TOKEN }}
 

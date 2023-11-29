@@ -12,6 +12,7 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    if: !contains("version-bump, github.event.pull_request.labels)
     strategy:
       fail-fast: false
       matrix:
