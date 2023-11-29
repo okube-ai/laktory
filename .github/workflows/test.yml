@@ -35,23 +35,20 @@ jobs:
             echo "tests will be run"
           fi
 
-      - name: Run tests
-        run: echo run tests - ${{ env.run_tests }}
-
       - name: Checkout
-        if: ${{ env.run_tests && success() }}
+        if: ${{ env.run_tests == 'true' && success()}}
         uses: actions/checkout@v3
 
 #      - name: Unshallow
 #        run: git fetch --prune --unshallow
 
       - uses: actions/setup-python@v4
-        if: ${{ env.run_tests && success() }}
+        if: ${{ env.run_tests == 'true' && success()}}
         with:
           python-version: ${{ matrix.pyVersion }}
 
       - name: Run tests
-        if: ${{ env.run_tests == 'true' }}
+        if: ${{ env.run_tests == 'true' && success()}}
         run: make dev test
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
