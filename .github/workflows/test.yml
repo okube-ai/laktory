@@ -25,9 +25,9 @@ jobs:
     steps:
       - name: Check if run tests
         env:
-          RUN_TESTS: "${{ !contains(github.event.pull_request.labels.*.name, 'version-bump') }}"
+          VERSION_BUMP: ${{ contains(github.event.pull_request.labels.*.name, 'version-bump') }}
         run: |
-          if ${RUN_TESTS} == true; then
+          if ${VERSION_BUMP} == false; then
             echo "run_tests=true" >> $GITHUB_ENV
             echo "tests will be run"
           else
