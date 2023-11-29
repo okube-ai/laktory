@@ -23,29 +23,32 @@ jobs:
           - '3.10'
           - '3.11'
     steps:
-      - name: Check if skip tests
+      - name: Check if run tests
         env:
-          IS_SKIP: "${{ !contains(github.event.pull_request.labels.*.name, 'version-bump') }}"
+          RUN_TESTS: "${{ !contains(github.event.pull_request.labels.*.name, 'version-bump') }}"
         run: |
-          if ${IS_SKIP} == true; then
-            echo "is_skip=true" >> $GITHUB_ENV
-            echo "tests will be skipped"
+          if ${RUN_TESTS} == true; then
+            echo "run_tests=true" >> $GITHUB_ENV
+            echo "tests will be run"
           else
-            echo "is_skip=false" >> $GITHUB_ENV
-            echo "tests will not be skipped"
+            echo "run_tests=false" >> $GITHUB_ENV
+            echo "tests will be skipped"
           fi
 
       - name: Checkout
+        if: {{success() && env.run_tests}}
         uses: actions/checkout@v3
 
 #      - name: Unshallow
 #        run: git fetch --prune --unshallow
 
       - uses: actions/setup-python@v4
+        if: {{success() && env.run_tests}}
         with:
           python-version: ${{ matrix.pyVersion }}
 
       - name: Run tests
+        if: {{success() && env.run_tests}}
         run: make dev test
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
