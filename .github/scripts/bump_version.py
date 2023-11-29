@@ -36,7 +36,7 @@ def main():
     update_changelog(changelog_filepath, v0, v1)
 
     # Cleanup
-    if git_env_filepath == local_env_filepath and os.path.exists(local_env_filepath:
+    if git_env_filepath == local_env_filepath and os.path.exists(local_env_filepath):
         os.remove(local_env_filepath)
 
 
