@@ -26,6 +26,11 @@ jobs:
 #      - name: Unshallow
 #        run: git fetch --prune --unshallow
 
+      - env:
+          EVENT_CONTEXT: ${{ toJSON(github.event) }}
+        run: |
+          echo $EVENT_CONTEXT
+
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.pyVersion }}
