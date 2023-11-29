@@ -1,10 +1,15 @@
 # Release History
 
 ## [0.0.22] - Unreleased
-###Fixed
-* a
 ###Added
-* b
+* Git tag for each pypi release
+* Automatic version bump after each pypi release
+###Fixed
+* n/a
+###Updated
+* n/a
+###Breaking Changes
+* n/a
 
 ## [0.0.21] - 2023-11-27
 ###Breaking Changes
