@@ -19,15 +19,15 @@ def main():
         v0 = fp.read().split("=")[-1].strip().replace('"', '')
         v0 = version.parse(v0)
         v1 = version.Version(f"{v0.major}.{v0.minor}.{v0.micro + 1}")
-    logging.info(f"Bumping laktory to {v1}")
+    print(f"Bumping laktory to {v1}")
 
     # Update version file
-    logging.info(f"Updating _version.py")
+    print(f"Updating _version.py")
     with open(version_filepath, "w") as fp:
         fp.write(f'VERSION = "{v1}"')
 
     # Set version as git action variable
-    logging.info(f"Setting git env var version")
+    print(f"Setting git env var version {git_env_filepath}")
     with open(git_env_filepath, 'a') as fp:
         fp.write(f"version={str(v1)}")
 
@@ -42,11 +42,9 @@ def main():
 def update_changelog(changelog_filepath, v0, v1):
 
     # Update CHANGELOG
-    logging.info(f"Updating changelog")
+    print(f"Updating changelog")
     with open(changelog_filepath, 'r') as fp:
         content = fp.read()
-
-    print(content)
 
     # Set version line
     version_line = f'## [{v0}] - Unreleased'
@@ -54,7 +52,7 @@ def update_changelog(changelog_filepath, v0, v1):
     # Validate
     if version_line not in content:
         msg = f"CHANGELOG  does not include version {v0}"
-        logging.info('ValueError: ' + msg)
+        print('ValueError: ' + msg)
         raise ValueError(msg)
 
     # Update current version release date
