@@ -35,6 +35,9 @@ jobs:
             echo "tests will be run"
           fi
 
+      - name: Run tests
+        run: echo run tests - ${{ env.run_tests }}
+
       - name: Checkout
         if: ${{ env.run_tests && success() }}
         uses: actions/checkout@v3
