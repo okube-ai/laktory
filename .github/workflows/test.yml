@@ -27,29 +27,28 @@ jobs:
         env:
           VERSION_BUMP: ${{ contains(github.event.pull_request.labels.*.name, 'version-bump') }}
         run: |
-          echo "version bump ${VERSION_BUMP}"
-          if ${VERSION_BUMP} == false; then
-            echo "run_tests=true" >> $GITHUB_ENV
-            echo "tests will be run"
-          else
+          if ${VERSION_BUMP} == true; then
             echo "run_tests=false" >> $GITHUB_ENV
             echo "tests will be skipped"
+          else
+            echo "run_tests=true" >> $GITHUB_ENV
+            echo "tests will be run"
           fi
 
       - name: Checkout
-        if: ${{ env.run_tests && success() }}
+        if: ${{ env.run_tests == 'true' && success()}}
         uses: actions/checkout@v3
 
 #      - name: Unshallow
 #        run: git fetch --prune --unshallow
 
       - uses: actions/setup-python@v4
-        if: ${{ env.run_tests && success() }}
+        if: ${{ env.run_tests == 'true' && success()}}
         with:
           python-version: ${{ matrix.pyVersion }}
 
       - name: Run tests
-        if: ${{ env.run_tests && success() }}
+        if: ${{ env.run_tests == 'true' && success()}}
         run: make dev test
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
