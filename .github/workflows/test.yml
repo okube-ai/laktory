@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Check if skip tests
         env:
-          IS_SKIP: ${{ "!contains(github.event.pull_request.labels.*.name, 'version-bump')" }}
+          IS_SKIP: "${{ !contains(github.event.pull_request.labels.*.name, 'version-bump') }}"
         run: |
           if ${IS_SKIP} == true; then
             echo "is_skip=true" >> $GITHUB_ENV
