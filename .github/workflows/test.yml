@@ -36,22 +36,16 @@ jobs:
           fi
 
       - name: Checkout
-        if: env.run_tests && success()
+        if: ${{ env.run_tests && success() }}
         uses: actions/checkout@v3
 
 #      - name: Unshallow
 #        run: git fetch --prune --unshallow
 
       - uses: actions/setup-python@v4
-        if: env.run_tests && success()
+        if: ${{ env.run_tests && success() }}
         with:
           python-version: ${{ matrix.pyVersion }}
-#
-#      - name: Check run_tests
-#        run: echo ${{ env.run_tests }}
-#
-#      - name: Check success
-#        run: echo ${{success()}}
 
       - name: Run tests
         if: ${{ env.run_tests && success() }}
