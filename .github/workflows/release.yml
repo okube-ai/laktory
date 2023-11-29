@@ -86,6 +86,7 @@ jobs:
         run: |
           git checkout -b version-bump-v${{ steps.bump_version.outputs.version }}
           git add ./laktory/_version.py
+          git add ./CHANGELOG.md
           git commit -m "version bump"
 
       - name: Push changes
