@@ -32,13 +32,18 @@ jobs:
         run: |
           echo $EVENT_CONTEXT
 
+      - env:
+          EVENT_CONTEXT: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          echo $EVENT_CONTEXT
+
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.pyVersion }}
 
       - name: Run tests
         run: make dev test
-        if: contains(github.event.pull_request.labels, 'version-bump')
+        if: contains(github.event.pull_request.labels.*.name, 'version-bump')
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
