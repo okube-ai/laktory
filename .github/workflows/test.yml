@@ -51,7 +51,7 @@ jobs:
         run: echo ${{ env.run_tests }}
 
       - name: Check success
-        run: echo {{success()}}
+        run: echo "{{success()}}"
 
       - name: Run tests
         if: env.run_tests && success()
