@@ -21,4 +21,4 @@ publish:
 
 publishdoc:
 	pip install mkdocs mkdocstrings[python] mkdocs-material
-	mkdocs gh-deploy
+	mkdocs gh-deploy --force
