@@ -9,100 +9,110 @@ on:
       - main
 
 jobs:
-  publish:
+#  publish:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v3
+#
+#      - uses: actions/setup-python@v4
+#        with:
+#          python-version: "3.10"
+#
+#      - name: Build and publish laktory to pypi
+#        run: make publish
+#        env:
+#          FLIT_INDEX_URL: ${{ vars.FLIT_INDEX_URL }}
+#          FLIT_USERNAME: ${{ vars.FLIT_USERNAME }}
+#          FLIT_PASSWORD: ${{ secrets.FLIT_PASSWORD }}
+#          TWINE_REPOSITORY_URL: ${{ vars.TWINE_REPOSITORY_URL }}
+#          TWINE_USERNAME: ${{ vars.TWINE_USERNAME }}
+#          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+#
+#  tag:
+#    permissions:
+#      contents: write  # required to push release tag
+#    runs-on: ubuntu-latest
+#    needs: publish
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#
+#      - name: Get versions
+#        id: get_version
+#        run: |
+#          import os
+#          with open("./laktory/_version.py") as fp:
+#            v = fp.read().split("=")[-1].strip().replace('"', '')
+#          with open(os.environ['GITHUB_OUTPUT'], 'a') as fp:
+#            print(f"version={v}", file=fp)
+#          print(f"Releasing laktory {v}")
+#        shell: python
+#
+#      - name: Set up Git
+#        run: git config --global user.email "actions@github.com" && git config --global user.name "GitHub Actions"
+#
+#      - name: Create release tag
+#        run: git tag v${{ steps.get_version.outputs.version }}
+#
+#      - name: Push release tag
+#        run: git push origin v${{ steps.get_version.outputs.version }}
+#
+#
+#  bump:
+#    permissions:
+#      contents: write  # required to push new branch
+#      pull-requests: write  # required to create pull-request
+#    runs-on: ubuntu-latest
+#    needs: tag
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#
+#      - name: Bump version
+#        id: bump_version
+#        run: python ./.github/scripts/bump_version.py
+#
+#      - name: Set up Git
+#        run: git config --global user.email "okubot@okube.ai" && git config --global user.name "okube-git-bot"
+#
+#      - name: Commit changes
+#        run: |
+#          git checkout -b version-bump-v${{ steps.bump_version.outputs.version }}
+#          git add ./laktory/_version.py
+#          git add ./CHANGELOG.md
+#          git commit -m "version bump"
+#
+#      - name: Push changes
+#        uses: ad-m/github-push-action@v0.8.0
+#        with:
+#          branch: version-bump-v${{ steps.bump_version.outputs.version }}
+#
+#      # PR creation can't use secrets.GITHUB_TOKEN as it will prevent triggering
+#      # other workflows.
+#      # TODO: Setup git user for specifically creating PR
+#      - name: Create pull request
+#        run: gh pr create --base main --head version-bump-v${{ steps.bump_version.outputs.version }} --title "version-bump-${{ steps.bump_version.outputs.version }}" --body "Automated version bump" --label version-bump
+#        env:
+#          GH_TOKEN: ${{ secrets.GIT_ACTIONS_TOKEN }}
+#
+#      - name: Approve pull request
+#        run: gh pr review --approve --body "Automatically approved by GitHub Actions"
+#        env:
+#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#      # TODO: Review why branch is not deleted
+#      - name: Merge pull request
+#        run: gh pr merge --auto --squash --delete-branch
+#        env:
+#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  doc:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: Build and publish laktory to pypi
-        run: make publish
-        env:
-          FLIT_INDEX_URL: ${{ vars.FLIT_INDEX_URL }}
-          FLIT_USERNAME: ${{ vars.FLIT_USERNAME }}
-          FLIT_PASSWORD: ${{ secrets.FLIT_PASSWORD }}
-          TWINE_REPOSITORY_URL: ${{ vars.TWINE_REPOSITORY_URL }}
-          TWINE_USERNAME: ${{ vars.TWINE_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-
-  tag:
-    permissions:
-      contents: write  # required to push release tag
-    runs-on: ubuntu-latest
-    needs: publish
+#    needs: tag
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Get versions
-        id: get_version
-        run: |
-          import os
-          with open("./laktory/_version.py") as fp:
-            v = fp.read().split("=")[-1].strip().replace('"', '')
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as fp:
-            print(f"version={v}", file=fp)
-          print(f"Releasing laktory {v}")
-        shell: python
-
-      - name: Set up Git
-        run: git config --global user.email "actions@github.com" && git config --global user.name "GitHub Actions"
-
-      - name: Create release tag
-        run: git tag v${{ steps.get_version.outputs.version }}
-
-      - name: Push release tag
-        run: git push origin v${{ steps.get_version.outputs.version }}
-
-
-  bump:
-    permissions:
-      contents: write  # required to push new branch
-      pull-requests: write  # required to create pull-request
-    runs-on: ubuntu-latest
-    needs: tag
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Bump version
-        id: bump_version
-        run: python ./.github/scripts/bump_version.py
-
-      - name: Set up Git
-        run: git config --global user.email "okubot@okube.ai" && git config --global user.name "okube-git-bot"
-
-      - name: Commit changes
-        run: |
-          git checkout -b version-bump-v${{ steps.bump_version.outputs.version }}
-          git add ./laktory/_version.py
-          git add ./CHANGELOG.md
-          git commit -m "version bump"
-
-      - name: Push changes
-        uses: ad-m/github-push-action@v0.8.0
-        with:
-          branch: version-bump-v${{ steps.bump_version.outputs.version }}
-
-      # PR creation can't use secrets.GITHUB_TOKEN as it will prevent triggering
-      # other workflows.
-      # TODO: Setup git user for specifically creating PR
-      - name: Create pull request
-        run: gh pr create --base main --head version-bump-v${{ steps.bump_version.outputs.version }} --title "version-bump-${{ steps.bump_version.outputs.version }}" --body "Automated version bump" --label version-bump
-        env:
-          GH_TOKEN: ${{ secrets.GIT_ACTIONS_TOKEN }}
-
-      - name: Approve pull request
-        run: gh pr review --approve --body "Automatically approved by GitHub Actions"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # TODO: Review why branch is not deleted
-      - name: Merge pull request
-        run: gh pr merge --auto --squash --delete-branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy doc
+        run: mkdocs gh-deploy
