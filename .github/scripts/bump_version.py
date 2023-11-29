@@ -30,7 +30,7 @@ def main():
     # Set version as git action variable
     print(f"Setting git env var version {git_env_filepath}")
     with open(git_env_filepath, 'a') as fp:
-        print(f"version={v1}", file=fp)
+        fp.write(f"version={v1}")
 
     # Update CHANGELOG
     update_changelog(changelog_filepath, v0, v1)
