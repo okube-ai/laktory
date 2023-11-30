@@ -9,6 +9,7 @@ from laktory.models.resources import Resources
 from laktory.models.sql.column import Column
 from laktory.models.compute.tablebuilder import TableBuilder
 from laktory.models.grants.tablegrant import TableGrant
+from laktory._settings import settings
 
 logger = get_logger(__name__)
 
@@ -26,6 +27,8 @@ class Table(BaseModel, Resources):
     schema_name: Union[str, None] = None
     timestamp_key: Union[str, None] = None
     builder: TableBuilder = TableBuilder()
+    view_definition: str = None
+    warehouse_id: str = None
 
     # ----------------------------------------------------------------------- #
     # Validators                                                              #
@@ -55,6 +58,10 @@ class Table(BaseModel, Resources):
                 join.other.catalog_name = self.catalog_name
             if join.other.schema_name is None:
                 join.other.schema_name = self.schema_name
+
+        # Warehouse ID
+        if self.warehouse_id is None:
+            self.warehouse_id = settings.databricks_warehouse_id
 
         return self
 
