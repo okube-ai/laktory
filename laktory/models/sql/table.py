@@ -5,16 +5,20 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.base import BaseModel
+from laktory.models.resources import Resources
 from laktory.models.sql.column import Column
 from laktory.models.compute.tablebuilder import TableBuilder
 from laktory.models.grants.tablegrant import TableGrant
+from laktory._settings import settings
 
 logger = get_logger(__name__)
 
 
-class Table(BaseModel):
+class Table(BaseModel, Resources):
     catalog_name: Union[str, None] = None
     columns: list[Column] = []
+    data_source_format: str = "DELTA"
+    table_type: str = "MANAGED"
     comment: Union[str, None] = None
     data: list[list[Any]] = None
     grants: list[TableGrant] = None
@@ -23,6 +27,8 @@ class Table(BaseModel):
     schema_name: Union[str, None] = None
     timestamp_key: Union[str, None] = None
     builder: TableBuilder = TableBuilder()
+    view_definition: str = None
+    warehouse_id: str = None
 
     # ----------------------------------------------------------------------- #
     # Validators                                                              #
@@ -52,6 +58,10 @@ class Table(BaseModel):
                 join.other.catalog_name = self.catalog_name
             if join.other.schema_name is None:
                 join.other.schema_name = self.schema_name
+
+        # Warehouse ID
+        if self.warehouse_id is None:
+            self.warehouse_id = settings.databricks_warehouse_id
 
         return self
 
@@ -114,3 +124,29 @@ class Table(BaseModel):
     @property
     def is_from_cdc(self):
         return self.builder.is_from_cdc
+
+    # ----------------------------------------------------------------------- #
+    # Resources Engine Methods                                                #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        return ["builder", "columns", "data", "grants", "primary_key", "timestamp_key"]
+
+    def model_pulumi_dump(self, *args, **kwargs):
+        d = super().model_pulumi_dump(*args, **kwargs)
+        d["columns"] = []
+        for i, c in enumerate(self.columns):
+            d["columns"] += [
+                {
+                    "name": c.name,
+                    "comment": c.comment,
+                    "type": c.type,
+                }
+            ]
+        return d
+
+    def deploy_with_pulumi(self, name=None, opts=None):
+        from laktory.resourcesengines.pulumi.table import PulumiTable
+
+        return PulumiTable(name=name, table=self, opts=opts)

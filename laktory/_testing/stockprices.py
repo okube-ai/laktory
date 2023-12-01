@@ -303,6 +303,17 @@ table_gld = Table(
 )
 table_gld.builder.joins_post_aggregation[0].other._df = df_name
 
+# --------------------------------------------------------------------------- #
+# Views                                                                       #
+# --------------------------------------------------------------------------- #
+
+view = None
+# view = View(
+#     name="slv_googl_prices",
+#     catalog_name="dev",
+#     schema_name="markets",
+#     sql_expression="SELECT * FROM dev.markets.slv_star_stock_prices"
+# )
 
 # --------------------------------------------------------------------------- #
 # Pipeline                                                                    #

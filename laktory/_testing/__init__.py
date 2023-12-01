@@ -8,3 +8,4 @@ from .stockprices import table_gld
 from .stockprices import df_meta
 from .stockprices import df_name
 from .stockprices import table_slv_star
+from .stockprices import view
