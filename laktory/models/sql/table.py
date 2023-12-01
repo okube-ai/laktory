@@ -137,11 +137,13 @@ class Table(BaseModel, Resources):
         d = super().model_pulumi_dump(*args, **kwargs)
         d["columns"] = []
         for i, c in enumerate(self.columns):
-            d["columns"] += [{
-                "name": c.name,
-                "comment": c.comment,
-                "type": c.type,
-            }]
+            d["columns"] += [
+                {
+                    "name": c.name,
+                    "comment": c.comment,
+                    "type": c.type,
+                }
+            ]
         return d
 
     def deploy_with_pulumi(self, name=None, opts=None):

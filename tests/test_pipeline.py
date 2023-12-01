@@ -61,7 +61,7 @@ def test_pipeline():
                     "window_filter": None,
                 },
                 "view_definition": None,
-                "warehouse_id": None,
+                "warehouse_id": "08b717ce051a0261",
             },
             {
                 "catalog_name": None,
@@ -179,7 +179,7 @@ def test_pipeline():
                     "window_filter": None,
                 },
                 "view_definition": None,
-                "warehouse_id": None,
+                "warehouse_id": "08b717ce051a0261",
             },
         ],
         "target": None,

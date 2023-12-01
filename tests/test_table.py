@@ -132,7 +132,7 @@ def test_model():
             "window_filter": None,
         },
         "view_definition": None,
-        "warehouse_id": None,
+        "warehouse_id": "08b717ce051a0261",
     }
 
     assert not table_slv.is_from_cdc
@@ -357,7 +357,7 @@ def test_silver_star():
             "window_filter": None,
         },
         "view_definition": None,
-        "warehouse_id": None,
+        "warehouse_id": "08b717ce051a0261",
     }
 
     df = table_slv_star.builder.read_source(spark)
