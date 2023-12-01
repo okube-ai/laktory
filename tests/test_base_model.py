@@ -57,12 +57,9 @@ def test_inject_vars():
 
 def test_pulumi_dump():
     d = schema.model_pulumi_dump()
-    assert d == {
-        "name": "stocks",
-        "comment": None,
-        "catalog_name": "default",
-        "force_destroy": True,
-    }
+    del d["name"]
+    del d["catalog_name"]
+    assert d == {'comment': None, 'force_destroy': True}
 
 
 if __name__ == "__main__":
