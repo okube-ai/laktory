@@ -11,7 +11,7 @@ class SqlQuery(BaseModel, Resources):
     data_source_id: str = None
     query: str
     comment: str = None
-    parent: str = None
+    parent: str
     run_as_role: str = None
     tags: list[str] = []
     warehouse_id: str = None
@@ -29,12 +29,6 @@ class SqlQuery(BaseModel, Resources):
     @property
     def key(self):
         key = self.name
-        if self.parent:
-            key = os.path.join(self.parent, self.name)
-        key = key.replace("/", "-")
-        if key.startswith("-"):
-            key = key[1:]
-
         return key
 
     # ----------------------------------------------------------------------- #
