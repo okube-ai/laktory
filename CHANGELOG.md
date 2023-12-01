@@ -2,7 +2,7 @@
 
 ## [0.0.23] - Unreleased
 ###Added
-* n/a
+* Table Pulumi resource
 ###Fixed
 * n/a
 ###Updated
