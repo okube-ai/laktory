@@ -95,7 +95,6 @@ class Pipeline(BaseModel, Resources):
     tables: list[Table] = []
     target: str = None
     udfs: list[PipelineUDF] = []
-    # views: list[Table] = []
 
     @model_validator(mode="after")
     def assign_pipeline_to_tables(self) -> Any:
@@ -114,10 +113,6 @@ class Pipeline(BaseModel, Resources):
                     t.builder.table_source.catalog_name = self.catalog
                 if t.builder.table_source.schema_name is None:
                     t.builder.table_source.schema_name = self.target
-
-        # for v in self.views:
-        #     v.catalog_name = self.catalog
-        #     v.schema_name = self.target
 
         return self
 
@@ -138,7 +133,6 @@ class Pipeline(BaseModel, Resources):
             "tables": True,
             "clusters": {"__all__": {"permissions"}},
             "udfs": True,
-            "views": True,
         }
 
     def model_pulumi_dump(self, *args, **kwargs):
