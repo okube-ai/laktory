@@ -2,13 +2,9 @@
 
 ## [0.0.23] - Unreleased
 ###Added
-* n/a
-###Fixed
-* n/a
-###Updated
-* n/a
-###Breaking changes
-* n/a
+* Databricks directory model
+* SQL Query model
+* Table resource
 
 ## [0.0.22] - 2023-11-29
 ###Added

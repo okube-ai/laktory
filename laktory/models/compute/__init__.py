@@ -8,3 +8,4 @@ from laktory.models.compute.tableaggregation import TableAggregation
 from laktory.models.compute.tablebuilder import TableBuilder
 from laktory.models.compute.tablewindowfilter import TableWindowFilter
 from laktory.models.compute.job import Job
+from laktory.models.compute.sqlquery import SqlQuery
