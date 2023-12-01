@@ -91,6 +91,8 @@ def test_model():
                 "unit": None,
             },
         ],
+        "data_source_format": "DELTA",
+        "table_type": "MANAGED",
         "comment": None,
         "data": [
             ["2023-11-01T00:00:00Z", "AAPL", 1, 2],
@@ -112,6 +114,7 @@ def test_model():
             "filter": None,
             "joins": [],
             "joins_post_aggregation": [],
+            "layer": "SILVER",
             "pipeline_name": None,
             "selects": None,
             "table_source": {
@@ -127,8 +130,9 @@ def test_model():
             },
             "template": "SILVER",
             "window_filter": None,
-            "layer": "SILVER",
         },
+        "view_definition": None,
+        "warehouse_id": None,
     }
 
     assert not table_slv.is_from_cdc
@@ -276,6 +280,8 @@ def test_silver_star():
                 "unit": None,
             }
         ],
+        "data_source_format": "DELTA",
+        "table_type": "MANAGED",
         "comment": None,
         "data": None,
         "grants": None,
@@ -333,6 +339,7 @@ def test_silver_star():
                 },
             ],
             "joins_post_aggregation": [],
+            "layer": "SILVER_STAR",
             "pipeline_name": None,
             "selects": None,
             "table_source": {
@@ -348,8 +355,9 @@ def test_silver_star():
             },
             "template": "SILVER_STAR",
             "window_filter": None,
-            "layer": "SILVER_STAR",
         },
+        "view_definition": None,
+        "warehouse_id": None,
     }
 
     df = table_slv_star.builder.read_source(spark)
