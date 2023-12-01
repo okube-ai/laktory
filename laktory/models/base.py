@@ -60,16 +60,11 @@ class BaseModel(_BaseModel):
         _pvars = {}
         for k, v in self.vars.items():
             # Pulumi outputs require a special pre-formatting step
-            # if isinstance(v, pulumi.Output):
-            #     if v.is_known():
-            #         print("value is known!", k)
-            #         _vars[f"${{var.{k}}}"] = v
-            #     else:
-            #         _vars[f"${{var.{k}}}"] = f"{{_pargs_{k}}}"
-            #         _pvars[f"_pargs_{k}"] = v
-            # else:
-            #     _vars[f"${{var.{k}}}"] = v
-            _vars[f"${{var.{k}}}"] = v
+            if isinstance(v, pulumi.Output):
+                _vars[f"${{var.{k}}}"] = f"{{_pargs_{k}}}"
+                _pvars[f"_pargs_{k}"] = v
+            else:
+                _vars[f"${{var.{k}}}"] = v
 
         def search_and_replace(d, old_value, new_val):
             if isinstance(d, dict):
@@ -106,7 +101,7 @@ class BaseModel(_BaseModel):
             d = search_and_replace(d, var_key, var_value)
 
         # Build pulumi output function where required
-        # d = apply_pulumi(d)
+        d = apply_pulumi(d)
 
         return d
 
