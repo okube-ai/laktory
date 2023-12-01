@@ -2,6 +2,7 @@ from .compute import *
 from .dataevent import DataEvent
 from .dataeventheader import DataEventHeader
 from .datasources import *
+from .directory import Directory
 from .grants import *
 from .group import Group
 from .producer import Producer
