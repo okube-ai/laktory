@@ -2,6 +2,8 @@
 
 ## [0.0.23] - Unreleased
 ###Added
+* Databricks directory model
+* Sql Query model
 * Table Pulumi resource
 ###Fixed
 * n/a
