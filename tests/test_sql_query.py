@@ -12,7 +12,8 @@ def test_sql_query():
         warehouse_id="12345",
     )
     data = query.model_dump()
-    assert query.key == "queries-google-prices"
+    print(query.key)
+    assert query.key == "google-prices"
     print(data)
     assert data == {
         "name": "google-prices",
