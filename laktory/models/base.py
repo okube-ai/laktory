@@ -1,6 +1,6 @@
+import pulumi
 import yaml
 import json
-import jsonref
 from typing import Any
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
@@ -55,6 +55,17 @@ class BaseModel(_BaseModel):
         return {}
 
     def inject_vars(self, d) -> dict:
+
+        _vars = {}
+        _pvars = {}
+        for k, v in self.vars.items():
+            # Pulumi outputs require a special pre-formatting step
+            if isinstance(v, pulumi.Output):
+                _vars[f"${{var.{k}}}"] = f"{{_pargs_{k}}}"
+                _pvars[f"_pargs_{k}"] = v
+            else:
+                _vars[f"${{var.{k}}}"] = v
+
         def search_and_replace(d, old_value, new_val):
             if isinstance(d, dict):
                 for key, value in d.items():
@@ -62,14 +73,36 @@ class BaseModel(_BaseModel):
             elif isinstance(d, list):
                 for i, item in enumerate(d):
                     d[i] = search_and_replace(item, old_value, new_val)
-            elif d == old_value:
+            elif d == old_value:  # required where d is not a string (bool)
                 d = new_val
             elif isinstance(d, str) and old_value in d:
                 d = d.replace(old_value, new_val)
             return d
 
-        for var_key, var_value in self.vars.items():
-            d = search_and_replace(d, f"${{var.{var_key}}}", var_value)
+        def apply_pulumi(d):
+            if isinstance(d, dict):
+                for key, value in d.items():
+                    d[key] = apply_pulumi(value)
+            elif isinstance(d, list):
+                for i, item in enumerate(d):
+                    d[i] = apply_pulumi(item)
+            elif isinstance(d, str) and '_pargs_' in d:
+                d = pulumi.Output.all(
+                    **_pvars
+                ).apply(
+                    lambda args, _d=d: _d.format_map(args)
+                )
+            else:
+                pass
+            return d
+
+        # Replace variable with their values (except for pulumi output)
+        for var_key, var_value in _vars.items():
+            d = search_and_replace(d, var_key, var_value)
+
+        # Build pulumi output function where required
+        d = apply_pulumi(d)
+
         return d
 
     def model_pulumi_dump(self, *args, **kwargs):

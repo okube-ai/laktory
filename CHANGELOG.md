@@ -6,7 +6,7 @@
 ###Fixed
 * n/a
 ###Updated
-* n/a
+* Variable injection to support Pulumi Output as part of a string 
 ###Breaking changes
 * n/a
 
