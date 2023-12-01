@@ -26,7 +26,6 @@ class Directory(BaseModel, Resources):
             return None
         return self.resources.directory.id
 
-
     @property
     def object_id(self):
         if self._resources is None:
