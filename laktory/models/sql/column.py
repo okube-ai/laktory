@@ -5,7 +5,7 @@ from typing import Callable
 from typing import Union
 
 from laktory._logger import get_logger
-from laktory.contants import SUPPORTED_TYPES
+from laktory.constants import SUPPORTED_TYPES
 from laktory.models.base import BaseModel
 from laktory.spark import Column as SparkColumn
 
