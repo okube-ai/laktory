@@ -9,6 +9,8 @@ extra_css:
 
 markdown_extensions:
   - admonition
+  - toc:
+      permalink: true
   - pymdownx.snippets  # link between markdown (changelog)
   - pymdownx.superfences  # code blocks titles
   - pymdownx.details
@@ -69,9 +71,20 @@ theme:
 
 
 plugins:
-  - mkdocstrings
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            members_order: source
+#            separate_signature: true
+            docstring_options:
+              ignore_init_summary: true
+            merge_init_into_class: true
 #  - snippets
 #  - search
+
+
 
 nav:
   - Get Started:
@@ -101,5 +114,11 @@ nav:
     - Secrets: guides/secrets.md
 
   - Lakehouse As Code: lakehouseascode.md
-  - API Reference: reference.md
+  - API Reference:
+    - Models:
+      - BaseModel: api/basemodel.md
+      - DataEventHeader: api/dataeventheader.md
+      - DataEvent: api/dataevent.md
+    - Spark: api/models.md
+    - DLT: api/models.md
   - Changelog: changelog.md
