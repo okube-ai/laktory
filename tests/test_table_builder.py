@@ -65,6 +65,64 @@ def test_table_join():
     ]
 
 
+def test_table_join_outer():
+    join = TableJoin(
+        left={
+            "name": "slv_stock_prices",
+            "filter": "created_at = '2023-11-01T00:00:00Z'",
+        },
+        other={
+            "name": "slv_stock_metadata",
+            "selects": {
+                "symbol2": "symbol",
+                "currency": "currency",
+                "first_traded": "first_traded",
+            },
+        },
+        on=["symbol"],
+        how="full_outer",
+    )
+    join.left._df = table_slv.to_df(spark)
+    join.other._df = df_meta
+
+    df = join.run(spark)
+
+    # Test join columns uniqueness
+    _df = df.withColumn("symbol2", F.lit("a"))
+    # _df = df.withColumn("symbol", F.lit("a"))
+    _df = _df.select("symbol")
+
+    # Test data
+    data = df.toPandas().fillna(-1).to_dict(orient="records")
+    print(data)
+    assert data == [
+        {
+            "created_at": "2023-11-01T00:00:00Z",
+            "open": 1.0,
+            "close": 2.0,
+            "currency": "USD",
+            "first_traded": "1980-12-12T14:30:00.000Z",
+            "symbol": "AAPL",
+        },
+        {
+            "created_at": -1,
+            "open": -1.0,
+            "close": -1.0,
+            "currency": "USD",
+            "first_traded": "1997-05-15T13:30:00.000Z",
+            "symbol": "AMZN",
+        },
+        {
+            "created_at": "2023-11-01T00:00:00Z",
+            "open": 3.0,
+            "close": 4.0,
+            "currency": "USD",
+            "first_traded": "2004-08-19T13:30:00.00Z",
+            "symbol": "GOOGL",
+        },
+    ]
+
+
 def test_table_agg():
     agg = TableAggregation(
         groupby_columns=["symbol"],
@@ -245,12 +303,12 @@ def test_gold():
     df3.printSchema()
     assert df3.schema == T.StructType(
         [
-            T.StructField("symbol", T.StringType(), True),
             T.StructField("min_open", T.DoubleType(), True),
             T.StructField("max_open", T.DoubleType(), True),
             T.StructField("min_close", T.DoubleType(), True),
             T.StructField("_gold_at", T.TimestampType(), False),
             T.StructField("name", T.StringType(), True),
+            T.StructField("symbol", T.StringType(), True),
             T.StructField("name2", T.StringType(), True),
         ]
     )
@@ -309,6 +367,7 @@ def test_cdc():
 
 if __name__ == "__main__":
     test_table_join()
+    test_table_join_outer()
     test_table_agg()
     test_table_agg_window()
     test_table_window_filter()
