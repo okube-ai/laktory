@@ -303,12 +303,12 @@ def test_gold():
     df3.printSchema()
     assert df3.schema == T.StructType(
         [
-            T.StructField("symbol", T.StringType(), True),
             T.StructField("min_open", T.DoubleType(), True),
             T.StructField("max_open", T.DoubleType(), True),
             T.StructField("min_close", T.DoubleType(), True),
             T.StructField("_gold_at", T.TimestampType(), False),
             T.StructField("name", T.StringType(), True),
+            T.StructField("symbol", T.StringType(), True),
             T.StructField("name2", T.StringType(), True),
         ]
     )
@@ -366,13 +366,13 @@ def test_cdc():
 
 
 if __name__ == "__main__":
-    # test_table_join()
+    test_table_join()
     test_table_join_outer()
-    # test_table_agg()
-    # test_table_agg_window()
-    # test_table_window_filter()
-    # test_bronze()
-    # test_silver()
-    # test_silver_star()
-    # test_gold()
-    # test_cdc()
+    test_table_agg()
+    test_table_agg_window()
+    test_table_window_filter()
+    test_bronze()
+    test_silver()
+    test_silver_star()
+    test_gold()
+    test_cdc()
