@@ -2,7 +2,7 @@
 
 ## [0.0.24] - Unreleased
 ###Fixed
-* n/a
+* Null values in joining columns with outer join
 ###Updated
 * Variable injection to support Pulumi Output as part of a string
 * Column builder requires all inputs available to build a column

@@ -99,7 +99,7 @@ def test_table_join_outer():
         },
         {
             "created_at": -1,
-            "symbol": -1,
+            "symbol": "AMZN",
             "open": -1.0,
             "close": -1.0,
             "currency": "USD",
@@ -360,6 +360,7 @@ def test_cdc():
 
 if __name__ == "__main__":
     test_table_join()
+    test_table_join_outer()
     test_table_agg()
     test_table_agg_window()
     test_table_window_filter()

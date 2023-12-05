@@ -70,9 +70,11 @@ class TableJoin(BaseModel):
             .drop()
         )
 
-        # Drop join columns
+        # Clean join columns
         for c in self.on:
-            df = df.drop(F.col(f"other.{c}"))
+            df = df.withColumn(c, F.coalesce(f"left.{c}", f"other.{c}"))
+
+        # Drop watermark column
         if self.other.watermark is not None:
             df = df.drop(F.col(f"other._other_wc"))
         logger.info(f"Joined Schema:")
