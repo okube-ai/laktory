@@ -187,10 +187,14 @@ class Column(BaseModel):
         for i, _arg in enumerate(_args):
             if df is not None:
                 if _arg.is_column and not has_column(df, _arg.value):
-                    logger.error(f"Column '{_arg.value}' not available")
-                    raise ValueError(
-                        f"Input column {_args} for {self.name} is not available"
-                    )
+                    logger.info(f"Column '{_arg.value}' not available")
+                    if raise_exception:
+                        raise ValueError(
+                            f"Input column {_args} for {self.name} is not available"
+                        )
+                    else:
+                        logger.info("Input columns not available. Skipping")
+                        return None
 
             args += [_arg.to_spark()]
 
