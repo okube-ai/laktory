@@ -145,7 +145,7 @@ table_slv = Table(
             "name": "created_at",
             "type": "timestamp",
             "spark_func_name": "coalesce",
-            "spark_func_args": ["_created_at", "data._created_at"],
+            "spark_func_args": ["data._created_at"],
         },
         {
             "name": "symbol",

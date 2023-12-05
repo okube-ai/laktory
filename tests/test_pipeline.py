@@ -74,15 +74,10 @@ def test_pipeline():
                         "schema_name": None,
                         "spark_func_args": [
                             {
-                                "value": "_created_at",
-                                "is_column": True,
-                                "to_lit": False,
-                            },
-                            {
                                 "value": "data._created_at",
                                 "is_column": True,
                                 "to_lit": False,
-                            },
+                            }
                         ],
                         "spark_func_kwargs": {},
                         "spark_func_name": "coalesce",

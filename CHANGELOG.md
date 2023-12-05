@@ -1,14 +1,11 @@
 # Release History
 
 ## [0.0.24] - Unreleased
-###Added
-* n/a
 ###Fixed
-* n/a
+* Null values in joining columns with outer join
 ###Updated
-* Variable injection to support Pulumi Output as part of a string 
-###Breaking changes
-* n/a
+* Variable injection to support Pulumi Output as part of a string
+* Column builder requires all inputs available to build a column
 
 ## [0.0.23] - 2023-12-01
 ###Added

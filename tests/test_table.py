@@ -34,8 +34,7 @@ def test_model():
                 "pii": None,
                 "schema_name": "markets",
                 "spark_func_args": [
-                    {"value": "_created_at", "is_column": True, "to_lit": False},
-                    {"value": "data._created_at", "is_column": True, "to_lit": False},
+                    {"value": "data._created_at", "is_column": True, "to_lit": False}
                 ],
                 "spark_func_kwargs": {},
                 "spark_func_name": "coalesce",
@@ -402,12 +401,12 @@ def test_gold():
     df3.printSchema()
     assert df3.schema == T.StructType(
         [
-            T.StructField("symbol", T.StringType(), True),
             T.StructField("min_open", T.DoubleType(), True),
             T.StructField("max_open", T.DoubleType(), True),
             T.StructField("min_close", T.DoubleType(), True),
             T.StructField("_gold_at", T.TimestampType(), False),
             T.StructField("name", T.StringType(), True),
+            T.StructField("symbol", T.StringType(), True),
             T.StructField("name2", T.StringType(), True),
         ]
     )

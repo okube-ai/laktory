@@ -5,7 +5,9 @@ from laktory.models import Schema
 from pulumi_random import RandomString
 
 env = RandomString("env", length=3, upper=False, numeric=False, special=False)
-schema_name = RandomString("schema", length=5, upper=False, numeric=False, special=False)
+schema_name = RandomString(
+    "schema", length=5, upper=False, numeric=False, special=False
+)
 
 
 schema = Schema(
@@ -59,7 +61,7 @@ def test_pulumi_dump():
     d = schema.model_pulumi_dump()
     del d["name"]
     del d["catalog_name"]
-    assert d == {'comment': None, 'force_destroy': True}
+    assert d == {"comment": None, "force_destroy": True}
 
 
 if __name__ == "__main__":
