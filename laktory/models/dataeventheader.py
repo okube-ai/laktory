@@ -8,7 +8,8 @@ from laktory.models.producer import Producer
 
 class DataEventHeader(BaseModel):
     """
-    Data Event Header
+    Data Event Header class defines the context (metadata) describing a data event.
+    It is generally used to read data from a storage location.
 
     Attributes
     ----------
@@ -20,11 +21,20 @@ class DataEventHeader(BaseModel):
         Data event producer
     events_root
         Root path for all events
+
+    Examples
+    ---------
+    >>> from laktory import models
+    >>> models.DataEventHeader(
+    ...     name="stock_price",
+    ...     producer={"name": "yahoo-finance"},
+    ... )
+    DataEventHeader(name='stock_price', description=None, producer=Producer(name='yahoo-finance', description=None, party=1), events_root='/Volumes/dev/sources/landing/events/')
     """
     name: str = Field(...)
-    description: Union[str, None] = Field(None)
+    description: Union[str, None] = Field(default=None)
     producer: Producer = Field(None)
-    events_root: str = settings.workspace_landing_root + "events/"
+    events_root: str = Field(settings.workspace_landing_root + "events/")
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
@@ -33,11 +43,11 @@ class DataEventHeader(BaseModel):
     @property
     def event_root(self) -> str:
         """
-        Root path for the event, defined as `{events_roots}/{producer_name}/{event_name}/`
+        Root path for the event, defined as `{self.events_roots}/{producer_name}/{event_name}/`
 
         Returns
         -------
-        output
+        str
             Event path
         """
         producer = ""
@@ -45,14 +55,3 @@ class DataEventHeader(BaseModel):
             producer = self.producer.name + "/"
         v = f"{self.events_root}{producer}{self.name}/"
         return v
-
-    #
-    # @field_validator("root_path")
-    # def default_root_path(cls, v: str, info: FieldValidationInfo) -> str:
-    #     if v is None:
-    #         data = info.data
-    #         producer = ""
-    #         if data.get("producer") is not None:
-    #             producer = data["producer"].name + "/"
-    #         v = f'{data.get("events_root_path", "")}{producer}{data.get("name", "")}/'
-    #     return v
