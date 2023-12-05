@@ -72,8 +72,10 @@ class TableJoin(BaseModel):
 
         # Clean join columns
         for c in self.on:
-            df = df.withColumn(c, F.coalesce(f"left.{c}", f"other.{c}"))
-            df = df.drop(F.col(f"left.{c}"), F.col(f"other.{c}"))
+            df = df.withColumn("__tmp", F.coalesce(f"left.{c}", f"other.{c}"))
+            df = df.drop(c)
+            df = df.withColumn(c, F.col("__tmp"))
+            df = df.drop("__tmp")
 
         # Drop watermark column
         if self.other.watermark is not None:
