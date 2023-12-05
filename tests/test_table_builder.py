@@ -65,6 +65,57 @@ def test_table_join():
     ]
 
 
+def test_table_join_outer():
+    join = TableJoin(
+        left={
+            "name": "slv_stock_prices",
+            "filter": "created_at = '2023-11-01T00:00:00Z'",
+        },
+        other={
+            "name": "slv_stock_metadata",
+            "selects": {
+                "symbol2": "symbol",
+                "currency": "currency",
+                "first_traded": "first_traded",
+            },
+        },
+        on=["symbol"],
+        how="full_outer",
+    )
+    join.left._df = table_slv.to_df(spark)
+    join.other._df = df_meta
+
+    df = join.run(spark)
+    data = df.toPandas().fillna(-1).to_dict(orient="records")
+    print(data)
+    assert data == [
+        {
+            "created_at": "2023-11-01T00:00:00Z",
+            "symbol": "AAPL",
+            "open": 1.0,
+            "close": 2.0,
+            "currency": "USD",
+            "first_traded": "1980-12-12T14:30:00.000Z",
+        },
+        {
+            "created_at": -1,
+            "symbol": -1,
+            "open": -1.0,
+            "close": -1.0,
+            "currency": "USD",
+            "first_traded": "1997-05-15T13:30:00.000Z",
+        },
+        {
+            "created_at": "2023-11-01T00:00:00Z",
+            "symbol": "GOOGL",
+            "open": 3.0,
+            "close": 4.0,
+            "currency": "USD",
+            "first_traded": "2004-08-19T13:30:00.00Z",
+        },
+    ]
+
+
 def test_table_agg():
     agg = TableAggregation(
         groupby_columns=["symbol"],
