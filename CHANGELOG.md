@@ -1,6 +1,16 @@
 # Release History
 
-## [0.0.24] - Unreleased
+## [0.0.25] - Unreleased
+###Added
+* n/a
+###Fixed
+* n/a
+###Updated
+* n/a
+###Breaking changes
+* n/a
+
+## [0.0.24] - 2023-12-05
 ###Fixed
 * Null values in joining columns with outer join
 ###Updated
