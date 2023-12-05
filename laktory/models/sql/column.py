@@ -184,44 +184,15 @@ class Column(BaseModel):
 
         # Build args
         args = []
-        expected_cols = 0
-        found_cols = 0
         for i, _arg in enumerate(_args):
             if df is not None:
-                if _arg.is_column:
-                    expected_cols += 1
-                    if not has_column(df, _arg.value):
-                        # When columns are not found, they are simply skipped and a
-                        # warning is issued. Some functions, like `coalesce` might list
-                        # multiple arguments, but don't expect all of them to be
-                        # available
-                        logger.warning(f"Column '{_arg.value}' not available")
-                        continue
-                    else:
-                        found_cols += 1
-
-            # TODO: Review if required
-            # if _arg.value.startswith("data.") or func_name == "coalesce":
-            #     pass
-            # input_type = dict(df.dtypes)[input_col_name]
-            # if input_type in ["double"]:
-            #     # Some bronze NaN data will be converted to 0 if cast to int
-            #     input_col = F.when(F.isnan(input_col_name), None).otherwise(F.col(input_col_name))
-            # if self.type not in ["_any"] and func_name not in [
-            #     "to_safe_timestamp"
-            # ]:
-            #     input_col = F.col(input_col_name).cast(self.type)
+                if _arg.is_column and not has_column(df, _arg.value):
+                    logger.error(f"Column '{_arg.value}' not available")
+                    raise ValueError(
+                        f"Input column {_args} for {self.name} is not available"
+                    )
 
             args += [_arg.to_spark()]
-
-        if expected_cols > 0 and found_cols == 0:
-            if raise_exception:
-                raise ValueError(
-                    f"None of the inputs columns ({_args}) for {self.name} have been found"
-                )
-            else:
-                logger.info("Input columns not available. Skipping")
-                return None
 
         # Build kwargs
         kwargs = {}
