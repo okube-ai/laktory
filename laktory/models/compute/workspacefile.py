@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import model_validator
 from laktory.models.base import BaseModel
 from laktory.models.resources import Resources
-from laktory.models.permission import Permission
+from laktory.models.databricks.permission import Permission
 
 
 class WorkspaceFile(BaseModel, Resources):

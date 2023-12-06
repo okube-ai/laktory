@@ -141,6 +141,10 @@ nav:
       - DataEventHeader: api/dataeventheader.md
       - DataEvent: api/dataevent.md
       - DataProducer: api/dataproducer.md
+      - Databricks:
+        - api/databricks/directory.md
+        - api/databricks/group.md
+        - api/databricks/user.md
     - Spark: api/models.md
     - DLT: api/models.md
   - Changelog: changelog.md

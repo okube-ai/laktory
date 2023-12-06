@@ -6,7 +6,7 @@ from pydantic import model_validator
 from pydantic import Field
 from laktory.models.base import BaseModel
 from laktory.models.resources import Resources
-from laktory.models.permission import Permission
+from laktory.models.databricks.permission import Permission
 from laktory.models.compute.cluster import Cluster
 from laktory.models.sql.table import Table
 
