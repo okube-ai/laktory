@@ -8,7 +8,7 @@
 ###Updated
 * n/a
 ###Breaking changes
-* n/a
+* Renamed Producer to DataProducer model
 
 ## [0.0.24] - 2023-12-05
 ###Fixed
