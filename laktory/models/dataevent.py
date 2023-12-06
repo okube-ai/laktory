@@ -25,8 +25,8 @@ EXCLUDES = [
 
 class DataEvent(DataEventHeader):
     """
-    Data Event Header class defines both the context (metadata) describing a
-    data event and its content. It is generally used to write data to a storage
+    Data Event class defines both the context (metadata) describing a data
+    event and its content. It is generally used to write data to a storage
     location.
 
     Attributes
