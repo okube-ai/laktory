@@ -38,8 +38,6 @@ class User(BaseModel, Resources):
             "account_admin"
         ]
     )
-    print(u)
-    #> disable_as_user_deletion=False display_name='John Doe' id=None groups=['role-engineer', 'domain-finance'] roles=['account_admin'] user_name='john.doe@okube.ai' workspace_access=None
     ```
     """
     disable_as_user_deletion: bool = False
@@ -76,4 +74,3 @@ if __name__ == "__main__":
             "account_admin"
         ]
     )
-    print(u)

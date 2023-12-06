@@ -26,8 +26,6 @@ class Group(BaseModel, Resources):
     d = models.Group(
         display_name="role-engineers"
     )
-    print(d)
-    #> display_name='role-engineers' allow_cluster_create=False workspace_access=None id=None
     ```
     """
     allow_cluster_create: bool = False

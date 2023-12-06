@@ -144,6 +144,8 @@ nav:
       - Databricks:
         - api/databricks/directory.md
         - api/databricks/group.md
+        - api/databricks/permission.md
+        - ServicePrincipal: api/databricks/serviceprincipal.md
         - api/databricks/user.md
     - Spark: api/models.md
     - DLT: api/models.md
