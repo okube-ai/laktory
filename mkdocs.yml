@@ -140,6 +140,7 @@ nav:
       - BaseModel: api/basemodel.md
       - DataEventHeader: api/dataeventheader.md
       - DataEvent: api/dataevent.md
+      - DataProducer: api/dataproducer.md
     - Spark: api/models.md
     - DLT: api/models.md
   - Changelog: changelog.md

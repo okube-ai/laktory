@@ -9,7 +9,7 @@ from pydantic import Field
 from pydantic import ConfigDict
 
 from laktory.models.dataeventheader import DataEventHeader
-from laktory.models.producer import Producer
+from laktory.models.dataproducer import DataProducer
 from laktory._settings import settings
 from laktory._logger import get_logger
 
@@ -69,7 +69,7 @@ class DataEvent(DataEventHeader):
     model_config = ConfigDict(populate_by_name=True)
     name: str = Field(..., alias="event_name")
     description: Union[str, None] = Field(None, alias="event_description")
-    producer: Producer = Field(None, alias="event_producer", description="producer")
+    producer: DataProducer = Field(None, alias="event_producer", description="producer")
     data: dict
     tstamp_col: str = "created_at"
     tstamp_in_path: bool = True

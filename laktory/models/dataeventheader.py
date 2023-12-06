@@ -3,7 +3,7 @@ from pydantic import Field
 
 from laktory._settings import settings
 from laktory.models.base import BaseModel
-from laktory.models.producer import Producer
+from laktory.models.dataproducer import DataProducer
 
 
 class DataEventHeader(BaseModel):
@@ -39,7 +39,7 @@ class DataEventHeader(BaseModel):
     """
     name: str = Field(...)
     description: Union[str, None] = Field(default=None)
-    producer: Producer = Field(default=None)
+    producer: DataProducer = Field(default=None)
     events_root: str = Field(settings.workspace_landing_root + "events/")
 
     # ----------------------------------------------------------------------- #
