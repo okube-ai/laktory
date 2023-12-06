@@ -141,6 +141,9 @@ nav:
       - DataEventHeader: api/dataeventheader.md
       - DataEvent: api/dataevent.md
       - DataProducer: api/dataproducer.md
+      - DataSource:
+        - EventDataSource: api/datasources/eventdatasource.md
+        - TableDataSource: api/datasources/tabledatasource.md
       - Databricks:
         - api/databricks/directory.md
         - api/databricks/group.md

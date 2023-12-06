@@ -8,8 +8,9 @@ from laktory.models.dataproducer import DataProducer
 
 class DataEventHeader(BaseModel):
     """
-    Data Event Header class defines the context (metadata) describing a data event.
-    It is generally used to read data from a storage location.
+    Data Event Header class defines the context (metadata) describing a data
+    event. It is generally used to read data from a storage location or to
+    build a `EventDataSource`.
 
     Attributes
     ----------
