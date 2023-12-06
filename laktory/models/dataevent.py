@@ -1,5 +1,4 @@
 import os
-import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any
@@ -25,10 +24,52 @@ EXCLUDES = [
 
 
 class DataEvent(DataEventHeader):
+    """
+    Data Event Header class defines both the context (metadata) describing a
+    data event and its content. It is generally used to write data to a storage
+    location.
+
+    Attributes
+    ----------
+    data
+        Event data stored as a (key, value) object
+    tstamp_col
+        Column storing event UTC timestamp
+    tstamp_in_path
+        If `True`, includes timestamp if data event filepath
+
+    Examples
+    --------
+    This is example one
+    ```py
+    from laktory import models
+    event = models.DataEvent(
+        name="stock_price",
+        producer={"name": "yahoo-finance"},
+        data={
+            "created_at": datetime(2023, 8, 23),
+            "symbol": "GOOGL",
+            "open": 130.25,
+            "close": 132.33,
+        },
+    )
+    print(event)
+    #> name='stock_price' description=None producer=Producer(name='yahoo-finance', description=None, party=1) events_root='/Volumes/dev/sources/landing/events/' data={'created_at': datetime.datetime(2023, 8, 23, 0, 0), 'symbol': 'GOOGL', 'open': 130.25, 'close': 132.33, '_name': 'stock_price', '_producer_name': 'yahoo-finance', '_created_at': datetime.datetime(2023, 8, 23, 0, 0, tzinfo=zoneinfo.ZoneInfo(key='UTC'))} tstamp_col='created_at' tstamp_in_path=True
+
+    print(event.dirpath)
+    #> /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/2023/08/23/
+
+    print(event.get_landing_filepath())
+    #> /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/2023/08/23/stock_price_20230823T000000000Z.json
+
+    print(event.get_storage_filepath())
+    #> /events/yahoo-finance/stock_price/2023/08/23/stock_price_20230823T000000000Z.json
+    ```
+     """
     model_config = ConfigDict(populate_by_name=True)
     name: str = Field(..., alias="event_name")
     description: Union[str, None] = Field(None, alias="event_description")
-    producer: Producer = Field(None, alias="event_producer")
+    producer: Producer = Field(None, alias="event_producer", description="producer")
     data: dict
     tstamp_col: str = "created_at"
     tstamp_in_path: bool = True
@@ -52,6 +93,7 @@ class DataEvent(DataEventHeader):
 
     @property
     def created_at(self) -> datetime:
+        """Timestamp at which event was created."""
         return self.data["_created_at"]
 
     # ----------------------------------------------------------------------- #
@@ -60,6 +102,7 @@ class DataEvent(DataEventHeader):
 
     @property
     def dirpath(self) -> str:
+        """Path of the directory storing the event data."""
         dirpath = self.event_root
         if self.tstamp_in_path:
             t = self.created_at
@@ -67,6 +110,22 @@ class DataEvent(DataEventHeader):
         return dirpath
 
     def get_filename(self, fmt: str = "json", suffix: str = None) -> str:
+        """
+        Get file name associated with the data of the even, given a format `fmt`
+        and a `suffix`.
+
+        Parameters
+        ----------
+        fmt
+            File format
+        suffix
+            File path suffix
+
+        Returns
+        -------
+        str
+            Data file path
+        """
         filename = self.name
         if suffix is not None:
             filename += f"_{suffix}"
@@ -87,9 +146,41 @@ class DataEvent(DataEventHeader):
         return filename
 
     def get_landing_filepath(self, fmt="json", suffix=None):
+        """
+        Get file path on the landing mount/volume associated with the data of
+        the event, given a format `fmt` and a `suffix`.
+
+        Parameters
+        ----------
+        fmt
+            File format
+        suffix
+            File path suffix
+
+        Returns
+        -------
+        str
+            Data file path
+        """
         return os.path.join(self.dirpath, self.get_filename(fmt, suffix))
 
     def get_storage_filepath(self, fmt="json", suffix=None):
+        """
+        Get file path on the landing storage associated with the data of the
+        event, given a format `fmt` and a `suffix`.
+
+        Parameters
+        ----------
+        fmt
+            File format
+        suffix
+            File path suffix
+
+        Returns
+        -------
+        str
+            Data file path
+        """
         path = self.get_landing_filepath(fmt=fmt, suffix=suffix)
         path = path.replace(settings.workspace_landing_root, "/")
         return path
@@ -133,6 +224,21 @@ class DataEvent(DataEventHeader):
         overwrite: bool = False,
         skip_if_exists: bool = False,
     ) -> None:
+        """
+        Write data event to local file path, given a format `fmt` and a
+        `suffix`.
+
+        Parameters
+        ----------
+        suffix
+            File path suffix
+        fmt
+            File format
+        overwrite
+            Overwrite file if already exists
+        skip_if_exists
+            If `True` and file already exists, writing is skipped.
+        """
         path = self.get_landing_filepath(suffix=suffix, fmt=fmt)
         dirpath = os.path.dirname(path)
 
@@ -164,6 +270,27 @@ class DataEvent(DataEventHeader):
         overwrite: bool = False,
         skip_if_exists: bool = False,
     ) -> None:
+        """
+        Write data event to azure storage container, given a format `fmt` and a
+        `suffix`.
+
+        Parameters
+        ----------
+        suffix
+            File path suffix
+        fmt
+            File format
+        container_client
+            Authorized Azure container client
+        account_url
+            URL of storage account
+        container_name
+            Name of the storage container
+        overwrite
+            Overwrite file if already exists
+        skip_if_exists
+            If `True` and file already exists, writing is skipped.
+        """
         # Set container client
         if container_client is None:
             from azure.storage.blob import ContainerClient
@@ -219,6 +346,23 @@ class DataEvent(DataEventHeader):
         overwrite: bool = False,
         skip_if_exists: bool = False,
     ) -> None:
+        """
+        Write data event to azure storage container, given a format `fmt` and a
+        `suffix`.
+
+        Parameters
+        ----------
+        suffix
+            File path suffix
+        fmt
+            File format
+        s3_resource
+            Authorized S3 bucket resource
+        overwrite
+            Overwrite file if already exists
+        skip_if_exists
+            If `True` and file already exists, writing is skipped.
+        """
         import boto3
 
         if s3_resource is None:
@@ -271,6 +415,23 @@ class DataEvent(DataEventHeader):
         skip_if_exists: bool = False,
         storage_type: Literal["VOLUME", "MOUNT"] = "VOLUME",
     ) -> None:
+        """
+        Write data event to Databricks volume or mount, given a format `fmt`
+        and a `suffix`.
+
+        Parameters
+        ----------
+        suffix:
+            File path suffix
+        fmt:
+            File format
+        overwrite:
+            Overwrite file if already exists
+        skip_if_exists:
+            If `True` and file already exists, writing is skipped.
+        storage_type:
+            Specify if data is written to a mount or a volume.
+        """
         path = self.get_landing_filepath(suffix=suffix, fmt=fmt)
         if storage_type == "MOUNT":
             path = "/dbfs" + path
@@ -293,3 +454,22 @@ class DataEvent(DataEventHeader):
             overwrite=overwrite,
             skip=skip_if_exists,
         )
+
+
+if __name__ == "__main__":
+    from laktory import models
+    event = models.DataEvent(
+        name="stock_price",
+        producer={"name": "yahoo-finance"},
+        data={
+            "created_at": datetime(2023, 8, 23),
+            "symbol": "GOOGL",
+            "open": 130.25,
+            "close": 132.33,
+        },
+    )
+    print(event)
+
+    print(event.dirpath)
+    print(event.get_landing_filepath())
+    print(event.get_storage_filepath())

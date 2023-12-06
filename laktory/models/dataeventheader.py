@@ -20,20 +20,26 @@ class DataEventHeader(BaseModel):
     producer
         Data event producer
     events_root
-        Root path for all events
+        Root path for all events. Default value: `{settings.workspace_landing_root}/events/`
 
     Examples
     ---------
-    >>> from laktory import models
-    >>> models.DataEventHeader(
-    ...     name="stock_price",
-    ...     producer={"name": "yahoo-finance"},
-    ... )
-    DataEventHeader(name='stock_price', description=None, producer=Producer(name='yahoo-finance', description=None, party=1), events_root='/Volumes/dev/sources/landing/events/')
+    ```python
+    from laktory import models
+    event = models.DataEventHeader(
+        name="stock_price",
+        producer={"name": "yahoo-finance"},
+    )
+    print(event)
+    #> name='stock_price' description=None producer=Producer(name='yahoo-finance', description=None, party=1) events_root='/Volumes/dev/sources/landing/events/'
+
+    print(event.event_root)
+    #> /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
+    ```
     """
     name: str = Field(...)
     description: Union[str, None] = Field(default=None)
-    producer: Producer = Field(None)
+    producer: Producer = Field(default=None)
     events_root: str = Field(settings.workspace_landing_root + "events/")
 
     # ----------------------------------------------------------------------- #
@@ -55,3 +61,14 @@ class DataEventHeader(BaseModel):
             producer = self.producer.name + "/"
         v = f"{self.events_root}{producer}{self.name}/"
         return v
+
+
+if __name__ == "__main__":
+    from laktory import models
+    event = models.DataEventHeader(
+        name="stock_price",
+        producer={"name": "yahoo-finance"},
+    )
+    print(event)
+
+    print(event.event_root)

@@ -9,6 +9,13 @@ from laktory.workspaceclient import WorkspaceClient
 
 
 class BaseModel(_BaseModel):
+    """
+    Base Model docstring
+    Parameters
+    ----------
+    _vars
+    kwargs
+    """
     model_config = ConfigDict(extra="forbid")
     # _vars: dict[str, Any] = {}
 
@@ -55,6 +62,17 @@ class BaseModel(_BaseModel):
         return {}
 
     def inject_vars(self, d) -> dict:
+        """
+        Variable injection
+
+        Parameters
+        ----------
+        d
+
+        Returns
+        -------
+
+        """
 
         _vars = {}
         _pvars = {}
