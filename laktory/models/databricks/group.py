@@ -41,7 +41,7 @@ class Group(BaseModel, Resources):
     def pulumi_excludes(self) -> list[str]:
         return ["id"]
 
-    def deploy_with_pulumi(self, name=None, opts=None):
+    def deploy_with_pulumi(self, name: str = None, opts=None):
         """
         Deploy group using pulumi.
 

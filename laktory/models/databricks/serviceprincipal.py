@@ -56,7 +56,24 @@ class ServicePrincipal(BaseModel, Resources):
     def pulumi_excludes(self) -> list[str]:
         return ["groups", "roles"]
 
-    def deploy_with_pulumi(self, name=None, group_ids=None, opts=None):
+    def deploy_with_pulumi(self, name: str = None, group_ids: dict[str, str] = None, opts=None):
+        """
+        Deploy service principal using pulumi.
+
+        Parameters
+        ----------
+        name:
+            Name of the pulumi resource. Default is `service-principal-{self.display_name}`
+        group_ids:
+            Dictionary whose keys are the display names and whose values are the group ids
+        opts:
+            Pulumi resource options
+
+        Returns
+        -------
+        PulumiServicePrincipal:
+            Pulumi service principal resource
+        """
         from laktory.resourcesengines.pulumi.serviceprincipal import (
             PulumiServicePrincipal,
         )

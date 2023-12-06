@@ -56,6 +56,23 @@ class User(BaseModel, Resources):
         return ["groups", "roles", "id"]
 
     def deploy_with_pulumi(self, name=None, group_ids=None, opts=None):
+        """
+        Deploy service user using pulumi.
+
+        Parameters
+        ----------
+        name:
+            Name of the pulumi resource. Default is `user-{self.user_name}`
+        group_ids:
+            Dictionary whose keys are the display names and whose values are the group ids
+        opts:
+            Pulumi resource options
+
+        Returns
+        -------
+        PulumiUser:
+            Pulumi user resource
+        """
         from laktory.resourcesengines.pulumi.user import PulumiUser
 
         return PulumiUser(name=name, user=self, group_ids=group_ids, opts=opts)
