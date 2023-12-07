@@ -4,14 +4,14 @@ from typing import Literal
 from typing import Union
 
 from laktory._logger import get_logger
-from laktory.models.compute.tablejoin import TableJoin
 from laktory.models.basemodel import BaseModel
-from laktory.models.sql.column import Column
-from laktory.spark import DataFrame
-from laktory.models.datasources import TableDataSource
 from laktory.models.datasources import EventDataSource
-from laktory.models.compute.tableaggregation import TableAggregation
-from laktory.models.compute.tablewindowfilter import TableWindowFilter
+from laktory.models.datasources import TableDataSource
+from laktory.models.sql.column import Column
+from laktory.models.sql.tableaggregation import TableAggregation
+from laktory.models.sql.tablejoin import TableJoin
+from laktory.models.sql.tablewindowfilter import TableWindowFilter
+from laktory.spark import DataFrame
 
 logger = get_logger(__name__)
 

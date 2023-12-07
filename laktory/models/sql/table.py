@@ -8,7 +8,7 @@ from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.baseresource import BaseResource
 from laktory.models.sql.column import Column
-from laktory.models.compute.tablebuilder import TableBuilder
+from laktory.models.sql.tablebuilder import TableBuilder
 from laktory.models.grants.tablegrant import TableGrant
 from laktory._settings import settings
 
