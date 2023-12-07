@@ -152,6 +152,7 @@ nav:
         - api/databricks/permission.md
         - ServicePrincipal: api/databricks/serviceprincipal.md
         - api/databricks/user.md
+      - Grants: api/grants.md
     - Spark: api/models.md
     - DLT: api/models.md
   - Changelog: changelog.md
