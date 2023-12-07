@@ -16,6 +16,7 @@ class BaseResource(_BaseModel):
     Parent class for all Laktory models deployable as one or multiple cloud
     resources. This `BaseResource` class is derived from `pydantic.BaseModel`.
     """
+
     _resources: Any = None
 
     @property

@@ -40,6 +40,7 @@ class User(BaseModel, BaseResource):
     )
     ```
     """
+
     disable_as_user_deletion: bool = False
     display_name: str = None
     id: Union[str, None] = None
@@ -80,6 +81,7 @@ class User(BaseModel, BaseResource):
 
 if __name__ == "__main__":
     from laktory import models
+
     u = models.User(
         user_name="john.doe@okube.ai",
         display_name="John Doe",
@@ -87,7 +89,5 @@ if __name__ == "__main__":
             "role-engineer",
             "domain-finance",
         ],
-        roles=[
-            "account_admin"
-        ]
+        roles=["account_admin"],
     )

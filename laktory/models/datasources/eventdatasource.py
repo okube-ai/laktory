@@ -43,6 +43,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
     df = source.read()
     ```
     """
+
     type: Literal["STORAGE_EVENTS", "STREAM_KINESIS", "STREAM_KAFKA"] = "STORAGE_EVENTS"
     fmt: Literal["JSON", "CSV", "PARQUET"] = "JSON"
     multiline: bool = False

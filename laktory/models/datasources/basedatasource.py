@@ -14,6 +14,7 @@ class BaseDataSource(BaseModel):
     read_as_stream
         If `True` read source as stream
     """
+
     read_as_stream: Union[bool, None] = True
 
     @abstractmethod

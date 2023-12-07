@@ -27,6 +27,7 @@ class Watermark(BaseModel):
     ----------
     https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#handling-late-data-and-watermarking
     """
+
     column: str
     threshold: str
 
@@ -80,6 +81,7 @@ class TableDataSourceCDC(BaseModel):
     ----------
     https://docs.databricks.com/en/delta-live-tables/python-ref.html#change-data-capture-with-python-in-delta-live-tables
     """
+
     apply_as_deletes: Union[str, None] = None
     apply_as_truncates: Union[str, None] = None
     columns: Union[list[str], None] = []
@@ -132,6 +134,7 @@ class TableDataSource(BaseDataSource):
     df = source.read(spark)
     ```
     """
+
     _df: Any = None
     catalog_name: Union[str, None] = None
     cdc: Union[TableDataSourceCDC, None] = None
@@ -221,6 +224,7 @@ class TableDataSource(BaseDataSource):
 
 if __name__ == "__main__":
     from laktory import models
+
     source = models.TableDataSource(
         name="brz_stock_prices",
         selects=["symbol", "open", "close"],

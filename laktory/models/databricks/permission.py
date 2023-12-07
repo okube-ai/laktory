@@ -20,6 +20,7 @@ class Permission(BaseModel):
     user_name
         Name of the user to assign the permission to.
     """
+
     group_name: str = None
     permission_level: str
     service_principal_name: str = None

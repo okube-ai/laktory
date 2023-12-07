@@ -8,7 +8,7 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 
-Model = TypeVar('Model', bound='BaseModel')
+Model = TypeVar("Model", bound="BaseModel")
 
 
 class BaseModel(_BaseModel):
@@ -21,6 +21,7 @@ class BaseModel(_BaseModel):
     vars
         Variable values to be resolved when using `inject_vars` method.
     """
+
     model_config = ConfigDict(extra="forbid")
     vars: dict[str, Any] = Field(default={}, exclude=True)
 
@@ -119,10 +120,8 @@ class BaseModel(_BaseModel):
             elif isinstance(d, list):
                 for i, item in enumerate(d):
                     d[i] = apply_pulumi(item)
-            elif isinstance(d, str) and '_pargs_' in d:
-                d = pulumi.Output.all(
-                    **_pvars
-                ).apply(
+            elif isinstance(d, str) and "_pargs_" in d:
+                d = pulumi.Output.all(**_pvars).apply(
                     lambda args, _d=d: _d.format_map(args)
                 )
             else:

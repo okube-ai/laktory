@@ -28,6 +28,7 @@ class Group(BaseModel, BaseResource):
     )
     ```
     """
+
     allow_cluster_create: bool = False
     display_name: str
     id: Union[str, None] = None
@@ -64,7 +65,6 @@ class Group(BaseModel, BaseResource):
 
 if __name__ == "__main__":
     from laktory import models
-    d = models.Group(
-        display_name="role-engineers"
-    )
+
+    d = models.Group(display_name="role-engineers")
     print(d)

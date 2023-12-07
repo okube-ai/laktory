@@ -38,6 +38,7 @@ class DataEventHeader(BaseModel):
     #> /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
     ```
     """
+
     name: str = Field(...)
     description: Union[str, None] = Field(default=None)
     producer: DataProducer = Field(default=None)
@@ -66,6 +67,7 @@ class DataEventHeader(BaseModel):
 
 if __name__ == "__main__":
     from laktory import models
+
     event = models.DataEventHeader(
         name="stock_price",
         producer={"name": "yahoo-finance"},

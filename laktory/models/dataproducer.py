@@ -31,6 +31,7 @@ class DataProducer(BaseModel):
     #> name='yahoo-finance' description='yfinance offers a threaded and Pythonic way to download market data from Yahoo! finance' party=3
     ```
     """
+
     name: str
     description: Union[str, None] = None
     party: Literal[1, 2, 3] = 1

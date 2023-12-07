@@ -27,6 +27,7 @@ class Directory(BaseModel, BaseResource):
     #> queries-views
     ```
     """
+
     path: str
     delete_recursive: Union[bool, None] = None
 
@@ -73,13 +74,13 @@ class Directory(BaseModel, BaseResource):
             Pulumi directory resource
         """
         from laktory.resourcesengines.pulumi.directory import PulumiDirectory
+
         return PulumiDirectory(name=name, directory=self, opts=opts)
 
 
 if __name__ == "__main__":
     from laktory import models
-    d = models.Directory(
-        path="/queries/views"
-    )
+
+    d = models.Directory(path="/queries/views")
     print(d)
     print(d.key)

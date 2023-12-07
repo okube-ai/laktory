@@ -65,7 +65,8 @@ class DataEvent(DataEventHeader):
     print(event.get_storage_filepath())
     #> /events/yahoo-finance/stock_price/2023/08/23/stock_price_20230823T000000000Z.json
     ```
-     """
+    """
+
     model_config = ConfigDict(populate_by_name=True)
     name: str = Field(..., alias="event_name")
     description: Union[str, None] = Field(None, alias="event_description")
@@ -458,6 +459,7 @@ class DataEvent(DataEventHeader):
 
 if __name__ == "__main__":
     from laktory import models
+
     event = models.DataEvent(
         name="stock_price",
         producer={"name": "yahoo-finance"},

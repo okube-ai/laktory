@@ -42,6 +42,7 @@ class ServicePrincipal(BaseModel, BaseResource):
     )
     ```
     """
+
     allow_cluster_create: bool = False
     application_id: str = None
     disable_as_user_deletion: bool = False
@@ -56,7 +57,9 @@ class ServicePrincipal(BaseModel, BaseResource):
     def pulumi_excludes(self) -> list[str]:
         return ["groups", "roles"]
 
-    def deploy_with_pulumi(self, name: str = None, group_ids: dict[str, str] = None, opts=None):
+    def deploy_with_pulumi(
+        self, name: str = None, group_ids: dict[str, str] = None, opts=None
+    ):
         """
         Deploy service principal using pulumi.
 
@@ -85,6 +88,7 @@ class ServicePrincipal(BaseModel, BaseResource):
 
 if __name__ == "__main__":
     from laktory import models
+
     sp = models.ServicePrincipal(
         display_name="neptune",
         application_id="baf147d1-a856-4de0-a570-8a56dbd7e234",
@@ -94,7 +98,5 @@ if __name__ == "__main__":
             "domain-finance",
             "domain-engineering",
         ],
-        roles=[
-            "account_admin"
-        ]
+        roles=["account_admin"],
     )
