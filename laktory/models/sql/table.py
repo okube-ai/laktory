@@ -198,8 +198,8 @@ class Table(BaseModel, BaseResource):
 
         Attributes
         ----------
-        spark: SparkContext
-            Spark context used to convert pandas DataFrame into a spark
+        spark: SparkSession
+            Spark session used to convert pandas DataFrame into a spark
             DataFrame if provided.
         """
         import pandas as pd
