@@ -2,8 +2,8 @@ from typing import Union
 import pulumi
 import pulumi_databricks as databricks
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.group import Group
-from laktory.models.user import User
+from laktory.models.databricks.group import Group
+from laktory.models.databricks.user import User
 
 from laktory._logger import get_logger
 
