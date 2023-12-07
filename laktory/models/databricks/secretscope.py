@@ -18,6 +18,7 @@ class SecretScopePermission(BaseModel):
     principal:
         Name of the service principal to assign the permission to
     """
+
     permission: Literal["READ", "WRITE", "MANAGE"] = None
     principal: str = None
 
@@ -33,6 +34,7 @@ class SecretScopeKeyvaultMetadata(BaseModel):
     resource_id:
         Id of the keyvault resource
     """
+
     dns_name: str = None
     resource_id: str = None
 
@@ -72,6 +74,7 @@ class SecretScope(BaseModel, BaseResource):
     ss.deploy()
     ```
     """
+
     backend_type: Literal["DATABRICKS", "AZURE_KEYVAULT"] = "DATABRICKS"
     keyvault_metadata: SecretScopeKeyvaultMetadata = None
     name: str = Field(...)
@@ -116,6 +119,7 @@ class SecretScope(BaseModel, BaseResource):
 
 if __name__ == "__main__":
     from laktory import models
+
     ss = models.SecretScope(
         name="azure",
         secrets=[
@@ -125,7 +129,7 @@ if __name__ == "__main__":
         permissions=[
             {"permission": "READ", "principal": "role-metastore-admins"},
             {"permission": "READ", "principal": "role-workspace-admins"},
-        ]
+        ],
     )
     print(ss)
     ss.deploy()

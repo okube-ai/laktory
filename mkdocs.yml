@@ -155,6 +155,8 @@ nav:
         - SecretScope: api/databricks/secretscope.md
         - api/databricks/user.md
       - Grants: api/grants.md
+      - SQL:
+          - api/sql/volume.md
     - Spark: api/models.md
     - DLT: api/models.md
   - Changelog: changelog.md

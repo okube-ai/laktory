@@ -14,6 +14,7 @@ class Secret(BaseModel):
     value:
         Value associated with the secret
     """
+
     scope: str = None
     key: str = None
     value: str = None
