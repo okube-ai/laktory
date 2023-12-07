@@ -5,7 +5,8 @@ from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
-from laktory.models.datasources import EventDataSource
+from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory.models.datasources import TableDataSource
 from laktory.models.datasources import TableDataSource
 from laktory.models.sql.column import Column
 from laktory.models.sql.tableaggregation import TableAggregation
@@ -17,10 +18,55 @@ logger = get_logger(__name__)
 
 
 class TableBuilder(BaseModel):
+    """
+    Mechanisms for building a table from a source in the context of a data
+    pipeline.
+
+    Attributes
+    ----------
+    aggregation:
+        Definition of the aggregation model following the joins and the source
+        read.
+    drop_columns:
+        Columns to drop from the output dataframe
+    drop_duplicates:
+        If `True`, drop duplicated rows using table `primary_key`
+    drop_source_columns:
+        If `True`, drop columns from the source after read and only keep
+        columns defined in the table and/or resulting from the joins.
+    event_source:
+        Definition of the event data source if applicable
+    filter:
+        Filter applied to the data source to keep only selected rows
+    joins:
+        Definition of the table(s) to be joined to the data source
+    joins_post_aggregation
+        Definition of the table(s) to be joined to the aggregated data
+    layer:
+        Layer in the medallion architecture
+    pipeline_name:
+        Name of the pipeline in which the table will be built
+    selects:
+        Columns to select from the output dataframe. A list of colum names or
+        a map for renaming the columns.
+    table_source:
+        Definition of the table data source if applicable
+    template:
+        Key indicating which notebook to use for building the table in the
+        context of a data pipeline.
+    window_filter:
+        Definition of rows filter based on a time spark window. Applied after
+        joins.
+
+    Examples
+    --------
+    ```py
+    ```
+    """
     aggregation: Union[TableAggregation, None] = None
-    drop_source_columns: Union[bool, None] = None
-    drop_duplicates: Union[bool, None] = None
     drop_columns: list[str] = []
+    drop_duplicates: Union[bool, None] = None
+    drop_source_columns: Union[bool, None] = None
     event_source: Union[EventDataSource, None] = None
     filter: Union[str, None] = None
     joins: list[TableJoin] = []
@@ -31,11 +77,15 @@ class TableBuilder(BaseModel):
     table_source: Union[TableDataSource, None] = None
     template: Union[str, bool, None] = None
     window_filter: Union[TableWindowFilter, None] = None
-    _table: Any = None
     _columns_to_build = []
+    _table: Any = None
 
     @model_validator(mode="after")
     def default_options(self) -> Any:
+        """
+        Sets default options like `drop_source_columns`, `drop_duplicates`,
+        `template`, etc. based on `layer` value.
+        """
         # Default values
         if self.layer == "BRONZE":
             if self.drop_source_columns is None:
@@ -67,40 +117,47 @@ class TableBuilder(BaseModel):
         return self
 
     @property
-    def source(self):
+    def source(self) -> BaseDataSource:
+        """Selected data source"""
         if self.event_source is not None and self.event_source.name is not None:
             return self.event_source
         elif self.table_source is not None and self.table_source.name is not None:
             return self.table_source
 
     @property
-    def is_from_cdc(self):
+    def is_from_cdc(self) -> bool:
+        """If `True` CDC source is used to build the table"""
         if self.source is None:
             return False
         else:
             return self.source.is_cdc
 
     @property
-    def columns(self):
+    def columns(self) -> list[Column]:
+        """List of columns"""
         return self._table.columns
 
     @property
-    def timestamp_key(self):
+    def timestamp_key(self) -> str:
+        """Table timestamp key"""
         return self._table.timestamp_key
 
     @property
-    def primary_key(self):
+    def primary_key(self) -> str:
+        """Table primary key"""
         return self._table.primary_key
 
     @property
-    def has_joins(self):
+    def has_joins(self) -> bool:
+        """Joins defined flag"""
         return len(self.joins) > 0
 
     @property
-    def has_joins_post_aggregation(self):
+    def has_joins_post_aggregation(self) -> bool:
+        """Post-aggregation joins defined flag"""
         return len(self.joins_post_aggregation) > 0
 
-    def get_layer_columns(self, layer, df=None):
+    def _get_layer_columns(self, layer, df=None) -> list[columns]:
         from laktory.spark.dataframe import has_column
 
         cols = []
@@ -176,6 +233,19 @@ class TableBuilder(BaseModel):
         return cols
 
     def read_source(self, spark) -> DataFrame:
+        """
+        Read data source specified in `self.source`
+
+        Parameters
+        ----------
+        spark: SparkSession
+            Spark session
+
+        Returns
+        -------
+        :
+            Output dataframe
+        """
         return self.source.read(spark)
 
     def build_columns(self, df, udfs=None, raise_exception=True) -> DataFrame:
@@ -198,7 +268,7 @@ class TableBuilder(BaseModel):
         logger.info(f"Applying {self.layer} transformations")
 
         # Build columns
-        self._columns_to_build = self.columns + self.get_layer_columns(
+        self._columns_to_build = self.columns + self._get_layer_columns(
             layer=self.layer, df=df
         )
         column_names = [c.name for c in self._columns_to_build]
@@ -232,7 +302,7 @@ class TableBuilder(BaseModel):
 
         if self.aggregation:
             df = self.aggregation.run(df, udfs=udfs)
-            self._columns_to_build += self.get_layer_columns(layer=self.layer, df=df)
+            self._columns_to_build += self._get_layer_columns(layer=self.layer, df=df)
 
         # Build columns after aggregation
         df = self.build_columns(
