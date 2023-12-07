@@ -2,7 +2,7 @@ from abc import abstractmethod
 from typing import Union
 from laktory.spark import DataFrame
 
-from laktory.models.base import BaseModel
+from laktory.models.basemodel import BaseModel
 
 
 class BaseDataSource(BaseModel):

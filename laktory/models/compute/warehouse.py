@@ -1,6 +1,6 @@
 from typing import Literal
-from laktory.models.base import BaseModel
-from laktory.models.resources import Resources
+from laktory.models.basemodel import BaseModel
+from laktory.models.baseresource import BaseResource
 from laktory.models.databricks.permission import Permission
 
 
@@ -13,7 +13,7 @@ class WarehouseTags(BaseModel):
     custom_tags: list[WarehouseCustomTag] = []
 
 
-class Warehouse(BaseModel, Resources):
+class Warehouse(BaseModel, BaseResource):
     cluster_size: Literal[
         "2X-Small",
         "X-Small",

@@ -1,12 +1,12 @@
 from typing import Union
 
-from laktory.models.base import BaseModel
-from laktory.models.resources import Resources
+from laktory.models.basemodel import BaseModel
+from laktory.models.baseresource import BaseResource
 from laktory.models.sql.schema import Schema
 from laktory.models.grants.cataloggrant import CatalogGrant
 
 
-class Catalog(BaseModel, Resources):
+class Catalog(BaseModel, BaseResource):
     name: str
     comment: Union[str, None] = None
     schemas: list[Schema] = []

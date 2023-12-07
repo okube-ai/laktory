@@ -2,7 +2,7 @@ from typing import Union
 from pydantic import Field
 
 from laktory._settings import settings
-from laktory.models.base import BaseModel
+from laktory.models.basemodel import BaseModel
 from laktory.models.dataproducer import DataProducer
 
 

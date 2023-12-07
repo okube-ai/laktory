@@ -2,8 +2,8 @@ from typing import Literal
 from typing import Any
 from pydantic import Field
 from pydantic import model_validator
-from laktory.models.base import BaseModel
-from laktory.models.resources import Resources
+from laktory.models.basemodel import BaseModel
+from laktory.models.baseresource import BaseResource
 from laktory.models.secrets.secret import Secret
 
 
@@ -18,7 +18,7 @@ class SecretScopeKeyvaultMetadata(BaseModel):
     resource_id: str = None
 
 
-class SecretScope(BaseModel, Resources):
+class SecretScope(BaseModel, BaseResource):
     backend_type: Literal["DATABRICKS", "AZURE_KEYVAULT"] = "DATABRICKS"
     keyvault_metadata: SecretScopeKeyvaultMetadata = None
     name: str = Field(...)

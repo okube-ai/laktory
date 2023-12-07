@@ -3,7 +3,7 @@ from typing import Union
 from typing import Literal
 from typing import Any
 
-from laktory.models.base import BaseModel
+from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory._logger import get_logger
 

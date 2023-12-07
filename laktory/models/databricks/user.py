@@ -1,9 +1,9 @@
 from typing import Union
-from laktory.models.base import BaseModel
-from laktory.models.resources import Resources
+from laktory.models.basemodel import BaseModel
+from laktory.models.baseresource import BaseResource
 
 
-class User(BaseModel, Resources):
+class User(BaseModel, BaseResource):
     """
     Databricks account user
 
@@ -57,7 +57,7 @@ class User(BaseModel, Resources):
 
     def deploy_with_pulumi(self, name=None, group_ids=None, opts=None):
         """
-        Deploy service user using pulumi.
+        Deploy user using pulumi.
 
         Parameters
         ----------

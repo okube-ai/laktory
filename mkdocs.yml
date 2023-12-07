@@ -138,6 +138,7 @@ nav:
   - API Reference:
     - Models:
       - BaseModel: api/basemodel.md
+      - BaseResource: api/baseresource.md
       - DataEventHeader: api/dataeventheader.md
       - DataEvent: api/dataevent.md
       - DataProducer: api/dataproducer.md

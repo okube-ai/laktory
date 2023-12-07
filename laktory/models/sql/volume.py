@@ -1,9 +1,9 @@
-from laktory.models.base import BaseModel
-from laktory.models.resources import Resources
+from laktory.models.basemodel import BaseModel
+from laktory.models.baseresource import BaseResource
 from laktory.models.grants.volumegrant import VolumeGrant
 
 
-class Volume(BaseModel, Resources):
+class Volume(BaseModel, BaseResource):
     name: str
     catalog_name: str = None
     schema_name: str = None

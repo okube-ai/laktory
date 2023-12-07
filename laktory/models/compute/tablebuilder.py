@@ -5,7 +5,7 @@ from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.compute.tablejoin import TableJoin
-from laktory.models.base import BaseModel
+from laktory.models.basemodel import BaseModel
 from laktory.models.sql.column import Column
 from laktory.spark import DataFrame
 from laktory.models.datasources import TableDataSource

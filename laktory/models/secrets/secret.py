@@ -1,4 +1,4 @@
-from laktory.models.base import BaseModel
+from laktory.models.basemodel import BaseModel
 
 
 class Secret(BaseModel):

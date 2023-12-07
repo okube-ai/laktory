@@ -1,7 +1,7 @@
 from typing import Literal
 from pydantic import Field
-from laktory.models.base import BaseModel
-from laktory.models.resources import Resources
+from laktory.models.basemodel import BaseModel
+from laktory.models.baseresource import BaseResource
 from laktory.models.databricks.permission import Permission
 
 
@@ -48,7 +48,7 @@ class ClusterLibrary(BaseModel):
     whl: str = None
 
 
-class Cluster(BaseModel, Resources):
+class Cluster(BaseModel, BaseResource):
     apply_policy_default_values: bool = None
     autoscale: ClusterAutoScale = None
     autotermination_minutes: int = None

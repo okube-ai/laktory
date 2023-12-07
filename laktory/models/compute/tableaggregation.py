@@ -5,7 +5,7 @@ from typing import Any
 from typing import Callable
 
 from laktory._logger import get_logger
-from laktory.models.base import BaseModel
+from laktory.models.basemodel import BaseModel
 from laktory.spark import DataFrame
 from laktory.spark import Column as SparkColumn
 from laktory.models.sql.column import Column

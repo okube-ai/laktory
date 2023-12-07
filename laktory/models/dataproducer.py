@@ -1,7 +1,7 @@
 from typing import Union
 from typing import Literal
 
-from laktory.models.base import BaseModel
+from laktory.models.basemodel import BaseModel
 
 
 class DataProducer(BaseModel):

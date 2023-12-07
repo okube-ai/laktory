@@ -1,5 +1,5 @@
 :construction: under construction :construction: 
 
-::: laktory.models.basemodel.BaseModel
+::: laktory.models.baseresource.BaseResource
     options:
         show_bases: false

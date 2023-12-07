@@ -1,6 +1,6 @@
 from typing import Any
 from pydantic import model_validator
-from laktory.models.base import BaseModel
+from laktory.models.basemodel import BaseModel
 
 
 class Permission(BaseModel):
