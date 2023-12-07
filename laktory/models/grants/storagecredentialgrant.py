@@ -14,8 +14,8 @@ class StorageCredentialGrant(BaseModel):
         List of allowed privileges
 
     References
-    ----------
-    https://docs.databricks.com/en/sql/language-manual/sql-ref-privileges.html#privilege-types
+
+    * [privilege types](https://docs.databricks.com/en/sql/language-manual/sql-ref-privileges.html#privilege-types)
     """
 
     principal: str

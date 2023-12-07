@@ -82,7 +82,7 @@ plugins:
           options:
             docstring_options:
               ignore_init_summary: true
-            docstring_section_style: table
+            docstring_section_style: spacy
             docstring_style: numpy
             filters: ["!^_"]
             group_by_category: true

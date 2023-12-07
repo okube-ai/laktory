@@ -4,7 +4,7 @@ from laktory.models.basemodel import BaseModel
 
 class CatalogGrant(BaseModel):
     """
-    Privileges granted to a principal and operating on a catalog
+    Privileges granted to a principal and operating on a catalog.
 
     Attributes
     ----------
@@ -14,8 +14,8 @@ class CatalogGrant(BaseModel):
         List of allowed privileges
 
     References
-    ----------
-    https://docs.databricks.com/en/sql/language-manual/sql-ref-privileges.html#privilege-types
+
+    * [privilege types](https://docs.databricks.com/en/sql/language-manual/sql-ref-privileges.html#privilege-types)
     """
 
     principal: str
