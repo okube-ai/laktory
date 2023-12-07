@@ -6,6 +6,14 @@ from laktory.models.base import BaseModel
 
 
 class BaseDataSource(BaseModel):
+    """
+    Base class for building data source
+
+    Attributes
+    ----------
+    read_as_stream
+        If `True` read source as stream
+    """
     read_as_stream: Union[bool, None] = True
 
     @abstractmethod
@@ -13,5 +21,6 @@ class BaseDataSource(BaseModel):
         raise NotImplementedError()
 
     @property
-    def is_cdc(self):
+    def is_cdc(self) -> bool:
+        """If `True` source data is a change data capture (CDC)"""
         return getattr(self, "cdc", None) is not None

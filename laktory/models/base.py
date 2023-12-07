@@ -2,76 +2,91 @@ import pulumi
 import yaml
 import json
 from typing import Any
+from typing import TypeVar
+from typing import TextIO
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
+from pydantic import Field
 
-from laktory.workspaceclient import WorkspaceClient
+Model = TypeVar('Model', bound='BaseModel')
 
 
 class BaseModel(_BaseModel):
     """
-    Base Model docstring
-    Parameters
+    Parent class for all Laktory models offering generic functions and
+    properties. This `BaseModel` class is derived from `pydantic.BaseModel`.
+
+    Attributes
     ----------
-    _vars
-    kwargs
+    vars
+        Variable values to be resolved when using `inject_vars` method.
     """
     model_config = ConfigDict(extra="forbid")
-    # _vars: dict[str, Any] = {}
-
-    def __init__(self, _vars=None, **kwargs):
-        super().__init__(**kwargs)
-        # Setting a private field does not seem to be propagated to all child
-        # classes. Using the init instead.
-        if _vars is None:
-            _vars = {}
-        self._vars = _vars
-
-    @property
-    def workspace_client(self):
-        return WorkspaceClient()
-
-    @property
-    def vars(self) -> dict[str, Any]:
-        return self._vars
-
-    @vars.setter
-    def vars(self, value):
-        self._vars = value
+    vars: dict[str, Any] = Field(default={}, exclude=True)
 
     @classmethod
-    def model_validate_yaml(cls, fp):
+    def model_validate_yaml(cls, fp: TextIO) -> Model:
+        """
+        Load model from yaml file object
+
+        Parameters
+        ----------
+        fp:
+            file object structured as a yaml file
+
+        Returns
+        -------
+        :
+            Model instance
+        """
         data = yaml.safe_load(fp)
         return cls.model_validate(data)
 
     @classmethod
-    def model_validate_json_file(cls, fp):
+    def model_validate_json_file(cls, fp: TextIO) -> Model:
+        """
+        Load model from json file object
+
+        Parameters
+        ----------
+        fp:
+            file object structured as a json file
+
+        Returns
+        -------
+        :
+            Model instance
+        """
         data = json.load(fp)
         return cls.model_validate(data)
 
-    #
-    # def model_pulumi_dump(self):
-    #     return self.model_dump()
-
     @property
     def pulumi_excludes(self) -> list[str]:
+        """List of fields to exclude when dumping model to pulumi"""
         return []
 
     @property
     def pulumi_renames(self) -> dict[str, str]:
+        """Map of fields to rename when dumping model to pulumi"""
         return {}
 
-    def inject_vars(self, d) -> dict:
+    def inject_vars(self, d: dict) -> dict:
         """
-        Variable injection
+        Inject model variables values into a model dump. Variables are
+        expressed as `${var.variable_name}` in the model and their values are
+        set as `self.vars. This method also supports Pulumi Outputs as variable
+        values.
 
         Parameters
         ----------
-        d
+        d:
+            Model dump
 
         Returns
         -------
-
+        :
+            Dump in which variable expressions have been replaced with their
+            values.
         """
 
         _vars = {}
@@ -123,68 +138,24 @@ class BaseModel(_BaseModel):
 
         return d
 
-    def model_pulumi_dump(self, *args, **kwargs):
+    def model_pulumi_dump(self, *args, **kwargs) -> dict:
+        """
+        Dump model and customize it to be used as an input for a pulumi
+        resource:
+
+        * dump the model
+        * remove excludes defined in `self.pulumi_excludes`
+        * rename keys according to `self.pulumi_renames`
+        * inject variables
+
+        Returns
+        -------
+        :
+            Pulumi-safe model dump
+        """
         kwargs["exclude"] = self.pulumi_excludes
         d = super().model_dump(*args, **kwargs)
         for k, v in self.pulumi_renames.items():
             d[v] = d.pop(k)
         d = self.inject_vars(d)
         return d
-
-    # TODO: Migrate to Databricks engine
-    # @classmethod
-    # def model_serialized_types(cls):
-    #     def parse(schema_data):
-    #         data_type = schema_data.get("type", None)
-    #         all_of = schema_data.get("allOf", None)
-    #         any_of = schema_data.get("anyOf", None)
-    #
-    #         if data_type is None and all_of is not None:
-    #             return parse(all_of[0])
-    #
-    #         elif data_type is None and any_of is not None:
-    #             return parse(any_of[0])
-    #
-    #         elif data_type == "object":
-    #             properties = schema_data.get("properties", {})
-    #             prop_mapping = {}
-    #             for prop, prop_data in properties.items():
-    #                 prop_mapping[prop] = parse(prop_data)
-    #             return prop_mapping
-    #
-    #         elif data_type == "array":
-    #             items = schema_data.get("items", {})
-    #             return [parse(items)]
-    #
-    #         else:
-    #             return data_type
-    #
-    #     json_schema = jsonref.loads(json.dumps(cls.model_json_schema()))
-    #
-    #     types = parse(json_schema)
-    #
-    #     return types
-
-    # TODO: Migrate to Databricks engine
-    # @classmethod
-    # def model_sql_schema(cls, types: dict = None):
-    #     if types is None:
-    #         types = cls.model_serialized_types()
-    #
-    #     schema = (
-    #         "("
-    #         + ", ".join(f"{k} {py_to_sql(v, mode='schema')}" for k, v in types.items())
-    #         + ")"
-    #     )
-    #
-    #     if "<>" in schema:
-    #         raise ValueError(
-    #             f"Some types are undefined sql schema can't be defined\n{schema}"
-    #         )
-    #
-    #     if "null" in schema:
-    #         raise ValueError(
-    #             f"Some types are undefined sql schema can't be defined\n{schema}"
-    #         )
-    #
-    #     return schema

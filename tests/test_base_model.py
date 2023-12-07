@@ -41,7 +41,7 @@ schema = Schema(
             ],
         ),
     ],
-    _vars={
+    vars={
         "dynamic_column": "low",
         "env": env.id,
         "schema_name": schema_name.id,

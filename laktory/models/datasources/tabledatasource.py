@@ -94,7 +94,7 @@ class TableDataSourceCDC(BaseModel):
 
 class TableDataSource(BaseDataSource):
     """
-    Data source using a data table, generally used in the context of a
+    Data source using a SQL table, generally used in the context of a
     data pipeline.
 
     Attributes

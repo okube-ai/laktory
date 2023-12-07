@@ -27,9 +27,6 @@ class EventDataSource(BaseDataSource, DataEventHeader):
         per line)
     header
         If `True`, first line of CSV files is assumed to be the column names.
-    read_as_stream: Union[bool, None]
-        If `True` data is read as a stream and output table will also be a
-        stream
     read_options:
         Other options passed to `spark.read.options`
 
