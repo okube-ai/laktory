@@ -156,6 +156,7 @@ nav:
         - api/databricks/user.md
       - Grants: api/grants.md
       - SQL:
+          - api/sql/catalog.md
           - api/sql/volume.md
     - Spark: api/models.md
     - DLT: api/models.md
