@@ -78,7 +78,7 @@ class Catalog(BaseModel, BaseResource):
     References
     ----------
 
-    * [Databricks Unity Catalog](https://docs.databricks.com/en/data-governance/unity-catalog/index.html)
+    * [Databricks Unity Catalog](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#catalogs)
     * [Pulumi Databricks Catalog](https://www.pulumi.com/registry/packages/databricks/api-docs/catalog/)
     """
 
@@ -127,7 +127,7 @@ class Catalog(BaseModel, BaseResource):
         Returns
         -------
         PulumiCatalog:
-            Pulumi group resource
+            Pulumi catalog resource
         """
         from laktory.resourcesengines.pulumi.catalog import PulumiCatalog
 

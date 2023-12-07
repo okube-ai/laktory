@@ -142,7 +142,7 @@ def test_model():
 
 
 def test_data():
-    data = table_slv.df.to_dict(orient="records")
+    data = table_slv.to_df().to_dict(orient="records")
     assert data == [
         {"created_at": "2023-11-01T00:00:00Z", "symbol": "AAPL", "open": 1, "close": 2},
         {"created_at": "2023-11-01T01:00:00Z", "symbol": "AAPL", "open": 3, "close": 4},

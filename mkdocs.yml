@@ -157,6 +157,8 @@ nav:
       - Grants: api/grants.md
       - SQL:
           - api/sql/catalog.md
+          - api/sql/schema.md
+          - api/sql/table.md
           - api/sql/volume.md
     - Spark: api/models.md
     - DLT: api/models.md

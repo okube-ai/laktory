@@ -1,5 +1,6 @@
 from typing import Any
 from typing import Union
+from typing import Literal
 
 from pydantic import model_validator
 
@@ -15,18 +16,92 @@ logger = get_logger(__name__)
 
 
 class Table(BaseModel, BaseResource):
+    """
+    A table resides in the third layer of Unity Catalog’s three-level
+    namespace. It contains rows of data. Laktory provides the mechanism to
+    build the table data in the context of a data pipeline using the
+    `builder` attribute.
+
+    Attributes
+    ----------
+    builder:
+        Instructions on how to build data from a source in the context of a
+        data pipeline.
+    catalog_name:
+        Name of the catalog storing the table
+    columns:
+        List of columns stored in the table
+    comment:
+        Text description of the catalog
+    data:
+        Data to be used to populate the rows
+    grants:
+        List of grants operating on the schema
+    name:
+        Name of the table
+    primary_key:
+        Name of the column storing a unique identifier for each row. It is used
+        by the builder to drop duplicated rows.
+    schema_name:
+        Name of the schema storing the table
+    table_type:
+        Distinguishes a view vs. managed/external Table.
+    timestamp_key:
+        Name of the column storing a timestamp associated with each row. It is
+        used as the default column by the builder when creating watermarks.
+    view_definition:
+        SQL text defining the view (for `table_type == "VIEW"`). Not supported
+        for MANAGED or EXTERNAL table_type.
+    warehouse_id:
+        All table CRUD operations must be executed on a running cluster or SQL
+        warehouse. If a warehouse_id is specified, that SQL warehouse will be
+        used to execute SQL commands to manage this table.
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    table = models.Table(
+        name="slv_stock_prices",
+        columns=[
+            {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
+            {"name": "open", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.open"]},
+            {"name": "close", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.close"]},
+        ],
+        builder={
+            "layer": "SILVER",
+            "table_source": {
+                "name": "brz_stock_prices",
+            },
+        }
+    )
+
+    # Read
+    df = table.builder.read_source(spark)
+
+    # Process
+    df = table.builder.process(df, spark)
+    ```
+
+    References
+    ----------
+
+    * [Databricks Unity Table](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#tables)
+    * [Pulumi Databricks Table](https://www.pulumi.com/registry/packages/databricks/api-docs/sqltable/)
+    """
+    builder: TableBuilder = TableBuilder()
     catalog_name: Union[str, None] = None
     columns: list[Column] = []
-    data_source_format: str = "DELTA"
-    table_type: str = "MANAGED"
     comment: Union[str, None] = None
     data: list[list[Any]] = None
+    data_source_format: str = "DELTA"
     grants: list[TableGrant] = None
     name: str
     primary_key: Union[str, None] = None
     schema_name: Union[str, None] = None
+    table_type: Literal["MANAGED", "EXTERNA", "VIEW"] = "MANAGED"
     timestamp_key: Union[str, None] = None
-    builder: TableBuilder = TableBuilder()
     view_definition: str = None
     warehouse_id: str = None
 
@@ -66,11 +141,12 @@ class Table(BaseModel, BaseResource):
         return self
 
     # ----------------------------------------------------------------------- #
-    # Computed fields                                                         #
+    # Properties                                                              #
     # ----------------------------------------------------------------------- #
 
     @property
     def parent_full_name(self) -> str:
+        """Schema full name `{catalog_name}.{schema_name}`"""
         _id = ""
         if self.catalog_name:
             _id += self.catalog_name
@@ -85,6 +161,7 @@ class Table(BaseModel, BaseResource):
 
     @property
     def full_name(self) -> str:
+        """Table full name `{catalog_name}.{schema_name}.{table_name}`"""
         _id = self.name
         if self.parent_full_name is not None:
             _id = f"{self.parent_full_name}.{_id}"
@@ -92,27 +169,39 @@ class Table(BaseModel, BaseResource):
 
     @property
     def database_name(self) -> str:
+        """Alternate name for `schema_name`"""
         return self.schema_name
 
     @property
-    def layer(self):
+    def layer(self) -> str:
+        """Layer in the medallion architecture ("BRONZE", "SILVER", "GOLD")"""
         return self.builder.layer
 
-    # ----------------------------------------------------------------------- #
-    # Properties                                                              #
-    # ----------------------------------------------------------------------- #
-
     @property
-    def column_names(self):
+    def column_names(self) -> list[str]:
+        """List of column names"""
         return [c.name for c in self.columns]
 
     @property
-    def df(self):
-        import pandas as pd
+    def is_from_cdc(self) -> bool:
+        """If `True` CDC source is used to build the table"""
+        return self.builder.is_from_cdc
 
-        return pd.DataFrame(data=self.data, columns=self.column_names)
+    # ----------------------------------------------------------------------- #
+    #  Methods                                                                #
+    # ----------------------------------------------------------------------- #
 
     def to_df(self, spark=None):
+        """
+        Dataframe representation of the table. Requires `self.data` to be
+        specified.
+
+        Attributes
+        ----------
+        spark: SparkContext
+            Spark context used to convert pandas DataFrame into a spark
+            DataFrame if provided.
+        """
         import pandas as pd
 
         df = pd.DataFrame(data=self.data, columns=self.column_names)
@@ -120,10 +209,6 @@ class Table(BaseModel, BaseResource):
         if spark:
             df = spark.createDataFrame(df)
         return df
-
-    @property
-    def is_from_cdc(self):
-        return self.builder.is_from_cdc
 
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
@@ -147,6 +232,46 @@ class Table(BaseModel, BaseResource):
         return d
 
     def deploy_with_pulumi(self, name=None, opts=None):
+        """
+        Deploy table using pulumi.
+
+        Parameters
+        ----------
+        name:
+            Name of the pulumi resource. Default is `table-{self.name}`
+        opts:
+            Pulumi resource options
+
+        Returns
+        -------
+        PulumiTable:
+            Pulumi table resource
+        """
         from laktory.resourcesengines.pulumi.table import PulumiTable
 
         return PulumiTable(name=name, table=self, opts=opts)
+
+
+if __name__ == "__main__":
+    from laktory import models
+
+    table = models.Table(
+        name="slv_stock_prices",
+        columns=[
+            {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
+            {"name": "open", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.open"]},
+            {"name": "close", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.close"]},
+        ],
+        builder={
+            "layer": "SILVER",
+            "table_source": {
+                "name": "brz_stock_prices",
+            },
+        }
+    )
+
+    # Read
+    df = table.builder.read_source(spark)
+
+    # Process
+    df = table.builder.process(df, spark)
