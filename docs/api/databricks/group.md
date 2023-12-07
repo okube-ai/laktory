@@ -1,1 +1,1 @@
-::: laktory.models.databricks.group.Group
+::: laktory.models.Group

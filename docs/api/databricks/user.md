@@ -1,1 +1,1 @@
-::: laktory.models.databricks.user.User
+::: laktory.models.User

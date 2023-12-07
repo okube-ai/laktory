@@ -1,1 +1,1 @@
-::: laktory.models.databricks.permission.Permission
+::: laktory.models.Permission

@@ -1,1 +1,1 @@
-::: laktory.models.databricks.serviceprincipal.ServicePrincipal
+::: laktory.models.ServicePrincipal

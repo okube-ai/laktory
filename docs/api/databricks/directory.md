@@ -1,1 +1,1 @@
-::: laktory.models.databricks.directory.Directory
+::: laktory.models.Directory

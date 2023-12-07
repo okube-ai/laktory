@@ -1,1 +1,1 @@
-::: laktory.models.dataevent.DataEvent
+::: laktory.models.DataEvent

@@ -1,1 +1,1 @@
-::: laktory.models.dataeventheader.DataEventHeader
+::: laktory.models.DataEventHeader
