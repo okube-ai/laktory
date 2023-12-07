@@ -1,7 +1,7 @@
 import pulumi
 import pulumi_databricks as databricks
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.secrets.secretscope import SecretScope
+from laktory.models.databricks.secretscope import SecretScope
 
 from laktory._logger import get_logger
 
