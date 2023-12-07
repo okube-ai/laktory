@@ -4,9 +4,9 @@ from typing import Literal
 from typing import Union
 from pydantic import model_validator
 from pydantic import Field
-from laktory.models.base import BaseModel
-from laktory.models.resources import Resources
-from laktory.models.permission import Permission
+from laktory.models.basemodel import BaseModel
+from laktory.models.baseresource import BaseResource
+from laktory.models.databricks.permission import Permission
 from laktory.models.compute.cluster import Cluster
 from laktory.models.sql.table import Table
 
@@ -75,7 +75,7 @@ class PipelineUDF(BaseModel):
     module_path: str = None
 
 
-class Pipeline(BaseModel, Resources):
+class Pipeline(BaseModel, BaseResource):
     allow_duplicate_names: bool = None
     catalog: str = None
     channel: str = "PREVIEW"

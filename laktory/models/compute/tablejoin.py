@@ -1,7 +1,7 @@
 from typing import Union
 
 from laktory._logger import get_logger
-from laktory.models.base import BaseModel
+from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.tabledatasource import TableDataSource
 from laktory.spark import DataFrame
 

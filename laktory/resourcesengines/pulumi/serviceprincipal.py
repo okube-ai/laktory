@@ -4,8 +4,8 @@ import pulumi
 import pulumi_databricks as databricks
 
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.group import Group
-from laktory.models.serviceprincipal import ServicePrincipal
+from laktory.models.databricks.group import Group
+from laktory.models.databricks.serviceprincipal import ServicePrincipal
 
 from laktory._logger import get_logger
 

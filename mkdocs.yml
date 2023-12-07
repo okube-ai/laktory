@@ -9,6 +9,8 @@ extra_css:
 
 markdown_extensions:
   - admonition
+  - toc:
+      permalink: true
   - pymdownx.snippets  # link between markdown (changelog)
   - pymdownx.superfences  # code blocks titles
   - pymdownx.details
@@ -69,9 +71,41 @@ theme:
 
 
 plugins:
-  - mkdocstrings
+  - mkdocstrings:
+      handlers:
+        python:
+          import:
+          - https://docs.python.org/3/objects.inv
+          - https://installer.readthedocs.io/en/stable/objects.inv  # demonstration purpose in the docs
+          - https://mkdocstrings.github.io/autorefs/objects.inv
+          paths: [src]
+          options:
+            docstring_options:
+              ignore_init_summary: true
+            docstring_section_style: table
+            docstring_style: numpy
+            filters: ["!^_"]
+            group_by_category: true
+            heading_level: 2
+            inherited_members: false  # this only apply to methods and properties, not to pydantic fields
+#            members_order: source
+            merge_init_into_class: true
+            separate_signature: false
+            show_category_heading: true
+            show_if_no_docstring: false
+            show_root_full_path: true
+            show_root_heading: true
+            show_signature_annotations: true
+            show_source: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            signature_crossrefs: true
+            summary: true
+
 #  - snippets
 #  - search
+
+
 
 nav:
   - Get Started:
@@ -101,5 +135,23 @@ nav:
     - Secrets: guides/secrets.md
 
   - Lakehouse As Code: lakehouseascode.md
-  - API Reference: reference.md
+  - API Reference:
+    - Models:
+      - BaseModel: api/basemodel.md
+      - BaseResource: api/baseresource.md
+      - DataEventHeader: api/dataeventheader.md
+      - DataEvent: api/dataevent.md
+      - DataProducer: api/dataproducer.md
+      - DataSources:
+        - BaseDataSource: api/datasources/basedatasource.md
+        - EventDataSource: api/datasources/eventdatasource.md
+        - TableDataSource: api/datasources/tabledatasource.md
+      - Databricks:
+        - api/databricks/directory.md
+        - api/databricks/group.md
+        - api/databricks/permission.md
+        - ServicePrincipal: api/databricks/serviceprincipal.md
+        - api/databricks/user.md
+    - Spark: api/models.md
+    - DLT: api/models.md
   - Changelog: changelog.md

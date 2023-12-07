@@ -1,5 +1,5 @@
 from typing import Literal
-from laktory.models.base import BaseModel
+from laktory.models.basemodel import BaseModel
 from laktory.models.grants.schemagrant import PRIVILEGES as DB_PRIVILEGES
 
 PRIVILEGES = DB_PRIVILEGES + [

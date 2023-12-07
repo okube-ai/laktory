@@ -8,7 +8,8 @@
 ###Updated
 * n/a
 ###Breaking changes
-* n/a
+* Renamed Producer model to DataProducer
+* Renamed Resource model to BaseResource
 
 ## [0.0.24] - 2023-12-05
 ###Fixed

@@ -4,7 +4,7 @@ import pyspark.sql.types as T
 
 from laktory.models import DataEventHeader
 from laktory.models import DataEvent
-from laktory.models import Producer
+from laktory.models import DataProducer
 from laktory.models import Table
 from laktory.models import Pipeline
 from laktory.models.compute.pipeline import PipelineUDF
@@ -21,7 +21,7 @@ spark.conf.set("spark.sql.session.timeZone", "UTC")
 
 class StockPriceDataEventHeader(DataEventHeader):
     name: str = "stock_price"
-    producer: Producer = Producer(name="yahoo-finance")
+    producer: DataProducer = DataProducer(name="yahoo-finance")
 
 
 class StockPriceDataEvent(StockPriceDataEventHeader, DataEvent):

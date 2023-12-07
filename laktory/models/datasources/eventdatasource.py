@@ -9,23 +9,43 @@ from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
-TYPES = (
-    "STORAGE_DUMPS",
-    "STORAGE_EVENTS",
-    "STREAM_KINESIS",
-    "STREAM_KAFKA",
-)
-
-FORMATS = (
-    "JSON",
-    "CSV",
-    "PARQUET",
-)
-
 
 class EventDataSource(BaseDataSource, DataEventHeader):
-    type: Literal[TYPES] = "STORAGE_EVENTS"
-    fmt: Literal[FORMATS] = "JSON"
+    """
+    Data source using events data (files), generally used in the context of a
+    data pipeline.
+
+    Attributes
+    ----------
+    type
+        Type of infrastructure storing the data
+    fmt
+        Format of the stored data
+    multiline
+        If `True`, JSON files are parsed assuming that an object maybe be
+        defined on multiple lines (as opposed to having a single object
+        per line)
+    header
+        If `True`, first line of CSV files is assumed to be the column names.
+    read_options:
+        Other options passed to `spark.read.options`
+
+    Examples
+    ---------
+    ```python
+    from laktory import models
+    source = models.EventDataSource(
+        name="stock_price",
+        producer={"name": "yahoo-finance"},
+        fmt="json",
+        read_as_stream=False,
+    )
+    df = source.read()
+    ```
+    """
+
+    type: Literal["STORAGE_EVENTS", "STREAM_KINESIS", "STREAM_KAFKA"] = "STORAGE_EVENTS"
+    fmt: Literal["JSON", "CSV", "PARQUET"] = "JSON"
     multiline: bool = False
     header: bool = True
     read_options: dict[str, str] = {}
@@ -72,6 +92,19 @@ class EventDataSource(BaseDataSource, DataEventHeader):
         return df
 
     def read(self, spark) -> DataFrame:
+        """
+        Read data with options specified in attributes.
+
+        Parameters
+        ----------
+        spark
+            Spark context
+
+        Returns
+        -------
+        : DataFrame
+            Resulting park dataframe
+        """
         if self.type == "STORAGE_EVENTS":
             return self._read_storage(spark)
         else:

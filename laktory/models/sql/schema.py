@@ -1,13 +1,13 @@
 from typing import Union
 
-from laktory.models.base import BaseModel
-from laktory.models.resources import Resources
+from laktory.models.basemodel import BaseModel
+from laktory.models.baseresource import BaseResource
 from laktory.models.sql.table import Table
 from laktory.models.sql.volume import Volume
 from laktory.models.grants.schemagrant import SchemaGrant
 
 
-class Schema(BaseModel, Resources):
+class Schema(BaseModel, BaseResource):
     name: str
     comment: Union[str, None] = None
     tables: list[Table] = []

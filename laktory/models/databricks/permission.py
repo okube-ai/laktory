@@ -1,16 +1,33 @@
 from typing import Any
 from pydantic import model_validator
-from laktory.models.base import BaseModel
+from laktory.models.basemodel import BaseModel
 
 
 class Permission(BaseModel):
-    permission_level: str
-    user_name: str = None
+    """
+    Databricks's permission generally applicable to objects like cluster,
+    notebook, pipeline, etc. For providing access to securable data, refer
+    to `models.Grant` instead.
+
+    Attributes
+    ----------
+    group_name:
+        Name of the group to assign the permission to.
+    permission_level:
+        Name of the permission to assign
+    service_principal_name:
+        Name of the service principal to assign the permission to.
+    user_name
+        Name of the user to assign the permission to.
+    """
+
     group_name: str = None
+    permission_level: str
     service_principal_name: str = None
+    user_name: str = None
 
     @model_validator(mode="after")
-    def singlue_input(self) -> Any:
+    def single_input(self) -> Any:
         count = 0
         if self.user_name:
             count += 1

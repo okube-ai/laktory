@@ -1,5 +1,5 @@
 from typing import Literal
-from laktory.models.base import BaseModel
+from laktory.models.basemodel import BaseModel
 from laktory.models.grants.tablegrant import PRIVILEGES as TABLE_PRIVILEGES
 from laktory.models.grants.volumegrant import PRIVILEGES as VOLUME_PRIVILEGES
 from laktory.models.grants.functiongrant import PRIVILEGES as FUNCTION_PRIVILEGES

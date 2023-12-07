@@ -1,7 +1,7 @@
 import pulumi
 import pulumi_databricks as databricks
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.group import Group
+from laktory.models.databricks.group import Group
 
 
 class PulumiGroup(PulumiResourcesEngine):

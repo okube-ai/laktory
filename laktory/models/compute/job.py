@@ -2,9 +2,9 @@ from typing import Any
 from typing import Literal
 from pydantic import model_validator
 from pydantic import Field
-from laktory.models.base import BaseModel
-from laktory.models.resources import Resources
-from laktory.models.permission import Permission
+from laktory.models.basemodel import BaseModel
+from laktory.models.baseresource import BaseResource
+from laktory.models.databricks.permission import Permission
 from laktory.models.compute.cluster import Cluster
 from laktory.models.compute.cluster import ClusterLibrary
 
@@ -195,7 +195,7 @@ class JobWebhookNotifications(BaseModel):
     on_successes: list[JobWebhookNotificationsOnSuccess] = None
 
 
-class Job(BaseModel, Resources):
+class Job(BaseModel, BaseResource):
     clusters: list[JobCluster] = []
     continuous: JobContinuous = None
     control_run_state: bool = None

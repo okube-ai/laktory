@@ -37,7 +37,7 @@ df = source.read()
 Reading the same dataset, but as a spark streaming source, is as easy as changing `read_as_stream` to `True`.
 ```py
 from laktory import models
-source = models.EventDataSource(
+source = models.TableDataSource(
     name="stock_price",
     producer={"name": "yahoo-finance"},
     fmt="json",

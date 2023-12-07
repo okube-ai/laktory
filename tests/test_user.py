@@ -11,15 +11,12 @@ user = User(
 
 group = Group(
     display_name="role-engineers",
-    user_names=[
-        "data.engineer@gmail.moc",
-    ],
 )
 
 
 def test_user_group():
     assert user.roles == ["store-admin"]
-    assert group.user_names == ["data.engineer@gmail.moc"]
+    assert group.display_name == "role-engineers"
 
 
 if __name__ == "__main__":

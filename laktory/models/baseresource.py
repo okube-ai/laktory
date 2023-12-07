@@ -11,19 +11,41 @@ from laktory._settings import settings
 ENGINES = ["pulumi", "databricks-api", "terraform"]
 
 
-class Resources(_BaseModel):
-    # _resources: Union[PulumiResourcesEngine, DatabricksResourcesEngine] = None
+class BaseResource(_BaseModel):
+    """
+    Parent class for all Laktory models deployable as one or multiple cloud
+    resources. This `BaseResource` class is derived from `pydantic.BaseModel`.
+    """
+
     _resources: Any = None
 
     @property
-    def resources(self):
+    def resources(self) -> list:
+        """List of deployed resources"""
         if self._resources is None:
             raise ValueError(
                 f"Model ({self}) has not been deployed. Call model.deploy() first"
             )
         return self._resources
 
-    def deploy(self, *args, engine: Literal[tuple(ENGINES)] = None, **kwargs):
+    def deploy(self, *args, engine: Literal[tuple(ENGINES)] = None, **kwargs) -> list:
+        """
+        Deploy model resources provided a deployment `engine`.
+
+        Parameters
+        ----------
+        args:
+            Arguments passed to deployment engine
+        engine:
+            Selected deployment engine. Default value: `settings.resources_engine`
+        kwargs
+            Keyword arguments to deployment engine
+
+        Returns
+        -------
+        :
+            List of deployed resources
+        """
         if not engine:
             engine = settings.resources_engine
         engine = engine.lower()

@@ -4,8 +4,8 @@ from typing import Union
 from pydantic import model_validator
 
 from laktory._logger import get_logger
-from laktory.models.base import BaseModel
-from laktory.models.resources import Resources
+from laktory.models.basemodel import BaseModel
+from laktory.models.baseresource import BaseResource
 from laktory.models.sql.column import Column
 from laktory.models.compute.tablebuilder import TableBuilder
 from laktory.models.grants.tablegrant import TableGrant
@@ -14,7 +14,7 @@ from laktory._settings import settings
 logger = get_logger(__name__)
 
 
-class Table(BaseModel, Resources):
+class Table(BaseModel, BaseResource):
     catalog_name: Union[str, None] = None
     columns: list[Column] = []
     data_source_format: str = "DELTA"
