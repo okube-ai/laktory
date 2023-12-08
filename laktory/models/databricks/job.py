@@ -5,8 +5,8 @@ from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.models.baseresource import BaseResource
 from laktory.models.databricks.permission import Permission
-from laktory.models.compute.cluster import Cluster
-from laktory.models.compute.cluster import ClusterLibrary
+from laktory.models.databricks.cluster import Cluster
+from laktory.models.databricks.cluster import ClusterLibrary
 
 
 class JobCluster(Cluster):

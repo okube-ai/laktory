@@ -1,7 +1,7 @@
 import pulumi
 import pulumi_databricks as databricks
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.compute.cluster import Cluster
+from laktory.models.databricks.cluster import Cluster
 
 from laktory._logger import get_logger
 
