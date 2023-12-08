@@ -157,9 +157,13 @@ nav:
       - Grants: api/grants.md
       - SQL:
           - api/sql/catalog.md
+          - api/sql/column.md
           - api/sql/schema.md
           - api/sql/table.md
           - TableBuilder: api/sql/tablebuilder.md
+          - TableAggregation: api/sql/tableaggregation.md
+          - TableJoin: api/sql/tablejoin.md
+          - TableWindowFilter: api/sql/tablewindowfilter.md
           - api/sql/volume.md
     - Spark: api/models.md
     - DLT: api/models.md

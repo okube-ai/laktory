@@ -50,7 +50,7 @@ class TableWindowFilter(BaseModel):
     References
     ----------
 
-    *[pyspark Window](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.Window.html)
+    * [pyspark Window](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.Window.html)
     """
     descending: bool = True
     drop_row_index: bool = True
