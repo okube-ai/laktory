@@ -1,1 +1,1 @@
-::: laktory.models.dataproducer.DataProducer
+::: laktory.models.DataProducer

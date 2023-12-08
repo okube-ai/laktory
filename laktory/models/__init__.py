@@ -5,5 +5,4 @@ from .dataeventheader import DataEventHeader
 from .datasources import *
 from .grants import *
 from .dataproducer import DataProducer
-from .secrets import *
 from .sql import *
