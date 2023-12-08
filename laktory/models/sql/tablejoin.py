@@ -9,10 +9,63 @@ logger = get_logger(__name__)
 
 
 class TableJoin(BaseModel):
-    left: TableDataSource = None
-    other: TableDataSource
-    on: list[str]
+    """
+    Mechanisms for building a table from a source in the context of a data
+    pipeline.
+
+    Attributes
+    ----------
+    how:
+        Type of join (left, outer, full, etc.)
+    left:
+        Left side of the join
+    on:
+        A list of strings for the columns to join on. The columns must exist
+        on both sides.
+    other:
+        Right side of the join
+    time_constraint_interval_lower:
+        Lower bound for a spark streaming event-time constraint
+    time_constraint_interval_upper:
+        Upper bound for a spark streaming event-time constraint
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    table = models.Table(
+        name="slv_star_stock_prices",
+        builder={
+            "layer": "SILVER",
+            "table_source": {
+                "name": "slv_stock_prices",
+            },
+            "joins": [
+                {
+                    "other": {
+                        "name": "slv_stock_metadata",
+                        "read_as_stream": False,
+                        "selects": [
+                            "symbol", "currency", "first_trader"
+                        ]
+                    },
+                    "on": ["symbol"],
+                }
+            ],
+        }
+    )
+    ```
+
+    References
+    ----------
+    [pyspark join](https://spark.apache.org/docs/3.1.2/api/python/reference/api/pyspark.sql.DataFrame.join.html)
+    [spark streaming join](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#inner-joins-with-optional-watermarking)
+    """
     how: str = "left"
+    left: TableDataSource = None
+    on: list[str]
+    other: TableDataSource
     time_constraint_interval_lower: str = "60 seconds"
     time_constraint_interval_upper: str = None
 
@@ -21,6 +74,19 @@ class TableJoin(BaseModel):
     # ----------------------------------------------------------------------- #
 
     def run(self, spark) -> DataFrame:
+        """
+        Execute join
+
+        Parameters
+        ----------
+        spark: SparkSession
+            Spark session
+
+        Returns
+        -------
+        : DataFrame
+            Output DataFrame
+        """
         import pyspark.sql.functions as F
 
         logger.info(f"Executing {self.left.name} {self.how} JOIN {self.other.name}")
@@ -84,3 +150,35 @@ class TableJoin(BaseModel):
         df.printSchema()
 
         return df
+
+
+if __name__ == "__main__":
+    from laktory import models
+
+    table = models.Table(
+        name="slv_star_stock_prices",
+        builder={
+            "layer": "SILVER",
+            "table_source": {
+                "name": "slv_stock_prices",
+            },
+            "joins": [
+                {
+                    "other": {
+                        "name": "slv_stock_metadata",
+                        "read_as_stream": False,
+                        "selects": [
+                            "symbol", "currency", "first_trader"
+                        ]
+                    },
+                    "on": ["symbol"],
+                }
+            ],
+        }
+    )
+
+    # Read
+    df = table.builder.read_source(spark)
+
+    # Process
+    df = table.builder.process(df, spark)

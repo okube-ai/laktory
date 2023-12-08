@@ -2,11 +2,12 @@ from pydantic import model_validator
 from typing import Any
 from typing import Literal
 from typing import Union
+from typing import Callable
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.basedatasource import BaseDataSource
-from laktory.models.datasources import TableDataSource
+from laktory.models.datasources import EventDataSource
 from laktory.models.datasources import TableDataSource
 from laktory.models.sql.column import Column
 from laktory.models.sql.tableaggregation import TableAggregation
@@ -57,11 +58,6 @@ class TableBuilder(BaseModel):
     window_filter:
         Definition of rows filter based on a time spark window. Applied after
         joins.
-
-    Examples
-    --------
-    ```py
-    ```
     """
     aggregation: Union[TableAggregation, None] = None
     drop_columns: list[str] = []
@@ -248,7 +244,25 @@ class TableBuilder(BaseModel):
         """
         return self.source.read(spark)
 
-    def build_columns(self, df, udfs=None, raise_exception=True) -> DataFrame:
+    def build_columns(
+            self,
+            df: DataFrame,
+            udfs: list[Callable] = None,
+            raise_exception: bool =True
+    ) -> DataFrame:
+        """
+        Build dataframe columns
+
+        Parameters
+        ----------
+        df:
+            Input DataFrame
+        udfs:
+            User-defined functions
+        raise_exception
+            If `True`, raise exception when input columns are not available,
+            else, skip.
+        """
         logger.info(f"Setting columns...")
         built_cols = []
         for col in self._columns_to_build:
@@ -263,6 +277,24 @@ class TableBuilder(BaseModel):
         return df
 
     def process(self, df, udfs=None, spark=None) -> DataFrame:
+        """
+        Build table from source DataFrame by applying joins, aggregations and
+        creating new columns.
+
+        Parameters
+        ----------
+        df:
+            Input DataFrame
+        udfs:
+            User-defined functions
+        spark: SparkSession
+            Spark sessions.
+
+        Returns
+        -------
+        :
+            output Spark DataFrame
+        """
         import pyspark.sql.functions as F
 
         logger.info(f"Applying {self.layer} transformations")
@@ -351,7 +383,8 @@ class TableBuilder(BaseModel):
         return df
 
     @property
-    def apply_changes_kwargs(self):
+    def apply_changes_kwargs(self) -> dict[str, str]:
+        """Keyword arguments for dlt.apply_changes function"""
         cdc = self.source.cdc
         return {
             "apply_as_deletes": cdc.apply_as_deletes,
