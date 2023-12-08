@@ -92,15 +92,15 @@ plugins:
             inherited_members: false  # this only apply to methods and properties, not to pydantic fields
             members_order: source
             merge_init_into_class: true
-            separate_signature: false
+            separate_signature: true
             show_category_heading: true
             show_if_no_docstring: false
             show_root_full_path: true
             show_root_heading: true
-            show_signature_annotations: true
+            show_signature_annotations: false  # redundant as annotations available in parameters section
             show_source: true
-            show_symbol_type_heading: true
-            show_symbol_type_toc: true
+            show_symbol_type_heading: true  # sponsors only
+            show_symbol_type_toc: true  # sponsors only
             signature_crossrefs: true
             summary: true
 
