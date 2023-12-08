@@ -149,6 +149,7 @@ nav:
         - EventDataSource: api/datasources/eventdatasource.md
         - TableDataSource: api/datasources/tabledatasource.md
       - Databricks:
+        - api/databricks/cluster.md
         - api/databricks/directory.md
         - api/databricks/group.md
         - api/databricks/permission.md
