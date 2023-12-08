@@ -16,8 +16,10 @@ class Notebook(BaseModel, BaseResource):
     source:
         Path to notebook in source code format on local filesystem.
     dirpath:
-        Workspace directory containing the notebook. Filename will be assumed
-        to be the same as local filepath.
+        Workspace directory containing the notebook. Filename will be assumed to be the same as local filepath. Used
+        if path is not specified.
+    path:
+        Workspace filepath for the notebook
     language:
          Notebook programming language
     permissions:

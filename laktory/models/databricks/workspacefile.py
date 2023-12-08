@@ -7,17 +7,34 @@ from laktory.models.databricks.permission import Permission
 
 
 class WorkspaceFile(BaseModel, BaseResource):
+    """
+    Databricks Workspace File
+
+    Attributes
+    ----------
+    source:
+        Path to file on local filesystem.
+    dirpath:
+        Workspace directory containing the file. Filename will be assumed to be the same as local filepath. Used if path
+        is not specified.
+    path:
+         Workspace filepath for the file
+    permissions:
+        List of file permissions
+    """
     source: str
     dirpath: str = None
     path: str = None
     permissions: list[Permission] = []
 
     @property
-    def filename(self):
+    def filename(self) -> str:
+        """File file name"""
         return os.path.basename(self.source)
 
     @property
-    def key(self):
+    def key(self) -> str:
+        """File resource key"""
         key = os.path.splitext(self.path)[0].replace("/", "-")
         if key.startswith("-"):
             key = key[1:]
@@ -47,7 +64,22 @@ class WorkspaceFile(BaseModel, BaseResource):
     def pulumi_excludes(self) -> list[str]:
         return ["permissions", "dirpath"]
 
-    def deploy_with_pulumi(self, name=None, groups=None, opts=None):
+    def deploy_with_pulumi(self, name=None, opts=None):
+        """
+        Deploy workspace file using pulumi.
+
+        Parameters
+        ----------
+        name:
+            Name of the pulumi resource. Default is `workspace-file-{self.key}`
+        opts:
+            Pulumi resource options
+
+        Returns
+        -------
+        PulumiNotebook:
+            Pulumi workspace file resource
+        """
         from laktory.resourcesengines.pulumi.workspacefile import PulumiWorkspaceFile
 
         return PulumiWorkspaceFile(name=name, workspace_file=self, opts=opts)
