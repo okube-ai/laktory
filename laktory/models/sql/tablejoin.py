@@ -10,8 +10,7 @@ logger = get_logger(__name__)
 
 class TableJoin(BaseModel):
     """
-    Mechanisms for building a table from a source in the context of a data
-    pipeline.
+    Specifications of a tables join.
 
     Attributes
     ----------
@@ -73,7 +72,7 @@ class TableJoin(BaseModel):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def run(self, spark) -> DataFrame:
+    def execute(self, spark) -> DataFrame:
         """
         Execute join
 

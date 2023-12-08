@@ -42,7 +42,7 @@ def test_table_join():
     join.left._df = table_slv.to_df(spark)
     join.other._df = df_meta
 
-    df = join.run(spark)
+    df = join.execute(spark)
     data = df.toPandas().to_dict(orient="records")
     print(data)
     assert data == [
@@ -85,7 +85,7 @@ def test_table_join_outer():
     join.left._df = table_slv.to_df(spark)
     join.other._df = df_meta
 
-    df = join.run(spark)
+    df = join.execute(spark)
 
     # Test join columns uniqueness
     _df = df.withColumn("symbol2", F.lit("a"))
@@ -135,7 +135,7 @@ def test_table_agg():
         ],
     )
     df = table_slv.to_df(spark)
-    df1 = agg.run(df=df)
+    df1 = agg.execute(df=df)
     df1.show()
     data = df1.toPandas().to_dict(orient="records")
     print(data)
@@ -164,7 +164,7 @@ def test_table_agg_window():
     df = table_slv.to_df(spark)
     assert df.count() == 4
 
-    df1 = agg.run(df=df)
+    df1 = agg.execute(df=df)
     df1.select("window.start", "window.end").show()
     df1.printSchema()
 
@@ -205,7 +205,7 @@ def test_table_window_filter():
     )
     df = table_slv.to_df(spark)
     df.show()
-    df1 = w.run(df=df)
+    df1 = w.execute(df=df)
     df1.show()
     data = df1.toPandas().to_dict(orient="records")
     print(data)

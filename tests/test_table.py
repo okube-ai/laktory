@@ -211,7 +211,7 @@ def test_table_join():
     join.left._df = table_slv.to_df(spark)
     join.other._df = df_meta
 
-    df = join.run(spark)
+    df = join.execute(spark)
     data = df.toPandas().to_dict(orient="records")
     print(data)
     assert data == [
@@ -247,7 +247,7 @@ def test_table_agg():
     )
     df = table_slv.to_df(spark)
 
-    df1 = agg.run(df=df)
+    df1 = agg.execute(df=df)
     df1.show()
     data = df1.toPandas().to_dict(orient="records")
     print(data)

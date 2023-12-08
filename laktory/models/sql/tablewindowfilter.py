@@ -12,14 +12,67 @@ class OrderBy(BaseModel):
 
 
 class TableWindowFilter(BaseModel):
-    partition_by: Union[list[str], None]
-    order_by: Union[list[OrderBy], None] = None
-    descending: bool = True
-    rows_to_keep: int = 1
-    drop_row_index: bool = True
-    row_index_name: str = "_row_index"
+    """
+    Specifications of a window-based filtering.
 
-    def run(self, df):
+    Attributes
+    ----------
+    descending:
+        If `True` rows are sorted in descending order before dropping rows
+        from each window.
+    drop_row_index:
+        If `True`, the row index column is dropped
+    order_by:
+        Defines the column used for sorting before dropping rows
+    partition_by
+        Defines the columns used for grouping into Windows
+    row_index_name:
+        Group-specific and sorted rows index name
+    rows_to_keep:
+        How many rows to keep per window
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    f = models.TableWindowFilter(
+        partition_by=["symbol"],
+        order_by=[
+            {"sql_expression": "created_at", "desc": True},
+        ],
+        drop_row_index=False,
+        rows_to_keep=1,
+    )
+    df1 = f.execute(df0)
+    ```
+
+    References
+    ----------
+
+    *[pyspark Window](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.Window.html)
+    """
+    descending: bool = True
+    drop_row_index: bool = True
+    order_by: Union[list[OrderBy], None] = None
+    partition_by: Union[list[str], None]
+    row_index_name: str = "_row_index"
+    rows_to_keep: int = 1
+
+    def execute(self, df):
+        """
+        Execute window filtering
+
+        Parameters
+        ----------
+        df: DataFrame
+            Spark DataFrame
+
+        Returns
+        -------
+        : DataFrame
+            Output DataFrame
+        """
         from pyspark.sql import Window
         import pyspark.sql.functions as F
 
@@ -44,3 +97,17 @@ class TableWindowFilter(BaseModel):
             df = df.drop(self.row_index_name)
 
         return df
+
+
+if __name__ == "__main__":
+    from laktory import models
+
+    f = models.TableWindowFilter(
+        partition_by=["symbol"],
+        order_by=[
+            {"sql_expression": "created_at", "desc": True},
+        ],
+        drop_row_index=False,
+        rows_to_keep=1,
+    )
+    df1 = f.execute(df0)

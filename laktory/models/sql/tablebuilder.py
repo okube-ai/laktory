@@ -316,7 +316,7 @@ class TableBuilder(BaseModel):
                 name = "previous_join"
             join.left = TableDataSource(name=name)
             join.left._df = df
-            df = join.run(spark)
+            df = join.execute(spark)
 
             # Build remaining columns again (in case inputs are found in joins)
             df = self.build_columns(
@@ -325,7 +325,7 @@ class TableBuilder(BaseModel):
 
         # Window filtering
         if self.window_filter:
-            df = self.window_filter.run(df)
+            df = self.window_filter.execute(df)
 
         # Drop source columns
         if self.drop_source_columns:
@@ -333,7 +333,7 @@ class TableBuilder(BaseModel):
             df = df.select(column_names)
 
         if self.aggregation:
-            df = self.aggregation.run(df, udfs=udfs)
+            df = self.aggregation.execute(df, udfs=udfs)
             self._columns_to_build += self._get_layer_columns(layer=self.layer, df=df)
 
         # Build columns after aggregation
@@ -349,7 +349,7 @@ class TableBuilder(BaseModel):
                 name = "previous_join"
             join.left = TableDataSource(name=name)
             join.left._df = df
-            df = join.run(spark)
+            df = join.execute(spark)
 
             # Build remaining columns again (in case inputs are found in joins)
             df = self.build_columns(
