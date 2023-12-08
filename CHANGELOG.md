@@ -6,7 +6,7 @@
 ###Fixed
 * n/a
 ###Updated
-* n/a
+* SparkFuncArgs model to allow constant value
 ###Breaking changes
 * Renamed Producer model to DataProducer
 * Renamed Resource model to BaseResource

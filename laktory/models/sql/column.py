@@ -8,29 +8,67 @@ from laktory._logger import get_logger
 from laktory.constants import SUPPORTED_TYPES
 from laktory.models.basemodel import BaseModel
 from laktory.spark import Column as SparkColumn
+from laktory.spark import DataFrame
 
 logger = get_logger(__name__)
 
 
 class SparkFuncArg(BaseModel):
+    """
+    Spark function argument
+
+    Attributes
+    ----------
+    value:
+        Value of the argument
+    is_column:
+        If `True`, the value is also the name of a column
+    to_lit:
+        If `True`, the value is converted to a spark column using
+        `F.lit({value})`
+    to_expr:
+        If `True`, the value is converted to a spark column using
+        `F.expr({value})`
+    """
+
     value: Any
     is_column: bool = None
     to_lit: bool = None
+    to_expr: bool = None
 
     @model_validator(mode="after")
-    def is_column_default(self) -> Any:
-        if self.to_lit is None and self.is_column is None:
+    def set_defaults(self) -> Any:
+        """Default options"""
+
+        # If only value is provided and value is a string, assume value is column
+        if self.is_column is None and self.to_expr is None and self.to_lit is None:
             if isinstance(self.value, str):
                 self.is_column = True
 
-        if self.is_column is None:
-            self.is_column = False
+        if self.is_column:
 
-        if self.to_lit is None:
+            if self.to_lit:
+                raise ValueError("If `to_column` is `True`, `to_lit` must be `None` or `False`")
+
+            if self.to_expr == False:
+                raise ValueError("If `to_column` is `True`, `to_expr` must be `None` or `True`")
+
+            self.to_expr = True
             self.to_lit = False
 
-        if self.is_column and self.to_lit:
-            raise ValueError("Only one of `to_column` or `to_lit` can be True")
+        else:
+
+            self.is_column = False
+
+            if self.to_lit is None and self.to_expr is None:
+                self.to_lit = True
+                self.to_expr = False
+
+            if self.to_lit is None:
+                self.to_lit = False
+
+            if self.to_expr is None:
+                self.to_expr = False
 
         return self
 
@@ -40,12 +78,65 @@ class SparkFuncArg(BaseModel):
         v = self.value
         if self.to_lit:
             v = F.lit(v)
-        else:
+        elif self.to_expr:
             v = F.expr(v)
         return v
 
 
 class Column(BaseModel):
+    """
+    Definition of a table column, including instructions on how to build the
+    column using spark and an input dataframe.
+
+    Attributes
+    ----------
+    catalog_name:
+        Name of the catalog string the column table
+    comment:
+        Text description of the column
+    name:
+        Name of the column
+    pii:
+        If `True`, the column is flagged as Personally Identifiable Information
+    schema_name:
+        Name of the schema storing the column table
+    spark_func_args:
+        List of arguments to be passed to the spark function to build the
+        column.
+    spark_func_kwargs:
+        List of keyword arguments to be passed to the spark function to build
+        the column.
+    spark_func_name:
+        Name of the spark function to build the column. Mutually exclusive to
+        `sql_expression`
+    sql_expression:
+        Expression defining how to build the column. Mutually exclusive to
+        `spark_func_name`
+    table_name:
+        Name of the table storing the column.
+    type:
+        Column data type
+    unit:
+        Column units
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    col = models.Column(
+        name="open",
+        spark_func_name="poly1",
+        spark_func_args=[
+            "data.open",
+        ],
+        spark_func_kwargs={"a": {"value": 2.0, "to_lit": True}},
+        type="double",
+    )
+
+    spark_col = col.to_spark(df)
+    ```
+    """
     catalog_name: Union[str, None] = None
     comment: Union[str, None] = None
     name: str
@@ -104,6 +195,7 @@ class Column(BaseModel):
 
     @property
     def parent_full_name(self) -> str:
+        """Table full name `{catalog_name}.{schema_name}.{table_name}`"""
         _id = ""
         if self.catalog_name:
             _id += self.catalog_name
@@ -124,6 +216,7 @@ class Column(BaseModel):
 
     @property
     def full_name(self) -> str:
+        """Column full name `{catalog_name}.{schema_name}.{table_name}.{column_name}`"""
         _id = self.name
         if self.parent_full_name is not None:
             _id = f"{self.parent_full_name}.{_id}"
@@ -131,6 +224,7 @@ class Column(BaseModel):
 
     @property
     def database_name(self) -> str:
+        """Alternate name for schema name"""
         return self.schema_name
 
     # ----------------------------------------------------------------------- #
@@ -139,10 +233,23 @@ class Column(BaseModel):
 
     def to_spark(
         self,
-        df,
+        df: DataFrame,
         udfs: list[Callable[[...], SparkColumn]] = None,
         raise_exception: bool = True,
     ) -> SparkColumn:
+        """
+        Build Spark Column
+
+        Parameters
+        ----------
+        df:
+            Input DataFrame
+        udfs:
+            User-defined functions
+        raise_exception
+            If `True`, raise exception when input columns are not available,
+            else, skip.
+        """
         import pyspark.sql.functions as F
         from laktory.spark import functions as LF
         from laktory.spark.dataframe import has_column
@@ -211,3 +318,19 @@ class Column(BaseModel):
             col = col.cast(self.type)
 
         return col
+
+
+if __name__ == "__main__":
+    from laktory import models
+
+    col = models.Column(
+        name="open",
+        spark_func_name="poly1",
+        spark_func_args=[
+            "data.open",
+        ],
+        spark_func_kwargs={"a": {"value": 2.0, "to_lit": True}},
+        type="double",
+    )
+
+    spark_col = col.to_spark(df)
