@@ -6,20 +6,19 @@ repo_name: Laktory
 
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/mkdocstrings.css
 
 markdown_extensions:
   - admonition
-  - toc:
-      permalink: true
-  - pymdownx.snippets  # link between markdown (changelog)
-  - pymdownx.superfences  # code blocks titles
-  - pymdownx.details
   - attr_list
+  - pymdownx.snippets  # link between markdown (changelog)
+  - pymdownx.superfences
+  - pymdownx.details
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-
-
+  - toc:
+      permalink: "¤"
 
 theme:
   name: material
@@ -43,18 +42,21 @@ theme:
         icon: material/brightness-7
         name: Switch to dark mode
   features:
+    - content.action.view
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
     - navigation.instant
     - navigation.instant.prefetch
     - navigation.instant.progress
+    - navigation.sections
     - navigation.tracking
     - navigation.tabs
     - navigation.tabs.sticky
-#    - navigation.sections
     - navigation.path
+    - search.highlight
     - search.suggest
-    - content.code.copy
-#    - content.code.select  # TODO: Enable
-#    - content.code.annotate  # TODO: Enable
+    - toc.follow
 
 #      primary: "#2fe1b9"
 #      accent: green
@@ -69,8 +71,8 @@ theme:
 #        icon: material/lightbulb-outline
 #        name: "Switch to dark mode"
 
-
 plugins:
+#  - markdown-exec
   - mkdocstrings:
       handlers:
         python:
@@ -102,8 +104,8 @@ plugins:
             signature_crossrefs: true
             summary: true
 
+#  - sear
 #  - snippets
-#  - search
 
 
 
