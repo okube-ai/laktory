@@ -61,15 +61,13 @@ class BaseModel(_BaseModel):
         data = json.load(fp)
         return cls.model_validate(data)
 
-    @property
-    def pulumi_excludes(self) -> list[str]:
-        """List of fields to exclude when dumping model to pulumi"""
-        return []
+    # ----------------------------------------------------------------------- #
+    # Properties                                                              #
+    # ----------------------------------------------------------------------- #
 
-    @property
-    def pulumi_renames(self) -> dict[str, str]:
-        """Map of fields to rename when dumping model to pulumi"""
-        return {}
+    # ----------------------------------------------------------------------- #
+    # Methods                                                                 #
+    # ----------------------------------------------------------------------- #
 
     def inject_vars(self, d: dict) -> dict:
         """
@@ -135,26 +133,4 @@ class BaseModel(_BaseModel):
         # Build pulumi output function where required
         d = apply_pulumi(d)
 
-        return d
-
-    def model_pulumi_dump(self, *args, **kwargs) -> dict:
-        """
-        Dump model and customize it to be used as an input for a pulumi
-        resource:
-
-        * dump the model
-        * remove excludes defined in `self.pulumi_excludes`
-        * rename keys according to `self.pulumi_renames`
-        * inject variables
-
-        Returns
-        -------
-        :
-            Pulumi-safe model dump
-        """
-        kwargs["exclude"] = self.pulumi_excludes
-        d = super().model_dump(*args, **kwargs)
-        for k, v in self.pulumi_renames.items():
-            d[v] = d.pop(k)
-        d = self.inject_vars(d)
         return d

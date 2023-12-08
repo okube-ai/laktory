@@ -19,6 +19,10 @@ class BaseResource(_BaseModel):
 
     _resources: Any = None
 
+    # ----------------------------------------------------------------------- #
+    # Properties                                                              #
+    # ----------------------------------------------------------------------- #
+
     @property
     def resources(self) -> list:
         """List of deployed resources"""
@@ -27,6 +31,42 @@ class BaseResource(_BaseModel):
                 f"Model ({self}) has not been deployed. Call model.deploy() first"
             )
         return self._resources
+
+    @property
+    def pulumi_excludes(self) -> list[str]:
+        """List of fields to exclude when dumping model to pulumi"""
+        return []
+
+    @property
+    def pulumi_renames(self) -> dict[str, str]:
+        """Map of fields to rename when dumping model to pulumi"""
+        return {}
+
+    # ----------------------------------------------------------------------- #
+    # Methods                                                                 #
+    # ----------------------------------------------------------------------- #
+
+    def model_pulumi_dump(self, *args, **kwargs) -> dict:
+        """
+        Dump model and customize it to be used as an input for a pulumi
+        resource:
+
+        * dump the model
+        * remove excludes defined in `self.pulumi_excludes`
+        * rename keys according to `self.pulumi_renames`
+        * inject variables
+
+        Returns
+        -------
+        :
+            Pulumi-safe model dump
+        """
+        kwargs["exclude"] = self.pulumi_excludes
+        d = super().model_dump(*args, **kwargs)
+        for k, v in self.pulumi_renames.items():
+            d[v] = d.pop(k)
+        d = self.inject_vars(d)
+        return d
 
     def deploy(self, *args, engine: Literal[tuple(ENGINES)] = None, **kwargs) -> list:
         """
