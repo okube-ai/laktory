@@ -37,6 +37,7 @@ class TimeWindow(BaseModel):
     * [pyspark window](https://spark.apache.org/docs/3.1.3/api/python/reference/api/pyspark.sql.functions.window.html)
 
     """
+
     time_column: str
     window_duration: str
     slide_duration: Union[str, None] = None
@@ -98,6 +99,7 @@ class TableAggregation(BaseModel):
 
     * [pyspark window](https://spark.apache.org/docs/3.1.3/api/python/reference/api/pyspark.sql.functions.window.html)
     """
+
     groupby_window: Union[TimeWindow, None] = None
     groupby_columns: Union[list[str], None] = []
     agg_expressions: list[Column] = []
@@ -154,6 +156,7 @@ class TableAggregation(BaseModel):
 
 if __name__ == "__main__":
     from laktory import models
+
     table = models.Table(
         name="gld_stock_prices_by_1d",
         builder={
@@ -162,17 +165,23 @@ if __name__ == "__main__":
                 "name": "slv_star_stock_prices",
             },
             "aggregation": {
-                "groupby_columns": [
-                    "symbol"
-                ],
+                "groupby_columns": ["symbol"],
                 "groupby_window": {
                     "time_column": "_tstamp",
                     "window_duration": "1 day",
                 },
                 "agg_expressions": [
-                    {"name": "low", "spark_func_name": "min", "spark_func_args": ["low"]},
-                    {"name": "high", "spark_func_name": "max", "spark_func_args": ["high"]},
-                ]
-            }
-        }
+                    {
+                        "name": "low",
+                        "spark_func_name": "min",
+                        "spark_func_args": ["low"],
+                    },
+                    {
+                        "name": "high",
+                        "spark_func_name": "max",
+                        "spark_func_args": ["high"],
+                    },
+                ],
+            },
+        },
     )

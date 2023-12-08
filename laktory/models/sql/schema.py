@@ -54,6 +54,7 @@ class Schema(BaseModel, BaseResource):
     * [Databricks Unity Schema](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#schemas)
     * [Pulumi Databricks Schema](https://www.pulumi.com/registry/packages/databricks/api-docs/schema/)
     """
+
     catalog_name: Union[str, None] = None
     comment: Union[str, None] = None
     force_destroy: bool = True
@@ -120,11 +121,8 @@ if __name__ == "__main__":
     from laktory import models
 
     schema = models.Schema(
-            catalog_name="dev",
-            name="engineering",
-            grants=[
-                    {"principal": "domain-engineering", "privileges": ["SELECT"]}
-            ],
+        catalog_name="dev",
+        name="engineering",
+        grants=[{"principal": "domain-engineering", "privileges": ["SELECT"]}],
     )
     schema.deploy()
-

@@ -69,7 +69,13 @@ def test_spark():
     cs = c.to_spark(df)
     s = df.withColumn(c.name, cs).toPandas()[c.name].tolist()
     assert cs.__repr__() == "Column<'CAST(coalesce(data.open) AS STRING)'>"
-    assert s == ['137.4600067138672', '135.44000244140625', '136.02000427246094', '133.58999633789062', '134.91000366210938']
+    assert s == [
+        "137.4600067138672",
+        "135.44000244140625",
+        "136.02000427246094",
+        "133.58999633789062",
+        "134.91000366210938",
+    ]
 
     c = Column(
         name="open2",
@@ -83,7 +89,13 @@ def test_spark():
     cs = c.to_spark(df)
     s = df.withColumn(c.name, cs).toPandas()[c.name].tolist()
     assert cs.__repr__() == "Column<'CAST(((2.0 * data.open) + 0.0) AS DOUBLE)'>"
-    assert s == [274.9200134277344, 270.8800048828125, 272.0400085449219, 267.17999267578125, 269.82000732421875]
+    assert s == [
+        274.9200134277344,
+        270.8800048828125,
+        272.0400085449219,
+        267.17999267578125,
+        269.82000732421875,
+    ]
 
     c = Column(
         name="open_close",
@@ -92,8 +104,17 @@ def test_spark():
     )
     cs = c.to_spark(df)
     s = df.withColumn(c.name, cs).toPandas()[c.name].tolist()
-    assert cs.__repr__() == "Column<'CAST((data.open * data.close) AS open_close AS DOUBLE)'>"
-    assert s == [18647.825014196802, 18388.689710131846, 18289.25068769534, 18069.38217083132, 18399.02695817873]
+    assert (
+        cs.__repr__()
+        == "Column<'CAST((data.open * data.close) AS open_close AS DOUBLE)'>"
+    )
+    assert s == [
+        18647.825014196802,
+        18388.689710131846,
+        18289.25068769534,
+        18069.38217083132,
+        18399.02695817873,
+    ]
 
     c = Column(
         name="id",
@@ -106,7 +127,7 @@ def test_spark():
     cs = c.to_spark(df)
     s = df.withColumn(c.name, cs).toPandas()[c.name].tolist()
     assert cs.__repr__() == "Column<'CAST(coalesce(data.@id) AS STRING)'>"
-    assert s == ['_id', '_id', '_id', '_id', '_id']
+    assert s == ["_id", "_id", "_id", "_id", "_id"]
 
     c = Column(
         name="no_explicit_type",
@@ -119,7 +140,7 @@ def test_spark():
     cs = c.to_spark(df)
     s = df.withColumn(c.name, cs).toPandas()[c.name].tolist()
     assert cs.__repr__() == "Column<'coalesce(data.symbol)'>"
-    assert s == ['GOOGL', 'GOOGL', 'GOOGL', 'GOOGL', 'GOOGL']
+    assert s == ["GOOGL", "GOOGL", "GOOGL", "GOOGL", "GOOGL"]
 
     c = Column(
         name="search_and_replace",
@@ -134,7 +155,7 @@ def test_spark():
     cs = c.to_spark(df)
     s = df.withColumn(c.name, cs).toPandas()[c.name].tolist()
     assert cs.__repr__() == "Column<'regexp_replace(data.symbol, O, 0, 1)'>"
-    assert s == ['G00GL', 'G00GL', 'G00GL', 'G00GL', 'G00GL']
+    assert s == ["G00GL", "G00GL", "G00GL", "G00GL", "G00GL"]
 
 
 def test_spark_udf():
@@ -155,7 +176,13 @@ def test_spark_udf():
     cs = c.to_spark(df, udfs=[x2, x_square])
     s = df.withColumn(c.name, cs).toPandas()[c.name].tolist()
     assert cs.__repr__() == "Column<'CAST((data.open * 2) AS DOUBLE)'>"
-    assert s == [274.9200134277344, 270.8800048828125, 272.0400085449219, 267.17999267578125, 269.82000732421875]
+    assert s == [
+        274.9200134277344,
+        270.8800048828125,
+        272.0400085449219,
+        267.17999267578125,
+        269.82000732421875,
+    ]
 
 
 if __name__ == "__main__":

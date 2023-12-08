@@ -46,18 +46,20 @@ class SparkFuncArg(BaseModel):
                 self.is_column = True
 
         if self.is_column:
-
             if self.to_lit:
-                raise ValueError("If `to_column` is `True`, `to_lit` must be `None` or `False`")
+                raise ValueError(
+                    "If `to_column` is `True`, `to_lit` must be `None` or `False`"
+                )
 
             if self.to_expr == False:
-                raise ValueError("If `to_column` is `True`, `to_expr` must be `None` or `True`")
+                raise ValueError(
+                    "If `to_column` is `True`, `to_expr` must be `None` or `True`"
+                )
 
             self.to_expr = True
             self.to_lit = False
 
         else:
-
             self.is_column = False
 
             if self.to_lit is None and self.to_expr is None:
@@ -137,6 +139,7 @@ class Column(BaseModel):
     spark_col = col.to_spark(df)
     ```
     """
+
     catalog_name: Union[str, None] = None
     comment: Union[str, None] = None
     name: str

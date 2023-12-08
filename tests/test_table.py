@@ -25,6 +25,32 @@ spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 def test_model():
     print(table_slv.model_dump())
     assert table_slv.model_dump() == {
+        "builder": {
+            "aggregation": None,
+            "drop_columns": [],
+            "drop_duplicates": None,
+            "drop_source_columns": True,
+            "event_source": None,
+            "filter": None,
+            "joins": [],
+            "joins_post_aggregation": [],
+            "layer": "SILVER",
+            "pipeline_name": None,
+            "selects": None,
+            "table_source": {
+                "read_as_stream": True,
+                "catalog_name": "dev",
+                "cdc": None,
+                "selects": None,
+                "filter": None,
+                "from_pipeline": True,
+                "name": "brz_stock_prices",
+                "schema_name": "markets",
+                "watermark": None,
+            },
+            "template": "SILVER",
+            "window_filter": None,
+        },
         "catalog_name": "dev",
         "columns": [
             {
@@ -34,7 +60,12 @@ def test_model():
                 "pii": None,
                 "schema_name": "markets",
                 "spark_func_args": [
-                    {"value": "data._created_at", "is_column": True, "to_lit": False}
+                    {
+                        "value": "data._created_at",
+                        "is_column": True,
+                        "to_lit": False,
+                        "to_expr": True,
+                    }
                 ],
                 "spark_func_kwargs": {},
                 "spark_func_name": "coalesce",
@@ -50,7 +81,12 @@ def test_model():
                 "pii": None,
                 "schema_name": "markets",
                 "spark_func_args": [
-                    {"value": "data.symbol", "is_column": True, "to_lit": False}
+                    {
+                        "value": "data.symbol",
+                        "is_column": True,
+                        "to_lit": False,
+                        "to_expr": True,
+                    }
                 ],
                 "spark_func_kwargs": {},
                 "spark_func_name": "coalesce",
@@ -66,7 +102,12 @@ def test_model():
                 "pii": None,
                 "schema_name": "markets",
                 "spark_func_args": [
-                    {"value": "data.open", "is_column": True, "to_lit": False}
+                    {
+                        "value": "data.open",
+                        "is_column": True,
+                        "to_lit": False,
+                        "to_expr": True,
+                    }
                 ],
                 "spark_func_kwargs": {},
                 "spark_func_name": "coalesce",
@@ -90,8 +131,6 @@ def test_model():
                 "unit": None,
             },
         ],
-        "data_source_format": "DELTA",
-        "table_type": "MANAGED",
         "comment": None,
         "data": [
             ["2023-11-01T00:00:00Z", "AAPL", 1, 2],
@@ -99,37 +138,13 @@ def test_model():
             ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
             ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
         ],
+        "data_source_format": "DELTA",
         "grants": None,
         "name": "slv_stock_prices",
         "primary_key": None,
         "schema_name": "markets",
+        "table_type": "MANAGED",
         "timestamp_key": None,
-        "builder": {
-            "aggregation": None,
-            "drop_source_columns": True,
-            "drop_duplicates": None,
-            "drop_columns": [],
-            "event_source": None,
-            "filter": None,
-            "joins": [],
-            "joins_post_aggregation": [],
-            "layer": "SILVER",
-            "pipeline_name": None,
-            "selects": None,
-            "table_source": {
-                "read_as_stream": True,
-                "catalog_name": "dev",
-                "cdc": None,
-                "selects": None,
-                "filter": None,
-                "from_pipeline": True,
-                "name": "brz_stock_prices",
-                "schema_name": "markets",
-                "watermark": None,
-            },
-            "template": "SILVER",
-            "window_filter": None,
-        },
         "view_definition": None,
         "warehouse_id": "08b717ce051a0261",
     }
@@ -260,44 +275,18 @@ def test_table_agg():
 def test_silver_star():
     print(table_slv_star.model_dump())
     assert table_slv_star.model_dump() == {
-        "catalog_name": "dev",
-        "columns": [
-            {
-                "catalog_name": "dev",
-                "comment": None,
-                "name": "symbol3",
-                "pii": None,
-                "schema_name": "markets",
-                "spark_func_args": [
-                    {"value": "symbol", "is_column": True, "to_lit": False}
-                ],
-                "spark_func_kwargs": {},
-                "spark_func_name": "coalesce",
-                "sql_expression": None,
-                "table_name": "slv_star_stock_prices",
-                "type": "string",
-                "unit": None,
-            }
-        ],
-        "data_source_format": "DELTA",
-        "table_type": "MANAGED",
-        "comment": None,
-        "data": None,
-        "grants": None,
-        "name": "slv_star_stock_prices",
-        "primary_key": None,
-        "schema_name": "markets",
-        "timestamp_key": None,
         "builder": {
             "aggregation": None,
-            "drop_source_columns": False,
-            "drop_duplicates": None,
             "drop_columns": [],
+            "drop_duplicates": None,
+            "drop_source_columns": False,
             "event_source": None,
             "filter": None,
             "joins": [
                 {
+                    "how": "left",
                     "left": None,
+                    "on": ["symbol"],
                     "other": {
                         "read_as_stream": True,
                         "catalog_name": "dev",
@@ -313,13 +302,13 @@ def test_silver_star():
                         "schema_name": "markets",
                         "watermark": None,
                     },
-                    "on": ["symbol"],
-                    "how": "left",
                     "time_constraint_interval_lower": "60 seconds",
                     "time_constraint_interval_upper": None,
                 },
                 {
+                    "how": "left",
                     "left": None,
+                    "on": ["symbol3"],
                     "other": {
                         "read_as_stream": True,
                         "catalog_name": "dev",
@@ -331,8 +320,6 @@ def test_silver_star():
                         "schema_name": "markets",
                         "watermark": None,
                     },
-                    "on": ["symbol3"],
-                    "how": "left",
                     "time_constraint_interval_lower": "60 seconds",
                     "time_constraint_interval_upper": None,
                 },
@@ -355,6 +342,39 @@ def test_silver_star():
             "template": "SILVER_STAR",
             "window_filter": None,
         },
+        "catalog_name": "dev",
+        "columns": [
+            {
+                "catalog_name": "dev",
+                "comment": None,
+                "name": "symbol3",
+                "pii": None,
+                "schema_name": "markets",
+                "spark_func_args": [
+                    {
+                        "value": "symbol",
+                        "is_column": True,
+                        "to_lit": False,
+                        "to_expr": True,
+                    }
+                ],
+                "spark_func_kwargs": {},
+                "spark_func_name": "coalesce",
+                "sql_expression": None,
+                "table_name": "slv_star_stock_prices",
+                "type": "string",
+                "unit": None,
+            }
+        ],
+        "comment": None,
+        "data": None,
+        "data_source_format": "DELTA",
+        "grants": None,
+        "name": "slv_star_stock_prices",
+        "primary_key": None,
+        "schema_name": "markets",
+        "table_type": "MANAGED",
+        "timestamp_key": None,
         "view_definition": None,
         "warehouse_id": "08b717ce051a0261",
     }

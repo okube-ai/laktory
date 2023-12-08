@@ -59,6 +59,7 @@ class TableBuilder(BaseModel):
         Definition of rows filter based on a time spark window. Applied after
         joins.
     """
+
     aggregation: Union[TableAggregation, None] = None
     drop_columns: list[str] = []
     drop_duplicates: Union[bool, None] = None
@@ -245,10 +246,7 @@ class TableBuilder(BaseModel):
         return self.source.read(spark)
 
     def build_columns(
-            self,
-            df: DataFrame,
-            udfs: list[Callable] = None,
-            raise_exception: bool =True
+        self, df: DataFrame, udfs: list[Callable] = None, raise_exception: bool = True
     ) -> DataFrame:
         """
         Build dataframe columns

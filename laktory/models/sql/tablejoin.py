@@ -62,6 +62,7 @@ class TableJoin(BaseModel):
     * [pyspark join](https://spark.apache.org/docs/3.1.2/api/python/reference/api/pyspark.sql.DataFrame.join.html)
     * [spark streaming join](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#inner-joins-with-optional-watermarking)
     """
+
     how: str = "left"
     left: TableDataSource = None
     on: list[str]
@@ -167,14 +168,12 @@ if __name__ == "__main__":
                     "other": {
                         "name": "slv_stock_metadata",
                         "read_as_stream": False,
-                        "selects": [
-                            "symbol", "currency", "first_trader"
-                        ]
+                        "selects": ["symbol", "currency", "first_trader"],
                     },
                     "on": ["symbol"],
                 }
             ],
-        }
+        },
     )
 
     # Read

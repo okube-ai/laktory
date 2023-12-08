@@ -52,6 +52,7 @@ class TableWindowFilter(BaseModel):
 
     * [pyspark Window](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.Window.html)
     """
+
     descending: bool = True
     drop_row_index: bool = True
     order_by: Union[list[OrderBy], None] = None

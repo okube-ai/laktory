@@ -90,6 +90,7 @@ class Table(BaseModel, BaseResource):
     * [Databricks Unity Table](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#tables)
     * [Pulumi Databricks Table](https://www.pulumi.com/registry/packages/databricks/api-docs/sqltable/)
     """
+
     builder: TableBuilder = TableBuilder()
     catalog_name: Union[str, None] = None
     columns: list[Column] = []
@@ -259,15 +260,25 @@ if __name__ == "__main__":
         name="slv_stock_prices",
         columns=[
             {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
-            {"name": "open", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.open"]},
-            {"name": "close", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.close"]},
+            {
+                "name": "open",
+                "type": "double",
+                "spark_func_name": "coalesce",
+                "spark_func_args": ["daa.open"],
+            },
+            {
+                "name": "close",
+                "type": "double",
+                "spark_func_name": "coalesce",
+                "spark_func_args": ["daa.close"],
+            },
         ],
         builder={
             "layer": "SILVER",
             "table_source": {
                 "name": "brz_stock_prices",
             },
-        }
+        },
     )
 
     # Read
