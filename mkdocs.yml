@@ -152,6 +152,7 @@ nav:
         - api/databricks/cluster.md
         - api/databricks/directory.md
         - api/databricks/group.md
+        - api/databricks/job.md
         - api/databricks/permission.md
         - ServicePrincipal: api/databricks/serviceprincipal.md
         - api/databricks/secret.md
