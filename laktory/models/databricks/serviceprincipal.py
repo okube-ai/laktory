@@ -71,7 +71,7 @@ class ServicePrincipal(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `service-principal-{self.display_name}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         group_ids:
             Dictionary whose keys are the display names and whose values are the group ids
         opts:

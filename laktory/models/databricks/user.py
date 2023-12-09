@@ -68,7 +68,7 @@ class User(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `user-{self.user_name}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         group_ids:
             Dictionary whose keys are the display names and whose values are the group ids
         opts:
