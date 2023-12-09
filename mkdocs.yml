@@ -179,7 +179,7 @@ nav:
         - has_column: api/spark/dataframe/has_column.md
         - flat_schema: api/spark/dataframe/schema_flat.md
       - Functions:
-        - types: api/spark/functions/_types.md
+        - constants: api/spark/functions/_constants.md
         - poly1: api/spark/functions/poly1.md
         - poly2: api/spark/functions/poly2.md
         - power: api/spark/functions/power.md

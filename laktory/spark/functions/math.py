@@ -35,11 +35,11 @@ def poly1(
 
     Parameters
     ----------
-    x: pyspark.sql.functions.column.Column, column name
+    x:
         Input column
-    a: float or pyspark.sql.functions.column.Column
+    a:
         Slope
-    b: float or pyspark.sql.functions.column.Column
+    b:
         y-intercept
 
     Returns
@@ -62,13 +62,13 @@ def poly2(
 
     Parameters
     ------
-    x: pyspark.sql.functions.column.Column or column name
+    x:
         Input column
-    a: float or pyspark.sql.functions.column.Column
+    a:
         x**2 coefficient
-    b: float or pyspark.sql.functions.column.Column
+    b:
         x**1 coefficient
-    c: float or pyspark.sql.functions.column.Column
+    c:
         x**0 coefficient
 
     Returns
@@ -95,15 +95,15 @@ def power(
     n: FLOAT_OR_COLUMN = 0.0,
 ) -> Column:
     """
-    Polynomial function of first degree
+    Power function
 
     Parameters
     ------
-    x: pyspark.sql.functions.column.Column or column name
+    x:
         Input column
-    a: float or pyspark.sql.functions.column.Column
+    a:
         Coefficient
-    n: float or pyspark.sql.functions.column.Column
+    n:
         Exponent
 
     Returns
@@ -128,9 +128,9 @@ def roundp(
 
     Parameters
     ------
-    x: pyspark.sql.functions.column.Column or column name
+    x:
         Input column
-    p: float or pyspark.sql.functions.column.Column
+    p:
         Precision
 
     Returns
