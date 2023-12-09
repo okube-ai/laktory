@@ -1,8 +1,7 @@
-from typing import Union
 import pulumi
 import pulumi_databricks as databricks
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.compute.notebook import Notebook
+from laktory.models.databricks.notebook import Notebook
 
 from laktory._logger import get_logger
 

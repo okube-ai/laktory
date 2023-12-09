@@ -7,7 +7,7 @@ from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.models.baseresource import BaseResource
 from laktory.models.databricks.permission import Permission
-from laktory.models.compute.cluster import Cluster
+from laktory.models.databricks.cluster import Cluster
 from laktory.models.sql.table import Table
 
 
@@ -148,60 +148,3 @@ class Pipeline(BaseModel, BaseResource):
         from laktory.resourcesengines.pulumi.pipeline import PulumiPipeline
 
         return PulumiPipeline(name=name, pipeline=self, opts=opts)
-
-    # ----------------------------------------------------------------------- #
-    # Methods                                                                 #
-    # ----------------------------------------------------------------------- #
-    # TODO: Move to Databricks SDK engine
-    # def get_tables_meta(self, catalog_name="main", schema_name="laktory") -> Table:
-    #     table = Table.meta_table()
-    #     table.catalog_name = catalog_name
-    #     table.schema_name = schema_name
-    #
-    #     data = []
-    #     for t in self.tables:
-    #         _dump = t.model_dump(mode="json")
-    #         _data = []
-    #         for c in table.column_names:
-    #             _data += [_dump[c]]
-    #         data += [_data]
-    #     table.data = data
-    #
-    #     return table
-    #
-    # def get_columns_meta(self, catalog_name="main", schema_name="laktory") -> Table:
-    #     table = Column.meta_table()
-    #     table.catalog_name = catalog_name
-    #     table.schema_name = schema_name
-    #
-    #     data = []
-    #     for t in self.tables:
-    #         for c in t.columns:
-    #             _dump = c.model_dump(mode="json")
-    #             _data = []
-    #             for k in table.column_names:
-    #                 _data += [_dump[k]]
-    #             data += [_data]
-    #     table.data = data
-    #
-    #     return table
-    #
-    # def publish_tables_meta(self, catalog_name="main", schema_name="laktory", init=True):
-    #
-    #     # Create catalog
-    #     Catalog(name=catalog_name).create(if_not_exists=True)
-    #
-    #     # Create schema
-    #     Schema(name=schema_name, catalog_name=catalog_name).create(if_not_exists=True)
-    #
-    #     # Get and create tables
-    #     tables = self.get_tables_meta(
-    #         catalog_name=catalog_name, schema_name=schema_name
-    #     )
-    #     tables.create(or_replace=init, insert_data=True)
-    #
-    #     # Get and create tables
-    #     columns = self.get_columns_meta(
-    #         catalog_name=catalog_name, schema_name=schema_name
-    #     )
-    #     columns.create(or_replace=init, insert_data=True)

@@ -6,20 +6,19 @@ repo_name: Laktory
 
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/mkdocstrings.css
 
 markdown_extensions:
   - admonition
-  - toc:
-      permalink: true
-  - pymdownx.snippets  # link between markdown (changelog)
-  - pymdownx.superfences  # code blocks titles
-  - pymdownx.details
   - attr_list
+  - pymdownx.snippets  # link between markdown (changelog)
+  - pymdownx.superfences
+  - pymdownx.details
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-
-
+  - toc:
+      permalink: "¤"
 
 theme:
   name: material
@@ -43,18 +42,21 @@ theme:
         icon: material/brightness-7
         name: Switch to dark mode
   features:
+    - content.action.view
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
     - navigation.instant
     - navigation.instant.prefetch
     - navigation.instant.progress
+    - navigation.sections
     - navigation.tracking
     - navigation.tabs
     - navigation.tabs.sticky
-#    - navigation.sections
     - navigation.path
+    - search.highlight
     - search.suggest
-    - content.code.copy
-#    - content.code.select  # TODO: Enable
-#    - content.code.annotate  # TODO: Enable
+    - toc.follow
 
 #      primary: "#2fe1b9"
 #      accent: green
@@ -69,8 +71,8 @@ theme:
 #        icon: material/lightbulb-outline
 #        name: "Switch to dark mode"
 
-
 plugins:
+#  - markdown-exec
   - mkdocstrings:
       handlers:
         python:
@@ -90,20 +92,20 @@ plugins:
             inherited_members: false  # this only apply to methods and properties, not to pydantic fields
             members_order: source
             merge_init_into_class: true
-            separate_signature: false
+            separate_signature: true
             show_category_heading: true
             show_if_no_docstring: false
             show_root_full_path: true
             show_root_heading: true
-            show_signature_annotations: true
+            show_signature_annotations: false  # redundant as annotations available in parameters section
             show_source: true
-            show_symbol_type_heading: true
-            show_symbol_type_toc: true
+            show_symbol_type_heading: true  # sponsors only
+            show_symbol_type_toc: true  # sponsors only
             signature_crossrefs: true
             summary: true
 
+#  - sear
 #  - snippets
-#  - search
 
 
 
@@ -147,13 +149,18 @@ nav:
         - EventDataSource: api/datasources/eventdatasource.md
         - TableDataSource: api/datasources/tabledatasource.md
       - Databricks:
+        - api/databricks/cluster.md
         - api/databricks/directory.md
         - api/databricks/group.md
+        - api/databricks/job.md
+        - api/databricks/notebook.md
         - api/databricks/permission.md
         - ServicePrincipal: api/databricks/serviceprincipal.md
         - api/databricks/secret.md
         - SecretScope: api/databricks/secretscope.md
         - api/databricks/user.md
+        - api/databricks/warehouse.md
+        - api/databricks/workspacefile.md
       - Grants: api/grants.md
       - SQL:
           - api/sql/catalog.md
