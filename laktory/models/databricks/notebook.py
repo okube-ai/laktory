@@ -24,6 +24,25 @@ class Notebook(BaseModel, BaseResource):
          Notebook programming language
     permissions:
         List of notebook permissions
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    notebook = models.Notebook(
+        source="./notebooks/pipelines/dlt_brz_template.py",
+    )
+    print(notebook.path)
+    #> /pipelines/dlt_brz_template.py
+
+    notebook = models.Notebook(
+        source="./notebooks/create_view.py",
+        dirpath="/views/"
+    )
+    print(notebook.path)
+    #> /views/create_view.py
+    ```
     """
 
     source: str
@@ -83,3 +102,17 @@ class Notebook(BaseModel, BaseResource):
         from laktory.resourcesengines.pulumi.notebook import PulumiNotebook
 
         return PulumiNotebook(name=name, notebook=self, opts=opts)
+
+
+if __name__ == "__main__":
+    from laktory import models
+
+    notebook = models.Notebook(
+        source="./notebooks/pipelines/dlt_brz_template.py",
+    )
+    print(notebook.path)
+    # > /pipelines/dlt_brz_template.py
+
+    notebook = models.Notebook(source="./notebooks/create_view.py", dirpath="/views/")
+    print(notebook.path)
+    # > /views/create_view.py

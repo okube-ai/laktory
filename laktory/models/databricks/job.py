@@ -643,6 +643,48 @@ class Job(BaseModel, BaseResource):
     webhook_notifications:
         Webhook notifications specifications
 
+    Examples
+    --------
+    Assuming the configuration yaml file
+    ```yaml title="job.yaml"
+    name: job-stock-prices
+    clusters:
+      - name: main
+        spark_version: 14.0.x-scala2.12
+        node_type_id: Standard_DS3_v2
+
+    tasks:
+      - task_key: ingest
+        job_cluster_key: main
+        notebook_task:
+          notebook_path: /jobs/ingest_stock_prices.py
+        libraries:
+          - pypi:
+              package: yfinance
+
+      - task_key: pipeline
+        depends_ons:
+          - task_key: ingest
+        pipeline_task:
+          pipeline_id: 74900655-3641-49f1-8323-b8507f0e3e3b
+
+    permissions:
+      - group_name: account users
+        permission_level: CAN_VIEW
+      - group_name: role-engineers
+        permission_level: CAN_MANAGE_RUN
+    ```
+
+    Create and deploy a job object with
+    ```py
+    from laktory import models
+
+    with open("job.yaml", "r") as fp:
+        job = models.Job.model_validate_yaml(fp)
+    job.deploy_with_pulumi()
+    ```
+
+
     References
     ----------
 

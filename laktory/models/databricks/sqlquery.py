@@ -19,6 +19,8 @@ class SqlQuery(BaseModel, BaseResource):
         Data source ID of the SQL warehouse that will be used to run the query. Mutually exclusive with `warehouse_id`
     name:
         The title of this query that appears in list views, widget headings, and on the query page.
+    parent:
+        Id of the workspace folder storing the query
     permissions:
         List of permissions specifications
     query:
@@ -29,6 +31,25 @@ class SqlQuery(BaseModel, BaseResource):
         List of tags
     warehouse_id:
         ID of the SQL warehouse that will be used to run the query. Mutually exclusive with `data_source_id`.
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    q = models.SqlQuery(
+        name="create-view",
+        query="CREATE VIEW google_stock_prices AS SELECT * FROM stock_prices WHERE symbol = 'GOOGL'",
+        warehouse_id="09z739ce103q9374",
+        parent="folders/2479128258235163",
+        permissions=[
+            {
+                "group_name": "role-engineers",
+                "permission_level": "CAN_RUN",
+            }
+        ],
+    )
+    ```
     """
 
     comment: str = None
@@ -88,3 +109,20 @@ class SqlQuery(BaseModel, BaseResource):
         from laktory.resourcesengines.pulumi.sqlquery import PulumiSqlQuery
 
         return PulumiSqlQuery(name=name, sql_query=self, opts=opts)
+
+
+if __name__ == "__main__":
+    from laktory import models
+
+    q = models.SqlQuery(
+        name="create-view",
+        query="CREATE VIEW google_stock_prices AS SELECT * FROM stock_prices WHERE symbol = 'GOOGL'",
+        warehouse_id="09z739ce103q9374",
+        parent="folders/2479128258235163",
+        permissions=[
+            {
+                "group_name": "role-engineers",
+                "permission_level": "CAN_RUN",
+            }
+        ],
+    )

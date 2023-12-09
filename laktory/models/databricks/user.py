@@ -74,6 +74,22 @@ class User(BaseModel, BaseResource):
         opts:
             Pulumi resource options
 
+        Examples
+        --------
+        ```py
+        from laktory import models
+
+        u = models.User(
+            user_name="john.doe@okube.ai",
+            display_name="John Doe",
+            groups=[
+                "role-engineer",
+                "domain-finance",
+            ],
+            roles=["account_admin"],
+        )
+        ```
+
         Returns
         -------
         PulumiUser:

@@ -12,19 +12,59 @@ from laktory.models.sql.table import Table
 
 
 class PipelineLibraryFile(BaseModel):
+    """
+    Pipeline Library File specifications
+
+    Attributes
+    ----------
+    path:
+        Workspace filepath
+    """
+
     path: str
 
 
 class PipelineLibraryNotebook(BaseModel):
+    """
+    Pipeline Library Notebook specifications
+
+    Attributes
+    ----------
+    path:
+        Workspace notebook filepath
+    """
+
     path: str
 
 
 class PipelineLibrary(BaseModel):
+    """
+    Pipeline Library specifications
+
+    Attributes
+    ----------
+    file:
+        File specifications
+    notebook:
+        Notebook specifications
+    """
+
     file: str = None
     notebook: PipelineLibraryNotebook = None
 
 
 class PipelineNotifications(BaseModel):
+    """
+    Pipeline Notifications specifications
+
+    Attributes
+    ----------
+    alerts:
+        Alert types
+    recipients:
+        List of user/group/service principal names
+    """
+
     alerts: list[
         Literal[
             "on-update-success",
@@ -152,6 +192,93 @@ class DLTPipeline(BaseModel, BaseResource):
         Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
     udfs:
         List of user defined functions provided to the table builders.
+
+    Examples
+    --------
+    Assuming the configuration yaml file
+    ```yaml title="pipeline.yaml"
+    name: pl-stock-prices
+
+    catalog: dev
+    target: finance
+
+    clusters:
+      - name : default
+        node_type_id: Standard_DS3_v2
+        autoscale:
+          min_workers: 1
+          max_workers: 2
+
+    libraries:
+      - notebook:
+          path: /pipelines/dlt_brz_template.py
+      - notebook:
+          path: /pipelines/dlt_slv_template.py
+      - notebook:
+          path: /pipelines/dlt_gld_stock_performances.py
+
+    permissions:
+      - group_name: account users
+        permission_level: CAN_VIEW
+      - group_name: role-engineers
+        permission_level: CAN_RUN
+
+    # --------------------------------------------------------------------------- #
+    # Tables                                                                      #
+    # --------------------------------------------------------------------------- #
+
+    tables:
+      - name: brz_stock_prices
+        timestamp_key: data.created_at
+        builder:
+          layer: BRONZE
+          event_source:
+            name: stock_price
+            producer:
+              name: yahoo-finance
+            read_as_stream: True
+
+      - name: slv_stock_prices
+        timestamp_key: created_at
+        builder:
+          layer: SILVER
+          table_source:
+            name: brz_stock_prices
+            read_as_stream: True
+        columns:
+          - name: created_at
+            type: timestamp
+            spark_func_name: coalesce
+            spark_func_args:
+              - data._created_at
+
+          - name: symbol
+            type: string
+            spark_func_name: coalesce
+            spark_func_args:
+              - data.symbol
+
+          - name: open
+            type: double
+            spark_func_name: coalesce
+            spark_func_args:
+              - data.open
+
+          - name: close
+            type: double
+            spark_func_name: coalesce
+            spark_func_args:
+              - data.close
+    ```
+
+    Create and deploy a pipeline object with
+    ```py
+    from laktory import models
+
+    with open("pipeline.yaml", "r") as fp:
+        pipeline = models.DLTPipeline.model_validate_yaml(fp)
+    pipeline.deploy_with_pulumi()
+    ```
 
     References
     ----------
