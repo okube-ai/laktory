@@ -37,14 +37,6 @@ class Notebook(BaseModel, BaseResource):
         """Notebook file name"""
         return os.path.basename(self.source)
 
-    @property
-    def key(self) -> str:
-        """Notebook resource key"""
-        key = os.path.splitext(self.path)[0].replace("/", "-")
-        if key.startswith("-"):
-            key = key[1:]
-        return key
-
     @model_validator(mode="after")
     def default_path(self) -> Any:
         if self.path is None:
@@ -59,6 +51,14 @@ class Notebook(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def resource_key(self) -> str:
+        """Notebook resource key"""
+        key = os.path.splitext(self.path)[0].replace("/", "-")
+        if key.startswith("-"):
+            key = key[1:]
+        return key
 
     @property
     def pulumi_excludes(self) -> list[str]:

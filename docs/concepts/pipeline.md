@@ -65,7 +65,7 @@ A few things to notice:
 * the information required to read source data, build new columns, etc. is all stored within that `pl` object
 
 Let's see how this is declared in the configuration file
-```yaml title="pipline.yaml"
+```yaml title="pipeline.yaml"
 name: pl-stock-prices
 
 catalog: dev

@@ -22,7 +22,7 @@ class PulumiSchema(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"schema-{schema.full_name}"
+            name = schema.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -31,7 +31,7 @@ class PulumiSchema(PulumiResourcesEngine):
 
         # Schema
         self.schema = databricks.Schema(
-            f"schema-{schema.full_name}",
+            name,
             opts=opts,
             **schema.model_pulumi_dump(),
         )
@@ -40,7 +40,7 @@ class PulumiSchema(PulumiResourcesEngine):
         _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.schema))
         if schema.grants:
             self.grants = databricks.Grants(
-                f"grants-{schema.full_name}",
+                f"grants-{name}",
                 schema=schema.full_name,
                 grants=[
                     databricks.GrantsGrantArgs(

@@ -22,14 +22,14 @@ class PulumiCatalog(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"catalog-{catalog.full_name}"
+            name = catalog.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(parent=self)
 
         # Catalog
         self.catalog = databricks.Catalog(
-            f"catalog-{catalog.full_name}",
+            name,
             opts=opts,
             **catalog.model_pulumi_dump(),
         )
@@ -37,7 +37,7 @@ class PulumiCatalog(PulumiResourcesEngine):
         # Grants
         if catalog.grants:
             self.grants = databricks.Grants(
-                f"grants-catalog-{catalog.full_name}",
+                f"grants-{name}",
                 catalog=self.catalog.name,
                 grants=[
                     databricks.GrantsGrantArgs(

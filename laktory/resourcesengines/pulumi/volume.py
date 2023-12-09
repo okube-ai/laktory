@@ -22,7 +22,7 @@ class PulumiVolume(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"volume-{volume.full_name}"
+            name = volume.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -31,7 +31,7 @@ class PulumiVolume(PulumiResourcesEngine):
 
         # Volume
         self.volume = databricks.Volume(
-            f"volume-{volume.full_name}",
+            name,
             opts=opts,
             **volume.model_pulumi_dump(),
         )
@@ -40,7 +40,7 @@ class PulumiVolume(PulumiResourcesEngine):
         _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.volume))
         if volume.grants:
             self.grants = databricks.Grants(
-                f"grants-{volume.full_name}",
+                f"grants-{name}",
                 volume=volume.full_name,
                 grants=[
                     databricks.GrantsGrantArgs(

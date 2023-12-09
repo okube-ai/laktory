@@ -20,7 +20,7 @@ class PulumiNotebook(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"notebook-{notebook.key}"
+            name = notebook.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -29,7 +29,7 @@ class PulumiNotebook(PulumiResourcesEngine):
         )
 
         self.notebook = databricks.Notebook(
-            f"notebook-{notebook.key}",
+            name,
             opts=opts,
             **notebook.model_pulumi_dump(),
         )
@@ -47,7 +47,7 @@ class PulumiNotebook(PulumiResourcesEngine):
 
         if access_controls:
             self.permissions = databricks.Permissions(
-                f"permissions-file-{notebook.key}",
+                f"permissions-{name}",
                 access_controls=access_controls,
                 notebook_path=self.notebook.path,
                 opts=opts,

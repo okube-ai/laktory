@@ -6,8 +6,8 @@ from laktory.models import DataEventHeader
 from laktory.models import DataEvent
 from laktory.models import DataProducer
 from laktory.models import Table
-from laktory.models import Pipeline
-from laktory.models.compute.pipeline import PipelineUDF
+from laktory.models import DLTPipeline
+from laktory.models.databricks.dltpipeline import PipelineUDF
 from datetime import datetime
 
 spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
@@ -320,7 +320,7 @@ view = None
 # --------------------------------------------------------------------------- #
 
 
-class StockPricesPipeline(Pipeline):
+class StockPricesPipeline(DLTPipeline):
     name: str = "pl-stock-prices"
     tables: list[Table] = [
         table_brz,

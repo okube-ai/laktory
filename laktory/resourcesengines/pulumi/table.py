@@ -20,7 +20,7 @@ class PulumiTable(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"table-{table.full_name}"
+            name = table.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -30,7 +30,7 @@ class PulumiTable(PulumiResourcesEngine):
         # Table
         if table.builder.pipeline_name is None:
             self.table = databricks.SqlTable(
-                f"table-{table.full_name}",
+                name,
                 opts=opts,
                 **table.model_pulumi_dump(),
             )
@@ -39,7 +39,7 @@ class PulumiTable(PulumiResourcesEngine):
         _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.table))
         if table.grants:
             self.grants = databricks.Grants(
-                f"grants-{table.full_name}",
+                f"grants-{name}",
                 table=table.full_name,
                 grants=[
                     databricks.GrantsGrantArgs(

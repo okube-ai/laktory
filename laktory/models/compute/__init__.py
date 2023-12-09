@@ -1,2 +1,2 @@
-from laktory.models.compute.pipeline import Pipeline
-from laktory.models.compute.sqlquery import SqlQuery
+from laktory.models.databricks.dltpipeline import DLTPipeline
+from laktory.models.databricks.sqlquery import SqlQuery

@@ -2,7 +2,7 @@ from typing import Union
 import pulumi
 import pulumi_databricks as databricks
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.compute.workspacefile import WorkspaceFile
+from laktory.models.databricks.workspacefile import WorkspaceFile
 
 from laktory._logger import get_logger
 
@@ -21,7 +21,7 @@ class PulumiWorkspaceFile(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"workspace-file-{workspace_file.key}"
+            name = workspace_file.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -30,7 +30,7 @@ class PulumiWorkspaceFile(PulumiResourcesEngine):
         )
 
         self.file = databricks.WorkspaceFile(
-            f"workspace-file-{workspace_file.key}",
+            name,
             opts=opts,
             **workspace_file.model_pulumi_dump(),
         )
@@ -46,10 +46,11 @@ class PulumiWorkspaceFile(PulumiResourcesEngine):
                 )
             ]
 
+        _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.file))
         if access_controls:
             self.permissions = databricks.Permissions(
-                f"permissions-file-{workspace_file.key}",
+                f"permissions-file-{workspace_file.resource_key}",
                 access_controls=access_controls,
                 workspace_file_path=self.file.path,
-                opts=opts,
+                opts=_opts,
             )

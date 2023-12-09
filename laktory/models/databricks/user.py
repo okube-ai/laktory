@@ -5,7 +5,7 @@ from laktory.models.baseresource import BaseResource
 
 class User(BaseModel, BaseResource):
     """
-    Databricks account user
+    Databricks user
 
     Attributes
     ----------
@@ -52,6 +52,11 @@ class User(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def resource_key(self) -> str:
+        return self.user_name
+
     @property
     def pulumi_excludes(self) -> list[str]:
         return ["groups", "roles", "id"]

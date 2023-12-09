@@ -26,7 +26,7 @@ class PulumiServicePrincipal(PulumiResourcesEngine):
     ):
         sp = service_principal
         if name is None:
-            name = f"service-principal-{sp.display_name}"
+            name = service_principal.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -35,7 +35,7 @@ class PulumiServicePrincipal(PulumiResourcesEngine):
         )
 
         self.sp = databricks.ServicePrincipal(
-            f"service-principal-{sp.display_name}",
+            name,
             opts=opts,
             **sp.model_pulumi_dump(),
         )
@@ -44,7 +44,7 @@ class PulumiServicePrincipal(PulumiResourcesEngine):
         for role in sp.roles:
             self.roles += [
                 databricks.ServicePrincipalRole(
-                    f"service-principal-role-{sp.display_name}-{role}",
+                    f"role-{role}-{name}",
                     service_principal_id=self.sp.id,
                     role=role,
                     opts=opts,

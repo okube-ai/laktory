@@ -10,6 +10,7 @@
 ###Breaking changes
 * Renamed Producer model to DataProducer
 * Renamed Resource model to BaseResource
+* Renamed Pipeline model to DLTPipeline
 
 ## [0.0.24] - 2023-12-05
 ###Fixed

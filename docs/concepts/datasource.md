@@ -46,6 +46,6 @@ In this case
 
 * the `selects` argument is used to select only `symbol`, `open` and `close` columns
 * the `filter` argument is used to select only rows associated with Apple stock. 
-* the `from_pipeline` argument can be used in the context of a data [pipline](pipeline.md) to reference another table part of the same pipeline.  
+* the `from_pipeline` argument can be used in the context of a data [pipeline](pipeline.md) to reference another table part of the same pipeline.  
 
 More data sources (like Kafka / Event Hub / Kinesis streams) will be supported in the future.

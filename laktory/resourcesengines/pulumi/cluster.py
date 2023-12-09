@@ -20,7 +20,7 @@ class PulumiCluster(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"cluster-{cluster.name}"
+            name = cluster.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -29,7 +29,7 @@ class PulumiCluster(PulumiResourcesEngine):
         )
 
         self.cluster = databricks.Cluster(
-            f"cluster-{cluster.name}", opts=opts, **cluster.model_pulumi_dump()
+            name, opts=opts, **cluster.model_pulumi_dump()
         )
 
         access_controls = []
@@ -45,7 +45,7 @@ class PulumiCluster(PulumiResourcesEngine):
 
         if access_controls:
             self.permissions = databricks.Permissions(
-                f"permissions-cluster-{cluster.name}",
+                f"permissions-{name}",
                 access_controls=access_controls,
                 cluster_id=self.cluster.id,
                 opts=opts,

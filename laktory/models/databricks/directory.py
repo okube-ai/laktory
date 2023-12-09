@@ -32,7 +32,7 @@ class Directory(BaseModel, BaseResource):
     delete_recursive: Union[bool, None] = None
 
     @property
-    def key(self):
+    def resource_key(self) -> str:
         """Key identifier for the directory"""
         key = self.path.replace("/", "-")
         if key.startswith("-"):

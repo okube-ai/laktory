@@ -20,7 +20,7 @@ table_xy = models.Table(name="table_xy", columns=[x,y])
 table_xyz = models.Table(name="table_xyz", columns=[x,y, z])
 
 pipeline = models.Pipeline(
-    name="my-pipline",
+    name="my-pipeline",
     catalog="dev",
     target="finance",
     tables=[table_xy, table_xyz],
@@ -32,7 +32,7 @@ pipeline = models.Pipeline(
 from laktory import models
 
 pipeline = models.Pipeline(
-    name="my-pipline",
+    name="my-pipeline",
     catalog="dev",
     target="finance",
     tables=[
@@ -58,7 +58,7 @@ In most cases however, it is best practice to declare these models as `yaml` con
 Here is the same example using a configuration file.
 
 ```yaml title="my-pipeline.yaml"
-name: my-pipline
+name: my-pipeline
 catalog: dev
 target: finance
 tables: 
@@ -90,7 +90,7 @@ In some cases, it's not practical or even possible to declare a property as plai
 Take for example the declaration of a pipeline where the catalog name is the environment in which the pipeline will be deployed.
 
 ```yaml
-name: my-pipline
+name: my-pipeline
 catalog: dev
 target: finance
 tables: 
@@ -104,7 +104,7 @@ You probably want to re-use the same configuration file for all your environment
 Laktory makes it possible by introducing the concept of models variables or `vars`, declared as `${var.variable_name}`
 
 ```yaml
-name: my-pipline
+name: my-pipeline
 catalog: ${var.env}
 target: finance
 tables: 

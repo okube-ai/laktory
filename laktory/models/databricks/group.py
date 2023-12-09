@@ -5,7 +5,7 @@ from laktory.models.baseresource import BaseResource
 
 class Group(BaseModel, BaseResource):
     """
-    Databricks account group
+    Databricks group
 
     Attributes
     ----------
@@ -37,6 +37,10 @@ class Group(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def resource_key(self) -> str:
+        return self.display_name
 
     @property
     def pulumi_excludes(self) -> list[str]:

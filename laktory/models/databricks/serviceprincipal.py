@@ -53,6 +53,11 @@ class ServicePrincipal(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def resource_key(self) -> str:
+        return self.display_name
+
     @property
     def pulumi_excludes(self) -> list[str]:
         return ["groups", "roles"]

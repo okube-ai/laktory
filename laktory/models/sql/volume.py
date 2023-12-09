@@ -99,6 +99,10 @@ class Volume(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def resource_key(self) -> str:
+        return self.full_name
+
+    @property
     def pulumi_excludes(self) -> list[str]:
         return ["grants"]
 

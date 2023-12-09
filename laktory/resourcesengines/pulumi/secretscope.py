@@ -20,7 +20,7 @@ class PulumiSecretScope(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"secret-scope-{secret_scope.name}"
+            name = secret_scope.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -29,7 +29,7 @@ class PulumiSecretScope(PulumiResourcesEngine):
         )
 
         self.secret_scope = databricks.SecretScope(
-            f"secret-scope-{secret_scope.name}",
+            name,
             opts=opts,
             **secret_scope.model_pulumi_dump(),
         )

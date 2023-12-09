@@ -215,6 +215,9 @@ class Table(BaseModel, BaseResource):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
+    def resource_key(self) -> str:
+        return self.full_name
+
     @property
     def pulumi_excludes(self) -> list[str]:
         return ["builder", "columns", "data", "grants", "primary_key", "timestamp_key"]

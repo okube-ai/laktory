@@ -75,7 +75,7 @@ class PipelineUDF(BaseModel):
     module_path: str = None
 
 
-class Pipeline(BaseModel, BaseResource):
+class DLTPipeline(BaseModel, BaseResource):
     allow_duplicate_names: bool = None
     catalog: str = None
     channel: str = "PREVIEW"
@@ -119,6 +119,10 @@ class Pipeline(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def resource_type_id(self) -> str:
+        return "pipeline"
 
     @property
     def id(self):
