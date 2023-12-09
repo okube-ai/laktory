@@ -25,9 +25,15 @@ def is_mocked() -> bool:
     cluster even when the native DLT module is not available.
 
     DLT is mocked in the following situations:
-        - notebook ran outside a DLT pipeline and DBR < 13
-        - notebook ran outside a DLT pipeline and DBR >= 13 with shared access
-          mode cluster
+
+    * notebook ran outside a DLT pipeline and DBR < 13
+    * notebook ran outside a DLT pipeline and DBR >= 13 with shared access
+    mode cluster
+
+    Returns
+    -------
+    :
+        Mocked flag
     """
     try:
         import dlt
@@ -42,6 +48,11 @@ def is_debug() -> bool:
     Debug flag. If True, DLT readers are replaced with laktory functions
     allowing to run a notebook outside of a pipeline and preview the content
     of the output DataFrame.
+
+    Returns
+    -------
+    :
+        Debug flag
     """
     try:
         import dlt
@@ -59,6 +70,11 @@ def get_df(df_wrapper) -> DataFrame:
     `@dlt.view`. Returns None when `is_debug()` is `False`.
 
     This method is not supported when a table using DLT views as input.
+
+    Returns
+    -------
+    :
+        Output DataFrame
     """
     df = None
     if is_debug():
