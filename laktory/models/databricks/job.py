@@ -20,6 +20,7 @@ class JobCluster(Cluster):
 
     that are not allowed.
     """
+
     is_pinned: bool = Field(None)
     libraries: list[Any] = Field(None)
     permissions: list[Any] = Field(None)
@@ -47,6 +48,7 @@ class JobContinuous(BaseModel):
         Indicate whether this continuous job is paused or not. When the pause_status field is omitted in the block,
         the server will default to using `UNPAUSED` as a value for pause_status.
     """
+
     pause_status: Literal["PAUSED", "UNPAUSED"] = None
 
 
@@ -69,6 +71,7 @@ class JobEmailNotifications(BaseModel):
     on_success:
         List of emails to notify when the run completes successfully.
     """
+
     no_alert_for_skipped_runs: bool = None
     on_duration_warning_threshold_exceededs: list[str] = None
     on_failures: list[str] = None
@@ -93,6 +96,7 @@ class JobHealthRule(BaseModel):
     value:
         Value used to compare to the given metric.
     """
+
     metric: str = None
     op: str = None
     value: int = None
@@ -107,6 +111,7 @@ class JobHealth(BaseModel):
     rules:
         Job health rules specifications
     """
+
     rules: list[JobHealthRule] = None
 
 
@@ -137,6 +142,7 @@ class JobParameter(BaseModel):
     name:
         The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`,
     """
+
     default: str = None
     name: str = None
 
@@ -152,6 +158,7 @@ class JobRunAs(BaseModel):
     user_name:
         The email of an active workspace user. Non-admin users can only set this field to their own email.
     """
+
     service_principal_name: str = None
     user_name: str = None
 
@@ -171,6 +178,7 @@ class JobSchedule(BaseModel):
         Indicate whether this schedule is paused or not. When the pause_status field is omitted and a schedule is
         provided, the server will default to using `UNPAUSED` as a value for pause_status.
     """
+
     quartz_cron_expression: str
     timezone_id: str
     pause_status: Union[Literal["PAUSED", "UNPAUSED"], None] = None
@@ -190,8 +198,16 @@ class JobTaskConditionTask(BaseModel):
     right:
         The right operand of the condition task. It could be a string value, job state, or parameter reference.
     """
+
     left: str = None
-    op: Literal["EQUAL_TO", "GREATER_THAN", "GREATER_THAN_OR_EQUAL", "LESS_THAN", "LESS_THAN_OR_EQUAL", "NOT_EQUAL"] = None
+    op: Literal[
+        "EQUAL_TO",
+        "GREATER_THAN",
+        "GREATER_THAN_OR_EQUAL",
+        "LESS_THAN",
+        "LESS_THAN_OR_EQUAL",
+        "NOT_EQUAL",
+    ] = None
     right: str = None
 
 
@@ -207,6 +223,7 @@ class JobTaskDependsOn(BaseModel):
         Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for
         this task to run.
     """
+
     task_key: str = None
     outcome: Literal["true", "false"] = None
 
@@ -233,6 +250,7 @@ class JobTaskNotebookTask(BaseModel):
         repository defined in git_source. If the value is empty, the task will use GIT if git_source is defined and
         WORKSPACE otherwise.
     """
+
     notebook_path: str
     base_parameters: dict[str, Any] = None
     source: Literal["WORKSPACE", "GIT"] = None
@@ -249,6 +267,7 @@ class JobTaskPipelineTask(BaseModel):
     full_refresh:
         Specifies if there should be full refresh of the pipeline.
     """
+
     pipeline_id: str = None
     full_refresh: bool = None
 
@@ -264,6 +283,7 @@ class JobTaskRunJobTask(BaseModel):
     job_parameters:
         Job parameters for the task
     """
+
     job_id: str = None
     job_parameters: dict[str, Any]
 
@@ -277,6 +297,7 @@ class JobTaskSqlTaskQuery(BaseModel):
     query_id:
         Query ID
     """
+
     query_id: str = None
 
 
@@ -291,6 +312,7 @@ class JobTaskSqlTaskAlertSubscription(BaseModel):
     user_name:
         The email of an active workspace user. Non-admin users can only set this field to their own email.
     """
+
     destination_id: str = None
     user_name: str = None
 
@@ -309,6 +331,7 @@ class JobTaskSQLTaskAlert(BaseModel):
     pause_subscriptions:
         It `True` subscriptions are paused
     """
+
     alert_id: str = None
     subscriptions: list[JobTaskSqlTaskAlertSubscription] = None
     pause_subscriptions: bool = None
@@ -327,6 +350,7 @@ class JobTaskSqlTaskDashboard(BaseModel):
     subscriptions:
         Subscriptions specifications
     """
+
     dashboard_id: str = None
     custom_subject: list[JobTaskSqlTaskAlertSubscription] = None
     subscriptions: list[JobTaskSqlTaskAlertSubscription] = None
@@ -341,6 +365,7 @@ class JobTaskSqlTaskFile(BaseModel):
     path:
         SQL filepath
     """
+
     path: str = None
 
 
@@ -363,6 +388,7 @@ class JobTaskSQLTask(BaseModel):
     warehouse_id:
         Warehouse id
     """
+
     alert: JobTaskSQLTaskAlert = None
     dashboard: JobTaskSqlTaskDashboard = None
     file: JobTaskSqlTaskFile = None
@@ -418,6 +444,7 @@ class JobTask(BaseModel):
     timeout_seconds:
         An optional timeout applied to each run of this job. The default behavior is to have no timeout.
     """
+
     # compute_key: str = None
     condition_task: JobTaskConditionTask = None
     depends_ons: list[JobTaskDependsOn] = None
@@ -460,6 +487,7 @@ class JobTriggerFileArrival(BaseModel):
         This makes it possible to wait for a batch of incoming files to arrive before triggering a run.
         The minimum allowed value is 60 seconds.
     """
+
     url: str = None
     min_time_between_triggers_seconds: int = None
     wait_after_last_change_seconds: int = None
@@ -477,6 +505,7 @@ class JobTrigger(BaseModel):
         Indicate whether this trigger is paused or not. When the pause_status field is omitted in the block, the server
         will default to using `UNPAUSED` as a value for pause_status.
     """
+
     file_arrival: JobTriggerFileArrival
     pause_status: Literal["PAUSED", "UNPAUSED"] = None
 
@@ -490,6 +519,7 @@ class JobWebhookNotificationsOnDurationWarningThresholdExceeded(BaseModel):
     id:
         Unique identifier
     """
+
     id: str = None
 
 
@@ -502,6 +532,7 @@ class JobWebhookNotificationsOnFailure(BaseModel):
     id:
         Unique identifier
     """
+
     id: str = None
 
 
@@ -514,6 +545,7 @@ class JobWebhookNotificationsOnStart(BaseModel):
     id:
         Unique identifier
     """
+
     id: str = None
 
 
@@ -526,6 +558,7 @@ class JobWebhookNotificationsOnSuccess(BaseModel):
     id:
         Unique identifier
     """
+
     id: str = None
 
 
@@ -544,6 +577,7 @@ class JobWebhookNotifications(BaseModel):
     on_successes:
         On successes specifications
     """
+
     on_duration_warning_threshold_exceededs: list[
         JobWebhookNotificationsOnDurationWarningThresholdExceeded
     ] = None
@@ -615,6 +649,7 @@ class Job(BaseModel, BaseResource):
     * [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
     * [Pulumi Databricks Job](https://www.pulumi.com/registry/packages/databricks/api-docs/job/#databricks-job)
     """
+
     clusters: list[JobCluster] = []
     continuous: JobContinuous = None
     control_run_state: bool = None

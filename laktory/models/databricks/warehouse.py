@@ -15,6 +15,7 @@ class WarehouseCustomTag(BaseModel):
     value:
         Tag value
     """
+
     key: str
     value: str
 
@@ -28,6 +29,7 @@ class WarehouseTags(BaseModel):
     custom_tags:
         Tags specifications
     """
+
     custom_tags: list[WarehouseCustomTag] = []
 
 
@@ -69,6 +71,7 @@ class Warehouse(BaseModel, BaseResource):
     warehouse_type:
         SQL warehouse type.
     """
+
     cluster_size: Literal[
         "2X-Small",
         "X-Small",

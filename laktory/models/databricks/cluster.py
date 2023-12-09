@@ -16,6 +16,7 @@ class ClusterAutoScale(BaseModel):
     max_workers:
         Maximum number of worker nodes
     """
+
     min_workers: int
     max_workers: int
 
@@ -29,6 +30,7 @@ class ClusterInitScriptVolumes(BaseModel):
     destination:
         Volume filepath
     """
+
     destination: str = None
 
 
@@ -41,6 +43,7 @@ class ClusterInitScriptWorkspace(BaseModel):
     destination:
         Workspace filepath
     """
+
     destination: str = None
 
 
@@ -55,6 +58,7 @@ class ClusterInitScript(BaseModel):
     workspace:
         Workspace file specifications
     """
+
     volumes: ClusterInitScriptVolumes = None
     workspace: ClusterInitScriptWorkspace = None
 
@@ -81,6 +85,7 @@ class ClusterLibraryPypi(BaseModel):
     repo:
         Packages repository
     """
+
     package: str = None
     repo: str = None
 
@@ -103,6 +108,7 @@ class ClusterLibrary(BaseModel):
     whl:
         Wheel filepath
     """
+
     cran: ClusterLibraryCran = None
     egg: str = None
     jar: str = None
@@ -125,6 +131,8 @@ class Cluster(BaseModel, BaseResource):
     autotermination_minutes:
         Automatically terminate the cluster after being inactive for this time
         in minutes.
+    cluster_id:
+        Cluster ID. Used mostly when assigning a cluster to a job task.
     custom_tags:
         Additional tags for cluster resources. Databricks will tag all cluster
         resources (e.g., AWS EC2 instances and EBS volumes) with these tags in
@@ -236,12 +244,13 @@ class Cluster(BaseModel, BaseResource):
     * [Pulumi Databricks Cluster](https://www.pulumi.com/registry/packages/databricks/api-docs/cluster/)
 
     """
+
     apply_policy_default_values: bool = None
     autoscale: ClusterAutoScale = None
     autotermination_minutes: int = None
     # aws_attributes
     # azure_attributes
-    # cluster_id: str = None
+    cluster_id: str = None
     # cluster_log_conf
     # cluster_source
     # cluster_mount_infos

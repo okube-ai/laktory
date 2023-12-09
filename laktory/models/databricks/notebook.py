@@ -25,6 +25,7 @@ class Notebook(BaseModel, BaseResource):
     permissions:
         List of notebook permissions
     """
+
     source: str
     dirpath: str = None
     path: str = None

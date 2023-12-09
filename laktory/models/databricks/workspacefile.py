@@ -22,6 +22,7 @@ class WorkspaceFile(BaseModel, BaseResource):
     permissions:
         List of file permissions
     """
+
     source: str
     dirpath: str = None
     path: str = None
