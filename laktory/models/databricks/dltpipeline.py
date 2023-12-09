@@ -37,6 +37,23 @@ class PipelineNotifications(BaseModel):
 
 
 class PipelineCluster(Cluster):
+    """
+    Pipeline Cluster. Same attributes as `laktory.models.Cluster`, except for
+
+    * `autotermination_minutes`
+    * `cluster_id`
+    * `data_security_mode`
+    * `enable_elastic_disk`
+    * `idempotency_token`
+    * `is_pinned`
+    * `libraries`
+    * `node_type_id`
+    * `runtime_engine`
+    * `single_user_name`
+    * `spark_version`
+
+    that are not allowed.
+    """
     autotermination_minutes: int = Field(None)
     cluster_id: str = Field(None)
     data_security_mode: str = Field(None)
@@ -70,20 +87,84 @@ class PipelineCluster(Cluster):
 
 
 class PipelineUDF(BaseModel):
+    """
+    Pipeline User Define Function
+
+    Attributes
+    ----------
+    module_name:
+        Name of the module from which the function needs to be imported.
+    function_name:
+        Name of the function.
+    module_path:
+        Workspace filepath of the module, if not in the same directory as the pipeline notebook
+    """
     module_name: str
     function_name: str
     module_path: str = None
 
 
 class DLTPipeline(BaseModel, BaseResource):
+    """
+    Databricks Delta Live Tables (DLT) Pipeline
+
+    Attributes
+    ----------
+    allow_duplicate_names:
+        If `False`, deployment will fail if name conflicts with that of another pipeline.
+    catalog:
+        Name of the unity catalog storing the pipeline tables
+    channel:
+        Name of the release channel for Spark version used by DLT pipeline.
+    clusters:
+        Clusters to run the pipeline. If none is specified, pipelines will automatically select a default cluster
+        configuration for the pipeline.
+    configuration:
+         List of values to apply to the entire pipeline. Elements must be formatted as key:value pairs
+    continuous:
+        If `True`, the pipeline is run continuously.
+    development:
+        If `True` the pipeline is run in development mode
+    edition:
+        Name of the product edition
+    libraries:
+        Specifies pipeline code (notebooks) and required artifacts.
+    name:
+        Pipeline name
+    notifications:
+        Notifications specifications
+    permissions:
+        Permissions specifications
+    photon:
+        If `True`, Photon engine enabled.
+    serverless:
+        If `True`, serverless is enabled
+    storage:
+        A location on DBFS or cloud storage where output data and metadata required for pipeline execution are stored.
+        By default, tables are stored in a subdirectory of this location. Change of this parameter forces recreation
+        of the pipeline. (Conflicts with `catalog`).
+    tables:
+        List of tables to build
+    target:
+        The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data.
+        Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
+    udfs:
+        List of user defined functions provided to the table builders.
+
+    References
+    ----------
+
+    * [Databricks Pipeline](https://docs.databricks.com/api/workspace/pipelines/create)
+    * [Pulumi Databricks Pipeline](https://www.pulumi.com/registry/packages/databricks/api-docs/pipeline/)
+    """
     allow_duplicate_names: bool = None
     catalog: str = None
-    channel: str = "PREVIEW"
+    channel: Literal["CURRENT", "PREVIEW"] = "PREVIEW"
     clusters: list[PipelineCluster] = []
     configuration: dict[str, str] = {}
     continuous: bool = None
     development: Union[bool, str] = None
-    edition: str = None
+    edition: Literal["CORE", "PRO", "ADVANCED"] = None
     # filters
     libraries: list[PipelineLibrary] = []
     name: str

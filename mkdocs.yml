@@ -151,6 +151,7 @@ nav:
       - Databricks:
         - api/databricks/cluster.md
         - api/databricks/directory.md
+        - DLTPipeline: api/databricks/dltpipeline.md
         - api/databricks/group.md
         - api/databricks/job.md
         - api/databricks/notebook.md
@@ -159,6 +160,7 @@ nav:
         - api/databricks/secret.md
         - SecretScope: api/databricks/secretscope.md
         - api/databricks/user.md
+        - api/databricks/sqlquery.md
         - api/databricks/warehouse.md
         - api/databricks/workspacefile.md
       - Grants: api/grants.md

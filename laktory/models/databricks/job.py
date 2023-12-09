@@ -12,7 +12,7 @@ from laktory.models.databricks.cluster import ClusterLibrary
 
 class JobCluster(Cluster):
     """
-    Job Cluster. Same attributes as `models.Cluster`, except for
+    Job Cluster. Same attributes as `laktory.models.Cluster`, except for
 
     * `is_pinned`
     * `libraries`

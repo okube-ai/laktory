@@ -50,12 +50,6 @@ class SqlQuery(BaseModel, BaseResource):
 
         return self
 
-    @property
-    def key(self) -> str:
-        """SQL query key"""
-        key = self.name
-        return key
-
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
