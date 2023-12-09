@@ -54,6 +54,7 @@ class PipelineCluster(Cluster):
 
     that are not allowed.
     """
+
     autotermination_minutes: int = Field(None)
     cluster_id: str = Field(None)
     data_security_mode: str = Field(None)
@@ -99,6 +100,7 @@ class PipelineUDF(BaseModel):
     module_path:
         Workspace filepath of the module, if not in the same directory as the pipeline notebook
     """
+
     module_name: str
     function_name: str
     module_path: str = None
@@ -157,6 +159,7 @@ class DLTPipeline(BaseModel, BaseResource):
     * [Databricks Pipeline](https://docs.databricks.com/api/workspace/pipelines/create)
     * [Pulumi Databricks Pipeline](https://www.pulumi.com/registry/packages/databricks/api-docs/pipeline/)
     """
+
     allow_duplicate_names: bool = None
     catalog: str = None
     channel: Literal["CURRENT", "PREVIEW"] = "PREVIEW"

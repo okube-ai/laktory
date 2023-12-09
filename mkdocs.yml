@@ -160,7 +160,7 @@ nav:
         - api/databricks/secret.md
         - SecretScope: api/databricks/secretscope.md
         - api/databricks/user.md
-        - api/databricks/sqlquery.md
+        - SqlQuery: api/databricks/sqlquery.md
         - api/databricks/warehouse.md
         - api/databricks/workspacefile.md
       - Grants: api/grants.md
