@@ -135,7 +135,7 @@ def roundp(
 
     Returns
     -------
-    output: pyspark.sql.functions.column.Column
+    :
         Output column
     """
     # eps0 = 1.0e-16

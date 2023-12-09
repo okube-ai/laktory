@@ -139,41 +139,52 @@ nav:
   - Lakehouse As Code: lakehouseascode.md
   - API Reference:
     - Models:
-      - BaseModel: api/basemodel.md
-      - BaseResource: api/baseresource.md
-      - DataEventHeader: api/dataeventheader.md
-      - DataEvent: api/dataevent.md
-      - DataProducer: api/dataproducer.md
+      - BaseModel: api/models/basemodel.md
+      - BaseResource: api/models/baseresource.md
+      - DataEventHeader: api/models/dataeventheader.md
+      - DataEvent: api/models/dataevent.md
+      - DataProducer: api/models/dataproducer.md
       - DataSources:
-        - BaseDataSource: api/datasources/basedatasource.md
-        - EventDataSource: api/datasources/eventdatasource.md
-        - TableDataSource: api/datasources/tabledatasource.md
+        - BaseDataSource: api/models/datasources/basedatasource.md
+        - EventDataSource: api/models/datasources/eventdatasource.md
+        - TableDataSource: api/models/datasources/tabledatasource.md
       - Databricks:
-        - api/databricks/cluster.md
-        - api/databricks/directory.md
-        - DLTPipeline: api/databricks/dltpipeline.md
-        - api/databricks/group.md
-        - api/databricks/job.md
-        - api/databricks/notebook.md
-        - api/databricks/permission.md
-        - ServicePrincipal: api/databricks/serviceprincipal.md
-        - api/databricks/secret.md
-        - SecretScope: api/databricks/secretscope.md
-        - api/databricks/user.md
-        - SqlQuery: api/databricks/sqlquery.md
-        - api/databricks/warehouse.md
-        - api/databricks/workspacefile.md
-      - Grants: api/grants.md
+        - api/models/databricks/cluster.md
+        - api/models/databricks/directory.md
+        - DLTPipeline: api/models/databricks/dltpipeline.md
+        - api/models/databricks/group.md
+        - api/models/databricks/job.md
+        - api/models/databricks/notebook.md
+        - api/models/databricks/permission.md
+        - ServicePrincipal: api/models/databricks/serviceprincipal.md
+        - api/models/databricks/secret.md
+        - SecretScope: api/models/databricks/secretscope.md
+        - api/models/databricks/user.md
+        - SqlQuery: api/models/databricks/sqlquery.md
+        - api/models/databricks/warehouse.md
+        - api/models/databricks/workspacefile.md
+      - Grants: api/models/grants.md
       - SQL:
-          - api/sql/catalog.md
-          - api/sql/column.md
-          - api/sql/schema.md
-          - api/sql/table.md
-          - TableBuilder: api/sql/tablebuilder.md
-          - TableAggregation: api/sql/tableaggregation.md
-          - TableJoin: api/sql/tablejoin.md
-          - TableWindowFilter: api/sql/tablewindowfilter.md
-          - api/sql/volume.md
-    - Spark: api/models.md
+          - api/models/sql/catalog.md
+          - api/models/sql/column.md
+          - api/models/sql/schema.md
+          - api/models/sql/table.md
+          - TableBuilder: api/models/sql/tablebuilder.md
+          - TableAggregation: api/models/sql/tableaggregation.md
+          - TableJoin: api/models/sql/tablejoin.md
+          - TableWindowFilter: api/models/sql/tablewindowfilter.md
+          - api/models/sql/volume.md
+    - Spark:
+      - DataFrame:
+        - has_column: api/spark/dataframe/has_column.md
+        - flat_schema: api/spark/dataframe/schema_flat.md
+      - Functions:
+        - types: api/spark/functions/_types.md
+        - poly1: api/spark/functions/poly1.md
+        - poly2: api/spark/functions/poly2.md
+        - power: api/spark/functions/power.md
+        - roundp: api/spark/functions/roundp.md
+        - string_split: api/spark/functions/string_split.md
+        - uuid: api/spark/functions/uuid.md
     - DLT: api/models.md
   - Changelog: changelog.md

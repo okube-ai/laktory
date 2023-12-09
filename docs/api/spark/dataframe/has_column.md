@@ -1,0 +1,1 @@
+::: laktory.spark.dataframe.has_column
