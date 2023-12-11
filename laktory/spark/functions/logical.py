@@ -22,10 +22,10 @@ __all__ = [
 
 def compare(
         x: COLUMN_OR_NAME,
-        y: Any = 0,
-        where: STRING_OR_COLUMN = None,
+        y: COLUMN_OR_NAME = 0,
+        where: COLUMN_OR_NAME = None,
         operator: str = "==",
-        default: bool = None,
+        default: COLUMN_OR_NAME = None,
 ) -> Column:
     """
     Compare a column `x` and a value or another column `y` using
@@ -36,26 +36,48 @@ def compare(
 
     Parameters
     ---------
-    x : pd.Series
-        Base series to compare
-    y : pd.Series or Object
-        Series or object to compare to
-    where: pd.Series
+    x :
+        Base column to compare
+    y :
+        Column to compare to
+    where:
         Where to apply the comparison
     operator: str
         Operator for comparison
-    default: bool
-        Default value to be applied outside of where
+    default:
+        Default value to be applied when `where` is `False`
 
     Returns
     -------
-    output: pd.Series
+    :
         Comparison result
+
+    Examples
+    --------
+    ```py
+    from pyspark.sql import SparkSession
+    import pyspark.sql.functions as F
+    import laktory.spark.functions as LF
+
+    spark = SparkSession.builder.getOrCreate()
+
+    df = spark.createDataFrame([[0.45], [0.55]], ["x"])
+    df.select(
+        "x",
+        LF.compare("x", F.lit(0.5), operator=">",).alias("y")
+    ).show()
+
+    #> +----+-----+
+    #> |   x|    y|
+    #> +----+-----+
+    #> |0.45|false|
+    #> |0.55| true|
+    #> +----+-----+
+    ```
     """
 
     x = _col(x)
     y = _col(y)
-    y = _lit(y)
 
     if operator == "==":
         c = x == y
@@ -73,7 +95,26 @@ def compare(
         raise ValueError(f"Operator '{operator}' is not supported.")
 
     if where is not None:
+        where = _col(where)
+        if default is None:
+            default = F.lit(None)
+        else:
+            default = _col(default)
+
         c = F.when(where, c).otherwise(default)
 
     return c
 
+
+if __name__ == "__main__":
+    from pyspark.sql import SparkSession
+    import pyspark.sql.functions as F
+    import laktory.spark.functions as LF
+
+    spark = SparkSession.builder.getOrCreate()
+
+    df = spark.createDataFrame([[0.45], [0.55]], ["x"])
+    df.select(
+        "x",
+        LF.compare("x", F.lit(0.5), operator=">",).alias("y")
+    ).show()

@@ -20,7 +20,7 @@ def _col(col: str) -> Column:
     if isinstance(col, Column):
         return col
 
-    return F.col(col)
+    return F.expr(col)
 
 
 def _lit(col: str) -> Column:

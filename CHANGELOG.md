@@ -2,7 +2,7 @@
 
 ## [0.0.25] - Unreleased
 ###Added
-* n/a
+* compare spark function
 ###Fixed
 * n/a
 ###Updated

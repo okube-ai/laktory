@@ -1,3 +1,4 @@
+import pyspark.sql.functions as F
 from pyspark.sql.column import Column
 from laktory.spark.functions._common import (
     COLUMN_OR_NAME,
@@ -52,14 +53,14 @@ def poly1(
 
     spark = SparkSession.builder.getOrCreate()
 
-    df = spark.range(1)
-    df.select(LF.poly1(x=F.lit(9), a=-1, b=2)).show()
+    df = spark.createDataFrame([[9]], ["x"])
+    df.select("x", LF.poly1("x", a=-1, b=2).alias("y")).show()
 
-    #> +--------------+
-    #> |((-1 * 9) + 2)|
-    #> +--------------+
-    #> |            -7|
-    #> +--------------+
+    ># +---+-----+
+    ># |  x|    y|
+    ># +---+-----+
+    ># |  9| -7.0|
+    ># +---+-----+
     ```
     """
 
@@ -101,14 +102,14 @@ def poly2(
 
     spark = SparkSession.builder.getOrCreate()
 
-    df = spark.range(1)
-    df.select(LF.poly2(x=F.lit(9), a=-1, b=2)).show()
+    df = spark.range(1).withColumn("x", F.lit(9))
+    df.select("x", LF.poly2("x", a=-1, b=2).alias("y")).show()
 
-    #> +--------------------------------------+
-    #> |(((-1 * POWER(9, 2)) + (2 * 9)) + 0.0)|
-    #> +--------------------------------------+
-    #> |                                 -63.0|
-    #> +--------------------------------------+
+    ># +---+-----+
+    ># |  x|    y|
+    ># +---+-----+
+    ># |  9|-63.0|
+    ># +---+-----+
     ```
     """
     return _lit(a) * _col(x) ** 2 + _lit(b) * _col(x) + _lit(c)
@@ -151,14 +152,14 @@ def power(
 
     spark = SparkSession.builder.getOrCreate()
 
-    df = spark.range(1)
-    df.select(LF.poly2(x=F.lit(9), a=-1, b=2)).show()
+    df = spark.createDataFrame([[9]], ["x"])
+    df.select("x", LF.poly2("x", a=-1, b=2)).show()
 
-    #> +-----------------+
-    #> |(2 * POWER(3, 2))|
-    #> +-----------------+
-    #> |             18.0|
-    #> +-----------------+
+    ># +---+----+
+    ># |  x|   y|
+    ># +---+----+
+    ># |  9|18.0|
+    ># +---+----+
     ```
     """
     return _lit(a) * _col(x) ** _lit(n)
