@@ -6,10 +6,10 @@ from pyspark.sql.column import Column
 COLUMN_OR_NAME = Union[Column, str]
 """spark column or column name"""
 
-INT_OR_COLUMN = Union[int, COLUMN_OR_NAME]
+INT_OR_COLUMN = Union[int, Union[Column, str]]
 """int, spark column or column name"""
 
-FLOAT_OR_COLUMN = Union[float, COLUMN_OR_NAME]
+FLOAT_OR_COLUMN = Union[float, Union[Column, str]]
 """float, spark column or column name"""
 
 STRING_OR_COLUMN = Union[str, Column]

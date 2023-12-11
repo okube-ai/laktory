@@ -64,5 +64,37 @@ def uuid() -> Column:
     -------
     output: pyspark.sql.functions.column.Column
         Output column
+
+    Examples
+    --------
+    ```py
+    from pyspark.sql import SparkSession
+    import laktory.spark.functions as LF
+
+    spark = SparkSession.builder.getOrCreate()
+
+    df = spark.range(3)
+    df.select(LF.uuid()).show()
+
+    +--------------------+
+    |              uuid()|
+    +--------------------+
+    |cf4eef40-7997-468...|
+    |859e7acd-80ba-4b8...|
+    |0743db7d-cd5c-49b...|
+    +--------------------+
+    ```
+
     """
     return F.expr("uuid()")
+
+
+if __name__ == "__main__":
+    from pyspark.sql import SparkSession
+    import laktory.spark.functions as LF
+
+    spark = SparkSession.builder.getOrCreate()
+
+    df = spark.range(3)
+    df.select(LF.uuid()).show()
+
