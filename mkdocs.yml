@@ -177,7 +177,7 @@ nav:
     - Spark:
       - DataFrame:
         - has_column: api/spark/dataframe/has_column.md
-        - flat_schema: api/spark/dataframe/schema_flat.md
+        - schema_flat: api/spark/dataframe/schema_flat.md
       - Functions:
         - constants: api/spark/functions/_constants.md
         - poly1: api/spark/functions/poly1.md
@@ -187,5 +187,10 @@ nav:
         - string_split: api/spark/functions/string_split.md
         - uuid: api/spark/functions/uuid.md
     - DLT:
-      - api/dlt/utilities.md
+      - apply_changes: api/dlt/apply_changes.md
+      - get_df: api/dlt/get_df.md
+      - is_debug: api/dlt/is_debug.md
+      - is_mocked: api/dlt/is_mocked.md
+      - read: api/dlt/read.md
+      - read_stream: api/dlt/read_stream.md
   - Changelog: changelog.md

@@ -20,7 +20,7 @@ logger = get_logger(__name__)
 
 def is_mocked() -> bool:
     """
-    DLT module mock flag. If True, native Databricks DLT functions are mocked
+    DLT module mock flag. If `True`, native Databricks DLT functions are mocked
     to allow debugging by running a pipeline notebook against an arbitrary
     cluster even when the native DLT module is not available.
 
@@ -45,7 +45,7 @@ def is_mocked() -> bool:
 
 def is_debug() -> bool:
     """
-    Debug flag. If True, DLT readers are replaced with laktory functions
+    Debug flag. If `True`, DLT readers are replaced with laktory functions
     allowing to run a notebook outside of a pipeline and preview the content
     of the output DataFrame.
 
@@ -75,6 +75,25 @@ def get_df(df_wrapper) -> DataFrame:
     -------
     :
         Output DataFrame
+
+    Examples
+    --------
+    ```py
+    from laktory import dlt
+    dlt.spark = spark
+
+    def define_table(table):
+        @dlt.table(name="stock_prices")
+        def get_df():
+            df = spark.createDataFrame([[1.0, 1.1, 0.98]])
+            return df
+
+        return get_df
+
+    wrapper = define_table(table)
+    df = dlt.get_df(wrapper)
+    display(df)
+    ```
     """
     df = None
     if is_debug():
@@ -90,7 +109,33 @@ def get_df(df_wrapper) -> DataFrame:
 # --------------------------------------------------------------------------- #
 
 
-def read(*args, **kwargs):
+def read(*args, **kwargs) -> DataFrame:
+    """
+    When `is_debug()` is `True` read table from storage, else read table from
+    pipeline with native Databricks `dlt.read`
+
+    Returns
+    -------
+    :
+        Ouput DataFrame
+
+    Examples
+    --------
+    ```py
+    from laktory import dlt
+    dlt.spark = spark
+
+    def define_table(table):
+        @dlt.table(name="slv_stock_prices")
+        def get_df():
+            df = dlt.read("dev.finance.brz_stock_prices")
+            return df
+
+        return get_df
+
+    define_table(table)
+    ```
+    """
     if is_debug():
         return spark.read.table(args[0])
     else:
@@ -101,6 +146,33 @@ def read(*args, **kwargs):
 
 
 def read_stream(*args, fmt="delta", **kwargs):
+    """
+    When `is_debug()` is `True` read table from storage as stream, else read
+    table from pipeline with native Databricks `dlt.read_stream`
+
+    Returns
+    -------
+    :
+        Ouput DataFrame
+
+    Examples
+    --------
+    ```py
+    from laktory import dlt
+    dlt.spark = spark
+
+    def define_table(table):
+        @dlt.table(name="slv_stock_prices")
+        def get_df():
+            df = dlt.read_stream("dev.finance.brz_stock_prices")
+            return df
+
+        return get_df
+
+    define_table(table)
+    ```
+    """
+
     if is_debug():
         return spark.readStream.format(fmt).table(args[0])
     else:
@@ -111,6 +183,32 @@ def read_stream(*args, fmt="delta", **kwargs):
 
 
 def apply_changes(*args, table=None, **kwargs):
+    """
+    When `is_debug()` is `True` read source CDC table from storage, else run
+    native Databricks `dlt.apply_changes`
+
+    Returns
+    -------
+    :
+        Ouput DataFrame
+
+    Examples
+    --------
+    ```py
+    from laktory import dlt
+    dlt.spark = spark
+
+    def define_table(table):
+        @dlt.create_streaming_table(name="slv_stock_prices")
+        df = dlt.apply_changes({
+            source="brz_stock_prices",
+            target="slv_stock_prices",
+        })
+        return get_df
+
+    define_table(table)
+    ```
+    """
     if is_debug():
         if table is None:
             return
