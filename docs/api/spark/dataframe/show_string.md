@@ -1,0 +1,1 @@
+::: laktory.spark.dataframe.show_string

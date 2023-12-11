@@ -47,20 +47,22 @@ def string_split(
     --------
     ```py
     from pyspark.sql import SparkSession
+    import pyspark.sql.functions as F
     import laktory.spark.functions as LF
 
     spark = SparkSession.builder.getOrCreate()
 
     df = spark.range(1).withColumn("x", F.lit("price_close"))
-    df.select("x", LF.string_split("x", pattern="_", key=1).alias("y")).show()
-
-    #> +-----------+-----+
-    #> |          x|    y|
-    #> +-----------+-----+
-    #> |price_close|close|
-    #> +-----------+-----+
+    df = df.withColumn("y", LF.string_split("x", pattern="_", key=1))
+    print(df.show_string())
+    '''
+    +---+-----------+-----+
+    | id|          x|    y|
+    +---+-----------+-----+
+    |  0|price_close|close|
+    +---+-----------+-----+
+    '''
     ```
-
     """
     return F.split(_col(x), pattern=pattern).getItem(key)
 
@@ -91,15 +93,17 @@ def uuid() -> Column:
     spark = SparkSession.builder.getOrCreate()
 
     df = spark.range(3)
-    df.select(LF.uuid()).show()
-
-    #> +--------------------+
-    #> |              uuid()|
-    #> +--------------------+
-    #> |cf4eef40-7997-468...|
-    #> |859e7acd-80ba-4b8...|
-    #> |0743db7d-cd5c-49b...|
-    #> +--------------------+
+    df = df.withColumn("uuid", LF.uuid())
+    print(df.show_string())
+    '''
+    +---+--------------------+
+    | id|                uuid|
+    +---+--------------------+
+    |  0|e61c5887-52e8-488...|
+    |  1|047282fe-f403-458...|
+    |  2|14d11bfa-ef47-442...|
+    +---+--------------------+
+    '''
     ```
 
     """

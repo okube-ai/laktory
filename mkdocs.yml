@@ -178,6 +178,7 @@ nav:
       - DataFrame:
         - has_column: api/spark/dataframe/has_column.md
         - schema_flat: api/spark/dataframe/schema_flat.md
+        - show_string: api/spark/dataframe/show_string.md
       - Functions:
         - constants: api/spark/functions/_constants.md
         - poly1: api/spark/functions/poly1.md

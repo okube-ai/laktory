@@ -21,7 +21,6 @@ __all__ = [
 # Polynomials                                                                 #
 # --------------------------------------------------------------------------- #
 
-
 def poly1(
     x: COLUMN_OR_NAME,
     a: FLOAT_OR_COLUMN = 1.0,
@@ -47,23 +46,24 @@ def poly1(
     Examples
     --------
     ```py
+    import laktory  # noqa: F401
     from pyspark.sql import SparkSession
-    import pyspark.sql.functions as F
     import laktory.spark.functions as LF
 
     spark = SparkSession.builder.getOrCreate()
 
     df = spark.createDataFrame([[9]], ["x"])
-    df.select("x", LF.poly1("x", a=-1, b=2).alias("y")).show()
-
-    ># +---+-----+
-    ># |  x|    y|
-    ># +---+-----+
-    ># |  9| -7.0|
-    ># +---+-----+
+    df = df.withColumn("y", LF.poly1("x", a=-1, b=2))
+    print(df.show_string())
+    '''
+    +---+---+
+    |  x|  y|
+    +---+---+
+    |  9| -7|
+    +---+---+
+    '''
     ```
     """
-
     return _lit(a) * _col(x) + _lit(b)
 
 
@@ -97,19 +97,20 @@ def poly2(
     --------
     ```py
     from pyspark.sql import SparkSession
-    import pyspark.sql.functions as F
     import laktory.spark.functions as LF
 
     spark = SparkSession.builder.getOrCreate()
 
-    df = spark.range(1).withColumn("x", F.lit(9))
-    df.select("x", LF.poly2("x", a=-1, b=2).alias("y")).show()
-
-    ># +---+-----+
-    ># |  x|    y|
-    ># +---+-----+
-    ># |  9|-63.0|
-    ># +---+-----+
+    df = spark.createDataFrame([[9]], ["x"])
+    df = df.withColumn("y", LF.poly2("x", a=-1, b=2))
+    print(df.show_string())
+    '''
+    +---+-----+
+    |  x|    y|
+    +---+-----+
+    |  9|-63.0|
+    +---+-----+
+    '''
     ```
     """
     return _lit(a) * _col(x) ** 2 + _lit(b) * _col(x) + _lit(c)
@@ -147,19 +148,20 @@ def power(
     --------
     ```py
     from pyspark.sql import SparkSession
-    import pyspark.sql.functions as F
     import laktory.spark.functions as LF
 
     spark = SparkSession.builder.getOrCreate()
 
     df = spark.createDataFrame([[9]], ["x"])
-    df.select("x", LF.poly2("x", a=-1, b=2)).show()
-
-    ># +---+----+
-    ># |  x|   y|
-    ># +---+----+
-    ># |  9|18.0|
-    ># +---+----+
+    df = df.withColumn("y", LF.power("x", a=-3, n=2))
+    print(df.show_string())
+    '''
+    +---+------+
+    |  x|     y|
+    +---+------+
+    |  9|-243.0|
+    +---+------+
+    '''
     ```
     """
     return _lit(a) * _col(x) ** _lit(n)
@@ -193,30 +195,32 @@ def roundp(
     --------
     ```py
     from pyspark.sql import SparkSession
-    import pyspark.sql.functions as F
     import laktory.spark.functions as LF
 
     spark = SparkSession.builder.getOrCreate()
 
-    # df = spark.range(1)
-    # df.select(LF.power(x=F.lit(3), a=2, n=2)).show()
-
     df = spark.createDataFrame([[0.781], [13.0]], ["x"])
-    df.select("x", LF.roundp("x", p=5).alias("y")).show()
-    #> +-----+----+
-    #> |    x|   y|
-    #> +-----+----+
-    #> |0.781| 0.0|
-    #> | 13.0|15.0|
-    #> +-----+----+
+    df = df.withColumn("y", LF.roundp("x", p=5))
+    print(df.show_string())
+    '''
+    +-----+----+
+    |    x|   y|
+    +-----+----+
+    |0.781| 0.0|
+    | 13.0|15.0|
+    +-----+----+
+    '''
 
-    df.select("x", LF.roundp("x", p=0.25).alias("y")).show()
-    #> +-----+----+
-    #> |    x|   y|
-    #> +-----+----+
-    #> |0.781|0.75|
-    #> | 13.0|13.0|
-    #> +-----+----+
+    df = df.withColumn("y", LF.roundp("x", p=0.25))
+    print(df.show_string())
+    '''
+    +-----+----+
+    |    x|   y|
+    +-----+----+
+    |0.781|0.75|
+    | 13.0|13.0|
+    +-----+----+
+    '''
     ```
     """
     # eps0 = 1.0e-16

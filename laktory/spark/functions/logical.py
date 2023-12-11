@@ -62,17 +62,23 @@ def compare(
     spark = SparkSession.builder.getOrCreate()
 
     df = spark.createDataFrame([[0.45], [0.55]], ["x"])
-    df.select(
-        "x",
-        LF.compare("x", F.lit(0.5), operator=">",).alias("y")
-    ).show()
-
-    #> +----+-----+
-    #> |   x|    y|
-    #> +----+-----+
-    #> |0.45|false|
-    #> |0.55| true|
-    #> +----+-----+
+    df = df.withColumn(
+        "y",
+        LF.compare(
+            "x",
+            F.lit(0.5),
+            operator=">",
+        ),
+    )
+    print(df.show_string())
+    '''
+    +----+-----+
+    |   x|    y|
+    +----+-----+
+    |0.45|false|
+    |0.55| true|
+    +----+-----+
+    '''
     ```
     """
 
