@@ -27,7 +27,7 @@ def show_string(df: DataFrame, n: int = 20, truncate: Union[bool, int] = True, v
     --------
 
     ```py
-    import laktory
+    import laktory  # noqa: F401
     from pyspark.sql import SparkSession
 
     spark = SparkSession.builder.getOrCreate()

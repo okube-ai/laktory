@@ -24,9 +24,10 @@ def has_column(df: DataFrame, col: str) -> bool:
     --------
 
     ```py
-    import laktory
+    import laktory  # noqa: F401
     from pyspark.sql import SparkSession
     import pyspark.sql.types as T
+
     spark = SparkSession.builder.getOrCreate()
 
     schema = T.StructType(
@@ -77,9 +78,9 @@ def has_column(df: DataFrame, col: str) -> bool:
     print(df.has_column("symbol"))
     #> False
     print(df.has_column("`stock`.`symbol`"))
-    # > True
+    #> True
     print(df.has_column("`prices[2]`.`close`"))
-    # > True
+    #> True
     ```
     """
     _col = re.sub(r"\[(\d+)\]", r"[*]", col)

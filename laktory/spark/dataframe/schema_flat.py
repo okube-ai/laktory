@@ -19,9 +19,10 @@ def schema_flat(df: DataFrame) -> list[str]:
     Examples
     --------
     ```py
-    import laktory
+    import laktory  # noqa: F401
     from pyspark.sql import SparkSession
     import pyspark.sql.types as T
+
     spark = SparkSession.builder.getOrCreate()
 
     schema = T.StructType(
@@ -70,7 +71,17 @@ def schema_flat(df: DataFrame) -> list[str]:
 
     df = spark.createDataFrame(data, schema=schema)
     print(df.schema_flat())
-    #> ['index', 'stock', 'stock.symbol', 'stock.name', 'prices', 'prices[*].open', 'prices[*].close']
+    '''
+    [
+        'indexx',
+        'stock',
+        'stock.symbol',
+        'stock.name',
+        'prices',
+        'prices[*].open',
+        'prices[*].close',
+    ]
+    '''
     ```
     """
     def get_fields(json_schema):
