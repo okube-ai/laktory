@@ -80,9 +80,10 @@ def get_df(df_wrapper) -> DataFrame:
     --------
     ```py
     from laktory import dlt
+
     dlt.spark = spark
 
-    def define_table(table):
+    def define_table():
         @dlt.table(name="stock_prices")
         def get_df():
             df = spark.createDataFrame([[1.0, 1.1, 0.98]])
@@ -90,7 +91,7 @@ def get_df(df_wrapper) -> DataFrame:
 
         return get_df
 
-    wrapper = define_table(table)
+    wrapper = define_table()
     df = dlt.get_df(wrapper)
     display(df)
     ```
@@ -123,9 +124,10 @@ def read(*args, **kwargs) -> DataFrame:
     --------
     ```py
     from laktory import dlt
+
     dlt.spark = spark
 
-    def define_table(table):
+    def define_table():
         @dlt.table(name="slv_stock_prices")
         def get_df():
             df = dlt.read("dev.finance.brz_stock_prices")
@@ -133,7 +135,7 @@ def read(*args, **kwargs) -> DataFrame:
 
         return get_df
 
-    define_table(table)
+    define_table()
     ```
     """
     if is_debug():
@@ -159,9 +161,10 @@ def read_stream(*args, fmt="delta", **kwargs):
     --------
     ```py
     from laktory import dlt
+
     dlt.spark = spark
 
-    def define_table(table):
+    def define_table():
         @dlt.table(name="slv_stock_prices")
         def get_df():
             df = dlt.read_stream("dev.finance.brz_stock_prices")
@@ -169,7 +172,7 @@ def read_stream(*args, fmt="delta", **kwargs):
 
         return get_df
 
-    define_table(table)
+    define_table()
     ```
     """
 
@@ -196,17 +199,31 @@ def apply_changes(*args, table=None, **kwargs):
     --------
     ```py
     from laktory import dlt
+    from laktory import models
+
     dlt.spark = spark
 
     def define_table(table):
-        @dlt.create_streaming_table(name="slv_stock_prices")
-        df = dlt.apply_changes({
-            source="brz_stock_prices",
-            target="slv_stock_prices",
-        })
-        return get_df
+        dlt.create_streaming_table(name=table.name)
+        df = dlt.apply_changes(**table.builder.apply_changes_kwargs)
+        # df = None
+        return df
 
-    define_table(table)
+    define_table(
+        models.Table(
+            name="slv_stock_prices",
+            builder={
+                "table_source": {
+                    "name": "brz_stock_prices",
+                    "cdc": {
+                        "primary_keys": ["asset_symbol"],
+                        "sequence_by": "change_id",
+                        "scd_type": 2,
+                    },
+                },
+            },
+        )
+    )
     ```
     """
     if is_debug():

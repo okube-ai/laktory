@@ -87,21 +87,17 @@ def uuid() -> Column:
     Examples
     --------
     ```py
-    from pyspark.sql import SparkSession
     import laktory.spark.functions as LF
-
-    spark = SparkSession.builder.getOrCreate()
 
     df = spark.range(3)
     df = df.withColumn("uuid", LF.uuid())
-    print(df.show_string())
     '''
     +---+--------------------+
     | id|                uuid|
     +---+--------------------+
-    |  0|e61c5887-52e8-488...|
-    |  1|047282fe-f403-458...|
-    |  2|14d11bfa-ef47-442...|
+    |  0|acc0b53e-a36f-4f8...|
+    |  1|56cdeb41-6828-486...|
+    |  2|64a7d2bf-5e1d-41a...|
     +---+--------------------+
     '''
     ```

@@ -48,10 +48,7 @@ def poly1(
     --------
     ```py
     import laktory  # noqa: F401
-    from pyspark.sql import SparkSession
     import laktory.spark.functions as LF
-
-    spark = SparkSession.builder.getOrCreate()
 
     df = spark.createDataFrame([[9]], ["x"])
     df = df.withColumn("y", LF.poly1("x", a=-1, b=2))
@@ -97,10 +94,7 @@ def poly2(
     Examples
     --------
     ```py
-    from pyspark.sql import SparkSession
     import laktory.spark.functions as LF
-
-    spark = SparkSession.builder.getOrCreate()
 
     df = spark.createDataFrame([[9]], ["x"])
     df = df.withColumn("y", LF.poly2("x", a=-1, b=2))
@@ -148,10 +142,7 @@ def power(
     Examples
     --------
     ```py
-    from pyspark.sql import SparkSession
     import laktory.spark.functions as LF
-
-    spark = SparkSession.builder.getOrCreate()
 
     df = spark.createDataFrame([[9]], ["x"])
     df = df.withColumn("y", LF.power("x", a=-3, n=2))
@@ -195,10 +186,7 @@ def roundp(
     Examples
     --------
     ```py
-    from pyspark.sql import SparkSession
     import laktory.spark.functions as LF
-
-    spark = SparkSession.builder.getOrCreate()
 
     df = spark.createDataFrame([[0.781], [13.0]], ["x"])
     df = df.withColumn("y", LF.roundp("x", p=5))

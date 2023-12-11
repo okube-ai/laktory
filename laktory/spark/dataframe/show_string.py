@@ -33,9 +33,7 @@ def show_string(
 
     ```py
     import laktory  # noqa: F401
-    from pyspark.sql import SparkSession
 
-    spark = SparkSession.builder.getOrCreate()
     df = spark.createDataFrame([[7, "a"], [8, "b"], [9, "c"]], ["x", "y"])
     print(df.show_string())
     '''
