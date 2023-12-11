@@ -25,9 +25,10 @@ df0 = spark.createDataFrame(pdf)
 
 
 def test_compare(df0=df0):
-
     df = df0.withColumn("compare1", LF.compare("x", "a"))
-    df = df.withColumn("compare2", LF.compare("x", "a", operator=">", where=F.col("a")>0))
+    df = df.withColumn(
+        "compare2", LF.compare("x", "a", operator=">", where=F.col("a") > 0)
+    )
     pdf = df.toPandas()
 
     assert pdf["compare1"].tolist() == [True, False, False]
