@@ -1,7 +1,5 @@
-from typing import Union
 import pyspark.sql.functions as F
 
-# from pyspark.sql.functions import pandas_udf
 from pyspark.sql.column import Column
 from laktory.spark.functions._common import (
     COLUMN_OR_NAME,

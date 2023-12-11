@@ -1,64 +1,79 @@
-# # --------------------------------------------------------------------------- #
-# # compare                                                                     #
-# # --------------------------------------------------------------------------- #
-#
-# @pandas_udf(sqlt.BooleanType(), udfuncs)
-# def compare(
-#         x: pd.Series,
-#         y: Union[float, pd.Series] = 0,
-#         where: pd.Series = None,
-#         operator: str = "==",
-#         default: bool = None,
-# ) -> pd.Series:
-#     """
-#     Compare a series `x` and a value or another series `y` using
-#     `operator`. Comparison can be limited to `where` and assigned
-#     `default` elsewhere.
-#
-#     output = `x` `operator` `y`
-#
-#     Parameters
-#     ---------
-#     x : pd.Series
-#         Base series to compare
-#     y : pd.Series or Object
-#         Series or object to compare to
-#     where: pd.Series
-#         Where to apply the comparison
-#     operator: str
-#         Operator for comparison
-#     default: bool
-#         Default value to be applied outside of where
-#
-#     Returns
-#     -------
-#     output: pd.Series
-#         Comparison result
-#     """
-#     output = pd.Series(default, x.index)
-#
-#     if where is None:
-#         where = pd.Series(True, x.index)
-#     elif isinstance(where, pd.Series):
-#         where = where.astype(bool)
-#
-#     if not isinstance(y, pd.Series):
-#         y = pd.Series(y, index=x.index)
-#
-#     if operator == "==":
-#         output.loc[where] = x.loc[where] == y.loc[where]
-#     elif operator == "!=":
-#         output.loc[where] = x.loc[where] != y.loc[where]
-#     elif operator == "<":
-#         output.loc[where] = x.loc[where] < y.loc[where]
-#     elif operator == "<=":
-#         output.loc[where] = x.loc[where] <= y.loc[where]
-#     elif operator == ">":
-#         output.loc[where] = x.loc[where] > y.loc[where]
-#     elif operator == ">=":
-#         output.loc[where] = x.loc[where] >= y.loc[where]
-#     else:
-#         raise ValueError(f"Operator '{operator}' is not supported.")
-#
-#     return output
-#
+import pyspark.sql.functions as F
+
+from pyspark.sql.column import Column
+from typing import Any
+from laktory.spark.functions._common import (
+    COLUMN_OR_NAME,
+    INT_OR_COLUMN,
+    FLOAT_OR_COLUMN,
+    STRING_OR_COLUMN,
+    _col,
+    _lit,
+)
+
+__all__ = [
+    "compare",
+]
+
+
+# --------------------------------------------------------------------------- #
+# compare                                                                     #
+# --------------------------------------------------------------------------- #
+
+def compare(
+        x: COLUMN_OR_NAME,
+        y: Any = 0,
+        where: STRING_OR_COLUMN = None,
+        operator: str = "==",
+        default: bool = None,
+) -> Column:
+    """
+    Compare a column `x` and a value or another column `y` using
+    `operator`. Comparison can be limited to `where` and assigned
+    `default` elsewhere.
+
+    output = `x` `operator` `y`
+
+    Parameters
+    ---------
+    x : pd.Series
+        Base series to compare
+    y : pd.Series or Object
+        Series or object to compare to
+    where: pd.Series
+        Where to apply the comparison
+    operator: str
+        Operator for comparison
+    default: bool
+        Default value to be applied outside of where
+
+    Returns
+    -------
+    output: pd.Series
+        Comparison result
+    """
+
+    x = _col(x)
+    y = _col(y)
+    y = _lit(y)
+
+    if operator == "==":
+        c = x == y
+    elif operator == "!=":
+        c = x != y
+    elif operator == "<":
+        c = x < y
+    elif operator == "<=":
+        c = x <= y
+    elif operator == ">":
+        c = x > y
+    elif operator == ">=":
+        c = x >= y
+    else:
+        raise ValueError(f"Operator '{operator}' is not supported.")
+
+    if where is not None:
+        c = F.when(where, c).otherwise(default)
+
+    return c
+
