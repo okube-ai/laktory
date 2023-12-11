@@ -17,7 +17,7 @@ def x2(x):
     ```py
     from laktory import x2
 
-    x2(2.0)
+    print(x2(2.0))
     #> 5.0
     ```
     """
