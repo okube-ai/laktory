@@ -50,12 +50,3 @@ def show_string(
     if truncate is True:
         truncate = 20
     return df._jdf.showString(n, int(truncate), vertical)
-
-
-if __name__ == "__main__":
-    import laktory
-    from pyspark.sql import SparkSession
-
-    spark = SparkSession.builder.getOrCreate()
-    df = spark.createDataFrame([[7, "a"], [8, "b"], [9, "c"]], ["x", "y"])
-    print(df.show_string())

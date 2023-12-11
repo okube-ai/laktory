@@ -108,21 +108,3 @@ def compare(
         c = F.when(where, c).otherwise(default)
 
     return c
-
-
-if __name__ == "__main__":
-    from pyspark.sql import SparkSession
-    import pyspark.sql.functions as F
-    import laktory.spark.functions as LF
-
-    spark = SparkSession.builder.getOrCreate()
-
-    df = spark.createDataFrame([[0.45], [0.55]], ["x"])
-    df.select(
-        "x",
-        LF.compare(
-            "x",
-            F.lit(0.5),
-            operator=">",
-        ).alias("y"),
-    ).show()

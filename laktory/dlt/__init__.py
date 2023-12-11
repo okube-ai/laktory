@@ -206,7 +206,6 @@ def apply_changes(*args, table=None, **kwargs):
     def define_table(table):
         dlt.create_streaming_table(name=table.name)
         df = dlt.apply_changes(**table.builder.apply_changes_kwargs)
-        # df = None
         return df
 
     define_table(

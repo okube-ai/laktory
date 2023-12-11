@@ -217,19 +217,3 @@ def roundp(
     # if precision < eps0:
     #     raise ValueError("Precision must be greater than 1.0e-16")
     return F.round(_col(x) / _lit(p)) * _lit(p)
-
-
-if __name__ == "__main__":
-    from pyspark.sql import SparkSession
-    import pyspark.sql.functions as F
-    import laktory.spark.functions as LF
-
-    spark = SparkSession.builder.getOrCreate()
-
-    # df = spark.range(1)
-    # df.select(LF.power(x=F.lit(3), a=2, n=2)).show()
-
-    df = spark.createDataFrame([[0.781], [13.0]], ["x"])
-    df.select("x", LF.roundp("x", p=5).alias("y")).show()
-
-    df.select("x", LF.roundp("x", p=0.25).alias("y")).show()

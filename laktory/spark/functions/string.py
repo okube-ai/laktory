@@ -101,26 +101,5 @@ def uuid() -> Column:
     +---+--------------------+
     '''
     ```
-
     """
     return F.expr("uuid()")
-
-
-if __name__ == "__main__":
-    # from pyspark.sql import SparkSession
-    # import laktory.spark.functions as LF
-    #
-    # spark = SparkSession.builder.getOrCreate()
-    #
-    # df = spark.range(3)
-    # df.select(LF.uuid()).show()
-
-    from pyspark.sql import SparkSession
-    import laktory.spark.functions as LF
-
-    spark = SparkSession.builder.getOrCreate()
-
-    df = spark.range(1).withColumn("x", F.lit("price_close"))
-    df.select("x", LF.string_split("x", pattern="_", key=1).alias("y")).show()
-
-    # df.select(LF.string_split(F.lit("price.close"), pattern=".", key=0)).show()
