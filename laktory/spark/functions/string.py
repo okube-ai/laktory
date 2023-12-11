@@ -31,17 +31,36 @@ def string_split(
 
     Parameters
     ------
-    x: pyspark.sql.functions.column.Column or column name
+    x:
         Input text series to split
-    pattern: str or pyspark.sql.functions.column.Column
+    pattern:
         String or regular expression to split on. If not specified, split on whitespace.
-    key: int or pyspark.sql.functions.column.Column
+    key:
         Split index to return
 
     Returns
     -------
-    output: pd.Series
-        Output series
+    :
+        Result
+
+    Examples
+    --------
+    ```py
+    from pyspark.sql import SparkSession
+    import laktory.spark.functions as LF
+
+    spark = SparkSession.builder.getOrCreate()
+
+    df = spark.range(1).withColumn("x", F.lit("price_close"))
+    df.select("x", LF.string_split("x", pattern="_", key=1).alias("y")).show()
+
+    #> +-----------+-----+
+    #> |          x|    y|
+    #> +-----------+-----+
+    #> |price_close|close|
+    #> +-----------+-----+
+    ```
+
     """
     return F.split(_col(x), pattern=pattern).getItem(key)
 
@@ -88,11 +107,20 @@ def uuid() -> Column:
 
 
 if __name__ == "__main__":
+    # from pyspark.sql import SparkSession
+    # import laktory.spark.functions as LF
+    #
+    # spark = SparkSession.builder.getOrCreate()
+    #
+    # df = spark.range(3)
+    # df.select(LF.uuid()).show()
+
     from pyspark.sql import SparkSession
     import laktory.spark.functions as LF
 
     spark = SparkSession.builder.getOrCreate()
 
-    df = spark.range(3)
-    df.select(LF.uuid()).show()
+    df = spark.range(1).withColumn("x", F.lit("price_close"))
+    df.select("x", LF.string_split("x", pattern="_", key=1).alias("y")).show()
 
+    # df.select(LF.string_split(F.lit("price.close"), pattern=".", key=0)).show()
