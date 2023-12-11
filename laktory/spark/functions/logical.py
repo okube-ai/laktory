@@ -20,12 +20,13 @@ __all__ = [
 # compare                                                                     #
 # --------------------------------------------------------------------------- #
 
+
 def compare(
-        x: COLUMN_OR_NAME,
-        y: COLUMN_OR_NAME = 0,
-        where: COLUMN_OR_NAME = None,
-        operator: str = "==",
-        default: COLUMN_OR_NAME = None,
+    x: COLUMN_OR_NAME,
+    y: COLUMN_OR_NAME = 0,
+    where: COLUMN_OR_NAME = None,
+    operator: str = "==",
+    default: COLUMN_OR_NAME = None,
 ) -> Column:
     """
     Compare a column `x` and a value or another column `y` using
@@ -122,5 +123,9 @@ if __name__ == "__main__":
     df = spark.createDataFrame([[0.45], [0.55]], ["x"])
     df.select(
         "x",
-        LF.compare("x", F.lit(0.5), operator=">",).alias("y")
+        LF.compare(
+            "x",
+            F.lit(0.5),
+            operator=">",
+        ).alias("y"),
     ).show()

@@ -84,6 +84,7 @@ def schema_flat(df: DataFrame) -> list[str]:
     '''
     ```
     """
+
     def get_fields(json_schema):
         field_names = []
         for f in json_schema.get("fields", []):
@@ -112,10 +113,10 @@ def schema_flat(df: DataFrame) -> list[str]:
 
 
 if __name__ == "__main__":
-
     import laktory
     from pyspark.sql import SparkSession
     import pyspark.sql.types as T
+
     spark = SparkSession.builder.getOrCreate()
 
     schema = T.StructType(

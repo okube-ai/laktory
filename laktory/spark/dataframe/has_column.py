@@ -89,10 +89,10 @@ def has_column(df: DataFrame, col: str) -> bool:
 
 
 if __name__ == "__main__":
-
     import laktory
     from pyspark.sql import SparkSession
     import pyspark.sql.types as T
+
     spark = SparkSession.builder.getOrCreate()
 
     schema = T.StructType(
@@ -141,7 +141,7 @@ if __name__ == "__main__":
 
     df = spark.createDataFrame(data, schema=schema)
     print(df.has_column("symbol"))
-    #> False
+    # > False
     print(df.has_column("`stock`.`symbol`"))
     # > True
     print(df.has_column("`prices[2]`.`close`"))
