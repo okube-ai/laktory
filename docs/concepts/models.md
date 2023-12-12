@@ -1,6 +1,3 @@
-??? "API Documentation"
-    [`laktory.models`](TODO)<br>
-
 Laktory is built on top of a collection of nested [pydantic](https://docs.pydantic.dev/latest/concepts/models/) models. 
 Each model is a subclass of `pydantic.BaseModel` and offer a few additional methods and properties. 
 The serializable nature of these models makes it possible to define a lakehouse using a declarative approach.

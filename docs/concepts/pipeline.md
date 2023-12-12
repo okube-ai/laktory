@@ -1,5 +1,5 @@
 ??? "API Documentation"
-    [`laktory.models.compute.pipeline`](TODO)<br>
+    [`laktory.models.Pipeline`][laktory.models.Pipeline]<br>
 
 From all the models, `Pipeline` is without a doubt the most critical and fundamental one for building a Lakehouse.
 
@@ -151,8 +151,6 @@ And the final result:
 ![pl-stock-prices](../images/pl_stock_prices_simple.png)
 
 More details on how to define a table from a configuration file is available [here](table.md)
-
-Currently, there is no support for creating a gold table using this configuration-based approach, but could be available in the near future.
 
 ## Streaming
 The event-based and kappa architectures promoted by Laktory lend themselves very well for Spark structured streaming, a real-time data processing framework that enables continuous, scalable, and fault-tolerant processing of data streams. 

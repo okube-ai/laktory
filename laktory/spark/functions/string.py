@@ -30,7 +30,7 @@ def string_split(
     Get substring using separator `pat`.
 
     Parameters
-    ------
+    ----------
     x:
         Input text series to split
     pattern:
@@ -76,12 +76,9 @@ def uuid() -> Column:
     """
     Create a unique id for each row.
 
-    Parameters
-    ------
-
     Returns
     -------
-    output: pyspark.sql.functions.column.Column
+    :
         Output column
 
     Examples

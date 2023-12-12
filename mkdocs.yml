@@ -151,7 +151,7 @@ nav:
       - Databricks:
         - api/models/databricks/cluster.md
         - api/models/databricks/directory.md
-        - DLTPipeline: api/models/databricks/dltpipeline.md
+        - Pipeline: api/models/databricks/pipeline.md
         - api/models/databricks/group.md
         - api/models/databricks/job.md
         - api/models/databricks/notebook.md

@@ -1,5 +1,5 @@
 ??? "API Documentation"
-    [`laktory.models.sql.table`](TODO)<br>
+    [`laktory.models.Table`][laktory.models.Table]<br>
 
 The `Table` model is a fundamental component when building a Lakehouse.
 In the context of Laktory, it can serve a few purposes

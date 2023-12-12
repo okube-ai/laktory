@@ -106,7 +106,7 @@ class Volume(BaseModel, BaseResource):
     def pulumi_excludes(self) -> list[str]:
         return ["grants"]
 
-    def deploy_with_pulumi(self, name=None, **kwargs):
+    def deploy_with_pulumi(self, name=None, opts=None):
         """
         Deploy volume using pulumi.
 
@@ -124,7 +124,7 @@ class Volume(BaseModel, BaseResource):
         """
         from laktory.resourcesengines.pulumi.volume import PulumiVolume
 
-        return PulumiVolume(name=name, volume=self, **kwargs)
+        return PulumiVolume(name=name, volume=self, opts=opts)
 
 
 if __name__ == "__main__":

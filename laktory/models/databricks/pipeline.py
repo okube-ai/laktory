@@ -146,7 +146,7 @@ class PipelineUDF(BaseModel):
     module_path: str = None
 
 
-class DLTPipeline(BaseModel, BaseResource):
+class Pipeline(BaseModel, BaseResource):
     """
     Databricks Delta Live Tables (DLT) Pipeline
 
@@ -277,7 +277,7 @@ class DLTPipeline(BaseModel, BaseResource):
     '''
 
     # Read pipeline
-    pipeline = models.DLTPipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
+    pipeline = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
 
     # Deploy pipeline
     pipeline.deploy_with_pulumi()

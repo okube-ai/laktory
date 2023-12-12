@@ -4,7 +4,7 @@ import pulumi_databricks as databricks
 
 from laktory._logger import get_logger
 from laktory._settings import settings
-from laktory.models.databricks.dltpipeline import DLTPipeline
+from laktory.models.databricks.pipeline import Pipeline
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
 
 logger = get_logger(__name__)
@@ -18,7 +18,7 @@ class PulumiPipeline(PulumiResourcesEngine):
     def __init__(
         self,
         name=None,
-        pipeline: DLTPipeline = None,
+        pipeline: Pipeline = None,
         opts=None,
     ):
         if name is None:

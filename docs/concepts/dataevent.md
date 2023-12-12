@@ -1,6 +1,6 @@
 ??? "API Documentation"
-    [`laktory.models.DataEvent`](TODO)<br>
-    [`laktory.models.DataEventHeader`](TODO)
+    [`laktory.models.DataEventHeader`][laktory.models.DataEventHeader]<br>
+    [`laktory.models.DataEvent`][laktory.models.DataEvent]<br>
 
 The `DataEvent` (and `DataEventHeader`) models are supporting the event-based architecture described in [Design Principles](design.md).
 They define the metadata (name, producer, timestamp, etc.) as well as the data (payload) of an event.
