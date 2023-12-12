@@ -5,6 +5,10 @@ from pyspark.sql import SparkSession
 spark = SparkSession.builder.getOrCreate()
 
 
+# --------------------------------------------------------------------------- #
+# DLT                                                                         #
+# --------------------------------------------------------------------------- #
+
 @pytest.mark.parametrize("example", find_examples("./laktory/dlt"), ids=str)
 def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
@@ -27,6 +31,10 @@ def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExam
         )
 
 
+# --------------------------------------------------------------------------- #
+# Models                                                                      #
+# --------------------------------------------------------------------------- #
+
 @pytest.mark.parametrize("example", find_examples("./laktory/models"), ids=str)
 def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
@@ -42,6 +50,10 @@ def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExam
             module_globals={"spark": spark})
 
 
+# --------------------------------------------------------------------------- #
+# Spark DataFrame                                                             #
+# --------------------------------------------------------------------------- #
+
 @pytest.mark.parametrize("example", find_examples("./laktory/spark/dataframe"), ids=str)
 def test_docstrings_spark_dataframe(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
@@ -52,7 +64,25 @@ def test_docstrings_spark_dataframe(example: CodeExample, eval_example: EvalExam
         eval_example.run_print_check(example, module_globals={"spark": spark})
 
 
+# --------------------------------------------------------------------------- #
+# Spark Functions                                                             #
+# --------------------------------------------------------------------------- #
+
 @pytest.mark.parametrize("example", find_examples("./laktory/spark/functions"), ids=str)
+def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format(example)
+        eval_example.run_print_update(example, module_globals={"spark": spark})
+    else:
+        eval_example.lint(example)
+        eval_example.run_print_check(example, module_globals={"spark": spark})
+
+
+# --------------------------------------------------------------------------- #
+# Markdowns                                                                   #
+# --------------------------------------------------------------------------- #
+
+@pytest.mark.parametrize("example", find_examples("./docs/"), ids=str)
 def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format(example)
