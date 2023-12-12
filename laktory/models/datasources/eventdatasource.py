@@ -34,13 +34,14 @@ class EventDataSource(BaseDataSource, DataEventHeader):
     ---------
     ```python
     from laktory import models
+
     source = models.EventDataSource(
         name="stock_price",
         producer={"name": "yahoo-finance"},
-        fmt="json",
+        fmt="JSON",
         read_as_stream=False,
     )
-    df = source.read()
+    # df = source.read(spark)
     ```
     """
 

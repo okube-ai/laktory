@@ -60,6 +60,7 @@ class SecretScope(BaseModel, BaseResource):
     --------
     ```py
     from laktory import models
+
     ss = models.SecretScope(
         name="azure",
         secrets=[
@@ -69,7 +70,7 @@ class SecretScope(BaseModel, BaseResource):
         permissions=[
             {"permission": "READ", "principal": "role-metastore-admins"},
             {"permission": "READ", "principal": "role-workspace-admins"},
-        ]
+        ],
     )
     ss.deploy()
     ```

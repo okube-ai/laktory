@@ -23,9 +23,8 @@ class Group(BaseModel, BaseResource):
     --------
     ```py
     from laktory import models
-    d = models.Group(
-        display_name="role-engineers"
-    )
+
+    d = models.Group(display_name="role-engineers")
     ```
     """
 

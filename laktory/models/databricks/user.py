@@ -27,6 +27,7 @@ class User(BaseModel, BaseResource):
     --------
     ```py
     from laktory import models
+
     u = models.User(
         user_name="john.doe@okube.ai",
         display_name="John Doe",
@@ -34,9 +35,7 @@ class User(BaseModel, BaseResource):
             "role-engineer",
             "domain-finance",
         ],
-        roles=[
-            "account_admin"
-        ]
+        roles=["account_admin"],
     )
     ```
     """

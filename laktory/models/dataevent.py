@@ -43,6 +43,8 @@ class DataEvent(DataEventHeader):
     This is example one
     ```py
     from laktory import models
+    from datetime import datetime
+
     event = models.DataEvent(
         name="stock_price",
         producer={"name": "yahoo-finance"},
@@ -54,13 +56,17 @@ class DataEvent(DataEventHeader):
         },
     )
     print(event)
-    #> name='stock_price' description=None producer=DataProducer(name='yahoo-finance', description=None, party=1) events_root='/Volumes/dev/sources/landing/events/' data={'created_at': datetime.datetime(2023, 8, 23, 0, 0), 'symbol': 'GOOGL', 'open': 130.25, 'close': 132.33, '_name': 'stock_price', '_producer_name': 'yahoo-finance', '_created_at': datetime.datetime(2023, 8, 23, 0, 0, tzinfo=zoneinfo.ZoneInfo(key='UTC'))} tstamp_col='created_at' tstamp_in_path=True
+    '''
+    vars={} name='stock_price' description=None producer=DataProducer(vars={}, name='yahoo-finance', description=None, party=1) events_root='/Volumes/dev/sources/landing/events/' data={'created_at': datetime.datetime(2023, 8, 23, 0, 0), 'symbol': 'GOOGL', 'open': 130.25, 'close': 132.33, '_name': 'stock_price', '_producer_name': 'yahoo-finance', '_created_at': datetime.datetime(2023, 8, 23, 0, 0, tzinfo=zoneinfo.ZoneInfo(key='UTC'))} tstamp_col='created_at' tstamp_in_path=True
+    '''
 
     print(event.dirpath)
     #> /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/2023/08/23/
 
     print(event.get_landing_filepath())
-    #> /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/2023/08/23/stock_price_20230823T000000000Z.json
+    '''
+    /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/2023/08/23/stock_price_20230823T000000000Z.json
+    '''
 
     print(event.get_storage_filepath())
     #> /events/yahoo-finance/stock_price/2023/08/23/stock_price_20230823T000000000Z.json

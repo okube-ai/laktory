@@ -27,12 +27,15 @@ class DataEventHeader(BaseModel):
     ---------
     ```python
     from laktory import models
+
     event = models.DataEventHeader(
         name="stock_price",
         producer={"name": "yahoo-finance"},
     )
     print(event)
-    #> name='stock_price' description=None producer=DataProducer(name='yahoo-finance', description=None, party=1) events_root='/Volumes/dev/sources/landing/events/'
+    '''
+    vars={} name='stock_price' description=None producer=DataProducer(vars={}, name='yahoo-finance', description=None, party=1) events_root='/Volumes/dev/sources/landing/events/'
+    '''
 
     print(event.event_root)
     #> /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/

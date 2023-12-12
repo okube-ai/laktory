@@ -645,8 +645,12 @@ class Job(BaseModel, BaseResource):
 
     Examples
     --------
-    Assuming the configuration yaml file
-    ```yaml title="job.yaml"
+    ```py
+    import io
+    from laktory import models
+
+    # Define job
+    job_yaml = '''
     name: job-stock-prices
     clusters:
       - name: main
@@ -673,17 +677,14 @@ class Job(BaseModel, BaseResource):
         permission_level: CAN_VIEW
       - group_name: role-engineers
         permission_level: CAN_MANAGE_RUN
+    '''
+
+    # Read job
+    job = models.Job.model_validate_yaml(io.StringIO(job_yaml))
+
+    # Deploy
+    job.deploy()
     ```
-
-    Create and deploy a job object with
-    ```py
-    from laktory import models
-
-    with open("job.yaml", "r") as fp:
-        job = models.Job.model_validate_yaml(fp)
-    job.deploy_with_pulumi()
-    ```
-
 
     References
     ----------
@@ -691,6 +692,9 @@ class Job(BaseModel, BaseResource):
     * [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
     * [Pulumi Databricks Job](https://www.pulumi.com/registry/packages/databricks/api-docs/job/#databricks-job)
     """
+
+
+
 
     clusters: list[JobCluster] = []
     continuous: JobContinuous = None

@@ -27,7 +27,7 @@ def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExam
         )
 
 
-@pytest.mark.parametrize("example", find_examples("./laktory/models/sql"), ids=str)
+@pytest.mark.parametrize("example", find_examples("./laktory/models"), ids=str)
 def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format(example)

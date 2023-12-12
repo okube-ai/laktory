@@ -27,6 +27,7 @@ class ServicePrincipal(BaseModel, BaseResource):
     --------
     ```py
     from laktory import models
+
     sp = models.ServicePrincipal(
         display_name="neptune",
         application_id="baf147d1-a856-4de0-a570-8a56dbd7e234",
@@ -36,9 +37,7 @@ class ServicePrincipal(BaseModel, BaseResource):
             "domain-finance",
             "domain-engineering",
         ],
-        roles=[
-            "account_admin"
-        ]
+        roles=["account_admin"],
     )
     ```
     """

@@ -18,13 +18,14 @@ class Directory(BaseModel, BaseResource):
     --------
     ```py
     from laktory import models
-    d = models.Directory(
-        path="/queries/views"
-    )
+
+    d = models.Directory(path="/queries/views")
     print(d)
-    #> path='/queries/views' delete_recursive=None
-    print(d.key)
+    #> vars={} path='/queries/views' delete_recursive=None
+    print(d.resource_key)
     #> queries-views
+    print(d.resource_name)
+    #> directory-queries-views
     ```
     """
 

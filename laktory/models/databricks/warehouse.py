@@ -83,11 +83,8 @@ class Warehouse(BaseModel, BaseResource):
         channel_name="CHANNEL_NAME_PREVIEW",
         enable_photon=True,
         enable_serverless_compute=True,
-        permissions=[
-            {"group_name": "account users", "permission_level": "CAN_USE"}
-        ]
+        permissions=[{"group_name": "account users", "permission_level": "CAN_USE"}],
     )
-
     ```
     """
 

@@ -196,7 +196,12 @@ class DLTPipeline(BaseModel, BaseResource):
     Examples
     --------
     Assuming the configuration yaml file
-    ```yaml title="pipeline.yaml"
+    ```py
+    import io
+    from laktory import models
+
+    # Define pipeline
+    pipeline_yaml = '''
     name: pl-stock-prices
 
     catalog: dev
@@ -269,14 +274,12 @@ class DLTPipeline(BaseModel, BaseResource):
             spark_func_name: coalesce
             spark_func_args:
               - data.close
-    ```
+    '''
 
-    Create and deploy a pipeline object with
-    ```py
-    from laktory import models
+    # Read pipeline
+    pipeline = models.DLTPipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
 
-    with open("pipeline.yaml", "r") as fp:
-        pipeline = models.DLTPipeline.model_validate_yaml(fp)
+    # Deploy pipeline
     pipeline.deploy_with_pulumi()
     ```
 

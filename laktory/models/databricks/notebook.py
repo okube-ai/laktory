@@ -36,10 +36,7 @@ class Notebook(BaseModel, BaseResource):
     print(notebook.path)
     #> /pipelines/dlt_brz_template.py
 
-    notebook = models.Notebook(
-        source="./notebooks/create_view.py",
-        dirpath="/views/"
-    )
+    notebook = models.Notebook(source="./notebooks/create_view.py", dirpath="/views/")
     print(notebook.path)
     #> /views/create_view.py
     ```
