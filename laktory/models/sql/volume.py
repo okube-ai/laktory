@@ -44,7 +44,7 @@ class Volume(BaseModel, BaseResource):
         grants=[
             {"principal": "account users", "privileges": ["READ_VOLUME"]},
             {"principal": "role-metastore-admins", "privileges": ["WRITE_VOLUME"]},
-        ]
+        ],
     )
     print(volume.full_name)
     #> dev.sources.landing

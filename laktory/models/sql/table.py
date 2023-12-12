@@ -60,28 +60,41 @@ class Table(BaseModel, BaseResource):
     Examples
     --------
     ```py
+    from laktory import dlt
     from laktory import models
+
+    dlt.spark = spark
 
     table = models.Table(
         name="slv_stock_prices",
         columns=[
             {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
-            {"name": "open", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.open"]},
-            {"name": "close", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.close"]},
+            {
+                "name": "open",
+                "type": "double",
+                "spark_func_name": "coalesce",
+                "spark_func_args": ["daa.open"],
+            },
+            {
+                "name": "close",
+                "type": "double",
+                "spark_func_name": "coalesce",
+                "spark_func_args": ["daa.close"],
+            },
         ],
         builder={
             "layer": "SILVER",
             "table_source": {
                 "name": "brz_stock_prices",
             },
-        }
+        },
     )
 
     # Read
-    df = table.builder.read_source(spark)
+    # df = table.builder.read_source(spark)
 
     # Process
-    df = table.builder.process(df, spark)
+    # df = table.builder.process(df, None)
     ```
 
     References

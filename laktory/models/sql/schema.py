@@ -39,11 +39,9 @@ class Schema(BaseModel, BaseResource):
     from laktory import models
 
     schema = models.Schema(
-            catalog_name="dev",
-            name="engineering",
-            grants=[
-                    {"principal": "domain-engineering", "privileges": ["SELECT"]}
-            ],
+        catalog_name="dev",
+        name="engineering",
+        grants=[{"principal": "domain-engineering", "privileges": ["SELECT"]}],
     )
     schema.deploy()
     ```
