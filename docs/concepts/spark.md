@@ -33,7 +33,6 @@ Laktory is monkey patching the DataFrame class from spark by assigning all the c
 you can also do the following to get the same results
 ```py
 import pandas as pd
-import laktory  # simply importing laktory will make the new methods available from a DataFrame object
 
 df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
 df.has_column("x")

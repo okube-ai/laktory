@@ -22,10 +22,11 @@ It provides re-usable mechanisms for reading data of various nature given differ
 This type of data source supports reading multiple files stored on a storage container
 ```py
 from laktory import models
+
 source = models.EventDataSource(
     name="stock_price",
     producer={"name": "yahoo-finance"},
-    fmt="json",
+    fmt="JSON",
     read_as_stream=False,
 )
 df = source.read()
@@ -34,10 +35,11 @@ df = source.read()
 Reading the same dataset, but as a spark streaming source, is as easy as changing `read_as_stream` to `True`.
 ```py
 from laktory import models
+
 source = models.TableDataSource(
     name="stock_price",
     producer={"name": "yahoo-finance"},
-    fmt="json",
+    fmt="JSON",
     read_as_stream=True,
 )
 df_stream = source.read()
@@ -49,6 +51,7 @@ df_stream = source.read()
 When your data is already loading into a table, you can use the `TableDataSource` model instead
 ```py
 from laktory import models
+
 source = models.EventDataSource(
     name="brz_stock_prices",
     selects=["symbol", "open", "close"],
@@ -75,19 +78,30 @@ A table builder supports the creation of the columns defined in the `Table` mode
 
 ```py
 from laktory import models
+
 table = models.Table(
     name="slv_stock_prices",
     columns=[
         {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
-        {"name": "open", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.open"]},
-        {"name": "close", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.close"]},
+        {
+            "name": "open",
+            "type": "double",
+            "spark_func_name": "coalesce",
+            "spark_func_args": ["daa.open"],
+        },
+        {
+            "name": "close",
+            "type": "double",
+            "spark_func_name": "coalesce",
+            "spark_func_args": ["daa.close"],
+        },
     ],
     builder={
         "layer": "SILVER",
         "table_source": {
             "name": "brz_stock_prices",
         },
-    }
+    },
 )
 
 # Read
@@ -105,6 +119,7 @@ Note that each column may be defined as an SQL expression or as the output of a 
 For silver star and gold tables, we often need to join multiple datasets.
 ```py
 from laktory import models
+
 table = models.Table(
     name="slv_star_stock_prices",
     builder={
@@ -123,12 +138,10 @@ table = models.Table(
                         "first_traded",
                     ],
                 },
-                "on": [
-                    "symbol"
-                ],
-            }   
+                "on": ["symbol"],
+            }
         ],
-    }
+    },
 )
 
 # Read
@@ -168,7 +181,7 @@ table = models.Table(
                 "time_column": "_tstamp",
                 "window_duration": "1 day",
             },
-            "agg_expressions":[
+            "agg_expressions": [
                 {
                     "name": "rows_count",
                     "spark_func_name": "count",
@@ -179,10 +192,9 @@ table = models.Table(
                     "spark_func_name": "min",
                     "spark_func_args": ["low"],
                 },
-                
-            ]
+            ],
         },
-    }
+    },
 )
 
 # Read
@@ -215,14 +227,11 @@ table = models.Table(
                 "symbol",
             ],
             "order_by": [
-                {
-                    "sql_expression": "created_at",
-                    "desc": True
-                },
+                {"sql_expression": "created_at", "desc": True},
             ],
             "rows_to_keep": 2,
-        }
-    }
+        },
+    },
 )
 
 # Read

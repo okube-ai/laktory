@@ -60,10 +60,11 @@ for g in groups:
 
 # Set users
 users = [
-    models.User(user_name="john.doe@okube.ai", groups=["role-engineer", "domain-finance"]),
-    models.User(user_name="jane.doe@okube.ai", groups=["role-analyst", "domain-hr"]),   
+    models.User(
+        user_name="john.doe@okube.ai", groups=["role-engineer", "domain-finance"]
+    ),
+    models.User(user_name="jane.doe@okube.ai", groups=["role-analyst", "domain-hr"]),
 ]
-
 ```
 
 Laktory also allows to set the privileges and permissions directly at the declaration of the models (when applicable).

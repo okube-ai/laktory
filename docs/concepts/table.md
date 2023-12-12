@@ -8,6 +8,7 @@ In the context of Laktory, it can serve a few purposes
 The `Table` model may be used to declare a classic SQL object
 ```py
 from laktory import models
+
 table = models.Table(
     schema_name="finance",
     catalog_name="dev",
@@ -17,7 +18,7 @@ table = models.Table(
         {"name": "symbol", "type": "string"},
         {"name": "open", "type": "double"},
         {"name": "close", "type": "double"},
-    ]
+    ],
 )
 ```
 This will be generally sufficient to create the associated object within a schema. 
@@ -34,6 +35,6 @@ df = table.to_df()
 ```
 
 ## Builder
-However, where things get very interesting is when the builder is used as described in [TableBuilder](tablebuilder.md).
+However, the most powerful table manipulation routines are provider in the [TableBuilder](tablebuilder.md) class.
 
 The most frequent use case for the declaration of a `Table` and its associated transformations is as part of a data [pipeline](pipeline.md).

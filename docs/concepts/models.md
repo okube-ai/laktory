@@ -13,8 +13,8 @@ x = models.Column(name="x", type="double")
 y = models.Column(name="y", type="double")
 z = models.Column(name="z", type="double")
 
-table_xy = models.Table(name="table_xy", columns=[x,y])
-table_xyz = models.Table(name="table_xyz", columns=[x,y, z])
+table_xy = models.Table(name="table_xy", columns=[x, y])
+table_xyz = models.Table(name="table_xyz", columns=[x, y, z])
 
 pipeline = models.Pipeline(
     name="my-pipeline",
@@ -34,19 +34,21 @@ pipeline = models.Pipeline(
     target="finance",
     tables=[
         {
-            "name": "table_xy", "columns": [
+            "name": "table_xy",
+            "columns": [
                 {"name": "x", "type": "double"},
                 {"name": "y", "type": "double"},
-            ]
-         },
+            ],
+        },
         {
-            "name": "table_xyz", "columns": [
+            "name": "table_xyz",
+            "columns": [
                 {"name": "x", "type": "double"},
                 {"name": "y", "type": "double"},
                 {"name": "z", "type": "double"},
-            ]
-         },
-    ]
+            ],
+        },
+    ],
 )
 ```
 
@@ -77,8 +79,9 @@ tables:
 
 ```py title="main.py"
 from laktory import models
+
 with open("my-pipeline.yaml", "r") as fp:
-  pipeline = models.Pipeline.model_validate_yaml(fp)
+    pipeline = models.Pipeline.model_validate_yaml(fp)
 ```
 Using any of the above approaches will result in the exact same `pipeline` python object.
 

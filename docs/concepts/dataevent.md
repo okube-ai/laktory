@@ -15,7 +15,7 @@ from laktory import models
 from datetime import datetime
 
 
-event =  models.DataEvent(
+event = models.DataEvent(
     name="stock_price",
     producer={"name": "yahoo-finance"},
     data={
@@ -45,7 +45,7 @@ It is essentially a strip down version of the `DataEvent` model in which the `da
 ```py
 from laktory import models
 
-event =  models.DataEventHeader(
+event = models.DataEventHeader(
     name="stock_price",
     producer={"name": "yahoo-finance"},
 )

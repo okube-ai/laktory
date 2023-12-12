@@ -693,9 +693,6 @@ class Job(BaseModel, BaseResource):
     * [Pulumi Databricks Job](https://www.pulumi.com/registry/packages/databricks/api-docs/job/#databricks-job)
     """
 
-
-
-
     clusters: list[JobCluster] = []
     continuous: JobContinuous = None
     control_run_state: bool = None

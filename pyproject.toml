@@ -32,7 +32,6 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
 ]
 dynamic = ["version"]
 dependencies = [
@@ -100,7 +99,7 @@ extend-ignore = []
 #flake8-quotes = {inline-quotes = 'single', multiline-quotes = 'double'}
 #mccabe = { max-complexity = 14 }
 #isort = { known-first-party = ['pydantic', 'tests'] }
-#target-version = "py39"
+target-version = "py39"
 #extend-exclude = ['pydantic/v1', 'tests/mypy/outputs']
 builtins = ["spark", "display"]
 

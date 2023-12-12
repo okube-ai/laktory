@@ -42,7 +42,7 @@ events = [
             "open": 132.00,
             "close": 134.12,
         },
-    )
+    ),
 ]
 
 # Export to databricks landing volume / mount.
@@ -178,6 +178,7 @@ logger = get_logger(__name__)
 # Read pipeline definition
 pl_name = spark.conf.get("pipeline_name", "pl-stock-prices")
 pl = read_metadata(pipeline=pl_name)
+
 
 # Define table
 def define_table(table):
