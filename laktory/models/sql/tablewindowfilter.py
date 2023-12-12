@@ -34,7 +34,20 @@ class TableWindowFilter(BaseModel):
     Examples
     --------
     ```py
+    from datetime import datetime
     from laktory import models
+
+    df0 = spark.createDataFrame(
+        [
+            [datetime(2023, 1, 1), "APPL", 200.0],
+            [datetime(2023, 1, 2), "APPL", 202.0],
+            [datetime(2023, 1, 3), "APPL", 201.5],
+            [datetime(2023, 1, 1), "GOOL", 200.0],
+            [datetime(2023, 1, 2), "GOOL", 202.0],
+            [datetime(2023, 1, 3), "GOOL", 201.5],
+        ],
+        ["created_at", "symbol", "price"],
+    )
 
     f = models.TableWindowFilter(
         partition_by=["symbol"],

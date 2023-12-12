@@ -1,5 +1,5 @@
 ??? "API Documentation"
-    [`laktory.models.compute.tablebuilder.TableBuilder`](TODO)<br>
+    [`laktory.models.TableBuilder`][laktory.models.TableBuilder]<br>
 
 The `TableBuilder` model is a core component of Laktory that provides the mechanisms for building highly complex tables from simple configuration.
 It supports data input, columns creation, joins and aggregations. 
@@ -12,23 +12,21 @@ Each of these default may also be overwritten, regardless of the `layer` value.
 
 
 ### Data Sources
-??? "API Documentation"
-    [`laktory.models.datasources`](TODO)<br>
-
 The `DataSource` models facilitate loading data into a spark DataFrame. 
 It provides re-usable mechanisms for reading data of various nature given different configuration.
 
 #### Event Data Source
 ??? "API Documentation"
-    [`laktory.models.datasources.eventdatasource.EventDataSource`](TODO)<br>
+    [`laktory.models.EventDataSource`][laktory.models.EventDataSource]<br>
 
 This type of data source supports reading multiple files stored on a storage container
 ```py
 from laktory import models
+
 source = models.EventDataSource(
     name="stock_price",
     producer={"name": "yahoo-finance"},
-    fmt="json",
+    fmt="JSON",
     read_as_stream=False,
 )
 df = source.read()
@@ -37,10 +35,11 @@ df = source.read()
 Reading the same dataset, but as a spark streaming source, is as easy as changing `read_as_stream` to `True`.
 ```py
 from laktory import models
+
 source = models.TableDataSource(
     name="stock_price",
     producer={"name": "yahoo-finance"},
-    fmt="json",
+    fmt="JSON",
     read_as_stream=True,
 )
 df_stream = source.read()
@@ -48,10 +47,11 @@ df_stream = source.read()
 
 #### Table Data Source
 ??? "API Documentation"
-    [`laktory.models.datasources.tabledatasource.TableDataSource`](TODO)<br>
+    [`laktory.models.TableDataSource`][laktory.models.TableDataSource]<br>
 When your data is already loading into a table, you can use the `TableDataSource` model instead
 ```py
 from laktory import models
+
 source = models.EventDataSource(
     name="brz_stock_prices",
     selects=["symbol", "open", "close"],
@@ -65,32 +65,43 @@ In this case
 
 * the `selects` argument is used to select only `symbol`, `open` and `close` columns
 * the `filter` argument is used to select only rows associated with Apple stock. 
-* the `from_pipeline` argument can be used in the context of a data [pipline](pipeline.md) to reference another table part of the same pipeline.  
+* the `from_pipeline` argument can be used in the context of a data [pipeline](pipeline.md) to reference another table part of the same pipeline.  
 
 More data sources (like Kafka / Event Hub / Kinesis streams) will be supported in the future.
 
 
 ### Columns
 ??? "API Documentation"
-    [`laktory.models.sql.column.Column`](TODO)<br>
+    [`laktory.models.Column`][laktory.models.Column]<br>
 
 A table builder supports the creation of the columns defined in the `Table` model.
 
 ```py
 from laktory import models
+
 table = models.Table(
     name="slv_stock_prices",
     columns=[
         {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
-        {"name": "open", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.open"]},
-        {"name": "close", "type": "double", "spark_func_name": "coalesce", "spark_func_args": ["daa.close"]},
+        {
+            "name": "open",
+            "type": "double",
+            "spark_func_name": "coalesce",
+            "spark_func_args": ["daa.open"],
+        },
+        {
+            "name": "close",
+            "type": "double",
+            "spark_func_name": "coalesce",
+            "spark_func_args": ["daa.close"],
+        },
     ],
     builder={
         "layer": "SILVER",
         "table_source": {
             "name": "brz_stock_prices",
         },
-    }
+    },
 )
 
 # Read
@@ -104,10 +115,11 @@ Note that each column may be defined as an SQL expression or as the output of a 
 
 ### Joins
 ??? "API Documentation"
-    [`laktory.models.compute.tablejoin.TableJoin`](TODO)<br>
+    [`laktory.models.TableJoin`][laktory.models.TableJoin]<br>
 For silver star and gold tables, we often need to join multiple datasets.
 ```py
 from laktory import models
+
 table = models.Table(
     name="slv_star_stock_prices",
     builder={
@@ -126,12 +138,10 @@ table = models.Table(
                         "first_traded",
                     ],
                 },
-                "on": [
-                    "symbol"
-                ],
-            }   
+                "on": ["symbol"],
+            }
         ],
-    }
+    },
 )
 
 # Read
@@ -150,7 +160,7 @@ Spark [structured streaming joins](https://spark.apache.org/docs/latest/structur
 
 ### Aggregations
 ??? "API Documentation"
-    [`laktory.models.compute.tableaggregation.TableAggregation`](TODO)<br>
+    [`laktory.models.TableAggregation`][laktory.models.TableAggregation]<br>
 Gold tables are all about aggregations. 
 
 ```py
@@ -171,7 +181,7 @@ table = models.Table(
                 "time_column": "_tstamp",
                 "window_duration": "1 day",
             },
-            "agg_expressions":[
+            "agg_expressions": [
                 {
                     "name": "rows_count",
                     "spark_func_name": "count",
@@ -182,10 +192,9 @@ table = models.Table(
                     "spark_func_name": "min",
                     "spark_func_args": ["low"],
                 },
-                
-            ]
+            ],
         },
-    }
+    },
 )
 
 # Read
@@ -199,7 +208,7 @@ For each group, the number of rows `count` and the lowest price `low` are comput
 
 ### Window Filter
 ??? "API Documentation"
-    [`laktory.models.compute.tablewindowfilter.TableWindowFilter`](TODO)<br>
+    [`laktory.models.TableWindowFilter`][laktory.models.TableWindowFilter]<br>
 
 In some instances, you want the output to be a selection of rows out of groups.
 
@@ -218,14 +227,11 @@ table = models.Table(
                 "symbol",
             ],
             "order_by": [
-                {
-                    "sql_expression": "created_at",
-                    "desc": True
-                },
+                {"sql_expression": "created_at", "desc": True},
             ],
             "rows_to_keep": 2,
-        }
-    }
+        },
+    },
 )
 
 # Read

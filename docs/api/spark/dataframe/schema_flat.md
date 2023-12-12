@@ -1,0 +1,1 @@
+::: laktory.spark.dataframe.schema_flat

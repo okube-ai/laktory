@@ -24,6 +24,22 @@ class Notebook(BaseModel, BaseResource):
          Notebook programming language
     permissions:
         List of notebook permissions
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    notebook = models.Notebook(
+        source="./notebooks/pipelines/dlt_brz_template.py",
+    )
+    print(notebook.path)
+    #> /pipelines/dlt_brz_template.py
+
+    notebook = models.Notebook(source="./notebooks/create_view.py", dirpath="/views/")
+    print(notebook.path)
+    #> /views/create_view.py
+    ```
     """
 
     source: str
@@ -36,14 +52,6 @@ class Notebook(BaseModel, BaseResource):
     def filename(self) -> str:
         """Notebook file name"""
         return os.path.basename(self.source)
-
-    @property
-    def key(self) -> str:
-        """Notebook resource key"""
-        key = os.path.splitext(self.path)[0].replace("/", "-")
-        if key.startswith("-"):
-            key = key[1:]
-        return key
 
     @model_validator(mode="after")
     def default_path(self) -> Any:
@@ -61,6 +69,14 @@ class Notebook(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def resource_key(self) -> str:
+        """Notebook resource key"""
+        key = os.path.splitext(self.path)[0].replace("/", "-")
+        if key.startswith("-"):
+            key = key[1:]
+        return key
+
+    @property
     def pulumi_excludes(self) -> list[str]:
         return ["permissions", "dirpath"]
 
@@ -71,7 +87,7 @@ class Notebook(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `notebook-{self.key}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         opts:
             Pulumi resource options
 
@@ -83,3 +99,17 @@ class Notebook(BaseModel, BaseResource):
         from laktory.resourcesengines.pulumi.notebook import PulumiNotebook
 
         return PulumiNotebook(name=name, notebook=self, opts=opts)
+
+
+if __name__ == "__main__":
+    from laktory import models
+
+    notebook = models.Notebook(
+        source="./notebooks/pipelines/dlt_brz_template.py",
+    )
+    print(notebook.path)
+    # > /pipelines/dlt_brz_template.py
+
+    notebook = models.Notebook(source="./notebooks/create_view.py", dirpath="/views/")
+    print(notebook.path)
+    # > /views/create_view.py

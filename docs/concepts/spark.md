@@ -1,6 +1,6 @@
 ??? "API Documentation"
-    [`laktory.spark.functions`](TODO)<br>
-    [`laktory.spark.dataframe`](TODO)<br>
+    [`laktory.spark.functions`](../api/spark/functions/poly1.md)<br>
+    [`laktory.spark.dataframe`](../api/spark/dataframe/has_column.md)<br>
 
 Apache Spark, an open-source, distributed computing system. Apache Spark is designed for big data processing and analytics and provides a fast and general-purpose cluster-computing framework.
 It supports various programming languages, including Scala, Java, Python, and R.
@@ -33,7 +33,6 @@ Laktory is monkey patching the DataFrame class from spark by assigning all the c
 you can also do the following to get the same results
 ```py
 import pandas as pd
-import laktory  # simply importing laktory will make the new methods available from a DataFrame object
 
 df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
 df.has_column("x")

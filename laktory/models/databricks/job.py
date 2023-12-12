@@ -12,7 +12,7 @@ from laktory.models.databricks.cluster import ClusterLibrary
 
 class JobCluster(Cluster):
     """
-    Job Cluster. Same attributes as `models.Cluster`, except for
+    Job Cluster. Same attributes as `laktory.models.Cluster`, except for
 
     * `is_pinned`
     * `libraries`
@@ -643,6 +643,49 @@ class Job(BaseModel, BaseResource):
     webhook_notifications:
         Webhook notifications specifications
 
+    Examples
+    --------
+    ```py
+    import io
+    from laktory import models
+
+    # Define job
+    job_yaml = '''
+    name: job-stock-prices
+    clusters:
+      - name: main
+        spark_version: 14.0.x-scala2.12
+        node_type_id: Standard_DS3_v2
+
+    tasks:
+      - task_key: ingest
+        job_cluster_key: main
+        notebook_task:
+          notebook_path: /jobs/ingest_stock_prices.py
+        libraries:
+          - pypi:
+              package: yfinance
+
+      - task_key: pipeline
+        depends_ons:
+          - task_key: ingest
+        pipeline_task:
+          pipeline_id: 74900655-3641-49f1-8323-b8507f0e3e3b
+
+    permissions:
+      - group_name: account users
+        permission_level: CAN_VIEW
+      - group_name: role-engineers
+        permission_level: CAN_MANAGE_RUN
+    '''
+
+    # Read job
+    job = models.Job.model_validate_yaml(io.StringIO(job_yaml))
+
+    # Deploy
+    job.deploy()
+    ```
+
     References
     ----------
 
@@ -707,7 +750,7 @@ class Job(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `job-{self.user_name}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         opts:
             Pulumi resource options
 

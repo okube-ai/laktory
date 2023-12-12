@@ -47,9 +47,7 @@ class Catalog(BaseModel, BaseResource):
         schemas=[
             {
                 "name": "engineering",
-                "grants": [
-                    {"principal": "domain-engineering", "privileges": ["SELECT"]}
-                ],
+                "grants": [{"principal": "domain-engineering", "privileges": ["SELECT"]}],
             },
             {
                 "name": "sources",
@@ -120,7 +118,7 @@ class Catalog(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `catalog-{self.name}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         opts:
             Pulumi resource options
 

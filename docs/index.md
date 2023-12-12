@@ -37,7 +37,7 @@ with open("table.yaml") as fp:
 Deployment of required resources to cloud provider and Databricks workspaces, leveraging Infrastructure-as-Code (IaC) tools.
 
 ```py title="main.py"
-table.deploy_with_pulumi()
+table.deploy_with_pulumi()  # noqa
 ```
 ```commandline title="command line"
 pulumi up
@@ -57,9 +57,10 @@ from laktory import read_metadata
 pl = read_metadata(pipeline="pl-stock-prices")
 table = pl.tables[0]
 
+
 # Build table
 @dlt.table(name=table.name)
-def get_df():
+def get_df(table=table):
     # Read Source
     df = table.builder.read_source(spark)
 
@@ -68,6 +69,7 @@ def get_df():
 
     # Return
     return df
+
 
 # Debug table
 wrapper = get_df

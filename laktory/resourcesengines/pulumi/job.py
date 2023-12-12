@@ -2,8 +2,7 @@ import pulumi
 import pulumi_databricks as databricks
 from laktory._settings import settings
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.compute.job import Job
-from laktory.models.compute.pipeline import Pipeline
+from laktory.models.databricks.job import Job
 
 from laktory._logger import get_logger
 
@@ -22,7 +21,7 @@ class PulumiJob(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"job-{job.name}"
+            name = job.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -35,7 +34,7 @@ class PulumiJob(PulumiResourcesEngine):
         # ------------------------------------------------------------------- #
 
         self.job = databricks.Job(
-            f"job-{job.name}",
+            name,
             opts=opts,
             **job.model_pulumi_dump(),
         )
@@ -53,7 +52,7 @@ class PulumiJob(PulumiResourcesEngine):
 
         if access_controls:
             self.permissions = databricks.Permissions(
-                f"permissions-job-{job.name}",
+                f"permissions-{name}",
                 access_controls=access_controls,
                 job_id=self.job.id,
                 opts=opts,

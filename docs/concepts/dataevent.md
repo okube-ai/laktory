@@ -1,6 +1,6 @@
 ??? "API Documentation"
-    [`laktory.models.DataEvent`](TODO)<br>
-    [`laktory.models.DataEventHeader`](TODO)
+    [`laktory.models.DataEventHeader`][laktory.models.DataEventHeader]<br>
+    [`laktory.models.DataEvent`][laktory.models.DataEvent]<br>
 
 The `DataEvent` (and `DataEventHeader`) models are supporting the event-based architecture described in [Design Principles](design.md).
 They define the metadata (name, producer, timestamp, etc.) as well as the data (payload) of an event.
@@ -15,7 +15,7 @@ from laktory import models
 from datetime import datetime
 
 
-event =  models.DataEvent(
+event = models.DataEvent(
     name="stock_price",
     producer={"name": "yahoo-finance"},
     data={
@@ -45,7 +45,7 @@ It is essentially a strip down version of the `DataEvent` model in which the `da
 ```py
 from laktory import models
 
-event =  models.DataEventHeader(
+event = models.DataEventHeader(
     name="stock_price",
     producer={"name": "yahoo-finance"},
 )

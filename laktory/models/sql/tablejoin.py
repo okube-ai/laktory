@@ -45,14 +45,12 @@ class TableJoin(BaseModel):
                     "other": {
                         "name": "slv_stock_metadata",
                         "read_as_stream": False,
-                        "selects": [
-                            "symbol", "currency", "first_trader"
-                        ]
+                        "selects": ["symbol", "currency", "first_trader"],
                     },
                     "on": ["symbol"],
                 }
             ],
-        }
+        },
     )
     ```
 

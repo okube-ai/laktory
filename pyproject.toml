@@ -24,9 +24,14 @@ requires-python = ">=3.9"
 keywords = ["one", "two"]
 license = {text = "MIT"}
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Development Status :: 4 - Beta",
+    "Framework :: Pydantic :: 2",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 dynamic = ["version"]
 dependencies = [
@@ -57,6 +62,7 @@ spark = [
 test = [
     "pytest",
     "pytest-cov",
+    "pytest-examples",
 #    "tox"
     "yfinance",
 ]
@@ -86,3 +92,16 @@ include = ["laktory*"]
 [tool.setuptools.dynamic]
 version = {attr = "laktory._version.VERSION"}
 
+[tool.ruff]
+#line-length = 120
+#extend-select = ['Q', 'RUF100', 'C90', 'UP', 'I', 'D', 'T']
+extend-ignore = []
+#flake8-quotes = {inline-quotes = 'single', multiline-quotes = 'double'}
+#mccabe = { max-complexity = 14 }
+#isort = { known-first-party = ['pydantic', 'tests'] }
+target-version = "py39"
+#extend-exclude = ['pydantic/v1', 'tests/mypy/outputs']
+builtins = ["spark", "display"]
+
+[tool.ruff.pydocstyle]
+convention = "numpy"

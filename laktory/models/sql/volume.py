@@ -44,7 +44,7 @@ class Volume(BaseModel, BaseResource):
         grants=[
             {"principal": "account users", "privileges": ["READ_VOLUME"]},
             {"principal": "role-metastore-admins", "privileges": ["WRITE_VOLUME"]},
-        ]
+        ],
     )
     print(volume.full_name)
     #> dev.sources.landing
@@ -99,17 +99,21 @@ class Volume(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def resource_key(self) -> str:
+        return self.full_name
+
+    @property
     def pulumi_excludes(self) -> list[str]:
         return ["grants"]
 
-    def deploy_with_pulumi(self, name=None, **kwargs):
+    def deploy_with_pulumi(self, name=None, opts=None):
         """
         Deploy volume using pulumi.
 
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `volume-{self.name}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         opts:
             Pulumi resource options
 
@@ -120,7 +124,7 @@ class Volume(BaseModel, BaseResource):
         """
         from laktory.resourcesengines.pulumi.volume import PulumiVolume
 
-        return PulumiVolume(name=name, volume=self, **kwargs)
+        return PulumiVolume(name=name, volume=self, opts=opts)
 
 
 if __name__ == "__main__":

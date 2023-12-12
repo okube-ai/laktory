@@ -21,7 +21,7 @@ class PulumiUser(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"user-{user.user_name}"
+            name = user.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -31,7 +31,7 @@ class PulumiUser(PulumiResourcesEngine):
 
         if user.id is None:
             self.user = databricks.User(
-                f"user-{user.user_name}",
+                name,
                 opts=opts,
                 **user.model_pulumi_dump(),
             )
@@ -48,7 +48,7 @@ class PulumiUser(PulumiResourcesEngine):
         for role in user.roles:
             self.roles += [
                 databricks.UserRole(
-                    f"user-role-{user.user_name}-{role}",
+                    f"role-{name}-{role}",
                     user_id=self.user.id,
                     role=role,
                     opts=opts,

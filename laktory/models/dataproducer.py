@@ -22,13 +22,16 @@ class DataProducer(BaseModel):
     --------
     ```py
     from laktory import models
+
     producer = models.DataProducer(
         name="yahoo-finance",
         description="yfinance offers a threaded and Pythonic way to download market data from Yahoo! finance",
         party=3,
     )
     print(producer)
-    #> name='yahoo-finance' description='yfinance offers a threaded and Pythonic way to download market data from Yahoo! finance' party=3
+    '''
+    vars={} name='yahoo-finance' description='yfinance offers a threaded and Pythonic way to download market data from Yahoo! finance' party=3
+    '''
     ```
     """
 

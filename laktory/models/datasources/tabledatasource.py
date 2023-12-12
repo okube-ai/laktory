@@ -124,6 +124,7 @@ class TableDataSource(BaseDataSource):
     ---------
     ```python
     from laktory import models
+
     source = models.TableDataSource(
         name="brz_stock_prices",
         selects=["symbol", "open", "close"],
@@ -131,7 +132,7 @@ class TableDataSource(BaseDataSource):
         from_pipeline=False,
         read_as_stream=True,
     )
-    df = source.read(spark)
+    # df = source.read(spark)
     ```
     """
 

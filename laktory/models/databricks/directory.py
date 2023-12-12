@@ -18,13 +18,14 @@ class Directory(BaseModel, BaseResource):
     --------
     ```py
     from laktory import models
-    d = models.Directory(
-        path="/queries/views"
-    )
+
+    d = models.Directory(path="/queries/views")
     print(d)
-    #> path='/queries/views' delete_recursive=None
-    print(d.key)
+    #> vars={} path='/queries/views' delete_recursive=None
+    print(d.resource_key)
     #> queries-views
+    print(d.resource_name)
+    #> directory-queries-views
     ```
     """
 
@@ -32,7 +33,7 @@ class Directory(BaseModel, BaseResource):
     delete_recursive: Union[bool, None] = None
 
     @property
-    def key(self):
+    def resource_key(self) -> str:
         """Key identifier for the directory"""
         key = self.path.replace("/", "-")
         if key.startswith("-"):
@@ -64,7 +65,7 @@ class Directory(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `directory-{self.key}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         opts:
             Pulumi resource options
 

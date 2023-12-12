@@ -70,6 +70,22 @@ class Warehouse(BaseModel, BaseResource):
         Databricks tags all endpoint resources with these tags.
     warehouse_type:
         SQL warehouse type.
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    warehouse = models.Warehouse(
+        name="default",
+        cluster_size="2X-Small",
+        auto_stop_mins=30,
+        channel_name="CHANNEL_NAME_PREVIEW",
+        enable_photon=True,
+        enable_serverless_compute=True,
+        permissions=[{"group_name": "account users", "permission_level": "CAN_USE"}],
+    )
+    ```
     """
 
     cluster_size: Literal[
@@ -121,7 +137,7 @@ class Warehouse(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `warehouse-{self.name}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         opts:
             Pulumi resource options
 
@@ -133,3 +149,17 @@ class Warehouse(BaseModel, BaseResource):
         from laktory.resourcesengines.pulumi.warehouse import PulumiWarehouse
 
         return PulumiWarehouse(name=name, warehouse=self, opts=opts)
+
+
+if __name__ == "__main__":
+    from laktory import models
+
+    warehouse = models.Warehouse(
+        name="default",
+        cluster_size="2X-Small",
+        auto_stop_mins=30,
+        channel_name="CHANNEL_NAME_PREVIEW",
+        enable_photon=True,
+        enable_serverless_compute=True,
+        permissions=[{"group_name": "account users", "permission_level": "CAN_USE"}],
+    )

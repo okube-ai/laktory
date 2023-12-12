@@ -39,11 +39,9 @@ class Schema(BaseModel, BaseResource):
     from laktory import models
 
     schema = models.Schema(
-            catalog_name="dev",
-            name="engineering",
-            grants=[
-                    {"principal": "domain-engineering", "privileges": ["SELECT"]}
-            ],
+        catalog_name="dev",
+        name="engineering",
+        grants=[{"principal": "domain-engineering", "privileges": ["SELECT"]}],
     )
     schema.deploy()
     ```
@@ -93,6 +91,10 @@ class Schema(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def resource_key(self) -> str:
+        return self.full_name
+
+    @property
     def pulumi_excludes(self) -> list[str]:
         return ["tables", "volumes", "grants"]
 
@@ -103,7 +105,7 @@ class Schema(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `schema-{self.name}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         opts:
             Pulumi resource options
 

@@ -5,7 +5,7 @@ In fact, it's built on top of IaC tools to run the deployment for you.
 Let's have a look at a simple example that deploy a pipeline with a single table using Pulumi.
 
 Pipeline configuration
-```yaml title="pipline.yaml"
+```yaml title="pipeline.yaml"
 name: pl-stock-prices
 
 catalog: dev

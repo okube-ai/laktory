@@ -1,6 +1,7 @@
 from typing import Literal
 from typing import Union
 from typing import Any
+import re
 from pydantic import BaseModel as _BaseModel
 
 from laktory._settings import settings
@@ -41,6 +42,25 @@ class BaseResource(_BaseModel):
     def pulumi_renames(self) -> dict[str, str]:
         """Map of fields to rename when dumping model to pulumi"""
         return {}
+
+    @property
+    def resource_type_id(self) -> str:
+        """Resource type id used to build resource name"""
+        _id = type(self).__name__
+        _id = re.sub(
+            r"(?<!^)(?=[A-Z])", "-", _id
+        ).lower()  # Convert CamelCase to kebab-case
+        return _id
+
+    @property
+    def resource_key(self) -> str:
+        """Resource key used to build resource name"""
+        return self.name
+
+    @property
+    def resource_name(self) -> str:
+        """Resource name `{self.resource_type}.{self.resource_key}`"""
+        return f"{self.resource_type_id}-{self.resource_key}"
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #

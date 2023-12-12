@@ -4,7 +4,7 @@ import pulumi_databricks as databricks
 
 from laktory._logger import get_logger
 from laktory._settings import settings
-from laktory.models.compute.pipeline import Pipeline
+from laktory.models.databricks.pipeline import Pipeline
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
 
 logger = get_logger(__name__)
@@ -22,7 +22,7 @@ class PulumiPipeline(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"pipline-{pipeline.name}"
+            name = pipeline.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -35,7 +35,7 @@ class PulumiPipeline(PulumiResourcesEngine):
         # ------------------------------------------------------------------- #
 
         self.pipeline = databricks.Pipeline(
-            f"pipline-{pipeline.name}",
+            name,
             opts=opts,
             **pipeline.model_pulumi_dump(),
         )
@@ -53,7 +53,7 @@ class PulumiPipeline(PulumiResourcesEngine):
 
         if access_controls:
             self.permissions = databricks.Permissions(
-                f"permissions-pipeline-{pipeline.name}",
+                f"permissions-{name}",
                 access_controls=access_controls,
                 pipeline_id=self.pipeline.id,
                 opts=opts,
@@ -70,7 +70,7 @@ class PulumiPipeline(PulumiResourcesEngine):
         with open(source, "w") as fp:
             fp.write(s)
         filepath = f"{settings.workspace_laktory_root}pipelines/{pipeline.name}.json"
-        self.conf = databricks.WorkspaceFile(
+        self.workspace_file = databricks.WorkspaceFile(
             f"file-{filepath}",
             path=filepath,
             # md5=hashlib.md5(s.encode('utf-8')).hexdigest(),
@@ -79,6 +79,7 @@ class PulumiPipeline(PulumiResourcesEngine):
         )
         # os.remove(filepath)
 
+        _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.workspace_file))
         if access_controls:
             self.conf_permissions = databricks.Permissions(
                 f"permissions-file-{filepath}",

@@ -20,14 +20,20 @@ logger = get_logger(__name__)
 
 def is_mocked() -> bool:
     """
-    DLT module mock flag. If True, native Databricks DLT functions are mocked
+    DLT module mock flag. If `True`, native Databricks DLT functions are mocked
     to allow debugging by running a pipeline notebook against an arbitrary
     cluster even when the native DLT module is not available.
 
     DLT is mocked in the following situations:
-        - notebook ran outside a DLT pipeline and DBR < 13
-        - notebook ran outside a DLT pipeline and DBR >= 13 with shared access
-          mode cluster
+
+    * notebook ran outside a DLT pipeline and DBR < 13
+    * notebook ran outside a DLT pipeline and DBR >= 13 with shared access
+    mode cluster
+
+    Returns
+    -------
+    :
+        Mocked flag
     """
     try:
         import dlt
@@ -39,9 +45,14 @@ def is_mocked() -> bool:
 
 def is_debug() -> bool:
     """
-    Debug flag. If True, DLT readers are replaced with laktory functions
+    Debug flag. If `True`, DLT readers are replaced with laktory functions
     allowing to run a notebook outside of a pipeline and preview the content
     of the output DataFrame.
+
+    Returns
+    -------
+    :
+        Debug flag
     """
     try:
         import dlt
@@ -59,6 +70,31 @@ def get_df(df_wrapper) -> DataFrame:
     `@dlt.view`. Returns None when `is_debug()` is `False`.
 
     This method is not supported when a table using DLT views as input.
+
+    Returns
+    -------
+    :
+        Output DataFrame
+
+    Examples
+    --------
+    ```py
+    from laktory import dlt
+
+    dlt.spark = spark
+
+    def define_table():
+        @dlt.table(name="stock_prices")
+        def get_df():
+            df = spark.createDataFrame([[1.0, 1.1, 0.98]])
+            return df
+
+        return get_df
+
+    wrapper = define_table()
+    df = dlt.get_df(wrapper)
+    display(df)
+    ```
     """
     df = None
     if is_debug():
@@ -74,7 +110,34 @@ def get_df(df_wrapper) -> DataFrame:
 # --------------------------------------------------------------------------- #
 
 
-def read(*args, **kwargs):
+def read(*args, **kwargs) -> DataFrame:
+    """
+    When `is_debug()` is `True` read table from storage, else read table from
+    pipeline with native Databricks `dlt.read`
+
+    Returns
+    -------
+    :
+        Ouput DataFrame
+
+    Examples
+    --------
+    ```py
+    from laktory import dlt
+
+    dlt.spark = spark
+
+    def define_table():
+        @dlt.table(name="slv_stock_prices")
+        def get_df():
+            df = dlt.read("dev.finance.brz_stock_prices")
+            return df
+
+        return get_df
+
+    define_table()
+    ```
+    """
     if is_debug():
         return spark.read.table(args[0])
     else:
@@ -85,6 +148,34 @@ def read(*args, **kwargs):
 
 
 def read_stream(*args, fmt="delta", **kwargs):
+    """
+    When `is_debug()` is `True` read table from storage as stream, else read
+    table from pipeline with native Databricks `dlt.read_stream`
+
+    Returns
+    -------
+    :
+        Ouput DataFrame
+
+    Examples
+    --------
+    ```py
+    from laktory import dlt
+
+    dlt.spark = spark
+
+    def define_table():
+        @dlt.table(name="slv_stock_prices")
+        def get_df():
+            df = dlt.read_stream("dev.finance.brz_stock_prices")
+            return df
+
+        return get_df
+
+    define_table()
+    ```
+    """
+
     if is_debug():
         return spark.readStream.format(fmt).table(args[0])
     else:
@@ -95,6 +186,45 @@ def read_stream(*args, fmt="delta", **kwargs):
 
 
 def apply_changes(*args, table=None, **kwargs):
+    """
+    When `is_debug()` is `True` read source CDC table from storage, else run
+    native Databricks `dlt.apply_changes`
+
+    Returns
+    -------
+    :
+        Ouput DataFrame
+
+    Examples
+    --------
+    ```py
+    from laktory import dlt
+    from laktory import models
+
+    dlt.spark = spark
+
+    def define_table(table):
+        dlt.create_streaming_table(name=table.name)
+        df = dlt.apply_changes(**table.builder.apply_changes_kwargs)
+        return df
+
+    define_table(
+        models.Table(
+            name="slv_stock_prices",
+            builder={
+                "table_source": {
+                    "name": "brz_stock_prices",
+                    "cdc": {
+                        "primary_keys": ["asset_symbol"],
+                        "sequence_by": "change_id",
+                        "scd_type": 2,
+                    },
+                },
+            },
+        )
+    )
+    ```
+    """
     if is_debug():
         if table is None:
             return

@@ -10,8 +10,9 @@ def test_workspace_file():
         permissions=[{"permission_level": "CAN_READ", "group_name": "account users"}],
     )
     assert workspace_file.filename == "install_laktory.sh"
-    assert workspace_file.key == "init_scripts-install_laktory"
     assert workspace_file.path == "/init_scripts/install_laktory.sh"
+    assert workspace_file.resource_key == "init_scripts-install_laktory"
+    assert workspace_file.resource_name == "workspace-file-init_scripts-install_laktory"
 
     assert workspace_file.permissions[0].permission_level == "CAN_READ"
     assert workspace_file.permissions[0].group_name == "account users"

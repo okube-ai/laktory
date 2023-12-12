@@ -237,6 +237,35 @@ class Cluster(BaseModel, BaseResource):
         SSH public key contents that will be added to each Spark node in this cluster. The corresponding private keys
         can be used to login with the user name ubuntu on port 2200. You can specify up to 10 keys.
 
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    cluster = models.Cluster(
+        name="default",
+        spark_version="14.0.x-scala2.12",
+        data_security_mode="USER_ISOLATION",
+        node_type_id="Standard_DS3_v2",
+        autoscale={
+            "min_workers": 1,
+            "max_workers": 4,
+        },
+        num_workers=0,
+        autotermination_minutes=30,
+        libraries=[{"pypi": {"package": "laktory==0.0.23"}}],
+        permissions=[
+            {
+                "group_name": "role-engineers",
+                "permission_level": "CAN_RESTART",
+            }
+        ],
+        is_pinned=True,
+    )
+    cluster.deploy_with_pulumi()
+    ```
+
     References
     ----------
 
@@ -301,7 +330,7 @@ class Cluster(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `cluster-{self.user_name}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         opts:
             Pulumi resource options
 
@@ -313,3 +342,29 @@ class Cluster(BaseModel, BaseResource):
         from laktory.resourcesengines.pulumi.cluster import PulumiCluster
 
         return PulumiCluster(name=name, cluster=self, opts=opts)
+
+
+if __name__ == "__main__":
+    from laktory import models
+
+    cluster = models.Cluster(
+        name="default",
+        spark_version="14.0.x-scala2.12",
+        data_security_mode="USER_ISOLATION",
+        node_type_id="Standard_DS3_v2",
+        autoscale={
+            "min_workers": 1,
+            "max_workers": 4,
+        },
+        num_workers=0,
+        autotermination_minutes=30,
+        libraries=[{"pypi": {"package": "laktory==0.0.23"}}],
+        permissions=[
+            {
+                "group_name": "role-engineers",
+                "permission_level": "CAN_RESTART",
+            }
+        ],
+        is_pinned=True,
+    )
+    cluster.deploy_with_pulumi()

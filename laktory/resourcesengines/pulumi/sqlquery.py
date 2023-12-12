@@ -2,7 +2,7 @@ from typing import Union
 import pulumi
 import pulumi_databricks as databricks
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.compute.sqlquery import SqlQuery
+from laktory.models.databricks.sqlquery import SqlQuery
 
 from laktory._logger import get_logger
 
@@ -21,7 +21,7 @@ class PulumiSqlQuery(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"sql-query-{sql_query.key}"
+            name = sql_query.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -41,7 +41,7 @@ class PulumiSqlQuery(PulumiResourcesEngine):
             sql_query.vars["_data_source_id"] = warehouse.data_source_id
 
         self.query = databricks.SqlQuery(
-            f"sql-query-{sql_query.key}",
+            name,
             opts=opts,
             **sql_query.model_pulumi_dump(),
         )
@@ -59,7 +59,7 @@ class PulumiSqlQuery(PulumiResourcesEngine):
 
         if access_controls:
             self.permissions = databricks.Permissions(
-                f"permissions-sql-query-{sql_query.key}",
+                f"permissions-{name}",
                 access_controls=access_controls,
                 sql_query_id=self.query.id,
                 opts=opts,

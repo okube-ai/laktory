@@ -24,6 +24,17 @@ spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 df0 = spark.createDataFrame(pdf)
 
 
+def test_compare(df0=df0):
+    df = df0.withColumn("compare1", LF.compare("x", "a"))
+    df = df.withColumn(
+        "compare2", LF.compare("x", "a", operator=">", where=F.col("a") > 0)
+    )
+    pdf = df.toPandas()
+
+    assert pdf["compare1"].tolist() == [True, False, False]
+    assert pdf["compare2"].tolist() == [False, None, True]
+
+
 def test_poly(df0=df0):
     df = df0.withColumn("poly1_1", LF.poly1("x", -1, 1.0))
     df = df.withColumn("poly1_2", LF.poly1("x", F.col("a"), F.col("b")))
@@ -71,6 +82,7 @@ def test_uuid(df0=df0):
 
 
 if __name__ == "__main__":
+    test_compare()
     test_poly()
     test_power()
     test_roundp()

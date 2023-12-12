@@ -1,7 +1,7 @@
 import pulumi
 import pulumi_databricks as databricks
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.compute.warehouse import Warehouse
+from laktory.models.databricks.warehouse import Warehouse
 
 from laktory._logger import get_logger
 
@@ -20,7 +20,7 @@ class PulumiWarehouse(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"warehouse-{warehouse.name}"
+            name = warehouse.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -29,7 +29,7 @@ class PulumiWarehouse(PulumiResourcesEngine):
         )
 
         self.warehouse = databricks.SqlEndpoint(
-            f"warehouse-{warehouse.name}",
+            name,
             opts=opts,
             **warehouse.model_pulumi_dump(),
         )
@@ -47,7 +47,7 @@ class PulumiWarehouse(PulumiResourcesEngine):
 
         if access_controls:
             self.permissions = databricks.Permissions(
-                f"permissions-warehouse-{warehouse.name}",
+                f"permissions-{name}",
                 access_controls=access_controls,
                 sql_endpoint_id=self.warehouse.id,
                 opts=opts,

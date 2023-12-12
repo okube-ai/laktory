@@ -1,6 +1,3 @@
-??? "API Documentation"
-    [`laktory.models`](TODO)<br>
-
 Laktory is built on top of a collection of nested [pydantic](https://docs.pydantic.dev/latest/concepts/models/) models. 
 Each model is a subclass of `pydantic.BaseModel` and offer a few additional methods and properties. 
 The serializable nature of these models makes it possible to define a lakehouse using a declarative approach.
@@ -16,11 +13,11 @@ x = models.Column(name="x", type="double")
 y = models.Column(name="y", type="double")
 z = models.Column(name="z", type="double")
 
-table_xy = models.Table(name="table_xy", columns=[x,y])
-table_xyz = models.Table(name="table_xyz", columns=[x,y, z])
+table_xy = models.Table(name="table_xy", columns=[x, y])
+table_xyz = models.Table(name="table_xyz", columns=[x, y, z])
 
 pipeline = models.Pipeline(
-    name="my-pipline",
+    name="my-pipeline",
     catalog="dev",
     target="finance",
     tables=[table_xy, table_xyz],
@@ -32,24 +29,26 @@ pipeline = models.Pipeline(
 from laktory import models
 
 pipeline = models.Pipeline(
-    name="my-pipline",
+    name="my-pipeline",
     catalog="dev",
     target="finance",
     tables=[
         {
-            "name": "table_xy", "columns": [
+            "name": "table_xy",
+            "columns": [
                 {"name": "x", "type": "double"},
                 {"name": "y", "type": "double"},
-            ]
-         },
+            ],
+        },
         {
-            "name": "table_xyz", "columns": [
+            "name": "table_xyz",
+            "columns": [
                 {"name": "x", "type": "double"},
                 {"name": "y", "type": "double"},
                 {"name": "z", "type": "double"},
-            ]
-         },
-    ]
+            ],
+        },
+    ],
 )
 ```
 
@@ -58,7 +57,7 @@ In most cases however, it is best practice to declare these models as `yaml` con
 Here is the same example using a configuration file.
 
 ```yaml title="my-pipeline.yaml"
-name: my-pipline
+name: my-pipeline
 catalog: dev
 target: finance
 tables: 
@@ -80,8 +79,9 @@ tables:
 
 ```py title="main.py"
 from laktory import models
+
 with open("my-pipeline.yaml", "r") as fp:
-  pipeline = models.Pipeline.model_validate_yaml(fp)
+    pipeline = models.Pipeline.model_validate_yaml(fp)
 ```
 Using any of the above approaches will result in the exact same `pipeline` python object.
 
@@ -90,7 +90,7 @@ In some cases, it's not practical or even possible to declare a property as plai
 Take for example the declaration of a pipeline where the catalog name is the environment in which the pipeline will be deployed.
 
 ```yaml
-name: my-pipline
+name: my-pipeline
 catalog: dev
 target: finance
 tables: 
@@ -104,7 +104,7 @@ You probably want to re-use the same configuration file for all your environment
 Laktory makes it possible by introducing the concept of models variables or `vars`, declared as `${var.variable_name}`
 
 ```yaml
-name: my-pipline
+name: my-pipeline
 catalog: ${var.env}
 target: finance
 tables: 

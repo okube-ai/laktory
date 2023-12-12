@@ -126,6 +126,15 @@ class Column(BaseModel):
     ```py
     from laktory import models
 
+    df = spark.createDataFrame(
+        [
+            [200.0],
+            [202.0],
+            [201.5],
+        ],
+        ["data.open"],
+    )
+
     col = models.Column(
         name="open",
         spark_func_name="poly1",

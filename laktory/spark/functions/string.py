@@ -1,7 +1,5 @@
-from typing import Union
 import pyspark.sql.functions as F
 
-# from pyspark.sql.functions import pandas_udf
 from pyspark.sql.column import Column
 from laktory.spark.functions._common import (
     COLUMN_OR_NAME,
@@ -32,18 +30,39 @@ def string_split(
     Get substring using separator `pat`.
 
     Parameters
-    ------
-    x: pyspark.sql.functions.column.Column or column name
+    ----------
+    x:
         Input text series to split
-    pattern: str or pyspark.sql.functions.column.Column
+    pattern:
         String or regular expression to split on. If not specified, split on whitespace.
-    key: int or pyspark.sql.functions.column.Column
+    key:
         Split index to return
 
     Returns
     -------
-    output: pd.Series
-        Output series
+    :
+        Result
+
+    Examples
+    --------
+    ```py
+    from pyspark.sql import SparkSession
+    import pyspark.sql.functions as F
+    import laktory.spark.functions as LF
+
+    spark = SparkSession.builder.getOrCreate()
+
+    df = spark.range(1).withColumn("x", F.lit("price_close"))
+    df = df.withColumn("y", LF.string_split("x", pattern="_", key=1))
+    print(df.show_string())
+    '''
+    +---+-----------+-----+
+    | id|          x|    y|
+    +---+-----------+-----+
+    |  0|price_close|close|
+    +---+-----------+-----+
+    '''
+    ```
     """
     return F.split(_col(x), pattern=pattern).getItem(key)
 
@@ -57,12 +76,27 @@ def uuid() -> Column:
     """
     Create a unique id for each row.
 
-    Parameters
-    ------
-
     Returns
     -------
-    output: pyspark.sql.functions.column.Column
+    :
         Output column
+
+    Examples
+    --------
+    ```py
+    import laktory.spark.functions as LF
+
+    df = spark.range(3)
+    df = df.withColumn("uuid", LF.uuid())
+    '''
+    +---+--------------------+
+    | id|                uuid|
+    +---+--------------------+
+    |  0|acc0b53e-a36f-4f8...|
+    |  1|56cdeb41-6828-486...|
+    |  2|64a7d2bf-5e1d-41a...|
+    +---+--------------------+
+    '''
+    ```
     """
     return F.expr("uuid()")

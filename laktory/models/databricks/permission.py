@@ -5,9 +5,11 @@ from laktory.models.basemodel import BaseModel
 
 class Permission(BaseModel):
     """
-    Databricks's permission generally applicable to objects like cluster,
-    notebook, pipeline, etc. For providing access to securable data, refer
-    to `models.Grant` instead.
+    Databricks Permission
+
+    Permission generally applicable to objects like cluster, notebook,
+    pipeline, etc. For providing access to securable data, refer to
+    `models.Grant` instead.
 
     Attributes
     ----------
@@ -19,6 +21,14 @@ class Permission(BaseModel):
         Name of the service principal to assign the permission to.
     user_name
         Name of the user to assign the permission to.
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    p = models.Permission(group_name="role-engineers", permission_level="READ")
+    ```
     """
 
     group_name: str = None
@@ -46,3 +56,9 @@ class Permission(BaseModel):
             )
 
         return self
+
+
+if __name__ == "__main__":
+    from laktory import models
+
+    p = models.Permission(group_name="role-engineers", permission_level="READ")

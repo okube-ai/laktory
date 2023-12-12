@@ -1,7 +1,7 @@
 import pulumi
 import pulumi_databricks as databricks
 from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
-from laktory.models.directory import Directory
+from laktory.models.databricks.directory import Directory
 
 
 class PulumiDirectory(PulumiResourcesEngine):
@@ -16,7 +16,7 @@ class PulumiDirectory(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"directory-{directory.key}"
+            name = directory.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -25,5 +25,5 @@ class PulumiDirectory(PulumiResourcesEngine):
         )
 
         self.directory = databricks.Directory(
-            f"directory-{directory.key}", opts=opts, **directory.model_pulumi_dump()
+            name, opts=opts, **directory.model_pulumi_dump()
         )

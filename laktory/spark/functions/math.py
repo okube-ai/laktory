@@ -1,7 +1,4 @@
-from typing import Union
 import pyspark.sql.functions as F
-
-# from pyspark.sql.functions import pandas_udf
 from pyspark.sql.column import Column
 from laktory.spark.functions._common import (
     COLUMN_OR_NAME,
@@ -35,19 +32,36 @@ def poly1(
 
     Parameters
     ----------
-    x: pyspark.sql.functions.column.Column, column name
+    x:
         Input column
-    a: float or pyspark.sql.functions.column.Column
+    a:
         Slope
-    b: float or pyspark.sql.functions.column.Column
+    b:
         y-intercept
 
     Returns
     -------
-    output: pyspark.sql.functions.column.Column
+    :
         Output column
-    """
 
+    Examples
+    --------
+    ```py
+    import laktory  # noqa: F401
+    import laktory.spark.functions as LF
+
+    df = spark.createDataFrame([[9]], ["x"])
+    df = df.withColumn("y", LF.poly1("x", a=-1, b=2))
+    print(df.show_string())
+    '''
+    +---+---+
+    |  x|  y|
+    +---+---+
+    |  9| -7|
+    +---+---+
+    '''
+    ```
+    """
     return _lit(a) * _col(x) + _lit(b)
 
 
@@ -62,24 +76,37 @@ def poly2(
 
     Parameters
     ------
-    x: pyspark.sql.functions.column.Column or column name
+    x:
         Input column
-    a: float or pyspark.sql.functions.column.Column
+    a:
         x**2 coefficient
-    b: float or pyspark.sql.functions.column.Column
+    b:
         x**1 coefficient
-    c: float or pyspark.sql.functions.column.Column
+    c:
         x**0 coefficient
 
     Returns
     -------
-    output: pyspark.sql.functions.column.Column
+    :
         Output column
+
 
     Examples
     --------
-    >>> 1+1.0
-    2.0
+    ```py
+    import laktory.spark.functions as LF
+
+    df = spark.createDataFrame([[9]], ["x"])
+    df = df.withColumn("y", LF.poly2("x", a=-1, b=2))
+    print(df.show_string())
+    '''
+    +---+-----+
+    |  x|    y|
+    +---+-----+
+    |  9|-63.0|
+    +---+-----+
+    '''
+    ```
     """
     return _lit(a) * _col(x) ** 2 + _lit(b) * _col(x) + _lit(c)
 
@@ -95,21 +122,39 @@ def power(
     n: FLOAT_OR_COLUMN = 0.0,
 ) -> Column:
     """
-    Polynomial function of first degree
+    Power function
 
     Parameters
     ------
-    x: pyspark.sql.functions.column.Column or column name
+    x:
         Input column
-    a: float or pyspark.sql.functions.column.Column
+    a:
         Coefficient
-    n: float or pyspark.sql.functions.column.Column
+    n:
         Exponent
 
     Returns
     -------
-    output: pyspark.sql.functions.column.Column
+    :
         Output column
+
+
+    Examples
+    --------
+    ```py
+    import laktory.spark.functions as LF
+
+    df = spark.createDataFrame([[9]], ["x"])
+    df = df.withColumn("y", LF.power("x", a=-3, n=2))
+    print(df.show_string())
+    '''
+    +---+------+
+    |  x|     y|
+    +---+------+
+    |  9|-243.0|
+    +---+------+
+    '''
+    ```
     """
     return _lit(a) * _col(x) ** _lit(n)
 
@@ -128,15 +173,44 @@ def roundp(
 
     Parameters
     ------
-    x: pyspark.sql.functions.column.Column or column name
+    x:
         Input column
-    p: float or pyspark.sql.functions.column.Column
+    p:
         Precision
 
     Returns
     -------
-    output: pyspark.sql.functions.column.Column
+    :
         Output column
+
+    Examples
+    --------
+    ```py
+    import laktory.spark.functions as LF
+
+    df = spark.createDataFrame([[0.781], [13.0]], ["x"])
+    df = df.withColumn("y", LF.roundp("x", p=5))
+    print(df.show_string())
+    '''
+    +-----+----+
+    |    x|   y|
+    +-----+----+
+    |0.781| 0.0|
+    | 13.0|15.0|
+    +-----+----+
+    '''
+
+    df = df.withColumn("y", LF.roundp("x", p=0.25))
+    print(df.show_string())
+    '''
+    +-----+----+
+    |    x|   y|
+    +-----+----+
+    |0.781|0.75|
+    | 13.0|13.0|
+    +-----+----+
+    '''
+    ```
     """
     # eps0 = 1.0e-16
     # precision = float(precision)

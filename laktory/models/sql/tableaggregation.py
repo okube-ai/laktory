@@ -17,7 +17,7 @@ class TimeWindow(BaseModel):
     """
     Specifications for Time Window Aggregation
 
-    Parameters
+    Attributes
     ----------
     time_column:
         Timestamp column used for grouping rows
@@ -69,6 +69,7 @@ class TableAggregation(BaseModel):
     --------
     ```py
     from laktory import models
+
     table = models.Table(
         name="gld_stock_prices_by_1d",
         builder={
@@ -77,9 +78,7 @@ class TableAggregation(BaseModel):
                 "name": "slv_star_stock_prices",
             },
             "aggregation": {
-                "groupby_columns": [
-                    "symbol"
-                ],
+                "groupby_columns": ["symbol"],
                 "groupby_window": {
                     "time_column": "_tstamp",
                     "window_duration": "1 day",
@@ -87,9 +86,9 @@ class TableAggregation(BaseModel):
                 "agg_expressions": [
                     {"name": "low", "spark_func_name": "min", "spark_func_args": ["low"]},
                     {"name": "high", "spark_func_name": "max", "spark_func_args": ["high"]},
-                ]
-            }
-        }
+                ],
+            },
+        },
     )
     ```
 

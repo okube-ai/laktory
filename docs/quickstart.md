@@ -2,13 +2,14 @@ Suppose your end goal is to compare Apple and Google stock performances.
 The example below illustrates how Laktory can help with:
 
 * Generating the raw data
-* Declaring the transformation layers (bronze, silver, gold) 
+* Declaring the transformation layers (bronze, silver, gold)
 * Deploying the corresponding data pipeline to Databricks
 
 
 ### Generate data events
+
 ??? "API Documentation"
-    [`laktory.models.dataevent`](TODO)<br>
+    [`laktory.models.DataEvent`][laktory.models.DataEvent]<br>
 
 A `DataEvent` class helps you set both the metadata (event name, producer, etc.) and the data of an event and provides the methods for writing that event to a cloud storage or databricks volume/mount.
 
@@ -41,7 +42,7 @@ events = [
             "open": 132.00,
             "close": 134.12,
         },
-    )
+    ),
 ]
 
 # Export to databricks landing volume / mount.
@@ -51,8 +52,8 @@ for event in events:
 
 ### Declare data pipeline and tables
 ??? "API Documentation"
-    [`laktory.models.sql.table`](TODO)<br>
-    [`laktory.models.compute.pipeline`](TODO)<br>
+    [`laktory.models.Table`][laktory.models.Table]<br>
+    [`laktory.models.Pipeline`][laktory.models.Pipeline]<br>
 
 Once you have data events in your landing storage (they can be generated with any external system), build a yaml file (or python code) to define your data pipeline and the associated transformations. This configuration file may be used to set
 
@@ -177,6 +178,7 @@ logger = get_logger(__name__)
 # Read pipeline definition
 pl_name = spark.conf.get("pipeline_name", "pl-stock-prices")
 pl = read_metadata(pipeline=pl_name)
+
 
 # Define table
 def define_table(table):

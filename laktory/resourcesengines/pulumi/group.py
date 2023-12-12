@@ -16,7 +16,7 @@ class PulumiGroup(PulumiResourcesEngine):
         opts=None,
     ):
         if name is None:
-            name = f"group-{group.display_name}"
+            name = group.resource_name
         super().__init__(self.t, name, {}, opts)
 
         opts = pulumi.ResourceOptions(
@@ -25,11 +25,7 @@ class PulumiGroup(PulumiResourcesEngine):
         )
 
         if group.id is None:
-            self.group = databricks.Group(
-                f"group-{group.display_name}", opts=opts, **group.model_pulumi_dump()
-            )
+            self.group = databricks.Group(name, opts=opts, **group.model_pulumi_dump())
             group.id = self.group.id
         else:
-            self.group = databricks.Group.get(
-                f"group-{group.display_name}", id=group.id
-            )
+            self.group = databricks.Group.get(name, id=group.id)

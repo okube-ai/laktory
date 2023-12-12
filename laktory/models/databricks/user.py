@@ -5,7 +5,7 @@ from laktory.models.baseresource import BaseResource
 
 class User(BaseModel, BaseResource):
     """
-    Databricks account user
+    Databricks user
 
     Attributes
     ----------
@@ -27,6 +27,7 @@ class User(BaseModel, BaseResource):
     --------
     ```py
     from laktory import models
+
     u = models.User(
         user_name="john.doe@okube.ai",
         display_name="John Doe",
@@ -34,9 +35,7 @@ class User(BaseModel, BaseResource):
             "role-engineer",
             "domain-finance",
         ],
-        roles=[
-            "account_admin"
-        ]
+        roles=["account_admin"],
     )
     ```
     """
@@ -52,6 +51,11 @@ class User(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def resource_key(self) -> str:
+        return self.user_name
+
     @property
     def pulumi_excludes(self) -> list[str]:
         return ["groups", "roles", "id"]
@@ -63,11 +67,27 @@ class User(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `user-{self.user_name}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         group_ids:
             Dictionary whose keys are the display names and whose values are the group ids
         opts:
             Pulumi resource options
+
+        Examples
+        --------
+        ```py
+        from laktory import models
+
+        u = models.User(
+            user_name="john.doe@okube.ai",
+            display_name="John Doe",
+            groups=[
+                "role-engineer",
+                "domain-finance",
+            ],
+            roles=["account_admin"],
+        )
+        ```
 
         Returns
         -------

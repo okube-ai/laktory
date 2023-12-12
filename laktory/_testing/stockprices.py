@@ -7,7 +7,7 @@ from laktory.models import DataEvent
 from laktory.models import DataProducer
 from laktory.models import Table
 from laktory.models import Pipeline
-from laktory.models.compute.pipeline import PipelineUDF
+from laktory.models.databricks.pipeline import PipelineUDF
 from datetime import datetime
 
 spark = SparkSession.builder.appName("UnitTesting").getOrCreate()

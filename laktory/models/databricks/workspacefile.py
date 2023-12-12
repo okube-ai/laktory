@@ -30,16 +30,8 @@ class WorkspaceFile(BaseModel, BaseResource):
 
     @property
     def filename(self) -> str:
-        """File file name"""
+        """File filename"""
         return os.path.basename(self.source)
-
-    @property
-    def key(self) -> str:
-        """File resource key"""
-        key = os.path.splitext(self.path)[0].replace("/", "-")
-        if key.startswith("-"):
-            key = key[1:]
-        return key
 
     @model_validator(mode="after")
     def default_path(self) -> Any:
@@ -57,6 +49,16 @@ class WorkspaceFile(BaseModel, BaseResource):
 
         return self
 
+    @property
+    def resource_key(self) -> str:
+        """File resource key"""
+        key = os.path.splitext(self.path)[0].replace("/", "-")
+        if key.startswith("-"):
+            key = key[1:]
+        return key
+
+    # resource_key.__doc__ = super().resource_key.__doc__
+
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
@@ -72,7 +74,7 @@ class WorkspaceFile(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `workspace-file-{self.key}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         opts:
             Pulumi resource options
 

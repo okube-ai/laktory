@@ -27,6 +27,7 @@ class ServicePrincipal(BaseModel, BaseResource):
     --------
     ```py
     from laktory import models
+
     sp = models.ServicePrincipal(
         display_name="neptune",
         application_id="baf147d1-a856-4de0-a570-8a56dbd7e234",
@@ -36,9 +37,7 @@ class ServicePrincipal(BaseModel, BaseResource):
             "domain-finance",
             "domain-engineering",
         ],
-        roles=[
-            "account_admin"
-        ]
+        roles=["account_admin"],
     )
     ```
     """
@@ -53,6 +52,11 @@ class ServicePrincipal(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def resource_key(self) -> str:
+        return self.display_name
+
     @property
     def pulumi_excludes(self) -> list[str]:
         return ["groups", "roles"]
@@ -66,7 +70,7 @@ class ServicePrincipal(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `service-principal-{self.display_name}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         group_ids:
             Dictionary whose keys are the display names and whose values are the group ids
         opts:

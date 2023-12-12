@@ -2,14 +2,17 @@
 
 ## [0.0.25] - Unreleased
 ###Added
-* n/a
-###Fixed
-* n/a
+* compare spark function
+* API Reference
+* doc tests
 ###Updated
 * SparkFuncArgs model to allow constant value
 ###Breaking changes
 * Renamed Producer model to DataProducer
 * Renamed Resource model to BaseResource
+* Renamed user and permissions resources
+* Renamed group and permissions resources
+* Renamed pipeline resources
 
 ## [0.0.24] - 2023-12-05
 ###Fixed

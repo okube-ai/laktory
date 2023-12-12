@@ -60,6 +60,7 @@ class SecretScope(BaseModel, BaseResource):
     --------
     ```py
     from laktory import models
+
     ss = models.SecretScope(
         name="azure",
         secrets=[
@@ -69,7 +70,7 @@ class SecretScope(BaseModel, BaseResource):
         permissions=[
             {"permission": "READ", "principal": "role-metastore-admins"},
             {"permission": "READ", "principal": "role-workspace-admins"},
-        ]
+        ],
     )
     ss.deploy()
     ```
@@ -103,7 +104,7 @@ class SecretScope(BaseModel, BaseResource):
         Parameters
         ----------
         name:
-            Name of the pulumi resource. Default is `secret-scope-{self.name}`
+            Name of the pulumi resource. Default is `{self.resource_name}`
         opts:
             Pulumi resource options
 

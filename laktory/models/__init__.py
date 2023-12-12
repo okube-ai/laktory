@@ -1,4 +1,3 @@
-from .compute import *
 from .databricks import *
 from .dataevent import DataEvent
 from .dataeventheader import DataEventHeader
