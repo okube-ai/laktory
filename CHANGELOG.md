@@ -1,6 +1,16 @@
 # Release History
 
-## [0.0.25] - Unreleased
+## [0.0.26] - Unreleased
+###Added
+* n/a
+###Fixed
+* n/a
+###Updated
+* n/a
+###Breaking changes
+* n/a
+
+## [0.0.25] - 2023-12-12
 ###Added
 * compare spark function
 * API Reference
