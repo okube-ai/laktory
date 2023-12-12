@@ -10,6 +10,9 @@
 ###Breaking changes
 * Renamed Producer model to DataProducer
 * Renamed Resource model to BaseResource
+* Renamed user and permissions resources
+* Renamed group and permissions resources
+* Renamed pipeline resources
 
 ## [0.0.24] - 2023-12-05
 ###Fixed
