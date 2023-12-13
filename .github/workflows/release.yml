@@ -38,16 +38,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Get versions
+      - name: Get version
         id: get_version
         run: |
           import os
+          from datetime import datetime
+          
+          # Get version
           with open("./laktory/_version.py") as fp:
             v = fp.read().split("=")[-1].strip().replace('"', '')
+          
+          # Get date
+          date = datetime.utcnow().date().isoformat()
+          
           with open(os.environ['GITHUB_OUTPUT'], 'a') as fp:
             print(f"version={v}", file=fp)
-          print(f"Releasing laktory {v}")
+            print(f"date={date}", file=fp)
+            print()
+          print(f"Releasing laktory {v} ({date})")
         shell: python
+
+      - name: Write release body
+        id: write_body
+        run: python ./.github/scripts/write_release_body.py
 
       - name: Set up Git
         run: git config --global user.email "actions@github.com" && git config --global user.name "GitHub Actions"
@@ -58,6 +71,16 @@ jobs:
       - name: Push release tag
         run: git push origin v${{ steps.get_version.outputs.version }}
 
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          release_name: v${{ steps.get_version.outputs.version }} (${{steps.get_version.outputs.date}})
+          body_path: ./.github/scripts/release_body.md
+          draft: false
+          prerelease: false
 
   bump:
     permissions:
