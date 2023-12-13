@@ -4,7 +4,8 @@ from datetime import datetime
 from packaging import version
 
 script_root = os.path.dirname(__file__)
-laktory_root = "./laktory/"
+package_name = "laktory"
+laktory_root = f"./{package_name}/"
 
 
 def main():
@@ -66,13 +67,13 @@ def update_changelog(changelog_filepath, v0, v1):
         '# Release History',
         '',
         f'## [{v1}] - Unreleased',
-        '###Added',
+        '### Added',
         '* n/a',
-        '###Fixed',
+        '### Fixed',
         '* n/a',
-        '###Updated',
+        '### Updated',
         '* n/a',
-        '###Breaking changes',
+        '### Breaking changes',
         '* n/a',
         ''
     ]
