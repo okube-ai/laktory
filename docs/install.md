@@ -1,7 +1,7 @@
 For typical usage, a simple pip install will do the trick.
 
 ```bash
-pip install pydantic
+pip install laktory
 ```
 
 The main dependencies are:
