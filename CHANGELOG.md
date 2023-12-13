@@ -2,7 +2,7 @@
 
 ## [0.0.26] - Unreleased
 ### Added
-* n/a
+* GitHub releases
 ### Fixed
 * n/a
 ### Updated
