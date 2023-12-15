@@ -49,14 +49,14 @@ def convert_units(
     import laktory  # noqa: F401
     import laktory.spark.functions as LF
 
-    df = spark.createDataFrame([[1]], ["x"])
+    df = spark.createDataFrame([[1.0]], ["x"])
     df = df.withColumn("y", LF.convert_units("x", input_unit="m", output_unit="ft"))
     print(df.show_string())
     '''
     +---+-----------------+
     |  x|                y|
     +---+-----------------+
-    |  1|3.280839895013124|
+    |1.0|3.280839895013124|
     +---+-----------------+
     '''
     ```
