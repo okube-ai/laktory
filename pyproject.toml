@@ -37,6 +37,7 @@ dynamic = ["version"]
 dependencies = [
 #    "databricks-sdk",
     "jsonref",
+    "planck",
     "pulumi",
     "pulumi_databricks",
     "pulumi_random",

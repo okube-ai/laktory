@@ -3,12 +3,7 @@
 ## [0.0.26] - Unreleased
 ### Added
 * GitHub releases
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Unit conversions spark function
 
 ## [0.0.25] - 2023-12-12
 ### Added
