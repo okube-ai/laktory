@@ -1,6 +1,16 @@
 # Release History
 
-## [0.0.26] - Unreleased
+## [0.0.27] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.0.26] - 2023-12-16
 ### Added
 * GitHub releases
 * Units conversion spark function
