@@ -60,5 +60,10 @@ def convert_units(
     +---+-----------------+
     '''
     ```
+
+    References
+    ----------
+    The units conversion function use `planck` convert as a backend.
+    [planck](https://www.okube.ai/planck/)
     """
     return units.convert(_col(x), input_unit, output_unit)
