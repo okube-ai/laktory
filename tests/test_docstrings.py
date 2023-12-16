@@ -11,7 +11,7 @@ spark = SparkSession.builder.getOrCreate()
 
 
 @pytest.mark.parametrize("example", find_examples("./laktory/dlt"), ids=str)
-def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExample):
+def test_docstrings_dlt(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format(example)
         eval_example.run_print_update(
@@ -38,7 +38,7 @@ def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExam
 
 
 @pytest.mark.parametrize("example", find_examples("./laktory/models"), ids=str)
-def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExample):
+def test_docstrings_models(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format(example)
         eval_example.run_print_update(
@@ -86,7 +86,7 @@ def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExam
 
 
 @pytest.mark.parametrize("example", find_examples("./docs/"), ids=str)
-def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExample):
+def test_docstrings_markdowns(example: CodeExample, eval_example: EvalExample):
     """
     Examples in documentation are not all designed to be run in isolation. We only format them using black. To be
     investigated if there is a better approach.

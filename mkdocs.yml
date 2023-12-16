@@ -181,6 +181,7 @@ nav:
         - show_string: api/spark/dataframe/show_string.md
       - Functions:
         - constants: api/spark/functions/_constants.md
+        - convert_units: api/spark/functions/convert_units.md
         - poly1: api/spark/functions/poly1.md
         - poly2: api/spark/functions/poly2.md
         - power: api/spark/functions/power.md

@@ -81,6 +81,15 @@ def test_uuid(df0=df0):
     assert pdf["uuid"].nunique() == 3
 
 
+def test_units(df0=df0):
+    df = df0.withColumn("ft", LF.convert_units("x", "m", "ft"))
+    df = df.withColumn("kelvin", LF.convert_units("x", "C", "K"))
+    pdf = df.toPandas()
+
+    assert pdf["ft"].tolist() == [3.280839895013124, 6.561679790026248, 9.842519685039372]
+    assert pdf["kelvin"].tolist() == [274.15, 275.15, 276.15]
+
+
 if __name__ == "__main__":
     test_compare()
     test_poly()
@@ -88,3 +97,4 @@ if __name__ == "__main__":
     test_roundp()
     test_string_split()
     test_uuid()
+    test_units()
