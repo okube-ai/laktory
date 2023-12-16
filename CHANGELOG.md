@@ -2,13 +2,7 @@
 
 ## [0.0.27] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Support for DLT tables expectations
 
 ## [0.0.26] - 2023-12-16
 ### Added

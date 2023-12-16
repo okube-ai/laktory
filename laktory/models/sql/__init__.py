@@ -4,6 +4,7 @@ from .schema import Schema
 from .table import Table
 from .tableaggregation import TableAggregation
 from .tablebuilder import TableBuilder
+from .tableexpectation import TableExpectation
 from .tablejoin import TableJoin
 from .tablewindowfilter import TableWindowFilter
 from .volume import Volume

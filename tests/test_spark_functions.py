@@ -86,7 +86,11 @@ def test_units(df0=df0):
     df = df.withColumn("kelvin", LF.convert_units("x", "C", "K"))
     pdf = df.toPandas()
 
-    assert pdf["ft"].tolist() == [3.280839895013124, 6.561679790026248, 9.842519685039372]
+    assert pdf["ft"].tolist() == [
+        3.280839895013124,
+        6.561679790026248,
+        9.842519685039372,
+    ]
     assert pdf["kelvin"].tolist() == [274.15, 275.15, 276.15]
 
 

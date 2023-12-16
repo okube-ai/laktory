@@ -10,6 +10,7 @@ from laktory.models.baseresource import BaseResource
 from laktory.models.sql.column import Column
 from laktory.models.sql.tablebuilder import TableBuilder
 from laktory.models.grants.tablegrant import TableGrant
+from laktory.models.sql.tableexpectation import TableExpectation
 from laktory._settings import settings
 
 logger = get_logger(__name__)
@@ -35,6 +36,9 @@ class Table(BaseModel, BaseResource):
         Text description of the catalog
     data:
         Data to be used to populate the rows
+    expectations:
+        List of expectations for the table. Can be used as warnings, drop
+        invalid records or fail a pipeline.
     grants:
         List of grants operating on the schema
     name:
@@ -110,6 +114,7 @@ class Table(BaseModel, BaseResource):
     comment: Union[str, None] = None
     data: list[list[Any]] = None
     data_source_format: str = "DELTA"
+    expectations: list[TableExpectation] = []
     grants: list[TableGrant] = None
     name: str
     primary_key: Union[str, None] = None
@@ -200,6 +205,30 @@ class Table(BaseModel, BaseResource):
     def is_from_cdc(self) -> bool:
         """If `True` CDC source is used to build the table"""
         return self.builder.is_from_cdc
+
+    @property
+    def warning_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.action == "WARN":
+                expectations[e.name] = e.expression
+        return expectations
+
+    @property
+    def drop_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.action == "DROP":
+                expectations[e.name] = e.expression
+        return expectations
+
+    @property
+    def fail_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.action == "FAIL":
+                expectations[e.name] = e.expression
+        return expectations
 
     # ----------------------------------------------------------------------- #
     #  Methods                                                                #
