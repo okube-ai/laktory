@@ -1,6 +1,16 @@
 # Release History
 
-## [0.0.27] - Unreleased
+## [0.0.28] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.0.27] - 2023-12-16
 ### Added
 * Support for DLT tables expectations
 
