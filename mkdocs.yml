@@ -169,8 +169,9 @@ nav:
           - api/models/sql/column.md
           - api/models/sql/schema.md
           - api/models/sql/table.md
-          - TableBuilder: api/models/sql/tablebuilder.md
           - TableAggregation: api/models/sql/tableaggregation.md
+          - TableBuilder: api/models/sql/tablebuilder.md
+          - TableExpectation: api/models/sql/tableexpectation.md
           - TableJoin: api/models/sql/tablejoin.md
           - TableWindowFilter: api/models/sql/tablewindowfilter.md
           - api/models/sql/volume.md

@@ -54,6 +54,7 @@ def test_pipeline():
                 "comment": None,
                 "data": None,
                 "data_source_format": "DELTA",
+                "expectations": [],
                 "grants": None,
                 "name": "brz_stock_prices",
                 "primary_key": None,
@@ -178,6 +179,18 @@ def test_pipeline():
                     ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
                 ],
                 "data_source_format": "DELTA",
+                "expectations": [
+                    {
+                        "name": "positive_price",
+                        "expression": "open > 0",
+                        "action": "FAIL",
+                    },
+                    {
+                        "name": "recent_price",
+                        "expression": "created_at > '2023-01-01'",
+                        "action": "DROP",
+                    },
+                ],
                 "grants": None,
                 "name": "slv_stock_prices",
                 "primary_key": None,
