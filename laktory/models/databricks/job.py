@@ -49,7 +49,7 @@ class JobContinuous(BaseModel):
         the server will default to using `UNPAUSED` as a value for pause_status.
     """
 
-    pause_status: Literal["PAUSED", "UNPAUSED"] = None
+    pause_status: Union[Literal["PAUSED", "UNPAUSED"], str] = None
 
 
 class JobEmailNotifications(BaseModel):
@@ -181,7 +181,7 @@ class JobSchedule(BaseModel):
 
     quartz_cron_expression: str
     timezone_id: str
-    pause_status: Union[Literal["PAUSED", "UNPAUSED"], None] = None
+    pause_status: Union[Literal["PAUSED", "UNPAUSED"], str, None] = None
 
 
 class JobTaskConditionTask(BaseModel):
@@ -507,7 +507,7 @@ class JobTrigger(BaseModel):
     """
 
     file_arrival: JobTriggerFileArrival
-    pause_status: Literal["PAUSED", "UNPAUSED"] = None
+    pause_status: Union[Literal["PAUSED", "UNPAUSED"], str] = None
 
 
 class JobWebhookNotificationsOnDurationWarningThresholdExceeded(BaseModel):

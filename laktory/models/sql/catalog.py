@@ -83,7 +83,7 @@ class Catalog(BaseModel, BaseResource):
     comment: Union[str, None] = None
     force_destroy: bool = True
     grants: list[CatalogGrant] = None
-    isolation_mode: Literal["OPEN", "ISOLATED"] = "OPEN"
+    isolation_mode: Union[Literal["OPEN", "ISOLATED"], str] = "OPEN"
     name: str
     owner: str = None
     schemas: list[Schema] = []
