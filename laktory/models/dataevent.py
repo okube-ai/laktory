@@ -420,7 +420,7 @@ class DataEvent(DataEventHeader):
         fmt: str = "json",
         overwrite: bool = False,
         skip_if_exists: bool = False,
-        storage_type: Literal["VOLUME", "MOUNT"] = "VOLUME",
+        storage_type: Union[Literal["VOLUME", "MOUNT"], str] = "VOLUME",
     ) -> None:
         """
         Write data event to Databricks volume or mount, given a format `fmt`

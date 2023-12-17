@@ -1,4 +1,5 @@
 from typing import Literal
+from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.baseresource import BaseResource
 from laktory.models.databricks.permission import Permission
@@ -100,7 +101,7 @@ class Warehouse(BaseModel, BaseResource):
         "4X-Large",
     ]
     auto_stop_mins: int = None
-    channel_name: Literal["CHANNEL_NAME_CURRENT", "CHANNEL_NAME_PREVIEW"] = None
+    channel_name: Union[Literal["CHANNEL_NAME_CURRENT", "CHANNEL_NAME_PREVIEW"], str] = None
     # data_source_id
     enable_photon: bool = None
     enable_serverless_compute: bool = None
@@ -112,10 +113,10 @@ class Warehouse(BaseModel, BaseResource):
     num_clusters: int = None
     # odbc_params
     permissions: list[Permission] = []
-    spot_instance_policy: Literal["COST_OPTIMIZED", "RELIABILITY_OPTIMIZED"] = None
+    spot_instance_policy: Union[Literal["COST_OPTIMIZED", "RELIABILITY_OPTIMIZED"], str] = None
     # state
     tags: WarehouseTags = None
-    warehouse_type: Literal["CLASSIC", "PRO"] = None
+    warehouse_type: Union[Literal["CLASSIC", "PRO"], str] = None
 
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #

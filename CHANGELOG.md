@@ -1,14 +1,13 @@
 # Release History
 
 ## [0.0.28] - Unreleased
-### Added
-* n/a
-### Fixed
-* n/a
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* job.continuous.pause_status to allow for arbitrary string (allow variable)
+* job.email_notifications.pause_status to allow for arbitrary string (allow variable)
+* job.task_condition.pause_status to allow for arbitrary string (allow variable)
+* warehouse.channel_name to allow for arbitrary string (allow variable)
+* warehouse.spot_instance_policy to allow for arbitrary string (allow variable)
+* warehouse.warehouse_type to allow for arbitrary string (allow variable)
 
 ## [0.0.27] - 2023-12-16
 ### Added
