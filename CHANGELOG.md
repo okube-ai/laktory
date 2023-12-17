@@ -1,6 +1,16 @@
 # Release History
 
-## [0.0.28] - Unreleased
+## [0.0.29] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.0.28] - 2023-12-17
 ### Updated
 * job.continuous.pause_status to allow for arbitrary string (allow variable)
 * job.email_notifications.pause_status to allow for arbitrary string (allow variable)
