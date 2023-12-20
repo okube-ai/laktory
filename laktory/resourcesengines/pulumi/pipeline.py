@@ -67,7 +67,7 @@ class PulumiPipeline(PulumiResourcesEngine):
         d = pipeline.model_dump(exclude_none=True)
         d = pipeline.inject_vars(d)
         s = json.dumps(d, indent=4)
-        with open(source, "w") as fp:
+        with open(source, "w", newline="\n") as fp:
             fp.write(s)
         filepath = f"{settings.workspace_laktory_root}pipelines/{pipeline.name}.json"
         self.workspace_file = databricks.WorkspaceFile(
