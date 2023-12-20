@@ -1,6 +1,16 @@
 # Release History
 
-## [0.0.29] - Unreleased
+## [0.0.30] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.0.29] - 2023-12-20
 ### Fixed
 * Forced newlines character to eliminate discrepancies between Windows and Linux environment when writing pipeline files. 
 
