@@ -743,6 +743,13 @@ class Job(BaseModel, BaseResource):
 
         return d
 
+    def pulumi_resource_class(self):
+        import pulumi_databricks as databricks
+        return databricks.Job
+
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Job"
+
     def deploy_with_pulumi(self, name=None, opts=None):
         """
         Deploy job using pulumi.

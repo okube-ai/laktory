@@ -334,6 +334,9 @@ class Pipeline(BaseModel, BaseResource):
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Job"
+
     @property
     def resource_type_id(self) -> str:
         return "pipeline"

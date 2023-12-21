@@ -88,6 +88,14 @@ class BaseResource(_BaseModel):
         d = self.inject_vars(d)
         return d
 
+    def pulumi_resource_class(self) -> Any:
+        """TODO"""
+        raise NotImplementedError()
+
+    def pulumi_resource_type(self) -> str:
+        """TODO"""
+        raise NotImplementedError()
+
     def deploy(self, *args, engine: Literal[tuple(ENGINES)] = None, **kwargs) -> list:
         """
         Deploy model resources provided a deployment `engine`.

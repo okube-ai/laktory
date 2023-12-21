@@ -5,3 +5,4 @@ from .datasources import *
 from .grants import *
 from .dataproducer import DataProducer
 from .sql import *
+from .stacks import *
