@@ -2,6 +2,7 @@ import pulumi
 
 from laktory.models import Table
 from laktory.models import Schema
+from laktory.models import BaseModel
 from pulumi_random import RandomString
 
 env = RandomString("env", length=3, upper=False, numeric=False, special=False)
@@ -49,6 +50,11 @@ schema = Schema(
 )
 
 
+class Camel(BaseModel):
+    d: dict = {}
+    l: list = []
+
+
 def test_inject_vars():
     d0 = schema.model_dump()
     d1 = schema.inject_vars(d0)
@@ -64,6 +70,20 @@ def test_pulumi_dump():
     assert d == {"comment": None, "force_destroy": True}
 
 
+def test_camel_case():
+    camel = Camel(
+        d={"this_is_a_test": ["value_a", "value_b", {"key_alpha": 0, "keyBeta": 1}]},
+        l=["a", "a-b-c", "class_member"],
+    )
+    d = camel.model_dump(keys_to_camel_case=True)
+    print(d)
+    assert d == {
+        "d": {"thisIsATest": ["value_a", "value_b", {"keyBeta": 1, "keyAlpha": 0}]},
+        "l": ["a", "a-b-c", "class_member"],
+    }
+
+
 if __name__ == "__main__":
     test_inject_vars()
     test_pulumi_dump()
+    test_camel_case()
