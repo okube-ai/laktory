@@ -38,6 +38,12 @@ To benefit from all features, we recommend also installing your cloud provider-s
 Laktory facilitate building and deploying custom spark functions. 
 If you wish to test these functions locally, we recommend also installing the spark optional dependency.
 
+For running spark locally, you also need to follow instructions provided [here](https://www.machinelearningplus.com/pyspark/install-pyspark-on-mac/). 
+If you use homebrew to install java, your `JAVA_HOME` and `SPARK_HOME` environment variables should look something like:
+* `JAVA_HOME=/opt/homebrew/opt/java`
+* `SPARK_HOME=/opt/homebrew/Cellar/apache-spark/3.5.0/libexec`
+
+
 ```bash
 pip install laktory[spark]
 ```
@@ -47,7 +53,3 @@ If you need or prefer installing Laktory from git, you can use:
 ```bash
 pip install git+https://github.com/okube-ai/laktory.git@main
 ```
-For running spark locally, you also need to follow instructions provided [here](https://www.machinelearningplus.com/pyspark/install-pyspark-on-mac/). 
-If you use homebrew to install java, your `JAVA_HOME` and `SPARK_HOME` environment variables should look something like:
-* `JAVA_HOME=/opt/homebrew/opt/java`
-* `SPARK_HOME=/opt/homebrew/Cellar/apache-spark/3.5.0/libexec`
