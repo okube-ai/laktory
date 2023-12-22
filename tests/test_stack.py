@@ -252,8 +252,10 @@ def test_stack_model():
 
 def test_pulumi_stack():
     pstack = stack.to_pulumi_stack()
+    stack.write_pulumi_stack()
     data = pstack.model_dump()
     print(data)
+
     assert data == {
         "name": "workspace",
         "runtime": "yaml",
@@ -261,7 +263,7 @@ def test_pulumi_stack():
         "variables": {},
         "resources": {
             "pl-stock-prices": {
-                "type": "databricks:Job",
+                "type": "databricks:Pipeline",
                 "properties": {
                     "channel": "PREVIEW",
                     "clusters": [],
@@ -281,36 +283,36 @@ def test_pulumi_stack():
                     "tags": {},
                     "tasks": [
                         {
-                            "job_cluster_key": "main",
                             "libraries": [
                                 {"pypi": {"package": "laktory==0.0.27"}},
                                 {"pypi": {"package": "yfinance"}},
                             ],
-                            "notebook_task": {
-                                "notebook_path": "/jobs/ingest_stock_metadata.py"
+                            "jobClusterKey": "main",
+                            "notebookTask": {
+                                "notebookPath": "/jobs/ingest_stock_metadata.py"
                             },
-                            "task_key": "ingest-metadata",
+                            "taskKey": "ingest-metadata",
                         },
                         {
                             "libraries": [
                                 {"pypi": {"package": "laktory==0.0.27"}},
                                 {"pypi": {"package": "yfinance"}},
                             ],
-                            "pipeline_task": {"pipeline_id": "${pl-stock-prices.id}"},
-                            "task_key": "run-pipeline",
+                            "pipelineTask": {"pipelineId": "${pl-stock-prices.id}"},
+                            "taskKey": "run-pipeline",
                         },
                     ],
-                    "job_clusters": [
+                    "jobClusters": [
                         {
-                            "job_cluster_key": "main",
-                            "new_cluster": {
-                                "data_security_mode": "USER_ISOLATION",
-                                "init_scripts": [],
-                                "node_type_id": "Standard_DS3_v2",
-                                "spark_conf": {},
-                                "spark_env_vars": {},
-                                "spark_version": "14.0.x-scala2.12",
-                                "ssh_public_keys": [],
+                            "jobClusterKey": "main",
+                            "newCluster": {
+                                "dataSecurityMode": "USER_ISOLATION",
+                                "initScripts": [],
+                                "nodeTypeId": "Standard_DS3_v2",
+                                "sparkConf": {},
+                                "sparkEnvVars": {},
+                                "sparkVersion": "14.0.x-scala2.12",
+                                "sshPublicKeys": [],
                             },
                         }
                     ],
@@ -321,6 +323,11 @@ def test_pulumi_stack():
     }
 
 
+def test_pulumi_preview():
+    stack.pulumi_preview("okube/dev")
+
+
 if __name__ == "__main__":
     test_stack_model()
     test_pulumi_stack()
+    test_pulumi_preview()

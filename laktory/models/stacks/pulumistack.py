@@ -1,3 +1,4 @@
+import json
 from typing import Any
 from typing import Union
 
@@ -27,7 +28,14 @@ class PulumiStack(BaseStack):
     outputs: dict[str, str] = {}
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
+        """TODO"""
         kwargs["exclude_none"] = kwargs.get("exclude_none", True)
+        kwargs["keys_to_camel_case"] = True
         d = super().model_dump(*args, **kwargs)
         d["resources"] = self.resolve_vars(d["resources"], target="pulumi")
         return d
+
+    def model_dump_json(self, *args, **kwargs) -> str:
+        """TODO"""
+        d = self.model_dump(*args, **kwargs)
+        return json.dumps(d, indent=4)
