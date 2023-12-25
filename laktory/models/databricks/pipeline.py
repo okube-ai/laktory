@@ -1,13 +1,13 @@
-import os
 from typing import Any
 from typing import Literal
 from typing import Union
 from pydantic import model_validator
 from pydantic import Field
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
-from laktory.models.databricks.permission import Permission
 from laktory.models.databricks.cluster import Cluster
+from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.permissions import Permissions
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.sql.table import Table
 
 
@@ -146,7 +146,7 @@ class PipelineUDF(BaseModel):
     module_path: str = None
 
 
-class Pipeline(BaseModel, BaseResource):
+class Pipeline(BaseModel, PulumiResource):
     """
     Databricks Delta Live Tables (DLT) Pipeline
 
@@ -331,21 +331,12 @@ class Pipeline(BaseModel, BaseResource):
         return self
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Pulumi Methods                                                          #
     # ----------------------------------------------------------------------- #
 
+    @property
     def pulumi_resource_type(self) -> str:
         return "databricks:Pipeline"
-
-    @property
-    def resource_type_id(self) -> str:
-        return "pipeline"
-
-    @property
-    def id(self):
-        if self._resources is None:
-            return None
-        return self.resources.pipeline.id
 
     @property
     def pulumi_excludes(self) -> list[str]:
@@ -356,14 +347,45 @@ class Pipeline(BaseModel, BaseResource):
             "udfs": True,
         }
 
-    def model_pulumi_dump(self, *args, **kwargs):
-        d = super().model_pulumi_dump(*args, **kwargs)
+    def pulumi_properties(self, *args, **kwargs):
+        d = super().pulumi_properties(*args, **kwargs)
         _clusters = []
         for c in d.get("clusters", []):
             c["label"] = c.pop("name")
             _clusters += [c]
         d["clusters"] = _clusters
         return d
+
+    @property
+    def all_resources(self) -> list[PulumiResource]:
+        res = [
+            self,
+        ]
+        if self.permissions:
+
+            res += [
+                Permissions(
+                    resource_name=f"permissions-{self.resource_name}",
+                    access_controls=self.permissions,
+                    pipeline_id="TODO",  # TODO
+                )
+            ]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
+    # Others                                                                  #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def resource_type_id(self) -> str:
+        return "pipeline"
+
+    @property
+    def id(self):
+        if self._resources is None:
+            return None
+        return self.resources.pipeline.id
 
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):
         from laktory.resourcesengines.pulumi.pipeline import PulumiPipeline

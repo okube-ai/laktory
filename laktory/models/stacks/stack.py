@@ -24,19 +24,19 @@ logger = get_logger(__name__)
 
 
 class StackResources(BaseModel):
-    catalogs: dict[str, Catalog] = {}
-    cluster: dict[str, Cluster] = {}
-    groups: dict[str, Group] = {}
-    jobs: dict[str, Job] = {}
-    notebooks: dict[str, Notebook] = {}
-    pipelines: dict[str, Pipeline] = {}
-    schemas: dict[str, Schema] = {}
-    secret_scopes: dict[str, SecretScope] = {}
-    sql_queries: dict[str, SqlQuery] = {}
-    tables: dict[str, Table] = {}
-    users: dict[str, User] = {}
-    warehouse: dict[str, Warehouse] = {}
-    workspace_files: dict[str, WorkspaceFile] = {}
+    catalogs: list[Catalog] = []
+    cluster: list[Cluster] = []
+    groups: list[Group] = []
+    jobs: list[Job] = []
+    notebooks: list[Notebook] = []
+    pipelines: list[Pipeline] = []
+    schemas: list[Schema] = []
+    secret_scopes: list[SecretScope] = []
+    sql_queries: list[SqlQuery] = []
+    tables: list[Table] = []
+    users: list[User] = []
+    warehouse: list[Warehouse] = []
+    workspace_files: list[WorkspaceFile] = []
 
 
 class StackEnvironment(BaseModel):
@@ -67,33 +67,11 @@ class Stack(BaseStack):
     # ----------------------------------------------------------------------- #
     def to_pulumi_stack(self):
 
-        def _set_resource(r):
-            return {
-                "type": r.pulumi_resource_type(),
-                "properties": r.model_pulumi_dump(exclude_none=True)
-            }
-
         resources = {}
 
-        # Notebooks
-        for k, r in self.resources.notebooks.items():
-            resources[k] = _set_resource(r)
-
-        # Workspace files
-        for k, r in self.resources.workspace_files.items():
-            resources[k] = _set_resource(r)
-
-        # Queries
-        for k, r in self.resources.sql_queries.items():
-            resources[k] = _set_resource(r)
-
-        # Pipelines
-        for k, r in self.resources.pipelines.items():
-            resources[k] = _set_resource(r)
-
-        # Jobs
-        for k, r in self.resources.jobs.items():
-            resources[k] = _set_resource(r)
+        for r in self.resources.notebooks + self.resources.jobs + self.resources.pipelines:
+            for _r in r.all_resources:
+                resources[_r.resource_name] = _r.pulumi_yaml_dump()
 
         return PulumiStack(
             name=self.name,

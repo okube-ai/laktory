@@ -5,6 +5,7 @@ import re
 from pydantic import BaseModel as _BaseModel
 
 from laktory._settings import settings
+from laktory.models.resources.pulumiresource import PulumiResource
 
 # from laktory.resourcesengines.pulumi.base import PulumiResourcesEngine
 # from laktory.resourcesengines.databricks.base import DatabricksResourcesEngine
@@ -62,6 +63,9 @@ class BaseResource(_BaseModel):
         """Resource name `{self.resource_type}.{self.resource_key}`"""
         return f"{self.resource_type_id}-{self.resource_key}"
 
+    def pulumi_resources(self) -> list[PulumiResource]:
+        raise NotImplementedError()
+
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
@@ -88,10 +92,12 @@ class BaseResource(_BaseModel):
         d = self.inject_vars(d)
         return d
 
+    @property
     def pulumi_resource_class(self) -> Any:
         """TODO"""
         raise NotImplementedError()
 
+    @property
     def pulumi_resource_type(self) -> str:
         """TODO"""
         raise NotImplementedError()

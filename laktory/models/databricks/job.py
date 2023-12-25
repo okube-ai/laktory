@@ -4,10 +4,11 @@ from typing import Union
 from pydantic import model_validator
 from pydantic import Field
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
-from laktory.models.databricks.permission import Permission
 from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.cluster import ClusterLibrary
+from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.permissions import Permissions
+from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class JobCluster(Cluster):
@@ -586,7 +587,7 @@ class JobWebhookNotifications(BaseModel):
     on_successes: list[JobWebhookNotificationsOnSuccess] = None
 
 
-class Job(BaseModel, BaseResource):
+class Job(BaseModel, PulumiResource):
     """
     Databricks Job
 
@@ -717,8 +718,12 @@ class Job(BaseModel, BaseResource):
     webhook_notifications: JobWebhookNotifications = None
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Pulumi Methods                                                          #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Job"
 
     @property
     def pulumi_excludes(self) -> list[str]:
@@ -728,8 +733,8 @@ class Job(BaseModel, BaseResource):
     def pulumi_renames(self) -> dict[str, str]:
         return {"clusters": "job_clusters"}
 
-    def model_pulumi_dump(self, *args, **kwargs):
-        d = super().model_pulumi_dump(*args, **kwargs)
+    def pulumi_properties(self, *args, **kwargs):
+        d = super().pulumi_properties(*args, **kwargs)
         _clusters = []
         for c in d.get("job_clusters", []):
             name = c.pop("name")
@@ -743,12 +748,26 @@ class Job(BaseModel, BaseResource):
 
         return d
 
-    def pulumi_resource_class(self):
-        import pulumi_databricks as databricks
-        return databricks.Job
+    @property
+    def all_resources(self) -> list[PulumiResource]:
+        res = [
+            self,
+        ]
+        if self.permissions:
 
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Job"
+            res += [
+                Permissions(
+                    resource_name=f"permissions-{self.resource_name}",
+                    access_controls=self.permissions,
+                    job_id="TODO",  # TODO
+                )
+            ]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
+    # Others                                                                  #
+    # ----------------------------------------------------------------------- #
 
     def deploy_with_pulumi(self, name=None, opts=None):
         """

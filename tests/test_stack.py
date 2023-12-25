@@ -6,6 +6,10 @@ pipeline = models.Pipeline(
     libraries=[
         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}},
     ],
+    permissions=[
+        {"group_name": "account users", "permission_level": "CAN_VIEW"},
+        {"group_name": "role-engineers", "permission_level": "CAN_RUN"},
+    ],
 )
 
 job = models.Job(
@@ -49,23 +53,25 @@ job = models.Job(
 stack = models.Stack(
     name="workspace",
     resources={
-        "jobs": {"job-stock-prices": job},
-        "pipelines": {"pl-stock-prices": pipeline},
+        "jobs": [job],
+        "pipelines": [pipeline],
     },
 )
 
 
 def test_stack_model():
     data = stack.model_dump()
+    print(data)
     assert data == {
         "name": "workspace",
         "description": None,
         "resources": {
-            "catalogs": {},
-            "cluster": {},
-            "groups": {},
-            "jobs": {
-                "job-stock-prices": {
+            "catalogs": [],
+            "cluster": [],
+            "groups": [],
+            "jobs": [
+                {
+                    "resource_name": "job-job-stock-prices-stack",
                     "clusters": [
                         {
                             "apply_policy_default_values": None,
@@ -207,10 +213,11 @@ def test_stack_model():
                     "trigger": None,
                     "webhook_notifications": None,
                 }
-            },
-            "notebooks": {},
-            "pipelines": {
-                "pl-stock-prices": {
+            ],
+            "notebooks": [],
+            "pipelines": [
+                {
+                    "resource_name": "pipeline-pl-stock-prices-stack",
                     "allow_duplicate_names": None,
                     "catalog": None,
                     "channel": "PREVIEW",
@@ -227,7 +234,20 @@ def test_stack_model():
                     ],
                     "name": "pl-stock-prices-stack",
                     "notifications": [],
-                    "permissions": [],
+                    "permissions": [
+                        {
+                            "group_name": "account users",
+                            "permission_level": "CAN_VIEW",
+                            "service_principal_name": None,
+                            "user_name": None,
+                        },
+                        {
+                            "group_name": "role-engineers",
+                            "permission_level": "CAN_RUN",
+                            "service_principal_name": None,
+                            "user_name": None,
+                        },
+                    ],
                     "photon": None,
                     "serverless": None,
                     "storage": None,
@@ -235,14 +255,14 @@ def test_stack_model():
                     "target": None,
                     "udfs": [],
                 }
-            },
-            "schemas": {},
-            "secret_scopes": {},
-            "sql_queries": {},
-            "tables": {},
-            "users": {},
-            "warehouse": {},
-            "workspace_files": {},
+            ],
+            "schemas": [],
+            "secret_scopes": [],
+            "sql_queries": [],
+            "tables": [],
+            "users": [],
+            "warehouse": [],
+            "workspace_files": [],
         },
         "environments": [],
         "variables": {},
@@ -262,53 +282,144 @@ def test_pulumi_stack():
         "config": {},
         "variables": {},
         "resources": {
-            "pl-stock-prices": {
-                "type": "databricks:Pipeline",
-                "properties": {
-                    "channel": "PREVIEW",
-                    "clusters": [],
-                    "configuration": {},
-                    "libraries": [
-                        {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
-                    ],
-                    "name": "pl-stock-prices-stack",
-                    "notifications": [],
-                },
-            },
-            "job-stock-prices": {
+            "job-job-stock-prices-stack": {
                 "type": "databricks:Job",
                 "properties": {
+                    "continuous": None,
+                    "format": None,
+                    "health": None,
                     "name": "job-stock-prices-stack",
                     "parameters": [],
+                    "schedule": None,
                     "tags": {},
                     "tasks": [
                         {
+                            "description": None,
+                            "health": None,
                             "libraries": [
-                                {"pypi": {"package": "laktory==0.0.27"}},
-                                {"pypi": {"package": "yfinance"}},
+                                {
+                                    "cran": None,
+                                    "egg": None,
+                                    "jar": None,
+                                    "maven": None,
+                                    "pypi": {
+                                        "package": "laktory==0.0.27",
+                                        "repo": None,
+                                    },
+                                    "whl": None,
+                                },
+                                {
+                                    "cran": None,
+                                    "egg": None,
+                                    "jar": None,
+                                    "maven": None,
+                                    "pypi": {"package": "yfinance", "repo": None},
+                                    "whl": None,
+                                },
                             ],
+                            "conditionTask": None,
+                            "dependsOns": None,
+                            "emailNotifications": None,
+                            "existingClusterId": None,
                             "jobClusterKey": "main",
+                            "maxRetries": None,
+                            "minRetryIntervalMillis": None,
                             "notebookTask": {
-                                "notebookPath": "/jobs/ingest_stock_metadata.py"
+                                "source": None,
+                                "notebookPath": "/jobs/ingest_stock_metadata.py",
+                                "baseParameters": None,
                             },
+                            "notificationSettings": None,
+                            "pipelineTask": None,
+                            "retryOnTimeout": None,
+                            "runIf": None,
+                            "runJobTask": None,
+                            "sqlTask": None,
                             "taskKey": "ingest-metadata",
+                            "timeoutSeconds": None,
                         },
                         {
+                            "description": None,
+                            "health": None,
                             "libraries": [
-                                {"pypi": {"package": "laktory==0.0.27"}},
-                                {"pypi": {"package": "yfinance"}},
+                                {
+                                    "cran": None,
+                                    "egg": None,
+                                    "jar": None,
+                                    "maven": None,
+                                    "pypi": {
+                                        "package": "laktory==0.0.27",
+                                        "repo": None,
+                                    },
+                                    "whl": None,
+                                },
+                                {
+                                    "cran": None,
+                                    "egg": None,
+                                    "jar": None,
+                                    "maven": None,
+                                    "pypi": {"package": "yfinance", "repo": None},
+                                    "whl": None,
+                                },
                             ],
-                            "pipelineTask": {"pipelineId": "${pl-stock-prices.id}"},
+                            "conditionTask": None,
+                            "dependsOns": None,
+                            "emailNotifications": None,
+                            "existingClusterId": None,
+                            "jobClusterKey": None,
+                            "maxRetries": None,
+                            "minRetryIntervalMillis": None,
+                            "notebookTask": None,
+                            "notificationSettings": None,
+                            "pipelineTask": {
+                                "pipelineId": "${pl-stock-prices.id}",
+                                "fullRefresh": None,
+                            },
+                            "retryOnTimeout": None,
+                            "runIf": None,
+                            "runJobTask": None,
+                            "sqlTask": None,
                             "taskKey": "run-pipeline",
+                            "timeoutSeconds": None,
                         },
                     ],
+                    "trigger": None,
+                    "resourceName": "job-job-stock-prices-stack",
+                    "controlRunState": None,
+                    "emailNotifications": None,
+                    "maxConcurrentRuns": None,
+                    "maxRetries": None,
+                    "minRetryIntervalMillis": None,
+                    "notificationSettings": None,
+                    "retryOnTimeout": None,
+                    "runAs": None,
+                    "timeoutSeconds": None,
+                    "webhookNotifications": None,
                     "jobClusters": [
                         {
                             "jobClusterKey": "main",
                             "newCluster": {
+                                "autoscale": None,
+                                "libraries": None,
+                                "permissions": None,
+                                "applyPolicyDefaultValues": None,
+                                "autoterminationMinutes": None,
+                                "clusterId": None,
+                                "customTags": None,
                                 "dataSecurityMode": "USER_ISOLATION",
+                                "driverInstancePoolId": None,
+                                "driverNodeTypeId": None,
+                                "enableElasticDisk": None,
+                                "enableLocalDiskEncryption": None,
+                                "idempotencyToken": None,
                                 "initScripts": [],
+                                "instancePoolId": None,
+                                "isPinned": None,
                                 "nodeTypeId": "Standard_DS3_v2",
+                                "numWorkers": None,
+                                "policyId": None,
+                                "runtimeEngine": None,
+                                "singleUserName": None,
                                 "sparkConf": {},
                                 "sparkEnvVars": {},
                                 "sparkVersion": "14.0.x-scala2.12",
@@ -316,6 +427,70 @@ def test_pulumi_stack():
                             },
                         }
                     ],
+                },
+            },
+            "pipeline-pl-stock-prices-stack": {
+                "type": "databricks:Pipeline",
+                "properties": {
+                    "catalog": None,
+                    "channel": "PREVIEW",
+                    "clusters": [],
+                    "configuration": {},
+                    "continuous": None,
+                    "development": None,
+                    "edition": None,
+                    "libraries": [
+                        {
+                            "file": None,
+                            "notebook": {"path": "/pipelines/dlt_brz_template.py"},
+                        }
+                    ],
+                    "name": "pl-stock-prices-stack",
+                    "notifications": [],
+                    "photon": None,
+                    "serverless": None,
+                    "storage": None,
+                    "target": None,
+                    "resourceName": "pipeline-pl-stock-prices-stack",
+                    "allowDuplicateNames": None,
+                },
+            },
+            "permissions-pipeline-pl-stock-prices-stack": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "resourceName": "permissions-pipeline-pl-stock-prices-stack",
+                    "accessControls": [
+                        {
+                            "groupName": "account users",
+                            "permissionLevel": "CAN_VIEW",
+                            "servicePrincipalName": None,
+                            "userName": None,
+                        },
+                        {
+                            "groupName": "role-engineers",
+                            "permissionLevel": "CAN_RUN",
+                            "servicePrincipalName": None,
+                            "userName": None,
+                        },
+                    ],
+                    "pipelineId": "TODO",
+                    "jobId": None,
+                    "clusterId": None,
+                    "directoryId": None,
+                    "directoryPath": None,
+                    "experimentId": None,
+                    "notebookId": None,
+                    "objectType": None,
+                    "registeredModelId": None,
+                    "repoId": None,
+                    "repoPath": None,
+                    "servingEndpointId": None,
+                    "sqlAlertId": None,
+                    "sqlDashboardId": None,
+                    "sqlEndpointId": None,
+                    "sqlQueryId": None,
+                    "workspaceFileId": None,
+                    "workspaceFilePath": None,
                 },
             },
         },
@@ -330,4 +505,4 @@ def test_pulumi_preview():
 if __name__ == "__main__":
     test_stack_model()
     test_pulumi_stack()
-    test_pulumi_preview()
+    # test_pulumi_preview()
