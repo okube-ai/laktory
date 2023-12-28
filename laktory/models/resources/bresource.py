@@ -40,7 +40,13 @@ class BaseResource(_BaseModel):
     @property
     def default_resource_name(self) -> str:
         """Resource name `{self.resource_type}.{self.resource_key}`"""
-        return f"{self.resource_type_id}-{self.resource_key}"
+
+        if self.resource_type_id not in self.resource_key:
+            name = f"{self.resource_type_id}-{self.resource_key}"
+        else:
+            name = f"{self.resource_key}"
+
+        return name
 
     @property
     def all_resources(self):

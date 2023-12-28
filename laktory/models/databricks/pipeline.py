@@ -379,7 +379,7 @@ class Pipeline(BaseModel, PulumiResource):
 
     @property
     def resource_type_id(self) -> str:
-        return "pipeline"
+        return "pl"
 
     @property
     def id(self):
