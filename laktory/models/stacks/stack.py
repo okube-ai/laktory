@@ -52,6 +52,7 @@ class Stack(BaseStack):
     The Stack defines a group of deployable resources.
     """
     name: str
+    config: dict[str, str] = None
     description: str = None
     resources: StackResources
     environments: list[StackEnvironment] = []
@@ -75,10 +76,10 @@ class Stack(BaseStack):
 
         return PulumiStack(
             name=self.name,
+            config=self.config,
             description=self.description,
             resources=resources,
             # variables=None,  # TODO
-            # config=None,  # TODO
             outputs=self.pulumi_outputs,
         )
 
@@ -94,7 +95,7 @@ class Stack(BaseStack):
         with open(filepath, "w") as fp:
             yaml.dump(self.to_pulumi_stack().model_dump(), fp)
 
-    def _pulumi_call(self, command, stack=None):
+    def _pulumi_call(self, command, stack=None, flags=None):
         self.write_pulumi_stack()
         worker = Worker()
 
@@ -102,16 +103,19 @@ class Stack(BaseStack):
         if stack is not None:
             cmd += ["-s", stack]
 
+        if flags is not None:
+            cmd += flags
+
         worker.run(
             cmd=cmd,
             cwd="./.laktory/",
         )
 
-    def pulumi_preview(self, stack=None):
-        self._pulumi_call("preview", stack=stack)
+    def pulumi_preview(self, stack=None, flags=None):
+        self._pulumi_call("preview", stack=stack, flags=flags)
 
-    def pulumi_up(self, stack=None):
-        self._pulumi_call("up", stack=stack)
+    def pulumi_up(self, stack=None, flags=None):
+        self._pulumi_call("up", stack=stack, flags=flags)
 
     # ----------------------------------------------------------------------- #
     # Terraform Methods                                                       #

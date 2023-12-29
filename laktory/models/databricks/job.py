@@ -760,7 +760,7 @@ class Job(BaseModel, PulumiResource):
                 Permissions(
                     resource_name=f"permissions-{self.resource_name}",
                     access_controls=self.permissions,
-                    job_id="TODO",  # TODO
+                    job_id=f"${{jobs.{self.resource_name}.id}}",
                 )
             ]
 

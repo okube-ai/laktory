@@ -3,7 +3,7 @@ from laktory import models
 
 pipeline = models.Pipeline(
     resource_name="pl-custom-name",
-    name="pl-stock-prices-stack",
+    name="pl-stock-prices",
     libraries=[
         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}},
     ],
@@ -14,7 +14,7 @@ pipeline = models.Pipeline(
 )
 
 job = models.Job(
-    name="job-stock-prices-stack",
+    name="job-stock-prices",
     clusters=[
         {
             "name": "main",
@@ -37,11 +37,11 @@ job = models.Job(
         {
             "task_key": "run-pipeline",
             "pipeline_task": {
-                # "pipeline_id": "${resources.pipelines.pl-stocks-prices-stack.id}",  # BUNDLES STYLE  {resources.resource_type.resource_key.id}
+                # "pipeline_id": "${resources.pipelines.pl-stocks-prices.id}",  # BUNDLES STYLE  {resources.resource_type.resource_key.id}
                 # "pipeline_id": "${databricks_pipeline.lhouse_project_pipeline.id}",  # TERRAFORM STYLE {resource_type.resource_key.id}
-                # "pipeline_id": "${pl-stocks-prices-stack.id}",  # PULUMI STYLE {resource_key.id}
-                # "pipeline_id": "${pipelines.pl-custom-name.id}",  # LAKTORY STYLE {resource_type.resource_key.id}
-                "pipeline_id": "1234",  # LAKTORY STYLE {resource_type.resource_key.id}
+                # "pipeline_id": "${pl-stocks-prices.id}",  # PULUMI STYLE {resource_key.id}
+                "pipeline_id": "${pipelines.pl-custom-name.id}",  # LAKTORY STYLE {resource_type.resource_key.id}
+                # "pipeline_id": "1234",  # LAKTORY STYLE {resource_type.resource_key.id}
             },
             "libraries": [
                 {"pypi": {"package": "laktory==0.0.27"}},
@@ -53,10 +53,13 @@ job = models.Job(
 
 
 stack = models.Stack(
-    name="workspace",
+    name="unit-testing",
+    config={
+        "databricks:host": "adb-2211091707396001.1.azuredatabricks.net",
+    },
     resources={
         "jobs": [job],
-        # "pipelines": [pipeline],
+        "pipelines": [pipeline],
     },
 )
 
@@ -65,7 +68,8 @@ def test_stack_model():
     data = stack.model_dump()
     print(data)
     assert data == {
-        "name": "workspace",
+        "name": "unit-testing",
+        "config": {"databricks:host": "adb-2211091707396001.1.azuredatabricks.net"},
         "description": None,
         "resources": {
             "catalogs": [],
@@ -73,7 +77,7 @@ def test_stack_model():
             "groups": [],
             "jobs": [
                 {
-                    "resource_name": "job-stock-prices-stack",
+                    "resource_name": "job-stock-prices",
                     "clusters": [
                         {
                             "apply_policy_default_values": None,
@@ -112,7 +116,7 @@ def test_stack_model():
                     "max_concurrent_runs": None,
                     "max_retries": None,
                     "min_retry_interval_millis": None,
-                    "name": "job-stock-prices-stack",
+                    "name": "job-stock-prices",
                     "notification_settings": None,
                     "parameters": [],
                     "permissions": [],
@@ -200,7 +204,7 @@ def test_stack_model():
                             "notebook_task": None,
                             "notification_settings": None,
                             "pipeline_task": {
-                                "pipeline_id": "1234",
+                                "pipeline_id": "${pipelines.pl-custom-name.id}",
                                 "full_refresh": None,
                             },
                             "retry_on_timeout": None,
@@ -217,7 +221,47 @@ def test_stack_model():
                 }
             ],
             "notebooks": [],
-            "pipelines": [],
+            "pipelines": [
+                {
+                    "resource_name": "pl-custom-name",
+                    "allow_duplicate_names": None,
+                    "catalog": None,
+                    "channel": "PREVIEW",
+                    "clusters": [],
+                    "configuration": {},
+                    "continuous": None,
+                    "development": None,
+                    "edition": None,
+                    "libraries": [
+                        {
+                            "file": None,
+                            "notebook": {"path": "/pipelines/dlt_brz_template.py"},
+                        }
+                    ],
+                    "name": "pl-stock-prices",
+                    "notifications": [],
+                    "permissions": [
+                        {
+                            "group_name": "account users",
+                            "permission_level": "CAN_VIEW",
+                            "service_principal_name": None,
+                            "user_name": None,
+                        },
+                        {
+                            "group_name": "role-engineers",
+                            "permission_level": "CAN_RUN",
+                            "service_principal_name": None,
+                            "user_name": None,
+                        },
+                    ],
+                    "photon": None,
+                    "serverless": None,
+                    "storage": None,
+                    "tables": [],
+                    "target": None,
+                    "udfs": [],
+                }
+            ],
             "schemas": [],
             "secret_scopes": [],
             "sql_queries": [],
@@ -241,15 +285,15 @@ def test_pulumi_stack():
     print(data)
 
     assert data == {
-        "name": "workspace",
+        "name": "unit-testing",
         "runtime": "yaml",
-        "config": {},
+        "config": {"databricks:host": "adb-2211091707396001.1.azuredatabricks.net"},
         "variables": {},
         "resources": {
-            "job-stock-prices-stack": {
+            "job-stock-prices": {
                 "type": "databricks:Job",
                 "properties": {
-                    "name": "job-stock-prices-stack",
+                    "name": "job-stock-prices",
                     "parameters": [],
                     "tags": {},
                     "tasks": [
@@ -269,7 +313,7 @@ def test_pulumi_stack():
                                 {"pypi": {"package": "laktory==0.0.27"}},
                                 {"pypi": {"package": "yfinance"}},
                             ],
-                            "pipelineTask": {"pipelineId": "1234"},
+                            "pipelineTask": {"pipelineId": "${pl-custom-name.id}"},
                             "taskKey": "run-pipeline",
                         },
                     ],
@@ -288,14 +332,43 @@ def test_pulumi_stack():
                         }
                     ],
                 },
-            }
+            },
+            "pl-custom-name": {
+                "type": "databricks:Pipeline",
+                "properties": {
+                    "channel": "PREVIEW",
+                    "clusters": [],
+                    "configuration": {},
+                    "libraries": [
+                        {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
+                    ],
+                    "name": "pl-stock-prices",
+                    "notifications": [],
+                },
+            },
+            "permissions-pl-custom-name": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "account users", "permissionLevel": "CAN_VIEW"},
+                        {"groupName": "role-engineers", "permissionLevel": "CAN_RUN"},
+                    ],
+                    "pipelineId": "${pl-custom-name.id}",
+                },
+            },
         },
         "outputs": {},
     }
 
 
 def test_pulumi_preview():
-    stack.pulumi_preview("okube/dev")
+    stack.pulumi_preview(
+        "okube/dev",
+        flags=[
+            "--expect-no-changes",
+            # "--yes"
+        ],
+    )
 
 
 if __name__ == "__main__":
