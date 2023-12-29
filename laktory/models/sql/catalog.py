@@ -108,7 +108,7 @@ class Catalog(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["schemas", "is_unity", "grants"]
 
     def deploy_with_pulumi(self, name=None, opts=None):

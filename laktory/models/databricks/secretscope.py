@@ -1,5 +1,6 @@
 from typing import Literal
 from typing import Any
+from typing import Union
 from pydantic import Field
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
@@ -94,7 +95,7 @@ class SecretScope(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions", "secrets"]
 
     def deploy_with_pulumi(self, name: str = None, opts=None):

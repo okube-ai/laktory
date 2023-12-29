@@ -726,15 +726,16 @@ class Job(BaseModel, PulumiResource):
         return "databricks:Job"
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions"]
 
     @property
     def pulumi_renames(self) -> dict[str, str]:
         return {"clusters": "job_clusters"}
 
-    def pulumi_properties(self, *args, **kwargs):
-        d = super().pulumi_properties(*args, **kwargs)
+    @property
+    def pulumi_properties(self):
+        d = super().pulumi_properties
         _clusters = []
         for c in d.get("job_clusters", []):
             name = c.pop("name")

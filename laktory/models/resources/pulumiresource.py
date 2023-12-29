@@ -1,5 +1,6 @@
 from typing import ClassVar
 from typing import Any
+from typing import Union
 from laktory.models.resources.bresource import BaseResource
 
 
@@ -18,7 +19,12 @@ class PulumiResource(BaseResource):
         raise NotImplementedError()
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def base_pulumi_excludes(self) -> list[str]:
+        """List of fields from base class to exclude when dumping model to pulumi"""
+        return ["resource_name"]
+
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         """List of fields to exclude when dumping model to pulumi"""
         return []
 
@@ -31,13 +37,15 @@ class PulumiResource(BaseResource):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def pulumi_yaml_dump(self, *args, to_stack=False, **kwargs) -> dict[str, Any]:
+    @property
+    def pulumi_yaml_dump(self) -> dict[str, Any]:
         return {
             "type": self.pulumi_resource_type,
-            "properties": self.pulumi_properties()
+            "properties": self.pulumi_properties
         }
 
-    def pulumi_properties(self, *args, **kwargs) -> dict:
+    @property
+    def pulumi_properties(self) -> dict:
         """
         Dump model and customize it to be used as an input for a pulumi
         resource:
@@ -52,8 +60,14 @@ class PulumiResource(BaseResource):
         :
             Pulumi-safe model dump
         """
-        kwargs["exclude"] = self.pulumi_excludes
-        d = super().model_dump(*args, **kwargs)
+        excludes = self.base_pulumi_excludes
+        if isinstance(self.pulumi_excludes, dict):
+            excludes = {k: True for k in excludes}
+            excludes.update(self.pulumi_excludes)
+        else:
+            excludes = self.base_pulumi_excludes + self.pulumi_excludes
+
+        d = super().model_dump(exclude=excludes, exclude_none=True)
         for k, v in self.pulumi_renames.items():
             d[v] = d.pop(k)
         d = self.inject_vars(d)

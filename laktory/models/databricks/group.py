@@ -42,7 +42,7 @@ class Group(BaseModel, BaseResource):
         return self.display_name
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["id"]
 
     def deploy_with_pulumi(self, name: str = None, opts=None):

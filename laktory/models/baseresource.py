@@ -35,7 +35,7 @@ class BaseResource(_BaseModel):
         return self._resources
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         """List of fields to exclude when dumping model to pulumi"""
         return []
 

@@ -1,5 +1,6 @@
 import os
 from typing import Any
+from typing import Union
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.baseresource import BaseResource
@@ -64,7 +65,7 @@ class WorkspaceFile(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions", "dirpath"]
 
     def deploy_with_pulumi(self, name=None, opts=None):

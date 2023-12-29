@@ -261,7 +261,7 @@ class Table(BaseModel, BaseResource):
         return self.full_name
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["builder", "columns", "data", "grants", "primary_key", "timestamp_key"]
 
     def model_pulumi_dump(self, *args, **kwargs):

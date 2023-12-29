@@ -1,6 +1,7 @@
 import os
 from typing import Any
 from typing import Literal
+from typing import Union
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.baseresource import BaseResource
@@ -77,7 +78,7 @@ class Notebook(BaseModel, BaseResource):
         return key
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions", "dirpath"]
 
     def deploy_with_pulumi(self, name=None, groups=None, opts=None):

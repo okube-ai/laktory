@@ -339,7 +339,7 @@ class Pipeline(BaseModel, PulumiResource):
         return "databricks:Pipeline"
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return {
             "permissions": True,
             "tables": True,
@@ -347,8 +347,9 @@ class Pipeline(BaseModel, PulumiResource):
             "udfs": True,
         }
 
-    def pulumi_properties(self, *args, **kwargs):
-        d = super().pulumi_properties(*args, **kwargs)
+    @property
+    def pulumi_properties(self):
+        d = super().pulumi_properties
         _clusters = []
         for c in d.get("clusters", []):
             c["label"] = c.pop("name")

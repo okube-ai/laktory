@@ -1,3 +1,4 @@
+from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.baseresource import BaseResource
 
@@ -58,7 +59,7 @@ class ServicePrincipal(BaseModel, BaseResource):
         return self.display_name
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["groups", "roles"]
 
     def deploy_with_pulumi(

@@ -1,6 +1,7 @@
 import os
 from typing import Any
 from typing import Literal
+from typing import Union
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.baseresource import BaseResource
@@ -83,7 +84,7 @@ class SqlQuery(BaseModel, BaseResource):
         return self.resources.query.id
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions", "warehouse_id"]
 
     @property

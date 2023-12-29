@@ -57,7 +57,7 @@ class User(BaseModel, BaseResource):
         return self.user_name
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["groups", "roles", "id"]
 
     def deploy_with_pulumi(self, name=None, group_ids=None, opts=None):

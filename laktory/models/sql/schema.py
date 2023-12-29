@@ -95,7 +95,7 @@ class Schema(BaseModel, BaseResource):
         return self.full_name
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["tables", "volumes", "grants"]
 
     def deploy_with_pulumi(self, name=None, opts=None):

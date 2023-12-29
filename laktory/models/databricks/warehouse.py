@@ -123,7 +123,7 @@ class Warehouse(BaseModel, BaseResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions"]
 
     def model_pulumi_dump(self, *args, **kwargs):
