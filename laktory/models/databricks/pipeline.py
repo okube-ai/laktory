@@ -339,6 +339,11 @@ class Pipeline(BaseModel, PulumiResource):
         return "databricks:Pipeline"
 
     @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Pipeline
+
+    @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return {
             "permissions": True,

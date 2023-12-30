@@ -33,5 +33,10 @@ class Permissions(BaseModel, PulumiResource):
         return "databricks:Permissions"
 
     @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Permissions
+
+    @property
     def all_resources(self) -> list[PulumiResource]:
         return [self]

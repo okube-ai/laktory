@@ -1,4 +1,4 @@
-from typing import ClassVar
+import os
 from typing import Any
 from typing import Union
 from laktory.models.resources.bresource import BaseResource
@@ -36,13 +36,6 @@ class PulumiResource(BaseResource):
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_yaml_dump(self) -> dict[str, Any]:
-        return {
-            "type": self.pulumi_resource_type,
-            "properties": self.pulumi_properties
-        }
 
     @property
     def pulumi_properties(self) -> dict:
