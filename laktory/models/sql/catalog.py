@@ -1,12 +1,12 @@
 from typing import Union
 from typing import Literal
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.legacybaseresource import LegacyBaseResource
 from laktory.models.sql.schema import Schema
 from laktory.models.grants.cataloggrant import CatalogGrant
 
 
-class Catalog(BaseModel, BaseResource):
+class Catalog(BaseModel, LegacyBaseResource):
     """
     A catalog is the first layer of Unity Catalog’s three-level namespace. It’s
     used to organize your data assets.

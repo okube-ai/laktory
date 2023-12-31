@@ -718,12 +718,38 @@ class Job(BaseModel, PulumiResource):
     webhook_notifications: JobWebhookNotifications = None
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Methods                                                          #
+    # Resource Properties                                                     #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def all_resources(self) -> list[PulumiResource]:
+        res = [
+            self,
+        ]
+        if self.permissions:
+
+            res += [
+                Permissions(
+                    resource_name=f"permissions-{self.resource_name}",
+                    access_controls=self.permissions,
+                    job_id=f"${{jobs.{self.resource_name}.id}}",
+                )
+            ]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
 
     @property
     def pulumi_resource_type(self) -> str:
         return "databricks:Job"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Job
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
@@ -749,43 +775,3 @@ class Job(BaseModel, PulumiResource):
 
         return d
 
-    @property
-    def all_resources(self) -> list[PulumiResource]:
-        res = [
-            self,
-        ]
-        if self.permissions:
-
-            res += [
-                Permissions(
-                    resource_name=f"permissions-{self.resource_name}",
-                    access_controls=self.permissions,
-                    job_id=f"${{jobs.{self.resource_name}.id}}",
-                )
-            ]
-
-        return res
-
-    # ----------------------------------------------------------------------- #
-    # Others                                                                  #
-    # ----------------------------------------------------------------------- #
-
-    def deploy_with_pulumi(self, name=None, opts=None):
-        """
-        Deploy job using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiJob:
-            Pulumi job resource
-        """
-        from laktory.resourcesengines.pulumi.job import PulumiJob
-
-        return PulumiJob(name=name, job=self, opts=opts)

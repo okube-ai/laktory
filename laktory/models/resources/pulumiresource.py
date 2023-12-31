@@ -1,7 +1,8 @@
-import os
-from typing import Any
+from abc import abstractmethod
 from typing import Union
 from laktory.models.resources.bresource import BaseResource
+
+variables = {}
 
 
 class PulumiResource(BaseResource):
@@ -11,10 +12,12 @@ class PulumiResource(BaseResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_resource_type(self):
+    @abstractmethod
+    def pulumi_resource_type(self) -> str:
         raise NotImplementedError()
 
     @property
+    @abstractmethod
     def pulumi_cls(self):
         raise NotImplementedError()
 
@@ -65,3 +68,12 @@ class PulumiResource(BaseResource):
             d[v] = d.pop(k)
         d = self.inject_vars(d)
         return d
+
+    def deploy_with_pulumi(self, opts=None):
+        for r in self.all_resources:
+            properties = r.pulumi_properties
+            properties = self.resolve_vars(properties, target="pulumi_py")
+            _r = r.pulumi_cls(r.resource_name, **properties, opts=opts)
+
+            # TODO: Store other properties (like url, etc.).
+            variables[f"{r.resource_name}.id"] = _r.id

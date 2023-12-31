@@ -1,9 +1,9 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.legacybaseresource import LegacyBaseResource
 
 
-class User(BaseModel, BaseResource):
+class User(BaseModel, LegacyBaseResource):
     """
     Databricks user
 

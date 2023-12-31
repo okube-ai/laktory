@@ -13,7 +13,7 @@ from laktory.models.resources.pulumiresource import PulumiResource
 ENGINES = ["pulumi", "databricks-api", "terraform"]
 
 
-class BaseResource(_BaseModel):
+class LegacyBaseResource(_BaseModel):
     """
     Parent class for all Laktory models deployable as one or multiple cloud
     resources. This `BaseResource` class is derived from `pydantic.BaseModel`.

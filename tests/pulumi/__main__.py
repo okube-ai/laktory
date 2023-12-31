@@ -48,6 +48,9 @@ class Service:
                 ],
             )
         ]
+        self.pipelines[-1].deploy_with_pulumi(
+            opts=pulumi.ResourceOptions(provider=self.workspace_provider)
+        )
 
     # ----------------------------------------------------------------------- #
     # Jobs                                                                    #
@@ -89,9 +92,9 @@ class Service:
                 ],
             )
         ]
+        self.jobs[-1].deploy_with_pulumi(opts=pulumi.ResourceOptions(provider=self.workspace_provider))
 
     def set_stack(self):
-
         self.stack = models.Stack(
             name="unit-testing",
             config={

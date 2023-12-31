@@ -2,7 +2,7 @@ from typing import Literal
 from typing import Union
 from pydantic import Field
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.legacybaseresource import LegacyBaseResource
 from laktory.models.databricks.permission import Permission
 
 
@@ -118,7 +118,7 @@ class ClusterLibrary(BaseModel):
     whl: str = None
 
 
-class Cluster(BaseModel, BaseResource):
+class Cluster(BaseModel, LegacyBaseResource):
     """
     Databricks cluster
 

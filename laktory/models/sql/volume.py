@@ -1,11 +1,11 @@
 from typing import Literal
 from typing import Union
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.legacybaseresource import LegacyBaseResource
 from laktory.models.grants.volumegrant import VolumeGrant
 
 
-class Volume(BaseModel, BaseResource):
+class Volume(BaseModel, LegacyBaseResource):
     """
     Volumes are Unity Catalog objects representing a logical volume of storage
     in a cloud object storage location. Volumes provide capabilities for

@@ -1,7 +1,7 @@
 from typing import Literal
 from typing import Union
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.legacybaseresource import LegacyBaseResource
 from laktory.models.databricks.permission import Permission
 
 
@@ -34,7 +34,7 @@ class WarehouseTags(BaseModel):
     custom_tags: list[WarehouseCustomTag] = []
 
 
-class Warehouse(BaseModel, BaseResource):
+class Warehouse(BaseModel, LegacyBaseResource):
     """
     Databricks Warehouse
 

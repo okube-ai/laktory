@@ -1,6 +1,7 @@
 import pulumi
 import yaml
 import json
+import os
 from typing import Any
 from typing import TypeVar
 from typing import TextIO
@@ -47,6 +48,7 @@ class BaseModel(_BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     vars: dict[str, Any] = Field(default={}, exclude=True)
+    variables: dict[str, Any] = Field(default={}, exclude=True)
 
     @classmethod
     def model_validate_yaml(cls, fp: TextIO) -> Model:
@@ -164,5 +166,82 @@ class BaseModel(_BaseModel):
 
         # Build pulumi output function where required
         d = apply_pulumi(d)
+
+        return d
+
+    def resolve_vars(self, d: dict, target=None) -> dict[str, Any]:
+
+        from laktory.models.resources.pulumiresource import variables as pulumi_vars
+
+        _vars = {}
+
+        if target == "pulumi":
+            _vars["${catalogs."] = "${"
+            _vars["${clusters."] = "${"
+            _vars["${groups."] = "${"
+            _vars["${jobs."] = "${"
+            _vars["${notebooks."] = "${"
+            _vars["${pipelines."] = "${"
+            _vars["${schemas."] = "${"
+            _vars["${secret_scopes."] = "${"
+            _vars["${sql_queries."] = "${"
+            _vars["${tables."] = "${"
+            _vars["${users."] = "${"
+            _vars["${warehouses."] = "${"
+            _vars["${workspace_files."] = "${"
+        elif target == "terraform":
+            _vars["${catalogs."] = "${databricks_catalog."
+            _vars["${clusters."] = "${databricks_cluster."
+            _vars["${groups."] = "${databricks_group."
+            _vars["${jobs."] = "${databricks_job."
+            _vars["${notebooks."] = "${databricks_notebook."
+            _vars["${pipelines."] = "${databricks_pipeline."
+            _vars["${schemas."] = "${databricks_schema."
+            _vars["${secret_scopes."] = "${databricks_secret_scope."
+            _vars["${sql_queries."] = "${databricks_sql_query."
+            _vars["${tables."] = "${databricks_sql_table."
+            _vars["${users."] = "${databricks_user."
+            _vars["${warehouses."] = "${databricks_sql_endpoint."
+            _vars["${workspace_files."] = "${databricks_workspace_file."
+        elif target == "pulumi_py":
+            _vars["${catalogs."] = "${var."
+            _vars["${clusters."] = "${var."
+            _vars["${groups."] = "${var."
+            _vars["${jobs."] = "${var."
+            _vars["${notebooks."] = "${var."
+            _vars["${pipelines."] = "${var."
+            _vars["${schemas."] = "${var."
+            _vars["${secret_scopes."] = "${var."
+            _vars["${sql_queries."] = "${var."
+            _vars["${tables."] = "${var."
+            _vars["${users."] = "${var."
+            _vars["${warehouses."] = "${var."
+            _vars["${workspace_files."] = "${var."
+
+        for k, v in self.variables.items():
+            _vars[f"${{var.{k}}}"] = v
+
+        for k, v in pulumi_vars.items():
+            _vars[f"${{var.{k}}}"] = v
+
+        for k, v in os.environ.items():
+            _vars[f"${{var.{k}}}"] = v
+
+        def search_and_replace(d, old_value, new_val):
+            if isinstance(d, dict):
+                for key, value in d.items():
+                    d[key] = search_and_replace(value, old_value, new_val)
+            elif isinstance(d, list):
+                for i, item in enumerate(d):
+                    d[i] = search_and_replace(item, old_value, new_val)
+            elif d == old_value:  # required where d is not a string (bool)
+                d = new_val
+            elif isinstance(d, str) and old_value in d:
+                d = d.replace(old_value, new_val)
+            return d
+
+        # Replace variable with their values (except for pulumi output)
+        for var_key, var_value in _vars.items():
+            d = search_and_replace(d, var_key, var_value)
 
         return d

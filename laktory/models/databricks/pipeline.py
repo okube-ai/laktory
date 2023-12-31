@@ -331,7 +331,32 @@ class Pipeline(BaseModel, PulumiResource):
         return self
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Methods                                                          #
+    # Resource Properties                                                     #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def resource_type_id(self) -> str:
+        return "pl"
+
+    @property
+    def all_resources(self) -> list[PulumiResource]:
+        res = [
+            self,
+        ]
+        if self.permissions:
+
+            res += [
+                Permissions(
+                    resource_name=f"permissions-{self.resource_name}",
+                    access_controls=self.permissions,
+                    pipeline_id=f"${{pipelines.{self.resource_name}.id}}",
+                )
+            ]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
 
     @property
@@ -361,39 +386,3 @@ class Pipeline(BaseModel, PulumiResource):
             _clusters += [c]
         d["clusters"] = _clusters
         return d
-
-    @property
-    def all_resources(self) -> list[PulumiResource]:
-        res = [
-            self,
-        ]
-        if self.permissions:
-
-            res += [
-                Permissions(
-                    resource_name=f"permissions-{self.resource_name}",
-                    access_controls=self.permissions,
-                    pipeline_id=f"${{pipelines.{self.resource_name}.id}}",
-                )
-            ]
-
-        return res
-
-    # ----------------------------------------------------------------------- #
-    # Others                                                                  #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def resource_type_id(self) -> str:
-        return "pl"
-
-    @property
-    def id(self):
-        if self._resources is None:
-            return None
-        return self.resources.pipeline.id
-
-    def deploy_with_pulumi(self, name=None, groups=None, opts=None):
-        from laktory.resourcesengines.pulumi.pipeline import PulumiPipeline
-
-        return PulumiPipeline(name=name, pipeline=self, opts=opts)

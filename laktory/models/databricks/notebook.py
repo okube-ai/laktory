@@ -4,11 +4,11 @@ from typing import Literal
 from typing import Union
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.legacybaseresource import LegacyBaseResource
 from laktory.models.databricks.permission import Permission
 
 
-class Notebook(BaseModel, BaseResource):
+class Notebook(BaseModel, LegacyBaseResource):
     """
     Databricks Notebook
 

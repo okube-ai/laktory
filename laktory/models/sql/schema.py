@@ -1,13 +1,13 @@
 from typing import Union
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.legacybaseresource import LegacyBaseResource
 from laktory.models.sql.table import Table
 from laktory.models.sql.volume import Volume
 from laktory.models.grants.schemagrant import SchemaGrant
 
 
-class Schema(BaseModel, BaseResource):
+class Schema(BaseModel, LegacyBaseResource):
     """
     A schema (also called a database) is the second layer of Unity Catalog’s
     three-level namespace. A schema organizes tables and views.

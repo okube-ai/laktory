@@ -1,9 +1,9 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.legacybaseresource import LegacyBaseResource
 
 
-class Group(BaseModel, BaseResource):
+class Group(BaseModel, LegacyBaseResource):
     """
     Databricks group
 

@@ -4,7 +4,7 @@ from typing import Union
 from pydantic import Field
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.legacybaseresource import LegacyBaseResource
 from laktory.models.databricks.secret import Secret
 
 
@@ -40,7 +40,7 @@ class SecretScopeKeyvaultMetadata(BaseModel):
     resource_id: str = None
 
 
-class SecretScope(BaseModel, BaseResource):
+class SecretScope(BaseModel, LegacyBaseResource):
     """
     Databricks secret scope
 

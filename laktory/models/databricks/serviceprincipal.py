@@ -1,9 +1,9 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.legacybaseresource import LegacyBaseResource
 
 
-class ServicePrincipal(BaseModel, BaseResource):
+class ServicePrincipal(BaseModel, LegacyBaseResource):
     """
     Databricks account service principal
 
