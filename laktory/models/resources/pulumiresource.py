@@ -1,8 +1,9 @@
 from abc import abstractmethod
 from typing import Union
-from laktory.models.resources.bresource import BaseResource
+from laktory.models.resources.baseresource import BaseResource
 
-variables = {}
+pulumi_outputs = {}
+"""Store pulumi outputs for deployed resources"""
 
 
 class PulumiResource(BaseResource):
@@ -76,4 +77,4 @@ class PulumiResource(BaseResource):
             _r = r.pulumi_cls(r.resource_name, **properties, opts=opts)
 
             # TODO: Store other properties (like url, etc.).
-            variables[f"{r.resource_name}.id"] = _r.id
+            pulumi_outputs[f"{r.resource_name}.id"] = _r.id

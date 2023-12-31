@@ -3,7 +3,7 @@ from laktory import models
 
 pipeline = models.Pipeline(
     resource_name="pl-custom-name",
-    name="pl-stock-prices",
+    name="pl-stock-prices-ut-stack",
     libraries=[
         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}},
     ],
@@ -14,7 +14,7 @@ pipeline = models.Pipeline(
 )
 
 job = models.Job(
-    name="job-stock-prices",
+    name="job-stock-prices-ut-stack",
     clusters=[
         {
             "name": "main",
@@ -63,11 +63,20 @@ stack = models.Stack(
     },
 )
 
+empty_stack = models.Stack(
+    name="unit-testing",
+    config={
+        "databricks:host": "adb-2211091707396001.1.azuredatabricks.net",
+    },
+    resources={},
+)
+
 
 def test_stack_model():
     data = stack.model_dump()
     print(data)
     assert data == {
+        "variables": {},
         "name": "unit-testing",
         "config": {"databricks:host": "adb-2211091707396001.1.azuredatabricks.net"},
         "description": None,
@@ -77,7 +86,7 @@ def test_stack_model():
             "groups": [],
             "jobs": [
                 {
-                    "resource_name": "job-stock-prices",
+                    "resource_name": "job-stock-prices-ut-stack",
                     "clusters": [
                         {
                             "apply_policy_default_values": None,
@@ -116,7 +125,7 @@ def test_stack_model():
                     "max_concurrent_runs": None,
                     "max_retries": None,
                     "min_retry_interval_millis": None,
-                    "name": "job-stock-prices",
+                    "name": "job-stock-prices-ut-stack",
                     "notification_settings": None,
                     "parameters": [],
                     "permissions": [],
@@ -238,7 +247,7 @@ def test_stack_model():
                             "notebook": {"path": "/pipelines/dlt_brz_template.py"},
                         }
                     ],
-                    "name": "pl-stock-prices",
+                    "name": "pl-stock-prices-ut-stack",
                     "notifications": [],
                     "permissions": [
                         {
@@ -271,7 +280,6 @@ def test_stack_model():
             "workspace_files": [],
         },
         "environments": [],
-        "variables": {},
         "pulumi_outputs": {},
     }
 
@@ -285,15 +293,15 @@ def test_pulumi_stack():
     print(data)
 
     assert data == {
+        "variables": {},
         "name": "unit-testing",
         "runtime": "yaml",
         "config": {"databricks:host": "adb-2211091707396001.1.azuredatabricks.net"},
-        "variables": {},
         "resources": {
-            "job-stock-prices": {
+            "job-stock-prices-ut-stack": {
                 "type": "databricks:Job",
                 "properties": {
-                    "name": "job-stock-prices",
+                    "name": "job-stock-prices-ut-stack",
                     "parameters": [],
                     "tags": {},
                     "tasks": [
@@ -342,7 +350,7 @@ def test_pulumi_stack():
                     "libraries": [
                         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
                     ],
-                    "name": "pl-stock-prices",
+                    "name": "pl-stock-prices-ut-stack",
                     "notifications": [],
                 },
             },
@@ -361,17 +369,15 @@ def test_pulumi_stack():
     }
 
 
-def test_pulumi_preview():
-    stack.pulumi_preview(
-        "okube/dev",
-        flags=[
-            "--expect-no-changes",
-            # "--yes"
-        ],
-    )
+def test_pulumi_up():
+    # Create resources
+    stack.pulumi_up("okube/dev", flags=["--yes"])
+
+    # Delete resources
+    empty_stack.pulumi_up("okube/dev", flags=["--yes"])
 
 
 if __name__ == "__main__":
     test_stack_model()
     test_pulumi_stack()
-    test_pulumi_preview()
+    test_pulumi_up()

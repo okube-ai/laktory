@@ -171,7 +171,7 @@ class BaseModel(_BaseModel):
 
     def resolve_vars(self, d: dict, target=None) -> dict[str, Any]:
 
-        from laktory.models.resources.pulumiresource import variables as pulumi_vars
+        from laktory.models.resources.pulumiresource import pulumi_outputs
 
         _vars = {}
 
@@ -221,7 +221,7 @@ class BaseModel(_BaseModel):
         for k, v in self.variables.items():
             _vars[f"${{var.{k}}}"] = v
 
-        for k, v in pulumi_vars.items():
+        for k, v in pulumi_outputs.items():
             _vars[f"${{var.{k}}}"] = v
 
         for k, v in os.environ.items():
