@@ -4,11 +4,12 @@ from typing import Literal
 from typing import Union
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
-from laktory.models.legacybaseresource import LegacyBaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.permissions import Permissions
 
 
-class SqlQuery(BaseModel, LegacyBaseResource):
+class SqlQuery(BaseModel, PulumiResource):
     """
     Databricks SQL Query
 
@@ -73,15 +74,41 @@ class SqlQuery(BaseModel, LegacyBaseResource):
         return self
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
-    def id(self) -> str:
-        """Deployed sql query id"""
-        if self._resources is None:
-            return None
-        return self.resources.query.id
+    def all_resources(self) -> list[PulumiResource]:
+        res = [
+            self,
+        ]
+
+        # TODO: Figure out how to fetch data source ids
+        # if self.data_source_id is None:
+        #     d = self.inject_vars(self.model_dump())
+        #     warehouse = databricks.SqlEndpoint.get(
+        #         f"warehouse-{name}",
+        #         id=d["warehouse_id"],
+        #         opts=opts,
+        #     )
+        #     sql_query.data_source_id = "${var._data_source_id}"
+        #     sql_query.vars["_data_source_id"] = warehouse.data_source_id
+
+        if self.permissions:
+
+            res += [
+                Permissions(
+                    resource_name=f"permissions-{self.resource_name}",
+                    access_controls=self.permissions,
+                    sql_query_id=f"${{notebooks.{self.resource_name}.id}}",
+                )
+            ]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
@@ -91,39 +118,4 @@ class SqlQuery(BaseModel, LegacyBaseResource):
     def pulumi_renames(self):
         return {"comment": "description"}
 
-    def deploy_with_pulumi(self, name=None, opts=None):
-        """
-        Deploy sql query using pulumi.
 
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiSqlQuery:
-            Pulumi SQL Query resource
-        """
-        from laktory.resourcesengines.pulumi.sqlquery import PulumiSqlQuery
-
-        return PulumiSqlQuery(name=name, sql_query=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    q = models.SqlQuery(
-        name="create-view",
-        query="CREATE VIEW google_stock_prices AS SELECT * FROM stock_prices WHERE symbol = 'GOOGL'",
-        warehouse_id="09z739ce103q9374",
-        parent="folders/2479128258235163",
-        permissions=[
-            {
-                "group_name": "role-engineers",
-                "permission_level": "CAN_RUN",
-            }
-        ],
-    )

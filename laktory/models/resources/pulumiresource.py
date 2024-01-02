@@ -77,4 +77,9 @@ class PulumiResource(BaseResource):
             _r = r.pulumi_cls(r.resource_name, **properties, opts=opts)
 
             # TODO: Store other properties (like url, etc.).
-            pulumi_outputs[f"{r.resource_name}.id"] = _r.id
+            for k in [
+                "id",
+                "object_id",
+            ]:
+                if hasattr(_r, k):
+                    pulumi_outputs[f"{r.resource_name}.{k}"] = getattr(_r, k)

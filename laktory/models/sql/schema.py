@@ -1,13 +1,14 @@
 from typing import Union
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.legacybaseresource import LegacyBaseResource
+from laktory.models.databricks.grants import Grants
+from laktory.models.grants.schemagrant import SchemaGrant
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.sql.table import Table
 from laktory.models.sql.volume import Volume
-from laktory.models.grants.schemagrant import SchemaGrant
 
 
-class Schema(BaseModel, LegacyBaseResource):
+class Schema(BaseModel, PulumiResource):
     """
     A schema (also called a database) is the second layer of Unity Catalog’s
     three-level namespace. A schema organizes tables and views.
@@ -87,7 +88,7 @@ class Schema(BaseModel, LegacyBaseResource):
         return _id
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
@@ -95,36 +96,42 @@ class Schema(BaseModel, LegacyBaseResource):
         return self.full_name
 
     @property
+    def all_resources(self) -> list[PulumiResource]:
+
+        res = [
+            self
+        ]
+
+        # Schema grants
+        # TODO: _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.schema))
+        if self.grants:
+            res += [
+                Grants(
+                    resource_name=f"grants-{self.name}",
+                    schema=self.full_name,
+                    grants=[
+                        {
+                            "principal": g.principal, "privileges": g.privileges
+                        }
+                        for g in self.grants
+                    ],
+                )
+            ]
+
+        if self.volumes:
+            for v in self.volumes:
+                res += [v.all_resources]
+
+        if self.tables:
+            for t in self.tables:
+                res += [t.all_resources]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
+
+    @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["tables", "volumes", "grants"]
-
-    def deploy_with_pulumi(self, name=None, opts=None):
-        """
-        Deploy schema using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiSchema:
-            Pulumi schema resource
-        """
-        from laktory.resourcesengines.pulumi.schema import PulumiSchema
-
-        return PulumiSchema(name=name, schema=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    schema = models.Schema(
-        catalog_name="dev",
-        name="engineering",
-        grants=[{"principal": "domain-engineering", "privileges": ["SELECT"]}],
-    )
-    schema.deploy()

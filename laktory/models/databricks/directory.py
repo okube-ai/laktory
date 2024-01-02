@@ -1,9 +1,9 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
-from laktory.models.legacybaseresource import LegacyBaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class Directory(BaseModel, LegacyBaseResource):
+class Directory(BaseModel, PulumiResource):
     """
     Databricks Directory
 
@@ -43,45 +43,18 @@ class Directory(BaseModel, LegacyBaseResource):
         return key
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
+    # ----------------------------------------------------------------------- #
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
 
     @property
-    def id(self):
-        if self._resources is None:
-            return None
-        return self.resources.directory.id
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Directory"
 
     @property
-    def object_id(self):
-        if self._resources is None:
-            return None
-        return self.resources.directory.object_id
-
-    def deploy_with_pulumi(self, name: str = None, opts=None):
-        """
-        Deploy directory using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiDirectory:
-            Pulumi directory resource
-        """
-        from laktory.resourcesengines.pulumi.directory import PulumiDirectory
-
-        return PulumiDirectory(name=name, directory=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    d = models.Directory(path="/queries/views")
-    print(d)
-    print(d.key)
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Directory

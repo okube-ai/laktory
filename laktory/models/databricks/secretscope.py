@@ -4,8 +4,9 @@ from typing import Union
 from pydantic import Field
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
-from laktory.models.legacybaseresource import LegacyBaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.databricks.secret import Secret
+from laktory.models.databricks.secretacl import SecretAcl
 
 
 class SecretScopePermission(BaseModel):
@@ -40,7 +41,7 @@ class SecretScopeKeyvaultMetadata(BaseModel):
     resource_id: str = None
 
 
-class SecretScope(BaseModel, LegacyBaseResource):
+class SecretScope(BaseModel, PulumiResource):
     """
     Databricks secret scope
 
@@ -91,47 +92,41 @@ class SecretScope(BaseModel, LegacyBaseResource):
         return self
 
     # ----------------------------------------------------------------------- #
+    # Resource Properties                                                     #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def all_resources(self) -> list[PulumiResource]:
+        res = [
+            self,
+        ]
+
+        for s in self.secrets:
+            res += [
+                Secret(
+                    resource_name=f"secret-{self.name}-{s.key}",
+                    key=s.key,
+                    string_value=s.value,
+                    scope=self.secret_scope.id,
+                )
+            ]
+
+        for p in self.permissions:
+            res += [
+                SecretAcl(
+                    resource_name=f"secret-scope-acl-{self.name}-{p.principal}",
+                    permission=p.permission,
+                    principal=p.principal,
+                    scope=self.name,
+                )
+            ]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #
     # ----------------------------------------------------------------------- #
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions", "secrets"]
-
-    def deploy_with_pulumi(self, name: str = None, opts=None):
-        """
-        Deploy secret scope using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiSecretScope:
-            Pulumi group resource
-        """
-        from laktory.resourcesengines.pulumi.secretscope import PulumiSecretScope
-
-        return PulumiSecretScope(name=name, secret_scope=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    ss = models.SecretScope(
-        name="azure",
-        secrets=[
-            {"key": "keyvault-url", "value": "https://my-secrets.vault.azure.net/"},
-            {"key": "client-id", "value": "f461daa2-c281-4166-bc3e-538b90223184"},
-        ],
-        permissions=[
-            {"permission": "READ", "principal": "role-metastore-admins"},
-            {"permission": "READ", "principal": "role-workspace-admins"},
-        ],
-    )
-    print(ss)
-    ss.deploy()

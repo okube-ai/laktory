@@ -1,12 +1,13 @@
 from typing import Union
 from typing import Literal
 from laktory.models.basemodel import BaseModel
-from laktory.models.legacybaseresource import LegacyBaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.sql.schema import Schema
 from laktory.models.grants.cataloggrant import CatalogGrant
+from laktory.models.databricks.grants import Grants
 
 
-class Catalog(BaseModel, LegacyBaseResource):
+class Catalog(BaseModel, PulumiResource):
     """
     A catalog is the first layer of Unity Catalog’s three-level namespace. It’s
     used to organize your data assets.
@@ -104,68 +105,42 @@ class Catalog(BaseModel, LegacyBaseResource):
         return self.name
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def all_resources(self) -> list[PulumiResource]:
+
+        res = [
+            self
+        ]
+
+        # Catalog grants
+        # TODO: _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.schema))
+        if self.grants:
+            res += [
+                Grants(
+                    resource_name=f"grants-{self.name}",
+                    catalog=self.full_name,
+                    grants=[
+                        {
+                            "principal": g.principal, "privileges": g.privileges
+                        }
+                        for g in self.grants
+                    ],
+                )
+            ]
+
+        if self.schemas:
+            for s in self.schemas:
+                res += [s.all_resources]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["schemas", "is_unity", "grants"]
-
-    def deploy_with_pulumi(self, name=None, opts=None):
-        """
-        Deploy catalog using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiCatalog:
-            Pulumi catalog resource
-        """
-        from laktory.resourcesengines.pulumi.catalog import PulumiCatalog
-
-        return PulumiCatalog(name=name, catalog=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    catalog = models.Catalog(
-        name="dev",
-        grants=[
-            {"principal": "account users", "privileges": ["USE_CATALOG", "USE_SCHEMA"]}
-        ],
-        schemas=[
-            {
-                "name": "engineering",
-                "grants": [
-                    {"principal": "domain-engineering", "privileges": ["SELECT"]}
-                ],
-            },
-            {
-                "name": "sources",
-                "volumes": [
-                    {
-                        "name": "landing",
-                        "volume_type": "EXTERNAL",
-                        "grants": [
-                            {
-                                "principal": "account users",
-                                "privileges": ["READ_VOLUME"],
-                            },
-                            {
-                                "principal": "role-metastore-admins",
-                                "privileges": ["WRITE_VOLUME"],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-    )
-    catalog.deploy()

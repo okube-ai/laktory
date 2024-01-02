@@ -1,9 +1,11 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
-from laktory.models.legacybaseresource import LegacyBaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.databricks.serviceprincipalrole import ServicePrincipalRole
+from laktory.models.databricks.groupmember import GroupMember
 
 
-class ServicePrincipal(BaseModel, LegacyBaseResource):
+class ServicePrincipal(BaseModel, PulumiResource):
     """
     Databricks account service principal
 
@@ -21,6 +23,8 @@ class ServicePrincipal(BaseModel, LegacyBaseResource):
         Display name for the service principal
     groups:
         List of the group names that the user should be member of.
+    group_ids:
+        Dictionary with mapping between group names and group ids
     roles:
         List of roles assigned to the user e.g. ("account_admin")
 
@@ -48,10 +52,11 @@ class ServicePrincipal(BaseModel, LegacyBaseResource):
     disable_as_user_deletion: bool = False
     display_name: str
     groups: list[str] = []
+    group_ids: dict[str, str]
     roles: list[str] = []
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
@@ -59,49 +64,42 @@ class ServicePrincipal(BaseModel, LegacyBaseResource):
         return self.display_name
 
     @property
+    def all_resources(self) -> list[PulumiResource]:
+        res = [
+            self,
+        ]
+
+        for role in self.roles:
+            res += [
+                ServicePrincipalRole(
+                    resource_name=f"role-{role}-{self.resource_name}",
+                    service_principal_id=self.sp.id,
+                    role=role,
+                )
+            ]
+
+        if self.group_ids:
+
+            # Group Member
+            for g in self.groups:
+                # Find matching group
+                group_id = self.group_ids.get(g, None)
+
+                if group_id:
+                    res += [
+                        GroupMember(
+                            resource_name=f"group-member-{self.display_name}-{g}",
+                            group_id=group_id,
+                            member_id=self.sp.id,
+                        )
+                    ]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
+
+    @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["groups", "roles"]
-
-    def deploy_with_pulumi(
-        self, name: str = None, group_ids: dict[str, str] = None, opts=None
-    ):
-        """
-        Deploy service principal using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        group_ids:
-            Dictionary whose keys are the display names and whose values are the group ids
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiServicePrincipal:
-            Pulumi service principal resource
-        """
-        from laktory.resourcesengines.pulumi.serviceprincipal import (
-            PulumiServicePrincipal,
-        )
-
-        return PulumiServicePrincipal(
-            name=name, service_principal=self, group_ids=group_ids, opts=opts
-        )
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    sp = models.ServicePrincipal(
-        display_name="neptune",
-        application_id="baf147d1-a856-4de0-a570-8a56dbd7e234",
-        groups=[
-            "role-engineer",
-            "role-analyst",
-            "domain-finance",
-            "domain-engineering",
-        ],
-        roles=["account_admin"],
-    )
+        return ["groups", "roles", "group_ids"]

@@ -4,11 +4,12 @@ from typing import Literal
 from typing import Union
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
-from laktory.models.legacybaseresource import LegacyBaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.permissions import Permissions
 
 
-class Notebook(BaseModel, LegacyBaseResource):
+class Notebook(BaseModel, PulumiResource):
     """
     Databricks Notebook
 
@@ -66,7 +67,7 @@ class Notebook(BaseModel, LegacyBaseResource):
         return self
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
@@ -78,39 +79,35 @@ class Notebook(BaseModel, LegacyBaseResource):
         return key
 
     @property
+    def all_resources(self) -> list[PulumiResource]:
+        res = [
+            self,
+        ]
+        if self.permissions:
+
+            res += [
+                Permissions(
+                    resource_name=f"permissions-{self.resource_name}",
+                    access_controls=self.permissions,
+                    notebook_id=f"${{notebooks.{self.resource_name}.id}}",
+                )
+            ]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Notebook"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Notebook
+
+    @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions", "dirpath"]
-
-    def deploy_with_pulumi(self, name=None, groups=None, opts=None):
-        """
-        Deploy notebook using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiNotebook:
-            Pulumi notebook resource
-        """
-        from laktory.resourcesengines.pulumi.notebook import PulumiNotebook
-
-        return PulumiNotebook(name=name, notebook=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    notebook = models.Notebook(
-        source="./notebooks/pipelines/dlt_brz_template.py",
-    )
-    print(notebook.path)
-    # > /pipelines/dlt_brz_template.py
-
-    notebook = models.Notebook(source="./notebooks/create_view.py", dirpath="/views/")
-    print(notebook.path)
-    # > /views/create_view.py

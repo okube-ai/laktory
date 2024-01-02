@@ -5,18 +5,19 @@ from typing import Literal
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
-from laktory.models.legacybaseresource import LegacyBaseResource
+from laktory.models.databricks.grants import Grants
+from laktory.models.grants.tablegrant import TableGrant
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.sql.column import Column
 from laktory.models.sql.tablebuilder import TableBuilder
-from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.sql.tableexpectation import TableExpectation
-from laktory._settings import settings
 
 logger = get_logger(__name__)
 
 
-class Table(BaseModel, LegacyBaseResource):
+class Table(BaseModel, PulumiResource):
     """
     A table resides in the third layer of Unity Catalog’s three-level
     namespace. It contains rows of data. Laktory provides the mechanism to
@@ -254,11 +255,44 @@ class Table(BaseModel, LegacyBaseResource):
         return df
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
+    @property
     def resource_key(self) -> str:
         return self.full_name
+
+    @property
+    def all_resources(self) -> list[PulumiResource]:
+
+        res = []
+
+        if not self.builder.pipeline_name:
+            res += [
+            self
+        ]
+
+        # Schema grants
+        # TODO: _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.schema))
+        if self.grants:
+            res += [
+                Grants(
+                    resource_name=f"grants-{self.name}",
+                    table=self.full_name,
+                    grants=[
+                        {
+                            "principal": g.principal, "privileges": g.privileges
+                        }
+                        for g in self.grants
+                    ],
+                )
+            ]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
@@ -276,58 +310,3 @@ class Table(BaseModel, LegacyBaseResource):
                 }
             ]
         return d
-
-    def deploy_with_pulumi(self, name=None, opts=None):
-        """
-        Deploy table using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiTable:
-            Pulumi table resource
-        """
-        from laktory.resourcesengines.pulumi.table import PulumiTable
-
-        return PulumiTable(name=name, table=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    table = models.Table(
-        name="slv_stock_prices",
-        columns=[
-            {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
-            {
-                "name": "open",
-                "type": "double",
-                "spark_func_name": "coalesce",
-                "spark_func_args": ["daa.open"],
-            },
-            {
-                "name": "close",
-                "type": "double",
-                "spark_func_name": "coalesce",
-                "spark_func_args": ["daa.close"],
-            },
-        ],
-        builder={
-            "layer": "SILVER",
-            "table_source": {
-                "name": "brz_stock_prices",
-            },
-        },
-    )
-
-    # Read
-    df = table.builder.read_source(spark)
-
-    # Process
-    df = table.builder.process(df, spark)

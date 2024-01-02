@@ -2,8 +2,9 @@ from typing import Literal
 from typing import Union
 from pydantic import Field
 from laktory.models.basemodel import BaseModel
-from laktory.models.legacybaseresource import LegacyBaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.permissions import Permissions
 
 
 class ClusterAutoScale(BaseModel):
@@ -118,7 +119,7 @@ class ClusterLibrary(BaseModel):
     whl: str = None
 
 
-class Cluster(BaseModel, LegacyBaseResource):
+class Cluster(BaseModel, PulumiResource):
     """
     Databricks cluster
 
@@ -313,8 +314,38 @@ class Cluster(BaseModel, LegacyBaseResource):
     # workload_type:
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def all_resources(self) -> list[PulumiResource]:
+        res = [
+            self,
+        ]
+        if self.permissions:
+
+            res += [
+                Permissions(
+                    resource_name=f"permissions-{self.resource_name}",
+                    access_controls=self.permissions,
+                    cluster_id=f"${{clusters.{self.resource_name}.id}}",
+                )
+            ]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Cluster"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Cluster
 
     @property
     def pulumi_renames(self):
@@ -323,49 +354,3 @@ class Cluster(BaseModel, LegacyBaseResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions"]
-
-    def deploy_with_pulumi(self, name=None, groups=None, opts=None):
-        """
-        Deploy cluster using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiCluster:
-            Pulumi cluster resource
-        """
-        from laktory.resourcesengines.pulumi.cluster import PulumiCluster
-
-        return PulumiCluster(name=name, cluster=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    cluster = models.Cluster(
-        name="default",
-        spark_version="14.0.x-scala2.12",
-        data_security_mode="USER_ISOLATION",
-        node_type_id="Standard_DS3_v2",
-        autoscale={
-            "min_workers": 1,
-            "max_workers": 4,
-        },
-        num_workers=0,
-        autotermination_minutes=30,
-        libraries=[{"pypi": {"package": "laktory==0.0.23"}}],
-        permissions=[
-            {
-                "group_name": "role-engineers",
-                "permission_level": "CAN_RESTART",
-            }
-        ],
-        is_pinned=True,
-    )
-    cluster.deploy_with_pulumi()

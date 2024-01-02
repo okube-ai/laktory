@@ -1,13 +1,17 @@
+import json
 from typing import Any
 from typing import Literal
 from typing import Union
 from pydantic import model_validator
 from pydantic import Field
+
+from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.permission import Permission
 from laktory.models.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.databricks.workspacefile import WorkspaceFile
 from laktory.models.sql.table import Table
 
 
@@ -352,6 +356,34 @@ class Pipeline(BaseModel, PulumiResource):
                     pipeline_id=f"${{pipelines.{self.resource_name}.id}}",
                 )
             ]
+
+        # Configuration file
+        source = f"./tmp-{self.name}.json"
+        d = self.model_dump(exclude_none=True)
+        d = self.resolve_vars(d, target=None)  # TODO: Check target
+        s = json.dumps(d, indent=4)
+        with open(source, "w") as fp:
+            fp.write(s)
+        filepath = f"{settings.workspace_laktory_root}pipelines/{self.name}.json"
+        res += [
+            WorkspaceFile(
+                resource_name=f"file-{filepath}",
+                path=filepath,
+                source=source,
+            )
+        ]
+
+        # TODO: _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.workspace_file))
+        res += [
+            Permissions(
+                resource_name=f"permissions-file-{filepath}",
+                access_controls=[Permission(
+                    permission_level="CAN_READ",
+                    group_name="account users",
+                )],
+                workspace_file_path=filepath,
+            )
+        ]
 
         return res
 

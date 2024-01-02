@@ -2,23 +2,23 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class Secret(BaseModel, PulumiResource):
+class SecretAcl(BaseModel, PulumiResource):
     """
-    Databricks secret
+    Databricks secret ACL
 
     Attributes
     ----------
-    scope:
+    permission:
         Scope associated with the secret
-    key:
+    principal:
         Key associated with the secret.
-    value:
+    scope:
         Value associated with the secret
     """
 
+    permission: str = None
+    principal: str = None
     scope: str = None
-    key: str = None
-    value: str = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -30,9 +30,9 @@ class Secret(BaseModel, PulumiResource):
 
     @property
     def pulumi_resource_type(self) -> str:
-        return "databricks:Secret"
+        return "databricks:SecretAcl"
 
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
-        return databricks.Secret
+        return databricks.SecretAcl

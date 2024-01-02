@@ -1,11 +1,12 @@
 from typing import Literal
 from typing import Union
 from laktory.models.basemodel import BaseModel
-from laktory.models.legacybaseresource import LegacyBaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.grants.volumegrant import VolumeGrant
+from laktory.models.databricks.grants import Grants
 
 
-class Volume(BaseModel, LegacyBaseResource):
+class Volume(BaseModel, PulumiResource):
     """
     Volumes are Unity Catalog objects representing a logical volume of storage
     in a cloud object storage location. Volumes provide capabilities for
@@ -96,7 +97,7 @@ class Volume(BaseModel, LegacyBaseResource):
         return _id
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
@@ -104,44 +105,34 @@ class Volume(BaseModel, LegacyBaseResource):
         return self.full_name
 
     @property
+    def all_resources(self) -> list[PulumiResource]:
+
+        res = [
+            self
+        ]
+
+        # Volume grants
+        # TODO: _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.schema))
+        if self.grants:
+            res += [
+                Grants(
+                    resource_name=f"grants-{self.name}",
+                    volume=self.full_name,
+                    grants=[
+                        {
+                            "principal": g.principal, "privileges": g.privileges
+                        }
+                        for g in self.grants
+                    ],
+                )
+            ]
+
+        return res
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
+
+    @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["grants"]
-
-    def deploy_with_pulumi(self, name=None, opts=None):
-        """
-        Deploy volume using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiVolume:
-            Pulumi group resource
-        """
-        from laktory.resourcesengines.pulumi.volume import PulumiVolume
-
-        return PulumiVolume(name=name, volume=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    volume = models.Volume(
-        name="landing",
-        catalog_name="dev",
-        schema_name="sources",
-        volume_type="EXTERNAL",
-        storage_location="abfss://landing@lakehouse-storage.dfs.core.windows.net/",
-        grants=[
-            {"principal": "account users", "privileges": ["READ_VOLUME"]},
-            {"principal": "role-metastore-admins", "privileges": ["WRITE_VOLUME"]},
-        ],
-    )
-    print(volume.full_name)
-    print(volume.parent_full_name)
-    volume.deploy()
