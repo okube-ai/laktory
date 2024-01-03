@@ -21,10 +21,8 @@ class ServicePrincipal(BaseModel, PulumiResource):
         If `True` user is disabled instead of delete when the resource is deleted
     display_name:
         Display name for the service principal
-    groups:
-        List of the group names that the user should be member of.
     group_ids:
-        Dictionary with mapping between group names and group ids
+        List of the group ids that the user should be member of.
     roles:
         List of roles assigned to the user e.g. ("account_admin")
 
@@ -37,7 +35,7 @@ class ServicePrincipal(BaseModel, PulumiResource):
         display_name="neptune",
         application_id="baf147d1-a856-4de0-a570-8a56dbd7e234",
         groups=[
-            "role-engineer",
+            "${vars.group-role-engineer}...", # TODO: Update
             "role-analyst",
             "domain-finance",
             "domain-engineering",
@@ -51,13 +49,21 @@ class ServicePrincipal(BaseModel, PulumiResource):
     application_id: str = None
     disable_as_user_deletion: bool = False
     display_name: str
-    groups: list[str] = []
-    group_ids: dict[str, str]
+    group_ids: list[str] = []
     roles: list[str] = []
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:ServicePrincipal"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.ServicePrincipal
 
     @property
     def resource_key(self) -> str:
@@ -73,26 +79,21 @@ class ServicePrincipal(BaseModel, PulumiResource):
             res += [
                 ServicePrincipalRole(
                     resource_name=f"role-{role}-{self.resource_name}",
-                    service_principal_id=self.sp.id,
+                    service_principal_id=f"${{resources.{self.resource_name}.id}}",
                     role=role,
                 )
             ]
 
-        if self.group_ids:
+        # Group Member
+        for group_id in self.group_ids:
 
-            # Group Member
-            for g in self.groups:
-                # Find matching group
-                group_id = self.group_ids.get(g, None)
-
-                if group_id:
-                    res += [
-                        GroupMember(
-                            resource_name=f"group-member-{self.display_name}-{g}",
-                            group_id=group_id,
-                            member_id=self.sp.id,
-                        )
-                    ]
+            res += [
+                GroupMember(
+                    resource_name=f"group-member-{self.display_name}-{group_id}",
+                    group_id=group_id,
+                    member_id=f"${{resources.{self.resource_name}.id}}",
+                )
+            ]
 
         return res
 

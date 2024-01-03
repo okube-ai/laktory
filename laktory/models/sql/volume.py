@@ -116,7 +116,7 @@ class Volume(BaseModel, PulumiResource):
         if self.grants:
             res += [
                 Grants(
-                    resource_name=f"grants-{self.name}",
+                    resource_name=f"grants-{self.resource_name}",
                     volume=self.full_name,
                     grants=[
                         {
@@ -132,6 +132,15 @@ class Volume(BaseModel, PulumiResource):
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Volume"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Volume
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:

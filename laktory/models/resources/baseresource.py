@@ -1,6 +1,6 @@
-from typing import Any
 import re
-from pydantic import model_validator
+from pydantic import computed_field
+from pydantic import Field
 from pydantic import BaseModel as _BaseModel
 
 
@@ -9,13 +9,13 @@ class BaseResource(_BaseModel):
     Parent class for all Laktory models deployable as one or multiple cloud
     resources. This `BaseResource` class is derived from `pydantic.BaseModel`.
     """
-    resource_name: str = None
+    resource_name_: str = Field(None, alias="resource_name", exclude=True)
 
-    @model_validator(mode='after')
-    def set_default_resource_name(self) -> Any:
-        if self.resource_name is None:
-            self.resource_name = self.default_resource_name
-        return self
+    @computed_field
+    def resource_name(self) -> str:
+        if self.resource_name_:
+            return self.resource_name_
+        return self.default_resource_name
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

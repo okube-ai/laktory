@@ -89,7 +89,7 @@ class Notebook(BaseModel, PulumiResource):
                 Permissions(
                     resource_name=f"permissions-{self.resource_name}",
                     access_controls=self.permissions,
-                    notebook_id=f"${{notebooks.{self.resource_name}.id}}",
+                    notebook_id=f"${{resources.{self.resource_name}.id}}",
                 )
             ]
 

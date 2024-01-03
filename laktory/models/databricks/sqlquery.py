@@ -100,7 +100,7 @@ class SqlQuery(BaseModel, PulumiResource):
                 Permissions(
                     resource_name=f"permissions-{self.resource_name}",
                     access_controls=self.permissions,
-                    sql_query_id=f"${{notebooks.{self.resource_name}.id}}",
+                    sql_query_id=f"${{resources.{self.resource_name}.id}}",
                 )
             ]
 
@@ -109,6 +109,15 @@ class SqlQuery(BaseModel, PulumiResource):
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:SqlQuery"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.SqlQuery
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:

@@ -1,5 +1,4 @@
 from laktory.models.basemodel import BaseModel
-from laktory.models.databricks.permission import Permission
 from laktory.models.resources.pulumiresource import PulumiResource
 
 

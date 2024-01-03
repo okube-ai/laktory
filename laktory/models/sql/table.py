@@ -188,11 +188,6 @@ class Table(BaseModel, PulumiResource):
         return _id
 
     @property
-    def database_name(self) -> str:
-        """Alternate name for `schema_name`"""
-        return self.schema_name
-
-    @property
     def layer(self) -> str:
         """Layer in the medallion architecture ("BRONZE", "SILVER", "GOLD")"""
         return self.builder.layer
@@ -277,7 +272,7 @@ class Table(BaseModel, PulumiResource):
         if self.grants:
             res += [
                 Grants(
-                    resource_name=f"grants-{self.name}",
+                    resource_name=f"grants-{self.resource_name}",
                     table=self.full_name,
                     grants=[
                         {
@@ -293,6 +288,15 @@ class Table(BaseModel, PulumiResource):
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:SqlTable"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.SqlTable
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:

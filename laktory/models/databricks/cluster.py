@@ -328,7 +328,7 @@ class Cluster(BaseModel, PulumiResource):
                 Permissions(
                     resource_name=f"permissions-{self.resource_name}",
                     access_controls=self.permissions,
-                    cluster_id=f"${{clusters.{self.resource_name}.id}}",
+                    cluster_id=f"${{resources.{self.resource_name}.id}}",
                 )
             ]
 

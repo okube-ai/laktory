@@ -353,7 +353,7 @@ class Pipeline(BaseModel, PulumiResource):
                 Permissions(
                     resource_name=f"permissions-{self.resource_name}",
                     access_controls=self.permissions,
-                    pipeline_id=f"${{pipelines.{self.resource_name}.id}}",
+                    pipeline_id=f"${{resources.{self.resource_name}.id}}",
                 )
             ]
 

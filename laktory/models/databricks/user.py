@@ -18,10 +18,8 @@ class User(BaseModel, PulumiResource):
     id:
         Id of the user. Generally used when the user is externally managed
         with an identity provider such as Azure AD, Okta or OneLogin.
-    groups:
-        List of the group names that the user should be member of.
     group_ids:
-        Dictionary with mapping between group names and group ids
+        List of the group ids that the user should be member of.
     roles:
         List of roles assigned to the user e.g. ("account_admin")
     workspace_access
@@ -47,8 +45,7 @@ class User(BaseModel, PulumiResource):
     disable_as_user_deletion: bool = False
     display_name: str = None
     id: Union[str, None] = None
-    groups: list[str] = []
-    group_ids: dict[str, str]
+    group_ids: list[str] = []
     roles: list[str] = []
     user_name: str
     workspace_access: bool = None
@@ -71,32 +68,36 @@ class User(BaseModel, PulumiResource):
             res += [
                 UserRole(
                     resource_name=f"role-{role}-{self.resource_name}",
-                    user_id=self.sp.id,
+                    # user_id=self.sp.id,
+                    user_id=f"${{resources.{self.resource_name}.id}}",
                     role=role,
                 )
             ]
 
-        if self.group_ids:
-
-            # Group Member
-            for g in self.groups:
-                # Find matching group
-                group_id = self.group_ids.get(g, None)
-
-                if group_id:
-                    res += [
-                        GroupMember(
-                            resource_name=f"group-member-{self.display_name}-{g}",
-                            group_id=group_id,
-                            member_id=self.sp.id,
-                        )
-                    ]
+        # Group Member
+        for group_id in self.group_ids:
+            res += [
+                GroupMember(
+                    resource_name=f"group-member-{self.display_name}-{group_id}",
+                    group_id=group_id,
+                    member_id=f"${{resources.{self.resource_name}.id}}",
+                )
+            ]
 
         return res
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:User"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.User
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:

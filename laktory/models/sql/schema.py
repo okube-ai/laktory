@@ -107,7 +107,7 @@ class Schema(BaseModel, PulumiResource):
         if self.grants:
             res += [
                 Grants(
-                    resource_name=f"grants-{self.name}",
+                    resource_name=f"grants-{self.resource_name}",
                     schema=self.full_name,
                     grants=[
                         {
@@ -120,17 +120,26 @@ class Schema(BaseModel, PulumiResource):
 
         if self.volumes:
             for v in self.volumes:
-                res += [v.all_resources]
+                res += v.all_resources
 
         if self.tables:
             for t in self.tables:
-                res += [t.all_resources]
+                res += t.all_resources
 
         return res
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Schema"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Schema
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:

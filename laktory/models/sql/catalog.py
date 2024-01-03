@@ -120,7 +120,7 @@ class Catalog(BaseModel, PulumiResource):
         if self.grants:
             res += [
                 Grants(
-                    resource_name=f"grants-{self.name}",
+                    resource_name=f"grants-{self.resource_name}",
                     catalog=self.full_name,
                     grants=[
                         {
@@ -133,13 +133,22 @@ class Catalog(BaseModel, PulumiResource):
 
         if self.schemas:
             for s in self.schemas:
-                res += [s.all_resources]
+                res += s.all_resources
 
         return res
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Catalog"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Catalog
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
