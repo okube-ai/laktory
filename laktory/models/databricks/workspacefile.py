@@ -51,7 +51,6 @@ class WorkspaceFile(BaseModel, PulumiResource):
 
         return self
 
-
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
@@ -71,12 +70,12 @@ class WorkspaceFile(BaseModel, PulumiResource):
         ]
         if self.permissions:
 
-            # TODO: _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.file))
             res += [
                 Permissions(
                     resource_name=f"permissions-{self.resource_name}",
                     access_controls=self.permissions,
                     workspace_file_path=self.path,
+                    options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
                 )
             ]
 

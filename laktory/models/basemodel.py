@@ -172,60 +172,50 @@ class BaseModel(_BaseModel):
     def resolve_vars(self, d: dict, target=None) -> dict[str, Any]:
 
         from laktory.models.resources.pulumiresource import pulumi_outputs
+        from laktory.models.resources.pulumiresource import pulumi_resources
 
+        # Build available variables
         _vars = {}
 
         if target == "pulumi":
-            _vars["${catalogs."] = "${"
-            _vars["${clusters."] = "${"
-            _vars["${groups."] = "${"
-            _vars["${jobs."] = "${"
-            _vars["${notebooks."] = "${"
-            _vars["${pipelines."] = "${"
-            _vars["${schemas."] = "${"
-            _vars["${secret_scopes."] = "${"
-            _vars["${sql_queries."] = "${"
-            _vars["${tables."] = "${"
-            _vars["${users."] = "${"
-            _vars["${warehouses."] = "${"
-            _vars["${workspace_files."] = "${"
+            pass
+            # _vars["${resources."] = "${"
         elif target == "terraform":
-            _vars["${catalogs."] = "${databricks_catalog."
-            _vars["${clusters."] = "${databricks_cluster."
-            _vars["${groups."] = "${databricks_group."
-            _vars["${jobs."] = "${databricks_job."
-            _vars["${notebooks."] = "${databricks_notebook."
-            _vars["${pipelines."] = "${databricks_pipeline."
-            _vars["${schemas."] = "${databricks_schema."
-            _vars["${secret_scopes."] = "${databricks_secret_scope."
-            _vars["${sql_queries."] = "${databricks_sql_query."
-            _vars["${tables."] = "${databricks_sql_table."
-            _vars["${users."] = "${databricks_user."
-            _vars["${warehouses."] = "${databricks_sql_endpoint."
-            _vars["${workspace_files."] = "${databricks_workspace_file."
+            # TODO: Review
+            raise NotImplementedError()
+            # _vars["${catalogs."] = "${databricks_catalog."
+            # _vars["${clusters."] = "${databricks_cluster."
+            # _vars["${groups."] = "${databricks_group."
+            # _vars["${jobs."] = "${databricks_job."
+            # _vars["${notebooks."] = "${databricks_notebook."
+            # _vars["${pipelines."] = "${databricks_pipeline."
+            # _vars["${schemas."] = "${databricks_schema."
+            # _vars["${service_principals."] = "${databricks_service_principal."
+            # _vars["${secret_scopes."] = "${databricks_secret_scope."
+            # _vars["${sql_queries."] = "${databricks_sql_query."
+            # _vars["${tables."] = "${databricks_sql_table."
+            # _vars["${users."] = "${databricks_user."
+            # _vars["${warehouses."] = "${databricks_sql_endpoint."
+            # _vars["${workspace_files."] = "${databricks_workspace_file."
         elif target == "pulumi_py":
-            _vars["${catalogs."] = "${var."
-            _vars["${clusters."] = "${var."
-            _vars["${groups."] = "${var."
-            _vars["${jobs."] = "${var."
-            _vars["${notebooks."] = "${var."
-            _vars["${pipelines."] = "${var."
-            _vars["${schemas."] = "${var."
-            _vars["${secret_scopes."] = "${var."
-            _vars["${sql_queries."] = "${var."
-            _vars["${tables."] = "${var."
-            _vars["${users."] = "${var."
-            _vars["${warehouses."] = "${var."
-            _vars["${workspace_files."] = "${var."
+            # _vars["${resources."] = "${var."
+            pass
 
+        # User-defined variables
         for k, v in self.variables.items():
             _vars[f"${{var.{k}}}"] = v
 
-        for k, v in pulumi_outputs.items():
-            _vars[f"${{var.{k}}}"] = v
-
+        # Environment variables
         for k, v in os.environ.items():
             _vars[f"${{var.{k}}}"] = v
+
+        # Pulumi resource outputs
+        for k, v in pulumi_outputs.items():
+            _vars[f"${{resources.{k}}}"] = v
+
+        # Pulumi resources
+        for k, v in pulumi_resources.items():
+            _vars[f"${{resources.{k}}}"] = v
 
         def search_and_replace(d, old_value, new_val):
             if isinstance(d, dict):

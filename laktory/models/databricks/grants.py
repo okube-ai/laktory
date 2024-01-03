@@ -41,6 +41,3 @@ class Grants(BaseModel, PulumiResource):
         import pulumi_databricks as databricks
         return databricks.Grants
 
-    @property
-    def all_resources(self) -> list[PulumiResource]:
-        return [self]

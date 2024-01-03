@@ -373,7 +373,6 @@ class Pipeline(BaseModel, PulumiResource):
             )
         ]
 
-        # TODO: _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.workspace_file))
         res += [
             Permissions(
                 resource_name=f"permissions-file-{filepath}",
@@ -382,6 +381,7 @@ class Pipeline(BaseModel, PulumiResource):
                     group_name="account users",
                 )],
                 workspace_file_path=filepath,
+                options={"depends_on": [f"${{resources.file-{filepath}}}"]}
             )
         ]
 

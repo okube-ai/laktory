@@ -112,7 +112,6 @@ class Volume(BaseModel, PulumiResource):
         ]
 
         # Volume grants
-        # TODO: _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.schema))
         if self.grants:
             res += [
                 Grants(
@@ -124,6 +123,7 @@ class Volume(BaseModel, PulumiResource):
                         }
                         for g in self.grants
                     ],
+                    options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
                 )
             ]
 

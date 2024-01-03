@@ -2,6 +2,21 @@ import re
 from pydantic import computed_field
 from pydantic import Field
 from pydantic import BaseModel as _BaseModel
+from laktory.models.basemodel import BaseModel
+
+
+class ResourceOptions(BaseModel):
+    # pulumi + terraform
+    depends_on: list[str] = []
+    provider: str = None
+
+    # pulumi only
+    aliases: list[str] = None
+    delete_before_replace: bool = None
+    ignore_changes: list[str] = None
+    import_: str = None
+    parent: str = None
+    replace_on_changes: list[str] = None
 
 
 class BaseResource(_BaseModel):
@@ -10,6 +25,7 @@ class BaseResource(_BaseModel):
     resources. This `BaseResource` class is derived from `pydantic.BaseModel`.
     """
     resource_name_: str = Field(None, alias="resource_name", exclude=True)
+    options: ResourceOptions = ResourceOptions()
 
     @computed_field
     def resource_name(self) -> str:

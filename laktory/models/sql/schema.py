@@ -103,7 +103,6 @@ class Schema(BaseModel, PulumiResource):
         ]
 
         # Schema grants
-        # TODO: _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.schema))
         if self.grants:
             res += [
                 Grants(
@@ -115,16 +114,19 @@ class Schema(BaseModel, PulumiResource):
                         }
                         for g in self.grants
                     ],
+                    options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
                 )
             ]
 
         if self.volumes:
             for v in self.volumes:
                 res += v.all_resources
+                # TODO: add dependency?
 
         if self.tables:
             for t in self.tables:
                 res += t.all_resources
+                # TODO: add dependency?
 
         return res
 

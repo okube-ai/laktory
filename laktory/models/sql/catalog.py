@@ -116,7 +116,6 @@ class Catalog(BaseModel, PulumiResource):
         ]
 
         # Catalog grants
-        # TODO: _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.schema))
         if self.grants:
             res += [
                 Grants(
@@ -128,12 +127,14 @@ class Catalog(BaseModel, PulumiResource):
                         }
                         for g in self.grants
                     ],
+                    options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
                 )
             ]
 
         if self.schemas:
             for s in self.schemas:
                 res += s.all_resources
+                # TODO: Added dependency?
 
         return res
 

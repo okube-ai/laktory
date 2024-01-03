@@ -264,11 +264,10 @@ class Table(BaseModel, PulumiResource):
 
         if not self.builder.pipeline_name:
             res += [
-            self
-        ]
+                self
+            ]
 
         # Schema grants
-        # TODO: _opts = opts.merge(pulumi.ResourceOptions(depends_on=self.schema))
         if self.grants:
             res += [
                 Grants(
@@ -280,6 +279,7 @@ class Table(BaseModel, PulumiResource):
                         }
                         for g in self.grants
                     ],
+                    options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
                 )
             ]
 

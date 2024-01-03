@@ -77,35 +77,29 @@ class PulumiResource(BaseResource):
 
     def deploy(self, opts=None):
 
-        import pulumi
+        from pulumi import ResourceOptions
 
-        class LaktoryComponent(pulumi.ComponentResource):
-            pass
-
-        provider = "databricks"  # TODO: Review
-        t = f"laktory:{provider}:{type(self).__name__.replace('Pulumi', '')}"
-
-        parent = LaktoryComponent(
-            t,
-            self.resource_name,
-            {},
-            opts=opts,
-        )
         self._pulumi_resources = {
-            self.resource_name: parent
         }
 
-        opts = pulumi.ResourceOptions(
-            parent=parent,
-            delete_before_replace=True,
-        )
-
         for r in self.all_resources:
+
+            # Properties
             properties = r.pulumi_properties
             properties = self.resolve_vars(properties, target="pulumi_py")
-            _r = r.pulumi_cls(r.resource_name, **properties, opts=opts)
-            self._pulumi_resources[r.resource_name] = _r
 
+            # Options
+            _opts = ResourceOptions(**properties.pop("options", {}))
+            if opts is not None:
+                _opts = ResourceOptions.merge(_opts, opts)
+
+            _r = r.pulumi_cls(r.resource_name, **properties, opts=_opts)
+
+            # Save resource
+            self._pulumi_resources[r.resource_name] = _r
+            pulumi_resources[r.resource_name] = _r
+
+            # Save resource outputs
             # TODO: Store other properties (like url, etc.).
             for k in [
                 "id",
@@ -113,10 +107,6 @@ class PulumiResource(BaseResource):
             ]:
                 if hasattr(_r, k):
                     pulumi_outputs[f"{r.resource_name}.{k}"] = getattr(_r, k)
-
-        # Save resources
-        for k, v in self._pulumi_resources.items():
-            pulumi_resources[k] = v
 
         # Return resources
         return self._pulumi_resources
