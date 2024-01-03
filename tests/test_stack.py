@@ -40,8 +40,8 @@ job = models.Job(
                 # "pipeline_id": "${resources.pipelines.pl-stocks-prices.id}",  # BUNDLES STYLE  {resources.resource_type.resource_key.id}
                 # "pipeline_id": "${databricks_pipeline.lhouse_project_pipeline.id}",  # TERRAFORM STYLE {resource_type.resource_key.id}
                 # "pipeline_id": "${pl-stocks-prices.id}",  # PULUMI STYLE {resource_key.id}
-                "pipeline_id": "${pipelines.pl-custom-name.id}",  # LAKTORY STYLE {resource_type.resource_key.id}
-                # "pipeline_id": "1234",  # LAKTORY STYLE {resource_type.resource_key.id}
+                "pipeline_id": "${resources.pl-custom-name.id}",  # LAKTORY STYLE {resources.resource_name.id}
+                # "pipeline_id": "1234",
             },
             "libraries": [
                 {"pypi": {"package": "laktory==0.0.27"}},
