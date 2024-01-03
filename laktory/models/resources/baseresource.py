@@ -12,7 +12,7 @@ class ResourceOptions(BaseModel):
 
     # pulumi only
     aliases: list[str] = None
-    delete_before_replace: bool = None
+    delete_before_replace: bool = True
     ignore_changes: list[str] = None
     import_: str = None
     parent: str = None
