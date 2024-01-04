@@ -21,7 +21,9 @@ class Directory(BaseModel, PulumiResource):
 
     d = models.Directory(path="/queries/views")
     print(d)
-    #> vars={} path='/queries/views' delete_recursive=None
+    '''
+    resource_name_=None options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None) resources_=None variables={} path='/queries/views' delete_recursive=None
+    '''
     print(d.resource_key)
     #> queries-views
     print(d.resource_name)
@@ -35,11 +37,16 @@ class Directory(BaseModel, PulumiResource):
     @property
     def resource_key(self) -> str:
         """Key identifier for the directory"""
-        key = self.path.replace("/", "-")
-        if key.startswith("-"):
-            key = key[1:]
-        if key.endswith("-"):
-            key = key[:-1]
+        key = self.path
+        key = key.replace("/", "-")
+        key = key.replace("\\", "-")
+        key = key.replace(".", "-")
+        for i in range(5):
+            if key.startswith("-"):
+                key = key[1:]
+        for i in range(5):
+            if key.endswith("-"):
+                key = key[:-1]
         return key
 
     # ----------------------------------------------------------------------- #
