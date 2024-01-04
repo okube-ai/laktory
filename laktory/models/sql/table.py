@@ -304,8 +304,9 @@ class Table(BaseModel, PulumiResource):
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["builder", "columns", "data", "grants", "primary_key", "timestamp_key"]
 
-    def model_pulumi_dump(self, *args, **kwargs):
-        d = super().model_pulumi_dump(*args, **kwargs)
+    @property
+    def pulumi_properties(self):
+        d = super().pulumi_properties
         d["columns"] = []
         for i, c in enumerate(self.columns):
             d["columns"] += [

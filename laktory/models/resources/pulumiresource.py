@@ -86,7 +86,7 @@ class PulumiResource(BaseResource):
 
             # Properties
             properties = r.pulumi_properties
-            properties = self.resolve_vars(properties, target="pulumi_py")
+            properties = self.inject_vars(properties, target="pulumi_py")
 
             # Options
             _opts = ResourceOptions(**properties.pop("options", {}))

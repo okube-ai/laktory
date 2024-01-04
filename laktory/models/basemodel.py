@@ -102,7 +102,7 @@ class BaseModel(_BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def resolve_vars(self, d: dict, target=None) -> dict[str, Any]:
+    def inject_vars(self, d: dict, target=None) -> dict[str, Any]:
         """
         Inject variables values into a dictionary (generally model dump).
 

@@ -40,7 +40,7 @@ class PulumiStack(BaseStack):
                 "type": r.pulumi_resource_type,
                 "properties": r.pulumi_properties
             }
-        d["resources"] = self.resolve_vars(d["resources"], target="pulumi")
+        d["resources"] = self.inject_vars(d["resources"], target="pulumi")
 
         if keys_to_camel_case:
             d = camelize_keys(d)

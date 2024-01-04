@@ -362,7 +362,7 @@ class Pipeline(BaseModel, PulumiResource):
             # Configuration file
             source = f"./tmp-{self.name}.json"
             d = self.model_dump(exclude_none=True)
-            d = self.resolve_vars(d, target=None)  # TODO: Check target
+            d = self.inject_vars(d, target=None)  # TODO: Check target
             s = json.dumps(d, indent=4)
             with open(source, "w") as fp:
                 fp.write(s)

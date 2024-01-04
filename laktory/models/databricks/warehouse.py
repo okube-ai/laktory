@@ -160,7 +160,8 @@ class Warehouse(BaseModel, PulumiResource):
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions"]
 
-    def model_pulumi_dump(self, *args, **kwargs):
-        d = super().model_pulumi_dump(*args, **kwargs)
+    @property
+    def pulumi_properties(self):
+        d = super().pulumi_properties
         d["channel"] = {"name": d.pop("channel_name")}
         return d
