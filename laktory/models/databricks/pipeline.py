@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Any
 from typing import Literal
 from typing import Union
@@ -6,6 +7,7 @@ from pydantic import model_validator
 from pydantic import Field
 
 from laktory._settings import settings
+from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
 from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.permission import Permission
@@ -106,14 +108,9 @@ class PipelineCluster(Cluster):
     is_pinned: bool = Field(None, exclude=True)
     libraries: list[Any] = Field(None, exclude=True)
     node_type_id: str = Field(None, exclude=True)
-    options: dict = Field(None, exclude=True)
     runtime_engine: str = Field(None, exclude=True)
     single_user_name: str = Field(None, exclude=True)
     spark_version: str = Field(None, exclude=True)
-
-    @property
-    def resource_name(self) -> str:
-        return None
 
     @model_validator(mode="after")
     def excluded_fields(self) -> Any:
@@ -125,8 +122,6 @@ class PipelineCluster(Cluster):
             "idempotency_token",
             "is_pinned",
             "libraries",
-            "options",
-            "resource_name",
             "runtime_engine",
             "single_user_name",
             "spark_version",
@@ -366,9 +361,9 @@ class Pipeline(BaseModel, PulumiResource):
                 ]
 
             # Configuration file
-            source = f"./tmp-{self.name}.json"
+            source = os.path.join(CACHE_ROOT, f"tmp-{self.name}.json")
             d = self.model_dump(exclude_none=True)
-            d = self.inject_vars(d, target=None)  # TODO: Check target
+            d = self.inject_vars(d, target="pulumi_py")  # TODO: Check target
             s = json.dumps(d, indent=4)
             with open(source, "w") as fp:
                 fp.write(s)

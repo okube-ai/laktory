@@ -24,12 +24,7 @@ class JobCluster(Cluster):
 
     is_pinned: bool = Field(None, exclude=True)
     libraries: list[Any] = Field(None, exclude=True)
-    options: dict = Field(None, exclude=True)
     permissions: list[Any] = Field(None, exclude=True)
-
-    @property
-    def resource_name(self) -> str:
-        return None
 
     @model_validator(mode="after")
     def excluded_fields(self) -> Any:
@@ -37,8 +32,6 @@ class JobCluster(Cluster):
             "is_pinned",
             "libraries",
             "permissions",
-            "resource_name",
-            "options",
         ]:
             if getattr(self, f, None) not in [None, [], {}]:
                 raise ValueError(f"Field {f} should be null")

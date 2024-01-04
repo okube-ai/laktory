@@ -18,16 +18,6 @@ def test_sql_query():
     assert query.resource_name == "sql-query-google-prices"
     print(data)
     assert data == {
-        "options": {
-            "depends_on": [],
-            "provider": None,
-            "aliases": None,
-            "delete_before_replace": True,
-            "ignore_changes": None,
-            "import_": None,
-            "parent": None,
-            "replace_on_changes": None,
-        },
         "comment": None,
         "data_source_id": None,
         "name": "google-prices",
@@ -37,7 +27,6 @@ def test_sql_query():
         "run_as_role": None,
         "tags": [],
         "warehouse_id": "12345",
-        "resource_name": "sql-query-google-prices",
     }
 
 

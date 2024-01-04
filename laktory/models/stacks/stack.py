@@ -2,12 +2,15 @@ import os
 import yaml
 from typing import Any
 
+from laktory._logger import get_logger
+from laktory._worker import Worker
+from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
 from laktory.models.stacks.pulumistack import PulumiStack
-from laktory._worker import Worker
-from laktory._logger import get_logger
 
 logger = get_logger(__name__)
+
+DIRPATH = "./"
 
 
 class StackEnvironment(BaseModel):
@@ -50,23 +53,26 @@ class Stack(BaseModel):
             outputs=self.pulumi_outputs,
         )
 
-    def write_pulumi_stack(self) -> None:
-        dirpath = "./.laktory/"
+    def write_pulumi_stack(self) -> str:
 
         # TODO: Write environment configs
-        filepath = os.path.join(dirpath, "Pulumi.yaml")
+        filepath = os.path.join(CACHE_ROOT, "Pulumi.yaml")
 
-        if not os.path.exists(dirpath):
-            os.makedirs(dirpath)
+        if not os.path.exists(CACHE_ROOT):
+            os.makedirs(CACHE_ROOT)
 
         with open(filepath, "w") as fp:
             yaml.dump(self.to_pulumi_stack().model_dump(), fp)
 
+        return filepath
+
     def _pulumi_call(self, command, stack=None, flags=None):
-        self.write_pulumi_stack()
+        filepath = self.write_pulumi_stack()
         worker = Worker()
 
         cmd = ["pulumi", command]
+
+        # Stack
         if stack is not None:
             cmd += ["-s", stack]
 
@@ -75,7 +81,7 @@ class Stack(BaseModel):
 
         worker.run(
             cmd=cmd,
-            cwd="./.laktory/",
+            cwd=CACHE_ROOT,
         )
 
     def pulumi_preview(self, stack=None, flags=None):

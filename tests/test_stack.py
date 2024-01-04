@@ -73,24 +73,18 @@ empty_stack = models.Stack(
 
 def test_stack_model():
     data = stack.model_dump()
+    data["config"]["databricks:token"] = "***"
     print(data)
     assert data == {
         "variables": {},
         "name": "unit-testing",
-        "config": {"databricks:host": "adb-2211091707396001.1.azuredatabricks.net"},
+        "config": {
+            "databricks:host": "https://adb-2211091707396001.1.azuredatabricks.net/",
+            "databricks:token": "***",
+        },
         "description": None,
         "resources": [
             {
-                "options": {
-                    "depends_on": [],
-                    "provider": None,
-                    "aliases": None,
-                    "delete_before_replace": True,
-                    "ignore_changes": None,
-                    "import_": None,
-                    "parent": None,
-                    "replace_on_changes": None,
-                },
                 "clusters": [
                     {
                         "apply_policy_default_values": None,
@@ -116,7 +110,6 @@ def test_stack_model():
                         "spark_env_vars": {},
                         "spark_version": "14.0.x-scala2.12",
                         "ssh_public_keys": [],
-                        "resource_name": None,
                     }
                 ],
                 "continuous": None,
@@ -223,19 +216,8 @@ def test_stack_model():
                 "timeout_seconds": None,
                 "trigger": None,
                 "webhook_notifications": None,
-                "resource_name": "job-stock-prices-ut-stack",
             },
             {
-                "options": {
-                    "depends_on": [],
-                    "provider": None,
-                    "aliases": None,
-                    "delete_before_replace": True,
-                    "ignore_changes": None,
-                    "import_": None,
-                    "parent": None,
-                    "replace_on_changes": None,
-                },
                 "allow_duplicate_names": None,
                 "catalog": None,
                 "channel": "PREVIEW",
@@ -272,7 +254,6 @@ def test_stack_model():
                 "tables": [],
                 "target": None,
                 "udfs": [],
-                "resource_name": "pl-custom-name",
             },
         ],
         "environments": [],
@@ -286,13 +267,17 @@ def test_pulumi_stack():
     pstack = stack.to_pulumi_stack()
     stack.write_pulumi_stack()
     data = pstack.model_dump()
+    data["config"]["databricks:token"] = "***"
     print(data)
 
     assert data == {
         "variables": {},
         "name": "unit-testing",
         "runtime": "yaml",
-        "config": {"databricks:host": "adb-2211091707396001.1.azuredatabricks.net"},
+        "config": {
+            "databricks:host": "https://adb-2211091707396001.1.azuredatabricks.net/",
+            "databricks:token": "***",
+        },
         "resources": {
             "job-stock-prices-ut-stack": {
                 "type": "databricks:Job",
@@ -401,5 +386,5 @@ def test_pulumi_up():
 
 if __name__ == "__main__":
     test_stack_model()
-    # test_pulumi_stack()
-    # test_pulumi_up()
+    test_pulumi_stack()
+    test_pulumi_up()

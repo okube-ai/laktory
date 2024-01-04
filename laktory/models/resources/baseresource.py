@@ -26,10 +26,9 @@ class BaseResource(_BaseModel):
     resources. This `BaseResource` class is derived from `pydantic.BaseModel`.
     """
     resource_name_: str = Field(None, alias="resource_name", exclude=True)
-    options: ResourceOptions = ResourceOptions()
+    options: ResourceOptions = Field(ResourceOptions(), exclude=True)
     resources_: list[Any] = Field(None, exclude=True)
 
-    @computed_field
     @property
     def resource_name(self) -> str:
         if self.resource_name_:

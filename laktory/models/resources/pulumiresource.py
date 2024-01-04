@@ -57,15 +57,7 @@ class PulumiResource(BaseResource):
         :
             Pulumi-safe model dump
         """
-        base_excludes = ["resource_name", "options"]
-        excludes = base_excludes
-        if isinstance(self.pulumi_excludes, dict):
-            excludes = {k: True for k in excludes}
-            excludes.update(self.pulumi_excludes)
-        else:
-            excludes = base_excludes + self.pulumi_excludes
-
-        d = super().model_dump(exclude=excludes, exclude_none=True)
+        d = super().model_dump(exclude=self.pulumi_excludes, exclude_none=True)
         for k, v in self.pulumi_renames.items():
             d[v] = d.pop(k)
         d = self.inject_vars(d)

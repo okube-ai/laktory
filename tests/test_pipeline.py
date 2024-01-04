@@ -6,16 +6,6 @@ pl = StockPricesPipeline()
 def test_pipeline():
     print(pl.model_dump())
     assert pl.model_dump() == {
-        "options": {
-            "depends_on": [],
-            "provider": None,
-            "aliases": None,
-            "delete_before_replace": True,
-            "ignore_changes": None,
-            "import_": None,
-            "parent": None,
-            "replace_on_changes": None,
-        },
         "allow_duplicate_names": None,
         "catalog": None,
         "channel": "PREVIEW",
@@ -33,16 +23,6 @@ def test_pipeline():
         "storage": None,
         "tables": [
             {
-                "options": {
-                    "depends_on": [],
-                    "provider": None,
-                    "aliases": None,
-                    "delete_before_replace": True,
-                    "ignore_changes": None,
-                    "import_": None,
-                    "parent": None,
-                    "replace_on_changes": None,
-                },
                 "builder": {
                     "aggregation": None,
                     "drop_columns": [],
@@ -84,19 +64,8 @@ def test_pipeline():
                 "timestamp_key": None,
                 "view_definition": None,
                 "warehouse_id": "08b717ce051a0261",
-                "resource_name": "table-.brz_stock_prices",
             },
             {
-                "options": {
-                    "depends_on": [],
-                    "provider": None,
-                    "aliases": None,
-                    "delete_before_replace": True,
-                    "ignore_changes": None,
-                    "import_": None,
-                    "parent": None,
-                    "replace_on_changes": None,
-                },
                 "builder": {
                     "aggregation": None,
                     "drop_columns": [],
@@ -231,20 +200,21 @@ def test_pipeline():
                 "timestamp_key": None,
                 "view_definition": None,
                 "warehouse_id": "08b717ce051a0261",
-                "resource_name": "table-.slv_stock_prices",
             },
         ],
         "target": None,
         "udfs": [{"module_name": "stock_functions", "function_name": "high"}],
-        "resource_name": "pl-stock-prices",
     }
 
 
 def test_pipeline_pulumi():
-    # Properties
+    assert pl.resource_name == "pl-stock-prices"
+    assert pl.options.model_dump(exclude_none=True) == {
+        "depends_on": [],
+        "delete_before_replace": True,
+    }
     print(pl.pulumi_properties)
     assert pl.pulumi_properties == {
-        "options": {"depends_on": [], "delete_before_replace": True},
         "channel": "PREVIEW",
         "clusters": [],
         "configuration": {},
