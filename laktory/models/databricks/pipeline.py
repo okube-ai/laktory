@@ -98,18 +98,22 @@ class PipelineCluster(Cluster):
 
     that are not allowed.
     """
+    autotermination_minutes: int = Field(None, exclude=True)
+    cluster_id: str = Field(None, exclude=True)
+    data_security_mode: str = Field(None, exclude=True)
+    enable_elastic_disk: bool = Field(None, exclude=True)
+    idempotency_token: str = Field(None, exclude=True)
+    is_pinned: bool = Field(None, exclude=True)
+    libraries: list[Any] = Field(None, exclude=True)
+    node_type_id: str = Field(None, exclude=True)
+    options: dict = Field(None, exclude=True)
+    runtime_engine: str = Field(None, exclude=True)
+    single_user_name: str = Field(None, exclude=True)
+    spark_version: str = Field(None, exclude=True)
 
-    autotermination_minutes: int = Field(None)
-    cluster_id: str = Field(None)
-    data_security_mode: str = Field(None)
-    enable_elastic_disk: bool = Field(None)
-    idempotency_token: str = Field(None)
-    is_pinned: bool = Field(None)
-    libraries: list[Any] = Field(None)
-    node_type_id: str = None
-    runtime_engine: str = Field(None)
-    single_user_name: str = Field(None)
-    spark_version: str = Field(None)
+    @property
+    def resource_name(self) -> str:
+        return None
 
     @model_validator(mode="after")
     def excluded_fields(self) -> Any:
@@ -121,6 +125,8 @@ class PipelineCluster(Cluster):
             "idempotency_token",
             "is_pinned",
             "libraries",
+            "options",
+            "resource_name",
             "runtime_engine",
             "single_user_name",
             "spark_version",

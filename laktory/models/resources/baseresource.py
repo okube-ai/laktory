@@ -30,6 +30,7 @@ class BaseResource(_BaseModel):
     resources_: list[Any] = Field(None, exclude=True)
 
     @computed_field
+    @property
     def resource_name(self) -> str:
         if self.resource_name_:
             return self.resource_name_
