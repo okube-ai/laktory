@@ -55,9 +55,9 @@ class Camel(BaseModel):
     l: list = []
 
 
-def test_resolve_vars():
+def test_inject_vars():
     d0 = schema.model_dump()
-    d1 = schema.resolve_vars(d0)
+    d1 = schema.inject_vars(d0)
     assert d1["tables"][-1]["columns"][0]["name"] == "low"
     assert isinstance(d1["name"], pulumi.Output)
     assert isinstance(d1["catalog_name"], pulumi.Output)
@@ -77,5 +77,5 @@ def test_camel_case():
 
 
 if __name__ == "__main__":
-    test_resolve_vars()
+    test_inject_vars()
     test_camel_case()
