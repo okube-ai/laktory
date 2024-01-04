@@ -1,42 +1,13 @@
 import os
 import yaml
+from typing import Any
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.stacks.basestack import BaseStack
-from laktory.models.databricks.cluster import Cluster
-from laktory.models.databricks.group import Group
-from laktory.models.databricks.job import Job
-from laktory.models.databricks.notebook import Notebook
-from laktory.models.databricks.pipeline import Pipeline
-from laktory.models.databricks.secretscope import SecretScope
-from laktory.models.databricks.sqlquery import SqlQuery
-from laktory.models.databricks.user import User
-from laktory.models.databricks.warehouse import Warehouse
-from laktory.models.databricks.workspacefile import WorkspaceFile
-from laktory.models.sql.catalog import Catalog
-from laktory.models.sql.schema import Schema
-from laktory.models.sql.table import Table
 from laktory.models.stacks.pulumistack import PulumiStack
 from laktory._worker import Worker
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
-
-
-class StackResources(BaseModel):
-    catalogs: list[Catalog] = []
-    cluster: list[Cluster] = []
-    groups: list[Group] = []
-    jobs: list[Job] = []
-    notebooks: list[Notebook] = []
-    pipelines: list[Pipeline] = []
-    schemas: list[Schema] = []
-    secret_scopes: list[SecretScope] = []
-    sql_queries: list[SqlQuery] = []
-    tables: list[Table] = []
-    users: list[User] = []
-    warehouse: list[Warehouse] = []
-    workspace_files: list[WorkspaceFile] = []
 
 
 class StackEnvironment(BaseModel):
@@ -47,21 +18,17 @@ class StackVariable(BaseModel):
     pass
 
 
-class Stack(BaseStack):
+class Stack(BaseModel):
     """
     The Stack defines a group of deployable resources.
     """
     name: str
     config: dict[str, str] = None
     description: str = None
-    resources: StackResources
+    resources: list[Any]
     environments: list[StackEnvironment] = []
     variables: dict[str, str] = {}
     pulumi_outputs: dict[str, str] = {}  # TODO
-
-    # @property
-    # def parsed_resources(self):
-    #     resources = self.resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Methods                                                          #
@@ -70,7 +37,7 @@ class Stack(BaseStack):
 
         resources = {}
 
-        for r in self.resources.notebooks + self.resources.jobs + self.resources.pipelines:
+        for r in self.resources:
             for _r in r.resources:
                 resources[_r.resource_name] = _r
 

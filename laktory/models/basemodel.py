@@ -138,9 +138,8 @@ class BaseModel(_BaseModel):
         _vars = {}
         _pvars = {}
 
-        if target == "pulumi":
-            pass
-            # _vars["${resources."] = "${"
+        if target == "pulumi_yaml":
+            _vars["${resources."] = "${"
         elif target == "terraform":
             # TODO: Review
             raise NotImplementedError()

@@ -58,9 +58,14 @@ class WorkspaceFile(BaseModel, PulumiResource):
     @property
     def resource_key(self) -> str:
         """File resource key"""
-        key = os.path.splitext(self.path)[0].replace("/", "-")
-        if key.startswith("-"):
-            key = key[1:]
+        # key = os.path.splitext(self.path)[0]
+        key = self.path
+        key = key.replace("/", "-")
+        key = key.replace("\\", "-")
+        key = key.replace(".", "-")
+        for i in range(5):
+            if key.startswith("-"):
+                key = key[1:]
         return key
 
     @property

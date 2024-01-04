@@ -4,7 +4,6 @@ from typing import Union
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.basemodel import camelize_keys
-from laktory.models.stacks.basestack import BaseStack
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
@@ -16,7 +15,7 @@ class ConfigValue(BaseModel):
     default: Any = None
 
 
-class PulumiStack(BaseStack):
+class PulumiStack(BaseModel):
     """
     A stack, as defined by pulumi for deployment.
     """
@@ -40,7 +39,7 @@ class PulumiStack(BaseStack):
                 "type": r.pulumi_resource_type,
                 "properties": r.pulumi_properties
             }
-        d["resources"] = self.inject_vars(d["resources"], target="pulumi")
+        d["resources"] = self.inject_vars(d["resources"], target="pulumi_yaml")
 
         if keys_to_camel_case:
             d = camelize_keys(d)

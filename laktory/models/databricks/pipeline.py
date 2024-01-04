@@ -367,23 +367,23 @@ class Pipeline(BaseModel, PulumiResource):
             with open(source, "w") as fp:
                 fp.write(s)
             filepath = f"{settings.workspace_laktory_root}pipelines/{self.name}.json"
-            self.resources_ += [
-                WorkspaceFile(
-                    resource_name=f"file-{filepath}",
+            file = WorkspaceFile(
                     path=filepath,
                     source=source,
                 )
+            self.resources_ += [
+                file
             ]
 
             self.resources_ += [
                 Permissions(
-                    resource_name=f"permissions-file-{filepath}",
+                    resource_name=f"permissions-file-{file.resource_name}",
                     access_controls=[Permission(
                         permission_level="CAN_READ",
                         group_name="account users",
                     )],
                     workspace_file_path=filepath,
-                    options={"depends_on": [f"${{resources.file-{filepath}}}"]}
+                    options={"depends_on": [f"${{resources.{file.resource_name}}}"]}
                 )
             ]
 
