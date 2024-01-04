@@ -33,9 +33,9 @@ class User(BaseModel, PulumiResource):
     u = models.User(
         user_name="john.doe@okube.ai",
         display_name="John Doe",
-        groups=[
-            "role-engineer",
-            "domain-finance",
+        group_ids=[
+            "${resources.group-role-engineer.id}",
+            "${resources.group-domain-finance.id}",
         ],
         roles=["account_admin"],
     )

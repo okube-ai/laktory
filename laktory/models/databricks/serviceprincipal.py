@@ -34,11 +34,11 @@ class ServicePrincipal(BaseModel, PulumiResource):
     sp = models.ServicePrincipal(
         display_name="neptune",
         application_id="baf147d1-a856-4de0-a570-8a56dbd7e234",
-        groups=[
-            "${vars.group-role-engineer}...", # TODO: Update
-            "role-analyst",
-            "domain-finance",
-            "domain-engineering",
+        group_ids=[
+            "${resources.group-role-engineer.id}",
+            "${resources.group-role-analyst.id}",
+            "${resources.group-domain-finance.id}",
+            "${resources.group-domain-engineering.id}",
         ],
         roles=["account_admin"],
     )
