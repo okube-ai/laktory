@@ -30,7 +30,7 @@ class DataProducer(BaseModel):
     )
     print(producer)
     '''
-    vars={} name='yahoo-finance' description='yfinance offers a threaded and Pythonic way to download market data from Yahoo! finance' party=3
+    variables={} name='yahoo-finance' description='yfinance offers a threaded and Pythonic way to download market data from Yahoo! finance' party=3
     '''
     ```
     """
