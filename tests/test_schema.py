@@ -7,7 +7,7 @@ from laktory.models import Column
 
 
 def test_model():
-    db = Schema(
+    schema = Schema(
         name="flights",
         catalog_name="laktory_testing",
         tables=[
@@ -40,27 +40,11 @@ def test_model():
         ],
     )
 
-    assert db.tables[0].columns[0].name == "airspeed"
-    assert type(db.tables[0].columns[0]) == Column
-    assert db.name == "flights"
-    assert db.full_name == "laktory_testing.flights"
-
-
-def atest_create():
-    # Timestamp is included in catalog name to prevent conflicts when running
-    # multiple tests in parallel
-    catalog_name = "laktory_testing_" + str(datetime.now().timestamp()).replace(".", "")
-
-    cat = Catalog(name=catalog_name)
-    cat.create(if_not_exists=True)
-    db = Schema(name="default", catalog_name=catalog_name)
-    db.create()
-    assert db.exists()
-    db.delete()
-    assert not db.exists()
-    cat.delete(force=True)
+    assert schema.tables[0].columns[0].name == "airspeed"
+    assert type(schema.tables[0].columns[0]) == Column
+    assert schema.name == "flights"
+    assert schema.full_name == "laktory_testing.flights"
 
 
 if __name__ == "__main__":
     test_model()
-    # atest_create()
