@@ -3,6 +3,7 @@ import yaml
 import json
 import os
 from typing import Any
+from typing import Literal
 from typing import TypeVar
 from typing import TextIO
 from pydantic import BaseModel as _BaseModel
@@ -10,29 +11,6 @@ from pydantic import ConfigDict
 from pydantic import Field
 
 Model = TypeVar("Model", bound="BaseModel")
-
-
-def _snake_to_camel(snake_str):
-    components = snake_str.split('_')
-    return components[0] + ''.join(x.title() for x in components[1:])
-
-
-def camelize_keys(d):
-    if isinstance(d, dict):
-        keys = list(d.keys())
-        values = list(d.values())
-        for key, value in zip(keys, values):
-            new_key = _snake_to_camel(key)
-            d[new_key] = camelize_keys(value)
-            if new_key != key:
-                del d[key]
-
-    elif isinstance(d, list):
-        for i, item in enumerate(d):
-            d[i] = camelize_keys(item)
-    else:
-        pass
-    return d
 
 
 class BaseModel(_BaseModel):
@@ -85,15 +63,6 @@ class BaseModel(_BaseModel):
         data = json.load(fp)
         return cls.model_validate(data)
 
-    def model_dump(self, *args, keys_to_camel_case=False, **kwargs):
-        """TODO"""
-        d = super().model_dump(*args, **kwargs)
-
-        if keys_to_camel_case:
-            d = camelize_keys(d)
-
-        return d
-
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
@@ -102,7 +71,11 @@ class BaseModel(_BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def inject_vars(self, d: dict, target=None) -> dict[str, Any]:
+    def inject_vars(
+            self,
+            d: dict,
+            target: Literal["pulumi_py", "pulumi_yaml"] = "pulumi_py"
+    ) -> dict[str, Any]:
         """
         Inject variables values into a dictionary (generally model dump).
 
@@ -123,6 +96,9 @@ class BaseModel(_BaseModel):
         ----------
         d:
             Model dump
+        target:
+            Target for the variables injection as each one might require a
+            slightly different format.
 
         Returns
         -------

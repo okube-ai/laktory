@@ -9,6 +9,7 @@ from ._settings import settings
 # Packages                                                                    #
 # --------------------------------------------------------------------------- #
 
+import laktory._parsers
 import laktory.models
 import laktory.spark
 

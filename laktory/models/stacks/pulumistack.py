@@ -2,8 +2,8 @@ import json
 from typing import Any
 from typing import Union
 
+from laktory._parsers import camelize_keys
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import camelize_keys
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
