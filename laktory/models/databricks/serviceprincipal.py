@@ -70,32 +70,34 @@ class ServicePrincipal(BaseModel, PulumiResource):
         return self.display_name
 
     @property
-    def all_resources(self) -> list[PulumiResource]:
-        res = [
-            self,
-        ]
+    def resources(self) -> list[PulumiResource]:
 
-        for role in self.roles:
-            res += [
-                ServicePrincipalRole(
-                    resource_name=f"role-{role}-{self.resource_name}",
-                    service_principal_id=f"${{resources.{self.resource_name}.id}}",
-                    role=role,
-                )
+        if self.resources_ is None:
+            self.resources_ = [
+                self,
             ]
 
-        # Group Member
-        for group_id in self.group_ids:
+            for role in self.roles:
+                self.resources_ += [
+                    ServicePrincipalRole(
+                        resource_name=f"role-{role}-{self.resource_name}",
+                        service_principal_id=f"${{resources.{self.resource_name}.id}}",
+                        role=role,
+                    )
+                ]
 
-            res += [
-                GroupMember(
-                    resource_name=f"group-member-{self.display_name}-{group_id}",
-                    group_id=group_id,
-                    member_id=f"${{resources.{self.resource_name}.id}}",
-                )
-            ]
+            # Group Member
+            for group_id in self.group_ids:
 
-        return res
+                self.resources_ += [
+                    GroupMember(
+                        resource_name=f"group-member-{self.display_name}-{group_id}",
+                        group_id=group_id,
+                        member_id=f"${{resources.{self.resource_name}.id}}",
+                    )
+                ]
+
+        return self.resources_
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

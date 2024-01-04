@@ -343,49 +343,51 @@ class Pipeline(BaseModel, PulumiResource):
         return "pl"
 
     @property
-    def all_resources(self) -> list[PulumiResource]:
-        res = [
-            self,
-        ]
-        if self.permissions:
+    def resources(self) -> list[PulumiResource]:
 
-            res += [
-                Permissions(
-                    resource_name=f"permissions-{self.resource_name}",
-                    access_controls=self.permissions,
-                    pipeline_id=f"${{resources.{self.resource_name}.id}}",
+        if self.resources_ is None:
+            self.resources_ = [
+                self,
+            ]
+            if self.permissions:
+
+                self.resources_ += [
+                    Permissions(
+                        resource_name=f"permissions-{self.resource_name}",
+                        access_controls=self.permissions,
+                        pipeline_id=f"${{resources.{self.resource_name}.id}}",
+                    )
+                ]
+
+            # Configuration file
+            source = f"./tmp-{self.name}.json"
+            d = self.model_dump(exclude_none=True)
+            d = self.resolve_vars(d, target=None)  # TODO: Check target
+            s = json.dumps(d, indent=4)
+            with open(source, "w") as fp:
+                fp.write(s)
+            filepath = f"{settings.workspace_laktory_root}pipelines/{self.name}.json"
+            self.resources_ += [
+                WorkspaceFile(
+                    resource_name=f"file-{filepath}",
+                    path=filepath,
+                    source=source,
                 )
             ]
 
-        # Configuration file
-        source = f"./tmp-{self.name}.json"
-        d = self.model_dump(exclude_none=True)
-        d = self.resolve_vars(d, target=None)  # TODO: Check target
-        s = json.dumps(d, indent=4)
-        with open(source, "w") as fp:
-            fp.write(s)
-        filepath = f"{settings.workspace_laktory_root}pipelines/{self.name}.json"
-        res += [
-            WorkspaceFile(
-                resource_name=f"file-{filepath}",
-                path=filepath,
-                source=source,
-            )
-        ]
+            self.resources_ += [
+                Permissions(
+                    resource_name=f"permissions-file-{filepath}",
+                    access_controls=[Permission(
+                        permission_level="CAN_READ",
+                        group_name="account users",
+                    )],
+                    workspace_file_path=filepath,
+                    options={"depends_on": [f"${{resources.file-{filepath}}}"]}
+                )
+            ]
 
-        res += [
-            Permissions(
-                resource_name=f"permissions-file-{filepath}",
-                access_controls=[Permission(
-                    permission_level="CAN_READ",
-                    group_name="account users",
-                )],
-                workspace_file_path=filepath,
-                options={"depends_on": [f"${{resources.file-{filepath}}}"]}
-            )
-        ]
-
-        return res
+        return self.resources_
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

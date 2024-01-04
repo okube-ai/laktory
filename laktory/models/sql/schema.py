@@ -96,39 +96,41 @@ class Schema(BaseModel, PulumiResource):
         return self.full_name
 
     @property
-    def all_resources(self) -> list[PulumiResource]:
+    def resources(self) -> list[PulumiResource]:
 
-        res = [
-            self
-        ]
+        if self.resources_ is None:
 
-        # Schema grants
-        if self.grants:
-            res += [
-                Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    schema=self.full_name,
-                    grants=[
-                        {
-                            "principal": g.principal, "privileges": g.privileges
-                        }
-                        for g in self.grants
-                    ],
-                    options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
-                )
+            self.resources_ = [
+                self
             ]
 
-        if self.volumes:
-            for v in self.volumes:
-                res += v.all_resources
-                # TODO: add dependency?
+            # Schema grants
+            if self.grants:
+                self.resources_ += [
+                    Grants(
+                        resource_name=f"grants-{self.resource_name}",
+                        schema=self.full_name,
+                        grants=[
+                            {
+                                "principal": g.principal, "privileges": g.privileges
+                            }
+                            for g in self.grants
+                        ],
+                        options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
+                    )
+                ]
 
-        if self.tables:
-            for t in self.tables:
-                res += t.all_resources
-                # TODO: add dependency?
+            if self.volumes:
+                for v in self.volumes:
+                    self.resources_ += v.resources
+                    # TODO: add dependency?
 
-        return res
+            if self.tables:
+                for t in self.tables:
+                    self.resources_ += t.resources
+                    # TODO: add dependency?
+
+        return self.resources_
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

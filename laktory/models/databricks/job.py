@@ -722,21 +722,24 @@ class Job(BaseModel, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def all_resources(self) -> list[PulumiResource]:
-        res = [
-            self,
-        ]
-        if self.permissions:
+    def resources(self) -> list[PulumiResource]:
 
-            res += [
-                Permissions(
-                    resource_name=f"permissions-{self.resource_name}",
-                    access_controls=self.permissions,
-                    job_id=f"${{resources.{self.resource_name}.id}}",
-                )
+        if self.resources_ is None:
+
+            self.resources_ = [
+                self,
             ]
 
-        return res
+            if self.permissions:
+                self.resources_ += [
+                    Permissions(
+                        resource_name=f"permissions-{self.resource_name}",
+                        access_controls=self.permissions,
+                        job_id=f"${{resources.{self.resource_name}.id}}",
+                    )
+                ]
+
+        return self.resources_
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

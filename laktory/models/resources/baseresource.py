@@ -1,4 +1,5 @@
 import re
+from typing import Any
 from pydantic import computed_field
 from pydantic import Field
 from pydantic import BaseModel as _BaseModel
@@ -26,6 +27,7 @@ class BaseResource(_BaseModel):
     """
     resource_name_: str = Field(None, alias="resource_name", exclude=True)
     options: ResourceOptions = ResourceOptions()
+    resources_: list[Any] = Field(None, exclude=True)
 
     @computed_field
     def resource_name(self) -> str:
@@ -63,7 +65,9 @@ class BaseResource(_BaseModel):
         return name
 
     @property
-    def all_resources(self):
-        return [
-            self
-        ]
+    def resources(self):
+        if self.resources_ is None:
+            self.resources_ = [
+                self
+            ]
+        return self.resources_

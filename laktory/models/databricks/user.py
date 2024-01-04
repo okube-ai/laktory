@@ -59,32 +59,35 @@ class User(BaseModel, PulumiResource):
         return self.user_name
 
     @property
-    def all_resources(self) -> list[PulumiResource]:
-        res = [
-            self,
-        ]
+    def resources(self) -> list[PulumiResource]:
 
-        for role in self.roles:
-            res += [
-                UserRole(
-                    resource_name=f"role-{role}-{self.resource_name}",
-                    # user_id=self.sp.id,
-                    user_id=f"${{resources.{self.resource_name}.id}}",
-                    role=role,
-                )
+        if self.resources_ is None:
+
+            self.resources_ = [
+                self,
             ]
 
-        # Group Member
-        for group_id in self.group_ids:
-            res += [
-                GroupMember(
-                    resource_name=f"group-member-{self.display_name}-{group_id}",
-                    group_id=group_id,
-                    member_id=f"${{resources.{self.resource_name}.id}}",
-                )
-            ]
+            for role in self.roles:
+                self.resources_ += [
+                    UserRole(
+                        resource_name=f"role-{role}-{self.resource_name}",
+                        # user_id=self.sp.id,
+                        user_id=f"${{resources.{self.resource_name}.id}}",
+                        role=role,
+                    )
+                ]
 
-        return res
+            # Group Member
+            for group_id in self.group_ids:
+                self.resources_ += [
+                    GroupMember(
+                        resource_name=f"group-member-{self.display_name}-{group_id}",
+                        group_id=group_id,
+                        member_id=f"${{resources.{self.resource_name}.id}}",
+                    )
+                ]
+
+        return self.resources_
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

@@ -82,7 +82,7 @@ class PulumiResource(BaseResource):
         self._pulumi_resources = {
         }
 
-        for r in self.all_resources:
+        for r in self.resources:
 
             # Properties
             properties = r.pulumi_properties

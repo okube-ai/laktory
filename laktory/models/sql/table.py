@@ -258,32 +258,34 @@ class Table(BaseModel, PulumiResource):
         return self.full_name
 
     @property
-    def all_resources(self) -> list[PulumiResource]:
+    def resources(self) -> list[PulumiResource]:
 
-        res = []
+        if self.self.resources_ is None:
 
-        if not self.builder.pipeline_name:
-            res += [
-                self
-            ]
+            self.resources_ = []
 
-        # Schema grants
-        if self.grants:
-            res += [
-                Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    table=self.full_name,
-                    grants=[
-                        {
-                            "principal": g.principal, "privileges": g.privileges
-                        }
-                        for g in self.grants
-                    ],
-                    options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
-                )
-            ]
+            if not self.builder.pipeline_name:
+                self.resources_ += [
+                    self
+                ]
 
-        return res
+            # Schema grants
+            if self.grants:
+                self.resources_ += [
+                    Grants(
+                        resource_name=f"grants-{self.resource_name}",
+                        table=self.full_name,
+                        grants=[
+                            {
+                                "principal": g.principal, "privileges": g.privileges
+                            }
+                            for g in self.grants
+                        ],
+                        options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
+                    )
+                ]
+
+        return self.resources_
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

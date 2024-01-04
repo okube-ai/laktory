@@ -105,29 +105,31 @@ class Volume(BaseModel, PulumiResource):
         return self.full_name
 
     @property
-    def all_resources(self) -> list[PulumiResource]:
+    def resources(self) -> list[PulumiResource]:
 
-        res = [
-            self
-        ]
+        if self.resources_ is None:
 
-        # Volume grants
-        if self.grants:
-            res += [
-                Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    volume=self.full_name,
-                    grants=[
-                        {
-                            "principal": g.principal, "privileges": g.privileges
-                        }
-                        for g in self.grants
-                    ],
-                    options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
-                )
+            self.resources_ = [
+                self
             ]
 
-        return res
+            # Volume grants
+            if self.grants:
+                self.resources_ += [
+                    Grants(
+                        resource_name=f"grants-{self.resource_name}",
+                        volume=self.full_name,
+                        grants=[
+                            {
+                                "principal": g.principal, "privileges": g.privileges
+                            }
+                            for g in self.grants
+                        ],
+                        options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
+                    )
+                ]
+
+        return self.resources_
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

@@ -71,7 +71,7 @@ class Stack(BaseStack):
         resources = {}
 
         for r in self.resources.notebooks + self.resources.jobs + self.resources.pipelines:
-            for _r in r.all_resources:
+            for _r in r.resources:
                 resources[_r.resource_name] = _r
 
         return PulumiStack(

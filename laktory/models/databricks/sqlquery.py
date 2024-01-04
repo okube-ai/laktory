@@ -78,33 +78,36 @@ class SqlQuery(BaseModel, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def all_resources(self) -> list[PulumiResource]:
-        res = [
-            self,
-        ]
+    def resources(self) -> list[PulumiResource]:
 
-        # TODO: Figure out how to fetch data source ids
-        # if self.data_source_id is None:
-        #     d = self.inject_vars(self.model_dump())
-        #     warehouse = databricks.SqlEndpoint.get(
-        #         f"warehouse-{name}",
-        #         id=d["warehouse_id"],
-        #         opts=opts,
-        #     )
-        #     sql_query.data_source_id = "${var._data_source_id}"
-        #     sql_query.vars["_data_source_id"] = warehouse.data_source_id
+        if self.resources_ is None:
 
-        if self.permissions:
-
-            res += [
-                Permissions(
-                    resource_name=f"permissions-{self.resource_name}",
-                    access_controls=self.permissions,
-                    sql_query_id=f"${{resources.{self.resource_name}.id}}",
-                )
+            self.resources_ = [
+                self,
             ]
 
-        return res
+            # TODO: Figure out how to fetch data source ids
+            # if self.data_source_id is None:
+            #     d = self.inject_vars(self.model_dump())
+            #     warehouse = databricks.SqlEndpoint.get(
+            #         f"warehouse-{name}",
+            #         id=d["warehouse_id"],
+            #         opts=opts,
+            #     )
+            #     sql_query.data_source_id = "${var._data_source_id}"
+            #     sql_query.vars["_data_source_id"] = warehouse.data_source_id
+
+            if self.permissions:
+
+                self.resources_ += [
+                    Permissions(
+                        resource_name=f"permissions-{self.resource_name}",
+                        access_controls=self.permissions,
+                        sql_query_id=f"${{resources.{self.resource_name}.id}}",
+                    )
+                ]
+
+        return self.resources_
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
