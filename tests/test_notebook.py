@@ -13,6 +13,8 @@ def test_notebook():
     assert nb0.path is None
     assert nb1.path == "/demos/hello_world.py"
     assert nb2.path == "/files/hello_world.py"
+    assert nb1.resource_key == "demos-hello_world"
+    assert nb1.resource_name == "notebook-demos-hello_world"
 
 
 if __name__ == "__main__":
