@@ -20,6 +20,10 @@
 * Modified `resource_key` for `WorkspaceFile`, `Notebook` and `Directory`
 * Modified `groups` field for `Users` and `ServicePrincipal` models to accept group id instead of group name
 
+## [0.0.29] - 2023-12-20
+### Fixed
+* Forced newlines character to eliminate discrepancies between Windows and Linux environment when writing pipeline files. 
+
 ## [0.0.28] - 2023-12-17
 ### Updated
 * job.continuous.pause_status to allow for arbitrary string (allow variable)
