@@ -59,7 +59,8 @@ class PulumiResource(BaseResource):
         """
         d = super().model_dump(exclude=self.pulumi_excludes, exclude_none=True)
         for k, v in self.pulumi_renames.items():
-            d[v] = d.pop(k)
+            if k in d:
+                d[v] = d.pop(k)
         d = self.inject_vars(d)
         return d
 
