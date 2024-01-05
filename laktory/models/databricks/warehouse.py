@@ -138,7 +138,7 @@ class Warehouse(BaseModel, PulumiResource):
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
                         access_controls=self.access_controls,
-                        warehouse_id=f"${{resources.{self.resource_name}.id}}",
+                        sql_endpoint_id=f"${{resources.{self.resource_name}.id}}",
                     )
                 ]
 

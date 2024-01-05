@@ -12,6 +12,7 @@ class Permissions(BaseModel, PulumiResource):
     directory_path: str = None
     experiment_id: str = None
     notebook_id: str = None
+    notebook_path: str = None
     object_type: str = None
     registered_model_id: str = None
     repo_id: str = None

@@ -107,8 +107,8 @@ class SecretScope(BaseModel, PulumiResource):
                     Secret(
                         resource_name=f"secret-{self.name}-{s.key}",
                         key=s.key,
-                        string_value=s.value,
-                        scope=self.secret_scope.id,
+                        value=s.value,
+                        scope=f"${{resources.{self.resource_name}.id}}",
                     )
                 ]
 
@@ -121,6 +121,7 @@ class SecretScope(BaseModel, PulumiResource):
                         scope=self.name,
                     )
                 ]
+                self.resources_[-1].options.depends_on = [f"${{resources.{self.resource_name}}}"]
 
         return self.resources_
 
@@ -140,4 +141,4 @@ class SecretScope(BaseModel, PulumiResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "secrets"]
+        return ["permissions", "secrets"]

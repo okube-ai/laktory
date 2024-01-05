@@ -93,6 +93,7 @@ class PulumiResource(BaseResource):
             for k in [
                 "id",
                 "object_id",
+                "path",
             ]:
                 if hasattr(_r, k):
                     pulumi_outputs[f"{r.resource_name}.{k}"] = getattr(_r, k)

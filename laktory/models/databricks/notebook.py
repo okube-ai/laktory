@@ -62,7 +62,7 @@ class Notebook(BaseModel, PulumiResource):
                 self.path = f"{self.dirpath}{self.filename}"
 
             elif "/notebooks/" in self.source:
-                self.path = "/" + self.source.split("/notebooks/")[-1]
+                self.path = "/.laktory/" + self.source.split("/notebooks/")[-1]
 
         return self
 
@@ -93,7 +93,7 @@ class Notebook(BaseModel, PulumiResource):
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
                         access_controls=self.access_controls,
-                        notebook_id=f"${{resources.{self.resource_name}.id}}",
+                        notebook_path=f"${{resources.{self.resource_name}.path}}",
                     )
                 ]
 

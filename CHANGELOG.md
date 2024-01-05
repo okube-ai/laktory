@@ -19,6 +19,7 @@
 * Renamed `vars` object to `variables`
 * Modified `resource_key` for `WorkspaceFile`, `Notebook` and `Directory`
 * Modified `groups` field for `Users` and `ServicePrincipal` models to accept group id instead of group name
+* Renamed `permissions` field to `access_controls` in multiple models to be consistent with Databricks API
 
 ## [0.0.29] - 2023-12-20
 ### Fixed
