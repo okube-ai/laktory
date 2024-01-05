@@ -2,6 +2,7 @@ import os
 from typing import Any
 from typing import Union
 from pydantic import model_validator
+from laktory import constants
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.databricks.accesscontrol import AccessControl
@@ -42,7 +43,10 @@ class WorkspaceFile(BaseModel, PulumiResource):
                 self.path = f"{self.dirpath}{self.filename}"
 
             elif "/workspacefiles/" in self.source:
-                self.path = "/" + self.source.split("/workspacefiles/")[-1]
+                self.path = (
+                    constants.LAKTORY_WORKSPACE_ROOT
+                    + self.source.split("/workspacefiles/")[-1]
+                )
 
             else:
                 raise ValueError(

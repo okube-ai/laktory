@@ -121,7 +121,9 @@ class SecretScope(BaseModel, PulumiResource):
                         scope=self.name,
                     )
                 ]
-                self.resources_[-1].options.depends_on = [f"${{resources.{self.resource_name}}}"]
+                self.resources_[-1].options.depends_on = [
+                    f"${{resources.{self.resource_name}}}"
+                ]
 
         return self.resources_
 

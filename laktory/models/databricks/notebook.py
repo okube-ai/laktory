@@ -3,6 +3,7 @@ from typing import Any
 from typing import Literal
 from typing import Union
 from pydantic import model_validator
+from laktory import constants
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.databricks.accesscontrol import AccessControl
@@ -62,7 +63,10 @@ class Notebook(BaseModel, PulumiResource):
                 self.path = f"{self.dirpath}{self.filename}"
 
             elif "/notebooks/" in self.source:
-                self.path = "/.laktory/" + self.source.split("/notebooks/")[-1]
+                self.path = (
+                    constants.LAKTORY_WORKSPACE_ROOT
+                    + self.source.split("/notebooks/")[-1]
+                )
 
         return self
 

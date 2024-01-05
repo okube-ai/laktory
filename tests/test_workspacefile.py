@@ -7,7 +7,9 @@ def test_workspace_file():
     workspace_file = WorkspaceFile(
         source="../libraries/init_scripts/install_laktory.sh",
         dirpath="/init_scripts/",
-        access_controls=[{"permission_level": "CAN_READ", "group_name": "account users"}],
+        access_controls=[
+            {"permission_level": "CAN_READ", "group_name": "account users"}
+        ],
     )
     print(workspace_file)
     assert workspace_file.filename == "install_laktory.sh"
