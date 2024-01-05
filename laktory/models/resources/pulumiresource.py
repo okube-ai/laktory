@@ -74,7 +74,7 @@ class PulumiResource(BaseResource):
             properties = self.inject_vars(properties, target="pulumi_py")
 
             # Options
-            _opts = self.options.model_dump()
+            _opts = r.options.model_dump()
             if _opts is None:
                 _opts = {}
             _opts = self.inject_vars(_opts, target="pulumi_py")
