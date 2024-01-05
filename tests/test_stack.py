@@ -55,8 +55,8 @@ job = models.Job(
 stack = models.Stack(
     name="unit-testing",
     config={
-        "databricks:host": os.getenv("DATABRICKS_HOST"),
-        "databricks:token": os.getenv("DATABRICKS_TOKEN"),
+        "databricks:host": "${var.DATABRICKS_HOST}",
+        "databricks:token": "${var.DATABRICKS_TOKEN}",
     },
     resources=[job, pipeline],
 )
@@ -64,8 +64,8 @@ stack = models.Stack(
 empty_stack = models.Stack(
     name="unit-testing",
     config={
-        "databricks:host": os.getenv("DATABRICKS_HOST"),
-        "databricks:token": os.getenv("DATABRICKS_TOKEN"),
+        "databricks:host": "${var.DATABRICKS_HOST}",
+        "databricks:token": "${var.DATABRICKS_TOKEN}",
     },
     resources=[],
 )
@@ -73,14 +73,13 @@ empty_stack = models.Stack(
 
 def test_stack_model():
     data = stack.model_dump()
-    data["config"]["databricks:token"] = "***"
     print(data)
     assert data == {
         "variables": {},
         "name": "unit-testing",
         "config": {
-            "databricks:host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-            "databricks:token": "***",
+            "databricks:host": "${var.DATABRICKS_HOST}",
+            "databricks:token": "${var.DATABRICKS_TOKEN}",
         },
         "description": None,
         "resources": [

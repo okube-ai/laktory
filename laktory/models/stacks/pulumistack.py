@@ -40,7 +40,8 @@ class PulumiStack(BaseModel):
                 "properties": r.pulumi_properties,
                 "options": r.options.model_dump(exclude_none=True),
             }
-        d["resources"] = self.inject_vars(d["resources"], target="pulumi_yaml")
+
+        d = self.inject_vars(d, target="pulumi_yaml")
 
         if keys_to_camel_case:
             d = camelize_keys(d)
