@@ -108,7 +108,7 @@ class PipelineCluster(Cluster):
     idempotency_token: str = Field(None, exclude=True)
     is_pinned: bool = Field(None, exclude=True)
     libraries: list[Any] = Field(None, exclude=True)
-    node_type_id: str = Field(None, exclude=True)
+    node_type_id: str = None
     runtime_engine: str = Field(None, exclude=True)
     single_user_name: str = Field(None, exclude=True)
     spark_version: str = Field(None, exclude=True)
