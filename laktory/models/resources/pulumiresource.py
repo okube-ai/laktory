@@ -81,7 +81,7 @@ class PulumiResource(BaseResource):
             if _opts is None:
                 _opts = {}
             _opts = self.inject_vars(_opts, target="pulumi_py")
-            _opts = ResourceOptions(_opts)
+            _opts = ResourceOptions(**_opts)
             if opts is not None:
                 _opts = ResourceOptions.merge(_opts, opts)
 
@@ -102,3 +102,4 @@ class PulumiResource(BaseResource):
 
         # Return resources
         return self._pulumi_resources
+

@@ -777,4 +777,3 @@ class Job(BaseModel, PulumiResource):
         d["job_clusters"] = _clusters
 
         return d
-
