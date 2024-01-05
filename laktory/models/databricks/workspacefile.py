@@ -4,7 +4,7 @@ from typing import Union
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 
 
@@ -14,21 +14,21 @@ class WorkspaceFile(BaseModel, PulumiResource):
 
     Attributes
     ----------
-    source:
-        Path to file on local filesystem.
+    access_controls:
+        List of file access controls
     dirpath:
         Workspace directory containing the file. Filename will be assumed to be the same as local filepath. Used if path
         is not specified.
     path:
          Workspace filepath for the file
-    permissions:
-        List of file permissions
+    source:
+        Path to file on local filesystem.
     """
 
-    source: str
+    access_controls: list[AccessControl] = []
     dirpath: str = None
     path: str = None
-    permissions: list[Permission] = []
+    source: str
 
     @property
     def filename(self) -> str:
@@ -74,11 +74,11 @@ class WorkspaceFile(BaseModel, PulumiResource):
             self.resources_ = [
                 self,
             ]
-            if self.permissions:
+            if self.access_controls:
                 self.resources_ += [
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
-                        access_controls=self.permissions,
+                        access_controls=self.access_controls,
                         workspace_file_path=self.path,
                         options={
                             "depends_on": [f"${{resources.{self.resource_name}}}"]
@@ -104,4 +104,4 @@ class WorkspaceFile(BaseModel, PulumiResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["permissions", "dirpath"]
+        return ["access_controls", "dirpath"]

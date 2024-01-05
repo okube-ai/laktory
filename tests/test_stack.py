@@ -7,7 +7,7 @@ pipeline = models.Pipeline(
     libraries=[
         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}},
     ],
-    permissions=[
+    access_controls=[
         {"group_name": "account users", "permission_level": "CAN_VIEW"},
         {"group_name": "role-engineers", "permission_level": "CAN_RUN"},
     ],
@@ -85,6 +85,7 @@ def test_stack_model():
         "description": None,
         "resources": [
             {
+                "access_controls": [],
                 "clusters": [
                     {
                         "apply_policy_default_values": None,
@@ -123,7 +124,6 @@ def test_stack_model():
                 "name": "job-stock-prices-ut-stack",
                 "notification_settings": None,
                 "parameters": [],
-                "permissions": [],
                 "retry_on_timeout": None,
                 "run_as": None,
                 "schedule": None,
@@ -218,6 +218,20 @@ def test_stack_model():
                 "webhook_notifications": None,
             },
             {
+                "access_controls": [
+                    {
+                        "group_name": "account users",
+                        "permission_level": "CAN_VIEW",
+                        "service_principal_name": None,
+                        "user_name": None,
+                    },
+                    {
+                        "group_name": "role-engineers",
+                        "permission_level": "CAN_RUN",
+                        "service_principal_name": None,
+                        "user_name": None,
+                    },
+                ],
                 "allow_duplicate_names": None,
                 "catalog": None,
                 "channel": "PREVIEW",
@@ -234,20 +248,6 @@ def test_stack_model():
                 ],
                 "name": "pl-stock-prices-ut-stack",
                 "notifications": [],
-                "permissions": [
-                    {
-                        "group_name": "account users",
-                        "permission_level": "CAN_VIEW",
-                        "service_principal_name": None,
-                        "user_name": None,
-                    },
-                    {
-                        "group_name": "role-engineers",
-                        "permission_level": "CAN_RUN",
-                        "service_principal_name": None,
-                        "user_name": None,
-                    },
-                ],
                 "photon": None,
                 "serverless": None,
                 "storage": None,
@@ -351,8 +351,8 @@ def test_pulumi_stack():
             "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
                 "properties": {
-                    "source": "./tmp-pl-stock-prices-ut-stack.json",
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                    "source": "./tmp-pl-stock-prices-ut-stack.json",
                 },
                 "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },

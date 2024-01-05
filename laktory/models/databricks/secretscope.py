@@ -140,4 +140,4 @@ class SecretScope(BaseModel, PulumiResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["permissions", "secrets"]
+        return ["access_controls", "secrets"]

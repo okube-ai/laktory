@@ -6,7 +6,7 @@ from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.cluster import ClusterLibrary
-from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
 
@@ -15,16 +15,16 @@ class JobCluster(Cluster):
     """
     Job Cluster. Same attributes as `laktory.models.Cluster`, except for
 
+    * `access_controls`
     * `is_pinned`
     * `libraries`
-    * `permissions`
 
     that are not allowed.
     """
 
+    access_controls: list[Any] = Field(None, exclude=True)
     is_pinned: bool = Field(None, exclude=True)
     libraries: list[Any] = Field(None, exclude=True)
-    permissions: list[Any] = Field(None, exclude=True)
 
     @model_validator(mode="after")
     def excluded_fields(self) -> Any:
@@ -593,6 +593,8 @@ class Job(BaseModel, PulumiResource):
 
     Attributes
     ----------
+    access_controls:
+        Access Controls specifications
     clusters:
         A list of job databricks.Cluster specifications that can be shared and reused by tasks of this job.
         Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings.
@@ -624,8 +626,6 @@ class Job(BaseModel, PulumiResource):
         Notifications specifications
     parameters:
         Parameters specifications
-    permissions:
-        Permissions specifications
     retry_on_timeout:
         An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on
         timeout.
@@ -694,6 +694,7 @@ class Job(BaseModel, PulumiResource):
     * [Pulumi Databricks Job](https://www.pulumi.com/registry/packages/databricks/api-docs/job/#databricks-job)
     """
 
+    access_controls: list[AccessControl] = []
     clusters: list[JobCluster] = []
     continuous: JobContinuous = None
     control_run_state: bool = None
@@ -706,7 +707,6 @@ class Job(BaseModel, PulumiResource):
     name: str = None
     notification_settings: JobNotificationSettings = None
     parameters: list[JobParameter] = []
-    permissions: list[Permission] = []
     # queue: Optional[JobQueueArgs] = None
     retry_on_timeout: bool = None
     run_as: JobRunAs = None
@@ -728,11 +728,11 @@ class Job(BaseModel, PulumiResource):
                 self,
             ]
 
-            if self.permissions:
+            if self.access_controls:
                 self.resources_ += [
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
-                        access_controls=self.permissions,
+                        access_controls=self.access_controls,
                         job_id=f"${{resources.{self.resource_name}.id}}",
                     )
                 ]
@@ -755,7 +755,7 @@ class Job(BaseModel, PulumiResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["permissions"]
+        return ["access_controls"]
 
     @property
     def pulumi_renames(self) -> dict[str, str]:

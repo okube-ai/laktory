@@ -1,10 +1,10 @@
 from laktory.models.basemodel import BaseModel
-from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class Permissions(BaseModel, PulumiResource):
-    access_controls: list[Permission]
+    access_controls: list[AccessControl]
     pipeline_id: str = None
     job_id: str = None
     cluster_id: str = None

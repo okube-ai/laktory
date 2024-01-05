@@ -3,11 +3,11 @@ from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 
 
-class Permission(BaseModel):
+class AccessControl(BaseModel):
     """
-    Databricks Permission
+    Databricks Access Control
 
-    Permission generally applicable to objects like cluster, notebook,
+    Access Control generally applicable to objects like cluster, notebook,
     pipeline, etc. For providing access to securable data, refer to
     `models.Grant` instead.
 

@@ -5,7 +5,7 @@ from typing import Union
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 
 
@@ -15,17 +15,17 @@ class Notebook(BaseModel, PulumiResource):
 
     Attributes
     ----------
-    source:
-        Path to notebook in source code format on local filesystem.
+    access_controls:
+        List of notebook access controls
     dirpath:
         Workspace directory containing the notebook. Filename will be assumed to be the same as local filepath. Used
         if path is not specified.
-    path:
-        Workspace filepath for the notebook
     language:
          Notebook programming language
-    permissions:
-        List of notebook permissions
+    path:
+        Workspace filepath for the notebook
+    source:
+        Path to notebook in source code format on local filesystem.
 
     Examples
     --------
@@ -44,11 +44,11 @@ class Notebook(BaseModel, PulumiResource):
     ```
     """
 
-    source: str
+    access_controls: list[AccessControl] = []
     dirpath: str = None
-    path: str = None
     language: Literal["SCALA", "PYTHON", "SQL", "R"] = None
-    permissions: list[Permission] = []
+    path: str = None
+    source: str
 
     @property
     def filename(self) -> str:
@@ -88,11 +88,11 @@ class Notebook(BaseModel, PulumiResource):
             self.resources_ = [
                 self,
             ]
-            if self.permissions:
+            if self.access_controls:
                 self.resources_ += [
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
-                        access_controls=self.permissions,
+                        access_controls=self.access_controls,
                         notebook_id=f"${{resources.{self.resource_name}.id}}",
                     )
                 ]
@@ -115,4 +115,4 @@ class Notebook(BaseModel, PulumiResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["permissions", "dirpath"]
+        return ["access_controls", "dirpath"]

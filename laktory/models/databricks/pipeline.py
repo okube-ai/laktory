@@ -10,7 +10,7 @@ from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
 from laktory.models.databricks.cluster import Cluster
-from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.databricks.workspacefile import WorkspaceFile
@@ -158,6 +158,8 @@ class Pipeline(BaseModel, PulumiResource):
 
     Attributes
     ----------
+    access_controls:
+        Pipeline access controls
     allow_duplicate_names:
         If `False`, deployment will fail if name conflicts with that of another pipeline.
     catalog:
@@ -181,8 +183,6 @@ class Pipeline(BaseModel, PulumiResource):
         Pipeline name
     notifications:
         Notifications specifications
-    permissions:
-        Permissions specifications
     photon:
         If `True`, Photon engine enabled.
     serverless:
@@ -296,6 +296,7 @@ class Pipeline(BaseModel, PulumiResource):
     * [Pulumi Databricks Pipeline](https://www.pulumi.com/registry/packages/databricks/api-docs/pipeline/)
     """
 
+    access_controls: list[AccessControl] = []
     allow_duplicate_names: bool = None
     catalog: str = None
     channel: Literal["CURRENT", "PREVIEW"] = "PREVIEW"
@@ -308,7 +309,6 @@ class Pipeline(BaseModel, PulumiResource):
     libraries: list[PipelineLibrary] = []
     name: str
     notifications: list[PipelineNotifications] = []
-    permissions: list[Permission] = []
     photon: bool = None
     serverless: bool = None
     storage: str = None
@@ -350,11 +350,11 @@ class Pipeline(BaseModel, PulumiResource):
             self.resources_ = [
                 self,
             ]
-            if self.permissions:
+            if self.access_controls:
                 self.resources_ += [
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
-                        access_controls=self.permissions,
+                        access_controls=self.access_controls,
                         pipeline_id=f"${{resources.{self.resource_name}.id}}",
                     )
                 ]
@@ -377,7 +377,7 @@ class Pipeline(BaseModel, PulumiResource):
                 Permissions(
                     resource_name=f"permissions-file-{file.resource_name}",
                     access_controls=[
-                        Permission(
+                        AccessControl(
                             permission_level="CAN_READ",
                             group_name="account users",
                         )
@@ -406,9 +406,9 @@ class Pipeline(BaseModel, PulumiResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return {
-            "permissions": True,
+            "access_controls": True,
             "tables": True,
-            "clusters": {"__all__": {"permissions"}},
+            "clusters": {"__all__": {"access_controls"}},
             "udfs": True,
         }
 
