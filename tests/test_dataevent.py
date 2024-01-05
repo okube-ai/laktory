@@ -94,7 +94,6 @@ def test_model_dump():
         "name": "stock_price",
         "description": None,
         "producer": {"name": "yahoo-finance", "description": None, "party": 1},
-        "events_root": None,
         "data": {
             "created_at": "2023-09-01T00:00:00",
             "symbol": "AAPL",
