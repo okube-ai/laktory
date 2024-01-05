@@ -26,6 +26,7 @@ SUPPORTED_TYPES = [
 
 # CACHE_ROOT = "./laktory"
 CACHE_ROOT = "./"
+LAKTORY_WORKSPACE_ROOT = "/.laktory/"
 # for k in vars(types):
 #     o = getattr(types, k)
 #     if "Type" in k and inspect.isclass(o):

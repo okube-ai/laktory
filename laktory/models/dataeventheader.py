@@ -1,5 +1,6 @@
 from typing import Union
 from pydantic import Field
+from pydantic import computed_field
 
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
@@ -34,7 +35,7 @@ class DataEventHeader(BaseModel):
     )
     print(event)
     '''
-    variables={} name='stock_price' description=None producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) events_root='/Volumes/dev/sources/landing/events/'
+    variables={} name='stock_price' description=None producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) events_root_=None
     '''
 
     print(event.event_root)
@@ -45,11 +46,18 @@ class DataEventHeader(BaseModel):
     name: str = Field(...)
     description: Union[str, None] = Field(default=None)
     producer: DataProducer = Field(default=None)
-    events_root: str = Field(settings.workspace_landing_root + "events/")
+    events_root_: Union[str, None] = Field(None, alias="events_root")
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def events_root(self) -> str:
+        """Must be computed to dynamically account for settings (env variable at run time)"""
+        if self.events_root_:
+            return self.events_root_
+        return settings.workspace_landing_root + "events/"
 
     @property
     def event_root(self) -> str:

@@ -59,25 +59,23 @@ class PulumiResource(BaseResource):
         """
         d = super().model_dump(exclude=self.pulumi_excludes, exclude_none=True)
         for k, v in self.pulumi_renames.items():
-            d[v] = d.pop(k)
+            if k in d:
+                d[v] = d.pop(k)
         d = self.inject_vars(d)
         return d
 
     def to_pulumi(self, opts=None):
-
         from pulumi import ResourceOptions
 
-        self._pulumi_resources = {
-        }
+        self._pulumi_resources = {}
 
         for r in self.resources:
-
             # Properties
             properties = r.pulumi_properties
             properties = self.inject_vars(properties, target="pulumi_py")
 
             # Options
-            _opts = self.options.model_dump()
+            _opts = r.options.model_dump()
             if _opts is None:
                 _opts = {}
             _opts = self.inject_vars(_opts, target="pulumi_py")
@@ -96,6 +94,7 @@ class PulumiResource(BaseResource):
             for k in [
                 "id",
                 "object_id",
+                "path",
             ]:
                 if hasattr(_r, k):
                     pulumi_outputs[f"{r.resource_name}.{k}"] = getattr(_r, k)

@@ -13,12 +13,14 @@
 * `UserRole` model
 ### Updated
 * `inject_vars` method to support multiple targets (`pulumi_yaml`, `pulumi_py`, etc.)
+* `events_root` field of   `DataEventHeader` and `DataEvent` models is now a property for the default value to dynamically account for settings
 ### Breaking changes
 * Removal of resources engines classes
 * Resources deployment method `deploy()` and `deploy_with_pulumi()` renamed to `to_pulumi()`
 * Renamed `vars` object to `variables`
 * Modified `resource_key` for `WorkspaceFile`, `Notebook` and `Directory`
 * Modified `groups` field for `Users` and `ServicePrincipal` models to accept group id instead of group name
+* Renamed `permissions` field to `access_controls` in multiple models to be consistent with Databricks API
 
 ## [0.0.29] - 2023-12-20
 ### Fixed

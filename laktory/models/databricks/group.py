@@ -52,6 +52,7 @@ class Group(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.Group
 
     # TODO:
@@ -60,4 +61,3 @@ class Group(BaseModel, PulumiResource):
     #     group.id = self.group.id
     # else:
     #     self.group = databricks.Group.get(name, id=group.id)
-

@@ -2,7 +2,6 @@ import subprocess
 
 
 class Worker:
-
     def run(self, cmd, cwd=None):
         try:
             completed_process = subprocess.run(

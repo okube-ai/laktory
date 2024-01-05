@@ -19,6 +19,7 @@ class PulumiStack(BaseModel):
     """
     A stack, as defined by pulumi for deployment.
     """
+
     name: str
     runtime: str = "yaml"
     description: Union[str, None] = None

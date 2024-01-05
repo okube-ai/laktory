@@ -259,15 +259,11 @@ class Table(BaseModel, PulumiResource):
 
     @property
     def resources(self) -> list[PulumiResource]:
-
         if self.self.resources_ is None:
-
             self.resources_ = []
 
             if not self.builder.pipeline_name:
-                self.resources_ += [
-                    self
-                ]
+                self.resources_ += [self]
 
             # Schema grants
             if self.grants:
@@ -276,12 +272,12 @@ class Table(BaseModel, PulumiResource):
                         resource_name=f"grants-{self.resource_name}",
                         table=self.full_name,
                         grants=[
-                            {
-                                "principal": g.principal, "privileges": g.privileges
-                            }
+                            {"principal": g.principal, "privileges": g.privileges}
                             for g in self.grants
                         ],
-                        options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
+                        options={
+                            "depends_on": [f"${{resources.{self.resource_name}}}"]
+                        },
                     )
                 ]
 
@@ -298,6 +294,7 @@ class Table(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.SqlTable
 
     @property

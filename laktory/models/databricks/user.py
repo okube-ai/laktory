@@ -60,9 +60,7 @@ class User(BaseModel, PulumiResource):
 
     @property
     def resources(self) -> list[PulumiResource]:
-
         if self.resources_ is None:
-
             self.resources_ = [
                 self,
             ]
@@ -100,6 +98,7 @@ class User(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.User
 
     @property

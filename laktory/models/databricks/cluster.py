@@ -3,7 +3,7 @@ from typing import Union
 from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 
 
@@ -126,6 +126,8 @@ class Cluster(BaseModel, PulumiResource):
     Attributes
     ----------
 
+    access_controls:
+        List of access controls
     apply_policy_default_values:
         Whether to use policy default values for missing cluster attributes.
     autoscale:
@@ -216,8 +218,6 @@ class Cluster(BaseModel, PulumiResource):
     num_workers:
         Number of worker nodes that this cluster should have. A cluster has one Spark driver and num_workers executors
         for a total of num_workers + 1 Spark nodes.
-    permissions:
-        List of permissions
     policy_id:
     runtime_engine:
         The type of runtime engine to use. If not specified, the runtime engine type is inferred
@@ -257,7 +257,7 @@ class Cluster(BaseModel, PulumiResource):
         num_workers=0,
         autotermination_minutes=30,
         libraries=[{"pypi": {"package": "laktory==0.0.23"}}],
-        permissions=[
+        access_controls=[
             {
                 "group_name": "role-engineers",
                 "permission_level": "CAN_RESTART",
@@ -276,6 +276,7 @@ class Cluster(BaseModel, PulumiResource):
 
     """
 
+    access_controls: list[AccessControl] = []
     apply_policy_default_values: bool = None
     autoscale: ClusterAutoScale = None
     autotermination_minutes: int = None
@@ -303,7 +304,6 @@ class Cluster(BaseModel, PulumiResource):
     name: str = None
     node_type_id: str = Field(...)
     num_workers: int = None
-    permissions: list[Permission] = []
     policy_id: str = None
     runtime_engine: Literal["STANDARD", "PHOTON"] = None
     single_user_name: str = None
@@ -319,18 +319,15 @@ class Cluster(BaseModel, PulumiResource):
 
     @property
     def resources(self) -> list[PulumiResource]:
-
         if self.resources_ is None:
-
             self.resources_ = [
                 self,
             ]
-            if self.permissions:
-
+            if self.access_controls:
                 self.resources_ += [
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
-                        access_controls=self.permissions,
+                        access_controls=self.access_controls,
                         cluster_id=f"${{resources.{self.resource_name}.id}}",
                     )
                 ]
@@ -348,6 +345,7 @@ class Cluster(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.Cluster
 
     @property
@@ -356,4 +354,4 @@ class Cluster(BaseModel, PulumiResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["permissions"]
+        return ["access_controls"]

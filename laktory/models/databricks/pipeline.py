@@ -10,7 +10,7 @@ from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
 from laktory.models.databricks.cluster import Cluster
-from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.databricks.workspacefile import WorkspaceFile
@@ -100,6 +100,7 @@ class PipelineCluster(Cluster):
 
     that are not allowed.
     """
+
     autotermination_minutes: int = Field(None, exclude=True)
     cluster_id: str = Field(None, exclude=True)
     data_security_mode: str = Field(None, exclude=True)
@@ -107,7 +108,7 @@ class PipelineCluster(Cluster):
     idempotency_token: str = Field(None, exclude=True)
     is_pinned: bool = Field(None, exclude=True)
     libraries: list[Any] = Field(None, exclude=True)
-    node_type_id: str = Field(None, exclude=True)
+    node_type_id: str = None
     runtime_engine: str = Field(None, exclude=True)
     single_user_name: str = Field(None, exclude=True)
     spark_version: str = Field(None, exclude=True)
@@ -157,6 +158,8 @@ class Pipeline(BaseModel, PulumiResource):
 
     Attributes
     ----------
+    access_controls:
+        Pipeline access controls
     allow_duplicate_names:
         If `False`, deployment will fail if name conflicts with that of another pipeline.
     catalog:
@@ -180,8 +183,6 @@ class Pipeline(BaseModel, PulumiResource):
         Pipeline name
     notifications:
         Notifications specifications
-    permissions:
-        Permissions specifications
     photon:
         If `True`, Photon engine enabled.
     serverless:
@@ -227,7 +228,7 @@ class Pipeline(BaseModel, PulumiResource):
       - notebook:
           path: /pipelines/dlt_gld_stock_performances.py
 
-    permissions:
+    access_controls:
       - group_name: account users
         permission_level: CAN_VIEW
       - group_name: role-engineers
@@ -295,6 +296,7 @@ class Pipeline(BaseModel, PulumiResource):
     * [Pulumi Databricks Pipeline](https://www.pulumi.com/registry/packages/databricks/api-docs/pipeline/)
     """
 
+    access_controls: list[AccessControl] = []
     allow_duplicate_names: bool = None
     catalog: str = None
     channel: Literal["CURRENT", "PREVIEW"] = "PREVIEW"
@@ -307,7 +309,6 @@ class Pipeline(BaseModel, PulumiResource):
     libraries: list[PipelineLibrary] = []
     name: str
     notifications: list[PipelineNotifications] = []
-    permissions: list[Permission] = []
     photon: bool = None
     serverless: bool = None
     storage: str = None
@@ -345,17 +346,15 @@ class Pipeline(BaseModel, PulumiResource):
 
     @property
     def resources(self) -> list[PulumiResource]:
-
         if self.resources_ is None:
             self.resources_ = [
                 self,
             ]
-            if self.permissions:
-
+            if self.access_controls:
                 self.resources_ += [
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
-                        access_controls=self.permissions,
+                        access_controls=self.access_controls,
                         pipeline_id=f"${{resources.{self.resource_name}.id}}",
                     )
                 ]
@@ -369,22 +368,22 @@ class Pipeline(BaseModel, PulumiResource):
                 fp.write(s)
             filepath = f"{settings.workspace_laktory_root}pipelines/{self.name}.json"
             file = WorkspaceFile(
-                    path=filepath,
-                    source=source,
-                )
-            self.resources_ += [
-                file
-            ]
+                path=filepath,
+                source=source,
+            )
+            self.resources_ += [file]
 
             self.resources_ += [
                 Permissions(
                     resource_name=f"permissions-file-{file.resource_name}",
-                    access_controls=[Permission(
-                        permission_level="CAN_READ",
-                        group_name="account users",
-                    )],
+                    access_controls=[
+                        AccessControl(
+                            permission_level="CAN_READ",
+                            group_name="account users",
+                        )
+                    ],
                     workspace_file_path=filepath,
-                    options={"depends_on": [f"${{resources.{file.resource_name}}}"]}
+                    options={"depends_on": [f"${{resources.{file.resource_name}}}"]},
                 )
             ]
 
@@ -401,14 +400,15 @@ class Pipeline(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.Pipeline
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return {
-            "permissions": True,
+            "access_controls": True,
             "tables": True,
-            "clusters": {"__all__": {"permissions"}},
+            "clusters": {"__all__": {"access_controls"}},
             "udfs": True,
         }
 

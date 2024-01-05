@@ -2,7 +2,7 @@ from typing import Literal
 from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 
 
@@ -41,6 +41,8 @@ class Warehouse(BaseModel, PulumiResource):
 
     Attributes
     ----------
+    access_controls:
+        Warehouse access controls
     auto_stop_mins:
         Time in minutes until an idle SQL warehouse terminates all clusters and stops.
     channel_name:
@@ -64,8 +66,6 @@ class Warehouse(BaseModel, PulumiResource):
         Warehouse name
     num_clusters:
         Fixed number of clusters when autoscaling is not enabled.
-    permissions:
-        Warehouse permissions
     spot_instance_policy:
         The spot policy to use for allocating instances to clusters.
     tags:
@@ -85,7 +85,7 @@ class Warehouse(BaseModel, PulumiResource):
         channel_name="CHANNEL_NAME_PREVIEW",
         enable_photon=True,
         enable_serverless_compute=True,
-        permissions=[{"group_name": "account users", "permission_level": "CAN_USE"}],
+        access_controls=[{"group_name": "account users", "permission_level": "CAN_USE"}],
     )
     ```
     """
@@ -101,8 +101,11 @@ class Warehouse(BaseModel, PulumiResource):
         "3X-Large",
         "4X-Large",
     ]
+    access_controls: list[AccessControl] = []
     auto_stop_mins: int = None
-    channel_name: Union[Literal["CHANNEL_NAME_CURRENT", "CHANNEL_NAME_PREVIEW"], str] = None
+    channel_name: Union[
+        Literal["CHANNEL_NAME_CURRENT", "CHANNEL_NAME_PREVIEW"], str
+    ] = None
     # data_source_id
     enable_photon: bool = None
     enable_serverless_compute: bool = None
@@ -113,8 +116,9 @@ class Warehouse(BaseModel, PulumiResource):
     name: str = None
     num_clusters: int = None
     # odbc_params
-    permissions: list[Permission] = []
-    spot_instance_policy: Union[Literal["COST_OPTIMIZED", "RELIABILITY_OPTIMIZED"], str] = None
+    spot_instance_policy: Union[
+        Literal["COST_OPTIMIZED", "RELIABILITY_OPTIMIZED"], str
+    ] = None
     # state
     tags: WarehouseTags = None
     warehouse_type: Union[Literal["CLASSIC", "PRO"], str] = None
@@ -125,19 +129,16 @@ class Warehouse(BaseModel, PulumiResource):
 
     @property
     def resources(self) -> list[PulumiResource]:
-
         if self.resources_ is None:
-
             self.resources_ = [
                 self,
             ]
-            if self.permissions:
-
+            if self.access_controls:
                 self.resources_ += [
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
-                        access_controls=self.permissions,
-                        warehouse_id=f"${{resources.{self.resource_name}.id}}",
+                        access_controls=self.access_controls,
+                        sql_endpoint_id=f"${{resources.{self.resource_name}.id}}",
                     )
                 ]
 
@@ -154,11 +155,12 @@ class Warehouse(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.SqlEndpoint
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["permissions"]
+        return ["access_controls"]
 
     @property
     def pulumi_properties(self):

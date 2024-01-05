@@ -25,6 +25,7 @@ class BaseResource(_BaseModel):
     Parent class for all Laktory models deployable as one or multiple cloud
     resources. This `BaseResource` class is derived from `pydantic.BaseModel`.
     """
+
     resource_name_: str = Field(None, alias="resource_name", exclude=True)
     options: ResourceOptions = Field(ResourceOptions(), exclude=True)
     resources_: list[Any] = Field(None, exclude=True)
@@ -67,7 +68,5 @@ class BaseResource(_BaseModel):
     @property
     def resources(self):
         if self.resources_ is None:
-            self.resources_ = [
-                self
-            ]
+            self.resources_ = [self]
         return self.resources_

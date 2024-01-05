@@ -97,7 +97,6 @@ class SecretScope(BaseModel, PulumiResource):
 
     @property
     def resources(self) -> list[PulumiResource]:
-
         if self.resources_ is None:
             self.resources_ = [
                 self,
@@ -108,8 +107,8 @@ class SecretScope(BaseModel, PulumiResource):
                     Secret(
                         resource_name=f"secret-{self.name}-{s.key}",
                         key=s.key,
-                        string_value=s.value,
-                        scope=self.secret_scope.id,
+                        value=s.value,
+                        scope=f"${{resources.{self.resource_name}.id}}",
                     )
                 ]
 
@@ -121,6 +120,9 @@ class SecretScope(BaseModel, PulumiResource):
                         principal=p.principal,
                         scope=self.name,
                     )
+                ]
+                self.resources_[-1].options.depends_on = [
+                    f"${{resources.{self.resource_name}}}"
                 ]
 
         return self.resources_
@@ -136,6 +138,7 @@ class SecretScope(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.SecretScope
 
     @property

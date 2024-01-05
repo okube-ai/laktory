@@ -25,6 +25,7 @@ class Stack(BaseModel):
     """
     The Stack defines a group of deployable resources.
     """
+
     name: str
     config: dict[str, str] = None
     description: str = None
@@ -37,7 +38,6 @@ class Stack(BaseModel):
     # Pulumi Methods                                                          #
     # ----------------------------------------------------------------------- #
     def to_pulumi_stack(self):
-
         resources = {}
 
         for r in self.resources:
@@ -54,7 +54,6 @@ class Stack(BaseModel):
         )
 
     def write_pulumi_stack(self) -> str:
-
         # TODO: Write environment configs
         filepath = os.path.join(CACHE_ROOT, "Pulumi.yaml")
 

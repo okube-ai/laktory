@@ -63,6 +63,7 @@ class ServicePrincipal(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.ServicePrincipal
 
     @property
@@ -71,7 +72,6 @@ class ServicePrincipal(BaseModel, PulumiResource):
 
     @property
     def resources(self) -> list[PulumiResource]:
-
         if self.resources_ is None:
             self.resources_ = [
                 self,
@@ -88,7 +88,6 @@ class ServicePrincipal(BaseModel, PulumiResource):
 
             # Group Member
             for group_id in self.group_ids:
-
                 self.resources_ += [
                     GroupMember(
                         resource_name=f"group-member-{self.display_name}-{group_id}",
