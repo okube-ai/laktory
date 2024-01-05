@@ -13,6 +13,7 @@
 * `UserRole` model
 ### Updated
 * `inject_vars` method to support multiple targets (`pulumi_yaml`, `pulumi_py`, etc.)
+* `events_root` field of   `DataEventHeader` and `DataEvent` models is now a property for the default value to dynamically account for settings
 ### Breaking changes
 * Removal of resources engines classes
 * Resources deployment method `deploy()` and `deploy_with_pulumi()` renamed to `to_pulumi()`

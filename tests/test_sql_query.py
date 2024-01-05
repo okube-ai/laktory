@@ -9,7 +9,7 @@ def test_sql_query():
         name="google-prices",
         parent="/queries",
         query="SELECT * FROM dev.finance.slv_stock_prices",
-        warehouse_id="12345",
+        data_source_id="12345",
     )
     data = query.model_dump()
     print(query.resource_key)
@@ -18,15 +18,14 @@ def test_sql_query():
     assert query.resource_name == "sql-query-google-prices"
     print(data)
     assert data == {
+        "access_controls": [],
         "comment": None,
-        "data_source_id": None,
+        "data_source_id": "12345",
         "name": "google-prices",
         "parent": "/queries",
-        "permissions": [],
         "query": "SELECT * FROM dev.finance.slv_stock_prices",
         "run_as_role": None,
         "tags": [],
-        "warehouse_id": "12345",
     }
 
 

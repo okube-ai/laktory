@@ -65,7 +65,7 @@ class EventsManager:
                     )
                 ]
                 if events_root:
-                    self.events[-1].events_root = events_root
+                    self.events[-1].events_root_ = events_root
 
         return self.events
 

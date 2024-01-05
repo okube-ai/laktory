@@ -6,6 +6,7 @@ pl = StockPricesPipeline()
 def test_pipeline():
     print(pl.model_dump())
     assert pl.model_dump() == {
+        "access_controls": [],
         "allow_duplicate_names": None,
         "catalog": None,
         "channel": "PREVIEW",
@@ -17,7 +18,6 @@ def test_pipeline():
         "libraries": [],
         "name": "pl-stock-prices",
         "notifications": [],
-        "permissions": [],
         "photon": None,
         "serverless": None,
         "storage": None,
@@ -32,7 +32,7 @@ def test_pipeline():
                         "name": "stock_price",
                         "description": None,
                         "producer": None,
-                        "events_root": "/Volumes/dev/sources/landing/events/",
+                        "events_root_": None,
                         "read_as_stream": True,
                         "type": "STORAGE_EVENTS",
                         "fmt": "JSON",

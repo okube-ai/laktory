@@ -41,6 +41,7 @@ def test_job_model():
     data = job.model_dump()
     print(data)
     assert data == {
+        "access_controls": [],
         "clusters": [
             {
                 "apply_policy_default_values": None,
@@ -79,7 +80,6 @@ def test_job_model():
         "name": "job-stock-prices",
         "notification_settings": None,
         "parameters": [],
-        "permissions": [],
         "retry_on_timeout": None,
         "run_as": None,
         "schedule": None,
