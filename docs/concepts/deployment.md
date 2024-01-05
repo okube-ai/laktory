@@ -36,9 +36,9 @@ with open("pipeline.yaml", "r") as fp:
     pipeline = models.Pipeline.model_validate_yaml(fp)
     
 # Deploy
-pipeline.deploy_with_pulumi()
+pipeline.to_pulumi()
 ```
-The `deploy_with_pulumi()` will trigger the instantiation of `pulumi_databricks.Pipeline(...)` class with all the required parameters.
+The `to_pulumi()` will trigger the instantiation of `pulumi_databricks.Pipeline(...)` class with all the required parameters.
 
 Once you are ready to run the actual deploy, simply invoke
 ```cmd title="prompt"
@@ -51,7 +51,7 @@ A model that is deployable can be identified has having `laktory.models.resource
 
 ## Resources Engines
 Here is the list of resources engines (or IaC tools) that are currently support or will be supported in the future.
-When they become available, it's simply about replacing the `deploy_with_pulumi` command in the example above with `deploy_with_xyz()`.
+When they become available, it's simply about replacing the `to_pulumi` command in the example above with `deploy_with_xyz()`.
 
 ### Pulumi <img src="../../images/pulumi.png" alt="pulumi" width="16"/> 
 

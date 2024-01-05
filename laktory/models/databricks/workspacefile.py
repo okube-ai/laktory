@@ -1,12 +1,14 @@
 import os
 from typing import Any
+from typing import Union
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.permissions import Permissions
 
 
-class WorkspaceFile(BaseModel, BaseResource):
+class WorkspaceFile(BaseModel, PulumiResource):
     """
     Databricks Workspace File
 
@@ -49,40 +51,57 @@ class WorkspaceFile(BaseModel, BaseResource):
 
         return self
 
+    # ----------------------------------------------------------------------- #
+    # Resource Properties                                                     #
+    # ----------------------------------------------------------------------- #
+
     @property
     def resource_key(self) -> str:
         """File resource key"""
-        key = os.path.splitext(self.path)[0].replace("/", "-")
-        if key.startswith("-"):
-            key = key[1:]
+        # key = os.path.splitext(self.path)[0]
+        key = self.path
+        key = key.replace("/", "-")
+        key = key.replace("\\", "-")
+        key = key.replace(".", "-")
+        for i in range(5):
+            if key.startswith("-"):
+                key = key[1:]
         return key
 
-    # resource_key.__doc__ = super().resource_key.__doc__
+    @property
+    def resources(self) -> list[PulumiResource]:
+
+        if self.resources_ is None:
+
+            self.resources_ = [
+                self,
+            ]
+            if self.permissions:
+
+                self.resources_ += [
+                    Permissions(
+                        resource_name=f"permissions-{self.resource_name}",
+                        access_controls=self.permissions,
+                        workspace_file_path=self.path,
+                        options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
+                    )
+                ]
+
+        return self.resources_
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_resource_type(self) -> str:
+        return "databricks:WorkspaceFile"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.WorkspaceFile
+
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions", "dirpath"]
-
-    def deploy_with_pulumi(self, name=None, opts=None):
-        """
-        Deploy workspace file using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiNotebook:
-            Pulumi workspace file resource
-        """
-        from laktory.resourcesengines.pulumi.workspacefile import PulumiWorkspaceFile
-
-        return PulumiWorkspaceFile(name=name, workspace_file=self, opts=opts)

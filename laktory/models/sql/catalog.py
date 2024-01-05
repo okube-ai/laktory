@@ -1,12 +1,13 @@
 from typing import Union
 from typing import Literal
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.sql.schema import Schema
 from laktory.models.grants.cataloggrant import CatalogGrant
+from laktory.models.databricks.grants import Grants
 
 
-class Catalog(BaseModel, BaseResource):
+class Catalog(BaseModel, PulumiResource):
     """
     A catalog is the first layer of Unity Catalog’s three-level namespace. It’s
     used to organize your data assets.
@@ -70,7 +71,7 @@ class Catalog(BaseModel, BaseResource):
             },
         ],
     )
-    catalog.deploy()
+    catalog.to_pulumi()
     ```
 
     References
@@ -104,68 +105,54 @@ class Catalog(BaseModel, BaseResource):
         return self.name
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_excludes(self) -> list[str]:
-        return ["schemas", "is_unity", "grants"]
+    def resources(self) -> list[PulumiResource]:
 
-    def deploy_with_pulumi(self, name=None, opts=None):
-        """
-        Deploy catalog using pulumi.
+        if self.resources_ is None:
 
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
+            self.resources_ = [
+                self
+            ]
 
-        Returns
-        -------
-        PulumiCatalog:
-            Pulumi catalog resource
-        """
-        from laktory.resourcesengines.pulumi.catalog import PulumiCatalog
-
-        return PulumiCatalog(name=name, catalog=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    catalog = models.Catalog(
-        name="dev",
-        grants=[
-            {"principal": "account users", "privileges": ["USE_CATALOG", "USE_SCHEMA"]}
-        ],
-        schemas=[
-            {
-                "name": "engineering",
-                "grants": [
-                    {"principal": "domain-engineering", "privileges": ["SELECT"]}
-                ],
-            },
-            {
-                "name": "sources",
-                "volumes": [
-                    {
-                        "name": "landing",
-                        "volume_type": "EXTERNAL",
-                        "grants": [
+            # Catalog grants
+            if self.grants:
+                self.resources_ += [
+                    Grants(
+                        resource_name=f"grants-{self.resource_name}",
+                        catalog=self.full_name,
+                        grants=[
                             {
-                                "principal": "account users",
-                                "privileges": ["READ_VOLUME"],
-                            },
-                            {
-                                "principal": "role-metastore-admins",
-                                "privileges": ["WRITE_VOLUME"],
-                            },
+                                "principal": g.principal, "privileges": g.privileges
+                            }
+                            for g in self.grants
                         ],
-                    },
-                ],
-            },
-        ],
-    )
-    catalog.deploy()
+                        options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
+                    )
+                ]
+
+            if self.schemas:
+                for s in self.schemas:
+                    self.resources_ += s.resources
+                    # TODO: Added dependency?
+
+        return self.resources_
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Catalog"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Catalog
+
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return ["schemas", "is_unity", "grants"]

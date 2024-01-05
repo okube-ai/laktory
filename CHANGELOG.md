@@ -1,14 +1,24 @@
 # Release History
 
-## [0.0.30] - Unreleased
+## [0.1.0] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
+* Stack model to define and deploy a complete collection of resources from yaml files only
+* `BaseResource` and `PulumiResource` models with all methods required to deploy through pulumi
+* `resources` object to a `BaseResource` instance to define and deploy all the associated resources 
+* Automatic creation of resources output variables that can be used in configuration files
+* `Grants` model
+* `GroupMember` model
+* `Permissions` model
+* `ServicePrincipalRole` model
+* `UserRole` model
 ### Updated
-* n/a
+* `inject_vars` method to support multiple targets (`pulumi_yaml`, `pulumi_py`, etc.)
 ### Breaking changes
-* n/a
+* Removal of resources engines classes
+* Resources deployment method `deploy()` and `deploy_with_pulumi()` renamed to `to_pulumi()`
+* Renamed `vars` object to `variables`
+* Modified `resource_key` for `WorkspaceFile`, `Notebook` and `Directory`
+* Modified `groups` field for `Users` and `ServicePrincipal` models to accept group id instead of group name
 
 ## [0.0.29] - 2023-12-20
 ### Fixed

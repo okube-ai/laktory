@@ -2,23 +2,20 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class Secret(BaseModel, PulumiResource):
+class GroupMember(BaseModel, PulumiResource):
     """
-    Databricks secret
+    Databricks secret ACL
 
     Attributes
     ----------
-    scope:
-        Scope associated with the secret
-    key:
-        Key associated with the secret.
-    value:
-        Value associated with the secret
+    group_id:
+        This is the id of the group resource.
+    member_id:
+        This is the id of the group, service principal, or user.
     """
 
-    scope: str = None
-    key: str = None
-    value: str = None
+    group_id: str = None
+    member_id: str = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -30,9 +27,9 @@ class Secret(BaseModel, PulumiResource):
 
     @property
     def pulumi_resource_type(self) -> str:
-        return "databricks:Secret"
+        return "databricks:GroupMember"
 
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
-        return databricks.Secret
+        return databricks.GroupMember

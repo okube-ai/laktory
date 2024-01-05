@@ -1,13 +1,14 @@
 from typing import Union
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.databricks.grants import Grants
+from laktory.models.grants.schemagrant import SchemaGrant
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.sql.table import Table
 from laktory.models.sql.volume import Volume
-from laktory.models.grants.schemagrant import SchemaGrant
 
 
-class Schema(BaseModel, BaseResource):
+class Schema(BaseModel, PulumiResource):
     """
     A schema (also called a database) is the second layer of Unity Catalog’s
     three-level namespace. A schema organizes tables and views.
@@ -43,7 +44,7 @@ class Schema(BaseModel, BaseResource):
         name="engineering",
         grants=[{"principal": "domain-engineering", "privileges": ["SELECT"]}],
     )
-    schema.deploy()
+    schema.to_pulumi()
     ```
 
     References
@@ -87,7 +88,7 @@ class Schema(BaseModel, BaseResource):
         return _id
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
@@ -95,36 +96,55 @@ class Schema(BaseModel, BaseResource):
         return self.full_name
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def resources(self) -> list[PulumiResource]:
+
+        if self.resources_ is None:
+
+            self.resources_ = [
+                self
+            ]
+
+            # Schema grants
+            if self.grants:
+                self.resources_ += [
+                    Grants(
+                        resource_name=f"grants-{self.resource_name}",
+                        schema=self.full_name,
+                        grants=[
+                            {
+                                "principal": g.principal, "privileges": g.privileges
+                            }
+                            for g in self.grants
+                        ],
+                        options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
+                    )
+                ]
+
+            if self.volumes:
+                for v in self.volumes:
+                    self.resources_ += v.resources
+                    # TODO: add dependency?
+
+            if self.tables:
+                for t in self.tables:
+                    self.resources_ += t.resources
+                    # TODO: add dependency?
+
+        return self.resources_
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Schema"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Schema
+
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["tables", "volumes", "grants"]
-
-    def deploy_with_pulumi(self, name=None, opts=None):
-        """
-        Deploy schema using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiSchema:
-            Pulumi schema resource
-        """
-        from laktory.resourcesengines.pulumi.schema import PulumiSchema
-
-        return PulumiSchema(name=name, schema=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    schema = models.Schema(
-        catalog_name="dev",
-        name="engineering",
-        grants=[{"principal": "domain-engineering", "privileges": ["SELECT"]}],
-    )
-    schema.deploy()

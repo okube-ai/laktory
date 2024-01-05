@@ -4,10 +4,11 @@ from typing import Union
 from pydantic import model_validator
 from pydantic import Field
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
-from laktory.models.databricks.permission import Permission
 from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.cluster import ClusterLibrary
+from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.permissions import Permissions
+from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class JobCluster(Cluster):
@@ -21,9 +22,9 @@ class JobCluster(Cluster):
     that are not allowed.
     """
 
-    is_pinned: bool = Field(None)
-    libraries: list[Any] = Field(None)
-    permissions: list[Any] = Field(None)
+    is_pinned: bool = Field(None, exclude=True)
+    libraries: list[Any] = Field(None, exclude=True)
+    permissions: list[Any] = Field(None, exclude=True)
 
     @model_validator(mode="after")
     def excluded_fields(self) -> Any:
@@ -586,7 +587,7 @@ class JobWebhookNotifications(BaseModel):
     on_successes: list[JobWebhookNotificationsOnSuccess] = None
 
 
-class Job(BaseModel, BaseResource):
+class Job(BaseModel, PulumiResource):
     """
     Databricks Job
 
@@ -683,7 +684,7 @@ class Job(BaseModel, BaseResource):
     job = models.Job.model_validate_yaml(io.StringIO(job_yaml))
 
     # Deploy
-    job.deploy()
+    job.to_pulumi()
     ```
 
     References
@@ -717,19 +718,53 @@ class Job(BaseModel, BaseResource):
     webhook_notifications: JobWebhookNotifications = None
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def resources(self) -> list[PulumiResource]:
+
+        if self.resources_ is None:
+
+            self.resources_ = [
+                self,
+            ]
+
+            if self.permissions:
+                self.resources_ += [
+                    Permissions(
+                        resource_name=f"permissions-{self.resource_name}",
+                        access_controls=self.permissions,
+                        job_id=f"${{resources.{self.resource_name}.id}}",
+                    )
+                ]
+
+        return self.resources_
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Job"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Job
+
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions"]
 
     @property
     def pulumi_renames(self) -> dict[str, str]:
         return {"clusters": "job_clusters"}
 
-    def model_pulumi_dump(self, *args, **kwargs):
-        d = super().model_pulumi_dump(*args, **kwargs)
+    @property
+    def pulumi_properties(self):
+        d = super().pulumi_properties
         _clusters = []
         for c in d.get("job_clusters", []):
             name = c.pop("name")
@@ -742,23 +777,3 @@ class Job(BaseModel, BaseResource):
         d["job_clusters"] = _clusters
 
         return d
-
-    def deploy_with_pulumi(self, name=None, opts=None):
-        """
-        Deploy job using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiJob:
-            Pulumi job resource
-        """
-        from laktory.resourcesengines.pulumi.job import PulumiJob
-
-        return PulumiJob(name=name, job=self, opts=opts)

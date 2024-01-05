@@ -2,23 +2,20 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class Secret(BaseModel, PulumiResource):
+class UserRole(BaseModel, PulumiResource):
     """
-    Databricks secret
+    Databricks User role
 
     Attributes
     ----------
-    scope:
-        Scope associated with the secret
-    key:
-        Key associated with the secret.
-    value:
-        Value associated with the secret
+    role:
+        This is the id of the role or instance profile resource.
+    user_id:
+        This is the id of the user resource.
     """
 
-    scope: str = None
-    key: str = None
-    value: str = None
+    role: str = None
+    user_id: str = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -30,9 +27,9 @@ class Secret(BaseModel, PulumiResource):
 
     @property
     def pulumi_resource_type(self) -> str:
-        return "databricks:Secret"
+        return "databricks:UserRole"
 
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
-        return databricks.Secret
+        return databricks.UserRole

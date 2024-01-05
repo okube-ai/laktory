@@ -1,9 +1,9 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class Group(BaseModel, BaseResource):
+class Group(BaseModel, PulumiResource):
     """
     Databricks group
 
@@ -34,40 +34,30 @@ class Group(BaseModel, BaseResource):
     workspace_access: bool = None
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
     def resource_key(self) -> str:
         return self.display_name
 
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
+
     @property
-    def pulumi_excludes(self) -> list[str]:
-        return ["id"]
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Group"
 
-    def deploy_with_pulumi(self, name: str = None, opts=None):
-        """
-        Deploy group using pulumi.
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Group
 
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
+    # TODO:
+    # if group.id is None:
+    #     self.group = databricks.Group(name, opts=opts, **group.model_pulumi_dump())
+    #     group.id = self.group.id
+    # else:
+    #     self.group = databricks.Group.get(name, id=group.id)
 
-        Returns
-        -------
-        PulumiGroup:
-            Pulumi group resource
-        """
-        from laktory.resourcesengines.pulumi.group import PulumiGroup
-
-        return PulumiGroup(name=name, group=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    d = models.Group(display_name="role-engineers")
-    print(d)

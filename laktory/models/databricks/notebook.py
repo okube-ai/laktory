@@ -1,13 +1,15 @@
 import os
 from typing import Any
 from typing import Literal
+from typing import Union
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.permissions import Permissions
 
 
-class Notebook(BaseModel, BaseResource):
+class Notebook(BaseModel, PulumiResource):
     """
     Databricks Notebook
 
@@ -65,51 +67,53 @@ class Notebook(BaseModel, BaseResource):
         return self
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
     def resource_key(self) -> str:
         """Notebook resource key"""
-        key = os.path.splitext(self.path)[0].replace("/", "-")
-        if key.startswith("-"):
-            key = key[1:]
+        key = self.path
+        key = key.replace("/", "-")
+        key = key.replace("\\", "-")
+        key = key.replace(".", "-")
+        for i in range(5):
+            if key.startswith("-"):
+                key = key[1:]
         return key
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def resources(self) -> list[PulumiResource]:
+
+        if self.resources_ is None:
+            self.resources_ = [
+                self,
+            ]
+            if self.permissions:
+
+                self.resources_ += [
+                    Permissions(
+                        resource_name=f"permissions-{self.resource_name}",
+                        access_controls=self.permissions,
+                        notebook_id=f"${{resources.{self.resource_name}.id}}",
+                    )
+                ]
+
+        return self.resources_
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Notebook"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Notebook
+
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions", "dirpath"]
-
-    def deploy_with_pulumi(self, name=None, groups=None, opts=None):
-        """
-        Deploy notebook using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiNotebook:
-            Pulumi notebook resource
-        """
-        from laktory.resourcesengines.pulumi.notebook import PulumiNotebook
-
-        return PulumiNotebook(name=name, notebook=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    notebook = models.Notebook(
-        source="./notebooks/pipelines/dlt_brz_template.py",
-    )
-    print(notebook.path)
-    # > /pipelines/dlt_brz_template.py
-
-    notebook = models.Notebook(source="./notebooks/create_view.py", dirpath="/views/")
-    print(notebook.path)
-    # > /views/create_view.py

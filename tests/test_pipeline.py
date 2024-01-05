@@ -1,8 +1,9 @@
 from laktory._testing import StockPricesPipeline
 
+pl = StockPricesPipeline()
+
 
 def test_pipeline():
-    pl = StockPricesPipeline()
     print(pl.model_dump())
     assert pl.model_dump() == {
         "allow_duplicate_names": None,
@@ -206,5 +207,29 @@ def test_pipeline():
     }
 
 
+def test_pipeline_pulumi():
+    assert pl.resource_name == "pl-stock-prices"
+    assert pl.options.model_dump(exclude_none=True) == {
+        "depends_on": [],
+        "delete_before_replace": True,
+    }
+    print(pl.pulumi_properties)
+    assert pl.pulumi_properties == {
+        "channel": "PREVIEW",
+        "clusters": [],
+        "configuration": {},
+        "libraries": [],
+        "name": "pl-stock-prices",
+        "notifications": [],
+    }
+
+    # Resources
+    assert len(pl.resources) == 3
+    r = pl.resources[-1]
+    r.options.aliases = ["my-file"]
+    assert pl.resources[-1].options.aliases == ["my-file"]
+
+
 if __name__ == "__main__":
     test_pipeline()
+    test_pipeline_pulumi()

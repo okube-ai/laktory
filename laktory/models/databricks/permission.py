@@ -56,9 +56,3 @@ class Permission(BaseModel):
             )
 
         return self
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    p = models.Permission(group_name="role-engineers", permission_level="READ")

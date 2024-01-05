@@ -1,13 +1,19 @@
+import json
 import os
 from typing import Any
 from typing import Literal
 from typing import Union
 from pydantic import model_validator
 from pydantic import Field
+
+from laktory._settings import settings
+from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
-from laktory.models.databricks.permission import Permission
 from laktory.models.databricks.cluster import Cluster
+from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.permissions import Permissions
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.databricks.workspacefile import WorkspaceFile
 from laktory.models.sql.table import Table
 
 
@@ -94,18 +100,17 @@ class PipelineCluster(Cluster):
 
     that are not allowed.
     """
-
-    autotermination_minutes: int = Field(None)
-    cluster_id: str = Field(None)
-    data_security_mode: str = Field(None)
-    enable_elastic_disk: bool = Field(None)
-    idempotency_token: str = Field(None)
-    is_pinned: bool = Field(None)
-    libraries: list[Any] = Field(None)
-    node_type_id: str = None
-    runtime_engine: str = Field(None)
-    single_user_name: str = Field(None)
-    spark_version: str = Field(None)
+    autotermination_minutes: int = Field(None, exclude=True)
+    cluster_id: str = Field(None, exclude=True)
+    data_security_mode: str = Field(None, exclude=True)
+    enable_elastic_disk: bool = Field(None, exclude=True)
+    idempotency_token: str = Field(None, exclude=True)
+    is_pinned: bool = Field(None, exclude=True)
+    libraries: list[Any] = Field(None, exclude=True)
+    node_type_id: str = Field(None, exclude=True)
+    runtime_engine: str = Field(None, exclude=True)
+    single_user_name: str = Field(None, exclude=True)
+    spark_version: str = Field(None, exclude=True)
 
     @model_validator(mode="after")
     def excluded_fields(self) -> Any:
@@ -146,7 +151,7 @@ class PipelineUDF(BaseModel):
     module_path: str = None
 
 
-class Pipeline(BaseModel, BaseResource):
+class Pipeline(BaseModel, PulumiResource):
     """
     Databricks Delta Live Tables (DLT) Pipeline
 
@@ -280,7 +285,7 @@ class Pipeline(BaseModel, BaseResource):
     pipeline = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
 
     # Deploy pipeline
-    pipeline.deploy_with_pulumi()
+    pipeline.to_pulumi()
     ```
 
     References
@@ -331,21 +336,75 @@ class Pipeline(BaseModel, BaseResource):
         return self
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
     def resource_type_id(self) -> str:
-        return "pipeline"
+        return "pl"
 
     @property
-    def id(self):
-        if self._resources is None:
-            return None
-        return self.resources.pipeline.id
+    def resources(self) -> list[PulumiResource]:
+
+        if self.resources_ is None:
+            self.resources_ = [
+                self,
+            ]
+            if self.permissions:
+
+                self.resources_ += [
+                    Permissions(
+                        resource_name=f"permissions-{self.resource_name}",
+                        access_controls=self.permissions,
+                        pipeline_id=f"${{resources.{self.resource_name}.id}}",
+                    )
+                ]
+
+            # Configuration file
+            source = os.path.join(CACHE_ROOT, f"tmp-{self.name}.json")
+            d = self.model_dump(exclude_none=True)
+            d = self.inject_vars(d, target="pulumi_py")  # TODO: Check target
+            s = json.dumps(d, indent=4)
+            with open(source, "w", newline="\n") as fp:
+                fp.write(s)
+            filepath = f"{settings.workspace_laktory_root}pipelines/{self.name}.json"
+            file = WorkspaceFile(
+                    path=filepath,
+                    source=source,
+                )
+            self.resources_ += [
+                file
+            ]
+
+            self.resources_ += [
+                Permissions(
+                    resource_name=f"permissions-file-{file.resource_name}",
+                    access_controls=[Permission(
+                        permission_level="CAN_READ",
+                        group_name="account users",
+                    )],
+                    workspace_file_path=filepath,
+                    options={"depends_on": [f"${{resources.{file.resource_name}}}"]}
+                )
+            ]
+
+        return self.resources_
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def pulumi_resource_type(self) -> str:
+        return "databricks:Pipeline"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.Pipeline
+
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return {
             "permissions": True,
             "tables": True,
@@ -353,16 +412,12 @@ class Pipeline(BaseModel, BaseResource):
             "udfs": True,
         }
 
-    def model_pulumi_dump(self, *args, **kwargs):
-        d = super().model_pulumi_dump(*args, **kwargs)
+    @property
+    def pulumi_properties(self):
+        d = super().pulumi_properties
         _clusters = []
         for c in d.get("clusters", []):
             c["label"] = c.pop("name")
             _clusters += [c]
         d["clusters"] = _clusters
         return d
-
-    def deploy_with_pulumi(self, name=None, groups=None, opts=None):
-        from laktory.resourcesengines.pulumi.pipeline import PulumiPipeline
-
-        return PulumiPipeline(name=name, pipeline=self, opts=opts)

@@ -1,8 +1,9 @@
 from typing import Literal
 from typing import Union
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.databricks.permission import Permission
+from laktory.models.databricks.permissions import Permissions
 
 
 class WarehouseCustomTag(BaseModel):
@@ -34,7 +35,7 @@ class WarehouseTags(BaseModel):
     custom_tags: list[WarehouseCustomTag] = []
 
 
-class Warehouse(BaseModel, BaseResource):
+class Warehouse(BaseModel, PulumiResource):
     """
     Databricks Warehouse
 
@@ -119,48 +120,48 @@ class Warehouse(BaseModel, BaseResource):
     warehouse_type: Union[Literal["CLASSIC", "PRO"], str] = None
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_excludes(self) -> list[str]:
+    def resources(self) -> list[PulumiResource]:
+
+        if self.resources_ is None:
+
+            self.resources_ = [
+                self,
+            ]
+            if self.permissions:
+
+                self.resources_ += [
+                    Permissions(
+                        resource_name=f"permissions-{self.resource_name}",
+                        access_controls=self.permissions,
+                        warehouse_id=f"${{resources.{self.resource_name}.id}}",
+                    )
+                ]
+
+        return self.resources_
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:SqlEndpoint"
+
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.SqlEndpoint
+
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions"]
 
-    def model_pulumi_dump(self, *args, **kwargs):
-        d = super().model_pulumi_dump(*args, **kwargs)
+    @property
+    def pulumi_properties(self):
+        d = super().pulumi_properties
         d["channel"] = {"name": d.pop("channel_name")}
         return d
-
-    def deploy_with_pulumi(self, name=None, opts=None):
-        """
-        Deploy warehouse using pulumi.
-
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        opts:
-            Pulumi resource options
-
-        Returns
-        -------
-        PulumiWarehouse:
-            Pulumi warehouse resource
-        """
-        from laktory.resourcesengines.pulumi.warehouse import PulumiWarehouse
-
-        return PulumiWarehouse(name=name, warehouse=self, opts=opts)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    warehouse = models.Warehouse(
-        name="default",
-        cluster_size="2X-Small",
-        auto_stop_mins=30,
-        channel_name="CHANNEL_NAME_PREVIEW",
-        enable_photon=True,
-        enable_serverless_compute=True,
-        permissions=[{"group_name": "account users", "permission_level": "CAN_USE"}],
-    )

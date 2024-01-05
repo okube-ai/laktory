@@ -41,7 +41,7 @@ schema = Schema(
             ],
         ),
     ],
-    vars={
+    variables={
         "dynamic_column": "low",
         "env": env.id,
         "schema_name": schema_name.id,
@@ -57,13 +57,5 @@ def test_inject_vars():
     assert isinstance(d1["catalog_name"], pulumi.Output)
 
 
-def test_pulumi_dump():
-    d = schema.model_pulumi_dump()
-    del d["name"]
-    del d["catalog_name"]
-    assert d == {"comment": None, "force_destroy": True}
-
-
 if __name__ == "__main__":
     test_inject_vars()
-    test_pulumi_dump()

@@ -18,15 +18,15 @@ def test_sql_query():
     assert query.resource_name == "sql-query-google-prices"
     print(data)
     assert data == {
-        "name": "google-prices",
-        "data_source_id": None,
-        "query": "SELECT * FROM dev.finance.slv_stock_prices",
         "comment": None,
+        "data_source_id": None,
+        "name": "google-prices",
         "parent": "/queries",
+        "permissions": [],
+        "query": "SELECT * FROM dev.finance.slv_stock_prices",
         "run_as_role": None,
         "tags": [],
         "warehouse_id": "12345",
-        "permissions": [],
     }
 
 

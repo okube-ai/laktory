@@ -1,9 +1,11 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
-from laktory.models.baseresource import BaseResource
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.databricks.userrole import UserRole
+from laktory.models.databricks.groupmember import GroupMember
 
 
-class User(BaseModel, BaseResource):
+class User(BaseModel, PulumiResource):
     """
     Databricks user
 
@@ -16,8 +18,8 @@ class User(BaseModel, BaseResource):
     id:
         Id of the user. Generally used when the user is externally managed
         with an identity provider such as Azure AD, Okta or OneLogin.
-    groups:
-        List of the group names that the user should be member of.
+    group_ids:
+        List of the group ids that the user should be member of.
     roles:
         List of roles assigned to the user e.g. ("account_admin")
     workspace_access
@@ -31,9 +33,9 @@ class User(BaseModel, BaseResource):
     u = models.User(
         user_name="john.doe@okube.ai",
         display_name="John Doe",
-        groups=[
-            "role-engineer",
-            "domain-finance",
+        group_ids=[
+            "${resources.group-role-engineer.id}",
+            "${resources.group-domain-finance.id}",
         ],
         roles=["account_admin"],
     )
@@ -43,13 +45,13 @@ class User(BaseModel, BaseResource):
     disable_as_user_deletion: bool = False
     display_name: str = None
     id: Union[str, None] = None
-    groups: list[str] = []
+    group_ids: list[str] = []
     roles: list[str] = []
     user_name: str
     workspace_access: bool = None
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
@@ -57,57 +59,49 @@ class User(BaseModel, BaseResource):
         return self.user_name
 
     @property
-    def pulumi_excludes(self) -> list[str]:
-        return ["groups", "roles", "id"]
+    def resources(self) -> list[PulumiResource]:
 
-    def deploy_with_pulumi(self, name=None, group_ids=None, opts=None):
-        """
-        Deploy user using pulumi.
+        if self.resources_ is None:
 
-        Parameters
-        ----------
-        name:
-            Name of the pulumi resource. Default is `{self.resource_name}`
-        group_ids:
-            Dictionary whose keys are the display names and whose values are the group ids
-        opts:
-            Pulumi resource options
+            self.resources_ = [
+                self,
+            ]
 
-        Examples
-        --------
-        ```py
-        from laktory import models
+            for role in self.roles:
+                self.resources_ += [
+                    UserRole(
+                        resource_name=f"role-{role}-{self.resource_name}",
+                        # user_id=self.sp.id,
+                        user_id=f"${{resources.{self.resource_name}.id}}",
+                        role=role,
+                    )
+                ]
 
-        u = models.User(
-            user_name="john.doe@okube.ai",
-            display_name="John Doe",
-            groups=[
-                "role-engineer",
-                "domain-finance",
-            ],
-            roles=["account_admin"],
-        )
-        ```
+            # Group Member
+            for group_id in self.group_ids:
+                self.resources_ += [
+                    GroupMember(
+                        resource_name=f"group-member-{self.display_name}-{group_id}",
+                        group_id=group_id,
+                        member_id=f"${{resources.{self.resource_name}.id}}",
+                    )
+                ]
 
-        Returns
-        -------
-        PulumiUser:
-            Pulumi user resource
-        """
-        from laktory.resourcesengines.pulumi.user import PulumiUser
+        return self.resources_
 
-        return PulumiUser(name=name, user=self, group_ids=group_ids, opts=opts)
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
 
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:User"
 
-if __name__ == "__main__":
-    from laktory import models
+    @property
+    def pulumi_cls(self):
+        import pulumi_databricks as databricks
+        return databricks.User
 
-    u = models.User(
-        user_name="john.doe@okube.ai",
-        display_name="John Doe",
-        groups=[
-            "role-engineer",
-            "domain-finance",
-        ],
-        roles=["account_admin"],
-    )
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return ["groups", "roles", "id", "group_ids"]

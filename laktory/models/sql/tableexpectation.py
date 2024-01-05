@@ -37,7 +37,7 @@ class TableExpectation(BaseModel):
     )
     print(e)
     '''
-    vars={} name='valid timestamp' expression="col(“timestamp”) > '2012-01-01'" action='DROP'
+    variables={} name='valid timestamp' expression="col(“timestamp”) > '2012-01-01'" action='DROP'
     '''
     ```
 

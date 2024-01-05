@@ -234,11 +234,6 @@ class Column(BaseModel):
             _id = f"{self.parent_full_name}.{_id}"
         return _id
 
-    @property
-    def database_name(self) -> str:
-        """Alternate name for schema name"""
-        return self.schema_name
-
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
     # ----------------------------------------------------------------------- #
