@@ -43,6 +43,7 @@ For example, John Doe, a data engineer working with the finance department would
 ## Implementation
 
 Here is how to use Laktory for creating the users and groups
+
 ```py
 from laktory import models
 
@@ -55,7 +56,7 @@ groups = [
 ]
 group_ids = {}
 for g in groups:
-    g.deploy()
+    g.to_pulumi()
     group_ids[g.display_name] = g.id
 
 # Set users

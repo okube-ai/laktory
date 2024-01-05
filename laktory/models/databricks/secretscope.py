@@ -74,7 +74,7 @@ class SecretScope(BaseModel, PulumiResource):
             {"permission": "READ", "principal": "role-workspace-admins"},
         ],
     )
-    ss.deploy()
+    ss.to_pulumi()
     ```
     """
 

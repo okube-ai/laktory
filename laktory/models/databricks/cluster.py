@@ -265,7 +265,7 @@ class Cluster(BaseModel, PulumiResource):
         ],
         is_pinned=True,
     )
-    cluster.deploy()
+    cluster.to_pulumi()
     ```
 
     References

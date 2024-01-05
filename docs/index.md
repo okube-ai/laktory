@@ -37,7 +37,7 @@ with open("table.yaml") as fp:
 Deployment of required resources to cloud provider and Databricks workspaces, leveraging Infrastructure-as-Code (IaC) tools.
 
 ```py title="main.py"
-table.deploy()  # noqa
+table.to_pulumi()  # noqa
 ```
 ```commandline title="command line"
 pulumi up

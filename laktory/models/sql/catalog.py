@@ -71,7 +71,7 @@ class Catalog(BaseModel, PulumiResource):
             },
         ],
     )
-    catalog.deploy()
+    catalog.to_pulumi()
     ```
 
     References

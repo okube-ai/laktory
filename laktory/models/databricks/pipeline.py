@@ -285,7 +285,7 @@ class Pipeline(BaseModel, PulumiResource):
     pipeline = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
 
     # Deploy pipeline
-    pipeline.deploy()
+    pipeline.to_pulumi()
     ```
 
     References

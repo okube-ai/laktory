@@ -44,7 +44,7 @@ class Schema(BaseModel, PulumiResource):
         name="engineering",
         grants=[{"principal": "domain-engineering", "privileges": ["SELECT"]}],
     )
-    schema.deploy()
+    schema.to_pulumi()
     ```
 
     References

@@ -63,7 +63,7 @@ class PulumiResource(BaseResource):
         d = self.inject_vars(d)
         return d
 
-    def deploy(self, opts=None):
+    def to_pulumi(self, opts=None):
 
         from pulumi import ResourceOptions
 
@@ -102,4 +102,3 @@ class PulumiResource(BaseResource):
 
         # Return resources
         return self._pulumi_resources
-

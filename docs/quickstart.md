@@ -151,7 +151,7 @@ pipeline.vars = {
 }
     
 # Deploy
-pipeline.deploy_with_pulumi()
+pipeline.to_pulumi()
 ```
 
 Deploy with pulumi

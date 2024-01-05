@@ -684,7 +684,7 @@ class Job(BaseModel, PulumiResource):
     job = models.Job.model_validate_yaml(io.StringIO(job_yaml))
 
     # Deploy
-    job.deploy()
+    job.to_pulumi()
     ```
 
     References
