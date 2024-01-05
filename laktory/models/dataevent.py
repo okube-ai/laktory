@@ -57,7 +57,7 @@ class DataEvent(DataEventHeader):
     )
     print(event)
     '''
-    variables={} name='stock_price' description=None producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) events_root='/Volumes/dev/sources/landing/events/' data={'created_at': datetime.datetime(2023, 8, 23, 0, 0), 'symbol': 'GOOGL', 'open': 130.25, 'close': 132.33, '_name': 'stock_price', '_producer_name': 'yahoo-finance', '_created_at': datetime.datetime(2023, 8, 23, 0, 0, tzinfo=zoneinfo.ZoneInfo(key='UTC'))} tstamp_col='created_at' tstamp_in_path=True
+    variables={} name='stock_price' description=None producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) events_root_=None data={'created_at': datetime.datetime(2023, 8, 23, 0, 0), 'symbol': 'GOOGL', 'open': 130.25, 'close': 132.33, '_name': 'stock_price', '_producer_name': 'yahoo-finance', '_created_at': datetime.datetime(2023, 8, 23, 0, 0, tzinfo=zoneinfo.ZoneInfo(key='UTC'))} tstamp_col='created_at' tstamp_in_path=True
     '''
 
     print(event.dirpath)

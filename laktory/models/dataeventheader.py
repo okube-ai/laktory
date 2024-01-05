@@ -35,7 +35,7 @@ class DataEventHeader(BaseModel):
     )
     print(event)
     '''
-    variables={} name='stock_price' description=None producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) events_root='/Volumes/dev/sources/landing/events/'
+    variables={} name='stock_price' description=None producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) events_root_=None
     '''
 
     print(event.event_root)

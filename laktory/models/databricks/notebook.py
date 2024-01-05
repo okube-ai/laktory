@@ -37,7 +37,7 @@ class Notebook(BaseModel, PulumiResource):
         source="./notebooks/pipelines/dlt_brz_template.py",
     )
     print(notebook.path)
-    #> /pipelines/dlt_brz_template.py
+    #> /.laktory/pipelines/dlt_brz_template.py
 
     notebook = models.Notebook(source="./notebooks/create_view.py", dirpath="/views/")
     print(notebook.path)

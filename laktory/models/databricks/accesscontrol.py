@@ -27,7 +27,7 @@ class AccessControl(BaseModel):
     ```py
     from laktory import models
 
-    p = models.Permission(group_name="role-engineers", permission_level="READ")
+    p = models.AccessControl(group_name="role-engineers", permission_level="READ")
     ```
     """
 

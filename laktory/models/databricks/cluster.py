@@ -257,7 +257,7 @@ class Cluster(BaseModel, PulumiResource):
         num_workers=0,
         autotermination_minutes=30,
         libraries=[{"pypi": {"package": "laktory==0.0.23"}}],
-        permissions=[
+        access_controls=[
             {
                 "group_name": "role-engineers",
                 "permission_level": "CAN_RESTART",

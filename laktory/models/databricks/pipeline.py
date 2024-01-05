@@ -228,7 +228,7 @@ class Pipeline(BaseModel, PulumiResource):
       - notebook:
           path: /pipelines/dlt_gld_stock_performances.py
 
-    permissions:
+    access_controls:
       - group_name: account users
         permission_level: CAN_VIEW
       - group_name: role-engineers

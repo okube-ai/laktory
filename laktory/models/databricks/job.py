@@ -673,7 +673,7 @@ class Job(BaseModel, PulumiResource):
         pipeline_task:
           pipeline_id: 74900655-3641-49f1-8323-b8507f0e3e3b
 
-    permissions:
+    access_controls:
       - group_name: account users
         permission_level: CAN_VIEW
       - group_name: role-engineers

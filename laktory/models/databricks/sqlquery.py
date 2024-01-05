@@ -42,7 +42,7 @@ class SqlQuery(BaseModel, PulumiResource):
         query="CREATE VIEW google_stock_prices AS SELECT * FROM stock_prices WHERE symbol = 'GOOGL'",
         data_source_id="09z739ce103q9374",
         parent="folders/2479128258235163",
-        permissions=[
+        access_controls=[
             {
                 "group_name": "role-engineers",
                 "permission_level": "CAN_RUN",
