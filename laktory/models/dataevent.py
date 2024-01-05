@@ -16,7 +16,7 @@ from laktory._logger import get_logger
 logger = get_logger(__name__)
 
 EXCLUDES = [
-    "events_root",
+    "events_root_",
     "event_path",
     "tstamp_col",
     "tstamp_in_path",
