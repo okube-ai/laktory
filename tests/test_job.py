@@ -36,8 +36,6 @@ job = Job(
     ],
 )
 
-pulumi_outputs["pl-stock-prices.id"] = "12345"
-
 
 def test_job_model():
     data = job.model_dump()
@@ -172,6 +170,7 @@ def test_job_model():
 
 
 def test_job_pulumi():
+    pulumi_outputs["pl-stock-prices.id"] = "12345"
     assert job.resource_name == "job-stock-prices"
     assert job.options.model_dump(exclude_none=True) == {
         "depends_on": [],
@@ -217,5 +216,5 @@ def test_job_pulumi():
 
 
 if __name__ == "__main__":
-    # test_job_model()
+    test_job_model()
     test_job_pulumi()
