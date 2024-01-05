@@ -79,9 +79,7 @@ class SqlQuery(BaseModel, PulumiResource):
 
     @property
     def resources(self) -> list[PulumiResource]:
-
         if self.resources_ is None:
-
             self.resources_ = [
                 self,
             ]
@@ -98,7 +96,6 @@ class SqlQuery(BaseModel, PulumiResource):
             #     sql_query.vars["_data_source_id"] = warehouse.data_source_id
 
             if self.permissions:
-
                 self.resources_ += [
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
@@ -120,6 +117,7 @@ class SqlQuery(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.SqlQuery
 
     @property
@@ -129,5 +127,3 @@ class SqlQuery(BaseModel, PulumiResource):
     @property
     def pulumi_renames(self):
         return {"comment": "description"}
-
-

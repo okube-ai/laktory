@@ -64,4 +64,5 @@ class Directory(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.Directory

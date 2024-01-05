@@ -177,8 +177,12 @@ table_slv = Table(
     },
     expectations=[
         {"name": "positive_price", "expression": "open > 0", "action": "FAIL"},
-        {"name": "recent_price", "expression": "created_at > '2023-01-01'", "action": "DROP"},
-    ]
+        {
+            "name": "recent_price",
+            "expression": "created_at > '2023-01-01'",
+            "action": "DROP",
+        },
+    ],
 )
 
 

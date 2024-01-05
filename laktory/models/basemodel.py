@@ -72,9 +72,7 @@ class BaseModel(_BaseModel):
     # ----------------------------------------------------------------------- #
 
     def inject_vars(
-            self,
-            d: dict,
-            target: Literal["pulumi_py", "pulumi_yaml"] = "pulumi_py"
+        self, d: dict, target: Literal["pulumi_py", "pulumi_yaml"] = "pulumi_py"
     ) -> dict[str, Any]:
         """
         Inject variables values into a dictionary (generally model dump).

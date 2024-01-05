@@ -64,14 +64,11 @@ class PulumiResource(BaseResource):
         return d
 
     def to_pulumi(self, opts=None):
-
         from pulumi import ResourceOptions
 
-        self._pulumi_resources = {
-        }
+        self._pulumi_resources = {}
 
         for r in self.resources:
-
             # Properties
             properties = r.pulumi_properties
             properties = self.inject_vars(properties, target="pulumi_py")

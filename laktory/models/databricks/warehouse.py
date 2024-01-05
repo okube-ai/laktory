@@ -102,7 +102,9 @@ class Warehouse(BaseModel, PulumiResource):
         "4X-Large",
     ]
     auto_stop_mins: int = None
-    channel_name: Union[Literal["CHANNEL_NAME_CURRENT", "CHANNEL_NAME_PREVIEW"], str] = None
+    channel_name: Union[
+        Literal["CHANNEL_NAME_CURRENT", "CHANNEL_NAME_PREVIEW"], str
+    ] = None
     # data_source_id
     enable_photon: bool = None
     enable_serverless_compute: bool = None
@@ -114,7 +116,9 @@ class Warehouse(BaseModel, PulumiResource):
     num_clusters: int = None
     # odbc_params
     permissions: list[Permission] = []
-    spot_instance_policy: Union[Literal["COST_OPTIMIZED", "RELIABILITY_OPTIMIZED"], str] = None
+    spot_instance_policy: Union[
+        Literal["COST_OPTIMIZED", "RELIABILITY_OPTIMIZED"], str
+    ] = None
     # state
     tags: WarehouseTags = None
     warehouse_type: Union[Literal["CLASSIC", "PRO"], str] = None
@@ -125,14 +129,11 @@ class Warehouse(BaseModel, PulumiResource):
 
     @property
     def resources(self) -> list[PulumiResource]:
-
         if self.resources_ is None:
-
             self.resources_ = [
                 self,
             ]
             if self.permissions:
-
                 self.resources_ += [
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
@@ -154,6 +155,7 @@ class Warehouse(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.SqlEndpoint
 
     @property

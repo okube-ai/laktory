@@ -46,6 +46,7 @@ class TableExpectation(BaseModel):
 
     * [DLT Table Expectations](https://docs.databricks.com/en/delta-live-tables/expectations.html)
     """
+
     name: str
     expression: str
     action: Literal["ALLOW", "DROP", "FAIL"] = "ALLOW"

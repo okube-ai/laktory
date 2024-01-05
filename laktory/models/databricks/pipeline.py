@@ -100,6 +100,7 @@ class PipelineCluster(Cluster):
 
     that are not allowed.
     """
+
     autotermination_minutes: int = Field(None, exclude=True)
     cluster_id: str = Field(None, exclude=True)
     data_security_mode: str = Field(None, exclude=True)
@@ -345,13 +346,11 @@ class Pipeline(BaseModel, PulumiResource):
 
     @property
     def resources(self) -> list[PulumiResource]:
-
         if self.resources_ is None:
             self.resources_ = [
                 self,
             ]
             if self.permissions:
-
                 self.resources_ += [
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
@@ -369,22 +368,22 @@ class Pipeline(BaseModel, PulumiResource):
                 fp.write(s)
             filepath = f"{settings.workspace_laktory_root}pipelines/{self.name}.json"
             file = WorkspaceFile(
-                    path=filepath,
-                    source=source,
-                )
-            self.resources_ += [
-                file
-            ]
+                path=filepath,
+                source=source,
+            )
+            self.resources_ += [file]
 
             self.resources_ += [
                 Permissions(
                     resource_name=f"permissions-file-{file.resource_name}",
-                    access_controls=[Permission(
-                        permission_level="CAN_READ",
-                        group_name="account users",
-                    )],
+                    access_controls=[
+                        Permission(
+                            permission_level="CAN_READ",
+                            group_name="account users",
+                        )
+                    ],
                     workspace_file_path=filepath,
-                    options={"depends_on": [f"${{resources.{file.resource_name}}}"]}
+                    options={"depends_on": [f"${{resources.{file.resource_name}}}"]},
                 )
             ]
 
@@ -401,6 +400,7 @@ class Pipeline(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.Pipeline
 
     @property

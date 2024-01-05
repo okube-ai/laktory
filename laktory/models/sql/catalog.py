@@ -110,12 +110,8 @@ class Catalog(BaseModel, PulumiResource):
 
     @property
     def resources(self) -> list[PulumiResource]:
-
         if self.resources_ is None:
-
-            self.resources_ = [
-                self
-            ]
+            self.resources_ = [self]
 
             # Catalog grants
             if self.grants:
@@ -124,12 +120,12 @@ class Catalog(BaseModel, PulumiResource):
                         resource_name=f"grants-{self.resource_name}",
                         catalog=self.full_name,
                         grants=[
-                            {
-                                "principal": g.principal, "privileges": g.privileges
-                            }
+                            {"principal": g.principal, "privileges": g.privileges}
                             for g in self.grants
                         ],
-                        options={"depends_on": [f"${{resources.{self.resource_name}}}"]},
+                        options={
+                            "depends_on": [f"${{resources.{self.resource_name}}}"]
+                        },
                     )
                 ]
 
@@ -151,6 +147,7 @@ class Catalog(BaseModel, PulumiResource):
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
+
         return databricks.Catalog
 
     @property
