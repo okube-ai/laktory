@@ -1,5 +1,6 @@
 import pulumi
 
+from laktory.models import BaseModel
 from laktory.models import Table
 from laktory.models import Schema
 from pulumi_random import RandomString
@@ -49,6 +50,43 @@ schema = Schema(
 )
 
 
+def test_read_yaml():
+    class OHLC(BaseModel):
+        open: float = None
+        high: float = None
+        low: float = None
+        close: float = None
+
+    class Price(BaseModel):
+        timestamp: float
+        ohlc: OHLC
+
+    class StockPrices(BaseModel):
+        symbol: str
+        prices: list[Price]
+
+    with open("./stockprices0.yaml", "r") as fp:
+        stockprices = StockPrices.model_validate_yaml(fp)
+
+    assert stockprices.model_dump() == {
+        "symbol": "AAPL",
+        "prices": [
+            {
+                "timestamp": 1.0,
+                "ohlc": {"open": 0.0, "high": None, "low": None, "close": 1.0},
+            },
+            {
+                "timestamp": 2.0,
+                "ohlc": {"open": 1.0, "high": None, "low": None, "close": 2.0},
+            },
+            {
+                "timestamp": 3.0,
+                "ohlc": {"open": None, "high": None, "low": 3.0, "close": 4.0},
+            },
+        ],
+    }
+
+
 def test_inject_vars():
     d0 = schema.model_dump()
     d1 = schema.inject_vars(d0)
@@ -58,4 +96,5 @@ def test_inject_vars():
 
 
 if __name__ == "__main__":
+    test_read_yaml()
     test_inject_vars()

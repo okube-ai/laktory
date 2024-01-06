@@ -11,6 +11,7 @@
 * `Permissions` model
 * `ServicePrincipalRole` model
 * `UserRole` model
+* Support for cross-references in yaml files. A yaml configuration file can include another.
 ### Updated
 * `inject_vars` method to support multiple targets (`pulumi_yaml`, `pulumi_py`, etc.)
 * `events_root` field of   `DataEventHeader` and `DataEvent` models is now a property for the default value to dynamically account for settings
