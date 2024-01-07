@@ -41,7 +41,7 @@ class StackResources(BaseModel):
     secrets: list[Secret] = []
     secretscopes: list[SecretScope] = []
     serviceprincipals: list[ServicePrincipal] = []
-    sqlquerys: list[SqlQuery] = []
+    sqlqueries: list[SqlQuery] = []
     tables: list[Table] = []
     providers: list[Union[DatabricksProvider]] = []
     users: list[User] = []
@@ -90,7 +90,7 @@ class Stack(BaseModel):
             config=self.config,
             description=self.description,
             resources=resources,
-            # variables=None,  # TODO
+            variables=self.variables,
             outputs=self.pulumi_outputs,
         )
 
