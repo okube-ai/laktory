@@ -43,8 +43,8 @@ class BaseModel(_BaseModel):
         :
             Model instance
         """
-        def inject_includes(d):
 
+        def inject_includes(d):
             if isinstance(d, dict):
                 for key, value in d.items():
                     d[key] = inject_includes(value)
