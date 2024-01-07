@@ -189,6 +189,39 @@ def test_stack_model():
             "serviceprincipals": [],
             "sqlquerys": [],
             "tables": [],
+            "providers": [
+                {
+                    "account_id": None,
+                    "auth_type": None,
+                    "azure_client_id": None,
+                    "azure_client_secret": None,
+                    "azure_environment": None,
+                    "azure_login_app_id": None,
+                    "azure_tenant_id": None,
+                    "azure_use_msi": None,
+                    "azure_workspace_resource_id": None,
+                    "client_id": None,
+                    "client_secret": None,
+                    "cluster_id": None,
+                    "config_file": None,
+                    "databricks_cli_path": None,
+                    "debug_headers": None,
+                    "debug_truncate_bytes": None,
+                    "google_credentials": None,
+                    "google_service_account": None,
+                    "host": "${var.DATABRICKS_HOST}",
+                    "http_timeout_seconds": None,
+                    "metadata_service_url": None,
+                    "password": None,
+                    "profile": None,
+                    "rate_limit": None,
+                    "retry_timeout_seconds": None,
+                    "skip_verify": None,
+                    "token": "${var.DATABRICKS_TOKEN}",
+                    "username": None,
+                    "warehouse_id": None,
+                }
+            ],
             "users": [],
             "volumes": [],
             "warehouses": [],
@@ -206,6 +239,7 @@ def test_pulumi_stack():
     stack.write_pulumi_stack()
     data = pstack.model_dump()
     data["config"]["databricks:token"] = "***"
+    data["resources"]["databricks-provider"]["properties"]["token"] = "***"
     print(data)
 
     assert data == {
@@ -269,7 +303,11 @@ def test_pulumi_stack():
                     "name": "pl-stock-prices-ut-stack",
                     "notifications": [],
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {
+                    "provider": "${databricks-provider}",
+                    "dependsOn": [],
+                    "deleteBeforeReplace": True,
+                },
             },
             "permissions-pl-custom-name": {
                 "type": "databricks:Permissions",
@@ -305,6 +343,14 @@ def test_pulumi_stack():
                     "deleteBeforeReplace": True,
                 },
             },
+            "databricks-provider": {
+                "type": "pulumi:providers:databricks",
+                "properties": {
+                    "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
+                    "token": "***",
+                },
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+            },
         },
         "outputs": {},
     }
@@ -319,6 +365,6 @@ def test_pulumi_up():
 
 
 if __name__ == "__main__":
-    # test_stack_model()
-    # test_pulumi_stack()
+    test_stack_model()
+    test_pulumi_stack()
     test_pulumi_up()

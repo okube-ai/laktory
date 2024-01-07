@@ -52,7 +52,7 @@ class BaseResource(_BaseModel):
     @property
     def resource_key(self) -> str:
         """Resource key used to build resource name"""
-        return self.name
+        return getattr(self, "name", "")
 
     @property
     def default_resource_name(self) -> str:
@@ -62,6 +62,9 @@ class BaseResource(_BaseModel):
             name = f"{self.resource_type_id}-{self.resource_key}"
         else:
             name = f"{self.resource_key}"
+
+        if name.endswith("-"):
+            name = name[:-1]
 
         return name
 

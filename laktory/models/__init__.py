@@ -5,5 +5,6 @@ from .dataeventheader import DataEventHeader
 from .dataproducer import DataProducer
 from .datasources import *
 from .grants import *
+from .providers import *
 from .sql import *
 from .stacks import *

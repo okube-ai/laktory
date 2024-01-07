@@ -1,5 +1,6 @@
 import os
 import yaml
+from typing import Union
 
 from laktory._logger import get_logger
 from laktory._worker import Worker
@@ -17,6 +18,7 @@ from laktory.models.databricks.sqlquery import SqlQuery
 from laktory.models.databricks.user import User
 from laktory.models.databricks.warehouse import Warehouse
 from laktory.models.databricks.workspacefile import WorkspaceFile
+from laktory.models.providers.databricksprovider import DatabricksProvider
 from laktory.models.sql.catalog import Catalog
 from laktory.models.sql.schema import Schema
 from laktory.models.sql.table import Table
@@ -41,6 +43,7 @@ class StackResources(BaseModel):
     serviceprincipals: list[ServicePrincipal] = []
     sqlquerys: list[SqlQuery] = []
     tables: list[Table] = []
+    providers: list[Union[DatabricksProvider]] = []
     users: list[User] = []
     volumes: list[Volume] = []
     warehouses: list[Warehouse] = []
