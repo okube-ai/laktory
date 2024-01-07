@@ -1,16 +1,50 @@
 import os
 import yaml
-from typing import Any
 
 from laktory._logger import get_logger
 from laktory._worker import Worker
 from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
+from laktory.models.databricks.cluster import Cluster
+from laktory.models.databricks.group import Group
+from laktory.models.databricks.job import Job
+from laktory.models.databricks.notebook import Notebook
+from laktory.models.databricks.pipeline import Pipeline
+from laktory.models.databricks.secret import Secret
+from laktory.models.databricks.secretscope import SecretScope
+from laktory.models.databricks.serviceprincipal import ServicePrincipal
+from laktory.models.databricks.sqlquery import SqlQuery
+from laktory.models.databricks.user import User
+from laktory.models.databricks.warehouse import Warehouse
+from laktory.models.databricks.workspacefile import WorkspaceFile
+from laktory.models.sql.catalog import Catalog
+from laktory.models.sql.schema import Schema
+from laktory.models.sql.table import Table
+from laktory.models.sql.volume import Volume
 from laktory.models.stacks.pulumistack import PulumiStack
 
 logger = get_logger(__name__)
 
 DIRPATH = "./"
+
+
+class StackResources(BaseModel):
+    catalogs: list[Catalog] = []
+    clusters: list[Cluster] = []
+    groups: list[Group] = []
+    jobs: list[Job] = []
+    notebooks: list[Notebook] = []
+    pipelines: list[Pipeline] = []
+    schemas: list[Schema] = []
+    secrets: list[Secret] = []
+    secretscopes: list[SecretScope] = []
+    serviceprincipals: list[ServicePrincipal] = []
+    sqlquerys: list[SqlQuery] = []
+    tables: list[Table] = []
+    users: list[User] = []
+    volumes: list[Volume] = []
+    warehouses: list[Warehouse] = []
+    workspacefiles: list[WorkspaceFile] = []
 
 
 class StackEnvironment(BaseModel):
@@ -29,7 +63,7 @@ class Stack(BaseModel):
     name: str
     config: dict[str, str] = None
     description: str = None
-    resources: list[Any]
+    resources: StackResources
     environments: list[StackEnvironment] = []
     variables: dict[str, str] = {}
     pulumi_outputs: dict[str, str] = {}  # TODO
@@ -40,9 +74,13 @@ class Stack(BaseModel):
     def to_pulumi_stack(self):
         resources = {}
 
-        for r in self.resources:
-            for _r in r.resources:
-                resources[_r.resource_name] = _r
+        for resource_type in self.resources.model_fields.keys():
+            if resource_type in ["variables"]:
+                continue
+
+            for r in getattr(self.resources, resource_type):
+                for _r in r.resources:
+                    resources[_r.resource_name] = _r
 
         return PulumiStack(
             name=self.name,
