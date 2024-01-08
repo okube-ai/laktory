@@ -1,10 +1,13 @@
-import json
+import os
+import yaml
 from typing import Any
 from typing import Union
 
-from laktory._parsers import camelize_keys
-from laktory.models.basemodel import BaseModel
 from laktory._logger import get_logger
+from laktory._parsers import camelize_keys
+from laktory._worker import Worker
+from laktory.constants import CACHE_ROOT
+from laktory.models.basemodel import BaseModel
 
 logger = get_logger(__name__)
 
@@ -44,3 +47,39 @@ class PulumiStack(BaseModel):
         d = self.inject_vars(d, target="pulumi_yaml")
 
         return d
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Methods                                                          #
+    # ----------------------------------------------------------------------- #
+
+    def write(self) -> str:
+        filepath = os.path.join(CACHE_ROOT, "Pulumi.yaml")
+
+        if not os.path.exists(CACHE_ROOT):
+            os.makedirs(CACHE_ROOT)
+
+        with open(filepath, "w") as fp:
+            yaml.dump(self.model_dump(), fp)
+
+        return filepath
+
+    def _call(self, command, stack, flags=None):
+        self.write()
+        worker = Worker()
+
+        cmd = ["pulumi", command]
+        cmd += ["-s", stack]
+
+        if flags is not None:
+            cmd += flags
+
+        worker.run(
+            cmd=cmd,
+            cwd=CACHE_ROOT,
+        )
+
+    def preview(self, stack=None, flags=None):
+        self._pulumi_call("preview", stack=stack, flags=flags)
+
+    def up(self, stack=None, flags=None):
+        self._call("up", stack=stack, flags=flags)

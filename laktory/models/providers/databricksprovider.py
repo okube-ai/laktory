@@ -89,6 +89,7 @@ class DatabricksProvider(BaseModel, PulumiResource):
     )
     ```
     """
+
     account_id: str = None
     auth_type: str = None
     azure_client_id: str = None

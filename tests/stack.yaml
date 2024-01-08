@@ -26,7 +26,7 @@ resources:
       clusters:
         - name: main
           spark_version: 14.0.x-scala2.12
-          node_type_id: Standard_DS3_v2
+          node_type_id: ${var.node_type_id}
       tasks:
         - task_key: ingest-metadata
           job_cluster_key: main
@@ -48,6 +48,7 @@ environments:
   dev:
     variables:
       is_dev: true
+      node_type_id: Standard_DS3_v2
   prod:
     resources:
       pipelines:
@@ -55,4 +56,5 @@ environments:
           development: False
     variables:
       is_dev: false
+      node_type_id: Standard_DS4_v2
 

@@ -4,14 +4,20 @@ from laktory import models
 with open("./stack.yaml", "r") as fp:
     stack = models.Stack.model_validate_yaml(fp)
 
-# empty_stack = stack.model_copy(deep=True, update={"resources": models.StackResources()})
+empty_stack = stack.model_copy(
+    deep=True,
+    update={
+        "resources": models.StackResources(),
+        "environments": {},
+    },
+)
 
 
 def test_stack_model():
     data = stack.model_dump()
     print(data)
     assert data == {
-        "variables": None,
+        "variables": {},
         "config": {
             "databricks:host": "${var.DATABRICKS_HOST}",
             "databricks:token": "${var.DATABRICKS_TOKEN}",
@@ -20,9 +26,9 @@ def test_stack_model():
         "name": "unit-testing",
         "pulumi_outputs": {},
         "resources": {
-            "catalogs": None,
-            "clusters": None,
-            "groups": None,
+            "catalogs": {},
+            "clusters": {},
+            "groups": {},
             "jobs": {
                 "job-stock-prices-ut-stack": {
                     "access_controls": [],
@@ -144,7 +150,7 @@ def test_stack_model():
                     "webhook_notifications": None,
                 }
             },
-            "notebooks": None,
+            "notebooks": {},
             "pipelines": {
                 "pl-custom-name": {
                     "access_controls": [
@@ -185,12 +191,12 @@ def test_stack_model():
                     "udfs": [],
                 }
             },
-            "schemas": None,
-            "secrets": None,
-            "secretscopes": None,
-            "serviceprincipals": None,
-            "sqlqueries": None,
-            "tables": None,
+            "schemas": {},
+            "secrets": {},
+            "secretscopes": {},
+            "serviceprincipals": {},
+            "sqlqueries": {},
+            "tables": {},
             "providers": {
                 "databricks-provider": {
                     "account_id": None,
@@ -224,10 +230,10 @@ def test_stack_model():
                     "warehouse_id": None,
                 }
             },
-            "users": None,
-            "volumes": None,
-            "warehouses": None,
-            "workspacefiles": None,
+            "users": {},
+            "volumes": {},
+            "warehouses": {},
+            "workspacefiles": {},
         },
         "environments": {
             "dev": {"variables": {"is_dev": True}, "config": None, "resources": None},
@@ -243,10 +249,10 @@ def test_stack_model():
 
 
 def test_pulumi_stack():
-    data_default = stack.to_pulumi_stack(env=None).model_dump()
+    data_default = stack.to_pulumi(env=None).model_dump()
     data_default["config"]["databricks:token"] = "***"
     data_default["resources"]["databricks-provider"]["properties"]["token"] = "***"
-    # print(data_default)
+    print(data_default)
     assert data_default == {
         "variables": {},
         "name": "unit-testing",
@@ -327,7 +333,7 @@ def test_pulumi_stack():
     }
 
     # Dev
-    data = stack.to_pulumi_stack(env="dev").model_dump()
+    data = stack.to_pulumi(env="dev").model_dump()
     data["config"]["databricks:token"] = "***"
     data["resources"]["databricks-provider"]["properties"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
@@ -335,7 +341,7 @@ def test_pulumi_stack():
     assert data == data0
 
     # Prod
-    data = stack.to_pulumi_stack(env="prod").model_dump()
+    data = stack.to_pulumi(env="prod").model_dump()
     data["config"]["databricks:token"] = "***"
     data["resources"]["databricks-provider"]["properties"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
@@ -345,14 +351,15 @@ def test_pulumi_stack():
 
 
 def test_pulumi_up():
-    # Create resources
+    # Create and delete dev resources
     stack.pulumi_up("okube/dev", flags=["--yes"])
-
-    # Delete resources
     empty_stack.pulumi_up("okube/dev", flags=["--yes"])
+
+    stack.pulumi_up("okube/prod", flags=["--yes"])
+    empty_stack.pulumi_up("okube/prod", flags=["--yes"])
 
 
 if __name__ == "__main__":
-    # test_stack_model()
+    test_stack_model()
     test_pulumi_stack()
-    # test_pulumi_up()
+    test_pulumi_up()

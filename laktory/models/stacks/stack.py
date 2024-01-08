@@ -1,15 +1,9 @@
-import os
-import yaml
-from collections import defaultdict
 from typing import Union
 from typing import Any
 from pydantic import model_validator
-from pydantic import Field
 
 from laktory._logger import get_logger
-from laktory._worker import Worker
 from laktory._parsers import merge_dicts
-from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
 from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.group import Group
@@ -47,12 +41,34 @@ class StackResources(BaseModel):
     secretscopes: dict[str, SecretScope] = {}
     serviceprincipals: dict[str, ServicePrincipal] = {}
     sqlqueries: dict[str, SqlQuery] = {}
-    tables: dict[str, Catalog] = {}
+    tables: dict[str, Table] = {}
     providers: dict[str, Union[DatabricksProvider]] = {}
     users: dict[str, User] = {}
     volumes: dict[str, Volume] = {}
     warehouses: dict[str, Warehouse] = {}
     workspacefiles: dict[str, WorkspaceFile] = {}
+
+    @model_validator(mode="after")
+    def update_resource_names(self) -> Any:
+        for k, r in self._all.items():
+            if r.resource_name_ and k != r.resource_name_:
+                raise ValueError(
+                    f"Provided resource name {r.resource_name_} does not match provided key {k}"
+                )
+            r.resource_name_ = k
+        return self
+
+    @property
+    def _all(self):
+        resources = {}
+        for resource_type in self.model_fields.keys():
+            if resource_type in ["variables"]:
+                continue
+
+            for resource_name, _r in getattr(self, resource_type).items():
+                resources[resource_name] = _r
+
+        return resources
 
 
 class EnvironmentStack(BaseModel):
@@ -62,20 +78,6 @@ class EnvironmentStack(BaseModel):
     pulumi_outputs: dict[str, str] = {}
     resources: StackResources = StackResources()
     variables: dict[str, Union[str, bool]] = {}
-
-    @property
-    def all_resources(self):
-
-        resources = {}
-        for resource_type in self.resources.model_fields.keys():
-
-            if resource_type in ["variables"]:
-                continue
-
-            for resource_name, _r in getattr(self.resources, resource_type).items():
-                resources[resource_name] = _r
-
-        return resources
 
 
 class EnvironmentSettings(BaseModel):
@@ -88,6 +90,7 @@ class Stack(BaseModel):
     """
     The Stack defines a group of deployable resources.
     """
+
     config: dict[str, str] = {}
     description: str = None
     name: str
@@ -95,58 +98,40 @@ class Stack(BaseModel):
     resources: StackResources = StackResources()
     variables: dict[str, Union[str, bool]] = {}
     environments: dict[str, EnvironmentSettings] = {}
-    envs: dict[str, EnvironmentStack] = Field({}, exclude=True)
 
     # ----------------------------------------------------------------------- #
-    # Validators                                                              #
+    # Properties                                                              #
     # ----------------------------------------------------------------------- #
 
-    @model_validator(mode='before')
-    def parse_environments(cls, data: Any) -> Any:
-
-        if "environments" not in data:
-            return data
-
+    @property
+    def envs(self) -> dict[str, EnvironmentStack]:
         ENV_FIELDS = ["config", "resources", "variables"]
 
-        data["envs"] = defaultdict(lambda: {})
-        for env_name, env in data["environments"].items():
+        d = self.model_dump(exclude_none=True)
+        _envs = d.pop("environments")
 
-            # Merge
-            for k in Stack.model_fields.keys():
+        # Restore fields excluded from dump
+        for rtype in d["resources"]:
+            for k, r in d["resources"][rtype].items():
+                r["options"] = getattr(self.resources, rtype)[k].options.model_dump(
+                    exclude_none=True
+                )
 
-                # Skip
-                if k in ["environments", "envs"]:
-                    continue
+        envs = {}
+        for env_name, env in self.environments.items():
+            for k in ENV_FIELDS:
+                d[k] = merge_dicts(d[k], _envs[env_name].get(k, {}))
 
-                # Merge
-                elif k in ENV_FIELDS:
-                    data["envs"][env_name][k] = merge_dicts(data.get(k, {}), env.get(k, {}))
+            envs[env_name] = EnvironmentStack(**d)
 
-                # Overwrite
-                else:
-                    if k in data:
-                        data["envs"][env_name][k] = data[k]
-
-        return data
-
-    @model_validator(mode="after")
-    def update_resource_names(self) -> Any:
-        for env in [self] + list(self.envs.values()):
-            for k, r in env.all_resources.items():
-                if r.resource_name_ and k != r.resource_name_:
-                    raise ValueError(f"Provided resource name {r.resource_name_} does not match provided key {k}")
-                r.resource_name_ = k
-        return self
-
-    all_resources = EnvironmentStack.all_resources
+        return envs
 
     # ----------------------------------------------------------------------- #
     # Pulumi Methods                                                          #
     # ----------------------------------------------------------------------- #
-    def to_pulumi_stack(self, env=None):
 
-        if env is not None:
+    def to_pulumi(self, env=None):
+        if env is not None and env in self.envs:
             env = self.envs[env]
         else:
             env = self
@@ -155,48 +140,36 @@ class Stack(BaseModel):
             name=env.name,
             config=env.config,
             description=env.description,
-            resources=env.all_resources,
+            resources=env.resources._all,
             variables=env.variables,
             outputs=env.pulumi_outputs,
         )
 
-    def write_pulumi_stack(self, env=None) -> str:
-        filepath = os.path.join(CACHE_ROOT, "Pulumi.yaml")
+    def pulumi_preview(self, stack, flags=None):
+        if "/" not in stack:
+            raise ValueError(
+                "Provides a valid pulumi stack name {organization}/{stack}"
+            )
 
-        if not os.path.exists(CACHE_ROOT):
-            os.makedirs(CACHE_ROOT)
-
-        with open(filepath, "w") as fp:
-            yaml.dump(self.to_pulumi_stack(env).model_dump(), fp)
-
-        return filepath
-
-    def _pulumi_call(self, command, stack=None, flags=None):
         env = None
         if stack is not None:
             env = stack.split("/")[-1]
-        filepath = self.write_pulumi_stack(env)
-        worker = Worker()
 
-        cmd = ["pulumi", command]
+        pstack = self.to_pulumi(env=env)
 
-        # Stack
-        if stack is not None:
-            cmd += ["-s", stack]
+        pstack.preview(stack=stack, flags=flags)
 
-        if flags is not None:
-            cmd += flags
+    def pulumi_up(self, stack, flags=None):
+        if "/" not in stack:
+            raise ValueError(
+                "Provides a valid pulumi stack name {organization}/{stack}"
+            )
 
-        worker.run(
-            cmd=cmd,
-            cwd=CACHE_ROOT,
-        )
+        env = stack.split("/")[-1]
 
-    def pulumi_preview(self, stack=None, flags=None):
-        self._pulumi_call("preview", stack=stack, flags=flags)
+        pstack = self.to_pulumi(env=env)
 
-    def pulumi_up(self, stack=None, flags=None):
-        self._pulumi_call("up", stack=stack, flags=flags)
+        pstack.up(stack=stack, flags=flags)
 
     # ----------------------------------------------------------------------- #
     # Terraform Methods                                                       #
