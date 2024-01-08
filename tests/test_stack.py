@@ -247,7 +247,84 @@ def test_pulumi_stack():
     data_default["config"]["databricks:token"] = "***"
     data_default["resources"]["databricks-provider"]["properties"]["token"] = "***"
     # print(data_default)
-    assert data_default == {'variables': {}, 'name': 'unit-testing', 'runtime': 'yaml', 'config': {'databricks:host': 'https://adb-2211091707396001.1.azuredatabricks.net/', 'databricks:token': '***'}, 'resources': {'job-stock-prices-ut-stack': {'type': 'databricks:Job', 'properties': {'name': 'job-stock-prices-ut-stack', 'parameters': [], 'tags': {}, 'tasks': [{'libraries': [{'pypi': {'package': 'laktory==0.0.27'}}, {'pypi': {'package': 'yfinance'}}], 'jobClusterKey': 'main', 'notebookTask': {'notebookPath': '/jobs/ingest_stock_metadata.py'}, 'taskKey': 'ingest-metadata'}, {'pipelineTask': {'pipelineId': '${pl-custom-name.id}'}, 'taskKey': 'run-pipeline'}], 'jobClusters': [{'jobClusterKey': 'main', 'newCluster': {'dataSecurityMode': 'USER_ISOLATION', 'initScripts': [], 'nodeTypeId': 'Standard_DS3_v2', 'sparkConf': {}, 'sparkEnvVars': {}, 'sparkVersion': '14.0.x-scala2.12', 'sshPublicKeys': []}}]}, 'options': {'dependsOn': [], 'deleteBeforeReplace': True}}, 'pl-custom-name': {'type': 'databricks:Pipeline', 'properties': {'channel': 'PREVIEW', 'clusters': [], 'configuration': {}, 'libraries': [{'notebook': {'path': '/pipelines/dlt_brz_template.py'}}], 'name': 'pl-stock-prices-ut-stack', 'notifications': []}, 'options': {'provider': '${databricks-provider}', 'dependsOn': [], 'deleteBeforeReplace': True}}, 'databricks-provider': {'type': 'pulumi:providers:databricks', 'properties': {'host': 'https://adb-2211091707396001.1.azuredatabricks.net/', 'token': '***'}, 'options': {'dependsOn': [], 'deleteBeforeReplace': True}}}, 'outputs': {}}
+    assert data_default == {
+        "variables": {},
+        "name": "unit-testing",
+        "runtime": "yaml",
+        "config": {
+            "databricks:host": "https://adb-2211091707396001.1.azuredatabricks.net/",
+            "databricks:token": "***",
+        },
+        "resources": {
+            "job-stock-prices-ut-stack": {
+                "type": "databricks:Job",
+                "properties": {
+                    "name": "job-stock-prices-ut-stack",
+                    "parameters": [],
+                    "tags": {},
+                    "tasks": [
+                        {
+                            "libraries": [
+                                {"pypi": {"package": "laktory==0.0.27"}},
+                                {"pypi": {"package": "yfinance"}},
+                            ],
+                            "jobClusterKey": "main",
+                            "notebookTask": {
+                                "notebookPath": "/jobs/ingest_stock_metadata.py"
+                            },
+                            "taskKey": "ingest-metadata",
+                        },
+                        {
+                            "pipelineTask": {"pipelineId": "${pl-custom-name.id}"},
+                            "taskKey": "run-pipeline",
+                        },
+                    ],
+                    "jobClusters": [
+                        {
+                            "jobClusterKey": "main",
+                            "newCluster": {
+                                "dataSecurityMode": "USER_ISOLATION",
+                                "initScripts": [],
+                                "nodeTypeId": "Standard_DS3_v2",
+                                "sparkConf": {},
+                                "sparkEnvVars": {},
+                                "sparkVersion": "14.0.x-scala2.12",
+                                "sshPublicKeys": [],
+                            },
+                        }
+                    ],
+                },
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+            },
+            "pl-custom-name": {
+                "type": "databricks:Pipeline",
+                "properties": {
+                    "channel": "PREVIEW",
+                    "clusters": [],
+                    "configuration": {},
+                    "libraries": [
+                        {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
+                    ],
+                    "name": "pl-stock-prices-ut-stack",
+                    "notifications": [],
+                },
+                "options": {
+                    "provider": "${databricks-provider}",
+                    "dependsOn": [],
+                    "deleteBeforeReplace": True,
+                },
+            },
+            "databricks-provider": {
+                "type": "pulumi:providers:databricks",
+                "properties": {
+                    "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
+                    "token": "***",
+                },
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+            },
+        },
+        "outputs": {},
+    }
 
     # Dev
     data = stack.to_pulumi_stack(env="dev").model_dump()
@@ -277,5 +354,5 @@ def test_pulumi_up():
 
 if __name__ == "__main__":
     # test_stack_model()
-    # test_pulumi_stack()
-    test_pulumi_up()
+    test_pulumi_stack()
+    # test_pulumi_up()
