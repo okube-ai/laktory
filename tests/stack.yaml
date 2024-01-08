@@ -4,10 +4,11 @@ config:
   databricks:token: ${var.DATABRICKS_TOKEN}
 resources:
   providers:
-    - host: ${var.DATABRICKS_HOST}
+    databricks-provider:
+      host: ${var.DATABRICKS_HOST}
       token: ${var.DATABRICKS_TOKEN}
   pipelines:
-    - resource_name: pl-custom-name
+    pl-custom-name:
       name: pl-stock-prices-ut-stack
       libraries:
         - notebook:
@@ -20,7 +21,8 @@ resources:
       options:
         provider: ${resources.databricks-provider}
   jobs:
-    - name: job-stock-prices-ut-stack
+    job-stock-prices-ut-stack:
+      name: job-stock-prices-ut-stack
       clusters:
         - name: main
           spark_version: 14.0.x-scala2.12
@@ -41,3 +43,16 @@ resources:
 #            pipeline_id: ${resources.pipelines.pl-custom-name.id}  # BUNDLES STYLE
 #            pipeline_id: ${databricks_pipeline.pl-custom-name.id}  # TERRAFORM STYLE
 #            pipeline_id: ${pl-custom-name.id}  # PULUMI STYLE
+
+environments:
+  dev:
+    variables:
+      is_dev: true
+  prod:
+    resources:
+      pipelines:
+        pl-custom-name:
+          development: False
+    variables:
+      is_dev: false
+
