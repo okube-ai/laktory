@@ -79,7 +79,7 @@ class PulumiStack(BaseModel):
         )
 
     def preview(self, stack=None, flags=None):
-        self._pulumi_call("preview", stack=stack, flags=flags)
+        self._call("preview", stack=stack, flags=flags)
 
     def up(self, stack=None, flags=None):
         self._call("up", stack=stack, flags=flags)

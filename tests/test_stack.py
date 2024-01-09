@@ -396,6 +396,9 @@ def test_pulumi_stack():
     assert data == data0
 
 
+def test_pulumi_preview():
+    stack.pulumi_preview("okube/dev")
+
 def test_pulumi_up():
     # Create and delete dev resources
     stack.pulumi_up("okube/dev", flags=["--yes"])
@@ -409,4 +412,5 @@ def test_pulumi_up():
 if __name__ == "__main__":
     test_stack_model()
     test_pulumi_stack()
+    test_pulumi_preview()
     test_pulumi_up()
