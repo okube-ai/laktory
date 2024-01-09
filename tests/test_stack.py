@@ -1,7 +1,10 @@
 import copy
+import os
 from laktory import models
 
-with open("./stack.yaml", "r") as fp:
+dirpath = os.path.dirname(__file__)
+
+with open(os.path.join(dirpath, "stack.yaml"), "r") as fp:
     stack = models.Stack.model_validate_yaml(fp)
 
 empty_stack = stack.model_copy(

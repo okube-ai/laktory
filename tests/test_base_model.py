@@ -1,9 +1,12 @@
 import pulumi
+import os
 
 from laktory.models import BaseModel
 from laktory.models import Table
 from laktory.models import Schema
 from pulumi_random import RandomString
+
+dirpath = os.path.dirname(__file__)
 
 env = RandomString("env", length=3, upper=False, numeric=False, special=False)
 schema_name = RandomString(
@@ -65,7 +68,7 @@ def test_read_yaml():
         symbol: str
         prices: list[Price]
 
-    with open("./stockprices0.yaml", "r") as fp:
+    with open(os.path.join(dirpath, "stockprices0.yaml"), "r") as fp:
         stockprices = StockPrices.model_validate_yaml(fp)
 
     assert stockprices.model_dump() == {
