@@ -84,7 +84,7 @@ class DatabricksProvider(BaseModel, PulumiResource):
     from laktory import models
 
     p = models.DatabricksProvider(
-        host=adb-4623853922539974.14.azuredatabricks.net",
+        host="adb-4623853922539974.14.azuredatabricks.net",
         token="${var.DATABRICKS_TOKEN}",
     )
     ```

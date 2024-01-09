@@ -44,7 +44,10 @@ class BaseModel(_BaseModel):
             Model instance
         """
 
-        dirpath = os.path.dirname(fp.name)
+        if hasattr(fp, "name"):
+            dirpath = os.path.dirname(fp.name)
+        else:
+            dirpath = "./"
 
         def inject_includes(d):
             if isinstance(d, dict):

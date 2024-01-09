@@ -22,7 +22,7 @@ class Directory(BaseModel, PulumiResource):
     d = models.Directory(path="/queries/views")
     print(d)
     '''
-    resource_name_=None options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None) resources_=None variables={} path='/queries/views' delete_recursive=None
+    resource_name_=None options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None) core_resources_=None variables={} path='/queries/views' delete_recursive=None
     '''
     print(d.resource_key)
     #> queries-views
