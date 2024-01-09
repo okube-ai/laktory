@@ -1,6 +1,6 @@
 import re
 from typing import Any
-from pydantic import computed_field
+from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import BaseModel as _BaseModel
 from laktory.models.basemodel import BaseModel
@@ -26,7 +26,7 @@ class BaseResource(_BaseModel):
     resources. This `BaseResource` class is derived from `pydantic.BaseModel`.
     """
 
-    resource_name_: str = Field(None, alias="resource_name", exclude=True)
+    resource_name_: str = Field(None, validation_alias=AliasChoices("resource_name_", "resource_name"), exclude=True)
     options: ResourceOptions = Field(ResourceOptions(), exclude=True)
     _core_resources: list[Any] = None
 
