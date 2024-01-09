@@ -258,16 +258,16 @@ class Table(BaseModel, PulumiResource):
         return self.full_name
 
     @property
-    def resources(self) -> list[PulumiResource]:
-        if self.self.resources_ is None:
-            self.resources_ = []
+    def core_resources(self) -> list[PulumiResource]:
+        if self.self.core_resources_ is None:
+            self.core_resources_ = []
 
             if not self.builder.pipeline_name:
-                self.resources_ += [self]
+                self.core_resources_ += [self]
 
             # Schema grants
             if self.grants:
-                self.resources_ += [
+                self.core_resources_ += [
                     Grants(
                         resource_name=f"grants-{self.resource_name}",
                         table=self.full_name,
@@ -281,7 +281,7 @@ class Table(BaseModel, PulumiResource):
                     )
                 ]
 
-        return self.resources_
+        return self.core_resources_
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

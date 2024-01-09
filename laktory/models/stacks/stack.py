@@ -139,7 +139,7 @@ class Stack(BaseModel):
         # Resources
         resources = {}
         for r in env.resources._all.values():
-            for _r in r.resources:
+            for _r in r.core_resources:
                 resources[_r.resource_name] = _r
 
         return PulumiStack(

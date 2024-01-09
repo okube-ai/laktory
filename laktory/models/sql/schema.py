@@ -96,13 +96,13 @@ class Schema(BaseModel, PulumiResource):
         return self.full_name
 
     @property
-    def resources(self) -> list[PulumiResource]:
-        if self.resources_ is None:
-            self.resources_ = [self]
+    def core_resources(self) -> list[PulumiResource]:
+        if self.core_resources_ is None:
+            self.core_resources_ = [self]
 
             # Schema grants
             if self.grants:
-                self.resources_ += [
+                self.core_resources_ += [
                     Grants(
                         resource_name=f"grants-{self.resource_name}",
                         schema=self.full_name,
@@ -118,15 +118,15 @@ class Schema(BaseModel, PulumiResource):
 
             if self.volumes:
                 for v in self.volumes:
-                    self.resources_ += v.resources
+                    self.core_resources_ += v.core_resources
                     # TODO: add dependency?
 
             if self.tables:
                 for t in self.tables:
-                    self.resources_ += t.resources
+                    self.core_resources_ += t.core_resources
                     # TODO: add dependency?
 
-        return self.resources_
+        return self.core_resources_
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

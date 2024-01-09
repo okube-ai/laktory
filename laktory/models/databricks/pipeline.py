@@ -345,13 +345,13 @@ class Pipeline(BaseModel, PulumiResource):
         return "pl"
 
     @property
-    def resources(self) -> list[PulumiResource]:
-        if self.resources_ is None:
-            self.resources_ = [
+    def core_resources(self) -> list[PulumiResource]:
+        if self.core_resources_ is None:
+            self.core_resources_ = [
                 self,
             ]
             if self.access_controls:
-                self.resources_ += [
+                self.core_resources_ += [
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
                         access_controls=self.access_controls,
@@ -371,9 +371,9 @@ class Pipeline(BaseModel, PulumiResource):
                 path=filepath,
                 source=source,
             )
-            self.resources_ += [file]
+            self.core_resources_ += [file]
 
-            self.resources_ += [
+            self.core_resources_ += [
                 Permissions(
                     resource_name=f"permissions-file-{file.resource_name}",
                     access_controls=[
@@ -387,7 +387,7 @@ class Pipeline(BaseModel, PulumiResource):
                 )
             ]
 
-        return self.resources_
+        return self.core_resources_
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

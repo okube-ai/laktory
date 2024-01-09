@@ -96,14 +96,14 @@ class SecretScope(BaseModel, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def resources(self) -> list[PulumiResource]:
-        if self.resources_ is None:
-            self.resources_ = [
+    def core_resources(self) -> list[PulumiResource]:
+        if self.core_resources_ is None:
+            self.core_resources_ = [
                 self,
             ]
 
             for s in self.secrets:
-                self.resources_ += [
+                self.core_resources_ += [
                     Secret(
                         resource_name=f"secret-{self.name}-{s.key}",
                         key=s.key,
@@ -113,7 +113,7 @@ class SecretScope(BaseModel, PulumiResource):
                 ]
 
             for p in self.permissions:
-                self.resources_ += [
+                self.core_resources_ += [
                     SecretAcl(
                         resource_name=f"secret-scope-acl-{self.name}-{p.principal}",
                         permission=p.permission,
@@ -121,11 +121,11 @@ class SecretScope(BaseModel, PulumiResource):
                         scope=self.name,
                     )
                 ]
-                self.resources_[-1].options.depends_on = [
+                self.core_resources_[-1].options.depends_on = [
                     f"${{resources.{self.resource_name}}}"
                 ]
 
-        return self.resources_
+        return self.core_resources_
 
     # ----------------------------------------------------------------------- #
     # Resources Engine Methods                                                #

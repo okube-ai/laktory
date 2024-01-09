@@ -109,13 +109,13 @@ class Catalog(BaseModel, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def resources(self) -> list[PulumiResource]:
-        if self.resources_ is None:
-            self.resources_ = [self]
+    def core_resources(self) -> list[PulumiResource]:
+        if self.core_resources_ is None:
+            self.core_resources_ = [self]
 
             # Catalog grants
             if self.grants:
-                self.resources_ += [
+                self.core_resources_ += [
                     Grants(
                         resource_name=f"grants-{self.resource_name}",
                         catalog=self.full_name,
@@ -131,10 +131,10 @@ class Catalog(BaseModel, PulumiResource):
 
             if self.schemas:
                 for s in self.schemas:
-                    self.resources_ += s.resources
+                    self.core_resources_ += s.core_resources
                     # TODO: Added dependency?
 
-        return self.resources_
+        return self.core_resources_
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

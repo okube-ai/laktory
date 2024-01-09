@@ -28,7 +28,7 @@ class BaseResource(_BaseModel):
 
     resource_name_: str = Field(None, alias="resource_name", exclude=True)
     options: ResourceOptions = Field(ResourceOptions(), exclude=True)
-    resources_: list[Any] = Field(None, exclude=True)
+    core_resources_: list[Any] = Field(None, exclude=True)
 
     @property
     def resource_name(self) -> str:
@@ -69,7 +69,7 @@ class BaseResource(_BaseModel):
         return name
 
     @property
-    def resources(self):
-        if self.resources_ is None:
-            self.resources_ = [self]
-        return self.resources_
+    def core_resources(self):
+        if self.core_resources_ is None:
+            self.core_resources_ = [self]
+        return self.core_resources_

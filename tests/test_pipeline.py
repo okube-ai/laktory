@@ -224,10 +224,10 @@ def test_pipeline_pulumi():
     }
 
     # Resources
-    assert len(pl.resources) == 3
-    r = pl.resources[-1]
+    assert len(pl.core_resources) == 3
+    r = pl.core_resources[-1]
     r.options.aliases = ["my-file"]
-    assert pl.resources[-1].options.aliases == ["my-file"]
+    assert pl.core_resources[-1].options.aliases == ["my-file"]
 
 
 if __name__ == "__main__":
