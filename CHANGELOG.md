@@ -2,7 +2,7 @@
 
 ## [0.1.0] - Unreleased
 ### Added
-* Stack model to define and deploy a complete collection of resources from yaml files only
+* Stack model to define and deploy a complete collection of resources from yaml files only and manage environments
 * `BaseResource` and `PulumiResource` models with all methods required to deploy through pulumi
 * `resources` object to a `BaseResource` instance to define and deploy all the associated resources 
 * Automatic creation of resources output variables that can be used in configuration files
