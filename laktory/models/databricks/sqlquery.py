@@ -102,5 +102,5 @@ class SqlQuery(BaseModel, PulumiResource):
         return ["access_controls", "warehouse_id"]
 
     @property
-    def pulumi_renames(self):
+    def pulumi_renames(self) -> dict[str, str]:
         return {"comment": "description"}

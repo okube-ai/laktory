@@ -349,7 +349,7 @@ class Cluster(BaseModel, PulumiResource):
         return databricks.Cluster
 
     @property
-    def pulumi_renames(self):
+    def pulumi_renames(self) -> dict[str, str]:
         return {"name": "cluster_name"}
 
     @property

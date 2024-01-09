@@ -91,6 +91,7 @@ class Catalog(BaseModel, PulumiResource):
     storage_root: str = None
 
     def model_post_init(self, __context):
+        super().model_post_init(__context)
         for schema in self.schemas:
             schema.catalog_name = self.name
             schema.model_post_init(None)

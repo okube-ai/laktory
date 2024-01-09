@@ -63,6 +63,7 @@ class Schema(BaseModel, PulumiResource):
     volumes: list[Volume] = []
 
     def model_post_init(self, __context):
+        super().model_post_init(__context)
         for table in self.tables:
             table.catalog_name = self.catalog_name
             table.schema_name = self.name
