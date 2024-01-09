@@ -48,7 +48,7 @@ def test_stack_model():
                             "init_scripts": [],
                             "instance_pool_id": None,
                             "name": "main",
-                            "node_type_id": "Standard_DS3_v2",
+                            "node_type_id": "${var.node_type_id}",
                             "num_workers": None,
                             "policy_id": None,
                             "runtime_engine": None,
@@ -236,9 +236,13 @@ def test_stack_model():
             "workspacefiles": {},
         },
         "environments": {
-            "dev": {"variables": {"is_dev": True}, "config": None, "resources": None},
+            "dev": {
+                "variables": {"is_dev": True, "node_type_id": "Standard_DS3_v2"},
+                "config": None,
+                "resources": None,
+            },
             "prod": {
-                "variables": {"is_dev": False},
+                "variables": {"is_dev": False, "node_type_id": "Standard_DS4_v2"},
                 "config": None,
                 "resources": {"pipelines": {"pl-custom-name": {"development": False}}},
             },
@@ -291,7 +295,7 @@ def test_pulumi_stack():
                             "newCluster": {
                                 "dataSecurityMode": "USER_ISOLATION",
                                 "initScripts": [],
-                                "nodeTypeId": "Standard_DS3_v2",
+                                "nodeTypeId": "${var.node_type_id}",
                                 "sparkConf": {},
                                 "sparkEnvVars": {},
                                 "sparkVersion": "14.0.x-scala2.12",
@@ -320,6 +324,40 @@ def test_pulumi_stack():
                     "deleteBeforeReplace": True,
                 },
             },
+            "permissions-pl-custom-name": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "account users", "permissionLevel": "CAN_VIEW"},
+                        {"groupName": "role-engineers", "permissionLevel": "CAN_RUN"},
+                    ],
+                    "pipelineId": "${pl-custom-name.id}",
+                },
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+            },
+            "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                "type": "databricks:WorkspaceFile",
+                "properties": {
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                    "source": "./tmp-pl-stock-prices-ut-stack.json",
+                },
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+            },
+            "permissions-file-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "account users", "permissionLevel": "CAN_READ"}
+                    ],
+                    "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                },
+                "options": {
+                    "dependsOn": [
+                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}"
+                    ],
+                    "deleteBeforeReplace": True,
+                },
+            },
             "databricks-provider": {
                 "type": "pulumi:providers:databricks",
                 "properties": {
@@ -338,6 +376,10 @@ def test_pulumi_stack():
     data["resources"]["databricks-provider"]["properties"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
     data0["variables"]["is_dev"] = True
+    data0["variables"]["node_type_id"] = "Standard_DS3_v2"
+    data0["resources"]["job-stock-prices-ut-stack"]["properties"]["jobClusters"][0][
+        "newCluster"
+    ]["nodeTypeId"] = "Standard_DS3_v2"
     assert data == data0
 
     # Prod
@@ -346,6 +388,10 @@ def test_pulumi_stack():
     data["resources"]["databricks-provider"]["properties"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
     data0["variables"]["is_dev"] = False
+    data0["variables"]["node_type_id"] = "Standard_DS4_v2"
+    data0["resources"]["job-stock-prices-ut-stack"]["properties"]["jobClusters"][0][
+        "newCluster"
+    ]["nodeTypeId"] = "Standard_DS4_v2"
     data0["resources"]["pl-custom-name"]["properties"]["development"] = False
     assert data == data0
 
@@ -355,6 +401,7 @@ def test_pulumi_up():
     stack.pulumi_up("okube/dev", flags=["--yes"])
     empty_stack.pulumi_up("okube/dev", flags=["--yes"])
 
+    # Create and delete prod resources
     stack.pulumi_up("okube/prod", flags=["--yes"])
     empty_stack.pulumi_up("okube/prod", flags=["--yes"])
 

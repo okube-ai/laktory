@@ -136,11 +136,17 @@ class Stack(BaseModel):
         else:
             env = self
 
+        # Resources
+        resources = {}
+        for r in env.resources._all.values():
+            for _r in r.resources:
+                resources[_r.resource_name] = _r
+
         return PulumiStack(
             name=env.name,
             config=env.config,
             description=env.description,
-            resources=env.resources._all,
+            resources=resources,
             variables=env.variables,
             outputs=env.pulumi_outputs,
         )
