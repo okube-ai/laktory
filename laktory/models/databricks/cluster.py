@@ -318,13 +318,13 @@ class Cluster(BaseModel, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def resources(self) -> list[PulumiResource]:
-        if self.resources_ is None:
-            self.resources_ = [
+    def core_resources(self) -> list[PulumiResource]:
+        if self._core_resources is None:
+            self._core_resources = [
                 self,
             ]
             if self.access_controls:
-                self.resources_ += [
+                self._core_resources += [
                     Permissions(
                         resource_name=f"permissions-{self.resource_name}",
                         access_controls=self.access_controls,
@@ -332,7 +332,7 @@ class Cluster(BaseModel, PulumiResource):
                     )
                 ]
 
-        return self.resources_
+        return self._core_resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
@@ -349,7 +349,7 @@ class Cluster(BaseModel, PulumiResource):
         return databricks.Cluster
 
     @property
-    def pulumi_renames(self):
+    def pulumi_renames(self) -> dict[str, str]:
         return {"name": "cluster_name"}
 
     @property

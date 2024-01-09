@@ -69,7 +69,7 @@ class PulumiResource(BaseResource):
 
         self._pulumi_resources = {}
 
-        for r in self.resources:
+        for r in self.core_resources:
             # Properties
             properties = r.pulumi_properties
             properties = self.inject_vars(properties, target="pulumi_py")

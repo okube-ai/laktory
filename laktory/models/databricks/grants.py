@@ -1,3 +1,5 @@
+from pydantic import Field
+from pydantic import AliasChoices
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 
@@ -23,7 +25,7 @@ class Grants(BaseModel, PulumiResource):
     catalog: str = None
     metastore: str = None
     model: str = None
-    schema: str = None
+    schema_: str = Field(None, validation_alias=AliasChoices("schema", "schema_"))  # required not to overwrite BaseModel attribute
     share: str = None
     view: str = None
     volume: str = None
@@ -31,6 +33,9 @@ class Grants(BaseModel, PulumiResource):
     # ----------------------------------------------------------------------- #
     # Pulumi Methods                                                          #
     # ----------------------------------------------------------------------- #
+    @property
+    def pulumi_renames(self) -> dict[str, str]:
+        return {"schema_": "schema"}
 
     @property
     def pulumi_resource_type(self) -> str:

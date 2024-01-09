@@ -2,7 +2,7 @@
 
 ## [0.1.0] - Unreleased
 ### Added
-* Stack model to define and deploy a complete collection of resources from yaml files only
+* Stack model to define and deploy a complete collection of resources from yaml files only and manage environments
 * `BaseResource` and `PulumiResource` models with all methods required to deploy through pulumi
 * `resources` object to a `BaseResource` instance to define and deploy all the associated resources 
 * Automatic creation of resources output variables that can be used in configuration files
@@ -11,6 +11,7 @@
 * `Permissions` model
 * `ServicePrincipalRole` model
 * `UserRole` model
+* Support for cross-references in yaml files. A yaml configuration file can include another.
 ### Updated
 * `inject_vars` method to support multiple targets (`pulumi_yaml`, `pulumi_py`, etc.)
 * `events_root` field of   `DataEventHeader` and `DataEvent` models is now a property for the default value to dynamically account for settings

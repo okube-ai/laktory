@@ -91,6 +91,7 @@ class Catalog(BaseModel, PulumiResource):
     storage_root: str = None
 
     def model_post_init(self, __context):
+        super().model_post_init(__context)
         for schema in self.schemas:
             schema.catalog_name = self.name
             schema.model_post_init(None)
@@ -109,13 +110,13 @@ class Catalog(BaseModel, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def resources(self) -> list[PulumiResource]:
-        if self.resources_ is None:
-            self.resources_ = [self]
+    def core_resources(self) -> list[PulumiResource]:
+        if self._core_resources is None:
+            self._core_resources = [self]
 
             # Catalog grants
             if self.grants:
-                self.resources_ += [
+                self._core_resources += [
                     Grants(
                         resource_name=f"grants-{self.resource_name}",
                         catalog=self.full_name,
@@ -131,10 +132,10 @@ class Catalog(BaseModel, PulumiResource):
 
             if self.schemas:
                 for s in self.schemas:
-                    self.resources_ += s.resources
+                    self._core_resources += s.core_resources
                     # TODO: Added dependency?
 
-        return self.resources_
+        return self._core_resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

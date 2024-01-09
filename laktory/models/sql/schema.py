@@ -63,6 +63,7 @@ class Schema(BaseModel, PulumiResource):
     volumes: list[Volume] = []
 
     def model_post_init(self, __context):
+        super().model_post_init(__context)
         for table in self.tables:
             table.catalog_name = self.catalog_name
             table.schema_name = self.name
@@ -96,13 +97,13 @@ class Schema(BaseModel, PulumiResource):
         return self.full_name
 
     @property
-    def resources(self) -> list[PulumiResource]:
-        if self.resources_ is None:
-            self.resources_ = [self]
+    def core_resources(self) -> list[PulumiResource]:
+        if self._core_resources is None:
+            self._core_resources = [self]
 
             # Schema grants
             if self.grants:
-                self.resources_ += [
+                self._core_resources += [
                     Grants(
                         resource_name=f"grants-{self.resource_name}",
                         schema=self.full_name,
@@ -118,15 +119,15 @@ class Schema(BaseModel, PulumiResource):
 
             if self.volumes:
                 for v in self.volumes:
-                    self.resources_ += v.resources
+                    self._core_resources += v.core_resources
                     # TODO: add dependency?
 
             if self.tables:
                 for t in self.tables:
-                    self.resources_ += t.resources
+                    self._core_resources += t.core_resources
                     # TODO: add dependency?
 
-        return self.resources_
+        return self._core_resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

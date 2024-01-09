@@ -82,6 +82,7 @@ class DataEvent(DataEventHeader):
     tstamp_in_path: bool = True
 
     def model_post_init(self, __context):
+        super().model_post_init(__context)
         # Add metadata
         self.data["_name"] = self.name
         self.data["_producer_name"] = self.producer.name

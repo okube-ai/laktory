@@ -1,0 +1,11 @@
+symbol: AAPL
+prices:
+  - timestamp: 1
+    ohlc:
+      open: 0.0
+      close: 1.0
+  - timestamp: 2
+    ohlc:
+      open: 1.0
+      close: 2.0
+  - ${include../stockprices1.yaml}
