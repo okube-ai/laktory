@@ -36,7 +36,7 @@ classifiers = [
 dynamic = ["version"]
 dependencies = [
 #    "databricks-sdk",
-    "jsonref",
+#    "jsonref",
     "planck",
     "pulumi",
     "pulumi_databricks",
@@ -44,6 +44,7 @@ dependencies = [
     "pyyaml",
     "pydantic>=2",
     "settus",
+    "typer[all]",
 ]
 
 [project.optional-dependencies]
