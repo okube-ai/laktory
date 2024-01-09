@@ -90,8 +90,8 @@ gcp = [
 [tool.setuptools.packages.find]
 include = ["laktory*", "tests"]
 
-#[tool.setuptools.package-data]
-#myModule = ["*.csv"]
+[tool.setuptools.package-data]
+"*" = ["*.yaml"]
 
 [tool.setuptools.dynamic]
 version = {attr = "laktory._version.VERSION"}
