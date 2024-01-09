@@ -402,6 +402,7 @@ def test_pulumi_stack():
 def test_pulumi_preview():
     stack.pulumi_preview("okube/dev")
 
+
 def test_pulumi_up():
     # Create and delete dev resources
     stack.pulumi_up("okube/dev", flags=["--yes"])
