@@ -88,10 +88,7 @@ gcp = [
 "Bug Tracker" = "https://github.com/opencubes-ai/laktory/issues"
 
 [tool.setuptools.packages.find]
-include = ["laktory*", "tests"]
-
-[tool.setuptools.package-data]
-"*" = ["*.yaml"]
+include = ["laktory*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "laktory._version.VERSION"}

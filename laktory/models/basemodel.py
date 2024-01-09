@@ -44,6 +44,8 @@ class BaseModel(_BaseModel):
             Model instance
         """
 
+        dirpath = os.path.dirname(fp.name)
+
         def inject_includes(d):
             if isinstance(d, dict):
                 for key, value in d.items():
@@ -53,6 +55,8 @@ class BaseModel(_BaseModel):
                     d[i] = inject_includes(item)
             elif "${include." in str(d):
                 path = d.replace("${include.", "")[:-1]
+                if not os.path.isabs(path):
+                    path = os.path.join(dirpath, path)
                 with open(path, "r") as _fp:
                     d = yaml.safe_load(_fp)
                     d = inject_includes(d)
