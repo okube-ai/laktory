@@ -1,4 +1,5 @@
 import typer
+from typing import Union
 from typing_extensions import Annotated
 from laktory.models.stacks.stack import Stack
 from laktory.models.basemodel import BaseModel
@@ -11,12 +12,12 @@ app = typer.Typer(
 
 
 class CLIController(BaseModel):
-    stack_filepath: str = None
-    engine: str = None
-    pulumi_stack_name: str = None
-    pulumi_options_str: str = None
-    terraform_options_str: str = None
-    stack: Stack = None
+    stack_filepath: Union[str, None] = None
+    engine: Union[str, None] = None
+    pulumi_stack_name: Union[str, None] = None
+    pulumi_options_str: Union[str, None] = None
+    terraform_options_str: Union[str, None] = None
+    stack: Union[Stack, None] = None
 
     @property
     def pulumi_options(self):
@@ -42,7 +43,7 @@ class CLIController(BaseModel):
         if self.stack_filepath is None:
             self.stack_filepath = "./stack.yaml"
 
-        with open(self.filepath, "r") as fp:
+        with open(self.stack_filepath, "r") as fp:
             self.stack = Stack.model_validate_yaml(fp)
 
     def set_engine(self):
@@ -70,12 +71,11 @@ def preview(
 ):
 
     controller = CLIController(
-        cmd="preview",
         engine=engine,
         pulumi_stack_name=stack,
         stack_filepath=filepath,
-        pulumi_options=pulumi_options,
-        terraform_options=terraform_options,
+        pulumi_options_str=pulumi_options,
+        terraform_options_str=terraform_options,
     )
 
     # Read Stack
@@ -85,9 +85,9 @@ def preview(
     controller.set_engine()
 
     # Call
-    if engine == "pulumi":
+    if controller.engine == "pulumi":
         controller.pulumi_call("preview")
-    elif engine == "terraform":
+    elif controller.engine == "terraform":
         raise NotImplementedError()
     else:
         raise ValueError("engine should be ['terraform', 'pulumi']")
@@ -105,8 +105,8 @@ def deploy(
         engine=engine,
         pulumi_stack_name=stack,
         stack_filepath=filepath,
-        pulumi_options=pulumi_options,
-        terraform_options=terraform_options,
+        pulumi_options_str=pulumi_options,
+        terraform_options_str=terraform_options,
     )
 
     # Read Stack
@@ -116,9 +116,9 @@ def deploy(
     controller.set_engine()
 
     # Call
-    if engine == "pulumi":
+    if controller.engine == "pulumi":
         controller.pulumi_call("up")
-    elif engine == "terraform":
+    elif controller.engine == "terraform":
         raise NotImplementedError()
     else:
         raise ValueError("engine should be ['terraform', 'pulumi']")
