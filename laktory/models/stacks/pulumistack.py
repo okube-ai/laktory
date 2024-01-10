@@ -5,7 +5,7 @@ from typing import Union
 
 from laktory._logger import get_logger
 from laktory._parsers import camelize_keys
-from laktory._worker import Worker
+from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
 
@@ -64,6 +64,8 @@ class PulumiStack(BaseModel):
         return filepath
 
     def _call(self, command, stack, flags=None):
+        from laktory.cli._worker import Worker
+
         self.write()
         worker = Worker()
 
@@ -76,6 +78,7 @@ class PulumiStack(BaseModel):
         worker.run(
             cmd=cmd,
             cwd=CACHE_ROOT,
+            raise_exceptions=settings.cli_raise_external_exceptions,
         )
 
     def preview(self, stack=None, flags=None):

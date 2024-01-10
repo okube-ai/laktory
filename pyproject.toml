@@ -94,6 +94,10 @@ include = ["laktory*"]
 [tool.setuptools.dynamic]
 version = {attr = "laktory._version.VERSION"}
 
+# CLI
+[project.scripts]
+laktory = "laktory.cli.app:app"
+
 [tool.ruff]
 #line-length = 120
 #extend-select = ['Q', 'RUF100', 'C90', 'UP', 'I', 'D', 'T']

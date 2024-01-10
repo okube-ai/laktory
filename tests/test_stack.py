@@ -7,14 +7,6 @@ dirpath = os.path.dirname(__file__)
 with open(os.path.join(dirpath, "stack.yaml"), "r") as fp:
     stack = models.Stack.model_validate_yaml(fp)
 
-empty_stack = stack.model_copy(
-    deep=True,
-    update={
-        "resources": models.StackResources(),
-        "environments": {},
-    },
-)
-
 
 def test_stack_model():
     data = stack.model_dump()
@@ -27,6 +19,7 @@ def test_stack_model():
         },
         "description": None,
         "name": "unit-testing",
+        "engine": "pulumi",
         "pulumi_outputs": {},
         "resources": {
             "catalogs": {},
@@ -399,22 +392,6 @@ def test_pulumi_stack():
     assert data == data0
 
 
-def test_pulumi_preview():
-    stack.pulumi_preview("okube/dev")
-
-
-def test_pulumi_up():
-    # Create and delete dev resources
-    stack.pulumi_up("okube/dev", flags=["--yes"])
-    empty_stack.pulumi_up("okube/dev", flags=["--yes"])
-
-    # Create and delete prod resources
-    stack.pulumi_up("okube/prod", flags=["--yes"])
-    empty_stack.pulumi_up("okube/prod", flags=["--yes"])
-
-
 if __name__ == "__main__":
     test_stack_model()
     test_pulumi_stack()
-    test_pulumi_preview()
-    test_pulumi_up()

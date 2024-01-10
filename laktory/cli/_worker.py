@@ -2,7 +2,7 @@ import subprocess
 
 
 class Worker:
-    def run(self, cmd, cwd=None):
+    def run(self, cmd, cwd=None, raise_exceptions=True):
         try:
             completed_process = subprocess.run(
                 cmd,
@@ -11,4 +11,7 @@ class Worker:
             )
 
         except Exception as e:
-            print("An error occurred:", str(e))
+            if raise_exceptions:
+                raise e
+            else:
+                print("An error occurred:", str(e))
