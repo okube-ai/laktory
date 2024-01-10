@@ -1,5 +1,6 @@
 from typing import Union
 from typing import Any
+from typing import Literal
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -74,6 +75,7 @@ class StackResources(BaseModel):
 class EnvironmentStack(BaseModel):
     config: dict[str, str] = {}
     description: str = None
+    engine: Literal["pulumi", "terraform"] = None
     name: str
     pulumi_outputs: dict[str, str] = {}
     resources: StackResources = StackResources()
@@ -94,6 +96,7 @@ class Stack(BaseModel):
     config: dict[str, str] = {}
     description: str = None
     name: str
+    engine: Literal["pulumi", "terraform"] = None
     pulumi_outputs: dict[str, str] = {}
     resources: StackResources = StackResources()
     variables: dict[str, Union[str, bool]] = {}
@@ -151,35 +154,9 @@ class Stack(BaseModel):
             outputs=env.pulumi_outputs,
         )
 
-    def pulumi_preview(self, stack, flags=None):
-        if "/" not in stack:
-            raise ValueError(
-                "Provides a valid pulumi stack name {organization}/{stack}"
-            )
-
-        env = None
-        if stack is not None:
-            env = stack.split("/")[-1]
-
-        pstack = self.to_pulumi(env=env)
-
-        pstack.preview(stack=stack, flags=flags)
-
-    def pulumi_up(self, stack, flags=None):
-        if "/" not in stack:
-            raise ValueError(
-                "Provides a valid pulumi stack name {organization}/{stack}"
-            )
-
-        env = stack.split("/")[-1]
-
-        pstack = self.to_pulumi(env=env)
-
-        pstack.up(stack=stack, flags=flags)
-
     # ----------------------------------------------------------------------- #
     # Terraform Methods                                                       #
     # ----------------------------------------------------------------------- #
 
-    def model_terraform_dump(self):
-        pass
+    def to_terraform(self):
+        raise NotImplementedError()

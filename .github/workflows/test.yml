@@ -55,6 +55,7 @@ jobs:
           DATABRICKS_WAREHOUSE_ID: ${{ vars.DATABRICKS_WAREHOUSE_ID }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
           LAKEHOUSE_SA_CONN_STR: ${{ secrets.LAKEHOUSE_SA_CONN_STR }}
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
 #      - name: Publish test coverage
 #        uses: codecov/codecov-action@v1

@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     #     keyvault_url="LAKTORY_KEYVAULT_URL"
     # )
 
+    # CLI
+    cli_raise_external_exceptions: bool = Field(False, alias="LAKTORY_CLI_RAISE_EXTERNAL_EXCEPTIONS")
+
     # Configuration
     resources_engine: Union[str, None] = Field(
         "pulumi", alias="LAKTORY_RESOURCES_ENGINE"
