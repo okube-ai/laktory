@@ -1,21 +1,26 @@
+import os
 from laktory import app
 from laktory import settings
 from typer.testing import CliRunner
 
 runner = CliRunner()
 settings.cli_raise_external_exceptions = True
+dirpath = os.path.dirname(__file__)
 
 
 def test_preview_pulumi():
-    result = runner.invoke(app, ["preview", "--stack", "okube/dev"])
+    filepath = os.path.join(dirpath, "stack.yaml")
+    result = runner.invoke(app, ["preview", "--stack", "okube/dev", "--filepath", filepath])
     assert result.exit_code == 0
 
 
 def test_deploy_pulumi():
-    result = runner.invoke(app, ["deploy", "-s", "okube/dev", "--pulumi-options", "--yes"])
+    filepath = os.path.join(dirpath, "stack.yaml")
+    result = runner.invoke(app, ["deploy", "-s", "okube/dev", "--filepath", filepath, "--pulumi-options", "--yes"])
     assert result.exit_code == 0
 
-    result = runner.invoke(app, ["deploy", "-s", "okube/dev", "--filepath", "./stack_empty.yaml", "--pulumi-options", "--yes"])
+    filepath = os.path.join(dirpath, "stack_empty.yaml")
+    result = runner.invoke(app, ["deploy", "-s", "okube/dev", "--filepath", filepath, "--pulumi-options", "--yes"])
     assert result.exit_code == 0
 
 
