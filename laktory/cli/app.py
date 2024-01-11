@@ -6,9 +6,7 @@ from laktory.models.basemodel import BaseModel
 
 APP_NAME = "laktory-cli"
 
-app = typer.Typer(
-    pretty_exceptions_show_locals=False  # prevent display secret data
-)
+app = typer.Typer(pretty_exceptions_show_locals=False)  # prevent display secret data
 
 
 class CLIController(BaseModel):
@@ -39,7 +37,6 @@ class CLIController(BaseModel):
         return env
 
     def read_stack(self):
-
         if self.stack_filepath is None:
             self.stack_filepath = "./stack.yaml"
 
@@ -47,11 +44,12 @@ class CLIController(BaseModel):
             self.stack = Stack.model_validate_yaml(fp)
 
     def set_backend(self):
-
         if self.backend is None:
             self.backend = self.stack.backend
         if self.backend is None:
-            raise ValueError("backend ['pulumi', 'terraform'] must be specified in stack file or as CLI option ")
+            raise ValueError(
+                "backend ['pulumi', 'terraform'] must be specified in stack file or as CLI option "
+            )
 
     def pulumi_call(self, cmd):
         if self.pulumi_stack_name is None:
@@ -63,13 +61,12 @@ class CLIController(BaseModel):
 
 @app.command()
 def preview(
-        backend: str = None,
-        stack: Annotated[str, typer.Option("--stack", "-s")] = None,
-        filepath: str = "./stack.yaml",
-        pulumi_options: Annotated[str, typer.Option("--pulumi-options")] = None,
-        terraform_options: Annotated[str, typer.Option("--terraform-options")] = None,
+    backend: str = None,
+    stack: Annotated[str, typer.Option("--stack", "-s")] = None,
+    filepath: str = "./stack.yaml",
+    pulumi_options: Annotated[str, typer.Option("--pulumi-options")] = None,
+    terraform_options: Annotated[str, typer.Option("--terraform-options")] = None,
 ):
-
     controller = CLIController(
         backend=backend,
         pulumi_stack_name=stack,
@@ -95,11 +92,11 @@ def preview(
 
 @app.command()
 def deploy(
-        backend: str = None,
-        stack: Annotated[str, typer.Option("--stack", "-s")] = None,
-        filepath: str = "./stack.yaml",
-        pulumi_options: Annotated[str, typer.Option("--pulumi-options")] = None,
-        terraform_options: Annotated[str, typer.Option("--terraform-options")] = None,
+    backend: str = None,
+    stack: Annotated[str, typer.Option("--stack", "-s")] = None,
+    filepath: str = "./stack.yaml",
+    pulumi_options: Annotated[str, typer.Option("--pulumi-options")] = None,
+    terraform_options: Annotated[str, typer.Option("--terraform-options")] = None,
 ):
     controller = CLIController(
         backend=backend,

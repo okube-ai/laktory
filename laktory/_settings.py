@@ -12,12 +12,12 @@ class Settings(BaseSettings):
     # )
 
     # CLI
-    cli_raise_external_exceptions: bool = Field(False, alias="LAKTORY_CLI_RAISE_EXTERNAL_EXCEPTIONS")
+    cli_raise_external_exceptions: bool = Field(
+        False, alias="LAKTORY_CLI_RAISE_EXTERNAL_EXCEPTIONS"
+    )
 
     # Configuration
-    iac_backend: Union[str, None] = Field(
-        "pulumi", alias="LAKTORY_IAC_BACKEND"
-    )
+    iac_backend: Union[str, None] = Field("pulumi", alias="LAKTORY_IAC_BACKEND")
 
     # Azure
     lakehouse_sa_conn_str: Union[str, None] = Field(None, alias="LAKEHOUSE_SA_CONN_STR")

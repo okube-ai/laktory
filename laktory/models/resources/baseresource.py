@@ -26,7 +26,11 @@ class BaseResource(_BaseModel):
     resources. This `BaseResource` class is derived from `pydantic.BaseModel`.
     """
 
-    resource_name_: str = Field(None, validation_alias=AliasChoices("resource_name_", "resource_name"), exclude=True)
+    resource_name_: str = Field(
+        None,
+        validation_alias=AliasChoices("resource_name_", "resource_name"),
+        exclude=True,
+    )
     options: ResourceOptions = Field(ResourceOptions(), exclude=True)
     _core_resources: list[Any] = None
 

@@ -10,7 +10,9 @@ dirpath = os.path.dirname(__file__)
 
 def test_preview_pulumi():
     filepath = os.path.join(dirpath, "stack.yaml")
-    result = runner.invoke(app, ["preview", "--stack", "okube/dev", "--filepath", filepath])
+    result = runner.invoke(
+        app, ["preview", "--stack", "okube/dev", "--filepath", filepath]
+    )
     assert result.exit_code == 0
 
 
@@ -19,11 +21,33 @@ def atest_deploy_pulumi():
     # are run concurrently because of the multiple python testing environment
     # which result in:  Conflict: Another update is currently in progress
     filepath = os.path.join(dirpath, "stack.yaml")
-    result = runner.invoke(app, ["deploy", "-s", "okube/dev", "--filepath", filepath, "--pulumi-options", "--yes"])
+    result = runner.invoke(
+        app,
+        [
+            "deploy",
+            "-s",
+            "okube/dev",
+            "--filepath",
+            filepath,
+            "--pulumi-options",
+            "--yes",
+        ],
+    )
     assert result.exit_code == 0
 
     filepath = os.path.join(dirpath, "stack_empty.yaml")
-    result = runner.invoke(app, ["deploy", "-s", "okube/dev", "--filepath", filepath, "--pulumi-options", "--yes"])
+    result = runner.invoke(
+        app,
+        [
+            "deploy",
+            "-s",
+            "okube/dev",
+            "--filepath",
+            filepath,
+            "--pulumi-options",
+            "--yes",
+        ],
+    )
     assert result.exit_code == 0
 
 

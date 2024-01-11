@@ -102,15 +102,16 @@ class BaseModel(_BaseModel):
         Inject variables values into a dictionary (generally model dump).
 
         There are 3 types of variables:
-            - User defined variables expressed as `${var.variable_name}` and
-              defined in `self.variables`.
-            - Pulumi resources expressed as `${resources.resource_name}`. These
-              are available from `laktory.pulumi_resources` and are populated
-              automatically by Laktory.
-            - Pulumi resources output properties expressed as
-             `${resources.resource_name.output}`. These are available from
-             `laktory.pulumi_outputs` and are populated automatically by
-              Laktory.
+
+        - User defined variables expressed as `${var.variable_name}` and
+          defined in `self.variables` or in environment variables.
+        - Pulumi resources expressed as `${resources.resource_name}`. These
+          are available from `laktory.pulumi_resources` and are populated
+          automatically by Laktory.
+        - Pulumi resources output properties expressed as
+         `${resources.resource_name.output}`. These are available from
+         `laktory.pulumi_outputs` and are populated automatically by
+          Laktory.
 
         Pulumi Outputs are also supported as variable values.
 
