@@ -97,6 +97,11 @@ class SecretScope(BaseModel, PulumiResource):
 
     @property
     def core_resources(self) -> list[PulumiResource]:
+        """
+        - secret scope
+        - secret values
+        - secret scope permissions (ACL)
+        """
         if self._core_resources is None:
             self._core_resources = [
                 self,

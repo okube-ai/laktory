@@ -76,7 +76,7 @@ class Notebook(BaseModel, PulumiResource):
 
     @property
     def resource_key(self) -> str:
-        """Notebook resource key"""
+        """path with special characters `/`, `.`, `\\` replaced with `-`"""
         key = self.path
         key = key.replace("/", "-")
         key = key.replace("\\", "-")
@@ -88,6 +88,10 @@ class Notebook(BaseModel, PulumiResource):
 
     @property
     def core_resources(self) -> list[PulumiResource]:
+        """
+        - job
+        - permissions
+        """
         if self._core_resources is None:
             self._core_resources = [
                 self,

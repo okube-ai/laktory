@@ -723,6 +723,10 @@ class Job(BaseModel, PulumiResource):
 
     @property
     def core_resources(self) -> list[PulumiResource]:
+        """
+        - job
+        - permissions
+        """
         if self._core_resources is None:
             self._core_resources = [
                 self,

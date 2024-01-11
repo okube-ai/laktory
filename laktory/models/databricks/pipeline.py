@@ -342,10 +342,19 @@ class Pipeline(BaseModel, PulumiResource):
 
     @property
     def resource_type_id(self) -> str:
+        """
+        pl
+        """
         return "pl"
 
     @property
     def core_resources(self) -> list[PulumiResource]:
+        """
+        - pipeline
+        - permissions
+        - configuration workspace file
+        - configuration workspace file permissions
+        """
         if self._core_resources is None:
             self._core_resources = [
                 self,

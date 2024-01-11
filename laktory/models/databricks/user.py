@@ -60,6 +60,11 @@ class User(BaseModel, PulumiResource):
 
     @property
     def core_resources(self) -> list[PulumiResource]:
+        """
+        - user
+        - user roles
+        - user group members
+        """
         if self._core_resources is None:
             self._core_resources = [
                 self,

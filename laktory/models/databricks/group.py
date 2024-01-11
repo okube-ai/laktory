@@ -39,6 +39,7 @@ class Group(BaseModel, PulumiResource):
 
     @property
     def resource_key(self) -> str:
+        """display name"""
         return self.display_name
 
     # ----------------------------------------------------------------------- #
