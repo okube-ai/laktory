@@ -8,12 +8,17 @@ The main dependencies are:
 
 * [`pydantic`](https://pypi.org/project/pydantic/): All laktory models derived from Pydantic `BaseModel`.
 * [`settus`](https://pypi.org/project/settus/): Cloud-based settings management system.
-* [`pulumi`](https://pypi.org/project/pulumi/): Infrastructure as code tool used to deploy resources..
+* [`pulumi`](https://pypi.org/project/pulumi/): Infrastructure as code tool used to deploy resources.
+* [`typer`](https://pypi.org/project/typer/): Library for building CLI applications. 
  
 
 If you've got Python 3.8+ and `pip` installed, you're good to go. 
 It is generally recommended to use a virtual environment for the installation. 
 
+The pip installation not only install the python package, but also Laktory CLI that can be invoked with
+```cmd
+laktory --help
+```
 
 ## Cloud-specific installation
 To benefit from all features, we recommend also installing your cloud provider-specific dependencies:

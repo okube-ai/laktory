@@ -19,7 +19,7 @@ def test_stack_model():
         },
         "description": None,
         "name": "unit-testing",
-        "engine": "pulumi",
+        "backend": "pulumi",
         "pulumi_outputs": {},
         "resources": {
             "catalogs": {},

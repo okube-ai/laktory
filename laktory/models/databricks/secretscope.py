@@ -128,7 +128,7 @@ class SecretScope(BaseModel, PulumiResource):
         return self._core_resources
 
     # ----------------------------------------------------------------------- #
-    # Resources Engine Methods                                                #
+    # Pulumi Methods                                                          #
     # ----------------------------------------------------------------------- #
 
     @property
