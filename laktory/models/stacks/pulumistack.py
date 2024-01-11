@@ -107,7 +107,7 @@ class PulumiStack(BaseModel):
         """
         self._call("preview", stack=stack, flags=flags)
 
-    def up(self, stack : str = None, flags: list[str] = None):
+    def up(self, stack: str = None, flags: list[str] = None):
         """
         Runs `pulumi up`
 

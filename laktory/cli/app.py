@@ -6,7 +6,10 @@ from laktory.models.basemodel import BaseModel
 
 APP_NAME = "laktory-cli"
 
-app = typer.Typer(pretty_exceptions_show_locals=False)  # prevent display secret data
+app = typer.Typer(
+    pretty_exceptions_show_locals=False,
+    help="Laktory CLI to preview and deploy resources",
+)  # prevent display secret data
 
 
 class CLIController(BaseModel):
@@ -61,12 +64,51 @@ class CLIController(BaseModel):
 
 @app.command()
 def preview(
-    backend: str = None,
-    stack: Annotated[str, typer.Option("--stack", "-s")] = None,
-    filepath: str = "./stack.yaml",
-    pulumi_options: Annotated[str, typer.Option("--pulumi-options")] = None,
-    terraform_options: Annotated[str, typer.Option("--terraform-options")] = None,
+    backend: Annotated[str, typer.Option(
+        help="IaC backend [pulumi, terraform]"
+    )] = None,
+    stack: Annotated[str, typer.Option(
+        "--stack", "-s",
+        help="Name of the stack. With pulumi backend, expected format is {organization}/{stack}"
+    )] = None,
+    filepath: Annotated[str, typer.Option(
+        help="Stack (yaml) filepath."
+    )] = "./stack.yaml",
+    pulumi_options: Annotated[str, typer.Option(
+        "--pulumi-options",
+        help="Comma separated pulumi options (flags)."
+    )] = None,
+    terraform_options: Annotated[str, typer.Option(
+        "--terraform-options",
+        help="Comma separated terraform options (flags)."
+    )] = None,
 ):
+    """
+    Validate configuration and resources and preview deployment.
+
+    Parameters
+    ----------
+    backend:
+        IaC backend [pulumi, terraform]
+    stack:
+        Name of the stack. With pulumi backend, expected format is {organization}/{stack}
+    filepath:
+        Stack (yaml) filepath.
+    pulumi_options:
+        Comma separated pulumi options (flags).
+    terraform_options:
+        Comma separated terraform options (flags).
+
+    Examples
+    --------
+    ```cmd
+    laktory preview -s okube/dev pulumi_options "--show-reads,--show-config"
+    ```
+
+    References
+    ----------
+    - pulumi preview [options](https://www.pulumi.com/docs/cli/commands/pulumi_preview/)
+    """
     controller = CLIController(
         backend=backend,
         pulumi_stack_name=stack,
@@ -92,12 +134,51 @@ def preview(
 
 @app.command()
 def deploy(
-    backend: str = None,
-    stack: Annotated[str, typer.Option("--stack", "-s")] = None,
-    filepath: str = "./stack.yaml",
-    pulumi_options: Annotated[str, typer.Option("--pulumi-options")] = None,
-    terraform_options: Annotated[str, typer.Option("--terraform-options")] = None,
+    backend: Annotated[str, typer.Option(
+        help="IaC backend [pulumi, terraform]"
+    )] = None,
+    stack: Annotated[str, typer.Option(
+        "--stack", "-s",
+        help="Name of the stack. With pulumi backend, expected format is {organization}/{stack}"
+    )] = None,
+    filepath: Annotated[str, typer.Option(
+        help="Stack (yaml) filepath."
+    )] = "./stack.yaml",
+    pulumi_options: Annotated[str, typer.Option(
+        "--pulumi-options",
+        help="Comma separated pulumi options (flags)."
+    )] = None,
+    terraform_options: Annotated[str, typer.Option(
+        "--terraform-options",
+        help="Comma separated terraform options (flags)."
+    )] = None,
 ):
+    """
+    Execute deployment.
+
+    Parameters
+    ----------
+    backend:
+        IaC backend [pulumi, terraform]
+    stack:
+        Name of the stack. With pulumi backend, expected format is {organization}/{stack}
+    filepath:
+        Stack (yaml) filepath.
+    pulumi_options:
+        Comma separated pulumi options (flags).
+    terraform_options:
+        Comma separated terraform options (flags).
+
+    Examples
+    --------
+    ```cmd
+    laktory deploy -s okube/dev --filepath my-stack.yaml
+    ```
+
+    References
+    ----------
+    - pulumi up [options](https://www.pulumi.com/docs/cli/commands/pulumi_up/)
+    """
     controller = CLIController(
         backend=backend,
         pulumi_stack_name=stack,
