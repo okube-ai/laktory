@@ -85,47 +85,35 @@ with open("my-pipeline.yaml", "r") as fp:
 ```
 Using any of the above approaches will result in the exact same `pipeline` python object.
 
-## Variables
-In some cases, it's not practical or even possible to declare a property as plain text.
-Take for example the declaration of a pipeline where the catalog name is the environment in which the pipeline will be deployed.
+#### YAML nesting
+Laktory supports nested yaml files, meaning that you can include or inject another yaml file from the base
+one. Using this approach, the example above could be re-written as
 
-```yaml
+```yaml title="my-pipeline.yaml"
 name: my-pipeline
 catalog: dev
 target: finance
 tables: 
-  - name: "table"
-    columns:
-      - name: x
-        type: double
-...
-```
-You probably want to re-use the same configuration file for all your environments, but with a different value for the catalog. 
-Laktory makes it possible by introducing the concept of models variables or `vars`, declared as `${var.variable_name}`
-
-```yaml
-name: my-pipeline
-catalog: ${var.env}
-target: finance
-tables: 
-  - name: "table"
-    columns:
-      - name: x
-        type: double
-...
+  - ${include.table1.yaml}
+  - ${include.table2.yaml}
 ```
 
-Once the object has been instantiated, it can be assigned variable values.  
-
-```py title="main.py"
-import os
-from laktory import models
-
-with open("my-pipeline.yaml", "r") as fp:
-    pipeline = models.Pipeline.model_validate_yaml(fp)
-
-pipeline.vars = {"env": os.getenv("ENV")}
+```yaml title="table1.yaml"
+name: "table_xy"
+columns:
+  - name: x
+    type: double
+  - name: y
+    type: double
 ```
 
-These variables won't affect serialization (`model_dump()`) until the method `inject_vars()` is called. 
-This is especially useful when your model needs to reference id of a resource that has not yet been deployed at runtime.
+```yaml title="table2.yaml"
+name: "table_xyz"
+columns:
+  - name: x
+    type: double
+  - name: y
+    type: double
+  - name: z
+    type: double
+```

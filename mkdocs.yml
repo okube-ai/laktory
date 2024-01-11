@@ -117,15 +117,18 @@ nav:
 
   - Concepts:
     - Design Principles: concepts/design.md
-    - Models: concepts/models.md
-    - Data Event: concepts/dataevent.md
-#    - Data Source: concepts/datasource.md
-    - Table: concepts/table.md
-    - Table Builder: concepts/tablebuilder.md
-    - Pipeline: concepts/pipeline.md
-    - Data Governance: concepts/governance.md
+    - Models:
+      - Intro: concepts/models.md
+      - Data Event: concepts/dataevent.md
+      - Table: concepts/table.md
+      - Table Builder: concepts/tablebuilder.md
+      - Pipeline: concepts/pipeline.md
+    - Stack: concepts/stack.md
+    - Variables: concepts/variables.md
     - Deployment (IaC): concepts/deployment.md
+    - CLI: concepts/cli.md
     - Spark Extension: concepts/spark.md
+    - Data Governance: concepts/governance.md
 
   - How-To Guides:
     - Users: guides/users.md
@@ -140,7 +143,6 @@ nav:
   - API Reference:
     - Models:
       - BaseModel: api/models/basemodel.md
-      - BaseResource: api/models/baseresource.md
       - DataEventHeader: api/models/dataeventheader.md
       - DataEvent: api/models/dataevent.md
       - DataProducer: api/models/dataproducer.md
@@ -155,7 +157,7 @@ nav:
         - api/models/databricks/group.md
         - api/models/databricks/job.md
         - api/models/databricks/notebook.md
-        - api/models/databricks/permission.md
+        - api/models/databricks/accesscontrol.md
         - ServicePrincipal: api/models/databricks/serviceprincipal.md
         - api/models/databricks/secret.md
         - SecretScope: api/models/databricks/secretscope.md
@@ -164,6 +166,9 @@ nav:
         - api/models/databricks/warehouse.md
         - api/models/databricks/workspacefile.md
       - Grants: api/models/grants.md
+      - Resources:
+        - BaseResource: api/models/baseresource.md
+        - PulumiResource: api/models/pulumiresource.md
       - SQL:
           - api/models/sql/catalog.md
           - api/models/sql/column.md
@@ -175,6 +180,7 @@ nav:
           - TableJoin: api/models/sql/tablejoin.md
           - TableWindowFilter: api/models/sql/tablewindowfilter.md
           - api/models/sql/volume.md
+    - CLI: api/cli.md
     - Spark:
       - DataFrame:
         - has_column: api/spark/dataframe/has_column.md
