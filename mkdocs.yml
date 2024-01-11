@@ -151,18 +151,22 @@ nav:
         - EventDataSource: api/models/datasources/eventdatasource.md
         - TableDataSource: api/models/datasources/tabledatasource.md
       - Databricks:
+        - AccessControl: api/models/databricks/accesscontrol.md
         - api/models/databricks/cluster.md
         - api/models/databricks/directory.md
-        - Pipeline: api/models/databricks/pipeline.md
+        - api/models/databricks/grants.md
         - api/models/databricks/group.md
         - api/models/databricks/job.md
         - api/models/databricks/notebook.md
-        - api/models/databricks/accesscontrol.md
-        - ServicePrincipal: api/models/databricks/serviceprincipal.md
+        - Pipeline: api/models/databricks/pipeline.md
         - api/models/databricks/secret.md
+        - SecretAcl: api/models/databricks/secretacl.md
         - SecretScope: api/models/databricks/secretscope.md
-        - api/models/databricks/user.md
+        - ServicePrincipal: api/models/databricks/serviceprincipal.md
+        - ServicePrincipalRole: api/models/databricks/serviceprincipalrole.md
         - SqlQuery: api/models/databricks/sqlquery.md
+        - api/models/databricks/user.md
+        - UserRole: api/models/databricks/userrole.md
         - api/models/databricks/warehouse.md
         - api/models/databricks/workspacefile.md
       - Grants: api/models/grants.md

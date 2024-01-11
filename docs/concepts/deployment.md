@@ -98,9 +98,9 @@ from laktory import models
 # Declare pipeline
 pipeline = models.Pipeline(
     name="pl-stock-prices",
-    libraries=[{"notebooks": {"path": "/pipelines/dlt_brz_template.py"}}]
+    libraries=[{"notebooks": {"path": "/pipelines/dlt_brz_template.py"}}],
 )
-    
+
 # Deploy
 pipeline.to_pulumi()
 ```

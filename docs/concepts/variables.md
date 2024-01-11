@@ -56,9 +56,7 @@ with open("my-job.yaml", "r") as fp:
     job = models.Job.model_validate_yaml(fp)
 
 stack = models.Stack(
-    name="my-stack",
-    resources={"jobs": {"my-job": job}},
-    variables={"env": "dev"}
+    name="my-stack", resources={"jobs": {"my-job": job}}, variables={"env": "dev"}
 )
 ```
 
