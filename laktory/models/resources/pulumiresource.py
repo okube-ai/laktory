@@ -4,13 +4,16 @@ from typing import Any
 from laktory.models.resources.baseresource import BaseResource
 
 pulumi_outputs = {}
-"""Store pulumi outputs for deployed resources"""
+"""Pulumi outputs for all deployed resources. Updated during deployment."""
 
 pulumi_resources = {}
-"""Store pulumi deployed resources"""
+"""All pulumi deployed resources objects. Updated during deployment."""
 
 
 class PulumiResource(BaseResource):
+    """
+    Parent class for all Laktory models deployable with Pulumi IaC backend.
+    """
     _pulumi_resources: dict[str, Any] = {}
 
     # ----------------------------------------------------------------------- #
@@ -44,13 +47,12 @@ class PulumiResource(BaseResource):
     @property
     def pulumi_properties(self) -> dict:
         """
-        Dump model and customize it to be used as an input for a pulumi
-        resource:
+        Resources properties formatted for pulumi:
 
-        * dump the model
-        * remove excludes defined in `self.pulumi_excludes`
-        * rename keys according to `self.pulumi_renames`
-        * inject variables
+        * Serialization (model dump)
+        * Removal of excludes defined in `self.pulumi_excludes`
+        * Renaming of keys according to `self.pulumi_renames`
+        * Injection of variables
 
         Returns
         -------
@@ -65,6 +67,20 @@ class PulumiResource(BaseResource):
         return d
 
     def to_pulumi(self, opts=None):
+        """
+        Instantiate one or multiple pulumi objects related to the model. This
+        function would trigger a deployment in the context of a `pulumi up`
+
+        Parameters
+        ----------
+        opts:
+            Resource options for deployment
+
+        Returns
+        -------
+        :
+            Deployed pulumi resources
+        """
         from pulumi import ResourceOptions
 
         self._pulumi_resources = {}

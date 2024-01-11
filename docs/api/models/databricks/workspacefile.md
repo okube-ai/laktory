@@ -1,1 +1,1 @@
-::: laktory.models.Notebook
+::: laktory.models.WorkspaceFile

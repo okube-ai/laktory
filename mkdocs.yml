@@ -168,11 +168,12 @@ nav:
         - api/models/databricks/user.md
         - UserRole: api/models/databricks/userrole.md
         - api/models/databricks/warehouse.md
-        - api/models/databricks/workspacefile.md
-      - Grants: api/models/grants.md
+        - WorkspaceFile: api/models/databricks/workspacefile.md
+      - Providers:
+        - DatabricksProvider: api/models/providers/databricks.md
       - Resources:
-        - BaseResource: api/models/baseresource.md
-        - PulumiResource: api/models/pulumiresource.md
+        - BaseResource: api/models/resources/baseresource.md
+        - PulumiResource: api/models/resources/pulumiresource.md
       - SQL:
           - api/models/sql/catalog.md
           - api/models/sql/column.md
@@ -184,6 +185,11 @@ nav:
           - TableJoin: api/models/sql/tablejoin.md
           - TableWindowFilter: api/models/sql/tablewindowfilter.md
           - api/models/sql/volume.md
+      - Stacks:
+          - Stack: api/models/stacks/stack.md
+          - PulumiStacK: api/models/stacks/pulumistack.md
+
+
     - CLI: api/cli.md
     - Spark:
       - DataFrame:

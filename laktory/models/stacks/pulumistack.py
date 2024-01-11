@@ -20,7 +20,12 @@ class ConfigValue(BaseModel):
 
 class PulumiStack(BaseModel):
     """
-    A stack, as defined by pulumi for deployment.
+    A Pulumi stack is pulumi-specific flavor of the `laktory.models.Stack`. It
+    re-structure the attributes to be aligned with a Pulumi.yaml file.
+
+    It is generally not instantiated directly, but rather created using
+    `laktory.models.Stack.to_pulumi()`.
+
     """
 
     name: str
@@ -32,7 +37,7 @@ class PulumiStack(BaseModel):
     outputs: dict[str, str] = {}
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
-        """TODO"""
+        """Serialize model to match the structure of a Pulumi.yaml file."""
         kwargs["exclude_none"] = kwargs.get("exclude_none", True)
         d = super().model_dump(*args, **kwargs)
 
@@ -53,6 +58,14 @@ class PulumiStack(BaseModel):
     # ----------------------------------------------------------------------- #
 
     def write(self) -> str:
+        """
+        Write Pulumi.yaml configuration file
+
+        Returns
+        -------
+        :
+            Filepath of the configuration file
+        """
         filepath = os.path.join(CACHE_ROOT, "Pulumi.yaml")
 
         if not os.path.exists(CACHE_ROOT):
@@ -63,7 +76,7 @@ class PulumiStack(BaseModel):
 
         return filepath
 
-    def _call(self, command, stack, flags=None):
+    def _call(self, command: str, stack: str, flags: list[str] =None):
         from laktory.cli._worker import Worker
 
         self.write()
@@ -81,8 +94,28 @@ class PulumiStack(BaseModel):
             raise_exceptions=settings.cli_raise_external_exceptions,
         )
 
-    def preview(self, stack=None, flags=None):
+    def preview(self, stack: str = None, flags: list[str] = None) -> None:
+        """
+        Runs `pulumi preview`
+
+        Parameters
+        ----------
+        stack:
+            Name of the stack to use
+        flags:
+            List of flags / options for pulumi preview
+        """
         self._call("preview", stack=stack, flags=flags)
 
-    def up(self, stack=None, flags=None):
+    def up(self, stack : str = None, flags: list[str] = None):
+        """
+        Runs `pulumi up`
+
+        Parameters
+        ----------
+        stack:
+            Name of the stack to use
+        flags:
+            List of flags / options for pulumi up
+        """
         self._call("up", stack=stack, flags=flags)
