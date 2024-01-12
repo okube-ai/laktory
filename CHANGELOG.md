@@ -1,6 +1,16 @@
 # Release History
 
-## [0.1.0] - Unreleased
+## [0.1.1] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.1.0] - 2024-01-12
 ### Added
 * Automatic creation of resources output variables that can be used in configuration files
 * Custom model serialization allowing conversion of keys to camel case
