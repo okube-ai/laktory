@@ -9,8 +9,8 @@ The stack act as a container for the resources, but also as a configuration obje
 name: workspace
 backend: pulumi
 config:
-  databricks:host: ${var.DATABRICKS_HOST}
-  databricks:token: ${var.DATABRICKS_TOKEN}
+  databricks:host: ${vars.DATABRICKS_HOST}
+  databricks:token: ${vars.DATABRICKS_TOKEN}
 resources:
   pipelines:
     pl-stock-prices:

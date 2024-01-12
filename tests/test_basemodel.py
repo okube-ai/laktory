@@ -16,8 +16,8 @@ schema_name = RandomString(
 
 
 schema = Schema(
-    name="${var.env}.${var.schema_name}",
-    catalog_name="${var.env}",
+    name="${vars.env}.${vars.schema_name}",
+    catalog_name="${vars.env}",
     tables=[
         Table(
             name="AAPL",
@@ -39,7 +39,7 @@ schema = Schema(
             name="GOOGL",
             columns=[
                 {
-                    "name": "${var.dynamic_column}",
+                    "name": "${vars.dynamic_column}",
                     "type": "double",
                 },
                 {
@@ -101,7 +101,7 @@ def test_camelize():
     assert dump == {
         "comment": None,
         "grants": None,
-        "name": "${var.env}.${var.schema_name}",
+        "name": "${vars.env}.${vars.schema_name}",
         "tables": [
             {
                 "builder": {
@@ -162,10 +162,10 @@ def test_camelize():
                 "expectations": [],
                 "grants": None,
                 "name": "AAPL",
-                "catalogName": "${var.env}",
+                "catalogName": "${vars.env}",
                 "dataSourceFormat": "DELTA",
                 "primaryKey": None,
-                "schemaName": "${var.env}.${var.schema_name}",
+                "schemaName": "${vars.env}.${vars.schema_name}",
                 "tableType": "MANAGED",
                 "timestampKey": None,
                 "viewDefinition": None,
@@ -191,7 +191,7 @@ def test_camelize():
                 "columns": [
                     {
                         "comment": None,
-                        "name": "${var.dynamic_column}",
+                        "name": "${vars.dynamic_column}",
                         "pii": None,
                         "type": "double",
                         "unit": None,
@@ -223,10 +223,10 @@ def test_camelize():
                 "expectations": [],
                 "grants": None,
                 "name": "GOOGL",
-                "catalogName": "${var.env}",
+                "catalogName": "${vars.env}",
                 "dataSourceFormat": "DELTA",
                 "primaryKey": None,
-                "schemaName": "${var.env}.${var.schema_name}",
+                "schemaName": "${vars.env}.${vars.schema_name}",
                 "tableType": "MANAGED",
                 "timestampKey": None,
                 "viewDefinition": None,
@@ -234,7 +234,7 @@ def test_camelize():
             },
         ],
         "volumes": [],
-        "catalogName": "${var.env}",
+        "catalogName": "${vars.env}",
         "forceDestroy": True,
     }
 

@@ -118,7 +118,7 @@ class BaseModel(_BaseModel):
 
         There are 3 types of variables:
 
-        - User defined variables expressed as `${var.variable_name}` and
+        - User defined variables expressed as `${vars.variable_name}` and
           defined in `self.variables` or in environment variables.
         - Pulumi resources expressed as `${resources.resource_name}`. These
           are available from `laktory.pulumi_resources` and are populated
@@ -172,20 +172,20 @@ class BaseModel(_BaseModel):
             # _vars["${warehouses."] = "${databricks_sql_endpoint."
             # _vars["${workspace_files."] = "${databricks_workspace_file."
         elif target == "pulumi_py":
-            # _vars["${resources."] = "${var."
+            # _vars["${resources."] = "${vars."
             pass
 
         # User-defined variables
         for k, v in self.variables.items():
             if isinstance(v, pulumi.Output):
-                _vars[f"${{var.{k}}}"] = f"{{_pargs_{k}}}"
+                _vars[f"${{vars.{k}}}"] = f"{{_pargs_{k}}}"
                 _pvars[f"_pargs_{k}"] = v
             else:
-                _vars[f"${{var.{k}}}"] = v
+                _vars[f"${{vars.{k}}}"] = v
 
         # Environment variables
         for k, v in os.environ.items():
-            _vars[f"${{var.{k}}}"] = v
+            _vars[f"${{vars.{k}}}"] = v
 
         # Pulumi resource outputs
         for k, v in pulumi_outputs.items():

@@ -64,7 +64,7 @@ Once you have data events in your landing storage (they can be generated with an
 ```yaml title="pipeline.yaml"
 name: pl-stock-prices
 
-catalog: ${var.env}
+catalog: ${vars.env}
 target: default
 
 clusters:
@@ -142,8 +142,8 @@ Now that your pipeline is defined, it (along with other resources) can be includ
 name: my-stack
 backend: pulumi
 config:
-  databricks:host: ${var.DATABRICKS_HOST}
-  databricks:token: ${var.DATABRICKS_TOKEN}
+  databricks:host: ${vars.DATABRICKS_HOST}
+  databricks:token: ${vars.DATABRICKS_TOKEN}
 resources:
   pipelines:
     pl-stock-prices: ${include.pipeline.yaml}

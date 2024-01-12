@@ -14,8 +14,8 @@ def test_stack_model():
     assert data == {
         "variables": {},
         "config": {
-            "databricks:host": "${var.DATABRICKS_HOST}",
-            "databricks:token": "${var.DATABRICKS_TOKEN}",
+            "databricks:host": "${vars.DATABRICKS_HOST}",
+            "databricks:token": "${vars.DATABRICKS_TOKEN}",
         },
         "description": None,
         "name": "unit-testing",
@@ -45,13 +45,16 @@ def test_stack_model():
                             "init_scripts": [],
                             "instance_pool_id": None,
                             "name": "main",
-                            "node_type_id": "${var.node_type_id}",
+                            "node_type_id": "${vars.node_type_id}",
                             "num_workers": None,
                             "policy_id": None,
                             "runtime_engine": None,
                             "single_user_name": None,
                             "spark_conf": {},
-                            "spark_env_vars": {},
+                            "spark_env_vars": {
+                                "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
+                                "LAKTORY_WORKSPACE_ENV": "${vars.env}",
+                            },
                             "spark_version": "14.0.x-scala2.12",
                             "ssh_public_keys": [],
                         }
@@ -214,7 +217,7 @@ def test_stack_model():
                     "debug_truncate_bytes": None,
                     "google_credentials": None,
                     "google_service_account": None,
-                    "host": "${var.DATABRICKS_HOST}",
+                    "host": "${vars.DATABRICKS_HOST}",
                     "http_timeout_seconds": None,
                     "metadata_service_url": None,
                     "password": None,
@@ -222,7 +225,7 @@ def test_stack_model():
                     "rate_limit": None,
                     "retry_timeout_seconds": None,
                     "skip_verify": None,
-                    "token": "${var.DATABRICKS_TOKEN}",
+                    "token": "${vars.DATABRICKS_TOKEN}",
                     "username": None,
                     "warehouse_id": None,
                 }
@@ -234,12 +237,20 @@ def test_stack_model():
         },
         "environments": {
             "dev": {
-                "variables": {"is_dev": True, "node_type_id": "Standard_DS3_v2"},
+                "variables": {
+                    "env": "dev",
+                    "is_dev": True,
+                    "node_type_id": "Standard_DS3_v2",
+                },
                 "config": None,
                 "resources": None,
             },
             "prod": {
-                "variables": {"is_dev": False, "node_type_id": "Standard_DS4_v2"},
+                "variables": {
+                    "env": "prod",
+                    "is_dev": False,
+                    "node_type_id": "Standard_DS4_v2",
+                },
                 "config": None,
                 "resources": {"pipelines": {"pl-custom-name": {"development": False}}},
             },
@@ -292,9 +303,12 @@ def test_pulumi_stack():
                             "newCluster": {
                                 "dataSecurityMode": "USER_ISOLATION",
                                 "initScripts": [],
-                                "nodeTypeId": "${var.node_type_id}",
+                                "nodeTypeId": "${vars.node_type_id}",
                                 "sparkConf": {},
-                                "sparkEnvVars": {},
+                                "sparkEnvVars": {
+                                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
+                                    "LAKTORY_WORKSPACE_ENV": "${vars.env}",
+                                },
                                 "sparkVersion": "14.0.x-scala2.12",
                                 "sshPublicKeys": [],
                             },
@@ -372,11 +386,12 @@ def test_pulumi_stack():
     data["config"]["databricks:token"] = "***"
     data["resources"]["databricks-provider"]["properties"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
+    data0["variables"]["env"] = "dev"
     data0["variables"]["is_dev"] = True
     data0["variables"]["node_type_id"] = "Standard_DS3_v2"
-    data0["resources"]["job-stock-prices-ut-stack"]["properties"]["jobClusters"][0][
-        "newCluster"
-    ]["nodeTypeId"] = "Standard_DS3_v2"
+    cluster = data0["resources"]["job-stock-prices-ut-stack"]["properties"]["jobClusters"][0]["newCluster"]
+    cluster["nodeTypeId"] = "Standard_DS3_v2"
+    cluster["sparkEnvVars"]["LAKTORY_WORKSPACE_ENV"] = "dev"
     assert data == data0
 
     # Prod
@@ -384,11 +399,12 @@ def test_pulumi_stack():
     data["config"]["databricks:token"] = "***"
     data["resources"]["databricks-provider"]["properties"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
+    data0["variables"]["env"] = "prod"
     data0["variables"]["is_dev"] = False
     data0["variables"]["node_type_id"] = "Standard_DS4_v2"
-    data0["resources"]["job-stock-prices-ut-stack"]["properties"]["jobClusters"][0][
-        "newCluster"
-    ]["nodeTypeId"] = "Standard_DS4_v2"
+    cluster = data0["resources"]["job-stock-prices-ut-stack"]["properties"]["jobClusters"][0]["newCluster"]
+    cluster["nodeTypeId"] = "Standard_DS4_v2"
+    cluster["sparkEnvVars"]["LAKTORY_WORKSPACE_ENV"] = "prod"
     data0["resources"]["pl-custom-name"]["properties"]["development"] = False
     assert data == data0
 

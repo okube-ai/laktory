@@ -15,12 +15,12 @@ Laktory makes it possible by introducing the concept of models variables.
 
 ## User-defined variables
 ### Declaration
-User-defined variables or `vars` are declared in a model as `${var.variable_name}`.
+User-defined variables or `vars` are declared in a model as `${vars.variable_name}`.
 
-We can re-write the job declaration by replacing the explicit environment expression `dev` by a variable named `env` and expressed as `${var.env}`
+We can re-write the job declaration by replacing the explicit environment expression `dev` by a variable named `env` and expressed as `${vars.env}`
 
 ```yaml
-name: my-job-${var.env}
+name: my-job-${vars.env}
 tasks:
   - task_key: pipeline
     pipeline_task:
@@ -68,7 +68,7 @@ covered with resources variables.
 In this case, the notation is `${resources.resource_name.resource_output}`. Our previous job example may be expressed as
 
 ```yaml
-name: my-job-${var.env}
+name: my-job-${vars.env}
 tasks:
   - task_key: pipeline
     pipeline_task:

@@ -35,8 +35,8 @@ to run the deployment.
 name: workspace
 backend: pulumi
 config:
-  databricks:host: ${var.DATABRICKS_HOST}
-  databricks:token: ${var.DATABRICKS_TOKEN}
+  databricks:host: ${vars.DATABRICKS_HOST}
+  databricks:token: ${vars.DATABRICKS_TOKEN}
 resources:
   pipelines:
     pl-stock-prices:
@@ -70,8 +70,8 @@ Switching to a terraform backend is as simple as changing the backend in the sta
 name: workspace
 backend: terraform
 config:
-  databricks:host: ${var.DATABRICKS_HOST}
-  databricks:token: ${var.DATABRICKS_TOKEN}
+  databricks:host: ${vars.DATABRICKS_HOST}
+  databricks:token: ${vars.DATABRICKS_TOKEN}
 resources:
   pipelines:
     pl-stock-prices:
