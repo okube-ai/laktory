@@ -1,6 +1,8 @@
 from abc import abstractmethod
 from typing import Union
 from typing import Any
+from laktory._settings import settings
+from laktory._parsers import _snake_to_camel
 from laktory.models.resources.baseresource import BaseResource
 
 pulumi_outputs = {}
@@ -61,6 +63,9 @@ class PulumiResource(BaseResource):
         """
         d = super().model_dump(exclude=self.pulumi_excludes, exclude_none=True)
         for k, v in self.pulumi_renames.items():
+            if settings.camel_serialization:
+                k = _snake_to_camel(k)
+                v = _snake_to_camel(v)
             if k in d:
                 d[v] = d.pop(k)
         d = self.inject_vars(d)

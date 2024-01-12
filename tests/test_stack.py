@@ -24,6 +24,7 @@ def test_stack_model():
         "resources": {
             "catalogs": {},
             "clusters": {},
+            "directories": {},
             "groups": {},
             "jobs": {
                 "job-stock-prices-ut-stack": {

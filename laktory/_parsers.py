@@ -6,13 +6,15 @@ def _snake_to_camel(snake_str):
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-def camelize_keys(d):
+def camelize_keys(d, parent=None, excluded_parents=None):
     if isinstance(d, dict):
+        if parent and excluded_parents and parent in excluded_parents:
+            return d
         keys = list(d.keys())
         values = list(d.values())
         for key, value in zip(keys, values):
             new_key = _snake_to_camel(key)
-            d[new_key] = camelize_keys(value)
+            d[new_key] = camelize_keys(value, parent=key, excluded_parents=excluded_parents)
             if new_key != key:
                 del d[key]
 

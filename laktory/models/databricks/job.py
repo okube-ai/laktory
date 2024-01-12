@@ -3,6 +3,7 @@ from typing import Literal
 from typing import Union
 from pydantic import model_validator
 from pydantic import Field
+from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.cluster import ClusterLibrary
@@ -769,14 +770,25 @@ class Job(BaseModel, PulumiResource):
     def pulumi_properties(self):
         d = super().pulumi_properties
         _clusters = []
-        for c in d.get("job_clusters", []):
-            name = c.pop("name")
-            _clusters += [
-                {
-                    "job_cluster_key": name,
-                    "new_cluster": c,
-                }
-            ]
-        d["job_clusters"] = _clusters
+        if settings.camel_serialization:
+            for c in d.get("jobClusters", []):
+                name = c.pop("name")
+                _clusters += [
+                    {
+                        "jobClusterKey": name,
+                        "newCluster": c,
+                    }
+                ]
+            d["jobClusters"] = _clusters
+        else:
+            for c in d.get("job_clusters", []):
+                name = c.pop("name")
+                _clusters += [
+                    {
+                        "job_cluster_key": name,
+                        "new_cluster": c,
+                    }
+                ]
+            d["job_clusters"] = _clusters
 
         return d

@@ -7,6 +7,7 @@ from laktory._logger import get_logger
 from laktory._parsers import merge_dicts
 from laktory.models.basemodel import BaseModel
 from laktory.models.databricks.cluster import Cluster
+from laktory.models.databricks.directory import Directory
 from laktory.models.databricks.group import Group
 from laktory.models.databricks.job import Job
 from laktory.models.databricks.notebook import Notebook
@@ -40,6 +41,8 @@ class StackResources(BaseModel):
         Catalogs
     clusters:
         Clusters
+    directories:
+        Directories
     groups:
         Groups
     jobs:
@@ -71,6 +74,7 @@ class StackResources(BaseModel):
     """
     catalogs: dict[str, Catalog] = {}
     clusters: dict[str, Cluster] = {}
+    directories: dict[str, Directory] = {}
     groups: dict[str, Group] = {}
     jobs: dict[str, Job] = {}
     notebooks: dict[str, Notebook] = {}

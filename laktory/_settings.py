@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # Configuration
     iac_backend: Union[str, None] = Field("pulumi", alias="LAKTORY_IAC_BACKEND")
 
+    # Models
+    camel_serialization: bool = Field(False)
+
     # Azure
     lakehouse_sa_conn_str: Union[str, None] = Field(None, alias="LAKEHOUSE_SA_CONN_STR")
 

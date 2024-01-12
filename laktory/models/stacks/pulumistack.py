@@ -4,7 +4,6 @@ from typing import Any
 from typing import Union
 
 from laktory._logger import get_logger
-from laktory._parsers import camelize_keys
 from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
@@ -38,16 +37,18 @@ class PulumiStack(BaseModel):
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         """Serialize model to match the structure of a Pulumi.yaml file."""
+        settings.camel_serialization = True
         kwargs["exclude_none"] = kwargs.get("exclude_none", True)
         d = super().model_dump(*args, **kwargs)
 
         # Special treatment of resources
         for r in self.resources.values():
             d["resources"][r.resource_name] = {
-                "type": camelize_keys(r.pulumi_resource_type),
-                "properties": camelize_keys(r.pulumi_properties),
-                "options": camelize_keys(r.options.model_dump(exclude_none=True)),
+                "type": r.pulumi_resource_type,
+                "properties": r.pulumi_properties,
+                "options": r.options.model_dump(exclude_none=True),
             }
+        settings.camel_serialization = False
 
         d = self.inject_vars(d, target="pulumi_yaml")
 
