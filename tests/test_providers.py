@@ -13,4 +13,3 @@ def test_databricks_provider():
 
 if __name__ == "__main__":
     test_databricks_provider()
-

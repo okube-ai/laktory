@@ -2,27 +2,29 @@
 
 ## [0.1.0] - Unreleased
 ### Added
-* Stack model to define and deploy a complete collection of resources from yaml files only and manage environments
-* Laktory CLI
-* `BaseResource` and `PulumiResource` models with all methods required to deploy through pulumi
-* `resources` object to a `BaseResource` instance to define and deploy all the associated resources 
 * Automatic creation of resources output variables that can be used in configuration files
+* Custom model serialization allowing conversion of keys to camel case
+* Laktory CLI
+* Stack model to define and deploy a complete collection of resources from yaml files only and manage environments
+* Support for cross-references in yaml files. A yaml configuration file can include another.
+* `BaseResource` and `PulumiResource` models with all methods required to deploy through pulumi
 * `Grants` model
 * `GroupMember` model
 * `Permissions` model
 * `ServicePrincipalRole` model
 * `UserRole` model
-* Support for cross-references in yaml files. A yaml configuration file can include another.
+* `resources` object to a `BaseResource` instance to define and deploy all the associated resources 
 ### Updated
-* `inject_vars` method to support multiple targets (`pulumi_yaml`, `pulumi_py`, etc.)
 * `events_root` field of   `DataEventHeader` and `DataEvent` models is now a property for the default value to dynamically account for settings
+* `inject_vars` method to support multiple targets (`pulumi_yaml`, `pulumi_py`, etc.)
 ### Breaking changes
-* Removal of resources engines classes
-* Resources deployment method `deploy()` and `deploy_with_pulumi()` renamed to `to_pulumi()`
-* Renamed `vars` object to `variables`
-* Modified `resource_key` for `WorkspaceFile`, `Notebook` and `Directory`
 * Modified `groups` field for `Users` and `ServicePrincipal` models to accept group id instead of group name
+* Modified `resource_key` for `WorkspaceFile`, `Notebook` and `Directory`
+* Removal of Laktory Resources Component (will trigger replacement of all resources unless aliases are used)
+* Removal of resources engines classes
 * Renamed `permissions` field to `access_controls` in multiple models to be consistent with Databricks API
+* Renamed `vars` object to `variables`
+* Resources deployment method `deploy()` and `deploy_with_pulumi()` renamed to `to_pulumi()`
 
 ## [0.0.29] - 2023-12-20
 ### Fixed

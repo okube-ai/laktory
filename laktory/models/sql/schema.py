@@ -94,10 +94,17 @@ class Schema(BaseModel, PulumiResource):
 
     @property
     def resource_key(self) -> str:
+        """Schema full name (catalog.schema)"""
         return self.full_name
 
     @property
     def core_resources(self) -> list[PulumiResource]:
+        """
+        - schema
+        - schema grants
+        - tables
+        - volumes
+        """
         if self._core_resources is None:
             self._core_resources = [self]
 

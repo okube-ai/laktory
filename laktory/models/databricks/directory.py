@@ -36,7 +36,7 @@ class Directory(BaseModel, PulumiResource):
 
     @property
     def resource_key(self) -> str:
-        """Key identifier for the directory"""
+        """path with special characters `/`, `.`, `\\` replaced with `-`"""
         key = self.path
         key = key.replace("/", "-")
         key = key.replace("\\", "-")

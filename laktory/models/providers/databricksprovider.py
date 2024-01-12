@@ -85,7 +85,7 @@ class DatabricksProvider(BaseModel, PulumiResource):
 
     p = models.DatabricksProvider(
         host="adb-4623853922539974.14.azuredatabricks.net",
-        token="${var.DATABRICKS_TOKEN}",
+        token="${vars.DATABRICKS_TOKEN}",
     )
     ```
     """

@@ -1,6 +1,7 @@
 from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.directory import Directory
+from laktory.models.databricks.grants import Grants
 from laktory.models.databricks.group import Group
 from laktory.models.databricks.job import Job
 from laktory.models.databricks.notebook import Notebook

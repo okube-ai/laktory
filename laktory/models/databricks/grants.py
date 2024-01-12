@@ -21,11 +21,49 @@ class Grant(BaseModel):
 
 
 class Grants(BaseModel, PulumiResource):
+    """
+    Databricks Grants
+
+    List of grants assigned to a securable object.
+
+    Attributes
+    ----------
+    grants:
+        List of grant assigned to the selected object
+    catalog:
+        Name of the catalog to assign the grants to
+    metastore:
+        Name of the metastore to assign the grants to
+    model
+        Name of the user to assign the permission to.
+    schema:
+        Name of the schema to assign the permission to.
+    share:
+        Name of the share to assign the permission to.
+    view:
+        Name of the view to assign the permission to.
+    volume:
+        Name of the volume to assign the permission to.
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    grants = models.Grants(
+        catalog="dev",
+        grants=[{"principal": "metastore-admins", "privileges": ["CREATE_SCHEMA"]}],
+    )
+    ```
+    """
+
     grants: list[Grant]
     catalog: str = None
     metastore: str = None
     model: str = None
-    schema_: str = Field(None, validation_alias=AliasChoices("schema", "schema_"))  # required not to overwrite BaseModel attribute
+    schema_: str = Field(
+        None, validation_alias=AliasChoices("schema", "schema_")
+    )  # required not to overwrite BaseModel attribute
     share: str = None
     view: str = None
     volume: str = None

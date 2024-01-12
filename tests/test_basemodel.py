@@ -4,6 +4,7 @@ import os
 from laktory.models import BaseModel
 from laktory.models import Table
 from laktory.models import Schema
+from laktory import settings
 from pulumi_random import RandomString
 
 dirpath = os.path.dirname(__file__)
@@ -15,8 +16,8 @@ schema_name = RandomString(
 
 
 schema = Schema(
-    name="${var.env}.${var.schema_name}",
-    catalog_name="${var.env}",
+    name="${vars.env}.${vars.schema_name}",
+    catalog_name="${vars.env}",
     tables=[
         Table(
             name="AAPL",
@@ -24,6 +25,9 @@ schema = Schema(
                 {
                     "name": "open",
                     "type": "double",
+                    "spark_func_kwargs": {
+                        "window_length": 2
+                    },  # window_length should not be converted to camel
                 },
                 {
                     "name": "close",
@@ -35,7 +39,7 @@ schema = Schema(
             name="GOOGL",
             columns=[
                 {
-                    "name": "${var.dynamic_column}",
+                    "name": "${vars.dynamic_column}",
                     "type": "double",
                 },
                 {
@@ -90,6 +94,153 @@ def test_read_yaml():
     }
 
 
+def test_camelize():
+    settings.camel_serialization = True
+    dump = schema.model_dump()
+    print(dump)
+    assert dump == {
+        "comment": None,
+        "grants": None,
+        "name": "${vars.env}.${vars.schema_name}",
+        "tables": [
+            {
+                "builder": {
+                    "aggregation": None,
+                    "filter": None,
+                    "joins": [],
+                    "layer": None,
+                    "selects": None,
+                    "template": None,
+                    "dropColumns": [],
+                    "dropDuplicates": None,
+                    "dropSourceColumns": None,
+                    "eventSource": None,
+                    "joinsPostAggregation": [],
+                    "pipelineName": None,
+                    "tableSource": None,
+                    "windowFilter": None,
+                },
+                "columns": [
+                    {
+                        "comment": None,
+                        "name": "open",
+                        "pii": None,
+                        "type": "double",
+                        "unit": None,
+                        "catalogName": None,
+                        "schemaName": None,
+                        "sparkFuncArgs": [],
+                        "sparkFuncKwargs": {
+                            "window_length": {
+                                "value": 2,
+                                "isColumn": False,
+                                "toLit": True,
+                                "toExpr": False,
+                            }
+                        },
+                        "sparkFuncName": None,
+                        "sqlExpression": None,
+                        "tableName": "AAPL",
+                    },
+                    {
+                        "comment": None,
+                        "name": "close",
+                        "pii": None,
+                        "type": "double",
+                        "unit": None,
+                        "catalogName": None,
+                        "schemaName": None,
+                        "sparkFuncArgs": [],
+                        "sparkFuncKwargs": {},
+                        "sparkFuncName": None,
+                        "sqlExpression": None,
+                        "tableName": "AAPL",
+                    },
+                ],
+                "comment": None,
+                "data": None,
+                "expectations": [],
+                "grants": None,
+                "name": "AAPL",
+                "catalogName": "${vars.env}",
+                "dataSourceFormat": "DELTA",
+                "primaryKey": None,
+                "schemaName": "${vars.env}.${vars.schema_name}",
+                "tableType": "MANAGED",
+                "timestampKey": None,
+                "viewDefinition": None,
+                "warehouseId": "08b717ce051a0261",
+            },
+            {
+                "builder": {
+                    "aggregation": None,
+                    "filter": None,
+                    "joins": [],
+                    "layer": None,
+                    "selects": None,
+                    "template": None,
+                    "dropColumns": [],
+                    "dropDuplicates": None,
+                    "dropSourceColumns": None,
+                    "eventSource": None,
+                    "joinsPostAggregation": [],
+                    "pipelineName": None,
+                    "tableSource": None,
+                    "windowFilter": None,
+                },
+                "columns": [
+                    {
+                        "comment": None,
+                        "name": "${vars.dynamic_column}",
+                        "pii": None,
+                        "type": "double",
+                        "unit": None,
+                        "catalogName": None,
+                        "schemaName": None,
+                        "sparkFuncArgs": [],
+                        "sparkFuncKwargs": {},
+                        "sparkFuncName": None,
+                        "sqlExpression": None,
+                        "tableName": "GOOGL",
+                    },
+                    {
+                        "comment": None,
+                        "name": "high",
+                        "pii": None,
+                        "type": "double",
+                        "unit": None,
+                        "catalogName": None,
+                        "schemaName": None,
+                        "sparkFuncArgs": [],
+                        "sparkFuncKwargs": {},
+                        "sparkFuncName": None,
+                        "sqlExpression": None,
+                        "tableName": "GOOGL",
+                    },
+                ],
+                "comment": None,
+                "data": None,
+                "expectations": [],
+                "grants": None,
+                "name": "GOOGL",
+                "catalogName": "${vars.env}",
+                "dataSourceFormat": "DELTA",
+                "primaryKey": None,
+                "schemaName": "${vars.env}.${vars.schema_name}",
+                "tableType": "MANAGED",
+                "timestampKey": None,
+                "viewDefinition": None,
+                "warehouseId": "08b717ce051a0261",
+            },
+        ],
+        "volumes": [],
+        "catalogName": "${vars.env}",
+        "forceDestroy": True,
+    }
+
+    settings.camel_serialization = False
+
+
 def test_inject_vars():
     d0 = schema.model_dump()
     d1 = schema.inject_vars(d0)
@@ -100,4 +251,5 @@ def test_inject_vars():
 
 if __name__ == "__main__":
     test_read_yaml()
+    test_camelize()
     test_inject_vars()

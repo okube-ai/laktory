@@ -34,13 +34,10 @@ with open("table.yaml") as fp:
 ```
 
 ### Deploy
-Deployment of required resources to cloud provider and Databricks workspaces, leveraging Infrastructure-as-Code (IaC) tools.
+Deployment of relevant resources to cloud provider and Databricks workspaces, using Laktory CLI and leveraging Infrastructure-as-Code (IaC) tools.
 
-```py title="main.py"
-table.to_pulumi()  # noqa
-```
 ```commandline title="command line"
-pulumi up
+laktory deploy --filepath stack.yaml
 ```
 
 ### Operate

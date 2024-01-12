@@ -72,6 +72,11 @@ class ServicePrincipal(BaseModel, PulumiResource):
 
     @property
     def core_resources(self) -> list[PulumiResource]:
+        """
+        - service principal
+        - service principal roles
+        - service principal group members
+        """
         if self._core_resources is None:
             self._core_resources = [
                 self,

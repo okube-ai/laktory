@@ -1,5 +1,5 @@
 name: unit-testing
-engine: pulumi
+backend: pulumi
 config:
-  databricks:host: ${var.DATABRICKS_HOST}
-  databricks:token: ${var.DATABRICKS_TOKEN}
+  databricks:host: ${vars.DATABRICKS_HOST}
+  databricks:token: ${vars.DATABRICKS_TOKEN}

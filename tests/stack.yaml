@@ -1,13 +1,13 @@
 name: unit-testing
-engine: pulumi
+backend: pulumi
 config:
-  databricks:host: ${var.DATABRICKS_HOST}
-  databricks:token: ${var.DATABRICKS_TOKEN}
+  databricks:host: ${vars.DATABRICKS_HOST}
+  databricks:token: ${vars.DATABRICKS_TOKEN}
 resources:
   providers:
     databricks-provider:
-      host: ${var.DATABRICKS_HOST}
-      token: ${var.DATABRICKS_TOKEN}
+      host: ${vars.DATABRICKS_HOST}
+      token: ${vars.DATABRICKS_TOKEN}
   pipelines:
     pl-custom-name:
       name: pl-stock-prices-ut-stack
@@ -27,7 +27,10 @@ resources:
       clusters:
         - name: main
           spark_version: 14.0.x-scala2.12
-          node_type_id: ${var.node_type_id}
+          node_type_id: ${vars.node_type_id}
+          spark_env_vars:
+            AZURE_TENANT_ID: "{{secrets/azure/tenant-id}}"
+            LAKTORY_WORKSPACE_ENV: ${vars.env}
       tasks:
         - task_key: ingest-metadata
           job_cluster_key: main
@@ -48,6 +51,7 @@ resources:
 environments:
   dev:
     variables:
+      env: dev
       is_dev: true
       node_type_id: Standard_DS3_v2
   prod:
@@ -56,6 +60,7 @@ environments:
         pl-custom-name:
           development: False
     variables:
+      env: prod
       is_dev: false
       node_type_id: Standard_DS4_v2
 

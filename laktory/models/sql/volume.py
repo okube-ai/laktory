@@ -102,10 +102,15 @@ class Volume(BaseModel, PulumiResource):
 
     @property
     def resource_key(self) -> str:
+        """Table full name (catalog.schema.volume)"""
         return self.full_name
 
     @property
     def core_resources(self) -> list[PulumiResource]:
+        """
+        - table
+        - table grants
+        """
         if self._core_resources is None:
             self._core_resources = [self]
 

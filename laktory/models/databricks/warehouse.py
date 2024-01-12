@@ -1,5 +1,6 @@
 from typing import Literal
 from typing import Union
+from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.databricks.accesscontrol import AccessControl
@@ -129,6 +130,10 @@ class Warehouse(BaseModel, PulumiResource):
 
     @property
     def core_resources(self) -> list[PulumiResource]:
+        """
+        - warehouse
+        - warehouse permissions
+        """
         if self._core_resources is None:
             self._core_resources = [
                 self,
@@ -165,5 +170,8 @@ class Warehouse(BaseModel, PulumiResource):
     @property
     def pulumi_properties(self):
         d = super().pulumi_properties
-        d["channel"] = {"name": d.pop("channel_name")}
+        if settings.camel_serialization:
+            d["channel"] = {"name": d.pop("channelName")}
+        else:
+            d["channel"] = {"name": d.pop("channel_name")}
         return d

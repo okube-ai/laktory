@@ -9,6 +9,9 @@ from typing import TextIO
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import model_serializer
+from laktory._settings import settings
+from laktory._parsers import _snake_to_camel
 
 Model = TypeVar("Model", bound="BaseModel")
 
@@ -26,6 +29,18 @@ class BaseModel(_BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     variables: dict[str, Any] = Field(default={}, exclude=True)
+
+    @model_serializer(mode="wrap")
+    def camel_serializer(self, handler) -> dict[str, Any]:
+        dump = handler(self)
+        if settings.camel_serialization:
+            keys = list(dump.keys())
+            for k in keys:
+                k_camel = _snake_to_camel(k)
+                if k_camel != k:
+                    dump[_snake_to_camel(k)] = dump.pop(k)
+
+        return dump
 
     @classmethod
     def model_validate_yaml(cls, fp: TextIO) -> Model:
@@ -102,15 +117,16 @@ class BaseModel(_BaseModel):
         Inject variables values into a dictionary (generally model dump).
 
         There are 3 types of variables:
-            - User defined variables expressed as `${var.variable_name}` and
-              defined in `self.variables`.
-            - Pulumi resources expressed as `${resources.resource_name}`. These
-              are available from `laktory.pulumi_resources` and are populated
-              automatically by Laktory.
-            - Pulumi resources output properties expressed as
-             `${resources.resource_name.output}`. These are available from
-             `laktory.pulumi_outputs` and are populated automatically by
-              Laktory.
+
+        - User defined variables expressed as `${vars.variable_name}` and
+          defined in `self.variables` or in environment variables.
+        - Pulumi resources expressed as `${resources.resource_name}`. These
+          are available from `laktory.pulumi_resources` and are populated
+          automatically by Laktory.
+        - Pulumi resources output properties expressed as
+         `${resources.resource_name.output}`. These are available from
+         `laktory.pulumi_outputs` and are populated automatically by
+          Laktory.
 
         Pulumi Outputs are also supported as variable values.
 
@@ -156,20 +172,20 @@ class BaseModel(_BaseModel):
             # _vars["${warehouses."] = "${databricks_sql_endpoint."
             # _vars["${workspace_files."] = "${databricks_workspace_file."
         elif target == "pulumi_py":
-            # _vars["${resources."] = "${var."
+            # _vars["${resources."] = "${vars."
             pass
 
         # User-defined variables
         for k, v in self.variables.items():
             if isinstance(v, pulumi.Output):
-                _vars[f"${{var.{k}}}"] = f"{{_pargs_{k}}}"
+                _vars[f"${{vars.{k}}}"] = f"{{_pargs_{k}}}"
                 _pvars[f"_pargs_{k}"] = v
             else:
-                _vars[f"${{var.{k}}}"] = v
+                _vars[f"${{vars.{k}}}"] = v
 
         # Environment variables
         for k, v in os.environ.items():
-            _vars[f"${{var.{k}}}"] = v
+            _vars[f"${{vars.{k}}}"] = v
 
         # Pulumi resource outputs
         for k, v in pulumi_outputs.items():
@@ -188,8 +204,10 @@ class BaseModel(_BaseModel):
                     d[i] = search_and_replace(item, old_value, new_val)
             elif d == old_value:  # required where d is not a string (bool)
                 d = new_val
-            elif isinstance(d, str) and old_value in d:
-                d = d.replace(old_value, new_val)
+            elif isinstance(d, str) and old_value.lower() in d.lower():
+                d = d.replace(old_value, old_value.lower())
+                d = d.replace(old_value.lower(), new_val)
+
             return d
 
         def apply_pulumi(d):

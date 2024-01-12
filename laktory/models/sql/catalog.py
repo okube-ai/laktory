@@ -111,6 +111,11 @@ class Catalog(BaseModel, PulumiResource):
 
     @property
     def core_resources(self) -> list[PulumiResource]:
+        """
+        - catalog
+        - catalog grants
+        - schemas resources
+        """
         if self._core_resources is None:
             self._core_resources = [self]
 

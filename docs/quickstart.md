@@ -61,10 +61,10 @@ Once you have data events in your landing storage (they can be generated with an
 * data transformations
 * privileges and grants
 
-```yaml
+```yaml title="pipeline.yaml"
 name: pl-stock-prices
 
-catalog: ${var.env}
+catalog: ${vars.env}
 target: default
 
 clusters:
@@ -136,28 +136,32 @@ tables:
 ```
 
 ### Validate and deploy
-Now that your pipeline definition, you can import it as a python object and deploy it using Pulumi (more IaC tools will be supported in the future).
-```py
-import os
-from laktory import models
+Now that your pipeline is defined, it (along with other resources) can be included in a stack and deployed using laktory CLI.
 
-# Read configuration file
-with open("pipeline.yaml", "r") as fp:
-    pipeline = models.Pipeline.model_validate_yaml(fp)
-
-# Set variables
-pipeline.vars = {
-    "env": os.getenv("ENV"),
-}
-    
-# Deploy
-pipeline.to_pulumi()
+```yaml title="stack.yaml"
+name: my-stack
+backend: pulumi
+config:
+  databricks:host: ${vars.DATABRICKS_HOST}
+  databricks:token: ${vars.DATABRICKS_TOKEN}
+resources:
+  pipelines:
+    pl-stock-prices: ${include.pipeline.yaml}
+environments:
+  dev:
+    variables:
+      env: dev
+  prod:
+    variables:
+      env: prod
 ```
 
-Deploy with pulumi
+Deploy with laktory CLI
 ```cmd
-pulumi up
+laktory deploy --stack my-organization/dev
 ```
+As you may have noticed from the stack definition, pulumi is used as the IaC backend. Currently, only pulumi is supported,
+but terraform in the near future.
 
 ### Run your pipeline
 Once deployed, you pipeline is ready to be run or will be run automatically if it's part of a scheduled job.

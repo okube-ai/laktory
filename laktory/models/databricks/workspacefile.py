@@ -61,7 +61,7 @@ class WorkspaceFile(BaseModel, PulumiResource):
 
     @property
     def resource_key(self) -> str:
-        """File resource key"""
+        """path with special characters `/`, `.`, `\\` replaced with `-`"""
         # key = os.path.splitext(self.path)[0]
         key = self.path
         key = key.replace("/", "-")

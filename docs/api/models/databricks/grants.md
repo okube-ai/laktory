@@ -1,4 +1,11 @@
-Each grant model allows a set of privileges to a principal and operate on a securable object.2
+::: laktory.models.Grants
+
+---
+
+::: laktory.models.databricks.grants.Grant
+
+--- 
+Each grant model allows a set of privileges to a principal and operate on a securable object.
 More details on privileges available [here](https://docs.databricks.com/en/sql/language-manual/sql-ref-privileges.html#privilege-types).
 
 
