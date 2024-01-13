@@ -111,7 +111,9 @@ class BaseModel(_BaseModel):
     # ----------------------------------------------------------------------- #
 
     def inject_vars(
-        self, d: dict, target: Literal["pulumi_py", "pulumi_yaml"] = "pulumi_py"
+        self,
+        d: dict,
+        target: Literal["pulumi_py", "pulumi_yaml", "terraform"] = "pulumi_py"
     ) -> dict[str, Any]:
         """
         Inject variables values into a dictionary (generally model dump).
@@ -155,8 +157,9 @@ class BaseModel(_BaseModel):
         if target == "pulumi_yaml":
             _vars["${resources."] = "${"
         elif target == "terraform":
+            _vars["${resources."] = "${"
             # TODO: Review
-            raise NotImplementedError()
+            # raise NotImplementedError()
             # _vars["${catalogs."] = "${databricks_catalog."
             # _vars["${clusters."] = "${databricks_cluster."
             # _vars["${groups."] = "${databricks_group."

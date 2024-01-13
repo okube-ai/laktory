@@ -2,13 +2,7 @@
 
 ## [0.1.1] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* General support for Terraform IaC backend
 
 ## [0.1.0] - 2024-01-12
 ### Added

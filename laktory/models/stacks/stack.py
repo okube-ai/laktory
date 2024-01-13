@@ -24,7 +24,6 @@ from laktory.models.sql.catalog import Catalog
 from laktory.models.sql.schema import Schema
 from laktory.models.sql.table import Table
 from laktory.models.sql.volume import Volume
-from laktory.models.stacks.pulumistack import PulumiStack
 
 logger = get_logger(__name__)
 
@@ -333,6 +332,7 @@ class Stack(BaseModel):
     def to_pulumi(self, env: Union[str, None] = None):
         """
         Create a pulumi stack for a given environment `env`.
+
         Parameters
         ----------
         env:
@@ -343,6 +343,8 @@ class Stack(BaseModel):
         : PulumiStack
             Pulumi-specific stack definition
         """
+        from laktory.models.stacks.pulumistack import PulumiStack
+
         if env is not None and env in self.envs:
             env = self.envs[env]
         else:
@@ -367,5 +369,32 @@ class Stack(BaseModel):
     # Terraform Methods                                                       #
     # ----------------------------------------------------------------------- #
 
-    def to_terraform(self):
-        raise NotImplementedError()
+    def to_terraform(self, env: Union[str, None] = None):
+        """
+        Create a terraform stack for a given environment `env`.
+
+        Parameters
+        ----------
+        env:
+            Target environment. If `None`, used default stack values only.
+
+        Returns
+        -------
+        : TerraformStack
+            Terraform-specific stack definition
+        """
+        from laktory.models.stacks.terraformstack import TerraformStack
+
+        if env is not None and env in self.envs:
+            env = self.envs[env]
+        else:
+            env = self
+
+        return TerraformStack(
+            # name=env.name,
+            # config=env.config,
+            # description=env.description,
+            resource=env.resources,
+            # variables=env.variables,
+            # outputs=env.pulumi_outputs,
+        )
