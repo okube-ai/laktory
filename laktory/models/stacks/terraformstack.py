@@ -18,14 +18,14 @@ class ConfigValue(BaseModel):
     default: Any = None
 
 
-class TerraformProvider(BaseModel):
+class TerraformRequiredProvider(BaseModel):
     source: str
     version: str = None
 
 
 class TerraformConfig(BaseModel):
-    required_providers: dict[str, TerraformProvider] = {
-        "databricks": TerraformProvider(source="databricks/databricks"),
+    required_providers: dict[str, TerraformRequiredProvider] = {
+        "databricks": TerraformRequiredProvider(source="databricks/databricks"),
 
     }
 
@@ -42,7 +42,7 @@ class TerraformStack(BaseModel):
     """
     terraform: TerraformConfig = TerraformConfig()
     provider: dict = {"databricks": {}}
-    resource:  StackResources = StackResources()  # need to define aliases (databricks_pipeline)
+    resource:  StackResources = StackResources()
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         """Serialize model to match the structure of a Terraform json file."""
@@ -68,7 +68,7 @@ class TerraformStack(BaseModel):
         return d
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Methods                                                          #
+    # Terraform Methods                                                       #
     # ----------------------------------------------------------------------- #
 
     def write(self) -> str:
@@ -156,6 +156,7 @@ if __name__ == "__main__":
 
     tstack = stack.to_terraform()
 
-    # print(tstack.model_dump())
+    import json
+    print(json.dumps(tstack.model_dump(), indent=4))
 
-    tstack.apply(flags=["-auto-approve"])
+    # tstack.apply(flags=["-auto-approve"])
