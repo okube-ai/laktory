@@ -19,6 +19,9 @@ from laktory.models.databricks.sqlquery import SqlQuery
 from laktory.models.databricks.user import User
 from laktory.models.databricks.warehouse import Warehouse
 from laktory.models.databricks.workspacefile import WorkspaceFile
+from laktory.models.providers.awsprovider import AWSProvider
+from laktory.models.providers.azureprovider import AzureProvider
+from laktory.models.providers.azurepulumiprovider import AzurePulumiProvider
 from laktory.models.providers.databricksprovider import DatabricksProvider
 from laktory.models.sql.catalog import Catalog
 from laktory.models.sql.schema import Schema
@@ -84,7 +87,7 @@ class StackResources(BaseModel):
     serviceprincipals: dict[str, ServicePrincipal] = {}
     sqlqueries: dict[str, SqlQuery] = {}
     tables: dict[str, Table] = {}
-    providers: dict[str, Union[DatabricksProvider]] = {}
+    providers: dict[str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]] = {}
     users: dict[str, User] = {}
     volumes: dict[str, Volume] = {}
     warehouses: dict[str, Warehouse] = {}
