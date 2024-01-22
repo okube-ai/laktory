@@ -25,7 +25,8 @@ class TerraformProvider(BaseModel):
 
 class TerraformConfig(BaseModel):
     required_providers: dict[str, TerraformProvider] = {
-        "databricks": TerraformProvider(source="databricks/databricks")
+        "databricks": TerraformProvider(source="databricks/databricks"),
+
     }
 
 
@@ -90,50 +91,52 @@ class TerraformStack(BaseModel):
         # Need to write providers folder (or to call terraform to create them)
 
         return filepath
-    #
-    # def _call(self, command: str, stack: str, flags: list[str] =None):
-    #     from laktory.cli._worker import Worker
-    #
-    #     self.write()
-    #     worker = Worker()
-    #
-    #     cmd = ["pulumi", command]
-    #     cmd += ["-s", stack]
-    #
-    #     if flags is not None:
-    #         cmd += flags
-    #
-    #     worker.run(
-    #         cmd=cmd,
-    #         cwd=CACHE_ROOT,
-    #         raise_exceptions=settings.cli_raise_external_exceptions,
-    #     )
-    #
-    # def preview(self, stack: str = None, flags: list[str] = None) -> None:
-    #     """
-    #     Runs `pulumi preview`
-    #
-    #     Parameters
-    #     ----------
-    #     stack:
-    #         Name of the stack to use
-    #     flags:
-    #         List of flags / options for pulumi preview
-    #     """
-    #     self._call("preview", stack=stack, flags=flags)
-    #
-    # def up(self, stack: str = None, flags: list[str] = None):
-    #     """
-    #     Runs `pulumi up`
-    #
-    #     Parameters
-    #     ----------
-    #     stack:
-    #         Name of the stack to use
-    #     flags:
-    #         List of flags / options for pulumi up
-    #     """
-    #     self._call("up", stack=stack, flags=flags)
+
+    def _call(self, command: str, flags: list[str] =None):
+        from laktory.cli._worker import Worker
+
+        self.write()
+        worker = Worker()
+
+        if not os.path.exists(os.path.join(CACHE_ROOT, ".terraform")):
+            worker.run(
+                cmd=["terraform", "init"],
+                cwd=CACHE_ROOT,
+                raise_exceptions=settings.cli_raise_external_exceptions,
+            )
+
+        cmd = ["terraform", command]
+
+        if flags is not None:
+            cmd += flags
+
+        worker.run(
+            cmd=cmd,
+            cwd=CACHE_ROOT,
+            raise_exceptions=settings.cli_raise_external_exceptions,
+        )
+
+    def plan(self, flags: list[str] = None) -> None:
+        """
+        Runs `terraform plan`
+
+        Parameters
+        ----------
+        flags:
+            List of flags / options for pulumi plan
+        """
+        self._call("plan", flags=flags)
+
+    def apply(self, flags: list[str] = None):
+        """
+        Runs `pulumi apply`
+
+        Parameters
+        ----------
+        flags:
+            List of flags / options for terraform apply
+        """
+        self._call("apply", flags=flags)
 
 
 if __name__ == "__main__":
@@ -153,6 +156,6 @@ if __name__ == "__main__":
 
     tstack = stack.to_terraform()
 
-    print(tstack.model_dump())
+    # print(tstack.model_dump())
 
-    tstack.write()
+    tstack.apply(flags=["-auto-approve"])
