@@ -19,6 +19,7 @@ from laktory.models.databricks.sqlquery import SqlQuery
 from laktory.models.databricks.user import User
 from laktory.models.databricks.warehouse import Warehouse
 from laktory.models.databricks.workspacefile import WorkspaceFile
+from laktory.models.providers.baseprovider import BaseProvider
 from laktory.models.providers.awsprovider import AWSProvider
 from laktory.models.providers.azureprovider import AzureProvider
 from laktory.models.providers.azurepulumiprovider import AzurePulumiProvider
@@ -95,7 +96,7 @@ class StackResources(BaseModel):
 
     @model_validator(mode="after")
     def update_resource_names(self) -> Any:
-        for k, r in self._all.items():
+        for k, r in self._get_all().items():
             if r.resource_name_ and k != r.resource_name_:
                 raise ValueError(
                     f"Provided resource name {r.resource_name_} does not match provided key {k}"
@@ -103,14 +104,20 @@ class StackResources(BaseModel):
             r.resource_name_ = k
         return self
 
-    @property
-    def _all(self):
+    def _get_all(self, providers_excluded=False, providers_only=False):
         resources = {}
         for resource_type in self.model_fields.keys():
             if resource_type in ["variables"]:
                 continue
 
             for resource_name, _r in getattr(self, resource_type).items():
+
+                if providers_excluded and isinstance(_r, BaseProvider):
+                    continue
+
+                if providers_only and not isinstance(_r, BaseProvider):
+                    continue
+
                 resources[resource_name] = _r
 
         return resources
@@ -355,7 +362,7 @@ class Stack(BaseModel):
 
         # Resources
         resources = {}
-        for r in env.resources._all.values():
+        for r in env.resources._get_all().values():
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
 
@@ -393,11 +400,22 @@ class Stack(BaseModel):
         else:
             env = self
 
+        # Providers
+        providers = {}
+        for r in env.resources._get_all(providers_only=True).values():
+            for _r in r.core_resources:
+                rname = _r.resource_name
+                providers[rname] = _r
+
+        # Resources
+        resources = {}
+        for r in env.resources._get_all(providers_excluded=True).values():
+            for _r in r.core_resources:
+                resources[_r.resource_name] = _r
+
+        # Update terraform
         return TerraformStack(
-            # name=env.name,
-            # config=env.config,
-            # description=env.description,
-            resource=env.resources,
-            # variables=env.variables,
-            # outputs=env.pulumi_outputs,
+            provider=providers,
+            resource=resources,
+            variables=env.variables,
         )

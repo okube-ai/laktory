@@ -1,14 +1,8 @@
 from abc import abstractmethod
 from typing import Union
-from typing import Any
+from laktory._settings import settings
+from laktory._parsers import _snake_to_camel
 from laktory.models.resources.baseresource import BaseResource
-#
-# pulumi_outputs = {}
-# """Pulumi outputs for all deployed resources. Updated during deployment."""
-#
-# pulumi_resources = {}
-# """All pulumi deployed resources objects. Updated during deployment."""
-#
 
 
 class TerraformResource(BaseResource):
@@ -35,3 +29,39 @@ class TerraformResource(BaseResource):
     def terraform_renames(self) -> dict[str, str]:
         """Map of fields to rename when dumping model to pulumi"""
         return {}
+
+    # ----------------------------------------------------------------------- #
+    # Methods                                                                 #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_properties(self) -> dict:
+        """
+        Resources properties formatted for terraform:
+
+        * Serialization (model dump)
+        * Removal of excludes defined in `self.terraform_excludes`
+        * Renaming of keys according to `self.terraform_renames`
+        * Injection of variables
+
+        Returns
+        -------
+        :
+            Terraform-safe model dump
+        """
+        d = super().model_dump(exclude=self.terraform_excludes, exclude_none=True)
+        for k, v in self.terraform_renames.items():
+            if settings.camel_serialization:
+                k = _snake_to_camel(k)
+                v = _snake_to_camel(v)
+            if k in d:
+                d[v] = d.pop(k)
+
+        # Add options
+        for k in ["depends_on", "provider"]:
+            value = self.options.model_dump(exclude_none=True).get(k, None)
+            if value:
+                d[k] = value
+
+        d = self.inject_vars(d)
+        return d

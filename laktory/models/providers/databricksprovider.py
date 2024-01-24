@@ -1,3 +1,4 @@
+from pydantic import Field
 from laktory.models.providers.baseprovider import BaseProvider
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -90,6 +91,7 @@ class DatabricksProvider(BaseProvider, PulumiResource, TerraformResource):
     )
     ```
     """
+    source: str = Field("databricks/databricks", exclude=True)
 
     account_id: str = None
     auth_type: str = None
@@ -142,4 +144,3 @@ class DatabricksProvider(BaseProvider, PulumiResource, TerraformResource):
         import pulumi_databricks as databricks
 
         return databricks.Provider
-

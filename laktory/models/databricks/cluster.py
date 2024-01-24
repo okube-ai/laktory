@@ -3,6 +3,7 @@ from typing import Union
 from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 
@@ -119,7 +120,7 @@ class ClusterLibrary(BaseModel):
     whl: str = None
 
 
-class Cluster(BaseModel, PulumiResource):
+class Cluster(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks cluster
 
@@ -359,3 +360,19 @@ class Cluster(BaseModel, PulumiResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["access_controls"]
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_cluster"
+
+    @property
+    def terraform_renames(self) -> dict[str, str]:
+        return self.pulumi_renames
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes

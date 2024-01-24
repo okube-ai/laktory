@@ -419,7 +419,7 @@ def test_terraform_stack():
     print(data_default)
     assert data_default == {
         "terraform": {
-            "required_providers": {"databricks": {"source": "databricks/databricks"}}
+            "required_providers": {"databricks-provider": {"source": "databricks/databricks"}}
         },
         "provider": {
             "databricks-provider": {

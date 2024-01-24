@@ -1,13 +1,12 @@
 import os
-import json
+from collections import defaultdict
 from typing import Any
 from typing import Union
-
+from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
-from laktory.models.stacks.stack import StackResources
 
 logger = get_logger(__name__)
 
@@ -20,14 +19,11 @@ class ConfigValue(BaseModel):
 
 class TerraformRequiredProvider(BaseModel):
     source: str
-    version: str = None
+    version: Union[str, None] = None
 
 
 class TerraformConfig(BaseModel):
-    required_providers: dict[str, TerraformRequiredProvider] = {
-        "databricks": TerraformRequiredProvider(source="databricks/databricks"),
-
-    }
+    required_providers: dict[str, TerraformRequiredProvider] = None
 
 
 class TerraformStack(BaseModel):
@@ -41,8 +37,18 @@ class TerraformStack(BaseModel):
 
     """
     terraform: TerraformConfig = TerraformConfig()
-    provider: dict = {"databricks": {}}
-    resource:  StackResources = StackResources()
+    provider: dict[str, Any] = {}
+    resource: dict[str, Any] = {}
+
+    @model_validator(mode="after")
+    def required_providers(self) -> Any:
+        if self.terraform.required_providers is None:
+            providers = {}
+            for p in self.provider.values():
+                providers[p.resource_name] = TerraformRequiredProvider(source=p.source, version=p.version)
+            self.terraform.required_providers = providers
+
+        return self
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         """Serialize model to match the structure of a Terraform json file."""
@@ -50,20 +56,17 @@ class TerraformStack(BaseModel):
         d = super().model_dump(*args, **kwargs)
 
         # Special treatment of resources
-        dr0 = {}
-        for rtype in self.resource.model_fields:
-            dr1 = {}
-            resources = getattr(self.resource, rtype)
-            for rname, r in resources.items():
-                dr1[rname] = r.model_dump(exclude_none=True)
+        d["resource"] = defaultdict(lambda: {})
+        for r in self.resource.values():
+            _d = r.terraform_properties
+            d["resource"][r.terraform_resource_type][r.resource_name] = _d
+        d["resource"] = dict(d["resource"])
 
-            # Skip resource types without resources
-            if dr1:
-                dr0[r.terraform_resource_type] = dr1
-
-        d["resource"] = dr0
-
-        d = self.inject_vars(d, target="terraform")
+        # Pulumi YAML requires the keyword "resources." to be removed
+        pattern = "\$\{resources\.(.*?)\}"
+        self.variables[pattern] = r"\1"
+        d = self.inject_vars(d)
+        del self.variables[pattern]
 
         return d
 

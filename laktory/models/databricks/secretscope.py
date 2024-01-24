@@ -5,6 +5,7 @@ from pydantic import Field
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.databricks.secret import Secret
 from laktory.models.databricks.secretacl import SecretAcl
 
@@ -41,7 +42,7 @@ class SecretScopeKeyvaultMetadata(BaseModel):
     resource_id: str = None
 
 
-class SecretScope(BaseModel, PulumiResource):
+class SecretScope(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks secret scope
 
@@ -149,3 +150,15 @@ class SecretScope(BaseModel, PulumiResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["permissions", "secrets"]
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_secret_scope"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes

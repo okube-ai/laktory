@@ -1,9 +1,10 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
-class Group(BaseModel, PulumiResource):
+class Group(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks group
 
@@ -62,3 +63,11 @@ class Group(BaseModel, PulumiResource):
     #     group.id = self.group.id
     # else:
     #     self.group = databricks.Group.get(name, id=group.id)
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_group"

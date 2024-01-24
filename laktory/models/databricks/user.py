@@ -1,11 +1,12 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.databricks.userrole import UserRole
 from laktory.models.databricks.groupmember import GroupMember
 
 
-class User(BaseModel, PulumiResource):
+class User(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks user
 
@@ -109,3 +110,15 @@ class User(BaseModel, PulumiResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["groups", "roles", "id", "group_ids"]
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_user"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes

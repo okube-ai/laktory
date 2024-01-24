@@ -146,7 +146,6 @@ class BaseModel(_BaseModel):
 
         from laktory.models.resources.pulumiresource import pulumi_outputs
         from laktory.models.resources.pulumiresource import pulumi_resources
-        from laktory.models.resources.terraformresource import terraform_resources
 
         # Build patterns
         _patterns = {}
@@ -175,10 +174,6 @@ class BaseModel(_BaseModel):
         # Pulumi resources
         for k, v in pulumi_resources.items():
             _vars[f"${{resources.{k}}}"] = v
-
-        # # Terraform resources
-        # for k, v in terraform_resources.items():
-        #     _vars[f"${{resources.{k}}}"] = k
 
         # Create patterns
         keys = list(_vars.keys())

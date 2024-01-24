@@ -25,6 +25,9 @@ class PulumiStack(BaseModel):
     It is generally not instantiated directly, but rather created using
     `laktory.models.Stack.to_pulumi()`.
 
+    References
+    ----------
+    - pulumi yaml [options](https://www.pulumi.com/docs/languages-sdks/yaml/yaml-language-reference/)
     """
 
     name: str
