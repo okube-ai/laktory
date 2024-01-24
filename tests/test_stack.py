@@ -415,6 +415,7 @@ def test_pulumi_stack():
 
 def test_terraform_stack():
     data_default = stack.to_terraform().model_dump()
+    data_default["provider"]["databricks-provider"]["token"] = "***"
     print(data_default)
     assert data_default == {
         "terraform": {
@@ -423,7 +424,7 @@ def test_terraform_stack():
         "provider": {
             "databricks-provider": {
                 "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-                "token": "dapic54f989beb4ef1b924b4fcfcf0962593-3",
+                "token": "***",
             }
         },
         "resource": {
@@ -451,17 +452,19 @@ def test_terraform_stack():
                     ],
                     "job_clusters": [
                         {
-                            "data_security_mode": "USER_ISOLATION",
-                            "init_scripts": [],
-                            "name": "main",
-                            "node_type_id": "${vars.node_type_id}",
-                            "spark_conf": {},
-                            "spark_env_vars": {
-                                "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
-                                "LAKTORY_WORKSPACE_ENV": "${vars.env}",
+                            "job_cluster_key": "main",
+                            "new_cluster": {
+                                "data_security_mode": "USER_ISOLATION",
+                                "init_scripts": [],
+                                "node_type_id": "${vars.node_type_id}",
+                                "spark_conf": {},
+                                "spark_env_vars": {
+                                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
+                                    "LAKTORY_WORKSPACE_ENV": "${vars.env}",
+                                },
+                                "spark_version": "14.0.x-scala2.12",
+                                "ssh_public_keys": [],
                             },
-                            "spark_version": "14.0.x-scala2.12",
-                            "ssh_public_keys": [],
                         }
                     ],
                 }
@@ -506,33 +509,26 @@ def test_terraform_stack():
         },
     }
 
-    #
-    # # Dev
-    # data = stack.to_pulumi(env="dev").model_dump()
-    # data["config"]["databricks:token"] = "***"
-    # data["resources"]["databricks-provider"]["properties"]["token"] = "***"
-    # data0 = copy.deepcopy(data_default)
-    # data0["variables"]["env"] = "dev"
-    # data0["variables"]["is_dev"] = True
-    # data0["variables"]["node_type_id"] = "Standard_DS3_v2"
-    # cluster = data0["resources"]["job-stock-prices-ut-stack"]["properties"]["jobClusters"][0]["newCluster"]
-    # cluster["nodeTypeId"] = "Standard_DS3_v2"
-    # cluster["sparkEnvVars"]["LAKTORY_WORKSPACE_ENV"] = "dev"
-    # assert data == data0
-    #
-    # # Prod
-    # data = stack.to_pulumi(env="prod").model_dump()
-    # data["config"]["databricks:token"] = "***"
-    # data["resources"]["databricks-provider"]["properties"]["token"] = "***"
-    # data0 = copy.deepcopy(data_default)
-    # data0["variables"]["env"] = "prod"
-    # data0["variables"]["is_dev"] = False
-    # data0["variables"]["node_type_id"] = "Standard_DS4_v2"
-    # cluster = data0["resources"]["job-stock-prices-ut-stack"]["properties"]["jobClusters"][0]["newCluster"]
-    # cluster["nodeTypeId"] = "Standard_DS4_v2"
-    # cluster["sparkEnvVars"]["LAKTORY_WORKSPACE_ENV"] = "prod"
-    # data0["resources"]["pl-custom-name"]["properties"]["development"] = False
-    # assert data == data0
+    # Dev
+    data = stack.to_terraform(env="dev").model_dump()
+    data["provider"]["databricks-provider"]["token"] = "***"
+    data0 = copy.deepcopy(data_default)
+    cluster = data0["resource"]["databricks_job"]["job-stock-prices-ut-stack"][
+        "job_clusters"
+    ][0]["new_cluster"]
+    cluster["node_type_id"] = "Standard_DS3_v2"
+    cluster["spark_env_vars"]["LAKTORY_WORKSPACE_ENV"] = "dev"
+    assert data == data0
+
+    # Prod
+    data = stack.to_terraform(env="prod").model_dump()
+    data["provider"]["databricks-provider"]["token"] = "***"
+    data0 = copy.deepcopy(data_default)
+    cluster = data0["resource"]["databricks_job"]["job-stock-prices-ut-stack"]["job_clusters"][0]["new_cluster"]
+    cluster["node_type_id"] = "Standard_DS4_v2"
+    cluster["spark_env_vars"]["LAKTORY_WORKSPACE_ENV"] = "prod"
+    data0["resource"]["databricks_pipeline"]["pl-custom-name"]["development"] = False
+    assert data == data0
 
 
 if __name__ == "__main__":
