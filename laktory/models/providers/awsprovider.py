@@ -1,5 +1,7 @@
 from laktory.models.basemodel import BaseModel
+from laktory.models.providers.baseprovider import BaseProvider
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
 class ProviderDefaultTags(BaseModel):
@@ -33,7 +35,7 @@ class ProviderAssumeRoleWithWebIdentity(BaseModel):
     web_identity_token_file: str = None
 
 
-class AWSProvider(BaseModel, PulumiResource):
+class AWSProvider(BaseProvider, PulumiResource, TerraformResource):
     """
     AWS Provider
 
@@ -207,3 +209,4 @@ class AWSProvider(BaseModel, PulumiResource):
         import pulumi_aws as aws
 
         return aws.Provider
+

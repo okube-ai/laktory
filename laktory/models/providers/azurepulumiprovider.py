@@ -1,8 +1,8 @@
-from laktory.models.basemodel import BaseModel
+from laktory.models.providers.baseprovider import BaseProvider
 from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class AzurePulumiProvider(BaseModel, PulumiResource):
+class AzurePulumiProvider(BaseProvider, PulumiResource):
     """
     Azure Pulumi (Native) Provider
 

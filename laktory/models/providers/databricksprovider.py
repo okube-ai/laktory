@@ -1,8 +1,9 @@
-from laktory.models.basemodel import BaseModel
+from laktory.models.providers.baseprovider import BaseProvider
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
-class DatabricksProvider(BaseModel, PulumiResource):
+class DatabricksProvider(BaseProvider, PulumiResource, TerraformResource):
     """
     Databricks Provider
 
@@ -141,3 +142,4 @@ class DatabricksProvider(BaseModel, PulumiResource):
         import pulumi_databricks as databricks
 
         return databricks.Provider
+
