@@ -30,7 +30,7 @@ schema = Schema(
                     },  # window_length should not be converted to camel
                 },
                 {
-                    "name": "close",
+                    "name": "${resources.close.id}",
                     "type": "double",
                 },
             ],
@@ -53,6 +53,8 @@ schema = Schema(
         "dynamic_column": "low",
         "env": env.id,
         "schema_name": schema_name.id,
+        # r"\$\{resources\.([\w.]+)\}": r"\1",
+        r"\$\{resources\.([\w.]+)\}": r"${ \1 }",
     },
 )
 
@@ -144,7 +146,7 @@ def test_camelize():
                     },
                     {
                         "comment": None,
-                        "name": "close",
+                        "name": "${resources.close.id}",
                         "pii": None,
                         "type": "double",
                         "unit": None,
@@ -247,6 +249,7 @@ def test_inject_vars():
     assert d1["tables"][-1]["columns"][0]["name"] == "low"
     assert isinstance(d1["name"], pulumi.Output)
     assert isinstance(d1["catalog_name"], pulumi.Output)
+    assert d1["tables"][0]["columns"][1]["name"] == "${ close.id }"
 
 
 if __name__ == "__main__":
