@@ -429,22 +429,6 @@ def test_terraform_stack():
         "resource": {
             "databricks_job": {
                 "job-stock-prices-ut-stack": {
-                    "access_controls": [],
-                    "clusters": [
-                        {
-                            "data_security_mode": "USER_ISOLATION",
-                            "init_scripts": [],
-                            "name": "main",
-                            "node_type_id": "${vars.node_type_id}",
-                            "spark_conf": {},
-                            "spark_env_vars": {
-                                "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
-                                "LAKTORY_WORKSPACE_ENV": "${vars.env}",
-                            },
-                            "spark_version": "14.0.x-scala2.12",
-                            "ssh_public_keys": [],
-                        }
-                    ],
                     "name": "job-stock-prices-ut-stack",
                     "parameters": [],
                     "tags": {},
@@ -465,14 +449,25 @@ def test_terraform_stack():
                             "task_key": "run-pipeline",
                         },
                     ],
+                    "job_clusters": [
+                        {
+                            "data_security_mode": "USER_ISOLATION",
+                            "init_scripts": [],
+                            "name": "main",
+                            "node_type_id": "${vars.node_type_id}",
+                            "spark_conf": {},
+                            "spark_env_vars": {
+                                "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
+                                "LAKTORY_WORKSPACE_ENV": "${vars.env}",
+                            },
+                            "spark_version": "14.0.x-scala2.12",
+                            "ssh_public_keys": [],
+                        }
+                    ],
                 }
             },
             "databricks_pipeline": {
                 "pl-custom-name": {
-                    "access_controls": [
-                        {"group_name": "account users", "permission_level": "CAN_VIEW"},
-                        {"group_name": "role-engineers", "permission_level": "CAN_RUN"},
-                    ],
                     "channel": "PREVIEW",
                     "clusters": [],
                     "configuration": {},
@@ -481,8 +476,6 @@ def test_terraform_stack():
                     ],
                     "name": "pl-stock-prices-ut-stack",
                     "notifications": [],
-                    "tables": [],
-                    "udfs": [],
                     "provider": "databricks-provider",
                 }
             },
@@ -506,7 +499,6 @@ def test_terraform_stack():
             },
             "databricks_workspace_file": {
                 "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
-                    "access_controls": [],
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "./tmp-pl-stock-prices-ut-stack.json",
                 }
