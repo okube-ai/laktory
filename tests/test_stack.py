@@ -198,7 +198,7 @@ def test_stack_model():
             "sqlqueries": {},
             "tables": {},
             "providers": {
-                "databricks-provider": {
+                "databricks": {
                     "account_id": None,
                     "auth_type": None,
                     "azure_client_id": None,
@@ -263,7 +263,7 @@ def test_stack_model():
 def test_pulumi_stack():
     data_default = stack.to_pulumi(env=None).model_dump()
     data_default["config"]["databricks:token"] = "***"
-    data_default["resources"]["databricks-provider"]["properties"]["token"] = "***"
+    data_default["resources"]["databricks"]["properties"]["token"] = "***"
     print(data_default)
     assert data_default == {
         "variables": {},
@@ -330,7 +330,7 @@ def test_pulumi_stack():
                     "notifications": [],
                 },
                 "options": {
-                    "provider": "${databricks-provider}",
+                    "provider": "${databricks}",
                     "dependsOn": [],
                     "deleteBeforeReplace": True,
                 },
@@ -369,7 +369,7 @@ def test_pulumi_stack():
                     "deleteBeforeReplace": True,
                 },
             },
-            "databricks-provider": {
+            "databricks": {
                 "type": "pulumi:providers:databricks",
                 "properties": {
                     "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
@@ -384,7 +384,7 @@ def test_pulumi_stack():
     # Dev
     data = stack.to_pulumi(env="dev").model_dump()
     data["config"]["databricks:token"] = "***"
-    data["resources"]["databricks-provider"]["properties"]["token"] = "***"
+    data["resources"]["databricks"]["properties"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
     data0["variables"]["env"] = "dev"
     data0["variables"]["is_dev"] = True
@@ -399,7 +399,7 @@ def test_pulumi_stack():
     # Prod
     data = stack.to_pulumi(env="prod").model_dump()
     data["config"]["databricks:token"] = "***"
-    data["resources"]["databricks-provider"]["properties"]["token"] = "***"
+    data["resources"]["databricks"]["properties"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
     data0["variables"]["env"] = "prod"
     data0["variables"]["is_dev"] = False
@@ -415,14 +415,17 @@ def test_pulumi_stack():
 
 def test_terraform_stack():
     data_default = stack.to_terraform().model_dump()
-    data_default["provider"]["databricks-provider"]["token"] = "***"
+    data_default["provider"]["databricks"]["token"] = "***"
+    import json
+
+    print(json.dumps(data_default["resource"]["databricks_job"], indent=4))
     print(data_default)
     assert data_default == {
         "terraform": {
-            "required_providers": {"databricks-provider": {"source": "databricks/databricks"}}
+            "required_providers": {"databricks": {"source": "databricks/databricks"}}
         },
         "provider": {
-            "databricks-provider": {
+            "databricks": {
                 "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
                 "token": "***",
             }
@@ -431,9 +434,9 @@ def test_terraform_stack():
             "databricks_job": {
                 "job-stock-prices-ut-stack": {
                     "name": "job-stock-prices-ut-stack",
-                    "parameters": [],
+                    "parameter": [],
                     "tags": {},
-                    "tasks": [
+                    "task": [
                         {
                             "job_cluster_key": "main",
                             "libraries": [
@@ -479,7 +482,7 @@ def test_terraform_stack():
                     ],
                     "name": "pl-stock-prices-ut-stack",
                     "notifications": [],
-                    "provider": "databricks-provider",
+                    "provider": "databricks",
                 }
             },
             "databricks_permissions": {
@@ -511,7 +514,7 @@ def test_terraform_stack():
 
     # Dev
     data = stack.to_terraform(env="dev").model_dump()
-    data["provider"]["databricks-provider"]["token"] = "***"
+    data["provider"]["databricks"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
     cluster = data0["resource"]["databricks_job"]["job-stock-prices-ut-stack"][
         "job_clusters"
@@ -522,9 +525,11 @@ def test_terraform_stack():
 
     # Prod
     data = stack.to_terraform(env="prod").model_dump()
-    data["provider"]["databricks-provider"]["token"] = "***"
+    data["provider"]["databricks"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
-    cluster = data0["resource"]["databricks_job"]["job-stock-prices-ut-stack"]["job_clusters"][0]["new_cluster"]
+    cluster = data0["resource"]["databricks_job"]["job-stock-prices-ut-stack"][
+        "job_clusters"
+    ][0]["new_cluster"]
     cluster["node_type_id"] = "Standard_DS4_v2"
     cluster["spark_env_vars"]["LAKTORY_WORKSPACE_ENV"] = "prod"
     data0["resource"]["databricks_pipeline"]["pl-custom-name"]["development"] = False

@@ -4,6 +4,7 @@ import os
 from laktory.models import BaseModel
 from laktory.models import Table
 from laktory.models import Schema
+from laktory.models import Job
 from laktory import settings
 from pulumi_random import RandomString
 
@@ -243,6 +244,80 @@ def test_camelize():
     settings.camel_serialization = False
 
 
+def test_singular():
+    job = Job(
+        name="my-job",
+        clusters=[
+            {
+                "name": "main",
+                "spark_version": "14.0.x-scala2.12",
+                "node_type_id": "${vars.node_type_id}",
+                "spark_env_vars": {
+                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
+                    "LAKTORY_WORKSPACE_ENV": "${vars.env}",
+                },
+            }
+        ],
+    )
+
+    settings.singular_serialization = True
+    dump = job.model_dump()
+    print(dump)
+    assert dump == {
+        "continuous": None,
+        "control_run_state": None,
+        "email_notifications": None,
+        "format": None,
+        "health": None,
+        "max_concurrent_runs": None,
+        "max_retries": None,
+        "min_retry_interval_millis": None,
+        "name": "my-job",
+        "notification_settings": None,
+        "retry_on_timeout": None,
+        "run_as": None,
+        "schedule": None,
+        "tags": {},
+        "timeout_seconds": None,
+        "trigger": None,
+        "webhook_notifications": None,
+        "access_control": [],
+        "cluster": [
+            {
+                "apply_policy_default_values": None,
+                "autoscale": None,
+                "autotermination_minutes": None,
+                "cluster_id": None,
+                "custom_tags": None,
+                "data_security_mode": "USER_ISOLATION",
+                "driver_instance_pool_id": None,
+                "driver_node_type_id": None,
+                "enable_elastic_disk": None,
+                "enable_local_disk_encryption": None,
+                "idempotency_token": None,
+                "instance_pool_id": None,
+                "name": "main",
+                "node_type_id": "${vars.node_type_id}",
+                "num_workers": None,
+                "policy_id": None,
+                "runtime_engine": None,
+                "single_user_name": None,
+                "spark_conf": {},
+                "spark_env_vars": {
+                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
+                    "LAKTORY_WORKSPACE_ENV": "${vars.env}",
+                },
+                "spark_version": "14.0.x-scala2.12",
+                "init_script": [],
+                "ssh_public_key": [],
+            }
+        ],
+        "parameter": [],
+        "task": [],
+    }
+    settings.singular_serialization = False
+
+
 def test_inject_vars():
     d0 = schema.model_dump()
     d1 = schema.inject_vars(d0)
@@ -255,4 +330,5 @@ def test_inject_vars():
 if __name__ == "__main__":
     test_read_yaml()
     test_camelize()
+    test_singular()
     test_inject_vars()
