@@ -53,12 +53,16 @@ class BaseModel(_BaseModel):
             fields = self.model_fields
             keys = list(dump.keys())
             for k in keys:
-                k_singular = k
-                if k in self.singulars:
-                    k_singular = self.singulars[k] or k
+                if k in self.singularizations:
+                    # Explicit singularization
+                    k_singular = self.singularizations[k] or k
                 else:
-                    if str(fields[k].annotation).startswith("list"):
+                    # Automatic singularization
+                    k_singular = k
+                    ann = str(fields[k].annotation)
+                    if ann.startswith("list[laktory.models"):
                         k_singular = engine.singular_noun(k) or k
+
                 if k_singular != k:
                     dump[k_singular] = dump.pop(k)
 
@@ -129,7 +133,7 @@ class BaseModel(_BaseModel):
     # ----------------------------------------------------------------------- #
 
     @property
-    def singulars(self) -> dict[str, str]:
+    def singularizations(self) -> dict[str, str]:
         return {}
 
     # ----------------------------------------------------------------------- #

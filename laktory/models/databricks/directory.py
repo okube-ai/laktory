@@ -76,10 +76,3 @@ class Directory(BaseModel, PulumiResource, TerraformResource):
     def terraform_resource_type(self) -> str:
         return "databricks_directory"
 
-    @property
-    def terraform_renames(self) -> dict[str, str]:
-        return self.pulumi_renames
-
-    @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes

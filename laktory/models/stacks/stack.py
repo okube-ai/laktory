@@ -139,6 +139,8 @@ class EnvironmentStack(BaseModel):
         the name of the Pulumi project.
     backend:
         IaC backend used for deployment.
+    organization:
+        Pulumi organization. Only supported with pulumi backend.
     pulumi_outputs:
         Requested resources-related outputs. Only available with Pulumi backend.
         See references for details.
@@ -153,6 +155,7 @@ class EnvironmentStack(BaseModel):
     description: str = None
     backend: Literal["pulumi", "terraform"] = None
     name: str
+    organization: str = None
     pulumi_outputs: dict[str, str] = {}
     resources: StackResources = StackResources()
     variables: dict[str, Union[str, bool]] = {}
@@ -194,6 +197,8 @@ class Stack(BaseModel):
     name:
         Name of the stack. If Pulumi is used as a backend, it should match
         the name of the Pulumi project.
+    organization:
+        Pulumi organization. Only supported with pulumi backend.
     backend:
         IaC backend used for deployment.
     pulumi_outputs:
@@ -292,6 +297,7 @@ class Stack(BaseModel):
     config: dict[str, str] = {}
     description: str = None
     name: str
+    organization: str = None
     backend: Literal["pulumi", "terraform"] = None
     pulumi_outputs: dict[str, str] = {}
     resources: StackResources = StackResources()
@@ -368,6 +374,7 @@ class Stack(BaseModel):
 
         return PulumiStack(
             name=env.name,
+            organization=env.organization,
             config=env.config,
             description=env.description,
             resources=resources,

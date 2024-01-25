@@ -767,35 +767,38 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     def pulumi_renames(self) -> dict[str, str]:
         return {"clusters": "job_clusters"}
 
-    def _properties_update(self, d):
-        _clusters = []
-        if settings.camel_serialization:
-            for c in d.get("jobClusters", []):
-                name = c.pop("name")
-                _clusters += [
-                    {
-                        "jobClusterKey": name,
-                        "newCluster": c,
-                    }
-                ]
-            d["jobClusters"] = _clusters
-        else:
-            for c in d.get("job_clusters", []):
-                name = c.pop("name")
-                _clusters += [
-                    {
-                        "job_cluster_key": name,
-                        "new_cluster": c,
-                    }
-                ]
-            d["job_clusters"] = _clusters
-
-        return d
-
     @property
     def pulumi_properties(self):
         d = super().pulumi_properties
-        return self._properties_update(d)
+
+        _clusters = []
+        if settings.camel_serialization:
+            k = "jobClusters"
+            if k in d:
+                for c in d[k]:
+                    name = c.pop("name")
+                    _clusters += [
+                        {
+                            "jobClusterKey": name,
+                            "newCluster": c,
+                        }
+                    ]
+                d[k] = _clusters
+
+        else:
+            k = "job_clusters"
+            if k in d:
+                for c in d[k]:
+                    name = c.pop("name")
+                    _clusters += [
+                        {
+                            "job_cluster_key": name,
+                            "new_cluster": c,
+                        }
+                    ]
+                d[k] = _clusters
+
+        return d
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
@@ -807,7 +810,10 @@ class Job(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def terraform_renames(self) -> dict[str, str]:
-        return self.pulumi_renames
+        return {
+            "clusters": "job_clusters",
+            "cluster": "job_cluster",
+        }
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
@@ -816,4 +822,18 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_properties(self) -> dict:
         d = super().terraform_properties
-        return self._properties_update(d)
+
+        _clusters = []
+        k = "job_cluster"
+        if k in d:
+            for c in d[k]:
+                name = c.pop("name")
+                _clusters += [
+                    {
+                        "job_cluster_key": name,
+                        "new_cluster": c,
+                    }
+                ]
+            d[k] = _clusters
+
+        return d

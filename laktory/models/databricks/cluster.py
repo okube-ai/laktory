@@ -366,6 +366,12 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def singularizations(self) -> dict[str, str]:
+        return {
+            "init_scripts": "init_scripts",
+        }
+
+    @property
     def terraform_resource_type(self) -> str:
         return "databricks_cluster"
 

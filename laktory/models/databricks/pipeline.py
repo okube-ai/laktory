@@ -425,11 +425,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_properties(self):
         d = super().pulumi_properties
-        _clusters = []
-        for c in d.get("clusters", []):
-            c["label"] = c.pop("name")
-            _clusters += [c]
-        d["clusters"] = _clusters
+        k = "clusters"
+        if k in d:
+            _clusters = []
+            for c in d[k]:
+                c["label"] = c.pop("name")
+                _clusters += [c]
+            d[k] = _clusters
         return d
 
     # ----------------------------------------------------------------------- #
@@ -447,9 +449,11 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_properties(self) -> dict:
         d = super().terraform_properties
-        _clusters = []
-        for c in d.get("clusters", []):
-            c["label"] = c.pop("name")
-            _clusters += [c]
-        d["clusters"] = _clusters
+        k = "cluster"
+        if k in d:
+            _clusters = []
+            for c in d[k]:
+                c["label"] = c.pop("name")
+                _clusters += [c]
+            d[k] = _clusters
         return d

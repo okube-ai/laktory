@@ -2,6 +2,7 @@ import os
 import yaml
 from typing import Any
 from typing import Union
+from pydantic import Field
 
 from laktory._logger import get_logger
 from laktory._settings import settings
@@ -31,6 +32,7 @@ class PulumiStack(BaseModel):
     """
 
     name: str
+    organization: str = Field(None, exclude=True)
     runtime: str = "yaml"
     description: Union[str, None] = None
     config: dict[str, Union[str, ConfigValue]] = {}

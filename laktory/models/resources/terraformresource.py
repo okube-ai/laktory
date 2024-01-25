@@ -51,9 +51,6 @@ class TerraformResource(BaseResource):
         """
         d = super().model_dump(exclude=self.terraform_excludes, exclude_none=True)
         for k, v in self.terraform_renames.items():
-            if settings.camel_serialization:
-                k = _snake_to_camel(k)
-                v = _snake_to_camel(v)
             if k in d:
                 d[v] = d.pop(k)
 

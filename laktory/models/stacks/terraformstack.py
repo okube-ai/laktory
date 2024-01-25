@@ -1,4 +1,5 @@
 import os
+import json
 from collections import defaultdict
 from typing import Any
 from typing import Union
@@ -52,6 +53,7 @@ class TerraformStack(BaseModel):
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         """Serialize model to match the structure of a Terraform json file."""
+        settings.singular_serialization = True
         kwargs["exclude_none"] = kwargs.get("exclude_none", True)
         d = super().model_dump(*args, **kwargs)
 
@@ -61,6 +63,7 @@ class TerraformStack(BaseModel):
             _d = r.terraform_properties
             d["resource"][r.terraform_resource_type][r.resource_name] = _d
         d["resource"] = dict(d["resource"])
+        settings.singular_serialization = False
 
         # Pulumi YAML requires the keyword "resources." to be removed
         pattern = "\$\{resources\.(.*?)\}"
@@ -90,8 +93,6 @@ class TerraformStack(BaseModel):
 
         with open(filepath, "w") as fp:
             json.dump(self.model_dump(), fp, indent=4)
-
-        # Need to write providers folder (or to call terraform to create them)
 
         return filepath
 

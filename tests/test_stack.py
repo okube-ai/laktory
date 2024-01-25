@@ -19,6 +19,7 @@ def test_stack_model():
         },
         "description": None,
         "name": "unit-testing",
+        "organization": "okube",
         "backend": "pulumi",
         "pulumi_outputs": {},
         "resources": {
@@ -261,7 +262,9 @@ def test_stack_model():
 
 
 def test_pulumi_stack():
-    data_default = stack.to_pulumi(env=None).model_dump()
+    pstack = stack.to_pulumi(env=None)
+    assert pstack.organization == "okube"
+    data_default = pstack.model_dump()
     data_default["config"]["databricks:token"] = "***"
     data_default["resources"]["databricks"]["properties"]["token"] = "***"
     print(data_default)
@@ -434,26 +437,26 @@ def test_terraform_stack():
             "databricks_job": {
                 "job-stock-prices-ut-stack": {
                     "name": "job-stock-prices-ut-stack",
-                    "parameter": [],
                     "tags": {},
+                    "parameter": [],
                     "task": [
                         {
                             "job_cluster_key": "main",
-                            "libraries": [
-                                {"pypi": {"package": "laktory==0.0.27"}},
-                                {"pypi": {"package": "yfinance"}},
-                            ],
                             "notebook_task": {
                                 "notebook_path": "/jobs/ingest_stock_metadata.py"
                             },
                             "task_key": "ingest-metadata",
+                            "library": [
+                                {"pypi": {"package": "laktory==0.0.27"}},
+                                {"pypi": {"package": "yfinance"}},
+                            ],
                         },
                         {
                             "pipeline_task": {"pipeline_id": "pl-custom-name.id"},
                             "task_key": "run-pipeline",
                         },
                     ],
-                    "job_clusters": [
+                    "job_cluster": [
                         {
                             "job_cluster_key": "main",
                             "new_cluster": {
@@ -475,29 +478,29 @@ def test_terraform_stack():
             "databricks_pipeline": {
                 "pl-custom-name": {
                     "channel": "PREVIEW",
-                    "clusters": [],
                     "configuration": {},
-                    "libraries": [
+                    "name": "pl-stock-prices-ut-stack",
+                    "cluster": [],
+                    "library": [
                         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
                     ],
-                    "name": "pl-stock-prices-ut-stack",
-                    "notifications": [],
+                    "notification": [],
                     "provider": "databricks",
                 }
             },
             "databricks_permissions": {
                 "permissions-pl-custom-name": {
-                    "access_controls": [
+                    "pipeline_id": "pl-custom-name.id",
+                    "access_control": [
                         {"group_name": "account users", "permission_level": "CAN_VIEW"},
                         {"group_name": "role-engineers", "permission_level": "CAN_RUN"},
                     ],
-                    "pipeline_id": "pl-custom-name.id",
                 },
                 "permissions-file-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
-                    "access_controls": [
+                    "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                    "access_control": [
                         {"group_name": "account users", "permission_level": "CAN_READ"}
                     ],
-                    "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": [
                         "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json"
                     ],
@@ -516,8 +519,9 @@ def test_terraform_stack():
     data = stack.to_terraform(env="dev").model_dump()
     data["provider"]["databricks"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
+    print(data0["resource"]["databricks_job"]["job-stock-prices-ut-stack"])
     cluster = data0["resource"]["databricks_job"]["job-stock-prices-ut-stack"][
-        "job_clusters"
+        "job_cluster"
     ][0]["new_cluster"]
     cluster["node_type_id"] = "Standard_DS3_v2"
     cluster["spark_env_vars"]["LAKTORY_WORKSPACE_ENV"] = "dev"
@@ -528,7 +532,7 @@ def test_terraform_stack():
     data["provider"]["databricks"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
     cluster = data0["resource"]["databricks_job"]["job-stock-prices-ut-stack"][
-        "job_clusters"
+        "job_cluster"
     ][0]["new_cluster"]
     cluster["node_type_id"] = "Standard_DS4_v2"
     cluster["spark_env_vars"]["LAKTORY_WORKSPACE_ENV"] = "prod"
