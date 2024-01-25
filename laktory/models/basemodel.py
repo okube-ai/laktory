@@ -3,6 +3,7 @@ import yaml
 import json
 import os
 import re
+import inflect
 from typing import Any
 from typing import TypeVar
 from typing import TextIO
@@ -37,12 +38,29 @@ class BaseModel(_BaseModel):
     @model_serializer(mode="wrap")
     def camel_serializer(self, handler) -> dict[str, Any]:
         dump = handler(self)
+        if dump is None:
+            return dump
+
         if settings.camel_serialization:
             keys = list(dump.keys())
             for k in keys:
                 k_camel = _snake_to_camel(k)
                 if k_camel != k:
                     dump[_snake_to_camel(k)] = dump.pop(k)
+
+        if settings.singular_serialization:
+            engine = inflect.engine()
+            fields = self.model_fields
+            keys = list(dump.keys())
+            for k in keys:
+                k_singular = k
+                if k in self.singulars:
+                    k_singular = self.singulars[k] or k
+                else:
+                    if str(fields[k].annotation).startswith("list"):
+                        k_singular = engine.singular_noun(k) or k
+                if k_singular != k:
+                    dump[k_singular] = dump.pop(k)
 
         return dump
 
@@ -109,6 +127,10 @@ class BaseModel(_BaseModel):
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def singulars(self) -> dict[str, str]:
+        return {}
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
