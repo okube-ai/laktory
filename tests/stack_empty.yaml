@@ -1,4 +1,5 @@
 name: unit-testing
+organization: okube
 backend: pulumi
 config:
   databricks:host: ${vars.DATABRICKS_HOST}

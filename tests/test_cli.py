@@ -11,7 +11,15 @@ dirpath = os.path.dirname(__file__)
 def test_preview_pulumi():
     filepath = os.path.join(dirpath, "stack.yaml")
     result = runner.invoke(
-        app, ["preview", "--stack", "okube/dev", "--filepath", filepath]
+        app, ["preview", "--env", "dev", "--filepath", filepath]
+    )
+    assert result.exit_code == 0
+
+
+def test_preview_terraform():
+    filepath = os.path.join(dirpath, "stack.yaml")
+    result = runner.invoke(
+        app, ["preview", "--backend", "terraform", "--filepath", filepath]
     )
     assert result.exit_code == 0
 
@@ -25,8 +33,8 @@ def atest_deploy_pulumi():
         app,
         [
             "deploy",
-            "-s",
-            "okube/dev",
+            "-e",
+            "dev",
             "--filepath",
             filepath,
             "--pulumi-options",
@@ -40,8 +48,8 @@ def atest_deploy_pulumi():
         app,
         [
             "deploy",
-            "-s",
-            "okube/dev",
+            "-e",
+            "dev",
             "--filepath",
             filepath,
             "--pulumi-options",
@@ -54,3 +62,4 @@ def atest_deploy_pulumi():
 if __name__ == "__main__":
     test_preview_pulumi()
     atest_deploy_pulumi()
+    test_preview_terraform()

@@ -15,10 +15,42 @@ app = typer.Typer(
 class CLIController(BaseModel):
     stack_filepath: Union[str, None] = None
     backend: Union[str, None] = None
-    pulumi_stack_name: Union[str, None] = None
+    organization: Union[str, None] = None
+    env: Union[str, None] = None
     pulumi_options_str: Union[str, None] = None
     terraform_options_str: Union[str, None] = None
     stack: Union[Stack, None] = None
+
+    def model_post_init(self, __context):
+        super().model_post_init(__context)
+
+        # Read stack
+        if self.stack_filepath is None:
+            self.stack_filepath = "./stack.yaml"
+        with open(self.stack_filepath, "r") as fp:
+            self.stack = Stack.model_validate_yaml(fp)
+
+        # Set backend
+        if self.backend is None:
+            self.backend = self.stack.backend
+        if self.backend is None:
+            raise ValueError(
+                "backend ['pulumi', 'terraform'] must be specified in stack file or as CLI option "
+            )
+
+        # Set organization
+        if self.organization is None:
+            self.organization = self.stack.organization
+        if self.organization is None and self.backend == "pulumi":
+            raise ValueError(
+                "organization must be specified with pulumi backend"
+            )
+
+        # Check environment
+        if self.env is None and self.backend == "pulumi":
+            raise ValueError(
+                "Environment must be specified with pulumi backend"
+            )
 
     @property
     def pulumi_options(self):
@@ -30,29 +62,11 @@ class CLIController(BaseModel):
     def terraform_options(self):
         if self.terraform_options_str is None:
             return None
-        return self.pulumi_options_str.split(",")
+        return self.terraform_options_str.split(",")
 
     @property
-    def env(self):
-        env = None
-        if self.pulumi_stack_name is not None:
-            env = self.pulumi_stack_name.split("/")[-1]
-        return env
-
-    def read_stack(self):
-        if self.stack_filepath is None:
-            self.stack_filepath = "./stack.yaml"
-
-        with open(self.stack_filepath, "r") as fp:
-            self.stack = Stack.model_validate_yaml(fp)
-
-    def set_backend(self):
-        if self.backend is None:
-            self.backend = self.stack.backend
-        if self.backend is None:
-            raise ValueError(
-                "backend ['pulumi', 'terraform'] must be specified in stack file or as CLI option "
-            )
+    def pulumi_stack_name(self):
+        return self.organization + "/" + self.env
 
     def pulumi_call(self, cmd):
         if self.pulumi_stack_name is None:
@@ -61,15 +75,25 @@ class CLIController(BaseModel):
         pstack = self.stack.to_pulumi(env=self.env)
         getattr(pstack, cmd)(stack=self.pulumi_stack_name, flags=self.pulumi_options)
 
+    def terraform_call(self, cmd):
+        pstack = self.stack.to_terraform(env=self.env)
+        if cmd == "preview":
+            cmd = "plan"
+        getattr(pstack, cmd)(flags=self.terraform_options)
+
 
 @app.command()
 def preview(
     backend: Annotated[str, typer.Option(
         help="IaC backend [pulumi, terraform]"
     )] = None,
-    stack: Annotated[str, typer.Option(
-        "--stack", "-s",
-        help="Name of the stack. With pulumi backend, expected format is {organization}/{stack}"
+    organization: Annotated[str, typer.Option(
+        "--org", "-o",
+        help="Name of the organization in associated with the pulumi stack."
+    )] = None,
+    environment: Annotated[str, typer.Option(
+        "--env", "-e",
+        help="Name of the environment"
     )] = None,
     filepath: Annotated[str, typer.Option(
         help="Stack (yaml) filepath."
@@ -90,8 +114,10 @@ def preview(
     ----------
     backend:
         IaC backend [pulumi, terraform]
-    stack:
-        Name of the stack. With pulumi backend, expected format is {organization}/{stack}
+    organization:
+        Name of the organization associated with the Pulumi stack.
+    environment:
+        Name of the environment.
     filepath:
         Stack (yaml) filepath.
     pulumi_options:
@@ -111,23 +137,18 @@ def preview(
     """
     controller = CLIController(
         backend=backend,
-        pulumi_stack_name=stack,
+        organization=organization,
+        env=environment,
         stack_filepath=filepath,
         pulumi_options_str=pulumi_options,
         terraform_options_str=terraform_options,
     )
 
-    # Read Stack
-    controller.read_stack()
-
-    # Set backend
-    controller.set_backend()
-
     # Call
     if controller.backend == "pulumi":
         controller.pulumi_call("preview")
     elif controller.backend == "terraform":
-        raise NotImplementedError()
+        controller.terraform_call("preview")
     else:
         raise ValueError("backend should be ['terraform', 'pulumi']")
 
@@ -137,9 +158,13 @@ def deploy(
     backend: Annotated[str, typer.Option(
         help="IaC backend [pulumi, terraform]"
     )] = None,
-    stack: Annotated[str, typer.Option(
-        "--stack", "-s",
-        help="Name of the stack. With pulumi backend, expected format is {organization}/{stack}"
+    organization: Annotated[str, typer.Option(
+        "--org", "-o",
+        help="Name of the organization in associated with the pulumi stack."
+    )] = None,
+    environment: Annotated[str, typer.Option(
+        "--env", "-e",
+        help="Name of the environment"
     )] = None,
     filepath: Annotated[str, typer.Option(
         help="Stack (yaml) filepath."
@@ -160,8 +185,10 @@ def deploy(
     ----------
     backend:
         IaC backend [pulumi, terraform]
-    stack:
-        Name of the stack. With pulumi backend, expected format is {organization}/{stack}
+    organization:
+        Name of the organization associated with the Pulumi stack.
+    environment:
+        Name of the environment.
     filepath:
         Stack (yaml) filepath.
     pulumi_options:
@@ -181,17 +208,12 @@ def deploy(
     """
     controller = CLIController(
         backend=backend,
-        pulumi_stack_name=stack,
+        organization=organization,
+        env=environment,
         stack_filepath=filepath,
         pulumi_options_str=pulumi_options,
         terraform_options_str=terraform_options,
     )
-
-    # Read Stack
-    controller.read_stack()
-
-    # Set backend
-    controller.set_backend()
 
     # Call
     if controller.backend == "pulumi":
