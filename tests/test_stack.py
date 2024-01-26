@@ -419,9 +419,6 @@ def test_pulumi_stack():
 def test_terraform_stack():
     data_default = stack.to_terraform().model_dump()
     data_default["provider"]["databricks"]["token"] = "***"
-    import json
-
-    print(json.dumps(data_default["resource"]["databricks_job"], indent=4))
     print(data_default)
     assert data_default == {
         "terraform": {
@@ -452,7 +449,9 @@ def test_terraform_stack():
                             ],
                         },
                         {
-                            "pipeline_task": {"pipeline_id": "pl-custom-name.id"},
+                            "pipeline_task": {
+                                "pipeline_id": "${databricks_pipeline.pl-custom-name.id}"
+                            },
                             "task_key": "run-pipeline",
                         },
                     ],
@@ -490,7 +489,7 @@ def test_terraform_stack():
             },
             "databricks_permissions": {
                 "permissions-pl-custom-name": {
-                    "pipeline_id": "pl-custom-name.id",
+                    "pipeline_id": "${databricks_pipeline.pl-custom-name.id}",
                     "access_control": [
                         {"group_name": "account users", "permission_level": "CAN_VIEW"},
                         {"group_name": "role-engineers", "permission_level": "CAN_RUN"},
@@ -502,7 +501,7 @@ def test_terraform_stack():
                         {"group_name": "account users", "permission_level": "CAN_READ"}
                     ],
                     "depends_on": [
-                        "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json"
+                        "databricks_workspace_file.workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json"
                     ],
                 },
             },
