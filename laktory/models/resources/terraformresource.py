@@ -9,7 +9,6 @@ class TerraformResource(BaseResource):
     """
     Parent class for all Laktory models deployable with Terraform IaC backend.
     """
-    # _pulumi_resources: dict[str, Any] = {}
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -22,12 +21,12 @@ class TerraformResource(BaseResource):
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        """List of fields to exclude when dumping model to pulumi"""
+        """List of fields to exclude when dumping model to terraform"""
         return []
 
     @property
     def terraform_renames(self) -> dict[str, str]:
-        """Map of fields to rename when dumping model to pulumi"""
+        """Map of fields to rename when dumping model to terraform"""
         return {}
 
     # ----------------------------------------------------------------------- #

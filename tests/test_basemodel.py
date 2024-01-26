@@ -295,6 +295,7 @@ def test_singular():
                 "enable_elastic_disk": None,
                 "enable_local_disk_encryption": None,
                 "idempotency_token": None,
+                "init_scripts": [],
                 "instance_pool_id": None,
                 "name": "main",
                 "node_type_id": "${vars.node_type_id}",
@@ -308,8 +309,7 @@ def test_singular():
                     "LAKTORY_WORKSPACE_ENV": "${vars.env}",
                 },
                 "spark_version": "14.0.x-scala2.12",
-                "init_script": [],
-                "ssh_public_key": [],
+                "ssh_public_keys": [],
             }
         ],
         "parameter": [],

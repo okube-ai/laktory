@@ -3,6 +3,8 @@
 ## [0.1.1] - Unreleased
 ### Added
 * General support for Terraform IaC backend
+### Breaking changes
+* Replaced CLI argument `--stack` with `--org` and `--dev` for a more consistent experience between pulumi and terraform backends
 
 ## [0.1.0] - 2024-01-12
 ### Added
