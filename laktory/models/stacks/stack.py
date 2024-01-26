@@ -422,7 +422,7 @@ class Stack(BaseModel):
 
         # Update terraform
         return TerraformStack(
-            provider=providers,
-            resource=resources,
+            providers=providers,
+            resources=resources,
             variables=env.variables,
         )

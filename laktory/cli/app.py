@@ -77,8 +77,6 @@ class CLIController(BaseModel):
 
     def terraform_call(self, cmd):
         pstack = self.stack.to_terraform(env=self.env)
-        if cmd == "preview":
-            cmd = "plan"
         getattr(pstack, cmd)(flags=self.terraform_options)
 
 
@@ -148,7 +146,7 @@ def preview(
     if controller.backend == "pulumi":
         controller.pulumi_call("preview")
     elif controller.backend == "terraform":
-        controller.terraform_call("preview")
+        controller.terraform_call("plan")
     else:
         raise ValueError("backend should be ['terraform', 'pulumi']")
 
@@ -219,7 +217,7 @@ def deploy(
     if controller.backend == "pulumi":
         controller.pulumi_call("up")
     elif controller.backend == "terraform":
-        raise NotImplementedError()
+        controller.terraform_call("apply")
     else:
         raise ValueError("backend should be ['terraform', 'pulumi']")
 

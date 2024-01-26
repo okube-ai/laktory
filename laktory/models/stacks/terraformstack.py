@@ -38,14 +38,21 @@ class TerraformStack(BaseModel):
 
     """
     terraform: TerraformConfig = TerraformConfig()
-    provider: dict[str, Any] = {}
-    resource: dict[str, Any] = {}
+    providers: dict[str, Any] = {}
+    resources: dict[str, Any] = {}
+
+    @property
+    def singularizations(self) -> dict[str, str]:
+        return {
+            "providers": "provider",
+            "resources": "resource",
+        }
 
     @model_validator(mode="after")
     def required_providers(self) -> Any:
         if self.terraform.required_providers is None:
             providers = {}
-            for p in self.provider.values():
+            for p in self.providers.values():
                 providers[p.resource_name] = TerraformRequiredProvider(source=p.source, version=p.version)
             self.terraform.required_providers = providers
 
@@ -59,17 +66,35 @@ class TerraformStack(BaseModel):
 
         # Special treatment of resources
         d["resource"] = defaultdict(lambda: {})
-        for r in self.resource.values():
+        for r in self.resources.values():
             _d = r.terraform_properties
             d["resource"][r.terraform_resource_type][r.resource_name] = _d
         d["resource"] = dict(d["resource"])
         settings.singular_serialization = False
 
-        # Pulumi YAML requires the keyword "resources." to be removed
-        pattern = "\$\{resources\.(.*?)\}"
-        self.variables[pattern] = r"\1"
+        # Pulumi YAML requires the keyword "resources." to be removed and the
+        # resource_name to be replaced with resource_type.resource_name.
+        patterns = []
+        for r in list(self.resources.values()) + list(self.providers.values()):
+            k0 = r.resource_name
+            k1 = f"{r.terraform_resource_type}.{r.resource_name}"
+            # special treatment for resources without type (providers)
+            if r.terraform_resource_type is None:
+                k1 = k0
+
+            # ${resources.resource_name} -> resource_type.resource_name
+            pattern = "\$\{resources\." + k0 + "\}"
+            self.variables[pattern] = k1
+            patterns += [pattern]
+
+            # ${resources.resource_name.property} -> ${resource_type.resource_name.property}
+            pattern = "\$\{resources\."+k0+"\.(.*?)\}"
+            self.variables[pattern] = rf"${{{k1}.\1}}"
+            patterns += [pattern]
+
         d = self.inject_vars(d)
-        del self.variables[pattern]
+        for p in patterns:
+            del self.variables[p]
 
         return d
 
@@ -141,26 +166,3 @@ class TerraformStack(BaseModel):
             List of flags / options for terraform apply
         """
         self._call("apply", flags=flags)
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    stack = models.Stack(
-        name="test",
-        resources={
-            "directories": {
-                "tmp-folder": {
-                    "path": "/tmp/"
-                }
-            }
-
-        }
-    )
-
-    tstack = stack.to_terraform()
-
-    import json
-    print(json.dumps(tstack.model_dump(), indent=4))
-
-    # tstack.apply(flags=["-auto-approve"])
