@@ -10,6 +10,7 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.databricks.grants import Grants
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.sql.column import Column
 from laktory.models.sql.tablebuilder import TableBuilder
 from laktory.models.sql.tableexpectation import TableExpectation
@@ -17,7 +18,7 @@ from laktory.models.sql.tableexpectation import TableExpectation
 logger = get_logger(__name__)
 
 
-class Table(BaseModel, PulumiResource):
+class Table(BaseModel, PulumiResource, TerraformResource):
     """
     A table resides in the third layer of Unity Catalog’s three-level
     namespace. It contains rows of data. Laktory provides the mechanism to
@@ -309,6 +310,32 @@ class Table(BaseModel, PulumiResource):
     @property
     def pulumi_properties(self):
         d = super().pulumi_properties
+        d["columns"] = []
+        for i, c in enumerate(self.columns):
+            d["columns"] += [
+                {
+                    "name": c.name,
+                    "comment": c.comment,
+                    "type": c.type,
+                }
+            ]
+        return d
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_table"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes
+
+    @property
+    def terraform_properties(self) -> dict:
+        d = super().terraform_properties
         d["columns"] = []
         for i, c in enumerate(self.columns):
             d["columns"] += [

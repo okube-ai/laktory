@@ -5,11 +5,12 @@ from pydantic import model_validator
 from laktory import constants
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 
 
-class WorkspaceFile(BaseModel, PulumiResource):
+class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Workspace File
 
@@ -109,3 +110,15 @@ class WorkspaceFile(BaseModel, PulumiResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["access_controls", "dirpath"]
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_workspace_file"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes

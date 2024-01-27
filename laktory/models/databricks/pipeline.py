@@ -13,6 +13,7 @@ from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.databricks.workspacefile import WorkspaceFile
 from laktory.models.sql.table import Table
 
@@ -152,7 +153,7 @@ class PipelineUDF(BaseModel):
     module_path: str = None
 
 
-class Pipeline(BaseModel, PulumiResource):
+class Pipeline(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Delta Live Tables (DLT) Pipeline
 
@@ -371,7 +372,7 @@ class Pipeline(BaseModel, PulumiResource):
             # Configuration file
             source = os.path.join(CACHE_ROOT, f"tmp-{self.name}.json")
             d = self.model_dump(exclude_none=True)
-            d = self.inject_vars(d, target="pulumi_py")  # TODO: Check target
+            d = self.inject_vars(d)
             s = json.dumps(d, indent=4)
             with open(source, "w", newline="\n") as fp:
                 fp.write(s)
@@ -424,9 +425,35 @@ class Pipeline(BaseModel, PulumiResource):
     @property
     def pulumi_properties(self):
         d = super().pulumi_properties
-        _clusters = []
-        for c in d.get("clusters", []):
-            c["label"] = c.pop("name")
-            _clusters += [c]
-        d["clusters"] = _clusters
+        k = "clusters"
+        if k in d:
+            _clusters = []
+            for c in d[k]:
+                c["label"] = c.pop("name")
+                _clusters += [c]
+            d[k] = _clusters
+        return d
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_pipeline"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes
+
+    @property
+    def terraform_properties(self) -> dict:
+        d = super().terraform_properties
+        k = "cluster"
+        if k in d:
+            _clusters = []
+            for c in d[k]:
+                c["label"] = c.pop("name")
+                _clusters += [c]
+            d[k] = _clusters
         return d

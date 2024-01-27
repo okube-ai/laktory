@@ -1,9 +1,10 @@
 from laktory.models.basemodel import BaseModel
 from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
-class Permissions(BaseModel, PulumiResource):
+class Permissions(BaseModel, PulumiResource, TerraformResource):
     access_controls: list[AccessControl]
     pipeline_id: str = None
     job_id: str = None
@@ -38,3 +39,11 @@ class Permissions(BaseModel, PulumiResource):
         import pulumi_databricks as databricks
 
         return databricks.Permissions
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_permissions"

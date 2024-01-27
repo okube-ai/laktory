@@ -93,13 +93,13 @@ class PulumiResource(BaseResource):
         for r in self.core_resources:
             # Properties
             properties = r.pulumi_properties
-            properties = self.inject_vars(properties, target="pulumi_py")
+            properties = self.inject_vars(properties)
 
             # Options
             _opts = r.options.model_dump()
             if _opts is None:
                 _opts = {}
-            _opts = self.inject_vars(_opts, target="pulumi_py")
+            _opts = self.inject_vars(_opts)
             _opts = ResourceOptions(**_opts)
             if opts is not None:
                 _opts = ResourceOptions.merge(_opts, opts)

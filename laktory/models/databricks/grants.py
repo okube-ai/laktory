@@ -2,6 +2,7 @@ from pydantic import Field
 from pydantic import AliasChoices
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
 class Grant(BaseModel):
@@ -20,7 +21,7 @@ class Grant(BaseModel):
     privileges: list[str]
 
 
-class Grants(BaseModel, PulumiResource):
+class Grants(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Grants
 
@@ -84,3 +85,15 @@ class Grants(BaseModel, PulumiResource):
         import pulumi_databricks as databricks
 
         return databricks.Grants
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_grants"
+
+    @property
+    def terraform_renames(self) -> dict[str, str]:
+        return self.pulumi_renames

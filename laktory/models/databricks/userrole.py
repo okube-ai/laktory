@@ -1,8 +1,9 @@
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
-class UserRole(BaseModel, PulumiResource):
+class UserRole(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks User role
 
@@ -34,3 +35,11 @@ class UserRole(BaseModel, PulumiResource):
         import pulumi_databricks as databricks
 
         return databricks.UserRole
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_user_role"

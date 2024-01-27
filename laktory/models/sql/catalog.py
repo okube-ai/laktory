@@ -2,12 +2,13 @@ from typing import Union
 from typing import Literal
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.sql.schema import Schema
 from laktory.models.grants.cataloggrant import CatalogGrant
 from laktory.models.databricks.grants import Grants
 
 
-class Catalog(BaseModel, PulumiResource):
+class Catalog(BaseModel, PulumiResource, TerraformResource):
     """
     A catalog is the first layer of Unity Catalog’s three-level namespace. It’s
     used to organize your data assets.
@@ -159,3 +160,15 @@ class Catalog(BaseModel, PulumiResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["schemas", "is_unity", "grants"]
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_catalog"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes

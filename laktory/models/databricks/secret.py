@@ -1,8 +1,9 @@
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
-class Secret(BaseModel, PulumiResource):
+class Secret(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks secret
 
@@ -41,3 +42,15 @@ class Secret(BaseModel, PulumiResource):
     @property
     def pulumi_renames(self) -> dict[str, str]:
         return {"value": "string_value"}
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_secret"
+
+    @property
+    def terraform_renames(self) -> dict[str, str]:
+        return self.pulumi_renames

@@ -2,8 +2,9 @@ import pulumi
 import yaml
 import json
 import os
+import re
+import inflect
 from typing import Any
-from typing import Literal
 from typing import TypeVar
 from typing import TextIO
 from pydantic import BaseModel as _BaseModel
@@ -14,6 +15,10 @@ from laktory._settings import settings
 from laktory._parsers import _snake_to_camel
 
 Model = TypeVar("Model", bound="BaseModel")
+
+
+def is_pattern(s):
+    return r"\$\{" in s
 
 
 class BaseModel(_BaseModel):
@@ -33,12 +38,33 @@ class BaseModel(_BaseModel):
     @model_serializer(mode="wrap")
     def camel_serializer(self, handler) -> dict[str, Any]:
         dump = handler(self)
+        if dump is None:
+            return dump
+
         if settings.camel_serialization:
             keys = list(dump.keys())
             for k in keys:
                 k_camel = _snake_to_camel(k)
                 if k_camel != k:
                     dump[_snake_to_camel(k)] = dump.pop(k)
+
+        if settings.singular_serialization:
+            engine = inflect.engine()
+            fields = self.model_fields
+            keys = list(dump.keys())
+            for k in keys:
+                if k in self.singularizations:
+                    # Explicit singularization
+                    k_singular = self.singularizations[k] or k
+                else:
+                    # Automatic singularization
+                    k_singular = k
+                    ann = str(fields[k].annotation)
+                    if ann.startswith("list[laktory.models"):
+                        k_singular = engine.singular_noun(k) or k
+
+                if k_singular != k:
+                    dump[k_singular] = dump.pop(k)
 
         return dump
 
@@ -106,13 +132,15 @@ class BaseModel(_BaseModel):
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def singularizations(self) -> dict[str, str]:
+        return {}
+
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def inject_vars(
-        self, d: dict, target: Literal["pulumi_py", "pulumi_yaml"] = "pulumi_py"
-    ) -> dict[str, Any]:
+    def inject_vars(self, d: dict) -> dict[str, Any]:
         """
         Inject variables values into a dictionary (generally model dump).
 
@@ -134,9 +162,6 @@ class BaseModel(_BaseModel):
         ----------
         d:
             Model dump
-        target:
-            Target for the variables injection as each one might require a
-            slightly different format.
 
         Returns
         -------
@@ -148,40 +173,21 @@ class BaseModel(_BaseModel):
         from laktory.models.resources.pulumiresource import pulumi_outputs
         from laktory.models.resources.pulumiresource import pulumi_resources
 
-        # Build available variables
+        # Build patterns
+        _patterns = {}
         _vars = {}
         _pvars = {}
 
-        if target == "pulumi_yaml":
-            _vars["${resources."] = "${"
-        elif target == "terraform":
-            # TODO: Review
-            raise NotImplementedError()
-            # _vars["${catalogs."] = "${databricks_catalog."
-            # _vars["${clusters."] = "${databricks_cluster."
-            # _vars["${groups."] = "${databricks_group."
-            # _vars["${jobs."] = "${databricks_job."
-            # _vars["${notebooks."] = "${databricks_notebook."
-            # _vars["${pipelines."] = "${databricks_pipeline."
-            # _vars["${schemas."] = "${databricks_schema."
-            # _vars["${service_principals."] = "${databricks_service_principal."
-            # _vars["${secret_scopes."] = "${databricks_secret_scope."
-            # _vars["${sql_queries."] = "${databricks_sql_query."
-            # _vars["${tables."] = "${databricks_sql_table."
-            # _vars["${users."] = "${databricks_user."
-            # _vars["${warehouses."] = "${databricks_sql_endpoint."
-            # _vars["${workspace_files."] = "${databricks_workspace_file."
-        elif target == "pulumi_py":
-            # _vars["${resources."] = "${vars."
-            pass
-
         # User-defined variables
         for k, v in self.variables.items():
+            _k = k
+            if not is_pattern(_k):
+                _k = f"${{vars.{_k}}}"
             if isinstance(v, pulumi.Output):
-                _vars[f"${{vars.{k}}}"] = f"{{_pargs_{k}}}"
+                _vars[_k] = f"{{_pargs_{k}}}"
                 _pvars[f"_pargs_{k}"] = v
             else:
-                _vars[f"${{vars.{k}}}"] = v
+                _vars[_k] = v
 
         # Environment variables
         for k, v in os.environ.items():
@@ -195,18 +201,26 @@ class BaseModel(_BaseModel):
         for k, v in pulumi_resources.items():
             _vars[f"${{resources.{k}}}"] = v
 
-        def search_and_replace(d, old_value, new_val):
+        # Create patterns
+        keys = list(_vars.keys())
+        for k in keys:
+            v = _vars[k]
+            if isinstance(v, str) and not is_pattern(k):
+                pattern = re.escape(k)
+                pattern = rf"{pattern}"
+                _vars[pattern] = _vars.pop(k)
+
+        def search_and_replace(d, pattern, repl):
             if isinstance(d, dict):
                 for key, value in d.items():
-                    d[key] = search_and_replace(value, old_value, new_val)
+                    d[key] = search_and_replace(value, pattern, repl)
             elif isinstance(d, list):
                 for i, item in enumerate(d):
-                    d[i] = search_and_replace(item, old_value, new_val)
-            elif d == old_value:  # required where d is not a string (bool)
-                d = new_val
-            elif isinstance(d, str) and old_value.lower() in d.lower():
-                d = d.replace(old_value, old_value.lower())
-                d = d.replace(old_value.lower(), new_val)
+                    d[i] = search_and_replace(item, pattern, repl)
+            elif d == pattern:  # required where d is not a string (bool or resource object)
+                d = repl
+            elif isinstance(d, str) and re.findall(pattern, d, flags=re.IGNORECASE):
+                d = re.sub(pattern, repl, d, flags=re.IGNORECASE)
 
             return d
 
@@ -226,8 +240,8 @@ class BaseModel(_BaseModel):
             return d
 
         # Replace variable with their values (except for pulumi output)
-        for var_key, var_value in _vars.items():
-            d = search_and_replace(d, var_key, var_value)
+        for pattern, repl in _vars.items():
+            d = search_and_replace(d, pattern, repl)
 
         # Build pulumi output function where required
         d = apply_pulumi(d)

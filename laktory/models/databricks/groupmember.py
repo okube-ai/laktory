@@ -1,8 +1,9 @@
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
-class GroupMember(BaseModel, PulumiResource):
+class GroupMember(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks secret ACL
 
@@ -34,3 +35,11 @@ class GroupMember(BaseModel, PulumiResource):
         import pulumi_databricks as databricks
 
         return databricks.GroupMember
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_group_member"

@@ -10,6 +10,7 @@ from laktory.models.databricks.cluster import ClusterLibrary
 from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
 class JobCluster(Cluster):
@@ -588,7 +589,7 @@ class JobWebhookNotifications(BaseModel):
     on_successes: list[JobWebhookNotificationsOnSuccess] = None
 
 
-class Job(BaseModel, PulumiResource):
+class Job(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Job
 
@@ -769,19 +770,63 @@ class Job(BaseModel, PulumiResource):
     @property
     def pulumi_properties(self):
         d = super().pulumi_properties
+
         _clusters = []
         if settings.camel_serialization:
-            for c in d.get("jobClusters", []):
-                name = c.pop("name")
-                _clusters += [
-                    {
-                        "jobClusterKey": name,
-                        "newCluster": c,
-                    }
-                ]
-            d["jobClusters"] = _clusters
+            k = "jobClusters"
+            if k in d:
+                for c in d[k]:
+                    name = c.pop("name")
+                    _clusters += [
+                        {
+                            "jobClusterKey": name,
+                            "newCluster": c,
+                        }
+                    ]
+                d[k] = _clusters
+
         else:
-            for c in d.get("job_clusters", []):
+            k = "job_clusters"
+            if k in d:
+                for c in d[k]:
+                    name = c.pop("name")
+                    _clusters += [
+                        {
+                            "job_cluster_key": name,
+                            "new_cluster": c,
+                        }
+                    ]
+                d[k] = _clusters
+
+        return d
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_job"
+
+    @property
+    def terraform_renames(self) -> dict[str, str]:
+        return {
+            "clusters": "job_clusters",
+            "cluster": "job_cluster",
+        }
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes
+
+    @property
+    def terraform_properties(self) -> dict:
+        d = super().terraform_properties
+
+        _clusters = []
+        k = "job_cluster"
+        if k in d:
+            for c in d[k]:
                 name = c.pop("name")
                 _clusters += [
                     {
@@ -789,6 +834,6 @@ class Job(BaseModel, PulumiResource):
                         "new_cluster": c,
                     }
                 ]
-            d["job_clusters"] = _clusters
+            d[k] = _clusters
 
         return d

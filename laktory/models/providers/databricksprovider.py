@@ -1,8 +1,10 @@
-from laktory.models.basemodel import BaseModel
+from pydantic import Field
+from laktory.models.providers.baseprovider import BaseProvider
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
-class DatabricksProvider(BaseModel, PulumiResource):
+class DatabricksProvider(BaseProvider, PulumiResource, TerraformResource):
     """
     Databricks Provider
 
@@ -89,6 +91,7 @@ class DatabricksProvider(BaseModel, PulumiResource):
     )
     ```
     """
+    source: str = Field("databricks/databricks", exclude=True)
 
     account_id: str = None
     auth_type: str = None

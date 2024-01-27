@@ -2,6 +2,7 @@ import os
 import yaml
 from typing import Any
 from typing import Union
+from pydantic import Field
 
 from laktory._logger import get_logger
 from laktory._settings import settings
@@ -25,9 +26,13 @@ class PulumiStack(BaseModel):
     It is generally not instantiated directly, but rather created using
     `laktory.models.Stack.to_pulumi()`.
 
+    References
+    ----------
+    - pulumi yaml [options](https://www.pulumi.com/docs/languages-sdks/yaml/yaml-language-reference/)
     """
 
     name: str
+    organization: str = Field(None, exclude=True)
     runtime: str = "yaml"
     description: Union[str, None] = None
     config: dict[str, Union[str, ConfigValue]] = {}
@@ -50,7 +55,11 @@ class PulumiStack(BaseModel):
             }
         settings.camel_serialization = False
 
-        d = self.inject_vars(d, target="pulumi_yaml")
+        # Pulumi YAML requires the keyword "resources." to be removed
+        pattern = r"\$\{resources\.(.*?)\}"
+        self.variables[pattern] = r"${\1}"
+        d = self.inject_vars(d)
+        del self.variables[pattern]
 
         return d
 

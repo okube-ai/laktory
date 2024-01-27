@@ -1,3 +1,4 @@
+organization: okube
 name: unit-testing
 backend: pulumi
 config:
@@ -5,7 +6,7 @@ config:
   databricks:token: ${vars.DATABRICKS_TOKEN}
 resources:
   providers:
-    databricks-provider:
+    databricks:  # for terraform, provider name must match resource type prefix
       host: ${vars.DATABRICKS_HOST}
       token: ${vars.DATABRICKS_TOKEN}
   pipelines:
@@ -20,7 +21,7 @@ resources:
         - group_name: role-engineers
           permission_level: CAN_RUN
       options:
-        provider: ${resources.databricks-provider}
+        provider: ${resources.databricks}
   jobs:
     job-stock-prices-ut-stack:
       name: job-stock-prices-ut-stack

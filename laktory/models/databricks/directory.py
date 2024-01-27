@@ -1,9 +1,10 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
-class Directory(BaseModel, PulumiResource):
+class Directory(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Directory
 
@@ -66,3 +67,12 @@ class Directory(BaseModel, PulumiResource):
         import pulumi_databricks as databricks
 
         return databricks.Directory
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_directory"
+

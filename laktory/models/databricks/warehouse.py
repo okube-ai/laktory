@@ -3,6 +3,7 @@ from typing import Union
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 
@@ -36,7 +37,7 @@ class WarehouseTags(BaseModel):
     custom_tags: list[WarehouseCustomTag] = []
 
 
-class Warehouse(BaseModel, PulumiResource):
+class Warehouse(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Warehouse
 
@@ -174,4 +175,22 @@ class Warehouse(BaseModel, PulumiResource):
             d["channel"] = {"name": d.pop("channelName")}
         else:
             d["channel"] = {"name": d.pop("channel_name")}
+        return d
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_sql_endpoint"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes
+
+    @property
+    def terraform_properties(self) -> dict:
+        d = super().terraform_properties
+        d["channel"] = {"name": d.pop("channel_name")}
         return d

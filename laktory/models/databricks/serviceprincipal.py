@@ -1,11 +1,12 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.databricks.serviceprincipalrole import ServicePrincipalRole
 from laktory.models.databricks.groupmember import GroupMember
 
 
-class ServicePrincipal(BaseModel, PulumiResource):
+class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks account service principal
 
@@ -110,3 +111,15 @@ class ServicePrincipal(BaseModel, PulumiResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["groups", "roles", "group_ids"]
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_service_principal"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes

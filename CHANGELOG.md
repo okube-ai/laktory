@@ -2,13 +2,12 @@
 
 ## [0.1.1] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
+* General support for Terraform IaC backend
+* AWS Provider
+* Azure Provider
+* Azure Pulumi (Native) Provider
 ### Breaking changes
-* n/a
+* Replaced CLI argument `--stack` with `--org` and `--dev` for a more consistent experience between pulumi and terraform backends
 
 ## [0.1.0] - 2024-01-12
 ### Added

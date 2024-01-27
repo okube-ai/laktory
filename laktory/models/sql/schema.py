@@ -4,11 +4,12 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.databricks.grants import Grants
 from laktory.models.grants.schemagrant import SchemaGrant
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.sql.table import Table
 from laktory.models.sql.volume import Volume
 
 
-class Schema(BaseModel, PulumiResource):
+class Schema(BaseModel, PulumiResource, TerraformResource):
     """
     A schema (also called a database) is the second layer of Unity Catalog’s
     three-level namespace. A schema organizes tables and views.
@@ -153,3 +154,15 @@ class Schema(BaseModel, PulumiResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["tables", "volumes", "grants"]
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_schema"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes

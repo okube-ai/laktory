@@ -5,11 +5,12 @@ from typing import Union
 from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
 
 
-class SqlQuery(BaseModel, PulumiResource):
+class SqlQuery(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks SQL Query
 
@@ -108,3 +109,19 @@ class SqlQuery(BaseModel, PulumiResource):
     @property
     def pulumi_renames(self) -> dict[str, str]:
         return {"comment": "description"}
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_sql_query"
+
+    @property
+    def terraform_renames(self) -> dict[str, str]:
+        return self.pulumi_renames
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes
