@@ -51,7 +51,7 @@ schema = Schema(
         ),
     ],
     variables={
-        "dynamic_column": "low",
+        "DYNAMIC_COLUMN": "low",
         "env": env.id,
         "schema_name": schema_name.id,
         # r"\$\{resources\.([\w.]+)\}": r"\1",

@@ -219,7 +219,7 @@ class BaseModel(_BaseModel):
                     d[i] = search_and_replace(item, pattern, repl)
             elif d == pattern:  # required where d is not a string (bool or resource object)
                 d = repl
-            elif isinstance(d, str) and re.findall(pattern, d):
+            elif isinstance(d, str) and re.findall(pattern, d, flags=re.IGNORECASE):
                 d = re.sub(pattern, repl, d, flags=re.IGNORECASE)
 
             return d
