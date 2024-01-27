@@ -112,7 +112,7 @@ The `to_pulumi()` will trigger the instantiation of `pulumi_databricks.Pipeline(
 
 Once you are ready to execute the deployment, simply invoke
 ```cmd title="prompt"
-pulumi up
+pulumi up --stack okube/devpor
 ```
 as you would with a standard Pulumi project. In this case, it is assumed that you have already setup a `Pulumi.yaml`
 file with  the required configuration for your stack.
