@@ -75,6 +75,7 @@ class StackResources(BaseModel):
     workspacefiles:
         WorkspacFiles
     """
+
     catalogs: dict[str, Catalog] = {}
     clusters: dict[str, Cluster] = {}
     directories: dict[str, Directory] = {}
@@ -88,7 +89,9 @@ class StackResources(BaseModel):
     serviceprincipals: dict[str, ServicePrincipal] = {}
     sqlqueries: dict[str, SqlQuery] = {}
     tables: dict[str, Table] = {}
-    providers: dict[str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]] = {}
+    providers: dict[
+        str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]
+    ] = {}
     users: dict[str, User] = {}
     volumes: dict[str, Volume] = {}
     warehouses: dict[str, Warehouse] = {}
@@ -111,7 +114,6 @@ class StackResources(BaseModel):
                 continue
 
             for resource_name, _r in getattr(self, resource_type).items():
-
                 if providers_excluded and isinstance(_r, BaseProvider):
                     continue
 
@@ -151,6 +153,7 @@ class EnvironmentStack(BaseModel):
     variables:
         Dictionary of variables made available in the resources definition.
     """
+
     config: dict[str, str] = {}
     description: str = None
     backend: Literal["pulumi", "terraform"] = None
@@ -177,6 +180,7 @@ class EnvironmentSettings(BaseModel):
     variables:
         Dictionary of variables made available in the resources definition.
     """
+
     config: dict[str, str] = None
     resources: Any = None
     variables: dict[str, Union[str, bool]] = None

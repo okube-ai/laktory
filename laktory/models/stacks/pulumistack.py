@@ -86,7 +86,7 @@ class PulumiStack(BaseModel):
 
         return filepath
 
-    def _call(self, command: str, stack: str, flags: list[str] =None):
+    def _call(self, command: str, stack: str, flags: list[str] = None):
         from laktory.cli._worker import Worker
 
         self.write()

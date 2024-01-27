@@ -38,6 +38,11 @@ To benefit from all features, we recommend also installing your cloud provider-s
     pip install laktory[gcp]
     ```
 
+## IaC Backends
+Laktory supports multiple IaC backends. You will need to install the CLI of your desired backend manually:
+
+* [terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+* [pulumi](https://www.pulumi.com/docs/install/)
 
 ## Spark installation
 Laktory facilitate building and deploying custom spark functions. 

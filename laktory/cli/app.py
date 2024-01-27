@@ -42,15 +42,11 @@ class CLIController(BaseModel):
         if self.organization is None:
             self.organization = self.stack.organization
         if self.organization is None and self.backend == "pulumi":
-            raise ValueError(
-                "organization must be specified with pulumi backend"
-            )
+            raise ValueError("organization must be specified with pulumi backend")
 
         # Check environment
         if self.env is None and self.backend == "pulumi":
-            raise ValueError(
-                "Environment must be specified with pulumi backend"
-            )
+            raise ValueError("Environment must be specified with pulumi backend")
 
     @property
     def pulumi_options(self):
@@ -82,28 +78,35 @@ class CLIController(BaseModel):
 
 @app.command()
 def preview(
-    backend: Annotated[str, typer.Option(
-        help="IaC backend [pulumi, terraform]"
-    )] = None,
-    organization: Annotated[str, typer.Option(
-        "--org", "-o",
-        help="Name of the organization in associated with the pulumi stack."
-    )] = None,
-    environment: Annotated[str, typer.Option(
-        "--env", "-e",
-        help="Name of the environment"
-    )] = None,
-    filepath: Annotated[str, typer.Option(
-        help="Stack (yaml) filepath."
-    )] = "./stack.yaml",
-    pulumi_options: Annotated[str, typer.Option(
-        "--pulumi-options",
-        help="Comma separated pulumi options (flags)."
-    )] = None,
-    terraform_options: Annotated[str, typer.Option(
-        "--terraform-options",
-        help="Comma separated terraform options (flags)."
-    )] = None,
+    backend: Annotated[
+        str, typer.Option(help="IaC backend [pulumi, terraform]")
+    ] = None,
+    organization: Annotated[
+        str,
+        typer.Option(
+            "--org",
+            "-o",
+            help="Name of the organization in associated with the pulumi stack.",
+        ),
+    ] = None,
+    environment: Annotated[
+        str, typer.Option("--env", "-e", help="Name of the environment")
+    ] = None,
+    filepath: Annotated[
+        str, typer.Option(help="Stack (yaml) filepath.")
+    ] = "./stack.yaml",
+    pulumi_options: Annotated[
+        str,
+        typer.Option(
+            "--pulumi-options", help="Comma separated pulumi options (flags)."
+        ),
+    ] = None,
+    terraform_options: Annotated[
+        str,
+        typer.Option(
+            "--terraform-options", help="Comma separated terraform options (flags)."
+        ),
+    ] = None,
 ):
     """
     Validate configuration and resources and preview deployment.
@@ -153,28 +156,35 @@ def preview(
 
 @app.command()
 def deploy(
-    backend: Annotated[str, typer.Option(
-        help="IaC backend [pulumi, terraform]"
-    )] = None,
-    organization: Annotated[str, typer.Option(
-        "--org", "-o",
-        help="Name of the organization in associated with the pulumi stack."
-    )] = None,
-    environment: Annotated[str, typer.Option(
-        "--env", "-e",
-        help="Name of the environment"
-    )] = None,
-    filepath: Annotated[str, typer.Option(
-        help="Stack (yaml) filepath."
-    )] = "./stack.yaml",
-    pulumi_options: Annotated[str, typer.Option(
-        "--pulumi-options",
-        help="Comma separated pulumi options (flags)."
-    )] = None,
-    terraform_options: Annotated[str, typer.Option(
-        "--terraform-options",
-        help="Comma separated terraform options (flags)."
-    )] = None,
+    backend: Annotated[
+        str, typer.Option(help="IaC backend [pulumi, terraform]")
+    ] = None,
+    organization: Annotated[
+        str,
+        typer.Option(
+            "--org",
+            "-o",
+            help="Name of the organization in associated with the pulumi stack.",
+        ),
+    ] = None,
+    environment: Annotated[
+        str, typer.Option("--env", "-e", help="Name of the environment")
+    ] = None,
+    filepath: Annotated[
+        str, typer.Option(help="Stack (yaml) filepath.")
+    ] = "./stack.yaml",
+    pulumi_options: Annotated[
+        str,
+        typer.Option(
+            "--pulumi-options", help="Comma separated pulumi options (flags)."
+        ),
+    ] = None,
+    terraform_options: Annotated[
+        str,
+        typer.Option(
+            "--terraform-options", help="Comma separated terraform options (flags)."
+        ),
+    ] = None,
 ):
     """
     Execute deployment.

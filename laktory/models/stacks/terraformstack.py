@@ -37,6 +37,7 @@ class TerraformStack(BaseModel):
     `laktory.models.Stack.to_terraform()`.
 
     """
+
     terraform: TerraformConfig = TerraformConfig()
     providers: dict[str, Any] = {}
     resources: dict[str, Any] = {}
@@ -53,7 +54,9 @@ class TerraformStack(BaseModel):
         if self.terraform.required_providers is None:
             providers = {}
             for p in self.providers.values():
-                providers[p.resource_name] = TerraformRequiredProvider(source=p.source, version=p.version)
+                providers[p.resource_name] = TerraformRequiredProvider(
+                    source=p.source, version=p.version
+                )
             self.terraform.required_providers = providers
 
         return self
@@ -121,7 +124,7 @@ class TerraformStack(BaseModel):
 
         return filepath
 
-    def _call(self, command: str, flags: list[str] =None):
+    def _call(self, command: str, flags: list[str] = None):
         from laktory.cli._worker import Worker
 
         self.write()
