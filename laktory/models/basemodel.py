@@ -18,7 +18,7 @@ Model = TypeVar("Model", bound="BaseModel")
 
 
 def is_pattern(s):
-    return "\$\{" in s
+    return r"\$\{" in s
 
 
 class BaseModel(_BaseModel):

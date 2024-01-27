@@ -150,8 +150,7 @@ class AWSProvider(BaseProvider, PulumiResource, TerraformResource):
     from laktory import models
 
     p = models.AWSProvider(
-        host="adb-4623853922539974.14.azuredatabricks.net",
-        token="${vars.DATABRICKS_TOKEN}",
+        access_key="${vars.AWS_ACCESS_KEY}",
     )
     ```
     """

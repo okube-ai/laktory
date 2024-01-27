@@ -93,10 +93,9 @@ class AzureProvider(BaseProvider, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    #TODO
     p = models.AzureProvider(
-        host="adb-4623853922539974.14.azuredatabricks.net",
-        token="${vars.DATABRICKS_TOKEN}",
+        client_id="${vars.AZURE_CLIENT_ID}",
+        client_secret="${vars.AZURE_CLIENT_SECRET}",
     )
     ```
     """

@@ -170,6 +170,9 @@ nav:
         - api/models/databricks/warehouse.md
         - WorkspaceFile: api/models/databricks/workspacefile.md
       - Providers:
+        - AzureProvider: api/models/providers/azure.md
+        - AzurePulumiProvider: api/models/providers/azurepulumi.md
+        - AWSProvider: api/models/providers/aws.md
         - DatabricksProvider: api/models/providers/databricks.md
       - Resources:
         - BaseResource: api/models/resources/baseresource.md
@@ -187,7 +190,8 @@ nav:
           - api/models/sql/volume.md
       - Stacks:
           - Stack: api/models/stacks/stack.md
-          - PulumiStacK: api/models/stacks/pulumistack.md
+          - PulumiStack: api/models/stacks/pulumistack.md
+          - TerraformStack: api/models/stacks/terraformstack.md
 
 
     - CLI: api/cli.md

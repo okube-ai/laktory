@@ -62,10 +62,9 @@ class AzurePulumiProvider(BaseProvider, PulumiResource):
     ```py
     from laktory import models
 
-    #TODO
-    p = models.AzureNativeProvider(
-        host="adb-4623853922539974.14.azuredatabricks.net",
-        token="${vars.DATABRICKS_TOKEN}",
+    p = models.AzureProvider(
+        client_id="${vars.AZURE_CLIENT_ID}",
+        client_secret="${vars.AZURE_CLIENT_SECRET}",
     )
     ```
     """

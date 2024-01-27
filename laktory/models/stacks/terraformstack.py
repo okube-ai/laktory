@@ -83,12 +83,12 @@ class TerraformStack(BaseModel):
                 k1 = k0
 
             # ${resources.resource_name} -> resource_type.resource_name
-            pattern = "\$\{resources\." + k0 + "\}"
+            pattern = r"\$\{resources\." + k0 + r"\}"
             self.variables[pattern] = k1
             patterns += [pattern]
 
             # ${resources.resource_name.property} -> ${resource_type.resource_name.property}
-            pattern = "\$\{resources\."+k0+"\.(.*?)\}"
+            pattern = r"\$\{resources\." + k0 + r"\.(.*?)\}"
             self.variables[pattern] = rf"${{{k1}.\1}}"
             patterns += [pattern]
 

@@ -56,7 +56,7 @@ class PulumiStack(BaseModel):
         settings.camel_serialization = False
 
         # Pulumi YAML requires the keyword "resources." to be removed
-        pattern = "\$\{resources\.(.*?)\}"
+        pattern = r"\$\{resources\.(.*?)\}"
         self.variables[pattern] = r"${\1}"
         d = self.inject_vars(d)
         del self.variables[pattern]
