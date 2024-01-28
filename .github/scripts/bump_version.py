@@ -9,7 +9,6 @@ laktory_root = f"./{package_name}/"
 
 
 def main():
-
     # Filepaths
     version_filepath = os.path.join(laktory_root, "_version.py")
     local_env_filepath = os.path.join(script_root, "git.env")
@@ -18,7 +17,7 @@ def main():
 
     # Read version file
     with open(version_filepath) as fp:
-        v0 = fp.read().split("=")[-1].strip().replace('"', '')
+        v0 = fp.read().split("=")[-1].strip().replace('"', "")
         v0 = version.parse(v0)
         v1 = version.Version(f"{v0.major}.{v0.minor}.{v0.micro + 1}")
     print(f"Bumping laktory to {v1}")
@@ -30,7 +29,7 @@ def main():
 
     # Set version as git action variable
     print(f"Setting git env var version {git_env_filepath}")
-    with open(git_env_filepath, 'a') as fp:
+    with open(git_env_filepath, "a") as fp:
         fp.write(f"version={v1}")
 
     # Update CHANGELOG
@@ -42,19 +41,18 @@ def main():
 
 
 def update_changelog(changelog_filepath, v0, v1):
-
     # Update CHANGELOG
     print(f"Updating changelog")
-    with open(changelog_filepath, 'r') as fp:
+    with open(changelog_filepath, "r") as fp:
         content = fp.read()
 
     # Set version line
-    version_line = f'## [{v0}] - Unreleased'
+    version_line = f"## [{v0}] - Unreleased"
 
     # Validate
     if version_line not in content:
         msg = f"CHANGELOG  does not include version {v0}"
-        print('ValueError: ' + msg)
+        print("ValueError: " + msg)
         raise ValueError(msg)
 
     # Update current version release date
@@ -64,23 +62,23 @@ def update_changelog(changelog_filepath, v0, v1):
 
     # Add placeholder for next version
     next_version_lines = [
-        '# Release History',
-        '',
-        f'## [{v1}] - Unreleased',
-        '### Added',
-        '* n/a',
-        '### Fixed',
-        '* n/a',
-        '### Updated',
-        '* n/a',
-        '### Breaking changes',
-        '* n/a',
-        ''
+        "# Release History",
+        "",
+        f"## [{v1}] - Unreleased",
+        "### Added",
+        "* n/a",
+        "### Fixed",
+        "* n/a",
+        "### Updated",
+        "* n/a",
+        "### Breaking changes",
+        "* n/a",
+        "",
     ]
-    content = content.replace('# Release History\n', '\n'.join(next_version_lines))
+    content = content.replace("# Release History\n", "\n".join(next_version_lines))
 
     # Write
-    with open(changelog_filepath, 'w') as fp:
+    with open(changelog_filepath, "w") as fp:
         fp.write(content)
 
 

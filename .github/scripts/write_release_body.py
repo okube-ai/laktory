@@ -6,7 +6,6 @@ package_root = f"./{package_name}/"
 
 
 def main():
-
     # Filepaths
     version_filepath = os.path.join(package_root, "_version.py")
     changelog_filepath = os.path.join("./", "CHANGELOG.md")
@@ -14,11 +13,11 @@ def main():
 
     # Read version file
     with open(version_filepath) as fp:
-        release_version = fp.read().split("=")[-1].strip().replace('"', '')
+        release_version = fp.read().split("=")[-1].strip().replace('"', "")
     print(f"Get changes for {package_name} {release_version}")
 
     # Read changelog
-    with open(changelog_filepath, 'r') as fp:
+    with open(changelog_filepath, "r") as fp:
         content = fp.read()
     blocks = content.split("## [")
 
@@ -41,7 +40,7 @@ def main():
 
     # Write body
     print(f"Writing body {body_filepath}")
-    with open(body_filepath, 'w') as fp:
+    with open(body_filepath, "w") as fp:
         fp.write(changes)
 
     if os.getenv("GITHUB_OUTPUT") is None:
