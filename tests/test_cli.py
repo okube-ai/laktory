@@ -18,6 +18,10 @@ def test_preview_terraform():
     filepath = os.path.join(dirpath, "stack.yaml")
     result = runner.invoke(
         app,
+        ["init", "--backend", "terraform", "--env", "dev", "--filepath", filepath],
+    )
+    result = runner.invoke(
+        app,
         ["preview", "--backend", "terraform", "--env", "dev", "--filepath", filepath],
     )
     assert result.exit_code == 0
@@ -74,7 +78,7 @@ def atest_deploy_terraform():
 
 
 if __name__ == "__main__":
-    test_preview_pulumi()
+    # test_preview_pulumi()
     test_preview_terraform()
-    atest_deploy_pulumi()
-    atest_deploy_terraform()
+    # atest_deploy_pulumi()
+    # atest_deploy_terraform()

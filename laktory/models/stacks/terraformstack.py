@@ -131,13 +131,6 @@ class TerraformStack(BaseModel):
         self.write()
         worker = Worker()
 
-        if not os.path.exists(os.path.join(CACHE_ROOT, ".terraform")):
-            worker.run(
-                cmd=["terraform", "init"],
-                cwd=CACHE_ROOT,
-                raise_exceptions=settings.cli_raise_external_exceptions,
-            )
-
         cmd = ["terraform", command]
 
         if flags is not None:
@@ -148,6 +141,17 @@ class TerraformStack(BaseModel):
             cwd=CACHE_ROOT,
             raise_exceptions=settings.cli_raise_external_exceptions,
         )
+
+    def init(self, flags: list[str] = None) -> None:
+        """
+        Runs `terraform init`
+
+        Parameters
+        ----------
+        flags:
+            List of flags / options for pulumi plan
+        """
+        self._call("init", flags=flags)
 
     def plan(self, flags: list[str] = None) -> None:
         """
