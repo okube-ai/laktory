@@ -9,8 +9,7 @@ laktory --help
 The CLI supports 3 main operations `init`, `preview` and `deploy`.
 
 ### init
-**This command is under development and should be released soon**
-`laktory init` helps you setup a yaml stack and some sample resources to get your started.
+`laktory init` setups IaC backend and download required resources. Only available with Terraform backend.
 
 ### preview
 `laktory preview` validate your yaml stack and describe new resources to be deployed or changes to existing ones.  Similar to `pulumi preview` or `terraform validate/plan`.
