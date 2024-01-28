@@ -81,7 +81,7 @@ def atest_deploy_terraform():
 
 
 if __name__ == "__main__":
-    # test_preview_pulumi()
+    test_preview_pulumi()
     test_preview_terraform()
-    # atest_deploy_pulumi()
-    # atest_deploy_terraform()
+    atest_deploy_pulumi()
+    atest_deploy_terraform()
