@@ -261,8 +261,8 @@ def test_stack_model():
                 "azurerm": {
                     "resource_group_name": "o3-rg-laktory-dev",
                     "storage_account_name": "o3stglaktorydev",
-                    "container_name": "terraform",
-                    "key": "dev.terraform.tfstate",
+                    "container_name": "unit-testing",
+                    "key": "terraform/dev.terraform.tfstate",
                 }
             }
         },
@@ -283,7 +283,7 @@ def test_pulumi_stack():
         "name": "unit-testing",
         "runtime": "yaml",
         "config": {
-            "databricks:host": "${vars.DATABRICKS_HOST}",
+            "databricks:host": "https://adb-2211091707396001.1.azuredatabricks.net/",
             "databricks:token": "***",
         },
         "resources": {
@@ -384,7 +384,10 @@ def test_pulumi_stack():
             },
             "databricks": {
                 "type": "pulumi:providers:databricks",
-                "properties": {"host": "${vars.DATABRICKS_HOST}", "token": "***"},
+                "properties": {
+                    "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
+                    "token": "***",
+                },
                 "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
         },
@@ -434,12 +437,17 @@ def test_terraform_stack():
                 "azurerm": {
                     "resource_group_name": "o3-rg-laktory-dev",
                     "storage_account_name": "o3stglaktorydev",
-                    "container_name": "terraform",
-                    "key": "dev.terraform.tfstate",
+                    "container_name": "unit-testing",
+                    "key": "terraform/dev.terraform.tfstate",
                 }
             },
         },
-        "provider": {"databricks": {"host": "${vars.DATABRICKS_HOST}", "token": "***"}},
+        "provider": {
+            "databricks": {
+                "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
+                "token": "***",
+            }
+        },
         "resource": {
             "databricks_job": {
                 "job-stock-prices-ut-stack": {
