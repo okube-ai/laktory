@@ -7,21 +7,50 @@ dirpath = os.path.dirname(__file__)
 with open(os.path.join(dirpath, "stack.yaml"), "r") as fp:
     stack = models.Stack.model_validate_yaml(fp)
 
+stack.terraform.backend = {
+    "azurerm": {
+        "resource_group_name": "o3-rg-laktory-dev",
+        "storage_account_name": "o3stglaktorydev",
+        "container_name": "unit-testing",
+        "key": "terraform/dev.terraform.tfstate",
+    }
+}
+
 
 def test_stack_model():
     data = stack.model_dump()
     print(data)
     assert data == {
         "variables": {},
-        "config": {
-            "databricks:host": "${vars.DATABRICKS_HOST}",
-            "databricks:token": "${vars.DATABRICKS_TOKEN}",
-        },
+        "backend": "pulumi",
         "description": None,
+        "environments": {
+            "dev": {
+                "variables": {
+                    "env": "dev",
+                    "is_dev": True,
+                    "node_type_id": "Standard_DS3_v2",
+                },
+                "resources": None,
+            },
+            "prod": {
+                "variables": {
+                    "env": "prod",
+                    "is_dev": False,
+                    "node_type_id": "Standard_DS4_v2",
+                },
+                "resources": {"pipelines": {"pl-custom-name": {"development": False}}},
+            },
+        },
         "name": "unit-testing",
         "organization": "okube",
-        "backend": "pulumi",
-        "pulumi_outputs": {},
+        "pulumi": {
+            "config": {
+                "databricks:host": "${vars.DATABRICKS_HOST}",
+                "databricks:token": "${vars.DATABRICKS_TOKEN}",
+            },
+            "outputs": {},
+        },
         "resources": {
             "catalogs": {},
             "clusters": {},
@@ -236,25 +265,15 @@ def test_stack_model():
             "warehouses": {},
             "workspacefiles": {},
         },
-        "environments": {
-            "dev": {
-                "variables": {
-                    "env": "dev",
-                    "is_dev": True,
-                    "node_type_id": "Standard_DS3_v2",
-                },
-                "config": None,
-                "resources": None,
-            },
-            "prod": {
-                "variables": {
-                    "env": "prod",
-                    "is_dev": False,
-                    "node_type_id": "Standard_DS4_v2",
-                },
-                "config": None,
-                "resources": {"pipelines": {"pl-custom-name": {"development": False}}},
-            },
+        "terraform": {
+            "backend": {
+                "azurerm": {
+                    "resource_group_name": "o3-rg-laktory-dev",
+                    "storage_account_name": "o3stglaktorydev",
+                    "container_name": "unit-testing",
+                    "key": "terraform/dev.terraform.tfstate",
+                }
+            }
         },
     }
 
@@ -416,13 +435,26 @@ def test_pulumi_stack():
     assert data == data0
 
 
+def test_pulumi_preview():
+    pstack = stack.to_pulumi(env="dev")
+    pstack.preview(stack="okube/dev")
+
+
 def test_terraform_stack():
     data_default = stack.to_terraform().model_dump()
     data_default["provider"]["databricks"]["token"] = "***"
     print(data_default)
     assert data_default == {
         "terraform": {
-            "required_providers": {"databricks": {"source": "databricks/databricks"}}
+            "required_providers": {"databricks": {"source": "databricks/databricks"}},
+            "backend": {
+                "azurerm": {
+                    "resource_group_name": "o3-rg-laktory-dev",
+                    "storage_account_name": "o3stglaktorydev",
+                    "container_name": "unit-testing",
+                    "key": "terraform/dev.terraform.tfstate",
+                }
+            },
         },
         "provider": {
             "databricks": {
@@ -539,7 +571,16 @@ def test_terraform_stack():
     assert data == data0
 
 
+def test_terraform_plan():
+    tstack = stack.to_terraform(env="dev")
+    tstack.terraform.backend = None  # TODO: Add credentials to git actions to use azure backend
+    tstack.init(flags=["-migrate-state"])
+    tstack.plan()
+
+
 if __name__ == "__main__":
     test_stack_model()
     test_pulumi_stack()
+    test_pulumi_preview()
     test_terraform_stack()
+    test_terraform_plan()

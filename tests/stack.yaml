@@ -1,9 +1,10 @@
 organization: okube
 name: unit-testing
 backend: pulumi
-config:
-  databricks:host: ${vars.DATABRICKS_HOST}
-  databricks:token: ${vars.DATABRICKS_TOKEN}
+pulumi:
+  config:
+    databricks:host: ${vars.DATABRICKS_HOST}
+    databricks:token: ${vars.DATABRICKS_TOKEN}
 resources:
   providers:
     databricks:  # for terraform, provider name must match resource type prefix

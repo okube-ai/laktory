@@ -25,6 +25,7 @@ class TerraformRequiredProvider(BaseModel):
 
 class TerraformConfig(BaseModel):
     required_providers: dict[str, TerraformRequiredProvider] = None
+    backend: Union[dict[str, Any], None] = None
 
 
 class TerraformStack(BaseModel):
@@ -37,6 +38,7 @@ class TerraformStack(BaseModel):
     `laktory.models.Stack.to_terraform()`.
 
     """
+
     terraform: TerraformConfig = TerraformConfig()
     providers: dict[str, Any] = {}
     resources: dict[str, Any] = {}
@@ -53,7 +55,9 @@ class TerraformStack(BaseModel):
         if self.terraform.required_providers is None:
             providers = {}
             for p in self.providers.values():
-                providers[p.resource_name] = TerraformRequiredProvider(source=p.source, version=p.version)
+                providers[p.resource_name] = TerraformRequiredProvider(
+                    source=p.source, version=p.version
+                )
             self.terraform.required_providers = providers
 
         return self
@@ -104,7 +108,7 @@ class TerraformStack(BaseModel):
 
     def write(self) -> str:
         """
-        Write Pulumi.yaml configuration file
+        Write Terraform json configuration file
 
         Returns
         -------
@@ -121,18 +125,11 @@ class TerraformStack(BaseModel):
 
         return filepath
 
-    def _call(self, command: str, flags: list[str] =None):
+    def _call(self, command: str, flags: list[str] = None):
         from laktory.cli._worker import Worker
 
         self.write()
         worker = Worker()
-
-        if not os.path.exists(os.path.join(CACHE_ROOT, ".terraform")):
-            worker.run(
-                cmd=["terraform", "init"],
-                cwd=CACHE_ROOT,
-                raise_exceptions=settings.cli_raise_external_exceptions,
-            )
 
         cmd = ["terraform", command]
 
@@ -144,6 +141,17 @@ class TerraformStack(BaseModel):
             cwd=CACHE_ROOT,
             raise_exceptions=settings.cli_raise_external_exceptions,
         )
+
+    def init(self, flags: list[str] = None) -> None:
+        """
+        Runs `terraform init`
+
+        Parameters
+        ----------
+        flags:
+            List of flags / options for pulumi plan
+        """
+        self._call("init", flags=flags)
 
     def plan(self, flags: list[str] = None) -> None:
         """

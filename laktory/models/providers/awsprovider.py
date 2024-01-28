@@ -154,6 +154,7 @@ class AWSProvider(BaseProvider, PulumiResource, TerraformResource):
     )
     ```
     """
+
     access_key: str = None
     allowed_account_ids: list[str] = None
     assume_role: ProviderAssumeRole = None
@@ -208,4 +209,3 @@ class AWSProvider(BaseProvider, PulumiResource, TerraformResource):
         import pulumi_aws as aws
 
         return aws.Provider
-

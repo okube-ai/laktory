@@ -99,6 +99,7 @@ class AzureProvider(BaseProvider, PulumiResource, TerraformResource):
     )
     ```
     """
+
     auxiliary_tenant_ids: list[str] = None
     client_certificate: str = None
     client_certificate_password: str = None

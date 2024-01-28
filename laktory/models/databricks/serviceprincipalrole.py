@@ -43,4 +43,3 @@ class ServicePrincipalRole(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_service_principal_role"
-

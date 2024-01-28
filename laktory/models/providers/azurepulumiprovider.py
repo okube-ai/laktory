@@ -68,6 +68,7 @@ class AzurePulumiProvider(BaseProvider, PulumiResource):
     )
     ```
     """
+
     auxiliary_tenant_ids: list[str] = None
     client_certificate_password: str = None
     client_certificate_path: str = None

@@ -34,6 +34,28 @@ logger = get_logger(__name__)
 DIRPATH = "./"
 
 
+class Terraform(BaseModel):
+    backend: dict[str, Any] = None
+
+
+class Pulumi(BaseModel):
+    """
+    config:
+        Pulumi configuration settings. Generally used to
+        configure providers. See references for more details.
+    outputs:
+        Requested resources-related outputs. See references for details.
+
+    References
+    ----------
+    - Pulumi [configuration](https://www.pulumi.com/docs/concepts/config/)
+    - Pulumi [outputs](https://www.pulumi.com/docs/concepts/inputs-outputs/#outputs)
+    """
+
+    config: dict[str, str] = {}
+    outputs: dict[str, str] = {}
+
+
 class StackResources(BaseModel):
     """
     Resources definition for a given stack or stack environment.
@@ -75,6 +97,7 @@ class StackResources(BaseModel):
     workspacefiles:
         WorkspacFiles
     """
+
     catalogs: dict[str, Catalog] = {}
     clusters: dict[str, Cluster] = {}
     directories: dict[str, Directory] = {}
@@ -88,7 +111,9 @@ class StackResources(BaseModel):
     serviceprincipals: dict[str, ServicePrincipal] = {}
     sqlqueries: dict[str, SqlQuery] = {}
     tables: dict[str, Table] = {}
-    providers: dict[str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]] = {}
+    providers: dict[
+        str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]
+    ] = {}
     users: dict[str, User] = {}
     volumes: dict[str, Volume] = {}
     warehouses: dict[str, Warehouse] = {}
@@ -111,7 +136,6 @@ class StackResources(BaseModel):
                 continue
 
             for resource_name, _r in getattr(self, resource_type).items():
-
                 if providers_excluded and isinstance(_r, BaseProvider):
                     continue
 
@@ -129,35 +153,34 @@ class EnvironmentStack(BaseModel):
 
     Attributes
     ----------
-    config:
-        Pulumi Configuration settings for IaC backend. Generally used to
-        configure providers. See references for more details.
+    backend:
+        IaC backend used for deployment.
     description:
         Description of the stack
     name:
         Name of the stack. If Pulumi is used as a backend, it should match
         the name of the Pulumi project.
-    backend:
-        IaC backend used for deployment.
     organization:
-        Pulumi organization. Only supported with pulumi backend.
-    pulumi_outputs:
-        Requested resources-related outputs. Only available with Pulumi backend.
-        See references for details.
+        Organization
+    pulumi:
+        Pulumi-specific settings
     resources:
         Dictionary of resources to be deployed. Each key should be a resource
         type and each value should be a dictionary of resources who's keys are
         the resource names and the values the resources definitions.
+    terraform:
+        Terraform-specific settings
     variables:
         Dictionary of variables made available in the resources definition.
     """
-    config: dict[str, str] = {}
-    description: str = None
+
     backend: Literal["pulumi", "terraform"] = None
+    description: str = None
     name: str
     organization: str = None
-    pulumi_outputs: dict[str, str] = {}
+    pulumi: Pulumi = Pulumi()
     resources: StackResources = StackResources()
+    terraform: Terraform = Terraform()
     variables: dict[str, Union[str, bool]] = {}
 
 
@@ -167,9 +190,6 @@ class EnvironmentSettings(BaseModel):
 
     Attributes
     ----------
-    config:
-        Pulumi configuration. Generally used to configure providers. Only
-        supported with pulumi backend.
     resources:
         Dictionary of resources to be deployed. Each key should be a resource
         type and each value should be a dictionary of resources who's keys are
@@ -177,7 +197,7 @@ class EnvironmentSettings(BaseModel):
     variables:
         Dictionary of variables made available in the resources definition.
     """
-    config: dict[str, str] = None
+
     resources: Any = None
     variables: dict[str, Union[str, bool]] = None
 
@@ -189,30 +209,28 @@ class Stack(BaseModel):
 
     Attributes
     ----------
-    config:
-        Pulumi configuration. Generally used to configure providers. Only
-        supported with pulumi backend. See references for more details.
+    backend:
+        IaC backend used for deployment.
     description:
         Description of the stack
+    environments:
+        Environment-specific overwrite of config, resources or variables
+        arguments.
     name:
         Name of the stack. If Pulumi is used as a backend, it should match
         the name of the Pulumi project.
     organization:
-        Pulumi organization. Only supported with pulumi backend.
-    backend:
-        IaC backend used for deployment.
-    pulumi_outputs:
-        Requested resources-related outputs. Only available with Pulumi backend.
-        See references for details.
+        Organization
+    pulumi:
+        Pulumi-specific settings
     resources:
         Dictionary of resources to be deployed. Each key should be a resource
         type and each value should be a dictionary of resources who's keys are
         the resource names and the values the resources definitions.
+    terraform:
+        Terraform-specific settings
     variables:
         Dictionary of variables made available in the resources definition.
-    environments:
-        Environment-specific overwrite of config, resources or variables
-        arguments.
 
     Examples
     --------
@@ -222,9 +240,11 @@ class Stack(BaseModel):
     stack = models.Stack(
         name="workspace",
         backend="pulumi",
-        config={
-            "databricks:host": "${vars.DATABRICKS_HOST}",
-            "databricks:token": "${vars.DATABRICKS_TOKEN}",
+        pulumi={
+            "config": {
+                "databricks:host": "${vars.DATABRICKS_HOST}",
+                "databricks:token": "${vars.DATABRICKS_TOKEN}",
+            },
         },
         resources={
             "pipelines": {
@@ -284,25 +304,21 @@ class Stack(BaseModel):
 
     print(stack)
     '''
-    variables={'org': 'okube'} config={'databricks:host': '${vars.DATABRICKS_HOST}', 'databricks:token': '${vars.DATABRICKS_TOKEN}'} description=None name='workspace' organization=None backend='pulumi' pulumi_outputs={} resources=StackResources(variables={}, catalogs={}, clusters={}, directories={}, groups={}, jobs={'job-stock-prices': Job(resource_name_='job-stock-prices', options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None), variables={}, access_controls=[], clusters=[JobCluster(resource_name_=None, options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None), variables={}, access_controls=None, apply_policy_default_values=None, autoscale=None, autotermination_minutes=None, cluster_id=None, custom_tags=None, data_security_mode='USER_ISOLATION', driver_instance_pool_id=None, driver_node_type_id=None, enable_elastic_disk=None, enable_local_disk_encryption=None, idempotency_token=None, init_scripts=[], instance_pool_id=None, is_pinned=None, libraries=None, name='main', node_type_id='Standard_DS3_v2', num_workers=None, policy_id=None, runtime_engine=None, single_user_name=None, spark_conf={}, spark_env_vars={}, spark_version='14.0.x-scala2.12', ssh_public_keys=[])], continuous=None, control_run_state=None, email_notifications=None, format=None, health=None, max_concurrent_runs=None, max_retries=None, min_retry_interval_millis=None, name='job-stock-prices', notification_settings=None, parameters=[], retry_on_timeout=None, run_as=None, schedule=None, tags={}, tasks=[JobTask(variables={}, condition_task=None, depends_ons=None, description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key='main', libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=JobTaskNotebookTask(variables={}, notebook_path='/.laktory/jobs/ingest_stock_prices.py', base_parameters=None, source=None), notification_settings=None, pipeline_task=None, retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='ingest', timeout_seconds=None), JobTask(variables={}, condition_task=None, depends_ons=[JobTaskDependsOn(variables={}, task_key='ingest', outcome=None)], description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key=None, libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=None, notification_settings=None, pipeline_task=JobTaskPipelineTask(variables={}, pipeline_id='${resources.pl-stock-prices.id}', full_refresh=None), retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='pipeline', timeout_seconds=None)], timeout_seconds=None, trigger=None, webhook_notifications=None)}, notebooks={}, pipelines={'pl-stock-prices': Pipeline(resource_name_='pl-stock-prices', options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None), variables={}, access_controls=[], allow_duplicate_names=None, catalog=None, channel='PREVIEW', clusters=[], configuration={}, continuous=None, development='${vars.is_dev}', edition=None, libraries=[PipelineLibrary(variables={}, file=None, notebook=PipelineLibraryNotebook(variables={}, path='/pipelines/dlt_brz_template.py'))], name='pl-stock-prices', notifications=[], photon=None, serverless=None, storage=None, tables=[], target=None, udfs=[])}, schemas={}, secrets={}, secretscopes={}, serviceprincipals={}, sqlqueries={}, tables={}, providers={}, users={}, volumes={}, warehouses={}, workspacefiles={}) environments={'dev': EnvironmentSettings(variables={'is_dev': True}, config=None, resources=None), 'prod': EnvironmentSettings(variables={'is_dev': False}, config=None, resources=None)}
+    variables={'org': 'okube'} backend='pulumi' description=None environments={'dev': EnvironmentSettings(variables={'is_dev': True}, resources=None), 'prod': EnvironmentSettings(variables={'is_dev': False}, resources=None)} name='workspace' organization=None pulumi=Pulumi(variables={}, config={'databricks:host': '${vars.DATABRICKS_HOST}', 'databricks:token': '${vars.DATABRICKS_TOKEN}'}, outputs={}) resources=StackResources(variables={}, catalogs={}, clusters={}, directories={}, groups={}, jobs={'job-stock-prices': Job(resource_name_='job-stock-prices', options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None), variables={}, access_controls=[], clusters=[JobCluster(resource_name_=None, options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None), variables={}, access_controls=None, apply_policy_default_values=None, autoscale=None, autotermination_minutes=None, cluster_id=None, custom_tags=None, data_security_mode='USER_ISOLATION', driver_instance_pool_id=None, driver_node_type_id=None, enable_elastic_disk=None, enable_local_disk_encryption=None, idempotency_token=None, init_scripts=[], instance_pool_id=None, is_pinned=None, libraries=None, name='main', node_type_id='Standard_DS3_v2', num_workers=None, policy_id=None, runtime_engine=None, single_user_name=None, spark_conf={}, spark_env_vars={}, spark_version='14.0.x-scala2.12', ssh_public_keys=[])], continuous=None, control_run_state=None, email_notifications=None, format=None, health=None, max_concurrent_runs=None, max_retries=None, min_retry_interval_millis=None, name='job-stock-prices', notification_settings=None, parameters=[], retry_on_timeout=None, run_as=None, schedule=None, tags={}, tasks=[JobTask(variables={}, condition_task=None, depends_ons=None, description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key='main', libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=JobTaskNotebookTask(variables={}, notebook_path='/.laktory/jobs/ingest_stock_prices.py', base_parameters=None, source=None), notification_settings=None, pipeline_task=None, retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='ingest', timeout_seconds=None), JobTask(variables={}, condition_task=None, depends_ons=[JobTaskDependsOn(variables={}, task_key='ingest', outcome=None)], description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key=None, libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=None, notification_settings=None, pipeline_task=JobTaskPipelineTask(variables={}, pipeline_id='${resources.pl-stock-prices.id}', full_refresh=None), retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='pipeline', timeout_seconds=None)], timeout_seconds=None, trigger=None, webhook_notifications=None)}, notebooks={}, pipelines={'pl-stock-prices': Pipeline(resource_name_='pl-stock-prices', options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None), variables={}, access_controls=[], allow_duplicate_names=None, catalog=None, channel='PREVIEW', clusters=[], configuration={}, continuous=None, development='${vars.is_dev}', edition=None, libraries=[PipelineLibrary(variables={}, file=None, notebook=PipelineLibraryNotebook(variables={}, path='/pipelines/dlt_brz_template.py'))], name='pl-stock-prices', notifications=[], photon=None, serverless=None, storage=None, tables=[], target=None, udfs=[])}, schemas={}, secrets={}, secretscopes={}, serviceprincipals={}, sqlqueries={}, tables={}, providers={}, users={}, volumes={}, warehouses={}, workspacefiles={}) terraform=Terraform(variables={}, backend=None)
     '''
     ```
 
-    References
-    ----------
-    - Pulumi [configuration](https://www.pulumi.com/docs/concepts/config/)
-    - Pulumi [outputs](https://www.pulumi.com/docs/concepts/inputs-outputs/#outputs)
     """
 
-    config: dict[str, str] = {}
+    backend: Literal["pulumi", "terraform"] = None
     description: str = None
+    environments: dict[str, EnvironmentSettings] = {}
     name: str
     organization: str = None
-    backend: Literal["pulumi", "terraform"] = None
-    pulumi_outputs: dict[str, str] = {}
+    pulumi: Pulumi = Pulumi()
     resources: StackResources = StackResources()
+    terraform: Terraform = Terraform()
     variables: dict[str, Union[str, bool]] = {}
-    environments: dict[str, EnvironmentSettings] = {}
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -320,7 +336,7 @@ class Stack(BaseModel):
         :
             Environment definitions.
         """
-        ENV_FIELDS = ["config", "resources", "variables"]
+        ENV_FIELDS = ["pulumi", "resources", "terraform", "variables"]
 
         d = self.model_dump(exclude_none=True)
         _envs = d.pop("environments")
@@ -375,11 +391,11 @@ class Stack(BaseModel):
         return PulumiStack(
             name=env.name,
             organization=env.organization,
-            config=env.config,
+            config=env.pulumi.config,
             description=env.description,
             resources=resources,
             variables=env.variables,
-            outputs=env.pulumi_outputs,
+            outputs=env.pulumi.outputs,
         )
 
     # ----------------------------------------------------------------------- #
@@ -422,6 +438,7 @@ class Stack(BaseModel):
 
         # Update terraform
         return TerraformStack(
+            terraform={"backend": env.terraform.backend},
             providers=providers,
             resources=resources,
             variables=env.variables,

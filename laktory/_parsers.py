@@ -14,7 +14,9 @@ def camelize_keys(d, parent=None, excluded_parents=None):
         values = list(d.values())
         for key, value in zip(keys, values):
             new_key = _snake_to_camel(key)
-            d[new_key] = camelize_keys(value, parent=key, excluded_parents=excluded_parents)
+            d[new_key] = camelize_keys(
+                value, parent=key, excluded_parents=excluded_parents
+            )
             if new_key != key:
                 del d[key]
 

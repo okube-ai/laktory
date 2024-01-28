@@ -16,6 +16,7 @@ class PulumiResource(BaseResource):
     """
     Parent class for all Laktory models deployable with Pulumi IaC backend.
     """
+
     _pulumi_resources: dict[str, Any] = {}
 
     # ----------------------------------------------------------------------- #

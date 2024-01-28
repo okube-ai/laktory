@@ -41,6 +41,7 @@ class ResourceOptions(BaseModel):
         a replacement.
         Pulumi only.
     """
+
     # pulumi + terraform
     depends_on: list[str] = []
     provider: str = None
@@ -68,6 +69,7 @@ class BaseResource(_BaseModel):
     options:
         Resources options specifications
     """
+
     resource_name_: str = Field(
         None,
         validation_alias=AliasChoices("resource_name_", "resource_name"),

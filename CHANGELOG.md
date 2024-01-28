@@ -6,6 +6,8 @@
 * AWS Provider
 * Azure Provider
 * Azure Pulumi (Native) Provider
+### Updated
+* `BaseModel` `inject_vars` method regular expressions support 
 ### Breaking changes
 * Replaced CLI argument `--stack` with `--org` and `--dev` for a more consistent experience between pulumi and terraform backends
 

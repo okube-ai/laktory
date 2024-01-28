@@ -21,4 +21,3 @@ class BaseProvider(BaseModel):
     @property
     def terraform_resource_type(self) -> str:
         return None
-
