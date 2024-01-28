@@ -1,9 +1,17 @@
 organization: okube
 name: unit-testing
 backend: pulumi
-config:
-  databricks:host: ${vars.DATABRICKS_HOST}
-  databricks:token: ${vars.DATABRICKS_TOKEN}
+pulumi:
+  config:
+    databricks:host: ${vars.DATABRICKS_HOST}
+    databricks:token: ${vars.DATABRICKS_TOKEN}
+terraform:
+  backend:
+    azurerm:
+      resource_group_name: o3-rg-laktory-dev
+      storage_account_name: o3stglaktorydev
+      container_name: unit-testing
+      key: terraform/dev.terraform.tfstate
 resources:
   providers:
     databricks:  # for terraform, provider name must match resource type prefix

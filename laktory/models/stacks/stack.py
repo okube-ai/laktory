@@ -34,6 +34,27 @@ logger = get_logger(__name__)
 DIRPATH = "./"
 
 
+class Terraform(BaseModel):
+    backend: dict[str, Any] = None
+
+
+class Pulumi(BaseModel):
+    """
+    config:
+        Pulumi configuration settings. Generally used to
+        configure providers. See references for more details.
+    outputs:
+        Requested resources-related outputs. See references for details.
+
+    References
+    ----------
+    - Pulumi [configuration](https://www.pulumi.com/docs/concepts/config/)
+    - Pulumi [outputs](https://www.pulumi.com/docs/concepts/inputs-outputs/#outputs)
+    """
+    config: dict[str, str] = {}
+    outputs: dict[str, str] = {}
+
+
 class StackResources(BaseModel):
     """
     Resources definition for a given stack or stack environment.
@@ -131,36 +152,34 @@ class EnvironmentStack(BaseModel):
 
     Attributes
     ----------
-    config:
-        Pulumi Configuration settings for IaC backend. Generally used to
-        configure providers. See references for more details.
+    backend:
+        IaC backend used for deployment.
     description:
         Description of the stack
     name:
         Name of the stack. If Pulumi is used as a backend, it should match
         the name of the Pulumi project.
-    backend:
-        IaC backend used for deployment.
     organization:
-        Pulumi organization. Only supported with pulumi backend.
-    pulumi_outputs:
-        Requested resources-related outputs. Only available with Pulumi backend.
-        See references for details.
+        Organization
+    pulumi:
+        Pulumi-specific settings
     resources:
         Dictionary of resources to be deployed. Each key should be a resource
         type and each value should be a dictionary of resources who's keys are
         the resource names and the values the resources definitions.
+    terraform:
+        Terraform-specific settings
     variables:
         Dictionary of variables made available in the resources definition.
     """
 
-    config: dict[str, str] = {}
-    description: str = None
     backend: Literal["pulumi", "terraform"] = None
+    description: str = None
     name: str
     organization: str = None
-    pulumi_outputs: dict[str, str] = {}
+    pulumi: Pulumi = Pulumi()
     resources: StackResources = StackResources()
+    terraform: Terraform = Terraform()
     variables: dict[str, Union[str, bool]] = {}
 
 
@@ -170,9 +189,6 @@ class EnvironmentSettings(BaseModel):
 
     Attributes
     ----------
-    config:
-        Pulumi configuration. Generally used to configure providers. Only
-        supported with pulumi backend.
     resources:
         Dictionary of resources to be deployed. Each key should be a resource
         type and each value should be a dictionary of resources who's keys are
@@ -180,8 +196,6 @@ class EnvironmentSettings(BaseModel):
     variables:
         Dictionary of variables made available in the resources definition.
     """
-
-    config: dict[str, str] = None
     resources: Any = None
     variables: dict[str, Union[str, bool]] = None
 
@@ -193,30 +207,28 @@ class Stack(BaseModel):
 
     Attributes
     ----------
-    config:
-        Pulumi configuration. Generally used to configure providers. Only
-        supported with pulumi backend. See references for more details.
+    backend:
+        IaC backend used for deployment.
     description:
         Description of the stack
+    environments:
+        Environment-specific overwrite of config, resources or variables
+        arguments.
     name:
         Name of the stack. If Pulumi is used as a backend, it should match
         the name of the Pulumi project.
     organization:
-        Pulumi organization. Only supported with pulumi backend.
-    backend:
-        IaC backend used for deployment.
-    pulumi_outputs:
-        Requested resources-related outputs. Only available with Pulumi backend.
-        See references for details.
+        Organization
+    pulumi:
+        Pulumi-specific settings
     resources:
         Dictionary of resources to be deployed. Each key should be a resource
         type and each value should be a dictionary of resources who's keys are
         the resource names and the values the resources definitions.
+    terraform:
+        Terraform-specific settings
     variables:
         Dictionary of variables made available in the resources definition.
-    environments:
-        Environment-specific overwrite of config, resources or variables
-        arguments.
 
     Examples
     --------
@@ -292,21 +304,17 @@ class Stack(BaseModel):
     '''
     ```
 
-    References
-    ----------
-    - Pulumi [configuration](https://www.pulumi.com/docs/concepts/config/)
-    - Pulumi [outputs](https://www.pulumi.com/docs/concepts/inputs-outputs/#outputs)
     """
 
-    config: dict[str, str] = {}
+    backend: Literal["pulumi", "terraform"] = None
     description: str = None
+    environments: dict[str, EnvironmentSettings] = {}
     name: str
     organization: str = None
-    backend: Literal["pulumi", "terraform"] = None
-    pulumi_outputs: dict[str, str] = {}
+    pulumi: Pulumi = Pulumi()
     resources: StackResources = StackResources()
+    terraform: Terraform = Terraform()
     variables: dict[str, Union[str, bool]] = {}
-    environments: dict[str, EnvironmentSettings] = {}
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -324,7 +332,7 @@ class Stack(BaseModel):
         :
             Environment definitions.
         """
-        ENV_FIELDS = ["config", "resources", "variables"]
+        ENV_FIELDS = ["pulumi", "resources", "terraform", "variables"]
 
         d = self.model_dump(exclude_none=True)
         _envs = d.pop("environments")
@@ -379,11 +387,11 @@ class Stack(BaseModel):
         return PulumiStack(
             name=env.name,
             organization=env.organization,
-            config=env.config,
+            config=env.pulumi.config,
             description=env.description,
             resources=resources,
             variables=env.variables,
-            outputs=env.pulumi_outputs,
+            outputs=env.pulumi.outputs,
         )
 
     # ----------------------------------------------------------------------- #
@@ -426,6 +434,7 @@ class Stack(BaseModel):
 
         # Update terraform
         return TerraformStack(
+            terraform={"backend": env.terraform.backend},
             providers=providers,
             resources=resources,
             variables=env.variables,

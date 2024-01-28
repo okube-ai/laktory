@@ -13,15 +13,35 @@ def test_stack_model():
     print(data)
     assert data == {
         "variables": {},
-        "config": {
-            "databricks:host": "${vars.DATABRICKS_HOST}",
-            "databricks:token": "${vars.DATABRICKS_TOKEN}",
-        },
+        "backend": "pulumi",
         "description": None,
+        "environments": {
+            "dev": {
+                "variables": {
+                    "env": "dev",
+                    "is_dev": True,
+                    "node_type_id": "Standard_DS3_v2",
+                },
+                "resources": None,
+            },
+            "prod": {
+                "variables": {
+                    "env": "prod",
+                    "is_dev": False,
+                    "node_type_id": "Standard_DS4_v2",
+                },
+                "resources": {"pipelines": {"pl-custom-name": {"development": False}}},
+            },
+        },
         "name": "unit-testing",
         "organization": "okube",
-        "backend": "pulumi",
-        "pulumi_outputs": {},
+        "pulumi": {
+            "config": {
+                "databricks:host": "${vars.DATABRICKS_HOST}",
+                "databricks:token": "${vars.DATABRICKS_TOKEN}",
+            },
+            "outputs": {},
+        },
         "resources": {
             "catalogs": {},
             "clusters": {},
@@ -236,25 +256,15 @@ def test_stack_model():
             "warehouses": {},
             "workspacefiles": {},
         },
-        "environments": {
-            "dev": {
-                "variables": {
-                    "env": "dev",
-                    "is_dev": True,
-                    "node_type_id": "Standard_DS3_v2",
-                },
-                "config": None,
-                "resources": None,
-            },
-            "prod": {
-                "variables": {
-                    "env": "prod",
-                    "is_dev": False,
-                    "node_type_id": "Standard_DS4_v2",
-                },
-                "config": None,
-                "resources": {"pipelines": {"pl-custom-name": {"development": False}}},
-            },
+        "terraform": {
+            "backend": {
+                "azurerm": {
+                    "resource_group_name": "o3-rg-laktory-dev",
+                    "storage_account_name": "o3stglaktorydev",
+                    "container_name": "terraform",
+                    "key": "dev.terraform.tfstate",
+                }
+            }
         },
     }
 
@@ -273,7 +283,7 @@ def test_pulumi_stack():
         "name": "unit-testing",
         "runtime": "yaml",
         "config": {
-            "databricks:host": "https://adb-2211091707396001.1.azuredatabricks.net/",
+            "databricks:host": "${vars.DATABRICKS_HOST}",
             "databricks:token": "***",
         },
         "resources": {
@@ -374,10 +384,7 @@ def test_pulumi_stack():
             },
             "databricks": {
                 "type": "pulumi:providers:databricks",
-                "properties": {
-                    "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-                    "token": "***",
-                },
+                "properties": {"host": "${vars.DATABRICKS_HOST}", "token": "***"},
                 "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
         },
@@ -422,14 +429,17 @@ def test_terraform_stack():
     print(data_default)
     assert data_default == {
         "terraform": {
-            "required_providers": {"databricks": {"source": "databricks/databricks"}}
+            "required_providers": {"databricks": {"source": "databricks/databricks"}},
+            "backend": {
+                "azurerm": {
+                    "resource_group_name": "o3-rg-laktory-dev",
+                    "storage_account_name": "o3stglaktorydev",
+                    "container_name": "terraform",
+                    "key": "dev.terraform.tfstate",
+                }
+            },
         },
-        "provider": {
-            "databricks": {
-                "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-                "token": "***",
-            }
-        },
+        "provider": {"databricks": {"host": "${vars.DATABRICKS_HOST}", "token": "***"}},
         "resource": {
             "databricks_job": {
                 "job-stock-prices-ut-stack": {

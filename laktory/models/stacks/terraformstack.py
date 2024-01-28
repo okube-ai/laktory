@@ -25,6 +25,7 @@ class TerraformRequiredProvider(BaseModel):
 
 class TerraformConfig(BaseModel):
     required_providers: dict[str, TerraformRequiredProvider] = None
+    backend: dict[str, Any] = None
 
 
 class TerraformStack(BaseModel):
