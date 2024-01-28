@@ -1,6 +1,16 @@
 # Release History
 
-## [0.1.1] - Unreleased
+## [0.1.2] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.1.1] - 2024-01-28
 ### Added
 * General support for Terraform IaC backend
 * AWS Provider
