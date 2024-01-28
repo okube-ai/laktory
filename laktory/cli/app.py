@@ -78,9 +78,7 @@ class CLIController(BaseModel):
 
 @app.command()
 def init(
-    backend: Annotated[
-        str, typer.Option(help="IaC backend [terraform]")
-    ] = None,
+    backend: Annotated[str, typer.Option(help="IaC backend [terraform]")] = None,
     organization: Annotated[
         str,
         typer.Option(

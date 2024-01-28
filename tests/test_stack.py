@@ -7,6 +7,15 @@ dirpath = os.path.dirname(__file__)
 with open(os.path.join(dirpath, "stack.yaml"), "r") as fp:
     stack = models.Stack.model_validate_yaml(fp)
 
+stack.terraform.backend = {
+    "azurerm": {
+        "resource_group_name": "o3-rg-laktory-dev",
+        "storage_account_name": "o3stglaktorydev",
+        "container_name": "unit-testing",
+        "key": "terraform/dev.terraform.tfstate",
+    }
+}
+
 
 def test_stack_model():
     data = stack.model_dump()
@@ -426,6 +435,11 @@ def test_pulumi_stack():
     assert data == data0
 
 
+def test_pulumi_preview():
+    pstack = stack.to_pulumi(env="dev")
+    pstack.preview(stack="okube/dev")
+
+
 def test_terraform_stack():
     data_default = stack.to_terraform().model_dump()
     data_default["provider"]["databricks"]["token"] = "***"
@@ -557,7 +571,15 @@ def test_terraform_stack():
     assert data == data0
 
 
+def test_terraform_plan():
+    tstack = stack.to_terraform(env="dev")
+    tstack.init()
+    tstack.plan()
+
+
 if __name__ == "__main__":
     test_stack_model()
     test_pulumi_stack()
+    test_pulumi_preview()
     test_terraform_stack()
+    test_terraform_plan()

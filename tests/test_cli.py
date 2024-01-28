@@ -1,6 +1,7 @@
 import os
 from laktory import app
 from laktory import settings
+from laktory import models
 from typer.testing import CliRunner
 
 runner = CliRunner()
@@ -16,10 +17,13 @@ def test_preview_pulumi():
 
 def test_preview_terraform():
     filepath = os.path.join(dirpath, "stack.yaml")
-    result = runner.invoke(
-        app,
-        ["init", "--backend", "terraform", "--env", "dev", "--filepath", filepath],
-    )
+    with open(filepath, "r") as fp:
+        pstack = models.Stack.model_validate_yaml(fp).to_terraform(env="dev")
+        pstack.init(flags=["-migrate-state"])
+    # result = runner.invoke(
+    #     app,
+    #     ["init", "--backend", "terraform", "--env", "dev", "--filepath", filepath],
+    # )
     result = runner.invoke(
         app,
         ["preview", "--backend", "terraform", "--env", "dev", "--filepath", filepath],
