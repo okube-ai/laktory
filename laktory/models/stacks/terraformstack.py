@@ -108,7 +108,7 @@ class TerraformStack(BaseModel):
 
     def write(self) -> str:
         """
-        Write Pulumi.yaml configuration file
+        Write Terraform json configuration file
 
         Returns
         -------
