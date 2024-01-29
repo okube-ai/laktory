@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.1.2] - Unreleased
-### Added
-* n/a
-### Fixed
-* n/a
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* Pipeline model to support null catalog (hive metastore)
 
 ## [0.1.1] - 2024-01-28
 ### Added

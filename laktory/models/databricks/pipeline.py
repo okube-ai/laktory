@@ -299,7 +299,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
     access_controls: list[AccessControl] = []
     allow_duplicate_names: bool = None
-    catalog: str = None
+    catalog: Union[str, None] = None
     channel: Literal["CURRENT", "PREVIEW"] = "PREVIEW"
     clusters: list[PipelineCluster] = []
     configuration: dict[str, str] = {}
