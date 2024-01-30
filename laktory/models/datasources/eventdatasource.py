@@ -17,18 +17,20 @@ class EventDataSource(BaseDataSource, DataEventHeader):
 
     Attributes
     ----------
-    type
-        Type of infrastructure storing the data
     fmt
         Format of the stored data
+    header
+        If `True`, first line of CSV files is assumed to be the column names.
     multiline
         If `True`, JSON files are parsed assuming that an object maybe be
         defined on multiple lines (as opposed to having a single object
         per line)
-    header
-        If `True`, first line of CSV files is assumed to be the column names.
     read_options:
         Other options passed to `spark.read.options`
+    schema_location:
+        Path for events schema. If `None`, `event_root` is used.
+    type
+        Type of infrastructure storing the data
 
     Examples
     ---------
@@ -45,11 +47,12 @@ class EventDataSource(BaseDataSource, DataEventHeader):
     ```
     """
 
-    type: Literal["STORAGE_EVENTS", "STREAM_KINESIS", "STREAM_KAFKA"] = "STORAGE_EVENTS"
     fmt: Literal["JSON", "CSV", "PARQUET", "DELTA"] = "JSON"
-    multiline: bool = False
     header: bool = True
+    multiline: bool = False
     read_options: dict[str, str] = {}
+    schema_location: str = None
+    type: Literal["STORAGE_EVENTS", "STREAM_KINESIS", "STREAM_KAFKA"] = "STORAGE_EVENTS"
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
@@ -59,11 +62,15 @@ class EventDataSource(BaseDataSource, DataEventHeader):
         if self.read_as_stream:
             logger.info(f"Reading {self.event_root} as stream")
 
+            schema_location = self.schema_location
+            if schema_location is None:
+                schema_location = self.event_root
+
             # Set reader
             reader = (
                 spark.readStream.format("cloudFiles")
                 .option("cloudFiles.format", self.fmt)
-                .option("cloudFiles.schemaLocation", self.event_root)
+                .option("cloudFiles.schemaLocation", schema_location)
                 .option("cloudFiles.inferColumnTypes", True)
                 .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
                 .option("cloudFiles.allowOverwrites", True)
