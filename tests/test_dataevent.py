@@ -19,6 +19,7 @@ def test_dataeventheader():
         "description": None,
         "producer": {"name": "yahoo-finance", "description": None, "party": 1},
         "events_root_": None,
+        "event_root_": None,
     }
     assert header.events_root == "/Volumes/dev/sources/landing/events/"
     assert (
@@ -76,6 +77,7 @@ def test_model_dump():
         "description": None,
         "producer": {"name": "yahoo-finance", "description": None, "party": 1},
         "events_root": None,
+        "event_root": None,
         "data": {
             "created_at": "2023-09-01T00:00:00",
             "symbol": "AAPL",
@@ -91,6 +93,7 @@ def test_model_dump():
         "tstamp_col": "created_at",
         "tstamp_in_path": True,
     }
+
     assert event.events_root == "/Volumes/dev/sources/landing/events/"
 
     # With exclusions
@@ -100,6 +103,7 @@ def test_model_dump():
         "name": "stock_price",
         "description": None,
         "producer": {"name": "yahoo-finance", "description": None, "party": 1},
+        "event_root": None,
         "data": {
             "created_at": "2023-09-01T00:00:00",
             "symbol": "AAPL",
