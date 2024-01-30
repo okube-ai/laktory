@@ -73,7 +73,6 @@ class DataEvent(DataEventHeader):
     ```
     """
 
-    model_config = ConfigDict(populate_by_name=True)
     name: str = Field(..., alias="event_name")
     description: Union[str, None] = Field(None, alias="event_description")
     producer: DataProducer = Field(None, alias="event_producer", description="producer")
