@@ -2,7 +2,8 @@
 
 ## [0.1.2] - Unreleased
 ### Updated
-* Pipeline model to support null catalog (hive metastore)
+* Pipeline model supports null catalog (hive metastore)
+* Event Data Source supports custom event root path
 
 ## [0.1.1] - 2024-01-28
 ### Added
