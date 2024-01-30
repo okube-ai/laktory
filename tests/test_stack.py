@@ -573,7 +573,9 @@ def test_terraform_stack():
 
 def test_terraform_plan():
     tstack = stack.to_terraform(env="dev")
-    tstack.terraform.backend = None  # TODO: Add credentials to git actions to use azure backend
+    tstack.terraform.backend = (
+        None  # TODO: Add credentials to git actions to use azure backend
+    )
     tstack.init(flags=["-migrate-state"])
     tstack.plan()
 
