@@ -1,15 +1,15 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import pytest
-#
-# from laktory._testing import StockPriceDataEventHeader
-# from laktory._testing import EventsManager
+
+from laktory._testing import StockPriceDataEventHeader
+from laktory._testing import EventsManager
 from laktory import models
 from laktory import settings
-#
-# header = StockPriceDataEventHeader()
-# events = EventsManager().build_events()
-# event = events[0]
+
+header = StockPriceDataEventHeader()
+events = EventsManager().build_events()
+event = events[0]
 
 
 def test_dataeventheader():
@@ -156,52 +156,11 @@ def test_to_databricks_mount():
 
 
 if __name__ == "__main__":
-    # test_dataeventheader()
+    test_dataeventheader()
     test_dataeventheader_root()
-    # test_dataevent()
-    # test_model_dump()
-    # test_event_without_tstamp()
-    # test_to_azure_storage_container()
-    # test_to_aws_s3_bucket()
-    # test_to_databricks_mount()
-    #
-    # from pydantic import BaseModel
-    # from pydantic import ConfigDict
-    # from pydantic import Field
-    #
-    # class M1(BaseModel):
-    #     model_config = ConfigDict(
-    #         # extra="forbid",
-    #         # populate_by_name=True,
-    #     )
-    #     x_ : float = Field(None, alias="x")
-    #     y: float = 1.0
-    #
-    #     def model_dump(self, *args, **kwargs):
-    #         print("M1 dump")
-    #         return super().model_dump(*args, **kwargs)
-    #
-    #     @property
-    #     def x(self):
-    #         if self.x_:
-    #             return self.x_
-    #         return 2.0
-    #
-    # class M2(BaseModel):
-    #     model_config = ConfigDict(extra="forbid")
-    #     m1 : M1
-    #     name: str = "roger"
-    #
-    #     def model_dump(self, *args, **kwargs):
-    #         print("M2 dump")
-    #         return super().model_dump(*args, **kwargs)
-    #
-    #
-    # m2 = M2(m1=M1(x=3))
-    #
-    # print(m2)
-    # dump = m2.model_dump(by_alias=False)
-    # print(dump)
-    # # print(dump)
-    # m2 = M2(**dump)
-    # # print(m2)
+    test_dataevent()
+    test_model_dump()
+    test_event_without_tstamp()
+    test_to_azure_storage_container()
+    test_to_aws_s3_bucket()
+    test_to_databricks_mount()
