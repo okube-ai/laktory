@@ -22,17 +22,18 @@ class MetastoreGrant(BaseModel):
     privileges: list[
         Literal[
             "CREATE_CATALOG",
-            "CREATE_EXTERNAL",
-            "LOCATION",
             "CREATE_CONNECTION",
+            "CREATE_EXTERNAL_LOCATION",
+            "CREATE_PROVIDER",
             "CREATE_RECIPIENT",
             "CREATE_SHARE",
-            "CREATE_PROVIDER",
+            "CREATE_STORAGE_CREDENTIAL",
+            "LOCATION",
+            "MANAGE_ALLOWLIST",
+            "SET_SHARE_PERMISSION",
             "USE_MARKETPLACE_ASSETS",
             "USE_PROVIDER",
-            "USE_SHARE",
             "USE_RECIPIENT",
-            "SET_SHARE_PERMISSION",
-            "MANAGE_ALLOWLIST",
+            "USE_SHARE",
         ]
     ]

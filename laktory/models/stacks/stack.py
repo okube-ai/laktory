@@ -10,6 +10,7 @@ from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.directory import Directory
 from laktory.models.databricks.group import Group
 from laktory.models.databricks.job import Job
+from laktory.models.databricks.metastore import Metastore
 from laktory.models.databricks.notebook import Notebook
 from laktory.models.databricks.pipeline import Pipeline
 from laktory.models.databricks.secret import Secret
@@ -72,6 +73,8 @@ class StackResources(BaseModel):
         Groups
     jobs:
         Jobs
+    metastores:
+        Metastores
     notebooks:
         Notebooks
     pipelines:
@@ -103,6 +106,7 @@ class StackResources(BaseModel):
     directories: dict[str, Directory] = {}
     groups: dict[str, Group] = {}
     jobs: dict[str, Job] = {}
+    metastores: dict[str, Metastore] = {}
     notebooks: dict[str, Notebook] = {}
     pipelines: dict[str, Pipeline] = {}
     schemas: dict[str, Schema] = {}
