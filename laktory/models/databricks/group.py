@@ -2,6 +2,7 @@ from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
+from laktory.models.databricks.mwspermissionassignment import MwsPermissionAssignment
 
 
 class Group(BaseModel, PulumiResource, TerraformResource):
@@ -33,6 +34,7 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     display_name: str
     id: Union[str, None] = None
     workspace_access: bool = None
+    workspace_permission_assignments: list[MwsPermissionAssignment] = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -71,3 +73,7 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_group"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes
