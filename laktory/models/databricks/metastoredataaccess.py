@@ -2,92 +2,151 @@ from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.databricks.metastoreassignment import MetastoreAssignment
-from laktory.models.databricks.metastoredataaccess import MetastoreDataAccess
-from laktory.models.grants.metastoregrant import MetastoreGrant
-from laktory.models.databricks.grants import Grants
 
 
-class Metastore(BaseModel, PulumiResource, TerraformResource):
+class MetastoreDataAccessAwsIamRole(BaseModel):
     """
-    Databricks Metastore
+    Databricks Metastore Data Access AWS IAM Role
 
     Attributes
     ----------
-    cloud:
+    role_arn:
         todo
-    created_at:
+    external_id:
         todo
-    created_by:
+    unity_catalog_iam_arn:
         todo
-    default_data_access_config_id:
+    """
+    role_arn: str = None
+    external_id: str = None
+    unity_catalog_iam_arn: str = None
+
+
+class MetastoreDataAccessAzureManagedIdentity(BaseModel):
+    """
+    Databricks Metastore Data Access Azure Managed Identity
+
+    Attributes
+    ----------
+    access_connector_id:
         todo
-    delta_sharing_organization_name:
-        The organization name of a Delta Sharing entity. This field is used for
-         Databricks to Databricks sharing. Once this is set it cannot be
-        removed and can only be modified to another valid value. To delete
-        this value please taint and recreate the resource.
-    delta_sharing_recipient_token_lifetime_in_seconds:
-        Required along with `delta_sharing_scope`. Used to set expiration
-        duration in seconds on recipient data access tokens.
-        Set to 0 for unlimited duration.
-    delta_sharing_scope:
-        Required along with delta_sharing_recipient_token_lifetime_in_seconds.
-         Used to enable delta sharing on the metastore.
-        Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.
+    credential_id:
+        todo
+    managed_identity_id:
+        todo
+    """
+    access_connector_id: str = None
+    credential_id: str = None
+    managed_identity_id: str = None
+
+
+class MetastoreDataAccessAzureServicePrincipal(BaseModel):
+    """
+    Databricks Metastore Data Access Azure Service Principals
+
+    Attributes
+    ----------
+    application_id:
+        todo
+    client_secret:
+        todo
+    directory_id:
+        todo
+    """
+    application_id: str = None
+    client_secret: str = None
+    directory_id: str = None
+
+
+class MetastoreDataAccessDatabricksGcpServiceAccount(BaseModel):
+    """
+    Databricks Metastore Data Access GCP Service Account Key
+
+    Attributes
+    ----------
+    email:
+        todo
+    private_key:
+        todo
+    private_key_id:
+        todo
+    """
+    credential_id: str = None
+    email: str = None
+
+
+class MetastoreDataAccessGcpServiceAccountKey(BaseModel):
+    """
+    Databricks Metastore Data Access GCP Service Account Key
+
+    Attributes
+    ----------
+    email:
+        todo
+    private_key:
+        todo
+    private_key_id:
+        todo
+    """
+    email: str = None
+    private_key: str = None
+    private_key_id: str = None
+
+
+class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
+    """
+    Databricks Metastore Data Access
+
+    Attributes
+    ----------
+    aws_iam_role:
+        AWS IAM role specifications
+    azure_managed_identity:
+        Azure Managed Identity specifications
+    azure_service_principal:
+        Azure Service Principal specifications
+    comment:
+        Comment
+    databricks_gcp_service_account:
+        Databricks GCP service account specifications
     force_destroy:
-        Destroy metastore regardless of its contents.
-    global_metastore_id:
-        todo
-    grants:
-        List of grants operating on the metastore
+        Force resource deletion even if not empty
+    force_update:
+        Force resource update even if not empty
+    gcp_service_account_key:
+        GCP service account key specifications
+    is_default:
+        Whether to set this credential as the default for the metastore.
     metastore_id:
-        todo
+        Metastore id
     name:
-        Name of metastore.
+        Data Access name
     owner:
-        Username/groupname/sp application_id of the metastore owner.
-    region:
-        The region of the metastore
-    storage_root:
-        Path on cloud storage account, where managed databricks.Table are
-        stored. Change forces creation of a new resource. If no storage_root is
-        defined for the metastore, each catalog must have a storage_root
-        defined.
-    storage_root_credential_id:
-        todo
-    updated_at:
-        todo
-    updated_by:
-        todo
-    workspace_assignments:
-        List of workspace to which metastore is assigned to
+        Owner
+    read_only:
+        Read only
+    skip_validation:
+        Skip Validation
 
     Examples
     --------
     ```py
     ```
     """
-    cloud: str = None
-    created_at: int = None
-    created_by: str = None
-    data_accesses: list[MetastoreDataAccess] = None
-    default_data_access_config_id: str = None
-    delta_sharing_organization_name: str = None
-    delta_sharing_recipient_token_lifetime_in_seconds: int = None
-    delta_sharing_scope: str = None
+    aws_iam_role: MetastoreDataAccessAwsIamRole = None
+    azure_managed_identity: MetastoreDataAccessAzureManagedIdentity = None
+    azure_service_principal: MetastoreDataAccessAzureServicePrincipal = None
+    comment: str = None
+    databricks_gcp_service_account: MetastoreDataAccessDatabricksGcpServiceAccount = None
     force_destroy: bool = None
-    global_metastore_id: str = None
-    grants: list[MetastoreGrant] = None
+    force_update: bool = None
+    gcp_service_account_key: MetastoreDataAccessGcpServiceAccountKey = None
+    is_default: bool = None
     metastore_id: str = None
     name: str = None
     owner: str = None
-    region: str = None
-    storage_root: str = None
-    storage_root_credential_id: str = None
-    updated_at: int = None
-    updated_by: str = None
-    workspace_assignments: list[MetastoreAssignment] = None
+    read_only: bool = None
+    skip_validation: bool = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -125,13 +184,6 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
                         },
                     )
                 ]
-
-            if self.data_accesses:
-                for data_access in self.data_accesses:
-                    data_access.metastore_id = f"${{resources.{self.resource_name}.id}}"
-                    # TODO: Setup workspace provider
-                    # TODO: Add dependency on grants
-
 
         return self._core_resources
 
