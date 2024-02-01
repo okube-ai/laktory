@@ -74,24 +74,17 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
         return key
 
     @property
-    def core_resources(self) -> list[PulumiResource]:
-        if self._core_resources is None:
-            self._core_resources = [
-                self,
+    def additional_core_resources(self) -> list[PulumiResource]:
+        resources = []
+        if self.access_controls:
+            resources += [
+                Permissions(
+                    resource_name=f"permissions-{self.resource_name}",
+                    access_controls=self.access_controls,
+                    workspace_file_path=self.path,
+                )
             ]
-            if self.access_controls:
-                self._core_resources += [
-                    Permissions(
-                        resource_name=f"permissions-{self.resource_name}",
-                        access_controls=self.access_controls,
-                        workspace_file_path=self.path,
-                        options={
-                            "depends_on": [f"${{resources.{self.resource_name}}}"]
-                        },
-                    )
-                ]
-
-        return self._core_resources
+        return resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

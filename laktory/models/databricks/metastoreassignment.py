@@ -22,6 +22,7 @@ class MetastoreAssignment(BaseModel, PulumiResource, TerraformResource):
     ```py
     ```
     """
+
     default_catalog_name: str = None
     metastore_id: Union[int, str] = None
     workspace_id: Union[int, str] = None
@@ -59,4 +60,3 @@ class MetastoreAssignment(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_metastore_assignment"
-

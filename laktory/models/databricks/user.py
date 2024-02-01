@@ -60,38 +60,33 @@ class User(BaseModel, PulumiResource, TerraformResource):
         return self.user_name
 
     @property
-    def core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list[PulumiResource]:
         """
-        - user
         - user roles
         - user group members
         """
-        if self._core_resources is None:
-            self._core_resources = [
-                self,
+        resources = []
+        for role in self.roles:
+            resources += [
+                UserRole(
+                    resource_name=f"role-{role}-{self.resource_name}",
+                    # user_id=self.sp.id,
+                    user_id=f"${{resources.{self.resource_name}.id}}",
+                    role=role,
+                )
             ]
 
-            for role in self.roles:
-                self._core_resources += [
-                    UserRole(
-                        resource_name=f"role-{role}-{self.resource_name}",
-                        # user_id=self.sp.id,
-                        user_id=f"${{resources.{self.resource_name}.id}}",
-                        role=role,
-                    )
-                ]
+        # Group Member
+        for group_id in self.group_ids:
+            resources += [
+                GroupMember(
+                    resource_name=f"group-member-{self.display_name}-{group_id}",
+                    group_id=group_id,
+                    member_id=f"${{resources.{self.resource_name}.id}}",
+                )
+            ]
 
-            # Group Member
-            for group_id in self.group_ids:
-                self._core_resources += [
-                    GroupMember(
-                        resource_name=f"group-member-{self.display_name}-{group_id}",
-                        group_id=group_id,
-                        member_id=f"${{resources.{self.resource_name}.id}}",
-                    )
-                ]
-
-        return self._core_resources
+        return resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

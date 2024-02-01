@@ -64,22 +64,17 @@ class Group(BaseModel, PulumiResource, TerraformResource):
         return ["workspace_permission_assignments"]
 
     @property
-    def core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list[PulumiResource]:
         """
-        - group
         - workspace permission assignments
         """
-        if self._core_resources is None:
-            self._core_resources = [
-                self,
-            ]
-            if self.workspace_permission_assignments:
-                for a in self.workspace_permission_assignments:
-                    a.principal_id = f"${{resources.{self.resource_name}.id}}"
-                    a.principal_id = 0  # TODO: Figure out how to convert id to int in yaml
-                    self._core_resources += [a]
-
-        return self._core_resources
+        resources = []
+        if self.workspace_permission_assignments:
+            for a in self.workspace_permission_assignments:
+                a.principal_id = f"${{resources.{self.resource_name}.id}}"
+                a.principal_id = 0  # TODO: Figure out how to convert id to int in yaml
+                resources += [a]
+        return resources
 
     # TODO:
     # if group.id is None:

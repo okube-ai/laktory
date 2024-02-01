@@ -260,34 +260,29 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         return self.full_name
 
     @property
-    def core_resources(self) -> list[PulumiResource]:
+    def self_as_core_resources(self):
+        return not self.builder.pipeline_name
+
+    @property
+    def additional_core_resources(self) -> list[PulumiResource]:
         """
-        - table
         - table grants
         """
-        if self.self._core_resources is None:
-            self._core_resources = []
+        resources = []
 
-            if not self.builder.pipeline_name:
-                self._core_resources += [self]
-
-            # Schema grants
-            if self.grants:
-                self._core_resources += [
-                    Grants(
-                        resource_name=f"grants-{self.resource_name}",
-                        table=self.full_name,
-                        grants=[
-                            {"principal": g.principal, "privileges": g.privileges}
-                            for g in self.grants
-                        ],
-                        options={
-                            "depends_on": [f"${{resources.{self.resource_name}}}"]
-                        },
-                    )
-                ]
-
-        return self._core_resources
+        # Schema grants
+        if self.grants:
+            resources += [
+                Grants(
+                    resource_name=f"grants-{self.resource_name}",
+                    table=self.full_name,
+                    grants=[
+                        {"principal": g.principal, "privileges": g.privileges}
+                        for g in self.grants
+                    ],
+                )
+            ]
+        return resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

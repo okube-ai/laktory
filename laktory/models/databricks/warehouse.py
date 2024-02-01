@@ -130,25 +130,20 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list[PulumiResource]:
         """
-        - warehouse
         - warehouse permissions
         """
-        if self._core_resources is None:
-            self._core_resources = [
-                self,
+        resources = []
+        if self.access_controls:
+            resources += [
+                Permissions(
+                    resource_name=f"permissions-{self.resource_name}",
+                    access_controls=self.access_controls,
+                    sql_endpoint_id=f"${{resources.{self.resource_name}.id}}",
+                )
             ]
-            if self.access_controls:
-                self._core_resources += [
-                    Permissions(
-                        resource_name=f"permissions-{self.resource_name}",
-                        access_controls=self.access_controls,
-                        sql_endpoint_id=f"${{resources.{self.resource_name}.id}}",
-                    )
-                ]
-
-        return self._core_resources
+        return resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

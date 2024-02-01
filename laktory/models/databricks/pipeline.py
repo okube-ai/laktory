@@ -349,55 +349,52 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         return "pl"
 
     @property
-    def core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list[PulumiResource]:
         """
-        - pipeline
         - permissions
         - configuration workspace file
         - configuration workspace file permissions
         """
-        if self._core_resources is None:
-            self._core_resources = [
-                self,
-            ]
-            if self.access_controls:
-                self._core_resources += [
-                    Permissions(
-                        resource_name=f"permissions-{self.resource_name}",
-                        access_controls=self.access_controls,
-                        pipeline_id=f"${{resources.{self.resource_name}.id}}",
-                    )
-                ]
+        resources = []
 
-            # Configuration file
-            source = os.path.join(CACHE_ROOT, f"tmp-{self.name}.json")
-            d = self.model_dump(exclude_none=True)
-            d = self.inject_vars(d)
-            s = json.dumps(d, indent=4)
-            with open(source, "w", newline="\n") as fp:
-                fp.write(s)
-            filepath = f"{settings.workspace_laktory_root}pipelines/{self.name}.json"
-            file = WorkspaceFile(
-                path=filepath,
-                source=source,
-            )
-            self._core_resources += [file]
-
-            self._core_resources += [
+        if self.access_controls:
+            resources += [
                 Permissions(
-                    resource_name=f"permissions-file-{file.resource_name}",
-                    access_controls=[
-                        AccessControl(
-                            permission_level="CAN_READ",
-                            group_name="account users",
-                        )
-                    ],
-                    workspace_file_path=filepath,
-                    options={"depends_on": [f"${{resources.{file.resource_name}}}"]},
+                    resource_name=f"permissions-{self.resource_name}",
+                    access_controls=self.access_controls,
+                    pipeline_id=f"${{resources.{self.resource_name}.id}}",
                 )
             ]
 
-        return self._core_resources
+        # Configuration file
+        source = os.path.join(CACHE_ROOT, f"tmp-{self.name}.json")
+        d = self.model_dump(exclude_none=True)
+        d = self.inject_vars(d)
+        s = json.dumps(d, indent=4)
+        with open(source, "w", newline="\n") as fp:
+            fp.write(s)
+        filepath = f"{settings.workspace_laktory_root}pipelines/{self.name}.json"
+        file = WorkspaceFile(
+            path=filepath,
+            source=source,
+        )
+        resources += [file]
+
+        resources += [
+            Permissions(
+                resource_name=f"permissions-file-{file.resource_name}",
+                access_controls=[
+                    AccessControl(
+                        permission_level="CAN_READ",
+                        group_name="account users",
+                    )
+                ],
+                workspace_file_path=filepath,
+                options={"depends_on": [f"${{resources.{file.resource_name}}}"]},
+            )
+        ]
+
+        return resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

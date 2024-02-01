@@ -10,7 +10,9 @@ from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.directory import Directory
 from laktory.models.databricks.group import Group
 from laktory.models.databricks.job import Job
+from laktory.models.databricks.externallocation import ExternalLocation
 from laktory.models.databricks.metastore import Metastore
+from laktory.models.databricks.metastoredataaccess import MetastoreDataAccess
 from laktory.models.databricks.notebook import Notebook
 from laktory.models.databricks.pipeline import Pipeline
 from laktory.models.databricks.secret import Secret
@@ -69,6 +71,8 @@ class StackResources(BaseModel):
         Clusters
     directories:
         Directories
+    externallocations:
+        External Locations
     groups:
         Groups
     jobs:
@@ -104,8 +108,10 @@ class StackResources(BaseModel):
     catalogs: dict[str, Catalog] = {}
     clusters: dict[str, Cluster] = {}
     directories: dict[str, Directory] = {}
+    externallocations: dict[str, ExternalLocation] = {}
     groups: dict[str, Group] = {}
     jobs: dict[str, Job] = {}
+    metastoredataaccesses: dict[str, MetastoreDataAccess] = {}
     metastores: dict[str, Metastore] = {}
     notebooks: dict[str, Notebook] = {}
     pipelines: dict[str, Pipeline] = {}
@@ -116,7 +122,12 @@ class StackResources(BaseModel):
     sqlqueries: dict[str, SqlQuery] = {}
     tables: dict[str, Table] = {}
     providers: dict[
-        str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]
+        str, Union[
+            AWSProvider,
+            AzureProvider,
+            AzurePulumiProvider,
+            DatabricksProvider
+        ]
     ] = {}
     users: dict[str, User] = {}
     volumes: dict[str, Volume] = {}
@@ -185,7 +196,7 @@ class EnvironmentStack(BaseModel):
     pulumi: Pulumi = Pulumi()
     resources: StackResources = StackResources()
     terraform: Terraform = Terraform()
-    variables: dict[str, Union[str, bool]] = {}
+    variables: dict[str, Any] = {}
 
 
 class EnvironmentSettings(BaseModel):
@@ -203,7 +214,7 @@ class EnvironmentSettings(BaseModel):
     """
 
     resources: Any = None
-    variables: dict[str, Union[str, bool]] = None
+    variables: dict[str, Any] = None
 
 
 class Stack(BaseModel):
@@ -322,7 +333,7 @@ class Stack(BaseModel):
     pulumi: Pulumi = Pulumi()
     resources: StackResources = StackResources()
     terraform: Terraform = Terraform()
-    variables: dict[str, Union[str, bool]] = {}
+    variables: dict[str, Any] = {}
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

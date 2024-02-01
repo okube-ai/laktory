@@ -17,6 +17,7 @@ class MetastoreDataAccessAwsIamRole(BaseModel):
     unity_catalog_iam_arn:
         todo
     """
+
     role_arn: str = None
     external_id: str = None
     unity_catalog_iam_arn: str = None
@@ -35,6 +36,7 @@ class MetastoreDataAccessAzureManagedIdentity(BaseModel):
     managed_identity_id:
         todo
     """
+
     access_connector_id: str = None
     credential_id: str = None
     managed_identity_id: str = None
@@ -53,6 +55,7 @@ class MetastoreDataAccessAzureServicePrincipal(BaseModel):
     directory_id:
         todo
     """
+
     application_id: str = None
     client_secret: str = None
     directory_id: str = None
@@ -71,6 +74,7 @@ class MetastoreDataAccessDatabricksGcpServiceAccount(BaseModel):
     private_key_id:
         todo
     """
+
     credential_id: str = None
     email: str = None
 
@@ -88,6 +92,7 @@ class MetastoreDataAccessGcpServiceAccountKey(BaseModel):
     private_key_id:
         todo
     """
+
     email: str = None
     private_key: str = None
     private_key_id: str = None
@@ -133,11 +138,14 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
     ```py
     ```
     """
+
     aws_iam_role: MetastoreDataAccessAwsIamRole = None
     azure_managed_identity: MetastoreDataAccessAzureManagedIdentity = None
     azure_service_principal: MetastoreDataAccessAzureServicePrincipal = None
     comment: str = None
-    databricks_gcp_service_account: MetastoreDataAccessDatabricksGcpServiceAccount = None
+    databricks_gcp_service_account: MetastoreDataAccessDatabricksGcpServiceAccount = (
+        None
+    )
     force_destroy: bool = None
     force_update: bool = None
     gcp_service_account_key: MetastoreDataAccessGcpServiceAccountKey = None
@@ -152,40 +160,40 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
-    @property
-    def core_resources(self) -> list[PulumiResource]:
-        """
-        # TODO
-        - metastore
-        - workspace assignments
-        - grants
-        """
-        if self._core_resources is None:
-            self._core_resources = [
-                self,
-            ]
-            if self.workspace_assignments:
-                for a in self.workspace_assignments:
-                    a.metastore_id = f"${{resources.{self.resource_name}.id}}"
-                    self._core_resources += [a]
-
-            if self.grants:
-                self._core_resources += [
-                    Grants(
-                        resource_name=f"grants-{self.resource_name}",
-                        metastore=f"${{resources.{self.resource_name}.id}}",
-                        grants=[
-                            {"principal": g.principal, "privileges": g.privileges}
-                            for g in self.grants
-                        ],
-                        options={
-                            "depends_on": [f"${{resources.{self.resource_name}}}"]
-                            # TODO: Setup workspace provider
-                        },
-                    )
-                ]
-
-        return self._core_resources
+    # @property
+    # def additional_core_resources(self) -> list[PulumiResource]:
+    #     """
+    #     # TODO
+    #     - metastore
+    #     - workspace assignments
+    #     - grants
+    #     """
+    #     if self._core_resources is None:
+    #         self._core_resources = [
+    #             self,
+    #         ]
+    #         if self.workspace_assignments:
+    #             for a in self.workspace_assignments:
+    #                 a.metastore_id = f"${{resources.{self.resource_name}.id}}"
+    #                 self._core_resources += [a]
+    #
+    #         if self.grants:
+    #             self._core_resources += [
+    #                 Grants(
+    #                     resource_name=f"grants-{self.resource_name}",
+    #                     metastore=f"${{resources.{self.resource_name}.id}}",
+    #                     grants=[
+    #                         {"principal": g.principal, "privileges": g.privileges}
+    #                         for g in self.grants
+    #                     ],
+    #                     options={
+    #                         "depends_on": [f"${{resources.{self.resource_name}}}"]
+    #                         # TODO: Setup workspace provider
+    #                     },
+    #                 )
+    #             ]
+    #
+    #     return self._core_resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
@@ -193,17 +201,13 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_resource_type(self) -> str:
-        return "databricks:Metastore"
+        return "databricks:MetastoreDataAccess"
 
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
 
-        return databricks.Metastore
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["workspace_assignments", "grants"]
+        return databricks.MetastoreDataAccess
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
@@ -211,14 +215,4 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def terraform_resource_type(self) -> str:
-        return "databricks_sql_endpoint"
-
-    @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
-
-    @property
-    def terraform_properties(self) -> dict:
-        d = super().terraform_properties
-        d["channel"] = {"name": d.pop("channel_name")}
-        return d
+        return "databricks_metastore_data_access"

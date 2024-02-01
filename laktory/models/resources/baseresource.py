@@ -111,8 +111,8 @@ class BaseResource(_BaseModel):
     @property
     def default_resource_name(self) -> str:
         """
-        Resource default name constructed as
-        `{self.resource_type_id}.{self.resource_key}`
+        Resource default name constructed as `{self.resource_type_id}-{self.resource_key}`. Also, "." are replaced with
+        "-" to avoid conflicts with resource properties
         """
 
         if self.resource_type_id not in self.resource_key:
@@ -123,7 +123,16 @@ class BaseResource(_BaseModel):
         if name.endswith("-"):
             name = name[:-1]
 
-        return name
+        return name.replace(".", "-")
+
+    @property
+    def self_as_core_resources(self):
+        """Flag set to `True` if self must be included in core resources"""
+        return True
+
+    @property
+    def additional_core_resources(self):
+        return []
 
     @property
     def core_resources(self):
@@ -132,5 +141,21 @@ class BaseResource(_BaseModel):
         - class instance (self)
         """
         if self._core_resources is None:
-            self._core_resources = [self]
+
+            # Get all resources
+            self._core_resources = []
+            if self.self_as_core_resources:
+                self._core_resources += [self]
+            self._core_resources += self.additional_core_resources
+
+            # Propagate options
+            provider = self._core_resources[0].options.provider
+            k0 = f"${{resources.{self._core_resources[0].resource_name}}}"
+            if provider:
+                for r in self._core_resources[1:]:
+                    if r.options.provider is None:
+                        r.options.provider = provider
+                    if k0 not in r.options.depends_on:
+                        r.options.depends_on += [k0]
+
         return self._core_resources

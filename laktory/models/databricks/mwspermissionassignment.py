@@ -29,6 +29,7 @@ class MwsPermissionAssignment(BaseModel, PulumiResource, TerraformResource):
     ```py
     ```
     """
+
     permissions: list[Literal["USER", "ADMIN"]] = ["USER"]
     principal_id: Union[int, str] = None
     workspace_id: Union[int, str] = None
@@ -66,4 +67,3 @@ class MwsPermissionAssignment(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_mws_permission_assignment"
-
