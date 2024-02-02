@@ -122,12 +122,7 @@ class StackResources(BaseModel):
     sqlqueries: dict[str, SqlQuery] = {}
     tables: dict[str, Table] = {}
     providers: dict[
-        str, Union[
-            AWSProvider,
-            AzureProvider,
-            AzurePulumiProvider,
-            DatabricksProvider
-        ]
+        str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]
     ] = {}
     users: dict[str, User] = {}
     volumes: dict[str, Volume] = {}

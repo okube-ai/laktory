@@ -107,7 +107,6 @@ class SecretScope(BaseModel, PulumiResource, TerraformResource):
         for s in self.secrets:
             resources += [
                 Secret(
-                    resource_name=f"secret-{self.name}-{s.key}",
                     key=s.key,
                     value=s.value,
                     scope=f"${{resources.{self.resource_name}.id}}",

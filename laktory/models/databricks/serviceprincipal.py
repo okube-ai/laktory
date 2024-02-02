@@ -81,7 +81,6 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
         for role in self.roles:
             resources += [
                 ServicePrincipalRole(
-                    resource_name=f"role-{role}-{self.resource_name}",
                     service_principal_id=f"${{resources.{self.resource_name}.id}}",
                     role=role,
                 )
@@ -91,7 +90,6 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
         for group_id in self.group_ids:
             resources += [
                 GroupMember(
-                    resource_name=f"group-member-{self.display_name}-{group_id}",
                     group_id=group_id,
                     member_id=f"${{resources.{self.resource_name}.id}}",
                 )

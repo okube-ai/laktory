@@ -69,8 +69,6 @@ class User(BaseModel, PulumiResource, TerraformResource):
         for role in self.roles:
             resources += [
                 UserRole(
-                    resource_name=f"role-{role}-{self.resource_name}",
-                    # user_id=self.sp.id,
                     user_id=f"${{resources.{self.resource_name}.id}}",
                     role=role,
                 )
@@ -80,7 +78,6 @@ class User(BaseModel, PulumiResource, TerraformResource):
         for group_id in self.group_ids:
             resources += [
                 GroupMember(
-                    resource_name=f"group-member-{self.display_name}-{group_id}",
                     group_id=group_id,
                     member_id=f"${{resources.{self.resource_name}.id}}",
                 )

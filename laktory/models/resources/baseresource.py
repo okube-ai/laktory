@@ -111,8 +111,10 @@ class BaseResource(_BaseModel):
     @property
     def default_resource_name(self) -> str:
         """
-        Resource default name constructed as `{self.resource_type_id}-{self.resource_key}`. Also, "." are replaced with
-        "-" to avoid conflicts with resource properties
+        Resource default name constructed as
+        - `{self.resource_type_id}-{self.resource_key}`
+        - removing ${resources....} tags
+        - Replacing . with - to avoid conflicts with resource properties
         """
 
         if self.resource_type_id not in self.resource_key:
@@ -123,7 +125,14 @@ class BaseResource(_BaseModel):
         if name.endswith("-"):
             name = name[:-1]
 
-        return name.replace(".", "-")
+        # ${resources.x.property} -> x
+        pattern = r"\$\{resources\.(.*?)\.(.*?)\}"
+        name = re.sub(pattern, r"\1", name)
+
+        # Remove .
+        name = name.replace(".", "-")
+
+        return name
 
     @property
     def self_as_core_resources(self):
@@ -141,7 +150,6 @@ class BaseResource(_BaseModel):
         - class instance (self)
         """
         if self._core_resources is None:
-
             # Get all resources
             self._core_resources = []
             if self.self_as_core_resources:

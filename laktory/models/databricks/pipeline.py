@@ -382,7 +382,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
         resources += [
             Permissions(
-                resource_name=f"permissions-file-{file.resource_name}",
+                resource_name=f"permissions-{file.resource_name}",
                 access_controls=[
                     AccessControl(
                         permission_level="CAN_READ",
