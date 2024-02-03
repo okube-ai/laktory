@@ -7,7 +7,7 @@ from laktory.models.grants.volumegrant import VolumeGrant
 from laktory.models.databricks.grants import Grants
 
 
-class Volume(BaseModel, PulumiResource):
+class Volume(BaseModel, PulumiResource, TerraformResource):
     """
     Volumes are Unity Catalog objects representing a logical volume of storage
     in a cloud object storage location. Volumes provide capabilities for

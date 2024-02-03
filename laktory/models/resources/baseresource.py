@@ -80,9 +80,16 @@ class BaseResource(_BaseModel):
 
     @property
     def resource_name(self) -> str:
+        pattern = re.compile(r'^[a-zA-Z][a-zA-Z0-9-_]*$')
+
+        name = self.default_resource_name
         if self.resource_name_:
-            return self.resource_name_
-        return self.default_resource_name
+            name = self.resource_name_
+
+        if not pattern.match(name):
+            raise ValueError(f"Resource name `{name}` is invalid. A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes.")
+
+        return name
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -134,7 +141,7 @@ class BaseResource(_BaseModel):
         pattern = r"\$\{vars\.(.*?)\}"
         name = re.sub(pattern, r"\1", name)
 
-        # Remove .
+        # Replace .
         name = name.replace(".", "-")
 
         return name

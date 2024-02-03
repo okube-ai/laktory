@@ -160,14 +160,8 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def terraform_resource_type(self) -> str:
-        return "databricks_sql_endpoint"
+        return "databricks_metastore"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
-
-    @property
-    def terraform_properties(self) -> dict:
-        d = super().terraform_properties
-        d["channel"] = {"name": d.pop("channel_name")}
-        return d
+        return self.pulumi_excludes + ["cloud"]
