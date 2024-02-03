@@ -1,30 +1,43 @@
+from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
 
-class UserRole(BaseModel, PulumiResource, TerraformResource):
+class MetastoreAssignment(BaseModel, PulumiResource, TerraformResource):
     """
-    Databricks User role
+    Databricks Metastore Assignment
 
     Attributes
     ----------
-    role:
-        This is the id of the role or instance profile resource.
-    user_id:
-        This is the id of the user resource.
+    metastore_id:
+        Unique identifier of the parent Metastore
+    workspace_id:
+        id of the workspace for the assignment
+    default_catalog_name:
+        Default catalog used for this assignment, default to hive_metastore
+
+    Examples
+    --------
+    ```py
+    ```
     """
 
-    role: str = None
-    user_id: str = None
+    default_catalog_name: str = None
+    metastore_id: Union[int, str] = None
+    workspace_id: Union[int, str] = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
     @property
-    def resource_key(self) -> str:
-        return f"{self.role}-{self.user_id}"
+    def resource_type_id(self):
+        return "assignment"
+
+    @property
+    def resource_key(self):
+        return f"{self.metastore_id}-{self.workspace_id}"
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
@@ -32,13 +45,13 @@ class UserRole(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_resource_type(self) -> str:
-        return "databricks:UserRole"
+        return "databricks:MetastoreAssignment"
 
     @property
     def pulumi_cls(self):
         import pulumi_databricks as databricks
 
-        return databricks.UserRole
+        return databricks.MetastoreAssignment
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
@@ -46,4 +59,4 @@ class UserRole(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def terraform_resource_type(self) -> str:
-        return "databricks_user_role"
+        return "databricks_metastore_assignment"

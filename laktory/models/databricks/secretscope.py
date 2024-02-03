@@ -97,41 +97,33 @@ class SecretScope(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list[PulumiResource]:
         """
-        - secret scope
         - secret values
         - secret scope permissions (ACL)
         """
-        if self._core_resources is None:
-            self._core_resources = [
-                self,
+        resources = []
+
+        for s in self.secrets:
+            resources += [
+                Secret(
+                    key=s.key,
+                    value=s.value,
+                    scope=f"${{resources.{self.resource_name}.id}}",
+                )
             ]
 
-            for s in self.secrets:
-                self._core_resources += [
-                    Secret(
-                        resource_name=f"secret-{self.name}-{s.key}",
-                        key=s.key,
-                        value=s.value,
-                        scope=f"${{resources.{self.resource_name}.id}}",
-                    )
-                ]
+        for p in self.permissions:
+            resources += [
+                SecretAcl(
+                    resource_name=f"secret-scope-acl-{self.name}-{p.principal}",
+                    permission=p.permission,
+                    principal=p.principal,
+                    scope=self.name,
+                )
+            ]
 
-            for p in self.permissions:
-                self._core_resources += [
-                    SecretAcl(
-                        resource_name=f"secret-scope-acl-{self.name}-{p.principal}",
-                        permission=p.permission,
-                        principal=p.principal,
-                        scope=self.name,
-                    )
-                ]
-                self._core_resources[-1].options.depends_on = [
-                    f"${{resources.{self.resource_name}}}"
-                ]
-
-        return self._core_resources
+        return resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Methods                                                          #

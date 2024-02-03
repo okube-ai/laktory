@@ -22,6 +22,10 @@ class GroupMember(BaseModel, PulumiResource, TerraformResource):
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def resource_key(self) -> str:
+        return f"{self.group_id}-{self.member_id}"
+
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #

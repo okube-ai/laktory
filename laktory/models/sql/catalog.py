@@ -111,37 +111,32 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list[PulumiResource]:
         """
-        - catalog
         - catalog grants
         - schemas resources
         """
-        if self._core_resources is None:
-            self._core_resources = [self]
+        resources = []
 
-            # Catalog grants
-            if self.grants:
-                self._core_resources += [
-                    Grants(
-                        resource_name=f"grants-{self.resource_name}",
-                        catalog=self.full_name,
-                        grants=[
-                            {"principal": g.principal, "privileges": g.privileges}
-                            for g in self.grants
-                        ],
-                        options={
-                            "depends_on": [f"${{resources.{self.resource_name}}}"]
-                        },
-                    )
-                ]
+        # Catalog grants
+        if self.grants:
+            grant = Grants(
+                resource_name=f"grants-{self.resource_name}",
+                catalog=self.full_name,
+                grants=[
+                    {"principal": g.principal, "privileges": g.privileges}
+                    for g in self.grants
+                ],
+            )
+            resources += [grant]
 
-            if self.schemas:
-                for s in self.schemas:
-                    self._core_resources += s.core_resources
-                    # TODO: Added dependency?
+        # Catalog schemas
+        if self.schemas:
+            for s in self.schemas:
+                resources += s.core_resources
+                # TODO: Add dependency?
 
-        return self._core_resources
+        return resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

@@ -22,6 +22,10 @@ class ServicePrincipalRole(BaseModel, PulumiResource, TerraformResource):
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def resource_key(self) -> str:
+        return f"{self.role}-{self.service_principal_id}"
+
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #

@@ -1,6 +1,6 @@
 from typing import Union
 from pydantic import Field
-from pydantic import computed_field
+from pydantic import ConfigDict
 
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
@@ -21,6 +21,8 @@ class DataEventHeader(BaseModel):
         Data event description
     producer
         Data event producer
+    event_root
+        Root path for specific event. Default value: `{settings.workspace_landing_root}/events/my-event`
     events_root
         Root path for all events. Default value: `{settings.workspace_landing_root}/events/`
 
@@ -35,7 +37,7 @@ class DataEventHeader(BaseModel):
     )
     print(event)
     '''
-    variables={} name='stock_price' description=None producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) events_root_=None
+    variables={} name='stock_price' description=None producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) events_root_=None event_root_=None
     '''
 
     print(event.event_root)
@@ -43,10 +45,12 @@ class DataEventHeader(BaseModel):
     ```
     """
 
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
     name: str = Field(...)
     description: Union[str, None] = Field(default=None)
     producer: DataProducer = Field(default=None)
     events_root_: Union[str, None] = Field(None, alias="events_root")
+    event_root_: Union[str, None] = Field(None, alias="event_root")
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
@@ -62,13 +66,17 @@ class DataEventHeader(BaseModel):
     @property
     def event_root(self) -> str:
         """
-        Root path for the event, defined as `{self.events_roots}/{producer_name}/{event_name}/`
+        Root path for the event. Default path is `{self.events_roots}/{producer_name}/{event_name}/`, but it may
+        be overwritten by self.event_root_.
 
         Returns
         -------
         str
             Event path
         """
+        if self.event_root_:
+            return self.event_root_
+
         producer = ""
         if self.producer is not None:
             producer = self.producer.name + "/"

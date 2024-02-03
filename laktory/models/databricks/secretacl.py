@@ -25,6 +25,10 @@ class SecretAcl(BaseModel, PulumiResource):
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def resource_key(self) -> str:
+        return f"{self.scope}-{self.principal}"
+
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #

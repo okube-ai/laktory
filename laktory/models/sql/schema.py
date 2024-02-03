@@ -99,43 +99,36 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
         return self.full_name
 
     @property
-    def core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list[PulumiResource]:
         """
-        - schema
         - schema grants
         - tables
         - volumes
         """
-        if self._core_resources is None:
-            self._core_resources = [self]
+        resources = []
 
-            # Schema grants
-            if self.grants:
-                self._core_resources += [
-                    Grants(
-                        resource_name=f"grants-{self.resource_name}",
-                        schema=self.full_name,
-                        grants=[
-                            {"principal": g.principal, "privileges": g.privileges}
-                            for g in self.grants
-                        ],
-                        options={
-                            "depends_on": [f"${{resources.{self.resource_name}}}"]
-                        },
-                    )
-                ]
+        # Schema grants
+        if self.grants:
+            resources += [
+                Grants(
+                    resource_name=f"grants-{self.resource_name}",
+                    schema=self.full_name,
+                    grants=[
+                        {"principal": g.principal, "privileges": g.privileges}
+                        for g in self.grants
+                    ],
+                )
+            ]
 
-            if self.volumes:
-                for v in self.volumes:
-                    self._core_resources += v.core_resources
-                    # TODO: add dependency?
+        if self.volumes:
+            for v in self.volumes:
+                resources += v.core_resources
 
-            if self.tables:
-                for t in self.tables:
-                    self._core_resources += t.core_resources
-                    # TODO: add dependency?
+        if self.tables:
+            for t in self.tables:
+                resources += t.core_resources
 
-        return self._core_resources
+        return resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

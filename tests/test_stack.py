@@ -55,6 +55,7 @@ def test_stack_model():
             "catalogs": {},
             "clusters": {},
             "directories": {},
+            "externallocations": {},
             "groups": {},
             "jobs": {
                 "job-stock-prices-ut-stack": {
@@ -180,6 +181,8 @@ def test_stack_model():
                     "webhook_notifications": None,
                 }
             },
+            "metastoredataaccesses": {},
+            "metastores": {},
             "notebooks": {},
             "pipelines": {
                 "pl-custom-name": {
@@ -366,7 +369,11 @@ def test_pulumi_stack():
                     ],
                     "pipelineId": "${pl-custom-name.id}",
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": ["${pl-custom-name}"],
+                    "deleteBeforeReplace": True,
+                },
             },
             "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
@@ -374,9 +381,13 @@ def test_pulumi_stack():
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "./tmp-pl-stock-prices-ut-stack.json",
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": ["${pl-custom-name}"],
+                    "deleteBeforeReplace": True,
+                },
             },
-            "permissions-file-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+            "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:Permissions",
                 "properties": {
                     "accessControls": [
@@ -385,8 +396,10 @@ def test_pulumi_stack():
                     "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                 },
                 "options": {
+                    "provider": "${databricks}",
                     "dependsOn": [
-                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}"
+                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}",
+                        "${pl-custom-name}",
                     ],
                     "deleteBeforeReplace": True,
                 },
@@ -526,21 +539,27 @@ def test_terraform_stack():
                         {"group_name": "account users", "permission_level": "CAN_VIEW"},
                         {"group_name": "role-engineers", "permission_level": "CAN_RUN"},
                     ],
+                    "depends_on": ["databricks_pipeline.pl-custom-name"],
+                    "provider": "databricks",
                 },
-                "permissions-file-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                     "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "access_control": [
                         {"group_name": "account users", "permission_level": "CAN_READ"}
                     ],
                     "depends_on": [
-                        "databricks_workspace_file.workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json"
+                        "databricks_workspace_file.workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json",
+                        "databricks_pipeline.pl-custom-name",
                     ],
+                    "provider": "databricks",
                 },
             },
             "databricks_workspace_file": {
                 "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "./tmp-pl-stock-prices-ut-stack.json",
+                    "depends_on": ["databricks_pipeline.pl-custom-name"],
+                    "provider": "databricks",
                 }
             },
         },
@@ -573,7 +592,9 @@ def test_terraform_stack():
 
 def test_terraform_plan():
     tstack = stack.to_terraform(env="dev")
-    tstack.terraform.backend = None  # TODO: Add credentials to git actions to use azure backend
+    tstack.terraform.backend = (
+        None  # TODO: Add credentials to git actions to use azure backend
+    )
     tstack.init(flags=["-migrate-state"])
     tstack.plan()
 

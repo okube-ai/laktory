@@ -213,6 +213,12 @@ class BaseModel(_BaseModel):
         def search_and_replace(d, pattern, repl):
             if isinstance(d, dict):
                 for key, value in d.items():
+                    # if isinstance(key, str) and re.findall(pattern, key, flags=re.IGNORECASE):
+                    #     k2 = re.sub(pattern, repl, key, flags=re.IGNORECASE)
+                    #     d[k2] = search_and_replace(value, pattern, repl)
+                    #     if key != k2:
+                    #         del d[key]
+                    # else:
                     d[key] = search_and_replace(value, pattern, repl)
             elif isinstance(d, list):
                 for i, item in enumerate(d):

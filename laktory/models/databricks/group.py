@@ -2,6 +2,7 @@ from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
+from laktory.models.databricks.mwspermissionassignment import MwsPermissionAssignment
 
 
 class Group(BaseModel, PulumiResource, TerraformResource):
@@ -33,6 +34,7 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     display_name: str
     id: Union[str, None] = None
     workspace_access: bool = None
+    workspace_permission_assignments: list[MwsPermissionAssignment] = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -57,6 +59,23 @@ class Group(BaseModel, PulumiResource, TerraformResource):
 
         return databricks.Group
 
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return ["workspace_permission_assignments"]
+
+    @property
+    def additional_core_resources(self) -> list[PulumiResource]:
+        """
+        - workspace permission assignments
+        """
+        resources = []
+        if self.workspace_permission_assignments:
+            for a in self.workspace_permission_assignments:
+                if a.principal_id is None:
+                    a.principal_id = f"${{resources.{self.resource_name}.id}}"
+                resources += [a]
+        return resources
+
     # TODO:
     # if group.id is None:
     #     self.group = databricks.Group(name, opts=opts, **group.model_pulumi_dump())
@@ -71,3 +90,7 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_group"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes

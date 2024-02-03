@@ -25,6 +25,10 @@ class Secret(BaseModel, PulumiResource, TerraformResource):
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def resource_key(self) -> str:
+        return f"{self.scope}-{self.key}"
+
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #

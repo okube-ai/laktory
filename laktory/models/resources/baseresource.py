@@ -80,9 +80,18 @@ class BaseResource(_BaseModel):
 
     @property
     def resource_name(self) -> str:
+        pattern = re.compile(r"^[a-zA-Z][a-zA-Z0-9-_]*$")
+
+        name = self.default_resource_name
         if self.resource_name_:
-            return self.resource_name_
-        return self.default_resource_name
+            name = self.resource_name_
+
+        if not pattern.match(name):
+            raise ValueError(
+                f"Resource name `{name}` is invalid. A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes."
+            )
+
+        return name
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -112,7 +121,10 @@ class BaseResource(_BaseModel):
     def default_resource_name(self) -> str:
         """
         Resource default name constructed as
-        `{self.resource_type_id}.{self.resource_key}`
+        - `{self.resource_type_id}-{self.resource_key}`
+        - removing ${resources....} tags
+        - removing ${vars....} tags
+        - Replacing . with - to avoid conflicts with resource properties
         """
 
         if self.resource_type_id not in self.resource_key:
@@ -123,7 +135,27 @@ class BaseResource(_BaseModel):
         if name.endswith("-"):
             name = name[:-1]
 
+        # ${resources.x.property} -> x
+        pattern = r"\$\{resources\.(.*?)\.(.*?)\}"
+        name = re.sub(pattern, r"\1", name)
+
+        # ${vars.x} -> x
+        pattern = r"\$\{vars\.(.*?)\}"
+        name = re.sub(pattern, r"\1", name)
+
+        # Replace .
+        name = name.replace(".", "-")
+
         return name
+
+    @property
+    def self_as_core_resources(self):
+        """Flag set to `True` if self must be included in core resources"""
+        return True
+
+    @property
+    def additional_core_resources(self):
+        return []
 
     @property
     def core_resources(self):
@@ -132,5 +164,24 @@ class BaseResource(_BaseModel):
         - class instance (self)
         """
         if self._core_resources is None:
-            self._core_resources = [self]
+            # Get all resources
+            self._core_resources = []
+            if self.self_as_core_resources:
+                self._core_resources += [self]
+            self._core_resources += self.additional_core_resources
+
+            # Propagate options
+            r0 = self._core_resources[0]
+            provider = r0.options.provider
+            k0 = f"${{resources.{r0.resource_name}}}"
+            for r in self._core_resources[1:]:
+                if provider:
+                    if r.options.provider is None:
+                        r.options.provider = provider
+
+                do = r.options.depends_on
+                if k0 not in do:
+                    do += [k0]
+                r.options.depends_on = do
+
         return self._core_resources
