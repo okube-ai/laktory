@@ -19,11 +19,3 @@ from laktory.models.databricks.user import User
 from laktory.models.databricks.userrole import UserRole
 from laktory.models.databricks.warehouse import Warehouse
 from laktory.models.databricks.workspacefile import WorkspaceFile
-
-
-# databricks.Metastore
-# databricks.MetastoreAssignment
-# databricks.MwsPermissionAssignment
-# databricks.MetastoreDataAccess
-# databricks.ExternalLocation
-# azure_native.storage

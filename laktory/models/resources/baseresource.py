@@ -80,14 +80,16 @@ class BaseResource(_BaseModel):
 
     @property
     def resource_name(self) -> str:
-        pattern = re.compile(r'^[a-zA-Z][a-zA-Z0-9-_]*$')
+        pattern = re.compile(r"^[a-zA-Z][a-zA-Z0-9-_]*$")
 
         name = self.default_resource_name
         if self.resource_name_:
             name = self.resource_name_
 
         if not pattern.match(name):
-            raise ValueError(f"Resource name `{name}` is invalid. A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes.")
+            raise ValueError(
+                f"Resource name `{name}` is invalid. A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes."
+            )
 
         return name
 

@@ -1,11 +1,17 @@
 # Release History
 
 ## [0.1.2] - Unreleased
+### Added
+* `Metastore`, `MetastoreAssignment`, `MetastoreDataAccess`, `MwsPermissionAssignment` and `ExternalLocation` models
+* `workspace_permission_assginments` field to `Group` model
+* 
 ### Updated
 * Pipeline model supports null catalog (hive metastore)
 * Event Data Source supports custom event root path
 * Event Data Source supports custom schema location path
-
+* Refactored `core_resources` property to automatically propagate provider and dependencies to sub-resources.
+### Breaking Changes
+* Refactored default resource name to remove illegal characters, resolve variables and remove resource tags.
 ## [0.1.1] - 2024-01-28
 ### Added
 * General support for Terraform IaC backend

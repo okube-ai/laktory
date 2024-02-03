@@ -40,7 +40,8 @@ def test_event_data_source_read():
     )
     df = source.read(spark).toPandas()
     assert len(df) == 80
-    assert list(df.columns) == ["data", "description", "name", "producer"]
+    print(list(df.columns))
+    assert list(df.columns) == ["data", "description", "event_root_", "name", "producer"]
     df["data"] = df["data"].apply(Row.asDict)
     df["symbol"] = df["data"].apply(dict.get, args=("symbol",))
     df["created_at"] = df["data"].apply(dict.get, args=("_created_at",))
