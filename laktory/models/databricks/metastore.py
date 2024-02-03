@@ -116,9 +116,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
                     {"principal": g.principal, "privileges": g.privileges}
                     for g in self.grants
                 ],
-                options={
-                    "provider": self.workspace_provider
-                },
+                options={"provider": self.workspace_provider},
             ).core_resources
 
         if self.data_accesses:
@@ -149,7 +147,12 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["workspace_assignments", "grants", "data_accesses", "workspace_provider"]
+        return [
+            "workspace_assignments",
+            "grants",
+            "data_accesses",
+            "workspace_provider",
+        ]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

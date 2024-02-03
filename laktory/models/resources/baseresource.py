@@ -162,13 +162,17 @@ class BaseResource(_BaseModel):
             self._core_resources += self.additional_core_resources
 
             # Propagate options
-            provider = self._core_resources[0].options.provider
-            k0 = f"${{resources.{self._core_resources[0].resource_name}}}"
-            if provider:
-                for r in self._core_resources[1:]:
+            r0 = self._core_resources[0]
+            provider = r0.options.provider
+            k0 = f"${{resources.{r0.resource_name}}}"
+            for r in self._core_resources[1:]:
+                if provider:
                     if r.options.provider is None:
                         r.options.provider = provider
-                    if k0 not in r.options.depends_on:
-                        r.options.depends_on += [k0]
+
+                do = r.options.depends_on
+                if k0 not in do:
+                    do += [k0]
+                r.options.depends_on = do
 
         return self._core_resources

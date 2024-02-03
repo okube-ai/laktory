@@ -123,12 +123,10 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
         if self.volumes:
             for v in self.volumes:
                 resources += v.core_resources
-                # TODO: add dependency?
 
         if self.tables:
             for t in self.tables:
                 resources += t.core_resources
-                # TODO: add dependency?
 
         return resources
 
