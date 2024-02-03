@@ -114,6 +114,7 @@ class BaseResource(_BaseModel):
         Resource default name constructed as
         - `{self.resource_type_id}-{self.resource_key}`
         - removing ${resources....} tags
+        - removing ${vars....} tags
         - Replacing . with - to avoid conflicts with resource properties
         """
 
@@ -127,6 +128,10 @@ class BaseResource(_BaseModel):
 
         # ${resources.x.property} -> x
         pattern = r"\$\{resources\.(.*?)\.(.*?)\}"
+        name = re.sub(pattern, r"\1", name)
+
+        # ${vars.x} -> x
+        pattern = r"\$\{vars\.(.*?)\}"
         name = re.sub(pattern, r"\1", name)
 
         # Remove .
