@@ -1,5 +1,7 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
+from laktory.models.databricks.grants import Grants
+from laktory.models.grants.storagecredentialgrant import StorageCredentialGrant
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -118,6 +120,8 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
         Force resource deletion even if not empty
     force_update:
         Force resource update even if not empty
+    grants:
+        List of grants operating on the data access
     gcp_service_account_key:
         GCP service account key specifications
     is_default:
@@ -149,6 +153,7 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
     force_destroy: bool = None
     force_update: bool = None
     gcp_service_account_key: MetastoreDataAccessGcpServiceAccountKey = None
+    grants: list[StorageCredentialGrant] = None
     is_default: bool = None
     metastore_id: str = None
     name: str = None
@@ -160,40 +165,26 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
-    # @property
-    # def additional_core_resources(self) -> list[PulumiResource]:
-    #     """
-    #     # TODO
-    #     - metastore
-    #     - workspace assignments
-    #     - grants
-    #     """
-    #     if self._core_resources is None:
-    #         self._core_resources = [
-    #             self,
-    #         ]
-    #         if self.workspace_assignments:
-    #             for a in self.workspace_assignments:
-    #                 a.metastore_id = f"${{resources.{self.resource_name}.id}}"
-    #                 self._core_resources += [a]
-    #
-    #         if self.grants:
-    #             self._core_resources += [
-    #                 Grants(
-    #                     resource_name=f"grants-{self.resource_name}",
-    #                     metastore=f"${{resources.{self.resource_name}.id}}",
-    #                     grants=[
-    #                         {"principal": g.principal, "privileges": g.privileges}
-    #                         for g in self.grants
-    #                     ],
-    #                     options={
-    #                         "depends_on": [f"${{resources.{self.resource_name}}}"]
-    #                         # TODO: Setup workspace provider
-    #                     },
-    #                 )
-    #             ]
-    #
-    #     return self._core_resources
+    @property
+    def additional_core_resources(self) -> list[PulumiResource]:
+        """
+        - storage credential grants
+        """
+        resources = []
+
+        # Catalog grants
+        if self.grants:
+            grant = Grants(
+                resource_name=f"grants-{self.resource_name}",
+                storage_credential=self.name,
+                grants=[
+                    {"principal": g.principal, "privileges": g.privileges}
+                    for g in self.grants
+                ],
+            )
+            resources += [grant]
+
+        return resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
@@ -209,6 +200,10 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
 
         return databricks.MetastoreDataAccess
 
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return ["grants"]
+
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
@@ -216,3 +211,7 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_metastore_data_access"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes

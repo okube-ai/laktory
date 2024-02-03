@@ -71,8 +71,8 @@ class Group(BaseModel, PulumiResource, TerraformResource):
         resources = []
         if self.workspace_permission_assignments:
             for a in self.workspace_permission_assignments:
-                a.principal_id = f"${{resources.{self.resource_name}.id}}"
-                a.principal_id = 0  # TODO: Figure out how to convert id to int in yaml
+                if a.principal_id is None:
+                    a.principal_id = f"${{resources.{self.resource_name}.id}}"
                 resources += [a]
         return resources
 

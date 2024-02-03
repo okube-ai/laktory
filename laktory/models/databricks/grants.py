@@ -33,6 +33,8 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
         List of grant assigned to the selected object
     catalog:
         Name of the catalog to assign the grants to
+    external_location:
+        Name of the external location to assign the grants to
     metastore:
         Name of the metastore to assign the grants to
     model
@@ -41,6 +43,8 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
         Name of the schema to assign the permission to.
     share:
         Name of the share to assign the permission to.
+    storage_credential:
+        Name of the storage credential to assign the permission to.
     view:
         Name of the view to assign the permission to.
     volume:
@@ -60,12 +64,14 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
 
     grants: list[Grant]
     catalog: str = None
+    external_location: str = None
     metastore: str = None
     model: str = None
     schema_: str = Field(
         None, validation_alias=AliasChoices("schema", "schema_")
     )  # required not to overwrite BaseModel attribute
     share: str = None
+    storage_credential: str = None
     view: str = None
     volume: str = None
 

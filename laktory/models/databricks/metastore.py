@@ -88,6 +88,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     storage_root_credential_id: str = None
     updated_at: int = None
     updated_by: str = None
+    workspace_provider: str = None
     workspace_assignments: list[MetastoreAssignment] = None
 
     # ----------------------------------------------------------------------- #
@@ -108,26 +109,27 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
                 resources += [a]
 
         if self.grants:
-            resources += [
-                Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    metastore=f"${{resources.{self.resource_name}.id}}",
-                    grants=[
-                        {"principal": g.principal, "privileges": g.privileges}
-                        for g in self.grants
-                    ],
-                    options={
-                        # TODO: Setup workspace provider
-                    },
-                )
-            ]
+            resources += Grants(
+                resource_name=f"grants-{self.resource_name}",
+                metastore=f"${{resources.{self.resource_name}.id}}",
+                grants=[
+                    {"principal": g.principal, "privileges": g.privileges}
+                    for g in self.grants
+                ],
+                options={
+                    "provider": self.workspace_provider
+                },
+            ).core_resources
 
         if self.data_accesses:
             for data_access in self.data_accesses:
                 data_access.metastore_id = f"${{resources.{self.resource_name}.id}}"
-                # TODO: Setup workspace provider
                 # TODO: Add dependency on grants
-                resources += [data_access]
+                _core_resources = data_access.core_resources
+                for r in _core_resources[1:]:
+                    if r.options.provider is None:
+                        r.options.provider = self.workspace_provider
+                resources += _core_resources
 
         return resources
 
@@ -147,7 +149,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["workspace_assignments", "grants", "data_accesses"]
+        return ["workspace_assignments", "grants", "data_accesses", "workspace_provider"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
