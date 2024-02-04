@@ -19,12 +19,16 @@ def test_notebook():
 
 
 def test_deploy():
-    validator = StackValidator({
-        "notebooks": [Notebook(
-            source="../test_notebook.py",
-            path="/laktory/hello",
-        )]
-    })
+    validator = StackValidator(
+        {
+            "notebooks": [
+                Notebook(
+                    source="../test_notebook.py",
+                    path="/laktory/hello",
+                )
+            ]
+        }
+    )
     validator.validate()
 
 

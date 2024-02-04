@@ -234,9 +234,7 @@ def test_pipeline_pulumi():
 
 
 def test_deploy():
-    validator = StackValidator({
-        "pipelines": [pl]
-    })
+    validator = StackValidator({"pipelines": [pl]})
     validator.validate()
 
 

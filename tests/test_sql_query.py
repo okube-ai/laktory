@@ -1,16 +1,18 @@
 import os
+from laktory._testing.stackvalidator import StackValidator
 from laktory.models import SqlQuery
 
 root_dir = os.path.dirname(__file__)
 
+query = SqlQuery(
+    name="google-prices",
+    parent="/queries",
+    query="SELECT * FROM dev.finance.slv_stock_prices",
+    data_source_id="12345",
+)
+
 
 def test_sql_query():
-    query = SqlQuery(
-        name="google-prices",
-        parent="/queries",
-        query="SELECT * FROM dev.finance.slv_stock_prices",
-        data_source_id="12345",
-    )
     data = query.model_dump()
     print(query.resource_key)
     assert query.resource_key == "google-prices"
@@ -29,5 +31,11 @@ def test_sql_query():
     }
 
 
+def test_deploy():
+    validator = StackValidator({"sqlqueries": [query]})
+    validator.validate()
+
+
 if __name__ == "__main__":
     test_sql_query()
+    test_deploy()

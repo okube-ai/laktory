@@ -4,37 +4,37 @@ from laktory.models import Schema
 from laktory.models import Column
 
 schema = Schema(
-        name="flights",
-        catalog_name="laktory_testing",
-        tables=[
-            Table(
-                name="f1549",
-                columns=[
-                    {
-                        "name": "airspeed",
-                        "type": "double",
-                    },
-                    {
-                        "name": "altitude",
-                        "type": "double",
-                    },
-                ],
-            ),
-            Table(
-                name="f0002",
-                columns=[
-                    {
-                        "name": "airspeed",
-                        "type": "double",
-                    },
-                    {
-                        "name": "altitude",
-                        "type": "double",
-                    },
-                ],
-            ),
-        ],
-    )
+    name="flights",
+    catalog_name="laktory_testing",
+    tables=[
+        Table(
+            name="f1549",
+            columns=[
+                {
+                    "name": "airspeed",
+                    "type": "double",
+                },
+                {
+                    "name": "altitude",
+                    "type": "double",
+                },
+            ],
+        ),
+        Table(
+            name="f0002",
+            columns=[
+                {
+                    "name": "airspeed",
+                    "type": "double",
+                },
+                {
+                    "name": "altitude",
+                    "type": "double",
+                },
+            ],
+        ),
+    ],
+)
 
 
 def test_model():
@@ -45,9 +45,7 @@ def test_model():
 
 
 def test_deploy():
-    validator = StackValidator({
-        "schemas": [schema]
-    })
+    validator = StackValidator({"schemas": [schema]})
     validator.validate()
 
 

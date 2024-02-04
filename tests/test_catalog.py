@@ -20,7 +20,9 @@ def test_deploy():
         schemas=[
             {
                 "name": "engineering",
-                "grants": [{"principal": "domain-engineering", "privileges": ["SELECT"]}],
+                "grants": [
+                    {"principal": "domain-engineering", "privileges": ["SELECT"]}
+                ],
             },
             {
                 "name": "sources",
