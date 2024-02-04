@@ -1,4 +1,5 @@
 from laktory._testing import StockPricesPipeline
+from laktory._testing.stackvalidator import StackValidator
 
 pl = StockPricesPipeline()
 
@@ -232,6 +233,14 @@ def test_pipeline_pulumi():
     assert pl.core_resources[-1].options.aliases == ["my-file"]
 
 
+def test_deploy():
+    validator = StackValidator({
+        "pipelines": [pl]
+    })
+    validator.validate()
+
+
 if __name__ == "__main__":
     test_pipeline()
     test_pipeline_pulumi()
+    test_deploy()

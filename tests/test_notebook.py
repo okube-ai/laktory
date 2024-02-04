@@ -1,5 +1,6 @@
 import os
 
+from laktory._testing.stackvalidator import StackValidator
 from laktory.models import Notebook
 
 root_dir = os.path.dirname(__file__)
@@ -17,5 +18,16 @@ def test_notebook():
     assert nb1.resource_name == "notebook-laktory-demos-hello_world-py"
 
 
+def test_deploy():
+    validator = StackValidator({
+        "notebooks": [Notebook(
+            source="../test_notebook.py",
+            path="/laktory/hello",
+        )]
+    })
+    validator.validate()
+
+
 if __name__ == "__main__":
     test_notebook()
+    test_deploy()

@@ -1,13 +1,9 @@
-from datetime import datetime
-
+from laktory._testing.stackvalidator import StackValidator
 from laktory.models import Table
 from laktory.models import Schema
-from laktory.models import Catalog
 from laktory.models import Column
 
-
-def test_model():
-    schema = Schema(
+schema = Schema(
         name="flights",
         catalog_name="laktory_testing",
         tables=[
@@ -40,11 +36,21 @@ def test_model():
         ],
     )
 
+
+def test_model():
     assert schema.tables[0].columns[0].name == "airspeed"
     assert type(schema.tables[0].columns[0]) == Column
     assert schema.name == "flights"
     assert schema.full_name == "laktory_testing.flights"
 
 
+def test_deploy():
+    validator = StackValidator({
+        "schemas": [schema]
+    })
+    validator.validate()
+
+
 if __name__ == "__main__":
     test_model()
+    test_deploy()
