@@ -649,7 +649,17 @@ def test_all_resources():
     print("token: ", validator.tstack.providers["databricks"].token)
     print("password: ", validator.tstack.providers["databricks"].password)
     print("catalog: ", validator.tstack.resources["catalog-dev"])
-    print(settings)
+    # print(settings)
+    import pydantic
+    import pulumi
+    import pulumi_databricks
+    import json
+    import sys
+    # print("pulumi", pulumi.version)
+    print("python", sys.version)
+    print("pydantic", pydantic.__version__)
+    # print("pulumi_databricks", pulumi_databricks.__)
+
     print(json.dumps(validator.tstack.model_dump(), indent=4))
 
     return validator.tstack
