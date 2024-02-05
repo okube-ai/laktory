@@ -643,11 +643,13 @@ def test_all_resources():
         },
     )
     import json
+    from laktory import settings
     print(validator.tstack)
     print("host: ", validator.tstack.providers["databricks"].host)
     print("token: ", validator.tstack.providers["databricks"].token)
     print("password: ", validator.tstack.providers["databricks"].password)
     print("catalog: ", validator.tstack.resources["catalog-dev"])
+    print(settings)
     print(json.dumps(validator.tstack.model_dump(), indent=4))
 
     return validator.tstack
