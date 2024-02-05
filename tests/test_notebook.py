@@ -7,7 +7,6 @@ nb = Notebook(
 
 
 def test_notebook():
-
     nb0 = Notebook(source="./hello_world.py")
     nb1 = Notebook(source="./notebooks/demos/hello_world.py")
     nb2 = Notebook(source="./notebooks/demos/hello_world.py", dirpath="/files/")

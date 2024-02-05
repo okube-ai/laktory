@@ -5,11 +5,22 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class ExternalLocationEncryptionDetailsSseEncryptionDetails(BaseModel):
+    """
+    Attributes
+    ----------
+    algorith:
+    aws_kms_key_arn:
+    """
     algorith: str = None
     aws_kms_key_arn: str = None
 
 
 class ExternalLocationEncryptionDetails(BaseModel):
+    """
+    Attributes
+    ----------
+    sse_encryption_details:
+    """
     sse_encryption_details: ExternalLocationEncryptionDetailsSseEncryptionDetails = None
 
 
