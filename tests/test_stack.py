@@ -644,7 +644,12 @@ def test_all_resources():
     )
     import json
     print(validator.tstack)
+    print("host: ", validator.tstack.providers["databricks"].host)
+    print("token: ", validator.tstack.providers["databricks"].token)
+    print("password: ", validator.tstack.providers["databricks"].password)
     print(json.dumps(validator.tstack.model_dump(), indent=4))
+
+    return validator.tstack
     # validator.validate()
 
 
@@ -654,4 +659,4 @@ if __name__ == "__main__":
     # test_pulumi_preview()
     # test_terraform_stack()
     # test_terraform_plan()
-    test_all_resources()
+    tstack = test_all_resources()
