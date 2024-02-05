@@ -621,8 +621,8 @@ def test_all_resources():
 
     validator = StackValidator(
         resources={
-            "catalogs": [catalog],
-            # "directories": [directory],
+            # "catalogs": [catalog],
+            "directories": [directory],
             # "jobs": [job],
             # "metastores": [metastore],
             # "pipelines": [pl],  # required by job
@@ -645,10 +645,10 @@ def test_all_resources():
     import json
     from laktory import settings
     print(validator.tstack)
-    print("host: ", validator.tstack.providers["databricks"].host)
-    print("token: ", validator.tstack.providers["databricks"].token)
-    print("password: ", validator.tstack.providers["databricks"].password)
-    print("catalog: ", validator.tstack.resources["catalog-dev"])
+    # print("host: ", validator.tstack.providers["databricks"].host)
+    # print("token: ", validator.tstack.providers["databricks"].token)
+    # print("password: ", validator.tstack.providers["databricks"].password)
+    # print("catalog: ", validator.tstack.resources["catalog-dev"])
     # print(settings)
     import pydantic
     import pulumi
@@ -660,10 +660,10 @@ def test_all_resources():
     print("pydantic", pydantic.__version__)
     # print("pulumi_databricks", pulumi_databricks.__)
 
-    print(json.dumps(validator.tstack.model_dump(), indent=4))
+    # print(json.dumps(validator.tstack.model_dump(), indent=4))
 
-    return validator.tstack
-    # validator.validate()
+    # return validator.tstack
+    validator.validate()
 
 
 if __name__ == "__main__":
