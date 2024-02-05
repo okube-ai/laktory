@@ -623,15 +623,15 @@ def test_all_resources():
         resources={
             # "catalogs": [catalog],
             "directories": [directory],
-            # "jobs": [job],
-            # "metastores": [metastore],
-            # "pipelines": [pl],  # required by job
-            # "notebooks": [nb],
-            # "schemas": [schema],
-            # "sqlqueries": [query],
-            # "groups": [group],
-            # "users": [user],
-            # "workspacefiles": [workspace_file],
+            "jobs": [job],
+            "metastores": [metastore],
+            "pipelines": [pl],  # required by job
+            "notebooks": [nb],
+            "schemas": [schema],
+            "sqlqueries": [query],
+            "groups": [group],
+            "users": [user],
+            "workspacefiles": [workspace_file],
         },
         providers={
             "provider-workspace-neptune": {
