@@ -154,9 +154,15 @@ nav:
         - AccessControl: api/models/databricks/accesscontrol.md
         - api/models/databricks/cluster.md
         - api/models/databricks/directory.md
+        - ExternalLocation: api/models/databricks/externallocation.md
         - api/models/databricks/grants.md
         - api/models/databricks/group.md
         - api/models/databricks/job.md
+        - api/models/databricks/metastore.md
+        - MetastoreAssignment: api/models/databricks/metastoreassignment.md
+        - MetastoreDataAccess: api/models/databricks/metastoredataaccess.md
+        - MwsPermissionAssignment: api/models/databricks/mwspermissionassignment.md
+        - api/models/databricks/mws.md
         - api/models/databricks/notebook.md
         - Pipeline: api/models/databricks/pipeline.md
         - api/models/databricks/secret.md
