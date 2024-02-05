@@ -45,7 +45,6 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
         name="engineering",
         grants=[{"principal": "domain-engineering", "privileges": ["SELECT"]}],
     )
-    schema.to_pulumi()
     ```
 
     References

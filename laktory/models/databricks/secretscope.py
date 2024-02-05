@@ -75,7 +75,6 @@ class SecretScope(BaseModel, PulumiResource, TerraformResource):
             {"permission": "READ", "principal": "role-workspace-admins"},
         ],
     )
-    ss.to_pulumi()
     ```
     """
 

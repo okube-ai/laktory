@@ -53,7 +53,6 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
     #> dev.sources.landing
     print(volume.parent_full_name)
     #> dev.sources
-    volume.to_pulumi()
     ```
 
     References

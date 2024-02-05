@@ -72,7 +72,6 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
             },
         ],
     )
-    catalog.to_pulumi()
     ```
 
     References

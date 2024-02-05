@@ -282,12 +282,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             spark_func_args:
               - data.close
     '''
-
-    # Read pipeline
     pipeline = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
-
-    # Deploy pipeline
-    pipeline.to_pulumi()
     ```
 
     References

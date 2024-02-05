@@ -266,7 +266,6 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
         ],
         is_pinned=True,
     )
-    cluster.to_pulumi()
     ```
 
     References

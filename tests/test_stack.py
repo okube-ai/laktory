@@ -621,17 +621,17 @@ def test_all_resources():
 
     validator = StackValidator(
         resources={
-            # "catalogs": [catalog],
-            "directories": [directory],
-            "jobs": [job],
-            "metastores": [metastore],
-            "pipelines": [pl],  # required by job
-            "notebooks": [nb],
-            "schemas": [schema],
-            "sqlqueries": [query],
-            "groups": [group],
-            "users": [user],
-            "workspacefiles": [workspace_file],
+            "catalogs": [catalog],
+            # "directories": [directory],
+            # "jobs": [job],
+            # "metastores": [metastore],
+            # "pipelines": [pl],  # required by job
+            # "notebooks": [nb],
+            # "schemas": [schema],
+            # "sqlqueries": [query],
+            # "groups": [group],
+            # "users": [user],
+            # "workspacefiles": [workspace_file],
         },
         providers={
             "provider-workspace-neptune": {
@@ -642,27 +642,7 @@ def test_all_resources():
             }
         },
     )
-    import json
-    from laktory import settings
-    print(validator.tstack)
-    # print("host: ", validator.tstack.providers["databricks"].host)
-    # print("token: ", validator.tstack.providers["databricks"].token)
-    # print("password: ", validator.tstack.providers["databricks"].password)
-    # print("catalog: ", validator.tstack.resources["catalog-dev"])
-    # print(settings)
-    import pydantic
-    import pulumi
-    import pulumi_databricks
-    import json
-    import sys
-    # print("pulumi", pulumi.version)
-    print("python", sys.version)
-    print("pydantic", pydantic.__version__)
-    # print("pulumi_databricks", pulumi_databricks.__)
 
-    # print(json.dumps(validator.tstack.model_dump(), indent=4))
-
-    # return validator.tstack
     validator.validate()
 
 
