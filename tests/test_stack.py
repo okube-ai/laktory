@@ -647,6 +647,7 @@ def test_all_resources():
     print("host: ", validator.tstack.providers["databricks"].host)
     print("token: ", validator.tstack.providers["databricks"].token)
     print("password: ", validator.tstack.providers["databricks"].password)
+    print("catalog: ", validator.tstack.resources["catalog-dev"])
     print(json.dumps(validator.tstack.model_dump(), indent=4))
 
     return validator.tstack
