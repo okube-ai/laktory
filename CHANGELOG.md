@@ -1,6 +1,16 @@
 # Release History
 
-## [0.1.2] - Unreleased
+## [0.1.3] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.1.2] - 2024-02-05
 ### Added
 * `Metastore`, `MetastoreAssignment`, `MetastoreDataAccess`, `MwsPermissionAssignment` and `ExternalLocation` models
 * `workspace_permission_assginments` field to `Group` model
