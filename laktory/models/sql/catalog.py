@@ -72,7 +72,6 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
             },
         ],
     )
-    catalog.to_pulumi()
     ```
 
     References
@@ -134,7 +133,6 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
         if self.schemas:
             for s in self.schemas:
                 resources += s.core_resources
-                # TODO: Add dependency?
 
         return resources
 

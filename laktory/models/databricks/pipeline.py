@@ -282,12 +282,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             spark_func_args:
               - data.close
     '''
-
-    # Read pipeline
     pipeline = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
-
-    # Deploy pipeline
-    pipeline.to_pulumi()
     ```
 
     References
@@ -307,7 +302,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     development: Union[bool, str] = None
     edition: Literal["CORE", "PRO", "ADVANCED"] = None
     # filters
-    libraries: list[PipelineLibrary] = []
+    libraries: list[PipelineLibrary] = None
     name: str
     notifications: list[PipelineNotifications] = []
     photon: bool = None

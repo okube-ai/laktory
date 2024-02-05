@@ -681,12 +681,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
       - group_name: role-engineers
         permission_level: CAN_MANAGE_RUN
     '''
-
-    # Read job
     job = models.Job.model_validate_yaml(io.StringIO(job_yaml))
-
-    # Deploy
-    job.to_pulumi()
     ```
 
     References

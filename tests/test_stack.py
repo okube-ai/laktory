@@ -1,5 +1,7 @@
 import copy
 import os
+
+from laktory._testing.stackvalidator import StackValidator
 from laktory import models
 
 dirpath = os.path.dirname(__file__)
@@ -599,9 +601,55 @@ def test_terraform_plan():
     tstack.plan()
 
 
+def test_all_resources():
+    from tests.test_catalog import catalog
+    from tests.test_directory import directory
+    from tests.test_job import job
+    from tests.test_pipeline import pl
+    from tests.test_metastore import metastore
+    from tests.test_notebook import nb
+    from tests.test_schema import schema
+    from tests.test_sql_query import query
+    from tests.test_user import user
+    from tests.test_user import group
+    from tests.test_workspacefile import workspace_file
+
+    root_dir = os.path.dirname(__file__)
+
+    nb.source = os.path.join(root_dir, nb.source)
+    workspace_file.source = os.path.join(root_dir, workspace_file.source)
+
+    validator = StackValidator(
+        resources={
+            "catalogs": [catalog],
+            "directories": [directory],
+            "jobs": [job],
+            "metastores": [metastore],
+            "pipelines": [pl],  # required by job
+            "notebooks": [nb],
+            "schemas": [schema],
+            "sqlqueries": [query],
+            "groups": [group],
+            "users": [user],
+            "workspacefiles": [workspace_file],
+        },
+        providers={
+            "provider-workspace-neptune": {
+                "host": "${vars.DATABRICKS_HOST}",
+                # "azure_client_id": "0",
+                # "azure_client_secret": "0",
+                # "azure_tenant_id": "0",
+            }
+        },
+    )
+
+    validator.validate()
+
+
 if __name__ == "__main__":
     test_stack_model()
     test_pulumi_stack()
     test_pulumi_preview()
     test_terraform_stack()
     test_terraform_plan()
+    test_all_resources()

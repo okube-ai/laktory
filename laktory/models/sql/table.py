@@ -300,7 +300,15 @@ class Table(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["builder", "columns", "data", "grants", "primary_key", "timestamp_key"]
+        return [
+            "builder",
+            "columns",
+            "data",
+            "expectations",
+            "grants",
+            "primary_key",
+            "timestamp_key",
+        ]
 
     @property
     def pulumi_properties(self):
@@ -322,7 +330,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def terraform_resource_type(self) -> str:
-        return "databricks_table"
+        return "databricks_sql_table"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
@@ -331,9 +339,9 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_properties(self) -> dict:
         d = super().terraform_properties
-        d["columns"] = []
+        d["column"] = []
         for i, c in enumerate(self.columns):
-            d["columns"] += [
+            d["column"] += [
                 {
                     "name": c.name,
                     "comment": c.comment,

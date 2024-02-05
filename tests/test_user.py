@@ -4,7 +4,7 @@ from laktory.models import Group
 user = User(
     user_name="data.engineer@gmail.moc",
     group_ids=[
-        "role-engineers",
+        "${resources.group-role-engineers.id}",
     ],
     roles=["store-admin"],
 )

@@ -5,6 +5,9 @@ from laktory._settings import settings
 from laktory._parsers import _snake_to_camel
 from laktory.models.resources.baseresource import BaseResource
 
+# TODO: Review pulumi_outputs and pulumi_resources as they cause issues when
+# running multiple tests in parallel
+
 pulumi_outputs = {}
 """Pulumi outputs for all deployed resources. Updated during deployment."""
 

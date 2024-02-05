@@ -124,7 +124,7 @@ class BaseResource(_BaseModel):
         - `{self.resource_type_id}-{self.resource_key}`
         - removing ${resources....} tags
         - removing ${vars....} tags
-        - Replacing . with - to avoid conflicts with resource properties
+        - Replacing special characters with - to avoid conflicts with resource properties
         """
 
         if self.resource_type_id not in self.resource_key:
@@ -143,8 +143,10 @@ class BaseResource(_BaseModel):
         pattern = r"\$\{vars\.(.*?)\}"
         name = re.sub(pattern, r"\1", name)
 
-        # Replace .
-        name = name.replace(".", "-")
+        # Replace special characters
+        chars = [".", "@"]
+        for c in chars:
+            name = name.replace(c, "-")
 
         return name
 

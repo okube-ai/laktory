@@ -15,7 +15,7 @@ def test_pipeline():
         "continuous": None,
         "development": None,
         "edition": None,
-        "libraries": [],
+        "libraries": None,
         "name": "pl-stock-prices",
         "notifications": [],
         "photon": None,
@@ -220,7 +220,6 @@ def test_pipeline_pulumi():
         "channel": "PREVIEW",
         "clusters": [],
         "configuration": {},
-        "libraries": [],
         "name": "pl-stock-prices",
         "notifications": [],
     }

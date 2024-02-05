@@ -4,7 +4,7 @@
 ### Added
 * `Metastore`, `MetastoreAssignment`, `MetastoreDataAccess`, `MwsPermissionAssignment` and `ExternalLocation` models
 * `workspace_permission_assginments` field to `Group` model
-* 
+* `StackValidator` class for testing deployment in both Pulumi and Terraform
 ### Updated
 * Pipeline model supports null catalog (hive metastore)
 * Event Data Source supports custom event root path
