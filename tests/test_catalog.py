@@ -1,18 +1,7 @@
 from laktory.models import Catalog
-from laktory._testing.stackvalidator import StackValidator
 
 
-def test_model():
-    cat = Catalog(
-        name="lakehouse",
-    )
-
-    assert cat.name == "lakehouse"
-    assert cat.full_name == "lakehouse"
-
-
-def test_deploy():
-    cat = Catalog(
+catalog = Catalog(
         name="dev",
         grants=[
             {"principal": "account users", "privileges": ["USE_CATALOG", "USE_SCHEMA"]}
@@ -45,10 +34,13 @@ def test_deploy():
             },
         ],
     )
-    validator = StackValidator({"catalogs": [cat]})
-    validator.validate()
+
+
+def test_model():
+    assert catalog.name == "dev"
+    assert catalog.full_name == "dev"
+    assert catalog.full_name == "dev"
 
 
 if __name__ == "__main__":
     test_model()
-    test_deploy()

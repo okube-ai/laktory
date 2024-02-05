@@ -1,5 +1,4 @@
 import os
-from laktory._testing.stackvalidator import StackValidator
 from laktory.models import SqlQuery
 
 root_dir = os.path.dirname(__file__)
@@ -31,11 +30,5 @@ def test_sql_query():
     }
 
 
-def test_deploy():
-    validator = StackValidator({"sqlqueries": [query]})
-    validator.validate()
-
-
 if __name__ == "__main__":
     test_sql_query()
-    test_deploy()

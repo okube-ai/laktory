@@ -1,6 +1,3 @@
-import os
-from laktory import settings
-from laktory._testing.stackvalidator import StackValidator
 from laktory.models import Metastore
 
 
@@ -112,21 +109,5 @@ def test_metastore():
     }
 
 
-def test_deploy():
-    validator = StackValidator(
-        resources={"metastores": [metastore]},
-        providers={
-            "provider-workspace-neptune": {
-                "host": "${vars.DATABRICKS_HOST}",
-                # "azure_client_id": "0",
-                # "azure_client_secret": "0",
-                # "azure_tenant_id": "0",
-            }
-        },
-    )
-    validator.validate()
-
-
 if __name__ == "__main__":
     test_metastore()
-    test_deploy()

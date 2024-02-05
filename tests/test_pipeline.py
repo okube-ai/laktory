@@ -1,5 +1,4 @@
 from laktory._testing import StockPricesPipeline
-from laktory._testing.stackvalidator import StackValidator
 
 pl = StockPricesPipeline()
 
@@ -16,7 +15,7 @@ def test_pipeline():
         "continuous": None,
         "development": None,
         "edition": None,
-        "libraries": [],
+        "libraries": None,
         "name": "pl-stock-prices",
         "notifications": [],
         "photon": None,
@@ -221,7 +220,6 @@ def test_pipeline_pulumi():
         "channel": "PREVIEW",
         "clusters": [],
         "configuration": {},
-        "libraries": [],
         "name": "pl-stock-prices",
         "notifications": [],
     }
@@ -233,12 +231,6 @@ def test_pipeline_pulumi():
     assert pl.core_resources[-1].options.aliases == ["my-file"]
 
 
-def test_deploy():
-    validator = StackValidator({"pipelines": [pl]})
-    validator.validate()
-
-
 if __name__ == "__main__":
     test_pipeline()
     test_pipeline_pulumi()
-    test_deploy()

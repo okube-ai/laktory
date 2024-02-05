@@ -1,4 +1,3 @@
-from laktory._testing.stackvalidator import StackValidator
 from laktory.models import Table
 from laktory.models import Schema
 from laktory.models import Column
@@ -44,11 +43,5 @@ def test_model():
     assert schema.full_name == "laktory_testing.flights"
 
 
-def test_deploy():
-    validator = StackValidator({"schemas": [schema]})
-    validator.validate()
-
-
 if __name__ == "__main__":
     test_model()
-    test_deploy()

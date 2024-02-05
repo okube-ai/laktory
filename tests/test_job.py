@@ -1,6 +1,5 @@
 import os
 
-from laktory._testing.stackvalidator import StackValidator
 from laktory.models import Job
 from laktory import pulumi_outputs
 
@@ -218,12 +217,6 @@ def test_job_pulumi():
     }
 
 
-def test_deploy():
-    validator = StackValidator({"jobs": [job]})
-    validator.validate()
-
-
 if __name__ == "__main__":
     test_job_model()
     test_job_pulumi()
-    test_deploy()

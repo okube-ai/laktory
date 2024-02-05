@@ -307,7 +307,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     development: Union[bool, str] = None
     edition: Literal["CORE", "PRO", "ADVANCED"] = None
     # filters
-    libraries: list[PipelineLibrary] = []
+    libraries: list[PipelineLibrary] = None
     name: str
     notifications: list[PipelineNotifications] = []
     photon: bool = None
