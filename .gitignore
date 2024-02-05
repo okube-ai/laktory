@@ -38,6 +38,7 @@ htmlcov
 tests/data
 tests/Pulumi.yaml
 tests/tmp*
+tmp*
 
 # Test results
 junit
