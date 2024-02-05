@@ -643,14 +643,15 @@ def test_all_resources():
         },
     )
     import json
+    print(validator.tstack)
     print(json.dumps(validator.tstack.model_dump(), indent=4))
     # validator.validate()
 
 
 if __name__ == "__main__":
-    test_stack_model()
-    test_pulumi_stack()
-    test_pulumi_preview()
-    test_terraform_stack()
-    test_terraform_plan()
+    # test_stack_model()
+    # test_pulumi_stack()
+    # test_pulumi_preview()
+    # test_terraform_stack()
+    # test_terraform_plan()
     test_all_resources()
