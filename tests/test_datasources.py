@@ -4,6 +4,7 @@ import os
 import pytest
 
 from laktory.models.datasources import EventDataSource
+from laktory.models.datasources import TableDataSource
 from laktory._testing import StockPriceDataEventHeader
 from laktory._testing import EventsManager
 
@@ -57,6 +58,16 @@ def test_event_data_source_read():
     assert row["close"] == pytest.approx(189.46, abs=0.01)
 
 
+def test_table_data_souurce():
+    source = TableDataSource(
+        path="/Volumes/tables/stock_prices/",
+    )
+    assert source.path == "/Volumes/tables/stock_prices/"
+    assert source.from_path
+    assert source._id == "/Volumes/tables/stock_prices/"
+
+
 if __name__ == "__main__":
     test_event_data_source()
     test_event_data_source_read()
+    test_table_data_souurce()
