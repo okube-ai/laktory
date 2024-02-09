@@ -158,6 +158,10 @@ class TableDataSource(BaseDataSource):
 
     @property
     def full_name(self) -> str:
+
+        if self.name is None:
+            return None
+
         name = ""
         if self.catalog_name is not None:
             name = self.catalog_name
