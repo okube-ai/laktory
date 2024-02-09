@@ -118,7 +118,7 @@ class TableBuilder(BaseModel):
         """Selected data source"""
         if self.event_source is not None and self.event_source.name is not None:
             return self.event_source
-        elif self.table_source is not None and self._id is not None:
+        elif self.table_source is not None and self.table_source._id is not None:
             return self.table_source
 
     @property
