@@ -140,10 +140,12 @@ Now that your pipeline is defined, it (along with other resources) can be includ
 
 ```yaml title="stack.yaml"
 name: my-stack
+organization: okube
 backend: pulumi
-config:
-  databricks:host: ${vars.DATABRICKS_HOST}
-  databricks:token: ${vars.DATABRICKS_TOKEN}
+pulumi:
+    config:
+      databricks:host: ${vars.DATABRICKS_HOST}
+      databricks:token: ${vars.DATABRICKS_TOKEN}
 resources:
   pipelines:
     pl-stock-prices: ${include.pipeline.yaml}
@@ -158,10 +160,9 @@ environments:
 
 Deploy with laktory CLI
 ```cmd
-laktory deploy --stack my-organization/dev
+laktory deploy --env dev
 ```
-As you may have noticed from the stack definition, pulumi is used as the IaC backend. Currently, only pulumi is supported,
-but terraform in the near future.
+As you may have noticed from the stack definition, pulumi is used as the IaC backend. Currently, both pulumi and terraform backends are supported.
 
 ### Run your pipeline
 Once deployed, you pipeline is ready to be run or will be run automatically if it's part of a scheduled job.
