@@ -2,6 +2,7 @@ from laktory.spark import DataFrame
 from typing import Union
 from typing import Literal
 from typing import Any
+from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.basedatasource import BaseDataSource
@@ -152,13 +153,24 @@ class TableDataSource(BaseDataSource):
     schema_name: Union[str, None] = None
     watermark: Union[Watermark, None] = None
 
+    @model_validator(mode="after")
+    def set_source(self) -> Any:
+        """Source Definition"""
+
+        if self.name and self.path:
+            raise ValueError("Either path or name must be specified, but not both")
+
+        if self.path:
+            self.from_pipeline = False
+
+        return self
+
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
 
     @property
     def full_name(self) -> str:
-
         if self.name is None:
             return None
 
