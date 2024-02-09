@@ -115,6 +115,8 @@ class TableDataSource(BaseDataSource):
         `spark.read`
     name:
         Name of the source table
+    path:
+        Path of the source table
     schema_name:
         Name of the schema of the source table
     watermark
@@ -142,7 +144,8 @@ class TableDataSource(BaseDataSource):
     selects: Union[list[str], dict[str, str], None] = None
     filter: Union[str, None] = None
     from_pipeline: Union[bool, None] = True
-    name: Union[str, None]
+    name: Union[str, None] = None
+    path: Union[str, None] = None
     schema_name: Union[str, None] = None
     watermark: Union[Watermark, None] = None
 
