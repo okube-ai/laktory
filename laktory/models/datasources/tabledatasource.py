@@ -110,6 +110,8 @@ class TableDataSource(BaseDataSource):
         or as a dictionary to rename the source columns
     filter:
         SQL expression used to select specific rows from the source table
+    fmt:
+        Table format
     from_pipeline:
         If `True` the source table will be read using `dlt.read` instead of
         `spark.read`
@@ -142,6 +144,7 @@ class TableDataSource(BaseDataSource):
     catalog_name: Union[str, None] = None
     cdc: Union[TableDataSourceCDC, None] = None
     selects: Union[list[str], dict[str, str], None] = None
+    fmt: Literal["PARQUET", "DELTA"] = "DELTA"
     filter: Union[str, None] = None
     from_pipeline: Union[bool, None] = True
     name: Union[str, None] = None
@@ -172,6 +175,16 @@ class TableDataSource(BaseDataSource):
 
         return name
 
+    @property
+    def from_path(self):
+        return self.path is not None
+
+    @property
+    def _id(self):
+        if self.from_path:
+            return self.path
+        return self.full_name
+
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
@@ -181,20 +194,24 @@ class TableDataSource(BaseDataSource):
         from laktory.dlt import read_stream
 
         if self._df is not None:
-            logger.info(f"Reading {self.full_name} from memory")
+            logger.info(f"Reading {self._id} from memory")
             df = self._df
         elif self.read_as_stream:
-            logger.info(f"Reading {self.full_name} as stream")
+            logger.info(f"Reading {self._id} as stream")
             if self.from_pipeline:
                 df = read_stream(self.full_name)
+            elif self.from_path:
+                df = spark.readStream.format(self.fmt).load(self.path)
             else:
-                df = spark.readStream.format("delta").table(self.full_name)
+                df = spark.readStream.format(self.fmt).table(self.full_name)
         else:
-            logger.info(f"Reading {self.full_name} as static")
+            logger.info(f"Reading {self._id} as static")
             if self.from_pipeline:
                 df = read(self.full_name)
+            elif self.from_path:
+                df = spark.read.format(self.fmt).load(self.path)
             else:
-                df = spark.read.table(self.full_name)
+                df = spark.read.format(self.fmt).table(self.full_name)
 
         return df
 
