@@ -64,7 +64,7 @@ def test_table_data_souurce():
     )
     assert source.path == "/Volumes/tables/stock_prices/"
     assert source.from_path
-    assert source._id == "/Volumes/tables/stock_prices/"
+    assert source.path_or_full_name == "/Volumes/tables/stock_prices/"
 
 
 if __name__ == "__main__":

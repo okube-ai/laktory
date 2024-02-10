@@ -196,7 +196,7 @@ class TableDataSource(BaseDataSource):
         return self.path is not None
 
     @property
-    def _id(self):
+    def path_or_full_name(self):
         if self.from_path:
             return self.path
         return self.full_name
@@ -210,10 +210,10 @@ class TableDataSource(BaseDataSource):
         from laktory.dlt import read_stream
 
         if self._df is not None:
-            logger.info(f"Reading {self._id} from memory")
+            logger.info(f"Reading {self.path_or_full_name} from memory")
             df = self._df
         elif self.read_as_stream:
-            logger.info(f"Reading {self._id} as stream")
+            logger.info(f"Reading {self.path_or_full_name} as stream")
             if self.from_pipeline:
                 df = read_stream(self.full_name)
             elif self.from_path:
@@ -221,7 +221,7 @@ class TableDataSource(BaseDataSource):
             else:
                 df = spark.readStream.format(self.fmt).table(self.full_name)
         else:
-            logger.info(f"Reading {self._id} as static")
+            logger.info(f"Reading {self.path_or_full_name} as static")
             if self.from_pipeline:
                 df = read(self.full_name)
             elif self.from_path:
