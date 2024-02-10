@@ -11,6 +11,7 @@ class ExternalLocationEncryptionDetailsSseEncryptionDetails(BaseModel):
     algorith:
     aws_kms_key_arn:
     """
+
     algorith: str = None
     aws_kms_key_arn: str = None
 
@@ -21,6 +22,7 @@ class ExternalLocationEncryptionDetails(BaseModel):
     ----------
     sse_encryption_details:
     """
+
     sse_encryption_details: ExternalLocationEncryptionDetailsSseEncryptionDetails = None
 
 
