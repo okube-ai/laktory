@@ -1,6 +1,16 @@
 # Release History
 
-## [0.1.3] - Unreleased
+## [0.1.4] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.1.3] - 2024-02-10
 ### Added
 * Support for explicit path in `TableDataSource` model
 
