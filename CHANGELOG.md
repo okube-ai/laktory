@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.1.5] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Propagation of stack variables to resources
 
 ## [0.1.4] - 2024-02-12
 ### Added
