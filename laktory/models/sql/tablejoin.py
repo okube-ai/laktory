@@ -21,6 +21,9 @@ class TableJoin(BaseModel):
     on:
         A list of strings for the columns to join on. The columns must exist
         on both sides.
+    on_expression:
+        String expression the join on condition. The expression can include
+        `left` and `other` dataframe references.
     other:
         Right side of the join
     time_constraint_interval_lower:
@@ -52,6 +55,26 @@ class TableJoin(BaseModel):
             ],
         },
     )
+
+    table = models.Table(
+        name="slv_star_stock_prices",
+        builder={
+            "layer": "SILVER",
+            "table_source": {
+                "name": "slv_stock_prices",
+            },
+            "joins": [
+                {
+                    "other": {
+                        "name": "slv_stock_metadata",
+                        "read_as_stream": False,
+                        "selects": ["symbol", "currency", "first_trader"],
+                    },
+                    "on_expression": "left.symbol == other.symbol",
+                }
+            ],
+        },
+    )
     ```
 
     References
@@ -63,7 +86,8 @@ class TableJoin(BaseModel):
 
     how: str = "left"
     left: TableDataSource = None
-    on: list[str]
+    on: list[str] = []
+    on_expression: str = None
     other: TableDataSource
     time_constraint_interval_lower: str = "60 seconds"
     time_constraint_interval_upper: str = None
@@ -101,11 +125,14 @@ class TableJoin(BaseModel):
         other_df = other_df.select(other_cols)
 
         # Drop duplicates to prevent adding rows to left
-        other_df = other_df.dropDuplicates(self.on)
+        if self.on:
+            other_df = other_df.dropDuplicates(self.on)
 
         _join = []
         for c in self.on:
             _join += [f"left.{c} == other.{c}"]
+        _join += self.on_expression
+
         if self.other.watermark is not None:
             if self.time_constraint_interval_lower:
                 _join += [
