@@ -1,6 +1,16 @@
 # Release History
 
-## [0.1.4] - Unreleased
+## [0.1.5] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.1.4] - 2024-02-12
 ### Added
 * Support for custom join sql expression in `TableJoin` model
 
