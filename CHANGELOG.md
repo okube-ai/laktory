@@ -2,13 +2,7 @@
 
 ## [0.1.4] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Support for custom join sql expression in `TableJoin` model
 
 ## [0.1.3] - 2024-02-10
 ### Added

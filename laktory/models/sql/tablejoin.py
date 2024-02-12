@@ -1,4 +1,5 @@
 from typing import Union
+from collections import defaultdict
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
@@ -131,7 +132,8 @@ class TableJoin(BaseModel):
         _join = []
         for c in self.on:
             _join += [f"left.{c} == other.{c}"]
-        _join += self.on_expression
+        if self.on_expression:
+            _join += [self.on_expression]
 
         if self.other.watermark is not None:
             if self.time_constraint_interval_lower:
@@ -162,8 +164,15 @@ class TableJoin(BaseModel):
             .drop()
         )
 
-        # Clean join columns
-        for c in self.on:
+        # Find duplicated columns (because of join)
+        d = defaultdict(lambda: 0)
+        for c in df.columns:
+            d[c] += 1
+
+        # Drop duplicated columns
+        for c, v in d.items():
+            if v < 2 or c not in _join:
+                continue
             df = df.withColumn("__tmp", F.coalesce(f"left.{c}", f"other.{c}"))
             df = df.drop(c)
             df = df.withColumn(c, F.col("__tmp"))
