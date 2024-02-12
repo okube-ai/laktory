@@ -45,6 +45,50 @@ def test_table_join():
     df = join.execute(spark)
     data = df.toPandas().to_dict(orient="records")
     print(data)
+    assert df.select("symbol")  # test for duplicated columns
+    assert data == [
+        {
+            "created_at": "2023-11-01T00:00:00Z",
+            "symbol": "AAPL",
+            "open": 1,
+            "close": 2,
+            "currency": "USD",
+            "first_traded": "1980-12-12T14:30:00.000Z",
+        },
+        {
+            "created_at": "2023-11-01T00:00:00Z",
+            "symbol": "GOOGL",
+            "open": 3,
+            "close": 4,
+            "currency": "USD",
+            "first_traded": "2004-08-19T13:30:00.00Z",
+        },
+    ]
+
+
+def test_table_join_expression():
+    join = TableJoin(
+        left={
+            "name": "slv_stock_prices",
+            "filter": "created_at = '2023-11-01T00:00:00Z'",
+        },
+        other={
+            "name": "slv_stock_metadata",
+            "selects": {
+                "symbol2": "symbol",
+                "currency": "currency",
+                "first_traded": "first_traded",
+            },
+        },
+        on_expression="left.symbol == other.symbol",
+    )
+    join.left._df = table_slv.to_df(spark)
+    join.other._df = df_meta
+
+    df = join.execute(spark)
+    data = df.toPandas().to_dict(orient="records")
+    print(data)
+    assert df.select("symbol")  # test for duplicated columns
     assert data == [
         {
             "created_at": "2023-11-01T00:00:00Z",
@@ -367,6 +411,7 @@ def test_cdc():
 
 if __name__ == "__main__":
     test_table_join()
+    test_table_join_expression()
     test_table_join_outer()
     test_table_agg()
     test_table_agg_window()

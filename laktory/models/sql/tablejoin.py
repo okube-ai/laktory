@@ -1,4 +1,5 @@
 from typing import Union
+from collections import defaultdict
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
@@ -21,6 +22,9 @@ class TableJoin(BaseModel):
     on:
         A list of strings for the columns to join on. The columns must exist
         on both sides.
+    on_expression:
+        String expression the join on condition. The expression can include
+        `left` and `other` dataframe references.
     other:
         Right side of the join
     time_constraint_interval_lower:
@@ -52,6 +56,26 @@ class TableJoin(BaseModel):
             ],
         },
     )
+
+    table = models.Table(
+        name="slv_star_stock_prices",
+        builder={
+            "layer": "SILVER",
+            "table_source": {
+                "name": "slv_stock_prices",
+            },
+            "joins": [
+                {
+                    "other": {
+                        "name": "slv_stock_metadata",
+                        "read_as_stream": False,
+                        "selects": ["symbol", "currency", "first_trader"],
+                    },
+                    "on_expression": "left.symbol == other.symbol",
+                }
+            ],
+        },
+    )
     ```
 
     References
@@ -63,7 +87,8 @@ class TableJoin(BaseModel):
 
     how: str = "left"
     left: TableDataSource = None
-    on: list[str]
+    on: list[str] = []
+    on_expression: str = None
     other: TableDataSource
     time_constraint_interval_lower: str = "60 seconds"
     time_constraint_interval_upper: str = None
@@ -101,11 +126,15 @@ class TableJoin(BaseModel):
         other_df = other_df.select(other_cols)
 
         # Drop duplicates to prevent adding rows to left
-        other_df = other_df.dropDuplicates(self.on)
+        if self.on:
+            other_df = other_df.dropDuplicates(self.on)
 
         _join = []
         for c in self.on:
             _join += [f"left.{c} == other.{c}"]
+        if self.on_expression:
+            _join += [self.on_expression]
+
         if self.other.watermark is not None:
             if self.time_constraint_interval_lower:
                 _join += [
@@ -135,8 +164,15 @@ class TableJoin(BaseModel):
             .drop()
         )
 
-        # Clean join columns
-        for c in self.on:
+        # Find duplicated columns (because of join)
+        d = defaultdict(lambda: 0)
+        for c in df.columns:
+            d[c] += 1
+
+        # Drop duplicated columns
+        for c, v in d.items():
+            if v < 2 or c not in _join:
+                continue
             df = df.withColumn("__tmp", F.coalesce(f"left.{c}", f"other.{c}"))
             df = df.drop(c)
             df = df.withColumn(c, F.col("__tmp"))

@@ -301,6 +301,7 @@ def test_silver_star():
                     "how": "left",
                     "left": None,
                     "on": ["symbol"],
+                    "on_expression": None,
                     "other": {
                         "read_as_stream": True,
                         "catalog_name": "dev",
@@ -325,6 +326,7 @@ def test_silver_star():
                     "how": "left",
                     "left": None,
                     "on": ["symbol3"],
+                    "on_expression": None,
                     "other": {
                         "read_as_stream": True,
                         "catalog_name": "dev",
