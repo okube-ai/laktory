@@ -1,6 +1,16 @@
 # Release History
 
-## [0.1.5] - Unreleased
+## [0.1.6] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.1.5] - 2024-02-14
 ### Added
 * Support for DLT views
 * Support for providing table builder `drop_duplicates` with a list of columns to consider for the drop duplicates. 
