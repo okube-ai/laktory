@@ -28,6 +28,8 @@ class TableBuilder(BaseModel):
     aggregation:
         Definition of the aggregation model following the joins and the source
         read.
+    as_dlt_view:
+        Create (DLT) view instead of table
     drop_columns:
         Columns to drop from the output dataframe
     drop_duplicates:
@@ -61,8 +63,9 @@ class TableBuilder(BaseModel):
     """
 
     aggregation: Union[TableAggregation, None] = None
+    as_dlt_view: bool = False
     drop_columns: list[str] = []
-    drop_duplicates: Union[bool, None] = None
+    drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
     event_source: Union[EventDataSource, None] = None
     filter: Union[str, None] = None
