@@ -27,6 +27,7 @@ def test_model():
     assert table_slv.model_dump() == {
         "builder": {
             "aggregation": None,
+            "as_dlt_view": False,
             "drop_columns": [],
             "drop_duplicates": None,
             "drop_source_columns": True,
@@ -291,6 +292,7 @@ def test_silver_star():
     assert table_slv_star.model_dump() == {
         "builder": {
             "aggregation": None,
+            "as_dlt_view": False,
             "drop_columns": [],
             "drop_duplicates": None,
             "drop_source_columns": False,

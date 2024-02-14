@@ -25,6 +25,7 @@ def test_pipeline():
             {
                 "builder": {
                     "aggregation": None,
+                    "as_dlt_view": False,
                     "drop_columns": [],
                     "drop_duplicates": None,
                     "drop_source_columns": False,
@@ -70,6 +71,7 @@ def test_pipeline():
             {
                 "builder": {
                     "aggregation": None,
+                    "as_dlt_view": False,
                     "drop_columns": [],
                     "drop_duplicates": None,
                     "drop_source_columns": True,

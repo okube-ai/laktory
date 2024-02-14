@@ -384,7 +384,6 @@ class TableBuilder(BaseModel):
 
         # Drop duplicates
         if self.drop_duplicates:
-
             subset = None
             if isinstance(self.drop_duplicates, list):
                 subset = self.drop_duplicates

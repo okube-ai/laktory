@@ -361,6 +361,29 @@ def test_gold():
     assert s["name2"] == "Apple"
 
 
+def test_drop_duplicates():
+    # Build DataFrame with duplicates
+    df0 = manager.to_spark_df()
+    df0.show()
+    df1 = table_brz.builder.process(df0)
+    df1.show()
+    df1 = df1.union(df1)
+
+    # Remove duplicates using all columns
+    slv_tmp = table_slv.copy()
+    slv_tmp.builder.drop_duplicates = True
+    df2 = slv_tmp.builder.process(df1)
+    df2.show()
+
+    # Remove duplicates using only symbol and _bronze_at
+    slv_tmp.builder.drop_duplicates = ["symbol", "_bronze_at"]
+    df3 = slv_tmp.builder.process(df1)
+
+    assert df1.count() == 160
+    assert df2.count() == 80
+    assert df3.count() == 4
+
+
 def test_cdc():
     table = Table(
         name="brz_users_type1",
@@ -421,3 +444,4 @@ if __name__ == "__main__":
     test_silver_star()
     test_gold()
     test_cdc()
+    test_drop_duplicates()
