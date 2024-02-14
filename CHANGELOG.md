@@ -3,6 +3,7 @@
 ## [0.1.5] - Unreleased
 ### Added
 * Support for DLT views
+* Support for providing table builder `drop_duplicates` with a list of columns to consider for the drop duplicates. 
 ### Fixed
 * Propagation of stack variables to resources
 
