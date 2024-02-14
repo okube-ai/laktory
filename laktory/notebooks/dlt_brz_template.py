@@ -22,9 +22,10 @@ pl = read_metadata(pipeline=pl_name)
 
 
 def define_table(table):
-    @dlt.table(
+    @dlt.table_or_view(
         name=table.name,
         comment=table.comment,
+        as_view=table.builder.as_dlt_view,
     )
     @dlt.expect_all(table.warning_expectations)
     @dlt.expect_all_or_drop(table.drop_expectations)

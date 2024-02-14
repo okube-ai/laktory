@@ -2,13 +2,10 @@
 
 ## [0.1.5] - Unreleased
 ### Added
-* n/a
+* Support for DLT views
+* Support for providing table builder `drop_duplicates` with a list of columns to consider for the drop duplicates. 
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Propagation of stack variables to resources
 
 ## [0.1.4] - 2024-02-12
 ### Added

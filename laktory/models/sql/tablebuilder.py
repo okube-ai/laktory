@@ -28,10 +28,16 @@ class TableBuilder(BaseModel):
     aggregation:
         Definition of the aggregation model following the joins and the source
         read.
+    as_dlt_view:
+        Create (DLT) view instead of table
     drop_columns:
         Columns to drop from the output dataframe
     drop_duplicates:
-        If `True`, drop duplicated rows using table `primary_key`
+        If `True`:
+            - drop duplicated rows using `primary_key` if defined or all
+              columns if not defined.
+        If list of strings:
+            - drop duplicated rows using `drop_duplicates` as the subset.
     drop_source_columns:
         If `True`, drop columns from the source after read and only keep
         columns defined in the table and/or resulting from the joins.
@@ -61,8 +67,9 @@ class TableBuilder(BaseModel):
     """
 
     aggregation: Union[TableAggregation, None] = None
+    as_dlt_view: bool = False
     drop_columns: list[str] = []
-    drop_duplicates: Union[bool, None] = None
+    drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
     event_source: Union[EventDataSource, None] = None
     filter: Union[str, None] = None
@@ -93,7 +100,7 @@ class TableBuilder(BaseModel):
         if self.layer == "SILVER":
             if self.drop_source_columns is None:
                 self.drop_source_columns = True
-            if self.drop_duplicates is not None:
+            if self.drop_duplicates is not None and self.primary_key:
                 self.drop_duplicates = True
 
         if self.layer == "SILVER_STAR":
@@ -376,10 +383,15 @@ class TableBuilder(BaseModel):
             df = df.drop(*self.drop_columns)
 
         # Drop duplicates
-        pk = self.primary_key
-        if self.drop_duplicates and pk:
-            logger.info(f"Removing duplicates with {pk}")
-            df = df.dropDuplicates([pk])
+        if self.drop_duplicates:
+            subset = None
+            if isinstance(self.drop_duplicates, list):
+                subset = self.drop_duplicates
+            elif self.primary_key:
+                subset = [self.primary_key]
+
+            logger.info(f"Removing duplicates with {subset}")
+            df = df.dropDuplicates(subset)
 
         return df
 

@@ -320,3 +320,15 @@ if is_mocked():
 
     def create_streaming_table(*args, **kwargs):
         pass
+
+
+# --------------------------------------------------------------------------- #
+# Wrappers                                                                    #
+# --------------------------------------------------------------------------- #
+
+
+def table_or_view(*args, as_view=False, **kwargs):
+    if as_view:
+        return view(*args, **kwargs)
+    else:
+        return table(*args, **kwargs)
