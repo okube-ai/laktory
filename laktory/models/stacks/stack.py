@@ -395,6 +395,7 @@ class Stack(BaseModel):
         # Resources
         resources = {}
         for r in env.resources._get_all().values():
+            r.variables = env.variables
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
 
