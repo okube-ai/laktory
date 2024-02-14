@@ -1,6 +1,8 @@
 # Release History
 
 ## [0.1.5] - Unreleased
+### Added
+* Support for DLT views
 ### Fixed
 * Propagation of stack variables to resources
 
