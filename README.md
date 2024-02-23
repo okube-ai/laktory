@@ -1,3 +1,4 @@
+
 # Laktory
 
 [![pypi](https://img.shields.io/pypi/v/laktory.svg)](https://pypi.org/project/laktory/)
@@ -8,12 +9,14 @@
 
 A DataOps framework for building Databricks lakehouse.
 
-<img src="docs/images/what_is_laktory.png" alt="what is laktory" width="400"/>
+<img src="docs/images/logo_green.png" alt="laktory logo" width="85"/>
 
 Laktory makes it possible to express and bring to life your data vision, from raw to enriched analytics-ready datasets and finely tuned AI models, while adhering to basic DevOps best practices such as source control, code reviews and CI/CD.
 
 Using a declarative approach, you define your datasets and transformations, validate them and deploy them into Databricks workspaces. 
 Once deployed, you can once again leverage Laktory for debugging and monitoring.  
+
+<img src="docs/images/what_is_laktory.png" alt="what is laktory" width="400"/>
 
 ## Help
 See [documentation](https://www.laktory.ai/) for more details.
@@ -71,5 +74,7 @@ In this template, 4 pulumi projects are used to:
 - `workspace`: The data workflows to build your lakehouse.
 
 ## Okube Company
-Okube is dedicated to build open source frameworks, the *kubes*, that empower businesses to build and deploy highly scalable data platforms and AI models. Contributions are more than welcome.
+<img src="docs/images/okube.png" alt="okube logo" width="85"/>
+
+[Okube](https://www.okube.ai) is dedicated to building open source frameworks, known as the *kubes*, empowering businesses to build, deploy and operate highly scalable data platforms and AI models. 
 
