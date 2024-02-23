@@ -83,3 +83,7 @@ It does not have visual interface nor allow you to setup pipelines with a few cl
 On the other hand, if you have minimal DevOps or programming experience, you will be able to efficiently scale, deploying hundreds of datasets and models without compromising data governance.
 It also provides you with the tools for building a UI within your organization for a fully self-served experience.
 
+## Okube
+<img src="images/okube.png" alt="okube logo" width="85"/>
+
+Laktory is one of the *kubes* developed by [Okube](https://www.okube.ai), a company dedicated to building open source frameworks, empowering businesses to build, deploy and operate highly scalable data platforms and AI models.

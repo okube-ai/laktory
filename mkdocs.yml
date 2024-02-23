@@ -1,8 +1,8 @@
-site_name: Laktory
+site_name: " "
 site_description: A DataOps framework for building Databricks lakehouse
 site_url: https://www.laktory.ai/
 repo_url: https://github.com/opencubes-ai/laktory
-repo_name: Laktory
+repo_name: laktory
 
 extra_css:
   - stylesheets/extra.css
@@ -41,6 +41,9 @@ theme:
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
+  logo: images/logo_sw_ltw.png
+  favicon: images/logo_sg.png
+
   features:
     - content.action.view
     - content.code.copy

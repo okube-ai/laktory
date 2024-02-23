@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.1.6] - Unreleased
-### Added
-* n/a
-### Fixed
-* n/a
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* Website branding
 
 ## [0.1.5] - 2024-02-14
 ### Added
