@@ -1,3 +1,4 @@
+<img src="images/logo_sg.png" alt="laktory logo" width="85"/>
 
 A DataOps framework for building Databricks lakehouse.
 
