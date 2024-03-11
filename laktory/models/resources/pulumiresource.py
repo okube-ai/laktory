@@ -94,6 +94,8 @@ class PulumiResource(BaseResource):
 
         self._pulumi_resources = {}
 
+        # TODO: Inject user-agent value for monitoring usage as a Databricks partner
+
         for r in self.core_resources:
             # Properties
             properties = r.pulumi_properties

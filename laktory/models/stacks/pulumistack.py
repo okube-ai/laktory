@@ -98,6 +98,8 @@ class PulumiStack(BaseModel):
         if flags is not None:
             cmd += flags
 
+        # TODO: Inject user-agent value for monitoring usage as a Databricks partner
+
         worker.run(
             cmd=cmd,
             cwd=CACHE_ROOT,
