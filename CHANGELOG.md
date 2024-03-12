@@ -2,13 +2,8 @@
 
 ## [0.1.7] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* show_version_info() method for bugs reporting
+* Git issues templates 
 
 ## [0.1.6] - 2024-02-23
 ### Updated
