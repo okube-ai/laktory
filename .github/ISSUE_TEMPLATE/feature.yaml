@@ -21,7 +21,7 @@ body:
       description: >
         Please describe how the new feature would be implemented, using psudocode if relevant.
       placeholder: >
-        Add a new parameter to DataFrame, to_series, to return a Series if possible.
+        Add a new class that support CloudFormation resources deployment.
 
         class CloudFormationResource(BaseResource):
             """
