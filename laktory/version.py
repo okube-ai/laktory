@@ -1,11 +1,12 @@
 import os
 import platform
 import sys
-from importlib_metadata import distributions
 from laktory._version import VERSION
 
 
 def show_version_info() -> str:
+
+    from importlib.metadata import distributions
 
     package_names = {
         "azure-identity",
