@@ -1,10 +1,9 @@
 Suppose your end goal is to compare Apple and Google stock performances.
 The example below illustrates how Laktory can help with:
 
-* Generating the raw data
+* Generating the raw data (ingestion)
 * Declaring the transformation layers (bronze, silver, gold)
 * Deploying the corresponding data pipeline to Databricks
-
 
 ### Generate data events
 
@@ -55,11 +54,12 @@ for event in events:
     [`laktory.models.Table`][laktory.models.Table]<br>
     [`laktory.models.Pipeline`][laktory.models.Pipeline]<br>
 
-Once you have data events in your landing storage (they can be generated with any external system), build a yaml file (or python code) to define your data pipeline and the associated transformations. This configuration file may be used to set
+Once you have data events in your landing storage (they can be generated with Laktory as above or any external system), build a yaml file (or python code) to define your data pipeline and the associated transformations. This configuration file may be used to set
 
 * pipeline properties
 * data transformations
 * privileges and grants
+
 
 ```yaml title="pipeline.yaml"
 name: pl-stock-prices
@@ -219,3 +219,7 @@ for table in pl.tables:
 Output:
 
 ![pl-stock-prices](images/dlt_debug.png)
+
+### Demo
+Watch Laktory in action! 
+![type:video](https://www.youtube.com/embed/TAKQC0R11Rc)
