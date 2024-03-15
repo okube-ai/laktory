@@ -53,6 +53,7 @@ dev = [
     "mkdocs",
     "mkdocstrings[python]",
     "mkdocs-material",
+    "mkdocs-video",
 #    "mkdocs-snippets",
 ]
 spark = [
