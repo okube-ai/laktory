@@ -20,5 +20,5 @@ publish:
 	twine upload dist/*
 
 publishdoc:
-	pip install mkdocs mkdocstrings[python] mkdocs-material
+	pip install mkdocs mkdocstrings[python] mkdocs-material mkdocs-video
 	mkdocs gh-deploy --force
