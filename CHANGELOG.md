@@ -1,6 +1,16 @@
 # Release History
 
-## [0.1.7] - Unreleased
+## [0.1.8] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.1.7] - 2024-03-15
 ### Added
 * show_version_info() method for bugs reporting
 * Git issues templates 
