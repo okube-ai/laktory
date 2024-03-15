@@ -1,0 +1,19 @@
+name: publish-doc
+
+on:
+  workflow_dispatch:
+    logLevel:
+      description: 'Log level'
+      default: 'info'
+
+jobs:
+  doc:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Publish doc
+        run: make publishdoc
