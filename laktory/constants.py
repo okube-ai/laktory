@@ -1,3 +1,8 @@
+SUPPORTED_BACKENDS = [
+    "pulumi",
+    "terraform",
+]
+
 SUPPORTED_TYPES = [
     "_any",
     "data",

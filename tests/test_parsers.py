@@ -1,5 +1,6 @@
 import laktory
 from laktory.models import BaseModel
+from laktory._parsers import remove_empty
 
 
 class Camel(BaseModel):
@@ -20,5 +21,18 @@ def test_camel_case():
     }
 
 
+def test_remove_empty():
+
+    d = {
+        "a": "a",
+        "b": {},
+        "c": [{}, "c", []],
+        "d": [],
+    }
+
+    assert remove_empty(d) == {'a': 'a', 'c': ['c']}
+
+
 if __name__ == "__main__":
     test_camel_case()
+    test_remove_empty()

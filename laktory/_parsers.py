@@ -6,6 +6,26 @@ def _snake_to_camel(snake_str):
     return components[0] + "".join(x.title() for x in components[1:])
 
 
+def remove_empty(d):
+    if isinstance(d, dict):
+        keys = list(d.keys())
+        values = list(d.values())
+        for key, value in zip(keys, values):
+            if value in [None, [], {}]:
+                del d[key]
+            else:
+                d[key] = remove_empty(d[key])
+
+    elif isinstance(d, list):
+        for i, item in enumerate(d):
+            if item in [None, [], {}]:
+                del d[i]
+            else:
+                d[i] = remove_empty(item)
+
+    return d
+
+
 def camelize_keys(d, parent=None, excluded_parents=None):
     if isinstance(d, dict):
         if parent and excluded_parents and parent in excluded_parents:
