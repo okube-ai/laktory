@@ -1,10 +1,20 @@
 import typer
+import os
+import yaml
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.validation import Validator
+from prompt_toolkit.validation import ValidationError
+from prompt_toolkit import prompt
 from typing import Union
 from typing_extensions import Annotated
+from laktory.constants import SUPPORTED_BACKENDS
 from laktory.models.stacks.stack import Stack
 from laktory.models.basemodel import BaseModel
+from laktory._parsers import remove_empty
 
 APP_NAME = "laktory-cli"
+
+DIRPATH = os.path.dirname(__file__)
 
 app = typer.Typer(
     pretty_exceptions_show_locals=False,
@@ -377,7 +387,227 @@ def deploy(
     elif controller.backend == "terraform":
         controller.terraform_call("apply")
     else:
-        raise ValueError("backend should be ['terraform', 'pulumi']")
+        raise ValueError(f"backend should be {SUPPORTED_BACKENDS}")
+
+
+class BackendValidator(Validator):
+    def validate(self, document):
+        text = document.text
+        if text.lower() not in SUPPORTED_BACKENDS:
+            raise ValidationError(
+                message=f"Please enter one of the supported IaC backends {SUPPORTED_BACKENDS}",
+                cursor_position=len(text))  # Move cursor to end
+
+@app.command()
+def getstarted(
+        # backend: Annotated[
+        #     str, typer.Option(help="IaC backend [pulumi, terraform]")
+        # ],
+        # organization: Annotated[
+        #     str,
+        #     typer.Option(
+        #         "--org",
+        #         "-o",
+        #         help="Name of the organization in associated with the pulumi stack.",
+        #     ),
+        # ] = None,
+        # environment: Annotated[
+        #     str, typer.Option("--env", "-e", help="Name of the environment")
+        # ] = None,
+        # filepath: Annotated[
+        #     str, typer.Option(help="Stack (yaml) filepath.")
+        # ] = "./stack.yaml",
+        # pulumi_options: Annotated[
+        #     str,
+        #     typer.Option(
+        #         "--pulumi-options", help="Comma separated pulumi options (flags)."
+        #     ),
+        # ] = None,
+        # terraform_options: Annotated[
+        #     str,
+        #     typer.Option(
+        #         "--terraform-options", help="Comma separated terraform options (flags)."
+        #     ),
+        # ] = None,
+):
+    """
+    Execute deployment.
+
+    Parameters
+    ----------
+    backend:
+        IaC backend [pulumi, terraform]
+    organization:
+        Name of the organization associated with the Pulumi stack.
+    environment:
+        Name of the environment.
+    filepath:
+        Stack (yaml) filepath.
+    pulumi_options:
+        Comma separated pulumi options (flags).
+    terraform_options:
+        Comma separated terraform options (flags).
+
+    Examples
+    --------
+    ```cmd
+    laktory deploy --env dev --filepath my-stack.yaml
+    ```
+
+    References
+    ----------
+    - pulumi up [options](https://www.pulumi.com/docs/cli/commands/pulumi_up/)
+    """
+
+    # Backend
+    completer = WordCompleter(SUPPORTED_BACKENDS, ignore_case=True)
+    # backend = prompt(f"Select IaC backend {SUPPORTED_BACKENDS}: ", completer=completer, validator=BackendValidator())
+    backend = "pulumi"
+
+    # Organization
+    organization = None
+    if backend == "pulumi":
+        # organization = prompt(f"Pulumi Organization: ")
+        # stack = prompt(f"Stack Name (must match Pulumi project name): ")
+        organization = "okube"
+        stack = "get-started"
+    else:
+        stack = prompt(f"Stack Name: ")
+
+    # Node type id
+    # node_type = prompt(f"Node type for pipeline (ex.: Standard_DS3_v2, c5.2xlarge, etc.): ")
+    node_type = "Standard_DS3_v2"
+
+    if not os.path.exists("./notebooks/pipelines"):
+        os.makedirs("./notebooks/pipelines")
+    if not os.path.exists("./data"):
+        os.makedirs("./data")
+
+    # Copy notebooks
+    for filename in [
+        "dlt_brz_template.py",
+        "dlt_slv_template.py",
+    ]:
+        with open(os.path.join(DIRPATH, f"../files/notebooks/{filename}")) as fp:
+            data = fp.read()
+            data = data.replace("pl-stock-prices", "pl-get-started")
+
+        with open(f"./notebooks/pipelines/{filename}", "w") as fp:
+            fp.write(data)
+
+    # Copy data
+    for filename in [
+        "stock_prices.json",
+    ]:
+
+        with open(os.path.join(DIRPATH, f"../files/data/{filename}")) as fp:
+            data = fp.read()
+
+        with open(f"./data/{filename}", "w") as fp:
+            fp.write(data)
+
+    # Build resources
+    resources = {
+        "notebooks": {
+            "notebook-pipelines-dlt-brz-template": {"source": "./notebooks/pipelines/dlt_brz_template.py"},
+            "notebook-pipelines-dlt-slv-template": {"source": "./notebooks/pipelines/dlt_slv_template.py"},
+        },
+        "workspacefiles": {
+            "workspace-file-stock-prices":
+                {
+                    "source": "./data/stock_prices.json",
+                    "path": "/Workspace/.laktory/landing/events/yahoo-finance/stock_price/stock_prices.json",
+                },
+        },
+        "pipelines": {
+            "pl-get-started": {
+                "name": "pl-get-started",
+                "target": "default",
+                "development": "${vars.is_dev}",
+                "configuration": {"pipeline_name": "pl-get-started"},
+                "clusters": [
+                    {
+                        "name": "default",
+                        "node_type_id": node_type,
+                        "autoscale": {
+                            "min_workers": 1,
+                            "max_workers": 2,
+                        }
+                    },
+                ],
+                "libraries": [
+                    {"notebook": {"path": "/.laktory/pipelines/dlt_brz_template.py"}},
+                    {"notebook": {"path": "/.laktory/pipelines/dlt_slv_template.py"}},
+                ],
+                "tables": [
+                    {
+                        "name": "brz_stock_prices",
+                        "builder": {
+                            "layer": "BRONZE",
+                            "event_source": {
+                                "name": "stock_price",
+                                "events_root": "file:/Workspace/.laktory/landing/events/",
+                                "schema_location": "/Workspace/.laktory/landing/events/yahoo-finance/stock_price/",
+                                "producer": {
+                                    "name": "yahoo-finance",
+                                }
+                            }
+                        }
+                    }
+                ]
+
+            }
+        }
+    }
+
+    # Build environments
+    environments = {
+        "dev": {"variables": {"env": "dev", "is_dev": True}},
+    }
+
+    # Build stack
+    if backend == "pulumi":
+        stack = Stack(
+            organization=organization,
+            name=stack,
+            backend=backend,
+            pulumi={
+                "config": {
+                    "databricks:host": "${vars.DATABRICKS_HOST}",
+                    "databricks:token": "${vars.DATABRICKS_TOKEN}"
+                }
+            },
+            resources=resources,
+            environments=environments,
+        )
+        stack.pulumi.outputs = None
+
+    else:
+        stack = Stack(
+            organization=organization,
+            name=stack,
+            backend=backend,
+            # terraform={
+            #     "config": {
+            #         "databricks:host": "${vars.DATABRICKS_HOST}",
+            #         "databricks:host": "${vars.DATABRICKS_TOKEN}"
+            #     }
+            # },
+            resources=resources,
+            environments=environments,
+        )
+
+    # Dump data
+    data = stack.model_dump(exclude_none=True)
+    data = remove_empty(data)
+
+    # Clean up resources
+    for k, n in data["resources"]["notebooks"].items():
+        del data["resources"]["notebooks"][k]["path"]
+
+    # Output Stack
+    with open("./stack.yaml", "w") as fp:
+        yaml.safe_dump(data, fp)
 
 
 if __name__ == "__main__":
