@@ -222,4 +222,4 @@ Output:
 
 ### Demo
 Watch Laktory in action! 
-![type:video](https://www.youtube.com/embed/TAKQC0R11Rc)
+![type:video](https://www.youtube.com/embed/dlaUQm5yUa4)
