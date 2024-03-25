@@ -16,3 +16,6 @@ The CLI supports 3 main operations `init`, `preview` and `deploy`.
 
 ### deploy
 `laktory deploy` execute the deployment by creating or updating resources.  Similar to `pulumi up` or `terraform apply`.
+
+### quickstart
+`laktory quickstart` setup a working example of a stock prices pipeline that you can use as a baseline. See [Quickstart](/quickstart) for more details.

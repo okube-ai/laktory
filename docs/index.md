@@ -80,7 +80,7 @@ A data pipeline built with Laktory is shipped with custom hooks enabling fine-gr
 
 ### Demo
 Watch how Laktory brings your pipeline definition into usable data tables. 
-![type:video](https://www.youtube.com/embed/TAKQC0R11Rc)
+![type:video](https://www.youtube.com/embed/dlaUQm5yUa4)
 
 ## Who is it for?
 Laktory is built by data engineers for data engineers. 

@@ -37,6 +37,7 @@ dynamic = ["version"]
 dependencies = [
     "inflect",
     "planck",
+    "prompt_toolkit",
     "pulumi",
     "pulumi_databricks",
     "pulumi_random",

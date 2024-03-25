@@ -101,7 +101,7 @@ class BaseResource(_BaseModel):
     def resource_type_id(self) -> str:
         """
         Resource type id used to build default resource name. Equivalent to
-        class name converted to kebab case. Ex.: SecretScope -> secret-scope
+        class name converted to kebab case. e.g.: SecretScope -> secret-scope
         """
         _id = type(self).__name__
         _id = re.sub(

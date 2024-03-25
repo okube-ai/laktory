@@ -1,173 +1,66 @@
-Suppose your end goal is to compare Apple and Google stock performances.
-The example below illustrates how Laktory can help with:
+The easiest way to get started with Laktory is to use the CLI `quickstart` command 
+to setup a pipeline that will process stock prices from big tech companies.
 
-* Generating the raw data (ingestion)
-* Declaring the transformation layers (bronze, silver, gold)
-* Deploying the corresponding data pipeline to Databricks
+### Run CLI quickstart
+Open a command prompt and invoke the `quickstart` command.
+```cmd
+laktory quickstart
+```
+You will be asked 2 questions:
 
-### Generate data events
+- Infrastructure as Code backend (terraform or pulumi)
+- Node type for compute (cloud specific, e.g. Standard_DS3_v2, c5.2xlarge, etc.)
 
+Once completed, a files have been created.
+
+#### Stack File
 ??? "API Documentation"
-    [`laktory.models.DataEvent`][laktory.models.DataEvent]<br>
+    [`laktory.models.Stack`][laktory.models.Stack]<br>
 
-A `DataEvent` class helps you set both the metadata (event name, producer, etc.) and the data of an event and provides the methods for writing that event to a cloud storage or databricks volume/mount.
+The `stack.yaml` file is the main entry point defining the `name` of the stack, the selected `backend` and the list
+of `resources` to be deployed. 
 
-```py
-from laktory import models
-from datetime import datetime
+In this example, we define 4 resources:
 
+- 1 data file (DBFSFile)
+- 2 notebooks
+- 1 pipeline 
 
-events = [
-    models.DataEvent(
-        name="stock_price",
-        producer={
-            "name": "yahoo-finance",
-        },
-        data={
-            "created_at": datetime(2023, 8, 23),
-            "symbol": "GOOGL",
-            "open": 130.25,
-            "close": 132.33,
-        },
-    ),
-    models.DataEvent(
-        name="stock_price",
-        producer={
-            "name": "yahoo-finance",
-        },
-        data={
-            "created_at": datetime(2023, 8, 24),
-            "symbol": "GOOGL",
-            "open": 132.00,
-            "close": 134.12,
-        },
-    ),
-]
+The pipeline also defines the data transformation for the bronze and silver tables.
 
-# Export to databricks landing volume / mount.
-for event in events:
-    event.to_databricks()
+#### Notebook Files
+The `notebooks/pipelines/dlt_brz_template.py` and `notebooks/pipelines/dlt_slv_template.py` files are the notebooks
+used by the pipeline.
+
+#### Data File
+The `data/stock_prices.json` file is a data file storing stock prices. 
+Normally, data would be mounted in Volumes from cloud storage, but for the simplicity a small data file is deployed as a
+DBFS file. 
+
+### Set Environment Variables
+
+As you may have noticed by inspecting the `stack.yaml` file there are two expected environment variables:
+
+- `DATABRICKS_HOST`: The workspace host URL 
+- `DATABRICKS_TOKEN`: A valid workspace [token](https://docs.databricks.com/en/dev-tools/auth/pat.html)
+
+Make sure they are properly set for a successful deployment.
+
+### Run Deployment
+
+You are now ready to deploy your stack to the workspace. If you are using terraform, you will need to first run an init
+```cmd
+laktory init
 ```
 
-### Declare data pipeline and tables
-??? "API Documentation"
-    [`laktory.models.Table`][laktory.models.Table]<br>
-    [`laktory.models.Pipeline`][laktory.models.Pipeline]<br>
-
-Once you have data events in your landing storage (they can be generated with Laktory as above or any external system), build a yaml file (or python code) to define your data pipeline and the associated transformations. This configuration file may be used to set
-
-* pipeline properties
-* data transformations
-* privileges and grants
-
-
-```yaml title="pipeline.yaml"
-name: pl-stock-prices
-
-catalog: ${vars.env}
-target: default
-
-clusters:
-  - name : default
-    node_type_id: Standard_DS3_v2
-    autoscale:
-      min_workers: 1
-      max_workers: 2
-
-libraries:
-  - notebook:
-      path: /pipelines/dlt_brz_template.py
-  - notebook:
-      path: /pipelines/dlt_slv_template.py
-  - notebook:
-      path: /pipelines/dlt_gld_stock_performances.py
-
-permissions:
-  - group_name: account users
-    permission_level: CAN_VIEW
-  - group_name: role-engineers
-    permission_level: CAN_RUN
-
-# --------------------------------------------------------------------------- #
-# Tables                                                                      #
-# --------------------------------------------------------------------------- #
-
-tables:
-  - name: brz_stock_prices
-    timestamp_key: data.created_at
-    builder:
-      layer: BRONZE
-      event_source:
-        name: stock_price
-        producer:
-          name: yahoo-finance
-
-
-  - name: slv_stock_prices
-    timestamp_key: created_at
-    builder:
-      layer: SILVER
-      table_source:
-        name: brz_stock_prices
-    columns:
-      - name: created_at
-        type: timestamp
-        spark_func_name: coalesce
-        spark_func_args:
-          - data._created_at
-
-      - name: symbol
-        type: string
-        spark_func_name: coalesce
-        spark_func_args:
-          - data.symbol
-
-      - name: open
-        type: double
-        spark_func_name: coalesce
-        spark_func_args:
-          - data.open
-
-      - name: close
-        type: double
-        spark_func_name: coalesce
-        spark_func_args:
-          - data.close
-```
-
-### Validate and deploy
-Now that your pipeline is defined, it (along with other resources) can be included in a stack and deployed using laktory CLI.
-
-```yaml title="stack.yaml"
-name: my-stack
-organization: okube
-backend: pulumi
-pulumi:
-    config:
-      databricks:host: ${vars.DATABRICKS_HOST}
-      databricks:token: ${vars.DATABRICKS_TOKEN}
-resources:
-  pipelines:
-    pl-stock-prices: ${include.pipeline.yaml}
-environments:
-  dev:
-    variables:
-      env: dev
-  prod:
-    variables:
-      env: prod
-```
-
-Deploy with laktory CLI
+Then, simply deploy using
 ```cmd
 laktory deploy --env dev
 ```
-As you may have noticed from the stack definition, pulumi is used as the IaC backend. Currently, both pulumi and terraform backends are supported.
 
 ### Run your pipeline
-Once deployed, you pipeline is ready to be run or will be run automatically if it's part of a scheduled job.
-![pl-stock-prices](images/pl_stock_prices_simple.png)
-
+Once deployed, you pipeline is ready to be run.
+![pl-stock-prices](images/pl_quickstart.png)
 
 ### Debug your pipeline
 If you need to debug or modify one of your pipeline's notebook, Laktory makes it very easy by allowing you to run and inspect (with some limitations) the output data outside of the DLT pipeline.
@@ -181,7 +74,7 @@ dlt.spark = spark
 logger = get_logger(__name__)
 
 # Read pipeline definition
-pl_name = spark.conf.get("pipeline_name", "pl-stock-prices")
+pl_name = spark.conf.get("pipeline_name", "pl-quickstart")
 pl = read_metadata(pipeline=pl_name)
 
 
@@ -220,6 +113,7 @@ Output:
 
 ![pl-stock-prices](images/dlt_debug.png)
 
+
 ### Demo
 Watch Laktory in action! 
-![type:video](https://www.youtube.com/embed/TAKQC0R11Rc)
+![type:video](https://www.youtube.com/embed/dlaUQm5yUa4)
