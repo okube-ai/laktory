@@ -473,7 +473,7 @@ def quickstart(
     # Node type id
     if node_type is None:
         node_type = prompt(
-            f"Node type for pipeline (ex.: Standard_DS3_v2, c5.2xlarge, etc.): "
+            f"Node type for pipeline (e.g.: Standard_DS3_v2, c5.2xlarge, etc.): "
         )
 
     if not os.path.exists("./notebooks/pipelines"):
