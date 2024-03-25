@@ -30,6 +30,69 @@ def test_preview_terraform():
     assert result.exit_code == 0
 
 
+def test_getstarted_pulumi():
+    filepath = os.path.join(dirpath, "stack_getstarted_pulumi.yaml")
+    result = runner.invoke(
+        app,
+        [
+            "getstarted",
+            "--backend",
+            "pulumi",
+            "-o",
+            "okube",
+            "-n",
+            "Standard_DS3_v2",
+            "--filepath",
+            filepath,
+        ],
+    )
+
+    # TODO: Add validation for the generated stack?
+    with open(filepath) as fp:
+        stack = models.Stack.model_validate_yaml(fp)
+
+    data = stack.model_dump(exclude_none=True)
+
+    assert stack.backend == "pulumi"
+    assert stack.name == "get-started"
+    assert stack.pulumi.config["databricks:host"] == "${vars.DATABRICKS_HOST}"
+    assert stack.pulumi.config["databricks:token"] == "${vars.DATABRICKS_TOKEN}"
+    assert len(stack.resources.dbfsfiles) == 1
+    assert len(stack.resources.notebooks) == 2
+    assert len(stack.resources.pipelines) == 1
+
+
+def test_getstarted_terraform():
+    filepath = os.path.join(dirpath, "stack_getstarted_terraform.yaml")
+    result = runner.invoke(
+        app,
+        [
+            "getstarted",
+            "--backend",
+            "terraform",
+            "-o",
+            "okube",
+            "-n",
+            "Standard_DS3_v2",
+            "--filepath",
+            filepath,
+        ],
+    )
+
+    with open(filepath) as fp:
+        stack = models.Stack.model_validate_yaml(fp)
+
+    data = stack.model_dump(exclude_none=True)
+
+    assert stack.backend == "terraform"
+    assert stack.name == "get-started"
+    assert stack.resources.providers["databricks"].host == "${vars.DATABRICKS_HOST}"
+    assert stack.resources.providers["databricks"].token == "${vars.DATABRICKS_TOKEN}"
+    assert len(stack.resources.dbfsfiles) == 1
+    assert len(stack.resources.notebooks) == 2
+    assert len(stack.resources.pipelines) == 1
+
+
 def atest_deploy_pulumi():
     # TODO: Figure out how to run in isolation. Currently, pulumi up commands
     # are run concurrently because of the multiple python testing environment
@@ -83,5 +146,7 @@ def atest_deploy_terraform():
 if __name__ == "__main__":
     test_preview_pulumi()
     test_preview_terraform()
-    atest_deploy_pulumi()
-    atest_deploy_terraform()
+    test_getstarted_pulumi()
+    test_getstarted_terraform()
+    # atest_deploy_pulumi()
+    # atest_deploy_terraform()

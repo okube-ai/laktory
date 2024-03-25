@@ -413,7 +413,6 @@ def getstarted(
             help="Name of the organization in associated with the pulumi stack.",
         ),
     ] = None,
-    # node_type
     node_type: Annotated[
         str,
         typer.Option(
@@ -422,6 +421,9 @@ def getstarted(
             help="Type of nodes for compute (e.g.: Standard_DS3_v2, c5.2xlarge,)",
         ),
     ] = None,
+    filepath: Annotated[
+        str, typer.Option(help="Stack (yaml) filepath.")
+    ] = "./stack.yaml",
 ):
     """
     Build get started stack in the calling directory.
@@ -434,6 +436,8 @@ def getstarted(
         Name of the organization associated with the Pulumi stack.
     node_type:
         Type of nodes for compute (e.g.: Standard_DS3_v2, c5.2xlarge,).
+    filepath:
+        Filepath of the generated stack yaml file.
 
     Examples
     --------
@@ -498,6 +502,14 @@ def getstarted(
 
         with open(f"./data/{filename}", "w") as fp:
             fp.write(data)
+
+    # Build providers (terraform only)
+    providers = {
+        "databricks": {
+            "host": "${vars.DATABRICKS_HOST}",
+            "token": "${vars.DATABRICKS_TOKEN}",
+        }
+    }
 
     # Build resources
     resources = {
@@ -616,16 +628,11 @@ def getstarted(
         stack.pulumi.outputs = None
 
     else:
+        resources["providers"] = providers
         stack = Stack(
             organization=organization,
             name=stack,
             backend=backend,
-            # terraform={
-            #     "config": {
-            #         "databricks:host": "${vars.DATABRICKS_HOST}",
-            #         "databricks:host": "${vars.DATABRICKS_TOKEN}"
-            #     }
-            # },
             resources=resources,
             environments=environments,
         )
@@ -635,12 +642,31 @@ def getstarted(
     data = remove_empty(data)
 
     # Clean up resources
+    if backend != "pulumi" and "pulumi" in data.keys():
+        del data["pulumi"]
     for k, n in data["resources"]["notebooks"].items():
         del data["resources"]["notebooks"][k]["path"]
 
+    # Sort data
+    d = {}
+    for k in [
+        "name",
+        "organization",
+        "backend",
+        "pulumi",
+        "resources",
+        "environments",
+    ]:
+        if k in data:
+            d[k] = data[k]
+
+    for k in data.keys():
+        if k not in d:
+            d[k] = data[k]
+
     # Output Stack
-    with open("./stack.yaml", "w") as fp:
-        yaml.safe_dump(data, fp)
+    with open(filepath, "w") as fp:
+        yaml.safe_dump(d, fp, sort_keys=False)
 
 
 if __name__ == "__main__":

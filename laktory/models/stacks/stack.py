@@ -193,7 +193,7 @@ class EnvironmentStack(BaseModel):
     name: str
     organization: str = None
     pulumi: Pulumi = Pulumi()
-    resources: StackResources = StackResources()
+    resources: Union[StackResources, None] = StackResources()
     terraform: Terraform = Terraform()
     variables: dict[str, Any] = {}
 
@@ -330,7 +330,7 @@ class Stack(BaseModel):
     name: str
     organization: Union[str, None] = None
     pulumi: Pulumi = Pulumi()
-    resources: StackResources = StackResources()
+    resources: Union[StackResources, None] = StackResources()
     terraform: Terraform = Terraform()
     variables: dict[str, Any] = {}
 
@@ -356,7 +356,7 @@ class Stack(BaseModel):
         _envs = d.pop("environments")
 
         # Restore fields excluded from dump
-        for rtype in d["resources"]:
+        for rtype in d.get("resources", {}):
             for k, r in d["resources"][rtype].items():
                 r["options"] = getattr(self.resources, rtype)[k].options.model_dump(
                     exclude_none=True
@@ -365,7 +365,8 @@ class Stack(BaseModel):
         envs = {}
         for env_name, env in self.environments.items():
             for k in ENV_FIELDS:
-                d[k] = merge_dicts(d[k], _envs[env_name].get(k, {}))
+                if k in d:
+                    d[k] = merge_dicts(d[k], _envs[env_name].get(k, {}))
 
             envs[env_name] = EnvironmentStack(**d)
 
