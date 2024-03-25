@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 
 # Read pipeline definition
-pl_name = spark.conf.get("pipeline_name", "pl-get-started")
+pl_name = spark.conf.get("pipeline_name", "pl-stock-prices")
 pl = read_metadata(pipeline=pl_name)
 
 

@@ -401,7 +401,7 @@ class BackendValidator(Validator):
 
 
 @app.command()
-def getstarted(
+def quickstart(
     backend: Annotated[
         str, typer.Option("--backend", "-b", help="IaC backend [terraform, terraform]")
     ] = None,
@@ -442,7 +442,7 @@ def getstarted(
     Examples
     --------
     ```cmd
-    laktory getstarted
+    laktory quickstart
     ```
     """
 
@@ -456,7 +456,7 @@ def getstarted(
         )
 
     # Stack
-    stack = "get-started"
+    stack = "quickstart"
 
     # Organization
     if backend == "pulumi":
@@ -486,9 +486,9 @@ def getstarted(
         "dlt_brz_template.py",
         "dlt_slv_template.py",
     ]:
-        with open(os.path.join(DIRPATH, f"../files/notebooks/{filename}")) as fp:
+        with open(os.path.join(DIRPATH, f"../resources/notebooks/{filename}")) as fp:
             data = fp.read()
-            data = data.replace("pl-stock-prices", "pl-get-started")
+            data = data.replace("pl-stock-prices", "pl-quickstart")
 
         with open(f"./notebooks/pipelines/{filename}", "w") as fp:
             fp.write(data)
@@ -497,7 +497,7 @@ def getstarted(
     for filename in [
         "stock_prices.json",
     ]:
-        with open(os.path.join(DIRPATH, f"../files/data/{filename}")) as fp:
+        with open(os.path.join(DIRPATH, f"../resources/data/{filename}")) as fp:
             data = fp.read()
 
         with open(f"./data/{filename}", "w") as fp:
@@ -528,11 +528,11 @@ def getstarted(
             },
         },
         "pipelines": {
-            "pl-get-started": {
-                "name": "pl-get-started",
+            "pl-quickstart": {
+                "name": "pl-quickstart",
                 "target": "default",
                 "development": "${vars.is_dev}",
-                "configuration": {"pipeline_name": "pl-get-started"},
+                "configuration": {"pipeline_name": "pl-quickstart"},
                 "clusters": [
                     {
                         "name": "default",
