@@ -60,7 +60,7 @@ laktory deploy --env dev
 
 ### Run your pipeline
 Once deployed, you pipeline is ready to be run.
-![pl-stock-prices](images/pl_stock_prices_simple.png)
+![pl-stock-prices](images/pl_quickstart.png)
 
 ### Debug your pipeline
 If you need to debug or modify one of your pipeline's notebook, Laktory makes it very easy by allowing you to run and inspect (with some limitations) the output data outside of the DLT pipeline.
