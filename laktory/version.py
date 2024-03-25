@@ -5,7 +5,6 @@ from laktory._version import VERSION
 
 
 def show_version_info() -> str:
-
     from importlib.metadata import distributions
 
     package_names = {
@@ -47,4 +46,3 @@ def show_version_info() -> str:
     info += "\n".join([f"{k}-{v}" for k, v in packages.items()])
 
     return info
-

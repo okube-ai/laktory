@@ -2,13 +2,8 @@
 
 ## [0.1.8] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* `getstarted` CLI command to initialize a Laktory stack.
+* Databricks DBFS file model
 
 ## [0.1.7] - 2024-03-15
 ### Added

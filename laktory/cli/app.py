@@ -396,42 +396,35 @@ class BackendValidator(Validator):
         if text.lower() not in SUPPORTED_BACKENDS:
             raise ValidationError(
                 message=f"Please enter one of the supported IaC backends {SUPPORTED_BACKENDS}",
-                cursor_position=len(text))  # Move cursor to end
+                cursor_position=len(text),
+            )  # Move cursor to end
+
 
 @app.command()
 def getstarted(
-        # backend: Annotated[
-        #     str, typer.Option(help="IaC backend [pulumi, terraform]")
-        # ],
-        # organization: Annotated[
-        #     str,
-        #     typer.Option(
-        #         "--org",
-        #         "-o",
-        #         help="Name of the organization in associated with the pulumi stack.",
-        #     ),
-        # ] = None,
-        # environment: Annotated[
-        #     str, typer.Option("--env", "-e", help="Name of the environment")
-        # ] = None,
-        # filepath: Annotated[
-        #     str, typer.Option(help="Stack (yaml) filepath.")
-        # ] = "./stack.yaml",
-        # pulumi_options: Annotated[
-        #     str,
-        #     typer.Option(
-        #         "--pulumi-options", help="Comma separated pulumi options (flags)."
-        #     ),
-        # ] = None,
-        # terraform_options: Annotated[
-        #     str,
-        #     typer.Option(
-        #         "--terraform-options", help="Comma separated terraform options (flags)."
-        #     ),
-        # ] = None,
+    backend: Annotated[
+        str, typer.Option("--backend", "-b", help="IaC backend [terraform, terraform]")
+    ] = None,
+    organization: Annotated[
+        str,
+        typer.Option(
+            "--org",
+            "-o",
+            help="Name of the organization in associated with the pulumi stack.",
+        ),
+    ] = None,
+    # node_type
+    node_type: Annotated[
+        str,
+        typer.Option(
+            "--node",
+            "-n",
+            help="Type of nodes for compute (e.g.: Standard_DS3_v2, c5.2xlarge,)",
+        ),
+    ] = None,
 ):
     """
-    Execute deployment.
+    Build get started stack in the calling directory.
 
     Parameters
     ----------
@@ -439,44 +432,45 @@ def getstarted(
         IaC backend [pulumi, terraform]
     organization:
         Name of the organization associated with the Pulumi stack.
-    environment:
-        Name of the environment.
-    filepath:
-        Stack (yaml) filepath.
-    pulumi_options:
-        Comma separated pulumi options (flags).
-    terraform_options:
-        Comma separated terraform options (flags).
+    node_type:
+        Type of nodes for compute (e.g.: Standard_DS3_v2, c5.2xlarge,).
 
     Examples
     --------
     ```cmd
-    laktory deploy --env dev --filepath my-stack.yaml
+    laktory getstarted
     ```
-
-    References
-    ----------
-    - pulumi up [options](https://www.pulumi.com/docs/cli/commands/pulumi_up/)
     """
 
     # Backend
     completer = WordCompleter(SUPPORTED_BACKENDS, ignore_case=True)
-    # backend = prompt(f"Select IaC backend {SUPPORTED_BACKENDS}: ", completer=completer, validator=BackendValidator())
-    backend = "pulumi"
+    if backend is None:
+        backend = prompt(
+            f"Select IaC backend {SUPPORTED_BACKENDS}: ",
+            completer=completer,
+            validator=BackendValidator(),
+        )
+
+    # Stack
+    stack = "get-started"
 
     # Organization
-    organization = None
     if backend == "pulumi":
-        # organization = prompt(f"Pulumi Organization: ")
-        # stack = prompt(f"Stack Name (must match Pulumi project name): ")
-        organization = "okube"
-        stack = "get-started"
+        if organization is None:
+            organization = prompt(f"Pulumi Organization: ")
+        if stack is None:
+            stack = prompt(f"Stack Name (must match Pulumi project name): ")
+    elif backend == "terraform":
+        if stack is None:
+            stack = prompt(f"Stack Name: ")
     else:
-        stack = prompt(f"Stack Name: ")
+        raise ValueError(f"Supported backends are {SUPPORTED_BACKENDS}")
 
     # Node type id
-    # node_type = prompt(f"Node type for pipeline (ex.: Standard_DS3_v2, c5.2xlarge, etc.): ")
-    node_type = "Standard_DS3_v2"
+    if node_type is None:
+        node_type = prompt(
+            f"Node type for pipeline (ex.: Standard_DS3_v2, c5.2xlarge, etc.): "
+        )
 
     if not os.path.exists("./notebooks/pipelines"):
         os.makedirs("./notebooks/pipelines")
@@ -499,7 +493,6 @@ def getstarted(
     for filename in [
         "stock_prices.json",
     ]:
-
         with open(os.path.join(DIRPATH, f"../files/data/{filename}")) as fp:
             data = fp.read()
 
@@ -509,15 +502,18 @@ def getstarted(
     # Build resources
     resources = {
         "notebooks": {
-            "notebook-pipelines-dlt-brz-template": {"source": "./notebooks/pipelines/dlt_brz_template.py"},
-            "notebook-pipelines-dlt-slv-template": {"source": "./notebooks/pipelines/dlt_slv_template.py"},
+            "notebook-pipelines-dlt-brz-template": {
+                "source": "./notebooks/pipelines/dlt_brz_template.py"
+            },
+            "notebook-pipelines-dlt-slv-template": {
+                "source": "./notebooks/pipelines/dlt_slv_template.py"
+            },
         },
-        "workspacefiles": {
-            "workspace-file-stock-prices":
-                {
-                    "source": "./data/stock_prices.json",
-                    "path": "/Workspace/.laktory/landing/events/yahoo-finance/stock_price/stock_prices.json",
-                },
+        "dbfsfiles": {
+            "dbfs-file-stock-prices": {
+                "source": "./data/stock_prices.json",
+                "path": "/Workspace/.laktory/landing/events/yahoo-finance/stock_price/stock_prices.json",
+            },
         },
         "pipelines": {
             "pl-get-started": {
@@ -532,7 +528,7 @@ def getstarted(
                         "autoscale": {
                             "min_workers": 1,
                             "max_workers": 2,
-                        }
+                        },
                     },
                 ],
                 "libraries": [
@@ -546,18 +542,55 @@ def getstarted(
                             "layer": "BRONZE",
                             "event_source": {
                                 "name": "stock_price",
-                                "events_root": "file:/Workspace/.laktory/landing/events/",
-                                "schema_location": "/Workspace/.laktory/landing/events/yahoo-finance/stock_price/",
+                                "events_root": "dbfs:/Workspace/.laktory/landing/events/",
                                 "producer": {
                                     "name": "yahoo-finance",
-                                }
+                                },
+                            },
+                        },
+                    },
+                    {
+                        "name": "slv_stock_prices",
+                        "expectations": [
+                            {
+                                "name": "positive_price",
+                                "expression": "open > 0",
+                                "action": "FAIL",
                             }
-                        }
-                    }
-                ]
-
+                        ],
+                        "builder": {
+                            "layer": "SILVER",
+                            "table_source": {
+                                "name": "brz_stock_prices",
+                            },
+                        },
+                        "columns": [
+                            {
+                                "name": "created_at",
+                                "type": "timestamp",
+                                "sql_expression": "data.created_at",
+                            },
+                            {
+                                "name": "symbol",
+                                "type": "string",
+                                "spark_func_name": "coalesce",
+                                "spark_func_args": ["data._created_at"],
+                            },
+                            {
+                                "name": "open",
+                                "type": "double",
+                                "sql_expression": "data.open",
+                            },
+                            {
+                                "name": "close",
+                                "type": "double",
+                                "sql_expression": "data.close",
+                            },
+                        ],
+                    },
+                ],
             }
-        }
+        },
     }
 
     # Build environments
@@ -574,7 +607,7 @@ def getstarted(
             pulumi={
                 "config": {
                     "databricks:host": "${vars.DATABRICKS_HOST}",
-                    "databricks:token": "${vars.DATABRICKS_TOKEN}"
+                    "databricks:token": "${vars.DATABRICKS_TOKEN}",
                 }
             },
             resources=resources,
