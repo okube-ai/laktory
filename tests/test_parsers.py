@@ -22,7 +22,6 @@ def test_camel_case():
 
 
 def test_remove_empty():
-
     d = {
         "a": "a",
         "b": {},
@@ -30,7 +29,7 @@ def test_remove_empty():
         "d": [],
     }
 
-    assert remove_empty(d) == {'a': 'a', 'c': ['c']}
+    assert remove_empty(d) == {"a": "a", "c": ["c"]}
 
 
 if __name__ == "__main__":

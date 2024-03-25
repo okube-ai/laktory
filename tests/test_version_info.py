@@ -4,7 +4,6 @@ from laktory import show_version_info
 
 
 def test_show_version_info():
-
     print(show_version_info())
 
 
