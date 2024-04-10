@@ -15,7 +15,6 @@ tstack.backend = "terraform"
 
 
 def test_workspace_client():
-
     for _stack in [stack, tstack]:
         runner = Runner(stack=_stack)
 
@@ -33,11 +32,14 @@ def test_workspace_client():
 def test_resources():
     runner = Runner(stack=stack)
 
-    assert runner.jobs == {'job-stock-prices-ut-stack': {'name': 'job-stock-prices-ut-stack', 'id': None}}
-    assert runner.pipelines == {'pl-custom-name': {'name': 'pl-stock-prices-ut-stack', 'id': None}}
+    assert runner.jobs == {
+        "job-stock-prices-ut-stack": {"name": "job-stock-prices-ut-stack", "id": None}
+    }
+    assert runner.pipelines == {
+        "pl-custom-name": {"name": "pl-stock-prices-ut-stack", "id": None}
+    }
 
 
 if __name__ == "__main__":
     test_workspace_client()
     test_resources()
-

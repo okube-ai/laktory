@@ -4,7 +4,6 @@ from laktory.models.stacks.stack import Stack
 
 
 class Runner:
-
     def __init__(self, stack: Stack = None, env: str = None):
         self.stack = stack
         self._env = env
@@ -15,7 +14,6 @@ class Runner:
         self.init_resources()
 
     def init_resources(self):
-
         for k, pl in self.stack.resources.pipelines.items():
             self.pipelines[k] = {
                 "name": pl.name,
@@ -47,7 +45,6 @@ class Runner:
 
     @property
     def workspace_arguments(self):
-
         data = {}
         if self.stack.backend == "pulumi":
             config = self.stack.to_pulumi(env=self.env).model_dump()["config"]
@@ -104,7 +101,6 @@ class Runner:
     # ----------------------------------------------------------------------- #
 
     def get_resource_ids(self, env=None):
-
         if env is not None:
             self.env = env
 
