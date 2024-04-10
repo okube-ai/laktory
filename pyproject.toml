@@ -35,6 +35,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
+    "databricks-sdk",
     "inflect",
     "planck",
     "prompt_toolkit",
