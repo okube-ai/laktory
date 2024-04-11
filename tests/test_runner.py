@@ -1,8 +1,7 @@
-import copy
 import os
 
 from laktory import models
-from laktory import Runner
+from laktory import Dispatcher
 
 dirpath = os.path.dirname(__file__)
 
@@ -16,9 +15,9 @@ tstack.backend = "terraform"
 
 def test_workspace_client():
     for _stack in [stack, tstack]:
-        runner = Runner(stack=_stack)
+        dispatcher = Dispatcher(stack=_stack)
 
-        kwargs = runner.workspace_arguments
+        kwargs = dispatcher.workspace_arguments
 
         if "token" in kwargs:
             kwargs["token"] = kwargs["token"][:6]
@@ -26,18 +25,18 @@ def test_workspace_client():
             "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
             "token": "dapic5",
         }
-        assert runner.wc is not None
+        assert dispatcher.wc is not None
 
 
 def test_resources():
-    runner = Runner(stack=stack)
+    dispatcher = Dispatcher(stack=stack)
 
-    assert runner.jobs == {
-        "job-stock-prices-ut-stack": {"name": "job-stock-prices-ut-stack", "id": None}
-    }
-    assert runner.pipelines == {
-        "pl-custom-name": {"name": "pl-stock-prices-ut-stack", "id": None}
-    }
+    assert list(dispatcher.resources.keys()) == ['pl-custom-name', 'job-stock-prices-ut-stack']
+    job = dispatcher.resources["job-stock-prices-ut-stack"]
+    pl = dispatcher.resources["pl-custom-name"]
+
+    assert job.model_dump() == {'name': 'job-stock-prices-ut-stack', 'id': None}
+    assert pl.model_dump() == {'name': 'pl-stock-prices-ut-stack', 'id': None}
 
 
 if __name__ == "__main__":

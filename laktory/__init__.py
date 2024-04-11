@@ -18,7 +18,7 @@ import laktory.spark
 # --------------------------------------------------------------------------- #
 
 from ._settings import Settings
-from .runner.runner import Runner
+from .dispatcher.dispatcher import Dispatcher
 
 # --------------------------------------------------------------------------- #
 # Objects                                                                     #

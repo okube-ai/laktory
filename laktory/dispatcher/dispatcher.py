@@ -1,30 +1,25 @@
 from databricks.sdk import WorkspaceClient
 
 from laktory.models.stacks.stack import Stack
+from laktory.dispatcher.pipelinerunner import PipelineRunner
+from laktory.dispatcher.jobrunner import JobRunner
 
 
-class Runner:
+class Dispatcher:
     def __init__(self, stack: Stack = None, env: str = None):
         self.stack = stack
         self._env = env
         self._wc = None
-        self.jobs = {}
-        self.pipelines = {}
+        self.resources = {}
 
         self.init_resources()
 
     def init_resources(self):
         for k, pl in self.stack.resources.pipelines.items():
-            self.pipelines[k] = {
-                "name": pl.name,
-                "id": None,
-            }
+            self.resources[k] = PipelineRunner(dispatcher=self, name=pl.name)
 
         for k, job in self.stack.resources.jobs.items():
-            self.jobs[k] = {
-                "name": job.name,
-                "id": None,
-            }
+            self.resources[k] = JobRunner(dispatcher=self, name=job.name)
 
     # ----------------------------------------------------------------------- #
     # Environment                                                             #
@@ -92,7 +87,6 @@ class Runner:
     @property
     def wc(self) -> WorkspaceClient:
         if self._wc is None:
-            print(self.workspace_arguments)
             self._wc = WorkspaceClient(**self.workspace_arguments)
         return self._wc
 
@@ -104,17 +98,5 @@ class Runner:
         if env is not None:
             self.env = env
 
-        # Pipelines
-        for k, pl in self.pipelines.items():
-            for _pl in self.wc.pipelines.list_pipelines():
-                if pl["name"] == _pl.name:
-                    pl["id"] = _pl.pipeline_id
-                    break
-
-        # Jobs
-        for k, job in self.jobs.items():
-            for _job in self.wc.jobs.list():
-                _job_data = _job.as_dict()
-                if job["name"] == _job_data["settings"]["name"]:
-                    job["id"] = _job.job_id
-                    break
+        for r in self.resources.values():
+            r.get_id()
