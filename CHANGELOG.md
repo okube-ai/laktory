@@ -2,7 +2,7 @@
 
 ## [0.1.9] - Unreleased
 ### Added
-* n/a
+* datetime utilities
 ### Fixed
 * n/a
 ### Updated
