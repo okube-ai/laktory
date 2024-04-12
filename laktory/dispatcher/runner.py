@@ -14,5 +14,8 @@ class Runner(BaseModel):
     def wc(self):
         return self.dispatcher.wc
 
-    def get_id(self):
+    def get_id(self) -> str:
+        raise NotImplementedError()
+
+    def run(self, wait=True):
         raise NotImplementedError()
