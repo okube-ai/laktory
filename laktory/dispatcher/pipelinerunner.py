@@ -1,11 +1,11 @@
 import time
 from typing import Literal
-
 from databricks.sdk.service.pipelines import StartUpdateResponse
 from databricks.sdk.service.pipelines import GetUpdateResponse
 from databricks.sdk.service.pipelines import UpdateInfoState
 from databricks.sdk.service.pipelines import EventLevel
 from databricks.sdk.core import DatabricksError
+
 from laktory.dispatcher.runner import Runner
 from laktory.datetime import unix_timestamp
 from laktory._logger import get_logger
@@ -53,7 +53,7 @@ class PipelineRunner(Runner):
                 raise e
 
             elif current_run_action.upper() == "WAIT":
-                logger.info(f"Pipeline {self.name} waiting for current update...")
+                logger.info(f"Pipeline {self.name} waiting for current update to be completed...")
                 self.wc.pipelines.wait_get_pipeline_idle(pipeline_id=self.id)
 
             elif current_run_action.upper() == "CANCEL":
