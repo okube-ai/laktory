@@ -1,6 +1,9 @@
 import time
 from typing import Literal
 from databricks.sdk.service.jobs import Wait
+from databricks.sdk.service.jobs import Run
+from databricks.sdk.service.jobs import RunLifeCycleState
+from databricks.sdk.errors import OperationFailed
 
 from laktory.dispatcher.runner import Runner
 from laktory._logger import get_logger
@@ -10,6 +13,7 @@ logger = get_logger(__name__)
 
 class JobRunner(Runner):
     _run_start: Wait = None
+    _run: Run = None
 
     def get_id(self) -> str:
         logger.info(f"Getting id for job {self.name}")
@@ -23,6 +27,7 @@ class JobRunner(Runner):
             self,
             wait: bool = True,
             timeout: int = 20*60,
+            raise_exception: bool = False,
             current_run_action: Literal["WAIT", "CANCEL", "FAIL"] = "WAIT",
 
     ):
@@ -38,13 +43,14 @@ class JobRunner(Runner):
             elif current_run_action.upper() == "WAIT":
                 logger.info(f"Job {self.name} waiting for current run(s) to be completed...")
                 for run in active_runs:
-                    logger.info(f"Waiting for {run.run_id}")
-                    self.wc.jobs.wait_get_run_job_terminated_or_skipped(run_id=run.run_id)
+                    try:
+                        self.wc.jobs.wait_get_run_job_terminated_or_skipped(run_id=run.run_id)
+                    except OperationFailed:
+                        pass
 
             elif current_run_action.upper() == "CANCEL":
                 logger.info(f"Job {self.name} cancelling current run(s)...")
                 for run in active_runs:
-                    logger.info(f"Cancelling {run.run_id}")
                     self.wc.jobs.cancel_run_and_wait(run_id=run.run_id)
 
         # Start update
@@ -53,3 +59,53 @@ class JobRunner(Runner):
         self._run_start = self.wc.jobs.run_now(
             job_id=self.id,
         )
+        logger.info(f"Job {self.name} run URL: {self._run.run_page_url}")
+
+        pstates = {}
+        if wait:
+            self.get_run()
+            while time.time() - t0 < timeout or self.run_state == RunLifeCycleState.TERMINATED:
+                self.get_run()
+
+                if self.run_state != pstates.get(self.run_id, None):
+                    logger.info(f"Job {self.name} state: {self.run_state.value}")
+                    pstates[self.run_id] = self.run_state
+
+                for task in self._run.tasks:
+                    state = task.state
+                    if state.life_cycle_state != pstates.get(task.run_id, None):
+                        logger.info(f"   Task {self.name}.{task.task_key} state: {state.life_cycle_state.value}")
+                    pstates[task.run_id] = state.life_cycle_state
+
+                if self.run_state in [
+                    RunLifeCycleState.TERMINATED,
+                    RunLifeCycleState.SKIPPED,
+                    RunLifeCycleState.INTERNAL_ERROR,
+                ]:
+                    break
+
+                time.sleep(1)
+
+            logger.info(
+                f"Job {self.name} run terminated after {time.time() - t0: 5.2f} sec with {self.run_state} ({self._run.state.state_message})"
+            )
+            for task in self._run.tasks:
+                logger.info(
+                    f"Task {self.name}.{task.task_key} terminated with {task.state.result_state} ({task.state.state_message})"
+                )
+            if raise_exception and self.run_state != RunLifeCycleState.TERMINATED:
+                raise Exception(f"Job {self.name} update not completed ({self.run_state})")
+
+    def get_run(self):
+        self._run = self.wc.jobs.get_run(
+            run_id=self.run_id,
+        )
+        return self._run
+
+    @property
+    def run_state(self):
+        return self._run.state.life_cycle_state
+
+    @property
+    def run_id(self) -> str:
+        return self._run_start.run_id
