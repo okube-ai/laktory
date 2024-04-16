@@ -158,6 +158,48 @@ The `joins` argument is a list of joins such that multiple joins can be chained 
 
 Spark [structured streaming joins](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html) are supported using a combination of `read_as_stream` options and watermarks declaration. 
 
+### Unions
+??? "API Documentation"
+    [`laktory.models.TableUnion`][laktory.models.TableUnion]<br>
+For silver star and gold tables, we may want to union multiple tables into one large table.
+```py
+from laktory import models
+
+table = models.Table(
+    name="slv_star_stock_prices",
+    builder={
+        "layer": "SILVER",
+        "table_source": {
+            "name": "slv_stock_prices_googl",
+        },
+        "unions": [
+            {
+                "other": {
+                    "name": "slv_stock_prices_aapl",
+                }
+            },
+            {
+                "other": {
+                    "name": "slv_stock_prices_amzn",
+                }
+            },
+        ],
+    },
+)
+
+# Read
+df = table.builder.read_source(spark)
+
+# Process
+df = table.builder.process(df, spark)
+```
+
+The source table `slv_stock_prices_googl` acts as the left table in a UNION with tables `slv_stock_prices_aapl` and `slv_stock_prices_amzn`.
+
+The `unions` argument is a list of unions such that multiple unions can be chained one after the other.
+
+Spark [dataframe union](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.union.html) is used to execute the joins. 
+
 ### Aggregations
 ??? "API Documentation"
     [`laktory.models.TableAggregation`][laktory.models.TableAggregation]<br>

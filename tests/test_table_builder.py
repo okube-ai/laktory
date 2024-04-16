@@ -12,6 +12,7 @@ from laktory._testing import table_slv_star
 from laktory._testing import table_gld
 from laktory.models import Table
 from laktory.models import TableJoin
+from laktory.models import TableUnion
 from laktory.models import TableWindowFilter
 from laktory.models import TableAggregation
 
@@ -165,6 +166,65 @@ def test_table_join_outer():
             "symbol": "GOOGL",
         },
     ]
+
+
+def test_table_union():
+    join = TableUnion(
+        left={
+            "name": "slv_stock_prices",
+        },
+        other={
+            "name": "slv_stock_prices",
+        },
+    )
+    join.left._df = table_slv.to_df(spark)
+    join.other._df = table_slv.to_df(spark)
+
+    df = join.execute(spark)
+    data = df.toPandas().to_dict(orient="records")
+    print(data[:4])
+    assert (
+        data
+        == [
+            {
+                "created_at": "2023-11-01T00:00:00Z",
+                "symbol": "AAPL",
+                "open": 1,
+                "close": 2,
+            },
+            {
+                "created_at": "2023-11-01T01:00:00Z",
+                "symbol": "AAPL",
+                "open": 3,
+                "close": 4,
+            },
+            {
+                "created_at": "2023-11-01T00:00:00Z",
+                "symbol": "GOOGL",
+                "open": 3,
+                "close": 4,
+            },
+            {
+                "created_at": "2023-11-01T01:00:00Z",
+                "symbol": "GOOGL",
+                "open": 5,
+                "close": 6,
+            },
+        ]
+        * 2
+    )
+
+    # slv_tmp.builder.drop_duplicates = True
+    # df2 = slv_tmp.builder.process(df1)
+    # df2.show()
+    #
+    # # Remove duplicates using only symbol and _bronze_at
+    # slv_tmp.builder.drop_duplicates = ["symbol", "_bronze_at"]
+    # df3 = slv_tmp.builder.process(df1)
+    #
+    # assert df1.count() == 160
+    # assert df2.count() == 80
+    # assert df3.count() == 4
 
 
 def test_table_agg():
@@ -384,6 +444,35 @@ def test_drop_duplicates():
     assert df3.count() == 4
 
 
+def test_builder_union():
+    # Set table using union
+    df0 = manager.to_spark_df()
+    df1 = table_brz.builder.process(df0)
+
+    # Table union
+    table_union = Table(
+        name="table_union",
+        catalog_name="dev",
+        schema_name="markets",
+        builder={
+            "layer": "SILVER",
+            "drop_source_columns": False,
+            "table_source": {
+                "name": "slv_stock_prices",
+            },
+            "unions": [{"other": {"name": "brz_stock_prices"}}],
+        },
+    )
+    table_union.builder.unions[0].other._df = df1
+
+    df1.show()
+
+    df2 = table_union.builder.process(df1)
+    df2.show()
+
+    assert df2.count() == df1.count() * 2
+
+
 def test_cdc():
     table = Table(
         name="brz_users_type1",
@@ -436,6 +525,7 @@ if __name__ == "__main__":
     test_table_join()
     test_table_join_expression()
     test_table_join_outer()
+    test_table_union()
     test_table_agg()
     test_table_agg_window()
     test_table_window_filter()
@@ -445,3 +535,4 @@ if __name__ == "__main__":
     test_gold()
     test_cdc()
     test_drop_duplicates()
+    test_builder_union()
