@@ -320,9 +320,9 @@ class Column(BaseModel):
 
         if len(_args) > 0 and len(args) < 1:
             if raise_exception:
-                raise ValueError("All input columns are missing")
+                raise ValueError(f"All input columns are missing for building {self.name}")
             else:
-                logger.info("All input columns are missing. Skipping")
+                logger.info(f"All input columns are missing for building {self.name}. Skipping")
                 return None
 
         # Build kwargs
