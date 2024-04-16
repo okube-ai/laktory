@@ -159,7 +159,6 @@ def test_spark():
 
 
 def test_spark_missing_column():
-
     # All columns are missing
     with pytest.raises(ValueError):
         c = Column(name="x", spark_func_args=("x",)).to_spark(df)

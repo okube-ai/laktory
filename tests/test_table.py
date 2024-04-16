@@ -24,8 +24,146 @@ spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 
 def test_model():
     print(table_slv.model_dump())
-    assert table_slv.model_dump() == {'builder': {'aggregation': None, 'as_dlt_view': False, 'drop_columns': [], 'drop_duplicates': None, 'drop_source_columns': True, 'event_source': None, 'filter': None, 'joins': [], 'joins_post_aggregation': [], 'layer': 'SILVER', 'pipeline_name': None, 'selects': None, 'table_source': {'read_as_stream': True, 'catalog_name': 'dev', 'cdc': None, 'selects': None, 'fmt': 'DELTA', 'filter': None, 'from_pipeline': True, 'name': 'brz_stock_prices', 'path': None, 'schema_name': 'markets', 'watermark': None}, 'template': 'SILVER', 'unions': [], 'window_filter': None}, 'catalog_name': 'dev', 'columns': [{'catalog_name': 'dev', 'comment': None, 'name': 'created_at', 'pii': None, 'raise_missing_arg_exception': True, 'schema_name': 'markets', 'spark_func_args': [{'value': 'data._created_at', 'is_column': True, 'to_lit': False, 'to_expr': True}], 'spark_func_kwargs': {}, 'spark_func_name': 'coalesce', 'sql_expression': None, 'table_name': 'slv_stock_prices', 'type': 'timestamp', 'unit': None}, {'catalog_name': 'dev', 'comment': None, 'name': 'symbol', 'pii': None, 'raise_missing_arg_exception': True, 'schema_name': 'markets', 'spark_func_args': [{'value': 'data.symbol', 'is_column': True, 'to_lit': False, 'to_expr': True}], 'spark_func_kwargs': {}, 'spark_func_name': 'coalesce', 'sql_expression': None, 'table_name': 'slv_stock_prices', 'type': 'string', 'unit': None}, {'catalog_name': 'dev', 'comment': None, 'name': 'open', 'pii': None, 'raise_missing_arg_exception': True, 'schema_name': 'markets', 'spark_func_args': [{'value': 'data.open', 'is_column': True, 'to_lit': False, 'to_expr': True}], 'spark_func_kwargs': {}, 'spark_func_name': 'coalesce', 'sql_expression': None, 'table_name': 'slv_stock_prices', 'type': 'double', 'unit': None}, {'catalog_name': 'dev', 'comment': None, 'name': 'close', 'pii': None, 'raise_missing_arg_exception': True, 'schema_name': 'markets', 'spark_func_args': [], 'spark_func_kwargs': {}, 'spark_func_name': None, 'sql_expression': 'data.open', 'table_name': 'slv_stock_prices', 'type': 'double', 'unit': None}], 'comment': None, 'data': [['2023-11-01T00:00:00Z', 'AAPL', 1, 2], ['2023-11-01T01:00:00Z', 'AAPL', 3, 4], ['2023-11-01T00:00:00Z', 'GOOGL', 3, 4], ['2023-11-01T01:00:00Z', 'GOOGL', 5, 6]], 'data_source_format': 'DELTA', 'expectations': [{'name': 'positive_price', 'expression': 'open > 0', 'action': 'FAIL'}, {'name': 'recent_price', 'expression': "created_at > '2023-01-01'", 'action': 'DROP'}], 'grants': None, 'name': 'slv_stock_prices', 'primary_key': None, 'schema_name': 'markets', 'table_type': 'MANAGED', 'timestamp_key': None, 'view_definition': None, 'warehouse_id': '08b717ce051a0261'}
-
+    assert table_slv.model_dump() == {
+        "builder": {
+            "aggregation": None,
+            "as_dlt_view": False,
+            "drop_columns": [],
+            "drop_duplicates": None,
+            "drop_source_columns": True,
+            "event_source": None,
+            "filter": None,
+            "joins": [],
+            "joins_post_aggregation": [],
+            "layer": "SILVER",
+            "pipeline_name": None,
+            "selects": None,
+            "table_source": {
+                "read_as_stream": True,
+                "catalog_name": "dev",
+                "cdc": None,
+                "selects": None,
+                "fmt": "DELTA",
+                "filter": None,
+                "from_pipeline": True,
+                "name": "brz_stock_prices",
+                "path": None,
+                "schema_name": "markets",
+                "watermark": None,
+            },
+            "template": "SILVER",
+            "unions": [],
+            "window_filter": None,
+        },
+        "catalog_name": "dev",
+        "columns": [
+            {
+                "catalog_name": "dev",
+                "comment": None,
+                "name": "created_at",
+                "pii": None,
+                "raise_missing_arg_exception": True,
+                "schema_name": "markets",
+                "spark_func_args": [
+                    {
+                        "value": "data._created_at",
+                        "is_column": True,
+                        "to_lit": False,
+                        "to_expr": True,
+                    }
+                ],
+                "spark_func_kwargs": {},
+                "spark_func_name": "coalesce",
+                "sql_expression": None,
+                "table_name": "slv_stock_prices",
+                "type": "timestamp",
+                "unit": None,
+            },
+            {
+                "catalog_name": "dev",
+                "comment": None,
+                "name": "symbol",
+                "pii": None,
+                "raise_missing_arg_exception": True,
+                "schema_name": "markets",
+                "spark_func_args": [
+                    {
+                        "value": "data.symbol",
+                        "is_column": True,
+                        "to_lit": False,
+                        "to_expr": True,
+                    }
+                ],
+                "spark_func_kwargs": {},
+                "spark_func_name": "coalesce",
+                "sql_expression": None,
+                "table_name": "slv_stock_prices",
+                "type": "string",
+                "unit": None,
+            },
+            {
+                "catalog_name": "dev",
+                "comment": None,
+                "name": "open",
+                "pii": None,
+                "raise_missing_arg_exception": True,
+                "schema_name": "markets",
+                "spark_func_args": [
+                    {
+                        "value": "data.open",
+                        "is_column": True,
+                        "to_lit": False,
+                        "to_expr": True,
+                    }
+                ],
+                "spark_func_kwargs": {},
+                "spark_func_name": "coalesce",
+                "sql_expression": None,
+                "table_name": "slv_stock_prices",
+                "type": "double",
+                "unit": None,
+            },
+            {
+                "catalog_name": "dev",
+                "comment": None,
+                "name": "close",
+                "pii": None,
+                "raise_missing_arg_exception": True,
+                "schema_name": "markets",
+                "spark_func_args": [],
+                "spark_func_kwargs": {},
+                "spark_func_name": None,
+                "sql_expression": "data.open",
+                "table_name": "slv_stock_prices",
+                "type": "double",
+                "unit": None,
+            },
+        ],
+        "comment": None,
+        "data": [
+            ["2023-11-01T00:00:00Z", "AAPL", 1, 2],
+            ["2023-11-01T01:00:00Z", "AAPL", 3, 4],
+            ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
+            ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
+        ],
+        "data_source_format": "DELTA",
+        "expectations": [
+            {"name": "positive_price", "expression": "open > 0", "action": "FAIL"},
+            {
+                "name": "recent_price",
+                "expression": "created_at > '2023-01-01'",
+                "action": "DROP",
+            },
+        ],
+        "grants": None,
+        "name": "slv_stock_prices",
+        "primary_key": None,
+        "schema_name": "markets",
+        "table_type": "MANAGED",
+        "timestamp_key": None,
+        "view_definition": None,
+        "warehouse_id": "08b717ce051a0261",
+    }
 
     assert not table_slv.is_from_cdc
 
@@ -156,8 +294,122 @@ def test_table_agg():
 
 def test_silver_star():
     print(table_slv_star.model_dump())
-    assert table_slv_star.model_dump() == {'builder': {'aggregation': None, 'as_dlt_view': False, 'drop_columns': [], 'drop_duplicates': None, 'drop_source_columns': False, 'event_source': None, 'filter': None, 'joins': [{'how': 'left', 'left': None, 'on': ['symbol'], 'on_expression': None, 'other': {'read_as_stream': True, 'catalog_name': 'dev', 'cdc': None, 'selects': {'symbol2': 'symbol', 'currency': 'currency', 'first_traded': 'last_traded'}, 'fmt': 'DELTA', 'filter': None, 'from_pipeline': True, 'name': 'slv_stock_metadata', 'path': None, 'schema_name': 'markets', 'watermark': None}, 'time_constraint_interval_lower': '60 seconds', 'time_constraint_interval_upper': None}, {'how': 'left', 'left': None, 'on': ['symbol3'], 'on_expression': None, 'other': {'read_as_stream': True, 'catalog_name': 'dev', 'cdc': None, 'selects': ['symbol3', 'name'], 'fmt': 'DELTA', 'filter': None, 'from_pipeline': True, 'name': 'slv_stock_names', 'path': None, 'schema_name': 'markets', 'watermark': None}, 'time_constraint_interval_lower': '60 seconds', 'time_constraint_interval_upper': None}], 'joins_post_aggregation': [], 'layer': 'SILVER_STAR', 'pipeline_name': None, 'selects': None, 'table_source': {'read_as_stream': True, 'catalog_name': 'dev', 'cdc': None, 'selects': None, 'fmt': 'DELTA', 'filter': "created_at = '2023-11-01T00:00:00Z'", 'from_pipeline': True, 'name': 'slv_stock_prices', 'path': None, 'schema_name': 'markets', 'watermark': None}, 'template': 'SILVER_STAR', 'unions': [], 'window_filter': None}, 'catalog_name': 'dev', 'columns': [{'catalog_name': 'dev', 'comment': None, 'name': 'symbol3', 'pii': None, 'raise_missing_arg_exception': True, 'schema_name': 'markets', 'spark_func_args': [{'value': 'symbol', 'is_column': True, 'to_lit': False, 'to_expr': True}], 'spark_func_kwargs': {}, 'spark_func_name': 'coalesce', 'sql_expression': None, 'table_name': 'slv_star_stock_prices', 'type': 'string', 'unit': None}], 'comment': None, 'data': None, 'data_source_format': 'DELTA', 'expectations': [], 'grants': None, 'name': 'slv_star_stock_prices', 'primary_key': None, 'schema_name': 'markets', 'table_type': 'MANAGED', 'timestamp_key': None, 'view_definition': None, 'warehouse_id': '08b717ce051a0261'}
-
+    assert table_slv_star.model_dump() == {
+        "builder": {
+            "aggregation": None,
+            "as_dlt_view": False,
+            "drop_columns": [],
+            "drop_duplicates": None,
+            "drop_source_columns": False,
+            "event_source": None,
+            "filter": None,
+            "joins": [
+                {
+                    "how": "left",
+                    "left": None,
+                    "on": ["symbol"],
+                    "on_expression": None,
+                    "other": {
+                        "read_as_stream": True,
+                        "catalog_name": "dev",
+                        "cdc": None,
+                        "selects": {
+                            "symbol2": "symbol",
+                            "currency": "currency",
+                            "first_traded": "last_traded",
+                        },
+                        "fmt": "DELTA",
+                        "filter": None,
+                        "from_pipeline": True,
+                        "name": "slv_stock_metadata",
+                        "path": None,
+                        "schema_name": "markets",
+                        "watermark": None,
+                    },
+                    "time_constraint_interval_lower": "60 seconds",
+                    "time_constraint_interval_upper": None,
+                },
+                {
+                    "how": "left",
+                    "left": None,
+                    "on": ["symbol3"],
+                    "on_expression": None,
+                    "other": {
+                        "read_as_stream": True,
+                        "catalog_name": "dev",
+                        "cdc": None,
+                        "selects": ["symbol3", "name"],
+                        "fmt": "DELTA",
+                        "filter": None,
+                        "from_pipeline": True,
+                        "name": "slv_stock_names",
+                        "path": None,
+                        "schema_name": "markets",
+                        "watermark": None,
+                    },
+                    "time_constraint_interval_lower": "60 seconds",
+                    "time_constraint_interval_upper": None,
+                },
+            ],
+            "joins_post_aggregation": [],
+            "layer": "SILVER_STAR",
+            "pipeline_name": None,
+            "selects": None,
+            "table_source": {
+                "read_as_stream": True,
+                "catalog_name": "dev",
+                "cdc": None,
+                "selects": None,
+                "fmt": "DELTA",
+                "filter": "created_at = '2023-11-01T00:00:00Z'",
+                "from_pipeline": True,
+                "name": "slv_stock_prices",
+                "path": None,
+                "schema_name": "markets",
+                "watermark": None,
+            },
+            "template": "SILVER_STAR",
+            "unions": [],
+            "window_filter": None,
+        },
+        "catalog_name": "dev",
+        "columns": [
+            {
+                "catalog_name": "dev",
+                "comment": None,
+                "name": "symbol3",
+                "pii": None,
+                "raise_missing_arg_exception": True,
+                "schema_name": "markets",
+                "spark_func_args": [
+                    {
+                        "value": "symbol",
+                        "is_column": True,
+                        "to_lit": False,
+                        "to_expr": True,
+                    }
+                ],
+                "spark_func_kwargs": {},
+                "spark_func_name": "coalesce",
+                "sql_expression": None,
+                "table_name": "slv_star_stock_prices",
+                "type": "string",
+                "unit": None,
+            }
+        ],
+        "comment": None,
+        "data": None,
+        "data_source_format": "DELTA",
+        "expectations": [],
+        "grants": None,
+        "name": "slv_star_stock_prices",
+        "primary_key": None,
+        "schema_name": "markets",
+        "table_type": "MANAGED",
+        "timestamp_key": None,
+        "view_definition": None,
+        "warehouse_id": "08b717ce051a0261",
+    }
 
     df = table_slv_star.builder.read_source(spark)
     df = table_slv_star.builder.process(df, spark=spark)
