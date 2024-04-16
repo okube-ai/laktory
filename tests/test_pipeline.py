@@ -105,6 +105,7 @@ def test_pipeline():
                         "comment": None,
                         "name": "created_at",
                         "pii": None,
+                        "raise_missing_arg_exception": True,
                         "schema_name": None,
                         "spark_func_args": [
                             {
@@ -126,6 +127,7 @@ def test_pipeline():
                         "comment": None,
                         "name": "symbol",
                         "pii": None,
+                        "raise_missing_arg_exception": True,
                         "schema_name": None,
                         "spark_func_args": [
                             {
@@ -147,6 +149,7 @@ def test_pipeline():
                         "comment": None,
                         "name": "open",
                         "pii": None,
+                        "raise_missing_arg_exception": True,
                         "schema_name": None,
                         "spark_func_args": [
                             {
@@ -168,6 +171,7 @@ def test_pipeline():
                         "comment": None,
                         "name": "close",
                         "pii": None,
+                        "raise_missing_arg_exception": True,
                         "schema_name": None,
                         "spark_func_args": [],
                         "spark_func_kwargs": {},
