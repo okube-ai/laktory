@@ -306,10 +306,15 @@ class Column(BaseModel):
             if df is not None:
                 if _arg.is_column and not has_column(df, _arg.value):
                     logger.info(f"Column '{_arg.value}' not available")
-                    if raise_exception and self.raise_missing_arg_exception:
-                        raise ValueError(
-                            f"Input column {_arg} for {self.name} is not available. Aborting."
-                        )
+
+                    if self.raise_missing_arg_exception:
+                        if raise_exception:
+                            raise ValueError(
+                                f"Input column {_arg} missing. Abort building {self.name}."
+                            )
+                        else:
+                            logger.info(f"Input column {_arg} missing. Skip building {self.name}")
+                            return None
                     else:
                         continue
 
@@ -317,9 +322,9 @@ class Column(BaseModel):
 
         if len(_args) > 0 and len(args) < 1:
             if raise_exception:
-                raise ValueError(f"All input columns are missing for building {self.name}. Aborting")
+                raise ValueError(f"All input columns are  missing. Abort building {self.name}")
             else:
-                logger.info(f"All input columns are missing for building {self.name}. Skipping")
+                logger.info(f"All input columns are missing. Skip building {self.name}")
                 return None
 
         # Build kwargs
