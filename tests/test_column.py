@@ -158,6 +158,37 @@ def test_spark():
     assert s == ["G00GL", "G00GL", "G00GL", "G00GL", "G00GL"]
 
 
+def test_spark_missing_column():
+
+    df.printSchema()
+
+    # All columns are missing
+    with pytest.raises(ValueError):
+        c = Column(name="x", spark_func_args=("x",)).to_spark(df)
+
+    # Single column is missing
+    with pytest.raises(ValueError):
+        c = Column(name="x", spark_func_args=("name", "x",)).to_spark(df)
+
+    # One column is missing, but missing is allowed
+    c = Column(
+        name="x",
+        spark_func_args=("name", "x",),
+        raise_missing_arg_exception=False
+    )
+    cs = c.to_spark(df)
+    s = df.withColumn(c.name, cs).toPandas()[c.name].tolist()
+    assert s == ['stock_price', 'stock_price', 'stock_price', 'stock_price', 'stock_price']
+
+    # Missing are allowed, but all inputs are missing
+    with pytest.raises(ValueError):
+        c = Column(
+            name="x",
+            spark_func_args=("m1", "m2",),
+            raise_missing_arg_exception=False
+        ).to_spark(df)
+
+
 def test_spark_udf():
     def x2(x):
         return 2 * x
@@ -189,4 +220,5 @@ if __name__ == "__main__":
     test_model()
     test_read()
     test_spark()
+    test_spark_missing_column()
     test_spark_udf()

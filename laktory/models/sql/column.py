@@ -100,6 +100,9 @@ class Column(BaseModel):
         Name of the column
     pii:
         If `True`, the column is flagged as Personally Identifiable Information
+    raise_missing_arg_exception:
+        If `True`, an exception is raised when one of the spark function
+        argument is missing. Otherwise, only warning is issued.
     schema_name:
         Name of the schema storing the column table
     spark_func_args:
@@ -153,6 +156,7 @@ class Column(BaseModel):
     comment: Union[str, None] = None
     name: str
     pii: Union[bool, None] = None
+    raise_missing_arg_exception: Union[bool, None] = True
     schema_name: Union[str, None] = None
     spark_func_args: list[Union[str, SparkFuncArg]] = []
     spark_func_kwargs: dict[str, Union[Any, SparkFuncArg]] = {}
@@ -302,15 +306,22 @@ class Column(BaseModel):
             if df is not None:
                 if _arg.is_column and not has_column(df, _arg.value):
                     logger.info(f"Column '{_arg.value}' not available")
-                    if raise_exception:
+                    if raise_exception and self.raise_missing_arg_exception:
                         raise ValueError(
-                            f"Input column {_args} for {self.name} is not available"
+                            f"Input column {_arg} for {self.name} is not available"
                         )
                     else:
-                        logger.info("Input columns not available. Skipping")
-                        return None
+                        logger.info(f"Input column {_arg} for {self.name} not available. Skipping")
+                        continue
 
             args += [_arg.to_spark()]
+
+        if len(_args) > 0 and len(args) < 1:
+            if raise_exception:
+                raise ValueError("All input columns are missing")
+            else:
+                logger.info("All input columns are missing. Skipping")
+                return None
 
         # Build kwargs
         kwargs = {}
