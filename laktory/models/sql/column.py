@@ -311,7 +311,9 @@ class Column(BaseModel):
                             f"Input column {_arg} for {self.name} is not available"
                         )
                     else:
-                        logger.info(f"Input column {_arg} for {self.name} not available. Skipping")
+                        logger.info(
+                            f"Input column {_arg} for {self.name} not available. Skipping"
+                        )
                         continue
 
             args += [_arg.to_spark()]
