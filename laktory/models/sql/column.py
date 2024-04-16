@@ -333,6 +333,7 @@ class Column(BaseModel):
             kwargs[k] = _arg.to_spark()
 
         # Function call
+        logger.info(f"   {self.name}[{self.type}] as {func_name}({args}, {kwargs})")
         col = f(*args, **kwargs)
 
         # Type Casting
