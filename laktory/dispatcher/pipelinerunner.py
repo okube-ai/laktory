@@ -68,8 +68,9 @@ class PipelineRunner(Runner):
             )
 
         pstate = None
+        self.get_update()
+        logger.info(f"Pipeline {self.name} run URL: {self.update_url}")
         if wait:
-            self.get_update()
             while time.time() - t0 < timeout or self.update_state == UpdateInfoState.COMPLETED:
                 self.get_update()
 
@@ -124,3 +125,7 @@ class PipelineRunner(Runner):
     @property
     def update_id(self) -> str:
         return self._update_start.update_id
+
+    @property
+    def update_url(self) -> str:
+        return f"{self.wc.config.host}/pipelines/{self.id}/updates/{self.update_id}"

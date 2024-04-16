@@ -59,11 +59,11 @@ class JobRunner(Runner):
         self._run_start = self.wc.jobs.run_now(
             job_id=self.id,
         )
-        logger.info(f"Job {self.name} run URL: {self._run.run_page_url}")
 
         pstates = {}
+        self.get_run()
+        logger.info(f"Job {self.name} run URL: {self._run.run_page_url}")
         if wait:
-            self.get_run()
             while time.time() - t0 < timeout or self.run_state == RunLifeCycleState.TERMINATED:
                 self.get_run()
 
