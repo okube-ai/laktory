@@ -159,7 +159,6 @@ def test_spark():
 
 
 def test_spark_missing_column():
-    df.printSchema()
 
     # All columns are missing
     with pytest.raises(ValueError):
