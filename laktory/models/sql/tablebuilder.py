@@ -169,6 +169,11 @@ class TableBuilder(BaseModel):
         return len(self.unions) > 0
 
     @property
+    def has_aggregation(self) -> bool:
+        """Has aggregation"""
+        return self.aggregation is not None
+
+    @property
     def has_joins_post_aggregation(self) -> bool:
         """Post-aggregation joins defined flag"""
         return len(self.joins_post_aggregation) > 0
@@ -320,7 +325,7 @@ class TableBuilder(BaseModel):
         self._columns_to_build = [c for c in self.columns]
         column_names = [c.name for c in self._columns_to_build]
         df = self.build_columns(
-            df, udfs=udfs, raise_exception=not (self.has_joins or self.aggregation)
+            df, udfs=udfs, raise_exception=not (self.has_joins or self.has_aggregation)
         )
 
         # Execute unions
@@ -356,7 +361,7 @@ class TableBuilder(BaseModel):
         self._columns_to_build += layer_columns
         column_names += [c.name for c in layer_columns]
         df = self.build_columns(
-            df, udfs=udfs, raise_exception=not self.has_joins_post_aggregation
+            df, udfs=udfs, raise_exception=not (self.has_joins_post_aggregation or self.has_aggregation)
         )
 
         # Window filtering
