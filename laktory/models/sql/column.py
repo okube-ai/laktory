@@ -310,10 +310,10 @@ class Column(BaseModel):
                     if self.raise_missing_arg_exception:
                         if raise_exception:
                             raise ValueError(
-                                f"Input column {_arg} missing. Abort building {self.name}."
+                                f"Input column {_arg.value} missing. Abort building {self.name}."
                             )
                         else:
-                            logger.info(f"Input column {_arg} missing. Skip building {self.name}")
+                            logger.info(f"Input column {_arg.value} missing. Skip building {self.name}")
                             return None
                     else:
                         continue

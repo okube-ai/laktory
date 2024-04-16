@@ -324,6 +324,7 @@ class TableBuilder(BaseModel):
         )
 
         # Execute unions
+        logger.info(f"Executing unions...")
         for i, union in enumerate(self.unions):
             if i == 0:
                 name = self.source.name
@@ -334,6 +335,7 @@ class TableBuilder(BaseModel):
             df = union.execute(spark)
 
         # Execute joins
+        logger.info(f"Executing joins...")
         for i, join in enumerate(self.joins):
             if i == 0:
                 name = self.source.name
@@ -349,6 +351,7 @@ class TableBuilder(BaseModel):
             )
 
         # Add layer columns
+        logger.info(f"Adding layer columns...")
         layer_columns = self._get_layer_columns(layer=self.layer, df=df)
         self._columns_to_build += layer_columns
         column_names += [c.name for c in layer_columns]
@@ -358,6 +361,7 @@ class TableBuilder(BaseModel):
 
         # Window filtering
         if self.window_filter:
+            logger.info(f"Window filtering...")
             df = self.window_filter.execute(df)
 
         # Drop source columns
@@ -366,6 +370,7 @@ class TableBuilder(BaseModel):
             df = df.select(column_names)
 
         if self.aggregation:
+            logger.info(f"Executing Aggregations...")
             df = self.aggregation.execute(df, udfs=udfs)
             self._columns_to_build += self._get_layer_columns(layer=self.layer, df=df)
 
@@ -376,6 +381,7 @@ class TableBuilder(BaseModel):
 
         # Make post-aggregation joins
         for i, join in enumerate(self.joins_post_aggregation):
+            logger.info(f"Post-aggregation joins...")
             if i == 0:
                 name = self.source.name
             else:
@@ -396,6 +402,7 @@ class TableBuilder(BaseModel):
         # Select columns
         cols = []
         if self.selects:
+            logger.info(f"Selecting columns...")
             if isinstance(self.selects, list):
                 cols += [F.col(c) for c in self.selects]
             elif isinstance(self.selects, dict):
