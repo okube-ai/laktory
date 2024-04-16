@@ -308,19 +308,16 @@ class Column(BaseModel):
                     logger.info(f"Column '{_arg.value}' not available")
                     if raise_exception and self.raise_missing_arg_exception:
                         raise ValueError(
-                            f"Input column {_arg} for {self.name} is not available"
+                            f"Input column {_arg} for {self.name} is not available. Aborting."
                         )
                     else:
-                        logger.info(
-                            f"Input column {_arg} for {self.name} not available. Skipping"
-                        )
                         continue
 
             args += [_arg.to_spark()]
 
         if len(_args) > 0 and len(args) < 1:
             if raise_exception:
-                raise ValueError(f"All input columns are missing for building {self.name}")
+                raise ValueError(f"All input columns are missing for building {self.name}. Aborting")
             else:
                 logger.info(f"All input columns are missing for building {self.name}. Skipping")
                 return None
