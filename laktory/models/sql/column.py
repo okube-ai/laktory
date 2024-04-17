@@ -313,7 +313,9 @@ class Column(BaseModel):
                                 f"Input column {_arg.value} missing. Abort building {self.name}."
                             )
                         else:
-                            logger.info(f"Input column {_arg.value} missing. Skip building {self.name}")
+                            logger.info(
+                                f"Input column {_arg.value} missing. Skip building {self.name}"
+                            )
                             return None
                     else:
                         continue
@@ -322,7 +324,9 @@ class Column(BaseModel):
 
         if len(_args) > 0 and len(args) < 1:
             if raise_exception:
-                raise ValueError(f"All input columns are  missing. Abort building {self.name}")
+                raise ValueError(
+                    f"All input columns are  missing. Abort building {self.name}"
+                )
             else:
                 logger.info(f"All input columns are missing. Skip building {self.name}")
                 return None

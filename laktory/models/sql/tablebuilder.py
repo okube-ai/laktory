@@ -361,7 +361,11 @@ class TableBuilder(BaseModel):
         self._columns_to_build += layer_columns
         column_names += [c.name for c in layer_columns]
         df = self.build_columns(
-            df, udfs=udfs, raise_exception=not (self.has_joins_post_aggregation or self.has_aggregation)
+            df,
+            udfs=udfs,
+            raise_exception=not (
+                self.has_joins_post_aggregation or self.has_aggregation
+            ),
         )
 
         # Window filtering

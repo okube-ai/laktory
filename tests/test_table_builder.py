@@ -482,13 +482,11 @@ def test_builder_agg():
                     {
                         "name": "close_mean",
                         "spark_func_name": "mean",
-                        "spark_func_args": [
-                            "close"
-                        ]
+                        "spark_func_args": ["close"],
                     },
-                ]
+                ],
             }
-        }
+        },
     )
 
     # Process Data
@@ -498,7 +496,7 @@ def test_builder_agg():
     # Test
     pdf = df3.toPandas()
     s0 = pdf["close_mean"].tolist()
-    s1 = (0.5*pdf["close_mean_2"].astype(float)).tolist()
+    s1 = (0.5 * pdf["close_mean_2"].astype(float)).tolist()
 
     assert s1 == pytest.approx(s0)
 
