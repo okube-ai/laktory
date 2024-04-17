@@ -213,12 +213,16 @@ nav:
         - show_string: api/spark/dataframe/show_string.md
       - Functions:
         - constants: api/spark/functions/_constants.md
+        - add: api/spark/functions/add.md
         - convert_units: api/spark/functions/convert_units.md
+        - div: api/spark/functions/div.md
+        - mul: api/spark/functions/mul.md
         - poly1: api/spark/functions/poly1.md
         - poly2: api/spark/functions/poly2.md
-        - power: api/spark/functions/power.md
         - roundp: api/spark/functions/roundp.md
+        - scaled_power: api/spark/functions/scaled_power.md
         - string_split: api/spark/functions/string_split.md
+        - sub: api/spark/functions/sub.md
         - uuid: api/spark/functions/uuid.md
     - DLT:
       - apply_changes: api/dlt/apply_changes.md

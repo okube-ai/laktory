@@ -1,3 +1,4 @@
+import pytest
 from pyspark.sql import types as T
 from pyspark.sql import functions as F
 from pyspark.sql import SparkSession
@@ -444,6 +445,64 @@ def test_drop_duplicates():
     assert df3.count() == 4
 
 
+def test_builder_agg():
+    # Get Data
+    df0 = manager.to_spark_df()
+    df1 = table_brz.builder.process(df0)
+    df2 = table_slv.builder.process(df1)
+    df2.show()
+
+    # Set table that needs to aggregate on input column and create new column
+    # on aggregated result
+    table_agg = Table(
+        name="table_agg",
+        catalog_name="dev",
+        schema_name="markets",
+        columns=[
+            {
+                "name": "close_mean_2",
+                "spark_func_name": "scaled_power",
+                "spark_func_args": [
+                    "close_mean",
+                    {
+                        "value": 2,
+                        "to_lit": True,
+                    },
+                    {
+                        "value": 1,
+                        "to_lit": True,
+                    },
+                ],
+            }
+        ],
+        builder={
+            "aggregation": {
+                "groupby_columns": ["symbol"],
+                "agg_expressions": [
+                    {
+                        "name": "close_mean",
+                        "spark_func_name": "mean",
+                        "spark_func_args": [
+                            "close"
+                        ]
+                    },
+                ]
+            }
+        }
+    )
+
+    # Process Data
+    df3 = table_agg.builder.process(df2)
+    df3.show()
+
+    # Test
+    pdf = df3.toPandas()
+    s0 = pdf["close_mean"].tolist()
+    s1 = (0.5*pdf["close_mean_2"].astype(float)).tolist()
+
+    assert s1 == pytest.approx(s0)
+
+
 def test_builder_union():
     # Set table using union
     df0 = manager.to_spark_df()
@@ -536,3 +595,4 @@ if __name__ == "__main__":
     test_cdc()
     test_drop_duplicates()
     test_builder_union()
+    test_builder_agg()

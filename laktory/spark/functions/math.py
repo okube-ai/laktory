@@ -10,12 +10,183 @@ from laktory.spark.functions._common import (
 )
 
 __all__ = [
+    "add",
+    "sub",
+    "mul",
+    "div",
     "poly1",
     "poly2",
-    "power",
+    "scaled_power",
     "roundp",
 ]
 
+
+# --------------------------------------------------------------------------- #
+# Arithmetics                                                                 #
+# --------------------------------------------------------------------------- #
+
+def add(
+    x: COLUMN_OR_NAME,
+    a: FLOAT_OR_COLUMN = 1.0,
+) -> Column:
+    """
+    Get floating addition `x + a`
+
+    Parameters
+    ----------
+    x:
+        Input column
+    a:
+        Addend
+
+    Returns
+    -------
+    :
+        Output column
+
+    Examples
+    --------
+    ```py
+    import laktory  # noqa: F401
+    import laktory.spark.functions as LF
+
+    df = spark.createDataFrame([[8], [6]], ["x"])
+    df = df.withColumn("y", LF.poly1("x", a=2))
+    print(df.show_string())
+    '''
+    +---+---+
+    |  x|  y|
+    +---+---+
+    |  8| 10|
+    |  6|  8|
+    +---+---+
+    '''
+    ```
+    """
+    return _col(x) + _lit(a)
+
+
+def sub(
+    x: COLUMN_OR_NAME,
+    a: FLOAT_OR_COLUMN = 1.0,
+) -> Column:
+    """
+    Get floating subtraction `x - a`
+
+    Parameters
+    ----------
+    x:
+        Input column
+    a:
+        Subtrahend
+
+    Returns
+    -------
+    :
+        Output column
+
+    Examples
+    --------
+    ```py
+    import laktory  # noqa: F401
+    import laktory.spark.functions as LF
+
+    df = spark.createDataFrame([[8], [6]], ["x"])
+    df = df.withColumn("y", LF.poly1("x", a=2))
+    print(df.show_string())
+    '''
+    +---+---+
+    |  x|  y|
+    +---+---+
+    |  8|  6|
+    |  6|  4|
+    +---+---+
+    '''
+    ```
+    """
+    return _col(x) - _lit(a)
+
+
+def mul(
+    x: COLUMN_OR_NAME,
+    a: FLOAT_OR_COLUMN = 1.0,
+) -> Column:
+    """
+    Get floating multiplication `x * a`
+
+    Parameters
+    ----------
+    x:
+        Input column
+    a:
+        Multiplier
+
+    Returns
+    -------
+    :
+        Output column
+
+    Examples
+    --------
+    ```py
+    import laktory  # noqa: F401
+    import laktory.spark.functions as LF
+
+    df = spark.createDataFrame([[8], [6]], ["x"])
+    df = df.withColumn("y", LF.poly1("x", a=2))
+    print(df.show_string())
+    '''
+    +---+---+
+    |  x|  y|
+    +---+---+
+    |  8| 16|
+    |  6| 12|
+    +---+---+
+    '''
+    ```
+    """
+    return _col(x) * _lit(a)
+
+
+def div(
+    x: COLUMN_OR_NAME,
+    a: FLOAT_OR_COLUMN = 1.0,
+) -> Column:
+    """
+    Get floating division `x / a`
+
+    Parameters
+    ----------
+    x:
+        Input column
+    a:
+        Divider
+
+    Returns
+    -------
+    :
+        Output column
+
+    Examples
+    --------
+    ```py
+    import laktory  # noqa: F401
+    import laktory.spark.functions as LF
+
+    df = spark.createDataFrame([[8], [6]], ["x"])
+    df = df.withColumn("y", LF.poly1("x", a=2))
+    print(df.show_string())
+    '''
+    +---+---+
+    |  x|  y|
+    +---+---+
+    |  8|  4|
+    |  6|  3|
+    +---+---+
+    '''
+    ```
+    """
+    return _col(x) / _lit(a)
 
 # --------------------------------------------------------------------------- #
 # Polynomials                                                                 #
@@ -28,7 +199,7 @@ def poly1(
     b: FLOAT_OR_COLUMN = 0.0,
 ) -> Column:
     """
-    Polynomial function of first degree
+    Polynomial function of first degree `a * x + b`
 
     Parameters
     ----------
@@ -72,7 +243,7 @@ def poly2(
     c: FLOAT_OR_COLUMN = 0.0,
 ) -> Column:
     """
-    Polynomial function of second degree
+    Polynomial function of second degree `a * x**2 + b * x + c`
 
     Parameters
     ------
@@ -112,24 +283,23 @@ def poly2(
 
 
 # --------------------------------------------------------------------------- #
-# Power                                                                       #
+# Scaled Power                                                                #
 # --------------------------------------------------------------------------- #
 
-
-def power(
+def scaled_power(
     x: COLUMN_OR_NAME,
     a: FLOAT_OR_COLUMN = 1.0,
     n: FLOAT_OR_COLUMN = 0.0,
 ) -> Column:
     """
-    Power function
+    Scaled power function `a * x`
 
     Parameters
     ------
     x:
         Input column
     a:
-        Coefficient
+        Scaling coefficient
     n:
         Exponent
 
@@ -145,7 +315,7 @@ def power(
     import laktory.spark.functions as LF
 
     df = spark.createDataFrame([[9]], ["x"])
-    df = df.withColumn("y", LF.power("x", a=-3, n=2))
+    df = df.withColumn("y", LF.scaled_power("x", a=-3, n=2))
     print(df.show_string())
     '''
     +---+------+
