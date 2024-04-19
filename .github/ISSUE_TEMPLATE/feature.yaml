@@ -1,0 +1,50 @@
+name: Feature Request
+description: Suggest a new feature for laktory
+title: "[FEATURE] "
+labels: [feature, triage]
+
+body:
+  - type: textarea
+    id: statement
+    attributes:
+      label: Problem Statement
+      description: >
+        Please describe what problem the feature would solve, e.g. "I wish I could use laktory to ..."
+      placeholder: >
+        I wish I could deploy laktory models using CloudFormation backend.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: >
+        Please describe how the new feature would be implemented, using psudocode if relevant.
+      placeholder: >
+        Add a new class that support CloudFormation resources deployment.
+
+        class CloudFormationResource(BaseResource):
+            """
+            Parent class for all Laktory models deployable with CloudFormation IaC backend.
+            """
+
+            # ----------------------------------------------------------------------- #
+            # Properties                                                              #
+            # ----------------------------------------------------------------------- #
+        
+            @property
+            @abstractmethod
+            def cloudformation_resource_type(self) -> str:
+                raise NotImplementedError()
+            
+        ...
+
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: >
+        Please provide any relevant GitHub issues, code examples, screenshots or references that help describe and support
+        the feature request.

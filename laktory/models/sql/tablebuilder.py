@@ -12,6 +12,7 @@ from laktory.models.datasources import TableDataSource
 from laktory.models.sql.column import Column
 from laktory.models.sql.tableaggregation import TableAggregation
 from laktory.models.sql.tablejoin import TableJoin
+from laktory.models.sql.tableunion import TableUnion
 from laktory.models.sql.tablewindowfilter import TableWindowFilter
 from laktory.spark import DataFrame
 
@@ -61,6 +62,8 @@ class TableBuilder(BaseModel):
     template:
         Key indicating which notebook to use for building the table in the
         context of a data pipeline.
+    unions:
+        Definition of the table(s) to be unioned to the data source
     window_filter:
         Definition of rows filter based on a time spark window. Applied after
         joins.
@@ -80,6 +83,7 @@ class TableBuilder(BaseModel):
     selects: Union[list[str], dict[str, str], None] = None
     table_source: Union[TableDataSource, None] = None
     template: Union[str, bool, None] = None
+    unions: list[TableUnion] = []
     window_filter: Union[TableWindowFilter, None] = None
     _columns_to_build = []
     _table: Any = None
@@ -158,6 +162,16 @@ class TableBuilder(BaseModel):
     def has_joins(self) -> bool:
         """Joins defined flag"""
         return len(self.joins) > 0
+
+    @property
+    def has_unions(self) -> bool:
+        """Unions defined flag"""
+        return len(self.unions) > 0
+
+    @property
+    def has_aggregation(self) -> bool:
+        """Has aggregation"""
+        return self.aggregation is not None
 
     @property
     def has_joins_post_aggregation(self) -> bool:
@@ -308,15 +322,25 @@ class TableBuilder(BaseModel):
         logger.info(f"Applying {self.layer} transformations")
 
         # Build columns
-        self._columns_to_build = self.columns + self._get_layer_columns(
-            layer=self.layer, df=df
-        )
+        self._columns_to_build = [c for c in self.columns]
         column_names = [c.name for c in self._columns_to_build]
         df = self.build_columns(
-            df, udfs=udfs, raise_exception=not (self.has_joins or self.aggregation)
+            df, udfs=udfs, raise_exception=not (self.has_joins or self.has_aggregation)
         )
 
-        # Make joins
+        # Execute unions
+        logger.info(f"Executing unions...")
+        for i, union in enumerate(self.unions):
+            if i == 0:
+                name = self.source.name
+            else:
+                name = "previous_union"
+            union.left = TableDataSource(name=name)
+            union.left._df = df
+            df = union.execute(spark)
+
+        # Execute joins
+        logger.info(f"Executing joins...")
         for i, join in enumerate(self.joins):
             if i == 0:
                 name = self.source.name
@@ -331,8 +355,22 @@ class TableBuilder(BaseModel):
                 df, udfs=udfs, raise_exception=i == len(self.joins) - 1
             )
 
+        # Add layer columns
+        logger.info(f"Adding layer columns...")
+        layer_columns = self._get_layer_columns(layer=self.layer, df=df)
+        self._columns_to_build += layer_columns
+        column_names += [c.name for c in layer_columns]
+        df = self.build_columns(
+            df,
+            udfs=udfs,
+            raise_exception=not (
+                self.has_joins_post_aggregation or self.has_aggregation
+            ),
+        )
+
         # Window filtering
         if self.window_filter:
+            logger.info(f"Window filtering...")
             df = self.window_filter.execute(df)
 
         # Drop source columns
@@ -341,6 +379,7 @@ class TableBuilder(BaseModel):
             df = df.select(column_names)
 
         if self.aggregation:
+            logger.info(f"Executing Aggregations...")
             df = self.aggregation.execute(df, udfs=udfs)
             self._columns_to_build += self._get_layer_columns(layer=self.layer, df=df)
 
@@ -351,6 +390,7 @@ class TableBuilder(BaseModel):
 
         # Make post-aggregation joins
         for i, join in enumerate(self.joins_post_aggregation):
+            logger.info(f"Post-aggregation joins...")
             if i == 0:
                 name = self.source.name
             else:
@@ -371,6 +411,7 @@ class TableBuilder(BaseModel):
         # Select columns
         cols = []
         if self.selects:
+            logger.info(f"Selecting columns...")
             if isinstance(self.selects, list):
                 cols += [F.col(c) for c in self.selects]
             elif isinstance(self.selects, dict):

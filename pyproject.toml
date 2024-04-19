@@ -37,6 +37,7 @@ dynamic = ["version"]
 dependencies = [
     "inflect",
     "planck",
+    "prompt_toolkit",
     "pulumi",
     "pulumi_databricks>=1.36",  # required to monitor laktory usage
     "pulumi_random",
@@ -53,6 +54,7 @@ dev = [
     "mkdocs",
     "mkdocstrings[python]",
     "mkdocs-material",
+    "mkdocs-video",
 #    "mkdocs-snippets",
 ]
 spark = [

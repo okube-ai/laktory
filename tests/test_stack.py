@@ -54,6 +54,7 @@ def test_stack_model():
             "outputs": {},
         },
         "resources": {
+            "dbfsfiles": {},
             "catalogs": {},
             "clusters": {},
             "directories": {},

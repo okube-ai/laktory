@@ -37,3 +37,4 @@ from .metadata import read_metadata
 from .models.resources.pulumiresource import pulumi_outputs
 from .models.resources.pulumiresource import pulumi_resources
 from .cli.app import app
+from .version import show_version_info

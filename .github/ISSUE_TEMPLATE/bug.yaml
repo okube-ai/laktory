@@ -1,0 +1,50 @@
+name: Bug Report
+description: Report incorrect behavior in the laktory library
+title: "[BUG] "
+labels: [bug, triage]
+
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Preliminary checks
+      options:
+        - label: >
+            I have checked that this issue has not already been reported.
+          required: true
+        - label: >
+            I have confirmed this bug exists on the
+            [latest version](https://pypi.org/project/laktory/) of laktory.
+          required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: >
+        Please provide as much detail as possible to make understanding and solving your problem as quick as possible.
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Example Code
+      description: >
+        If applicable, please add a self-contained, [minimal, reproducible example](https://stackoverflow.com/help/minimal-reproducible-example) demonstrating the bug.
+    validations:
+      required: false
+  - type: textarea
+    id: version
+    attributes:
+      label: Installed Versions
+      description: >
+        Please paste the output of ``laktory.show_version_info()``
+      value: >
+        <details>
+
+
+        Replace this line with the output of laktory.show_version_info()
+
+
+        </details>
+    validations:
+      required: true

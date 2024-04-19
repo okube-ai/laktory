@@ -1,4 +1,5 @@
 from laktory.models.databricks.accesscontrol import AccessControl
+from laktory.models.databricks.dbfsfile import DbfsFile
 from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.directory import Directory
 from laktory.models.databricks.externallocation import ExternalLocation

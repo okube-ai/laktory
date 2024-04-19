@@ -1,6 +1,6 @@
 # Release History
 
-## [0.1.7] - Unreleased
+## [0.1.10] - Unreleased
 ### Added
 * n/a
 ### Fixed
@@ -9,6 +9,25 @@
 * n/a
 ### Breaking changes
 * n/a
+
+## [0.1.9] - 2024-04-17
+### Added
+* Support for table unions in table builder
+* New column property `raise_missing_arg_exception` to allow for some spark function inputs to be missing
+* `add`, `sub`, `mul` and `div` spark functions
+
+### Breaking Change
+* Renamed `power` spark function to `scaled_power` to prevent conflict with native spark function 
+
+## [0.1.8] - 2024-03-25
+### Added
+* `quickstart` CLI command to initialize a sample Laktory stack.
+* Databricks DBFS file model
+
+## [0.1.7] - 2024-03-15
+### Added
+* show_version_info() method for bugs reporting
+* Git issues templates 
 
 ## [0.1.6] - 2024-02-23
 ### Updated

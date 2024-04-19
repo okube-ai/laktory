@@ -106,6 +106,7 @@ plugins:
             show_symbol_type_toc: true  # sponsors only
             signature_crossrefs: true
             summary: true
+  - mkdocs-video
 
 #  - sear
 #  - snippets
@@ -115,6 +116,7 @@ plugins:
 nav:
   - Get Started:
     - About: index.md
+    - Demos: demos.md
     - Installation: install.md
     - Quickstart: quickstart.md
 
@@ -134,8 +136,8 @@ nav:
     - Data Governance: concepts/governance.md
 
   - How-To Guides:
-    - Users: guides/users.md
     - Data Catalog: guides/catalog.md
+    - Users: guides/users.md
     - Data Table: guides/table.md
     - Data Pipeline: guides/pipeline.md
     - Compute: guides/compute.md
@@ -195,6 +197,7 @@ nav:
           - TableBuilder: api/models/sql/tablebuilder.md
           - TableExpectation: api/models/sql/tableexpectation.md
           - TableJoin: api/models/sql/tablejoin.md
+          - TableUnion: api/models/sql/tableunion.md
           - TableWindowFilter: api/models/sql/tablewindowfilter.md
           - api/models/sql/volume.md
       - Stacks:
@@ -211,12 +214,16 @@ nav:
         - show_string: api/spark/dataframe/show_string.md
       - Functions:
         - constants: api/spark/functions/_constants.md
+        - add: api/spark/functions/add.md
         - convert_units: api/spark/functions/convert_units.md
+        - div: api/spark/functions/div.md
+        - mul: api/spark/functions/mul.md
         - poly1: api/spark/functions/poly1.md
         - poly2: api/spark/functions/poly2.md
-        - power: api/spark/functions/power.md
         - roundp: api/spark/functions/roundp.md
+        - scaled_power: api/spark/functions/scaled_power.md
         - string_split: api/spark/functions/string_split.md
+        - sub: api/spark/functions/sub.md
         - uuid: api/spark/functions/uuid.md
     - DLT:
       - apply_changes: api/dlt/apply_changes.md

@@ -78,6 +78,10 @@ display(df)
 A data pipeline built with Laktory is shipped with custom hooks enabling fine-grained monitoring of performance and failures [under development]. 
 
 
+### Demo
+Watch how Laktory brings your pipeline definition into usable data tables. 
+![type:video](https://www.youtube.com/embed/dlaUQm5yUa4)
+
 ## Who is it for?
 Laktory is built by data engineers for data engineers. 
 It does not have visual interface nor allow you to setup pipelines with a few clicks and some drag and drop.

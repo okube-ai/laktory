@@ -48,7 +48,7 @@ def test_poly(df0=df0):
 
 
 def test_power(df0=df0):
-    df = df0.withColumn("power", LF.power("x", n=F.col("b")))
+    df = df0.withColumn("power", LF.scaled_power("x", n=F.col("b")))
     pdf = df.toPandas()
 
     assert pdf["power"].tolist() == [1, 1, 9]

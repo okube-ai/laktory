@@ -52,6 +52,7 @@ def test_model():
                 "watermark": None,
             },
             "template": "SILVER",
+            "unions": [],
             "window_filter": None,
         },
         "catalog_name": "dev",
@@ -61,6 +62,7 @@ def test_model():
                 "comment": None,
                 "name": "created_at",
                 "pii": None,
+                "raise_missing_arg_exception": True,
                 "schema_name": "markets",
                 "spark_func_args": [
                     {
@@ -82,6 +84,7 @@ def test_model():
                 "comment": None,
                 "name": "symbol",
                 "pii": None,
+                "raise_missing_arg_exception": True,
                 "schema_name": "markets",
                 "spark_func_args": [
                     {
@@ -103,6 +106,7 @@ def test_model():
                 "comment": None,
                 "name": "open",
                 "pii": None,
+                "raise_missing_arg_exception": True,
                 "schema_name": "markets",
                 "spark_func_args": [
                     {
@@ -124,6 +128,7 @@ def test_model():
                 "comment": None,
                 "name": "close",
                 "pii": None,
+                "raise_missing_arg_exception": True,
                 "schema_name": "markets",
                 "spark_func_args": [],
                 "spark_func_kwargs": {},
@@ -364,6 +369,7 @@ def test_silver_star():
                 "watermark": None,
             },
             "template": "SILVER_STAR",
+            "unions": [],
             "window_filter": None,
         },
         "catalog_name": "dev",
@@ -373,6 +379,7 @@ def test_silver_star():
                 "comment": None,
                 "name": "symbol3",
                 "pii": None,
+                "raise_missing_arg_exception": True,
                 "schema_name": "markets",
                 "spark_func_args": [
                     {
