@@ -197,6 +197,7 @@ nav:
           - TableBuilder: api/models/sql/tablebuilder.md
           - TableExpectation: api/models/sql/tableexpectation.md
           - TableJoin: api/models/sql/tablejoin.md
+          - TableUnion: api/models/sql/tableunion.md
           - TableWindowFilter: api/models/sql/tablewindowfilter.md
           - api/models/sql/volume.md
       - Stacks:
