@@ -100,6 +100,9 @@ class Column(BaseModel):
         Name of the column
     pii:
         If `True`, the column is flagged as Personally Identifiable Information
+    raise_missing_arg_exception:
+        If `True`, an exception is raised when one of the spark function
+        argument is missing. Otherwise, only warning is issued.
     schema_name:
         Name of the schema storing the column table
     spark_func_args:
@@ -153,6 +156,7 @@ class Column(BaseModel):
     comment: Union[str, None] = None
     name: str
     pii: Union[bool, None] = None
+    raise_missing_arg_exception: Union[bool, None] = True
     schema_name: Union[str, None] = None
     spark_func_args: list[Union[str, SparkFuncArg]] = []
     spark_func_kwargs: dict[str, Union[Any, SparkFuncArg]] = {}
@@ -302,15 +306,30 @@ class Column(BaseModel):
             if df is not None:
                 if _arg.is_column and not has_column(df, _arg.value):
                     logger.info(f"Column '{_arg.value}' not available")
-                    if raise_exception:
-                        raise ValueError(
-                            f"Input column {_args} for {self.name} is not available"
-                        )
+
+                    if self.raise_missing_arg_exception:
+                        if raise_exception:
+                            raise ValueError(
+                                f"Input column {_arg.value} missing. Abort building {self.name}."
+                            )
+                        else:
+                            logger.info(
+                                f"Input column {_arg.value} missing. Skip building {self.name}"
+                            )
+                            return None
                     else:
-                        logger.info("Input columns not available. Skipping")
-                        return None
+                        continue
 
             args += [_arg.to_spark()]
+
+        if len(_args) > 0 and len(args) < 1:
+            if raise_exception:
+                raise ValueError(
+                    f"All input columns are  missing. Abort building {self.name}"
+                )
+            else:
+                logger.info(f"All input columns are missing. Skip building {self.name}")
+                return None
 
         # Build kwargs
         kwargs = {}
@@ -318,6 +337,7 @@ class Column(BaseModel):
             kwargs[k] = _arg.to_spark()
 
         # Function call
+        logger.info(f"   {self.name}[{self.type}] as {func_name}({args}, {kwargs})")
         col = f(*args, **kwargs)
 
         # Type Casting

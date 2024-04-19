@@ -1,6 +1,6 @@
 # Release History
 
-## [0.1.9] - Unreleased
+## [0.1.10] - Unreleased
 ### Added
 * datetime utilities
 ### Fixed
@@ -9,6 +9,15 @@
 * n/a
 ### Breaking changes
 * n/a
+
+## [0.1.9] - 2024-04-17
+### Added
+* Support for table unions in table builder
+* New column property `raise_missing_arg_exception` to allow for some spark function inputs to be missing
+* `add`, `sub`, `mul` and `div` spark functions
+
+### Breaking Change
+* Renamed `power` spark function to `scaled_power` to prevent conflict with native spark function 
 
 ## [0.1.8] - 2024-03-25
 ### Added

@@ -51,6 +51,7 @@ def test_pipeline():
                     "selects": None,
                     "table_source": None,
                     "template": "BRONZE",
+                    "unions": [],
                     "window_filter": None,
                 },
                 "catalog_name": None,
@@ -96,6 +97,7 @@ def test_pipeline():
                         "watermark": None,
                     },
                     "template": "SILVER",
+                    "unions": [],
                     "window_filter": None,
                 },
                 "catalog_name": None,
@@ -105,6 +107,7 @@ def test_pipeline():
                         "comment": None,
                         "name": "created_at",
                         "pii": None,
+                        "raise_missing_arg_exception": True,
                         "schema_name": None,
                         "spark_func_args": [
                             {
@@ -126,6 +129,7 @@ def test_pipeline():
                         "comment": None,
                         "name": "symbol",
                         "pii": None,
+                        "raise_missing_arg_exception": True,
                         "schema_name": None,
                         "spark_func_args": [
                             {
@@ -147,6 +151,7 @@ def test_pipeline():
                         "comment": None,
                         "name": "open",
                         "pii": None,
+                        "raise_missing_arg_exception": True,
                         "schema_name": None,
                         "spark_func_args": [
                             {
@@ -168,6 +173,7 @@ def test_pipeline():
                         "comment": None,
                         "name": "close",
                         "pii": None,
+                        "raise_missing_arg_exception": True,
                         "schema_name": None,
                         "spark_func_args": [],
                         "spark_func_kwargs": {},
