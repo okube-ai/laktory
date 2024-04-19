@@ -3,12 +3,8 @@
 ## [0.1.10] - Unreleased
 ### Added
 * datetime utilities
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* `Dispatcher` class to manage and run remote jobs.
+* `JobRunner` class to run remote jobs.
 
 ## [0.1.9] - 2024-04-17
 ### Added
