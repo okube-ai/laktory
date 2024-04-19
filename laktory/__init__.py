@@ -1,9 +1,18 @@
+import os
 from ._version import VERSION
 
 __version__ = VERSION
 
 # Need to be imported first
 from ._settings import settings
+
+# --------------------------------------------------------------------------- #
+# User-agent                                                                  #
+# --------------------------------------------------------------------------- #
+
+from ._useragent import set_databricks_sdk_upstream
+set_databricks_sdk_upstream()
+
 
 # --------------------------------------------------------------------------- #
 # Packages                                                                    #

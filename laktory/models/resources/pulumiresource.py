@@ -1,6 +1,8 @@
 from abc import abstractmethod
 from typing import Union
 from typing import Any
+
+from laktory._useragent import set_databricks_sdk_upstream
 from laktory._settings import settings
 from laktory._parsers import _snake_to_camel
 from laktory.models.resources.baseresource import BaseResource
@@ -93,6 +95,9 @@ class PulumiResource(BaseResource):
         from pulumi import ResourceOptions
 
         self._pulumi_resources = {}
+
+        # Inject user-agent value for monitoring usage as a Databricks partner
+        set_databricks_sdk_upstream()
 
         for r in self.core_resources:
             # Properties
