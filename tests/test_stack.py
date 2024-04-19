@@ -461,7 +461,9 @@ def test_terraform_stack():
     print(data_default)
     assert data_default == {
         "terraform": {
-            "required_providers": {"databricks": {"source": "databricks/databricks"}},
+            "required_providers": {
+                "databricks": {"source": "databricks/databricks", "version": ">=1.39"}
+            },
             "backend": {
                 "azurerm": {
                     "resource_group_name": "o3-rg-laktory-dev",

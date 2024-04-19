@@ -18,9 +18,6 @@ headers = {
 # Requests                                                                    #
 # --------------------------------------------------------------------------- #
 
-response = requests.get(
-    url=url,
-    headers=headers
-)
+response = requests.get(url=url, headers=headers)
 
 print(response.json())

@@ -1,9 +1,18 @@
+import os
 from ._version import VERSION
 
 __version__ = VERSION
 
 # Need to be imported first
 from ._settings import settings
+
+# --------------------------------------------------------------------------- #
+# User-agent                                                                  #
+# --------------------------------------------------------------------------- #
+
+# Inject user-agent value for monitoring usage as a Databricks partner
+os.environ["DATABRICKS_SDK_UPSTREAM"] = "laktory"
+os.environ["DATABRICKS_SDK_UPSTREAM_VERSION"] = VERSION
 
 # --------------------------------------------------------------------------- #
 # Packages                                                                    #
