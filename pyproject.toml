@@ -39,7 +39,7 @@ dependencies = [
     "planck",
     "prompt_toolkit",
     "pulumi",
-    "pulumi_databricks",
+    "pulumi_databricks>=1.36",  # required to monitor laktory usage
     "pulumi_random",
     "pyyaml",
     "pydantic>=2",
