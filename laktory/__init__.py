@@ -10,9 +10,9 @@ from ._settings import settings
 # User-agent                                                                  #
 # --------------------------------------------------------------------------- #
 
-# Inject user-agent value for monitoring usage as a Databricks partner
-os.environ["DATABRICKS_SDK_UPSTREAM"] = "laktory"
-os.environ["DATABRICKS_SDK_UPSTREAM_VERSION"] = VERSION
+from ._useragent import set_databricks_sdk_upstream
+set_databricks_sdk_upstream()
+
 
 # --------------------------------------------------------------------------- #
 # Packages                                                                    #

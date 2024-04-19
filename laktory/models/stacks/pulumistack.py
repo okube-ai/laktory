@@ -4,7 +4,7 @@ from typing import Any
 from typing import Union
 from pydantic import Field
 
-from laktory._version import VERSION
+from laktory._useragent import set_databricks_sdk_upstream
 from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
@@ -100,8 +100,7 @@ class PulumiStack(BaseModel):
             cmd += flags
 
         # Inject user-agent value for monitoring usage as a Databricks partner
-        os.environ["DATABRICKS_SDK_UPSTREAM"] = "laktory"
-        os.environ["DATABRICKS_SDK_UPSTREAM_VERSION"] = VERSION
+        set_databricks_sdk_upstream()
 
         worker.run(
             cmd=cmd,
