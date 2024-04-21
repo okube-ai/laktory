@@ -19,19 +19,20 @@ class PipelineRunner(Runner):
 
     def get_id(self) -> str:
         logger.info(f"Getting id for pipeline {self.name}")
-        for _pl in self.wc.pipelines.list_pipelines(filter=f"name LIKE '{self.name}'", max_results=1):
+        for _pl in self.wc.pipelines.list_pipelines(
+            filter=f"name LIKE '{self.name}'", max_results=1
+        ):
             if self.name == _pl.name:
                 self.id = _pl.pipeline_id
                 return self.id
 
     def run(
-            self,
-            wait: bool = True,
-            timeout: int = 20*60,
-            full_refresh: bool = False,
-            raise_exception: bool = False,
-            current_run_action: Literal["WAIT", "CANCEL", "FAIL"] = "WAIT",
-
+        self,
+        wait: bool = True,
+        timeout: int = 20 * 60,
+        full_refresh: bool = False,
+        raise_exception: bool = False,
+        current_run_action: Literal["WAIT", "CANCEL", "FAIL"] = "WAIT",
     ):
         event_ids = []
 
@@ -46,14 +47,15 @@ class PipelineRunner(Runner):
             logger.info(f"Pipeline {self.name} update started...")
 
         except DatabricksError as e:
-
             # Exception is raised when update is currently in progress
             if current_run_action.upper() == "FAIL":
                 logger.info(f"Pipeline {self.name} already running...")
                 raise e
 
             elif current_run_action.upper() == "WAIT":
-                logger.info(f"Pipeline {self.name} waiting for current update to be completed...")
+                logger.info(
+                    f"Pipeline {self.name} waiting for current update to be completed..."
+                )
                 self.wc.pipelines.wait_get_pipeline_idle(pipeline_id=self.id)
 
             elif current_run_action.upper() == "CANCEL":
@@ -71,25 +73,32 @@ class PipelineRunner(Runner):
         self.get_update()
         logger.info(f"Pipeline {self.name} run URL: {self.update_url}")
         if wait:
-            while time.time() - t0 < timeout or self.update_state == UpdateInfoState.COMPLETED:
+            while (
+                time.time() - t0 < timeout
+                or self.update_state == UpdateInfoState.COMPLETED
+            ):
                 self.get_update()
 
                 if self.update_state != pstate:
-                    logger.info(f"Pipeline {self.name} state: {self.update_state.value}")
+                    logger.info(
+                        f"Pipeline {self.name} state: {self.update_state.value}"
+                    )
                     pstate = self.update_state
 
                 # filter don't seem to work
                 for event in self.wc.pipelines.list_pipeline_events(
-                        pipeline_id=self.id,
-                        max_results=100,
-                        # filter=f"(level in ('ERROR', 'WARN')) AND (timestamp > '{utc_datetime(t0).isoformat()}Z')"
-                        # filter=f"level in ('ERROR', 'WARN')",
-                        # filter=f"timestamp > '{utc_datetime(t0).isoformat()}Z'"
-                        page_token=None,
+                    pipeline_id=self.id,
+                    max_results=100,
+                    # filter=f"(level in ('ERROR', 'WARN')) AND (timestamp > '{utc_datetime(t0).isoformat()}Z')"
+                    # filter=f"level in ('ERROR', 'WARN')",
+                    # filter=f"timestamp > '{utc_datetime(t0).isoformat()}Z'"
+                    page_token=None,
                 ):
-
-                    if event.id in event_ids or unix_timestamp(
-                            event.timestamp) < t0 or event.origin.update_id != self.update_id:
+                    if (
+                        event.id in event_ids
+                        or unix_timestamp(event.timestamp) < t0
+                        or event.origin.update_id != self.update_id
+                    ):
                         continue
 
                     if event.level == EventLevel.WARN:
@@ -107,14 +116,17 @@ class PipelineRunner(Runner):
 
                 time.sleep(1.0)
 
-            logger.info(f"Pipeline {self.name} update terminated after {time.time() - t0: 5.2f} sec with {self.update_state}")
+            logger.info(
+                f"Pipeline {self.name} update terminated after {time.time() - t0: 5.2f} sec with {self.update_state}"
+            )
             if raise_exception and self.update_state != UpdateInfoState.COMPLETED:
-                raise Exception(f"Pipeline {self.name} update not completed ({self.update_state})")
+                raise Exception(
+                    f"Pipeline {self.name} update not completed ({self.update_state})"
+                )
 
     def get_update(self):
         self._update = self.wc.pipelines.get_update(
-            pipeline_id=self.id,
-            update_id=self.update_id
+            pipeline_id=self.id, update_id=self.update_id
         )
         return self._update
 

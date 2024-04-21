@@ -100,3 +100,15 @@ class Dispatcher:
 
         for r in self.resources.values():
             r.get_id()
+
+    # ----------------------------------------------------------------------- #
+    # Run                                                                     #
+    # ----------------------------------------------------------------------- #
+
+    def run_job(self, job_name, *args, **kwargs):
+        job = self.resources[job_name]
+        job.run(*args, **kwargs)
+
+    def run_pipeline(self, pipeline_name, *args, **kwargs):
+        pl = self.resources[pipeline_name]
+        pl.run(*args, **kwargs)

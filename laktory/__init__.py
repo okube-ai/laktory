@@ -11,6 +11,7 @@ from ._settings import settings
 # --------------------------------------------------------------------------- #
 
 from ._useragent import set_databricks_sdk_upstream
+
 set_databricks_sdk_upstream()
 
 

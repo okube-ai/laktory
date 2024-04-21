@@ -75,4 +75,3 @@ def write(
         controller.terraform_call("init")
     else:
         raise ValueError("backend should be ['terraform']")
-

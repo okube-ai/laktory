@@ -21,12 +21,12 @@ def test_unix_timestamp():
     assert unix_timestamp("2020-01-01T01:00:00") == utstamp
 
     # Null value
-    assert utc_datetime(np.datetime64('nat')) is None
+    assert utc_datetime(np.datetime64("nat")) is None
 
     # Timezone
-    utstamp0 = unix_timestamp('2022-08-02 15:43:54.199855-02:00')
-    utstamp1 = unix_timestamp('2022-08-02T15:43:54.199855+03:00')
-    assert utstamp0 - utstamp1 == 5 * units['h']['s']
+    utstamp0 = unix_timestamp("2022-08-02 15:43:54.199855-02:00")
+    utstamp1 = unix_timestamp("2022-08-02T15:43:54.199855+03:00")
+    assert utstamp0 - utstamp1 == 5 * units["h"]["s"]
 
 
 if __name__ == "__main__":

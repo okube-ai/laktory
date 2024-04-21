@@ -82,4 +82,3 @@ def preview(
         controller.terraform_call("plan")
     else:
         raise ValueError(f"backend should be {SUPPORTED_BACKENDS}")
-

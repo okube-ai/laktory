@@ -24,27 +24,28 @@ class JobRunner(Runner):
                 return self.id
 
     def run(
-            self,
-            wait: bool = True,
-            timeout: int = 20*60,
-            raise_exception: bool = False,
-            current_run_action: Literal["WAIT", "CANCEL", "FAIL"] = "WAIT",
-
+        self,
+        wait: bool = True,
+        timeout: int = 20 * 60,
+        raise_exception: bool = False,
+        current_run_action: Literal["WAIT", "CANCEL", "FAIL"] = "WAIT",
     ):
-
         active_runs = list(self.wc.jobs.list_runs(job_id=self.id, active_only=True))
 
         if len(active_runs) > 0:
-
             if current_run_action.upper() == "FAIL":
                 logger.info(f"Job {self.name} already running...")
                 raise Exception(f"Job {self.name} already running...")
 
             elif current_run_action.upper() == "WAIT":
-                logger.info(f"Job {self.name} waiting for current run(s) to be completed...")
+                logger.info(
+                    f"Job {self.name} waiting for current run(s) to be completed..."
+                )
                 for run in active_runs:
                     try:
-                        self.wc.jobs.wait_get_run_job_terminated_or_skipped(run_id=run.run_id)
+                        self.wc.jobs.wait_get_run_job_terminated_or_skipped(
+                            run_id=run.run_id
+                        )
                     except OperationFailed:
                         pass
 
@@ -64,7 +65,10 @@ class JobRunner(Runner):
         self.get_run()
         logger.info(f"Job {self.name} run URL: {self._run.run_page_url}")
         if wait:
-            while time.time() - t0 < timeout or self.run_state == RunLifeCycleState.TERMINATED:
+            while (
+                time.time() - t0 < timeout
+                or self.run_state == RunLifeCycleState.TERMINATED
+            ):
                 self.get_run()
 
                 if self.run_state != pstates.get(self.run_id, None):
@@ -74,7 +78,9 @@ class JobRunner(Runner):
                 for task in self._run.tasks:
                     state = task.state
                     if state.life_cycle_state != pstates.get(task.run_id, None):
-                        logger.info(f"   Task {self.name}.{task.task_key} state: {state.life_cycle_state.value}")
+                        logger.info(
+                            f"   Task {self.name}.{task.task_key} state: {state.life_cycle_state.value}"
+                        )
                     pstates[task.run_id] = state.life_cycle_state
 
                 if self.run_state in [
@@ -94,7 +100,9 @@ class JobRunner(Runner):
                     f"Task {self.name}.{task.task_key} terminated with {task.state.result_state} ({task.state.state_message})"
                 )
             if raise_exception and self.run_state != RunLifeCycleState.TERMINATED:
-                raise Exception(f"Job {self.name} update not completed ({self.run_state})")
+                raise Exception(
+                    f"Job {self.name} update not completed ({self.run_state})"
+                )
 
     def get_run(self):
         self._run = self.wc.jobs.get_run(

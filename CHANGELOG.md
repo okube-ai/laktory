@@ -2,9 +2,9 @@
 
 ## [0.1.10] - Unreleased
 ### Added
-* datetime utilities
 * `Dispatcher` class to manage and run remote jobs
 * `JobRunner` class to run remote jobs
+* datetime utilities
 ### Updated
 * Environment variables `DATABRICKS_SDK_UPSTREAM` and `DATABRICKS_SDK_UPSTREAM_VERSION` to track laktory metrics as a Databricks partner
 ### Fixed
