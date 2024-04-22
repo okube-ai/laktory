@@ -54,7 +54,7 @@ def run(
     raise_exception:
         Raise exception on failure
     current_run_action:
-        Current
+        Action to take for currently running job or pipline.
     full_refresh:
         Full tables refresh (pipline only)
     environment:

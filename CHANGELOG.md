@@ -2,6 +2,7 @@
 
 ## [0.1.10] - Unreleased
 ### Added
+* CLI `run` command to execute remote jobs and pipelines and monitor errors until completion
 * `Dispatcher` class to manage and run remote jobs
 * `JobRunner` class to run remote jobs
 * datetime utilities
