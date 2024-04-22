@@ -41,7 +41,7 @@ def run(
     ] = "./stack.yaml",
 ):
     """
-    Execute deployment.
+    Execute remote job or pipeline and monitor failures until completion.
 
     Parameters
     ----------
@@ -65,7 +65,7 @@ def run(
     Examples
     --------
     ```cmd
-    laktory deploy --env dev --filepath my-stack.yaml
+    laktory run --env dev -p pl-stock-prices --full_refresh --action CANCEL
     ```
 
     """
