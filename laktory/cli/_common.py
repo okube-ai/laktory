@@ -26,6 +26,7 @@ class CLIController(BaseModel):
     backend: Union[str, None] = None
     organization: Union[str, None] = None
     env: Union[str, None] = None
+    auto_approve: Union[bool, None] = False
     pulumi_options_str: Union[str, None] = None
     terraform_options_str: Union[str, None] = None
     stack: Union[Stack, None] = None
@@ -59,15 +60,27 @@ class CLIController(BaseModel):
 
     @property
     def pulumi_options(self):
-        if self.pulumi_options_str is None:
-            return None
-        return self.pulumi_options_str.split(",")
+
+        options = []
+        if self.auto_approve:
+            options += ["--yes"]
+
+        if self.pulumi_options_str:
+            options += self.pulumi_options_str.split(",")
+
+        return options
 
     @property
     def terraform_options(self):
-        if self.terraform_options_str is None:
-            return None
-        return self.terraform_options_str.split(",")
+
+        options = []
+        if self.auto_approve:
+            options += ["-auto-approve"]
+
+        if self.terraform_options_str:
+            options = self.terraform_options_str.split(",")
+
+        return options
 
     @property
     def pulumi_stack_name(self):

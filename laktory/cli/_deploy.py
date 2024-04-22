@@ -25,6 +25,14 @@ def deploy(
     filepath: Annotated[
         str, typer.Option(help="Stack (yaml) filepath.")
     ] = "./stack.yaml",
+    auto_approve: Annotated[
+        bool,
+        typer.Option(
+            "--yes",
+            "-y",
+            help="Automatically approve and perform the update after previewing it"
+        ),
+    ] = False,
     pulumi_options: Annotated[
         str,
         typer.Option(
@@ -51,6 +59,8 @@ def deploy(
         Name of the environment.
     filepath:
         Stack (yaml) filepath.
+    auto_approve:
+        Automatically approve and perform the update after previewing it
     pulumi_options:
         Comma separated pulumi options (flags).
     terraform_options:
@@ -70,6 +80,7 @@ def deploy(
         backend=backend,
         organization=organization,
         env=environment,
+        auto_approve=auto_approve,
         stack_filepath=filepath,
         pulumi_options_str=pulumi_options,
         terraform_options_str=terraform_options,
