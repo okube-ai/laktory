@@ -46,5 +46,57 @@ In this case, we have 2 workflows:
   - request for manual approval
   - deploy changes to `prod` environment
 
+Here is what the laktory-deploy workflow could look like
+```yaml
+name: laktory-deploy
+
+[...]
+
+jobs:
+  laktory-deploy-dev:
+    uses: ./.github/workflows/_job_laktory_deploy.yml
+    with:
+      env: dev
+      working-directory: ./workspace
+      databricks_host: 'adb-4623853922539974.14.azuredatabricks.net'
+    secrets: inherit
+
+  laktory-run-dev:
+    needs: laktory-deploy-dev
+    uses: ./.github/workflows/_job_laktory_run_pipeline.yml
+    with:
+      env: dev
+      working-directory: ./workspace
+      databricks_host: 'adb-4623853922539974.azuredatabricks.net'
+      pipeline_name: pl-stock-prices
+    secrets: inherit
+
+  laktory-preview-prd:
+    needs: laktory-run-dev
+    uses: ./.github/workflows/_job_laktory_preview.yml
+    with:
+      env: prd
+      working-directory: ./workspace
+    secrets: inherit
+
+  prd-deploy-approval:
+    needs: laktory-preview-prd
+    uses: ./.github/workflows/_job_release_approval.yml
+    secrets: inherit
+
+  laktory-deploy-prd:
+    needs: prd-deploy-approval
+    uses: ./.github/workflows/_job_laktory_deploy.yml
+    with:
+      env: prd
+      working-directory: ./workspace
+      databricks_host: 'adb-1985337240298151.azuredatabricks.net'
+    secrets:
+      pulumi_access_token: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      azure_client_id: ${{ secrets.AZURE_CLIENT_ID_PRD }}
+      azure_client_secret: ${{ secrets.AZURE_CLIENT_SECRET_PRD }}
+      azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+```
+
 Of course, the workflows can be customized for each project specific requirements, but they all generally require to
 use the `preview`, `deploy` and `run` CLI commands.

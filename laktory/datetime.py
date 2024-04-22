@@ -14,6 +14,33 @@ def unix_timestamp(
     unit: str = "s",
     as_int: bool = False,
 ) -> float:
+    """
+    Convert a datetime object into a unix timestamp float. If `None` is provided,
+    current UTC timestamp is returned.
+
+    Parameters
+    ----------
+    dt:
+        Datetime object
+
+    Returns
+    -------
+    output:
+        Unix timestamp
+
+    Examples
+    --------
+    ```py
+    from laktory.datetime import utc_datetime
+    from datetime import datetime
+
+    ts = unix_timestamp("2020-01-01T01:00:00")
+    print(ts)
+
+    ts = unix_timestamp(datetime(2020, 1, 1, 1, 0, 0))
+    print(ts)
+    ```
+    """
     if dt is None:
         dt = datetime.utcnow()
     elif type(dt) in [int, float, np.float64, np.int64]:
@@ -48,6 +75,32 @@ def unix_timestamp(
 def utc_datetime(
     unixtime: Union[datetime, date, str, float, int] = None,
 ) -> datetime:
+    """
+    Convert a unix timestamp into a datetime object. If `None` is provided,
+    current UTC datetime object is returned.
+
+    Parameters
+    ----------
+    unixtime:
+        Unix timestamp
+
+    Returns
+    -------
+    output:
+        Datetime object
+
+    Examples
+    --------
+    ```py
+    from laktory.datetime import utc_datetime
+
+    dt = utc_datetime("2020-01-01T01:00:00")
+    print(dt)
+
+    dt = utc_datetime(1577840400)
+    print(dt)
+    ```
+    """
     if not unixtime:
         dt = datetime.utcnow()
     elif isinstance(unixtime, datetime):

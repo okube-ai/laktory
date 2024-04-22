@@ -6,6 +6,33 @@ spark = SparkSession.builder.getOrCreate()
 
 
 # --------------------------------------------------------------------------- #
+# Datetime                                                                    #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("example", find_examples("./laktory/datetime.py"), ids=str)
+def test_docstrings_dlt(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format(example)
+        eval_example.run_print_update(
+            example,
+            # module_globals={
+                # "spark": spark,
+                # "display": lambda x: x,
+            # },
+        )
+    else:
+        eval_example.lint(example)
+        eval_example.run_print_check(
+            example,
+            # module_globals={
+            #     "spark": spark,
+            #     "display": lambda x: x,
+            # },
+        )
+
+
+# --------------------------------------------------------------------------- #
 # DLT                                                                         #
 # --------------------------------------------------------------------------- #
 

@@ -232,4 +232,6 @@ nav:
       - is_mocked: api/dlt/is_mocked.md
       - read: api/dlt/read.md
       - read_stream: api/dlt/read_stream.md
+    - Datetime: api/datetime.md
+
   - Changelog: changelog.md
