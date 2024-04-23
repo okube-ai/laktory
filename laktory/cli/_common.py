@@ -60,7 +60,6 @@ class CLIController(BaseModel):
 
     @property
     def pulumi_options(self):
-
         options = []
         if self.auto_approve:
             options += ["--yes"]
@@ -72,7 +71,6 @@ class CLIController(BaseModel):
 
     @property
     def terraform_options(self):
-
         options = []
         if self.auto_approve:
             options += ["-auto-approve"]

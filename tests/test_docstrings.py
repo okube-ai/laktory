@@ -11,14 +11,14 @@ spark = SparkSession.builder.getOrCreate()
 
 
 @pytest.mark.parametrize("example", find_examples("./laktory/datetime.py"), ids=str)
-def test_docstrings_dlt(example: CodeExample, eval_example: EvalExample):
+def test_docstrings_datetime(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format(example)
         eval_example.run_print_update(
             example,
             # module_globals={
-                # "spark": spark,
-                # "display": lambda x: x,
+            # "spark": spark,
+            # "display": lambda x: x,
             # },
         )
     else:

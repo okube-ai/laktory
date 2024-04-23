@@ -30,7 +30,7 @@ def deploy(
         typer.Option(
             "--yes",
             "-y",
-            help="Automatically approve and perform the update after previewing it"
+            help="Automatically approve and perform the update after previewing it",
         ),
     ] = False,
     pulumi_options: Annotated[
