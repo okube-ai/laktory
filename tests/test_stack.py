@@ -600,7 +600,7 @@ def test_terraform_plan():
     tstack.terraform.backend = (
         None  # TODO: Add credentials to git actions to use azure backend
     )
-    tstack.init(flags=["-migrate-state"])
+    tstack.init(flags=["-migrate-state", "-upgrade"])
     tstack.plan()
 
 

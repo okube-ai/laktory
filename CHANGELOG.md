@@ -2,13 +2,15 @@
 
 ## [0.1.10] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
+* CLI `run` command to execute remote jobs and pipelines and monitor errors until completion
+* `Dispatcher` class to manage and run remote jobs
+* `JobRunner` class to run remote jobs
+* `PipelineRunner` class to run remote pipelines
+* datetime utilities
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* Environment variables `DATABRICKS_SDK_UPSTREAM` and `DATABRICKS_SDK_UPSTREAM_VERSION` to track laktory metrics as a Databricks partner
+### Fixed
+* Permissions resource dependencies on `DbfsFile` and `WorkspaceFile`.
 
 ## [0.1.9] - 2024-04-17
 ### Added

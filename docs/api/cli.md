@@ -2,8 +2,12 @@
 
 ---
 
-::: laktory.cli.app.preview
+::: laktory.cli._preview.preview
 
 ---
 
-::: laktory.cli.app.deploy
+::: laktory.cli._deploy.deploy
+
+---
+
+::: laktory.cli._run.run
