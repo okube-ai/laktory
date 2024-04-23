@@ -232,7 +232,7 @@ nav:
       - read_stream: api/dlt/read_stream.md
     - Dispatcher:
         - Dispatcher: api/dispatcher/dispatcher.md
-        - BaseRunner: api/dispatcher/baserunner.md
+        - DispatcherRunner: api/dispatcher/dispatcherrunner.md
         - JobRunner: api/dispatcher/jobrunner.md
         - PipelineRunner: api/dispatcher/pipelinerunner.md
     - Datetime: api/datetime.md
