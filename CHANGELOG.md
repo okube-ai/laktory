@@ -1,6 +1,16 @@
 # Release History
 
-## [0.1.10] - Unreleased
+## [0.1.11] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.1.10] - 2024-04-23
 ### Added
 * CLI `run` command to execute remote jobs and pipelines and monitor errors until completion
 * `Dispatcher` class to manage and run remote jobs
