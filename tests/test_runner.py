@@ -2,6 +2,7 @@ import os
 
 from laktory import models
 from laktory import Dispatcher
+from laktory._version import VERSION
 
 dirpath = os.path.dirname(__file__)
 
@@ -16,9 +17,9 @@ tstack.backend = "terraform"
 def test_workspace_client():
     for _stack in [stack, tstack]:
         dispatcher = Dispatcher(stack=_stack)
+        assert f"okube-laktory/{VERSION}" in dispatcher.wc.config.user_agent
 
-        kwargs = dispatcher.workspace_arguments
-
+        kwargs = dispatcher._workspace_arguments
         if "token" in kwargs:
             kwargs["token"] = kwargs["token"][:6]
         assert kwargs == {

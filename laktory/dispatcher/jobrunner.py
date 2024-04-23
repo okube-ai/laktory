@@ -5,17 +5,21 @@ from databricks.sdk.service.jobs import Run
 from databricks.sdk.service.jobs import RunLifeCycleState
 from databricks.sdk.errors import OperationFailed
 
-from laktory.dispatcher.runner import Runner
+from laktory.dispatcher.baserunner import BaseRunner
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class JobRunner(Runner):
+class JobRunner(BaseRunner):
+    """
+    Job runner.
+    """
     _run_start: Wait = None
     _run: Run = None
 
     def get_id(self) -> str:
+        """Get deployed job id"""
         logger.info(f"Getting id for job {self.name}")
         for _job in self.wc.jobs.list(name=self.name):
             _job_data = _job.as_dict()
@@ -30,6 +34,30 @@ class JobRunner(Runner):
         raise_exception: bool = False,
         current_run_action: Literal["WAIT", "CANCEL", "FAIL"] = "WAIT",
     ):
+        """
+        Run remote job and monitor failures.
+
+        Parameters
+        ----------
+        wait:
+            If `True`, runs synchronously and wait for completion.
+        timeout:
+            Maximum time allowed for the job to run before an exception is
+            raised.
+        raise_exception:
+            If `True`, exceptions are raised if the job fails.
+        current_run_action:
+            Action to take with respect to current run (if any). Possible
+            options are:
+                - WAIT: wait for the current run to complete
+                - CANCEL: cancel the current run
+                - FAIL: raise an exception
+
+        Returns
+        -------
+        output:
+            None
+        """
         active_runs = list(self.wc.jobs.list_runs(job_id=self.id, active_only=True))
 
         if len(active_runs) > 0:

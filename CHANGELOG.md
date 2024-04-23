@@ -5,6 +5,7 @@
 * CLI `run` command to execute remote jobs and pipelines and monitor errors until completion
 * `Dispatcher` class to manage and run remote jobs
 * `JobRunner` class to run remote jobs
+* `PipelineRunner` class to run remote pipelines
 * datetime utilities
 ### Updated
 * Environment variables `DATABRICKS_SDK_UPSTREAM` and `DATABRICKS_SDK_UPSTREAM_VERSION` to track laktory metrics as a Databricks partner

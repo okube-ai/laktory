@@ -6,18 +6,22 @@ from databricks.sdk.service.pipelines import UpdateInfoState
 from databricks.sdk.service.pipelines import EventLevel
 from databricks.sdk.core import DatabricksError
 
-from laktory.dispatcher.runner import Runner
+from laktory.dispatcher.baserunner import BaseRunner
 from laktory.datetime import unix_timestamp
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class PipelineRunner(Runner):
+class PipelineRunner(BaseRunner):
+    """
+    Pipeline runner.
+    """
     _update_start: StartUpdateResponse = None
     _update: GetUpdateResponse = None
 
     def get_id(self) -> str:
+        """Get deployed pipeline id"""
         logger.info(f"Getting id for pipeline {self.name}")
         for _pl in self.wc.pipelines.list_pipelines(
             filter=f"name LIKE '{self.name}'", max_results=1
@@ -34,6 +38,33 @@ class PipelineRunner(Runner):
         raise_exception: bool = False,
         current_run_action: Literal["WAIT", "CANCEL", "FAIL"] = "WAIT",
     ):
+        """
+        Run remote pipeline and monitor failures.
+
+        Parameters
+        ----------
+        wait:
+            If `True`, runs synchronously and wait for completion.
+        timeout:
+            Maximum time allowed for the pipeline to run before an exception is
+            raised.
+        full_refresh:
+            If `True`, tables are fully refreshed (re-built). Otherwise, only
+            increments are processed.
+        raise_exception:
+            If `True`, exceptions are raised if the pipeline fails.
+        current_run_action:
+            Action to take with respect to current run (if any). Possible
+            options are:
+                - WAIT: wait for the current run to complete
+                - CANCEL: cancel the current run
+                - FAIL: raise an exception
+
+        Returns
+        -------
+        output:
+            None
+        """
         event_ids = []
 
         # Start update

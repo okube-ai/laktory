@@ -204,8 +204,6 @@ nav:
           - Stack: api/models/stacks/stack.md
           - PulumiStack: api/models/stacks/pulumistack.md
           - TerraformStack: api/models/stacks/terraformstack.md
-
-
     - CLI: api/cli.md
     - Spark:
       - DataFrame:
@@ -232,6 +230,11 @@ nav:
       - is_mocked: api/dlt/is_mocked.md
       - read: api/dlt/read.md
       - read_stream: api/dlt/read_stream.md
+    - Dispatcher:
+        - Dispatcher: api/dispatcher/dispatcher.md
+        - BaseRunner: api/dispatcher/baserunner.md
+        - JobRunner: api/dispatcher/jobrunner.md
+        - PipelineRunner: api/dispatcher/pipelinerunner.md
     - Datetime: api/datetime.md
 
   - Changelog: changelog.md
