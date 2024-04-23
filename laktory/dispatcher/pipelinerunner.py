@@ -6,14 +6,14 @@ from databricks.sdk.service.pipelines import UpdateInfoState
 from databricks.sdk.service.pipelines import EventLevel
 from databricks.sdk.core import DatabricksError
 
-from laktory.dispatcher.baserunner import BaseRunner
+from laktory.dispatcher.dispatcherrunner import DispatcherRunner
 from laktory.datetime import unix_timestamp
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class PipelineRunner(BaseRunner):
+class PipelineRunner(DispatcherRunner):
     """
     Pipeline runner.
     """

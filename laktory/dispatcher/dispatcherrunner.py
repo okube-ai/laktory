@@ -6,7 +6,7 @@ from pydantic import Field
 from databricks.sdk import WorkspaceClient
 
 
-class BaseRunner(BaseModel):
+class DispatcherRunner(BaseModel):
     """
     Base runner for jobs, pipelines and other executables.
 

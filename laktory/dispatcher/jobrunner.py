@@ -5,13 +5,13 @@ from databricks.sdk.service.jobs import Run
 from databricks.sdk.service.jobs import RunLifeCycleState
 from databricks.sdk.errors import OperationFailed
 
-from laktory.dispatcher.baserunner import BaseRunner
+from laktory.dispatcher.dispatcherrunner import DispatcherRunner
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class JobRunner(BaseRunner):
+class JobRunner(DispatcherRunner):
     """
     Job runner.
     """
