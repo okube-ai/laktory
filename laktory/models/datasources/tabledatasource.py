@@ -3,6 +3,7 @@ from typing import Union
 from typing import Literal
 from typing import Any
 from pydantic import model_validator
+from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.basedatasource import BaseDataSource
@@ -140,8 +141,7 @@ class TableDataSource(BaseDataSource):
     # df = source.read(spark)
     ```
     """
-
-    _df: Any = None
+    df: Any = Field(None, exclude=True)
     catalog_name: Union[str, None] = None
     cdc: Union[TableDataSourceCDC, None] = None
     selects: Union[list[str], dict[str, str], None] = None
@@ -209,9 +209,9 @@ class TableDataSource(BaseDataSource):
         from laktory.dlt import read
         from laktory.dlt import read_stream
 
-        if self._df is not None:
+        if self.df is not None:
             logger.info(f"Reading {self.path_or_full_name} from memory")
-            df = self._df
+            df = self.df
         elif self.read_as_stream:
             logger.info(f"Reading {self.path_or_full_name} as stream")
             if self.from_pipeline:
