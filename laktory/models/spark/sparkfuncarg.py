@@ -30,6 +30,8 @@ class SparkFuncArg(BaseModel):
     #     return self.convert_to == "COLUMN"
 
     def eval(self, spark=None):
+
+        # Imports required to evaluate expressions
         import pyspark.sql.functions as F
         from pyspark.sql.functions import lit
         from pyspark.sql.functions import col
@@ -40,7 +42,7 @@ class SparkFuncArg(BaseModel):
         if isinstance(v, BaseDataSource):
             v = self.value.read(spark)
         elif isinstance(v, str):
-            for f in ["lit", "col", "expr"]:
+            for f in ["lit", "col", "expr", "F."]:
                 if f in v:
                     v = eval(v)
                     break
