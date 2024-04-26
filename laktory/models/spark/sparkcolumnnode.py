@@ -22,9 +22,65 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 
 class SparkColumnNode(BaseModel):
-    allow_missing_arg: Union[bool, None] = False
+    """
+    SparkChain node that output a column upon execution.
+
+    Attributes
+    ----------
+    name:
+        Name of the column
+    allow_missing_column_args:
+        If `True`, spark func column arguments are allowed to be missing
+        without raising an exception.
+    spark_func_args:
+        List of arguments to be passed to the spark function to build the
+        column.
+        To support spark functions expecting column argument, col("x"),
+        lit("3") and expr("x*2") can be provided.
+    spark_func_kwargs:
+        List of keyword arguments to be passed to the spark function to build
+        the column.
+        To support spark functions expecting column argument, col("x"),
+        lit("3") and expr("x*2") can be provided.
+    spark_func_name:
+        Name of the spark function to build the column. Mutually exclusive to
+        `sql_expression`
+    sql_expression:
+        Expression defining how to build the column. Mutually exclusive to
+        `spark_func_name`
+    type:
+        Column data type
+    unit:
+        Column units
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
+
+    node = models.SparkColumnNode(
+        name="cosx",
+        type="double",
+        spark_func_name="cos",
+        spark_func_args=["x"],
+    )
+    df = df0.withColumn("cosx", node.execute())
+
+    node = models.SparkColumnNode(
+        name="xy",
+        type="double",
+        spark_func_name="coalesce",
+        spark_func_args=[col('x'), F.col('y')],
+        allow_missing_column_args=True,
+    )
+    df = df0.withColumn("xy", node.execute())
+    ```
+    """
+    allow_missing_column_args: Union[bool, None] = False
     name: str
-    spark_func_args: list[Union[str, SparkFuncArg, Any]] = []
+    spark_func_args: list[Union[Any, SparkFuncArg]] = []
     spark_func_kwargs: dict[str, Union[Any, SparkFuncArg]] = {}
     spark_func_name: Union[str, None] = None
     sql_expression: Union[str, None] = None
@@ -70,8 +126,8 @@ class SparkColumnNode(BaseModel):
         """
         import pyspark.sql.functions as F
         from pyspark.sql import Column
-        from laktory.spark import functions as LF
         from laktory.spark.dataframe import has_column
+        from laktory.spark import functions as LF
 
         if udfs is None:
             udfs = []
@@ -130,7 +186,7 @@ class SparkColumnNode(BaseModel):
                     cname = str(parg).split("'")[1]
                     if not has_column(df, cname):
                         missing_column_names += [cname]
-                        if not self.allow_missing_arg:
+                        if not self.allow_missing_column_args:
                             logger.error(f"Input column {cname} is missing. Abort building {self.name}")
                             raise MissingColumnError(cname)
                         else:
@@ -151,10 +207,9 @@ class SparkColumnNode(BaseModel):
         # Build kwargs
         kwargs = {}
         for k, _arg in _kwargs.items():
-            kwargs[k] = _arg.to_spark()
+            kwargs[k] = _arg.eval()
 
         # Function call
-        # logger.info(f"   {self.name}[{self.type}] as {func_name}({args}, {kwargs})")
         logger.info(f"{self.name}[{self.type}] as {func_name}({args}, {kwargs})")
         col = f(*args, **kwargs)
 
