@@ -8,6 +8,8 @@ from pyspark.sql import types as T
 
 import laktory.spark.functions as LF
 from laktory import models
+from laktory.exceptions import MissingColumnError
+from laktory.exceptions import MissingColumnsError
 
 pdf = pd.DataFrame(
     {
@@ -103,21 +105,6 @@ def test_dataframe_table_input(df0=df0):
                     {"df": df},
                 ],
             }
-            # {
-            #     "name": "cos_x",
-            #     "type": "double",
-            #     "spark_func_name": "cos",
-            #     "spark_func_args": ["x"],
-            # },
-            # {
-            #     "nodes": [
-            #         {
-            #             "spark_func_name": "select",
-            #             "spark_func_args": ["x", "cos_x"],
-            #         },
-            #
-            #     ],
-            # }
         ]
     )
 
@@ -200,9 +187,60 @@ def test_nested(df0=df0):
     assert pdf["x2"].tolist() == pdf["_x2"].tolist()
 
 
+def test_exceptions():
+
+    df = df0.select(df0.columns)
+
+    # Input missing - missing not allowed
+    sc = models.SparkChain(
+        nodes=[
+            {
+                "name": "cos_x",
+                "type": "double",
+                "spark_func_name": "cos",
+                "spark_func_args": ["col('y')"],
+                "allow_missing_arg": False,
+            },
+        ]
+    )
+    with pytest.raises(MissingColumnError):
+        df = sc.execute(df)
+
+    # Input missing - missing allowed
+    sc = models.SparkChain(
+        nodes=[
+            {
+                "name": "xy",
+                "type": "double",
+                "spark_func_name": "coalesce",
+                "spark_func_args": ["col('x')", "col('y')"],
+                "allow_missing_arg": True,
+            },
+        ]
+    )
+    df = sc.execute(df)
+    assert "xy" in df.columns
+
+    # All inputs missing
+    sc = models.SparkChain(
+        nodes=[
+            {
+                "name": "xy",
+                "type": "double",
+                "spark_func_name": "coalesce",
+                "spark_func_args": ["col('z')", "col('y')"],
+                "allow_missing_arg": True,
+            },
+        ]
+    )
+    with pytest.raises(MissingColumnsError):
+        df = sc.execute(df)
+
+
 if __name__ == "__main__":
     test_spark_func_arg()
     test_dataframe_df_input()
     test_dataframe_table_input()
     test_column()
     test_nested()
+    test_exceptions()

@@ -11,6 +11,8 @@ from laktory.spark import DataFrame
 from laktory.spark import Column as SparkColumn
 from laktory.models.spark._common import parse_args
 from laktory.models.spark._common import parse_kwargs
+from laktory.exceptions import MissingColumnError
+from laktory.exceptions import MissingColumnsError
 
 logger = get_logger(__name__)
 
@@ -20,14 +22,14 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 
 class SparkColumnNode(BaseModel):
+    allow_missing_arg: Union[bool, None] = False
     name: str
-    raise_missing_arg_exception: Union[bool, None] = True
-    type: str = "string"
-    unit: Union[str, None] = None
     spark_func_args: list[Union[str, SparkFuncArg, Any]] = []
     spark_func_kwargs: dict[str, Union[Any, SparkFuncArg]] = {}
     spark_func_name: Union[str, None] = None
     sql_expression: Union[str, None] = None
+    type: str = "string"
+    unit: Union[str, None] = None
 
     parse_args = parse_args
     parse_kwargs = parse_kwargs
@@ -51,7 +53,6 @@ class SparkColumnNode(BaseModel):
         self,
         df: DataFrame,
         udfs: list[Callable[[...], SparkColumn]] = None,
-        raise_exception: bool = True,
     ) -> SparkColumn:
         """
         Build Spark Column
@@ -62,11 +63,13 @@ class SparkColumnNode(BaseModel):
             Input DataFrame
         udfs:
             User-defined functions
-        raise_exception
-            If `True`, raise exception when input columns are not available,
-            else, skip.
+
+        Returns
+        -------
+            Output column
         """
         import pyspark.sql.functions as F
+        from pyspark.sql import Column
         from laktory.spark import functions as LF
         from laktory.spark.dataframe import has_column
 
@@ -103,38 +106,47 @@ class SparkColumnNode(BaseModel):
         _args = self.spark_func_args
         _kwargs = self.spark_func_kwargs
 
-        logger.info(f"   {self.name}[{self.type}] as {func_name}({_args}, {_kwargs})")
+        # Build log
+        func_log = f"{func_name}("
+        for a in _args:
+            func_log += f"{a.value},"
+        for k, a in _kwargs.items():
+            func_log += f"{k}={a.value},"
+        if func_log.endswith(","):
+            func_log = func_log[:-1]
+        func_log += ")"
+        logger.info(f"{self.name}[{self.type}] as {func_log}")
 
         # Build args
         args = []
+        missing_column_names = []
         for i, _arg in enumerate(_args):
-            # if df is not None:
-            #     if _arg.is_column and not has_column(df, _arg.value):
-            #         logger.info(f"Column '{_arg.value}' not available")
-            #
-            #         if self.raise_missing_arg_exception:
-            #             if raise_exception:
-            #                 raise ValueError(
-            #                     f"Input column {_arg.value} missing. Abort building {self.name}."
-            #                 )
-            #             else:
-            #                 logger.info(
-            #                     f"Input column {_arg.value} missing. Skip building {self.name}"
-            #                 )
-            #                 return None
-            #         else:
-            #             continue
+            parg = _arg.eval()
+            cname = _arg.value
 
-            args += [_arg.eval()]
+            if df is not None:
+                # Check if explicitly defined columns are available
+                if isinstance(parg, Column):
+                    cname = str(parg).split("'")[1]
+                    if not has_column(df, cname):
+                        missing_column_names += [cname]
+                        if not self.allow_missing_arg:
+                            logger.error(f"Input column {cname} is missing. Abort building {self.name}")
+                            raise MissingColumnError(cname)
+                        else:
+                            logger.warn(f"Input column {cname} is missing for building {self.name}")
+                            continue
+
+                else:
+                    pass
+                    # TODO: We could try to check if the function expect columns and if it's the case assume
+                    # that a string argument is intended to be a column name, but I feel this will be a rabbit
+                    # hole with tons of exceptions.
+
+            args += [parg]
 
         if len(_args) > 0 and len(args) < 1:
-            if raise_exception:
-                raise ValueError(
-                    f"All input columns are  missing. Abort building {self.name}"
-                )
-            else:
-                logger.info(f"All input columns are missing. Skip building {self.name}")
-                return None
+            raise MissingColumnsError(missing_column_names)
 
         # Build kwargs
         kwargs = {}
@@ -142,7 +154,8 @@ class SparkColumnNode(BaseModel):
             kwargs[k] = _arg.to_spark()
 
         # Function call
-        logger.info(f"   {self.name}[{self.type}] as {func_name}({args}, {kwargs})")
+        # logger.info(f"   {self.name}[{self.type}] as {func_name}({args}, {kwargs})")
+        logger.info(f"{self.name}[{self.type}] as {func_name}({args}, {kwargs})")
         col = f(*args, **kwargs)
 
         # Type Casting
