@@ -71,7 +71,7 @@ for event in events:
 # --------------------------------------------------------------------------- #
 
 pdf = pd.DataFrame([e.model_dump() for e in events])
-pdf.to_json(os.path.join(rootpath, "events_raw_df.json"))
+pdf.to_json(os.path.join(rootpath, "events_bronze_df.json"))
 
 
 # --------------------------------------------------------------------------- #
@@ -115,4 +115,8 @@ df = spark.createDataFrame(
     ),
 )
 df = df.repartition(1)
-df.write.parquet(os.path.join(rootpath, "events_raw_spark"), mode="overwrite")
+df.write.parquet(os.path.join(rootpath, "events_bronze_spark"), mode="overwrite")
+
+# --------------------------------------------------------------------------- #
+# Build Silver DataFrame                                                      #
+# --------------------------------------------------------------------------- #
