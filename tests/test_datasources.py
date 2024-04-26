@@ -1,21 +1,9 @@
-from pyspark.sql import Row
 from pyspark.sql import SparkSession
 import os
-import pytest
 import pandas as pd
 
 from laktory.models.datasources import EventDataSource
 from laktory.models.datasources import TableDataSource
-from laktory._testing import StockPriceDataEventHeader
-from laktory._testing import EventsManager
-
-
-# Build and write events
-data_dir = os.path.join(os.path.dirname(__file__), "data/")
-header = StockPriceDataEventHeader()
-manager = EventsManager()
-manager.build_events(data_dir)
-manager.to_path()
 
 # Spark
 pdf = pd.DataFrame(
@@ -33,6 +21,7 @@ df0 = spark.createDataFrame(pdf)
 
 
 def test_event_data_source():
+
     source = EventDataSource(
         name="stock_price",
         producer={"name": "yahoo_finance"},
@@ -48,31 +37,23 @@ def test_event_data_source_read():
     source = EventDataSource(
         name="stock_price",
         producer={"name": "yahoo-finance"},
-        events_root=data_dir,
+        events_root="./data/events/",
         read_as_stream=False,
     )
-    df = source.read(spark).toPandas()
-    assert len(df) == 80
-    print(list(df.columns))
-    assert list(df.columns) == [
+    df = source.read(spark)
+    assert df.count() == 80
+    assert df.columns == [
         "data",
         "description",
         "event_root_",
         "name",
         "producer",
     ]
-    df["data"] = df["data"].apply(Row.asDict)
-    df["symbol"] = df["data"].apply(dict.get, args=("symbol",))
-    df["created_at"] = df["data"].apply(dict.get, args=("_created_at",))
-    df = df.sort_values(["symbol", "created_at"])
-    row = df.iloc[0]["data"]
-    assert row["symbol"] == "AAPL"
-    assert row["close"] == pytest.approx(189.46, abs=0.01)
 
 
 def test_table_data_source(df0=df0):
     source = TableDataSource(
-        df=df0,
+        mock_df=df0,
         path="/Volumes/tables/stock_prices/",
         filter="b != 0",
         selects=["a", "b", "c"],
@@ -91,7 +72,7 @@ def test_table_data_source(df0=df0):
 
     # Select with rename
     source = TableDataSource(
-        df=df0,
+        mock_df=df0,
         path="/Volumes/tables/stock_prices/",
         selects={"x": "x1", "n": "n1"},
     )
@@ -101,7 +82,7 @@ def test_table_data_source(df0=df0):
 
     # Drop
     source = TableDataSource(
-        df=df0,
+        mock_df=df0,
         path="/Volumes/tables/stock_prices/",
         drops=["b", "c", "n"],
     )

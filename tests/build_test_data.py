@@ -38,9 +38,9 @@ for s in symbols:
     for _, row in df.iterrows():
         events += [
             models.DataEvent(
-                name="stock_prices",
+                name="stock_price",
                 producer={
-                    "name": "yahooo-finance",
+                    "name": "yahoo-finance",
                 },
                 data={
                     "created_at": _,
@@ -115,4 +115,4 @@ df = spark.createDataFrame(
     ),
 )
 df = df.repartition(1)
-df.write.parquet(os.path.join(rootpath, "events_raw_spark"))
+df.write.parquet(os.path.join(rootpath, "events_raw_spark"), mode="overwrite")

@@ -2,14 +2,16 @@
 
 ## [0.2.0] - Unreleased
 ### Added
-* `models.TableDataSource` `renames` attribute for renaming columns of the source table
-* `models.TableDataSource` `drops` attribute for dropping columns of the source table
-### Fixed
-* n/a
+* `SparkChain`
+* `SparkColumnNode`
+* `SparkTableNode`
+* Moved `filter`, `selects` and `watermarks` properties to `models.BaseDataSource` so that it can be used for all source types
+* `models.BaseDataSource` `renames` attribute for renaming columns of the source table
+* `models.BaseDataSource` `drops` attribute for dropping columns of the source table
 ### Updated
 * n/a
 ### Breaking changes
-* n/a
+* Refactored table builder to use SparkChain instead of direct definitions of joins, unions, columns building, etc.
 
 ## [0.1.10] - 2024-04-23
 ### Added
