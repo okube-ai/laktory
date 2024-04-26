@@ -1,12 +1,10 @@
 import pandas as pd
 import numpy as np
 import pytest
-from uuid import UUID
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
 
-import laktory.spark.functions as LF
 from laktory import models
 from laktory.exceptions import MissingColumnError
 from laktory.exceptions import MissingColumnsError

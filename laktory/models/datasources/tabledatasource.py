@@ -107,6 +107,8 @@ class TableDataSource(BaseDataSource):
         Name of the catalog of the source table
     cdc:
         Change data capture specifications
+    drops:
+        List of columns to drop
     selects:
         Columns to select from the source table. Can be specified as a list
         or as a dictionary to rename the source columns
@@ -121,6 +123,8 @@ class TableDataSource(BaseDataSource):
         Name of the source table
     path:
         Path of the source table
+    renames:
+        Mapping between the source table column names and new column names
     schema_name:
         Name of the schema of the source table
     watermark
@@ -144,12 +148,14 @@ class TableDataSource(BaseDataSource):
     df: Any = Field(None, exclude=True)
     catalog_name: Union[str, None] = None
     cdc: Union[TableDataSourceCDC, None] = None
+    drops: Union[list, None] = None
     selects: Union[list[str], dict[str, str], None] = None
     fmt: Literal["PARQUET", "DELTA"] = "DELTA"
     filter: Union[str, None] = None
     from_pipeline: Union[bool, None] = True
     name: Union[str, None] = None
     path: Union[str, None] = None
+    renames: Union[dict[str, str], None] = None
     schema_name: Union[str, None] = None
     watermark: Union[Watermark, None] = None
 
@@ -240,6 +246,10 @@ class TableDataSource(BaseDataSource):
         if self.filter:
             df = df.filter(self.filter)
 
+        # Apply drops
+        if self.drops:
+            df = df.drop(*self.drops)
+
         # Columns
         cols = []
         if self.selects:
@@ -248,6 +258,11 @@ class TableDataSource(BaseDataSource):
             elif isinstance(self.selects, dict):
                 cols += [F.col(k).alias(v) for k, v in self.selects.items()]
             df = df.select(cols)
+
+        # Renames
+        if self.renames:
+            for old_name, new_name in self.renames.items():
+                df = df.withColumnRenamed(old_name, new_name)
 
         # Apply Watermark
         if self.watermark:

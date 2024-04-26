@@ -2,6 +2,7 @@ from pyspark.sql import Row
 from pyspark.sql import SparkSession
 import os
 import pytest
+import pandas as pd
 
 from laktory.models.datasources import EventDataSource
 from laktory.models.datasources import TableDataSource
@@ -17,7 +18,18 @@ manager.build_events(data_dir)
 manager.to_path()
 
 # Spark
+pdf = pd.DataFrame(
+    {
+        "x": [1, 2, 3],
+        "a": [1, -1, 1],
+        "b": [2, 0, 2],
+        "c": [3, 0, 3],
+        "n": [4, 0, 4],
+    },
+)
 spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
+
+df0 = spark.createDataFrame(pdf)
 
 
 def test_event_data_source():
@@ -58,16 +70,47 @@ def test_event_data_source_read():
     assert row["close"] == pytest.approx(189.46, abs=0.01)
 
 
-def test_table_data_souurce():
+def test_table_data_source(df0=df0):
     source = TableDataSource(
+        df=df0,
         path="/Volumes/tables/stock_prices/",
+        filter="b != 0",
+        selects=["a", "b", "c"],
+        renames={"a": "aa", "b": "bb", "c": "cc"}
     )
+
+    # Test paths
     assert source.path == "/Volumes/tables/stock_prices/"
     assert source.from_path
     assert source.path_or_full_name == "/Volumes/tables/stock_prices/"
+
+    # Test reader
+    df = source.read(spark)
+    assert df.columns == ["aa", "bb", "cc"]
+    assert df.count() == 2
+
+    # Select with rename
+    source = TableDataSource(
+        df=df0,
+        path="/Volumes/tables/stock_prices/",
+        selects={"x": "x1", "n": "n1"},
+    )
+    df = source.read(spark)
+    assert df.columns == ["x1", "n1"]
+    assert df.count() == 3
+
+    # Drop
+    source = TableDataSource(
+        df=df0,
+        path="/Volumes/tables/stock_prices/",
+        drops=["b", "c", "n"],
+    )
+    df = source.read(spark)
+    assert df.columns == ["x", "a"]
+    assert df.count() == 3
 
 
 if __name__ == "__main__":
     test_event_data_source()
     test_event_data_source_read()
-    test_table_data_souurce()
+    test_table_data_source()

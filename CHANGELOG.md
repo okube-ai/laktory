@@ -1,8 +1,9 @@
 # Release History
 
-## [0.1.11] - Unreleased
+## [0.2.0] - Unreleased
 ### Added
-* n/a
+* `models.TableDataSource` `renames` attribute for renaming columns of the source table
+* `models.TableDataSource` `drops` attribute for dropping columns of the source table
 ### Fixed
 * n/a
 ### Updated
