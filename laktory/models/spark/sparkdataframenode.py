@@ -61,24 +61,13 @@ class SparkDataFrameNode(BaseModel):
     ```py
     from laktory import models
 
-    df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
+    df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 2, 3]}))
 
-    node = models.SparkColumnNode(
-        name="cosx",
-        type="double",
-        spark_func_name="cos",
-        spark_func_args=["x"],
+    node = models.SparkDataFrameNode(
+        spark_func_name="drop_duplicates",
+        spark_func_args=[["x"]],
     )
-    df = df0.withColumn("cosx", node.execute())
-
-    node = models.SparkColumnNode(
-        name="xy",
-        type="double",
-        spark_func_name="coalesce",
-        spark_func_args=[col('x'), F.col('y')],
-        allow_missing_column_args=True,
-    )
-    df = df0.withColumn("xy", node.execute())
+    df = node.execute(df, spark)
     ```
     """
     allow_missing_column_args: Union[bool, None] = False

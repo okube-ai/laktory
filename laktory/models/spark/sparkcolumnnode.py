@@ -66,7 +66,7 @@ class SparkColumnNode(BaseModel):
         spark_func_name="cos",
         spark_func_args=["x"],
     )
-    df = df0.withColumn("cosx", node.execute())
+    df = df0.withColumn("cosx", node.execute(df))
 
     node = models.SparkColumnNode(
         name="xy",
@@ -75,7 +75,7 @@ class SparkColumnNode(BaseModel):
         spark_func_args=[col('x'), F.col('y')],
         allow_missing_column_args=True,
     )
-    df = df0.withColumn("xy", node.execute())
+    df = df0.withColumn("xy", node.execute(df))
     ```
     """
     allow_missing_column_args: Union[bool, None] = False

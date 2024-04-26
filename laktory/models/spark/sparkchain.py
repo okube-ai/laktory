@@ -16,6 +16,65 @@ logger = get_logger(__name__)
 
 
 class SparkChain(BaseModel):
+    """
+    The Spark Chain class defines a series of transformation to be applied to
+    a DataFrame. Each transformation is expressed by a node that can either
+    add a new column (SparkColumnNode) or by a node that returns a new
+    DataFrame entirely (SparkDataFrameNode). Each node is executed
+    sequentially in the provided order. Each node may also be another Spark
+    Chain.
+
+    Attributes
+    ----------
+    nodes:
+        The list of transformations to be executed.
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
+
+    # Build Chain
+    sc = models.SparkChain(
+        nodes=[
+            {
+                "name": "cos_x",
+                "type": "double",
+                "spark_func_name": "cos",
+                "spark_func_args": ["x"],
+            },
+            {
+                "nodes": [
+                    {
+                        "spark_func_name": "withColumnRenamed",
+                        "spark_func_args": [
+                            "x",
+                            "x_tmp",
+                        ],
+                    },
+                    {
+                        "name": "x2",
+                        "type": "double",
+                        "spark_func_name": "sqrt",
+                        "spark_func_args": ["x_tmp"],
+                    },
+                ],
+            },
+            {
+                "spark_func_name": "drop",
+                "spark_func_args": [
+                    "x_tmp",
+                ],
+            },
+        ]
+    )
+
+    # Execute Chain
+    df = sc.execute(df0, spark)
+    ```
+    """
     nodes: list[Union[SparkDataFrameNode, "SparkChain", SparkColumnNode]]
 
     # TODO: Add validation that spark_func_name is provided for spark dataframe
@@ -38,10 +97,6 @@ class SparkChain(BaseModel):
 
             elif isinstance(node, SparkDataFrameNode):
                 df = node.execute(df, udfs=udfs, spark=spark)
-
-
-
-
 
 
         #
