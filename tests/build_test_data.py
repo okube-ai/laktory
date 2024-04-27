@@ -1,5 +1,6 @@
 import pandas as pd
 from pyspark.sql import SparkSession
+import pyspark.sql.functions as F
 import pyspark.sql.types as T
 import os
 import yfinance as yf
@@ -71,11 +72,12 @@ for event in events:
 # --------------------------------------------------------------------------- #
 
 pdf = pd.DataFrame([e.model_dump() for e in events])
-pdf.to_json(os.path.join(rootpath, "events_bronze_df.json"))
+del pdf["event_root"]
+pdf.to_json(os.path.join(rootpath, "brz_stock_prices.json"))
 
 
 # --------------------------------------------------------------------------- #
-# Write Spark DataFrame                                                       #
+# Write Bronze DataFrame                                                      #
 # --------------------------------------------------------------------------- #
 
 df = spark.createDataFrame(
@@ -115,8 +117,34 @@ df = spark.createDataFrame(
     ),
 )
 df = df.repartition(1)
-df.write.parquet(os.path.join(rootpath, "events_bronze_spark"), mode="overwrite")
+df.write.parquet(os.path.join(rootpath, "brz_stock_prices"), mode="overwrite")
+
 
 # --------------------------------------------------------------------------- #
 # Build Silver DataFrame                                                      #
 # --------------------------------------------------------------------------- #
+
+# Stock prices
+cols0 = df.columns
+df = df.withColumn("created_at", F.col("data._created_at").cast(T.TimestampType()))
+df = df.withColumn("symbol", F.col("data.symbol").cast(T.StringType()))
+df = df.withColumn("open", F.col("data.open").cast(T.DoubleType()))
+df = df.withColumn("close", F.col("data.close").cast(T.DoubleType()))
+df = df.drop(*cols0)
+df.write.parquet(os.path.join(rootpath, "slv_stock_prices"), mode="overwrite")
+
+# Metadata
+df_meta = spark.createDataFrame(
+    pd.DataFrame(
+        {
+            "symbol2": ["AAPL", "GOOGL", "AMZN"],
+            "currency": ["USD"] * 3,
+            "first_traded": [
+                "1980-12-12T14:30:00.000Z",
+                "2004-08-19T13:30:00.00Z",
+                "1997-05-15T13:30:00.000Z",
+            ],
+        }
+    )
+)
+df_meta.write.parquet(os.path.join(rootpath, "slv_stock_meta"), mode="overwrite")

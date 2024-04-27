@@ -10,6 +10,9 @@ from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory.models.datasources import EventDataSource
 from laktory.models.datasources import TableDataSource
 from laktory.models.sql.column import Column
+from laktory.models.spark.sparkchain import SparkChain
+from laktory.models.spark.sparkdataframenode import SparkDataFrameNode
+from laktory.models.spark.sparkcolumnnode import SparkColumnNode
 from laktory.models.sql.tableaggregation import TableAggregation
 from laktory.models.sql.tablejoin import TableJoin
 from laktory.models.sql.tableunion import TableUnion
@@ -26,13 +29,10 @@ class TableBuilder(BaseModel):
 
     Attributes
     ----------
-    aggregation:
-        Definition of the aggregation model following the joins and the source
-        read.
+    add_laktory_columns:
+        Add laktory default columns like layer-specific timestamps
     as_dlt_view:
         Create (DLT) view instead of table
-    drop_columns:
-        Columns to drop from the output dataframe
     drop_duplicates:
         If `True`:
             - drop duplicated rows using `primary_key` if defined or all
@@ -44,52 +44,31 @@ class TableBuilder(BaseModel):
         columns defined in the table and/or resulting from the joins.
     event_source:
         Definition of the event data source if applicable
-    filter:
-        Filter applied to the data source to keep only selected rows
-    joins:
-        Definition of the table(s) to be joined to the data source
-    joins_post_aggregation
-        Definition of the table(s) to be joined to the aggregated data
     layer:
         Layer in the medallion architecture
     pipeline_name:
         Name of the pipeline in which the table will be built
-    selects:
-        Columns to select from the output dataframe. A list of colum names or
-        a map for renaming the columns.
     table_source:
         Definition of the table data source if applicable
     template:
         Key indicating which notebook to use for building the table in the
         context of a data pipeline.
-    unions:
-        Definition of the table(s) to be unioned to the data source
-    window_filter:
-        Definition of rows filter based on a time spark window. Applied after
-        joins.
     """
 
-    aggregation: Union[TableAggregation, None] = None
+    add_laktory_columns: bool = True
     as_dlt_view: bool = False
-    drop_columns: list[str] = []
-    drop_duplicates: Union[bool, list[str], None] = None
+    drop_duplicates: Union[bool, None] = None
     drop_source_columns: Union[bool, None] = None
     event_source: Union[EventDataSource, None] = None
-    filter: Union[str, None] = None
-    joins: list[TableJoin] = []
-    joins_post_aggregation: list[TableJoin] = []
-    layer: Literal["BRONZE", "SILVER", "SILVER_STAR", "GOLD"] = None
+    layer: Literal["BRONZE", "SILVER", "GOLD"] = None
     pipeline_name: Union[str, None] = None
-    selects: Union[list[str], dict[str, str], None] = None
     table_source: Union[TableDataSource, None] = None
     template: Union[str, bool, None] = None
-    unions: list[TableUnion] = []
-    window_filter: Union[TableWindowFilter, None] = None
-    _columns_to_build = []
+    spark_chain: Union[SparkChain, None] = None
     _table: Any = None
 
     @model_validator(mode="after")
-    def default_options(self) -> Any:
+    def default_values(self) -> Any:
         """
         Sets default options like `drop_source_columns`, `drop_duplicates`,
         `template`, etc. based on `layer` value.
@@ -106,19 +85,19 @@ class TableBuilder(BaseModel):
                 self.drop_source_columns = True
             if self.drop_duplicates is not None and self.primary_key:
                 self.drop_duplicates = True
-
-        if self.layer == "SILVER_STAR":
-            if self.drop_source_columns is None:
-                self.drop_source_columns = False
-            if self.drop_duplicates is not None:
-                self.drop_duplicates = False
-
-        if self.layer == "GOLD":
-            if self.drop_source_columns is None:
-                self.drop_source_columns = False
-            if self.drop_duplicates is not None:
-                self.drop_duplicates = False
-
+        #
+        # if self.layer == "SILVER_STAR":
+        #     if self.drop_source_columns is None:
+        #         self.drop_source_columns = False
+        #     if self.drop_duplicates is not None:
+        #         self.drop_duplicates = False
+        #
+        # if self.layer == "GOLD":
+        #     if self.drop_source_columns is None:
+        #         self.drop_source_columns = False
+        #     if self.drop_duplicates is not None:
+        #         self.drop_duplicates = False
+        #
         if self.template is None:
             self.template = self.layer
 
@@ -146,112 +125,169 @@ class TableBuilder(BaseModel):
     @property
     def columns(self) -> list[Column]:
         """List of columns"""
+        if self._table is None:
+            return []
         return self._table.columns
 
     @property
     def timestamp_key(self) -> str:
         """Table timestamp key"""
+        if self._table is None:
+            return None
         return self._table.timestamp_key
 
     @property
     def primary_key(self) -> str:
         """Table primary key"""
+        if self._table is None:
+            return None
         return self._table.primary_key
 
     @property
-    def has_joins(self) -> bool:
-        """Joins defined flag"""
-        return len(self.joins) > 0
+    def layer_spark_chain(self):
 
-    @property
-    def has_unions(self) -> bool:
-        """Unions defined flag"""
-        return len(self.unions) > 0
+        nodes = []
 
-    @property
-    def has_aggregation(self) -> bool:
-        """Has aggregation"""
-        return self.aggregation is not None
+        if self.layer == "BRONZE":
 
-    @property
-    def has_joins_post_aggregation(self) -> bool:
-        """Post-aggregation joins defined flag"""
-        return len(self.joins_post_aggregation) > 0
+            if self.add_laktory_columns:
+                nodes += [
+                    SparkColumnNode(
+                        name="_bronze_at",
+                        type="timestamp",
+                        spark_func_name="current_timestamp",
+                    ),
+                ]
 
-    def _get_layer_columns(self, layer, df=None) -> list[columns]:
-        from laktory.spark.dataframe import has_column
+        elif self.layer == "SILVER":
 
-        cols = []
-
-        if layer == "BRONZE":
-            cols = [
-                Column(
-                    **{
-                        "name": "_bronze_at",
-                        "type": "timestamp",
-                        "spark_func_name": "current_timestamp",
-                    }
-                )
-            ]
-
-        elif layer == "SILVER":
             if self.timestamp_key:
-                cols += [
-                    Column(
-                        **{
-                            "name": "_tstamp",
-                            "type": "timestamp",
-                            "spark_func_name": "coalesce",
-                            "spark_func_args": [self.timestamp_key],
-                        }
+                nodes += [
+                    SparkColumnNode(
+                        name="_tstamp",
+                        type="timestamp",
+                        sql_expression=self.timestamp_key,
                     )
                 ]
 
-            if has_column(df, "_bronze_at"):
-                cols += [
-                    Column(
-                        **{
-                            "name": "_bronze_at",
-                            "type": "timestamp",
-                            "spark_func_name": "coalesce",
-                            "spark_func_args": ["_bronze_at"],
-                        }
+            if self.add_laktory_columns:
+                nodes += [
+                    SparkColumnNode(
+                        name="_silver_at",
+                        type="timestamp",
+                        spark_func_name="current_timestamp",
                     )
                 ]
 
-            cols += [
-                Column(
-                    **{
-                        "name": "_silver_at",
-                        "type": "timestamp",
-                        "spark_func_name": "current_timestamp",
-                    }
+        elif self.layer == "GOLD":
+
+            if self.add_laktory_columns:
+                nodes += [
+                    SparkColumnNode(
+                        name="_gold_at",
+                        type="timestamp",
+                        spark_func_name="current_timestamp",
+                    )
+                ]
+
+        if self.drop_duplicates:
+            subset = None
+            if isinstance(self.drop_duplicates, list):
+                subset = self.drop_duplicates
+            elif self.primary_key:
+                subset = [self.primary_key]
+
+            nodes += [
+                SparkDataFrameNode(
+                    spark_func_name="dropDuplicates",
+                    spark_func_args=[
+                        subset
+                    ]
                 )
             ]
 
-        elif layer == "SILVER_STAR":
-            cols = [
-                Column(
-                    **{
-                        "name": "_silver_star_at",
-                        "type": "timestamp",
-                        "spark_func_name": "current_timestamp",
-                    }
+        if self.drop_source_columns:
+            nodes += [
+                SparkDataFrameNode(
+                    spark_func_name="drop",
+                    spark_func_args=[
+                        c for c in self.spark_chain.columns[0] if c not in ["_bronze_at", "_silver_at", "_gold_at"]
+                    ]
                 )
             ]
 
-        elif layer == "GOLD":
-            cols = [
-                Column(
-                    **{
-                        "name": "_gold_at",
-                        "type": "timestamp",
-                        "spark_func_name": "current_timestamp",
-                    }
-                )
-            ]
+        if len(nodes) == 0:
+            return None
 
-        return cols
+        return SparkChain(nodes=nodes)
+
+    #
+    # def _get_layer_columns(self, layer, df=None) -> list[columns]:
+    #     from laktory.spark.dataframe import has_column
+    #
+    #     cols = []
+    #
+    #     if layer == "BRONZE":
+    #         pass
+    #
+    #     elif layer == "SILVER":
+    #         if self.timestamp_key:
+    #             cols += [
+    #                 Column(
+    #                     **{
+    #                         "name": "_tstamp",
+    #                         "type": "timestamp",
+    #                         "spark_func_name": "coalesce",
+    #                         "spark_func_args": [self.timestamp_key],
+    #                     }
+    #                 )
+    #             ]
+    #
+    #         if has_column(df, "_bronze_at"):
+    #             cols += [
+    #                 Column(
+    #                     **{
+    #                         "name": "_bronze_at",
+    #                         "type": "timestamp",
+    #                         "spark_func_name": "coalesce",
+    #                         "spark_func_args": ["_bronze_at"],
+    #                     }
+    #                 )
+    #             ]
+    #
+    #         cols += [
+    #             Column(
+    #                 **{
+    #                     "name": "_silver_at",
+    #                     "type": "timestamp",
+    #                     "spark_func_name": "current_timestamp",
+    #                 }
+    #             )
+    #         ]
+    #
+    #     elif layer == "SILVER_STAR":
+    #         cols = [
+    #             Column(
+    #                 **{
+    #                     "name": "_silver_star_at",
+    #                     "type": "timestamp",
+    #                     "spark_func_name": "current_timestamp",
+    #                 }
+    #             )
+    #         ]
+    #
+    #     elif layer == "GOLD":
+    #         cols = [
+    #             Column(
+    #                 **{
+    #                     "name": "_gold_at",
+    #                     "type": "timestamp",
+    #                     "spark_func_name": "current_timestamp",
+    #                 }
+    #             )
+    #         ]
+    #
+    #     return cols
 
     def read_source(self, spark) -> DataFrame:
         """
@@ -269,39 +305,9 @@ class TableBuilder(BaseModel):
         """
         return self.source.read(spark)
 
-    def build_columns(
-        self, df: DataFrame, udfs: list[Callable] = None, raise_exception: bool = True
-    ) -> DataFrame:
-        """
-        Build dataframe columns
-
-        Parameters
-        ----------
-        df:
-            Input DataFrame
-        udfs:
-            User-defined functions
-        raise_exception
-            If `True`, raise exception when input columns are not available,
-            else, skip.
-        """
-        logger.info(f"Setting columns...")
-        built_cols = []
-        for col in self._columns_to_build:
-            c = col.to_spark(df, udfs=udfs, raise_exception=raise_exception)
-            if c is not None:
-                df = df.withColumn(col.name, c)
-                built_cols += [col]
-
-        for c in built_cols:
-            self._columns_to_build.remove(c)
-
-        return df
-
     def process(self, df, udfs=None, spark=None) -> DataFrame:
         """
-        Build table from source DataFrame by applying joins, aggregations and
-        creating new columns.
+        Build table by reading source and applying Spark Chain.
 
         Parameters
         ----------
@@ -317,122 +323,14 @@ class TableBuilder(BaseModel):
         :
             output Spark DataFrame
         """
-        import pyspark.sql.functions as F
-
         logger.info(f"Applying {self.layer} transformations")
 
-        # Build columns
-        self._columns_to_build = [c for c in self.columns]
-        column_names = [c.name for c in self._columns_to_build]
-        df = self.build_columns(
-            df, udfs=udfs, raise_exception=not (self.has_joins or self.has_aggregation)
-        )
+        if self.spark_chain is None:
+            return df
 
-        # Execute unions
-        logger.info(f"Executing unions...")
-        for i, union in enumerate(self.unions):
-            if i == 0:
-                name = self.source.name
-            else:
-                name = "previous_union"
-            union.left = TableDataSource(name=name)
-            union.left._df = df
-            df = union.execute(spark)
-
-        # Execute joins
-        logger.info(f"Executing joins...")
-        for i, join in enumerate(self.joins):
-            if i == 0:
-                name = self.source.name
-            else:
-                name = "previous_join"
-            join.left = TableDataSource(name=name)
-            join.left._df = df
-            df = join.execute(spark)
-
-            # Build remaining columns again (in case inputs are found in joins)
-            df = self.build_columns(
-                df, udfs=udfs, raise_exception=i == len(self.joins) - 1
-            )
-
-        # Add layer columns
-        logger.info(f"Adding layer columns...")
-        layer_columns = self._get_layer_columns(layer=self.layer, df=df)
-        self._columns_to_build += layer_columns
-        column_names += [c.name for c in layer_columns]
-        df = self.build_columns(
-            df,
-            udfs=udfs,
-            raise_exception=not (
-                self.has_joins_post_aggregation or self.has_aggregation
-            ),
-        )
-
-        # Window filtering
-        if self.window_filter:
-            logger.info(f"Window filtering...")
-            df = self.window_filter.execute(df)
-
-        # Drop source columns
-        if self.drop_source_columns:
-            logger.info(f"Dropping source columns...")
-            df = df.select(column_names)
-
-        if self.aggregation:
-            logger.info(f"Executing Aggregations...")
-            df = self.aggregation.execute(df, udfs=udfs)
-            self._columns_to_build += self._get_layer_columns(layer=self.layer, df=df)
-
-        # Build columns after aggregation
-        df = self.build_columns(
-            df, udfs=udfs, raise_exception=not self.has_joins_post_aggregation
-        )
-
-        # Make post-aggregation joins
-        for i, join in enumerate(self.joins_post_aggregation):
-            logger.info(f"Post-aggregation joins...")
-            if i == 0:
-                name = self.source.name
-            else:
-                name = "previous_join"
-            join.left = TableDataSource(name=name)
-            join.left._df = df
-            df = join.execute(spark)
-
-            # Build remaining columns again (in case inputs are found in joins)
-            df = self.build_columns(
-                df, udfs=udfs, raise_exception=i == len(self.joins) - 1
-            )
-
-        # Apply filter
-        if self.filter:
-            df = df.filter(self.filter)
-
-        # Select columns
-        cols = []
-        if self.selects:
-            logger.info(f"Selecting columns...")
-            if isinstance(self.selects, list):
-                cols += [F.col(c) for c in self.selects]
-            elif isinstance(self.selects, dict):
-                cols += [F.col(k).alias(v) for k, v in self.selects.items()]
-            df = df.select(cols)
-
-        # Drop columns
-        if self.drop_columns:
-            logger.info(f"Dropping columns {self.drop_columns}...")
-            df = df.drop(*self.drop_columns)
-
-        # Drop duplicates
-        if self.drop_duplicates:
-            subset = None
-            if isinstance(self.drop_duplicates, list):
-                subset = self.drop_duplicates
-            elif self.primary_key:
-                subset = [self.primary_key]
-
-            logger.info(f"Removing duplicates with {subset}")
-            df = df.dropDuplicates(subset)
+        df = self.spark_chain.execute(df, udfs=udfs, spark=spark)
+        if self.layer_spark_chain:
+            df = self.layer_spark_chain.execute(df, udfs=udfs, spark=spark)
 
         return df
 
