@@ -1,4 +1,3 @@
-import inspect
 from typing import Union
 
 from laktory._logger import get_logger
@@ -76,14 +75,18 @@ class SparkChain(BaseModel):
     ```
     """
     nodes: list[Union[SparkDataFrameNode, "SparkChain", SparkColumnNode]]
+    _columns: list[list[str]] = []
 
-    # TODO: Add validation that spark_func_name is provided for spark dataframe
-    # nodes
+    @property
+    def columns(self):
+        return self._columns
 
     def execute(self, df, udfs=None, spark=None) -> DataFrame:
         logger.info("Executing Spark chain")
 
         for inode, node in enumerate(self.nodes):
+
+            self._columns += [df.columns]
 
             tnode = type(node)
             logger.info(f"Executing node {inode} ({tnode.__name__}).")
@@ -98,42 +101,6 @@ class SparkChain(BaseModel):
             elif isinstance(node, SparkDataFrameNode):
                 df = node.execute(df, udfs=udfs, spark=spark)
 
-
-        #
-        #
-        # # Build columns
-        # self._columns_to_build = [c for c in self.columns]
-        # column_names = [c.name for c in self._columns_to_build]
-        # df = self.build_columns(
-        #     df, udfs=udfs, raise_exception=not (self.has_joins or self.has_aggregation)
-        # )
-        #
-        # # Execute unions
-        # logger.info(f"Executing unions...")
-        # for i, union in enumerate(self.unions):
-        #     if i == 0:
-        #         name = self.source.name
-        #     else:
-        #         name = "previous_union"
-        #     union.left = TableDataSource(name=name)
-        #     union.left._df = df
-        #     df = union.execute(spark)
-        #
-        # # Execute joins
-        # logger.info(f"Executing joins...")
-        # for i, join in enumerate(self.joins):
-        #     if i == 0:
-        #         name = self.source.name
-        #     else:
-        #         name = "previous_join"
-        #     join.left = TableDataSource(name=name)
-        #     join.left._df = df
-        #     df = join.execute(spark)
-        #
-        #     # Build remaining columns again (in case inputs are found in joins)
-        #     df = self.build_columns(
-        #         df, udfs=udfs, raise_exception=i == len(self.joins) - 1
-        #     )
         #
         # # Add layer columns
         # logger.info(f"Adding layer columns...")
@@ -188,31 +155,6 @@ class SparkChain(BaseModel):
         # if self.filter:
         #     df = df.filter(self.filter)
         #
-        # # Select columns
-        # cols = []
-        # if self.selects:
-        #     logger.info(f"Selecting columns...")
-        #     if isinstance(self.selects, list):
-        #         cols += [F.col(c) for c in self.selects]
-        #     elif isinstance(self.selects, dict):
-        #         cols += [F.col(k).alias(v) for k, v in self.selects.items()]
-        #     df = df.select(cols)
-        #
-        # # Drop columns
-        # if self.drop_columns:
-        #     logger.info(f"Dropping columns {self.drop_columns}...")
-        #     df = df.drop(*self.drop_columns)
-        #
-        # # Drop duplicates
-        # if self.drop_duplicates:
-        #     subset = None
-        #     if isinstance(self.drop_duplicates, list):
-        #         subset = self.drop_duplicates
-        #     elif self.primary_key:
-        #         subset = [self.primary_key]
-        #
-        #     logger.info(f"Removing duplicates with {subset}")
-        #     df = df.dropDuplicates(subset)
 
         return df
 
@@ -220,7 +162,7 @@ class SparkChain(BaseModel):
 SparkChain.model_rebuild()
 
 
-def builtin_dataframe_functions():
+def _builtin_dataframe_functions():
 
     from pyspark.sql import DataFrame
     import inspect

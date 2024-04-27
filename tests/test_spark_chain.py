@@ -100,7 +100,7 @@ def test_dataframe_table_input(df0=df0):
             {
                 "spark_func_name": "union",
                 "spark_func_args": [
-                    {"df": df},
+                    {"mock_df": df},
                 ],
             }
         ]
@@ -232,6 +232,11 @@ def test_nested(df0=df0):
     pdf = df.toPandas()
     assert "x_tmp" not in pdf.columns
     assert pdf["x2"].tolist() == pdf["_x2"].tolist()
+    assert sc.columns == [
+        ['x', 'a', 'b', 'c', 'n', 'pi', 'p', 'word', '_x2'],
+        ['x', 'a', 'b', 'c', 'n', 'pi', 'p', 'word', '_x2', 'cos_x'],
+        ['x_tmp', 'a', 'b', 'c', 'n', 'pi', 'p', 'word', '_x2', 'cos_x', 'x2'],
+    ]
 
 
 def test_exceptions():

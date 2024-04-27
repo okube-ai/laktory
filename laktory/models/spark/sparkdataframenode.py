@@ -73,7 +73,7 @@ class SparkDataFrameNode(BaseModel):
     allow_missing_column_args: Union[bool, None] = False
     spark_func_args: list[Union[Any, SparkFuncArg]] = []
     spark_func_kwargs: dict[str, Union[Any, SparkFuncArg]] = {}
-    spark_func_name: Union[str, None] = None
+    spark_func_name: Union[str, None]
     # sql_expression: Union[str, None] = None
 
     parse_args = parse_args
