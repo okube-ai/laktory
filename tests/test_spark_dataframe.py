@@ -68,6 +68,9 @@ data = [
 spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 
 df = spark.createDataFrame(data, schema=schema)
+df_brz = spark.read.parquet("./data/brz_stock_prices")
+df_slv = spark.read.parquet("./data/slv_stock_prices")
+df_meta = spark.read.parquet("./data/slv_stock_meta")
 
 
 def test_df_schema_flat():
@@ -95,6 +98,83 @@ def test_df_has_column():
     assert df.has_column("u[0].a")
 
 
+def test_watermark():
+    df = df_slv.withWatermark("created_at", "1 hour")
+
+    wm = df.watermark()
+
+    assert wm["column"] == "created_at"
+    assert wm["threshold"] == "1 hours"
+
+
+def test_df_join():
+
+    df_slv.laktory_join(
+        other=df_meta
+    )
+    #
+    # join = TableJoin(
+    #     left={
+    #         "name": "slv_stock_prices",
+    #         "filter": "created_at = '2023-11-01T00:00:00Z'",
+    #     },
+    #     other={
+    #         "name": "slv_stock_metadata",
+    #         "selects": {
+    #             "symbol2": "symbol",
+    #             "currency": "currency",
+    #             "first_traded": "first_traded",
+    #         },
+    #     },
+    #     on=["symbol"],
+    #     how="full_outer",
+    # )
+    # join.left._df = table_slv.to_df(spark)
+    # join.other._df = df_meta
+    #
+    # df = join.execute(spark)
+    #
+    # # Test join columns uniqueness
+    # _df = df.withColumn("symbol2", F.lit("a"))
+    # # _df = df.withColumn("symbol", F.lit("a"))
+    # _df = _df.select("symbol")
+    #
+    # # Test data
+    # data = df.toPandas().fillna(-1).to_dict(orient="records")
+    # print(data)
+    # assert data == [
+    #     {
+    #         "created_at": "2023-11-01T00:00:00Z",
+    #         "open": 1.0,
+    #         "close": 2.0,
+    #         "currency": "USD",
+    #         "first_traded": "1980-12-12T14:30:00.000Z",
+    #         "symbol": "AAPL",
+    #     },
+    #     {
+    #         "created_at": -1,
+    #         "open": -1.0,
+    #         "close": -1.0,
+    #         "currency": "USD",
+    #         "first_traded": "1997-05-15T13:30:00.000Z",
+    #         "symbol": "AMZN",
+    #     },
+    #     {
+    #         "created_at": "2023-11-01T00:00:00Z",
+    #         "open": 3.0,
+    #         "close": 4.0,
+    #         "currency": "USD",
+    #         "first_traded": "2004-08-19T13:30:00.00Z",
+    #         "symbol": "GOOGL",
+    #     },
+    # ]
+
+
 if __name__ == "__main__":
-    test_df_schema_flat()
-    test_df_has_column()
+    # test_df_schema_flat()
+    # test_df_has_column()
+    # test_df_join()
+
+    test_watermark()
+
+    # df = df_slv.withWatermark("created_at", "1 hour")

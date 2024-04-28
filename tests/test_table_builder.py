@@ -456,35 +456,6 @@ def test_silver():
 #     ]
 #
 #
-# def test_bronze():
-#     df0 = manager.to_spark_df()
-#     df1 = table_brz.builder.process(df0)
-#     assert "_bronze_at" in df1.columns
-#
-#
-# def test_silver():
-#     df0 = manager.to_spark_df()
-#     df0.show()
-#     df1 = table_brz.builder.process(df0)
-#     df1.show()
-#     df2 = table_slv.builder.process(df1)
-#     df2.show()
-#     assert df2.schema == T.StructType(
-#         [
-#             T.StructField("created_at", T.TimestampType(), True),
-#             T.StructField("symbol", T.StringType(), True),
-#             T.StructField("open", T.DoubleType(), True),
-#             T.StructField("close", T.DoubleType(), True),
-#             T.StructField("_bronze_at", T.TimestampType(), False),
-#             T.StructField("_silver_at", T.TimestampType(), False),
-#         ]
-#     )
-#     s = df2.toPandas().iloc[0]
-#     print(s)
-#     assert s["created_at"] == pd.Timestamp("2023-09-01 00:00:00")
-#     assert s["symbol"] == "AAPL"
-#     assert s["open"] == 189.49000549316406
-#     assert s["close"] == 189.49000549316406
 #
 #
 # def test_silver_star():
@@ -518,55 +489,6 @@ def test_silver():
 #         },
 #     ]
 #
-#
-# def test_gold():
-#     assert table_gld.builder.template == "GOLD1"
-#     df0 = manager.to_spark_df()
-#     df0.show()
-#     df1 = table_brz.builder.process(df0)
-#     df1.show()
-#     df2 = table_slv.builder.process(df1)
-#     df2.show()
-#     df3 = table_gld.builder.process(df2)
-#     df3.show()
-#     df3.printSchema()
-#     assert df3.schema == T.StructType(
-#         [
-#             T.StructField("min_open", T.DoubleType(), True),
-#             T.StructField("max_open", T.DoubleType(), True),
-#             T.StructField("min_close", T.DoubleType(), True),
-#             T.StructField("_gold_at", T.TimestampType(), False),
-#             T.StructField("name", T.StringType(), True),
-#             T.StructField("symbol", T.StringType(), True),
-#             T.StructField("name2", T.StringType(), True),
-#         ]
-#     )
-#     s = df3.toPandas().iloc[0]
-#     print(s)
-#     assert s["name2"] == "Apple"
-#
-#
-# def test_drop_duplicates():
-#     # Build DataFrame with duplicates
-#     df0 = manager.to_spark_df()
-#     df0.show()
-#     df1 = table_brz.builder.process(df0)
-#     df1.show()
-#     df1 = df1.union(df1)
-#
-#     # Remove duplicates using all columns
-#     slv_tmp = table_slv.copy()
-#     slv_tmp.builder.drop_duplicates = True
-#     df2 = slv_tmp.builder.process(df1)
-#     df2.show()
-#
-#     # Remove duplicates using only symbol and _bronze_at
-#     slv_tmp.builder.drop_duplicates = ["symbol", "_bronze_at"]
-#     df3 = slv_tmp.builder.process(df1)
-#
-#     assert df1.count() == 160
-#     assert df2.count() == 80
-#     assert df3.count() == 4
 #
 #
 # def test_builder_agg():
