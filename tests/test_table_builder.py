@@ -2,10 +2,12 @@
 # from pyspark.sql import types as T
 from pyspark.sql import functions as F
 from pyspark.sql import SparkSession
+
 # import pandas as pd
 # import datetime
 
 from laktory import models
+
 # from laktory._testing import EventsManager
 # from laktory._testing import df_meta
 # from laktory._testing import table_brz
@@ -27,7 +29,6 @@ df_slv = spark.read.parquet("./data/slv_stock_prices")
 
 
 def test_read_and_process():
-
     builder = models.TableBuilder(
         event_source={
             "name": "brz_stock_prices",
@@ -38,34 +39,21 @@ def test_read_and_process():
                 {
                     "name": "created_at",
                     "type": "timestamp",
-                    "sql_expression": "data._created_at"
+                    "sql_expression": "data._created_at",
                 },
-                {
-                    "name": "symbol",
-                    "type": "string",
-                    "sql_expression": "data.symbol"
-                },
-                {
-                    "name": "open",
-                    "type": "double",
-                    "sql_expression": "data.open"
-                },
-                {
-                    "name": "close",
-                    "type": "double",
-                    "sql_expression": "data.close"
-                },
+                {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
+                {"name": "open", "type": "double", "sql_expression": "data.open"},
+                {"name": "close", "type": "double", "sql_expression": "data.close"},
                 {
                     "spark_func_name": "drop",
                     "spark_func_args": [
                         "description",
                         "data",
                         "producer",
-                    ]
-                }
+                    ],
+                },
             ]
-        }
-
+        },
     )
 
     # Read and process
@@ -73,12 +61,11 @@ def test_read_and_process():
     df = builder.process(df)
 
     # Test
-    assert df.columns == ['name', 'created_at', 'symbol', 'open', 'close']
+    assert df.columns == ["name", "created_at", "symbol", "open", "close"]
     assert df.count() == 80
 
 
 def test_bronze():
-
     builder = models.TableBuilder(
         layer="BRONZE",
         event_source={
@@ -87,14 +74,9 @@ def test_bronze():
         },
         spark_chain={
             "nodes": [
-                {
-                    "name": "symbol",
-                    "type": "string",
-                    "sql_expression": "data.symbol"
-                },
+                {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
             ]
-        }
-
+        },
     )
 
     # Read and process
@@ -107,12 +89,18 @@ def test_bronze():
     assert builder.layer == "BRONZE"
     assert builder.template == "BRONZE"
     assert builder.add_laktory_columns
-    assert df.columns == ['name', 'description', 'producer', 'data', 'symbol', "_bronze_at"]
+    assert df.columns == [
+        "name",
+        "description",
+        "producer",
+        "data",
+        "symbol",
+        "_bronze_at",
+    ]
     assert df.count() == 80
 
 
 def test_silver():
-
     df = df_brz.select(df_brz.columns)
     df = df.withColumn("_bronze_at", F.current_timestamp())
     df = df.union(df)
@@ -125,11 +113,7 @@ def test_silver():
         },
         spark_chain={
             "nodes": [
-                {
-                    "name": "symbol",
-                    "type": "string",
-                    "sql_expression": "data.symbol"
-                },
+                {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
             ]
         },
         drop_duplicates=True,
@@ -145,212 +129,9 @@ def test_silver():
     assert builder.layer == "SILVER"
     assert builder.template == "SILVER"
     assert builder.add_laktory_columns
-    assert df.columns == ['_bronze_at', 'symbol', '_silver_at']
+    assert df.columns == ["_bronze_at", "symbol", "_silver_at"]
     assert df.count() == 80
 
-#
-# def test_table_join():
-#     join = TableJoin(
-#         left={
-#             "name": "slv_stock_prices",
-#             "filter": "created_at = '2023-11-01T00:00:00Z'",
-#         },
-#         other={
-#             "name": "slv_stock_metadata",
-#             "selects": {
-#                 "symbol2": "symbol",
-#                 "currency": "currency",
-#                 "first_traded": "first_traded",
-#             },
-#         },
-#         on=["symbol"],
-#     )
-#     join.left._df = table_slv.to_df(spark)
-#     join.other._df = df_meta
-#
-#     df = join.execute(spark)
-#     data = df.toPandas().to_dict(orient="records")
-#     print(data)
-#     assert df.select("symbol")  # test for duplicated columns
-#     assert data == [
-#         {
-#             "created_at": "2023-11-01T00:00:00Z",
-#             "symbol": "AAPL",
-#             "open": 1,
-#             "close": 2,
-#             "currency": "USD",
-#             "first_traded": "1980-12-12T14:30:00.000Z",
-#         },
-#         {
-#             "created_at": "2023-11-01T00:00:00Z",
-#             "symbol": "GOOGL",
-#             "open": 3,
-#             "close": 4,
-#             "currency": "USD",
-#             "first_traded": "2004-08-19T13:30:00.00Z",
-#         },
-#     ]
-#
-#
-# def test_table_join_expression():
-#     join = TableJoin(
-#         left={
-#             "name": "slv_stock_prices",
-#             "filter": "created_at = '2023-11-01T00:00:00Z'",
-#         },
-#         other={
-#             "name": "slv_stock_metadata",
-#             "selects": {
-#                 "symbol2": "symbol",
-#                 "currency": "currency",
-#                 "first_traded": "first_traded",
-#             },
-#         },
-#         on_expression="left.symbol == other.symbol",
-#     )
-#     join.left._df = table_slv.to_df(spark)
-#     join.other._df = df_meta
-#
-#     df = join.execute(spark)
-#     data = df.toPandas().to_dict(orient="records")
-#     print(data)
-#     assert df.select("symbol")  # test for duplicated columns
-#     assert data == [
-#         {
-#             "created_at": "2023-11-01T00:00:00Z",
-#             "symbol": "AAPL",
-#             "open": 1,
-#             "close": 2,
-#             "currency": "USD",
-#             "first_traded": "1980-12-12T14:30:00.000Z",
-#         },
-#         {
-#             "created_at": "2023-11-01T00:00:00Z",
-#             "symbol": "GOOGL",
-#             "open": 3,
-#             "close": 4,
-#             "currency": "USD",
-#             "first_traded": "2004-08-19T13:30:00.00Z",
-#         },
-#     ]
-#
-#
-# def test_table_join_outer():
-#     join = TableJoin(
-#         left={
-#             "name": "slv_stock_prices",
-#             "filter": "created_at = '2023-11-01T00:00:00Z'",
-#         },
-#         other={
-#             "name": "slv_stock_metadata",
-#             "selects": {
-#                 "symbol2": "symbol",
-#                 "currency": "currency",
-#                 "first_traded": "first_traded",
-#             },
-#         },
-#         on=["symbol"],
-#         how="full_outer",
-#     )
-#     join.left._df = table_slv.to_df(spark)
-#     join.other._df = df_meta
-#
-#     df = join.execute(spark)
-#
-#     # Test join columns uniqueness
-#     _df = df.withColumn("symbol2", F.lit("a"))
-#     # _df = df.withColumn("symbol", F.lit("a"))
-#     _df = _df.select("symbol")
-#
-#     # Test data
-#     data = df.toPandas().fillna(-1).to_dict(orient="records")
-#     print(data)
-#     assert data == [
-#         {
-#             "created_at": "2023-11-01T00:00:00Z",
-#             "open": 1.0,
-#             "close": 2.0,
-#             "currency": "USD",
-#             "first_traded": "1980-12-12T14:30:00.000Z",
-#             "symbol": "AAPL",
-#         },
-#         {
-#             "created_at": -1,
-#             "open": -1.0,
-#             "close": -1.0,
-#             "currency": "USD",
-#             "first_traded": "1997-05-15T13:30:00.000Z",
-#             "symbol": "AMZN",
-#         },
-#         {
-#             "created_at": "2023-11-01T00:00:00Z",
-#             "open": 3.0,
-#             "close": 4.0,
-#             "currency": "USD",
-#             "first_traded": "2004-08-19T13:30:00.00Z",
-#             "symbol": "GOOGL",
-#         },
-#     ]
-#
-#
-# def test_table_union():
-#     join = TableUnion(
-#         left={
-#             "name": "slv_stock_prices",
-#         },
-#         other={
-#             "name": "slv_stock_prices",
-#         },
-#     )
-#     join.left._df = table_slv.to_df(spark)
-#     join.other._df = table_slv.to_df(spark)
-#
-#     df = join.execute(spark)
-#     data = df.toPandas().to_dict(orient="records")
-#     print(data[:4])
-#     assert (
-#         data
-#         == [
-#             {
-#                 "created_at": "2023-11-01T00:00:00Z",
-#                 "symbol": "AAPL",
-#                 "open": 1,
-#                 "close": 2,
-#             },
-#             {
-#                 "created_at": "2023-11-01T01:00:00Z",
-#                 "symbol": "AAPL",
-#                 "open": 3,
-#                 "close": 4,
-#             },
-#             {
-#                 "created_at": "2023-11-01T00:00:00Z",
-#                 "symbol": "GOOGL",
-#                 "open": 3,
-#                 "close": 4,
-#             },
-#             {
-#                 "created_at": "2023-11-01T01:00:00Z",
-#                 "symbol": "GOOGL",
-#                 "open": 5,
-#                 "close": 6,
-#             },
-#         ]
-#         * 2
-#     )
-#
-#     # slv_tmp.builder.drop_duplicates = True
-#     # df2 = slv_tmp.builder.process(df1)
-#     # df2.show()
-#     #
-#     # # Remove duplicates using only symbol and _bronze_at
-#     # slv_tmp.builder.drop_duplicates = ["symbol", "_bronze_at"]
-#     # df3 = slv_tmp.builder.process(df1)
-#     #
-#     # assert df1.count() == 160
-#     # assert df2.count() == 80
-#     # assert df3.count() == 4
-#
 #
 # def test_table_agg():
 #     agg = TableAggregation(

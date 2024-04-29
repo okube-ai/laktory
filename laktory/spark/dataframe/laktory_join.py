@@ -42,46 +42,11 @@ def laktory_join(
     Examples
     --------
     ```py
-    from laktory import models
+    import laktory
 
-    table = models.Table(
-        name="slv_star_stock_prices",
-        builder={
-            "layer": "SILVER",
-            "table_source": {
-                "name": "slv_stock_prices",
-            },
-            "joins": [
-                {
-                    "other": {
-                        "name": "slv_stock_metadata",
-                        "read_as_stream": False,
-                        "selects": ["symbol", "currency", "first_trader"],
-                    },
-                    "on": ["symbol"],
-                }
-            ],
-        },
-    )
-
-    table = models.Table(
-        name="slv_star_stock_prices",
-        builder={
-            "layer": "SILVER",
-            "table_source": {
-                "name": "slv_stock_prices",
-            },
-            "joins": [
-                {
-                    "other": {
-                        "name": "slv_stock_metadata",
-                        "read_as_stream": False,
-                        "selects": ["symbol", "currency", "first_trader"],
-                    },
-                    "on_expression": "left.symbol == other.symbol",
-                }
-            ],
-        },
+    df = df_stock_prices.laktory_join(
+        other=df_stock_metadata,
+        on=["symbol"],
     )
     ```
 
