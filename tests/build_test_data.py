@@ -68,12 +68,12 @@ for event in events:
 
 
 # --------------------------------------------------------------------------- #
-# Write Pandas DataFrame                                                      #
+# Build Pandas DataFrame                                                      #
 # --------------------------------------------------------------------------- #
 
 pdf = pd.DataFrame([e.model_dump() for e in events])
 del pdf["event_root"]
-pdf.to_json(os.path.join(rootpath, "brz_stock_prices.json"))
+# pdf.to_json(os.path.join(rootpath, "brz_stock_prices.json"))
 
 
 # --------------------------------------------------------------------------- #
@@ -131,6 +131,7 @@ df = df.withColumn("symbol", F.col("data.symbol").cast(T.StringType()))
 df = df.withColumn("open", F.col("data.open").cast(T.DoubleType()))
 df = df.withColumn("close", F.col("data.close").cast(T.DoubleType()))
 df = df.drop(*cols0)
+df = df.repartition(1)
 df.write.parquet(os.path.join(rootpath, "slv_stock_prices"), mode="overwrite")
 
 # Metadata
@@ -147,4 +148,5 @@ df_meta = spark.createDataFrame(
         }
     )
 )
-df_meta.write.parquet(os.path.join(rootpath, "slv_stock_meta"), mode="overwrite")
+df_meta = df_meta.repartition(1)
+df_meta.write.format("parquet").save(os.path.join(rootpath, "slv_stock_meta"), mode="overwrite")
