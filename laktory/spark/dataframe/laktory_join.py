@@ -91,8 +91,11 @@ def laktory_join(
     * [pyspark join](https://spark.apache.org/docs/3.1.2/api/python/reference/api/pyspark.sql.DataFrame.join.html)
     * [spark streaming join](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#inner-joins-with-optional-watermarking)
     """
-
     import pyspark.sql.functions as F
+
+    # Parse inputs
+    if on is None:
+        on = []
 
     logger.info(f"Executing {left} {how} JOIN {other}")
 
