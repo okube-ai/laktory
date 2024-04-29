@@ -1,5 +1,6 @@
 class MissingColumnError(Exception):
     """"""
+
     def __init__(self, message="Column is missing", column_name=None):
         if column_name:
             message = f"Column {column_name} is missing"
