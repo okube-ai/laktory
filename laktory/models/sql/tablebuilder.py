@@ -145,11 +145,9 @@ class TableBuilder(BaseModel):
 
     @property
     def layer_spark_chain(self):
-
         nodes = []
 
         if self.layer == "BRONZE":
-
             if self.add_laktory_columns:
                 nodes += [
                     SparkColumnNode(
@@ -160,7 +158,6 @@ class TableBuilder(BaseModel):
                 ]
 
         elif self.layer == "SILVER":
-
             if self.timestamp_key:
                 nodes += [
                     SparkColumnNode(
@@ -180,7 +177,6 @@ class TableBuilder(BaseModel):
                 ]
 
         elif self.layer == "GOLD":
-
             if self.add_laktory_columns:
                 nodes += [
                     SparkColumnNode(
@@ -199,10 +195,7 @@ class TableBuilder(BaseModel):
 
             nodes += [
                 SparkDataFrameNode(
-                    spark_func_name="dropDuplicates",
-                    spark_func_args=[
-                        subset
-                    ]
+                    spark_func_name="dropDuplicates", spark_func_args=[subset]
                 )
             ]
 
@@ -211,8 +204,10 @@ class TableBuilder(BaseModel):
                 SparkDataFrameNode(
                     spark_func_name="drop",
                     spark_func_args=[
-                        c for c in self.spark_chain.columns[0] if c not in ["_bronze_at", "_silver_at", "_gold_at"]
-                    ]
+                        c
+                        for c in self.spark_chain.columns[0]
+                        if c not in ["_bronze_at", "_silver_at", "_gold_at"]
+                    ],
                 )
             ]
 
