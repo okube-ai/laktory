@@ -26,9 +26,9 @@ schema = Schema(
                 {
                     "name": "open",
                     "type": "double",
-                    "spark_func_kwargs": {
-                        "window_length": 2
-                    },  # window_length should not be converted to camel
+                    # "spark_func_kwargs": {
+                    #     "window_length": 2
+                    # },  # window_length should not be converted to camel
                 },
                 {
                     "name": "${resources.close.id}",
@@ -108,22 +108,16 @@ def test_camelize():
         "tables": [
             {
                 "builder": {
-                    "aggregation": None,
-                    "filter": None,
-                    "joins": [],
                     "layer": None,
-                    "selects": None,
                     "template": None,
-                    "unions": [],
+                    "addLaktoryColumns": True,
                     "asDltView": False,
-                    "dropColumns": [],
                     "dropDuplicates": None,
                     "dropSourceColumns": None,
                     "eventSource": None,
-                    "joinsPostAggregation": [],
                     "pipelineName": None,
                     "tableSource": None,
-                    "windowFilter": None,
+                    "sparkChain": None,
                 },
                 "columns": [
                     {
@@ -135,17 +129,6 @@ def test_camelize():
                         "catalogName": None,
                         "raiseMissingArgException": True,
                         "schemaName": None,
-                        "sparkFuncArgs": [],
-                        "sparkFuncKwargs": {
-                            "window_length": {
-                                "value": 2,
-                                "isColumn": False,
-                                "toLit": True,
-                                "toExpr": False,
-                            }
-                        },
-                        "sparkFuncName": None,
-                        "sqlExpression": None,
                         "tableName": "AAPL",
                     },
                     {
@@ -157,10 +140,6 @@ def test_camelize():
                         "catalogName": None,
                         "raiseMissingArgException": True,
                         "schemaName": None,
-                        "sparkFuncArgs": [],
-                        "sparkFuncKwargs": {},
-                        "sparkFuncName": None,
-                        "sqlExpression": None,
                         "tableName": "AAPL",
                     },
                 ],
@@ -176,26 +155,20 @@ def test_camelize():
                 "tableType": "MANAGED",
                 "timestampKey": None,
                 "viewDefinition": None,
-                "warehouseId": "08b717ce051a0261",
+                "warehouseId": None,
             },
             {
                 "builder": {
-                    "aggregation": None,
-                    "filter": None,
-                    "joins": [],
                     "layer": None,
-                    "selects": None,
                     "template": None,
-                    "unions": [],
+                    "addLaktoryColumns": True,
                     "asDltView": False,
-                    "dropColumns": [],
                     "dropDuplicates": None,
                     "dropSourceColumns": None,
                     "eventSource": None,
-                    "joinsPostAggregation": [],
                     "pipelineName": None,
                     "tableSource": None,
-                    "windowFilter": None,
+                    "sparkChain": None,
                 },
                 "columns": [
                     {
@@ -207,10 +180,6 @@ def test_camelize():
                         "catalogName": None,
                         "raiseMissingArgException": True,
                         "schemaName": None,
-                        "sparkFuncArgs": [],
-                        "sparkFuncKwargs": {},
-                        "sparkFuncName": None,
-                        "sqlExpression": None,
                         "tableName": "GOOGL",
                     },
                     {
@@ -222,10 +191,6 @@ def test_camelize():
                         "catalogName": None,
                         "raiseMissingArgException": True,
                         "schemaName": None,
-                        "sparkFuncArgs": [],
-                        "sparkFuncKwargs": {},
-                        "sparkFuncName": None,
-                        "sqlExpression": None,
                         "tableName": "GOOGL",
                     },
                 ],
