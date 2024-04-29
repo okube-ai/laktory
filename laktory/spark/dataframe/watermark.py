@@ -1,8 +1,15 @@
 import json
+from pydantic import BaseModel
+
 from pyspark.sql.dataframe import DataFrame
 
 
-def watermark(df: DataFrame) -> dict[str, str]:
+class Watermark(BaseModel):
+    column: str
+    threshold: str
+
+
+def watermark(df: DataFrame) -> Watermark:
     """
     Returns dataframe watermark if available
 
@@ -36,4 +43,4 @@ def watermark(df: DataFrame) -> dict[str, str]:
     line = line.lower().replace("'eventtimewatermark '", "")
     column, threshold = line.split(",")
 
-    return {"column": column.strip(), "threshold": threshold.strip()}
+    return Watermark(column=column.strip(), threshold=threshold.strip())
