@@ -42,9 +42,9 @@ class TimeWindow(BaseModel):
 
 def groupby_and_agg(
     df,
-    groupby_window: TimeWindow=None,
+    groupby_window: TimeWindow = None,
     groupby_columns: list[str] = None,
-    agg_expressions: list[SparkColumnNode] = None
+    agg_expressions: list[SparkColumnNode] = None,
 ) -> DataFrame:
     """
     Laktory table join
@@ -93,7 +93,9 @@ def groupby_and_agg(
     if groupby_columns is None:
         groupby_columns = []
 
-    logger.info(f"Executing groupby ({groupby_window} & {groupby_columns}) with {agg_expressions}")
+    logger.info(
+        f"Executing groupby ({groupby_window} & {groupby_columns}) with {agg_expressions}"
+    )
 
     # Groupby arguments
     groupby = []
@@ -113,7 +115,6 @@ def groupby_and_agg(
     # Agg arguments
     aggs = []
     for expr in agg_expressions:
-
         if not isinstance(expr, SparkColumnNode):
             expr = SparkColumnNode(**expr)
 
@@ -126,4 +127,3 @@ def groupby_and_agg(
         ]
 
     return df.groupby(groupby).agg(*aggs)
-

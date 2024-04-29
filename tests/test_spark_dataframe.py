@@ -111,7 +111,9 @@ def test_watermark():
 
 
 def test_join():
-    left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(F.col("symbol") != "GOOGL")
+    left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(
+        F.col("symbol") != "GOOGL"
+    )
     other = df_meta.withColumnRenamed("symbol2", "symbol")
 
     other.show()
@@ -174,8 +176,9 @@ def test_join():
 
 
 def test_join_outer():
-
-    left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(F.col("symbol") != "GOOGL")
+    left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(
+        F.col("symbol") != "GOOGL"
+    )
     other = df_meta.withColumnRenamed("symbol2", "symbol")
 
     df = left.laktory_join(
@@ -229,7 +232,6 @@ def test_join_outer():
 
 
 def test_aggregation():
-
     _df = df_slv.filter(F.col("created_at") < "2023-09-07T00:00:00Z")
     _df.show()
 
@@ -245,7 +247,7 @@ def test_aggregation():
                 "name": "max_open",
                 "sql_expression": "max(open)",
             },
-        ]
+        ],
     ).sort("window")
     pdf = df.toPandas()
     assert "window" in df.columns
@@ -260,7 +262,7 @@ def test_aggregation():
                 "name": "mean_close",
                 "sql_expression": "mean(close)",
             },
-        ]
+        ],
     ).sort("symbol")
     pdf = df.toPandas()
     assert "symbol" in df.columns
@@ -278,18 +280,80 @@ def test_aggregation():
                 "name": "count",
                 "sql_expression": "count(close)",
             },
-        ]
+        ],
     ).sort("symbol", "window")
     pdf = df.toPandas()
     assert "symbol" in df.columns
     assert "window" in df.columns
-    assert pdf["count"].tolist() == [1, ] * _df.count()
+    assert (
+        pdf["count"].tolist()
+        == [
+            1,
+        ]
+        * _df.count()
+    )
+
+
+def test_window_filter():
+    df = df_slv.window_filter(
+        partition_by=["symbol"],
+        order_by=[
+            {"sql_expression": "created_at", "desc": True},
+        ],
+        drop_row_index=False,
+        rows_to_keep=2,
+    ).select("created_at", "symbol", "_row_index")
+
+    data = df.toPandas().to_dict(orient="records")
+    assert data == [
+        {
+            "created_at": Timestamp("2023-09-29 00:00:00"),
+            "symbol": "AAPL",
+            "_row_index": 1,
+        },
+        {
+            "created_at": Timestamp("2023-09-28 00:00:00"),
+            "symbol": "AAPL",
+            "_row_index": 2,
+        },
+        {
+            "created_at": Timestamp("2023-09-29 00:00:00"),
+            "symbol": "AMZN",
+            "_row_index": 1,
+        },
+        {
+            "created_at": Timestamp("2023-09-28 00:00:00"),
+            "symbol": "AMZN",
+            "_row_index": 2,
+        },
+        {
+            "created_at": Timestamp("2023-09-29 00:00:00"),
+            "symbol": "GOOGL",
+            "_row_index": 1,
+        },
+        {
+            "created_at": Timestamp("2023-09-28 00:00:00"),
+            "symbol": "GOOGL",
+            "_row_index": 2,
+        },
+        {
+            "created_at": Timestamp("2023-09-29 00:00:00"),
+            "symbol": "MSFT",
+            "_row_index": 1,
+        },
+        {
+            "created_at": Timestamp("2023-09-28 00:00:00"),
+            "symbol": "MSFT",
+            "_row_index": 2,
+        },
+    ]
 
 
 if __name__ == "__main__":
-    # test_df_schema_flat()
-    # test_df_has_column()
-    # test_watermark()
-    # test_join()
-    # test_join_outer()
+    test_df_schema_flat()
+    test_df_has_column()
+    test_watermark()
+    test_join()
+    test_join_outer()
     test_aggregation()
+    test_window_filter()
