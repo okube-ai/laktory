@@ -106,4 +106,3 @@ class EventDataSource(BaseDataSource, DataEventHeader):
         # .withColumn("file", F.input_file_name())
 
         return df
-

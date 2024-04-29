@@ -111,6 +111,7 @@ class TableDataSource(BaseDataSource):
     # df = source.read(spark)
     ```
     """
+
     catalog_name: Union[str, None] = None
     cdc: Union[TableDataSourceCDC, None] = None
     fmt: Literal["PARQUET", "DELTA"] = "DELTA"
