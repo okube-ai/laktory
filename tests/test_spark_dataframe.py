@@ -1,5 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import types as T
+from pyspark.sql import functions as F
+from pandas import Timestamp
 
 import laktory
 
@@ -66,6 +68,7 @@ data = [
 ]
 
 spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
+spark.conf.set("spark.sql.session.timeZone", "UTC")
 
 df = spark.createDataFrame(data, schema=schema)
 df_brz = spark.read.parquet("./data/brz_stock_prices")
@@ -103,78 +106,66 @@ def test_watermark():
 
     wm = df.watermark()
 
-    assert wm["column"] == "created_at"
-    assert wm["threshold"] == "1 hours"
+    assert wm.column == "created_at"
+    assert wm.threshold == "1 hours"
 
 
 def test_df_join():
+    left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z")
+    other = df_meta.withColumnRenamed("symbol2", "symbol")
 
-    df_slv.laktory_join(
-        other=df_meta
+    df = left.laktory_join(
+        other=other,
+        on=["symbol"],
+        how="full_outer",
     )
-    #
-    # join = TableJoin(
-    #     left={
-    #         "name": "slv_stock_prices",
-    #         "filter": "created_at = '2023-11-01T00:00:00Z'",
-    #     },
-    #     other={
-    #         "name": "slv_stock_metadata",
-    #         "selects": {
-    #             "symbol2": "symbol",
-    #             "currency": "currency",
-    #             "first_traded": "first_traded",
-    #         },
-    #     },
-    #     on=["symbol"],
-    #     how="full_outer",
-    # )
-    # join.left._df = table_slv.to_df(spark)
-    # join.other._df = df_meta
-    #
-    # df = join.execute(spark)
-    #
-    # # Test join columns uniqueness
-    # _df = df.withColumn("symbol2", F.lit("a"))
-    # # _df = df.withColumn("symbol", F.lit("a"))
-    # _df = _df.select("symbol")
-    #
-    # # Test data
-    # data = df.toPandas().fillna(-1).to_dict(orient="records")
-    # print(data)
-    # assert data == [
-    #     {
-    #         "created_at": "2023-11-01T00:00:00Z",
-    #         "open": 1.0,
-    #         "close": 2.0,
-    #         "currency": "USD",
-    #         "first_traded": "1980-12-12T14:30:00.000Z",
-    #         "symbol": "AAPL",
-    #     },
-    #     {
-    #         "created_at": -1,
-    #         "open": -1.0,
-    #         "close": -1.0,
-    #         "currency": "USD",
-    #         "first_traded": "1997-05-15T13:30:00.000Z",
-    #         "symbol": "AMZN",
-    #     },
-    #     {
-    #         "created_at": "2023-11-01T00:00:00Z",
-    #         "open": 3.0,
-    #         "close": 4.0,
-    #         "currency": "USD",
-    #         "first_traded": "2004-08-19T13:30:00.00Z",
-    #         "symbol": "GOOGL",
-    #     },
-    # ]
+
+    # Test join columns uniqueness
+    _df = df.withColumn("symbol2", F.lit("a"))
+    _df = df.withColumn("symbol", F.lit("a"))
+    _df = _df.select("symbol")
+
+    # Test data
+    data = df.toPandas().fillna(-1).to_dict(orient="records")
+    print(data)
+    assert data == [
+        {
+            "created_at": Timestamp("2023-09-01 00:00:00"),
+            "open": 189.49000549316406,
+            "close": 189.4600067138672,
+            "currency": "USD",
+            "first_traded": "1980-12-12T14:30:00.000Z",
+            "symbol": "AAPL",
+        },
+        {
+            "created_at": Timestamp("2023-09-01 00:00:00"),
+            "open": 139.4600067138672,
+            "close": 138.1199951171875,
+            "currency": "USD",
+            "first_traded": "1997-05-15T13:30:00.000Z",
+            "symbol": "AMZN",
+        },
+        {
+            "created_at": Timestamp("2023-09-01 00:00:00"),
+            "open": 137.4600067138672,
+            "close": 135.66000366210938,
+            "currency": "USD",
+            "first_traded": "2004-08-19T13:30:00.00Z",
+            "symbol": "GOOGL",
+        },
+        {
+            "created_at": Timestamp("2023-09-01 00:00:00"),
+            "open": 331.30999755859375,
+            "close": 328.6600036621094,
+            "currency": -1,
+            "first_traded": -1,
+            "symbol": "MSFT",
+        },
+    ]
 
 
 if __name__ == "__main__":
-    # test_df_schema_flat()
-    # test_df_has_column()
-    # test_df_join()
-
+    test_df_schema_flat()
+    test_df_has_column()
     test_watermark()
-
-    # df = df_slv.withWatermark("created_at", "1 hour")
+    test_df_join()
