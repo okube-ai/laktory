@@ -14,6 +14,7 @@ from laktory.models.datasources.tabledatasource import TableDataSource
 # Main Class                                                                  #
 # --------------------------------------------------------------------------- #
 
+
 class SparkFuncArg(BaseModel):
     """
     Spark function argument
@@ -23,6 +24,7 @@ class SparkFuncArg(BaseModel):
     value:
         Value of the argument
     """
+
     value: Union[TableDataSource, Any]
 
     # @property
@@ -30,7 +32,6 @@ class SparkFuncArg(BaseModel):
     #     return self.convert_to == "COLUMN"
 
     def eval(self, spark=None):
-
         # Imports required to evaluate expressions
         import pyspark.sql.functions as F
         from pyspark.sql.functions import lit

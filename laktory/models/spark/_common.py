@@ -18,7 +18,7 @@ def parse_args(cls, args: list[Union[str, SparkFuncArg]]) -> list[SparkFuncArg]:
 
 @field_validator("spark_func_kwargs")
 def parse_kwargs(
-        cls, kwargs: dict[str, Union[str, SparkFuncArg]]
+    cls, kwargs: dict[str, Union[str, SparkFuncArg]]
 ) -> dict[str, SparkFuncArg]:
     _kwargs = {}
     for k, a in kwargs.items():

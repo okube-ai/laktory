@@ -74,6 +74,7 @@ class SparkChain(BaseModel):
     df = sc.execute(df0, spark)
     ```
     """
+
     nodes: list[Union[SparkDataFrameNode, "SparkChain", SparkColumnNode]]
     _columns: list[list[str]] = []
 
@@ -85,7 +86,6 @@ class SparkChain(BaseModel):
         logger.info("Executing Spark chain")
 
         for inode, node in enumerate(self.nodes):
-
             self._columns += [df.columns]
 
             tnode = type(node)
@@ -163,7 +163,6 @@ SparkChain.model_rebuild()
 
 
 def _builtin_dataframe_functions():
-
     from pyspark.sql import DataFrame
     import inspect
 
@@ -184,4 +183,3 @@ def _builtin_dataframe_functions():
             func_names += [k]
 
     return func_names
-

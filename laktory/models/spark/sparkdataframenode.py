@@ -20,6 +20,7 @@ logger = get_logger(__name__)
 # Main Class                                                                  #
 # --------------------------------------------------------------------------- #
 
+
 class SparkDataFrameNode(BaseModel):
     """
     SparkChain node that output a DataFrame upon execution.
@@ -70,6 +71,7 @@ class SparkDataFrameNode(BaseModel):
     df = node.execute(df, spark)
     ```
     """
+
     allow_missing_column_args: Union[bool, None] = False
     spark_func_args: list[Union[Any, SparkFuncArg]] = []
     spark_func_kwargs: dict[str, Union[Any, SparkFuncArg]] = {}
@@ -125,7 +127,9 @@ class SparkDataFrameNode(BaseModel):
         # From Spark Function
         func_name = self.spark_func_name
         if self.spark_func_name is None:
-            raise ValueError("`spark_func_name` must be specific for a spark dataframe node")
+            raise ValueError(
+                "`spark_func_name` must be specific for a spark dataframe node"
+            )
 
         # Get from UDFs
         f = udfs.get(func_name, None)
@@ -168,10 +172,14 @@ class SparkDataFrameNode(BaseModel):
                     if not has_column(df, cname):
                         missing_column_names += [cname]
                         if not self.allow_missing_column_args:
-                            logger.error(f"Input column {cname} is missing. Abort building {self.name}")
+                            logger.error(
+                                f"Input column {cname} is missing. Abort building {self.name}"
+                            )
                             raise MissingColumnError(cname)
                         else:
-                            logger.warn(f"Input column {cname} is missing for building {self.name}")
+                            logger.warn(
+                                f"Input column {cname} is missing for building {self.name}"
+                            )
                             continue
 
                 else:
@@ -195,4 +203,3 @@ class SparkDataFrameNode(BaseModel):
         df = f(df, *args, **kwargs)
 
         return df
-

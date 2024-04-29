@@ -21,6 +21,7 @@ logger = get_logger(__name__)
 # Main Class                                                                  #
 # --------------------------------------------------------------------------- #
 
+
 class SparkColumnNode(BaseModel):
     """
     SparkChain node that output a column upon execution.
@@ -78,6 +79,7 @@ class SparkColumnNode(BaseModel):
     df = df0.withColumn("xy", node.execute(df))
     ```
     """
+
     allow_missing_column_args: Union[bool, None] = False
     name: str
     spark_func_args: list[Union[Any, SparkFuncArg]] = []
@@ -187,10 +189,14 @@ class SparkColumnNode(BaseModel):
                     if not has_column(df, cname):
                         missing_column_names += [cname]
                         if not self.allow_missing_column_args:
-                            logger.error(f"Input column {cname} is missing. Abort building {self.name}")
+                            logger.error(
+                                f"Input column {cname} is missing. Abort building {self.name}"
+                            )
                             raise MissingColumnError(cname)
                         else:
-                            logger.warn(f"Input column {cname} is missing for building {self.name}")
+                            logger.warn(
+                                f"Input column {cname} is missing for building {self.name}"
+                            )
                             continue
 
                 else:
@@ -218,4 +224,3 @@ class SparkColumnNode(BaseModel):
             col = col.cast(self.type)
 
         return col
-
