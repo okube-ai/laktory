@@ -15,6 +15,7 @@ class JobRunner(DispatcherRunner):
     """
     Job runner.
     """
+
     _run_start: Wait = None
     _run: Run = None
 

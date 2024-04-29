@@ -17,6 +17,7 @@ class PipelineRunner(DispatcherRunner):
     """
     Pipeline runner.
     """
+
     _update_start: StartUpdateResponse = None
     _update: GetUpdateResponse = None
 
