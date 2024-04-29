@@ -228,9 +228,68 @@ def test_join_outer():
     ]
 
 
+def test_aggregation():
+
+    _df = df_slv.filter(F.col("created_at") < "2023-09-07T00:00:00Z")
+    _df.show()
+
+    # Window
+    df = _df.groupby_and_agg(
+        groupby_window={
+            "time_column": "created_at",
+            "window_duration": "1 day",
+        },
+        agg_expressions=[
+            {"name": "min_open", "spark_func_name": "min", "spark_func_args": ["open"]},
+            {
+                "name": "max_open",
+                "sql_expression": "max(open)",
+            },
+        ]
+    ).sort("window")
+    pdf = df.toPandas()
+    assert "window" in df.columns
+    assert pdf["min_open"].round(2).to_list() == [137.46, 135.44, 136.02]
+    assert pdf["max_open"].round(2).to_list() == [331.31, 329.0, 333.38]
+
+    # Symbol
+    df = _df.groupby_and_agg(
+        groupby_columns=["symbol"],
+        agg_expressions=[
+            {
+                "name": "mean_close",
+                "sql_expression": "mean(close)",
+            },
+        ]
+    ).sort("symbol")
+    pdf = df.toPandas()
+    assert "symbol" in df.columns
+    assert pdf["mean_close"].round(2).to_list() == [187.36, 136.92, 135.3, 331.7]
+
+    # Symbol and window
+    df = _df.groupby_and_agg(
+        groupby_window={
+            "time_column": "created_at",
+            "window_duration": "1 day",
+        },
+        groupby_columns=["symbol"],
+        agg_expressions=[
+            {
+                "name": "count",
+                "sql_expression": "count(close)",
+            },
+        ]
+    ).sort("symbol", "window")
+    pdf = df.toPandas()
+    assert "symbol" in df.columns
+    assert "window" in df.columns
+    assert pdf["count"].tolist() == [1, ] * _df.count()
+
+
 if __name__ == "__main__":
-    test_df_schema_flat()
-    test_df_has_column()
-    test_watermark()
-    test_join()
-    test_join_outer()
+    # test_df_schema_flat()
+    # test_df_has_column()
+    # test_watermark()
+    # test_join()
+    # test_join_outer()
+    test_aggregation()

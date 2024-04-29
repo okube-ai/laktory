@@ -5,6 +5,7 @@ from laktory.spark.dataframe.has_column import has_column
 from laktory.spark.dataframe.show_string import show_string
 from laktory.spark.dataframe.laktory_join import laktory_join
 from laktory.spark.dataframe.watermark import watermark
+from laktory.spark.dataframe.groupbyandagg import groupby_and_agg
 
 
 # DataFrame Extensions
@@ -13,6 +14,7 @@ DataFrame.has_column = has_column
 DataFrame.show_string = show_string
 DataFrame.laktory_join = laktory_join
 DataFrame.watermark = watermark
+DataFrame.groupby_and_agg = groupby_and_agg
 
 # Spark Connect DataFrame Extensions
 try:
@@ -23,5 +25,6 @@ try:
     DataFrame.show_string = show_string
     DataFrame.laktory_join = laktory_join
     DataFrame.watermark = watermark
+    DataFrame.groupby_and_agg = groupby_and_agg
 except:
     pass

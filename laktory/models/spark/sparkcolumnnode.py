@@ -8,7 +8,7 @@ from laktory.constants import SUPPORTED_TYPES
 from laktory.models.basemodel import BaseModel
 from laktory.models.spark.sparkfuncarg import SparkFuncArg
 from laktory.spark import DataFrame
-from laktory.spark import Column as SparkColumn
+from laktory.spark import Column
 from laktory.models.spark._common import parse_args
 from laktory.models.spark._common import parse_kwargs
 from laktory.exceptions import MissingColumnError
@@ -110,8 +110,8 @@ class SparkColumnNode(BaseModel):
     def execute(
         self,
         df: DataFrame,
-        udfs: list[Callable[[...], SparkColumn]] = None,
-    ) -> SparkColumn:
+        udfs: list[Callable[[...], Column]] = None,
+    ) -> Column:
         """
         Build Spark Column
 
