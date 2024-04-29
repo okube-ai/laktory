@@ -21,7 +21,6 @@ df0 = spark.createDataFrame(pdf)
 
 
 def test_event_data_source():
-
     source = EventDataSource(
         name="stock_price",
         producer={"name": "yahoo_finance"},
@@ -57,7 +56,7 @@ def test_table_data_source(df0=df0):
         path="/Volumes/tables/stock_prices/",
         filter="b != 0",
         selects=["a", "b", "c"],
-        renames={"a": "aa", "b": "bb", "c": "cc"}
+        renames={"a": "aa", "b": "bb", "c": "cc"},
     )
 
     # Test paths
