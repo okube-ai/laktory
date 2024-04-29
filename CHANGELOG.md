@@ -8,6 +8,8 @@
 * Moved `filter`, `selects` and `watermarks` properties to `models.BaseDataSource` so that it can be used for all source types
 * `models.BaseDataSource` `renames` attribute for renaming columns of the source table
 * `models.BaseDataSource` `drops` attribute for dropping columns of the source table
+* spark DataFrame `watermark` returns the watermark column and threshold if any 
+* spark DataFrame `laktory_join` cleans columns duplicated from join and supports watermarking 
 ### Updated
 * n/a
 ### Breaking changes
