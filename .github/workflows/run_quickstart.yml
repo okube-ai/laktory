@@ -32,12 +32,15 @@ jobs:
             print(k, "|", v)
         shell: python
 
+      - name: Install Laktory
+        run: make install
+
       - name: make dir
         run: |
           mkdir $CWD
 
-      - name: Install Laktory
-        run: make -f ../Makefile install
+      - name: run quickstart
+        run: laktory quickstart
         working-directory: ${{ env.CWD }}
 
 #      - name: Install Laktory
