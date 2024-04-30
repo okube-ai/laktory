@@ -1,3 +1,4 @@
+import os
 from pyspark.sql import SparkSession
 from pyspark.sql import types as T
 from pyspark.sql import functions as F
@@ -71,9 +72,10 @@ spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 spark.conf.set("spark.sql.session.timeZone", "UTC")
 
 df = spark.createDataFrame(data, schema=schema)
-df_brz = spark.read.parquet("./data/brz_stock_prices")
-df_slv = spark.read.parquet("./data/slv_stock_prices")
-df_meta = spark.read.parquet("./data/slv_stock_meta")
+dirpath = os.path.dirname(__file__)
+df_brz = spark.read.parquet(os.path.join(dirpath, "./data/brz_stock_prices"))
+df_slv = spark.read.parquet(os.path.join(dirpath, "./data/slv_stock_prices"))
+df_meta = spark.read.parquet(os.path.join(dirpath, "./data/slv_stock_meta"))
 
 
 def test_df_schema_flat():
