@@ -60,6 +60,7 @@ class SparkDataFrameNode(BaseModel):
     Examples
     --------
     ```py
+    import pandas as pd
     from laktory import models
 
     df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 2, 3]}))
@@ -68,7 +69,7 @@ class SparkDataFrameNode(BaseModel):
         spark_func_name="drop_duplicates",
         spark_func_args=[["x"]],
     )
-    df = node.execute(df, spark)
+    df = node.execute(df0, spark)
     ```
     """
 

@@ -57,6 +57,7 @@ class SparkColumnNode(BaseModel):
     Examples
     --------
     ```py
+    import pandas as pd
     from laktory import models
 
     df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
@@ -73,7 +74,7 @@ class SparkColumnNode(BaseModel):
         name="xy",
         type="double",
         spark_func_name="coalesce",
-        spark_func_args=[col('x'), F.col('y')],
+        spark_func_args=["col('x')", "F.col('y')"],
         allow_missing_column_args=True,
     )
     df = df0.withColumn("xy", node.execute(df))
