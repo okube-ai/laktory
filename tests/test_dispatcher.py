@@ -10,7 +10,7 @@ with open(os.path.join(dirpath, "stack.yaml"), "r") as fp:
     stack = models.Stack.model_validate_yaml(fp)
 
 
-tstack = stack.copy()
+tstack = stack.model_copy()
 tstack.backend = "terraform"
 
 

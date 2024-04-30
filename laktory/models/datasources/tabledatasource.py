@@ -11,28 +11,6 @@ from laktory._logger import get_logger
 logger = get_logger(__name__)
 
 
-class Watermark(BaseModel):
-    """
-    Definition of a spark structured streaming watermark for joining data
-    streams.
-
-    Attributes
-    ----------
-    column:
-        Event time column name
-    threshold:
-        How late, expressed in seconds, the data is expected to be with
-        respect to event time.
-
-    References
-    ----------
-    https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#handling-late-data-and-watermarking
-    """
-
-    column: str
-    threshold: str
-
-
 class TableDataSourceCDC(BaseModel):
     """
     Defines the change data capture (CDC) properties of a table data source.
@@ -106,11 +84,6 @@ class TableDataSource(BaseDataSource):
         Name of the catalog of the source table
     cdc:
         Change data capture specifications
-    selects:
-        Columns to select from the source table. Can be specified as a list
-        or as a dictionary to rename the source columns
-    filter:
-        SQL expression used to select specific rows from the source table
     fmt:
         Table format
     from_pipeline:
@@ -122,8 +95,6 @@ class TableDataSource(BaseDataSource):
         Path of the source table
     schema_name:
         Name of the schema of the source table
-    watermark
-        Spark structured streaming watermark specifications
 
     Examples
     ---------
@@ -141,17 +112,13 @@ class TableDataSource(BaseDataSource):
     ```
     """
 
-    _df: Any = None
     catalog_name: Union[str, None] = None
     cdc: Union[TableDataSourceCDC, None] = None
-    selects: Union[list[str], dict[str, str], None] = None
     fmt: Literal["PARQUET", "DELTA"] = "DELTA"
-    filter: Union[str, None] = None
     from_pipeline: Union[bool, None] = True
     name: Union[str, None] = None
     path: Union[str, None] = None
     schema_name: Union[str, None] = None
-    watermark: Union[Watermark, None] = None
 
     @model_validator(mode="after")
     def set_source(self) -> Any:
@@ -209,9 +176,9 @@ class TableDataSource(BaseDataSource):
         from laktory.dlt import read
         from laktory.dlt import read_stream
 
-        if self._df is not None:
+        if self.mock_df is not None:
             logger.info(f"Reading {self.path_or_full_name} from memory")
-            df = self._df
+            df = self.mock_df
         elif self.read_as_stream:
             logger.info(f"Reading {self.path_or_full_name} as stream")
             if self.from_pipeline:
@@ -228,33 +195,6 @@ class TableDataSource(BaseDataSource):
                 df = spark.read.format(self.fmt).load(self.path)
             else:
                 df = spark.read.format(self.fmt).table(self.full_name)
-
-        return df
-
-    def read(self, spark) -> DataFrame:
-        import pyspark.sql.functions as F
-
-        df = self._read(spark)
-
-        # Apply filter
-        if self.filter:
-            df = df.filter(self.filter)
-
-        # Columns
-        cols = []
-        if self.selects:
-            if isinstance(self.selects, list):
-                cols += [F.col(c) for c in self.selects]
-            elif isinstance(self.selects, dict):
-                cols += [F.col(k).alias(v) for k, v in self.selects.items()]
-            df = df.select(cols)
-
-        # Apply Watermark
-        if self.watermark:
-            df = df.withWatermark(
-                self.watermark.column,
-                self.watermark.threshold,
-            )
 
         return df
 

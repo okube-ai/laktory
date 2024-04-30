@@ -14,6 +14,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.sql.column import Column
 from laktory.models.sql.tablebuilder import TableBuilder
 from laktory.models.sql.tableexpectation import TableExpectation
+from laktory.models.datasources.tabledatasource import TableDataSource
 
 logger = get_logger(__name__)
 
@@ -73,25 +74,27 @@ class Table(BaseModel, PulumiResource, TerraformResource):
 
     table = models.Table(
         name="slv_stock_prices",
-        columns=[
-            {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
-            {
-                "name": "open",
-                "type": "double",
-                "spark_func_name": "coalesce",
-                "spark_func_args": ["daa.open"],
-            },
-            {
-                "name": "close",
-                "type": "double",
-                "spark_func_name": "coalesce",
-                "spark_func_args": ["daa.close"],
-            },
-        ],
         builder={
             "layer": "SILVER",
             "table_source": {
                 "name": "brz_stock_prices",
+            },
+            "spark_chain": {
+                "nodes": [
+                    {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
+                    {
+                        "name": "open",
+                        "type": "double",
+                        "spark_func_name": "coalesce",
+                        "spark_func_args": ["daa.open"],
+                    },
+                    {
+                        "name": "close",
+                        "type": "double",
+                        "spark_func_name": "coalesce",
+                        "spark_func_args": ["daa.close"],
+                    },
+                ]
             },
         },
     )
@@ -141,19 +144,26 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         # Set builder table
         self.builder._table = self
 
-        # Assign to sources
+        # Find table sources
+        sources = []
         if self.builder.table_source is not None:
-            if self.builder.table_source.catalog_name is None:
-                self.builder.table_source.catalog_name = self.catalog_name
-            if self.builder.table_source.schema_name is None:
-                self.builder.table_source.schema_name = self.schema_name
+            sources += [self.builder.table_source]
 
-        # Assign to joins
-        for join in self.builder.joins:
-            if join.other.catalog_name is None:
-                join.other.catalog_name = self.catalog_name
-            if join.other.schema_name is None:
-                join.other.schema_name = self.schema_name
+        if self.builder.spark_chain:
+            for n in self.builder.spark_chain.nodes:
+                for a in n.spark_func_args:
+                    if isinstance(a.value, TableDataSource):
+                        sources += [a.value]
+                for a in n.spark_func_kwargs.values():
+                    if isinstance(a.value, TableDataSource):
+                        sources += [a.value]
+
+        # Assign catalog and schema to sources
+        for s in sources:
+            if s.catalog_name is None:
+                s.catalog_name = self.catalog_name
+            if s.schema_name is None:
+                s.schema_name = self.schema_name
 
         # Warehouse ID
         if self.warehouse_id is None:

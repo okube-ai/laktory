@@ -1,7 +1,6 @@
 from pydantic import model_validator
 from laktory.spark import DataFrame
 from typing import Literal
-from typing import Any
 
 from laktory.models.dataeventheader import DataEventHeader
 from laktory.models.datasources.basedatasource import BaseDataSource
@@ -58,6 +57,15 @@ class EventDataSource(BaseDataSource, DataEventHeader):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
+    def _read(self, spark) -> DataFrame:
+        if self.mock_df is not None:
+            logger.info(f"Reading event data source ({self.name}) from memory")
+            return self.mock_df
+        if self.type == "STORAGE_EVENTS":
+            return self._read_storage(spark)
+        else:
+            raise NotImplementedError()
+
     def _read_storage(self, spark) -> DataFrame:
         if self.read_as_stream:
             logger.info(f"Reading {self.event_root} as stream")
@@ -98,22 +106,3 @@ class EventDataSource(BaseDataSource, DataEventHeader):
         # .withColumn("file", F.input_file_name())
 
         return df
-
-    def read(self, spark) -> DataFrame:
-        """
-        Read data with options specified in attributes.
-
-        Parameters
-        ----------
-        spark
-            Spark context
-
-        Returns
-        -------
-        : DataFrame
-            Resulting park dataframe
-        """
-        if self.type == "STORAGE_EVENTS":
-            return self._read_storage(spark)
-        else:
-            raise NotImplementedError()

@@ -188,30 +188,32 @@ def quickstart(
                             "table_source": {
                                 "name": "brz_stock_prices",
                             },
+                            "spark_chain": {
+                                "nodes": [
+                                    {
+                                        "name": "created_at",
+                                        "type": "timestamp",
+                                        "sql_expression": "data.created_at",
+                                    },
+                                    {
+                                        "name": "symbol",
+                                        "type": "string",
+                                        "spark_func_name": "coalesce",
+                                        "spark_func_args": ["data._created_at"],
+                                    },
+                                    {
+                                        "name": "open",
+                                        "type": "double",
+                                        "sql_expression": "data.open",
+                                    },
+                                    {
+                                        "name": "close",
+                                        "type": "double",
+                                        "sql_expression": "data.close",
+                                    },
+                                ]
+                            },
                         },
-                        "columns": [
-                            {
-                                "name": "created_at",
-                                "type": "timestamp",
-                                "sql_expression": "data.created_at",
-                            },
-                            {
-                                "name": "symbol",
-                                "type": "string",
-                                "spark_func_name": "coalesce",
-                                "spark_func_args": ["data._created_at"],
-                            },
-                            {
-                                "name": "open",
-                                "type": "double",
-                                "sql_expression": "data.open",
-                            },
-                            {
-                                "name": "close",
-                                "type": "double",
-                                "sql_expression": "data.close",
-                            },
-                        ],
                     },
                 ],
             }

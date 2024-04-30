@@ -3,6 +3,7 @@ from pytest_examples import find_examples, CodeExample, EvalExample
 from pyspark.sql import SparkSession
 
 spark = SparkSession.builder.getOrCreate()
+spark.conf.set("spark.sql.session.timeZone", "UTC")
 
 
 # --------------------------------------------------------------------------- #

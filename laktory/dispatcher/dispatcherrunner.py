@@ -19,6 +19,7 @@ class DispatcherRunner(BaseModel):
     dispatcher:
         Dispatcher managing the runs
     """
+
     model_config = ConfigDict(extra="forbid")
     name: str = None
     id: str = None

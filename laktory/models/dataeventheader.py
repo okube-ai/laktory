@@ -82,15 +82,3 @@ class DataEventHeader(BaseModel):
             producer = self.producer.name + "/"
         v = f"{self.events_root}{producer}{self.name}/"
         return v
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    event = models.DataEventHeader(
-        name="stock_price",
-        producer={"name": "yahoo-finance"},
-    )
-    print(event)
-
-    print(event.event_root)

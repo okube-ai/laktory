@@ -1,14 +1,21 @@
 # Release History
 
-## [0.1.11] - Unreleased
+## [0.2.0] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
+* `SparkChain` a high level class allowing to declare and execute spark operations on a dataframe 
+* `SparkColumnNode` the node of a `SparkChain` that builds a new column
+* `SparkTableNode` the node of a `SparkChain` that returns a new DataFrame
+* Moved `filter`, `selects` and `watermarks` properties to `models.BaseDataSource` so that it can be used for all source types
+* `models.BaseDataSource` `renames` attribute for renaming columns of the source table
+* `models.BaseDataSource` `drops` attribute for dropping columns of the source table
+* spark DataFrame `watermark` returns the watermark column and threshold if any 
+* spark DataFrame `laktory_join` cleans columns duplicated from join and supports watermarking 
+* spark DataFrame `groupby_and_agg` groupby and aggregates in a single function 
+* spark DataFrame `window_filter` takes the first n rows over a window 
 ### Updated
 * n/a
 ### Breaking changes
-* n/a
+* Refactored table builder to use SparkChain instead of direct definitions of joins, unions, columns building, etc.
 
 ## [0.1.10] - 2024-04-23
 ### Added

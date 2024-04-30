@@ -7,5 +7,6 @@ from .datasources import *
 from .grants import *
 from .providers import *
 from .resources import *
+from .spark import *
 from .sql import *
 from .stacks import *
