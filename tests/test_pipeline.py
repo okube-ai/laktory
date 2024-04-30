@@ -271,11 +271,13 @@ def test_pipeline_pulumi():
     }
     print(pl.pulumi_properties)
     assert pl.pulumi_properties == {
+        "catalog": "dev1",
         "channel": "PREVIEW",
         "clusters": [],
         "configuration": {},
         "name": "pl-stock-prices",
         "notifications": [],
+        "target": "markets1",
     }
 
     # Resources
