@@ -650,9 +650,9 @@ def test_all_resources():
 
 
 if __name__ == "__main__":
-    atest_stack_model()
-    atest_pulumi_stack()
-    atest_pulumi_preview()
-    atest_terraform_stack()
-    atest_terraform_plan()
+    # atest_stack_model()
+    # atest_pulumi_stack()
+    # atest_pulumi_preview()
+    # atest_terraform_stack()
+    # atest_terraform_plan()
     test_all_resources()
