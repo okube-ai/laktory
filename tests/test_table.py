@@ -5,55 +5,104 @@ import pandas as pd
 from pandas import Timestamp
 import pytest
 
-from laktory._testing import EventsManager
-from laktory._testing import df_meta
-from laktory._testing import table_brz
-from laktory._testing import table_slv
-from laktory._testing import table_slv_star
-from laktory._testing import table_gld
+# from laktory._testing import EventsManager
+# from laktory._testing import df_meta
+# from laktory._testing import table_brz
+# from laktory._testing import table_slv
+# from laktory._testing import table_slv_star
+# from laktory._testing import table_gld
 from laktory.models import Table
-from laktory.models import TableJoin
-from laktory.models import TableAggregation
 
-manager = EventsManager()
-manager.build_events()
+# from laktory.models import TableJoin
+# from laktory.models import TableAggregation
+
+# manager = EventsManager()
+# manager.build_events()
 
 # Spark
 spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 
 
 def test_model():
-    print(table_slv.model_dump())
-    assert table_slv.model_dump() == {
+    table = Table(
+        name="slv_stock_prices",
+        columns=[
+            {
+                "name": "created_at",
+                "type": "timestamp",
+                # "spark_func_name": "coalesce",
+                # "spark_func_args": ["data._created_at"],
+            },
+            {
+                "name": "symbol",
+                "type": "string",
+                # "spark_func_name": "coalesce",
+                # "spark_func_args": ["data.symbol"],
+            },
+            {
+                "name": "open",
+                "type": "double",
+                # "spark_func_name": "coalesce",
+                # "spark_func_args": ["data.open"],
+            },
+            {
+                "name": "close",
+                "type": "double",
+                # "sql_expression": "data.open"
+            },
+        ],
+        data=[
+            ["2023-11-01T00:00:00Z", "AAPL", 1, 2],
+            ["2023-11-01T01:00:00Z", "AAPL", 3, 4],
+            ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
+            ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
+        ],
+        catalog_name="dev",
+        schema_name="markets",
+        builder={
+            "table_source": {
+                "name": "brz_stock_prices",
+            },
+            "layer": "SILVER",
+        },
+        expectations=[
+            {"name": "positive_price", "expression": "open > 0", "action": "FAIL"},
+            {
+                "name": "recent_price",
+                "expression": "created_at > '2023-01-01'",
+                "action": "DROP",
+            },
+        ],
+    )
+
+    print(table.model_dump())
+    data = table.model_dump()
+    assert data == {
         "builder": {
-            "aggregation": None,
+            "add_laktory_columns": True,
             "as_dlt_view": False,
-            "drop_columns": [],
             "drop_duplicates": None,
             "drop_source_columns": True,
             "event_source": None,
-            "filter": None,
-            "joins": [],
-            "joins_post_aggregation": [],
             "layer": "SILVER",
             "pipeline_name": None,
-            "selects": None,
             "table_source": {
+                "drops": None,
+                "filter": None,
                 "read_as_stream": True,
+                "renames": None,
+                "selects": None,
+                "watermark": None,
                 "catalog_name": "dev",
                 "cdc": None,
-                "selects": None,
                 "fmt": "DELTA",
-                "filter": None,
                 "from_pipeline": True,
                 "name": "brz_stock_prices",
                 "path": None,
                 "schema_name": "markets",
-                "watermark": None,
             },
             "template": "SILVER",
-            "unions": [],
-            "window_filter": None,
+            "spark_chain": None,
         },
         "catalog_name": "dev",
         "columns": [
@@ -64,17 +113,6 @@ def test_model():
                 "pii": None,
                 "raise_missing_arg_exception": True,
                 "schema_name": "markets",
-                "spark_func_args": [
-                    {
-                        "value": "data._created_at",
-                        "is_column": True,
-                        "to_lit": False,
-                        "to_expr": True,
-                    }
-                ],
-                "spark_func_kwargs": {},
-                "spark_func_name": "coalesce",
-                "sql_expression": None,
                 "table_name": "slv_stock_prices",
                 "type": "timestamp",
                 "unit": None,
@@ -86,17 +124,6 @@ def test_model():
                 "pii": None,
                 "raise_missing_arg_exception": True,
                 "schema_name": "markets",
-                "spark_func_args": [
-                    {
-                        "value": "data.symbol",
-                        "is_column": True,
-                        "to_lit": False,
-                        "to_expr": True,
-                    }
-                ],
-                "spark_func_kwargs": {},
-                "spark_func_name": "coalesce",
-                "sql_expression": None,
                 "table_name": "slv_stock_prices",
                 "type": "string",
                 "unit": None,
@@ -108,17 +135,6 @@ def test_model():
                 "pii": None,
                 "raise_missing_arg_exception": True,
                 "schema_name": "markets",
-                "spark_func_args": [
-                    {
-                        "value": "data.open",
-                        "is_column": True,
-                        "to_lit": False,
-                        "to_expr": True,
-                    }
-                ],
-                "spark_func_kwargs": {},
-                "spark_func_name": "coalesce",
-                "sql_expression": None,
                 "table_name": "slv_stock_prices",
                 "type": "double",
                 "unit": None,
@@ -130,10 +146,6 @@ def test_model():
                 "pii": None,
                 "raise_missing_arg_exception": True,
                 "schema_name": "markets",
-                "spark_func_args": [],
-                "spark_func_kwargs": {},
-                "spark_func_name": None,
-                "sql_expression": "data.open",
                 "table_name": "slv_stock_prices",
                 "type": "double",
                 "unit": None,
@@ -165,11 +177,11 @@ def test_model():
         "warehouse_id": "08b717ce051a0261",
     }
 
-    assert not table_slv.is_from_cdc
+    assert not table.is_from_cdc
 
-    assert table_slv.warning_expectations == {}
-    assert table_slv.drop_expectations == {"recent_price": "created_at > '2023-01-01'"}
-    assert table_slv.fail_expectations == {"positive_price": "open > 0"}
+    assert table.warning_expectations == {}
+    assert table.drop_expectations == {"recent_price": "created_at > '2023-01-01'"}
+    assert table.fail_expectations == {"positive_price": "open > 0"}
 
     # Invalid layer
     with pytest.raises(ValidationError):
