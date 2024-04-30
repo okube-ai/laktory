@@ -149,4 +149,6 @@ df_meta = spark.createDataFrame(
     )
 )
 df_meta = df_meta.repartition(1)
-df_meta.write.format("parquet").save(os.path.join(rootpath, "slv_stock_meta"), mode="overwrite")
+df_meta.write.format("parquet").save(
+    os.path.join(rootpath, "slv_stock_meta"), mode="overwrite"
+)
