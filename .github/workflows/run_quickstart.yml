@@ -1,6 +1,10 @@
 name: run-quickstart
 
 on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
   workflow_call:
     inputs:
       env:
