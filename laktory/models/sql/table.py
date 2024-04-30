@@ -73,25 +73,27 @@ class Table(BaseModel, PulumiResource, TerraformResource):
 
     table = models.Table(
         name="slv_stock_prices",
-        columns=[
-            {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
-            {
-                "name": "open",
-                "type": "double",
-                "spark_func_name": "coalesce",
-                "spark_func_args": ["daa.open"],
-            },
-            {
-                "name": "close",
-                "type": "double",
-                "spark_func_name": "coalesce",
-                "spark_func_args": ["daa.close"],
-            },
-        ],
         builder={
             "layer": "SILVER",
             "table_source": {
                 "name": "brz_stock_prices",
+            },
+            "spark_chain": {
+                "nodes": [
+                    {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
+                    {
+                        "name": "open",
+                        "type": "double",
+                        "spark_func_name": "coalesce",
+                        "spark_func_args": ["daa.open"],
+                    },
+                    {
+                        "name": "close",
+                        "type": "double",
+                        "spark_func_name": "coalesce",
+                        "spark_func_args": ["daa.close"],
+                    },
+                ]
             },
         },
     )
