@@ -50,13 +50,7 @@ jobs:
       - name: laktory preview
         run: laktory preview
         working-directory: ${{ env.CWD }}
+        env:
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
-
-#      - name: Install Laktory
-#        run: make install
-#        working-directory: ${{ inputs.working-directory }}
-#
-#      - name: laktory preview
-#        run: |
-#          laktory preview -e ${{ inputs.env }}
-#        working-directory: ${{ inputs.working-directory }}
