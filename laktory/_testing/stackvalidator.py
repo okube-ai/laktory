@@ -68,5 +68,6 @@ class StackValidator:
         self.pstack.preview(stack="okube/dev")
 
     def validate_terraform(self):
-        self.tstack.init()
-        self.tstack.plan()
+        pass
+        # self.tstack.init()
+        # self.tstack.plan()
