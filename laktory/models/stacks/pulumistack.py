@@ -85,6 +85,11 @@ class PulumiStack(BaseModel):
         with open(filepath, "w") as fp:
             yaml.dump(self.model_dump(), fp)
 
+        with open(filepath, "r") as fp:
+            print("\n", "=STACK=================STACK=")
+            print(fp.read())
+            print("=STACK=================STACK=")
+
         return filepath
 
     def _call(self, command: str, stack: str, flags: list[str] = None):
