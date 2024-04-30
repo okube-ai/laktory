@@ -44,7 +44,7 @@ def window_filter(
     Examples
     --------
     ```py
-    import laktory
+    from datetime import datetime
 
     df0 = spark.createDataFrame(
         [
@@ -66,7 +66,13 @@ def window_filter(
         drop_row_index=False,
         rows_to_keep=1,
     )
-    df1 = f.execute(df0)
+
+    print(df.toPandas().to_string())
+    '''
+      created_at symbol  price  _row_index
+    0 2023-01-03   APPL  201.5           1
+    1 2023-01-03   GOOL  201.5           1
+    '''
     ```
 
     References

@@ -26,6 +26,21 @@ def watermark(df: DataFrame) -> Watermark:
     Examples
     --------
     ```py
+    import pandas as pd
+
+    df = spark.createDataFrame(
+        pd.DataFrame(
+            {
+                "symbol": ["AAPL", "GOOGL"],
+                "price": [200.0, 205.0],
+                "tstamp": ["2023-09-01", "2023-09-01"],
+            }
+        )
+    )
+    df = df.withWatermark("tstamp", "1 hour")
+
+    print(df.watermark())
+    #> column='tstamp' threshold='1 hours'
     ```
     """
     plan = df._jdf.queryExecution().logical().toString().lower()

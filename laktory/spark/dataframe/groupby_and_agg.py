@@ -63,19 +63,33 @@ def groupby_and_agg(
     Examples
     --------
     ```py
-    from laktory import models
+    import pandas as pd
 
-    df = df_slv.groupby_and_agg(
-        groupby_columns=["symbol"],
+    df0 = spark.createDataFrame(
+        pd.DataFrame(
+            {
+                "symbol": ["AAPL", "GOOGL"],
+                "price": [200.0, 205.0],
+                "tstamp": ["2023-09-01", "2023-09-01"],
+            }
+        )
+    )
+
+    df = df0.groupby_and_agg(
         groupby_window={
-            "time_column": "_tstamp",
+            "time_column": "tstamp",
             "window_duration": "1 day",
         },
         agg_expressions=[
-            {"name": "low", "spark_func_name": "min", "spark_func_args": ["low"]},
-            {"name": "high", "spark_func_name": "max", "spark_func_args": ["high"]},
-        ]
+            {"name": "mean_price", "spark_func_name": "mean", "spark_func_args": ["price"]},
+        ],
     )
+
+    print(df.toPandas().to_string())
+    '''
+                                           window  mean_price
+    0  (2023-08-31 20:00:00, 2023-09-01 20:00:00)       202.5
+    '''
     ```
 
     References

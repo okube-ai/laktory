@@ -42,12 +42,37 @@ def laktory_join(
     Examples
     --------
     ```py
-    import laktory
+    import pandas as pd
 
-    df = df_stock_prices.laktory_join(
-        other=df_stock_metadata,
+    df_prices = spark.createDataFrame(
+        pd.DataFrame(
+            {
+                "symbol": ["AAPL", "GOOGL"],
+                "price": [200.0, 205.0],
+            }
+        )
+    )
+
+    df_meta = spark.createDataFrame(
+        pd.DataFrame(
+            {
+                "symbol": ["AAPL", "GOOGL"],
+                "name": ["Apple", "Google"],
+            }
+        )
+    )
+
+    df = df_prices.laktory_join(
+        other=df_meta,
         on=["symbol"],
     )
+
+    print(df.toPandas().to_string())
+    '''
+       price    name symbol
+    0  200.0   Apple   AAPL
+    1  205.0  Google  GOOGL
+    '''
     ```
 
     References
@@ -134,3 +159,27 @@ def laktory_join(
     df.printSchema()
 
     return df
+
+
+if __name__ == "__main__":
+    from laktory._testing.stockprices import spark
+    import pandas as pd
+
+    df_prices = spark.createDataFrame(pd.DataFrame(
+        {
+            "symbol": ["AAPL", "GOOGL"],
+            "price": [200.0, 205.0],
+        }
+    ))
+
+    df_meta = spark.createDataFrame(pd.DataFrame(
+        {
+            "symbol": ["AAPL", "GOOGL"],
+            "name": ["Apple", "Google"],
+        }
+    ))
+
+    df = df_prices.laktory_join(
+        other=df_meta,
+        on=["symbol"],
+    )
