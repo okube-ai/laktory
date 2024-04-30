@@ -1,15 +1,32 @@
+import os
+import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import pytest
 
-from laktory._testing import StockPriceDataEventHeader
-from laktory._testing import EventsManager
 from laktory import models
 from laktory import settings
 
+
+# Header
+class StockPriceDataEventHeader(models.DataEventHeader):
+    name: str = "stock_price"
+    producer: models.DataProducer = models.DataProducer(name="yahoo-finance")
+
+
 header = StockPriceDataEventHeader()
-events = EventsManager().build_events()
-event = events[0]
+
+
+# Event
+dirpath = os.path.dirname(__file__)
+with open(
+    os.path.join(
+        dirpath,
+        "./data/events/yahoo-finance/stock_price/2023/09/01/stock_price_AAPL_20230901T000000000Z.json",
+    )
+) as fp:
+    event = json.load(fp)
+event = models.DataEvent(**event)
 
 
 def test_dataeventheader():
@@ -72,10 +89,11 @@ def test_dataevent():
 def test_model_dump():
     # Without exclusions
     d = event.model_dump(exclude=[])
+    print(d)
     assert d == {
-        "name": "stock_price",
-        "description": None,
-        "producer": {"name": "yahoo-finance", "description": None, "party": 1},
+        "event_name": "stock_price",
+        "event_description": None,
+        "event_producer": {"name": "yahoo-finance", "description": None, "party": 1},
         "events_root": None,
         "event_root": None,
         "data": {
@@ -100,9 +118,9 @@ def test_model_dump():
     d = event.model_dump()
     print(d)
     assert d == {
-        "name": "stock_price",
-        "description": None,
-        "producer": {"name": "yahoo-finance", "description": None, "party": 1},
+        "event_name": "stock_price",
+        "event_description": None,
+        "event_producer": {"name": "yahoo-finance", "description": None, "party": 1},
         "event_root": None,
         "data": {
             "created_at": "2023-09-01T00:00:00",
