@@ -2,7 +2,7 @@ install:
 	pip install ./
 
 dev:
-	pip install -e './[dev,test,spark,azure,aws,gcp]'
+	pip install -e './[dev,test,spark,azure,aws,gcp]' 'pulumi==3.113.3' 'pulumi_databricks==1.36.0'
 
 test:
 	pytest --junitxml=junit/test-results.xml --cov=laktory --cov-report=xml --cov-report=html tests
