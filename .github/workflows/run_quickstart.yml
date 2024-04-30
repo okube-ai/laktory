@@ -1,0 +1,48 @@
+name: run-quickstart
+
+on:
+  workflow_call:
+    inputs:
+      env:
+        type: string
+        required: true
+      working-directory:
+        type: string
+        required: false
+        default: ./.run_quickstart
+
+
+jobs:
+  laktory-preview:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: env vars
+        run: |
+          import os
+          for k, v in os.environ.items():
+            print(k, "|", v)
+        shell: python
+
+      - name: make dir
+        run: |
+          mkdir ${{ inputs.working-directory }}
+
+      - name: Install Laktory
+        run: make install
+        working-directory: ${{ inputs.working-directory }}
+
+#      - name: Install Laktory
+#        run: make install
+#        working-directory: ${{ inputs.working-directory }}
+#
+#      - name: laktory preview
+#        run: |
+#          laktory preview -e ${{ inputs.env }}
+#        working-directory: ${{ inputs.working-directory }}
