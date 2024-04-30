@@ -257,30 +257,31 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
           table_source:
             name: brz_stock_prices
             read_as_stream: True
-        columns:
-          - name: created_at
-            type: timestamp
-            spark_func_name: coalesce
-            spark_func_args:
-              - data._created_at
+          spark_chain:
+            nodes:
+              - name: created_at
+                type: timestamp
+                spark_func_name: coalesce
+                spark_func_args:
+                  - data._created_at
 
-          - name: symbol
-            type: string
-            spark_func_name: coalesce
-            spark_func_args:
-              - data.symbol
+              - name: symbol
+                type: string
+                spark_func_name: coalesce
+                spark_func_args:
+                  - data.symbol
 
-          - name: open
-            type: double
-            spark_func_name: coalesce
-            spark_func_args:
-              - data.open
+              - name: open
+                type: double
+                spark_func_name: coalesce
+                spark_func_args:
+                  - data.open
 
-          - name: close
-            type: double
-            spark_func_name: coalesce
-            spark_func_args:
-              - data.close
+              - name: close
+                type: double
+                spark_func_name: coalesce
+                spark_func_args:
+                  - data.close
     '''
     pipeline = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
     ```
