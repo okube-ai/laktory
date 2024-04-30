@@ -1,6 +1,18 @@
-from laktory._testing import StockPricesPipeline
+from laktory import models
 
-pl = StockPricesPipeline()
+from laktory._testing.stockprices import table_slv
+from laktory._testing.stockprices import table_slv_join
+
+pl = models.Pipeline(
+    name="pl-stock-prices",
+    tables=[table_slv, table_slv_join],
+    udfs=[
+        {
+            "module_name": "stock_functions",
+            "function_name": "high",
+        }
+    ],
+)
 
 
 def test_pipeline():
@@ -24,81 +36,30 @@ def test_pipeline():
         "tables": [
             {
                 "builder": {
-                    "aggregation": None,
+                    "add_laktory_columns": True,
                     "as_dlt_view": False,
-                    "drop_columns": [],
-                    "drop_duplicates": None,
-                    "drop_source_columns": False,
-                    "event_source": {
-                        "name": "stock_price",
-                        "description": None,
-                        "producer": None,
-                        "events_root_": None,
-                        "event_root_": None,
-                        "read_as_stream": True,
-                        "fmt": "JSON",
-                        "header": True,
-                        "multiline": False,
-                        "read_options": {},
-                        "schema_location": None,
-                        "type": "STORAGE_EVENTS",
-                    },
-                    "filter": None,
-                    "joins": [],
-                    "joins_post_aggregation": [],
-                    "layer": "BRONZE",
-                    "pipeline_name": "pl-stock-prices",
-                    "selects": None,
-                    "table_source": None,
-                    "template": "BRONZE",
-                    "unions": [],
-                    "window_filter": None,
-                },
-                "catalog_name": None,
-                "columns": [],
-                "comment": None,
-                "data": None,
-                "data_source_format": "DELTA",
-                "expectations": [],
-                "grants": None,
-                "name": "brz_stock_prices",
-                "primary_key": None,
-                "schema_name": None,
-                "table_type": "MANAGED",
-                "timestamp_key": None,
-                "view_definition": None,
-                "warehouse_id": "08b717ce051a0261",
-            },
-            {
-                "builder": {
-                    "aggregation": None,
-                    "as_dlt_view": False,
-                    "drop_columns": [],
                     "drop_duplicates": None,
                     "drop_source_columns": True,
                     "event_source": None,
-                    "filter": None,
-                    "joins": [],
-                    "joins_post_aggregation": [],
                     "layer": "SILVER",
                     "pipeline_name": "pl-stock-prices",
-                    "selects": None,
                     "table_source": {
+                        "drops": None,
+                        "filter": None,
                         "read_as_stream": True,
+                        "renames": None,
+                        "selects": None,
+                        "watermark": None,
                         "catalog_name": "dev",
                         "cdc": None,
-                        "selects": None,
                         "fmt": "DELTA",
-                        "filter": None,
                         "from_pipeline": True,
                         "name": "brz_stock_prices",
                         "path": None,
                         "schema_name": "markets",
-                        "watermark": None,
                     },
                     "template": "SILVER",
-                    "unions": [],
-                    "window_filter": None,
+                    "spark_chain": None,
                 },
                 "catalog_name": None,
                 "columns": [
@@ -109,17 +70,6 @@ def test_pipeline():
                         "pii": None,
                         "raise_missing_arg_exception": True,
                         "schema_name": None,
-                        "spark_func_args": [
-                            {
-                                "value": "data._created_at",
-                                "is_column": True,
-                                "to_lit": False,
-                                "to_expr": True,
-                            }
-                        ],
-                        "spark_func_kwargs": {},
-                        "spark_func_name": "coalesce",
-                        "sql_expression": None,
                         "table_name": "slv_stock_prices",
                         "type": "timestamp",
                         "unit": None,
@@ -131,17 +81,6 @@ def test_pipeline():
                         "pii": None,
                         "raise_missing_arg_exception": True,
                         "schema_name": None,
-                        "spark_func_args": [
-                            {
-                                "value": "data.symbol",
-                                "is_column": True,
-                                "to_lit": False,
-                                "to_expr": True,
-                            }
-                        ],
-                        "spark_func_kwargs": {},
-                        "spark_func_name": "coalesce",
-                        "sql_expression": None,
                         "table_name": "slv_stock_prices",
                         "type": "string",
                         "unit": None,
@@ -153,17 +92,6 @@ def test_pipeline():
                         "pii": None,
                         "raise_missing_arg_exception": True,
                         "schema_name": None,
-                        "spark_func_args": [
-                            {
-                                "value": "data.open",
-                                "is_column": True,
-                                "to_lit": False,
-                                "to_expr": True,
-                            }
-                        ],
-                        "spark_func_kwargs": {},
-                        "spark_func_name": "coalesce",
-                        "sql_expression": None,
                         "table_name": "slv_stock_prices",
                         "type": "double",
                         "unit": None,
@@ -175,10 +103,6 @@ def test_pipeline():
                         "pii": None,
                         "raise_missing_arg_exception": True,
                         "schema_name": None,
-                        "spark_func_args": [],
-                        "spark_func_kwargs": {},
-                        "spark_func_name": None,
-                        "sql_expression": "data.open",
                         "table_name": "slv_stock_prices",
                         "type": "double",
                         "unit": None,
@@ -213,9 +137,126 @@ def test_pipeline():
                 "view_definition": None,
                 "warehouse_id": "08b717ce051a0261",
             },
+            {
+                "builder": {
+                    "add_laktory_columns": True,
+                    "as_dlt_view": False,
+                    "drop_duplicates": None,
+                    "drop_source_columns": False,
+                    "event_source": None,
+                    "layer": "SILVER",
+                    "pipeline_name": "pl-stock-prices",
+                    "table_source": {
+                        "drops": None,
+                        "filter": "created_at = '2023-09-01T00:00:00Z'",
+                        "read_as_stream": True,
+                        "renames": None,
+                        "selects": None,
+                        "watermark": None,
+                        "catalog_name": "dev",
+                        "cdc": None,
+                        "fmt": "DELTA",
+                        "from_pipeline": True,
+                        "name": "slv_stock_prices",
+                        "path": None,
+                        "schema_name": "markets",
+                    },
+                    "template": "SILVER",
+                    "spark_chain": {
+                        "nodes": [
+                            {
+                                "allow_missing_column_args": False,
+                                "spark_func_args": [],
+                                "spark_func_kwargs": {
+                                    "other": {
+                                        "value": {
+                                            "drops": None,
+                                            "filter": None,
+                                            "read_as_stream": True,
+                                            "renames": {"symbol2": "symbol"},
+                                            "selects": None,
+                                            "watermark": None,
+                                            "catalog_name": None,
+                                            "cdc": None,
+                                            "fmt": "DELTA",
+                                            "from_pipeline": True,
+                                            "name": "slv_stockmeta",
+                                            "path": None,
+                                            "schema_name": None,
+                                        }
+                                    },
+                                    "on": {"value": ["symbol"]},
+                                },
+                                "spark_func_name": "laktory_join",
+                            },
+                            {
+                                "allow_missing_column_args": False,
+                                "name": "symbol3",
+                                "spark_func_args": [],
+                                "spark_func_kwargs": {},
+                                "spark_func_name": None,
+                                "sql_expression": "symbol",
+                                "type": "string",
+                                "unit": None,
+                            },
+                            {
+                                "allow_missing_column_args": False,
+                                "spark_func_args": [{"value": "symbol"}],
+                                "spark_func_kwargs": {},
+                                "spark_func_name": "drop",
+                            },
+                            {
+                                "allow_missing_column_args": False,
+                                "spark_func_args": [],
+                                "spark_func_kwargs": {
+                                    "other": {
+                                        "value": {
+                                            "drops": None,
+                                            "filter": None,
+                                            "read_as_stream": True,
+                                            "renames": None,
+                                            "selects": None,
+                                            "watermark": None,
+                                            "catalog_name": None,
+                                            "cdc": None,
+                                            "fmt": "DELTA",
+                                            "from_pipeline": True,
+                                            "name": "slv_stock_names",
+                                            "path": None,
+                                            "schema_name": None,
+                                        }
+                                    },
+                                    "on": {"value": ["symbol3"]},
+                                },
+                                "spark_func_name": "laktory_join",
+                            },
+                        ]
+                    },
+                },
+                "catalog_name": None,
+                "columns": [],
+                "comment": None,
+                "data": None,
+                "data_source_format": "DELTA",
+                "expectations": [],
+                "grants": None,
+                "name": "slv_join_stock_prices",
+                "primary_key": None,
+                "schema_name": None,
+                "table_type": "MANAGED",
+                "timestamp_key": None,
+                "view_definition": None,
+                "warehouse_id": "08b717ce051a0261",
+            },
         ],
         "target": None,
-        "udfs": [{"module_name": "stock_functions", "function_name": "high"}],
+        "udfs": [
+            {
+                "module_name": "stock_functions",
+                "function_name": "high",
+                "module_path": None,
+            }
+        ],
     }
 
 
