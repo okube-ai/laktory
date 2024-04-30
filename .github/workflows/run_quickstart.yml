@@ -37,7 +37,7 @@ jobs:
           mkdir $CWD
 
       - name: Install Laktory
-        run: make install
+        run: make -f ../Makefile install
         working-directory: ${{ env.CWD }}
 
 #      - name: Install Laktory
