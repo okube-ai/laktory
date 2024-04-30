@@ -24,7 +24,8 @@ with open(os.path.join(data_dir, "googl.yaml"), "w") as fp:
 # Spark
 spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 spark.conf.set("spark.sql.session.timeZone", "UTC")
-df = spark.read.parquet("./data/brz_stock_prices")
+dirpath = os.path.dirname(__file__)
+df = spark.read.parquet(os.path.join(dirpath, "./data/brz_stock_prices"))
 df = df.filter("data.symbol == 'GOOGL'").limit(5)
 
 
