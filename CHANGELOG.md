@@ -2,9 +2,9 @@
 
 ## [0.2.0] - Unreleased
 ### Added
-* `SparkChain`
-* `SparkColumnNode`
-* `SparkTableNode`
+* `SparkChain` a high level class allowing to declare and execute spark operations on a dataframe 
+* `SparkColumnNode` the node of a `SparkChain` that builds a new column
+* `SparkTableNode` the node of a `SparkChain` that returns a new DataFrame
 * Moved `filter`, `selects` and `watermarks` properties to `models.BaseDataSource` so that it can be used for all source types
 * `models.BaseDataSource` `renames` attribute for renaming columns of the source table
 * `models.BaseDataSource` `drops` attribute for dropping columns of the source table

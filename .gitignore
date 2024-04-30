@@ -35,6 +35,7 @@ coverage.xml
 htmlcov
 
 # Test data
+tests/data_tmp
 tests/Pulumi.yaml
 tests/tmp*
 tmp*

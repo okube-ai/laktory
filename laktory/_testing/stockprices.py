@@ -124,5 +124,9 @@ table_slv_join = Table(
 table_slv_pl = table_slv.model_copy(deep=True)
 table_slv_join_pl = table_slv_join.model_copy(deep=True)
 table_slv_join.builder.table_source.mock_df = df_slv
-table_slv_join.builder.spark_chain.nodes[0].spark_func_kwargs["other"].value.mock_df = df_meta
-table_slv_join.builder.spark_chain.nodes[3].spark_func_kwargs["other"].value.mock_df = df_name
+table_slv_join.builder.spark_chain.nodes[0].spark_func_kwargs[
+    "other"
+].value.mock_df = df_meta
+table_slv_join.builder.spark_chain.nodes[3].spark_func_kwargs[
+    "other"
+].value.mock_df = df_name

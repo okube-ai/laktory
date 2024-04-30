@@ -212,7 +212,7 @@ def quickstart(
                                         "sql_expression": "data.close",
                                     },
                                 ]
-                            }
+                            },
                         },
                     },
                 ],

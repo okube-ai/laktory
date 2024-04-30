@@ -111,61 +111,6 @@ class SparkChain(BaseModel):
             elif isinstance(node, SparkDataFrameNode):
                 df = node.execute(df, udfs=udfs, spark=spark)
 
-        #
-        # # Add layer columns
-        # logger.info(f"Adding layer columns...")
-        # layer_columns = self._get_layer_columns(layer=self.layer, df=df)
-        # self._columns_to_build += layer_columns
-        # column_names += [c.name for c in layer_columns]
-        # df = self.build_columns(
-        #     df,
-        #     udfs=udfs,
-        #     raise_exception=not (
-        #         self.has_joins_post_aggregation or self.has_aggregation
-        #     ),
-        # )
-        #
-        # # Window filtering
-        # if self.window_filter:
-        #     logger.info(f"Window filtering...")
-        #     df = self.window_filter.execute(df)
-        #
-        # # Drop source columns
-        # if self.drop_source_columns:
-        #     logger.info(f"Dropping source columns...")
-        #     df = df.select(column_names)
-        #
-        # if self.aggregation:
-        #     logger.info(f"Executing Aggregations...")
-        #     df = self.aggregation.execute(df, udfs=udfs)
-        #     self._columns_to_build += self._get_layer_columns(layer=self.layer, df=df)
-        #
-        # # Build columns after aggregation
-        # df = self.build_columns(
-        #     df, udfs=udfs, raise_exception=not self.has_joins_post_aggregation
-        # )
-        #
-        # # Make post-aggregation joins
-        # for i, join in enumerate(self.joins_post_aggregation):
-        #     logger.info(f"Post-aggregation joins...")
-        #     if i == 0:
-        #         name = self.source.name
-        #     else:
-        #         name = "previous_join"
-        #     join.left = TableDataSource(name=name)
-        #     join.left._df = df
-        #     df = join.execute(spark)
-        #
-        #     # Build remaining columns again (in case inputs are found in joins)
-        #     df = self.build_columns(
-        #         df, udfs=udfs, raise_exception=i == len(self.joins) - 1
-        #     )
-        #
-        # # Apply filter
-        # if self.filter:
-        #     df = df.filter(self.filter)
-        #
-
         return df
 
 

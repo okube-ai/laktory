@@ -165,19 +165,23 @@ if __name__ == "__main__":
     from laktory._testing.stockprices import spark
     import pandas as pd
 
-    df_prices = spark.createDataFrame(pd.DataFrame(
-        {
-            "symbol": ["AAPL", "GOOGL"],
-            "price": [200.0, 205.0],
-        }
-    ))
+    df_prices = spark.createDataFrame(
+        pd.DataFrame(
+            {
+                "symbol": ["AAPL", "GOOGL"],
+                "price": [200.0, 205.0],
+            }
+        )
+    )
 
-    df_meta = spark.createDataFrame(pd.DataFrame(
-        {
-            "symbol": ["AAPL", "GOOGL"],
-            "name": ["Apple", "Google"],
-        }
-    ))
+    df_meta = spark.createDataFrame(
+        pd.DataFrame(
+            {
+                "symbol": ["AAPL", "GOOGL"],
+                "name": ["Apple", "Google"],
+            }
+        )
+    )
 
     df = df_prices.laktory_join(
         other=df_meta,
