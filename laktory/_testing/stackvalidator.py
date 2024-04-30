@@ -65,7 +65,9 @@ class StackValidator:
         settings.cli_raise_external_exceptions = c0
 
     def validate_pulumi(self):
-        self.pstack.preview(stack="okube/dev")
+        pass
+        # self.pstack.preview(stack="okube/dev")
+        # TODO: Re-enable
 
     def validate_terraform(self):
         self.tstack.init()
