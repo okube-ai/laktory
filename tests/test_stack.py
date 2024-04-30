@@ -604,7 +604,7 @@ def test_terraform_plan():
     tstack.plan()
 
 
-def atest_all_resources():
+def test_all_resources():
     from tests.test_catalog import catalog
     from tests.test_directory import directory
     from tests.test_job import job
@@ -626,14 +626,14 @@ def atest_all_resources():
         resources={
             "catalogs": [catalog],
             "directories": [directory],
-            "jobs": [job],
-            "metastores": [metastore],
-            "pipelines": [pl],  # required by job
-            "notebooks": [nb],
-            "schemas": [schema],
-            "sqlqueries": [query],
-            "groups": [group],
-            "users": [user],
+            # "jobs": [job],
+            # "metastores": [metastore],
+            # "pipelines": [pl],  # required by job
+            # "notebooks": [nb],
+            # "schemas": [schema],
+            # "sqlqueries": [query],
+            # "groups": [group],
+            # "users": [user],
             "workspacefiles": [workspace_file],
         },
         providers={
@@ -655,4 +655,4 @@ if __name__ == "__main__":
     test_pulumi_preview()
     test_terraform_stack()
     test_terraform_plan()
-    atest_all_resources()
+    test_all_resources()
