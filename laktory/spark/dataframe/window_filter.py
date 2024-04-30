@@ -44,19 +44,21 @@ def window_filter(
     Examples
     --------
     ```py
-    from datetime import datetime
+    import pyspark.sql.functions as F
+
+    from laktory._testing import spark
 
     df0 = spark.createDataFrame(
         [
-            [datetime(2023, 1, 1), "APPL", 200.0],
-            [datetime(2023, 1, 2), "APPL", 202.0],
-            [datetime(2023, 1, 3), "APPL", 201.5],
-            [datetime(2023, 1, 1), "GOOL", 200.0],
-            [datetime(2023, 1, 2), "GOOL", 202.0],
-            [datetime(2023, 1, 3), "GOOL", 201.5],
+            ["2023-01-01T00:00:00Z", "APPL", 200.0],
+            ["2023-01-02T00:00:00Z", "APPL", 202.0],
+            ["2023-01-03T00:00:00Z", "APPL", 201.5],
+            ["2023-01-01T00:00:00Z", "GOOL", 200.0],
+            ["2023-01-02T00:00:00Z", "GOOL", 202.0],
+            ["2023-01-03T00:00:00Z", "GOOL", 201.5],
         ],
         ["created_at", "symbol", "price"],
-    )
+    ).withColumn("created_at", F.col("created_at").cast("timestamp"))
 
     df = df0.window_filter(
         partition_by=["symbol"],
@@ -67,11 +69,11 @@ def window_filter(
         rows_to_keep=1,
     )
 
-    print(df.toPandas().to_string())
+    print(df.toPandas())
     '''
-               created_at symbol  price  _row_index
-    0 2023-01-03 05:00:00   APPL  201.5           1
-    1 2023-01-03 05:00:00   GOOL  201.5           1
+      created_at symbol  price  _row_index
+    0 2023-01-03   APPL  201.5           1
+    1 2023-01-03   GOOL  201.5           1
     '''
     ```
 
@@ -106,3 +108,32 @@ def window_filter(
         df = df.drop(row_index_name)
 
     return df
+
+
+if __name__ == "__main__":
+    import pyspark.sql.functions as F
+
+    from laktory._testing import spark
+
+    df0 = spark.createDataFrame(
+        [
+            ["2023-01-01T00:00:00Z", "APPL", 200.0],
+            ["2023-01-02T00:00:00Z", "APPL", 202.0],
+            ["2023-01-03T00:00:00Z", "APPL", 201.5],
+            ["2023-01-01T00:00:00Z", "GOOL", 200.0],
+            ["2023-01-02T00:00:00Z", "GOOL", 202.0],
+            ["2023-01-03T00:00:00Z", "GOOL", 201.5],
+        ],
+        ["created_at", "symbol", "price"],
+    ).withColumn("created_at", F.col("created_at").cast("timestamp"))
+
+    df = df0.window_filter(
+        partition_by=["symbol"],
+        order_by=[
+            {"sql_expression": "created_at", "desc": True},
+        ],
+        drop_row_index=False,
+        rows_to_keep=1,
+    )
+
+    print(df.toPandas())
