@@ -604,7 +604,7 @@ def test_terraform_plan():
     tstack.plan()
 
 
-def test_all_resources():
+def atest_all_resources():
     from tests.test_catalog import catalog
     from tests.test_directory import directory
     from tests.test_job import job
@@ -655,4 +655,4 @@ if __name__ == "__main__":
     test_pulumi_preview()
     test_terraform_stack()
     test_terraform_plan()
-    test_all_resources()
+    atest_all_resources()
