@@ -10,10 +10,8 @@ on:
       env:
         type: string
         required: true
-      working-directory:
-        type: string
-        required: false
-        default: ./.run_quickstart
+env:
+  CWD: ./.run_quickstart
 
 
 jobs:
@@ -36,11 +34,11 @@ jobs:
 
       - name: make dir
         run: |
-          mkdir ${{ inputs.working-directory }}
+          mkdir $CWD
 
       - name: Install Laktory
         run: make install
-        working-directory: ${{ inputs.working-directory }}
+        working-directory: ${{ env.CWD }}
 
 #      - name: Install Laktory
 #        run: make install
