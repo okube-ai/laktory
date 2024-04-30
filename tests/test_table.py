@@ -2,7 +2,6 @@ from pydantic import ValidationError
 from pyspark.sql import types as T
 from pyspark.sql import SparkSession
 import pandas as pd
-from pandas import Timestamp
 import pytest
 
 from laktory._testing import EventsManager
