@@ -627,7 +627,7 @@ def test_all_resources():
             "catalogs": [catalog],
             "directories": [directory],
             # "jobs": [job],
-            # "metastores": [metastore],
+            "metastores": [metastore],
             # "pipelines": [pl],  # required by job
             # "notebooks": [nb],
             # "schemas": [schema],
