@@ -27,8 +27,6 @@ class SparkDataFrameNode(BaseModel):
 
     Attributes
     ----------
-    name:
-        Name of the column
     allow_missing_column_args:
         If `True`, spark func column arguments are allowed to be missing
         without raising an exception.
@@ -49,13 +47,6 @@ class SparkDataFrameNode(BaseModel):
     spark_func_name:
         Name of the spark function to build the column. Mutually exclusive to
         `sql_expression`
-    sql_expression:
-        Expression defining how to build the column. Mutually exclusive to
-        `spark_func_name`
-    type:
-        Column data type
-    unit:
-        Column units
 
     Examples
     --------
@@ -69,7 +60,15 @@ class SparkDataFrameNode(BaseModel):
         spark_func_name="drop_duplicates",
         spark_func_args=[["x"]],
     )
-    df = node.execute(df0, spark)
+    df = node.execute(df0, spark=spark)
+
+    print(df.toPandas().to_string())
+    '''
+       x
+    0  1
+    1  2
+    2  3
+    '''
     ```
     """
 

@@ -69,9 +69,9 @@ def window_filter(
 
     print(df.toPandas().to_string())
     '''
-      created_at symbol  price  _row_index
-    0 2023-01-03   APPL  201.5           1
-    1 2023-01-03   GOOL  201.5           1
+               created_at symbol  price  _row_index
+    0 2023-01-03 05:00:00   APPL  201.5           1
+    1 2023-01-03 05:00:00   GOOL  201.5           1
     '''
     ```
 

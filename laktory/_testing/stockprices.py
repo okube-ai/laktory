@@ -80,7 +80,7 @@ table_slv_join = Table(
     builder={
         "layer": "SILVER",
         "table_source": {
-            "mock_df": df_slv,
+            # "mock_df": df_slv,
             "name": "slv_stock_prices",
             "filter": "created_at = '2023-09-01T00:00:00Z'",
         },
@@ -91,7 +91,7 @@ table_slv_join = Table(
                     "spark_func_kwargs": {
                         "other": {
                             "name": "slv_stockmeta",
-                            "mock_df": df_meta,
+                            # "mock_df": df_meta,
                             "renames": {"symbol2": "symbol"},
                         },
                         "on": ["symbol"],
@@ -107,7 +107,7 @@ table_slv_join = Table(
                     "spark_func_kwargs": {
                         "other": {
                             "name": "slv_stock_names",
-                            "mock_df": df_name,
+                            # "mock_df": df_name,
                         },
                         "on": ["symbol3"],
                     },
@@ -117,3 +117,12 @@ table_slv_join = Table(
         "drop_source_columns": False,
     },
 )
+
+# Because a pipeline will modify the schema and other properties of the table
+# we need to be a copy specifically for the pipeline. Deep copy does not work
+# so well on spark dataframes. They are assigned after the copy.
+table_slv_pl = table_slv.model_copy(deep=True)
+table_slv_join_pl = table_slv_join.model_copy(deep=True)
+table_slv_join.builder.table_source.mock_df = df_slv
+table_slv_join.builder.spark_chain.nodes[0].spark_func_kwargs["other"].value.mock_df = df_meta
+table_slv_join.builder.spark_chain.nodes[3].spark_func_kwargs["other"].value.mock_df = df_name

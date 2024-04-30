@@ -1,11 +1,12 @@
 from laktory import models
 
-from laktory._testing.stockprices import table_slv
-from laktory._testing.stockprices import table_slv_join
+from laktory._testing.stockprices import table_slv_pl
+from laktory._testing.stockprices import table_slv_join_pl
+
 
 pl = models.Pipeline(
     name="pl-stock-prices",
-    tables=[table_slv, table_slv_join],
+    tables=[table_slv_pl, table_slv_join_pl],
     udfs=[
         {
             "module_name": "stock_functions",

@@ -72,7 +72,16 @@ class SparkChain(BaseModel):
     )
 
     # Execute Chain
-    df = sc.execute(df0, spark)
+    df = sc.execute(df0, spark=spark)
+
+    # Print result
+    print(df.toPandas().to_string())
+    '''
+          cos_x        x2
+    0  0.540302  1.000000
+    1 -0.416147  1.414214
+    2 -0.989992  1.732051
+    '''
     ```
     """
 
