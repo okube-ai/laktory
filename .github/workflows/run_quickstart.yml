@@ -43,7 +43,11 @@ jobs:
         run: laktory quickstart -b terraform -n Standard_DS3_v2
         working-directory: ${{ env.CWD }}
 
-      - name: run preview
+      - name: laktory init
+        run: laktory init
+        working-directory: ${{ env.CWD }}
+
+      - name: laktory preview
         run: laktory preview
         working-directory: ${{ env.CWD }}
 
