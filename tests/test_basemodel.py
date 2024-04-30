@@ -155,7 +155,7 @@ def test_camelize():
                 "tableType": "MANAGED",
                 "timestampKey": None,
                 "viewDefinition": None,
-                "warehouseId": None,
+                "warehouseId": "08b717ce051a0261",
             },
             {
                 "builder": {

@@ -1,9 +1,9 @@
 import os
 import json
 import yaml
-from pyspark.sql import SparkSession
 
 from laktory.models import Column
+from laktory._testing.stockprices import df_brz as df
 
 GOOGL = {
     "name": "close",
@@ -22,10 +22,6 @@ with open(os.path.join(data_dir, "googl.yaml"), "w") as fp:
     yaml.dump(GOOGL, fp)
 
 # Spark
-spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
-spark.conf.set("spark.sql.session.timeZone", "UTC")
-dirpath = os.path.dirname(__file__)
-df = spark.read.parquet(os.path.join(dirpath, "./data/brz_stock_prices"))
 df = df.filter("data.symbol == 'GOOGL'").limit(5)
 
 

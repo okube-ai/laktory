@@ -19,6 +19,8 @@ spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 
 df0 = spark.createDataFrame(pdf)
 
+dirpath = os.path.dirname(__file__)
+
 
 def test_event_data_source():
     source = EventDataSource(
@@ -36,7 +38,7 @@ def test_event_data_source_read():
     source = EventDataSource(
         name="stock_price",
         producer={"name": "yahoo-finance"},
-        events_root="./data/events/",
+        events_root=os.path.join(dirpath, "./data/events/"),
         read_as_stream=False,
     )
     df = source.read(spark)
