@@ -1,0 +1,104 @@
+name: quickstart
+backend: terraform
+resources:
+  dbfsfiles:
+    dbfs-file-stock-prices:
+      path: /Workspace/.laktory/landing/events/yahoo-finance/stock_price/stock_prices.json
+      source: ./data/stock_prices.json
+  notebooks:
+    notebook-pipelines-dlt-brz-template:
+      source: ./notebooks/pipelines/dlt_brz_template.py
+    notebook-pipelines-dlt-slv-template:
+      source: ./notebooks/pipelines/dlt_slv_template.py
+  pipelines:
+    pl-quickstart:
+      channel: PREVIEW
+      clusters:
+      - autoscale:
+          min_workers: 1
+          max_workers: 2
+        name: default
+        node_type_id: TBD
+      configuration:
+        pipeline_name: pl-quickstart
+      development: ${vars.is_dev}
+      libraries:
+      - notebook:
+          path: /.laktory/pipelines/dlt_brz_template.py
+      - notebook:
+          path: /.laktory/pipelines/dlt_slv_template.py
+      name: pl-quickstart
+      tables:
+      - builder:
+          add_laktory_columns: true
+          as_dlt_view: false
+          drop_source_columns: false
+          event_source:
+            name: stock_price
+            producer:
+              name: yahoo-finance
+              party: 1
+            events_root_: dbfs:/Workspace/.laktory/landing/events/
+            read_as_stream: true
+            fmt: JSON
+            header: true
+            multiline: false
+            type: STORAGE_EVENTS
+          layer: BRONZE
+          pipeline_name: pl-quickstart
+          template: BRONZE
+        data_source_format: DELTA
+        name: brz_stock_prices
+        schema_name: default
+        table_type: MANAGED
+      - builder:
+          add_laktory_columns: true
+          as_dlt_view: false
+          drop_source_columns: true
+          layer: SILVER
+          pipeline_name: pl-quickstart
+          table_source:
+            read_as_stream: true
+            fmt: DELTA
+            from_pipeline: true
+            name: brz_stock_prices
+            schema_name: default
+          template: SILVER
+          spark_chain:
+            nodes:
+            - allow_missing_column_args: false
+              name: created_at
+              sql_expression: data.created_at
+              type: timestamp
+            - allow_missing_column_args: false
+              name: symbol
+              spark_func_args:
+              - value: data._created_at
+              spark_func_name: coalesce
+              type: string
+            - allow_missing_column_args: false
+              name: open
+              sql_expression: data.open
+              type: double
+            - allow_missing_column_args: false
+              name: close
+              sql_expression: data.close
+              type: double
+        data_source_format: DELTA
+        expectations:
+        - name: positive_price
+          expression: open > 0
+          action: FAIL
+        name: slv_stock_prices
+        schema_name: default
+        table_type: MANAGED
+      target: default
+  providers:
+    databricks:
+      host: ${vars.DATABRICKS_HOST}
+      token: ${vars.DATABRICKS_TOKEN}
+environments:
+  dev:
+    variables:
+      env: dev
+      is_dev: true
