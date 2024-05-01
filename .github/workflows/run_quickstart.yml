@@ -48,9 +48,22 @@ jobs:
         working-directory: ${{ env.CWD }}
 
       - name: laktory preview
-        run: laktory preview
+        run: laktory preview -e dev
         working-directory: ${{ env.CWD }}
         env:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
+      - name: laktory deploy
+        run: laktory preview -e dev -y
+        working-directory: ${{ env.CWD }}
+        env:
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+#      - name: laktory run
+#        run: laktory preview -e dev -y
+#        working-directory: ${{ env.CWD }}
+#        env:
+#          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+#          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
