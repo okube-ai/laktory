@@ -1,7 +1,4 @@
-import os
 from laktory.models import SqlQuery
-
-root_dir = os.path.dirname(__file__)
 
 query = SqlQuery(
     name="google-prices",
