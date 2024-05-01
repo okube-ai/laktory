@@ -1,7 +1,9 @@
 import json
+import re
 from pydantic import BaseModel
 
 from pyspark.sql.dataframe import DataFrame
+from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
 
 
 class Watermark(BaseModel):
@@ -43,19 +45,34 @@ def watermark(df: DataFrame) -> Watermark:
     #> column='tstamp' threshold='1 hours'
     ```
     """
-    plan = df._jdf.queryExecution().logical().toString().lower()
 
-    lines = plan.split("\n")
-    wm_found = False
-    for line in lines:
-        if "EventTimeWatermark".lower() in line.lower():
-            wm_found = True
-            break
+    # Get plan
+    if isinstance(df, ConnectDataFrame):
+        plan = df._plan.print()
 
-    if not wm_found:
-        return None
+        def parse_watermark(input_string):
+            match_c = re.search(r"event_time='([^']+)'", input_string)
+            match_t = re.search(r"delay_threshold='([^']+)'", input_string)
+            c = None
+            t = None
+            if match_c:
+                c = match_c.group(1)
+            if match_t:
+                t = match_t.group(1)
 
-    line = line.lower().replace("'eventtimewatermark '", "")
-    column, threshold = line.split(",")
+            return c, t
 
-    return Watermark(column=column.strip(), threshold=threshold.strip())
+        lines = plan.split("\n")
+        for line in lines:
+            if "<WithWatermark".lower() in line.lower():
+                c, t = parse_watermark(line)
+                return Watermark(column=c.strip(), threshold=t.strip())
+
+    else:
+        plan = df._jdf.queryExecution().logical().toString()
+
+        lines = plan.split("\n")
+        for line in lines:
+            if "EventTimeWatermark".lower() in line.lower():
+                c, t = line.lower().replace("'eventtimewatermark '", "").split(",")
+                return Watermark(column=c.strip(), threshold=t.strip())
