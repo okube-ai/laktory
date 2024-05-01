@@ -8,7 +8,7 @@ from laktory.spark.dataframe.watermark import watermark
 logger = get_logger(__name__)
 
 
-def laktory_join(
+def smart_join(
     left: DataFrame,
     other: DataFrame,
     how: str = "left",
@@ -18,7 +18,7 @@ def laktory_join(
     time_constraint_interval_upper: str = None,
 ) -> DataFrame:
     """
-    Laktory table join
+    Streaming table join
 
     Parameters
     ----------
@@ -62,7 +62,7 @@ def laktory_join(
         )
     )
 
-    df = df_prices.laktory_join(
+    df = df_prices.smart_join(
         other=df_meta,
         on=["symbol"],
     )
@@ -183,7 +183,7 @@ if __name__ == "__main__":
         )
     )
 
-    df = df_prices.laktory_join(
+    df = df_prices.smart_join(
         other=df_meta,
         on=["symbol"],
     )

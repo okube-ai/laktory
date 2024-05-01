@@ -195,7 +195,7 @@ def test_table_builder():
                             },
                             "on": {"value": ["symbol"]},
                         },
-                        "spark_func_name": "laktory_join",
+                        "spark_func_name": "smart_join",
                     },
                     {
                         "allow_missing_column_args": False,
@@ -236,7 +236,7 @@ def test_table_builder():
                             },
                             "on": {"value": ["symbol3"]},
                         },
-                        "spark_func_name": "laktory_join",
+                        "spark_func_name": "smart_join",
                     },
                 ]
             },

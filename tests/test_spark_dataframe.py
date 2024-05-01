@@ -118,7 +118,7 @@ def test_join():
 
     other.show()
 
-    df = left.laktory_join(
+    df = left.smart_join(
         other=other,
         on=["symbol"],
         how="left",
@@ -168,7 +168,7 @@ def test_join():
     ]
 
     # Join expression
-    df2 = left.laktory_join(
+    df2 = left.smart_join(
         other=other,
         on_expression="left.symbol == other.symbol",
     )
@@ -181,7 +181,7 @@ def test_join_outer():
     )
     other = df_meta.withColumnRenamed("symbol2", "symbol")
 
-    df = left.laktory_join(
+    df = left.smart_join(
         other=other,
         on=["symbol"],
         how="full_outer",

@@ -9,7 +9,7 @@
 * `models.BaseDataSource` `renames` attribute for renaming columns of the source table
 * `models.BaseDataSource` `drops` attribute for dropping columns of the source table
 * spark DataFrame `watermark` returns the watermark column and threshold if any 
-* spark DataFrame `laktory_join` cleans columns duplicated from join and supports watermarking 
+* spark DataFrame `smart_join` joins, cleans duplicated columns and supports watermarking 
 * spark DataFrame `groupby_and_agg` groupby and aggregates in a single function 
 * spark DataFrame `window_filter` takes the first n rows over a window 
 ### Updated
