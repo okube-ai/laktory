@@ -43,8 +43,8 @@ jobs:
         run: laktory quickstart -b terraform -n Standard_DS3_v2
         working-directory: ${{ env.CWD }}
 
-      - name: update notebooks
-        run: python ../.github/scripts/set_notebooks_laktory_version.py ${{ github.ref }}
+      - name: update stack
+        run: python ../.github/scripts/update_quickstart_stack.py ${{ github.ref }}
         working-directory: ${{ env.CWD }}
 
       - name: laktory init
