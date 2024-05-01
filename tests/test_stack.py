@@ -4,7 +4,7 @@ import os
 from laktory._testing.stackvalidator import StackValidator
 from laktory import models
 
-dirpath = os.path.dirname(__file__)
+dirpath = os.path.join(os.path.dirname(__file__), "data")
 
 with open(os.path.join(dirpath, "stack.yaml"), "r") as fp:
     stack = models.Stack.model_validate_yaml(fp)

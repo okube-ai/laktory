@@ -136,7 +136,7 @@ def quickstart(
     # Build stack
     if backend == "pulumi":
 
-        template_stack.resources.providers = None
+        template_stack.resources.providers = {}
         stack = Stack(
             organization=template_stack.organization,
             name=stack,
