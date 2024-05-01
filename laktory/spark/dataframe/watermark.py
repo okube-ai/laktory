@@ -1,6 +1,7 @@
-import json
 import re
+import io
 from pydantic import BaseModel
+from contextlib import redirect_stdout
 
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
@@ -29,6 +30,7 @@ def watermark(df: DataFrame) -> Watermark:
     --------
     ```py
     import pandas as pd
+    import laktory  # noqa: F401
 
     df = spark.createDataFrame(
         pd.DataFrame(
@@ -41,8 +43,7 @@ def watermark(df: DataFrame) -> Watermark:
     )
     df = df.withWatermark("tstamp", "1 hour")
 
-    print(df.watermark())
-    #> column='tstamp' threshold='1 hours'
+    watermark = df.watermark()
     ```
     """
 
@@ -69,7 +70,12 @@ def watermark(df: DataFrame) -> Watermark:
                 return Watermark(column=c.strip(), threshold=t.strip())
 
     else:
-        plan = df._jdf.queryExecution().logical().toString()
+        # Some Databricks cluster types prevent from using private method
+        # like ._jdf. Instead, we use .explain() method and capture the
+        # output
+        with io.StringIO() as buf, redirect_stdout(buf):
+            df.explain(extended=True)
+            plan = buf.getvalue().strip()
 
         lines = plan.split("\n")
         for line in lines:

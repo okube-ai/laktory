@@ -109,6 +109,8 @@ def test_watermark():
     assert wm.column == "created_at"
     assert wm.threshold == "1 hours"
 
+    # TODO: Add test for spark connect DataFrame
+
 
 def test_join():
     left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(
@@ -229,6 +231,11 @@ def test_join_outer():
             "symbol": "MSFT",
         },
     ]
+
+
+def test_join_watermark():
+    # TODO
+    pass
 
 
 def test_aggregation():
@@ -355,5 +362,6 @@ if __name__ == "__main__":
     test_watermark()
     test_join()
     test_join_outer()
+    test_join_watermark()
     test_aggregation()
     test_window_filter()
