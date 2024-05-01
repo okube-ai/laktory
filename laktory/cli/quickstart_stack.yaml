@@ -73,7 +73,7 @@ resources:
             - allow_missing_column_args: false
               name: symbol
               spark_func_args:
-              - value: data._created_at
+              - value: data.symbol
               spark_func_name: coalesce
               type: string
             - allow_missing_column_args: false
