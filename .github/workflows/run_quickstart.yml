@@ -43,6 +43,10 @@ jobs:
         run: laktory quickstart -b terraform -n Standard_DS3_v2
         working-directory: ${{ env.CWD }}
 
+      - name: update notebooks
+        run: python ../.github/scripts/set_notebooks_laktory_version.py ${{ github.ref }}
+        working-directory: ${{ env.CWD }}
+
       - name: laktory init
         run: laktory init
         working-directory: ${{ env.CWD }}
@@ -54,12 +58,12 @@ jobs:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
-#      - name: laktory deploy
-#        run: laktory deploy -e dev -y
-#        working-directory: ${{ env.CWD }}
-#        env:
-#          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-#          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      - name: laktory deploy
+        run: laktory deploy -e dev -y
+        working-directory: ${{ env.CWD }}
+        env:
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
       - name: laktory run
         run: laktory run -e dev -p pl-quickstart

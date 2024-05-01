@@ -60,7 +60,9 @@ class CLIController(BaseModel):
         if self.env is None:
             env_names = list(self.stack.envs.keys())
             if env_names:
-                logger.warn(f"Environment not specified, defaulting to first available ({env_names[0]})")
+                logger.warn(
+                    f"Environment not specified, defaulting to first available ({env_names[0]})"
+                )
                 self.env = env_names[0]
 
     @property
