@@ -2,21 +2,22 @@ import os
 from laktory import app
 from laktory import settings
 from laktory import models
+from laktory._testing import Paths
 from typer.testing import CliRunner
 
 runner = CliRunner()
 settings.cli_raise_external_exceptions = True
-dirpath = os.path.dirname(__file__)
+paths = Paths(__file__)
 
 
 def test_preview_pulumi():
-    filepath = os.path.join(dirpath, "stack.yaml")
+    filepath = os.path.join(paths.data, "stack.yaml")
     result = runner.invoke(app, ["preview", "--env", "dev", "--filepath", filepath])
     assert result.exit_code == 0
 
 
 def test_preview_terraform():
-    filepath = os.path.join(dirpath, "stack.yaml")
+    filepath = os.path.join(paths.data, "stack.yaml")
 
     # Ideally, we would run `laktory init`, but the runner does not seem to handle running multiple commands
     with open(filepath, "r") as fp:
@@ -31,7 +32,8 @@ def test_preview_terraform():
 
 
 def test_quickstart_pulumi():
-    filepath = os.path.join(dirpath, "stack_quickstart_pulumi.yaml")
+    filepath = os.path.join(paths.tmp, "stack_quickstart_pulumi.yaml")
+    print(filepath)
     result = runner.invoke(
         app,
         [
@@ -63,7 +65,7 @@ def test_quickstart_pulumi():
 
 
 def test_quickstart_terraform():
-    filepath = os.path.join(dirpath, "stack_quickstart_terraform.yaml")
+    filepath = os.path.join(paths.tmp, "stack_quickstart_terraform.yaml")
     result = runner.invoke(
         app,
         [
@@ -101,7 +103,7 @@ def atest_deploy_pulumi():
         "stack.yaml",
         "stack_empty.yaml",
     ]:
-        filepath = os.path.join(dirpath, filename)
+        filepath = os.path.join(paths.data, filename)
         result = runner.invoke(
             app,
             [
@@ -125,7 +127,7 @@ def atest_deploy_terraform():
         "stack.yaml",
         "stack_empty.yaml",
     ]:
-        filepath = os.path.join(dirpath, filename)
+        filepath = os.path.join(paths.data, filename)
         result = runner.invoke(
             app,
             [

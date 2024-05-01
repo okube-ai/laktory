@@ -3,10 +3,11 @@ import os
 from laktory import models
 from laktory import Dispatcher
 from laktory._version import VERSION
+from laktory._testing import Paths
 
-dirpath = os.path.dirname(__file__)
+paths = Paths(__file__)
 
-with open(os.path.join(dirpath, "stack.yaml"), "r") as fp:
+with open(os.path.join(paths.data, "stack.yaml"), "r") as fp:
     stack = models.Stack.model_validate_yaml(fp)
 
 

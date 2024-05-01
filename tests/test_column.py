@@ -3,8 +3,10 @@ import json
 import yaml
 
 from laktory.models import Column
+from laktory._testing import Paths
 from laktory._testing.stockprices import df_brz as df
 
+paths = Paths(__file__)
 GOOGL = {
     "name": "close",
     "type": "double",
@@ -13,12 +15,10 @@ GOOGL = {
     "schema_name": "markets",
     "table_name": "stock_prices",
 }
-data_dir = os.path.join(os.path.dirname(__file__), "data_tmp/")
-if not os.path.exists(data_dir):
-    os.makedirs(data_dir)
-with open(os.path.join(data_dir, "googl.json"), "w") as fp:
+
+with open(os.path.join(paths.tmp, "googl.json"), "w") as fp:
     json.dump(GOOGL, fp)
-with open(os.path.join(data_dir, "googl.yaml"), "w") as fp:
+with open(os.path.join(paths.tmp, "googl.yaml"), "w") as fp:
     yaml.dump(GOOGL, fp)
 
 # Spark
@@ -39,10 +39,10 @@ def test_model():
 def test_read():
     c0 = Column(**GOOGL)
 
-    with open(f"{data_dir}/googl.yaml", "r") as fp:
+    with open(f"{paths.tmp}/googl.yaml", "r") as fp:
         c1 = Column.model_validate_yaml(fp)
 
-    with open(f"{data_dir}/googl.json", "r") as fp:
+    with open(f"{paths.tmp}/googl.json", "r") as fp:
         c2 = Column.model_validate_json_file(fp)
 
     assert c1 == c0

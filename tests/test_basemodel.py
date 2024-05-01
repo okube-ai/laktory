@@ -6,9 +6,10 @@ from laktory.models import Table
 from laktory.models import Schema
 from laktory.models import Job
 from laktory import settings
+from laktory._testing import Paths
 from pulumi_random import RandomString
 
-dirpath = os.path.dirname(__file__)
+paths = Paths(__file__)
 
 env = RandomString("env", length=3, upper=False, numeric=False, special=False)
 schema_name = RandomString(
@@ -75,7 +76,7 @@ def test_read_yaml():
         symbol: str
         prices: list[Price]
 
-    with open(os.path.join(dirpath, "stockprices0.yaml"), "r") as fp:
+    with open(os.path.join(paths.data, "stockprices0.yaml"), "r") as fp:
         stockprices = StockPrices.model_validate_yaml(fp)
 
     assert stockprices.model_dump() == {

@@ -287,9 +287,9 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     # cluster_source
     # cluster_mount_infos
     custom_tags: dict[str, str] = None
-    data_security_mode: Literal[
-        "NONE", "SINGLE_USER", "USER_ISOLATION"
-    ] = "USER_ISOLATION"
+    data_security_mode: Literal["NONE", "SINGLE_USER", "USER_ISOLATION"] = (
+        "USER_ISOLATION"
+    )
     # docker_image
     driver_instance_pool_id: str = None
     driver_node_type_id: str = None

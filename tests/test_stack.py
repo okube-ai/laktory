@@ -1,12 +1,13 @@
 import copy
 import os
 
-from laktory._testing.stackvalidator import StackValidator
 from laktory import models
+from laktory._testing.stackvalidator import StackValidator
+from laktory._testing import Paths
 
-dirpath = os.path.dirname(__file__)
+paths = Paths(__file__)
 
-with open(os.path.join(dirpath, "stack.yaml"), "r") as fp:
+with open(os.path.join(paths.data, "stack.yaml"), "r") as fp:
     stack = models.Stack.model_validate_yaml(fp)
 
 stack.terraform.backend = {
@@ -616,11 +617,12 @@ def test_all_resources():
     from tests.test_user import user
     from tests.test_user import group
     from tests.test_workspacefile import workspace_file
+    from laktory._testing import Paths
 
-    root_dir = os.path.dirname(__file__)
+    paths = Paths(__file__)
 
-    nb.source = os.path.join(root_dir, nb.source)
-    workspace_file.source = os.path.join(root_dir, workspace_file.source)
+    nb.source = os.path.join(paths.root, nb.source)
+    workspace_file.source = os.path.join(paths.root, workspace_file.source)
 
     validator = StackValidator(
         resources={

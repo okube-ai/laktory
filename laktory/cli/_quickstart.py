@@ -1,6 +1,6 @@
-import os
 import typer
 import yaml
+import os
 from typing import Annotated
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit import prompt
@@ -11,6 +11,16 @@ from laktory.cli.app import app
 from laktory._parsers import remove_empty
 from laktory.models.stacks.stack import Stack
 from laktory.constants import SUPPORTED_BACKENDS
+
+
+def read_template():
+
+    filepath = os.path.join(os.path.dirname(__file__), "quickstart_stack.yaml")
+
+    with open(filepath, "r") as fp:
+        stack = Stack.model_validate_yaml(fp)
+
+    return stack
 
 
 @app.command()
@@ -116,119 +126,19 @@ def quickstart(
         with open(f"./data/{filename}", "w") as fp:
             fp.write(data)
 
-    # Build providers (terraform only)
-    providers = {
-        "databricks": {
-            "host": "${vars.DATABRICKS_HOST}",
-            "token": "${vars.DATABRICKS_TOKEN}",
-        }
-    }
-
-    # Build resources
-    resources = {
-        "notebooks": {
-            "notebook-pipelines-dlt-brz-template": {
-                "source": "./notebooks/pipelines/dlt_brz_template.py"
-            },
-            "notebook-pipelines-dlt-slv-template": {
-                "source": "./notebooks/pipelines/dlt_slv_template.py"
-            },
-        },
-        "dbfsfiles": {
-            "dbfs-file-stock-prices": {
-                "source": "./data/stock_prices.json",
-                "path": "/Workspace/.laktory/landing/events/yahoo-finance/stock_price/stock_prices.json",
-            },
-        },
-        "pipelines": {
-            "pl-quickstart": {
-                "name": "pl-quickstart",
-                "target": "default",
-                "development": "${vars.is_dev}",
-                "configuration": {"pipeline_name": "pl-quickstart"},
-                "clusters": [
-                    {
-                        "name": "default",
-                        "node_type_id": node_type,
-                        "autoscale": {
-                            "min_workers": 1,
-                            "max_workers": 2,
-                        },
-                    },
-                ],
-                "libraries": [
-                    {"notebook": {"path": "/.laktory/pipelines/dlt_brz_template.py"}},
-                    {"notebook": {"path": "/.laktory/pipelines/dlt_slv_template.py"}},
-                ],
-                "tables": [
-                    {
-                        "name": "brz_stock_prices",
-                        "builder": {
-                            "layer": "BRONZE",
-                            "event_source": {
-                                "name": "stock_price",
-                                "events_root": "dbfs:/Workspace/.laktory/landing/events/",
-                                "producer": {
-                                    "name": "yahoo-finance",
-                                },
-                            },
-                        },
-                    },
-                    {
-                        "name": "slv_stock_prices",
-                        "expectations": [
-                            {
-                                "name": "positive_price",
-                                "expression": "open > 0",
-                                "action": "FAIL",
-                            }
-                        ],
-                        "builder": {
-                            "layer": "SILVER",
-                            "table_source": {
-                                "name": "brz_stock_prices",
-                            },
-                            "spark_chain": {
-                                "nodes": [
-                                    {
-                                        "name": "created_at",
-                                        "type": "timestamp",
-                                        "sql_expression": "data.created_at",
-                                    },
-                                    {
-                                        "name": "symbol",
-                                        "type": "string",
-                                        "spark_func_name": "coalesce",
-                                        "spark_func_args": ["data._created_at"],
-                                    },
-                                    {
-                                        "name": "open",
-                                        "type": "double",
-                                        "sql_expression": "data.open",
-                                    },
-                                    {
-                                        "name": "close",
-                                        "type": "double",
-                                        "sql_expression": "data.close",
-                                    },
-                                ]
-                            },
-                        },
-                    },
-                ],
-            }
-        },
-    }
-
-    # Build environments
-    environments = {
-        "dev": {"variables": {"env": "dev", "is_dev": True}},
-    }
+    # Read template stack
+    template_stack = read_template()
+    template_stack.backend = backend
+    template_stack.resources.pipelines["pl-quickstart"].clusters[
+        0
+    ].node_type_id = node_type
 
     # Build stack
     if backend == "pulumi":
+
+        template_stack.resources.providers = {}
         stack = Stack(
-            organization=organization,
+            organization=template_stack.organization,
             name=stack,
             backend=backend,
             pulumi={
@@ -237,19 +147,18 @@ def quickstart(
                     "databricks:token": "${vars.DATABRICKS_TOKEN}",
                 }
             },
-            resources=resources,
-            environments=environments,
+            resources=template_stack.resources,
+            environments=template_stack.environments,
         )
         stack.pulumi.outputs = None
 
     else:
-        resources["providers"] = providers
         stack = Stack(
-            organization=organization,
+            organization=template_stack.organization,
             name=stack,
             backend=backend,
-            resources=resources,
-            environments=environments,
+            resources=template_stack.resources,
+            environments=template_stack.environments,
         )
 
     # Dump data

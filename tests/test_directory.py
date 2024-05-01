@@ -1,8 +1,4 @@
-import os
-
 from laktory.models import Directory
-
-root_dir = os.path.dirname(__file__)
 
 directory = Directory(path=".laktory/pipelines/")
 

@@ -3,9 +3,6 @@ import os
 from laktory.models import Job
 from laktory import pulumi_outputs
 
-
-root_dir = os.path.dirname(__file__)
-
 job = Job(
     name="job-stock-prices",
     clusters=[

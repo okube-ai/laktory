@@ -7,7 +7,9 @@ from prompt_toolkit.validation import ValidationError
 
 from laktory.models.stacks.stack import Stack
 from laktory.constants import SUPPORTED_BACKENDS
+from laktory._logger import get_logger
 
+logger = get_logger(__name__)
 DIRPATH = os.path.dirname(__file__)
 
 
@@ -55,8 +57,13 @@ class CLIController(BaseModel):
             raise ValueError("organization must be specified with pulumi backend")
 
         # Check environment
-        if self.env is None and self.backend == "pulumi":
-            raise ValueError("Environment must be specified with pulumi backend")
+        if self.env is None:
+            env_names = list(self.stack.envs.keys())
+            if env_names:
+                logger.warn(
+                    f"Environment not specified, defaulting to first available ({env_names[0]})"
+                )
+                self.env = env_names[0]
 
     @property
     def pulumi_options(self):

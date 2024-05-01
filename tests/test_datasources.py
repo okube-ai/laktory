@@ -4,8 +4,12 @@ import pandas as pd
 
 from laktory.models.datasources import EventDataSource
 from laktory.models.datasources import TableDataSource
+from laktory._testing import Paths
+from laktory._testing import spark
 
-# Spark
+paths = Paths(__file__)
+
+# DataFrame
 pdf = pd.DataFrame(
     {
         "x": [1, 2, 3],
@@ -15,11 +19,7 @@ pdf = pd.DataFrame(
         "n": [4, 0, 4],
     },
 )
-spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
-
 df0 = spark.createDataFrame(pdf)
-
-dirpath = os.path.dirname(__file__)
 
 
 def test_event_data_source():
@@ -38,7 +38,7 @@ def test_event_data_source_read():
     source = EventDataSource(
         name="stock_price",
         producer={"name": "yahoo-finance"},
-        events_root=os.path.join(dirpath, "./data/events/"),
+        events_root=os.path.join(paths.data, "./events/"),
         read_as_stream=False,
     )
     df = source.read(spark)

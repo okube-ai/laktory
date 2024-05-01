@@ -1,15 +1,15 @@
 import os
 from pyspark.sql import functions as F
-from pyspark.sql import SparkSession
 
 from laktory import models
+from laktory._testing import spark
+from laktory._testing import Paths
 
-# Spark
-spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
-spark.conf.set("spark.sql.session.timeZone", "UTC")
-dirpath = os.path.dirname(__file__)
-df_brz = spark.read.parquet(os.path.join(dirpath, "./data/brz_stock_prices"))
-df_slv = spark.read.parquet(os.path.join(dirpath, "./data/slv_stock_prices"))
+paths = Paths(__file__)
+
+# Data
+df_brz = spark.read.parquet(os.path.join(paths.data, "./brz_stock_prices"))
+df_slv = spark.read.parquet(os.path.join(paths.data, "./slv_stock_prices"))
 
 
 def test_read_and_process():

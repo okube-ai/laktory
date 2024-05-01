@@ -6,6 +6,9 @@ import pytest
 
 from laktory import models
 from laktory import settings
+from laktory._testing import Paths
+
+paths = Paths(__file__)
 
 
 # Header
@@ -18,11 +21,10 @@ header = StockPriceDataEventHeader()
 
 
 # Event
-dirpath = os.path.dirname(__file__)
 with open(
     os.path.join(
-        dirpath,
-        "./data/events/yahoo-finance/stock_price/2023/09/01/stock_price_AAPL_20230901T000000000Z.json",
+        paths.data,
+        "./events/yahoo-finance/stock_price/2023/09/01/stock_price_AAPL_20230901T000000000Z.json",
     )
 ) as fp:
     event = json.load(fp)
