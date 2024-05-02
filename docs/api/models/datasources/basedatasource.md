@@ -1,5 +1,5 @@
-::: laktory.models.datasources.BaseDataSource
+::: laktory.models.datasources.basedatasource.BaseDataSource
 
 ---
 
-::: laktory.models.datasources.Watermark
+::: laktory.models.datasources.basedatasource.Watermark

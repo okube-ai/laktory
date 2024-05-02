@@ -104,7 +104,7 @@ sc = models.SparkChain(
         {
             "spark_func_name": "withColumnRenamed",
             "spark_func_args": ["x", "theta"],
-        },        
+        },
         {
             "column": {
                 "name": "cos",

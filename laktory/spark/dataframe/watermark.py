@@ -1,11 +1,32 @@
 import re
 import io
 from contextlib import redirect_stdout
+from pydantic import BaseModel
 
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
 
-from laktory.models.datasources.basedatasource import Watermark
+
+class Watermark(BaseModel):
+    """
+    Definition of a spark structured streaming watermark for joining data
+    streams.
+
+    Attributes
+    ----------
+    column:
+        Event time column name
+    threshold:
+        How late, expressed in seconds, the data is expected to be with
+        respect to event time.
+
+    References
+    ----------
+    https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#handling-late-data-and-watermarking
+    """
+
+    column: str
+    threshold: str
 
 
 def watermark(df: DataFrame) -> Watermark:
