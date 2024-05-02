@@ -249,9 +249,13 @@ def test_aggregation():
             "window_duration": "1 day",
         },
         agg_expressions=[
-            {"name": "min_open", "spark_func_name": "min", "spark_func_args": ["open"]},
             {
-                "name": "max_open",
+                "column": {"name": "min_open"},
+                "spark_func_name": "min",
+                "spark_func_args": ["open"],
+            },
+            {
+                "column": {"name": "max_open"},
                 "sql_expression": "max(open)",
             },
         ],
@@ -266,7 +270,7 @@ def test_aggregation():
         groupby_columns=["symbol"],
         agg_expressions=[
             {
-                "name": "mean_close",
+                "column": {"name": "mean_close"},
                 "sql_expression": "mean(close)",
             },
         ],
@@ -284,7 +288,7 @@ def test_aggregation():
         groupby_columns=["symbol"],
         agg_expressions=[
             {
-                "name": "count",
+                "column": {"name": "count"},
                 "sql_expression": "count(close)",
             },
         ],

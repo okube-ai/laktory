@@ -23,7 +23,7 @@ pl = read_metadata(pipeline=pl_name)
 
 def define_table(table):
     @dlt.table_or_view(
-        name=table.name,
+        name=table.column_name,
         comment=table.comment,
         as_view=table.builder.as_dlt_view,
     )
@@ -31,7 +31,7 @@ def define_table(table):
     @dlt.expect_all_or_drop(table.drop_expectations)
     @dlt.expect_all_or_fail(table.fail_expectations)
     def get_df():
-        logger.info(f"Building {table.name} table")
+        logger.info(f"Building {table.column_name} table")
 
         # Read Source
         df = table.builder.read_source(spark)
@@ -53,7 +53,7 @@ def define_table(table):
 
 def define_cdc_table(table):
     dlt.create_streaming_table(
-        name=table.name,
+        name=table.column_name,
         comment=table.comment,
     )
 

@@ -44,15 +44,17 @@ table = models.Table(
         "layer": "SILVER",
         "table_source": {
             "name": "brz_stock_prices",
+        },
+        "spark_chain": {
+            "nodes": [
+                {
+                    "column": {"name": "symbol"},
+                    "type": "string",
+                    "sql_expression": "data.symbol"
+                }
+            ]
         }
     },
-    columns=[
-        {
-            "name": "symbol",
-            "type": "string",
-            "sql_expression": "data.symbol"
-        }
-    ]
 )
 
 print(table)

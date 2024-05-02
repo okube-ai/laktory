@@ -169,6 +169,7 @@ def test_pipeline():
                         "nodes": [
                             {
                                 "allow_missing_column_args": False,
+                                "column": None,
                                 "spark_func_args": [],
                                 "spark_func_kwargs": {
                                     "other": {
@@ -191,25 +192,31 @@ def test_pipeline():
                                     "on": {"value": ["symbol"]},
                                 },
                                 "spark_func_name": "smart_join",
+                                "sql_expression": None,
                             },
                             {
                                 "allow_missing_column_args": False,
-                                "name": "symbol3",
+                                "column": {
+                                    "name": "symbol3",
+                                    "type": "string",
+                                    "unit": None,
+                                },
                                 "spark_func_args": [],
                                 "spark_func_kwargs": {},
                                 "spark_func_name": None,
                                 "sql_expression": "symbol",
-                                "type": "string",
-                                "unit": None,
                             },
                             {
                                 "allow_missing_column_args": False,
+                                "column": None,
                                 "spark_func_args": [{"value": "symbol"}],
                                 "spark_func_kwargs": {},
                                 "spark_func_name": "drop",
+                                "sql_expression": None,
                             },
                             {
                                 "allow_missing_column_args": False,
+                                "column": None,
                                 "spark_func_args": [],
                                 "spark_func_kwargs": {
                                     "other": {
@@ -232,6 +239,7 @@ def test_pipeline():
                                     "on": {"value": ["symbol3"]},
                                 },
                                 "spark_func_name": "smart_join",
+                                "sql_expression": None,
                             },
                         ]
                     },

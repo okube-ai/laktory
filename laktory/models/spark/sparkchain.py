@@ -2,8 +2,7 @@ from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
-from laktory.models.spark.sparkdataframenode import SparkDataFrameNode
-from laktory.models.spark.sparkcolumnnode import SparkColumnNode
+from laktory.models.spark.sparkchainnode import SparkChainNode
 from laktory.spark import DataFrame
 
 logger = get_logger(__name__)
@@ -17,11 +16,12 @@ logger = get_logger(__name__)
 class SparkChain(BaseModel):
     """
     The Spark Chain class defines a series of transformation to be applied to
-    a DataFrame. Each transformation is expressed by a node that can either
-    add a new column (SparkColumnNode) or by a node that returns a new
-    DataFrame entirely (SparkDataFrameNode). Each node is executed
-    sequentially in the provided order. Each node may also be another Spark
-    Chain.
+    a DataFrame. Each transformation is expressed as a node (SparkChainNode
+    object) that, upon execution, returns a new dataframe. As a convenience,
+    `column` can be specified to create a new column. In this case, the spark
+    function or sql expression is expected to return a column instead of a
+    DataFrame. Each node is executed sequentially in the provided order. A node
+    may also be another Spark Chain.
 
     Attributes
     ----------
@@ -40,8 +40,10 @@ class SparkChain(BaseModel):
     sc = models.SparkChain(
         nodes=[
             {
-                "name": "cos_x",
-                "type": "double",
+                "column": {
+                    "name": "cos_x",
+                    "type": "double",
+                },
                 "spark_func_name": "cos",
                 "spark_func_args": ["x"],
             },
@@ -55,8 +57,10 @@ class SparkChain(BaseModel):
                         ],
                     },
                     {
-                        "name": "x2",
-                        "type": "double",
+                        "column": {
+                            "name": "x2",
+                            "type": "double",
+                        },
                         "spark_func_name": "sqrt",
                         "spark_func_args": ["x_tmp"],
                     },
@@ -85,7 +89,7 @@ class SparkChain(BaseModel):
     ```
     """
 
-    nodes: list[Union[SparkDataFrameNode, "SparkChain", SparkColumnNode]]
+    nodes: list[Union[SparkChainNode, "SparkChain"]]
     _columns: list[list[str]] = []
 
     @property
@@ -100,16 +104,7 @@ class SparkChain(BaseModel):
 
             tnode = type(node)
             logger.info(f"Executing node {inode} ({tnode.__name__}).")
-
-            if isinstance(node, SparkChain):
-                df = node.execute(df, udfs=udfs, spark=spark)
-
-            elif isinstance(node, SparkColumnNode):
-                col = node.execute(df, udfs=udfs)
-                df = df.withColumn(node.name, col)
-
-            elif isinstance(node, SparkDataFrameNode):
-                df = node.execute(df, udfs=udfs, spark=spark)
+            df = node.execute(df, udfs=udfs, spark=spark)
 
         return df
 

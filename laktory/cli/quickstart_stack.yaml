@@ -67,23 +67,27 @@ resources:
           spark_chain:
             nodes:
             - allow_missing_column_args: false
-              name: created_at
+              column:
+                name: created_at
+                type: timestamp
               sql_expression: data.created_at
-              type: timestamp
             - allow_missing_column_args: false
-              name: symbol
+              column:
+                name: symbol
+                type: string
               spark_func_args:
               - value: data.symbol
               spark_func_name: coalesce
-              type: string
             - allow_missing_column_args: false
-              name: open
+              column:
+                name: open
+                type: double
               sql_expression: data.open
-              type: double
             - allow_missing_column_args: false
-              name: close
+              column:
+                name: close
+                type: double
               sql_expression: data.close
-              type: double
         data_source_format: DELTA
         expectations:
         - name: positive_price

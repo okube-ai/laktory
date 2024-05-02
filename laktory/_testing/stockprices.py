@@ -97,7 +97,7 @@ table_slv_join = Table(
                         "on": ["symbol"],
                     },
                 },
-                {"name": "symbol3", "sql_expression": "symbol"},
+                {"column": {"name": "symbol3"}, "sql_expression": "symbol"},
                 {
                     "spark_func_name": "drop",
                     "spark_func_args": ["symbol"],
