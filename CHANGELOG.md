@@ -1,6 +1,16 @@
 # Release History
 
-## [0.2.0] - Unreleased
+## [0.2.1] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.2.0] - 2024-05-02
 ### Added
 * `SparkChain` a high level class allowing to declare and execute spark operations on a dataframe 
 * `SparkColumnNode` the node of a `SparkChain` that builds a new column
