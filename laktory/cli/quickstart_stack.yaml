@@ -12,27 +12,27 @@ resources:
       source: ./notebooks/pipelines/dlt_slv_template.py
   pipelines:
     pl-quickstart:
+      name: pl-quickstart
       channel: PREVIEW
+      development: ${vars.is_dev}
+      target: default
       clusters:
-      - autoscale:
+      - name: default
+        node_type_id: TBD
+        autoscale:
           min_workers: 1
           max_workers: 2
-        name: default
-        node_type_id: TBD
       configuration:
         pipeline_name: pl-quickstart
-      development: ${vars.is_dev}
       libraries:
       - notebook:
           path: /.laktory/pipelines/dlt_brz_template.py
       - notebook:
           path: /.laktory/pipelines/dlt_slv_template.py
-      name: pl-quickstart
       tables:
-      - builder:
-          add_laktory_columns: true
-          as_dlt_view: false
-          drop_source_columns: false
+      - name: brz_stock_prices
+        builder:
+          layer: BRONZE
           event_source:
             name: stock_price
             producer:
@@ -41,62 +41,36 @@ resources:
             events_root_: dbfs:/Workspace/.laktory/landing/events/
             read_as_stream: true
             fmt: JSON
-            header: true
-            multiline: false
-            type: STORAGE_EVENTS
-          layer: BRONZE
-          pipeline_name: pl-quickstart
-          template: BRONZE
-        data_source_format: DELTA
-        name: brz_stock_prices
-        schema_name: default
-        table_type: MANAGED
-      - builder:
-          add_laktory_columns: true
-          as_dlt_view: false
-          drop_source_columns: true
-          layer: SILVER
-          pipeline_name: pl-quickstart
-          table_source:
-            read_as_stream: true
-            fmt: DELTA
-            from_pipeline: true
-            name: brz_stock_prices
-            schema_name: default
-          template: SILVER
-          spark_chain:
-            nodes:
-            - allow_missing_column_args: false
-              column:
-                name: created_at
-                type: timestamp
-              sql_expression: data.created_at
-            - allow_missing_column_args: false
-              column:
-                name: symbol
-                type: string
-              spark_func_args:
-              - value: data.symbol
-              spark_func_name: coalesce
-            - allow_missing_column_args: false
-              column:
-                name: open
-                type: double
-              sql_expression: data.open
-            - allow_missing_column_args: false
-              column:
-                name: close
-                type: double
-              sql_expression: data.close
-        data_source_format: DELTA
+      - name: slv_stock_prices
         expectations:
         - name: positive_price
           expression: open > 0
           action: FAIL
-        name: slv_stock_prices
-        schema_name: default
-        table_type: MANAGED
-      target: default
+        builder:
+          layer: SILVER
+          table_source:
+            read_as_stream: true
+            name: brz_stock_prices
+          spark_chain:
+            nodes:
+            - column:
+                name: created_at
+                type: timestamp
+              sql_expression: data.created_at
+            - column:
+                name: symbol
+              spark_func_args:
+              - data.symbol
+              spark_func_name: coalesce
+            - column:
+                name: open
+                type: double
+              sql_expression: data.open
+            - column:
+                name: close
+                type: double
+              sql_expression: data.close
+
   providers:
     databricks:
       host: ${vars.DATABRICKS_HOST}

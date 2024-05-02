@@ -224,9 +224,12 @@ class SparkChainNode(BaseModel):
         # From Spark Function
         func_name = self.spark_func_name
         if self.spark_func_name is None:
-            raise ValueError(
-                "`spark_func_name` must be specified if `sql_expression` is not specified"
-            )
+            if self.is_column:
+                func_name = "coalesce"
+            else:
+                raise ValueError(
+                    "`spark_func_name` must be specified if `sql_expression` is not specified"
+                )
 
         # Get from UDFs
         f = udfs.get(func_name, None)
