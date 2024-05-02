@@ -11,7 +11,7 @@ You will be asked 2 questions:
 - Infrastructure as Code backend (terraform or pulumi)
 - Node type for compute (cloud specific, e.g. Standard_DS3_v2, c5.2xlarge, etc.)
 
-Once completed, a files have been created.
+Once completed, the stack files and resources have been created.
 
 #### Stack File
 ??? "API Documentation"

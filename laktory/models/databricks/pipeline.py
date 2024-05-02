@@ -259,26 +259,30 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             read_as_stream: True
           spark_chain:
             nodes:
-              - name: created_at
-                type: timestamp
+              - column:
+                    name: created_at
+                    type: timestamp
                 spark_func_name: coalesce
                 spark_func_args:
                   - data._created_at
 
-              - name: symbol
-                type: string
+              - column:
+                    name: symbol
+                    type: string
                 spark_func_name: coalesce
                 spark_func_args:
                   - data.symbol
 
-              - name: open
-                type: double
+              - column:
+                    name: open
+                    type: double
                 spark_func_name: coalesce
                 spark_func_args:
                   - data.open
 
-              - name: close
-                type: double
+              - column:
+                    name: close
+                    type: double
                 spark_func_name: coalesce
                 spark_func_args:
                   - data.close

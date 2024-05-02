@@ -4,7 +4,6 @@ from pydantic import field_validator
 from pydantic import ValidationError
 
 from laktory.models.spark.sparkfuncarg import SparkFuncArg
-from laktory.models.datasources.tabledatasource import TableDataSource
 
 
 @field_validator("spark_func_args")

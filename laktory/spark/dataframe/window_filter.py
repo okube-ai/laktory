@@ -3,7 +3,6 @@ from typing import Union
 from pyspark.sql.dataframe import DataFrame
 
 from laktory._logger import get_logger
-from laktory.models.spark.sparkcolumnnode import SparkColumnNode
 
 
 logger = get_logger(__name__)
@@ -23,7 +22,7 @@ def window_filter(
     rows_to_keep: int = 1,
 ) -> DataFrame:
     """
-    Window-based filtering
+    Apply spark window-based filtering
 
     Parameters
     ----------

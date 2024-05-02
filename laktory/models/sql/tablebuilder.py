@@ -11,9 +11,7 @@ from laktory.models.datasources import EventDataSource
 from laktory.models.datasources import TableDataSource
 from laktory.models.sql.column import Column
 from laktory.models.spark.sparkchain import SparkChain
-from laktory.models.spark.sparkdataframenode import SparkDataFrameNode
-from laktory.models.spark.sparkcolumnnode import SparkColumnNode
-
+from laktory.models.spark.sparkchainnode import SparkChainNode
 from laktory.spark import DataFrame
 
 logger = get_logger(__name__)
@@ -45,6 +43,9 @@ class TableBuilder(BaseModel):
         Layer in the medallion architecture
     pipeline_name:
         Name of the pipeline in which the table will be built
+    spark_chain:
+        Spark chain defining the data transformations applied to the data
+        source
     table_source:
         Definition of the table data source if applicable
     template:
@@ -147,9 +148,11 @@ class TableBuilder(BaseModel):
         if self.layer == "BRONZE":
             if self.add_laktory_columns:
                 nodes += [
-                    SparkColumnNode(
-                        name="_bronze_at",
-                        type="timestamp",
+                    SparkChainNode(
+                        column={
+                            "name": "_bronze_at",
+                            "type": "timestamp",
+                        },
                         spark_func_name="current_timestamp",
                     ),
                 ]
@@ -157,18 +160,22 @@ class TableBuilder(BaseModel):
         elif self.layer == "SILVER":
             if self.timestamp_key:
                 nodes += [
-                    SparkColumnNode(
-                        name="_tstamp",
-                        type="timestamp",
+                    SparkChainNode(
+                        column={
+                            "name": "_tstamp",
+                            "type": "timestamp",
+                        },
                         sql_expression=self.timestamp_key,
                     )
                 ]
 
             if self.add_laktory_columns:
                 nodes += [
-                    SparkColumnNode(
-                        name="_silver_at",
-                        type="timestamp",
+                    SparkChainNode(
+                        column={
+                            "name": "_silver_at",
+                            "type": "timestamp",
+                        },
                         spark_func_name="current_timestamp",
                     )
                 ]
@@ -176,9 +183,11 @@ class TableBuilder(BaseModel):
         elif self.layer == "GOLD":
             if self.add_laktory_columns:
                 nodes += [
-                    SparkColumnNode(
-                        name="_gold_at",
-                        type="timestamp",
+                    SparkChainNode(
+                        column={
+                            "name": "_gold_at",
+                            "type": "timestamp",
+                        },
                         spark_func_name="current_timestamp",
                     )
                 ]
@@ -191,14 +200,14 @@ class TableBuilder(BaseModel):
                 subset = [self.primary_key]
 
             nodes += [
-                SparkDataFrameNode(
+                SparkChainNode(
                     spark_func_name="dropDuplicates", spark_func_args=[subset]
                 )
             ]
 
         if self.drop_source_columns:
             nodes += [
-                SparkDataFrameNode(
+                SparkChainNode(
                     spark_func_name="drop",
                     spark_func_args=[
                         c
@@ -212,74 +221,6 @@ class TableBuilder(BaseModel):
             return None
 
         return SparkChain(nodes=nodes)
-
-    #
-    # def _get_layer_columns(self, layer, df=None) -> list[columns]:
-    #     from laktory.spark.dataframe import has_column
-    #
-    #     cols = []
-    #
-    #     if layer == "BRONZE":
-    #         pass
-    #
-    #     elif layer == "SILVER":
-    #         if self.timestamp_key:
-    #             cols += [
-    #                 Column(
-    #                     **{
-    #                         "name": "_tstamp",
-    #                         "type": "timestamp",
-    #                         "spark_func_name": "coalesce",
-    #                         "spark_func_args": [self.timestamp_key],
-    #                     }
-    #                 )
-    #             ]
-    #
-    #         if has_column(df, "_bronze_at"):
-    #             cols += [
-    #                 Column(
-    #                     **{
-    #                         "name": "_bronze_at",
-    #                         "type": "timestamp",
-    #                         "spark_func_name": "coalesce",
-    #                         "spark_func_args": ["_bronze_at"],
-    #                     }
-    #                 )
-    #             ]
-    #
-    #         cols += [
-    #             Column(
-    #                 **{
-    #                     "name": "_silver_at",
-    #                     "type": "timestamp",
-    #                     "spark_func_name": "current_timestamp",
-    #                 }
-    #             )
-    #         ]
-    #
-    #     elif layer == "SILVER_STAR":
-    #         cols = [
-    #             Column(
-    #                 **{
-    #                     "name": "_silver_star_at",
-    #                     "type": "timestamp",
-    #                     "spark_func_name": "current_timestamp",
-    #                 }
-    #             )
-    #         ]
-    #
-    #     elif layer == "GOLD":
-    #         cols = [
-    #             Column(
-    #                 **{
-    #                     "name": "_gold_at",
-    #                     "type": "timestamp",
-    #                     "spark_func_name": "current_timestamp",
-    #                 }
-    #             )
-    #         ]
-    #
-    #     return cols
 
     def read_source(self, spark) -> DataFrame:
         """

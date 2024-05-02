@@ -16,12 +16,14 @@ builder:
   layer: SILVER
   table_source:
     name: brz_stock_prices
-columns:
-  - name: symbol
-    type: string
-    spark_func_name: coalesce
-    spark_func_args:
-      - data.symbol
+  spark_chain:
+    nodes:
+      - column:
+          name: symbol
+          type: string
+        spark_func_name: coalesce
+        spark_func_args:
+          - data.symbol
   ...
 ```
 

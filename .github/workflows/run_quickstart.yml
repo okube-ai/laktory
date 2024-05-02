@@ -5,6 +5,12 @@ on:
 #    types:
 #      - opened
 #      - synchronize
+  workflow_dispatch:
+    logLevel:
+      description: 'Log level'
+      default: 'info'
+    branches:
+      - main
   workflow_call:
     inputs:
       env:

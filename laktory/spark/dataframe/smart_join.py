@@ -3,22 +3,26 @@ from pyspark.sql.dataframe import DataFrame
 
 from laktory._logger import get_logger
 from laktory.spark.dataframe.watermark import watermark
+from laktory.spark.dataframe.watermark import Watermark
 
 
 logger = get_logger(__name__)
 
 
-def laktory_join(
+def smart_join(
     left: DataFrame,
     other: DataFrame,
     how: str = "left",
     on: list[str] = None,
     on_expression: str = None,
+    left_watermark: Watermark = None,
+    other_watermark: Watermark = None,
     time_constraint_interval_lower: str = "60 seconds",
     time_constraint_interval_upper: str = None,
 ) -> DataFrame:
     """
-    Laktory table join
+    Join tables, clean up duplicated columns and support watermarking for
+    streaming joins.
 
     Parameters
     ----------
@@ -34,6 +38,10 @@ def laktory_join(
     on_expression:
         String expression the join on condition. The expression can include
         `left` and `other` dataframe references.
+    left_watermark
+        Watermark for left dataframe
+    other_watermark
+        Watermark for other dataframe
     time_constraint_interval_lower:
         Lower bound for a spark streaming event-time constraint
     time_constraint_interval_upper:
@@ -62,7 +70,7 @@ def laktory_join(
         )
     )
 
-    df = df_prices.laktory_join(
+    df = df_prices.smart_join(
         other=df_meta,
         on=["symbol"],
     )
@@ -83,14 +91,33 @@ def laktory_join(
     """
     import pyspark.sql.functions as F
 
+    logger.info(f"Executing {left} {how} JOIN {other}")
+
     # Parse inputs
     if on is None:
         on = []
+    wml = left_watermark
+    wmo = other_watermark
+    if wml is not None and not isinstance(wml, Watermark):
+        wml = Watermark(**wml)
+    if wmo is not None and not isinstance(wmo, Watermark):
+        wmo = Watermark(**wmo)
 
-    logger.info(f"Executing {left} {how} JOIN {other}")
-
-    wml = watermark(left)
-    wmo = watermark(other)
+    # Set watermarks
+    if wml is None:
+        try:
+            wml = watermark(left)
+        except Exception as e:
+            logger.warn(f"Could not fetch wartermark from left dataframe: {e}")
+    else:
+        left = left.withWatermark(wml.column, wml.threshold)
+    if wmo is None:
+        try:
+            wmo = watermark(other)
+        except Exception as e:
+            logger.warn(f"Could not fetch wartermark from other dataframe: {e}")
+    else:
+        other = other.withWatermark(wmo.column, wmo.threshold)
 
     # Add watermark
     other_cols = []
@@ -183,7 +210,7 @@ if __name__ == "__main__":
         )
     )
 
-    df = df_prices.laktory_join(
+    df = df_prices.smart_join(
         other=df_meta,
         on=["symbol"],
     )

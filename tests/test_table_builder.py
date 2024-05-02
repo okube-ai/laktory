@@ -21,13 +21,24 @@ def test_read_and_process():
         spark_chain={
             "nodes": [
                 {
-                    "name": "created_at",
-                    "type": "timestamp",
+                    "column": {
+                        "name": "created_at",
+                        "type": "timestamp",
+                    },
                     "sql_expression": "data._created_at",
                 },
-                {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
-                {"name": "open", "type": "double", "sql_expression": "data.open"},
-                {"name": "close", "type": "double", "sql_expression": "data.close"},
+                {
+                    "column": {"name": "symbol", "type": "string"},
+                    "sql_expression": "data.symbol",
+                },
+                {
+                    "column": {"name": "open", "type": "double"},
+                    "sql_expression": "data.open",
+                },
+                {
+                    "column": {"name": "close", "type": "double"},
+                    "sql_expression": "data.close",
+                },
                 {
                     "spark_func_name": "drop",
                     "spark_func_args": [
@@ -58,7 +69,10 @@ def test_bronze():
         },
         spark_chain={
             "nodes": [
-                {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
+                {
+                    "column": {"name": "symbol", "type": "string"},
+                    "sql_expression": "data.symbol",
+                },
             ]
         },
     )
@@ -97,7 +111,10 @@ def test_silver():
         },
         spark_chain={
             "nodes": [
-                {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
+                {
+                    "column": {"name": "symbol", "type": "string"},
+                    "sql_expression": "data.symbol",
+                },
             ]
         },
         drop_duplicates=True,

@@ -81,16 +81,23 @@ class Table(BaseModel, PulumiResource, TerraformResource):
             },
             "spark_chain": {
                 "nodes": [
-                    {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
                     {
-                        "name": "open",
-                        "type": "double",
+                        "column": {"name": "symbol", "type": "string"},
+                        "sql_expression": "data.symbol",
+                    },
+                    {
+                        "column": {
+                            "name": "open",
+                            "type": "double",
+                        },
                         "spark_func_name": "coalesce",
                         "spark_func_args": ["daa.open"],
                     },
                     {
-                        "name": "close",
-                        "type": "double",
+                        "column": {
+                            "name": "close",
+                            "type": "double",
+                        },
                         "spark_func_name": "coalesce",
                         "spark_func_args": ["daa.close"],
                     },

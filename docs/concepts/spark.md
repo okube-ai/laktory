@@ -19,7 +19,7 @@ df = df.withColumn("y", LF.poly1("x", -1, 1.0))
 ```
 These functions are by default available when declaring a column in a pipeline `Table` model.
 
-## DataFrame
+## DataFrame methods
 In this case the methods are designed to be applied directly on a spark dataframe.
 ```py
 import pandas as pd
@@ -37,3 +37,9 @@ import pandas as pd
 df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
 df.has_column("x")
 ```
+
+Some methods of interest are:
+
+- [`laktory.spark.dataframe.groupby_and_agg`](../api/spark/dataframe/groupby_and_agg.md): Apply a groupby and create aggregation columns.
+- [`laktory.spark.dataframe.smart_join`](../api/spark/dataframe/smart_join.md): Join tables, clean up duplicated columns and support watermarking for streaming joins. This is the recommended spark function for all joins defined in pipelines.
+- [`laktory.spark.dataframe.window_filter`](../api/spark/dataframe/window_filter.md): Apply spark window-based filtering

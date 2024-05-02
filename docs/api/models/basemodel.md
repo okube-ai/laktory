@@ -1,3 +1,3 @@
-::: laktory.models.basemodel.BaseModel
+::: laktory.models.BaseModel
     options:
         show_bases: false

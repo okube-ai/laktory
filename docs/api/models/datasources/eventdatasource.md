@@ -1,1 +1,1 @@
-::: laktory.models.datasources.eventdatasource.EventDataSource
+::: laktory.models.datasources.EventDataSource

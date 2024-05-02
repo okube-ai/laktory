@@ -87,7 +87,7 @@ table_slv_join = Table(
         "spark_chain": {
             "nodes": [
                 {
-                    "spark_func_name": "laktory_join",
+                    "spark_func_name": "smart_join",
                     "spark_func_kwargs": {
                         "other": {
                             "name": "slv_stockmeta",
@@ -97,13 +97,13 @@ table_slv_join = Table(
                         "on": ["symbol"],
                     },
                 },
-                {"name": "symbol3", "sql_expression": "symbol"},
+                {"column": {"name": "symbol3"}, "sql_expression": "symbol"},
                 {
                     "spark_func_name": "drop",
                     "spark_func_args": ["symbol"],
                 },
                 {
-                    "spark_func_name": "laktory_join",
+                    "spark_func_name": "smart_join",
                     "spark_func_kwargs": {
                         "other": {
                             "name": "slv_stock_names",
@@ -112,7 +112,7 @@ table_slv_join = Table(
                         "on": ["symbol3"],
                     },
                 },
-            ]
+            ],
         },
         "drop_source_columns": False,
     },

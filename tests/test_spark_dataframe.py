@@ -109,6 +109,8 @@ def test_watermark():
     assert wm.column == "created_at"
     assert wm.threshold == "1 hours"
 
+    # TODO: Add test for spark connect DataFrame
+
 
 def test_join():
     left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(
@@ -118,7 +120,7 @@ def test_join():
 
     other.show()
 
-    df = left.laktory_join(
+    df = left.smart_join(
         other=other,
         on=["symbol"],
         how="left",
@@ -168,7 +170,7 @@ def test_join():
     ]
 
     # Join expression
-    df2 = left.laktory_join(
+    df2 = left.smart_join(
         other=other,
         on_expression="left.symbol == other.symbol",
     )
@@ -181,7 +183,7 @@ def test_join_outer():
     )
     other = df_meta.withColumnRenamed("symbol2", "symbol")
 
-    df = left.laktory_join(
+    df = left.smart_join(
         other=other,
         on=["symbol"],
         how="full_outer",
@@ -231,6 +233,11 @@ def test_join_outer():
     ]
 
 
+def test_join_watermark():
+    # TODO
+    pass
+
+
 def test_aggregation():
     _df = df_slv.filter(F.col("created_at") < "2023-09-07T00:00:00Z")
     _df.show()
@@ -242,9 +249,13 @@ def test_aggregation():
             "window_duration": "1 day",
         },
         agg_expressions=[
-            {"name": "min_open", "spark_func_name": "min", "spark_func_args": ["open"]},
             {
-                "name": "max_open",
+                "column": {"name": "min_open"},
+                "spark_func_name": "min",
+                "spark_func_args": ["open"],
+            },
+            {
+                "column": {"name": "max_open"},
                 "sql_expression": "max(open)",
             },
         ],
@@ -259,7 +270,7 @@ def test_aggregation():
         groupby_columns=["symbol"],
         agg_expressions=[
             {
-                "name": "mean_close",
+                "column": {"name": "mean_close"},
                 "sql_expression": "mean(close)",
             },
         ],
@@ -277,7 +288,7 @@ def test_aggregation():
         groupby_columns=["symbol"],
         agg_expressions=[
             {
-                "name": "count",
+                "column": {"name": "count"},
                 "sql_expression": "count(close)",
             },
         ],
@@ -355,5 +366,6 @@ if __name__ == "__main__":
     test_watermark()
     test_join()
     test_join_outer()
+    test_join_watermark()
     test_aggregation()
     test_window_filter()
