@@ -119,18 +119,12 @@ def test_column(df0=df0):
     sc = models.SparkChain(
         nodes=[
             {
-                "column": {
-                    "name": "cos_x",
-                    "type": "double"
-                },
+                "column": {"name": "cos_x", "type": "double"},
                 "spark_func_name": "cos",
                 "spark_func_args": ["x"],
             },
             {
-                "column": {
-                    "name": "x2",
-                    "type": "double"
-                },
+                "column": {"name": "x2", "type": "double"},
                 "sql_expression": "x*2",
             },
         ]
@@ -166,10 +160,7 @@ def test_udfs(df0=df0):
                 "spark_func_kwargs": {"p": 0.1},
             },
             {
-                "column": {
-                    "name": "x3",
-                    "type": "double"
-                },
+                "column": {"name": "x3", "type": "double"},
                 "spark_func_name": "mul3",
                 "spark_func_args": [F.col("x")],
             },
