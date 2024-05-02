@@ -15,6 +15,7 @@ The added value of using Laktory for setting up Delta Live Tables is the ability
 Each bronze and silver table will be built using a definition from the configuration file and a template notebook.
 
 First, let's have a look at the notebook template for silver tables:
+
 ```py title="dlt_slv_template.py"
 from laktory import dlt
 from laktory import read_metadata
@@ -115,30 +116,35 @@ tables:
       table_source:
         name: brz_stock_prices
         read_as_stream: True
-    columns:
-      - name: created_at
-        type: timestamp
-        spark_func_name: coalesce
-        spark_func_args:
-          - data._created_at
-
-      - name: symbol
-        type: string
-        spark_func_name: coalesce
-        spark_func_args:
-          - data.symbol
-
-      - name: open
-        type: double
-        spark_func_name: coalesce
-        spark_func_args:
-          - data.open
-
-      - name: close
-        type: double
-        spark_func_name: coalesce
-        spark_func_args:
-          - data.close
+      spark_chain:
+        nodes:
+          - column:
+              name: created_at
+              type: timestamp
+            spark_func_name: coalesce
+            spark_func_args:
+              - data._created_at
+    
+          - column:
+              name: symbol
+              type: string
+            spark_func_name: coalesce
+            spark_func_args:
+              - data.symbol
+    
+          - column:
+              name: open
+              type: double
+            spark_func_name: coalesce
+            spark_func_args:
+              - data.open
+    
+          - column:
+              name: close
+              type: double
+            spark_func_name: coalesce
+            spark_func_args:
+              - data.close
 ```
  
 As you can see:

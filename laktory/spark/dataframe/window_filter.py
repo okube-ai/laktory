@@ -22,7 +22,7 @@ def window_filter(
     rows_to_keep: int = 1,
 ) -> DataFrame:
     """
-    Window-based filtering
+    Apply spark window-based filtering
 
     Parameters
     ----------

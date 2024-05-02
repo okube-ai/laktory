@@ -188,17 +188,17 @@ nav:
       - Resources:
         - BaseResource: api/models/resources/baseresource.md
         - PulumiResource: api/models/resources/pulumiresource.md
+      - Spark:
+        - SparkChain: api/models/spark/sparkchain.md
+        - SparkChainNode: api/models/spark/sparkchainnode.md
+        - SparkFuncArg: api/models/spark/sparkfuncarg.md
       - SQL:
           - api/models/sql/catalog.md
           - api/models/sql/column.md
           - api/models/sql/schema.md
           - api/models/sql/table.md
-          - TableAggregation: api/models/sql/tableaggregation.md
+          - TableExpectations: api/models/sql/tableexpectation.md
           - TableBuilder: api/models/sql/tablebuilder.md
-          - TableExpectation: api/models/sql/tableexpectation.md
-          - TableJoin: api/models/sql/tablejoin.md
-          - TableUnion: api/models/sql/tableunion.md
-          - TableWindowFilter: api/models/sql/tablewindowfilter.md
           - api/models/sql/volume.md
       - Stacks:
           - Stack: api/models/stacks/stack.md
@@ -207,9 +207,12 @@ nav:
     - CLI: api/cli.md
     - Spark:
       - DataFrame:
+        - groupby_and_agg: api/spark/dataframe/groupby_and_agg.md
         - has_column: api/spark/dataframe/has_column.md
         - schema_flat: api/spark/dataframe/schema_flat.md
+        - smart_join: api/spark/dataframe/smart_join.md
         - show_string: api/spark/dataframe/show_string.md
+        - window_filter: api/spark/dataframe/window_filter.md
       - Functions:
         - constants: api/spark/functions/_constants.md
         - add: api/spark/functions/add.md

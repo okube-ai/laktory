@@ -1,13 +1,13 @@
-::: laktory.cli.app.app
+::: laktory.cli.app
 
 ---
 
-::: laktory.cli._preview.preview
+::: laktory.cli.preview
 
 ---
 
-::: laktory.cli._deploy.deploy
+::: laktory.cli.deploy
 
 ---
 
-::: laktory.cli._run.run
+::: laktory.cli.run

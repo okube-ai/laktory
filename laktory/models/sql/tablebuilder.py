@@ -43,6 +43,9 @@ class TableBuilder(BaseModel):
         Layer in the medallion architecture
     pipeline_name:
         Name of the pipeline in which the table will be built
+    spark_chain:
+        Spark chain defining the data transformations applied to the data
+        source
     table_source:
         Definition of the table data source if applicable
     template:

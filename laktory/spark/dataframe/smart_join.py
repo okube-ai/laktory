@@ -21,7 +21,8 @@ def smart_join(
     time_constraint_interval_upper: str = None,
 ) -> DataFrame:
     """
-    Streaming table join
+    Join tables, clean up duplicated columns and support watermarking for
+    streaming joins.
 
     Parameters
     ----------

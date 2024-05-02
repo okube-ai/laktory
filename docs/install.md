@@ -6,9 +6,10 @@ pip install laktory
 
 The main dependencies are:
 
+* [`databricks-sdk`](https://pypi.org/project/databricks-sdk/): The Databricks SDK for Python includes functionality to accelerate development with Python for the Databricks Lakehouse.
+* [`pulumi`](https://pypi.org/project/pulumi/): Infrastructure as code tool used to deploy resources.
 * [`pydantic`](https://pypi.org/project/pydantic/): All laktory models derived from Pydantic `BaseModel`.
 * [`settus`](https://pypi.org/project/settus/): Cloud-based settings management system.
-* [`pulumi`](https://pypi.org/project/pulumi/): Infrastructure as code tool used to deploy resources.
 * [`typer`](https://pypi.org/project/typer/): Library for building CLI applications. 
  
 

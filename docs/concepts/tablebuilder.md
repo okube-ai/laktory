@@ -70,230 +70,107 @@ In this case
 More data sources (like Kafka / Event Hub / Kinesis streams) will be supported in the future.
 
 
-### Columns
+### Spark Chain
 ??? "API Documentation"
-    [`laktory.models.Column`][laktory.models.Column]<br>
+    [`laktory.models.SparkChain`][laktory.models.SparkChain]<br>
 
-A table builder supports the creation of the columns defined in the `Table` model.
+Spark Chain is the core model allowing to transform your source data into the desired state 
+for the output table. It is essentially a serialization of chained spark 
+operations with support for data sources in addition to DataFrames.
 
-```py
+A Spark Chain is defined as a series of nodes, each one representing a 
+transformation applied to a DataFrame. A node declare the spark function
+responsible for the transformation and the arguments to pass to that function.
+Each function is expected to output a DataFrame and receive as an input the 
+output of the previous node. As a convenience, a node can also declare a new
+column. In this case, the function is expected to output a column.
+
+For example, consider a simple DataFrame with column `x` for which you want to:
+
+- rename `x` to `theta`
+- compute `cos(theta)`
+- drop duplicated rows
+
+here is how you would do it with `SparkChain`
+```python
+import pandas as pd
+from laktory import models
+
+df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 2, 3]}))
+
+# Build Chain
+sc = models.SparkChain(
+    nodes=[
+        {
+            "spark_func_name": "withColumnRenamed",
+            "spark_func_args": ["x", "theta"],
+        },        
+        {
+            "column": {
+                "name": "cos",
+                "type": "double",
+            },
+            "spark_func_name": "cos",
+            "spark_func_args": ["theta"],
+        },
+        {
+            "spark_func_name": "drop",
+            "spark_func_args": ["x_tmp"],
+        },
+    ]
+)
+
+# Execute Chain
+df = sc.execute(df0, spark=spark)
+```
+
+### Process
+The `TableBuilder.process` method executes the spark chain described above and
+other default laktory spark chains to the input dataframe.
+
+
+### Putting it all together
+Here is a complete example of table builder declaration.
+```python
 from laktory import models
 
 table = models.Table(
     name="slv_stock_prices",
-    columns=[
-        {"name": "symbol", "type": "string", "sql_expression": "data.symbol"},
-        {
-            "name": "open",
-            "type": "double",
-            "spark_func_name": "coalesce",
-            "spark_func_args": ["daa.open"],
-        },
-        {
-            "name": "close",
-            "type": "double",
-            "spark_func_name": "coalesce",
-            "spark_func_args": ["daa.close"],
-        },
-    ],
     builder={
         "layer": "SILVER",
         "table_source": {
             "name": "brz_stock_prices",
         },
-    },
-)
-
-# Read
-df = table.builder.read_source(spark)
-
-# Process
-df = table.builder.process(df, spark)
-```
-In the example above, the columns `symbol`, `open` and `close` will be created using their provided definition and the data source.
-Note that each column may be defined as an SQL expression or as the output of a spark function.
-
-### Joins
-??? "API Documentation"
-    [`laktory.models.TableJoin`][laktory.models.TableJoin]<br>
-For silver star and gold tables, we often need to join multiple datasets.
-```py
-from laktory import models
-
-table = models.Table(
-    name="slv_star_stock_prices",
-    builder={
-        "layer": "SILVER_STAR",
-        "table_source": {
-            "name": "slv_stock_prices",
-        },
-        "joins": [
-            {
-                "other": {
-                    "name": "slv_stock_metadata",
-                    "read_as_stream": False,
-                    "selects": [
-                        "symbol",
-                        "currency",
-                        "first_traded",
-                    ],
-                },
-                "on": ["symbol"],
-            }
-        ],
-    },
-)
-
-# Read
-df = table.builder.read_source(spark)
-
-# Process
-df = table.builder.process(df, spark)
-```
-
-The source table `slv_stock_prices` acts as the left table in a LEFT JOIN with table `slv_stock_metadata` for which only the `symbol`, `currency` and `first_traded` columns are selected. 
-The `selects` statement can also be defined as a dictionary to remap the other column names into new column names before doing the join.
-
-The `joins` argument is a list of joins such that multiple joins can be chained one after the other.
-
-Spark [structured streaming joins](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html) are supported using a combination of `read_as_stream` options and watermarks declaration. 
-
-### Unions
-??? "API Documentation"
-    [`laktory.models.TableUnion`][laktory.models.TableUnion]<br>
-For silver star and gold tables, we may want to union multiple tables into one large table.
-```py
-from laktory import models
-
-table = models.Table(
-    name="slv_star_stock_prices",
-    builder={
-        "layer": "SILVER",
-        "table_source": {
-            "name": "slv_stock_prices_googl",
-        },
-        "unions": [
-            {
-                "other": {
-                    "name": "slv_stock_prices_aapl",
-                }
-            },
-            {
-                "other": {
-                    "name": "slv_stock_prices_amzn",
-                }
-            },
-        ],
-    },
-)
-
-# Read
-df = table.builder.read_source(spark)
-
-# Process
-df = table.builder.process(df, spark)
-```
-
-The source table `slv_stock_prices_googl` acts as the left table in a UNION with tables `slv_stock_prices_aapl` and `slv_stock_prices_amzn`.
-
-The `unions` argument is a list of unions such that multiple unions can be chained one after the other.
-
-Spark [dataframe union](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.union.html) is used to execute the joins. 
-
-### Aggregations
-??? "API Documentation"
-    [`laktory.models.TableAggregation`][laktory.models.TableAggregation]<br>
-Gold tables are all about aggregations. 
-
-```py
-from laktory import models
-
-table = models.Table(
-    name="gld_stock_prices",
-    builder={
-        "layer": "GOLD",
-        "table_source": {
-            "name": "slv_star_stock_prices",
-        },
-        "aggregation": {
-            "groupby_columns": [
-                "symbol",
-            ],
-            "groupby_window": {
-                "time_column": "_tstamp",
-                "window_duration": "1 day",
-            },
-            "agg_expressions": [
+        "spark_chain": {
+            "nodes": [
                 {
-                    "name": "rows_count",
-                    "spark_func_name": "count",
-                    "spark_func_args": ["symbol"],
+                    "column": {"name": "symbol", "type": "string"},
+                    "sql_expression": "data.symbol",
                 },
                 {
-                    "name": "low",
-                    "spark_func_name": "min",
-                    "spark_func_args": ["low"],
+                    "column": {
+                        "name": "open",
+                        "type": "double",
+                    },
+                    "spark_func_name": "coalesce",
+                    "spark_func_args": ["daa.open"],
                 },
-            ],
+                {
+                    "column": {
+                        "name": "close",
+                        "type": "double",
+                    },
+                    "spark_func_name": "coalesce",
+                    "spark_func_args": ["daa.close"],
+                },
+            ]
         },
     },
 )
 
 # Read
-df = table.builder.read_source(spark)
+df = table.builder.read_source(spark=spark)
 
 # Process
-df = table.builder.process(df, spark)
+df = table.builder.process(df, spark=spark)
 ```
-The source table `slv_star_stock_prices` is grouped by rows sharing the same `symbol` value and the same [time window](https://spark.apache.org/docs/3.1.3/api/python/reference/api/pyspark.sql.functions.window.html).
-For each group, the number of rows `count` and the lowest price `low` are computed.
-
-### Window Filter
-??? "API Documentation"
-    [`laktory.models.TableWindowFilter`][laktory.models.TableWindowFilter]<br>
-
-In some instances, you want the output to be a selection of rows out of groups.
-
-```py
-from laktory import models
-
-table = models.Table(
-    name="gld_stock_price_performances",
-    builder={
-        "layer": "GOLD",
-        "table_source": {
-            "name": "slv_star_stock_prices",
-        },
-        "window_filter": {
-            "partition_by": [
-                "symbol",
-            ],
-            "order_by": [
-                {"sql_expression": "created_at", "desc": True},
-            ],
-            "rows_to_keep": 2,
-        },
-    },
-)
-
-# Read
-df = table.builder.read_source(spark)
-
-# Process
-df = table.builder.process(df, spark)
-```
-The 2 (`rows_to_keep`) most recent (`created_at`) rows of each symbol (`partition_by`) will be selected.
-
-
-
-### Process
-The `TableBuilder.process` method applies all the transformation mentioned above (and more) and returns  the final DataFrame representation of the table.
-![table_builder](../images/table_builder.png)
-The above flow chart describes the sequence of the different transformations. 
-It is to note that the creation of columns is attempted after
-
-* initial setup
-* each table join
-* aggregation
-
-This allows to create columns that are required for different context (pre-join, post-join, post-aggregation, etc.) in a single declaration.

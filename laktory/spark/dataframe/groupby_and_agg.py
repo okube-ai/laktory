@@ -47,7 +47,7 @@ def groupby_and_agg(
     agg_expressions: list[SparkChainNode] = None,
 ) -> DataFrame:
     """
-    Laktory table join
+    Apply a groupby and create aggregation columns.
 
     Parameters
     ----------

@@ -1,15 +1,11 @@
 import re
 import io
-from pydantic import BaseModel
 from contextlib import redirect_stdout
 
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
 
-
-class Watermark(BaseModel):
-    column: str
-    threshold: str
+from laktory.models.datasources.basedatasource import Watermark
 
 
 def watermark(df: DataFrame) -> Watermark:

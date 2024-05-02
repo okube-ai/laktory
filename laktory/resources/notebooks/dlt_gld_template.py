@@ -34,7 +34,7 @@ for udf in pl.udfs:
 
 def define_table(table):
     @dlt.table_or_view(
-        name=table.column_name,
+        name=table.name,
         comment=table.comment,
         as_view=table.builder.as_dlt_view,
     )
@@ -42,7 +42,7 @@ def define_table(table):
     @dlt.expect_all_or_drop(table.drop_expectations)
     @dlt.expect_all_or_fail(table.fail_expectations)
     def get_df():
-        logger.info(f"Building {table.column_name} table")
+        logger.info(f"Building {table.name} table")
 
         # Read Source
         df = table.builder.read_source(spark)

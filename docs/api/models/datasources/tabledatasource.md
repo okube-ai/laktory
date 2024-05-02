@@ -1,12 +1,5 @@
-
----
-
-::: laktory.models.datasources.tabledatasource.TableDataSource
+::: laktory.models.datasources.TableDataSource
 
 ----
 
-::: laktory.models.datasources.tabledatasource.TableDataSourceCDC
-
----
-
-::: laktory.models.datasources.tabledatasource.Watermark
+::: laktory.models.datasources.TableDataSourceCDC
