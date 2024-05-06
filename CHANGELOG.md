@@ -2,13 +2,9 @@
 
 ## [0.2.1] - Unreleased
 ### Added
-* n/a
+* Support for spark chain for a data source
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Function selection for pyspark connect DataFrames
 
 ## [0.2.0] - 2024-05-02
 ### Added

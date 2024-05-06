@@ -194,6 +194,7 @@ class SparkChainNode(BaseModel):
         """
         import pyspark.sql.functions as F
         from pyspark.sql.dataframe import DataFrame
+        from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
         from pyspark.sql import Column
         from laktory.spark.dataframe import has_column
         from laktory.spark import functions as LF
@@ -233,19 +234,23 @@ class SparkChainNode(BaseModel):
 
         # Get from UDFs
         f = udfs.get(func_name, None)
+
+        # Get from built-in spark functions
         if f is None:
-            # Get from built-in spark functions
             if self.is_column:
                 f = getattr(F, func_name, None)
             else:
-                f = getattr(DataFrame, func_name, None)
-
-            if f is None:
-                # Get from laktory functions
-                if self.is_column:
-                    f = getattr(LF, func_name, None)
+                if isinstance(df, DataFrameConnect):
+                    f = getattr(DataFrameConnect, func_name, None)
                 else:
-                    f = getattr(LDF, func_name, None)
+                    f = getattr(DataFrame, func_name, None)
+
+        # Get from laktory functions
+        if f is None:
+            if self.is_column:
+                f = getattr(LF, func_name, None)
+            else:
+                f = getattr(LDF, func_name, None)
 
         if f is None:
             raise ValueError(f"Function {func_name} is not available")
