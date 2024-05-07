@@ -1,13 +1,8 @@
-import re
-from pydantic import model_validator
+from pydantic import field_validator
 from typing import Any
-from typing import Literal
 from typing import Union
 
-from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
-from laktory.models.datasources.basedatasource import BaseDataSource
-from laktory.models.datasources.tabledatasource import TableDataSource
 
 
 # --------------------------------------------------------------------------- #
@@ -25,13 +20,31 @@ class SparkFuncArg(BaseModel):
         Value of the argument
     """
 
-    value: Union[TableDataSource, Any]
+    value: Union[Any]
 
-    # @property
-    # def is_column(self):
-    #     return self.convert_to == "COLUMN"
+    @field_validator("value")
+    def value_to_data_source(cls, v: Any) -> Any:
+        """
+        Data source can't be set as an expected value type as it would create
+        a circular dependency. Instead, we check at validation if the value
+        could be instantiated as a DataSource object.
+        """
+        from laktory.models.datasources.eventdatasource import EventDataSource
+        from laktory.models.datasources.tabledatasource import TableDataSource
+
+        try:
+            v = TableDataSource(**v)
+        except:
+            try:
+                v = EventDataSource(**v)
+            except:
+                pass
+
+        return v
 
     def eval(self, spark=None):
+        from laktory.models.datasources.basedatasource import BaseDataSource
+
         # Imports required to evaluate expressions
         import pyspark.sql.functions as F
         from pyspark.sql.functions import lit

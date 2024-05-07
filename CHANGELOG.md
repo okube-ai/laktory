@@ -2,13 +2,11 @@
 
 ## [0.2.1] - Unreleased
 ### Added
-* n/a
+* Support for spark chain for a data source
+* Support for broadcasting in a data source
+* YAML model dump for all base models
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Function selection for pyspark connect DataFrames
 
 ## [0.2.0] - 2024-05-02
 ### Added

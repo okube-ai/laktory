@@ -59,6 +59,16 @@ def test_table_data_source(df0=df0):
         filter="b != 0",
         selects=["a", "b", "c"],
         renames={"a": "aa", "b": "bb", "c": "cc"},
+        broadcast=True,
+        spark_chain={
+            "nodes": [
+                {
+                    "column": {"name": "chain"},
+                    "spark_func_name": "lit",
+                    "spark_func_args": ["chain"],
+                }
+            ]
+        },
     )
 
     # Test paths
@@ -68,8 +78,9 @@ def test_table_data_source(df0=df0):
 
     # Test reader
     df = source.read(spark)
-    assert df.columns == ["aa", "bb", "cc"]
+    assert df.columns == ["aa", "bb", "cc", "chain"]
     assert df.count() == 2
+    assert df.toPandas()["chain"].tolist() == ["chain", "chain"]
 
     # Select with rename
     source = TableDataSource(

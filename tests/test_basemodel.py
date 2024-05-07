@@ -98,6 +98,12 @@ def test_read_yaml():
     }
 
 
+def test_dump_yaml():
+    assert schema.model_dump_yaml(exclude_none=True).startswith(
+        "catalog_name: ${vars.env}"
+    )
+
+
 def test_camelize():
     settings.camel_serialization = True
     dump = schema.model_dump()
@@ -303,6 +309,7 @@ def test_inject_vars():
 
 if __name__ == "__main__":
     test_read_yaml()
+    test_dump_yaml()
     test_camelize()
     test_singular()
     test_inject_vars()

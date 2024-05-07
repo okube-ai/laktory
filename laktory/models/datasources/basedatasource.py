@@ -5,6 +5,7 @@ from laktory.spark import DataFrame
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.spark.sparkchain import SparkChain
 
 
 class Watermark(BaseModel):
@@ -54,9 +55,11 @@ class BaseDataSource(BaseModel):
     drops: Union[list, None] = None
     filter: Union[str, None] = None
     mock_df: Any = Field(default=None, exclude=True)
+    broadcast: Union[bool, None] = False
     read_as_stream: Union[bool, None] = True
     renames: Union[dict[str, str], None] = None
     selects: Union[list[str], dict[str, str], None] = None
+    spark_chain: Union[SparkChain, None] = None
     watermark: Union[Watermark, None] = None
 
     def read(self, spark) -> DataFrame:
@@ -112,6 +115,14 @@ class BaseDataSource(BaseModel):
                 self.watermark.column,
                 self.watermark.threshold,
             )
+
+        # Broadcast
+        if self.broadcast:
+            df = F.broadcast(df)
+
+        # SparkChain
+        if self.spark_chain:
+            df = self.spark_chain.execute(df, udfs=None, spark=df.sparkSession)
 
         return df
 

@@ -2,7 +2,6 @@ from pydantic import model_validator
 from typing import Any
 from typing import Literal
 from typing import Union
-from typing import Callable
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel

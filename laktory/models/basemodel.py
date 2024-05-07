@@ -110,6 +110,9 @@ class BaseModel(_BaseModel):
 
         return cls.model_validate(data)
 
+    def model_dump_yaml(self, *args, **kwargs):
+        return yaml.dump(self.model_dump(*args, **kwargs))
+
     @classmethod
     def model_validate_json_file(cls, fp: TextIO) -> Model:
         """
