@@ -1,6 +1,16 @@
 # Release History
 
-## [0.2.1] - Unreleased
+## [0.2.2] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.2.1] - 2024-05-07
 ### Added
 * Support for spark chain for a data source
 * Support for broadcasting in a data source
