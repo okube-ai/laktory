@@ -59,6 +59,7 @@ def test_table_data_source(df0=df0):
         filter="b != 0",
         selects=["a", "b", "c"],
         renames={"a": "aa", "b": "bb", "c": "cc"},
+        broadcast=True,
         spark_chain={
             "nodes": [
                 {

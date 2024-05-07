@@ -22,6 +22,7 @@ def test_model():
             "table_source": {
                 "drops": None,
                 "filter": None,
+                "broadcast": False,
                 "read_as_stream": True,
                 "renames": None,
                 "selects": None,
@@ -159,6 +160,7 @@ def test_table_builder():
             "table_source": {
                 "drops": None,
                 "filter": "created_at = '2023-09-01T00:00:00Z'",
+                "broadcast": False,
                 "read_as_stream": True,
                 "renames": None,
                 "selects": None,
@@ -184,6 +186,7 @@ def test_table_builder():
                                 "value": {
                                     "drops": None,
                                     "filter": None,
+                                    "broadcast": False,
                                     "read_as_stream": True,
                                     "renames": {"symbol2": "symbol"},
                                     "selects": None,
@@ -228,6 +231,7 @@ def test_table_builder():
                                 "value": {
                                     "drops": None,
                                     "filter": None,
+                                    "broadcast": False,
                                     "read_as_stream": True,
                                     "renames": None,
                                     "selects": None,

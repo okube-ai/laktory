@@ -55,6 +55,7 @@ class BaseDataSource(BaseModel):
     drops: Union[list, None] = None
     filter: Union[str, None] = None
     mock_df: Any = Field(default=None, exclude=True)
+    broadcast: Union[bool, None] = False
     read_as_stream: Union[bool, None] = True
     renames: Union[dict[str, str], None] = None
     selects: Union[list[str], dict[str, str], None] = None
@@ -114,6 +115,10 @@ class BaseDataSource(BaseModel):
                 self.watermark.column,
                 self.watermark.threshold,
             )
+
+        # Broadcast
+        if self.broadcast:
+            df = F.broadcast(df)
 
         # SparkChain
         if self.spark_chain:
