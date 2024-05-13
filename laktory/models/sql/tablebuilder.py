@@ -5,13 +5,13 @@ from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
-from laktory.models.datasources.basedatasource import BaseDataSource
-from laktory.models.datasources import EventDataSource
+from laktory.models.datasources import FileDataSource
 from laktory.models.datasources import TableDataSource
+from laktory.models.datasources import MemoryDataSource
 from laktory.models.sql.column import Column
 from laktory.models.spark.sparkchain import SparkChain
 from laktory.models.spark.sparkchainnode import SparkChainNode
-from laktory.spark import DataFrame
+from laktory.spark import SparkDataFrame
 
 logger = get_logger(__name__)
 
@@ -36,17 +36,15 @@ class TableBuilder(BaseModel):
     drop_source_columns:
         If `True`, drop columns from the source after read and only keep
         columns defined in the table and/or resulting from the joins.
-    event_source:
-        Definition of the event data source if applicable
     layer:
         Layer in the medallion architecture
     pipeline_name:
         Name of the pipeline in which the table will be built
+    source:
+        Definition of the data source
     spark_chain:
         Spark chain defining the data transformations applied to the data
         source
-    table_source:
-        Definition of the table data source if applicable
     template:
         Key indicating which notebook to use for building the table in the
         context of a data pipeline.
@@ -56,10 +54,9 @@ class TableBuilder(BaseModel):
     as_dlt_view: bool = False
     drop_duplicates: Union[bool, None] = None
     drop_source_columns: Union[bool, None] = None
-    event_source: Union[EventDataSource, None] = None
+    source: Union[FileDataSource, TableDataSource, MemoryDataSource, None] = None
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
     pipeline_name: Union[str, None] = None
-    table_source: Union[TableDataSource, None] = None
     template: Union[str, bool, None] = None
     spark_chain: Union[SparkChain, None] = None
     _table: Any = None
@@ -99,17 +96,6 @@ class TableBuilder(BaseModel):
             self.template = self.layer
 
         return self
-
-    @property
-    def source(self) -> BaseDataSource:
-        """Selected data source"""
-        if self.event_source is not None and self.event_source.name is not None:
-            return self.event_source
-        elif (
-            self.table_source is not None
-            and self.table_source.path_or_full_name is not None
-        ):
-            return self.table_source
 
     @property
     def is_from_cdc(self) -> bool:
@@ -221,7 +207,7 @@ class TableBuilder(BaseModel):
 
         return SparkChain(nodes=nodes)
 
-    def read_source(self, spark) -> DataFrame:
+    def read_source(self, spark) -> SparkDataFrame:
         """
         Read data source specified in `self.source`
 
@@ -237,7 +223,7 @@ class TableBuilder(BaseModel):
         """
         return self.source.read(spark)
 
-    def process(self, df, udfs=None, spark=None) -> DataFrame:
+    def process(self, df, udfs=None, spark=None) -> SparkDataFrame:
         """
         Build table by reading source and applying Spark Chain.
 
