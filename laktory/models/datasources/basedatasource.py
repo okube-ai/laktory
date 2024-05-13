@@ -4,6 +4,7 @@ from typing import Union
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
+
 # from laktory.models.spark.sparkchain import SparkChain
 from laktory.spark import SparkDataFrame
 from laktory.spark import is_spark_dataframe
@@ -196,7 +197,9 @@ class BaseDataSource(BaseModel):
         elif self.dataframe_type == "POLARS":
             return self.read_polars()
         else:
-            raise ValueError(f"DataFrame type '{self.dataframe_type}' is not supported.")
+            raise ValueError(
+                f"DataFrame type '{self.dataframe_type}' is not supported."
+            )
 
     def read_spark(self, spark) -> SparkDataFrame:
         """
@@ -280,4 +283,3 @@ class BaseDataSource(BaseModel):
 
     def _post_read_polars(self, df: PolarsDataFrame) -> PolarsDataFrame:
         raise NotImplementedError()
-

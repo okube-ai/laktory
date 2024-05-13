@@ -8,22 +8,23 @@ from typing import Union
 from pydantic import Field
 from pydantic import ConfigDict
 
-from laktory.models.dataeventheader import DataEventHeader
+from laktory.models.basemodel import BaseModel
 from laktory.models.dataproducer import DataProducer
 from laktory._settings import settings
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
+# Metadata to exclude
 EXCLUDES = [
     "events_root_",
-    "event_path",
+    "event_root_",
     "tstamp_col",
     "tstamp_in_path",
 ]
 
 
-class DataEvent(DataEventHeader):
+class DataEvent(BaseModel):
     """
     Data Event class defines both the context (metadata) describing a data
     event and its content. It is generally used to write data to a storage
@@ -31,11 +32,21 @@ class DataEvent(DataEventHeader):
 
     Attributes
     ----------
-    data
+    data:
         Event data stored as a (key, value) object
-    tstamp_col
+    description:
+        Data event description
+    event_root:
+        Root path for specific event. Default value: `{settings.workspace_landing_root}/events/my-event`
+    events_root:
+        Root path for all events. Default value: `{settings.workspace_landing_root}/events/`
+    name:
+        Data event name
+    producer:
+        Data event producer
+    tstamp_col:
         Column storing event UTC timestamp
-    tstamp_in_path
+    tstamp_in_path:
         If `True`, includes timestamp if data event filepath
 
     Examples
@@ -44,6 +55,19 @@ class DataEvent(DataEventHeader):
     ```py
     from laktory import models
     from datetime import datetime
+
+
+    event = models.DataEvent(
+        name="stock_price",
+        producer={"name": "yahoo-finance"},
+    )
+    print(event)
+    '''
+    variables={} name='stock_price' description=None producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) events_root_=None event_root_=None
+    '''
+
+    print(event.event_root)
+    #> /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
 
     event = models.DataEvent(
         name="stock_price",
@@ -73,26 +97,31 @@ class DataEvent(DataEventHeader):
     ```
     """
 
-    name: str = Field(..., alias="event_name")
-    description: Union[str, None] = Field(None, alias="event_description")
-    producer: DataProducer = Field(None, alias="event_producer", description="producer")
-    data: dict
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    data: Union[dict, None] = None
+    description: Union[str, None] = None
+    events_root_: Union[str, None] = Field(None, alias="events_root")
+    event_root_: Union[str, None] = Field(None, alias="event_root")
+    name: str
+    producer: DataProducer = None
     tstamp_col: str = "created_at"
     tstamp_in_path: bool = True
 
     def model_post_init(self, __context):
         super().model_post_init(__context)
+
         # Add metadata
-        self.data["_name"] = self.name
-        self.data["_producer_name"] = self.producer.name
-        tstamp = self.data.get(self.tstamp_col)
-        if isinstance(tstamp, str):
-            tstamp = datetime.fromisoformat(tstamp)
-        elif tstamp is None:
-            tstamp = datetime.utcnow()
-        if not tstamp.tzinfo:
-            tstamp = tstamp.replace(tzinfo=ZoneInfo("UTC"))
-        self.data["_created_at"] = tstamp
+        if self.data is not None:
+            self.data["_name"] = self.name
+            self.data["_producer_name"] = self.producer.name
+            tstamp = self.data.get(self.tstamp_col)
+            if isinstance(tstamp, str):
+                tstamp = datetime.fromisoformat(tstamp)
+            elif tstamp is None:
+                tstamp = datetime.utcnow()
+            if not tstamp.tzinfo:
+                tstamp = tstamp.replace(tzinfo=ZoneInfo("UTC"))
+            self.data["_created_at"] = tstamp
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -106,6 +135,33 @@ class DataEvent(DataEventHeader):
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def events_root(self) -> str:
+        """Must be computed to dynamically account for settings (env variable at run time)"""
+        if self.events_root_:
+            return self.events_root_
+        return settings.workspace_landing_root + "events/"
+
+    @property
+    def event_root(self) -> str:
+        """
+        Root path for the event. Default path is `{self.events_roots}/{producer_name}/{event_name}/`, but it may
+        be overwritten by self.event_root_.
+
+        Returns
+        -------
+        str
+            Event path
+        """
+        if self.event_root_:
+            return self.event_root_
+
+        producer = ""
+        if self.producer is not None:
+            producer = self.producer.name + "/"
+        v = f"{self.events_root}{producer}{self.name}/"
+        return v
 
     @property
     def dirpath(self) -> str:
@@ -237,13 +293,13 @@ class DataEvent(DataEventHeader):
 
         Parameters
         ----------
-        suffix
+        suffix:
             File path suffix
-        fmt
+        fmt:
             File format
-        overwrite
+        overwrite:
             Overwrite file if already exists
-        skip_if_exists
+        skip_if_exists:
             If `True` and file already exists, writing is skipped.
         """
         path = self.get_landing_filepath(suffix=suffix, fmt=fmt)
@@ -283,19 +339,19 @@ class DataEvent(DataEventHeader):
 
         Parameters
         ----------
-        suffix
+        suffix:
             File path suffix
-        fmt
+        fmt:
             File format
-        container_client
+        container_client:
             Authorized Azure container client
-        account_url
+        account_url:
             URL of storage account
-        container_name
+        container_name:
             Name of the storage container
-        overwrite
+        overwrite:
             Overwrite file if already exists
-        skip_if_exists
+        skip_if_exists:
             If `True` and file already exists, writing is skipped.
         """
         # Set container client
@@ -359,15 +415,15 @@ class DataEvent(DataEventHeader):
 
         Parameters
         ----------
-        suffix
+        suffix:
             File path suffix
-        fmt
+        fmt:
             File format
-        s3_resource
+        s3_resource:
             Authorized S3 bucket resource
-        overwrite
+        overwrite:
             Overwrite file if already exists
-        skip_if_exists
+        skip_if_exists:
             If `True` and file already exists, writing is skipped.
         """
         import boto3

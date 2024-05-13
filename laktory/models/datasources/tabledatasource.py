@@ -12,7 +12,6 @@ from laktory._logger import get_logger
 logger = get_logger(__name__)
 
 
-
 class TableDataSource(BaseDataSource):
     """
     Data source using a data warehouse data table, generally used in the
@@ -94,7 +93,9 @@ class TableDataSource(BaseDataSource):
         if self.warehouse == "DATABRICKS":
             return self._read_spark_databricks(spark)
         else:
-            raise NotImplementedError(f"Warehouse '{self.warehouse}' is not yet supported.")
+            raise NotImplementedError(
+                f"Warehouse '{self.warehouse}' is not yet supported."
+            )
 
     def _read_spark_databricks(self, spark) -> SparkDataFrame:
 
