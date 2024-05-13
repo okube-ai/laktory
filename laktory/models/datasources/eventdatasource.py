@@ -1,5 +1,5 @@
 from pydantic import model_validator
-from laktory.spark import DataFrame
+from laktory.spark import SparkDataFrame
 from typing import Literal
 
 from laktory.models.dataeventheader import DataEventHeader
@@ -57,7 +57,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _read(self, spark) -> DataFrame:
+    def _read(self, spark) -> SparkDataFrame:
         if self.mock_df is not None:
             logger.info(f"Reading event data source ({self.name}) from memory")
             return self.mock_df
@@ -66,7 +66,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
         else:
             raise NotImplementedError()
 
-    def _read_storage(self, spark) -> DataFrame:
+    def _read_storage(self, spark) -> SparkDataFrame:
         if self.read_as_stream:
             logger.info(f"Reading {self.event_root} as stream")
 
