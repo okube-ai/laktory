@@ -16,10 +16,10 @@ def test_model():
             "as_dlt_view": False,
             "drop_duplicates": None,
             "drop_source_columns": True,
-            "event_source": None,
+            "file_source": None,
             "layer": "SILVER",
             "pipeline_name": None,
-            "table_source": {
+            "source": {
                 "drops": None,
                 "filter": None,
                 "broadcast": False,
@@ -154,10 +154,10 @@ def test_table_builder():
             "as_dlt_view": False,
             "drop_duplicates": None,
             "drop_source_columns": False,
-            "event_source": None,
+            "file_source": None,
             "layer": "SILVER",
             "pipeline_name": None,
-            "table_source": {
+            "source": {
                 "drops": None,
                 "filter": "created_at = '2023-09-01T00:00:00Z'",
                 "broadcast": False,

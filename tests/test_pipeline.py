@@ -43,10 +43,10 @@ def test_pipeline():
                     "as_dlt_view": False,
                     "drop_duplicates": None,
                     "drop_source_columns": True,
-                    "event_source": None,
+                    "file_source": None,
                     "layer": "SILVER",
                     "pipeline_name": "pl-stock-prices",
-                    "table_source": {
+                    "source": {
                         "drops": None,
                         "filter": None,
                         "broadcast": False,
@@ -148,10 +148,10 @@ def test_pipeline():
                     "as_dlt_view": False,
                     "drop_duplicates": None,
                     "drop_source_columns": False,
-                    "event_source": None,
+                    "file_source": None,
                     "layer": "SILVER",
                     "pipeline_name": "pl-stock-prices",
-                    "table_source": {
+                    "source": {
                         "drops": None,
                         "filter": "created_at = '2023-09-01T00:00:00Z'",
                         "broadcast": False,

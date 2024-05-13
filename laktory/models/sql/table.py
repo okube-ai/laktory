@@ -76,7 +76,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         name="slv_stock_prices",
         builder={
             "layer": "SILVER",
-            "table_source": {
+            "source": {
                 "name": "brz_stock_prices",
             },
             "spark_chain": {
@@ -153,8 +153,8 @@ class Table(BaseModel, PulumiResource, TerraformResource):
 
         # Find table sources
         sources = []
-        if self.builder.table_source is not None:
-            sources += [self.builder.table_source]
+        if isinstance(self.builder.source, TableDataSource):
+            sources += [self.builder.source]
 
         if self.builder.spark_chain:
             for n in self.builder.spark_chain.nodes:

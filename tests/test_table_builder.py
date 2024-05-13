@@ -14,7 +14,7 @@ df_slv = spark.read.parquet(os.path.join(paths.data, "./slv_stock_prices"))
 
 def test_read_and_process():
     builder = models.TableBuilder(
-        event_source={
+        file_source={
             "name": "brz_stock_prices",
             "mock_df": df_brz,
         },
@@ -63,7 +63,7 @@ def test_read_and_process():
 def test_bronze():
     builder = models.TableBuilder(
         layer="BRONZE",
-        event_source={
+        file_source={
             "name": "brz_stock_prices",
             "mock_df": df_brz,
         },
@@ -138,7 +138,7 @@ def test_cdc():
     table = models.Table(
         name="brz_users_type1",
         builder={
-            "table_source": {
+            "source": {
                 "name": "brz_users_cdc",
                 "cdc": {
                     "primary_keys": ["userId"],

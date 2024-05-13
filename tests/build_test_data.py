@@ -72,7 +72,7 @@ for event in events:
 # --------------------------------------------------------------------------- #
 
 pdf = pd.DataFrame([e.model_dump() for e in events])
-del pdf["event_root"]
+# del pdf["event_root"]
 # pdf.to_json(os.path.join(rootpath, "brz_stock_prices.json"))
 
 
@@ -81,7 +81,7 @@ del pdf["event_root"]
 # --------------------------------------------------------------------------- #
 
 df = spark.createDataFrame(
-    pdf,
+    pdf[["name", "description", "producer", "data"]],
     schema=T.StructType(
         [
             T.StructField("name", T.StringType()),
