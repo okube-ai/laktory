@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     databricks_warehouse_id: Union[str, None] = Field(None)
 
     @model_validator(mode="after")
-    def excluded_fields(self) -> Any:
+    def update_landing_root(self) -> Any:
         if self.workspace_landing_root == "":
             self.workspace_landing_root = (
                 f"/Volumes/{self.workspace_env}/sources/landing/"
