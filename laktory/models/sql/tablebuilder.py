@@ -264,7 +264,7 @@ class TableBuilder(BaseModel):
             "ignore_null_updates": cdc.ignore_null_updates,
             "keys": cdc.primary_keys,
             "sequence_by": cdc.sequence_by,
-            "source": self.source.name,
+            "source": self.source.table_name,
             "stored_as_scd_type": cdc.scd_type,
             "target": self._table.name,
             "track_history_column_list": cdc.track_history_columns,
