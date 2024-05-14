@@ -29,26 +29,6 @@ class BaseDataSink(BaseModel):
     as_stream: bool = False
     mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR"], None] = None
 
-    # @model_validator(mode="after")
-    # def options(self) -> Any:
-    #
-    #     dataframe_type = self.dataframe_type
-    #     # if is_spark_dataframe(self.mock_df):
-    #     #     dataframe_type = "SPARK"
-    #     # elif is_polars_dataframe(self.mock_df):
-    #     #     dataframe_type = "POLARS"
-    #
-    #     if dataframe_type == "SPARK":
-    #         pass
-    #     elif dataframe_type == "POLARS":
-    #         if self.as_stream:
-    #             raise ValueError("Polars DataFrames don't support streaming read.")
-    #         if self.watermark:
-    #             raise ValueError("Polars DataFrames don't support watermarking.")
-    #         if self.broadcast:
-    #             raise ValueError("Polars DataFrames don't support broadcasting.")
-    #
-    #     return self
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #

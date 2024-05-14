@@ -183,7 +183,7 @@ def test_cdc():
 
 
 if __name__ == "__main__":
-    # test_read_and_process()
-    # test_bronze()
-    # test_silver()
+    test_read_and_process()
+    test_bronze()
+    test_silver()
     test_cdc()
