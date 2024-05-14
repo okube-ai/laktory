@@ -30,3 +30,6 @@ except ModuleNotFoundError:
 
     class SparkColumn:
         pass
+
+    def is_spark_dataframe(df):
+        return True

@@ -11,3 +11,6 @@ except ModuleNotFoundError:
 
     class PolarsDataFrame:
         pass
+
+    def is_polars_dataframe(df):
+        return False
