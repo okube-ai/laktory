@@ -64,7 +64,9 @@ class MemoryDataSource(BaseDataSource):
     # ----------------------------------------------------------------------- #
 
     def _read_spark(self, spark) -> SparkDataFrame:
+        logger.info(f"Reading {self._id} from memory")
         return self.df
 
     def _read_polars(self) -> PolarsDataFrame:
+        logger.info(f"Reading {self._id} from memory")
         return self.df

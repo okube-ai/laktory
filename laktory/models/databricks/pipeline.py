@@ -244,7 +244,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         timestamp_key: data.created_at
         builder:
           layer: BRONZE
-          event_source:
+          source:
             name: stock_price
             producer:
               name: yahoo-finance

@@ -95,9 +95,9 @@ def test_memory_data_source(df0=df0):
 
 def test_table_data_source():
     source = TableDataSource(
-        name="slv_stock_prices",
         catalog_name="dev",
         schema_name="finance",
+        table_name="slv_stock_prices",
     )
 
     # Test meta

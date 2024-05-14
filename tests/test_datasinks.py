@@ -15,32 +15,6 @@ from laktory._testing import spark
 paths = Paths(__file__)
 
 
-#
-#
-# import os
-# import pandas as pd
-#
-# from laktory.models.datasources import FileDataSource
-# from laktory.models.datasources import MemoryDataSource
-# from laktory.models.datasources import TableDataSource
-# from laktory._testing import Paths
-# from laktory._testing import spark
-#
-# paths = Paths(__file__)
-#
-# # DataFrame
-# pdf = pd.DataFrame(
-#     {
-#         "x": [1, 2, 3],
-#         "a": [1, -1, 1],
-#         "b": [2, 0, 2],
-#         "c": [3, 0, 3],
-#         "n": [4, 0, 4],
-#     },
-# )
-# df0 = spark.createDataFrame(pdf)
-
-
 def test_file_data_sink():
 
     dirpath = os.path.join(paths.tmp, "df_slv_sink")
@@ -73,5 +47,25 @@ def test_file_data_sink():
         shutil.rmtree(dirpath)
 
 
+def test_table_data_sink():
+
+    # Write as overwrite
+    source = TableDataSink(
+        catalog_name="hive_metastore",
+        schema_name="default",
+        table_name="slv_stock_prices_sink",
+        mode="OVERWRITE",
+    )
+
+    assert source.full_name == "hive_metastore.default.slv_stock_prices_sink"
+    assert not source.as_stream
+    assert source.format == "DELTA"
+    assert source.mode == "OVERWRITE"
+
+    # TODO: Test write using spark sessions on Databricks
+    # source.write(df_slv)
+
+
 if __name__ == "__main__":
-    test_file_data_sink()
+    # test_file_data_sink()
+    test_table_data_sink()

@@ -134,7 +134,6 @@ class BaseDataSource(BaseModel):
     drops: Union[list, None] = None
     filter: Union[str, None] = None
     # mock_df: Any = Field(default=None, exclude=True)
-    read_as_stream: Union[bool, None] = True
     renames: Union[dict[str, str], None] = None
     selects: Union[list[str], dict[str, str], None] = None
     # spark_chain: Union[SparkChain, None] = None

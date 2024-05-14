@@ -27,7 +27,7 @@ class BaseDataSink(BaseModel):
     """
 
     as_stream: bool = False
-    mode: Union[Literal["overwrite", "append", "ignore", "error"], None] = None
+    mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR"], None] = None
 
     # @model_validator(mode="after")
     # def options(self) -> Any:

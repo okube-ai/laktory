@@ -26,10 +26,10 @@ class TableDataSource(BaseDataSource):
     from_dlt:
         If `True`, source will be read using `dlt.read` instead of `spark.read`
         when used in the context of a  Delta Live Table pipeline.
-    name:
-        Name of the source table
     schema_name:
         Name of the schema of the source table
+    table_name:
+        Name of the source table
 
     Examples
     ---------
@@ -39,7 +39,7 @@ class TableDataSource(BaseDataSource):
     source = models.TableDataSource(
         catalog_name="dev",
         schema_name="finance",
-        name="brz_stock_prices",
+        table_name="brz_stock_prices",
         selects=["symbol", "open", "close"],
         filter="symbol='AAPL'",
         from_pipeline=False,
@@ -51,7 +51,7 @@ class TableDataSource(BaseDataSource):
 
     catalog_name: Union[str, None] = None
     from_dlt: Union[bool, None] = False
-    name: Union[str, None] = None
+    table_name: Union[str, None] = None
     schema_name: Union[str, None] = None
     warehouse: Union[Literal["DATABRICKS"], None] = "DATABRICKS"
 
@@ -61,7 +61,7 @@ class TableDataSource(BaseDataSource):
 
     @property
     def full_name(self) -> str:
-        if self.name is None:
+        if self.table_name is None:
             return None
 
         name = ""
@@ -75,9 +75,9 @@ class TableDataSource(BaseDataSource):
                 name += f".{self.schema_name}"
 
         if name == "":
-            name = self.name
+            name = self.table_name
         else:
-            name += f".{self.name}"
+            name += f".{self.table_name}"
 
         return name
 
