@@ -33,14 +33,10 @@ resources:
       - name: brz_stock_prices
         builder:
           layer: BRONZE
-          event_source:
-            name: stock_price
-            producer:
-              name: yahoo-finance
-              party: 1
-            events_root_: dbfs:/Workspace/.laktory/landing/events/
-            read_as_stream: true
-            fmt: JSON
+          source:
+            path: dbfs:/Workspace/.laktory/landing/events/stock_price
+            as_stream: true
+            format: JSON
       - name: slv_stock_prices
         expectations:
         - name: positive_price
@@ -48,9 +44,9 @@ resources:
           action: FAIL
         builder:
           layer: SILVER
-          table_source:
-            read_as_stream: true
-            name: brz_stock_prices
+          source:
+            table_name: brz_stock_prices
+            as_stream: true
           spark_chain:
             nodes:
             - column:

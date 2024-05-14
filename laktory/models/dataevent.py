@@ -56,14 +56,13 @@ class DataEvent(BaseModel):
     from laktory import models
     from datetime import datetime
 
-
     event = models.DataEvent(
         name="stock_price",
         producer={"name": "yahoo-finance"},
     )
     print(event)
     '''
-    variables={} name='stock_price' description=None producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) events_root_=None event_root_=None
+    variables={} data=None description=None events_root_=None event_root_=None name='stock_price' producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) tstamp_col='created_at' tstamp_in_path=True
     '''
 
     print(event.event_root)
@@ -81,7 +80,7 @@ class DataEvent(BaseModel):
     )
     print(event)
     '''
-    variables={} name='stock_price' description=None producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) events_root_=None event_root_=None data={'created_at': datetime.datetime(2023, 8, 23, 0, 0), 'symbol': 'GOOGL', 'open': 130.25, 'close': 132.33, '_name': 'stock_price', '_producer_name': 'yahoo-finance', '_created_at': datetime.datetime(2023, 8, 23, 0, 0, tzinfo=zoneinfo.ZoneInfo(key='UTC'))} tstamp_col='created_at' tstamp_in_path=True
+    variables={} data={'created_at': datetime.datetime(2023, 8, 23, 0, 0), 'symbol': 'GOOGL', 'open': 130.25, 'close': 132.33, '_name': 'stock_price', '_producer_name': 'yahoo-finance', '_created_at': datetime.datetime(2023, 8, 23, 0, 0, tzinfo=zoneinfo.ZoneInfo(key='UTC'))} description=None events_root_=None event_root_=None name='stock_price' producer=DataProducer(variables={}, name='yahoo-finance', description=None, party=1) tstamp_col='created_at' tstamp_in_path=True
     '''
 
     print(event.dirpath)

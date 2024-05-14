@@ -213,7 +213,7 @@ def apply_changes(*args, table=None, **kwargs):
             name="slv_stock_prices",
             builder={
                 "source": {
-                    "name": "brz_stock_prices",
+                    "table_name": "brz_stock_prices",
                     "cdc": {
                         "primary_keys": ["asset_symbol"],
                         "sequence_by": "change_id",

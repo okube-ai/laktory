@@ -77,7 +77,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         builder={
             "layer": "SILVER",
             "source": {
-                "name": "brz_stock_prices",
+                "table_name": "brz_stock_prices",
             },
             "spark_chain": {
                 "nodes": [

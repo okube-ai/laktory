@@ -82,7 +82,7 @@ table_slv_join = Table(
         "source": {
             # "mock_df": df_slv,
             "table_name": "slv_stock_prices",
-            # "filter": "created_at = '2023-09-01T00:00:00Z'",
+            "filter": "created_at = '2023-09-01T00:00:00Z'",
         },
         "spark_chain": {
             "nodes": [
@@ -124,9 +124,9 @@ table_slv_join = Table(
 table_slv_pl = table_slv.model_copy(deep=True)
 table_slv_join_pl = table_slv_join.model_copy(deep=True)
 table_slv_join.builder.source.mock_df = df_slv
-# table_slv_join.builder.spark_chain.nodes[0].spark_func_kwargs[
-#     "other"
-# ].value.mock_df = df_meta
-# table_slv_join.builder.spark_chain.nodes[3].spark_func_kwargs[
-#     "other"
-# ].value.mock_df = df_name
+table_slv_join.builder.spark_chain.nodes[0].spark_func_kwargs[
+    "other"
+].value.mock_df = df_meta
+table_slv_join.builder.spark_chain.nodes[3].spark_func_kwargs[
+    "other"
+].value.mock_df = df_name

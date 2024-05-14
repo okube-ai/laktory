@@ -30,14 +30,25 @@ class FileDataSink(BaseDataSink):
     ---------
     ```python
     from laktory import models
+    import pandas as pd
+
+    df = spark.createDataFrame(
+        pd.DataFrame(
+            {
+                "symbol": ["AAPL", "GOOGL"],
+                "price": [200.0, 205.0],
+                "tstamp": ["2023-09-01", "2023-09-01"],
+            }
+        )
+    )
 
     sink = models.FileDataSink(
         path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
         format="PARQUET",
-        mode="overwrite",
+        mode="OVERWRITE",
         as_stream=False,
     )
-    sink.write(df)
+    # sink.write(df)
     ```
     """
 
@@ -83,11 +94,7 @@ class FileDataSink(BaseDataSink):
             logger.info(f"Writing df as static to {self.path}")
             writer = df.write
 
-        writer = (
-            writer
-            .mode(mode)
-            .format(self.format)
-        )
+        writer = writer.mode(mode).format(self.format)
 
         if self.write_options:
             writer = writer.options(**self.write_options)

@@ -24,17 +24,29 @@ class TableDataSink(BaseDataSink):
     ---------
     ```python
     from laktory import models
+    import pandas as pd
+
+    df = spark.createDataFrame(
+        pd.DataFrame(
+            {
+                "symbol": ["AAPL", "GOOGL"],
+                "price": [200.0, 205.0],
+                "tstamp": ["2023-09-01", "2023-09-01"],
+            }
+        )
+    )
 
     sink = models.TableDataSink(
         catalog_name="/Volumes/sources/landing/events/yahoo-finance/stock_price",
         schema_name="finance",
         table_name="slv_stock_prices",
-        mode="overwrite",
+        mode="OVERWRITE",
         as_stream=False,
     )
-    sink.write(df)
+    # sink.write(df)
     ```
     """
+
     catalog_name: Union[str, None] = None
     format: Literal["DELTA", "PARQUET"] = "DELTA"
     schema_name: Union[str, None] = None

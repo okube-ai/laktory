@@ -42,8 +42,8 @@ class TableDataSource(BaseDataSource):
         table_name="brz_stock_prices",
         selects=["symbol", "open", "close"],
         filter="symbol='AAPL'",
-        from_pipeline=False,
-        read_as_stream=True,
+        from_dlt=False,
+        as_stream=True,
     )
     # df = source.read(spark)
     ```
@@ -107,12 +107,12 @@ class TableDataSource(BaseDataSource):
             if self.from_dlt:
                 df = dlt_read_stream(self.full_name)
             else:
-                df = spark.readStream.format(self.fmt).table(self.full_name)
+                df = spark.readStream.table(self.full_name)
         else:
             logger.info(f"Reading {self._id} as static")
             if self.from_dlt:
                 df = dlt_read(self.full_name)
             else:
-                df = spark.read.format(self.fmt).table(self.full_name)
+                df = spark.read.table(self.full_name)
 
         return df

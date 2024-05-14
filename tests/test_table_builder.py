@@ -14,8 +14,8 @@ df_slv = spark.read.parquet(os.path.join(paths.data, "./slv_stock_prices"))
 
 def test_read_and_process():
     builder = models.TableBuilder(
-        file_source={
-            "name": "brz_stock_prices",
+        source={
+            "table_name": "brz_stock_prices",
             "mock_df": df_brz,
         },
         spark_chain={
@@ -63,8 +63,8 @@ def test_read_and_process():
 def test_bronze():
     builder = models.TableBuilder(
         layer="BRONZE",
-        file_source={
-            "name": "brz_stock_prices",
+        source={
+            "table_name": "brz_stock_prices",
             "mock_df": df_brz,
         },
         spark_chain={
@@ -105,8 +105,8 @@ def test_silver():
 
     builder = models.TableBuilder(
         layer="SILVER",
-        table_source={
-            "name": "slv_stock_prices",
+        source={
+            "table_name": "slv_stock_prices",
             "mock_df": df,
         },
         spark_chain={
@@ -139,7 +139,7 @@ def test_cdc():
         name="brz_users_type1",
         builder={
             "source": {
-                "name": "brz_users_cdc",
+                "table_name": "brz_users_cdc",
                 "cdc": {
                     "primary_keys": ["userId"],
                     "sequence_by": "sequenceNum",
@@ -183,7 +183,7 @@ def test_cdc():
 
 
 if __name__ == "__main__":
-    test_read_and_process()
-    test_bronze()
-    test_silver()
+    # test_read_and_process()
+    # test_bronze()
+    # test_silver()
     test_cdc()

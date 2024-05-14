@@ -1,9 +1,6 @@
 import os
-import sys
 import shutil
-import pandas as pd
 import pytest
-from pyspark.sql import SparkSession
 from pyspark.errors import AnalysisException
 
 from laktory.models import TableDataSink

@@ -20,10 +20,11 @@ It provides re-usable mechanisms for reading data of various nature given differ
     [`laktory.models.EventDataSource`][laktory.models.EventDataSource]<br>
 
 This type of data source supports reading multiple files stored on a storage container
+
 ```py
 from laktory import models
 
-source = models.EventDataSource(
+source = models.FileDataSource(
     name="stock_price",
     producer={"name": "yahoo-finance"},
     fmt="JSON",
@@ -49,10 +50,11 @@ df_stream = source.read()
 ??? "API Documentation"
     [`laktory.models.TableDataSource`][laktory.models.TableDataSource]<br>
 When your data is already loading into a table, you can use the `TableDataSource` model instead
+
 ```py
 from laktory import models
 
-source = models.EventDataSource(
+source = models.FileDataSource(
     name="brz_stock_prices",
     selects=["symbol", "open", "close"],
     filter="symbol='AAPL'",

@@ -26,10 +26,21 @@ class MemoryDataSource(BaseDataSource):
     ---------
     ```python
     from laktory import models
+    import pandas as pd
+
+    df = spark.createDataFrame(
+        pd.DataFrame(
+            {
+                "symbol": ["AAPL", "GOOGL"],
+                "price": [200.0, 205.0],
+                "tstamp": ["2023-09-01", "2023-09-01"],
+            }
+        )
+    )
 
     source = models.MemoryDataSource(
-        df=...,
-        read_as_stream=False,
+        df=df,
+        as_stream=False,
     )
     df = source.read()
     ```
