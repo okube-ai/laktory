@@ -64,6 +64,9 @@ spark = [
     "pyarrow",
     "pyspark",
 ]
+polars = [
+    "polars"
+]
 test = [
     "pytest",
     "pytest-cov",

@@ -7,8 +7,8 @@ from laktory._logger import get_logger
 from laktory.constants import SUPPORTED_TYPES
 from laktory.models.basemodel import BaseModel
 from laktory.models.spark.sparkfuncarg import SparkFuncArg
-from laktory.spark import DataFrame
-from laktory.spark import Column
+from laktory.spark import SparkDataFrame
+from laktory.spark import SparkColumn
 from laktory.models.spark._common import parse_args
 from laktory.models.spark._common import parse_kwargs
 from laktory.exceptions import MissingColumnError
@@ -168,11 +168,11 @@ class SparkChainNode(BaseModel):
 
     def execute(
         self,
-        df: DataFrame,
-        udfs: list[Callable[[...], Union[Column, DataFrame]]] = None,
+        df: SparkDataFrame,
+        udfs: list[Callable[[...], Union[SparkColumn, SparkDataFrame]]] = None,
         return_col: bool = False,
         spark=None,
-    ) -> Union[DataFrame, Column]:
+    ) -> Union[SparkDataFrame, SparkColumn]:
         """
         Build Spark Column
 
@@ -198,7 +198,7 @@ class SparkChainNode(BaseModel):
         from pyspark.sql import Column
         from laktory.spark.dataframe import has_column
         from laktory.spark import functions as LF
-        from laktory.spark import DataFrame as LDF
+        from laktory.spark import SparkDataFrame as LDF
 
         if udfs is None:
             udfs = []

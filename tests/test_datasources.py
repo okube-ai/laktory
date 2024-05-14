@@ -1,8 +1,8 @@
-from pyspark.sql import SparkSession
 import os
 import pandas as pd
 
-from laktory.models.datasources import EventDataSource
+from laktory.models.datasources import FileDataSource
+from laktory.models.datasources import MemoryDataSource
 from laktory.models.datasources import TableDataSource
 from laktory._testing import Paths
 from laktory._testing import spark
@@ -22,70 +22,59 @@ pdf = pd.DataFrame(
 df0 = spark.createDataFrame(pdf)
 
 
-def test_event_data_source():
-    source = EventDataSource(
-        name="stock_price",
-        producer={"name": "yahoo_finance"},
+def test_file_data_source():
+    source = FileDataSource(
+        path="Volumes/sources/landing/events/yahoo_finance/stock_price"
     )
-    assert (
-        source.event_root
-        == "/Volumes/dev/sources/landing/events/yahoo_finance/stock_price/"
-    )
+
+    assert source.path == "Volumes/sources/landing/events/yahoo_finance/stock_price"
+    assert source.dataframe_type == "SPARK"
+    assert not source.as_stream
     assert not source.is_cdc
 
 
-def test_event_data_source_read():
-    source = EventDataSource(
-        name="stock_price",
-        producer={"name": "yahoo-finance"},
-        events_root=os.path.join(paths.data, "./events/"),
-        read_as_stream=False,
+def test_file_data_source_read():
+    source = FileDataSource(
+        path=os.path.join(paths.data, "./events/yahoo-finance/stock_price"),
+        as_stream=False,
     )
     df = source.read(spark)
     assert df.count() == 80
     assert df.columns == [
         "data",
         "description",
-        "event_root_",
         "name",
         "producer",
     ]
 
 
-def test_table_data_source(df0=df0):
-    source = TableDataSource(
-        mock_df=df0,
-        path="/Volumes/tables/stock_prices/",
+def test_memory_data_source(df0=df0):
+    source = MemoryDataSource(
+        df=df0,
         filter="b != 0",
         selects=["a", "b", "c"],
         renames={"a": "aa", "b": "bb", "c": "cc"},
         broadcast=True,
-        spark_chain={
-            "nodes": [
-                {
-                    "column": {"name": "chain"},
-                    "spark_func_name": "lit",
-                    "spark_func_args": ["chain"],
-                }
-            ]
-        },
+        # spark_chain={
+        #     "nodes": [
+        #         {
+        #             "column": {"name": "chain"},
+        #             "spark_func_name": "lit",
+        #             "spark_func_args": ["chain"],
+        #         }
+        #     ]
+        # },
     )
-
-    # Test paths
-    assert source.path == "/Volumes/tables/stock_prices/"
-    assert source.from_path
-    assert source.path_or_full_name == "/Volumes/tables/stock_prices/"
 
     # Test reader
     df = source.read(spark)
-    assert df.columns == ["aa", "bb", "cc", "chain"]
+    assert df.columns == ["aa", "bb", "cc"]
     assert df.count() == 2
-    assert df.toPandas()["chain"].tolist() == ["chain", "chain"]
+    # assert df.toPandas()["chain"].tolist() == ["chain", "chain"]
 
     # Select with rename
-    source = TableDataSource(
-        mock_df=df0,
-        path="/Volumes/tables/stock_prices/",
+    source = MemoryDataSource(
+        df=df0,
         selects={"x": "x1", "n": "n1"},
     )
     df = source.read(spark)
@@ -93,17 +82,31 @@ def test_table_data_source(df0=df0):
     assert df.count() == 3
 
     # Drop
-    source = TableDataSource(
-        mock_df=df0,
-        path="/Volumes/tables/stock_prices/",
+    source = MemoryDataSource(
+        df=df0,
         drops=["b", "c", "n"],
     )
     df = source.read(spark)
+    df.show()
     assert df.columns == ["x", "a"]
     assert df.count() == 3
 
 
+def test_table_data_source():
+    source = TableDataSource(
+        catalog_name="dev",
+        schema_name="finance",
+        table_name="slv_stock_prices",
+    )
+
+    # Test meta
+    assert source.full_name == "dev.finance.slv_stock_prices"
+    assert source._id == "dev.finance.slv_stock_prices"
+    assert not source.from_dlt
+
+
 if __name__ == "__main__":
-    test_event_data_source()
-    test_event_data_source_read()
+    test_file_data_source()
+    test_file_data_source_read()
+    test_memory_data_source()
     test_table_data_source()

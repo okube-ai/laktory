@@ -25,7 +25,7 @@ def main():
     # Update version file
     print(f"Updating _version.py")
     with open(version_filepath, "w") as fp:
-        fp.write(f'VERSION = "{v1}"')
+        fp.write(f'VERSION = "{v1}"\n')
 
     # Set version as git action variable
     print(f"Setting git env var version {git_env_filepath}")

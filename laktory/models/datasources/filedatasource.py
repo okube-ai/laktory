@@ -1,23 +1,24 @@
-from pydantic import model_validator
-from laktory.spark import DataFrame
+import os.path
+
 from typing import Literal
 
-from laktory.models.dataeventheader import DataEventHeader
 from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory.spark import SparkDataFrame
+from laktory.polars import PolarsDataFrame
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class EventDataSource(BaseDataSource, DataEventHeader):
+class FileDataSource(BaseDataSource):
     """
-    Data source using events data (files), generally used in the context of a
-    data pipeline.
+    Data source using disk files, such as data events (json/csv) and
+    dataframe parquets. It is generally used in the context of a data pipeline.
 
     Attributes
     ----------
-    fmt
-        Format of the stored data
+    format:
+        Format of the data files
     header
         If `True`, first line of CSV files is assumed to be the column names.
     multiline
@@ -27,57 +28,53 @@ class EventDataSource(BaseDataSource, DataEventHeader):
     read_options:
         Other options passed to `spark.read.options`
     schema_location:
-        Path for events schema. If `None`, `event_root` is used.
-    type
-        Type of infrastructure storing the data
+        Path for files schema. If `None`, parent directory of `path` is used
 
     Examples
     ---------
     ```python
     from laktory import models
 
-    source = models.EventDataSource(
-        name="stock_price",
-        producer={"name": "yahoo-finance"},
-        fmt="JSON",
-        read_as_stream=False,
+    source = models.FileDataSource(
+        path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
+        format="JSON",
+        as_stream=False,
     )
     # df = source.read(spark)
     ```
     """
 
-    fmt: Literal["JSON", "CSV", "PARQUET", "DELTA"] = "JSON"
+    format: Literal["CSV", "PARQUET", "DELTA", "JSON"] = "JSON"
     header: bool = True
     multiline: bool = False
+    path: str
     read_options: dict[str, str] = {}
     schema_location: str = None
-    type: Literal["STORAGE_EVENTS", "STREAM_KINESIS", "STREAM_KAFKA"] = "STORAGE_EVENTS"
+
+    # ----------------------------------------------------------------------- #
+    # Properties                                                              #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def _id(self):
+        return str(self.path)
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _read(self, spark) -> DataFrame:
-        if self.mock_df is not None:
-            logger.info(f"Reading event data source ({self.name}) from memory")
-            return self.mock_df
-        if self.type == "STORAGE_EVENTS":
-            return self._read_storage(spark)
-        else:
-            raise NotImplementedError()
-
-    def _read_storage(self, spark) -> DataFrame:
-        if self.read_as_stream:
-            logger.info(f"Reading {self.event_root} as stream")
+    def _read_spark(self, spark) -> SparkDataFrame:
+        if self.as_stream:
+            logger.info(f"Reading {self._id} as stream")
 
             schema_location = self.schema_location
             if schema_location is None:
-                schema_location = self.event_root
+                schema_location = os.path.dirname(self.path)
 
             # Set reader
             reader = (
                 spark.readStream.format("cloudFiles")
-                .option("cloudFiles.format", self.fmt)
+                .option("cloudFiles.format", self.format)
                 .option("cloudFiles.schemaLocation", schema_location)
                 .option("cloudFiles.inferColumnTypes", True)
                 .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
@@ -85,10 +82,10 @@ class EventDataSource(BaseDataSource, DataEventHeader):
             )
 
         else:
-            logger.info(f"Reading {self.event_root} as static")
+            logger.info(f"Reading {self._id} as static")
 
             # Set reader
-            reader = spark.read.format(self.fmt)
+            reader = spark.read.format(self.format)
 
         reader = (
             reader.option("multiLine", self.multiline)  # only apply to JSON format
@@ -100,7 +97,7 @@ class EventDataSource(BaseDataSource, DataEventHeader):
             reader = reader.options(**self.read_options)
 
         # Load
-        df = reader.load(self.event_root)
+        df = reader.load(self.path)
 
         # Not supported by UC
         # .withColumn("file", F.input_file_name())

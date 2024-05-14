@@ -115,15 +115,14 @@ def test_camelize():
         "tables": [
             {
                 "builder": {
+                    "source": None,
                     "layer": None,
                     "template": None,
                     "addLaktoryColumns": True,
                     "asDltView": False,
                     "dropDuplicates": None,
                     "dropSourceColumns": None,
-                    "eventSource": None,
                     "pipelineName": None,
-                    "tableSource": None,
                     "sparkChain": None,
                 },
                 "columns": [
@@ -166,15 +165,14 @@ def test_camelize():
             },
             {
                 "builder": {
+                    "source": None,
                     "layer": None,
                     "template": None,
                     "addLaktoryColumns": True,
                     "asDltView": False,
                     "dropDuplicates": None,
                     "dropSourceColumns": None,
-                    "eventSource": None,
                     "pipelineName": None,
-                    "tableSource": None,
                     "sparkChain": None,
                 },
                 "columns": [

@@ -3,7 +3,7 @@ from typing import Union
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.spark.sparkchainnode import SparkChainNode
-from laktory.spark import DataFrame
+from laktory.spark import SparkDataFrame
 
 logger = get_logger(__name__)
 
@@ -96,7 +96,7 @@ class SparkChain(BaseModel):
     def columns(self):
         return self._columns
 
-    def execute(self, df, udfs=None, spark=None) -> DataFrame:
+    def execute(self, df, udfs=None, spark=None) -> SparkDataFrame:
         logger.info("Executing Spark chain")
 
         for inode, node in enumerate(self.nodes):
