@@ -127,7 +127,7 @@ class SparkChainNode(BaseModel):
         spark_func_name="drop_duplicates",
         spark_func_args=[["x"]],
     )
-    df = node.execute(df0, spark=spark)
+    df = node.execute(df0)
 
     print(df.toPandas().to_string())
     '''
@@ -171,7 +171,6 @@ class SparkChainNode(BaseModel):
         df: SparkDataFrame,
         udfs: list[Callable[[...], Union[SparkColumn, SparkDataFrame]]] = None,
         return_col: bool = False,
-        spark=None,
     ) -> Union[SparkDataFrame, SparkColumn]:
         """
         Build Spark Column
@@ -185,8 +184,6 @@ class SparkChainNode(BaseModel):
         return_col
             If `True` and column specified, function returns `Column` object
             instead of DataFrame.
-        spark:
-            Spark Session
 
         Returns
         -------
@@ -310,7 +307,7 @@ class SparkChainNode(BaseModel):
         # Build kwargs
         kwargs = {}
         for k, _arg in _kwargs.items():
-            kwargs[k] = _arg.eval(spark)
+            kwargs[k] = _arg.eval(df.spark)
 
         # Function call
         logger.info(f"{self.id} as {func_name}({args}, {kwargs})")

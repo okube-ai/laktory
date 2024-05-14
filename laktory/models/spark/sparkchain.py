@@ -96,7 +96,7 @@ class SparkChain(BaseModel):
     def columns(self):
         return self._columns
 
-    def execute(self, df, udfs=None, spark=None) -> SparkDataFrame:
+    def execute(self, df, udfs=None) -> SparkDataFrame:
         logger.info("Executing Spark chain")
 
         for inode, node in enumerate(self.nodes):
@@ -104,7 +104,7 @@ class SparkChain(BaseModel):
 
             tnode = type(node)
             logger.info(f"Executing node {inode} ({tnode.__name__}).")
-            df = node.execute(df, udfs=udfs, spark=spark)
+            df = node.execute(df, udfs=udfs)
 
         return df
 
