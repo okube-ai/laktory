@@ -1,4 +1,4 @@
-from laktory.spark import DataFrame
+from laktory.spark import SparkDataFrame
 from typing import Union
 from typing import Literal
 from typing import Any
@@ -6,77 +6,16 @@ from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory.spark import SparkDataFrame
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class TableDataSourceCDC(BaseModel):
-    """
-    Defines the change data capture (CDC) properties of a table data source.
-    They are used to build the target using `apply_changes` method from
-    Databricks DLT.
-
-    Attributes
-    ----------
-    apply_as_deletes:
-        Specifies when a CDC event should be treated as a DELETE rather than
-        an upsert. To handle out-of-order data, the deleted row is temporarily
-        retained as a tombstone in the underlying Delta table, and a view is
-        created in the metastore that filters out these tombstones.
-    apply_as_truncates:
-        Specifies when a CDC event should be treated as a full table TRUNCATE.
-        Because this clause triggers a full truncate of the target table, it
-        should be used only for specific use cases requiring this
-        functionality.
-    columns:
-        A subset of columns to include in the target table. Use `columns` to
-        specify the complete list of columns to include.
-    except_columns:
-        A subset of columns to exclude in the target table.
-    ignore_null_updates:
-        Allow ingesting updates containing a subset of the target columns.
-        When a CDC event matches an existing row and ignore_null_updates is
-        `True`, columns with a null will retain their existing values in the
-        target. This also applies to nested columns with a value of null. When
-        ignore_null_updates is `False`, existing values will be overwritten
-        with null values.
-    primary_keys:
-        The column or combination of columns that uniquely identify a row in
-        the source data. This is used to identify which CDC events apply to
-        specific records in the target table.
-    scd_type:
-        Whether to store records as SCD type 1 or SCD type 2.
-    sequence_by:
-        The column name specifying the logical order of CDC events in the
-        source data. Delta Live Tables uses this sequencing to handle change
-        events that arrive out of order.
-    track_history_columns:
-        A subset of output columns to be tracked for history in the target table.
-    track_history_except_columns:
-        A subset of output columns to be excluded from tracking.
-
-    References
-    ----------
-    https://docs.databricks.com/en/delta-live-tables/python-ref.html#change-data-capture-with-python-in-delta-live-tables
-    """
-
-    apply_as_deletes: Union[str, None] = None
-    apply_as_truncates: Union[str, None] = None
-    columns: Union[list[str], None] = []
-    except_columns: Union[list[str], None] = []
-    ignore_null_updates: Union[bool, None] = None
-    primary_keys: list[str]
-    scd_type: Literal[1, 2] = None
-    sequence_by: str
-    track_history_columns: Union[list[str], None] = None
-    track_history_except_columns: Union[list[str], None] = None
-
-
 class TableDataSource(BaseDataSource):
     """
-    Data source using a SQL table, generally used in the context of a
-    data pipeline.
+    Data source using a data warehouse data table, generally used in the
+    context of a data pipeline.
 
     Attributes
     ----------
@@ -84,17 +23,13 @@ class TableDataSource(BaseDataSource):
         Name of the catalog of the source table
     cdc:
         Change data capture specifications
-    fmt:
-        Table format
-    from_pipeline:
-        If `True` the source table will be read using `dlt.read` instead of
-        `spark.read`
-    name:
-        Name of the source table
-    path:
-        Path of the source table
+    from_dlt:
+        If `True`, source will be read using `dlt.read` instead of `spark.read`
+        when used in the context of a  Delta Live Table pipeline.
     schema_name:
         Name of the schema of the source table
+    table_name:
+        Name of the source table
 
     Examples
     ---------
@@ -102,35 +37,23 @@ class TableDataSource(BaseDataSource):
     from laktory import models
 
     source = models.TableDataSource(
-        name="brz_stock_prices",
+        catalog_name="dev",
+        schema_name="finance",
+        table_name="brz_stock_prices",
         selects=["symbol", "open", "close"],
         filter="symbol='AAPL'",
-        from_pipeline=False,
-        read_as_stream=True,
+        from_dlt=False,
+        as_stream=True,
     )
     # df = source.read(spark)
     ```
     """
 
     catalog_name: Union[str, None] = None
-    cdc: Union[TableDataSourceCDC, None] = None
-    fmt: Literal["PARQUET", "DELTA"] = "DELTA"
-    from_pipeline: Union[bool, None] = True
-    name: Union[str, None] = None
-    path: Union[str, None] = None
+    from_dlt: Union[bool, None] = False
+    table_name: Union[str, None] = None
     schema_name: Union[str, None] = None
-
-    @model_validator(mode="after")
-    def set_source(self) -> Any:
-        """Source Definition"""
-
-        if self.name and self.path:
-            raise ValueError("Either path or name must be specified, but not both")
-
-        if self.path:
-            self.from_pipeline = False
-
-        return self
+    warehouse: Union[Literal["DATABRICKS"], None] = "DATABRICKS"
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -138,7 +61,7 @@ class TableDataSource(BaseDataSource):
 
     @property
     def full_name(self) -> str:
-        if self.name is None:
+        if self.table_name is None:
             return None
 
         name = ""
@@ -152,61 +75,44 @@ class TableDataSource(BaseDataSource):
                 name += f".{self.schema_name}"
 
         if name == "":
-            name = self.name
+            name = self.table_name
         else:
-            name += f".{self.name}"
+            name += f".{self.table_name}"
 
         return name
 
     @property
-    def from_path(self):
-        return self.path is not None
-
-    @property
-    def path_or_full_name(self):
-        if self.from_path:
-            return self.path
+    def _id(self) -> str:
         return self.full_name
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _read(self, spark) -> DataFrame:
-        from laktory.dlt import read
-        from laktory.dlt import read_stream
-
-        if self.mock_df is not None:
-            logger.info(f"Reading {self.path_or_full_name} from memory")
-            df = self.mock_df
-        elif self.read_as_stream:
-            logger.info(f"Reading {self.path_or_full_name} as stream")
-            if self.from_pipeline:
-                df = read_stream(self.full_name)
-            elif self.from_path:
-                df = spark.readStream.format(self.fmt).load(self.path)
-            else:
-                df = spark.readStream.format(self.fmt).table(self.full_name)
+    def _read_spark(self, spark) -> SparkDataFrame:
+        if self.warehouse == "DATABRICKS":
+            return self._read_spark_databricks(spark)
         else:
-            logger.info(f"Reading {self.path_or_full_name} as static")
-            if self.from_pipeline:
-                df = read(self.full_name)
-            elif self.from_path:
-                df = spark.read.format(self.fmt).load(self.path)
+            raise NotImplementedError(
+                f"Warehouse '{self.warehouse}' is not yet supported."
+            )
+
+    def _read_spark_databricks(self, spark) -> SparkDataFrame:
+
+        from laktory.dlt import read as dlt_read
+        from laktory.dlt import read_stream as dlt_read_stream
+
+        if self.as_stream:
+            logger.info(f"Reading {self._id} as stream")
+            if self.from_dlt:
+                df = dlt_read_stream(self.full_name)
             else:
-                df = spark.read.format(self.fmt).table(self.full_name)
+                df = spark.readStream.table(self.full_name)
+        else:
+            logger.info(f"Reading {self._id} as static")
+            if self.from_dlt:
+                df = dlt_read(self.full_name)
+            else:
+                df = spark.read.table(self.full_name)
 
         return df
-
-
-if __name__ == "__main__":
-    from laktory import models
-
-    source = models.TableDataSource(
-        name="brz_stock_prices",
-        selects=["symbol", "open", "close"],
-        filter="symbol='AAPL'",
-        from_pipeline=False,
-        read_as_stream=True,
-    )
-    df = source.read(spark)

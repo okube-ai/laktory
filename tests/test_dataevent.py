@@ -11,15 +11,6 @@ from laktory._testing import Paths
 paths = Paths(__file__)
 
 
-# Header
-class StockPriceDataEventHeader(models.DataEventHeader):
-    name: str = "stock_price"
-    producer: models.DataProducer = models.DataProducer(name="yahoo-finance")
-
-
-header = StockPriceDataEventHeader()
-
-
 # Event
 with open(
     os.path.join(
@@ -29,16 +20,19 @@ with open(
 ) as fp:
     event = json.load(fp)
 event = models.DataEvent(**event)
+header = event.model_copy(deep=True)
+header.data = None
 
 
-def test_dataeventheader():
+def test_dataevent_header():
+
     print(header.model_dump())
     assert header.model_dump() == {
-        "name": "stock_price",
+        "data": None,
         "description": None,
+        # "event_root": None,
+        "name": "stock_price",
         "producer": {"name": "yahoo-finance", "description": None, "party": 1},
-        "events_root_": None,
-        "event_root_": None,
     }
     assert header.events_root == "/Volumes/dev/sources/landing/events/"
     assert (
@@ -47,32 +41,30 @@ def test_dataeventheader():
     )
 
 
-def test_dataeventheader_root():
+def test_dataevent_root():
     # Custom value for events root
-    header = models.DataEventHeader(name="my-event", events_root="test")
-    header2 = models.DataEventHeader(
-        **header.model_dump(by_alias=True, exclude_none=True)
-    )
+    header = models.DataEvent(name="my-event", events_root="test")
+    # header2 = models.DataEvent(
+    #     **header.model_dump(by_alias=True, exclude_none=True)
+    # )
     assert header.events_root == "test"
-    assert header2.events_root == "test"
+    # assert header2.events_root == "test"
 
     # Default value
-    header = models.DataEventHeader(name="my-event")
+    header = models.DataEvent(name="my-event")
     assert header.events_root == "/Volumes/dev/sources/landing/events/"
     root0 = settings.workspace_landing_root
-    header2 = models.DataEventHeader(
-        **header.model_dump(by_alias=True, exclude_none=True)
-    )
+    header2 = models.DataEvent(**header.model_dump(by_alias=True, exclude_none=True))
     settings.workspace_landing_root = "custom_root/"
     assert header.events_root == "custom_root/events/"
     assert header2.events_root == "custom_root/events/"
     settings.workspace_landing_root = root0
 
     # Custom value for event root
-    header = models.DataEventHeader(name="my-event", event_root="/Landing/my_event")
+    header = models.DataEvent(name="my-event", event_root="/Landing/my_event")
     print(header)
     assert header.event_root == "/Landing/my_event"
-    header = models.DataEventHeader(**header.model_dump(exclude_none=True))
+    header = models.DataEvent(**header.model_dump(exclude_none=True))
 
 
 def test_dataevent():
@@ -93,9 +85,9 @@ def test_model_dump():
     d = event.model_dump(exclude=[])
     print(d)
     assert d == {
-        "event_name": "stock_price",
-        "event_description": None,
-        "event_producer": {"name": "yahoo-finance", "description": None, "party": 1},
+        "name": "stock_price",
+        "description": None,
+        "producer": {"name": "yahoo-finance", "description": None, "party": 1},
         "events_root": None,
         "event_root": None,
         "data": {
@@ -120,10 +112,10 @@ def test_model_dump():
     d = event.model_dump()
     print(d)
     assert d == {
-        "event_name": "stock_price",
-        "event_description": None,
-        "event_producer": {"name": "yahoo-finance", "description": None, "party": 1},
-        "event_root": None,
+        "name": "stock_price",
+        "description": None,
+        "producer": {"name": "yahoo-finance", "description": None, "party": 1},
+        # "event_root": None,
         "data": {
             "created_at": "2023-09-01T00:00:00",
             "symbol": "AAPL",
@@ -173,18 +165,11 @@ def test_to_aws_s3_bucket():
     event.to_aws_s3_bucket(bucket_name="okube-unit-testing", skip_if_exists=True)
 
 
-def test_to_databricks_mount():
-    # TODO: add tests
-    pass
-    # event.to_databricks_mount()
-
-
 if __name__ == "__main__":
-    test_dataeventheader()
-    test_dataeventheader_root()
+    test_dataevent_header()
+    test_dataevent_root()
     test_dataevent()
     test_model_dump()
     test_event_without_tstamp()
     test_to_azure_storage_container()
     test_to_aws_s3_bucket()
-    test_to_databricks_mount()

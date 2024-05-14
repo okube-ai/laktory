@@ -12,6 +12,7 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.databricks.cluster import Cluster
 from laktory.models.databricks.accesscontrol import AccessControl
 from laktory.models.databricks.permissions import Permissions
+from laktory.models.datasources.tabledatasource import TableDataSource
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.databricks.workspacefile import WorkspaceFile
@@ -244,19 +245,17 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         timestamp_key: data.created_at
         builder:
           layer: BRONZE
-          event_source:
-            name: stock_price
-            producer:
-              name: yahoo-finance
-            read_as_stream: True
+          source:
+            table_name: stock_price
+            as_stream: True
 
       - name: slv_stock_prices
         timestamp_key: created_at
         builder:
           layer: SILVER
-          table_source:
-            name: brz_stock_prices
-            read_as_stream: True
+          source:
+            table_name: brz_stock_prices
+            as_stream: True
           spark_chain:
             nodes:
               - column:
@@ -329,11 +328,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                 c.schema_name = t.schema_name
 
             # Assign to sources
-            if t.builder.table_source is not None:
-                if t.builder.table_source.catalog_name is None:
-                    t.builder.table_source.catalog_name = self.catalog
-                if t.builder.table_source.schema_name is None:
-                    t.builder.table_source.schema_name = self.target
+            if t.builder.source is not None and isinstance(
+                t.builder.source, TableDataSource
+            ):
+                if t.builder.source.catalog_name is None:
+                    t.builder.source.catalog_name = self.catalog
+                if t.builder.source.schema_name is None:
+                    t.builder.source.schema_name = self.target
 
         return self
 

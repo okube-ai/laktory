@@ -15,19 +15,19 @@ Each of these default may also be overwritten, regardless of the `layer` value.
 The `DataSource` models facilitate loading data into a spark DataFrame. 
 It provides re-usable mechanisms for reading data of various nature given different configuration.
 
-#### Event Data Source
+#### File Data Source
 ??? "API Documentation"
-    [`laktory.models.EventDataSource`][laktory.models.EventDataSource]<br>
+    [`laktory.models.FileDataSource`][laktory.models.FileDataSource]<br>
 
 This type of data source supports reading multiple files stored on a storage container
+
 ```py
 from laktory import models
 
-source = models.EventDataSource(
-    name="stock_price",
-    producer={"name": "yahoo-finance"},
-    fmt="JSON",
-    read_as_stream=False,
+source = models.FileDataSource(
+    path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
+    format="JSON",
+    as_stream=False,
 )
 df = source.read()
 ```
@@ -36,11 +36,10 @@ Reading the same dataset, but as a spark streaming source, is as easy as changin
 ```py
 from laktory import models
 
-source = models.TableDataSource(
-    name="stock_price",
-    producer={"name": "yahoo-finance"},
-    fmt="JSON",
-    read_as_stream=True,
+source = models.FileDataSource(
+    path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
+    format="JSON",
+    as_stream=True,
 )
 df_stream = source.read()
 ```
@@ -48,16 +47,17 @@ df_stream = source.read()
 #### Table Data Source
 ??? "API Documentation"
     [`laktory.models.TableDataSource`][laktory.models.TableDataSource]<br>
-When your data is already loading into a table, you can use the `TableDataSource` model instead
+When your data is already loaded into a table, you can use the `TableDataSource` model instead
+
 ```py
 from laktory import models
 
-source = models.EventDataSource(
-    name="brz_stock_prices",
+source = models.FileDataSource(
+    table_name="brz_stock_prices",
     selects=["symbol", "open", "close"],
     filter="symbol='AAPL'",
-    from_pipeline=False,
-    read_as_stream=True,
+    from_dlt=False,
+    as_stream=True,
 )
 df = source.read()
 ```
@@ -65,7 +65,7 @@ In this case
 
 * the `selects` argument is used to select only `symbol`, `open` and `close` columns
 * the `filter` argument is used to select only rows associated with Apple stock. 
-* the `from_pipeline` argument can be used in the context of a data [pipeline](pipeline.md) to reference another table part of the same pipeline.  
+* the `from_dlt` argument can be used in the context of a data [pipeline](pipeline.md) to reference another table part of the same pipeline.  
 
 More data sources (like Kafka / Event Hub / Kinesis streams) will be supported in the future.
 
@@ -138,8 +138,8 @@ table = models.Table(
     name="slv_stock_prices",
     builder={
         "layer": "SILVER",
-        "table_source": {
-            "name": "brz_stock_prices",
+        "source": {
+            "table_name": "brz_stock_prices",
         },
         "spark_chain": {
             "nodes": [
