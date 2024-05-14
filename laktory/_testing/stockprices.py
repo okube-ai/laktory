@@ -58,8 +58,8 @@ table_slv = Table(
     catalog_name="dev",
     schema_name="markets",
     builder={
-        "table_source": {
-            "name": "brz_stock_prices",
+        "source": {
+            "table_name": "brz_stock_prices",
         },
         "layer": "SILVER",
     },
@@ -79,10 +79,10 @@ table_slv_join = Table(
     schema_name="markets",
     builder={
         "layer": "SILVER",
-        "table_source": {
+        "source": {
             # "mock_df": df_slv,
-            "name": "slv_stock_prices",
-            "filter": "created_at = '2023-09-01T00:00:00Z'",
+            "table_name": "slv_stock_prices",
+            # "filter": "created_at = '2023-09-01T00:00:00Z'",
         },
         "spark_chain": {
             "nodes": [
@@ -90,7 +90,7 @@ table_slv_join = Table(
                     "spark_func_name": "smart_join",
                     "spark_func_kwargs": {
                         "other": {
-                            "name": "slv_stockmeta",
+                            "table_name": "slv_stockmeta",
                             # "mock_df": df_meta,
                             "renames": {"symbol2": "symbol"},
                         },
@@ -106,7 +106,7 @@ table_slv_join = Table(
                     "spark_func_name": "smart_join",
                     "spark_func_kwargs": {
                         "other": {
-                            "name": "slv_stock_names",
+                            "table_name": "slv_stock_names",
                             # "mock_df": df_name,
                         },
                         "on": ["symbol3"],
@@ -123,10 +123,10 @@ table_slv_join = Table(
 # so well on spark dataframes. They are assigned after the copy.
 table_slv_pl = table_slv.model_copy(deep=True)
 table_slv_join_pl = table_slv_join.model_copy(deep=True)
-table_slv_join.builder.table_source.mock_df = df_slv
-table_slv_join.builder.spark_chain.nodes[0].spark_func_kwargs[
-    "other"
-].value.mock_df = df_meta
-table_slv_join.builder.spark_chain.nodes[3].spark_func_kwargs[
-    "other"
-].value.mock_df = df_name
+table_slv_join.builder.source.mock_df = df_slv
+# table_slv_join.builder.spark_chain.nodes[0].spark_func_kwargs[
+#     "other"
+# ].value.mock_df = df_meta
+# table_slv_join.builder.spark_chain.nodes[3].spark_func_kwargs[
+#     "other"
+# ].value.mock_df = df_name

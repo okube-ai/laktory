@@ -25,7 +25,7 @@ def test_file_data_sink():
     source = FileDataSink(
         path=dirpath,
         format="PARQUET",
-        mode="overwrite",
+        mode="OVERWRITE",
     )
     source.write(df_slv)
 
@@ -67,5 +67,5 @@ def test_table_data_sink():
 
 
 if __name__ == "__main__":
-    # test_file_data_sink()
+    test_file_data_sink()
     test_table_data_sink()

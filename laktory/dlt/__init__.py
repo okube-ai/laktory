@@ -1,5 +1,5 @@
 from laktory._logger import get_logger
-from laktory.spark import DataFrame
+from laktory.spark import SparkDataFrame
 
 try:
     from dlt import *
@@ -63,7 +63,7 @@ def is_debug() -> bool:
     return False
 
 
-def get_df(df_wrapper) -> DataFrame:
+def get_df(df_wrapper) -> SparkDataFrame:
     """
     When executed in debug mode (ref `dlt.is_debug`), executes and returns
     the output DataFrame of a function decorated with `@dlt.table` or
@@ -110,7 +110,7 @@ def get_df(df_wrapper) -> DataFrame:
 # --------------------------------------------------------------------------- #
 
 
-def read(*args, **kwargs) -> DataFrame:
+def read(*args, **kwargs) -> SparkDataFrame:
     """
     When `is_debug()` is `True` read table from storage, else read table from
     pipeline with native Databricks `dlt.read`
@@ -212,7 +212,7 @@ def apply_changes(*args, table=None, **kwargs):
         models.Table(
             name="slv_stock_prices",
             builder={
-                "table_source": {
+                "source": {
                     "name": "brz_stock_prices",
                     "cdc": {
                         "primary_keys": ["asset_symbol"],

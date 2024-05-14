@@ -2,6 +2,7 @@ from typing import Any
 from typing import Literal
 from typing import Union
 from pydantic import model_validator
+from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
 
@@ -107,21 +108,21 @@ class BaseDataSource(BaseModel):
     ----------
     as_stream:
         If `True`source is read as a streaming DataFrame.
-    dataframe_type:
-        Type of dataframe
+    broadcast:
+        If `True` DataFrame is broadcasted
     cdc:
         Change data capture specifications
+    dataframe_type:
+        Type of dataframe
     drops:
         List of columns to drop
+    filter:
+        SQL expression used to select specific rows from the source table
+    renames:
+        Mapping between the source table column names and new column names
     selects:
         Columns to select from the source table. Can be specified as a list
         or as a dictionary to rename the source columns
-    filter:
-        SQL expression used to select specific rows from the source table
-    read_as_stream
-        If `True` read source as stream
-    renames:
-        Mapping between the source table column names and new column names
     watermark
         Spark structured streaming watermark specifications
 
@@ -133,7 +134,7 @@ class BaseDataSource(BaseModel):
     dataframe_type: Literal["SPARK", "POLARS"] = "SPARK"
     drops: Union[list, None] = None
     filter: Union[str, None] = None
-    # mock_df: Any = Field(default=None, exclude=True)
+    mock_df: Any = Field(default=None, exclude=True)
     renames: Union[dict[str, str], None] = None
     selects: Union[list[str], dict[str, str], None] = None
     # spark_chain: Union[SparkChain, None] = None
@@ -142,15 +143,15 @@ class BaseDataSource(BaseModel):
     @model_validator(mode="after")
     def options(self) -> Any:
 
-        dataframe_type = self.dataframe_type
-        # if is_spark_dataframe(self.mock_df):
-        #     dataframe_type = "SPARK"
-        # elif is_polars_dataframe(self.mock_df):
-        #     dataframe_type = "POLARS"
+        # Overwrite Dataframe type if mock dataframe is provided
+        if is_spark_dataframe(self.mock_df):
+            self.dataframe_type = "SPARK"
+        elif is_polars_dataframe(self.mock_df):
+            self.dataframe_type = "POLARS"
 
-        if dataframe_type == "SPARK":
+        if self.dataframe_type == "SPARK":
             pass
-        elif dataframe_type == "POLARS":
+        elif self.dataframe_type == "POLARS":
             if self.as_stream:
                 raise ValueError("Polars DataFrames don't support streaming read.")
             if self.watermark:
@@ -183,7 +184,7 @@ class BaseDataSource(BaseModel):
 
         Parameters
         ----------
-        spark
+        spark:
             Spark context
 
         Returns
@@ -191,44 +192,22 @@ class BaseDataSource(BaseModel):
         : DataFrame
             Resulting dataframe
         """
-        if self.dataframe_type == "SPARK":
-            return self.read_spark(spark=spark)
+        if self.mock_df:
+            df = self.mock_df
+        elif self.dataframe_type == "SPARK":
+            df = self._read_spark(spark=spark)
         elif self.dataframe_type == "POLARS":
-            return self.read_polars()
+            df = self._read_polars()
         else:
             raise ValueError(
                 f"DataFrame type '{self.dataframe_type}' is not supported."
             )
 
-    def read_spark(self, spark) -> SparkDataFrame:
-        """
-        Read data as Spark DataFrame with options specified in attributes.
+        if is_spark_dataframe(df):
+            df = self._post_read_spark(df)
+        elif is_polars_dataframe(df):
+            df = self._post_read_polars(df)
 
-        Parameters
-        ----------
-        spark
-            Spark context
-
-        Returns
-        -------
-        : DataFrame
-            Spark dataframe
-        """
-        df = self._read_spark(spark=spark)
-        df = self._post_read_spark(df)
-        return df
-
-    def read_polars(self) -> PolarsDataFrame:
-        """
-        Read data as Polars DataFrame with options specified in attributes.
-
-        Returns
-        -------
-        : DataFrame
-            Polars dataframe
-        """
-        df = self._read_polars()
-        df = self._post_read_polars(df)
         return df
 
     def _read_spark(self, spark) -> SparkDataFrame:

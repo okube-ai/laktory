@@ -43,7 +43,6 @@ def test_file_data_source_read():
     assert df.columns == [
         "data",
         "description",
-        "event_root_",
         "name",
         "producer",
     ]
