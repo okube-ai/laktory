@@ -4,6 +4,7 @@ try:
     from pyspark.sql.connect.dataframe import DataFrame as SparkConnectDataFrame
     from pyspark.sql.dataframe import DataFrame as SparkDataFrame
     from pyspark.sql.column import Column as SparkColumn
+    from pyspark.sql.session import SparkSession
 
     import laktory.spark.dataframe
     import laktory.spark.functions
@@ -31,5 +32,9 @@ except ModuleNotFoundError:
     class SparkColumn:
         pass
 
+    class SparkSession:
+        pass
+
     def is_spark_dataframe(df):
         return True
+
