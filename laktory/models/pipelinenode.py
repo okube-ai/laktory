@@ -1,6 +1,8 @@
+import uuid
 from typing import Any
 from typing import Literal
 from typing import Union
+from typing import Callable
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
@@ -12,6 +14,7 @@ from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipelinenodeexpectation import PipelineNodeExpectation
 from laktory.models.spark.sparkchain import SparkChain
 from laktory.models.spark.sparkchainnode import SparkChainNode
+from laktory.spark import SparkSession
 from laktory.types import AnyDataFrame
 from laktory._logger import get_logger
 
@@ -41,7 +44,7 @@ class PipelineNode(BaseModel):
     primary_key: str = None
     timestamp_key: str = None
     sink: Union[FileDataSink, TableDataSink, None] = None
-    source: Union[FileDataSource, TableDataSource, MemoryDataSource, "PipelineNode", None]
+    source: Union[FileDataSource, TableDataSource, MemoryDataSource, str, None]
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
@@ -61,7 +64,7 @@ class PipelineNode(BaseModel):
                 self.drop_source_columns = True
             if self.drop_duplicates is not None and self.primary_key:
                 self.drop_duplicates = True
-        #
+
         # if self.layer == "SILVER_STAR":
         #     if self.drop_source_columns is None:
         #         self.drop_source_columns = False
@@ -74,6 +77,10 @@ class PipelineNode(BaseModel):
         #     if self.drop_duplicates is not None:
         #         self.drop_duplicates = False
         #
+
+        # Genera node id
+        if self.id is None:
+            self.id = str(uuid.uuid4())
 
         return self
     # ----------------------------------------------------------------------- #
@@ -169,7 +176,12 @@ class PipelineNode(BaseModel):
 
         return SparkChain(nodes=nodes)
 
-    def execute(self, spark=None, udfs=None) -> AnyDataFrame:
+    def execute(
+            self,
+            spark: SparkSession = None,
+            udfs: list[Callable] = None,
+            df: AnyDataFrame = None
+    ) -> AnyDataFrame:
         """
         Execute pipeline node
 
@@ -179,6 +191,8 @@ class PipelineNode(BaseModel):
             Spark session
         udfs:
             User-defined functions
+        df:
+            DataFrame generated
 
         Returns
         -------
@@ -188,7 +202,8 @@ class PipelineNode(BaseModel):
         logger.info(f"Applying {self.layer} transformations")
 
         # Read Source
-        df = self.source.read(spark)
+        if not isinstance(self.source, str):
+            df = self.source.read(spark)
 
         if self.source.is_cdc:
             pass
