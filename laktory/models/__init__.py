@@ -6,6 +6,7 @@ from .datasinks import *
 from .datasources import *
 from .grants import *
 from .pipelinenode import PipelineNode
+from .dataframepipeline import DataFramePipeline
 from .providers import *
 from .resources import *
 from .spark import *
