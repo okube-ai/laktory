@@ -37,6 +37,7 @@ dynamic = ["version"]
 dependencies = [
     "databricks-sdk",
     "inflect",
+    "networkx",
     "planck",
     "prompt_toolkit",
     "pulumi",
