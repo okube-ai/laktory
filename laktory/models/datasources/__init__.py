@@ -1,4 +1,5 @@
 from typing import Union
+from .basedatasource import BaseDataSource
 from .filedatasource import FileDataSource
 from .memorydatasource import MemoryDataSource
 from .pipelinenodedatasource import PipelineNodeDataSource
@@ -11,9 +12,9 @@ classes = [
     TableDataSource,
 ]
 
-
-def create_union(*args):
-    return Union[args]
-
-
-DataSourcesUnion = create_union(*classes)
+DataSourcesUnion = Union[
+    FileDataSource,
+    MemoryDataSource,
+    PipelineNodeDataSource,
+    TableDataSource,
+]

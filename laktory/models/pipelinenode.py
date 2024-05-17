@@ -7,8 +7,7 @@ from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
-from laktory.models.datasinks.filedatasink import FileDataSink
-from laktory.models.datasinks.tabledatasink import TableDataSink
+from laktory.models.datasinks import DataSinksUnion
 from laktory.models.pipelinenodeexpectation import PipelineNodeExpectation
 from laktory.models.spark.sparkchain import SparkChain
 from laktory.models.spark.sparkchainnode import SparkChainNode
@@ -21,14 +20,49 @@ logger = get_logger(__name__)
 
 class PipelineNode(BaseModel):
     """
+    Pipeline base component generating a DataFrame from a data source and a
+    SparkChain transformation. Optional output to a data sink.
 
     Attributes
     ----------
+    add_layer_columns:
+        If `True` and `layer` not `None` layer-specific columns like timestamps
+        are added to the resulting DataFrame.
+    chain:
+        Spark or Polars chain defining the data transformations applied to the
+        data source
+    drop_duplicates:
+        If `True`:
+            - drop duplicated rows using `primary_key` if defined or all
+              columns if not defined.
+        If list of strings:
+            - drop duplicated rows using `drop_duplicates` as the subset.
+    drop_source_columns:
+        If `True`, drop columns from the source after read and only keep
+        columns resulting from executing the SparkChain.
+    expectations:
+        List of expectations for the DataFrame. Can be used as warnings, drop
+        invalid records or fail a pipeline.
+    id:
+        ID given to the node. Required to reference a node in a data source.
+    layer:
+        Layer in the medallion architecture
+    primary_key:
+        Name of the column storing a unique identifier for each row. It is used
+        by the node to drop duplicated rows.
+    source:
+        Definition of the data source
+    sink:
+        Definition of the data sink
+    timestamp_key:
+        Name of the column storing a timestamp associated with each row. It is
+        used as the default column by the builder when creating watermarks.
+
 
     Examples
     --------
     ```py
-
+    #TODO
     ```
     """
 
@@ -40,9 +74,9 @@ class PipelineNode(BaseModel):
     id: Union[str, None] = None
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
     primary_key: str = None
-    timestamp_key: str = None
-    sink: Union[FileDataSink, TableDataSink, None] = None
+    sink: Union[DataSinksUnion, None] = None
     source: DataSourcesUnion
+    timestamp_key: str = None
     _df: Any = None
 
     @model_validator(mode="after")
@@ -64,11 +98,6 @@ class PipelineNode(BaseModel):
             if self.drop_duplicates is not None and self.primary_key:
                 self.drop_duplicates = True
 
-        # if self.layer == "SILVER_STAR":
-        #     if self.drop_source_columns is None:
-        #         self.drop_source_columns = False
-        #     if self.drop_duplicates is not None:
-        #         self.drop_duplicates = False
         #
         # if self.layer == "GOLD":
         #     if self.drop_source_columns is None:

@@ -1,3 +1,15 @@
+from typing import Union
+from .basedatasink import BaseDataSink
 from .filedatasink import FileDataSink
 from .tabledatasink import TableDataSink
-from .basedatasink import BaseDataSink
+
+classes = [
+    FileDataSink,
+    TableDataSink,
+]
+
+
+DataSinksUnion = Union[
+    FileDataSink,
+    TableDataSink,
+]

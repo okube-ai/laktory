@@ -22,17 +22,32 @@ logger = get_logger(__name__)
 
 class DataFramePipeline(BaseModel):
     """
+    Pipeline model to manage a full-fledged data pipeline including reading
+    from data sources, applying data transformations through Spark and output
+    to data sinks.
+
+    A pipeline is composed of collections of `nodes`, each one defining its
+    own source, transformations and sink. A node may be the source of another
+    node.
+
+    Multiple engines are supported for running the pipeline ... [TODO: Complete]
+
+    Multiple orchestrators are supported for running the pipeline ... [TODO: Complete]
 
     Attributes
     ----------
+    dlt:
+        Delta Live Tables specifications if DLT engine is selected.
     nodes:
         The list of pipeline nodes. Each node defines a data source, a series
         of transformations and optionally a sink.
+    engine:
+        Selected engine for execution. TODO: Complete
 
     Examples
     --------
     ```py
-
+    #TODO
     ```
     """
 
