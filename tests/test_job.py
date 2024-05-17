@@ -1,6 +1,6 @@
 import os
 
-from laktory.models import Job
+from laktory.models.resources.databricks import Job
 from laktory import pulumi_outputs
 
 job = Job(
@@ -22,7 +22,7 @@ job = Job(
         },
         {
             "depends_ons": [{"task_key": "ingestion"}],
-            "pipeline_task": {"pipeline_id": "${resources.pl-stock-prices.id}"},
+            "pipeline_task": {"pipeline_id": "${resources.dlt-pl-stock-prices.id}"},
             "task_key": "pipeline",
         },
         {
@@ -123,7 +123,7 @@ def test_job_model():
                 "notebook_task": None,
                 "notification_settings": None,
                 "pipeline_task": {
-                    "pipeline_id": "${resources.pl-stock-prices.id}",
+                    "pipeline_id": "${resources.dlt-pl-stock-prices.id}",
                     "full_refresh": None,
                 },
                 "retry_on_timeout": None,
@@ -169,7 +169,7 @@ def test_job_model():
 
 
 def test_job_pulumi():
-    pulumi_outputs["pl-stock-prices.id"] = "12345"
+    pulumi_outputs["dlt-pl-stock-prices.id"] = "12345"
     assert job.resource_name == "job-stock-prices"
     assert job.options.model_dump(exclude_none=True) == {
         "depends_on": [],

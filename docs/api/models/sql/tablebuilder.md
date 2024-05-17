@@ -1,2 +1,0 @@
-::: laktory.models.TableBuilder
-

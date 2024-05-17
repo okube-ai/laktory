@@ -59,9 +59,9 @@ def test_quickstart_pulumi():
     assert stack.name == "quickstart"
     assert stack.pulumi.config["databricks:host"] == "${vars.DATABRICKS_HOST}"
     assert stack.pulumi.config["databricks:token"] == "${vars.DATABRICKS_TOKEN}"
-    assert len(stack.resources.dbfsfiles) == 1
-    assert len(stack.resources.notebooks) == 2
-    assert len(stack.resources.dltpipelines) == 1
+    assert len(stack.resources.databricks_dbfsfiles) == 1
+    assert len(stack.resources.databricks_notebooks) == 2
+    assert len(stack.resources.databricks_dltpipelines) == 1
 
 
 def test_quickstart_terraform():
@@ -90,9 +90,9 @@ def test_quickstart_terraform():
     assert stack.name == "quickstart"
     assert stack.resources.providers["databricks"].host == "${vars.DATABRICKS_HOST}"
     assert stack.resources.providers["databricks"].token == "${vars.DATABRICKS_TOKEN}"
-    assert len(stack.resources.dbfsfiles) == 1
-    assert len(stack.resources.notebooks) == 2
-    assert len(stack.resources.dltpipelines) == 1
+    assert len(stack.resources.databricks_dbfsfiles) == 1
+    assert len(stack.resources.databricks_notebooks) == 2
+    assert len(stack.resources.databricks_dltpipelines) == 1
 
 
 def atest_deploy_pulumi():

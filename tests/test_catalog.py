@@ -1,4 +1,4 @@
-from laktory.models import Catalog
+from laktory.models.resources.databricks import Catalog
 
 
 catalog = Catalog(

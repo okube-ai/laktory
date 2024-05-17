@@ -160,54 +160,54 @@ nav:
         - FileDataSource: api/models/datasources/filedatasource.md
         - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
         - TableDataSource: api/models/datasources/tabledatasource.md
-      - Databricks:
-        - AccessControl: api/models/databricks/accesscontrol.md
-        - api/models/databricks/cluster.md
-        - api/models/databricks/directory.md
-        - ExternalLocation: api/models/databricks/externallocation.md
-        - api/models/databricks/grants.md
-        - api/models/databricks/group.md
-        - api/models/databricks/job.md
-        - api/models/databricks/metastore.md
-        - MetastoreAssignment: api/models/databricks/metastoreassignment.md
-        - MetastoreDataAccess: api/models/databricks/metastoredataaccess.md
-        - MwsPermissionAssignment: api/models/databricks/mwspermissionassignment.md
-        - api/models/databricks/mws.md
-        - api/models/databricks/notebook.md
-        - Pipeline: api/models/databricks/pipeline.md
-        - api/models/databricks/secret.md
-        - SecretAcl: api/models/databricks/secretacl.md
-        - SecretScope: api/models/databricks/secretscope.md
-        - ServicePrincipal: api/models/databricks/serviceprincipal.md
-        - ServicePrincipalRole: api/models/databricks/serviceprincipalrole.md
-        - SqlQuery: api/models/databricks/sqlquery.md
-        - api/models/databricks/user.md
-        - UserRole: api/models/databricks/userrole.md
-        - api/models/databricks/warehouse.md
-        - WorkspaceFile: api/models/databricks/workspacefile.md
-      - Pipelines:
-        - Pipeline: api/models/pipeline.md
-        - PipelineNode: api/models/pipelinenode.md
-      - Providers:
-        - AzureProvider: api/models/providers/azure.md
-        - AzurePulumiProvider: api/models/providers/azurepulumi.md
-        - AWSProvider: api/models/providers/aws.md
-        - DatabricksProvider: api/models/providers/databricks.md
       - Resources:
         - BaseResource: api/models/resources/baseresource.md
         - PulumiResource: api/models/resources/pulumiresource.md
+        - TerraformResource: api/models/resources/terraformresource.md
+        - Databricks:
+          - AccessControl: api/models/resources/databricks/accesscontrol.md
+          - api/models/resources/databricks/cluster.md
+          - api/models/resources/databricks/directory.md
+          - ExternalLocation: api/models/resources/databricks/externallocation.md
+          - api/models/resources/databricks/grants.md
+          - api/models/resources/databricks/group.md
+          - api/models/resources/databricks/job.md
+          - api/models/resources/databricks/metastore.md
+          - MetastoreAssignment: api/models/resources/databricks/metastoreassignment.md
+          - MetastoreDataAccess: api/models/resources/databricks/metastoredataaccess.md
+          - MwsPermissionAssignment: api/models/resources/databricks/mwspermissionassignment.md
+          - api/models/resources/databricks/mws.md
+          - api/models/resources/databricks/notebook.md
+          - Pipeline: api/models/resources/databricks/pipeline.md
+          - api/models/resources/databricks/secret.md
+          - SecretAcl: api/models/resources/databricks/secretacl.md
+          - SecretScope: api/models/resources/databricks/secretscope.md
+          - ServicePrincipal: api/models/resources/databricks/serviceprincipal.md
+          - ServicePrincipalRole: api/models/resources/databricks/serviceprincipalrole.md
+          - SqlQuery: api/models/resources/databricks/sqlquery.md
+          - api/models/resources/databricks/user.md
+          - UserRole: api/models/resources/databricks/userrole.md
+          - api/models/resources/databricks/warehouse.md
+          - WorkspaceFile: api/models/resources/databricks/workspacefile.md
+          - api/models/resources/databricks/catalog.md
+          - api/models/resources/databricks/column.md
+          - api/models/resources/databricks/schema.md
+          - api/models/resources/databricks/table.md
+          - TableExpectations: api/models/resources/databricks/tableexpectation.md
+          - TableBuilder: api/models/resources/databricks/tablebuilder.md
+          - api/models/resources/databricks/volume.md
+        - Providers:
+          - AzureProvider: api/models/resources/providers/azure.md
+          - AzurePulumiProvider: api/resources/models/providers/azurepulumi.md
+          - AWSProvider: api/models/resources/providers/aws.md
+          - DatabricksProvider: api/resources/models/providers/databricks.md
+      - Pipelines:
+        - Pipeline: api/models/pipeline.md
+        - PipelineNode: api/models/pipelinenode.md
       - Spark:
         - SparkChain: api/models/spark/sparkchain.md
         - SparkChainNode: api/models/spark/sparkchainnode.md
         - SparkFuncArg: api/models/spark/sparkfuncarg.md
-      - SQL:
-          - api/models/sql/catalog.md
-          - api/models/sql/column.md
-          - api/models/sql/schema.md
-          - api/models/sql/table.md
-          - TableExpectations: api/models/sql/tableexpectation.md
-          - TableBuilder: api/models/sql/tablebuilder.md
-          - api/models/sql/volume.md
       - Stacks:
           - Stack: api/models/stacks/stack.md
           - PulumiStack: api/models/stacks/pulumistack.md

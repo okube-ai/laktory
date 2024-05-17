@@ -6,32 +6,32 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory._parsers import merge_dicts
 from laktory.models.basemodel import BaseModel
-from laktory.models.databricks.dbfsfile import DbfsFile
-from laktory.models.databricks.cluster import Cluster
-from laktory.models.databricks.directory import Directory
-from laktory.models.databricks.group import Group
-from laktory.models.databricks.job import Job
-from laktory.models.databricks.externallocation import ExternalLocation
-from laktory.models.databricks.metastore import Metastore
-from laktory.models.databricks.metastoredataaccess import MetastoreDataAccess
-from laktory.models.databricks.notebook import Notebook
-from laktory.models.databricks.dltpipeline import DLTPipeline
-from laktory.models.databricks.secret import Secret
-from laktory.models.databricks.secretscope import SecretScope
-from laktory.models.databricks.serviceprincipal import ServicePrincipal
-from laktory.models.databricks.sqlquery import SqlQuery
-from laktory.models.databricks.user import User
-from laktory.models.databricks.warehouse import Warehouse
-from laktory.models.databricks.workspacefile import WorkspaceFile
-from laktory.models.providers.baseprovider import BaseProvider
-from laktory.models.providers.awsprovider import AWSProvider
-from laktory.models.providers.azureprovider import AzureProvider
-from laktory.models.providers.azurepulumiprovider import AzurePulumiProvider
-from laktory.models.providers.databricksprovider import DatabricksProvider
-from laktory.models.sql.catalog import Catalog
-from laktory.models.sql.schema import Schema
-from laktory.models.sql.table import Table
-from laktory.models.sql.volume import Volume
+from laktory.models.resources.databricks.catalog import Catalog
+from laktory.models.resources.databricks.cluster import Cluster
+from laktory.models.resources.databricks.dbfsfile import DbfsFile
+from laktory.models.resources.databricks.directory import Directory
+from laktory.models.resources.databricks.dltpipeline import DLTPipeline
+from laktory.models.resources.databricks.externallocation import ExternalLocation
+from laktory.models.resources.databricks.group import Group
+from laktory.models.resources.databricks.job import Job
+from laktory.models.resources.databricks.metastore import Metastore
+from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
+from laktory.models.resources.databricks.notebook import Notebook
+from laktory.models.resources.databricks.schema import Schema
+from laktory.models.resources.databricks.secret import Secret
+from laktory.models.resources.databricks.secretscope import SecretScope
+from laktory.models.resources.databricks.serviceprincipal import ServicePrincipal
+from laktory.models.resources.databricks.sqlquery import SqlQuery
+from laktory.models.resources.databricks.table import Table
+from laktory.models.resources.databricks.user import User
+from laktory.models.resources.databricks.volume import Volume
+from laktory.models.resources.databricks.warehouse import Warehouse
+from laktory.models.resources.databricks.workspacefile import WorkspaceFile
+from laktory.models.resources.providers.awsprovider import AWSProvider
+from laktory.models.resources.providers.azureprovider import AzureProvider
+from laktory.models.resources.providers.azurepulumiprovider import AzurePulumiProvider
+from laktory.models.resources.providers.baseprovider import BaseProvider
+from laktory.models.resources.providers.databricksprovider import DatabricksProvider
 
 logger = get_logger(__name__)
 
@@ -66,72 +66,72 @@ class StackResources(BaseModel):
 
     Attributes
     ----------
-    dbfsfiles:
-        DbfsFiles
-    catalogs:
-        Catalogs
-    clusters:
-        Clusters
-    directories:
-        Directories
-    externallocations:
-        External Locations
-    groups:
-        Groups
-    jobs:
-        Jobs
-    metastores:
-        Metastores
-    notebooks:
-        Notebooks
-    dlt-pipelines:
-        DLT Pipelines
-    schemas:
-        Schemas
-    secretscopes:
-        SecretScopes
-    serviceprincipals:
-        ServicePrincipals
-    sqlqueries:
-        SQLQueries
-    tables:
-        Tables
+    databricks_dbfsfiles:
+        Databricks DbfsFiles
+    databricks_catalogs:
+        Databricks Catalogs
+    databricks_clusters:
+        Databricks Clusters
+    databricks_directories:
+        Databricks Directories
+    databricks_externallocations:
+        Databricks External Locations
+    databricks_groups:
+        Databricks Groups
+    databricks_jobs:
+        Databricks Jobs
+    databricks_metastores:
+        Databricks Metastores
+    databricks_notebooks:
+        Databricks Notebooks
+    databricks_dltpipelines:
+        Databricks DLT Pipelines
+    databricks_schemas:
+        Databricks Schemas
+    databricks_secretscopes:
+        Databricks SecretScopes
+    databricks_serviceprincipals:
+        Databricks ServicePrincipals
+    databricks_sqlqueries:
+        Databricks SQLQueries
+    databricks_tables:
+        Databricks Tables
     providers:
         Providers
-    users:
-        Users
-    volumes:
-        Volumes
-    warehouses:
-        Warehouses
-    workspacefiles:
-        WorkspacFiles
+    databricks_users:
+        Databricks Users
+    databricks_volumes:
+        Databricks Volumes
+    databricks_warehouses:
+        Databricks Warehouses
+    databricks_workspacefiles:
+        Databricks WorkspacFiles
     """
 
-    dbfsfiles: dict[str, DbfsFile] = {}
-    catalogs: dict[str, Catalog] = {}
-    clusters: dict[str, Cluster] = {}
-    directories: dict[str, Directory] = {}
-    externallocations: dict[str, ExternalLocation] = {}
-    groups: dict[str, Group] = {}
-    jobs: dict[str, Job] = {}
-    metastoredataaccesses: dict[str, MetastoreDataAccess] = {}
-    metastores: dict[str, Metastore] = {}
-    notebooks: dict[str, Notebook] = {}
-    dltpipelines: dict[str, DLTPipeline] = {}
-    schemas: dict[str, Schema] = {}
-    secrets: dict[str, Secret] = {}
-    secretscopes: dict[str, SecretScope] = {}
-    serviceprincipals: dict[str, ServicePrincipal] = {}
-    sqlqueries: dict[str, SqlQuery] = {}
-    tables: dict[str, Table] = {}
+    databricks_dbfsfiles: dict[str, DbfsFile] = {}
+    databricks_catalogs: dict[str, Catalog] = {}
+    databricks_clusters: dict[str, Cluster] = {}
+    databricks_directories: dict[str, Directory] = {}
+    databricks_externallocations: dict[str, ExternalLocation] = {}
+    databricks_groups: dict[str, Group] = {}
+    databricks_jobs: dict[str, Job] = {}
+    databricks_metastoredataaccesses: dict[str, MetastoreDataAccess] = {}
+    databricks_metastores: dict[str, Metastore] = {}
+    databricks_notebooks: dict[str, Notebook] = {}
+    databricks_dltpipelines: dict[str, DLTPipeline] = {}
+    databricks_schemas: dict[str, Schema] = {}
+    databricks_secrets: dict[str, Secret] = {}
+    databricks_secretscopes: dict[str, SecretScope] = {}
+    databricks_serviceprincipals: dict[str, ServicePrincipal] = {}
+    databricks_sqlqueries: dict[str, SqlQuery] = {}
+    databricks_tables: dict[str, Table] = {}
+    databricks_users: dict[str, User] = {}
+    databricks_volumes: dict[str, Volume] = {}
+    databricks_warehouses: dict[str, Warehouse] = {}
+    databricks_workspacefiles: dict[str, WorkspaceFile] = {}
     providers: dict[
         str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]
     ] = {}
-    users: dict[str, User] = {}
-    volumes: dict[str, Volume] = {}
-    warehouses: dict[str, Warehouse] = {}
-    workspacefiles: dict[str, WorkspaceFile] = {}
 
     @model_validator(mode="after")
     def update_resource_names(self) -> Any:
@@ -261,7 +261,7 @@ class Stack(BaseModel):
             },
         },
         resources={
-            "dltpipelines": {
+            "databricks_dltpipelines": {
                 "pl-stock-prices": {
                     "name": "pl-stock-prices",
                     "development": "${vars.is_dev}",
@@ -270,7 +270,7 @@ class Stack(BaseModel):
                     ],
                 }
             },
-            "jobs": {
+            "databricks_jobs": {
                 "job-stock-prices": {
                     "name": "job-stock-prices",
                     "clusters": [
@@ -318,7 +318,7 @@ class Stack(BaseModel):
 
     print(stack)
     '''
-    variables={'org': 'okube'} backend='pulumi' description=None environments={'dev': EnvironmentSettings(variables={'is_dev': True}, resources=None), 'prod': EnvironmentSettings(variables={'is_dev': False}, resources=None)} name='workspace' organization=None pulumi=Pulumi(variables={}, config={'databricks:host': '${vars.DATABRICKS_HOST}', 'databricks:token': '${vars.DATABRICKS_TOKEN}'}, outputs={}) resources=StackResources(variables={}, dbfsfiles={}, catalogs={}, clusters={}, directories={}, externallocations={}, groups={}, jobs={'job-stock-prices': Job(resource_name_='job-stock-prices', options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None), variables={}, access_controls=[], clusters=[JobCluster(resource_name_=None, options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None), variables={}, access_controls=None, apply_policy_default_values=None, autoscale=None, autotermination_minutes=None, cluster_id=None, custom_tags=None, data_security_mode='USER_ISOLATION', driver_instance_pool_id=None, driver_node_type_id=None, enable_elastic_disk=None, enable_local_disk_encryption=None, idempotency_token=None, init_scripts=[], instance_pool_id=None, is_pinned=None, libraries=None, name='main', node_type_id='Standard_DS3_v2', num_workers=None, policy_id=None, runtime_engine=None, single_user_name=None, spark_conf={}, spark_env_vars={}, spark_version='14.0.x-scala2.12', ssh_public_keys=[])], continuous=None, control_run_state=None, email_notifications=None, format=None, health=None, max_concurrent_runs=None, max_retries=None, min_retry_interval_millis=None, name='job-stock-prices', notification_settings=None, parameters=[], retry_on_timeout=None, run_as=None, schedule=None, tags={}, tasks=[JobTask(variables={}, condition_task=None, depends_ons=None, description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key='main', libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=JobTaskNotebookTask(variables={}, notebook_path='/.laktory/jobs/ingest_stock_prices.py', base_parameters=None, source=None), notification_settings=None, pipeline_task=None, retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='ingest', timeout_seconds=None), JobTask(variables={}, condition_task=None, depends_ons=[JobTaskDependsOn(variables={}, task_key='ingest', outcome=None)], description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key=None, libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=None, notification_settings=None, pipeline_task=JobTaskPipelineTask(variables={}, pipeline_id='${resources.dlt-pl-stock-prices.id}', full_refresh=None), retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='pipeline', timeout_seconds=None)], timeout_seconds=None, trigger=None, webhook_notifications=None)}, metastoredataaccesses={}, metastores={}, notebooks={}, dltpipelines={'pl-stock-prices': DLTPipeline(resource_name_='pl-stock-prices', options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None), variables={}, access_controls=[], allow_duplicate_names=None, catalog=None, channel='PREVIEW', clusters=[], configuration={}, continuous=None, development='${vars.is_dev}', edition=None, libraries=[PipelineLibrary(variables={}, file=None, notebook=PipelineLibraryNotebook(variables={}, path='/pipelines/dlt_brz_template.py'))], name='pl-stock-prices', notifications=[], photon=None, serverless=None, storage=None, tables=[], target=None, udfs=[])}, schemas={}, secrets={}, secretscopes={}, serviceprincipals={}, sqlqueries={}, tables={}, providers={}, users={}, volumes={}, warehouses={}, workspacefiles={}) terraform=Terraform(variables={}, backend=None)
+    variables={'org': 'okube'} backend='pulumi' description=None environments={'dev': EnvironmentSettings(variables={'is_dev': True}, resources=None), 'prod': EnvironmentSettings(variables={'is_dev': False}, resources=None)} name='workspace' organization=None pulumi=Pulumi(variables={}, config={'databricks:host': '${vars.DATABRICKS_HOST}', 'databricks:token': '${vars.DATABRICKS_TOKEN}'}, outputs={}) resources=StackResources(variables={}, databricks_dbfsfiles={}, databricks_catalogs={}, databricks_clusters={}, databricks_directories={}, databricks_externallocations={}, databricks_groups={}, databricks_jobs={'job-stock-prices': Job(resource_name_='job-stock-prices', options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None), variables={}, access_controls=[], clusters=[JobCluster(resource_name_=None, options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None), variables={}, access_controls=None, apply_policy_default_values=None, autoscale=None, autotermination_minutes=None, cluster_id=None, custom_tags=None, data_security_mode='USER_ISOLATION', driver_instance_pool_id=None, driver_node_type_id=None, enable_elastic_disk=None, enable_local_disk_encryption=None, idempotency_token=None, init_scripts=[], instance_pool_id=None, is_pinned=None, libraries=None, name='main', node_type_id='Standard_DS3_v2', num_workers=None, policy_id=None, runtime_engine=None, single_user_name=None, spark_conf={}, spark_env_vars={}, spark_version='14.0.x-scala2.12', ssh_public_keys=[])], continuous=None, control_run_state=None, email_notifications=None, format=None, health=None, max_concurrent_runs=None, max_retries=None, min_retry_interval_millis=None, name='job-stock-prices', notification_settings=None, parameters=[], retry_on_timeout=None, run_as=None, schedule=None, tags={}, tasks=[JobTask(variables={}, condition_task=None, depends_ons=None, description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key='main', libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=JobTaskNotebookTask(variables={}, notebook_path='/.laktory/jobs/ingest_stock_prices.py', base_parameters=None, source=None), notification_settings=None, pipeline_task=None, retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='ingest', timeout_seconds=None), JobTask(variables={}, condition_task=None, depends_ons=[JobTaskDependsOn(variables={}, task_key='ingest', outcome=None)], description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key=None, libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=None, notification_settings=None, pipeline_task=JobTaskPipelineTask(variables={}, pipeline_id='${resources.dlt-pl-stock-prices.id}', full_refresh=None), retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='pipeline', timeout_seconds=None)], timeout_seconds=None, trigger=None, webhook_notifications=None)}, databricks_metastoredataaccesses={}, databricks_metastores={}, databricks_notebooks={}, databricks_dltpipelines={'pl-stock-prices': DLTPipeline(resource_name_='pl-stock-prices', options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None), variables={}, access_controls=[], allow_duplicate_names=None, catalog=None, channel='PREVIEW', clusters=[], configuration={}, continuous=None, development='${vars.is_dev}', edition=None, libraries=[PipelineLibrary(variables={}, file=None, notebook=PipelineLibraryNotebook(variables={}, path='/pipelines/dlt_brz_template.py'))], name='pl-stock-prices', notifications=[], photon=None, serverless=None, storage=None, tables=[], target=None, udfs=[])}, databricks_schemas={}, databricks_secrets={}, databricks_secretscopes={}, databricks_serviceprincipals={}, databricks_sqlqueries={}, databricks_tables={}, databricks_users={}, databricks_volumes={}, databricks_warehouses={}, databricks_workspacefiles={}, providers={}) terraform=Terraform(variables={}, backend=None)
     '''
     ```
 

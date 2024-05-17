@@ -1,1 +1,1 @@
-::: laktory.models.DataFramePipeline
+::: laktory.models.Pipeline

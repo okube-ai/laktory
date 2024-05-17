@@ -115,7 +115,7 @@ node_gld = models.PipelineNode(
     },
 )
 
-pl = models.DataFramePipeline(nodes=[node_brz, node_slv, node_gld, node_meta_slv])
+pl = models.Pipeline(nodes=[node_brz, node_slv, node_gld, node_meta_slv])
 
 
 def test_dag():

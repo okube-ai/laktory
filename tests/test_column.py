@@ -2,7 +2,7 @@ import os
 import json
 import yaml
 
-from laktory.models import Column
+from laktory.models.resources.databricks import Column
 from laktory._testing import Paths
 from laktory._testing.stockprices import df_brz as df
 

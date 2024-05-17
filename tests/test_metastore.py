@@ -1,4 +1,4 @@
-from laktory.models import Metastore
+from laktory.models.resources.databricks import Metastore
 
 
 metastore = Metastore(

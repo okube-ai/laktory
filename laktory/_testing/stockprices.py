@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from pyspark.sql import SparkSession
 
-from laktory.models import Table
+from laktory.models.resources.databricks import Table
 
 spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
 spark.conf.set("spark.sql.session.timeZone", "UTC")

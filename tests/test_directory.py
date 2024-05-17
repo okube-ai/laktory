@@ -1,4 +1,4 @@
-from laktory.models import Directory
+from laktory.models.resources.databricks import Directory
 
 directory = Directory(path=".laktory/pipelines/")
 

@@ -1,4 +1,4 @@
-from laktory.models import SqlQuery
+from laktory.models.resources.databricks import SqlQuery
 
 query = SqlQuery(
     name="google-prices",

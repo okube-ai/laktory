@@ -1,6 +1,6 @@
-from laktory.models import Table
-from laktory.models import Schema
-from laktory.models import Column
+from laktory.models.resources.databricks import Table
+from laktory.models.resources.databricks import Schema
+from laktory.models.resources.databricks import Column
 
 schema = Schema(
     name="flights",

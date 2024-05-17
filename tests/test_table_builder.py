@@ -13,7 +13,7 @@ df_slv = spark.read.parquet(os.path.join(paths.data, "./slv_stock_prices"))
 
 
 def test_read_and_process():
-    builder = models.TableBuilder(
+    builder = models.resources.databricks.TableBuilder(
         source={
             "table_name": "brz_stock_prices",
             "mock_df": df_brz,
@@ -61,7 +61,7 @@ def test_read_and_process():
 
 
 def test_bronze():
-    builder = models.TableBuilder(
+    builder = models.resources.databricks.TableBuilder(
         layer="BRONZE",
         source={
             "table_name": "brz_stock_prices",
@@ -103,7 +103,7 @@ def test_silver():
     df = df.withColumn("_bronze_at", F.current_timestamp())
     df = df.union(df)
 
-    builder = models.TableBuilder(
+    builder = models.resources.databricks.TableBuilder(
         layer="SILVER",
         source={
             "table_name": "slv_stock_prices",
@@ -135,7 +135,7 @@ def test_silver():
 
 
 def test_cdc():
-    table = models.Table(
+    table = models.resources.databricks.Table(
         name="brz_users_type1",
         builder={
             "source": {
