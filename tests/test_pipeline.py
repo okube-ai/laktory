@@ -4,7 +4,7 @@ from laktory._testing.stockprices import table_slv_pl
 from laktory._testing.stockprices import table_slv_join_pl
 
 
-pl = models.Pipeline(
+pl = models.DLTPipeline(
     name="pl-stock-prices",
     catalog="dev1",
     target="markets1",
@@ -274,7 +274,8 @@ def test_pipeline():
 
 
 def test_pipeline_pulumi():
-    assert pl.resource_name == "pl-stock-prices"
+    print(pl.resource_name)
+    assert pl.resource_name == "dlt-pl-stock-prices"
     assert pl.options.model_dump(exclude_none=True) == {
         "depends_on": [],
         "delete_before_replace": True,

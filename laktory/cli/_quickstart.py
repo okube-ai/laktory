@@ -129,7 +129,7 @@ def quickstart(
     # Read template stack
     template_stack = read_template()
     template_stack.backend = backend
-    template_stack.resources.pipelines["pl-quickstart"].clusters[
+    template_stack.resources.dltpipelines["pl-quickstart"].clusters[
         0
     ].node_type_id = node_type
 

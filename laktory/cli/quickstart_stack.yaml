@@ -10,7 +10,7 @@ resources:
       source: ./notebooks/pipelines/dlt_brz_template.py
     notebook-pipelines-dlt-slv-template:
       source: ./notebooks/pipelines/dlt_slv_template.py
-  pipelines:
+  dltpipelines:
     pl-quickstart:
       name: pl-quickstart
       channel: PREVIEW

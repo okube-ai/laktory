@@ -7,7 +7,7 @@ from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
 from laktory.models.pipelinenode import PipelineNode
-from laktory.models.databricks.pipeline import Pipeline
+from laktory.models.databricks.dltpipeline import DLTPipeline
 
 if TYPE_CHECKING:
     from plotly.graph_objs import Figure
@@ -51,7 +51,7 @@ class DataFramePipeline(BaseModel):
     ```
     """
 
-    dlt: Union[Pipeline, None] = None
+    dlt: Union[DLTPipeline, None] = None
     nodes: list[Union[PipelineNode]]
     engine: Union[Literal["DLT"], None] = "DLT"
     # orchestrator: Literal["DATABRICKS"] = "DATABRICKS"

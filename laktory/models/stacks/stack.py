@@ -15,7 +15,7 @@ from laktory.models.databricks.externallocation import ExternalLocation
 from laktory.models.databricks.metastore import Metastore
 from laktory.models.databricks.metastoredataaccess import MetastoreDataAccess
 from laktory.models.databricks.notebook import Notebook
-from laktory.models.databricks.pipeline import Pipeline
+from laktory.models.databricks.dltpipeline import DLTPipeline
 from laktory.models.databricks.secret import Secret
 from laktory.models.databricks.secretscope import SecretScope
 from laktory.models.databricks.serviceprincipal import ServicePrincipal
@@ -84,8 +84,8 @@ class StackResources(BaseModel):
         Metastores
     notebooks:
         Notebooks
-    pipelines:
-        Pipelines
+    dlt-pipelines:
+        DLT Pipelines
     schemas:
         Schemas
     secretscopes:
@@ -118,7 +118,7 @@ class StackResources(BaseModel):
     metastoredataaccesses: dict[str, MetastoreDataAccess] = {}
     metastores: dict[str, Metastore] = {}
     notebooks: dict[str, Notebook] = {}
-    pipelines: dict[str, Pipeline] = {}
+    dltpipelines: dict[str, DLTPipeline] = {}
     schemas: dict[str, Schema] = {}
     secrets: dict[str, Secret] = {}
     secretscopes: dict[str, SecretScope] = {}
@@ -261,7 +261,7 @@ class Stack(BaseModel):
             },
         },
         resources={
-            "pipelines": {
+            "dlt-pipelines": {
                 "pl-stock-prices": {
                     "name": "pl-stock-prices",
                     "development": "${vars.is_dev}",
@@ -292,7 +292,7 @@ class Stack(BaseModel):
                             "task_key": "pipeline",
                             "depends_ons": [{"task_key": "ingest"}],
                             "pipeline_task": {
-                                "pipeline_id": "${resources.pl-stock-prices.id}",
+                                "pipeline_id": "${resources.dlt-pl-stock-prices.id}",
                             },
                         },
                     ],

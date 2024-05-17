@@ -11,7 +11,7 @@ from laktory.models.databricks.metastoredataaccess import MetastoreDataAccess
 from laktory.models.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.databricks.mwspermissionassignment import MwsPermissionAssignment
 from laktory.models.databricks.notebook import Notebook
-from laktory.models.databricks.pipeline import Pipeline
+from laktory.models.databricks.dltpipeline import DLTPipeline
 from laktory.models.databricks.secret import Secret
 from laktory.models.databricks.secretacl import SecretAcl
 from laktory.models.databricks.secretscope import SecretScope
