@@ -42,7 +42,11 @@ def test_stack_model():
                     "is_dev": False,
                     "node_type_id": "Standard_DS4_v2",
                 },
-                "resources": {"dltpipelines": {"pl-custom-name": {"development": False}}},
+                "resources": {
+                    "databricks_dltpipelines": {
+                        "pl-custom-name": {"development": False}
+                    }
+                },
             },
         },
         "name": "unit-testing",
@@ -55,13 +59,13 @@ def test_stack_model():
             "outputs": {},
         },
         "resources": {
-            "dbfsfiles": {},
-            "catalogs": {},
-            "clusters": {},
-            "directories": {},
-            "externallocations": {},
-            "groups": {},
-            "jobs": {
+            "databricks_dbfsfiles": {},
+            "databricks_catalogs": {},
+            "databricks_clusters": {},
+            "databricks_directories": {},
+            "databricks_externallocations": {},
+            "databricks_groups": {},
+            "databricks_jobs": {
                 "job-stock-prices-ut-stack": {
                     "access_controls": [],
                     "clusters": [
@@ -185,10 +189,10 @@ def test_stack_model():
                     "webhook_notifications": None,
                 }
             },
-            "metastoredataaccesses": {},
-            "metastores": {},
-            "notebooks": {},
-            "dltpipelines": {
+            "databricks_metastoredataaccesses": {},
+            "databricks_metastores": {},
+            "databricks_notebooks": {},
+            "databricks_dltpipelines": {
                 "pl-custom-name": {
                     "access_controls": [
                         {
@@ -228,12 +232,12 @@ def test_stack_model():
                     "udfs": [],
                 }
             },
-            "schemas": {},
-            "secrets": {},
-            "secretscopes": {},
-            "serviceprincipals": {},
-            "sqlqueries": {},
-            "tables": {},
+            "databricks_schemas": {},
+            "databricks_secrets": {},
+            "databricks_secretscopes": {},
+            "databricks_serviceprincipals": {},
+            "databricks_sqlqueries": {},
+            "databricks_tables": {},
             "providers": {
                 "databricks": {
                     "account_id": None,
@@ -267,10 +271,10 @@ def test_stack_model():
                     "warehouse_id": None,
                 }
             },
-            "users": {},
-            "volumes": {},
-            "warehouses": {},
-            "workspacefiles": {},
+            "databricks_users": {},
+            "databricks_volumes": {},
+            "databricks_warehouses": {},
+            "databricks_workspacefiles": {},
         },
         "terraform": {
             "backend": {
@@ -626,17 +630,17 @@ def test_all_resources():
 
     validator = StackValidator(
         resources={
-            "catalogs": [catalog],
-            "directories": [directory],
-            "jobs": [job],
-            "metastores": [metastore],
-            "dltpipelines": [pl],  # required by job
-            "notebooks": [nb],
-            "schemas": [schema],
-            "sqlqueries": [query],
-            "groups": [group],
-            "users": [user],
-            "workspacefiles": [workspace_file],
+            "databricks_catalogs": [catalog],
+            "databricks_directories": [directory],
+            "databricks_jobs": [job],
+            "databricks_metastores": [metastore],
+            "databricks_dltpipelines": [pl],  # required by job
+            "databricks_notebooks": [nb],
+            "databricks_schemas": [schema],
+            "databricks_sqlqueries": [query],
+            "databricks_groups": [group],
+            "databricks_users": [user],
+            "databricks_workspacefiles": [workspace_file],
         },
         providers={
             "provider-workspace-neptune": {

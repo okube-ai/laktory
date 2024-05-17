@@ -1,16 +1,16 @@
 name: quickstart
 backend: terraform
 resources:
-  dbfsfiles:
+  databricks_dbfsfiles:
     dbfs-file-stock-prices:
       path: /Workspace/.laktory/landing/events/yahoo-finance/stock_price/stock_prices.json
       source: ./data/stock_prices.json
-  notebooks:
+  databricks_notebooks:
     notebook-pipelines-dlt-brz-template:
       source: ./notebooks/pipelines/dlt_brz_template.py
     notebook-pipelines-dlt-slv-template:
       source: ./notebooks/pipelines/dlt_slv_template.py
-  dltpipelines:
+  databricks_dltpipelines:
     pl-quickstart:
       name: pl-quickstart
       channel: PREVIEW

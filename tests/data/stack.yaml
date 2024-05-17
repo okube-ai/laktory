@@ -10,7 +10,7 @@ resources:
     databricks:  # for terraform, provider name must match resource type prefix
       host: ${vars.DATABRICKS_HOST}
       token: ${vars.DATABRICKS_TOKEN}
-  dltpipelines:
+  databricks_dltpipelines:
     pl-custom-name:
       name: pl-stock-prices-ut-stack
       libraries:
@@ -23,7 +23,7 @@ resources:
           permission_level: CAN_RUN
       options:
         provider: ${resources.databricks}
-  jobs:
+  databricks_jobs:
     job-stock-prices-ut-stack:
       name: job-stock-prices-ut-stack
       clusters:
@@ -58,7 +58,7 @@ environments:
       node_type_id: Standard_DS3_v2
   prod:
     resources:
-      dltpipelines:
+      databricks_dltpipelines:
         pl-custom-name:
           development: False
     variables:

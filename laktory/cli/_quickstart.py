@@ -129,7 +129,7 @@ def quickstart(
     # Read template stack
     template_stack = read_template()
     template_stack.backend = backend
-    template_stack.resources.dltpipelines["pl-quickstart"].clusters[
+    template_stack.resources.databricks_dltpipelines["pl-quickstart"].clusters[
         0
     ].node_type_id = node_type
 
@@ -168,8 +168,8 @@ def quickstart(
     # Clean up resources
     if backend != "pulumi" and "pulumi" in data.keys():
         del data["pulumi"]
-    for k, n in data["resources"]["notebooks"].items():
-        del data["resources"]["notebooks"][k]["path"]
+    for k, n in data["resources"]["databricks_notebooks"].items():
+        del data["resources"]["databricks_notebooks"][k]["path"]
 
     # Sort data
     d = {}

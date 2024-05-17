@@ -2,7 +2,9 @@ from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.resources.databricks.mwspermissionassignment import MwsPermissionAssignment
+from laktory.models.resources.databricks.mwspermissionassignment import (
+    MwsPermissionAssignment,
+)
 
 
 class Group(BaseModel, PulumiResource, TerraformResource):
