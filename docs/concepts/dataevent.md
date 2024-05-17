@@ -1,8 +1,7 @@
 ??? "API Documentation"
-    [`laktory.models.DataEventHeader`][laktory.models.DataEventHeader]<br>
     [`laktory.models.DataEvent`][laktory.models.DataEvent]<br>
 
-The `DataEvent` (and `DataEventHeader`) models are supporting the event-based architecture described in [Design Principles](design.md).
+The `DataEvent` model is supporting the event-based architecture described in [Design Principles](design.md).
 They define the metadata (name, producer, timestamp, etc.) as well as the data (payload) of an event.
 They can be used both in the context of generating and consuming data.
 
@@ -37,22 +36,6 @@ The default path for the event follows the standard convention
 > {events_root}/{producer_name}/{event_name}/{year}/{month}/{day}/{event_name}_{year}{month}{day}T{timestamp}.{format}
 
 But you may customize it using environment variable `WORKSPACE_LANDING_ROOT` or `events_root`, `tstamp_in_path` and `suffix` arguments.
-
-### Consumption
-Similarly one can leverage the `DataEventHeader` model to simplify reading events from the landing storage. 
-It is essentially a strip down version of the `DataEvent` model in which the `data` does not need to be provided.
-
-```py
-from laktory import models
-
-event = models.DataEventHeader(
-    name="stock_price",
-    producer={"name": "yahoo-finance"},
-)
-
-df = spark.read.load(event.event_root)
-```
-Again, the default path is assumed, but it could be customized.
 
 ### Format
 Currently, data events can be stored and read from `JSON`, `CSV` and `PARQUET` formats. More may be added in the future. 

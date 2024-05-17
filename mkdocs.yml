@@ -148,12 +148,17 @@ nav:
   - API Reference:
     - Models:
       - BaseModel: api/models/basemodel.md
-      - DataEventHeader: api/models/dataeventheader.md
+#      - DataEventHeader: api/models/dataeventheader.md
       - DataEvent: api/models/dataevent.md
       - DataProducer: api/models/dataproducer.md
+      - DataSinks:
+        - BaseDataSink: api/models/datasinks/basedatasink.md
+        - FileDataSink: api/models/datasinks/filedatasink.md
+        - TableDataSink: api/models/datasinks/tabledatasink.md
       - DataSources:
         - BaseDataSource: api/models/datasources/basedatasource.md
-        - EventDataSource: api/models/datasources/eventdatasource.md
+        - FileDataSource: api/models/datasources/filedatasource.md
+        - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
         - TableDataSource: api/models/datasources/tabledatasource.md
       - Databricks:
         - AccessControl: api/models/databricks/accesscontrol.md
@@ -180,6 +185,9 @@ nav:
         - UserRole: api/models/databricks/userrole.md
         - api/models/databricks/warehouse.md
         - WorkspaceFile: api/models/databricks/workspacefile.md
+      - Pipelines:
+        - Pipeline: api/models/pipeline.md
+        - PipelineNode: api/models/pipelinenode.md
       - Providers:
         - AzureProvider: api/models/providers/azure.md
         - AzurePulumiProvider: api/models/providers/azurepulumi.md

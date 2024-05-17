@@ -1,32 +1,36 @@
-from pydantic import model_validator
+import uuid
 from typing import Any
 from typing import Literal
 from typing import Union
+from typing import Callable
+from pydantic import model_validator
 
-from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
-from laktory.models.datasources import FileDataSource
-from laktory.models.datasources import TableDataSource
-from laktory.models.datasources import MemoryDataSource
-from laktory.models.sql.column import Column
+from laktory.models.datasources import DataSourcesUnion
+from laktory.models.datasinks import DataSinksUnion
+from laktory.models.pipelinenodeexpectation import PipelineNodeExpectation
 from laktory.models.spark.sparkchain import SparkChain
 from laktory.models.spark.sparkchainnode import SparkChainNode
-from laktory.spark import SparkDataFrame
+from laktory.spark import SparkSession
+from laktory.types import AnyDataFrame
+from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class TableBuilder(BaseModel):
+class PipelineNode(BaseModel):
     """
-    Mechanisms for building a table from a source in the context of a data
-    pipeline.
+    Pipeline base component generating a DataFrame from a data source and a
+    SparkChain transformation. Optional output to a data sink.
 
     Attributes
     ----------
-    add_laktory_columns:
-        Add laktory default columns like layer-specific timestamps
-    as_dlt_view:
-        Create (DLT) view instead of table
+    add_layer_columns:
+        If `True` and `layer` not `None` layer-specific columns like timestamps
+        are added to the resulting DataFrame.
+    chain:
+        Spark or Polars chain defining the data transformations applied to the
+        data source
     drop_duplicates:
         If `True`:
             - drop duplicated rows using `primary_key` if defined or all
@@ -35,31 +39,45 @@ class TableBuilder(BaseModel):
             - drop duplicated rows using `drop_duplicates` as the subset.
     drop_source_columns:
         If `True`, drop columns from the source after read and only keep
-        columns defined in the table and/or resulting from the joins.
+        columns resulting from executing the SparkChain.
+    expectations:
+        List of expectations for the DataFrame. Can be used as warnings, drop
+        invalid records or fail a pipeline.
+    id:
+        ID given to the node. Required to reference a node in a data source.
     layer:
         Layer in the medallion architecture
-    pipeline_name:
-        Name of the pipeline in which the table will be built
+    primary_key:
+        Name of the column storing a unique identifier for each row. It is used
+        by the node to drop duplicated rows.
     source:
         Definition of the data source
-    spark_chain:
-        Spark chain defining the data transformations applied to the data
-        source
-    template:
-        Key indicating which notebook to use for building the table in the
-        context of a data pipeline.
+    sink:
+        Definition of the data sink
+    timestamp_key:
+        Name of the column storing a timestamp associated with each row. It is
+        used as the default column by the builder when creating watermarks.
+
+
+    Examples
+    --------
+    ```py
+    # TODO
+    ```
     """
 
-    add_laktory_columns: bool = True
-    as_dlt_view: bool = False
-    drop_duplicates: Union[bool, None] = None
+    add_layer_columns: bool = True
+    drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
-    source: Union[FileDataSource, TableDataSource, MemoryDataSource, None] = None
+    chain: Union[SparkChain, None] = None
+    expectations: list[PipelineNodeExpectation] = []
+    id: Union[str, None] = None
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
-    pipeline_name: Union[str, None] = None
-    template: Union[str, bool, None] = None
-    spark_chain: Union[SparkChain, None] = None
-    _table: Any = None
+    primary_key: str = None
+    sink: Union[DataSinksUnion, None] = None
+    source: DataSourcesUnion
+    timestamp_key: str = None
+    _df: Any = None
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
@@ -79,12 +97,7 @@ class TableBuilder(BaseModel):
                 self.drop_source_columns = True
             if self.drop_duplicates is not None and self.primary_key:
                 self.drop_duplicates = True
-        #
-        # if self.layer == "SILVER_STAR":
-        #     if self.drop_source_columns is None:
-        #         self.drop_source_columns = False
-        #     if self.drop_duplicates is not None:
-        #         self.drop_duplicates = False
+
         #
         # if self.layer == "GOLD":
         #     if self.drop_source_columns is None:
@@ -92,10 +105,16 @@ class TableBuilder(BaseModel):
         #     if self.drop_duplicates is not None:
         #         self.drop_duplicates = False
         #
-        if self.template is None:
-            self.template = self.layer
+
+        # Genera node id
+        if self.id is None:
+            self.id = str(uuid.uuid4())
 
         return self
+
+    # ----------------------------------------------------------------------- #
+    # Properties                                                              #
+    # ----------------------------------------------------------------------- #
 
     @property
     def is_from_cdc(self) -> bool:
@@ -106,32 +125,11 @@ class TableBuilder(BaseModel):
             return self.source.is_cdc
 
     @property
-    def columns(self) -> list[Column]:
-        """List of columns"""
-        if self._table is None:
-            return []
-        return self._table.columns
-
-    @property
-    def timestamp_key(self) -> str:
-        """Table timestamp key"""
-        if self._table is None:
-            return None
-        return self._table.timestamp_key
-
-    @property
-    def primary_key(self) -> str:
-        """Table primary key"""
-        if self._table is None:
-            return None
-        return self._table.primary_key
-
-    @property
     def layer_spark_chain(self):
         nodes = []
 
         if self.layer == "BRONZE":
-            if self.add_laktory_columns:
+            if self.add_layer_columns:
                 nodes += [
                     SparkChainNode(
                         column={
@@ -154,7 +152,7 @@ class TableBuilder(BaseModel):
                     )
                 ]
 
-            if self.add_laktory_columns:
+            if self.add_layer_columns:
                 nodes += [
                     SparkChainNode(
                         column={
@@ -166,7 +164,7 @@ class TableBuilder(BaseModel):
                 ]
 
         elif self.layer == "GOLD":
-            if self.add_laktory_columns:
+            if self.add_layer_columns:
                 nodes += [
                     SparkChainNode(
                         column={
@@ -190,13 +188,13 @@ class TableBuilder(BaseModel):
                 )
             ]
 
-        if self.drop_source_columns:
+        if self.drop_source_columns and self.chain:
             nodes += [
                 SparkChainNode(
                     spark_func_name="drop",
                     spark_func_args=[
                         c
-                        for c in self.spark_chain.columns[0]
+                        for c in self.chain.columns[0]
                         if c not in ["_bronze_at", "_silver_at", "_gold_at"]
                     ],
                 )
@@ -207,32 +205,23 @@ class TableBuilder(BaseModel):
 
         return SparkChain(nodes=nodes)
 
-    def read_source(self, spark) -> SparkDataFrame:
+    def execute(
+        self,
+        spark: SparkSession = None,
+        udfs: list[Callable] = None,
+        df: AnyDataFrame = None,
+    ) -> AnyDataFrame:
         """
-        Read data source specified in `self.source`
+        Execute pipeline node
 
         Parameters
         ----------
         spark: SparkSession
             Spark session
-
-        Returns
-        -------
-        :
-            Output dataframe
-        """
-        return self.source.read(spark)
-
-    def process(self, df, udfs=None) -> SparkDataFrame:
-        """
-        Build table by reading source and applying Spark Chain.
-
-        Parameters
-        ----------
-        df:
-            Input DataFrame
         udfs:
             User-defined functions
+        df:
+            DataFrame generated
 
         Returns
         -------
@@ -241,29 +230,31 @@ class TableBuilder(BaseModel):
         """
         logger.info(f"Applying {self.layer} transformations")
 
-        if self.spark_chain:
-            df = self.spark_chain.execute(df, udfs=udfs)
+        # Read Source
+        if not isinstance(self.source, str):
+            df = self.source.read(spark)
 
+        if self.source.is_cdc:
+            pass
+            # TODO: Apply SCD transformations
+            #       Best strategy is probably to build a spark dataframe function and add a node in the chain with
+            #       that function
+            # https://iterationinsights.com/article/how-to-implement-slowly-changing-dimensions-scd-type-2-using-delta-table
+            # https://www.linkedin.com/pulse/implementing-slowly-changing-dimension-2-using-lau-johansson-yemxf/
+
+        # Apply chain
+        if self.chain:
+            df = self.chain.execute(df, udfs=udfs)
+
+        # Apply layer-specific chain
         if self.layer_spark_chain:
             df = self.layer_spark_chain.execute(df, udfs=udfs)
 
-        return df
+        # Output to sink
+        if self.sink:
+            self.sink.write(df)
 
-    @property
-    def apply_changes_kwargs(self) -> dict[str, str]:
-        """Keyword arguments for dlt.apply_changes function"""
-        cdc = self.source.cdc
-        return {
-            "apply_as_deletes": cdc.apply_as_deletes,
-            "apply_as_truncates": cdc.apply_as_truncates,
-            "column_list": cdc.columns,
-            "except_column_list": cdc.except_columns,
-            "ignore_null_updates": cdc.ignore_null_updates,
-            "keys": cdc.primary_keys,
-            "sequence_by": cdc.sequence_by,
-            "source": self.source.table_name,
-            "stored_as_scd_type": cdc.scd_type,
-            "target": self._table.name,
-            "track_history_column_list": cdc.track_history_columns,
-            "track_history_except_column_list": cdc.track_history_except_columns,
-        }
+        # Save DataFrame
+        self._df = df
+
+        return df

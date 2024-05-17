@@ -29,14 +29,12 @@ class SparkFuncArg(BaseModel):
         a circular dependency. Instead, we check at validation if the value
         could be instantiated as a DataSource object.
         """
-        from laktory.models.datasources.filedatasource import FileDataSource
-        from laktory.models.datasources.tabledatasource import TableDataSource
+        from laktory.models.datasources import classes
 
-        try:
-            v = TableDataSource(**v)
-        except:
+        for c in classes:
             try:
-                v = FileDataSource(**v)
+                v = c(**v)
+                break
             except:
                 pass
 
