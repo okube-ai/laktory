@@ -41,7 +41,7 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    catalog = models.Catalog(
+    catalog = models.resources.databricks.Catalog(
         name="dev",
         grants=[
             {"principal": "account users", "privileges": ["USE_CATALOG", "USE_SCHEMA"]}

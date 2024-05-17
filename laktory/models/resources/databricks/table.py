@@ -72,7 +72,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
 
     dlt.spark = spark
 
-    table = models.Table(
+    table = models.resources.databricks.Table(
         name="slv_stock_prices",
         builder={
             "layer": "SILVER",

@@ -209,7 +209,7 @@ def apply_changes(*args, table=None, **kwargs):
         return df
 
     define_table(
-        models.Table(
+        models.resources.databricks.Table(
             name="slv_stock_prices",
             builder={
                 "source": {

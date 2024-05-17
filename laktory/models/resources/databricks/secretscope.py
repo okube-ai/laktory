@@ -64,7 +64,7 @@ class SecretScope(BaseModel, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    ss = models.SecretScope(
+    ss = models.resources.databricks.SecretScope(
         name="azure",
         secrets=[
             {"key": "keyvault-url", "value": "https://my-secrets.vault.azure.net/"},

@@ -80,7 +80,7 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    warehouse = models.Warehouse(
+    warehouse = models.resources.databricks.Warehouse(
         name="default",
         cluster_size="2X-Small",
         auto_stop_mins=30,

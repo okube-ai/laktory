@@ -16,6 +16,7 @@
 * Merged `TableBuilder` `event_source` and `table_source` attributes into `source`
 * Removed `SparkChain` support in DataSources
 * Renamed `Pipeline` model to `DLTPipeline` model
+* Cloud resources moved under models.resources.{provider}.{resource_class} to avoid collisions with future classes.
 
 ## [0.2.1] - 2024-05-07
 ### Added

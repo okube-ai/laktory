@@ -286,7 +286,9 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
                 spark_func_args:
                   - data.close
     '''
-    pipeline = models.DLTPipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
+    pipeline = models.resources.databricks.DLTPipeline.model_validate_yaml(
+        io.StringIO(pipeline_yaml)
+    )
     ```
 
     References

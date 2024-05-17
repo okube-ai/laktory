@@ -38,7 +38,7 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    volume = models.Volume(
+    volume = models.resources.databricks.Volume(
         name="landing",
         catalog_name="dev",
         schema_name="sources",

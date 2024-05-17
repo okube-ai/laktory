@@ -246,7 +246,7 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    cluster = models.Cluster(
+    cluster = models.resources.databricks.Cluster(
         name="default",
         spark_version="14.0.x-scala2.12",
         data_security_mode="USER_ISOLATION",

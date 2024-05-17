@@ -27,7 +27,9 @@ class AccessControl(BaseModel):
     ```py
     from laktory import models
 
-    p = models.AccessControl(group_name="role-engineers", permission_level="READ")
+    p = models.resources.databricks.AccessControl(
+        group_name="role-engineers", permission_level="READ"
+    )
     ```
     """
 

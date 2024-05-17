@@ -31,7 +31,7 @@ class User(BaseModel, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    u = models.User(
+    u = models.resources.databricks.User(
         user_name="john.doe@okube.ai",
         display_name="John Doe",
         group_ids=[

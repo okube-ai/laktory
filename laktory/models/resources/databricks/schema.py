@@ -40,7 +40,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    schema = models.Schema(
+    schema = models.resources.databricks.Schema(
         catalog_name="dev",
         name="engineering",
         grants=[{"principal": "domain-engineering", "privileges": ["SELECT"]}],

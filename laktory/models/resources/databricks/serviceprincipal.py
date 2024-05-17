@@ -34,7 +34,7 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    sp = models.ServicePrincipal(
+    sp = models.resources.databricks.ServicePrincipal(
         display_name="neptune",
         application_id="baf147d1-a856-4de0-a570-8a56dbd7e234",
         group_ids=[

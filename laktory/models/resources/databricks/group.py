@@ -28,7 +28,7 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    d = models.Group(display_name="role-engineers")
+    d = models.resources.databricks.Group(display_name="role-engineers")
     ```
     """
 

@@ -20,7 +20,7 @@ class Directory(BaseModel, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    d = models.Directory(path="/queries/views")
+    d = models.resources.databricks.Directory(path="/queries/views")
     print(d)
     '''
     resource_name_=None options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None) variables={} path='/queries/views' delete_recursive=None

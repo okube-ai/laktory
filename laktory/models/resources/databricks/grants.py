@@ -55,7 +55,7 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    grants = models.Grants(
+    grants = models.resources.databricks.Grants(
         catalog="dev",
         grants=[{"principal": "metastore-admins", "privileges": ["CREATE_SCHEMA"]}],
     )

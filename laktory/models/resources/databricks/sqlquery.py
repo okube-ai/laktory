@@ -38,7 +38,7 @@ class SqlQuery(BaseModel, PulumiResource, TerraformResource):
     ```py
     from laktory import models
 
-    q = models.SqlQuery(
+    q = models.resources.databricks.SqlQuery(
         name="create-view",
         query="CREATE VIEW google_stock_prices AS SELECT * FROM stock_prices WHERE symbol = 'GOOGL'",
         data_source_id="09z739ce103q9374",

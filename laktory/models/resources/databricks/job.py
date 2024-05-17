@@ -681,7 +681,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
       - group_name: role-engineers
         permission_level: CAN_MANAGE_RUN
     '''
-    job = models.Job.model_validate_yaml(io.StringIO(job_yaml))
+    job = models.resources.databricks.Job.model_validate_yaml(io.StringIO(job_yaml))
     ```
 
     References
