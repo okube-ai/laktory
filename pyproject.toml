@@ -59,6 +59,7 @@ dev = [
     "mkdocs-material",
     "mkdocs-video",
 #    "mkdocs-snippets",
+    "plotly",
 ]
 spark = [
     "pandas",
