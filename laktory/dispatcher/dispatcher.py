@@ -52,7 +52,7 @@ class Dispatcher:
 
     def init_resources(self):
         """Set resource for each of the resources defined in the stack"""
-        for k, pl in self.stack.resources.pipelines.items():
+        for k, pl in self.stack.resources.dltpipelines.items():
             self.resources[k] = PipelineRunner(dispatcher=self, name=pl.name)
 
         for k, job in self.stack.resources.jobs.items():

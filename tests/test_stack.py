@@ -42,7 +42,7 @@ def test_stack_model():
                     "is_dev": False,
                     "node_type_id": "Standard_DS4_v2",
                 },
-                "resources": {"pipelines": {"pl-custom-name": {"development": False}}},
+                "resources": {"dltpipelines": {"pl-custom-name": {"development": False}}},
             },
         },
         "name": "unit-testing",
@@ -188,7 +188,7 @@ def test_stack_model():
             "metastoredataaccesses": {},
             "metastores": {},
             "notebooks": {},
-            "pipelines": {
+            "dltpipelines": {
                 "pl-custom-name": {
                     "access_controls": [
                         {
@@ -630,7 +630,7 @@ def test_all_resources():
             "directories": [directory],
             "jobs": [job],
             "metastores": [metastore],
-            "pipelines": [pl],  # required by job
+            "dltpipelines": [pl],  # required by job
             "notebooks": [nb],
             "schemas": [schema],
             "sqlqueries": [query],
@@ -653,8 +653,8 @@ def test_all_resources():
 
 if __name__ == "__main__":
     test_stack_model()
-    test_pulumi_stack()
-    test_pulumi_preview()
-    test_terraform_stack()
-    test_terraform_plan()
-    test_all_resources()
+    # test_pulumi_stack()
+    # test_pulumi_preview()
+    # test_terraform_stack()
+    # test_terraform_plan()
+    # test_all_resources()

@@ -1,6 +1,6 @@
 # Release History
 
-## [0.2.2] - Unreleased
+## [0.3.0] - Unreleased
 ### Added
 * Future support for Polars and other types of DataFrame
 * `FileDataSink` and `TableDataSink` models
@@ -15,6 +15,7 @@
 * Renamed `name` attribute to `table_name` in `TableDataSource` model
 * Merged `TableBuilder` `event_source` and `table_source` attributes into `source`
 * Removed `SparkChain` support in DataSources
+* Renamed `Pipeline` model to `DLTPipeline` model
 
 ## [0.2.1] - 2024-05-07
 ### Added

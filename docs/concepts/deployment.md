@@ -99,7 +99,7 @@ If you prefer writing infrastructure as code with python, Laktory integrates nic
 from laktory import models
 
 # Declare pipeline
-pipeline = models.Pipeline(
+pipeline = models.DLTPipeline(
     name="pl-stock-prices",
     libraries=[{"notebooks": {"path": "/pipelines/dlt_brz_template.py"}}],
 )

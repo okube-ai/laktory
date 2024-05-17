@@ -6,6 +6,7 @@ The serializable nature of these models makes it possible to define a lakehouse 
 Let's explore the declaration of `Column`, `Table` and `Pipeline` models as an example. 
 
 ### Python Sequential
+
 ```py
 from laktory import models
 
@@ -16,7 +17,7 @@ z = models.Column(name="z", type="double")
 table_xy = models.Table(name="table_xy", columns=[x, y])
 table_xyz = models.Table(name="table_xyz", columns=[x, y, z])
 
-pipeline = models.Pipeline(
+pipeline = models.DLTPipeline(
     name="my-pipeline",
     catalog="dev",
     target="finance",
@@ -25,10 +26,11 @@ pipeline = models.Pipeline(
 ```
 
 ### Python Nested
+
 ```py
 from laktory import models
 
-pipeline = models.Pipeline(
+pipeline = models.DLTPipeline(
     name="my-pipeline",
     catalog="dev",
     target="finance",
@@ -81,7 +83,7 @@ tables:
 from laktory import models
 
 with open("my-pipeline.yaml", "r") as fp:
-    pipeline = models.Pipeline.model_validate_yaml(fp)
+    pipeline = models.DLTPipeline.model_validate_yaml(fp)
 ```
 Using any of the above approaches will result in the exact same `pipeline` python object.
 

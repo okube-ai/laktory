@@ -154,7 +154,7 @@ class PipelineUDF(BaseModel):
     module_path: str = None
 
 
-class Pipeline(BaseModel, PulumiResource, TerraformResource):
+class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Delta Live Tables (DLT) Pipeline
 
@@ -286,7 +286,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                 spark_func_args:
                   - data.close
     '''
-    pipeline = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
+    pipeline = models.DLTPipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
     ```
 
     References
@@ -345,9 +345,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     @property
     def resource_type_id(self) -> str:
         """
-        pl
+        dlt
         """
-        return "pl"
+        return "dlt"
 
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
