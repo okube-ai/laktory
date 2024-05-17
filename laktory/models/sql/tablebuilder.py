@@ -243,10 +243,9 @@ class TableBuilder(BaseModel):
         """
         logger.info(f"Applying {self.layer} transformations")
 
-        if self.spark_chain is None:
-            return df
+        if self.spark_chain:
+            df = self.spark_chain.execute(df, udfs=udfs, spark=spark)
 
-        df = self.spark_chain.execute(df, udfs=udfs, spark=spark)
         if self.layer_spark_chain:
             df = self.layer_spark_chain.execute(df, udfs=udfs, spark=spark)
 

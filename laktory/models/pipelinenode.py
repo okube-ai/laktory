@@ -6,9 +6,7 @@ from typing import Callable
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.datasources.filedatasource import FileDataSource
-from laktory.models.datasources.memorydatasource import MemoryDataSource
-from laktory.models.datasources.tabledatasource import TableDataSource
+from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasinks.filedatasink import FileDataSink
 from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipelinenodeexpectation import PipelineNodeExpectation
@@ -44,7 +42,8 @@ class PipelineNode(BaseModel):
     primary_key: str = None
     timestamp_key: str = None
     sink: Union[FileDataSink, TableDataSink, None] = None
-    source: Union[FileDataSource, TableDataSource, MemoryDataSource, str, None]
+    source: DataSourcesUnion
+    _df: Any = None
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
@@ -159,7 +158,7 @@ class PipelineNode(BaseModel):
                 )
             ]
 
-        if self.drop_source_columns:
+        if self.drop_source_columns and self.chain:
             nodes += [
                 SparkChainNode(
                     spark_func_name="drop",
@@ -224,5 +223,8 @@ class PipelineNode(BaseModel):
         # Output to sink
         if self.sink:
             self.sink.write(df)
+
+        # Save DataFrame
+        self._df = df
 
         return df

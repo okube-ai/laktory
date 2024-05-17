@@ -307,7 +307,7 @@ class SparkChainNode(BaseModel):
         # Build kwargs
         kwargs = {}
         for k, _arg in _kwargs.items():
-            kwargs[k] = _arg.eval(df.spark)
+            kwargs[k] = _arg.eval(df.sparkSession)
 
         # Function call
         logger.info(f"{self.id} as {func_name}({args}, {kwargs})")
