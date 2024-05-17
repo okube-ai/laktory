@@ -33,7 +33,7 @@ def test_execute():
                 {
                     "column": {"name": "symbol"},
                     "spark_func_name": "coalesce",
-                    "spark_func_args": ["data.symbol"]
+                    "spark_func_args": ["data.symbol"],
                 },
                 {
                     "column": {"name": "close", "type": "double"},
@@ -41,15 +41,15 @@ def test_execute():
                 },
                 {
                     "spark_func_name": "drop",
-                    "spark_func_args": ["data", "producer", "name", "description"]
-                }
+                    "spark_func_args": ["data", "producer", "name", "description"],
+                },
             ]
         },
         sink={
             "path": sink_path,
             "format": "PARQUET",
             "mode": "OVERWRITE",
-        }
+        },
     )
     df0 = node.execute()
     df1 = spark.read.format("PARQUET").load(sink_path)
@@ -149,6 +149,7 @@ def test_cdc():
 
     # TODO: Test CDC transformations when ready
     print(node)
+
 
 #
 #     assert table.builder.apply_changes_kwargs == {

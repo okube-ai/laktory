@@ -37,4 +37,3 @@ except ModuleNotFoundError:
 
     def is_spark_dataframe(df):
         return True
-

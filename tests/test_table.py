@@ -266,7 +266,7 @@ def test_table_builder():
 
     # Test process
     df = table_slv_join.builder.read_source(spark)
-    df = table_slv_join.builder.process(df, spark=spark)
+    df = table_slv_join.builder.process(df)
     df = df.sort("symbol3")
     pdf = df.toPandas()
 

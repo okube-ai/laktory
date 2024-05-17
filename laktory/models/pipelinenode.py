@@ -82,6 +82,7 @@ class PipelineNode(BaseModel):
             self.id = str(uuid.uuid4())
 
         return self
+
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
@@ -176,10 +177,10 @@ class PipelineNode(BaseModel):
         return SparkChain(nodes=nodes)
 
     def execute(
-            self,
-            spark: SparkSession = None,
-            udfs: list[Callable] = None,
-            df: AnyDataFrame = None
+        self,
+        spark: SparkSession = None,
+        udfs: list[Callable] = None,
+        df: AnyDataFrame = None,
     ) -> AnyDataFrame:
         """
         Execute pipeline node

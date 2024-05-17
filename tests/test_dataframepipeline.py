@@ -51,7 +51,7 @@ node_slv = models.PipelineNode(
             {
                 "column": {"name": "symbol"},
                 "spark_func_name": "coalesce",
-                "spark_func_args": ["data.symbol"]
+                "spark_func_args": ["data.symbol"],
             },
             {
                 "column": {"name": "close", "type": "double"},
@@ -59,25 +59,25 @@ node_slv = models.PipelineNode(
             },
             {
                 "spark_func_name": "drop",
-                "spark_func_args": ["data", "producer", "name", "description"]
+                "spark_func_args": ["data", "producer", "name", "description"],
             },
             {
                 "spark_func_name": "smart_join",
                 "spark_func_kwargs": {
                     "other": {
                         "node_id": "slv_stock_meta",
-                        "renames": {"symbol2": "symbol"}
+                        "renames": {"symbol2": "symbol"},
                     },
                     "on": ["symbol"],
                 },
-            }
+            },
         ]
     },
     sink={
         "path": slv_sink_path,
         "format": "PARQUET",
         "mode": "OVERWRITE",
-    }
+    },
 )
 
 node_gld = models.PipelineNode(
@@ -102,9 +102,9 @@ node_gld = models.PipelineNode(
                             "column": {"name": "min_price", "type": "double"},
                             "spark_func_name": "min",
                             "spark_func_args": ["close"],
-                        }
+                        },
                     ],
-                }
+                },
             }
         ]
     },
@@ -112,12 +112,10 @@ node_gld = models.PipelineNode(
         "path": gld_sink_path,
         "format": "PARQUET",
         "mode": "OVERWRITE",
-    }
+    },
 )
 
-pl = models.DataFramePipeline(
-    nodes=[node_brz, node_slv, node_gld, node_meta_slv]
-)
+pl = models.DataFramePipeline(nodes=[node_brz, node_slv, node_gld, node_meta_slv])
 
 
 def test_dag():
@@ -129,17 +127,19 @@ def test_dag():
     assert len(dag.nodes) == 4
     assert len(dag.edges) == 3
     assert list(nx.topological_sort(dag)) == [
-        'brz_stock_prices',
-        'slv_stock_meta',
-        'slv_stock_prices',
-        'gld_max_stock_prices'
+        "brz_stock_prices",
+        "slv_stock_meta",
+        "slv_stock_prices",
+        "gld_max_stock_prices",
     ]
 
     # Test nodes assignment
     assert pl.sorted_nodes == [node_brz, node_meta_slv, node_slv, node_gld]
     assert node_slv.source.node == node_brz
     assert node_gld.source.node == node_slv
-    assert node_slv.chain.nodes[-1].spark_func_kwargs["other"].value.node == node_meta_slv
+    assert (
+        node_slv.chain.nodes[-1].spark_func_kwargs["other"].value.node == node_meta_slv
+    )
 
     # Test figure
     fig = pl.dag_figure()
@@ -150,21 +150,53 @@ def test_execute():
     pl.execute(spark)
 
     # In memory DataFrames
-    assert pl.nodes_dict["brz_stock_prices"]._df.columns == ['name', 'description', 'producer', 'data', '_bronze_at']
+    assert pl.nodes_dict["brz_stock_prices"]._df.columns == [
+        "name",
+        "description",
+        "producer",
+        "data",
+        "_bronze_at",
+    ]
     assert pl.nodes_dict["brz_stock_prices"]._df.count() == 80
-    assert pl.nodes_dict["slv_stock_meta"]._df.columns == ['symbol2', 'currency', 'first_traded', '_silver_at']
+    assert pl.nodes_dict["slv_stock_meta"]._df.columns == [
+        "symbol2",
+        "currency",
+        "first_traded",
+        "_silver_at",
+    ]
     assert pl.nodes_dict["slv_stock_meta"]._df.count() == 3
-    assert pl.nodes_dict["slv_stock_prices"]._df.columns == ['_bronze_at', 'created_at', 'close', 'currency', 'first_traded', '_silver_at', 'symbol']
+    assert pl.nodes_dict["slv_stock_prices"]._df.columns == [
+        "_bronze_at",
+        "created_at",
+        "close",
+        "currency",
+        "first_traded",
+        "_silver_at",
+        "symbol",
+    ]
     assert pl.nodes_dict["slv_stock_prices"]._df.count() == 80
-    assert pl.nodes_dict["gld_max_stock_prices"]._df.columns == ['symbol', 'max_price', 'min_price', '_gold_at']
+    assert pl.nodes_dict["gld_max_stock_prices"]._df.columns == [
+        "symbol",
+        "max_price",
+        "min_price",
+        "_gold_at",
+    ]
     assert pl.nodes_dict["gld_max_stock_prices"]._df.count() == 4
 
     # Sinks
     _df_slv = spark.read.format("PARQUET").load(slv_sink_path)
     _df_gld = spark.read.format("PARQUET").load(gld_sink_path)
-    assert _df_slv.columns == ['_bronze_at', 'created_at', 'close', 'currency', 'first_traded', '_silver_at', 'symbol']
+    assert _df_slv.columns == [
+        "_bronze_at",
+        "created_at",
+        "close",
+        "currency",
+        "first_traded",
+        "_silver_at",
+        "symbol",
+    ]
     assert _df_slv.count() == 80
-    assert _df_gld.columns == ['symbol', 'max_price', 'min_price', '_gold_at']
+    assert _df_gld.columns == ["symbol", "max_price", "min_price", "_gold_at"]
     assert _df_gld.count() == 4
 
     # Cleanup
@@ -175,4 +207,3 @@ def test_execute():
 if __name__ == "__main__":
     test_dag()
     test_execute()
-

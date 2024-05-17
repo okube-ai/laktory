@@ -223,7 +223,7 @@ class TableBuilder(BaseModel):
         """
         return self.source.read(spark)
 
-    def process(self, df, udfs=None, spark=None) -> SparkDataFrame:
+    def process(self, df, udfs=None) -> SparkDataFrame:
         """
         Build table by reading source and applying Spark Chain.
 
@@ -233,8 +233,6 @@ class TableBuilder(BaseModel):
             Input DataFrame
         udfs:
             User-defined functions
-        spark: SparkSession
-            Spark sessions.
 
         Returns
         -------
@@ -244,10 +242,10 @@ class TableBuilder(BaseModel):
         logger.info(f"Applying {self.layer} transformations")
 
         if self.spark_chain:
-            df = self.spark_chain.execute(df, udfs=udfs, spark=spark)
+            df = self.spark_chain.execute(df, udfs=udfs)
 
         if self.layer_spark_chain:
-            df = self.layer_spark_chain.execute(df, udfs=udfs, spark=spark)
+            df = self.layer_spark_chain.execute(df, udfs=udfs)
 
         return df
 

@@ -35,6 +35,7 @@ class DataFramePipeline(BaseModel):
 
     ```
     """
+
     dlt: Union[Pipeline, None] = None
     nodes: list[Union[PipelineNode]]
     engine: Union[Literal["DLT"], None] = "DLT"
@@ -82,8 +83,10 @@ class DataFramePipeline(BaseModel):
                         a.value.node = self.nodes_dict[a.value.node_id]
 
         if not nx.is_directed_acyclic_graph(dag):
-            raise ValueError("Pipeline is not a DAG (directed acyclic graph)."
-                             " A circular dependency has been detected. Please review nodes dependencies.")
+            raise ValueError(
+                "Pipeline is not a DAG (directed acyclic graph)."
+                " A circular dependency has been detected. Please review nodes dependencies."
+            )
 
         return dag
 
@@ -127,21 +130,23 @@ class DataFramePipeline(BaseModel):
 
         edge_traces = []
         for e in dag.edges:
-            edge_traces += [go.Scatter(
-                x=[pos[e[0]][0], pos[e[1]][0]],
-                y=[pos[e[0]][1], pos[e[1]][1]],
-                line={
-                    "color": "#a006b1",
-                },
-                marker=dict(
-                    symbol="arrow-bar-up",
-                    angleref="previous",
-                    size=30,
-                ),
-                mode="lines+markers",
-                hoverinfo='none',
-                showlegend=False,
-            )]
+            edge_traces += [
+                go.Scatter(
+                    x=[pos[e[0]][0], pos[e[1]][0]],
+                    y=[pos[e[0]][1], pos[e[1]][1]],
+                    line={
+                        "color": "#a006b1",
+                    },
+                    marker=dict(
+                        symbol="arrow-bar-up",
+                        angleref="previous",
+                        size=30,
+                    ),
+                    mode="lines+markers",
+                    hoverinfo="none",
+                    showlegend=False,
+                )
+            ]
 
         # ------------------------------------------------------------------- #
         # Nodes                                                               #
@@ -157,8 +162,8 @@ class DataFramePipeline(BaseModel):
                 size=50,
                 color="#06d49e",
                 line=dict(
-                  width=2,
-                  color="#dff2ed",
+                    width=2,
+                    color="#dff2ed",
                 ),
             ),
             textfont=dict(
@@ -166,4 +171,4 @@ class DataFramePipeline(BaseModel):
             ),
         )
 
-        return go.Figure(data=[nodes_trace]+edge_traces)
+        return go.Figure(data=[nodes_trace] + edge_traces)

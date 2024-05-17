@@ -76,7 +76,7 @@ class SparkChain(BaseModel):
     )
 
     # Execute Chain
-    df = sc.execute(df0, spark=spark)
+    df = sc.execute(df0)
 
     # Print result
     print(df.toPandas().to_string())
