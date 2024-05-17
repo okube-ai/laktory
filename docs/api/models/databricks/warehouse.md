@@ -2,8 +2,8 @@
 
 ---
 
-::: laktory.models.databricks.warehouse.WarehouseTags
+::: laktory.models.resources.databricks.warehouse.WarehouseTags
 
 ---
 
-::: laktory.models.databricks.warehouse.WarehouseCustomTag
+::: laktory.models.resources.databricks.warehouse.WarehouseCustomTag

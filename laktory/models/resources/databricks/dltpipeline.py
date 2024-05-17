@@ -9,14 +9,14 @@ from pydantic import Field
 from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
-from laktory.models.databricks.cluster import Cluster
-from laktory.models.databricks.accesscontrol import AccessControl
-from laktory.models.databricks.permissions import Permissions
+from laktory.models.resources.databricks.cluster import Cluster
+from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.datasources.tabledatasource import TableDataSource
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.databricks.workspacefile import WorkspaceFile
-from laktory.models.sql.table import Table
+from laktory.models.resources.databricks.workspacefile import WorkspaceFile
+from laktory.models.resources.databricks.table import Table
 
 
 class PipelineLibraryFile(BaseModel):

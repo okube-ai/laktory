@@ -2,7 +2,7 @@
 
 ---
 
-::: laktory.models.databricks.grants.Grant
+::: laktory.models.resources.databricks.grants.Grant
 
 --- 
 Each grant model allows a set of privileges to a principal and operate on a securable object.

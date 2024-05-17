@@ -1,5 +1,5 @@
 from laktory.models.basemodel import BaseModel
-from laktory.models.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 

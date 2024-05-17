@@ -5,10 +5,10 @@ from pydantic import model_validator
 from pydantic import Field
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
-from laktory.models.databricks.cluster import Cluster
-from laktory.models.databricks.cluster import ClusterLibrary
-from laktory.models.databricks.accesscontrol import AccessControl
-from laktory.models.databricks.permissions import Permissions
+from laktory.models.resources.databricks.cluster import Cluster
+from laktory.models.resources.databricks.cluster import ClusterLibrary
+from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 

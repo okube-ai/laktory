@@ -1,2 +1,2 @@
-::: laktory.models.TableBuilder
+::: laktory.models.resources.databricks.TableBuilder
 

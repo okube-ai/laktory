@@ -2,8 +2,8 @@ from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.databricks.userrole import UserRole
-from laktory.models.databricks.groupmember import GroupMember
+from laktory.models.resources.databricks.userrole import UserRole
+from laktory.models.resources.databricks.groupmember import GroupMember
 
 
 class User(BaseModel, PulumiResource, TerraformResource):

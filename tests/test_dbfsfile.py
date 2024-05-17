@@ -1,4 +1,4 @@
-from laktory.models import DbfsFile
+from laktory.models.resources.databricks import DbfsFile
 
 dbfs_file = DbfsFile(
     source="./test_workspacefile.py",

@@ -1,7 +1,7 @@
 from typing import Union
 
 
-from laktory.models.databricks.dltpipeline import DLTPipeline
+from laktory.models.resources.databricks.dltpipeline import DLTPipeline
 from laktory._settings import settings
 
 

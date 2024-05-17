@@ -2,9 +2,9 @@ import pulumi
 import os
 
 from laktory.models import BaseModel
-from laktory.models import Table
-from laktory.models import Schema
-from laktory.models import Job
+from laktory.models.resources.databricks import Table
+from laktory.models.resources.databricks import Schema
+from laktory.models.resources.databricks import Job
 from laktory import settings
 from laktory._testing import Paths
 from pulumi_random import RandomString

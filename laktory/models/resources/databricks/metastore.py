@@ -2,10 +2,10 @@ from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.databricks.metastoreassignment import MetastoreAssignment
-from laktory.models.databricks.metastoredataaccess import MetastoreDataAccess
+from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
+from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
 from laktory.models.grants.metastoregrant import MetastoreGrant
-from laktory.models.databricks.grants import Grants
+from laktory.models.resources.databricks.grants import Grants
 
 
 class Metastore(BaseModel, PulumiResource, TerraformResource):

@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from laktory.models import Table
+from laktory.models.resources.databricks import Table
 from laktory._testing.stockprices import table_slv
 from laktory._testing.stockprices import table_slv_join
 from laktory._testing.stockprices import spark

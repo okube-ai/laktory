@@ -2,20 +2,20 @@
 
 ---
 
-::: laktory.models.databricks.metastoredataaccess.MetastoreDataAccessAwsIamRole
+::: laktory.models.resources.databricks.metastoredataaccess.MetastoreDataAccessAwsIamRole
 
 ---
 
-::: laktory.models.databricks.metastoredataaccess.MetastoreDataAccessAzureManagedIdentity
+::: laktory.models.resources.databricks.metastoredataaccess.MetastoreDataAccessAzureManagedIdentity
 
 ---
 
-::: laktory.models.databricks.metastoredataaccess.MetastoreDataAccessAzureServicePrincipal
+::: laktory.models.resources.databricks.metastoredataaccess.MetastoreDataAccessAzureServicePrincipal
 
 ---
 
-::: laktory.models.databricks.metastoredataaccess.MetastoreDataAccessDatabricksGcpServiceAccount
+::: laktory.models.resources.databricks.metastoredataaccess.MetastoreDataAccessDatabricksGcpServiceAccount
 
 ---
 
-::: laktory.models.databricks.metastoredataaccess.MetastoreDataAccessGcpServiceAccountKey
+::: laktory.models.resources.databricks.metastoredataaccess.MetastoreDataAccessGcpServiceAccountKey

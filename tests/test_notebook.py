@@ -1,4 +1,4 @@
-from laktory.models import Notebook
+from laktory.models.resources.databricks import Notebook
 
 nb = Notebook(
     source="./test_notebook.py",

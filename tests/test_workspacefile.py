@@ -1,4 +1,4 @@
-from laktory.models import WorkspaceFile
+from laktory.models.resources.databricks import WorkspaceFile
 
 workspace_file = WorkspaceFile(
     source="./test_workspacefile.py",

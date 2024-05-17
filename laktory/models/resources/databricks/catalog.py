@@ -3,9 +3,9 @@ from typing import Literal
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.sql.schema import Schema
+from laktory.models.resources.databricks.schema import Schema
 from laktory.models.grants.cataloggrant import CatalogGrant
-from laktory.models.databricks.grants import Grants
+from laktory.models.resources.databricks.grants import Grants
 
 
 class Catalog(BaseModel, PulumiResource, TerraformResource):

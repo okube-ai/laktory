@@ -7,7 +7,7 @@ from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
 from laktory.models.pipelinenode import PipelineNode
-from laktory.models.databricks.dltpipeline import DLTPipeline
+from laktory.models.resources.databricks.dltpipeline import DLTPipeline
 
 if TYPE_CHECKING:
     from plotly.graph_objs import Figure
@@ -20,7 +20,7 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 
 
-class DataFramePipeline(BaseModel):
+class Pipeline(BaseModel):
     """
     Pipeline model to manage a full-fledged data pipeline including reading
     from data sources, applying data transformations through Spark and output

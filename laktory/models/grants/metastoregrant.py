@@ -14,7 +14,7 @@ class MetastoreGrant(BaseModel):
         List of allowed privileges
 
     References
-
+    ----------
     * [privilege types](https://docs.databricks.com/en/sql/language-manual/sql-ref-privileges.html#privilege-types)
     """
 

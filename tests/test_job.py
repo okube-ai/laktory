@@ -1,6 +1,6 @@
 import os
 
-from laktory.models import Job
+from laktory.models.resources.databricks import Job
 from laktory import pulumi_outputs
 
 job = Job(
@@ -22,7 +22,7 @@ job = Job(
         },
         {
             "depends_ons": [{"task_key": "ingestion"}],
-            "pipeline_task": {"pipeline_id": "${resources.pl-stock-prices.id}"},
+            "pipeline_task": {"pipeline_id": "${resources.dlt-pl-stock-prices.id}"},
             "task_key": "pipeline",
         },
         {

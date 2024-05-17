@@ -8,7 +8,7 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import FileDataSource
 from laktory.models.datasources import TableDataSource
 from laktory.models.datasources import MemoryDataSource
-from laktory.models.sql.column import Column
+from laktory.models.resources.databricks.column import Column
 from laktory.models.spark.sparkchain import SparkChain
 from laktory.models.spark.sparkchainnode import SparkChainNode
 from laktory.spark import SparkDataFrame

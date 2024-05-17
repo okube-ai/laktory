@@ -7,13 +7,13 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
-from laktory.models.databricks.grants import Grants
+from laktory.models.resources.databricks.grants import Grants
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.sql.column import Column
-from laktory.models.sql.tablebuilder import TableBuilder
-from laktory.models.sql.tableexpectation import TableExpectation
+from laktory.models.resources.databricks.column import Column
+from laktory.models.resources.databricks.tablebuilder import TableBuilder
+from laktory.models.resources.databricks.tableexpectation import TableExpectation
 from laktory.models.datasources.tabledatasource import TableDataSource
 
 logger = get_logger(__name__)

@@ -2,8 +2,8 @@
 
 ---
 
-::: laktory.models.databricks.externallocation.ExternalLocationEncryptionDetailsSseEncryptionDetails
+::: laktory.models.resources.databricks.externallocation.ExternalLocationEncryptionDetailsSseEncryptionDetails
 
 ---
 
-::: laktory.models.databricks.externallocation.ExternalLocationEncryptionDetails
+::: laktory.models.resources.databricks.externallocation.ExternalLocationEncryptionDetails

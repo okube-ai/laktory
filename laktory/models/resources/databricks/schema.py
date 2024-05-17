@@ -1,12 +1,12 @@
 from typing import Union
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.databricks.grants import Grants
+from laktory.models.resources.databricks.grants import Grants
 from laktory.models.grants.schemagrant import SchemaGrant
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.sql.table import Table
-from laktory.models.sql.volume import Volume
+from laktory.models.resources.databricks.table import Table
+from laktory.models.resources.databricks.volume import Volume
 
 
 class Schema(BaseModel, PulumiResource, TerraformResource):

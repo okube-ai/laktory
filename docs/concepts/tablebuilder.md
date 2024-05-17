@@ -1,5 +1,5 @@
 ??? "API Documentation"
-    [`laktory.models.TableBuilder`][laktory.models.TableBuilder]<br>
+    [`laktory.models.resources.databricks.TableBuilder`][laktory.models.resources.databricks.TableBuilder]<br>
 
 The `TableBuilder` model is a core component of Laktory that provides the mechanisms for building highly complex tables from simple configuration.
 It supports data input, columns creation, joins and aggregations. 

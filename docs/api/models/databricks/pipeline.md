@@ -2,25 +2,25 @@
 
 ---
 
-::: laktory.models.databricks.dltpipeline.PipelineLibraryFile
+::: laktory.models.resources.databricks.dltpipeline.PipelineLibraryFile
 
 ---
 
-::: laktory.models.databricks.dltpipeline.PipelineLibraryNotebook
+::: laktory.models.resources.databricks.dltpipeline.PipelineLibraryNotebook
 
 ---
 
-::: laktory.models.databricks.dltpipeline.PipelineLibrary
+::: laktory.models.resources.databricks.dltpipeline.PipelineLibrary
 
 ---
 
-::: laktory.models.databricks.dltpipeline.PipelineNotifications
+::: laktory.models.resources.databricks.dltpipeline.PipelineNotifications
 
 ---
 
-::: laktory.models.databricks.dltpipeline.PipelineCluster
+::: laktory.models.resources.databricks.dltpipeline.PipelineCluster
 
 ---
 
-::: laktory.models.databricks.dltpipeline.PipelineUDF
+::: laktory.models.resources.databricks.dltpipeline.PipelineUDF
 

@@ -4,7 +4,7 @@ from laktory._testing.stockprices import table_slv_pl
 from laktory._testing.stockprices import table_slv_join_pl
 
 
-pl = models.DLTPipeline(
+pl = models.resources.databricks.DLTPipeline(
     name="pl-stock-prices",
     catalog="dev1",
     target="markets1",

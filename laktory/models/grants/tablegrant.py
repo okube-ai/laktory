@@ -15,7 +15,6 @@ class TableGrant(BaseModel):
 
     References
     ----------
-
     * [privilege types](https://docs.databricks.com/en/sql/language-manual/sql-ref-privileges.html#privilege-types)
     """
 

@@ -1,6 +1,6 @@
 import os
 
-from laktory.models import DatabricksProvider
+from laktory.models.resources import DatabricksProvider
 
 
 def test_databricks_provider():

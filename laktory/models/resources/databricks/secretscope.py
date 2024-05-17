@@ -6,8 +6,8 @@ from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.databricks.secret import Secret
-from laktory.models.databricks.secretacl import SecretAcl
+from laktory.models.resources.databricks.secret import Secret
+from laktory.models.resources.databricks.secretacl import SecretAcl
 
 
 class SecretScopePermission(BaseModel):
