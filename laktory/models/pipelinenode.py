@@ -7,6 +7,7 @@ from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
+from laktory.models.datasources import BaseDataSource
 from laktory.models.datasinks import DataSinksUnion
 from laktory.models.pipelinenodeexpectation import PipelineNodeExpectation
 from laktory.models.spark.sparkchain import SparkChain
@@ -204,6 +205,27 @@ class PipelineNode(BaseModel):
             return None
 
         return SparkChain(nodes=nodes)
+
+    # ----------------------------------------------------------------------- #
+    # Methods                                                                 #
+    # ----------------------------------------------------------------------- #
+
+    def get_sources(self, cls=BaseDataSource) -> list[BaseDataSource]:
+        sources = []
+
+        if isinstance(self.source, cls):
+            sources += [self.source]
+
+        if self.chain:
+            for sn in self.chain.nodes:
+                for a in sn.spark_func_args:
+                    if isinstance(a.value, cls):
+                        sources += [a.value]
+                for a in sn.spark_func_kwargs.values():
+                    if isinstance(a.value, cls):
+                        sources += [a.value]
+
+        return sources
 
     def execute(
         self,
