@@ -78,7 +78,8 @@ class PipelineNode(BaseModel):
     sink: Union[DataSinksUnion, None] = None
     source: DataSourcesUnion
     timestamp_key: str = None
-    _df: Any = None
+    _output_df: Any = None
+    _pipeline: Any = None
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
@@ -107,15 +108,31 @@ class PipelineNode(BaseModel):
         #         self.drop_duplicates = False
         #
 
-        # Genera node id
+        # Generate node id
         if self.id is None:
             self.id = str(uuid.uuid4())
+
+        # Assign node to sources
+        for s in self.get_sources():
+            s._pipeline_node = self
+
+        # Assign node to sinks
+        if self.sink:
+            self.sink._pipeline_node = self
 
         return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def is_engine_dlt(self) -> bool:
+        """If `True`, pipeline node is used in the context of a DLT pipeline"""
+        is_engine_dlt = False
+        if self._pipeline and self._pipeline.is_engine_dlt:
+            is_engine_dlt = True
+        return is_engine_dlt
 
     @property
     def is_from_cdc(self) -> bool:
@@ -229,34 +246,47 @@ class PipelineNode(BaseModel):
 
     def execute(
         self,
+        apply_chain: bool = True,
+        df: AnyDataFrame = None,
+        read_source: bool = True,
         spark: SparkSession = None,
         udfs: list[Callable] = None,
-        df: AnyDataFrame = None,
+        write_sink: bool = True,
     ) -> AnyDataFrame:
         """
         Execute pipeline node
 
         Parameters
         ----------
+        apply_chain:
+            Flag to apply chain in the execution
+        df:
+            DataFrame generated
+        read_source:
+            Flag to include reading source in the execution
         spark: SparkSession
             Spark session
         udfs:
             User-defined functions
-        df:
-            DataFrame generated
+        write_sink:
+            Flag to include writing sink in the execution
 
         Returns
         -------
         :
             output Spark DataFrame
         """
-        logger.info(f"Applying {self.layer} transformations")
+        logger.info(f"Executing node {self.id} ({self.layer})")
+
+        # Parse DLT
+        if self.is_engine_dlt:
+            write_sink = False
 
         # Read Source
-        if not isinstance(self.source, str):
+        if read_source and self.source:
             df = self.source.read(spark)
 
-        if self.source.is_cdc:
+        if read_source and self.source.is_cdc:
             pass
             # TODO: Apply SCD transformations
             #       Best strategy is probably to build a spark dataframe function and add a node in the chain with
@@ -265,18 +295,18 @@ class PipelineNode(BaseModel):
             # https://www.linkedin.com/pulse/implementing-slowly-changing-dimension-2-using-lau-johansson-yemxf/
 
         # Apply chain
-        if self.chain:
+        if apply_chain and self.chain:
             df = self.chain.execute(df, udfs=udfs)
 
         # Apply layer-specific chain
-        if self.layer_spark_chain:
+        if apply_chain and self.layer_spark_chain:
             df = self.layer_spark_chain.execute(df, udfs=udfs)
 
         # Output to sink
-        if self.sink:
+        if write_sink and self.sink:
             self.sink.write(df)
 
         # Save DataFrame
-        self._df = df
+        self._output_df = df
 
         return df

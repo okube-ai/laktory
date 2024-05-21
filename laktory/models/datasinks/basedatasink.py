@@ -28,6 +28,7 @@ class BaseDataSink(BaseModel):
 
     as_stream: bool = False
     mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR"], None] = None
+    _pipeline_node: "PipelineNode" = None
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -58,3 +59,13 @@ class BaseDataSink(BaseModel):
 
     def _write_polars(self, df: PolarsDataFrame, mode=mode) -> None:
         raise NotImplementedError("Not implemented for Polars DataFrame")
+
+    # ----------------------------------------------------------------------- #
+    # Sources                                                                 #
+    # ----------------------------------------------------------------------- #
+
+    def as_source(self, as_stream=None):
+        raise NotImplementedError()
+
+    def read(self, spark=None, as_stream=None):
+        return self.as_source(as_stream=as_stream).read(spark=spark)

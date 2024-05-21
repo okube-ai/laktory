@@ -18,8 +18,8 @@ class PipelineNodeDataSource(BaseDataSource):
     ----------
     node_id:
         Id of the pipeline node to act as a data source
-    df:
-        DataFrame output from the pipeline node
+    # df:
+    #     DataFrame output from the pipeline node
 
     Examples
     ---------
@@ -29,7 +29,7 @@ class PipelineNodeDataSource(BaseDataSource):
 
     node_id: Union[str, None]
     node: Any = None  # Add suggested type?
-    _df: Any = None
+    # _df: Any = None
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -44,9 +44,55 @@ class PipelineNodeDataSource(BaseDataSource):
     # ----------------------------------------------------------------------- #
 
     def _read_spark(self, spark) -> SparkDataFrame:
-        logger.info(f"Reading {self._id} from pipeline node")
-        return self.node._df
+
+        # Reading from DLT
+        if self.is_engine_dlt:
+
+            from laktory.dlt import read as dlt_read
+            from laktory.dlt import read_stream as dlt_read_stream
+            from laktory.dlt import is_debug
+
+            if is_debug():
+                logger.info(f"Reading pipeline node {self._id} from sink (DLT debug)")
+                df = None
+                if self.node.sink:
+                    df = self.node.sink.read(spark=spark, as_stream=self.as_stream)
+            else:
+                if self.as_stream:
+                    logger.info(f"Reading pipeline node {self._id} with DLT as stream")
+                    df = dlt_read_stream(self.id)
+                else:
+                    logger.info(f"Reading pipeline node {self._id} with DLT as static")
+                    df = dlt_read(self.id)
+
+        # Read from node output DataFrame (if available)
+        elif self.node._output_df:
+            logger.info(f"Reading pipeline node {self._id} from output DataFrame")
+            df = self.node._output_df
+
+        # Read from node sink
+        elif self.node.sink:
+            logger.info(f"Reading pipeline node {self._id} from sink")
+            df = self.node.sink.read(spark=spark, as_stream=self.as_stream)
+
+        else:
+            raise ValueError(f"Pipeline Node {self.id} can't read DataFrame")
+
+        return df
 
     def _read_polars(self) -> PolarsDataFrame:
-        logger.info(f"Reading {self._id} from pipeline node")
-        return self.node._df
+
+        # Read from node output DataFrame (if available)
+        if self.node._output_df:
+            logger.info(f"Reading pipeline node {self._id} from output DataFrame")
+            df = self.node._output_df
+
+        # Read from node sink
+        elif self.node.sink:
+            logger.info(f"Reading pipeline node {self._id} from sink")
+            df = self.node.sink.read(as_stream=self.as_stream)
+
+        else:
+            raise ValueError(f"Pipeline Node {self.id} can't read DataFrame")
+
+        return df

@@ -2,6 +2,7 @@ from typing import Literal
 from typing import Union
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
+from laktory.models.datasources.tabledatasource import TableDataSource
 
 
 class TableDataSink(BaseDataSink):
@@ -101,3 +102,17 @@ class TableDataSink(BaseDataSink):
 
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
         (df.write.format(self.format).mode(mode).saveAsTable(self.full_name))
+
+    def as_source(self, as_stream=None) -> TableDataSource:
+
+        source = TableDataSource(
+            catalog_name=self.catalog_name,
+            table_name=self.table_name,
+            schema_name=self.schema_name,
+            warehouse=self.warehouse,
+        )
+        if as_stream:
+            source.as_stream = as_stream
+
+        return source
+

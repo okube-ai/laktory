@@ -12,6 +12,7 @@ from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
+from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipelinenode import PipelineNode
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.dltpipeline import DLTPipeline
@@ -29,6 +30,7 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 # Helper Classes                                                              #
 # --------------------------------------------------------------------------- #
+
 
 class PipelineUDF(BaseModel):
     """
@@ -84,10 +86,11 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # TODO
     ```
     """
+
     dlt: Union[DLTPipeline, None] = None
     name: str
     nodes: list[Union[PipelineNode]]
-    engine: Union[Literal["DLT"], None] = "DLT"
+    engine: Union[Literal["DLT"], None] = None
     # orchestrator: Literal["DATABRICKS"] = "DATABRICKS"
     udfs: list[PipelineUDF] = []
 
@@ -98,18 +101,48 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             data["dlt"]["name"] = data.get("name", None)
         return data
 
-    # @model_validator(mode="after")
-    # def update_nodes(self) -> Any:
-    #     """
-    #     """
-    #     for n in self.nodes:
-    #         for s in n.get_sources(Ta)
-    #
-    #     return self
+    @model_validator(mode="after")
+    def update_nodes(self) -> Any:
+        """ """
+
+        # Build dag
+        _ = self.dag
+
+        for n in self.nodes:
+            # Assign pipeline
+            n._pipeline = self
+
+        return self
+
+    @model_validator(mode="after")
+    def validate_dlt(self) -> Any:
+
+        if not self.is_engine_dlt:
+            return self
+
+        for n in self.nodes:
+
+            # Sink must be Table or None
+            if n.sink is None:
+                pass
+            if isinstance(n.sink, TableDataSink):
+                if n.sink.table_name != n.id:
+                    raise ValueError(
+                        "For DLT pipeline, table sink name must be the same as node id."
+                    )
+                n.sink.catalog_name = self.dlt.catalog
+                n.sink.schema_name = self.dlt.target
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def is_engine_dlt(self) -> bool:
+        """If `True`, pipeline engine is DLT"""
+        return self.engine == "DLT"
 
     @property
     def nodes_dict(self) -> dict[str, PipelineNode]:
@@ -264,10 +297,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
         resources = []
 
-        if self.engine == "DLT":
-            resources += [
-                self.dlt
-            ]
+        if self.is_engine_dlt:
+            resources += [self.dlt]
 
             resources += [file]
 
@@ -298,6 +329,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_cls(self):
         return None
+
     #
     # @property
     # def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
@@ -327,6 +359,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return ""
+
     #
     # @property
     # def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
