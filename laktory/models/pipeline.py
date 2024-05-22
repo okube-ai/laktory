@@ -199,8 +199,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         logger.info("Executing Pipeline")
 
         for inode, node in enumerate(self.sorted_nodes):
-            logger.info(f"Executing node {inode} ({node.id}).")
-            node.execute(spark, udfs=udfs)
+            node.execute(spark=spark, udfs=udfs)
 
     def dag_figure(self) -> "Figure":
 

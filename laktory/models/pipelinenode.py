@@ -247,8 +247,8 @@ class PipelineNode(BaseModel):
     def execute(
         self,
         apply_chain: bool = True,
-        df: AnyDataFrame = None,
-        read_source: bool = True,
+        # df: AnyDataFrame = None,
+        # read_source: bool = True,
         spark: SparkSession = None,
         udfs: list[Callable] = None,
         write_sink: bool = True,
@@ -260,10 +260,6 @@ class PipelineNode(BaseModel):
         ----------
         apply_chain:
             Flag to apply chain in the execution
-        df:
-            DataFrame generated
-        read_source:
-            Flag to include reading source in the execution
         spark: SparkSession
             Spark session
         udfs:
@@ -276,17 +272,16 @@ class PipelineNode(BaseModel):
         :
             output Spark DataFrame
         """
-        logger.info(f"Executing node {self.id} ({self.layer})")
+        logger.info(f"Executing pipeline node {self.id} ({self.layer})")
 
         # Parse DLT
         if self.is_engine_dlt:
             write_sink = False
 
         # Read Source
-        if read_source and self.source:
-            df = self.source.read(spark)
+        df = self.source.read(spark)
 
-        if read_source and self.source.is_cdc:
+        if self.source.is_cdc:
             pass
             # TODO: Apply SCD transformations
             #       Best strategy is probably to build a spark dataframe function and add a node in the chain with

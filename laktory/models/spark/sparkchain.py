@@ -103,7 +103,7 @@ class SparkChain(BaseModel):
             self._columns += [df.columns]
 
             tnode = type(node)
-            logger.info(f"Executing node {inode} ({tnode.__name__}).")
+            logger.info(f"Executing spark chain node {inode} ({tnode.__name__}).")
             df = node.execute(df, udfs=udfs)
 
         return df
