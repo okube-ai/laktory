@@ -46,7 +46,6 @@ class FileDataSink(BaseDataSink):
         path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
         format="PARQUET",
         mode="OVERWRITE",
-        as_stream=False,
     )
     # sink.write(df)
     ```

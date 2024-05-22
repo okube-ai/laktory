@@ -50,7 +50,6 @@ class TableDataSink(BaseDataSink):
         schema_name="finance",
         table_name="slv_stock_prices",
         mode="OVERWRITE",
-        as_stream=False,
     )
     # sink.write(df)
     ```
