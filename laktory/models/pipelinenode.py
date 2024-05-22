@@ -143,6 +143,30 @@ class PipelineNode(BaseModel):
             return self.source.is_cdc
 
     @property
+    def warning_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.action == "WARN":
+                expectations[e.name] = e.expression
+        return expectations
+
+    @property
+    def drop_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.action == "DROP":
+                expectations[e.name] = e.expression
+        return expectations
+
+    @property
+    def fail_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.action == "FAIL":
+                expectations[e.name] = e.expression
+        return expectations
+
+    @property
     def layer_spark_chain(self):
         nodes = []
 
