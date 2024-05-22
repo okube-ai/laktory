@@ -95,7 +95,7 @@ class FileDataSink(BaseDataSink):
             logger.info(f"Writing df as static to {self.path}")
             writer = df.write
 
-        writer = writer.mode(mode).format(self.format)
+        writer = writer.mode(mode).format(self.format).option("mergeSchema", "true")
 
         if self.write_options:
             writer = writer.options(**self.write_options)

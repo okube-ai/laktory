@@ -1,5 +1,6 @@
 from typing import Union
 from typing import Any
+from pydantic import Field
 
 from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory.spark import SparkDataFrame
@@ -28,7 +29,7 @@ class PipelineNodeDataSource(BaseDataSource):
     """
 
     node_id: Union[str, None]
-    node: Any = None  # Add suggested type?
+    node: Any = Field(None, exclude=True)  # Add suggested type?
     # _df: Any = None
 
     # ----------------------------------------------------------------------- #

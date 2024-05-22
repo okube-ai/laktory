@@ -326,6 +326,77 @@ def test_pipeline_dlt():
 
 
 if __name__ == "__main__":
-    test_dag()
-    test_execute()
-    test_pipeline_dlt()
+    # test_dag()
+    # test_execute()
+    # test_pipeline_dlt()
+
+    node_brz = models.PipelineNode(
+        id="brz_stock_prices",
+        layer="BRONZE",
+        source={
+            "path": "/Volumes/dev/sources/landing/events/yahoo-finance/stock_price/",
+            "as_stream": True,
+        },
+        sink={
+            "table_name": "brz_stock_prices",
+            "catalog_name": "dev",
+            "schema_name": "sandbox",
+            "mode": "APPEND",
+            "checkpoint_location": "/tmp/brz2/",
+        }
+    )
+
+    node_slv = models.PipelineNode(
+        id="slv_stock_prices",
+        layer="SILVER",
+        source={
+            "node_id": "brz_stock_prices",
+            "as_stream": True,
+        },
+        sink={
+            "table_name": "slv_stock_prices",
+            "catalog_name": "dev",
+            "schema_name": "sandbox",
+            "checkpoint_location": "/tmp/slv2/",
+            "mode": "APPEND",
+        },
+        chain={
+            "nodes": [
+                {
+                    "column": {"name": "created_at", "type": "timestamp"},
+                    "sql_expression": "data.created_at",
+                },
+                {
+                    "column": {"name": "symbol"},
+                    "spark_func_name": "coalesce",
+                    "spark_func_args": ["data.symbol"],
+                },
+                {
+                    "column": {"name": "close", "type": "double"},
+                    "sql_expression": "data.close",
+                },
+                {
+                    "spark_func_name": "drop",
+                    "spark_func_args": ["data", "producer", "name", "description"],
+                },
+            ]
+        },
+    )
+
+    pl = models.Pipeline(
+        name="pl-stock-prices",
+        dlt=dict(
+            catalog="dev",
+            target="sandbox",
+        ),
+        nodes=[node_brz, node_slv],
+        engine=None,
+        # udfs=[
+        # ],
+    )
+
+    with open("./data/pl-spark-streaming.yaml", "w") as fp:
+        fp.write(pl.model_dump_yaml(exclude_none=True))
+
+
+

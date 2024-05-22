@@ -127,6 +127,7 @@ class TableDataSink(BaseDataSink):
                 .outputMode(self.mode)
                 .format(self.format)
                 .trigger(availableNow=True)  # TODO: Add option for trigger?
+                .option("mergeSchema", "true")
             )
 
             if self.checkpoint_location:
@@ -136,7 +137,7 @@ class TableDataSink(BaseDataSink):
 
         else:
             logger.info(f"Writing {self._id} as static with mode {self.mode}")
-            (df.write.format(self.format).mode(mode).saveAsTable(self.full_name))
+            (df.write.format(self.format).mode(mode).option("mergeSchema", "true").saveAsTable(self.full_name))
 
     def as_source(self, as_stream=None) -> TableDataSource:
 
