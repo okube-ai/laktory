@@ -68,6 +68,7 @@ class PipelineNode(BaseModel):
     """
 
     add_layer_columns: bool = True
+    description: str = None
     drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
     chain: Union[SparkChain, None] = None

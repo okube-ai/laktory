@@ -61,10 +61,10 @@ class PipelineNodeDataSource(BaseDataSource):
             else:
                 if self.as_stream:
                     logger.info(f"Reading pipeline node {self._id} with DLT as stream")
-                    df = dlt_read_stream(self._pipeline_node.id)
+                    df = dlt_read_stream(self.node.id)
                 else:
                     logger.info(f"Reading pipeline node {self._id} with DLT as static")
-                    df = dlt_read(self._pipeline_node.id)
+                    df = dlt_read(self.node.id)
 
         # Read from node output DataFrame (if available)
         elif self.node._output_df:
