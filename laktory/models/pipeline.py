@@ -117,6 +117,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     @model_validator(mode="after")
     def validate_dlt(self) -> Any:
 
+        if self.is_engine_dlt:
+            if self.dlt is None:
+                raise ValueError("dlt must be defined if DLT engine is selected.")
+
         if not self.is_engine_dlt:
             return self
 

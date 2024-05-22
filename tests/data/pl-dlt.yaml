@@ -1,27 +1,28 @@
 name: pl-stock-prices
+dlt:
+  catalog: dev
+  target: sandbox
+engine: DLT
 nodes:
 - id: brz_stock_prices
   layer: BRONZE
   source:
     path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
+    as_stream: true
   sink:
-    catalog_name: dev
-    schema_name: sandbox
     table_name: brz_stock_prices
-    mode: OVERWRITE
 
 - id: slv_stock_prices
   layer: SILVER
   source:
     node_id: brz_stock_prices
+    as_stream: true
   sink:
-    catalog_name: dev
-    schema_name: sandbox
     table_name: slv_stock_prices
-    mode: OVERWRITE
   chain:
     nodes:
-    - column:
+    - allow_missing_column_args: false
+      column:
         name: created_at
         type: timestamp
       sql_expression: data.created_at
