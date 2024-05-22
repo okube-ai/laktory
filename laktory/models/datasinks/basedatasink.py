@@ -16,17 +16,18 @@ class BaseDataSink(BaseModel):
 
     Attributes
     ----------
-    as_stream:
-        If `True`DataFrame is written as a data stream.
+    # as_stream:
+    #     If `True`DataFrame is written as a data stream.
     mode:
         Write mode.
         - overwrite: Overwrite existing data
         - append: Append contents of the DataFrame to existing data
         - error: Throw and exception if data already exists
         - ignore: Silently ignore this operation if data already exists
+        - complete: Overwrite for streaming DataFrames
     """
 
-    as_stream: bool = False
+    # as_stream: bool = False
     mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE"], None] = None
     _pipeline_node: "PipelineNode" = None
 

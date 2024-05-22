@@ -57,12 +57,12 @@ class FileDataSink(BaseDataSink):
     path: str
     write_options: dict[str, str] = {}
 
-    @model_validator(mode="after")
-    def check_format(self) -> Any:
-        if self.as_stream and self.format != "DELTA":
-            raise ValueError("Streaming is only supported with Delta")
-
-        return self
+    # @model_validator(mode="after")
+    # def check_format(self) -> Any:
+    #     if self.as_stream and self.format != "DELTA":
+    #         raise ValueError("Streaming is only supported with Delta")
+    #
+    #     return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -84,7 +84,7 @@ class FileDataSink(BaseDataSink):
 
     def _write_spark(self, df: SparkDataFrame, mode=None) -> None:
 
-        if self.as_stream:
+        if df.isStreaming:
             logger.info(f"Writing df as stream to {self.path}")
 
             writer = df.writeStream.option(
