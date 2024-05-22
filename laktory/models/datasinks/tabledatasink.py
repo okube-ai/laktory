@@ -126,6 +126,7 @@ class TableDataSink(BaseDataSink):
                 .writeStream
                 .outputMode(self.mode)
                 .format(self.format)
+                .trigger(availableNow=True)  # TODO: Add option for trigger?
             )
 
             if self.checkpoint_location:
