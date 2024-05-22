@@ -279,7 +279,7 @@ class PipelineNode(BaseModel):
             write_sink = False
 
         # Read Source
-        df = self.source.read(spark)
+        self._output_df = self.source.read(spark)
 
         if self.source.is_cdc:
             pass
@@ -291,17 +291,14 @@ class PipelineNode(BaseModel):
 
         # Apply chain
         if apply_chain and self.chain:
-            df = self.chain.execute(df, udfs=udfs)
+            self._output_df = self.chain.execute(self._output_df, udfs=udfs)
 
         # Apply layer-specific chain
         if apply_chain and self.layer_spark_chain:
-            df = self.layer_spark_chain.execute(df, udfs=udfs)
+            self._output_df = self.layer_spark_chain.execute(self._output_df, udfs=udfs)
 
         # Output to sink
         if write_sink and self.sink:
-            self.sink.write(df)
+            self.sink.write(self._output_df)
 
-        # Save DataFrame
-        self._output_df = df
-
-        return df
+        return self._output_df
