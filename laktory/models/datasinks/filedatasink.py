@@ -61,6 +61,7 @@ class FileDataSink(BaseDataSink):
     def check_format(self) -> Any:
         if self.as_stream and self.format != "DELTA":
             raise ValueError("Streaming is only supported with Delta")
+
         return self
 
     # ----------------------------------------------------------------------- #

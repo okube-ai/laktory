@@ -1,5 +1,7 @@
 from typing import Literal
 from typing import Union
+from typing import Any
+from pydantic import model_validator
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
 from laktory.models.datasources.tabledatasource import TableDataSource
@@ -15,6 +17,9 @@ class TableDataSink(BaseDataSink):
 
     Attributes
     ----------
+    checkpoint_location:
+        Path to which the checkpoint file for streaming dataframe should
+        be written.
     catalog_name:
         Name of the catalog of the source table
     table_name:
@@ -52,10 +57,19 @@ class TableDataSink(BaseDataSink):
     """
 
     catalog_name: Union[str, None] = None
+    checkpoint_location: Union[str, None] = None
     format: Literal["DELTA", "PARQUET"] = "DELTA"
     schema_name: Union[str, None] = None
     table_name: Union[str, None]
     warehouse: Union[Literal["DATABRICKS"], None] = "DATABRICKS"
+
+    @model_validator(mode="after")
+    def check_mode(self) -> Any:
+        if self.as_stream:
+            if self.mode not in ["APPEND", "COMPLETE"]:
+                raise ValueError(f"Mode {self.mode} is not supported for streams. Select 'APPEND' or 'COMPLETE'")
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -104,8 +118,24 @@ class TableDataSink(BaseDataSink):
             )
 
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
-        logger.info(f"Writing {self._id} with mode {self.mode}")
-        (df.write.format(self.format).mode(mode).saveAsTable(self.full_name))
+
+        if self.as_stream:
+            logger.info(f"Writing {self._id} as stream with mode {self.mode}")
+            writer = (
+                df
+                .writeStream
+                .outputMode(self.mode)
+                .format(self.format)
+            )
+
+            if self.checkpoint_location:
+                writer = writer.option("checkpointLocation", self.checkpoint_location)
+
+            writer.toTable(self.full_name)
+
+        else:
+            logger.info(f"Writing {self._id} as static with mode {self.mode}")
+            (df.write.format(self.format).mode(mode).saveAsTable(self.full_name))
 
     def as_source(self, as_stream=None) -> TableDataSource:
 
