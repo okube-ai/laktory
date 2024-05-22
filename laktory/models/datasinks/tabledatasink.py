@@ -3,6 +3,9 @@ from typing import Union
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
 from laktory.models.datasources.tabledatasource import TableDataSource
+from laktory._logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class TableDataSink(BaseDataSink):
@@ -101,6 +104,7 @@ class TableDataSink(BaseDataSink):
             )
 
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
+        logger.info(f"Writing {self._id} with mode {self.mode}")
         (df.write.format(self.format).mode(mode).saveAsTable(self.full_name))
 
     def as_source(self, as_stream=None) -> TableDataSource:
