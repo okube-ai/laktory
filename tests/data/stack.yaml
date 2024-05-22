@@ -10,19 +10,21 @@ resources:
     databricks:  # for terraform, provider name must match resource type prefix
       host: ${vars.DATABRICKS_HOST}
       token: ${vars.DATABRICKS_TOKEN}
-  databricks_dltpipelines:
+  pipelines:
     pl-custom-name:
       name: pl-stock-prices-ut-stack
-      libraries:
-        - notebook:
-            path: /pipelines/dlt_brz_template.py
-      access_controls:
-        - group_name: account users
-          permission_level: CAN_VIEW
-        - group_name: role-engineers
-          permission_level: CAN_RUN
-      options:
-        provider: ${resources.databricks}
+      nodes: []
+      dlt:
+        libraries:
+          - notebook:
+              path: /pipelines/dlt_brz_template.py
+        access_controls:
+          - group_name: account users
+            permission_level: CAN_VIEW
+          - group_name: role-engineers
+            permission_level: CAN_RUN
+        options:
+          provider: ${resources.databricks}
   databricks_jobs:
     job-stock-prices-ut-stack:
       name: job-stock-prices-ut-stack

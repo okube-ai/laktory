@@ -28,7 +28,9 @@ class BaseDataSink(BaseModel):
     """
 
     # as_stream: bool = False
-    mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE"], None] = None
+    mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE"], None] = (
+        None
+    )
     _pipeline_node: "PipelineNode" = None
 
     # ----------------------------------------------------------------------- #

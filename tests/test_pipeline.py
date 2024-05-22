@@ -48,14 +48,11 @@ def test_dag():
     assert pl.sorted_nodes == [node_brz, node_meta, node_slv, node_gld]
     assert node_slv.source.node == node_brz
     assert node_gld.source.node == node_slv
-    assert (
-        node_slv.chain.nodes[-1].spark_func_kwargs["other"].value.node == node_meta
-    )
+    assert node_slv.chain.nodes[-1].spark_func_kwargs["other"].value.node == node_meta
 
     # Test figure
     fig = pl.dag_figure()
     fig.write_html(os.path.join(paths.tmp, "dag.html"), auto_open=OPEN_FIGURES)
-
 
 
 def test_execute():
@@ -122,20 +119,179 @@ def test_pipeline_dlt():
         pl = models.Pipeline.model_validate_yaml(fp)
 
     # Test Sink as Source
-    sink_source = pl.nodes[1].source.node.sink.as_source(as_stream=pl.nodes[1].source.as_stream)
+    sink_source = pl.nodes[1].source.node.sink.as_source(
+        as_stream=pl.nodes[1].source.as_stream
+    )
     data = sink_source.model_dump()
     print(data)
-    assert data == {'as_stream': True, 'broadcast': False, 'cdc': None, 'dataframe_type': 'SPARK', 'drops': None, 'filter': None, 'renames': None, 'selects': None, 'watermark': None, 'catalog_name': 'dev', 'from_dlt': None, 'table_name': 'brz_stock_prices', 'schema_name': 'sandbox', 'warehouse': 'DATABRICKS'}
+    assert data == {
+        "as_stream": True,
+        "broadcast": False,
+        "cdc": None,
+        "dataframe_type": "SPARK",
+        "drops": None,
+        "filter": None,
+        "renames": None,
+        "selects": None,
+        "watermark": None,
+        "catalog_name": "dev",
+        "from_dlt": None,
+        "table_name": "brz_stock_prices",
+        "schema_name": "sandbox",
+        "warehouse": "DATABRICKS",
+    }
 
     data = pl.model_dump()
     print(data)
-    assert data == {'dlt': {'access_controls': [], 'allow_duplicate_names': None, 'catalog': 'dev', 'channel': 'PREVIEW', 'clusters': [], 'configuration': {}, 'continuous': None, 'development': None, 'edition': None, 'libraries': None, 'name': 'pl-stock-prices', 'notifications': [], 'photon': None, 'serverless': None, 'storage': None, 'tables': [], 'target': 'sandbox', 'udfs': []}, 'name': 'pl-stock-prices', 'nodes': [{'add_layer_columns': True, 'description': None, 'drop_duplicates': None, 'drop_source_columns': False, 'chain': None, 'expectations': [], 'id': 'brz_stock_prices', 'layer': 'BRONZE', 'primary_key': None, 'sink': {'mode': None, 'catalog_name': 'dev', 'checkpoint_location': None, 'format': 'DELTA', 'schema_name': 'sandbox', 'table_name': 'brz_stock_prices', 'warehouse': 'DATABRICKS'}, 'source': {'as_stream': True, 'broadcast': False, 'cdc': None, 'dataframe_type': 'SPARK', 'drops': None, 'filter': None, 'renames': None, 'selects': None, 'watermark': None, 'format': 'JSON', 'header': True, 'multiline': False, 'path': '/Volumes/dev/sources/landing/events/yahoo-finance/stock_price/', 'read_options': {}, 'schema_location': None}, 'timestamp_key': None}, {'add_layer_columns': True, 'description': None, 'drop_duplicates': None, 'drop_source_columns': True, 'chain': {'nodes': [{'allow_missing_column_args': False, 'column': {'name': 'created_at', 'type': 'timestamp', 'unit': None}, 'spark_func_args': [], 'spark_func_kwargs': {}, 'spark_func_name': None, 'sql_expression': 'data.created_at'}, {'allow_missing_column_args': False, 'column': {'name': 'symbol', 'type': 'string', 'unit': None}, 'spark_func_args': [{'value': 'data.symbol'}], 'spark_func_kwargs': {}, 'spark_func_name': 'coalesce', 'sql_expression': None}, {'allow_missing_column_args': False, 'column': {'name': 'close', 'type': 'double', 'unit': None}, 'spark_func_args': [], 'spark_func_kwargs': {}, 'spark_func_name': None, 'sql_expression': 'data.close'}, {'allow_missing_column_args': False, 'column': None, 'spark_func_args': [{'value': 'data'}, {'value': 'producer'}, {'value': 'name'}, {'value': 'description'}], 'spark_func_kwargs': {}, 'spark_func_name': 'drop', 'sql_expression': None}]}, 'expectations': [], 'id': 'slv_stock_prices', 'layer': 'SILVER', 'primary_key': None, 'sink': {'mode': None, 'catalog_name': 'dev', 'checkpoint_location': None, 'format': 'DELTA', 'schema_name': 'sandbox', 'table_name': 'slv_stock_prices', 'warehouse': 'DATABRICKS'}, 'source': {'as_stream': True, 'broadcast': False, 'cdc': None, 'dataframe_type': 'SPARK', 'drops': None, 'filter': None, 'renames': None, 'selects': None, 'watermark': None, 'node_id': 'brz_stock_prices'}, 'timestamp_key': None}], 'engine': 'DLT', 'udfs': []}
+    assert data == {
+        "dlt": {
+            "access_controls": [],
+            "allow_duplicate_names": None,
+            "catalog": "dev",
+            "channel": "PREVIEW",
+            "clusters": [],
+            "configuration": {},
+            "continuous": None,
+            "development": None,
+            "edition": None,
+            "libraries": None,
+            "name": "pl-stock-prices",
+            "notifications": [],
+            "photon": None,
+            "serverless": None,
+            "storage": None,
+            "tables": [],
+            "target": "sandbox",
+            "udfs": [],
+        },
+        "name": "pl-stock-prices",
+        "nodes": [
+            {
+                "add_layer_columns": True,
+                "description": None,
+                "drop_duplicates": None,
+                "drop_source_columns": False,
+                "chain": None,
+                "expectations": [],
+                "id": "brz_stock_prices",
+                "layer": "BRONZE",
+                "primary_key": None,
+                "sink": {
+                    "mode": None,
+                    "catalog_name": "dev",
+                    "checkpoint_location": None,
+                    "format": "DELTA",
+                    "schema_name": "sandbox",
+                    "table_name": "brz_stock_prices",
+                    "warehouse": "DATABRICKS",
+                },
+                "source": {
+                    "as_stream": True,
+                    "broadcast": False,
+                    "cdc": None,
+                    "dataframe_type": "SPARK",
+                    "drops": None,
+                    "filter": None,
+                    "renames": None,
+                    "selects": None,
+                    "watermark": None,
+                    "format": "JSON",
+                    "header": True,
+                    "multiline": False,
+                    "path": "/Volumes/dev/sources/landing/events/yahoo-finance/stock_price/",
+                    "read_options": {},
+                    "schema_location": None,
+                },
+                "timestamp_key": None,
+            },
+            {
+                "add_layer_columns": True,
+                "description": None,
+                "drop_duplicates": None,
+                "drop_source_columns": True,
+                "chain": {
+                    "nodes": [
+                        {
+                            "allow_missing_column_args": False,
+                            "column": {
+                                "name": "created_at",
+                                "type": "timestamp",
+                                "unit": None,
+                            },
+                            "spark_func_args": [],
+                            "spark_func_kwargs": {},
+                            "spark_func_name": None,
+                            "sql_expression": "data.created_at",
+                        },
+                        {
+                            "allow_missing_column_args": False,
+                            "column": {
+                                "name": "symbol",
+                                "type": "string",
+                                "unit": None,
+                            },
+                            "spark_func_args": [{"value": "data.symbol"}],
+                            "spark_func_kwargs": {},
+                            "spark_func_name": "coalesce",
+                            "sql_expression": None,
+                        },
+                        {
+                            "allow_missing_column_args": False,
+                            "column": {"name": "close", "type": "double", "unit": None},
+                            "spark_func_args": [],
+                            "spark_func_kwargs": {},
+                            "spark_func_name": None,
+                            "sql_expression": "data.close",
+                        },
+                        {
+                            "allow_missing_column_args": False,
+                            "column": None,
+                            "spark_func_args": [
+                                {"value": "data"},
+                                {"value": "producer"},
+                                {"value": "name"},
+                                {"value": "description"},
+                            ],
+                            "spark_func_kwargs": {},
+                            "spark_func_name": "drop",
+                            "sql_expression": None,
+                        },
+                    ]
+                },
+                "expectations": [],
+                "id": "slv_stock_prices",
+                "layer": "SILVER",
+                "primary_key": None,
+                "sink": {
+                    "mode": None,
+                    "catalog_name": "dev",
+                    "checkpoint_location": None,
+                    "format": "DELTA",
+                    "schema_name": "sandbox",
+                    "table_name": "slv_stock_prices",
+                    "warehouse": "DATABRICKS",
+                },
+                "source": {
+                    "as_stream": True,
+                    "broadcast": False,
+                    "cdc": None,
+                    "dataframe_type": "SPARK",
+                    "drops": None,
+                    "filter": None,
+                    "renames": None,
+                    "selects": None,
+                    "watermark": None,
+                    "node_id": "brz_stock_prices",
+                },
+                "timestamp_key": None,
+            },
+        ],
+        "engine": "DLT",
+        "udfs": [],
+    }
 
 
 if __name__ == "__main__":
     test_dag()
     test_execute()
     test_pipeline_dlt()
-
-
-

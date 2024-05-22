@@ -88,7 +88,9 @@ class FileDataSink(BaseDataSink):
 
             writer = df.writeStream.option(
                 "checkpointlocation", self._checkpoint_location
-            ).trigger(availableNow=True)  # TODO: Add option for trigger?
+            ).trigger(
+                availableNow=True
+            )  # TODO: Add option for trigger?
 
         else:
             logger.info(f"Writing df as static to {self.path}")

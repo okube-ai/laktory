@@ -6,6 +6,7 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory._parsers import merge_dicts
 from laktory.models.basemodel import BaseModel
+from laktory.models.pipeline import Pipeline
 from laktory.models.resources.databricks.catalog import Catalog
 from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.dbfsfile import DbfsFile
@@ -106,6 +107,8 @@ class StackResources(BaseModel):
         Databricks Warehouses
     databricks_workspacefiles:
         Databricks WorkspacFiles
+    pipelines:
+        Laktory Pipelines
     """
 
     databricks_dbfsfiles: dict[str, DbfsFile] = {}
@@ -129,6 +132,7 @@ class StackResources(BaseModel):
     databricks_volumes: dict[str, Volume] = {}
     databricks_warehouses: dict[str, Warehouse] = {}
     databricks_workspacefiles: dict[str, WorkspaceFile] = {}
+    pipelines: dict[str, Pipeline] = {}
     providers: dict[
         str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]
     ] = {}

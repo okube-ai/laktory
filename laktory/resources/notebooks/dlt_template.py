@@ -22,6 +22,7 @@ with open(filepath, "r") as fp:
 # Tables and Views Definition                                                 #
 # --------------------------------------------------------------------------- #
 
+
 def define_table(node):
     @dlt.table_or_view(
         name=node.id,
