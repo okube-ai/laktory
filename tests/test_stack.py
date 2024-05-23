@@ -43,9 +43,7 @@ def test_stack_model():
                     "node_type_id": "Standard_DS4_v2",
                 },
                 "resources": {
-                    "databricks_dltpipelines": {
-                        "pl-custom-name": {"development": False}
-                    }
+                    "pipelines": {"pl-custom-name": {"dlt": {"development": False}}}
                 },
             },
         },
@@ -375,18 +373,18 @@ def test_pulumi_stack():
                     "deleteBeforeReplace": True,
                 },
             },
-            "permissions-pl-custom-name": {
+            "permissions-dlt-custom-name": {
                 "type": "databricks:Permissions",
                 "properties": {
                     "accessControls": [
                         {"groupName": "account users", "permissionLevel": "CAN_VIEW"},
                         {"groupName": "role-engineers", "permissionLevel": "CAN_RUN"},
                     ],
-                    "pipelineId": "${pl-custom-name.id}",
+                    "pipelineId": "${dlt-custom-name.id}",
                 },
                 "options": {
                     "provider": "${databricks}",
-                    "dependsOn": ["${pl-custom-name}"],
+                    "dependsOn": ["${dlt-custom-name}"],
                     "deleteBeforeReplace": True,
                 },
             },
@@ -396,11 +394,7 @@ def test_pulumi_stack():
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "./tmp-pl-stock-prices-ut-stack.json",
                 },
-                "options": {
-                    "provider": "${databricks}",
-                    "dependsOn": ["${dlt-custom-name}"],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
             "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:Permissions",
@@ -411,10 +405,8 @@ def test_pulumi_stack():
                     "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                 },
                 "options": {
-                    "provider": "${databricks}",
                     "dependsOn": [
-                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}",
-                        "${dlt-custom-name}",
+                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}"
                     ],
                     "deleteBeforeReplace": True,
                 },
@@ -459,7 +451,7 @@ def test_pulumi_stack():
     ][0]["newCluster"]
     cluster["nodeTypeId"] = "Standard_DS4_v2"
     cluster["sparkEnvVars"]["LAKTORY_WORKSPACE_ENV"] = "prod"
-    data0["resources"]["pl-custom-name"]["properties"]["development"] = False
+    data0["resources"]["dlt-custom-name"]["properties"]["development"] = False
     assert data == data0
 
 

@@ -2,6 +2,13 @@ name: pl-stock-prices
 dlt:
   catalog: dev
   target: sandbox
+  access_controls:
+    - group_name: account users
+      permission_level: CAN_VIEW
+  options:
+    provider: ${resources.databricks2}
+options:
+  provider: ${resources.databricks1}
 engine: DLT
 nodes:
 - id: brz_stock_prices

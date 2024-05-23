@@ -7,6 +7,7 @@ from laktory._logger import get_logger
 from laktory._parsers import merge_dicts
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline import Pipeline
+from laktory.models.resources.baseresource import ResourceOptions
 from laktory.models.resources.databricks.catalog import Catalog
 from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.dbfsfile import DbfsFile
@@ -337,6 +338,7 @@ class Stack(BaseModel):
     resources: Union[StackResources, None] = StackResources()
     terraform: Terraform = Terraform()
     variables: dict[str, Any] = {}
+    _envs: dict[str, EnvironmentStack] = None
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -354,27 +356,69 @@ class Stack(BaseModel):
         :
             Environment definitions.
         """
-        ENV_FIELDS = ["pulumi", "resources", "terraform", "variables"]
 
-        d = self.model_dump(exclude_none=True)
-        _envs = d.pop("environments")
+        if self._envs is None:
 
-        # Restore fields excluded from dump
-        for rtype in d.get("resources", {}):
-            for k, r in d["resources"][rtype].items():
-                r["options"] = getattr(self.resources, rtype)[k].options.model_dump(
-                    exclude_none=True
-                )
+            ENV_FIELDS = ["pulumi", "resources", "terraform", "variables"]
 
-        envs = {}
-        for env_name, env in self.environments.items():
-            for k in ENV_FIELDS:
-                if k in d:
-                    d[k] = merge_dicts(d[k], _envs[env_name].get(k, {}))
+            # Because options is an excluded field for all resources and
+            # sub-resources, we need to manually dump it and add it to
+            # the base dump
+            def dump_with_options(obj: Any) -> Any:
 
-            envs[env_name] = EnvironmentStack(**d)
+                # Check data type, call recursively if not a BaseModel
+                if isinstance(obj, list):
+                    return [dump_with_options(v) for v in obj]
+                elif isinstance(obj, dict):
+                    return {k: dump_with_options(v) for k, v in obj.items()}
+                elif not isinstance(obj, BaseModel):
+                    return obj
 
-        return envs
+                # Get model dump
+                model = obj
+                data = model.model_dump(exclude_none=True)
+
+                # Loop through all model fields
+                for field_name, field in model.model_fields.items():
+
+                    # Explicitly dump options if found in the model
+                    if field_name == "options" and field.annotation == ResourceOptions:
+                        data["options"] = model.options.model_dump(exclude_none=True)
+
+                    if field_name == "resource_name_" and model.resource_name_:
+                        data["resource_name_"] = model.resource_name_
+
+                    # Parse list
+                    if isinstance(data.get(field_name, None), list):
+                        data[field_name] = [
+                            dump_with_options(v) for v in getattr(model, field_name)
+                        ]
+
+                    # Parse dict (might result from a dict or a BaseModel)
+                    elif isinstance(data.get(field_name, None), dict):
+                        a = getattr(model, field_name)
+
+                        if isinstance(a, dict):
+                            for k in a.keys():
+                                data[field_name][k] = dump_with_options(a[k])
+                        else:
+                            data[field_name] = dump_with_options(a)
+
+                return data
+
+            d = dump_with_options(self)
+            _envs = d.pop("environments")
+
+            envs = {}
+            for env_name, env in self.environments.items():
+                for k in ENV_FIELDS:
+                    if k in d:
+                        d[k] = merge_dicts(d[k], _envs[env_name].get(k, {}))
+                envs[env_name] = EnvironmentStack(**d)
+
+            self._envs = envs
+
+        return self._envs
 
     # ----------------------------------------------------------------------- #
     # Pulumi Methods                                                          #

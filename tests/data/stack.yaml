@@ -13,8 +13,10 @@ resources:
   pipelines:
     pl-custom-name:
       name: pl-stock-prices-ut-stack
+      engine: DLT
       nodes: []
       dlt:
+        resource_name: dlt-custom-name
         libraries:
           - notebook:
               path: /pipelines/dlt_brz_template.py
@@ -60,9 +62,10 @@ environments:
       node_type_id: Standard_DS3_v2
   prod:
     resources:
-      databricks_dltpipelines:
+      pipelines:
         pl-custom-name:
-          development: False
+          dlt:
+            development: False
     variables:
       env: prod
       is_dev: false

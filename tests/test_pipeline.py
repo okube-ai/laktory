@@ -322,6 +322,13 @@ def test_pipeline_dlt():
     assert resources[2].options.provider == "${resources.databricks1}"
     assert resources[3].options.provider == "${resources.databricks1}"
 
+    assert resources[0].options.depends_on == []
+    assert resources[1].options.depends_on == ["${resources.dlt-pl-stock-prices}"]
+    assert resources[2].options.depends_on == []
+    assert resources[3].options.depends_on == [
+        "${resources.workspace-file-laktory-pipelines-pl-stock-prices-json}"
+    ]
+
 
 if __name__ == "__main__":
     test_dag()
