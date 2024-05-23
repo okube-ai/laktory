@@ -357,7 +357,7 @@ def test_pulumi_stack():
                 },
                 "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
-            "pl-custom-name": {
+            "dlt-custom-name": {
                 "type": "databricks:Pipeline",
                 "properties": {
                     "channel": "PREVIEW",
@@ -398,7 +398,7 @@ def test_pulumi_stack():
                 },
                 "options": {
                     "provider": "${databricks}",
-                    "dependsOn": ["${pl-custom-name}"],
+                    "dependsOn": ["${dlt-custom-name}"],
                     "deleteBeforeReplace": True,
                 },
             },
@@ -414,7 +414,7 @@ def test_pulumi_stack():
                     "provider": "${databricks}",
                     "dependsOn": [
                         "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}",
-                        "${pl-custom-name}",
+                        "${dlt-custom-name}",
                     ],
                     "deleteBeforeReplace": True,
                 },
