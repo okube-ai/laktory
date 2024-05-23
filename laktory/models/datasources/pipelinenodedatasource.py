@@ -19,8 +19,6 @@ class PipelineNodeDataSource(BaseDataSource):
     ----------
     node_id:
         Id of the pipeline node to act as a data source
-    # df:
-    #     DataFrame output from the pipeline node
 
     Examples
     ---------
@@ -30,7 +28,6 @@ class PipelineNodeDataSource(BaseDataSource):
 
     node_id: Union[str, None]
     node: Any = Field(None, exclude=True)  # Add suggested type?
-    # _df: Any = None
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

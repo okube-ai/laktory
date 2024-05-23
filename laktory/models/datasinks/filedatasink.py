@@ -1,8 +1,6 @@
 import os
-from typing import Any
 from typing import Literal
 from typing import Union
-from pydantic import model_validator
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
 from laktory._logger import get_logger
@@ -55,13 +53,6 @@ class FileDataSink(BaseDataSink):
     format: Literal["CSV", "PARQUET", "DELTA", "JSON"] = "DELTA"
     path: str
     write_options: dict[str, str] = {}
-
-    # @model_validator(mode="after")
-    # def check_format(self) -> Any:
-    #     if self.as_stream and self.format != "DELTA":
-    #         raise ValueError("Streaming is only supported with Delta")
-    #
-    #     return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

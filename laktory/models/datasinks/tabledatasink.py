@@ -1,7 +1,5 @@
 from typing import Literal
 from typing import Union
-from typing import Any
-from pydantic import model_validator
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
 from laktory.models.datasources.tabledatasource import TableDataSource
@@ -61,14 +59,6 @@ class TableDataSink(BaseDataSink):
     schema_name: Union[str, None] = None
     table_name: Union[str, None]
     warehouse: Union[Literal["DATABRICKS"], None] = "DATABRICKS"
-
-    # @model_validator(mode="after")
-    # def check_mode(self) -> Any:
-    #     if self.as_stream:
-    #         if self.mode not in ["APPEND", "COMPLETE"]:
-    #             raise ValueError(f"Mode {self.mode} is not supported for streams. Select 'APPEND' or 'COMPLETE'")
-    #
-    #     return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

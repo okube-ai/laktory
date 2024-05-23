@@ -366,34 +366,6 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
                     pipeline_id=f"${{resources.{self.resource_name}.id}}",
                 )
             ]
-        #
-        # # Configuration file
-        # source = os.path.join(CACHE_ROOT, f"tmp-{self.name}.json")
-        # d = self.model_dump(exclude_none=True)
-        # d = self.inject_vars(d)
-        # s = json.dumps(d, indent=4)
-        # with open(source, "w", newline="\n") as fp:
-        #     fp.write(s)
-        # filepath = f"{settings.workspace_laktory_root}pipelines/{self.name}.json"
-        # file = WorkspaceFile(
-        #     path=filepath,
-        #     source=source,
-        # )
-        # resources += [file]
-        #
-        # resources += [
-        #     Permissions(
-        #         resource_name=f"permissions-{file.resource_name}",
-        #         access_controls=[
-        #             AccessControl(
-        #                 permission_level="CAN_READ",
-        #                 group_name="account users",
-        #             )
-        #         ],
-        #         workspace_file_path=filepath,
-        #         options={"depends_on": [f"${{resources.{file.resource_name}}}"]},
-        #     )
-        # ]
 
         return resources
 

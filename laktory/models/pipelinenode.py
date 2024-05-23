@@ -277,8 +277,6 @@ class PipelineNode(BaseModel):
     def execute(
         self,
         apply_chain: bool = True,
-        # df: AnyDataFrame = None,
-        # read_source: bool = True,
         spark: SparkSession = None,
         udfs: list[Callable] = None,
         write_sink: bool = True,
@@ -311,7 +309,7 @@ class PipelineNode(BaseModel):
         # Read Source
         self._output_df = self.source.read(spark)
 
-        if self.source.is_cdc:
+        if self.source.is_cdc and not self.is_engine_dlt:
             pass
             # TODO: Apply SCD transformations
             #       Best strategy is probably to build a spark dataframe function and add a node in the chain with

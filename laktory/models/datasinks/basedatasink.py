@@ -16,8 +16,6 @@ class BaseDataSink(BaseModel):
 
     Attributes
     ----------
-    # as_stream:
-    #     If `True`DataFrame is written as a data stream.
     mode:
         Write mode.
         - overwrite: Overwrite existing data
@@ -27,7 +25,6 @@ class BaseDataSink(BaseModel):
         - complete: Overwrite for streaming DataFrames
     """
 
-    # as_stream: bool = False
     mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE"], None] = (
         None
     )
