@@ -79,6 +79,10 @@ def define_table(node):
 
 # Build nodes
 for node in pl.nodes:
+
+    if node.dlt_template != "DEFAULT":
+        continue
+
     if node.is_from_cdc:
         pass
         # df = define_cdc_table(table)

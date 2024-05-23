@@ -29,6 +29,10 @@ class PipelineNode(BaseModel):
     add_layer_columns:
         If `True` and `layer` not `None` layer-specific columns like timestamps
         are added to the resulting DataFrame.
+    dlt_template:
+        Specify which template (notebook) to use if pipeline is run with
+        Databricks Delta Live Tables. If `None` default laktory template
+        notebook is used.
     chain:
         Spark or Polars chain defining the data transformations applied to the
         data source
@@ -68,6 +72,7 @@ class PipelineNode(BaseModel):
     """
 
     add_layer_columns: bool = True
+    dlt_template: Union[str, None] = "DEFAULT"
     description: str = None
     drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
