@@ -145,7 +145,14 @@ def test_pipeline_dlt():
     print(data)
     assert data == {
         "dlt": {
-            "access_controls": [],
+            "access_controls": [
+                {
+                    "group_name": "account users",
+                    "permission_level": "CAN_VIEW",
+                    "service_principal_name": None,
+                    "user_name": None,
+                }
+            ],
             "allow_duplicate_names": None,
             "catalog": "dev",
             "channel": "PREVIEW",
@@ -289,6 +296,31 @@ def test_pipeline_dlt():
         "engine": "DLT",
         "udfs": [],
     }
+
+    # Test resources
+    resources = pl.core_resources
+    assert len(resources) == 4
+
+    assert isinstance(resources[0], models.resources.databricks.DLTPipeline)
+    assert isinstance(resources[1], models.resources.databricks.Permissions)
+    assert isinstance(resources[2], models.resources.databricks.WorkspaceFile)
+    assert isinstance(resources[3], models.resources.databricks.Permissions)
+
+    assert resources[0].resource_name == "dlt-pl-stock-prices"
+    assert resources[1].resource_name == "permissions-dlt-pl-stock-prices"
+    assert (
+        resources[2].resource_name
+        == "workspace-file-laktory-pipelines-pl-stock-prices-json"
+    )
+    assert (
+        resources[3].resource_name
+        == "permissions-workspace-file-laktory-pipelines-pl-stock-prices-json"
+    )
+
+    assert resources[0].options.provider == "${resources.databricks2}"
+    assert resources[1].options.provider == "${resources.databricks2}"
+    assert resources[2].options.provider == "${resources.databricks1}"
+    assert resources[3].options.provider == "${resources.databricks1}"
 
 
 if __name__ == "__main__":

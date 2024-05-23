@@ -270,12 +270,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         """Flag set to `True` if self must be included in core resources"""
         return False
 
-    # @property
-    # def resource_type_id(self) -> str:
-    #     """
-    #     dlt
-    #     """
-    #     return "pl"
+    @property
+    def resource_type_id(self) -> str:
+        """
+        pl
+        """
+        return "pl"
 
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
