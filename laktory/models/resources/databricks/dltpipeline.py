@@ -207,55 +207,6 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
       - group_name: role-engineers
         permission_level: CAN_RUN
 
-    # --------------------------------------------------------------------------- #
-    # Tables                                                                      #
-    # --------------------------------------------------------------------------- #
-
-    tables:
-      - name: brz_stock_prices
-        timestamp_key: data.created_at
-        builder:
-          layer: BRONZE
-          source:
-            table_name: stock_price
-            as_stream: True
-
-      - name: slv_stock_prices
-        timestamp_key: created_at
-        builder:
-          layer: SILVER
-          source:
-            table_name: brz_stock_prices
-            as_stream: True
-          spark_chain:
-            nodes:
-              - column:
-                    name: created_at
-                    type: timestamp
-                spark_func_name: coalesce
-                spark_func_args:
-                  - data._created_at
-
-              - column:
-                    name: symbol
-                    type: string
-                spark_func_name: coalesce
-                spark_func_args:
-                  - data.symbol
-
-              - column:
-                    name: open
-                    type: double
-                spark_func_name: coalesce
-                spark_func_args:
-                  - data.open
-
-              - column:
-                    name: close
-                    type: double
-                spark_func_name: coalesce
-                spark_func_args:
-                  - data.close
     '''
     pipeline = models.resources.databricks.DLTPipeline.model_validate_yaml(
         io.StringIO(pipeline_yaml)

@@ -53,50 +53,11 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     Examples
     --------
     ```py
-    from laktory import dlt
     from laktory import models
-
-    dlt.spark = spark
 
     table = models.resources.databricks.Table(
         name="slv_stock_prices",
-        builder={
-            "layer": "SILVER",
-            "source": {
-                "table_name": "brz_stock_prices",
-            },
-            "spark_chain": {
-                "nodes": [
-                    {
-                        "column": {"name": "symbol", "type": "string"},
-                        "sql_expression": "data.symbol",
-                    },
-                    {
-                        "column": {
-                            "name": "open",
-                            "type": "double",
-                        },
-                        "spark_func_name": "coalesce",
-                        "spark_func_args": ["daa.open"],
-                    },
-                    {
-                        "column": {
-                            "name": "close",
-                            "type": "double",
-                        },
-                        "spark_func_name": "coalesce",
-                        "spark_func_args": ["daa.close"],
-                    },
-                ]
-            },
-        },
     )
-
-    # Read
-    # df = table.builder.read_source(spark)
-
-    # Process
-    # df = table.builder.process(df, None)
     ```
 
     References

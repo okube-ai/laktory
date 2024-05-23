@@ -30,7 +30,7 @@ class PipelineNodeExpectation(BaseModel):
     ```py
     from laktory import models
 
-    e = models.resources.databricks.TableExpectation(
+    e = models.PipelineNodeExpectation(
         name="valid timestamp",
         expression="col(“timestamp”) > '2012-01-01'",
         action="DROP",

@@ -185,7 +185,7 @@ def read_stream(*args, fmt="delta", **kwargs):
         return _read_stream(*args, **kwargs)
 
 
-def apply_changes(*args, table=None, **kwargs):
+def apply_changes(*args, node=None, **kwargs):
     """
     When `is_debug()` is `True` read source CDC table from storage, else run
     native Databricks `dlt.apply_changes`
@@ -193,7 +193,7 @@ def apply_changes(*args, table=None, **kwargs):
     Returns
     -------
     :
-        Ouput DataFrame
+        Output DataFrame
 
     Examples
     --------
@@ -203,32 +203,33 @@ def apply_changes(*args, table=None, **kwargs):
 
     dlt.spark = spark
 
-    def define_table(table):
-        dlt.create_streaming_table(name=table.name)
-        df = dlt.apply_changes(**table.builder.apply_changes_kwargs)
+    def define_table(node):
+        dlt.create_streaming_table(name=node.id)
+        df = dlt.apply_changes(**node.apply_changes_kwargs)
         return df
 
     define_table(
-        models.resources.databricks.Table(
-            name="slv_stock_prices",
-            builder={
-                "source": {
-                    "table_name": "brz_stock_prices",
-                    "cdc": {
-                        "primary_keys": ["asset_symbol"],
-                        "sequence_by": "change_id",
-                        "scd_type": 2,
-                    },
+        models.PipelineNode(
+            id="slv_stock_prices",
+            source={
+                "table_name": "brz_stock_prices",
+                "cdc": {
+                    "primary_keys": ["asset_symbol"],
+                    "sequence_by": "change_id",
+                    "scd_type": 2,
                 },
+            },
+            sink={
+                "table_name": "brz_stock_prices",
             },
         )
     )
     ```
     """
     if is_debug():
-        if table is None:
+        if node is None:
             return
-        df = table.read_source(spark=spark)
+        df = node.source.read(spark=spark)
         # TODO: Apply changes
         logger.warning(
             "Laktory does not currently support applying CDC changes. Returned DataFrame is CDC source."

@@ -173,6 +173,25 @@ class PipelineNode(BaseModel):
         return expectations
 
     @property
+    def apply_changes_kwargs(self) -> dict[str, str]:
+        """Keyword arguments for dlt.apply_changes function"""
+        cdc = self.source.cdc
+        return {
+            "apply_as_deletes": cdc.apply_as_deletes,
+            "apply_as_truncates": cdc.apply_as_truncates,
+            "column_list": cdc.columns,
+            "except_column_list": cdc.except_columns,
+            "ignore_null_updates": cdc.ignore_null_updates,
+            "keys": cdc.primary_keys,
+            "sequence_by": cdc.sequence_by,
+            "source": self.source.table_name,
+            "stored_as_scd_type": cdc.scd_type,
+            "target": self.sink.table_name,
+            "track_history_column_list": cdc.track_history_columns,
+            "track_history_except_column_list": cdc.track_history_except_columns,
+        }
+
+    @property
     def layer_spark_chain(self):
         nodes = []
 
