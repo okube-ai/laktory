@@ -137,7 +137,6 @@ class BaseDataSource(BaseModel):
     mock_df: Any = Field(default=None, exclude=True)
     renames: Union[dict[str, str], None] = None
     selects: Union[list[str], dict[str, str], None] = None
-    # spark_chain: Union[SparkChain, None] = None
     watermark: Union[Watermark, None] = None
     _pipeline_node: "PipelineNode" = None
 

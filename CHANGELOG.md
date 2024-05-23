@@ -2,21 +2,21 @@
 
 ## [0.3.0] - Unreleased
 ### Added
+* `Pipeline` model, the new central component for building ETL pipelines
+* `PipelineNode` model, the `Pipeline` sub-component defining each DataFrame in a pipeline
+* `FileDataSink` and `TableDataSink` sinks models
+* `PipelineNodeDataSource` and `MemoryDataSource` sources model
 * Future support for Polars and other types of DataFrame
-* `FileDataSink` and `TableDataSink` models
-* `MemoryDataSource` model
-### Fixed
-* n/a
 ### Updated
 * Enabled CDC support for both `FileDataSource` and `TableDataSource`
 ### Breaking changes
 * Merged `DataEventHeader` into `DataEvent` model
 * Renamed `EventDataSource` model to `FileDataSource`
 * Renamed `name` attribute to `table_name` in `TableDataSource` model
-* Merged `TableBuilder` `event_source` and `table_source` attributes into `source`
 * Removed `SparkChain` support in DataSources
 * Renamed `Pipeline` model to `DLTPipeline` model
 * Cloud resources moved under models.resources.{provider}.{resource_class} to avoid collisions with future classes.
+* Removed `TableBuilder`. `PipelineNode` should be used instead
 
 ## [0.2.1] - 2024-05-07
 ### Added

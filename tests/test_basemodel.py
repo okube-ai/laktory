@@ -114,17 +114,6 @@ def test_camelize():
         "name": "${vars.env}.${vars.schema_name}",
         "tables": [
             {
-                "builder": {
-                    "source": None,
-                    "layer": None,
-                    "template": None,
-                    "addLaktoryColumns": True,
-                    "asDltView": False,
-                    "dropDuplicates": None,
-                    "dropSourceColumns": None,
-                    "pipelineName": None,
-                    "sparkChain": None,
-                },
                 "columns": [
                     {
                         "comment": None,
@@ -150,8 +139,6 @@ def test_camelize():
                     },
                 ],
                 "comment": None,
-                "data": None,
-                "expectations": [],
                 "grants": None,
                 "name": "AAPL",
                 "catalogName": "${vars.env}",
@@ -159,22 +146,10 @@ def test_camelize():
                 "primaryKey": None,
                 "schemaName": "${vars.env}.${vars.schema_name}",
                 "tableType": "MANAGED",
-                "timestampKey": None,
                 "viewDefinition": None,
                 "warehouseId": "08b717ce051a0261",
             },
             {
-                "builder": {
-                    "source": None,
-                    "layer": None,
-                    "template": None,
-                    "addLaktoryColumns": True,
-                    "asDltView": False,
-                    "dropDuplicates": None,
-                    "dropSourceColumns": None,
-                    "pipelineName": None,
-                    "sparkChain": None,
-                },
                 "columns": [
                     {
                         "comment": None,
@@ -200,8 +175,6 @@ def test_camelize():
                     },
                 ],
                 "comment": None,
-                "data": None,
-                "expectations": [],
                 "grants": None,
                 "name": "GOOGL",
                 "catalogName": "${vars.env}",
@@ -209,7 +182,6 @@ def test_camelize():
                 "primaryKey": None,
                 "schemaName": "${vars.env}.${vars.schema_name}",
                 "tableType": "MANAGED",
-                "timestampKey": None,
                 "viewDefinition": None,
                 "warehouseId": "08b717ce051a0261",
             },

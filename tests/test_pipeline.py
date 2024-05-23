@@ -136,7 +136,6 @@ def test_pipeline_dlt():
         "selects": None,
         "watermark": None,
         "catalog_name": "dev",
-        "from_dlt": None,
         "table_name": "brz_stock_prices",
         "schema_name": "sandbox",
         "warehouse": "DATABRICKS",
@@ -168,9 +167,7 @@ def test_pipeline_dlt():
             "photon": None,
             "serverless": None,
             "storage": None,
-            "tables": [],
             "target": "sandbox",
-            "udfs": [],
         },
         "name": "pl-stock-prices",
         "nodes": [

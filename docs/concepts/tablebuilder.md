@@ -56,7 +56,6 @@ source = models.FileDataSource(
     table_name="brz_stock_prices",
     selects=["symbol", "open", "close"],
     filter="symbol='AAPL'",
-    from_dlt=False,
     as_stream=True,
 )
 df = source.read()

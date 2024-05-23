@@ -2,41 +2,38 @@ import pytest
 from pydantic import ValidationError
 
 from laktory.models.resources.databricks import Table
-from laktory._testing.stockprices import table_slv
-from laktory._testing.stockprices import table_slv_join
 from laktory._testing.stockprices import spark
 
 
 def test_model():
-    print(table_slv.model_dump())
-    data = table_slv.model_dump()
-    assert data == {
-        "builder": {
-            "add_laktory_columns": True,
-            "as_dlt_view": False,
-            "drop_duplicates": None,
-            "drop_source_columns": True,
-            "source": {
-                "as_stream": False,
-                "broadcast": False,
-                "cdc": None,
-                "dataframe_type": "SPARK",
-                "drops": None,
-                "filter": None,
-                "renames": None,
-                "selects": None,
-                "watermark": None,
-                "catalog_name": "dev",
-                "from_dlt": None,
-                "table_name": "brz_stock_prices",
-                "schema_name": "markets",
-                "warehouse": "DATABRICKS",
+
+    table = Table(
+        name="slv_stock_prices",
+        columns=[
+            {
+                "name": "created_at",
+                "type": "timestamp",
             },
-            "layer": "SILVER",
-            "pipeline_name": None,
-            "template": "SILVER",
-            "spark_chain": None,
-        },
+            {
+                "name": "symbol",
+                "type": "string",
+            },
+            {
+                "name": "open",
+                "type": "double",
+            },
+            {
+                "name": "close",
+                "type": "double",
+            },
+        ],
+        catalog_name="dev",
+        schema_name="markets",
+    )
+
+    data = table.model_dump()
+    print(data)
+    assert data == {
         "catalog_name": "dev",
         "columns": [
             {
@@ -85,208 +82,16 @@ def test_model():
             },
         ],
         "comment": None,
-        "data": [
-            ["2023-11-01T00:00:00Z", "AAPL", 1, 2],
-            ["2023-11-01T01:00:00Z", "AAPL", 3, 4],
-            ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
-            ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
-        ],
         "data_source_format": "DELTA",
-        "expectations": [
-            {"name": "positive_price", "expression": "open > 0", "action": "FAIL"},
-            {
-                "name": "recent_price",
-                "expression": "created_at > '2023-01-01'",
-                "action": "DROP",
-            },
-        ],
         "grants": None,
         "name": "slv_stock_prices",
         "primary_key": None,
         "schema_name": "markets",
         "table_type": "MANAGED",
-        "timestamp_key": None,
         "view_definition": None,
         "warehouse_id": "08b717ce051a0261",
     }
-
-    assert not table_slv.is_from_cdc
-
-    assert table_slv.warning_expectations == {}
-    assert table_slv.drop_expectations == {"recent_price": "created_at > '2023-01-01'"}
-    assert table_slv.fail_expectations == {"positive_price": "open > 0"}
-
-    # Invalid layer
-    with pytest.raises(ValidationError):
-        Table(name="googl", layer="ROUGE")
-
-
-def test_data():
-    data = table_slv.to_df().to_dict(orient="records")
-    print(data)
-    assert data == [
-        {"created_at": "2023-11-01T00:00:00Z", "symbol": "AAPL", "open": 1, "close": 2},
-        {"created_at": "2023-11-01T01:00:00Z", "symbol": "AAPL", "open": 3, "close": 4},
-        {
-            "created_at": "2023-11-01T00:00:00Z",
-            "symbol": "GOOGL",
-            "open": 3,
-            "close": 4,
-        },
-        {
-            "created_at": "2023-11-01T01:00:00Z",
-            "symbol": "GOOGL",
-            "open": 5,
-            "close": 6,
-        },
-    ]
-
-
-def test_table_builder():
-    # Test model
-    data = table_slv_join.model_dump()
-    print(data)
-    assert data == {
-        "builder": {
-            "add_laktory_columns": True,
-            "as_dlt_view": False,
-            "drop_duplicates": None,
-            "drop_source_columns": False,
-            "source": {
-                "as_stream": False,
-                "broadcast": False,
-                "cdc": None,
-                "dataframe_type": "SPARK",
-                "drops": None,
-                "filter": "created_at = '2023-09-01T00:00:00Z'",
-                "renames": None,
-                "selects": None,
-                "watermark": None,
-                "catalog_name": "dev",
-                "from_dlt": None,
-                "table_name": "slv_stock_prices",
-                "schema_name": "markets",
-                "warehouse": "DATABRICKS",
-            },
-            "layer": "SILVER",
-            "pipeline_name": None,
-            "template": "SILVER",
-            "spark_chain": {
-                "nodes": [
-                    {
-                        "allow_missing_column_args": False,
-                        "column": None,
-                        "spark_func_args": [],
-                        "spark_func_kwargs": {
-                            "other": {
-                                "value": {
-                                    "as_stream": False,
-                                    "broadcast": False,
-                                    "cdc": None,
-                                    "dataframe_type": "SPARK",
-                                    "drops": None,
-                                    "filter": None,
-                                    "renames": {"symbol2": "symbol"},
-                                    "selects": None,
-                                    "watermark": None,
-                                    "catalog_name": "dev",
-                                    "from_dlt": None,
-                                    "table_name": "slv_stockmeta",
-                                    "schema_name": "markets",
-                                    "warehouse": "DATABRICKS",
-                                }
-                            },
-                            "on": {"value": ["symbol"]},
-                        },
-                        "spark_func_name": "smart_join",
-                        "sql_expression": None,
-                    },
-                    {
-                        "allow_missing_column_args": False,
-                        "column": {"name": "symbol3", "type": "string", "unit": None},
-                        "spark_func_args": [],
-                        "spark_func_kwargs": {},
-                        "spark_func_name": None,
-                        "sql_expression": "symbol",
-                    },
-                    {
-                        "allow_missing_column_args": False,
-                        "column": None,
-                        "spark_func_args": [{"value": "symbol"}],
-                        "spark_func_kwargs": {},
-                        "spark_func_name": "drop",
-                        "sql_expression": None,
-                    },
-                    {
-                        "allow_missing_column_args": False,
-                        "column": None,
-                        "spark_func_args": [],
-                        "spark_func_kwargs": {
-                            "other": {
-                                "value": {
-                                    "as_stream": False,
-                                    "broadcast": False,
-                                    "cdc": None,
-                                    "dataframe_type": "SPARK",
-                                    "drops": None,
-                                    "filter": None,
-                                    "renames": None,
-                                    "selects": None,
-                                    "watermark": None,
-                                    "catalog_name": "dev",
-                                    "from_dlt": None,
-                                    "table_name": "slv_stock_names",
-                                    "schema_name": "markets",
-                                    "warehouse": "DATABRICKS",
-                                }
-                            },
-                            "on": {"value": ["symbol3"]},
-                        },
-                        "spark_func_name": "smart_join",
-                        "sql_expression": None,
-                    },
-                ]
-            },
-        },
-        "catalog_name": "dev",
-        "columns": [],
-        "comment": None,
-        "data": None,
-        "data_source_format": "DELTA",
-        "expectations": [],
-        "grants": None,
-        "name": "slv_join_stock_prices",
-        "primary_key": None,
-        "schema_name": "markets",
-        "table_type": "MANAGED",
-        "timestamp_key": None,
-        "view_definition": None,
-        "warehouse_id": "08b717ce051a0261",
-    }
-
-    # Test process
-    df = table_slv_join.builder.read_source(spark)
-    df = table_slv_join.builder.process(df)
-    df = df.sort("symbol3")
-    pdf = df.toPandas()
-
-    # Test data
-    assert df.columns == [
-        "created_at",
-        "open",
-        "close",
-        "currency",
-        "first_traded",
-        "name",
-        "symbol3",
-        "_silver_at",
-    ]
-    assert df.count() == 4
-    assert pdf["symbol3"].tolist() == ["AAPL", "AMZN", "GOOGL", "MSFT"]
-    assert pdf["name"].tolist() == ["Apple", "Amazon", "Google", None]
 
 
 if __name__ == "__main__":
     test_model()
-    test_data()
-    test_table_builder()

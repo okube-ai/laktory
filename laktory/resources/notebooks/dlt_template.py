@@ -62,15 +62,15 @@ def define_table(node):
 # --------------------------------------------------------------------------- #
 
 
-# def define_cdc_table(table):
-#     dlt.create_streaming_table(
-#         name=table.name,
-#         comment=table.comment,
-#     )
-#
-#     df = dlt.apply_changes(**table.builder.apply_changes_kwargs)
-#
-#     return df
+def define_cdc_table(node):
+    dlt.create_streaming_table(
+        name=node.id,
+        comment=node.comment,
+    )
+
+    df = dlt.apply_changes(**node.apply_changes_kwargs)
+
+    return df
 
 
 # --------------------------------------------------------------------------- #
@@ -84,9 +84,8 @@ for node in pl.nodes:
         continue
 
     if node.is_from_cdc:
-        pass
-        # df = define_cdc_table(table)
-        # display(df)
+        df = define_cdc_table(node)
+        display(df)
 
     else:
         wrapper = define_table(node)
