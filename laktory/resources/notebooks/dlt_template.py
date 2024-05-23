@@ -46,6 +46,22 @@ def define_table(node):
 
 
 # --------------------------------------------------------------------------- #
+# CDC tables                                                                  #
+# --------------------------------------------------------------------------- #
+
+
+# def define_cdc_table(table):
+#     dlt.create_streaming_table(
+#         name=table.name,
+#         comment=table.comment,
+#     )
+#
+#     df = dlt.apply_changes(**table.builder.apply_changes_kwargs)
+#
+#     return df
+
+
+# --------------------------------------------------------------------------- #
 # Execution                                                                   #
 # --------------------------------------------------------------------------- #
 
