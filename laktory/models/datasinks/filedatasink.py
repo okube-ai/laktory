@@ -1,8 +1,6 @@
 import os
-from typing import Any
 from typing import Literal
 from typing import Union
-from pydantic import model_validator
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
 from laktory._logger import get_logger
@@ -46,7 +44,6 @@ class FileDataSink(BaseDataSink):
         path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
         format="PARQUET",
         mode="OVERWRITE",
-        as_stream=False,
     )
     # sink.write(df)
     ```
@@ -56,12 +53,6 @@ class FileDataSink(BaseDataSink):
     format: Literal["CSV", "PARQUET", "DELTA", "JSON"] = "DELTA"
     path: str
     write_options: dict[str, str] = {}
-
-    @model_validator(mode="after")
-    def check_format(self) -> Any:
-        if self.as_stream and self.format != "DELTA":
-            raise ValueError("Streaming is only supported with Delta")
-        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -83,18 +74,20 @@ class FileDataSink(BaseDataSink):
 
     def _write_spark(self, df: SparkDataFrame, mode=None) -> None:
 
-        if self.as_stream:
+        if df.isStreaming:
             logger.info(f"Writing df as stream to {self.path}")
 
             writer = df.writeStream.option(
                 "checkpointlocation", self._checkpoint_location
-            )
+            ).trigger(
+                availableNow=True
+            )  # TODO: Add option for trigger?
 
         else:
             logger.info(f"Writing df as static to {self.path}")
             writer = df.write
 
-        writer = writer.mode(mode).format(self.format)
+        writer = writer.mode(mode).format(self.format).option("mergeSchema", "true")
 
         if self.write_options:
             writer = writer.options(**self.write_options)

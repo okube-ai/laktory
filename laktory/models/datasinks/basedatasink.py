@@ -16,18 +16,19 @@ class BaseDataSink(BaseModel):
 
     Attributes
     ----------
-    as_stream:
-        If `True`DataFrame is written as a data stream.
     mode:
         Write mode.
         - overwrite: Overwrite existing data
         - append: Append contents of the DataFrame to existing data
         - error: Throw and exception if data already exists
         - ignore: Silently ignore this operation if data already exists
+        - complete: Overwrite for streaming DataFrames
     """
 
-    as_stream: bool = False
-    mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR"], None] = None
+    mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE"], None] = (
+        None
+    )
+    _pipeline_node: "PipelineNode" = None
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -58,3 +59,13 @@ class BaseDataSink(BaseModel):
 
     def _write_polars(self, df: PolarsDataFrame, mode=mode) -> None:
         raise NotImplementedError("Not implemented for Polars DataFrame")
+
+    # ----------------------------------------------------------------------- #
+    # Sources                                                                 #
+    # ----------------------------------------------------------------------- #
+
+    def as_source(self, as_stream=None):
+        raise NotImplementedError()
+
+    def read(self, spark=None, as_stream=None):
+        return self.as_source(as_stream=as_stream).read(spark=spark)

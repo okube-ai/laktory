@@ -166,24 +166,35 @@ class BaseResource(_BaseModel):
         - class instance (self)
         """
         if self._core_resources is None:
-            # Get all resources
+            # Add self
             self._core_resources = []
             if self.self_as_core_resources:
                 self._core_resources += [self]
-            self._core_resources += self.additional_core_resources
 
-            # Propagate options
-            r0 = self._core_resources[0]
-            provider = r0.options.provider
-            k0 = f"${{resources.{r0.resource_name}}}"
-            for r in self._core_resources[1:]:
-                if provider:
-                    if r.options.provider is None:
-                        r.options.provider = provider
+            # Add additional
+            def get_additional_resources(r):
+                resources = []
 
-                do = r.options.depends_on
-                if k0 not in do:
-                    do += [k0]
-                r.options.depends_on = do
+                provider = r.options.provider
+                k0 = f"${{resources.{r.resource_name}}}"
+                for _r in r.additional_core_resources:
+                    if provider:
+                        if _r.options.provider is None:
+                            _r.options.provider = provider
+
+                    do = _r.options.depends_on
+                    if r.self_as_core_resources and k0 not in do:
+                        do += [k0]
+                    _r.options.depends_on = do
+
+                    if _r.self_as_core_resources:
+                        resources += [_r]
+
+                    for __r in get_additional_resources(_r):
+                        resources += [__r]
+
+                return resources
+
+            self._core_resources += get_additional_resources(self)
 
         return self._core_resources

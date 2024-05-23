@@ -1,303 +1,339 @@
+import os
+import shutil
+import networkx as nx
+
 from laktory import models
+from laktory._testing import spark
+from laktory._testing import Paths
 
-from laktory._testing.stockprices import table_slv_pl
-from laktory._testing.stockprices import table_slv_join_pl
+paths = Paths(__file__)
 
-
-pl = models.resources.databricks.DLTPipeline(
-    name="pl-stock-prices",
-    catalog="dev1",
-    target="markets1",
-    tables=[table_slv_pl, table_slv_join_pl],
-    udfs=[
-        {
-            "module_name": "stock_functions",
-            "function_name": "high",
-        }
-    ],
-)
+OPEN_FIGURES = False
 
 
-def test_pipeline():
-    print(pl.model_dump())
-    assert pl.model_dump() == {
-        "access_controls": [],
-        "allow_duplicate_names": None,
-        "catalog": "dev1",
-        "channel": "PREVIEW",
-        "clusters": [],
-        "configuration": {},
-        "continuous": None,
-        "development": None,
-        "edition": None,
-        "libraries": None,
+with open(os.path.join(paths.data, "pl-spark-local.yaml"), "r") as fp:
+    pl = models.Pipeline.model_validate_yaml(fp)
+
+
+with open(os.path.join(paths.data, "pl-dlt.yaml"), "r") as fp:
+    pl_dlt = models.Pipeline.model_validate_yaml(fp)  # also used in test_stack
+
+
+# Update paths
+slv_sink_path = os.path.join(paths.tmp, "pl_slv_sink")
+gld_sink_path = os.path.join(paths.tmp, "pl_gld_sink")
+pl.nodes[0].source.path = os.path.join(paths.data, "brz_stock_prices")
+pl.nodes[3].source.path = os.path.join(paths.data, "slv_stock_meta")
+pl.nodes[1].sink.path = os.path.join(paths.tmp, slv_sink_path)
+pl.nodes[2].sink.path = os.path.join(paths.tmp, gld_sink_path)
+
+# Save nodes
+node_brz = pl.nodes[0]
+node_slv = pl.nodes[1]
+node_gld = pl.nodes[2]
+node_meta = pl.nodes[3]
+
+
+def test_dag():
+    dag = pl.dag
+
+    # Test Dag
+    assert nx.is_directed_acyclic_graph(dag)
+    assert len(dag.nodes) == 4
+    assert len(dag.edges) == 3
+    assert list(nx.topological_sort(dag)) == [
+        "brz_stock_prices",
+        "slv_stock_meta",
+        "slv_stock_prices",
+        "gld_max_stock_prices",
+    ]
+
+    # Test nodes assignment
+    assert pl.sorted_nodes == [node_brz, node_meta, node_slv, node_gld]
+    assert node_slv.source.node == node_brz
+    assert node_gld.source.node == node_slv
+    assert node_slv.chain.nodes[-1].spark_func_kwargs["other"].value.node == node_meta
+
+    # Test figure
+    fig = pl.dag_figure()
+    fig.write_html(os.path.join(paths.tmp, "dag.html"), auto_open=OPEN_FIGURES)
+
+
+def test_execute():
+    pl.execute(spark)
+
+    # In memory DataFrames
+    assert pl.nodes_dict["brz_stock_prices"]._output_df.columns == [
+        "name",
+        "description",
+        "producer",
+        "data",
+        "_bronze_at",
+    ]
+    assert pl.nodes_dict["brz_stock_prices"]._output_df.count() == 80
+    assert pl.nodes_dict["slv_stock_meta"]._output_df.columns == [
+        "symbol2",
+        "currency",
+        "first_traded",
+        "_silver_at",
+    ]
+    assert pl.nodes_dict["slv_stock_meta"]._output_df.count() == 3
+    assert pl.nodes_dict["slv_stock_prices"]._output_df.columns == [
+        "_bronze_at",
+        "created_at",
+        "close",
+        "currency",
+        "first_traded",
+        "_silver_at",
+        "symbol",
+    ]
+    assert pl.nodes_dict["slv_stock_prices"]._output_df.count() == 80
+    assert pl.nodes_dict["gld_max_stock_prices"]._output_df.columns == [
+        "symbol",
+        "max_price",
+        "min_price",
+        "_gold_at",
+    ]
+    assert pl.nodes_dict["gld_max_stock_prices"]._output_df.count() == 4
+
+    # Sinks
+    _df_slv = spark.read.format("PARQUET").load(slv_sink_path)
+    _df_gld = spark.read.format("PARQUET").load(gld_sink_path)
+    assert _df_slv.columns == [
+        "_bronze_at",
+        "created_at",
+        "close",
+        "currency",
+        "first_traded",
+        "_silver_at",
+        "symbol",
+    ]
+    assert _df_slv.count() == 80
+    assert _df_gld.columns == ["symbol", "max_price", "min_price", "_gold_at"]
+    assert _df_gld.count() == 4
+
+    # Cleanup
+    shutil.rmtree(slv_sink_path)
+    shutil.rmtree(gld_sink_path)
+
+
+def test_pipeline_dlt():
+
+    # Test Sink as Source
+    sink_source = pl_dlt.nodes[1].source.node.sink.as_source(
+        as_stream=pl_dlt.nodes[1].source.as_stream
+    )
+    data = sink_source.model_dump()
+    print(data)
+    assert data == {
+        "as_stream": True,
+        "broadcast": False,
+        "cdc": None,
+        "dataframe_type": "SPARK",
+        "drops": None,
+        "filter": None,
+        "renames": None,
+        "selects": None,
+        "watermark": None,
+        "catalog_name": "dev",
+        "from_dlt": None,
+        "table_name": "brz_stock_prices",
+        "schema_name": "sandbox",
+        "warehouse": "DATABRICKS",
+    }
+
+    data = pl_dlt.model_dump()
+    print(data)
+    assert data == {
+        "dlt": {
+            "access_controls": [
+                {
+                    "group_name": "account users",
+                    "permission_level": "CAN_VIEW",
+                    "service_principal_name": None,
+                    "user_name": None,
+                }
+            ],
+            "allow_duplicate_names": None,
+            "catalog": "dev",
+            "channel": "PREVIEW",
+            "clusters": [],
+            "configuration": {},
+            "continuous": None,
+            "development": None,
+            "edition": None,
+            "libraries": None,
+            "name": "pl-stock-prices",
+            "notifications": [],
+            "photon": None,
+            "serverless": None,
+            "storage": None,
+            "tables": [],
+            "target": "sandbox",
+            "udfs": [],
+        },
         "name": "pl-stock-prices",
-        "notifications": [],
-        "photon": None,
-        "serverless": None,
-        "storage": None,
-        "tables": [
+        "nodes": [
             {
-                "builder": {
-                    "add_laktory_columns": True,
-                    "as_dlt_view": False,
-                    "drop_duplicates": None,
-                    "drop_source_columns": True,
-                    "source": {
-                        "as_stream": False,
-                        "broadcast": False,
-                        "cdc": None,
-                        "dataframe_type": "SPARK",
-                        "drops": None,
-                        "filter": None,
-                        "renames": None,
-                        "selects": None,
-                        "watermark": None,
-                        "catalog_name": "dev",
-                        "from_dlt": False,
-                        "table_name": "brz_stock_prices",
-                        "schema_name": "markets",
-                        "warehouse": "DATABRICKS",
-                    },
-                    "layer": "SILVER",
-                    "pipeline_name": "pl-stock-prices",
-                    "template": "SILVER",
-                    "spark_chain": None,
-                },
-                "catalog_name": "dev1",
-                "columns": [
-                    {
-                        "catalog_name": "dev1",
-                        "comment": None,
-                        "name": "created_at",
-                        "pii": None,
-                        "raise_missing_arg_exception": True,
-                        "schema_name": "markets1",
-                        "table_name": "slv_stock_prices",
-                        "type": "timestamp",
-                        "unit": None,
-                    },
-                    {
-                        "catalog_name": "dev1",
-                        "comment": None,
-                        "name": "symbol",
-                        "pii": None,
-                        "raise_missing_arg_exception": True,
-                        "schema_name": "markets1",
-                        "table_name": "slv_stock_prices",
-                        "type": "string",
-                        "unit": None,
-                    },
-                    {
-                        "catalog_name": "dev1",
-                        "comment": None,
-                        "name": "open",
-                        "pii": None,
-                        "raise_missing_arg_exception": True,
-                        "schema_name": "markets1",
-                        "table_name": "slv_stock_prices",
-                        "type": "double",
-                        "unit": None,
-                    },
-                    {
-                        "catalog_name": "dev1",
-                        "comment": None,
-                        "name": "close",
-                        "pii": None,
-                        "raise_missing_arg_exception": True,
-                        "schema_name": "markets1",
-                        "table_name": "slv_stock_prices",
-                        "type": "double",
-                        "unit": None,
-                    },
-                ],
-                "comment": None,
-                "data": [
-                    ["2023-11-01T00:00:00Z", "AAPL", 1, 2],
-                    ["2023-11-01T01:00:00Z", "AAPL", 3, 4],
-                    ["2023-11-01T00:00:00Z", "GOOGL", 3, 4],
-                    ["2023-11-01T01:00:00Z", "GOOGL", 5, 6],
-                ],
-                "data_source_format": "DELTA",
-                "expectations": [
-                    {
-                        "name": "positive_price",
-                        "expression": "open > 0",
-                        "action": "FAIL",
-                    },
-                    {
-                        "name": "recent_price",
-                        "expression": "created_at > '2023-01-01'",
-                        "action": "DROP",
-                    },
-                ],
-                "grants": None,
-                "name": "slv_stock_prices",
-                "primary_key": None,
-                "schema_name": "markets1",
-                "table_type": "MANAGED",
-                "timestamp_key": None,
-                "view_definition": None,
-                "warehouse_id": "08b717ce051a0261",
-            },
-            {
-                "builder": {
-                    "add_laktory_columns": True,
-                    "as_dlt_view": False,
-                    "drop_duplicates": None,
-                    "drop_source_columns": False,
-                    "source": {
-                        "as_stream": False,
-                        "broadcast": False,
-                        "cdc": None,
-                        "dataframe_type": "SPARK",
-                        "drops": None,
-                        "filter": "created_at = '2023-09-01T00:00:00Z'",
-                        "renames": None,
-                        "selects": None,
-                        "watermark": None,
-                        "catalog_name": "dev",
-                        "from_dlt": False,
-                        "table_name": "slv_stock_prices",
-                        "schema_name": "markets",
-                        "warehouse": "DATABRICKS",
-                    },
-                    "layer": "SILVER",
-                    "pipeline_name": "pl-stock-prices",
-                    "template": "SILVER",
-                    "spark_chain": {
-                        "nodes": [
-                            {
-                                "allow_missing_column_args": False,
-                                "column": None,
-                                "spark_func_args": [],
-                                "spark_func_kwargs": {
-                                    "other": {
-                                        "value": {
-                                            "as_stream": False,
-                                            "broadcast": False,
-                                            "cdc": None,
-                                            "dataframe_type": "SPARK",
-                                            "drops": None,
-                                            "filter": None,
-                                            "renames": {"symbol2": "symbol"},
-                                            "selects": None,
-                                            "watermark": None,
-                                            "catalog_name": "dev",
-                                            "from_dlt": False,
-                                            "table_name": "slv_stockmeta",
-                                            "schema_name": "markets",
-                                            "warehouse": "DATABRICKS",
-                                        }
-                                    },
-                                    "on": {"value": ["symbol"]},
-                                },
-                                "spark_func_name": "smart_join",
-                                "sql_expression": None,
-                            },
-                            {
-                                "allow_missing_column_args": False,
-                                "column": {
-                                    "name": "symbol3",
-                                    "type": "string",
-                                    "unit": None,
-                                },
-                                "spark_func_args": [],
-                                "spark_func_kwargs": {},
-                                "spark_func_name": None,
-                                "sql_expression": "symbol",
-                            },
-                            {
-                                "allow_missing_column_args": False,
-                                "column": None,
-                                "spark_func_args": [{"value": "symbol"}],
-                                "spark_func_kwargs": {},
-                                "spark_func_name": "drop",
-                                "sql_expression": None,
-                            },
-                            {
-                                "allow_missing_column_args": False,
-                                "column": None,
-                                "spark_func_args": [],
-                                "spark_func_kwargs": {
-                                    "other": {
-                                        "value": {
-                                            "as_stream": False,
-                                            "broadcast": False,
-                                            "cdc": None,
-                                            "dataframe_type": "SPARK",
-                                            "drops": None,
-                                            "filter": None,
-                                            "renames": None,
-                                            "selects": None,
-                                            "watermark": None,
-                                            "catalog_name": "dev",
-                                            "from_dlt": False,
-                                            "table_name": "slv_stock_names",
-                                            "schema_name": "markets",
-                                            "warehouse": "DATABRICKS",
-                                        }
-                                    },
-                                    "on": {"value": ["symbol3"]},
-                                },
-                                "spark_func_name": "smart_join",
-                                "sql_expression": None,
-                            },
-                        ]
-                    },
-                },
-                "catalog_name": "dev1",
-                "columns": [],
-                "comment": None,
-                "data": None,
-                "data_source_format": "DELTA",
+                "add_layer_columns": True,
+                "dlt_template": "DEFAULT",
+                "description": None,
+                "drop_duplicates": None,
+                "drop_source_columns": False,
+                "chain": None,
                 "expectations": [],
-                "grants": None,
-                "name": "slv_join_stock_prices",
+                "id": "brz_stock_prices",
+                "layer": "BRONZE",
                 "primary_key": None,
-                "schema_name": "markets1",
-                "table_type": "MANAGED",
+                "sink": {
+                    "mode": None,
+                    "catalog_name": "dev",
+                    "checkpoint_location": None,
+                    "format": "DELTA",
+                    "schema_name": "sandbox",
+                    "table_name": "brz_stock_prices",
+                    "warehouse": "DATABRICKS",
+                },
+                "source": {
+                    "as_stream": True,
+                    "broadcast": False,
+                    "cdc": None,
+                    "dataframe_type": "SPARK",
+                    "drops": None,
+                    "filter": None,
+                    "renames": None,
+                    "selects": None,
+                    "watermark": None,
+                    "format": "JSON",
+                    "header": True,
+                    "multiline": False,
+                    "path": "/Volumes/dev/sources/landing/events/yahoo-finance/stock_price/",
+                    "read_options": {},
+                    "schema_location": None,
+                },
                 "timestamp_key": None,
-                "view_definition": None,
-                "warehouse_id": "08b717ce051a0261",
+            },
+            {
+                "add_layer_columns": True,
+                "dlt_template": "DEFAULT",
+                "description": None,
+                "drop_duplicates": None,
+                "drop_source_columns": True,
+                "chain": {
+                    "nodes": [
+                        {
+                            "allow_missing_column_args": False,
+                            "column": {
+                                "name": "created_at",
+                                "type": "timestamp",
+                                "unit": None,
+                            },
+                            "spark_func_args": [],
+                            "spark_func_kwargs": {},
+                            "spark_func_name": None,
+                            "sql_expression": "data.created_at",
+                        },
+                        {
+                            "allow_missing_column_args": False,
+                            "column": {
+                                "name": "symbol",
+                                "type": "string",
+                                "unit": None,
+                            },
+                            "spark_func_args": [{"value": "data.symbol"}],
+                            "spark_func_kwargs": {},
+                            "spark_func_name": "coalesce",
+                            "sql_expression": None,
+                        },
+                        {
+                            "allow_missing_column_args": False,
+                            "column": {"name": "close", "type": "double", "unit": None},
+                            "spark_func_args": [],
+                            "spark_func_kwargs": {},
+                            "spark_func_name": None,
+                            "sql_expression": "data.close",
+                        },
+                        {
+                            "allow_missing_column_args": False,
+                            "column": None,
+                            "spark_func_args": [
+                                {"value": "data"},
+                                {"value": "producer"},
+                                {"value": "name"},
+                                {"value": "description"},
+                            ],
+                            "spark_func_kwargs": {},
+                            "spark_func_name": "drop",
+                            "sql_expression": None,
+                        },
+                    ]
+                },
+                "expectations": [],
+                "id": "slv_stock_prices",
+                "layer": "SILVER",
+                "primary_key": None,
+                "sink": {
+                    "mode": None,
+                    "catalog_name": "dev",
+                    "checkpoint_location": None,
+                    "format": "DELTA",
+                    "schema_name": "sandbox",
+                    "table_name": "slv_stock_prices",
+                    "warehouse": "DATABRICKS",
+                },
+                "source": {
+                    "as_stream": True,
+                    "broadcast": False,
+                    "cdc": None,
+                    "dataframe_type": "SPARK",
+                    "drops": None,
+                    "filter": None,
+                    "renames": None,
+                    "selects": None,
+                    "watermark": None,
+                    "node_id": "brz_stock_prices",
+                },
+                "timestamp_key": None,
             },
         ],
-        "target": "markets1",
-        "udfs": [
-            {
-                "module_name": "stock_functions",
-                "function_name": "high",
-                "module_path": None,
-            }
-        ],
+        "engine": "DLT",
+        "udfs": [],
     }
 
+    # Test resources
+    resources = pl_dlt.core_resources
+    assert len(resources) == 4
 
-def test_pipeline_pulumi():
-    print(pl.resource_name)
-    assert pl.resource_name == "dlt-pl-stock-prices"
-    assert pl.options.model_dump(exclude_none=True) == {
-        "depends_on": [],
-        "delete_before_replace": True,
-    }
-    print(pl.pulumi_properties)
-    assert pl.pulumi_properties == {
-        "catalog": "dev1",
-        "channel": "PREVIEW",
-        "clusters": [],
-        "configuration": {},
-        "name": "pl-stock-prices",
-        "notifications": [],
-        "target": "markets1",
-    }
+    assert isinstance(resources[0], models.resources.databricks.DLTPipeline)
+    assert isinstance(resources[1], models.resources.databricks.Permissions)
+    assert isinstance(resources[2], models.resources.databricks.WorkspaceFile)
+    assert isinstance(resources[3], models.resources.databricks.Permissions)
 
-    # Resources
-    assert len(pl.core_resources) == 3
-    r = pl.core_resources[-1]
-    r.options.aliases = ["my-file"]
-    assert pl.core_resources[-1].options.aliases == ["my-file"]
+    assert resources[0].resource_name == "dlt-pl-stock-prices"
+    assert resources[1].resource_name == "permissions-dlt-pl-stock-prices"
+    assert (
+        resources[2].resource_name
+        == "workspace-file-laktory-pipelines-pl-stock-prices-json"
+    )
+    assert (
+        resources[3].resource_name
+        == "permissions-workspace-file-laktory-pipelines-pl-stock-prices-json"
+    )
+
+    assert resources[0].options.provider == "${resources.databricks2}"
+    assert resources[1].options.provider == "${resources.databricks2}"
+    assert resources[2].options.provider == "${resources.databricks1}"
+    assert resources[3].options.provider == "${resources.databricks1}"
+
+    assert resources[0].options.depends_on == []
+    assert resources[1].options.depends_on == ["${resources.dlt-pl-stock-prices}"]
+    assert resources[2].options.depends_on == []
+    assert resources[3].options.depends_on == [
+        "${resources.workspace-file-laktory-pipelines-pl-stock-prices-json}"
+    ]
 
 
 if __name__ == "__main__":
-    test_pipeline()
-    test_pipeline_pulumi()
+    test_dag()
+    test_execute()
+    test_pipeline_dlt()

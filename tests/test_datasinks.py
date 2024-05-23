@@ -47,17 +47,16 @@ def test_file_data_sink():
 def test_table_data_sink():
 
     # Write as overwrite
-    source = TableDataSink(
+    sink = TableDataSink(
         catalog_name="hive_metastore",
         schema_name="default",
         table_name="slv_stock_prices_sink",
         mode="OVERWRITE",
     )
 
-    assert source.full_name == "hive_metastore.default.slv_stock_prices_sink"
-    assert not source.as_stream
-    assert source.format == "DELTA"
-    assert source.mode == "OVERWRITE"
+    assert sink.full_name == "hive_metastore.default.slv_stock_prices_sink"
+    assert sink.format == "DELTA"
+    assert sink.mode == "OVERWRITE"
 
     # TODO: Test write using spark sessions on Databricks
     # source.write(df_slv)

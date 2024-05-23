@@ -7,6 +7,7 @@ from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
+from laktory.models.datasources import BaseDataSource
 from laktory.models.datasinks import DataSinksUnion
 from laktory.models.pipelinenodeexpectation import PipelineNodeExpectation
 from laktory.models.spark.sparkchain import SparkChain
@@ -28,6 +29,10 @@ class PipelineNode(BaseModel):
     add_layer_columns:
         If `True` and `layer` not `None` layer-specific columns like timestamps
         are added to the resulting DataFrame.
+    dlt_template:
+        Specify which template (notebook) to use if pipeline is run with
+        Databricks Delta Live Tables. If `None` default laktory template
+        notebook is used.
     chain:
         Spark or Polars chain defining the data transformations applied to the
         data source
@@ -67,6 +72,8 @@ class PipelineNode(BaseModel):
     """
 
     add_layer_columns: bool = True
+    dlt_template: Union[str, None] = "DEFAULT"
+    description: str = None
     drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
     chain: Union[SparkChain, None] = None
@@ -77,7 +84,8 @@ class PipelineNode(BaseModel):
     sink: Union[DataSinksUnion, None] = None
     source: DataSourcesUnion
     timestamp_key: str = None
-    _df: Any = None
+    _output_df: Any = None
+    _pipeline: Any = None
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
@@ -106,9 +114,17 @@ class PipelineNode(BaseModel):
         #         self.drop_duplicates = False
         #
 
-        # Genera node id
+        # Generate node id
         if self.id is None:
             self.id = str(uuid.uuid4())
+
+        # Assign node to sources
+        for s in self.get_sources():
+            s._pipeline_node = self
+
+        # Assign node to sinks
+        if self.sink:
+            self.sink._pipeline_node = self
 
         return self
 
@@ -117,12 +133,44 @@ class PipelineNode(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @property
+    def is_engine_dlt(self) -> bool:
+        """If `True`, pipeline node is used in the context of a DLT pipeline"""
+        is_engine_dlt = False
+        if self._pipeline and self._pipeline.is_engine_dlt:
+            is_engine_dlt = True
+        return is_engine_dlt
+
+    @property
     def is_from_cdc(self) -> bool:
         """If `True` CDC source is used to build the table"""
         if self.source is None:
             return False
         else:
             return self.source.is_cdc
+
+    @property
+    def warning_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.action == "WARN":
+                expectations[e.name] = e.expression
+        return expectations
+
+    @property
+    def drop_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.action == "DROP":
+                expectations[e.name] = e.expression
+        return expectations
+
+    @property
+    def fail_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.action == "FAIL":
+                expectations[e.name] = e.expression
+        return expectations
 
     @property
     def layer_spark_chain(self):
@@ -205,36 +253,63 @@ class PipelineNode(BaseModel):
 
         return SparkChain(nodes=nodes)
 
+    # ----------------------------------------------------------------------- #
+    # Methods                                                                 #
+    # ----------------------------------------------------------------------- #
+
+    def get_sources(self, cls=BaseDataSource) -> list[BaseDataSource]:
+        sources = []
+
+        if isinstance(self.source, cls):
+            sources += [self.source]
+
+        if self.chain:
+            for sn in self.chain.nodes:
+                for a in sn.spark_func_args:
+                    if isinstance(a.value, cls):
+                        sources += [a.value]
+                for a in sn.spark_func_kwargs.values():
+                    if isinstance(a.value, cls):
+                        sources += [a.value]
+
+        return sources
+
     def execute(
         self,
+        apply_chain: bool = True,
         spark: SparkSession = None,
         udfs: list[Callable] = None,
-        df: AnyDataFrame = None,
+        write_sink: bool = True,
     ) -> AnyDataFrame:
         """
         Execute pipeline node
 
         Parameters
         ----------
+        apply_chain:
+            Flag to apply chain in the execution
         spark: SparkSession
             Spark session
         udfs:
             User-defined functions
-        df:
-            DataFrame generated
+        write_sink:
+            Flag to include writing sink in the execution
 
         Returns
         -------
         :
             output Spark DataFrame
         """
-        logger.info(f"Applying {self.layer} transformations")
+        logger.info(f"Executing pipeline node {self.id} ({self.layer})")
+
+        # Parse DLT
+        if self.is_engine_dlt:
+            write_sink = False
 
         # Read Source
-        if not isinstance(self.source, str):
-            df = self.source.read(spark)
+        self._output_df = self.source.read(spark)
 
-        if self.source.is_cdc:
+        if self.source.is_cdc and not self.is_engine_dlt:
             pass
             # TODO: Apply SCD transformations
             #       Best strategy is probably to build a spark dataframe function and add a node in the chain with
@@ -243,18 +318,15 @@ class PipelineNode(BaseModel):
             # https://www.linkedin.com/pulse/implementing-slowly-changing-dimension-2-using-lau-johansson-yemxf/
 
         # Apply chain
-        if self.chain:
-            df = self.chain.execute(df, udfs=udfs)
+        if apply_chain and self.chain:
+            self._output_df = self.chain.execute(self._output_df, udfs=udfs)
 
         # Apply layer-specific chain
-        if self.layer_spark_chain:
-            df = self.layer_spark_chain.execute(df, udfs=udfs)
+        if apply_chain and self.layer_spark_chain:
+            self._output_df = self.layer_spark_chain.execute(self._output_df, udfs=udfs)
 
         # Output to sink
-        if self.sink:
-            self.sink.write(df)
+        if write_sink and self.sink:
+            self.sink.write(self._output_df)
 
-        # Save DataFrame
-        self._df = df
-
-        return df
+        return self._output_df

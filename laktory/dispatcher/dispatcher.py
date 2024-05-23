@@ -52,6 +52,13 @@ class Dispatcher:
 
     def init_resources(self):
         """Set resource for each of the resources defined in the stack"""
+
+        for k, pl in self.stack.resources.pipelines.items():
+            if pl.dlt is not None:
+                self.resources[pl.dlt.resource_name] = PipelineRunner(
+                    dispatcher=self, name=pl.dlt.name
+                )
+
         for k, pl in self.stack.resources.databricks_dltpipelines.items():
             self.resources[k] = PipelineRunner(dispatcher=self, name=pl.name)
 

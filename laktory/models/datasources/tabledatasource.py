@@ -50,7 +50,7 @@ class TableDataSource(BaseDataSource):
     """
 
     catalog_name: Union[str, None] = None
-    from_dlt: Union[bool, None] = False
+    from_dlt: Union[bool, None] = None
     table_name: Union[str, None] = None
     schema_name: Union[str, None] = None
     warehouse: Union[Literal["DATABRICKS"], None] = "DATABRICKS"

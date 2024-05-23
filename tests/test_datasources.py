@@ -102,7 +102,6 @@ def test_table_data_source():
     # Test meta
     assert source.full_name == "dev.finance.slv_stock_prices"
     assert source._id == "dev.finance.slv_stock_prices"
-    assert not source.from_dlt
 
 
 if __name__ == "__main__":

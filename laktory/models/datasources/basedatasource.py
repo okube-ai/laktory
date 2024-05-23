@@ -139,6 +139,7 @@ class BaseDataSource(BaseModel):
     selects: Union[list[str], dict[str, str], None] = None
     # spark_chain: Union[SparkChain, None] = None
     watermark: Union[Watermark, None] = None
+    _pipeline_node: "PipelineNode" = None
 
     @model_validator(mode="after")
     def options(self) -> Any:
@@ -173,6 +174,14 @@ class BaseDataSource(BaseModel):
     def is_cdc(self) -> bool:
         """If `True` source data is a change data capture (CDC)"""
         return self.cdc is not None
+
+    @property
+    def is_engine_dlt(self) -> bool:
+        """If `True`, data source is used in the context of a DLT pipeline"""
+        is_engine_dlt = False
+        if self._pipeline_node and self._pipeline_node.is_engine_dlt:
+            is_engine_dlt = True
+        return is_engine_dlt
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #

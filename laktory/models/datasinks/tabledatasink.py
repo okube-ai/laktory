@@ -2,6 +2,10 @@ from typing import Literal
 from typing import Union
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
+from laktory.models.datasources.tabledatasource import TableDataSource
+from laktory._logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class TableDataSink(BaseDataSink):
@@ -11,6 +15,9 @@ class TableDataSink(BaseDataSink):
 
     Attributes
     ----------
+    checkpoint_location:
+        Path to which the checkpoint file for streaming dataframe should
+        be written.
     catalog_name:
         Name of the catalog of the source table
     table_name:
@@ -41,13 +48,13 @@ class TableDataSink(BaseDataSink):
         schema_name="finance",
         table_name="slv_stock_prices",
         mode="OVERWRITE",
-        as_stream=False,
     )
     # sink.write(df)
     ```
     """
 
     catalog_name: Union[str, None] = None
+    checkpoint_location: Union[str, None] = None
     format: Literal["DELTA", "PARQUET"] = "DELTA"
     schema_name: Union[str, None] = None
     table_name: Union[str, None]
@@ -100,4 +107,39 @@ class TableDataSink(BaseDataSink):
             )
 
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
-        (df.write.format(self.format).mode(mode).saveAsTable(self.full_name))
+
+        if df.isStreaming:
+            logger.info(f"Writing {self._id} as stream with mode {self.mode}")
+            writer = (
+                df.writeStream.outputMode(self.mode)
+                .format(self.format)
+                .trigger(availableNow=True)  # TODO: Add option for trigger?
+                .option("mergeSchema", "true")
+            )
+
+            if self.checkpoint_location:
+                writer = writer.option("checkpointLocation", self.checkpoint_location)
+
+            writer.toTable(self.full_name)
+
+        else:
+            logger.info(f"Writing {self._id} as static with mode {self.mode}")
+            (
+                df.write.format(self.format)
+                .mode(mode)
+                .option("mergeSchema", "true")
+                .saveAsTable(self.full_name)
+            )
+
+    def as_source(self, as_stream=None) -> TableDataSource:
+
+        source = TableDataSource(
+            catalog_name=self.catalog_name,
+            table_name=self.table_name,
+            schema_name=self.schema_name,
+            warehouse=self.warehouse,
+        )
+        if as_stream:
+            source.as_stream = as_stream
+
+        return source

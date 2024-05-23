@@ -1,13 +1,25 @@
+import os
+import json
 from typing import Union
 from typing import Literal
 from typing import TYPE_CHECKING
+from typing import Any
+from pydantic import model_validator
 import networkx as nx
 
 from laktory._logger import get_logger
+from laktory._settings import settings
+from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
+from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipelinenode import PipelineNode
+from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.dltpipeline import DLTPipeline
+from laktory.models.resources.databricks.permissions import Permissions
+from laktory.models.resources.databricks.workspacefile import WorkspaceFile
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 if TYPE_CHECKING:
     from plotly.graph_objs import Figure
@@ -16,11 +28,35 @@ logger = get_logger(__name__)
 
 
 # --------------------------------------------------------------------------- #
+# Helper Classes                                                              #
+# --------------------------------------------------------------------------- #
+
+
+class PipelineUDF(BaseModel):
+    """
+    Pipeline User Define Function
+
+    Attributes
+    ----------
+    module_name:
+        Name of the module from which the function needs to be imported.
+    function_name:
+        Name of the function.
+    module_path:
+        Workspace filepath of the module, if not in the same directory as the pipeline notebook
+    """
+
+    module_name: str
+    function_name: str
+    module_path: str = None
+
+
+# --------------------------------------------------------------------------- #
 # Main Class                                                                  #
 # --------------------------------------------------------------------------- #
 
 
-class Pipeline(BaseModel):
+class Pipeline(BaseModel, PulumiResource, TerraformResource):
     """
     Pipeline model to manage a full-fledged data pipeline including reading
     from data sources, applying data transformations through Spark and output
@@ -52,13 +88,65 @@ class Pipeline(BaseModel):
     """
 
     dlt: Union[DLTPipeline, None] = None
+    name: str
     nodes: list[Union[PipelineNode]]
-    engine: Union[Literal["DLT"], None] = "DLT"
+    engine: Union[Literal["DLT"], None] = None
     # orchestrator: Literal["DATABRICKS"] = "DATABRICKS"
+    udfs: list[PipelineUDF] = []
+
+    @model_validator(mode="before")
+    @classmethod
+    def assign_to_dlt(cls, data: Any) -> Any:
+        if "dlt" in data.keys():
+            data["dlt"]["name"] = data.get("name", None)
+        return data
+
+    @model_validator(mode="after")
+    def update_nodes(self) -> Any:
+        """ """
+
+        # Build dag
+        _ = self.dag
+
+        for n in self.nodes:
+            # Assign pipeline
+            n._pipeline = self
+
+        return self
+
+    @model_validator(mode="after")
+    def validate_dlt(self) -> Any:
+
+        if self.is_engine_dlt:
+            if self.dlt is None:
+                raise ValueError("dlt must be defined if DLT engine is selected.")
+
+        if not self.is_engine_dlt:
+            return self
+
+        for n in self.nodes:
+
+            # Sink must be Table or None
+            if n.sink is None:
+                pass
+            if isinstance(n.sink, TableDataSink):
+                if n.sink.table_name != n.id:
+                    raise ValueError(
+                        "For DLT pipeline, table sink name must be the same as node id."
+                    )
+                n.sink.catalog_name = self.dlt.catalog
+                n.sink.schema_name = self.dlt.target
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def is_engine_dlt(self) -> bool:
+        """If `True`, pipeline engine is DLT"""
+        return self.engine == "DLT"
 
     @property
     def nodes_dict(self) -> dict[str, PipelineNode]:
@@ -79,23 +167,9 @@ class Pipeline(BaseModel):
 
         # Build edges and assign nodes to pipeline node data sources
         for n in self.nodes:
-            if isinstance(n.source, PipelineNodeDataSource):
-                dag.add_edge(n.source.node_id, n.id)
-                n.source.node = self.nodes_dict[n.source.node_id]
-
-            if not n.chain:
-                continue
-
-            for sn in n.chain.nodes:
-                for a in sn.spark_func_args:
-                    if isinstance(a.value, PipelineNodeDataSource):
-                        dag.add_edge(a.value.node_id, n.id)
-                        a.value.node = self.nodes_dict[a.value.node_id]
-                for a in sn.spark_func_kwargs.values():
-                    if isinstance(a.value, PipelineNodeDataSource):
-                        dag.add_edge(a.value.node_id, n.id)
-                        a.value.node = n
-                        a.value.node = self.nodes_dict[a.value.node_id]
+            for s in n.get_sources(PipelineNodeDataSource):
+                dag.add_edge(s.node_id, n.id)
+                s.node = self.nodes_dict[s.node_id]
 
         if not nx.is_directed_acyclic_graph(dag):
             raise ValueError(
@@ -129,8 +203,7 @@ class Pipeline(BaseModel):
         logger.info("Executing Pipeline")
 
         for inode, node in enumerate(self.sorted_nodes):
-            logger.info(f"Executing node {inode} ({node.id}).")
-            node.execute(spark, udfs=udfs)
+            node.execute(spark=spark, udfs=udfs)
 
     def dag_figure(self) -> "Figure":
 
@@ -187,3 +260,122 @@ class Pipeline(BaseModel):
         )
 
         return go.Figure(data=[nodes_trace] + edge_traces)
+
+    # ----------------------------------------------------------------------- #
+    # Resource Properties                                                     #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def self_as_core_resources(self):
+        """Flag set to `True` if self must be included in core resources"""
+        return False
+
+    @property
+    def resource_type_id(self) -> str:
+        """
+        pl
+        """
+        return "pl"
+
+    @property
+    def additional_core_resources(self) -> list[PulumiResource]:
+        """
+        - configuration workspace file
+        - configuration workspace file permissions
+        if engine is DLT:
+        - DLT Pipeline
+        """
+        # Configuration file
+        source = os.path.join(CACHE_ROOT, f"tmp-{self.name}.json")
+        d = self.model_dump(exclude_none=True)
+        d = self.inject_vars(d)
+        s = json.dumps(d, indent=4)
+        with open(source, "w", newline="\n") as fp:
+            fp.write(s)
+        filepath = f"{settings.workspace_laktory_root}pipelines/{self.name}.json"
+        file = WorkspaceFile(
+            path=filepath,
+            source=source,
+        )
+
+        resources = []
+
+        if self.is_engine_dlt:
+            resources += [self.dlt]
+
+            resources += [file]
+
+            resources += [
+                Permissions(
+                    resource_name=f"permissions-{file.resource_name}",
+                    access_controls=[
+                        AccessControl(
+                            permission_level="CAN_READ",
+                            group_name="account users",
+                        )
+                    ],
+                    workspace_file_path=filepath,
+                    options={"depends_on": [f"${{resources.{file.resource_name}}}"]},
+                )
+            ]
+
+        return resources
+
+    # ----------------------------------------------------------------------- #
+    # Pulumi Properties                                                       #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return ""  # "databricks:Pipeline"
+
+    @property
+    def pulumi_cls(self):
+        return None
+
+    #
+    # @property
+    # def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+    #     return {
+    #         "access_controls": True,
+    #         "tables": True,
+    #         "clusters": {"__all__": {"access_controls"}},
+    #         "udfs": True,
+    #     }
+    #
+    # @property
+    # def pulumi_properties(self):
+    #     d = super().pulumi_properties
+    #     k = "clusters"
+    #     if k in d:
+    #         _clusters = []
+    #         for c in d[k]:
+    #             c["label"] = c.pop("name")
+    #             _clusters += [c]
+    #         d[k] = _clusters
+    #     return d
+
+    # ----------------------------------------------------------------------- #
+    # Terraform Properties                                                    #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return ""
+
+    #
+    # @property
+    # def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    #     return self.pulumi_excludes
+    #
+    # @property
+    # def terraform_properties(self) -> dict:
+    #     d = super().terraform_properties
+    #     k = "cluster"
+    #     if k in d:
+    #         _clusters = []
+    #         for c in d[k]:
+    #             c["label"] = c.pop("name")
+    #             _clusters += [c]
+    #         d[k] = _clusters
+    #     return d

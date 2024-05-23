@@ -1,0 +1,50 @@
+name: pl-stock-prices
+dlt:
+  catalog: dev
+  target: sandbox
+  access_controls:
+    - group_name: account users
+      permission_level: CAN_VIEW
+  options:
+    provider: ${resources.databricks2}
+options:
+  provider: ${resources.databricks1}
+engine: DLT
+nodes:
+- id: brz_stock_prices
+  layer: BRONZE
+  source:
+    path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
+    as_stream: true
+  sink:
+    table_name: brz_stock_prices
+
+- id: slv_stock_prices
+  layer: SILVER
+  source:
+    node_id: brz_stock_prices
+    as_stream: true
+  sink:
+    table_name: slv_stock_prices
+  chain:
+    nodes:
+    - allow_missing_column_args: false
+      column:
+        name: created_at
+        type: timestamp
+      sql_expression: data.created_at
+    - column:
+        name: symbol
+      spark_func_name: coalesce
+      spark_func_args:
+      - value: data.symbol
+    - column:
+        name: close
+        type: double
+      sql_expression: data.close
+    - spark_func_name: drop
+      spark_func_args:
+      - value: data
+      - value: producer
+      - value: name
+      - value: description
