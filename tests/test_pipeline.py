@@ -176,6 +176,7 @@ def test_pipeline_dlt():
         "nodes": [
             {
                 "add_layer_columns": True,
+                "dlt_template": "DEFAULT",
                 "description": None,
                 "drop_duplicates": None,
                 "drop_source_columns": False,
@@ -214,6 +215,7 @@ def test_pipeline_dlt():
             },
             {
                 "add_layer_columns": True,
+                "dlt_template": "DEFAULT",
                 "description": None,
                 "drop_duplicates": None,
                 "drop_source_columns": True,
