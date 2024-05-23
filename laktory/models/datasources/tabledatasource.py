@@ -23,9 +23,6 @@ class TableDataSource(BaseDataSource):
         Name of the catalog of the source table
     cdc:
         Change data capture specifications
-    from_dlt:
-        If `True`, source will be read using `dlt.read` instead of `spark.read`
-        when used in the context of a  Delta Live Table pipeline.
     schema_name:
         Name of the schema of the source table
     table_name:
@@ -42,7 +39,6 @@ class TableDataSource(BaseDataSource):
         table_name="brz_stock_prices",
         selects=["symbol", "open", "close"],
         filter="symbol='AAPL'",
-        from_dlt=False,
         as_stream=True,
     )
     # df = source.read(spark)
@@ -50,7 +46,6 @@ class TableDataSource(BaseDataSource):
     """
 
     catalog_name: Union[str, None] = None
-    from_dlt: Union[bool, None] = None
     table_name: Union[str, None] = None
     schema_name: Union[str, None] = None
     warehouse: Union[Literal["DATABRICKS"], None] = "DATABRICKS"
@@ -98,21 +93,11 @@ class TableDataSource(BaseDataSource):
             )
 
     def _read_spark_databricks(self, spark) -> SparkDataFrame:
-
-        from laktory.dlt import read as dlt_read
-        from laktory.dlt import read_stream as dlt_read_stream
-
         if self.as_stream:
             logger.info(f"Reading {self._id} as stream")
-            if self.from_dlt:
-                df = dlt_read_stream(self.full_name)
-            else:
-                df = spark.readStream.table(self.full_name)
+            df = spark.readStream.table(self.full_name)
         else:
             logger.info(f"Reading {self._id} as static")
-            if self.from_dlt:
-                df = dlt_read(self.full_name)
-            else:
-                df = spark.read.table(self.full_name)
+            df = spark.read.table(self.full_name)
 
         return df
