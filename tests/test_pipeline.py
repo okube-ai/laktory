@@ -15,6 +15,10 @@ with open(os.path.join(paths.data, "pl-spark-local.yaml"), "r") as fp:
     pl = models.Pipeline.model_validate_yaml(fp)
 
 
+with open(os.path.join(paths.data, "pl-dlt.yaml"), "r") as fp:
+    pl_dlt = models.Pipeline.model_validate_yaml(fp)  # also used in test_stack
+
+
 # Update paths
 slv_sink_path = os.path.join(paths.tmp, "pl_slv_sink")
 gld_sink_path = os.path.join(paths.tmp, "pl_gld_sink")
@@ -115,12 +119,9 @@ def test_execute():
 
 def test_pipeline_dlt():
 
-    with open(os.path.join(paths.data, "pl-dlt.yaml"), "r") as fp:
-        pl = models.Pipeline.model_validate_yaml(fp)
-
     # Test Sink as Source
-    sink_source = pl.nodes[1].source.node.sink.as_source(
-        as_stream=pl.nodes[1].source.as_stream
+    sink_source = pl_dlt.nodes[1].source.node.sink.as_source(
+        as_stream=pl_dlt.nodes[1].source.as_stream
     )
     data = sink_source.model_dump()
     print(data)
@@ -141,7 +142,7 @@ def test_pipeline_dlt():
         "warehouse": "DATABRICKS",
     }
 
-    data = pl.model_dump()
+    data = pl_dlt.model_dump()
     print(data)
     assert data == {
         "dlt": {
@@ -298,7 +299,7 @@ def test_pipeline_dlt():
     }
 
     # Test resources
-    resources = pl.core_resources
+    resources = pl_dlt.core_resources
     assert len(resources) == 4
 
     assert isinstance(resources[0], models.resources.databricks.DLTPipeline)
