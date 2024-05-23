@@ -192,52 +192,63 @@ def test_stack_model():
             "databricks_metastoredataaccesses": {},
             "databricks_metastores": {},
             "databricks_notebooks": {},
-            "databricks_dltpipelines": {
-                "pl-custom-name": {
-                    "access_controls": [
-                        {
-                            "group_name": "account users",
-                            "permission_level": "CAN_VIEW",
-                            "service_principal_name": None,
-                            "user_name": None,
-                        },
-                        {
-                            "group_name": "role-engineers",
-                            "permission_level": "CAN_RUN",
-                            "service_principal_name": None,
-                            "user_name": None,
-                        },
-                    ],
-                    "allow_duplicate_names": None,
-                    "catalog": None,
-                    "channel": "PREVIEW",
-                    "clusters": [],
-                    "configuration": {},
-                    "continuous": None,
-                    "development": None,
-                    "edition": None,
-                    "libraries": [
-                        {
-                            "file": None,
-                            "notebook": {"path": "/pipelines/dlt_brz_template.py"},
-                        }
-                    ],
-                    "name": "pl-stock-prices-ut-stack",
-                    "notifications": [],
-                    "photon": None,
-                    "serverless": None,
-                    "storage": None,
-                    "tables": [],
-                    "target": None,
-                    "udfs": [],
-                }
-            },
+            "databricks_dltpipelines": {},
             "databricks_schemas": {},
             "databricks_secrets": {},
             "databricks_secretscopes": {},
             "databricks_serviceprincipals": {},
             "databricks_sqlqueries": {},
             "databricks_tables": {},
+            "databricks_users": {},
+            "databricks_volumes": {},
+            "databricks_warehouses": {},
+            "databricks_workspacefiles": {},
+            "pipelines": {
+                "pl-custom-name": {
+                    "dlt": {
+                        "access_controls": [
+                            {
+                                "group_name": "account users",
+                                "permission_level": "CAN_VIEW",
+                                "service_principal_name": None,
+                                "user_name": None,
+                            },
+                            {
+                                "group_name": "role-engineers",
+                                "permission_level": "CAN_RUN",
+                                "service_principal_name": None,
+                                "user_name": None,
+                            },
+                        ],
+                        "allow_duplicate_names": None,
+                        "catalog": None,
+                        "channel": "PREVIEW",
+                        "clusters": [],
+                        "configuration": {},
+                        "continuous": None,
+                        "development": None,
+                        "edition": None,
+                        "libraries": [
+                            {
+                                "file": None,
+                                "notebook": {"path": "/pipelines/dlt_brz_template.py"},
+                            }
+                        ],
+                        "name": "pl-stock-prices-ut-stack",
+                        "notifications": [],
+                        "photon": None,
+                        "serverless": None,
+                        "storage": None,
+                        "tables": [],
+                        "target": None,
+                        "udfs": [],
+                    },
+                    "name": "pl-stock-prices-ut-stack",
+                    "nodes": [],
+                    "engine": "DLT",
+                    "udfs": [],
+                }
+            },
             "providers": {
                 "databricks": {
                     "account_id": None,
@@ -271,10 +282,6 @@ def test_stack_model():
                     "warehouse_id": None,
                 }
             },
-            "databricks_users": {},
-            "databricks_volumes": {},
-            "databricks_warehouses": {},
-            "databricks_workspacefiles": {},
         },
         "terraform": {
             "backend": {
