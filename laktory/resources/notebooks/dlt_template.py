@@ -1,6 +1,9 @@
 # MAGIC %pip install laktory
 
 # COMMAND ----------
+import importlib
+import sys
+import os
 import pyspark.sql.functions as F
 
 from laktory import dlt
@@ -17,6 +20,15 @@ filepath = f"/Workspace{settings.workspace_laktory_root}pipelines/{pl_name}.json
 with open(filepath, "r") as fp:
     pl = models.Pipeline.model_validate_json(fp.read())
 
+
+# Import User Defined Functions
+sys.path.append("/Workspace/pipelines/")
+udfs = []
+for udf in pl.udfs:
+    if udf.module_path:
+        sys.path.append(os.path.abspath(udf.module_path))
+    module = importlib.import_module(udf.module_name)
+    udfs += [getattr(module, udf.function_name)]
 
 # --------------------------------------------------------------------------- #
 # Tables and Views Definition                                                 #
@@ -36,7 +48,7 @@ def define_table(node):
         logger.info(f"Building {node.id} node")
 
         # Execute node
-        df = node.execute(spark=spark, udfs=None)
+        df = node.execute(spark=spark, udfs=udfs)
         df.printSchema()
 
         # Return
