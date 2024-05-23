@@ -1,20 +1,10 @@
 from laktory import models
 
-from laktory._testing.stockprices import table_slv_pl
-from laktory._testing.stockprices import table_slv_join_pl
-
 
 pl = models.resources.databricks.DLTPipeline(
     name="pl-stock-prices",
     catalog="dev1",
     target="markets1",
-    tables=[table_slv_pl, table_slv_join_pl],
-    udfs=[
-        {
-            "module_name": "stock_functions",
-            "function_name": "high",
-        }
-    ],
 )
 
 

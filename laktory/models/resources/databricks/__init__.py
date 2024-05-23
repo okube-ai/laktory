@@ -23,8 +23,6 @@ from .serviceprincipal import ServicePrincipal
 from .serviceprincipalrole import ServicePrincipalRole
 from .sqlquery import SqlQuery
 from .table import Table
-from .tablebuilder import TableBuilder
-from .tableexpectation import TableExpectation
 from .user import User
 from .userrole import UserRole
 from .volume import Volume

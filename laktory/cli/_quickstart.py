@@ -106,8 +106,7 @@ def quickstart(
 
     # Copy notebooks
     for filename in [
-        "dlt_brz_template.py",
-        "dlt_slv_template.py",
+        "dlt_template.py",
     ]:
         with open(os.path.join(DIRPATH, f"../resources/notebooks/{filename}")) as fp:
             data = fp.read()
@@ -129,7 +128,7 @@ def quickstart(
     # Read template stack
     template_stack = read_template()
     template_stack.backend = backend
-    template_stack.resources.databricks_dltpipelines["pl-quickstart"].clusters[
+    template_stack.resources.pipelines["pl-quickstart"].dlt.clusters[
         0
     ].node_type_id = node_type
 

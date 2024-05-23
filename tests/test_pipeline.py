@@ -168,9 +168,7 @@ def test_pipeline_dlt():
             "photon": None,
             "serverless": None,
             "storage": None,
-            "tables": [],
             "target": "sandbox",
-            "udfs": [],
         },
         "name": "pl-stock-prices",
         "nodes": [

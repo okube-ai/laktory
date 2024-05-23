@@ -12,9 +12,6 @@ from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.column import Column
-from laktory.models.resources.databricks.tablebuilder import TableBuilder
-from laktory.models.resources.databricks.tableexpectation import TableExpectation
-from laktory.models.datasources.tabledatasource import TableDataSource
 
 logger = get_logger(__name__)
 
@@ -22,15 +19,10 @@ logger = get_logger(__name__)
 class Table(BaseModel, PulumiResource, TerraformResource):
     """
     A table resides in the third layer of Unity Catalog’s three-level
-    namespace. It contains rows of data. Laktory provides the mechanism to
-    build the table data in the context of a data pipeline using the
-    `builder` attribute.
+    namespace. It contains rows of data.
 
     Attributes
     ----------
-    builder:
-        Instructions on how to build data from a source in the context of a
-        data pipeline.
     catalog_name:
         Name of the catalog storing the table
     columns:
@@ -39,9 +31,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         Text description of the catalog
     data:
         Data to be used to populate the rows
-    expectations:
-        List of expectations for the table. Can be used as warnings, drop
-        invalid records or fail a pipeline.
     grants:
         List of grants operating on the schema
     name:
@@ -53,9 +42,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         Name of the schema storing the table
     table_type:
         Distinguishes a view vs. managed/external Table.
-    timestamp_key:
-        Name of the column storing a timestamp associated with each row. It is
-        used as the default column by the builder when creating watermarks.
     view_definition:
         SQL text defining the view (for `table_type == "VIEW"`). Not supported
         for MANAGED or EXTERNAL table_type.
@@ -120,19 +106,15 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     * [Pulumi Databricks Table](https://www.pulumi.com/registry/packages/databricks/api-docs/sqltable/)
     """
 
-    builder: TableBuilder = TableBuilder()
     catalog_name: Union[str, None] = None
     columns: list[Column] = []
     comment: Union[str, None] = None
-    data: list[list[Any]] = None
     data_source_format: str = "DELTA"
-    expectations: list[TableExpectation] = []
     grants: list[TableGrant] = None
     name: str
     primary_key: Union[str, None] = None
     schema_name: Union[str, None] = None
     table_type: Literal["MANAGED", "EXTERNA", "VIEW"] = "MANAGED"
-    timestamp_key: Union[str, None] = None
     view_definition: str = None
     warehouse_id: str = None
 
@@ -147,30 +129,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
             c.table_name = self.name
             c.catalog_name = self.catalog_name
             c.schema_name = self.schema_name
-
-        # Set builder table
-        self.builder._table = self
-
-        # Find table sources
-        sources = []
-        if isinstance(self.builder.source, TableDataSource):
-            sources += [self.builder.source]
-
-        if self.builder.spark_chain:
-            for n in self.builder.spark_chain.nodes:
-                for a in n.spark_func_args:
-                    if isinstance(a.value, TableDataSource):
-                        sources += [a.value]
-                for a in n.spark_func_kwargs.values():
-                    if isinstance(a.value, TableDataSource):
-                        sources += [a.value]
-
-        # Assign catalog and schema to sources
-        for s in sources:
-            if s.catalog_name is None:
-                s.catalog_name = self.catalog_name
-            if s.schema_name is None:
-                s.schema_name = self.schema_name
 
         # Warehouse ID
         if self.warehouse_id is None:
@@ -206,11 +164,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         return _id
 
     @property
-    def layer(self) -> str:
-        """Layer in the medallion architecture ("BRONZE", "SILVER", "GOLD")"""
-        return self.builder.layer
-
-    @property
     def column_names(self) -> list[str]:
         """List of column names"""
         return [c.name for c in self.columns]
@@ -220,52 +173,9 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         """If `True` CDC source is used to build the table"""
         return self.builder.is_from_cdc
 
-    @property
-    def warning_expectations(self) -> dict[str, str]:
-        expectations = {}
-        for e in self.expectations:
-            if e.action == "WARN":
-                expectations[e.name] = e.expression
-        return expectations
-
-    @property
-    def drop_expectations(self) -> dict[str, str]:
-        expectations = {}
-        for e in self.expectations:
-            if e.action == "DROP":
-                expectations[e.name] = e.expression
-        return expectations
-
-    @property
-    def fail_expectations(self) -> dict[str, str]:
-        expectations = {}
-        for e in self.expectations:
-            if e.action == "FAIL":
-                expectations[e.name] = e.expression
-        return expectations
-
     # ----------------------------------------------------------------------- #
     #  Methods                                                                #
     # ----------------------------------------------------------------------- #
-
-    def to_df(self, spark=None):
-        """
-        Dataframe representation of the table. Requires `self.data` to be
-        specified.
-
-        Attributes
-        ----------
-        spark: SparkSession
-            Spark session used to convert pandas DataFrame into a spark
-            DataFrame if provided.
-        """
-        import pandas as pd
-
-        df = pd.DataFrame(data=self.data, columns=self.column_names)
-
-        if spark:
-            df = spark.createDataFrame(df)
-        return df
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -275,10 +185,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     def resource_key(self) -> str:
         """Table full name (catalog.schema.table)"""
         return self.full_name
-
-    @property
-    def self_as_core_resources(self):
-        return not self.builder.pipeline_name
 
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
@@ -318,13 +224,9 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
-            "builder",
             "columns",
-            "data",
-            "expectations",
             "grants",
             "primary_key",
-            "timestamp_key",
         ]
 
     @property

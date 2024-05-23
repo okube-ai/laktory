@@ -1,13 +1,9 @@
-import json
-import os
 from typing import Any
 from typing import Literal
 from typing import Union
 from pydantic import model_validator
 from pydantic import Field
 
-from laktory._settings import settings
-from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.accesscontrol import AccessControl
@@ -15,8 +11,6 @@ from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.datasources.tabledatasource import TableDataSource
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.resources.databricks.workspacefile import WorkspaceFile
-from laktory.models.resources.databricks.table import Table
 
 
 class PipelineLibraryFile(BaseModel):
@@ -135,25 +129,6 @@ class PipelineCluster(Cluster):
         return self
 
 
-class PipelineUDF(BaseModel):
-    """
-    Pipeline User Define Function
-
-    Attributes
-    ----------
-    module_name:
-        Name of the module from which the function needs to be imported.
-    function_name:
-        Name of the function.
-    module_path:
-        Workspace filepath of the module, if not in the same directory as the pipeline notebook
-    """
-
-    module_name: str
-    function_name: str
-    module_path: str = None
-
-
 class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Delta Live Tables (DLT) Pipeline
@@ -193,13 +168,9 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
         A location on DBFS or cloud storage where output data and metadata required for pipeline execution are stored.
         By default, tables are stored in a subdirectory of this location. Change of this parameter forces recreation
         of the pipeline. (Conflicts with `catalog`).
-    tables:
-        List of tables to build
     target:
         The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data.
         Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
-    udfs:
-        List of user defined functions provided to the table builders.
 
     Examples
     --------
@@ -314,31 +285,7 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     photon: bool = None
     serverless: bool = None
     storage: str = None
-    tables: list[Table] = []
     target: str = None
-    udfs: list[PipelineUDF] = []
-
-    @model_validator(mode="after")
-    def assign_pipeline_to_tables(self) -> Any:
-        for t in self.tables:
-            t.builder.pipeline_name = self.name
-            t.catalog_name = self.catalog
-            t.schema_name = self.target
-            for c in t.columns:
-                c.table_name = t.name
-                c.catalog_name = t.catalog_name
-                c.schema_name = t.schema_name
-
-            # Assign to sources
-            if t.builder.source is not None and isinstance(
-                t.builder.source, TableDataSource
-            ):
-                if t.builder.source.catalog_name is None:
-                    t.builder.source.catalog_name = self.catalog
-                if t.builder.source.schema_name is None:
-                    t.builder.source.schema_name = self.target
-
-        return self
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -387,9 +334,7 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return {
             "access_controls": True,
-            "tables": True,
             "clusters": {"__all__": {"access_controls"}},
-            "udfs": True,
         }
 
     @property
