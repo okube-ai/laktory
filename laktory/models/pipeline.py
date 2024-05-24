@@ -16,6 +16,7 @@ from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipelinenode import PipelineNode
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.dltpipeline import DLTPipeline
+from laktory.models.resources.databricks.notebook import Notebook
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -88,9 +89,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     """
 
     dlt: Union[DLTPipeline, None] = None
+    databricks_notebook: Union[Notebook, None] = None
     name: str
     nodes: list[Union[PipelineNode]]
-    engine: Union[Literal["DLT"], None] = None
+    engine: Union[Literal["DLT", "DATABRICKS_NOTEBOOK", "DATABRICKS_JOB"], None] = None
     # orchestrator: Literal["DATABRICKS"] = "DATABRICKS"
     udfs: list[PipelineUDF] = []
 
@@ -298,26 +300,24 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             source=source,
         )
 
-        resources = []
+        resources = [file]
+
+        resources += [
+            Permissions(
+                resource_name=f"permissions-{file.resource_name}",
+                access_controls=[
+                    AccessControl(
+                        permission_level="CAN_READ",
+                        group_name="account users",
+                    )
+                ],
+                workspace_file_path=filepath,
+                options={"depends_on": [f"${{resources.{file.resource_name}}}"]},
+            )
+        ]
 
         if self.is_engine_dlt:
             resources += [self.dlt]
-
-            resources += [file]
-
-            resources += [
-                Permissions(
-                    resource_name=f"permissions-{file.resource_name}",
-                    access_controls=[
-                        AccessControl(
-                            permission_level="CAN_READ",
-                            group_name="account users",
-                        )
-                    ],
-                    workspace_file_path=filepath,
-                    options={"depends_on": [f"${{resources.{file.resource_name}}}"]},
-                )
-            ]
 
         return resources
 
