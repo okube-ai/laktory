@@ -78,8 +78,8 @@ class PipelineNode(BaseModel):
     drop_source_columns: Union[bool, None] = None
     chain: Union[SparkChain, None] = None
     expectations: list[PipelineNodeExpectation] = []
-    id: Union[str, None] = None
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
+    name: Union[str, None] = None
     primary_key: str = None
     sink: Union[DataSinksUnion, None] = None
     source: DataSourcesUnion
@@ -115,8 +115,8 @@ class PipelineNode(BaseModel):
         #
 
         # Generate node id
-        if self.id is None:
-            self.id = str(uuid.uuid4())
+        if self.name is None:
+            self.name = str(uuid.uuid4())
 
         # Assign node to sources
         for s in self.get_sources():
@@ -319,7 +319,7 @@ class PipelineNode(BaseModel):
         :
             output Spark DataFrame
         """
-        logger.info(f"Executing pipeline node {self.id} ({self.layer})")
+        logger.info(f"Executing pipeline node {self.name} ({self.layer})")
 
         # Parse DLT
         if self.is_engine_dlt:

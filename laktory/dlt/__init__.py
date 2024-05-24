@@ -204,7 +204,7 @@ def apply_changes(*args, node=None, **kwargs):
     dlt.spark = spark
 
     def define_table(node):
-        dlt.create_streaming_table(name=node.id)
+        dlt.create_streaming_table(name=node.name)
         df = dlt.apply_changes(**node.apply_changes_kwargs)
         return df
 

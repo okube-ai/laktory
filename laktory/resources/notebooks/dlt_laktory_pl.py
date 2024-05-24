@@ -37,7 +37,7 @@ for udf in pl.udfs:
 
 def define_table(node):
     @dlt.table_or_view(
-        name=node.id,
+        name=node.name,
         comment=node.description,
         as_view=node.sink is None,
     )
@@ -45,7 +45,7 @@ def define_table(node):
     @dlt.expect_all_or_drop(node.drop_expectations)
     @dlt.expect_all_or_fail(node.fail_expectations)
     def get_df():
-        logger.info(f"Building {node.id} node")
+        logger.info(f"Building {node.name} node")
 
         # Execute node
         df = node.execute(spark=spark, udfs=udfs)
@@ -64,7 +64,7 @@ def define_table(node):
 
 def define_cdc_table(node):
     dlt.create_streaming_table(
-        name=node.id,
+        name=node.name,
         comment=node.comment,
     )
 

@@ -17,7 +17,7 @@ class PipelineNodeDataSource(BaseDataSource):
 
     Attributes
     ----------
-    node_id:
+    node_name:
         Id of the pipeline node to act as a data source
 
     Examples
@@ -26,7 +26,7 @@ class PipelineNodeDataSource(BaseDataSource):
     ```
     """
 
-    node_id: Union[str, None]
+    node_name: Union[str, None]
     node: Any = Field(None, exclude=True)  # Add suggested type?
 
     # ----------------------------------------------------------------------- #
@@ -35,7 +35,7 @@ class PipelineNodeDataSource(BaseDataSource):
 
     @property
     def _id(self) -> str:
-        return self.node_id
+        return self.node_name
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
@@ -58,10 +58,10 @@ class PipelineNodeDataSource(BaseDataSource):
             else:
                 if self.as_stream:
                     logger.info(f"Reading pipeline node {self._id} with DLT as stream")
-                    df = dlt_read_stream(self.node.id)
+                    df = dlt_read_stream(self.node.name)
                 else:
                     logger.info(f"Reading pipeline node {self._id} with DLT as static")
-                    df = dlt_read(self.node.id)
+                    df = dlt_read(self.node.name)
 
         # Read from node output DataFrame (if available)
         elif self.node._output_df:
@@ -74,7 +74,7 @@ class PipelineNodeDataSource(BaseDataSource):
             df = self.node.sink.read(spark=spark, as_stream=self.as_stream)
 
         else:
-            raise ValueError(f"Pipeline Node {self.id} can't read DataFrame")
+            raise ValueError(f"Pipeline Node {self._id} can't read DataFrame")
 
         return df
 
@@ -91,6 +91,6 @@ class PipelineNodeDataSource(BaseDataSource):
             df = self.node.sink.read(as_stream=self.as_stream)
 
         else:
-            raise ValueError(f"Pipeline Node {self.id} can't read DataFrame")
+            raise ValueError(f"Pipeline Node {self._id} can't read DataFrame")
 
         return df

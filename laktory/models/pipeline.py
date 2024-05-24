@@ -16,7 +16,9 @@ from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipelinenode import PipelineNode
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.dltpipeline import DLTPipeline
-from laktory.models.resources.databricks.notebook import Notebook
+from laktory.models.resources.databricks.job import Job
+from laktory.models.resources.databricks.job import JobTask
+from laktory.models.resources.databricks.job import JobParameter
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -50,6 +52,27 @@ class PipelineUDF(BaseModel):
     module_name: str
     function_name: str
     module_path: str = None
+
+
+class LaktoryPipelineJob(Job):
+    """
+    Databricks job specifically designed to run a Laktory pipeline
+
+    Attributes
+    ----------
+    laktory_version:
+        Laktory version to use in the notebook tasks
+    notebook_path:
+        Path for the notebook. If `None`, default path for laktory job notebooks is used.
+
+    """
+
+    laktory_version: Union[str, None] = None
+    notebook_path: Union[str, None] = None
+
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return super().pulumi_excludes + ["laktory_version", "notebook_path"]
 
 
 # --------------------------------------------------------------------------- #
@@ -88,12 +111,11 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
+    databricks_job: Union[LaktoryPipelineJob, None] = None
     dlt: Union[DLTPipeline, None] = None
-    databricks_notebook: Union[Notebook, None] = None
     name: str
     nodes: list[Union[PipelineNode]]
-    engine: Union[Literal["DLT", "DATABRICKS_NOTEBOOK", "DATABRICKS_JOB"], None] = None
-    # orchestrator: Literal["DATABRICKS"] = "DATABRICKS"
+    engine: Union[Literal["DLT", "DATABRICKS_JOB"], None] = None
     udfs: list[PipelineUDF] = []
 
     @model_validator(mode="before")
@@ -119,12 +141,11 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     @model_validator(mode="after")
     def validate_dlt(self) -> Any:
 
-        if self.is_engine_dlt:
-            if self.dlt is None:
-                raise ValueError("dlt must be defined if DLT engine is selected.")
-
         if not self.is_engine_dlt:
             return self
+
+        if self.dlt is None:
+            raise ValueError("dlt must be defined if DLT engine is selected.")
 
         for n in self.nodes:
 
@@ -132,12 +153,65 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             if n.sink is None:
                 pass
             if isinstance(n.sink, TableDataSink):
-                if n.sink.table_name != n.id:
+                if n.sink.table_name != n.name:
                     raise ValueError(
                         "For DLT pipeline, table sink name must be the same as node id."
                     )
                 n.sink.catalog_name = self.dlt.catalog
                 n.sink.schema_name = self.dlt.target
+
+        return self
+
+    @model_validator(mode="after")
+    def validate_job(self) -> Any:
+
+        if not self.engine == "DATABRICKS_JOB":
+            return self
+
+        if self.databricks_job is None:
+            raise ValueError(
+                "databricks_job must be defined if DATABRICKS_JOB engine is selected."
+            )
+
+        cluster_found = False
+        for c in self.databricks_job.clusters:
+            if c.name == "node-cluster":
+                cluster_found = True
+        if not cluster_found:
+            raise ValueError(
+                "To use DATABRICKS_JOB engine, a cluster named `node-cluster` must be defined in the databricks_job attribute."
+            )
+
+        job = self.databricks_job
+        job.parameters = [JobParameter(name="pipeline_name", default=self.name)]
+
+        notebook_path = self.databricks_job.notebook_path
+        if notebook_path is None:
+            notebook_path = f"{settings.workspace_laktory_root}jobs/job_laktory_pl.py"
+
+        package = "laktory"
+        if self.databricks_job.laktory_version:
+            package += f"=={self.databricks_job.laktory_version}"
+
+        job.tasks = []
+        for node in self.sorted_nodes:
+
+            depends_on = []
+            for edge in self.dag.in_edges(node.name):
+                depends_on += [{"task_key": "node-" + edge[0]}]
+
+            job.tasks += [
+                JobTask(
+                    task_key="node-" + node.name,
+                    notebook_task={
+                        "base_parameters": {"node_name": node.name},
+                        "notebook_path": notebook_path,
+                    },
+                    libraries=[{"pypi": {"package": package}}],
+                    depends_ons=depends_on,
+                    job_cluster_key="node-cluster",
+                )
+            ]
 
         return self
 
@@ -152,7 +226,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def nodes_dict(self) -> dict[str, PipelineNode]:
-        return {n.id: n for n in self.nodes}
+        return {n.name: n for n in self.nodes}
 
     @property
     def dag(self) -> nx.DiGraph:
@@ -165,13 +239,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
         # Build nodes
         for n in self.nodes:
-            dag.add_node(n.id)
+            dag.add_node(n.name)
 
         # Build edges and assign nodes to pipeline node data sources
         for n in self.nodes:
             for s in n.get_sources(PipelineNodeDataSource):
-                dag.add_edge(s.node_id, n.id)
-                s.node = self.nodes_dict[s.node_id]
+                dag.add_edge(s.node_name, n.name)
+                s.node = self.nodes_dict[s.node_name]
 
         if not nx.is_directed_acyclic_graph(dag):
             raise ValueError(
@@ -182,16 +256,16 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         return dag
 
     @property
-    def sorted_node_ids(self):
-        return nx.topological_sort(self.dag)
+    def sorted_node_names(self):
+        return list(nx.topological_sort(self.dag))
 
     @property
     def sorted_nodes(self):
-        node_ids = self.sorted_node_ids
+        node_names = self.sorted_node_names
         nodes = []
-        for node_id in node_ids:
+        for node_name in node_names:
             for node in self.nodes:
-                if node.id == node_id:
+                if node.name == node_name:
                     nodes += [node]
                     break
 
@@ -318,6 +392,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
         if self.is_engine_dlt:
             resources += [self.dlt]
+
+        if self.engine == "DATABRICKS_JOB":
+            resources += [self.databricks_job]
 
         return resources
 
