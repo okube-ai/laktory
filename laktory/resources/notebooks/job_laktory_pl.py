@@ -28,7 +28,7 @@ with open(filepath, "r") as fp:
 
 
 # Import User Defined Functions
-sys.path.append("/Workspace/pipelines/")
+sys.path.append(f"/Workspace{settings.workspace_laktory_root}pipelines/")
 udfs = []
 for udf in pl.udfs:
     if udf.module_path:
