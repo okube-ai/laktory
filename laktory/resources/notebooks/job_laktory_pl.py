@@ -8,12 +8,10 @@ import sys
 import os
 import pyspark.sql.functions as F
 
-from laktory import dlt
 from laktory import models
 from laktory import get_logger
 from laktory import settings
 
-dlt.spark = spark
 logger = get_logger(__name__)
 
 # --------------------------------------------------------------------------- #
