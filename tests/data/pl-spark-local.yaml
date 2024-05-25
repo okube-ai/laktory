@@ -1,15 +1,15 @@
 name: pl-stock-prices
 nodes:
-- id: brz_stock_prices
+- name: brz_stock_prices
   layer: BRONZE
   source:
     format: PARQUET
     path: ./data/brz_stock_prices/
 
-- id: slv_stock_prices
+- name: slv_stock_prices
   layer: SILVER
   source:
-    node_id: brz_stock_prices
+    node_name: brz_stock_prices
   sink:
     format: PARQUET
     mode: OVERWRITE
@@ -40,14 +40,14 @@ nodes:
         'on':
           - symbol
         other:
-          node_id: slv_stock_meta
+          node_name: slv_stock_meta
           renames:
             symbol2: symbol
 
-- id: gld_max_stock_prices
+- name: gld_max_stock_prices
   layer: GOLD
   source:
-    node_id: slv_stock_prices
+    node_name: slv_stock_prices
   sink:
     format: PARQUET
     mode: OVERWRITE
@@ -72,7 +72,7 @@ nodes:
         groupby_columns:
         - symbol
 
-- id: slv_stock_meta
+- name: slv_stock_meta
   layer: SILVER
   source:
     format: PARQUET

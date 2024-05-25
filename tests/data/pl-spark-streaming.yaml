@@ -1,6 +1,6 @@
 name: pl-stock-prices
 nodes:
-- id: brz_stock_prices
+- name: brz_stock_prices
   layer: BRONZE
   source:
     path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
@@ -12,11 +12,11 @@ nodes:
     checkpoint_location: /tmp/brz/
     mode: APPEND
 
-- id: slv_stock_prices
+- name: slv_stock_prices
   layer: SILVER
   source:
     as_stream: true
-    node_id: brz_stock_prices
+    node_name: brz_stock_prices
   sink:
     catalog_name: dev
     schema_name: sandbox
