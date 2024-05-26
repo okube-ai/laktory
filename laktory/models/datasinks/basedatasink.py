@@ -43,6 +43,19 @@ class BaseDataSink(BaseModel):
     # ----------------------------------------------------------------------- #
 
     def write(self, df: AnyDataFrame, mode=None) -> None:
+        """
+        Write DataFrame into sink.
+
+        Parameters
+        ----------
+        df:
+            Input DataFrame
+        mode:
+            Write mode overwrite of the sink default mode.
+
+        Returns
+        -------
+        """
         if mode is None:
             mode = self.mode
         if is_spark_dataframe(df):
@@ -68,4 +81,17 @@ class BaseDataSink(BaseModel):
         raise NotImplementedError()
 
     def read(self, spark=None, as_stream=None):
+        """
+        Read DataFrame from sink.
+
+        Parameters
+        ----------
+        spark:
+            Spark Session
+        as_stream:
+            If `True`, DataFrame read as stream.
+
+        Returns
+        -------
+        """
         return self.as_source(as_stream=as_stream).read(spark=spark)

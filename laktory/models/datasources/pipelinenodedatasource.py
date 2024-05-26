@@ -12,17 +12,39 @@ logger = get_logger(__name__)
 
 class PipelineNodeDataSource(BaseDataSource):
     """
-    Data source using a data warehouse data table, generally used in the
-    context of a data pipeline.
+    Data Source using an upstream pipeline node. Using a pipeline node data
+    source defines the interdependencies between each node in a pipeline.
+    Depending on the selected pipeline orchestrator and the context, a pipeline
+    node data source might read the data from:
+    - memory
+    - upstream node sink
+    - DLT table
 
     Attributes
     ----------
     node_name:
-        Id of the pipeline node to act as a data source
+        Name of the upstream pipeline node
 
     Examples
     ---------
     ```python
+    from laktory import models
+
+    brz = models.PipelineNode(
+        name="brz_stock_prices",
+        source={"path": "/Volumes/sources/landing/events/yahoo-finance/stock_price"},
+        sink={"path": "/Volumes/sources/landing/tables/brz_stock_prices"},
+    )
+
+    slv = models.PipelineNode(
+        name="slv_stock_prices",
+        source={"node_name": "brz_stock_prices"},
+        sink={"path": "/Volumes/sources/landing/tables/slv_stock_prices"},
+    )
+
+    pl = models.Pipeline(name="pl-stock-prices", nodes=[brz, slv])
+
+    # pl.execute(spark=spark)
     ```
     """
 

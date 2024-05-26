@@ -95,7 +95,20 @@ class FileDataSink(BaseDataSink):
 
         writer.save(self.path)
 
-    def as_source(self, as_stream=None) -> FileDataSource:
+    def as_source(self, as_stream: bool = None) -> FileDataSource:
+        """
+        Generate a file data source with the same path as the sink.
+
+        Parameters
+        ----------
+        as_stream:
+            If `True`, sink will be read as stream.
+
+        Returns
+        -------
+        :
+            File Data Source
+        """
 
         source = FileDataSource(
             path=self.path,

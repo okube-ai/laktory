@@ -54,7 +54,7 @@ class PipelineUDF(BaseModel):
     module_path: str = None
 
 
-class LaktoryPipelineJob(Job):
+class PipelineDatabricksJob(Job):
     """
     Databricks job specifically designed to run a Laktory pipeline
 
@@ -132,7 +132,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    databricks_job: Union[LaktoryPipelineJob, None] = None
+    databricks_job: Union[PipelineDatabricksJob, None] = None
     dlt: Union[DLTPipeline, None] = None
     name: str
     nodes: list[Union[PipelineNode]]
