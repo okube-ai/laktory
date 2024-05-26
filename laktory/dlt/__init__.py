@@ -210,7 +210,7 @@ def apply_changes(*args, node=None, **kwargs):
 
     define_table(
         models.PipelineNode(
-            id="slv_stock_prices",
+            name="slv_stock_prices",
             source={
                 "table_name": "brz_stock_prices",
                 "cdc": {

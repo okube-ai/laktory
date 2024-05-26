@@ -203,6 +203,7 @@ def test_stack_model():
             "databricks_workspacefiles": {},
             "pipelines": {
                 "pl-custom-name": {
+                    "databricks_job": None,
                     "dlt": {
                         "access_controls": [
                             {

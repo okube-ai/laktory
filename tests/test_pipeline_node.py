@@ -19,7 +19,7 @@ def test_execute():
     sink_path = os.path.join(paths.tmp, "pl_node_sink")
 
     node = models.PipelineNode(
-        id="slv_stock_prices",
+        name="slv_stock_prices",
         source={
             "table_name": "brz_stock_prices",
             "mock_df": df_brz,
@@ -65,7 +65,7 @@ def test_execute():
 def test_bronze():
     node = models.PipelineNode(
         layer="BRONZE",
-        id="slv_stock_prices",
+        name="slv_stock_prices",
         source={
             "table_name": "brz_stock_prices",
             "mock_df": df_brz,

@@ -106,7 +106,7 @@ def quickstart(
 
     # Copy notebooks
     for filename in [
-        "dlt_template.py",
+        "dlt_laktory_pl.py",
     ]:
         with open(os.path.join(DIRPATH, f"../resources/notebooks/{filename}")) as fp:
             data = fp.read()
