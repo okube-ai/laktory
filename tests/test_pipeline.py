@@ -294,7 +294,7 @@ def test_pipeline_dlt():
                 "timestamp_key": None,
             },
         ],
-        "engine": "DLT",
+        "orchestrator": "DLT",
         "udfs": [],
     }
 

@@ -44,7 +44,7 @@ class PipelineNodeDataSource(BaseDataSource):
     def _read_spark(self, spark) -> SparkDataFrame:
 
         # Reading from DLT
-        if self.is_engine_dlt:
+        if self.is_orchestrator_dlt:
 
             from laktory.dlt import read as dlt_read
             from laktory.dlt import read_stream as dlt_read_stream

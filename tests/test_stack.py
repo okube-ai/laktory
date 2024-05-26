@@ -242,7 +242,7 @@ def test_stack_model():
                     },
                     "name": "pl-stock-prices-ut-stack",
                     "nodes": [],
-                    "engine": "DLT",
+                    "orchestrator": "DLT",
                     "udfs": [],
                 }
             },

@@ -133,12 +133,12 @@ class PipelineNode(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @property
-    def is_engine_dlt(self) -> bool:
+    def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline node is used in the context of a DLT pipeline"""
-        is_engine_dlt = False
-        if self._pipeline and self._pipeline.is_engine_dlt:
-            is_engine_dlt = True
-        return is_engine_dlt
+        is_orchestrator_dlt = False
+        if self._pipeline and self._pipeline.is_orchestrator_dlt:
+            is_orchestrator_dlt = True
+        return is_orchestrator_dlt
 
     @property
     def is_from_cdc(self) -> bool:
@@ -322,13 +322,13 @@ class PipelineNode(BaseModel):
         logger.info(f"Executing pipeline node {self.name} ({self.layer})")
 
         # Parse DLT
-        if self.is_engine_dlt:
+        if self.is_orchestrator_dlt:
             write_sink = False
 
         # Read Source
         self._output_df = self.source.read(spark)
 
-        if self.source.is_cdc and not self.is_engine_dlt:
+        if self.source.is_cdc and not self.is_orchestrator_dlt:
             pass
             # TODO: Apply SCD transformations
             #       Best strategy is probably to build a spark dataframe function and add a node in the chain with

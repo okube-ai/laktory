@@ -9,7 +9,7 @@ dlt:
     provider: ${resources.databricks2}
 options:
   provider: ${resources.databricks1}
-engine: DLT
+orchestrator: DLT
 nodes:
 - name: brz_stock_prices
   layer: BRONZE

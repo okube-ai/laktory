@@ -83,26 +83,47 @@ class LaktoryPipelineJob(Job):
 class Pipeline(BaseModel, PulumiResource, TerraformResource):
     """
     Pipeline model to manage a full-fledged data pipeline including reading
-    from data sources, applying data transformations through Spark and output
-    to data sinks.
+    from data sources, applying data transformations through Spark and
+    outputting to data sinks.
 
     A pipeline is composed of collections of `nodes`, each one defining its
-    own source, transformations and sink. A node may be the source of another
-    node.
+    own source, transformations and optional sink. A node may be the source of
+    another node.
 
-    Multiple engines are supported for running the pipeline ... [TODO: Complete]
-
-    Multiple orchestrators are supported for running the pipeline ... [TODO: Complete]
+    A pipeline may be run manually by using python or the CLI, but it may also
+    be deployed and scheduled using one of the supported orchestrators, such as
+    a Databricks Delta Live Tables or job.
 
     Attributes
     ----------
+    databricks_job:
+        Defines the Databricks Job specifications when DATABRICKS_JOB is
+        selected as the orchestrator.
     dlt:
-        Delta Live Tables specifications if DLT engine is selected.
+        Defines the Delta Live Tables specifications when DLT is selected as
+        the orchestrator.
+    name:
+        Name of the pipeline
     nodes:
-        The list of pipeline nodes. Each node defines a data source, a series
+        List of pipeline nodes. Each node defines a data source, a series
         of transformations and optionally a sink.
-    engine:
-        Selected engine for execution. TODO: Complete
+    orchestrator:
+        Orchestrator used for scheduling and executing the pipeline. The
+        selected option defines which resources are to be deployed.
+        Supported options are:
+        - `DLT`: When orchestrated through Databricks DLT, each pipeline node
+          creates a DLT table (or view, if no sink is defined). Behind the
+          scenes, `PipelineNodeDataSource` leverages native `dlt` `read` and
+          `read_stream` functions to defined the interdependencies between the
+          tables as in a standard DLT pipeline. This is the recommended
+          orchestrator as it is the most feature rich.
+        - `DATABRICKS_JOB`: When deployed through a Databricks Job, a task
+          is created for each pipeline node and all the required dependencies
+          are set automatically. If a given task (or pipeline node) uses a
+          `PipelineNodeDataSource` as the source, the data will be read from
+          the upstream node sink.
+    udfs:
+        List of user defined functions provided to the spark chain.
 
     Examples
     --------
@@ -115,7 +136,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     dlt: Union[DLTPipeline, None] = None
     name: str
     nodes: list[Union[PipelineNode]]
-    engine: Union[Literal["DLT", "DATABRICKS_JOB"], None] = None
+    orchestrator: Union[Literal["DLT", "DATABRICKS_JOB"], None] = None
     udfs: list[PipelineUDF] = []
 
     @model_validator(mode="before")
@@ -141,11 +162,11 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     @model_validator(mode="after")
     def validate_dlt(self) -> Any:
 
-        if not self.is_engine_dlt:
+        if not self.is_orchestrator_dlt:
             return self
 
         if self.dlt is None:
-            raise ValueError("dlt must be defined if DLT engine is selected.")
+            raise ValueError("dlt must be defined if DLT orchestrator is selected.")
 
         for n in self.nodes:
 
@@ -165,12 +186,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     @model_validator(mode="after")
     def validate_job(self) -> Any:
 
-        if not self.engine == "DATABRICKS_JOB":
+        if not self.orchestrator == "DATABRICKS_JOB":
             return self
 
         if self.databricks_job is None:
             raise ValueError(
-                "databricks_job must be defined if DATABRICKS_JOB engine is selected."
+                "databricks_job must be defined if DATABRICKS_JOB orchestrator is selected."
             )
 
         cluster_found = False
@@ -179,7 +200,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                 cluster_found = True
         if not cluster_found:
             raise ValueError(
-                "To use DATABRICKS_JOB engine, a cluster named `node-cluster` must be defined in the databricks_job attribute."
+                "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
             )
 
         job = self.databricks_job
@@ -220,9 +241,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def is_engine_dlt(self) -> bool:
-        """If `True`, pipeline engine is DLT"""
-        return self.engine == "DLT"
+    def is_orchestrator_dlt(self) -> bool:
+        """If `True`, pipeline orchestrator is DLT"""
+        return self.orchestrator == "DLT"
 
     @property
     def nodes_dict(self) -> dict[str, PipelineNode]:
@@ -358,8 +379,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         """
         - configuration workspace file
         - configuration workspace file permissions
-        if engine is DLT:
+        if orchestrator is DLT:
         - DLT Pipeline
+        if orchestrator is DATABRICKS_JOB:
+        - Databricks Job
         """
         # Configuration file
         source = os.path.join(CACHE_ROOT, f"tmp-{self.name}.json")
@@ -390,10 +413,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             )
         ]
 
-        if self.is_engine_dlt:
+        if self.is_orchestrator_dlt:
             resources += [self.dlt]
 
-        if self.engine == "DATABRICKS_JOB":
+        if self.orchestrator == "DATABRICKS_JOB":
             resources += [self.databricks_job]
 
         return resources

@@ -1,5 +1,5 @@
 name: pl-stock-prices
-engine: DATABRICKS_JOB
+orchestrator: DATABRICKS_JOB
 databricks_job:
   name: job-pl-stock-prices
   laktory_version: 0.3.0

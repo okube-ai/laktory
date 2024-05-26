@@ -11,7 +11,7 @@ resources:
   pipelines:
     pl-quickstart:
       name: pl-quickstart
-      engine: DLT
+      orchestrator: DLT
       dlt:
         development: ${vars.is_dev}
         target: default

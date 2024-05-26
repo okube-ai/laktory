@@ -175,12 +175,12 @@ class BaseDataSource(BaseModel):
         return self.cdc is not None
 
     @property
-    def is_engine_dlt(self) -> bool:
+    def is_orchestrator_dlt(self) -> bool:
         """If `True`, data source is used in the context of a DLT pipeline"""
-        is_engine_dlt = False
-        if self._pipeline_node and self._pipeline_node.is_engine_dlt:
-            is_engine_dlt = True
-        return is_engine_dlt
+        is_orchestrator_dlt = False
+        if self._pipeline_node and self._pipeline_node.is_orchestrator_dlt:
+            is_orchestrator_dlt = True
+        return is_orchestrator_dlt
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
