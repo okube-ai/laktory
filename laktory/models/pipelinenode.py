@@ -21,21 +21,22 @@ logger = get_logger(__name__)
 
 class PipelineNode(BaseModel):
     """
-    Pipeline base component generating a DataFrame from a data source and a
-    SparkChain transformation. Optional output to a data sink.
+    Pipeline base component generating a DataFrame by reading a data source and
+    applying a chain of transformations.Optional output to a data sink. Some
+    basic transformations are also natively supported.
 
     Attributes
     ----------
     add_layer_columns:
         If `True` and `layer` not `None` layer-specific columns like timestamps
         are added to the resulting DataFrame.
+    chain:
+        Spark or Polars chain defining the data transformations applied to the
+        data source
     dlt_template:
         Specify which template (notebook) to use if pipeline is run with
         Databricks Delta Live Tables. If `None` default laktory template
         notebook is used.
-    chain:
-        Spark or Polars chain defining the data transformations applied to the
-        data source
     drop_duplicates:
         If `True`:
             - drop duplicated rows using `primary_key` if defined or all
@@ -48,10 +49,10 @@ class PipelineNode(BaseModel):
     expectations:
         List of expectations for the DataFrame. Can be used as warnings, drop
         invalid records or fail a pipeline.
-    id:
-        ID given to the node. Required to reference a node in a data source.
     layer:
         Layer in the medallion architecture
+    name:
+        Name given to the node. Required to reference a node in a data source.
     primary_key:
         Name of the column storing a unique identifier for each row. It is used
         by the node to drop duplicated rows.
@@ -66,8 +67,64 @@ class PipelineNode(BaseModel):
 
     Examples
     --------
+    A node reading stock prices data from a CSV file and writing a DataFrame
+    to disk as a parquet file.
     ```py
-    # TODO
+    import io
+    from laktory import models
+
+    node_yaml = '''
+        - name: brz_stock_prices
+          layer: BRONZE
+          source:
+            format: CSV
+            path: ./raw/brz_stock_prices.csv
+          sink:
+            format: PARQUET
+            mode: OVERWRITE
+            path: ./dataframes/brz_stock_prices
+    '''
+
+    node = models.PipelineNode.model_validate_yaml(io.StringIO(node_yaml))
+
+    # node.execute(spark)
+    ```
+
+    A node reading stock prices from an upstream node and writing a DataFrame
+    to a data table.
+    ```py
+    import io
+    from laktory import models
+
+    node_yaml = '''
+        - name: slv_stock_prices
+          layer: SILVER
+          source:
+            node_name: brz_stock_prices
+          sink:
+            catalog_name: hive_metastore
+            schema_name: default
+            table_name: slv_stock_prices
+          chain:
+            nodes:
+            - column:
+                name: created_at
+                type: timestamp
+              sql_expression: data.created_at
+            - column:
+                name: symbol
+              spark_func_name: coalesce
+              spark_func_args:
+              - value: data.symbol
+            - column:
+                name: close
+                type: double
+              sql_expression: data.close
+    '''
+
+    node = models.PipelineNode.model_validate_yaml(io.StringIO(node_yaml))
+
+    # node.execute(spark)
     ```
     """
 
@@ -89,10 +146,6 @@ class PipelineNode(BaseModel):
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
-        """
-        Sets default options like `drop_source_columns`, `drop_duplicates`,
-        `template`, etc. based on `layer` value.
-        """
         # Default values
         if self.layer == "BRONZE":
             if self.drop_source_columns is None:
@@ -301,7 +354,11 @@ class PipelineNode(BaseModel):
         write_sink: bool = True,
     ) -> AnyDataFrame:
         """
-        Execute pipeline node
+        Execute pipeline node by:
+
+        - Reading the source
+        - Applying the user defined (and layer-specific if applicable) transformation chains
+        - Writing the sink
 
         Parameters
         ----------

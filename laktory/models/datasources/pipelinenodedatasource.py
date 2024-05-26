@@ -16,6 +16,7 @@ class PipelineNodeDataSource(BaseDataSource):
     source defines the interdependencies between each node in a pipeline.
     Depending on the selected pipeline orchestrator and the context, a pipeline
     node data source might read the data from:
+
     - memory
     - upstream node sink
     - DLT table

@@ -8,7 +8,10 @@ logger = get_logger(__name__)
 
 class PipelineNodeExpectation(BaseModel):
     """
-    Specifications for aggregation by group or time window.
+    Definition of an expectation for a given node output DataFrame. It consists
+    of an SQL expression of the expectation and of an action to be taken if the
+    expectation is not met. Similar to DLT Table Expectation. Currently only
+    supported with DLT pipeline orchestrator.
 
     Attributes
     ----------
@@ -18,12 +21,10 @@ class PipelineNodeExpectation(BaseModel):
         SQL expression definition the constraint
     action:
         Action to take when expectation is not met.
-        `ALLOW`: Invalid records are written to the target; failure is reported
-                 as a metric for the dataset.
-        `DROP`: Invalid records are dropped before data is written to the
-                target; failure is reported as a metrics for the dataset.
-        `FAIL`: Invalid records prevent the update from succeeding. Manual
-                intervention is required before re-processing.
+        `ALLOW`: Write invalid records to the output DataFrame, but log
+        exception.
+        `DROP`: Drop Invalid records to the output DataFrame and log exception.
+        `FAIL`: Raise exception when invalid records are found.
 
     Examples
     --------
