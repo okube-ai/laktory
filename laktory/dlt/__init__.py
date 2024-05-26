@@ -204,13 +204,13 @@ def apply_changes(*args, node=None, **kwargs):
     dlt.spark = spark
 
     def define_table(node):
-        dlt.create_streaming_table(name=node.id)
+        dlt.create_streaming_table(name=node.name)
         df = dlt.apply_changes(**node.apply_changes_kwargs)
         return df
 
     define_table(
         models.PipelineNode(
-            id="slv_stock_prices",
+            name="slv_stock_prices",
             source={
                 "table_name": "brz_stock_prices",
                 "cdc": {

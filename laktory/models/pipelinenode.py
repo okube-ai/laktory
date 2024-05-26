@@ -78,8 +78,8 @@ class PipelineNode(BaseModel):
     drop_source_columns: Union[bool, None] = None
     chain: Union[SparkChain, None] = None
     expectations: list[PipelineNodeExpectation] = []
-    id: Union[str, None] = None
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
+    name: Union[str, None] = None
     primary_key: str = None
     sink: Union[DataSinksUnion, None] = None
     source: DataSourcesUnion
@@ -115,8 +115,8 @@ class PipelineNode(BaseModel):
         #
 
         # Generate node id
-        if self.id is None:
-            self.id = str(uuid.uuid4())
+        if self.name is None:
+            self.name = str(uuid.uuid4())
 
         # Assign node to sources
         for s in self.get_sources():
@@ -133,12 +133,12 @@ class PipelineNode(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @property
-    def is_engine_dlt(self) -> bool:
+    def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline node is used in the context of a DLT pipeline"""
-        is_engine_dlt = False
-        if self._pipeline and self._pipeline.is_engine_dlt:
-            is_engine_dlt = True
-        return is_engine_dlt
+        is_orchestrator_dlt = False
+        if self._pipeline and self._pipeline.is_orchestrator_dlt:
+            is_orchestrator_dlt = True
+        return is_orchestrator_dlt
 
     @property
     def is_from_cdc(self) -> bool:
@@ -319,16 +319,16 @@ class PipelineNode(BaseModel):
         :
             output Spark DataFrame
         """
-        logger.info(f"Executing pipeline node {self.id} ({self.layer})")
+        logger.info(f"Executing pipeline node {self.name} ({self.layer})")
 
         # Parse DLT
-        if self.is_engine_dlt:
+        if self.is_orchestrator_dlt:
             write_sink = False
 
         # Read Source
         self._output_df = self.source.read(spark)
 
-        if self.source.is_cdc and not self.is_engine_dlt:
+        if self.source.is_cdc and not self.is_orchestrator_dlt:
             pass
             # TODO: Apply SCD transformations
             #       Best strategy is probably to build a spark dataframe function and add a node in the chain with

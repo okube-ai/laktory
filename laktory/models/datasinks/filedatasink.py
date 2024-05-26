@@ -3,6 +3,7 @@ from typing import Literal
 from typing import Union
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
+from laktory.models.datasources.filedatasource import FileDataSource
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
@@ -93,3 +94,14 @@ class FileDataSink(BaseDataSink):
             writer = writer.options(**self.write_options)
 
         writer.save(self.path)
+
+    def as_source(self, as_stream=None) -> FileDataSource:
+
+        source = FileDataSource(
+            path=self.path,
+            format=self.format,
+        )
+        if as_stream:
+            source.as_stream = as_stream
+
+        return source
