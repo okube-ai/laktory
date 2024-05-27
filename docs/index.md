@@ -26,17 +26,14 @@ At its core, Laktory provides a pipeline model defined as a collection of
 nodes, each producing a DataFrame by reading a source, applying
 transformations, and optionally writing the output to a sink.
 
-Various sources and sinks are supported, ranging from data files to data
-warehouse tables. By selecting a node as a source for another downstream node,
-you establish the dependencies between different nodes, allowing you to build a
-directed acyclic graph (DAG).
-
 Transformations are defined through a chain of Spark (or Polars) function
 calls, offering a highly scalable, flexible, and customizable framework,
 particularly well-suited for streaming operations.
 
 The entire pipeline definition is serializable, making it an ideal candidate
 for a DataOps approach using infrastructure as code.
+
+More details available [here](concepts/pipeline.md).
 
 ## DataOps
 <img src="images/what_is_laktory.png" alt="what is laktory" width="400"/>
@@ -56,6 +53,7 @@ chain:
   - spark_func_name: select
     spark_func_args:
       - timestamp
+      - symbol
       - open
       - close
       - high
