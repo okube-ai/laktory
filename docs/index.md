@@ -1,86 +1,110 @@
 <img src="images/logo_sg.png" alt="laktory logo" width="85"/>
 
-A DataOps framework for building Databricks lakehouse.
-
-<img src="images/what_is_laktory.png" alt="what is laktory" width="400"/>
+An open-source, dataframe-centric ETL framework for building lakehouses with a
+DataOps approach.
 
 ## What is it?
-Laktory, the lakehouse factory, makes it possible to express and bring to life your data vision, from raw data to enriched analytics-ready datasets and finely tuned AI models, while adhering to basic DevOps best practices such as source control, code reviews and CI/CD.
+Laktory, the lakehouse factory, is an open-source framework designed for 
+building, deploying, and executing data pipelines while adhering to essential
+DevOps best practices such as source control, code reviews, and CI/CD. 
+Leveraging Apache Spark and Polars (under development) as its core data
+transformation engines, Laktory ensures robust and scalable data processing
+capabilities.
+
+While a Laktory data pipeline can be run locally for small datasets or 
+prototyping, it really starts to shine when deployed and orchestrated on a 
+cloud data platform, such as Databricks. When combined with [Delta Live Tables](https://www.databricks.com/product/delta-live-tables),
+it provides a top-tier, simple and low maintenance fully managed solution.  
+
+Beyond just data pipelines, Laktory allows for the comprehensive definition
+and deployment of your entire data platform. This includes everything from 
+cloud infrastructure to data tables, security, and quality monitoring systems,
+providing an all-in-one solution for modern data platform management.
+
+## Data Pipeline
+At its core, Laktory provides a pipeline model defined as a collection of 
+nodes, each producing a DataFrame by reading a source, applying
+transformations, and optionally writing the output to a sink.
+
+Various sources and sinks are supported, ranging from data files to data
+warehouse tables. By selecting a node as a source for another downstream node,
+you establish the dependencies between different nodes, allowing you to build a
+directed acyclic graph (DAG).
+
+Transformations are defined through a chain of Spark (or Polars) function
+calls, offering a highly scalable, flexible, and customizable framework,
+particularly well-suited for streaming operations.
+
+The entire pipeline definition is serializable, making it an ideal candidate
+for a DataOps approach using infrastructure as code.
+
+## DataOps
+<img src="images/what_is_laktory.png" alt="what is laktory" width="400"/>
 
 ### Declare
-Declarative definition of your data platform, from cloud infrastructure to data tables, security and quality monitoring.
-```yaml
+Declarative definition of your data transformations using Spark functions.
+```yaml title="pipeline_node.yaml"
 name: slv_stock_prices
-timestamp_key: created_at
-builder:
-  layer: SILVER
-  table_source:
-    name: brz_stock_prices
-  spark_chain:
-    nodes:
-      - column:
-          name: symbol
-          type: string
-        spark_func_name: coalesce
-        spark_func_args:
-          - data.symbol
-  ...
+source:
+  path: ./events/stock_prices/
+sink:
+  schema_name: finance
+  table_name: slv_stock_prices
+layer: SILVER
+chain:
+  nodes:
+  - spark_func_name: select
+    spark_func_args:
+      - timestamp
+      - open
+      - close
+      - high
+      - low
+      - volume
+  - spark_func_name: drop_duplicates
+    spark_func_kwargs:
+      subset:
+        - symbol
+        - timestamp
+...
 ```
 
 ### Validate
-Validation and augmentation of configuration models with laktory default properties, templates and custom spark functions.
+Validation and augmentation of configuration models with laktory default
+properties, templates and custom Spark functions.
 ```py
 from laktory import models
 
-with open("table.yaml") as fp:
-    table = models.Table.model_validate(fp)
+with open("pipeline_node.yaml") as fp:
+    node = models.PipelineNode.model_validate(fp)
 ```
 
 ### Deploy
-Deployment of relevant resources to cloud provider and Databricks workspaces, using Laktory CLI and leveraging Infrastructure-as-Code (IaC) tools.
+Deployment of relevant resources to cloud provider and Databricks workspaces,
+using Laktory CLI and leveraging Infrastructure-as-Code (IaC) tools.
 
 ```commandline title="command line"
 laktory deploy --filepath stack.yaml
 ```
 
 ### Operate
-Execute, monitor and debug jobs and pipelines, giving life to your data vision, all from Databricks workspaces. 
-
-Laktory is your best friend your best friend when it comes to prototyping and debugging data pipelines. 
-Import the laktory-specific `dlt` package and execute and test your notebook outside of a Delta Live Table execution.
-
+Execution of data pipelines on local or remote host and monitoring of errors
+using python code
 ```py
-from laktory import dlt
-from laktory import read_metadata
+from laktory import models
 
-# Read model
-pl = read_metadata(pipeline="pl-stock-prices")
-table = pl.tables[0]
+with open("pipeline.yaml") as fp:
+    pl = models.Pipeline.model_validate(fp)
 
-
-# Build table
-@dlt.table(name=table.name)
-def get_df(table=table):
-    # Read Source
-    df = table.builder.read_source(spark)
-
-    # Process
-    df = table.builder.process(df, udfs=None, spark=spark)
-
-    # Return
-    return df
-
-
-# Debug table
-wrapper = get_df
-df = dlt.get_df(wrapper)
-display(df)
+pl.execute(spark=spark)
 ```
 
-A data pipeline built with Laktory is shipped with custom hooks enabling fine-grained monitoring of performance and failures [under development]. 
+or Laktory CLI.
+```commandline title="command line"
+laktory run -p pl-stock-prices --env dev
+```
 
-
-### Demo
+## Demo
 Watch how Laktory brings your pipeline definition into usable data tables. 
 ![type:video](https://www.youtube.com/embed/dlaUQm5yUa4)
 
