@@ -2,12 +2,12 @@
     [`laktory.models.Pipeline`][laktory.models.Pipeline]<br>
     [`laktory.models.PipelineNode`][laktory.models.PipelineNode]<br>
 
-The Pipeline model is the most fundamental component of Laktory. It declares 
-how data is read, transformed and written.
+The Pipeline model is the cornerstone of Laktory. It specifies the process of 
+reading, transforming, and writing data.
 
-A pipeline is defined as a collection of nodes, each producing a DataFrame by
-reading a source, applying transformations, and optionally writing the output 
-to a sink.
+A pipeline is structured as a sequence of nodes. Each node generates a 
+DataFrame by reading a source, applying transformations, and optionally writing
+the output to a sink.
 
 ```yaml
 name: stock_prices
@@ -48,40 +48,40 @@ nodes:
 ```
 
 ### Sources and Sinks
-Various [sources and sinks](./sources.md) are supported, ranging from data 
-files to data warehouse tables. By selecting a node as a source for another
-downstream node, you establish the dependencies between different nodes, 
-allowing you to build a directed acyclic graph (DAG).
+Laktory supports a variety of [sources and sinks](./sources.md), including
+data files and data warehouse tables. By designating a node as the source for
+another downstream node, you create dependencies between nodes, enabling the
+construction of a directed acyclic graph (DAG).
 
 ### Spark Chain
 Transformations are defined through a [chain](./sparkchain.md) of Spark 
 (or Polars) function calls, offering a highly scalable, flexible, and 
-customizable framework, particularly well-suited for streaming operations.
+customizable framework. Usage of Spark and Spark Streaming also 
+enables streaming operations.
 
 ### Serialization
-The entire pipeline definition is serializable, making it highly portable for
-deployment on a remote compute positioning itself as an ideal candidate for a
-DataOps approach using infrastructure as code.
+The entire pipeline definition is serializable, ensuring high portability for 
+deployment on remote compute environments. This feature makes Laktory an ideal 
+candidate for a DataOps approach using infrastructure as code.
 
 ## Layers
-A pipeline node lets you selected the target medallion architecture layer
-(`BRONZE`, `SILVER`, `GOLD`) so that basic transformations are automatically 
-preset. For example the `SILVER` tables will drop source columns and duplicates 
-by default.
+A pipeline node allows you to select the target [medallion architecture](design.md/#medallion-architecture)
+layer (`BRONZE`, `SILVER`, `GOLD`). Basic transformations are automatically 
+preset based on the selected layer. For example, `SILVER` dataframes will,
+by default, drop source columns and duplicates.
 
 ## Orchestrators
-The pipeline `pipeline.execute()` command makes it entirely possible to run
-your data transformations locally or on a remote server. It will process each
-node sequentially, reading data from the source, applying the transformations
-and writing the sink if applicable. It supports streaming operations through
-[Apache Spark Structured Streaming](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html)
-and various output formats and write modes through the configration of the 
-sink.
+The `pipeline.execute()` command allows you to run your data transformations 
+either locally or on a remote server. It processes each node sequentially, 
+reading data from the source, applying transformations, and writing to the
+sink if applicable. It supports streaming operations through [Apache Spark
+Structured Streaming]((https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html))
+, various output formats and write modes through sink configuration.
 
-However, selecting an orchestrator often enables more advanced features like
-nodes parallel processing, automatic schema management and historical 
-re-processing. Selecting and configuring the desired orchestrator is done directly in the
-pipline configuration.
+However, choosing an orchestrator can unlock more advanced features such as 
+parallel processing of nodes, automatic schema management, and historical
+re-processing. You can select and configure the desired orchestrator directly 
+within the pipeline configuration.
 
 ```yaml title="pipeline.yaml"
 - name: stock_prices
@@ -105,15 +105,15 @@ pipline configuration.
         path: /.laktory/dlt/dlt_laktory_pl.py
 ```
 
-The choice of orchestrator will define which resources are deployed when 
+The choice of orchestrator determines which resources are deployed when 
 running the `laktory deploy` CLI command. 
 
 ### Delta Live Tables (DLT)
 [Databricks Delta Live Tables](https://www.databricks.com/product/delta-live-tables)
-is the recommended orchestrator as it provides the most feature rich 
-experience. Notably, it supports automatic schema changes management,
-data quality checks, continuous execution, error handling, failure recovery
-and autoscaling. 
+is the recommended orchestrator as it provides the most feature-rich 
+experience. Key features include automatic schema change management, data 
+quality checks, continuous execution, error handling, failure recovery, and
+autoscaling.
 
 ![dlt](../images/dlt_stock_prices.png)
 
@@ -121,9 +121,9 @@ A Laktory pipeline integrates with DLT by executing each node inside a
 `dlt.table()` or `dlt.view()` decorated function and returning the output
 DataFrame. 
 
-When used in the context of DLT, a node execution will not trigger a sink write
-as this operation is managed by DLT. When a source is a pipeline node, 
-`dlt.read()` and `dlt.read_stream()` functions will be called to ensure 
+In the context of DLT, node execution does not trigger a sink write, as this
+operation is managed by DLT. When a source is a pipeline node, 
+`dlt.read()` and `dlt.read_stream()` functions are called to ensure 
 compatibility with the DLT framework. 
 
 
@@ -162,7 +162,7 @@ for node in pl.nodes:
     display(df)
 ```
 
-Notice how `dlt` module is imported from laktory as it will provide additional
+Notice how `dlt` module is imported from laktory as it provides additional
 debugging and inspection capabilities. Notably, you can run the notebook in a
 user cluster and will be able to inspect the resulting DataFrame.
 
@@ -172,13 +172,13 @@ user cluster and will be able to inspect the resulting DataFrame.
 ### Databricks Job
 A [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
 is another great orchestration mechanism. In this case, Laktory will create a 
-task per node, allowing to parallelize nodes execution. Each reading and 
-writing operation is entirely handled by Laktory source and sink 
+task for each node, enabling parallel execution of nodes. Each reading and 
+writing operation is entirely handled by Laktory source and sink. 
 
 ![job](../images/job_stock_prices.png)
 
-The supporting notebook simply needs to load the pipeline model and get the
-node name from the job.
+The supporting notebook simply needs to load the pipeline model and retrieve
+the node name from the job.
 
 ```py title="job_laktory_pl"
 dbutils.widgets.text("pipeline_name", "pl-stock-prices")
@@ -213,17 +213,16 @@ Supporting Apache Airflow as an orchestrator is currently under development and
 will be release soon.
 
 ## Streaming
-The event-based and kappa architectures promoted by Laktory lend themselves 
-very well for Spark Structured Streaming, a real-time data processing framework
-that enables continuous, scalable, and fault-tolerant processing of data 
-streams. 
+The event-based and kappa architectures promoted by Laktory are well-suited for
+Spark Structured Streaming. This real-time data processing framework enables 
+continuous, scalable, and fault-tolerant processing of data streams.
 
-By setting `as_stream` to `True` in a pipeline node data source, the resulting
-DataFrame will be streaming in nature and only new rows of data will be 
-processed at each run instead of re-processing the entire data set.
+By setting `as_stream: True` in a pipeline node data source, the resulting
+DataFrame will be streaming in nature, processing only new rows of data at
+each run instead of re-processing the entire dataset.
 
-Streaming does not mean that the pipeline is continuously running. Execution 
-can still be scheduled, but each run is incremental. Selecting Delta Live
-Tables orchestrator with `continuous: True` is currently the only way for
-deploying a continuously running pipeline.
+Streaming does not mean the pipeline is continuously running. Execution can
+still be scheduled, but each run is incremental. Currently, the only way to
+deploy a continuously running pipeline is by selecting the Delta Live Tables
+orchestrator with `continuous: True`.
 
