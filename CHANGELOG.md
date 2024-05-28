@@ -2,13 +2,7 @@
 
 ## [0.3.3] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Support for SQL expression in SparkChain node.
 
 ## [0.3.2] - 2024-05-28
 ### Updated

@@ -81,7 +81,8 @@ class SparkChainNode(BaseModel):
         specified, the spark function should return a column instead. Mutually
          exclusive to `sql_expression`.
     sql_expression:
-        Expression defining how to build the column. If `column` is
+        SQL Expression using `{df}` to reference upstream dataframe and
+        defining how to build the output dataframe. If `column` is
         specified, the sql expression should define a column instead. Mutually
          exclusive to `spark_func_name`
 
@@ -214,8 +215,6 @@ class SparkChainNode(BaseModel):
                     return col
                 return self.add_column(df, col)
             else:
-                raise NotImplementedError("sql_expression not supported yet")
-                # TODO: This implementation should workd, but it should be tested and documented
                 df = df.sparkSession.sql(self.sql_expression, df=df)
                 return df
 

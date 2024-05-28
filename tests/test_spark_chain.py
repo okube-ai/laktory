@@ -91,6 +91,28 @@ def test_dataframe_df_input(df0=df0):
     assert df.columns == df0.columns
 
 
+def test_dataframe_sql_expression(df0=df0):
+    df = df0.select(df0.columns)
+
+    sc = models.SparkChain(
+        nodes=[
+            {
+                "sql_expression": "SELECT *, x*2 AS x2 FROM {df}",
+            },
+        ]
+    )
+
+    # Execute Chain
+    df = sc.execute(df)
+
+    # Test
+    pdf = df.toPandas()
+    assert pdf.columns.tolist() == ["x", "a", "b", "c", "n", "pi", "p", "word", "x2"]
+    assert pdf["x2"].tolist() == (pdf["x"] * 2).tolist()
+
+    df.show()
+
+
 def test_dataframe_table_input(df0=df0):
     df = df0.select(df0.columns)
 
@@ -279,10 +301,11 @@ def test_exceptions():
 
 
 if __name__ == "__main__":
-    test_spark_func_arg()
-    test_dataframe_df_input()
-    test_dataframe_table_input()
-    test_column()
-    test_udfs()
-    test_nested()
-    test_exceptions()
+    # test_spark_func_arg()
+    # test_dataframe_df_input()
+    test_dataframe_sql_expression()
+    # test_dataframe_table_input()
+    # test_column()
+    # test_udfs()
+    # test_nested()
+    # test_exceptions()
