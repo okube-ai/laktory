@@ -26,7 +26,7 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 `laktory deploy` executes the deployment by creating or updating resources.  Similar to `pulumi up` or `terraform apply`.
 
 #### run
-`laktory run` execute remote job or pipeline and monitor failures until completion.
+`laktory run` execute remote job or DLT pipeline and monitor failures until completion. Local execution (without an orchestrator) of a pipeline is not yet supported.
 
 ### CI/CD
 These commands can be run locally, but really start to provide value in the context of a CI/CD pipeline in which 

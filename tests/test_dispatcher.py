@@ -33,12 +33,14 @@ def test_workspace_client():
 def test_resources():
     dispatcher = Dispatcher(stack=stack)
 
+    print(dispatcher.resources.keys())
+
     assert list(dispatcher.resources.keys()) == [
-        "dlt-custom-name",
+        "pl-stock-prices-ut-stack",
         "job-stock-prices-ut-stack",
     ]
     job = dispatcher.resources["job-stock-prices-ut-stack"]
-    dlt = dispatcher.resources["dlt-custom-name"]
+    dlt = dispatcher.resources["pl-stock-prices-ut-stack"]
 
     assert job.model_dump() == {"name": "job-stock-prices-ut-stack", "id": None}
     assert dlt.model_dump() == {"name": "pl-stock-prices-ut-stack", "id": None}

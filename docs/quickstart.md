@@ -20,17 +20,14 @@ Once completed, the stack files and resources have been created.
 The `stack.yaml` file is the main entry point defining the `name` of the stack, the selected `backend` and the list
 of `resources` to be deployed. 
 
-In this example, we define 4 resources:
+In this example, we define 3 resources:
 
 - 1 data file (DBFSFile)
-- 2 notebooks
-- 1 pipeline 
-
-The pipeline also defines the data transformation for the bronze and silver tables.
+- 1 notebooks
+- 1 pipeline
 
 #### Notebook Files
-The `notebooks/pipelines/dlt_brz_template.py` and `notebooks/pipelines/dlt_slv_template.py` files are the notebooks
-used by the pipeline.
+The `notebooks/dlt/dlt_laktory_pl.py` file is the standard notebook used by Laktory pipelines using DLT orchestrator.
 
 #### Data File
 The `data/stock_prices.json` file is a data file storing stock prices. 
@@ -59,37 +56,52 @@ laktory deploy --env dev
 ```
 
 ### Run your pipeline
-Once deployed, you pipeline is ready to be run.
+Once deployed, you pipeline is ready to be run through Databricks UI
 ![pl-stock-prices](images/pl_quickstart.png)
+
+or using laktory CLI
+```cmd
+laktory run --dlt pl-quickstart
+```
 
 ### Debug your pipeline
 If you need to debug or modify one of your pipeline's notebook, Laktory makes it very easy by allowing you to run and inspect (with some limitations) the output data outside of the DLT pipeline.
 
-```py title="dlt_slv_template.py"
+```py title="dlt_laktory_pl.py"
 from laktory import dlt
-from laktory import read_metadata
+from laktory import models
 from laktory import get_logger
+from laktory import settings
 
 dlt.spark = spark
 logger = get_logger(__name__)
 
 # Read pipeline definition
 pl_name = spark.conf.get("pipeline_name", "pl-quickstart")
-pl = read_metadata(pipeline=pl_name)
+filepath = f"/Workspace{settings.workspace_laktory_root}pipelines/{pl_name}.json"
+with open(filepath, "r") as fp:
+    pl = models.Pipeline.model_validate_json(fp.read())
+
+# --------------------------------------------------------------------------- #
+# Tables and Views Definition                                                 #
+# --------------------------------------------------------------------------- #
 
 
-# Define table
-def define_table(table):
-    @dlt.table(name=table.name, comment=table.comment)
+def define_table(node):
+    @dlt.table_or_view(
+        name=node.name,
+        comment=node.description,
+        as_view=node.sink is None,
+    )
+    @dlt.expect_all(node.warning_expectations)
+    @dlt.expect_all_or_drop(node.drop_expectations)
+    @dlt.expect_all_or_fail(node.fail_expectations)
     def get_df():
-        logger.info(f"Building {table.name} table")
+        logger.info(f"Building {node.name} node")
 
-        # Read Source
-        df = table.builder.read_source(spark)
+        # Execute node
+        df = node.execute(spark=spark, udfs=udfs)
         df.printSchema()
-
-        # Process
-        df = table.builder.process(df, spark=spark)
 
         # Return
         return df
@@ -101,12 +113,15 @@ def define_table(table):
 # Execution                                                                   #
 # --------------------------------------------------------------------------- #
 
-# Build tables
-for table in pl.tables:
-    if table.layer == "SILVER":
-        wrapper = define_table(table)
-        df = dlt.get_df(wrapper)
-        display(df)
+# Build nodes
+for node in pl.nodes:
+
+    if node.dlt_template != "DEFAULT":
+        continue
+
+    wrapper = define_table(node)
+    df = dlt.get_df(wrapper)
+    display(df)
 ```
 
 Output:

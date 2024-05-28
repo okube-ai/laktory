@@ -99,8 +99,8 @@ def quickstart(
             f"Node type for pipeline (e.g.: Standard_DS3_v2, c5.2xlarge, etc.): "
         )
 
-    if not os.path.exists("./notebooks/pipelines"):
-        os.makedirs("./notebooks/pipelines")
+    if not os.path.exists("./notebooks/dlt"):
+        os.makedirs("./notebooks/dlt")
     if not os.path.exists("./data"):
         os.makedirs("./data")
 
@@ -112,7 +112,7 @@ def quickstart(
             data = fp.read()
             data = data.replace("pl-stock-prices", "pl-quickstart")
 
-        with open(f"./notebooks/pipelines/{filename}", "w") as fp:
+        with open(f"./notebooks/dlt/{filename}", "w") as fp:
             fp.write(data)
 
     # Copy data

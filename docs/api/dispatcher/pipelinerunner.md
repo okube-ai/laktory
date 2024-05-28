@@ -1,1 +1,1 @@
-::: laktory.dispatcher.PipelineRunner
+::: laktory.dispatcher.DLTPipelineRunner
