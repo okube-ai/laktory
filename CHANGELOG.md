@@ -1,6 +1,16 @@
 # Release History
 
-## [0.3.0] - Unreleased
+## [0.3.1] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.3.0] - 2024-05-28
 ### Added
 * `Pipeline` model, the new central component for building ETL pipelines
 * `PipelineNode` model, the `Pipeline` sub-component defining each dataframe in a pipeline
