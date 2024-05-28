@@ -65,7 +65,7 @@ deployment on remote compute environments. This feature makes Laktory an ideal
 candidate for a DataOps approach using infrastructure as code.
 
 ## Layers
-A pipeline node allows you to select the target [medallion architecture](design.md/#medallion-architecture)
+A pipeline node allows you to select the target [medallion architecture](../design.md/#medallion-architecture)
 layer (`BRONZE`, `SILVER`, `GOLD`). Basic transformations are automatically 
 preset based on the selected layer. For example, `SILVER` dataframes will,
 by default, drop source columns and duplicates.
@@ -115,7 +115,7 @@ experience. Key features include automatic schema change management, data
 quality checks, continuous execution, error handling, failure recovery, and
 autoscaling.
 
-![dlt](../images/dlt_stock_prices.png)
+![dlt](../../images/dlt_stock_prices.png)
 
 A Laktory pipeline integrates with DLT by executing each node inside a
 `dlt.table()` or `dlt.view()` decorated function and returning the output
@@ -166,7 +166,7 @@ Notice how `dlt` module is imported from laktory as it provides additional
 debugging and inspection capabilities. Notably, you can run the notebook in a
 user cluster and will be able to inspect the resulting dataframe.
 
-![dlt](../images/dlt_debug.png)
+![dlt](../../images/dlt_debug.png)
 
 
 ### Databricks Job
@@ -175,7 +175,7 @@ is another great orchestration mechanism. In this case, Laktory will create a
 task for each node, enabling parallel execution of nodes. Each reading and 
 writing operation is entirely handled by Laktory source and sink. 
 
-![job](../images/job_stock_prices.png)
+![job](../../images/job_stock_prices.png)
 
 The supporting notebook simply needs to load the pipeline model and retrieve
 the node name from the job.
