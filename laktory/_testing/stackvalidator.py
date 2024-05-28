@@ -66,7 +66,7 @@ class StackValidator:
 
     def validate_pulumi(self):
         pass
-        # self.pstack.preview(stack="okube/dev")
+        self.pstack.preview(stack="okube/dev")
         # TODO: Re-enable
 
     def validate_terraform(self):
