@@ -19,10 +19,10 @@ class BaseDataSink(BaseModel):
     mode:
         Write mode.
         - overwrite: Overwrite existing data
-        - append: Append contents of the DataFrame to existing data
+        - append: Append contents of the dataframe to existing data
         - error: Throw and exception if data already exists
         - ignore: Silently ignore this operation if data already exists
-        - complete: Overwrite for streaming DataFrames
+        - complete: Overwrite for streaming dataframes
     """
 
     mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE"], None] = (
@@ -44,12 +44,12 @@ class BaseDataSink(BaseModel):
 
     def write(self, df: AnyDataFrame, mode=None) -> None:
         """
-        Write DataFrame into sink.
+        Write dataframe into sink.
 
         Parameters
         ----------
         df:
-            Input DataFrame
+            Input dataframe
         mode:
             Write mode overwrite of the sink default mode.
 
@@ -62,16 +62,16 @@ class BaseDataSink(BaseModel):
             self._write_spark(df, mode=mode)
         elif is_polars_dataframe(df):
             if self.as_stream:
-                raise ValueError("Polars DataFrames don't support streaming write.")
+                raise ValueError("Polars dataframes don't support streaming write.")
             self._write_polars(df, mode=mode)
         else:
             raise ValueError()
 
     def _write_spark(self, df: SparkDataFrame, mode=mode) -> None:
-        raise NotImplementedError("Not implemented for Spark DataFrame")
+        raise NotImplementedError("Not implemented for Spark dataframe")
 
     def _write_polars(self, df: PolarsDataFrame, mode=mode) -> None:
-        raise NotImplementedError("Not implemented for Polars DataFrame")
+        raise NotImplementedError("Not implemented for Polars dataframe")
 
     # ----------------------------------------------------------------------- #
     # Sources                                                                 #
@@ -82,14 +82,14 @@ class BaseDataSink(BaseModel):
 
     def read(self, spark=None, as_stream=None):
         """
-        Read DataFrame from sink.
+        Read dataframe from sink.
 
         Parameters
         ----------
         spark:
             Spark Session
         as_stream:
-            If `True`, DataFrame read as stream.
+            If `True`, dataframe read as stream.
 
         Returns
         -------

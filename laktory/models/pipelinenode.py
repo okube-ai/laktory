@@ -74,12 +74,12 @@ class PipelineNode(BaseModel):
     from laktory import models
 
     node_yaml = '''
-        - name: brz_stock_prices
-          layer: BRONZE
-          source:
+        name: brz_stock_prices
+        layer: BRONZE
+        source:
             format: CSV
             path: ./raw/brz_stock_prices.csv
-          sink:
+        sink:
             format: PARQUET
             mode: OVERWRITE
             path: ./dataframes/brz_stock_prices
@@ -97,29 +97,29 @@ class PipelineNode(BaseModel):
     from laktory import models
 
     node_yaml = '''
-        - name: slv_stock_prices
-          layer: SILVER
-          source:
-            node_name: brz_stock_prices
-          sink:
-            catalog_name: hive_metastore
-            schema_name: default
-            table_name: slv_stock_prices
-          chain:
-            nodes:
-            - column:
-                name: created_at
-                type: timestamp
-              sql_expression: data.created_at
-            - column:
-                name: symbol
-              spark_func_name: coalesce
-              spark_func_args:
-              - value: data.symbol
-            - column:
-                name: close
-                type: double
-              sql_expression: data.close
+        name: slv_stock_prices
+        layer: SILVER
+        source:
+          node_name: brz_stock_prices
+        sink:
+          catalog_name: hive_metastore
+          schema_name: default
+          table_name: slv_stock_prices
+        chain:
+          nodes:
+          - column:
+              name: created_at
+              type: timestamp
+            sql_expression: data.created_at
+          - column:
+              name: symbol
+            spark_func_name: coalesce
+            spark_func_args:
+            - value: data.symbol
+          - column:
+              name: close
+              type: double
+            sql_expression: data.close
     '''
 
     node = models.PipelineNode.model_validate_yaml(io.StringIO(node_yaml))

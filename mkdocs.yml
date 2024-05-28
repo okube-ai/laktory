@@ -124,10 +124,12 @@ nav:
     - Design Principles: concepts/design.md
     - Models:
       - Intro: concepts/models.md
-      - Data Event: concepts/dataevent.md
-      - Table: concepts/table.md
-      - Table Builder: concepts/tablebuilder.md
       - Pipeline: concepts/pipeline.md
+      - Data Sources and Sinks: concepts/sourcessinks.md
+      - Spark Chain: concepts/sparkchain.md
+      - Data Event: concepts/dataevent.md
+#      - Table: concepts/table.md
+#      - Table Builder: concepts/tablebuilder.md
     - Stack: concepts/stack.md
     - Variables: concepts/variables.md
     - Deployment (IaC): concepts/deployment.md

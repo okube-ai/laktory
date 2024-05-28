@@ -23,7 +23,7 @@ providing an all-in-one solution for modern data platform management.
 
 ## Data Pipeline
 At its core, Laktory provides a pipeline model defined as a collection of 
-nodes, each producing a DataFrame by reading a source, applying
+nodes, each producing a dataframe by reading a source, applying
 transformations, and optionally writing the output to a sink.
 
 Transformations are defined through a chain of Spark (or Polars) function

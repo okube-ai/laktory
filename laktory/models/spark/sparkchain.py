@@ -16,11 +16,11 @@ logger = get_logger(__name__)
 class SparkChain(BaseModel):
     """
     The Spark Chain class defines a series of transformation to be applied to
-    a DataFrame. Each transformation is expressed as a node (SparkChainNode
+    a dataframe. Each transformation is expressed as a node (SparkChainNode
     object) that, upon execution, returns a new dataframe. As a convenience,
     `column` can be specified to create a new column. In this case, the spark
     function or sql expression is expected to return a column instead of a
-    DataFrame. Each node is executed sequentially in the provided order. A node
+    dataframe. Each node is executed sequentially in the provided order. A node
     may also be another Spark Chain.
 
     Attributes

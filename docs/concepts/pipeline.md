@@ -6,7 +6,7 @@ The Pipeline model is the cornerstone of Laktory. It specifies the process of
 reading, transforming, and writing data.
 
 A pipeline is structured as a sequence of nodes. Each node generates a 
-DataFrame by reading a source, applying transformations, and optionally writing
+dataframe by reading a source, applying transformations, and optionally writing
 the output to a sink.
 
 ```yaml
@@ -119,7 +119,7 @@ autoscaling.
 
 A Laktory pipeline integrates with DLT by executing each node inside a
 `dlt.table()` or `dlt.view()` decorated function and returning the output
-DataFrame. 
+dataframe. 
 
 In the context of DLT, node execution does not trigger a sink write, as this
 operation is managed by DLT. When a source is a pipeline node, 
@@ -164,7 +164,7 @@ for node in pl.nodes:
 
 Notice how `dlt` module is imported from laktory as it provides additional
 debugging and inspection capabilities. Notably, you can run the notebook in a
-user cluster and will be able to inspect the resulting DataFrame.
+user cluster and will be able to inspect the resulting dataframe.
 
 ![dlt](../images/dlt_debug.png)
 
@@ -210,7 +210,7 @@ else:
 
 ### Apache Airflow
 Supporting Apache Airflow as an orchestrator is currently under development and
-will be release soon.
+will be released soon.
 
 ## Streaming
 The event-based and kappa architectures promoted by Laktory are well-suited for
@@ -218,7 +218,7 @@ Spark Structured Streaming. This real-time data processing framework enables
 continuous, scalable, and fault-tolerant processing of data streams.
 
 By setting `as_stream: True` in a pipeline node data source, the resulting
-DataFrame will be streaming in nature, processing only new rows of data at
+dataframe will be streaming in nature, processing only new rows of data at
 each run instead of re-processing the entire dataset.
 
 Streaming does not mean the pipeline is continuously running. Execution can
@@ -226,3 +226,5 @@ still be scheduled, but each run is incremental. Currently, the only way to
 deploy a continuously running pipeline is by selecting the Delta Live Tables
 orchestrator with `continuous: True`.
 
+For more information about streaming data, consider reading this 
+[blog post](https://www.linkedin.com/pulse/mastering-streaming-data-pipelines-kappa-architecture-olivier-soucy-0gjgf/).

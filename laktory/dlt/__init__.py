@@ -47,7 +47,7 @@ def is_debug() -> bool:
     """
     Debug flag. If `True`, DLT readers are replaced with laktory functions
     allowing to run a notebook outside of a pipeline and preview the content
-    of the output DataFrame.
+    of the output dataframe.
 
     Returns
     -------
@@ -66,7 +66,7 @@ def is_debug() -> bool:
 def get_df(df_wrapper) -> SparkDataFrame:
     """
     When executed in debug mode (ref `dlt.is_debug`), executes and returns
-    the output DataFrame of a function decorated with `@dlt.table` or
+    the output dataframe of a function decorated with `@dlt.table` or
     `@dlt.view`. Returns None when `is_debug()` is `False`.
 
     This method is not supported when a table using DLT views as input.
@@ -74,7 +74,7 @@ def get_df(df_wrapper) -> SparkDataFrame:
     Returns
     -------
     :
-        Output DataFrame
+        Output dataframe
 
     Examples
     --------
@@ -118,7 +118,7 @@ def read(*args, **kwargs) -> SparkDataFrame:
     Returns
     -------
     :
-        Ouput DataFrame
+        Ouput dataframe
 
     Examples
     --------
@@ -155,7 +155,7 @@ def read_stream(*args, fmt="delta", **kwargs):
     Returns
     -------
     :
-        Ouput DataFrame
+        Ouput dataframe
 
     Examples
     --------
@@ -193,7 +193,7 @@ def apply_changes(*args, node=None, **kwargs):
     Returns
     -------
     :
-        Output DataFrame
+        Output dataframe
 
     Examples
     --------
@@ -232,7 +232,7 @@ def apply_changes(*args, node=None, **kwargs):
         df = node.source.read(spark=spark)
         # TODO: Apply changes
         logger.warning(
-            "Laktory does not currently support applying CDC changes. Returned DataFrame is CDC source."
+            "Laktory does not currently support applying CDC changes. Returned dataframe is CDC source."
         )
         return df
     else:

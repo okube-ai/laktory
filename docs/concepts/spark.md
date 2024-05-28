@@ -19,7 +19,7 @@ df = df.withColumn("y", LF.poly1("x", -1, 1.0))
 ```
 These functions are by default available when declaring a column in a pipeline `Table` model.
 
-## DataFrame methods
+## Dataframe methods
 In this case the methods are designed to be applied directly on a spark dataframe.
 ```py
 import pandas as pd

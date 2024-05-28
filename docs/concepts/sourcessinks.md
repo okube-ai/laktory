@@ -1,5 +1,5 @@
 ## Data Sources
-The `DataSource` models facilitate loading data into a DataFrame. It provides 
+The `DataSource` models facilitate loading data into a dataframe. It provides 
 reusable mechanisms for reading data of various nature given different
 configuration and various execution contexts.
 
@@ -20,7 +20,7 @@ source = models.FileDataSource(
     format="JSON",
     as_stream=False,
 )
-df = source.read()
+df = source.read(spark=spark)
 ```
 
 Reading the same dataset, but as a spark streaming source, is as easy as changing `as_stream` to `True`.
@@ -32,7 +32,7 @@ source = models.FileDataSource(
     format="JSON",
     as_stream=True,
 )
-df_stream = source.read()
+df_stream = source.read(spark=spark)
 ```
 
 #### Table Data Source
@@ -45,13 +45,14 @@ When your data is already loaded into a lakehouse data table, you can use the
 ```py
 from laktory import models
 
-source = models.FileDataSource(
+source = models.TableDataSource(
     table_name="brz_stock_prices",
     selects=["symbol", "open", "close"],
     filter="symbol='AAPL'",
+    warehouse="DATABRICKS",
     as_stream=True,
 )
-df = source.read()
+df = source.read(spark=spark)
 ```
 In this case
 
@@ -66,9 +67,9 @@ in the future.
     [`laktory.models.PipelineNodeDataSource`][laktory.models.PipelineNodeDataSource]<br>
 
 To establish a relationship between two nodes in a data pipeline, the 
-`PipelineNodeDataSource` must be used. This type of data source will behave
-differently depending on the execution context.
-
+`PipelineNodeDataSource` must be used. Assuming each node is a vertex in a 
+directed acyclic graph (DAG), using a `PipelineNodeDataSource` creates an edge
+between two vertices. It also defines the execution order of the nodes.
 ```py
 from laktory import models
 
@@ -77,11 +78,12 @@ source = models.PipelineNodeDataSource(
     as_stream=True,
 )
 ```
+This type of data source adapts to its execution context.
 
-* Single Worker Execution: The source uses the in-memory output DataFrame from
+* Single Worker Execution: The source uses the in-memory output dataframe from
   the upstream node.
 * Multi-Workers Execution: The source uses the upstream node sink as a source 
-  for read the DataFrame.
+  for read the dataframe.
 * DLT Execution: The source uses `dlt.read()` and `dlt,read_stream()` to read 
   data from the upstream node.
      
@@ -92,7 +94,7 @@ source = models.PipelineNodeDataSource(
     [`laktory.models.TableDataSink`][laktory.models.TableDataSink]<br>
 
 
-Analogously to `DataSource`, `DataSink` models facilitate writing a DataFrame
+Analogously to `DataSource`, `DataSink` models facilitate writing a dataframe
 into a target location. It provides re-usable mechanisms for writing data 
 in various formats, adapting to different execution contexts.
 
@@ -102,8 +104,8 @@ It is generally used as a component of a [pipeline](pipeline.md) node.
 ??? "API Documentation"
     [`laktory.models.FileDataSink`][laktory.models.FileDataSink]<br>
 
-File data sink supports writing a DataFrame as files to a disk location
-using a variety of storage format. For streaming dataframes, you may also
+File data sink supports writing a dataframe as files to a disk location
+using a variety of storage format. For streaming dataframes, you also need to
 specify a checkpoint location.
 
 ```py

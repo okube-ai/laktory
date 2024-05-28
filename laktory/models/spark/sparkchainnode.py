@@ -54,10 +54,10 @@ class SparkChainNodeColumn(BaseModel):
 
 class SparkChainNode(BaseModel):
     """
-    SparkChain node that output a DataFrame upon execution. As a convenience,
+    SparkChain node that output a dataframe upon execution. As a convenience,
     `column` can be specified to create a new column. In this case, the spark
     function or sql expression is expected to return a column instead of a
-    DataFrame. Each node is executed sequentially in the provided order. A node
+    dataframe. Each node is executed sequentially in the provided order. A node
     may also be another Spark Chain.
 
     Attributes
@@ -178,16 +178,16 @@ class SparkChainNode(BaseModel):
         Parameters
         ----------
         df:
-            Input DataFrame
+            Input dataframe
         udfs:
             User-defined functions
         return_col
             If `True` and column specified, function returns `Column` object
-            instead of DataFrame.
+            instead of dataframe.
 
         Returns
         -------
-            Output DataFrame
+            Output dataframe
         """
         import pyspark.sql.functions as F
         from pyspark.sql.dataframe import DataFrame
@@ -215,9 +215,9 @@ class SparkChainNode(BaseModel):
                 return self.add_column(df, col)
             else:
                 raise NotImplementedError("sql_expression not supported yet")
-                #     df.createOrReplaceTempView("_df")
-                #     df = spark.sql(self.sql_expression)
-                #     return df
+                # TODO: This implementation should workd, but it should be tested and documented
+                df = df.sparkSession.sql(self.sql_expression, df=df)
+                return df
 
         # From Spark Function
         func_name = self.spark_func_name
