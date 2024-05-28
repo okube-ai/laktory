@@ -26,7 +26,7 @@ nodes:
     as_stream: true
   sink:
     table_name: slv_stock_prices
-  chain:
+  transformer:
     nodes:
     - allow_missing_column_args: false
       column:

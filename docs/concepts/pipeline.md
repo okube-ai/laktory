@@ -19,7 +19,7 @@ nodes:
     sink:
       schema_name: finance
       table_name: brz_stock_prices
-    chain: 
+    transformer: 
       nodes: []
   - name: slv_stock_prices
     layer: SILVER
@@ -28,7 +28,7 @@ nodes:
     sink:
       schema_name: finance
       table_name: brz_stock_prices
-    chain:
+    transformer:
         nodes:
           - spark_func_name: select
             spark_func_args:
@@ -53,7 +53,7 @@ data files and data warehouse tables. By designating a node as the source for
 another downstream node, you create dependencies between nodes, enabling the
 construction of a directed acyclic graph (DAG).
 
-### Spark Chain
+### Transformer
 Transformations are defined through a [chain](./sparkchain.md) of Spark 
 (or Polars) function calls, offering a highly scalable, flexible, and 
 customizable framework. Usage of Spark and Spark Streaming also 

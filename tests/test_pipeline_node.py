@@ -24,7 +24,7 @@ def test_execute():
             "table_name": "brz_stock_prices",
             "mock_df": df_brz,
         },
-        chain={
+        transformer={
             "nodes": [
                 {
                     "column": {"name": "created_at", "type": "timestamp"},
@@ -70,7 +70,7 @@ def test_bronze():
             "table_name": "brz_stock_prices",
             "mock_df": df_brz,
         },
-        chain={
+        transformer={
             "nodes": [
                 {
                     "column": {"name": "symbol", "type": "string"},
@@ -110,7 +110,7 @@ def test_silver():
             "table_name": "slv_stock_prices",
             "mock_df": df,
         },
-        chain={
+        transformer={
             "nodes": [
                 {
                     "column": {"name": "symbol", "type": "string"},

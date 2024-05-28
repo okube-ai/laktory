@@ -48,7 +48,7 @@ sink:
   schema_name: finance
   table_name: slv_stock_prices
 layer: SILVER
-chain:
+transformer:
   nodes:
   - spark_func_name: select
     spark_func_args:

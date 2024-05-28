@@ -47,7 +47,7 @@ resources:
           as_stream: true
         sink:
           table_name: slv_stock_prices
-        chain:
+        transformer:
           nodes:
           - column:
               name: created_at

@@ -123,7 +123,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
           `PipelineNodeDataSource` as the source, the data will be read from
           the upstream node sink.
     udfs:
-        List of user defined functions provided to the spark chain.
+        List of user defined functions provided to the transformer.
 
     Examples
     --------
@@ -157,7 +157,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             format: PARQUET
             mode: OVERWRITE
             path: ./dataframes/slv_stock_prices
-          chain:
+          transformer:
             nodes:
             - column:
                 name: created_at
@@ -228,7 +228,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
           sink:
               path: /Volumes/dev/sources/landing/tables/slv_stock_prices/
               mode: OVERWRITE
-          chain:
+          transformer:
             nodes:
             - column:
                 name: created_at
@@ -309,7 +309,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             as_stream: true
           sink:
             table_name: slv_stock_prices
-          chain:
+          transformer:
             nodes:
             - column:
                 name: created_at

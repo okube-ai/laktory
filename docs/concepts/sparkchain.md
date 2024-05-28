@@ -3,7 +3,7 @@
 ??? "API Documentation"
     [`laktory.models.SparkChain`][laktory.models.SparkChain]<br>
 
-Spark chain is the core dataframe transformation model. It is essentially the
+Spark chain is the core dataframe transformers model. It is essentially the
 serialization of chained spark operations with support for [data sources](sourcessinks.md) 
 in addition to dataframes.
 

@@ -55,15 +55,6 @@ def test_memory_data_source(df0=df0):
         selects=["a", "b", "c"],
         renames={"a": "aa", "b": "bb", "c": "cc"},
         broadcast=True,
-        # spark_chain={
-        #     "nodes": [
-        #         {
-        #             "column": {"name": "chain"},
-        #             "spark_func_name": "lit",
-        #             "spark_func_args": ["chain"],
-        #         }
-        #     ]
-        # },
     )
 
     # Test reader

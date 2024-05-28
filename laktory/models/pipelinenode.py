@@ -22,17 +22,15 @@ logger = get_logger(__name__)
 class PipelineNode(BaseModel):
     """
     Pipeline base component generating a DataFrame by reading a data source and
-    applying a chain of transformations.Optional output to a data sink. Some
-    basic transformations are also natively supported.
+    applying a transformer (chain of dataframe transformations). Optional
+    output to a data sink. Some basic transformations are also natively
+    supported.
 
     Attributes
     ----------
     add_layer_columns:
         If `True` and `layer` not `None` layer-specific columns like timestamps
         are added to the resulting DataFrame.
-    chain:
-        Spark or Polars chain defining the data transformations applied to the
-        data source
     dlt_template:
         Specify which template (notebook) to use if pipeline is run with
         Databricks Delta Live Tables. If `None` default laktory template
@@ -60,6 +58,9 @@ class PipelineNode(BaseModel):
         Definition of the data source
     sink:
         Definition of the data sink
+    transformer:
+        Spark or Polars chain defining the data transformations applied to the
+        data source.
     timestamp_key:
         Name of the column storing a timestamp associated with each row. It is
         used as the default column by the builder when creating watermarks.
@@ -105,7 +106,7 @@ class PipelineNode(BaseModel):
           catalog_name: hive_metastore
           schema_name: default
           table_name: slv_stock_prices
-        chain:
+        transformer:
           nodes:
           - column:
               name: created_at
@@ -133,7 +134,7 @@ class PipelineNode(BaseModel):
     description: str = None
     drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
-    chain: Union[SparkChain, None] = None
+    transformer: Union[SparkChain, None] = None
     expectations: list[PipelineNodeExpectation] = []
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
     name: Union[str, None] = None
@@ -308,13 +309,13 @@ class PipelineNode(BaseModel):
                 )
             ]
 
-        if self.drop_source_columns and self.chain:
+        if self.drop_source_columns and self.transformer:
             nodes += [
                 SparkChainNode(
                     spark_func_name="drop",
                     spark_func_args=[
                         c
-                        for c in self.chain.columns[0]
+                        for c in self.transformer.columns[0]
                         if c not in ["_bronze_at", "_silver_at", "_gold_at"]
                     ],
                 )
@@ -335,8 +336,8 @@ class PipelineNode(BaseModel):
         if isinstance(self.source, cls):
             sources += [self.source]
 
-        if self.chain:
-            for sn in self.chain.nodes:
+        if self.transformer:
+            for sn in self.transformer.nodes:
                 for a in sn.spark_func_args:
                     if isinstance(a.value, cls):
                         sources += [a.value]
@@ -348,7 +349,7 @@ class PipelineNode(BaseModel):
 
     def execute(
         self,
-        apply_chain: bool = True,
+        apply_transformer: bool = True,
         spark: SparkSession = None,
         udfs: list[Callable] = None,
         write_sink: bool = True,
@@ -357,13 +358,13 @@ class PipelineNode(BaseModel):
         Execute pipeline node by:
 
         - Reading the source
-        - Applying the user defined (and layer-specific if applicable) transformation chains
+        - Applying the user defined (and layer-specific if applicable) transformations
         - Writing the sink
 
         Parameters
         ----------
-        apply_chain:
-            Flag to apply chain in the execution
+        apply_transformer:
+            Flag to apply transformer in the execution
         spark: SparkSession
             Spark session
         udfs:
@@ -393,12 +394,12 @@ class PipelineNode(BaseModel):
             # https://iterationinsights.com/article/how-to-implement-slowly-changing-dimensions-scd-type-2-using-delta-table
             # https://www.linkedin.com/pulse/implementing-slowly-changing-dimension-2-using-lau-johansson-yemxf/
 
-        # Apply chain
-        if apply_chain and self.chain:
-            self._output_df = self.chain.execute(self._output_df, udfs=udfs)
+        # Apply transformer
+        if apply_transformer and self.transformer:
+            self._output_df = self.transformer.execute(self._output_df, udfs=udfs)
 
         # Apply layer-specific chain
-        if apply_chain and self.layer_spark_chain:
+        if apply_transformer and self.layer_spark_chain:
             self._output_df = self.layer_spark_chain.execute(self._output_df, udfs=udfs)
 
         # Output to sink

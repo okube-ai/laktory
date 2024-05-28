@@ -52,7 +52,7 @@ def test_dag():
     assert pl.sorted_nodes == [node_brz, node_meta, node_slv, node_gld]
     assert node_slv.source.node == node_brz
     assert node_gld.source.node == node_slv
-    assert node_slv.chain.nodes[-1].spark_func_kwargs["other"].value.node == node_meta
+    assert node_slv.transformer.nodes[-1].spark_func_kwargs["other"].value.node == node_meta
 
     # Test figure
     fig = pl.dag_figure()
@@ -178,7 +178,7 @@ def test_pipeline_dlt():
                 "description": None,
                 "drop_duplicates": None,
                 "drop_source_columns": False,
-                "chain": None,
+                "transformer": None,
                 "expectations": [],
                 "layer": "BRONZE",
                 "name": "brz_stock_prices",
@@ -217,7 +217,7 @@ def test_pipeline_dlt():
                 "description": None,
                 "drop_duplicates": None,
                 "drop_source_columns": True,
-                "chain": {
+                "transformer": {
                     "nodes": [
                         {
                             "allow_missing_column_args": False,

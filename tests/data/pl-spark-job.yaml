@@ -24,7 +24,7 @@ nodes:
   sink:
       path: /Volumes/dev/sources/landing/tables/slv_stock_prices/
       mode: OVERWRITE
-  chain:
+  transformer:
     nodes:
     - column:
         name: created_at
