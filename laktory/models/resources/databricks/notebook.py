@@ -35,10 +35,10 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
     from laktory import models
 
     notebook = models.resources.databricks.Notebook(
-        source="./notebooks/pipelines/dlt_brz_template.py",
+        source="./notebooks/dlt/dlt_laktory_pl.py",
     )
     print(notebook.path)
-    #> /.laktory/pipelines/dlt_brz_template.py
+    #> /.laktory/dlt/dlt_laktory_pl.py
 
     notebook = models.resources.databricks.Notebook(
         source="./notebooks/create_view.py", dirpath="/views/"
