@@ -3,15 +3,16 @@ from databricks.sdk import WorkspaceClient
 from laktory._useragent import DATABRICKS_USER_AGENT
 from laktory._useragent import VERSION
 from laktory.models.stacks.stack import Stack
-from laktory.dispatcher.pipelinerunner import PipelineRunner
+from laktory.dispatcher.dltpipelinerunner import DLTPipelineRunner
 from laktory.dispatcher.jobrunner import JobRunner
 
 
 class Dispatcher:
     """
     The dispatcher is a manager that can be used to run and monitor remote jobs
-    and pipelines defined in a stack. It is generally used through Laktory CLI
-    `run` command, but may be used directly in scripts and python programs.
+    and DLT pipelines defined in a stack. It is generally used through Laktory
+    CLI `run` command, but may be used directly in scripts and python
+    programs.
 
     Parameters
     ----------
@@ -55,15 +56,20 @@ class Dispatcher:
 
         for k, pl in self.stack.resources.pipelines.items():
             if pl.dlt is not None:
-                self.resources[pl.dlt.resource_name] = PipelineRunner(
+                self.resources[pl.dlt.name] = DLTPipelineRunner(
                     dispatcher=self, name=pl.dlt.name
                 )
 
+            if pl.databricks_job is not None:
+                self.resources[pl.databricks_job.name] = JobRunner(
+                    dispatcher=self, name=pl.databricks_job.name
+                )
+
         for k, pl in self.stack.resources.databricks_dltpipelines.items():
-            self.resources[k] = PipelineRunner(dispatcher=self, name=pl.name)
+            self.resources[pl.name] = DLTPipelineRunner(dispatcher=self, name=pl.name)
 
         for k, job in self.stack.resources.databricks_jobs.items():
-            self.resources[k] = JobRunner(dispatcher=self, name=job.name)
+            self.resources[job.name] = JobRunner(dispatcher=self, name=job.name)
 
     # ----------------------------------------------------------------------- #
     # Environment                                                             #
@@ -176,18 +182,18 @@ class Dispatcher:
         job = self.resources[job_name]
         job.run(*args, **kwargs)
 
-    def run_pipeline(self, pipeline_name: str, *args, **kwargs):
+    def run_dlt(self, dlt_name: str, *args, **kwargs):
         """
-        Run pipeline with name `pipeline_name`
+        Run DLT pipeline with name `dlt_name`
 
         Parameters
         ----------
-        pipeline_name:
-            Name of the pipeline
+        dlt_name:
+            Name of the DLT pipeline
         *args:
             Arguments passed to `JobRunner.run()`
         **kwargs:
             Keyword arguments passed to `JobRunner.run()`
         """
-        pl = self.resources[pipeline_name]
+        pl = self.resources[dlt_name]
         pl.run(*args, **kwargs)

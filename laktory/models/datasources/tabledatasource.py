@@ -56,6 +56,7 @@ class TableDataSource(BaseDataSource):
 
     @property
     def full_name(self) -> str:
+        """Table full name {catalog_name}.{schema_name}.{table_name}"""
         if self.table_name is None:
             return None
 

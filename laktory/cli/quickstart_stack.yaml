@@ -7,7 +7,7 @@ resources:
       source: ./data/stock_prices.json
   databricks_notebooks:
     notebook-pipelines-dlt-template:
-      source: ./notebooks/pipelines/dlt_template.py
+      source: ./notebooks/dlt/dlt_laktory_pl.py
   pipelines:
     pl-quickstart:
       name: pl-quickstart
@@ -25,12 +25,12 @@ resources:
           pipeline_name: pl-quickstart
         libraries:
         - notebook:
-            path: /.laktory/dlt/dlt_template.py
+            path: /.laktory/dlt/dlt_laktory_pl.py
       nodes:
       - name: brz_stock_prices
         layer: BRONZE
         source:
-          path: dbfs:/Workspace/.laktory/landing/events/stock_price
+          path: dbfs:/Workspace/.laktory/landing/events/yahoo-finance/stock_price
           as_stream: true
           format: JSON
         sink:
@@ -47,7 +47,7 @@ resources:
           as_stream: true
         sink:
           table_name: slv_stock_prices
-        chain:
+        transformer:
           nodes:
           - column:
               name: created_at

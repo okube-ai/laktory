@@ -54,7 +54,7 @@ class PipelineUDF(BaseModel):
     module_path: str = None
 
 
-class LaktoryPipelineJob(Job):
+class PipelineDatabricksJob(Job):
     """
     Databricks job specifically designed to run a Laktory pipeline
 
@@ -123,16 +123,237 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
           `PipelineNodeDataSource` as the source, the data will be read from
           the upstream node sink.
     udfs:
-        List of user defined functions provided to the spark chain.
+        List of user defined functions provided to the transformer.
 
     Examples
     --------
+    This first example shows how to configure a simple pipeline with 2 nodes.
+    Upon execution, raw data will be read from a CSV file and two DataFrames
+    (bronze and silver) will be created and saved as parquet files. Notice how
+    the first node is used as a data source for the second node.
+
     ```py
-    # TODO
+    import io
+    from laktory import models
+
+    pipeline_yaml = '''
+        name: pl-stock-prices
+        nodes:
+        - name: brz_stock_prices
+          layer: BRONZE
+          source:
+            format: CSV
+            path: ./raw/brz_stock_prices.csv
+          sink:
+            format: PARQUET
+            mode: OVERWRITE
+            path: ./dataframes/brz_stock_prices
+
+        - name: slv_stock_prices
+          layer: SILVER
+          source:
+            node_name: brz_stock_prices
+          sink:
+            format: PARQUET
+            mode: OVERWRITE
+            path: ./dataframes/slv_stock_prices
+          transformer:
+            nodes:
+            - column:
+                name: created_at
+                type: timestamp
+              sql_expression: data.created_at
+            - column:
+                name: symbol
+              spark_func_name: coalesce
+              spark_func_args:
+              - value: data.symbol
+            - column:
+                name: close
+                type: double
+              sql_expression: data.close
+            - spark_func_name: drop
+              spark_func_args:
+              - value: data
+              - value: producer
+              - value: name
+              - value: description
+    '''
+
+    pl = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
+
+    # Execute pipeline
+    # pl.execute()
     ```
+
+    The next example defines a 3 nodes pipeline (1 bronze and 2 silvers)
+    orchestrated with a Databricks Job. Notice how nodes are used as data
+    sources not only for other nodes, but also for the `other` keyword argument
+    of the smart join function (slv_stock_prices). Because we are using the
+    DATABRICKS_JOB orchestrator, the job configuration must be declared.
+    The tasks will be automatically created by the Pipeline model. Each
+    task will execute a single node using the notebook referenced in
+    `databricks_job.notebook_path` the content of this notebook should be
+    similar to laktory.resources.notebooks.job_laktory.pl
+
+    ```py
+    import io
+    from laktory import models
+
+    pipeline_yaml = '''
+        name: pl-stock-prices
+        orchestrator: DATABRICKS_JOB
+        databricks_job:
+          name: job-pl-stock-prices
+          laktory_version: 0.3.0
+          notebook_path: /Workspace/.laktory/jobs/job_laktory_pl.py
+          clusters:
+            - name: node-cluster
+              spark_version: 14.0.x-scala2.12
+              node_type_id: Standard_DS3_v2
+
+        nodes:
+        - name: brz_stock_prices
+          layer: BRONZE
+          source:
+            path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
+          sink:
+              path: /Volumes/dev/sources/landing/tables/dev_stock_prices/
+              mode: OVERWRITE
+
+        - name: slv_stock_prices
+          layer: SILVER
+          source:
+            node_name: brz_stock_prices
+          sink:
+              path: /Volumes/dev/sources/landing/tables/slv_stock_prices/
+              mode: OVERWRITE
+          transformer:
+            nodes:
+            - column:
+                name: created_at
+                type: timestamp
+              sql_expression: data.created_at
+            - column:
+                name: symbol
+              spark_func_name: coalesce
+              spark_func_args:
+              - value: data.symbol
+            - column:
+                name: close
+                type: double
+              sql_expression: data.close
+            - spark_func_name: drop
+              spark_func_args:
+              - value: data
+              - value: producer
+              - value: name
+              - value: description
+            - spark_func_name: smart_join
+              spark_func_kwargs:
+                'on':
+                  - symbol
+                other:
+                  node_name: slv_stock_meta
+
+        - name: slv_stock_meta
+          layer: SILVER
+          source:
+            path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_meta/
+          sink:
+            path: /Volumes/dev/sources/landing/tables/slv_stock_meta/
+            mode: OVERWRITE
+
+    '''
+    pl = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
+    ```
+
+    Finally, we re-implement the previous pipeline, but with a few key
+    differences:
+
+    - Orchestrator is `DLT` instead of a `DATABRICKS_JOB`
+    - Sinks are Unity Catalog tables instead of storage locations
+    - Data is read as a stream in most nodes
+    - `slv_stock_meta` is simply a DLT view since it does not have an associated
+      sink.
+
+    We also need to provide some basic configuration for the DLT pipeline.
+
+    ```py
+    import io
+    from laktory import models
+
+    pipeline_yaml = '''
+        name: pl-stock-prices
+        orchestrator: DLT
+        dlt:
+            catalog: dev
+            target: sandbox
+            access_controls:
+            - group_name: account users
+              permission_level: CAN_VIEW
+
+        nodes:
+        - name: brz_stock_prices
+          layer: BRONZE
+          source:
+            path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
+            as_stream: true
+          sink:
+            table_name: brz_stock_prices
+
+        - name: slv_stock_prices
+          layer: SILVER
+          source:
+            node_name: brz_stock_prices
+            as_stream: true
+          sink:
+            table_name: slv_stock_prices
+          transformer:
+            nodes:
+            - column:
+                name: created_at
+                type: timestamp
+              sql_expression: data.created_at
+            - column:
+                name: symbol
+              spark_func_name: coalesce
+              spark_func_args:
+              - value: data.symbol
+            - column:
+                name: close
+                type: double
+              sql_expression: data.close
+            - spark_func_name: drop
+              spark_func_args:
+              - value: data
+              - value: producer
+              - value: name
+              - value: description
+            - spark_func_name: smart_join
+              spark_func_kwargs:
+                'on':
+                  - symbol
+                other:
+                  node_name: slv_stock_meta
+
+        - name: slv_stock_meta
+          layer: SILVER
+          source:
+            path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_meta/
+
+    '''
+    pl = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
+    ```
+
+    References
+    ----------
+    * [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
+    * [Databricks DLT](https://www.databricks.com/product/delta-live-tables)
+
     """
 
-    databricks_job: Union[LaktoryPipelineJob, None] = None
+    databricks_job: Union[PipelineDatabricksJob, None] = None
     dlt: Union[DLTPipeline, None] = None
     name: str
     nodes: list[Union[PipelineNode]]
@@ -148,8 +369,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="after")
     def update_nodes(self) -> Any:
-        """ """
-
         # Build dag
         _ = self.dag
 
@@ -247,10 +466,27 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def nodes_dict(self) -> dict[str, PipelineNode]:
+        """
+        Nodes dictionary whose keys are the node names.
+
+        Returns
+        -------
+        :
+            Nodes
+        """
         return {n.name: n for n in self.nodes}
 
     @property
     def dag(self) -> nx.DiGraph:
+        """
+        Networkx Directed Acyclic Graph representation of the pipeline. Useful
+        to identify interdependencies between nodes.
+
+        Returns
+        -------
+        :
+            Directed Acyclic Graph
+        """
 
         # TODO: Review if this needs to be computed dynamically or if we can
         #       compute it only after initialization. It depends if we believe
@@ -281,7 +517,15 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         return list(nx.topological_sort(self.dag))
 
     @property
-    def sorted_nodes(self):
+    def sorted_nodes(self) -> list[PipelineNode]:
+        """
+        Topologically sorted nodes.
+
+        Returns
+        -------
+        :
+            List of Topologically sorted nodes.
+        """
         node_names = self.sorted_node_names
         nodes = []
         for node_name in node_names:
@@ -297,12 +541,33 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     def execute(self, spark, udfs=None) -> None:
+        """
+        Execute the pipeline (read sources and write sinks) by sequentially
+        executing each node. The selected orchestrator might impact how
+        data sources or sinks are processed.
+
+        Parameters
+        ----------
+        spark:
+            Spark Session
+        udfs:
+            List of user-defined functions used in transformation chains.
+        """
         logger.info("Executing Pipeline")
 
         for inode, node in enumerate(self.sorted_nodes):
             node.execute(spark=spark, udfs=udfs)
 
     def dag_figure(self) -> "Figure":
+        """
+        [UNDER DEVELOPMENT] Generate a figure representation of the pipeline
+        DAG.
+
+        Returns
+        -------
+        :
+            Plotly figure representation of the pipeline.
+        """
 
         import plotly.graph_objs as go
 
@@ -364,7 +629,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def self_as_core_resources(self):
-        """Flag set to `True` if self must be included in core resources"""
         return False
 
     @property
@@ -379,9 +643,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         """
         - configuration workspace file
         - configuration workspace file permissions
-        if orchestrator is DLT:
+
+        if orchestrator is `DLT`:
+
         - DLT Pipeline
-        if orchestrator is DATABRICKS_JOB:
+
+        if orchestrator is `DATABRICKS_JOB`:
+
         - Databricks Job
         """
         # Configuration file

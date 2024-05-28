@@ -3,24 +3,23 @@ Each model is a subclass of `pydantic.BaseModel` and offer a few additional meth
 The serializable nature of these models makes it possible to define a lakehouse using a declarative approach.
 
 ## Declaration
-Let's explore the declaration of `Column`, `Table` and `Pipeline` models as an example. 
+Let's explore the declaration of `Column`, `Table` and `Schema` models as an example. 
 
 ### Python Sequential
 
 ```py
 from laktory import models
 
-x = models.Column(name="x", type="double")
-y = models.Column(name="y", type="double")
-z = models.Column(name="z", type="double")
+x = models.resources.databricks.Column(name="x", type="double")
+y = models.resources.databricks.Column(name="y", type="double")
+z = models.resources.databricks.Column(name="z", type="double")
 
-table_xy = models.Table(name="table_xy", columns=[x, y])
-table_xyz = models.Table(name="table_xyz", columns=[x, y, z])
+table_xy = models.resources.databricks.Table(name="table_xy", columns=[x, y])
+table_xyz = models.resources.databricks.Table(name="table_xyz", columns=[x, y, z])
 
-pipeline = models.DLTPipeline(
-    name="my-pipeline",
-    catalog="dev",
-    target="finance",
+pipeline = models.resources.databricks.Schema(
+    catalog_name="dev",
+    name="finance",
     tables=[table_xy, table_xyz],
 )
 ```
@@ -30,10 +29,9 @@ pipeline = models.DLTPipeline(
 ```py
 from laktory import models
 
-pipeline = models.DLTPipeline(
-    name="my-pipeline",
-    catalog="dev",
-    target="finance",
+pipeline = models.resources.databricks.Schema(
+    catalog_name="dev",
+    name="finance",
     tables=[
         {
             "name": "table_xy",
@@ -58,10 +56,9 @@ pipeline = models.DLTPipeline(
 In most cases however, it is best practice to declare these models as `yaml` configuration files to decouple modeling and implementation.
 Here is the same example using a configuration file.
 
-```yaml title="my-pipeline.yaml"
-name: my-pipeline
-catalog: dev
-target: finance
+```yaml title="my-schema.yaml"
+catalog_name: dev
+name: finance
 tables: 
   - name: "table_xy"
     columns:
@@ -83,18 +80,17 @@ tables:
 from laktory import models
 
 with open("my-pipeline.yaml", "r") as fp:
-    pipeline = models.DLTPipeline.model_validate_yaml(fp)
+    schema = models.resources.databricks.Schema.model_validate_yaml(fp)
 ```
-Using any of the above approaches will result in the exact same `pipeline` python object.
+Using any of the above approaches will result in the exact same `schema` python object.
 
 #### YAML nesting
 Laktory supports nested yaml files, meaning that you can include or inject another yaml file from the base
 one. Using this approach, the example above could be re-written as
 
-```yaml title="my-pipeline.yaml"
-name: my-pipeline
-catalog: dev
-target: finance
+```yaml title="my-schema.yaml"
+catalog_name: dev
+name: finance
 tables: 
   - ${include.table1.yaml}
   - ${include.table2.yaml}

@@ -14,7 +14,7 @@ nodes:
     format: PARQUET
     mode: OVERWRITE
     path: ../tmp/pl_slv_sink
-  chain:
+  transformer:
     nodes:
     - column:
         name: created_at
@@ -52,7 +52,7 @@ nodes:
     format: PARQUET
     mode: OVERWRITE
     path: /tests/tmp/pl_gld_sink
-  chain:
+  transformer:
     nodes:
     - spark_func_name: groupby_and_agg
       spark_func_kwargs:

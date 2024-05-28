@@ -123,11 +123,11 @@ nav:
   - Concepts:
     - Design Principles: concepts/design.md
     - Models:
-      - Intro: concepts/models.md
-      - Data Event: concepts/dataevent.md
-      - Table: concepts/table.md
-      - Table Builder: concepts/tablebuilder.md
-      - Pipeline: concepts/pipeline.md
+      - Intro: concepts/models/models.md
+      - Pipeline: concepts/models/pipeline.md
+      - Data Sources and Sinks: concepts/models/sourcessinks.md
+      - Spark Chain: concepts/models/sparkchain.md
+      - Data Event: conceptsmodels/dataevent.md
     - Stack: concepts/stack.md
     - Variables: concepts/variables.md
     - Deployment (IaC): concepts/deployment.md
@@ -158,8 +158,13 @@ nav:
       - DataSources:
         - BaseDataSource: api/models/datasources/basedatasource.md
         - FileDataSource: api/models/datasources/filedatasource.md
+        - MemoryDataSource: api/models/datasources/memorydatasource.md
         - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
         - TableDataSource: api/models/datasources/tabledatasource.md
+      - Pipelines:
+        - Pipeline: api/models/pipeline.md
+        - PipelineNode: api/models/pipelinenode.md
+        - PipelineNodeExpectation: api/models/pipelinenodeexpectation.md
       - Resources:
         - BaseResource: api/models/resources/baseresource.md
         - PulumiResource: api/models/resources/pulumiresource.md
@@ -168,6 +173,7 @@ nav:
           - AccessControl: api/models/resources/databricks/accesscontrol.md
           - api/models/resources/databricks/cluster.md
           - api/models/resources/databricks/directory.md
+          - DLT Pipeline: api/models/resources/databricks/dltpipeline.md
           - ExternalLocation: api/models/resources/databricks/externallocation.md
           - api/models/resources/databricks/grants.md
           - api/models/resources/databricks/group.md
@@ -178,7 +184,6 @@ nav:
           - MwsPermissionAssignment: api/models/resources/databricks/mwspermissionassignment.md
           - api/models/resources/databricks/mws.md
           - api/models/resources/databricks/notebook.md
-          - Pipeline: api/models/resources/databricks/pipeline.md
           - api/models/resources/databricks/secret.md
           - SecretAcl: api/models/resources/databricks/secretacl.md
           - SecretScope: api/models/resources/databricks/secretscope.md
@@ -193,17 +198,12 @@ nav:
           - api/models/resources/databricks/column.md
           - api/models/resources/databricks/schema.md
           - api/models/resources/databricks/table.md
-          - TableExpectations: api/models/resources/databricks/tableexpectation.md
-          - TableBuilder: api/models/resources/databricks/tablebuilder.md
           - api/models/resources/databricks/volume.md
         - Providers:
           - AzureProvider: api/models/resources/providers/azure.md
           - AzurePulumiProvider: api/resources/models/providers/azurepulumi.md
           - AWSProvider: api/models/resources/providers/aws.md
           - DatabricksProvider: api/resources/models/providers/databricks.md
-      - Pipelines:
-        - Pipeline: api/models/pipeline.md
-        - PipelineNode: api/models/pipelinenode.md
       - Spark:
         - SparkChain: api/models/spark/sparkchain.md
         - SparkChainNode: api/models/spark/sparkchainnode.md

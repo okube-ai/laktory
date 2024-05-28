@@ -72,7 +72,7 @@ jobs:
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
       - name: laktory run
-        run: laktory run -e dev -p pl-quickstart
+        run: laktory run -e dev -dlt pl-quickstart
         working-directory: ${{ env.CWD }}
         env:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}

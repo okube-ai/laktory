@@ -13,9 +13,9 @@ from laktory._logger import get_logger
 logger = get_logger(__name__)
 
 
-class PipelineRunner(DispatcherRunner):
+class DLTPipelineRunner(DispatcherRunner):
     """
-    Pipeline runner.
+    DLT Pipeline runner.
     """
 
     _update_start: StartUpdateResponse = None

@@ -34,7 +34,7 @@ if __name__ == "__main__":
         "--notebooks_path",
         type=str,
         help="Path of the notebooks directory",
-        default="./notebooks/pipelines",
+        default="./notebooks/dlt",
     )
     args = parser.parse_args()
 

@@ -66,6 +66,7 @@ class TableDataSink(BaseDataSink):
 
     @property
     def full_name(self) -> str:
+        """Table full name {catalog_name}.{schema_name}.{table_name}"""
         if self.table_name is None:
             return None
 
@@ -132,7 +133,19 @@ class TableDataSink(BaseDataSink):
             )
 
     def as_source(self, as_stream=None) -> TableDataSource:
+        """
+        Generate a table data source with the same properties as the sink.
 
+        Parameters
+        ----------
+        as_stream:
+            If `True`, sink will be read as stream.
+
+        Returns
+        -------
+        :
+            Table Data Source
+        """
         source = TableDataSource(
             catalog_name=self.catalog_name,
             table_name=self.table_name,

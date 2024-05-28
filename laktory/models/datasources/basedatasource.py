@@ -125,7 +125,6 @@ class BaseDataSource(BaseModel):
         or as a dictionary to rename the source columns
     watermark
         Spark structured streaming watermark specifications
-
     """
 
     as_stream: bool = False

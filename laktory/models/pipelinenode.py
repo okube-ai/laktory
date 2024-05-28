@@ -21,8 +21,10 @@ logger = get_logger(__name__)
 
 class PipelineNode(BaseModel):
     """
-    Pipeline base component generating a DataFrame from a data source and a
-    SparkChain transformation. Optional output to a data sink.
+    Pipeline base component generating a DataFrame by reading a data source and
+    applying a transformer (chain of dataframe transformations). Optional
+    output to a data sink. Some basic transformations are also natively
+    supported.
 
     Attributes
     ----------
@@ -33,9 +35,6 @@ class PipelineNode(BaseModel):
         Specify which template (notebook) to use if pipeline is run with
         Databricks Delta Live Tables. If `None` default laktory template
         notebook is used.
-    chain:
-        Spark or Polars chain defining the data transformations applied to the
-        data source
     drop_duplicates:
         If `True`:
             - drop duplicated rows using `primary_key` if defined or all
@@ -48,10 +47,10 @@ class PipelineNode(BaseModel):
     expectations:
         List of expectations for the DataFrame. Can be used as warnings, drop
         invalid records or fail a pipeline.
-    id:
-        ID given to the node. Required to reference a node in a data source.
     layer:
         Layer in the medallion architecture
+    name:
+        Name given to the node. Required to reference a node in a data source.
     primary_key:
         Name of the column storing a unique identifier for each row. It is used
         by the node to drop duplicated rows.
@@ -59,6 +58,9 @@ class PipelineNode(BaseModel):
         Definition of the data source
     sink:
         Definition of the data sink
+    transformer:
+        Spark or Polars chain defining the data transformations applied to the
+        data source.
     timestamp_key:
         Name of the column storing a timestamp associated with each row. It is
         used as the default column by the builder when creating watermarks.
@@ -66,8 +68,64 @@ class PipelineNode(BaseModel):
 
     Examples
     --------
+    A node reading stock prices data from a CSV file and writing a DataFrame
+    to disk as a parquet file.
     ```py
-    # TODO
+    import io
+    from laktory import models
+
+    node_yaml = '''
+        name: brz_stock_prices
+        layer: BRONZE
+        source:
+            format: CSV
+            path: ./raw/brz_stock_prices.csv
+        sink:
+            format: PARQUET
+            mode: OVERWRITE
+            path: ./dataframes/brz_stock_prices
+    '''
+
+    node = models.PipelineNode.model_validate_yaml(io.StringIO(node_yaml))
+
+    # node.execute(spark)
+    ```
+
+    A node reading stock prices from an upstream node and writing a DataFrame
+    to a data table.
+    ```py
+    import io
+    from laktory import models
+
+    node_yaml = '''
+        name: slv_stock_prices
+        layer: SILVER
+        source:
+          node_name: brz_stock_prices
+        sink:
+          catalog_name: hive_metastore
+          schema_name: default
+          table_name: slv_stock_prices
+        transformer:
+          nodes:
+          - column:
+              name: created_at
+              type: timestamp
+            sql_expression: data.created_at
+          - column:
+              name: symbol
+            spark_func_name: coalesce
+            spark_func_args:
+            - value: data.symbol
+          - column:
+              name: close
+              type: double
+            sql_expression: data.close
+    '''
+
+    node = models.PipelineNode.model_validate_yaml(io.StringIO(node_yaml))
+
+    # node.execute(spark)
     ```
     """
 
@@ -76,7 +134,7 @@ class PipelineNode(BaseModel):
     description: str = None
     drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
-    chain: Union[SparkChain, None] = None
+    transformer: Union[SparkChain, None] = None
     expectations: list[PipelineNodeExpectation] = []
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
     name: Union[str, None] = None
@@ -89,10 +147,6 @@ class PipelineNode(BaseModel):
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
-        """
-        Sets default options like `drop_source_columns`, `drop_duplicates`,
-        `template`, etc. based on `layer` value.
-        """
         # Default values
         if self.layer == "BRONZE":
             if self.drop_source_columns is None:
@@ -255,13 +309,13 @@ class PipelineNode(BaseModel):
                 )
             ]
 
-        if self.drop_source_columns and self.chain:
+        if self.drop_source_columns and self.transformer:
             nodes += [
                 SparkChainNode(
                     spark_func_name="drop",
                     spark_func_args=[
                         c
-                        for c in self.chain.columns[0]
+                        for c in self.transformer.columns[0]
                         if c not in ["_bronze_at", "_silver_at", "_gold_at"]
                     ],
                 )
@@ -282,8 +336,8 @@ class PipelineNode(BaseModel):
         if isinstance(self.source, cls):
             sources += [self.source]
 
-        if self.chain:
-            for sn in self.chain.nodes:
+        if self.transformer:
+            for sn in self.transformer.nodes:
                 for a in sn.spark_func_args:
                     if isinstance(a.value, cls):
                         sources += [a.value]
@@ -295,18 +349,22 @@ class PipelineNode(BaseModel):
 
     def execute(
         self,
-        apply_chain: bool = True,
+        apply_transformer: bool = True,
         spark: SparkSession = None,
         udfs: list[Callable] = None,
         write_sink: bool = True,
     ) -> AnyDataFrame:
         """
-        Execute pipeline node
+        Execute pipeline node by:
+
+        - Reading the source
+        - Applying the user defined (and layer-specific if applicable) transformations
+        - Writing the sink
 
         Parameters
         ----------
-        apply_chain:
-            Flag to apply chain in the execution
+        apply_transformer:
+            Flag to apply transformer in the execution
         spark: SparkSession
             Spark session
         udfs:
@@ -336,12 +394,12 @@ class PipelineNode(BaseModel):
             # https://iterationinsights.com/article/how-to-implement-slowly-changing-dimensions-scd-type-2-using-delta-table
             # https://www.linkedin.com/pulse/implementing-slowly-changing-dimension-2-using-lau-johansson-yemxf/
 
-        # Apply chain
-        if apply_chain and self.chain:
-            self._output_df = self.chain.execute(self._output_df, udfs=udfs)
+        # Apply transformer
+        if apply_transformer and self.transformer:
+            self._output_df = self.transformer.execute(self._output_df, udfs=udfs)
 
         # Apply layer-specific chain
-        if apply_chain and self.layer_spark_chain:
+        if apply_transformer and self.layer_spark_chain:
             self._output_df = self.layer_spark_chain.execute(self._output_df, udfs=udfs)
 
         # Output to sink

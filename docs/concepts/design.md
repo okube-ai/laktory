@@ -66,9 +66,6 @@ This layer facilitates self-service analytics, ad-hoc reporting, and advanced an
 Following an ELT methodology prioritizing speed, agility, and minimal transformations, the Silver layer serves as a source for Departmental Analysts, Data Engineers, and Data Scientists. 
 The Silver Layer employs 3rd-Normal Form-like data models, supporting efficient data modeling and acting as an intermediate step before more complex transformations in the Gold layer.
 
-### Silver Star
-The Silver Star layer is Laktory-specific and represents a subset of the silver layer in which data has been de-normalized. It often involves joining multiples tables, while preserving the number of rows found in the left silver table. 
-
 ### Gold
 The Gold layer in a lakehouse holds highly refined and aggregated data, powering analytics, machine learning, and production applications. 
 These tables represent transformed knowledge, not just information, and are crucial for analysts.

@@ -3,10 +3,10 @@
 ## [0.3.0] - Unreleased
 ### Added
 * `Pipeline` model, the new central component for building ETL pipelines
-* `PipelineNode` model, the `Pipeline` sub-component defining each DataFrame in a pipeline
+* `PipelineNode` model, the `Pipeline` sub-component defining each dataframe in a pipeline
 * `FileDataSink` and `TableDataSink` sinks models
 * `PipelineNodeDataSource` and `MemoryDataSource` sources model
-* Future support for Polars and other types of DataFrame
+* Future support for Polars and other types of dataframe
 ### Updated
 * Enabled CDC support for both `FileDataSource` and `TableDataSource`
 ### Breaking changes
@@ -24,13 +24,13 @@
 * Support for broadcasting in a data source
 * YAML model dump for all base models
 ### Fixed
-* Function selection for pyspark connect DataFrames
+* Function selection for pyspark connect dataframes
 
 ## [0.2.0] - 2024-05-02
 ### Added
 * `SparkChain` a high level class allowing to declare and execute spark operations on a dataframe 
 * `SparkColumnNode` the node of a `SparkChain` that builds a new column
-* `SparkTableNode` the node of a `SparkChain` that returns a new DataFrame
+* `SparkTableNode` the node of a `SparkChain` that returns a new dataframe
 * Moved `filter`, `selects` and `watermarks` properties to `models.BaseDataSource` so that it can be used for all source types
 * `models.BaseDataSource` `renames` attribute for renaming columns of the source table
 * `models.BaseDataSource` `drops` attribute for dropping columns of the source table
