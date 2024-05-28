@@ -1,7 +1,7 @@
 ??? "API Documentation"
     [`laktory.models.DataEvent`][laktory.models.DataEvent]<br>
 
-The `DataEvent` model is supporting the event-based architecture described in [Design Principles](design.md).
+The `DataEvent` model is supporting the event-based architecture described in [Design Principles](../design.md).
 They define the metadata (name, producer, timestamp, etc.) as well as the data (payload) of an event.
 They can be used both in the context of generating and consuming data.
 
