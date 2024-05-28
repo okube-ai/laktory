@@ -62,12 +62,6 @@ class Directory(BaseModel, PulumiResource, TerraformResource):
     def pulumi_resource_type(self) -> str:
         return "databricks:Directory"
 
-    @property
-    def pulumi_cls(self):
-        import pulumi_databricks as databricks
-
-        return databricks.Directory
-
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #

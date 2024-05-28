@@ -697,10 +697,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     def pulumi_resource_type(self) -> str:
         return ""  # "databricks:Pipeline"
 
-    @property
-    def pulumi_cls(self):
-        return None
-
     #
     # @property
     # def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:

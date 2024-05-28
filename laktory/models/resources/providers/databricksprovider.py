@@ -140,9 +140,3 @@ class DatabricksProvider(BaseProvider, PulumiResource, TerraformResource):
     @property
     def pulumi_resource_type(self) -> str:
         return "pulumi:providers:databricks"
-
-    @property
-    def pulumi_cls(self):
-        import pulumi_databricks as databricks
-
-        return databricks.Provider

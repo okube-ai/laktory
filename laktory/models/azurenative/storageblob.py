@@ -63,12 +63,6 @@ class StorageBlob(BaseModel, PulumiResource):
     def pulumi_resource_type(self) -> str:
         return "azure-native:storage:Blob"
 
-    @property
-    def pulumi_cls(self):
-        import pulumi_azure_native as azure_native
-
-        return azure_native.storage.Blob
-
     # # ----------------------------------------------------------------------- #
     # # Terraform Properties                                                    #
     # # ----------------------------------------------------------------------- #
