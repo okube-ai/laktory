@@ -1,14 +1,18 @@
 import time
 from typing import Literal
-from databricks.sdk.service.pipelines import StartUpdateResponse
-from databricks.sdk.service.pipelines import GetUpdateResponse
-from databricks.sdk.service.pipelines import UpdateInfoState
-from databricks.sdk.service.pipelines import EventLevel
-from databricks.sdk.core import DatabricksError
+from typing import TYPE_CHECKING
 
 from laktory.dispatcher.dispatcherrunner import DispatcherRunner
 from laktory.datetime import unix_timestamp
 from laktory._logger import get_logger
+
+if TYPE_CHECKING:
+    from databricks.sdk.service.pipelines import StartUpdateResponse
+    from databricks.sdk.service.pipelines import GetUpdateResponse
+    from databricks.sdk.service.pipelines import UpdateInfoState
+    from databricks.sdk.service.pipelines import EventLevel
+    from databricks.sdk.core import DatabricksError
+
 
 logger = get_logger(__name__)
 

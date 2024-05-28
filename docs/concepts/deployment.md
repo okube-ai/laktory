@@ -15,10 +15,10 @@ Laktory, but more might be added in the future.
 [Pulumi](https://www.pulumi.com/) might not be as popular as Terraform, but it has gained a lot of momentum in the last
 few months. It's defining characteristic is its support for multiple programming languages, like Python, Node.js, Go 
 and Java. In the context of Laktory, it offers a nice alternative as it allows to leverage Python to declare the 
-configuration instead of a simple yaml file. Only Python and YAML are supported through Laktory.
+configuration instead of a simple yaml file. Only YAML is supported through Laktory.
 
 
-## Terraform - YAML
+## Terraform
 The simplest way of deploying resources is to declare a [stack](stack.md) in a yaml file and use laktory [CLI](cli.md)
 to run the deployment.
 
@@ -57,7 +57,7 @@ laktory deploy --env dev
 
 
 
-## Pulumi - YAML
+## Pulumi
 Using Pulumi backend simply requires to change the backend and to configure
 default providers using the config field.
 
@@ -91,28 +91,3 @@ name should match the `name` attributed in `stack.yaml`.
 
 Refer to pulumi [stacks](https://www.pulumi.com/learn/building-with-pulumi/understanding-stacks/)
 for more information.
-
-## Pulumi - Python
-If you prefer writing infrastructure as code with python, Laktory integrates nicely with Pulumi python.
-
-```py title="__main__.py"
-from laktory import models
-
-# Declare pipeline
-pipeline = models.DLTPipeline(
-    name="pl-stock-prices",
-    libraries=[{"notebooks": {"path": "/pipelines/dlt_brz_template.py"}}],
-)
-
-# Deploy
-pipeline.to_pulumi()
-```
-
-The `to_pulumi()` will trigger the instantiation of `pulumi_databricks.Pipeline(...)` class with all the required parameters.
-
-Once you are ready to execute the deployment, simply invoke
-```cmd title="prompt"
-pulumi up --stack okube/devpor
-```
-as you would with a standard Pulumi project. In this case, it is assumed that you have already setup a `Pulumi.yaml`
-file with  the required configuration for your stack.
