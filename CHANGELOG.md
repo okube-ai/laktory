@@ -1,14 +1,9 @@
 # Release History
 
 ## [0.3.1] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Updated ReadMe
+* Stack Validator unit test
 
 ## [0.3.0] - 2024-05-28
 ### Added
