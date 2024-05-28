@@ -7,14 +7,27 @@
 [![versions](https://img.shields.io/pypi/pyversions/laktory.svg)](https://github.com/okube-ai/laktory)
 [![license](https://img.shields.io/github/license/okube-ai/laktory.svg)](https://github.com/okube-ai/laktory/blob/main/LICENSE)
 
-A DataOps framework for building Databricks lakehouse.
+An open-source, dataframe-centric ETL framework for building lakehouses with a 
+DataOps approach.
 
 <img src="docs/images/logo_sg.png" alt="laktory logo" width="85"/>
 
-Laktory makes it possible to express and bring to life your data vision, from raw to enriched analytics-ready datasets and finely tuned AI models, while adhering to basic DevOps best practices such as source control, code reviews and CI/CD.
+Laktory, the lakehouse factory, is an open-source framework designed for 
+building, deploying, and executing data pipelines while adhering to essential
+DevOps best practices such as source control, code reviews, and CI/CD. 
+Leveraging Apache Spark and Polars (under development) as its core data
+transformation engines, Laktory ensures robust and scalable data processing
+capabilities.
 
-Using a declarative approach, you define your datasets and transformations, validate them and deploy them into Databricks workspaces. 
-Once deployed, you can once again leverage Laktory for debugging and monitoring.  
+While a Laktory data pipeline can be run locally for small datasets or 
+prototyping, it really starts to shine when deployed and orchestrated on a 
+cloud data platform, such as Databricks. When combined with [Delta Live Tables](https://www.databricks.com/product/delta-live-tables),
+it provides a top-tier, simple and low maintenance fully managed solution.  
+
+Beyond just data pipelines, Laktory allows for the comprehensive definition
+and deployment of your entire data platform. This includes everything from 
+cloud infrastructure to data tables, security, and quality monitoring systems,
+providing an all-in-one solution for modern data platform management.
 
 <img src="docs/images/what_is_laktory.png" alt="what is laktory" width="400"/>
 
@@ -35,43 +48,72 @@ see the [Install](https://www.laktory.ai/install/) section in the documentation.
 ```py
 from laktory import models
 
-table = models.Table(
+node_brz = models.PipelineNode(
     name="brz_stock_prices",
-    catalog_name="prod",
-    schema_name="finance",
-    timestamp_key="data.created_at",
-    builder={
-        "layer": "SILVER",
-        "table_source": {
-            "name": "brz_stock_prices",
-        },
-        "spark_chain": {
-            "nodes": [
-                {
-                    "column": {"name": "symbol"},
-                    "type": "string",
-                    "sql_expression": "data.symbol"
-                }
-            ]
-        }
+    layer="BRONZE",
+    source={
+        "format": "PARQUET",
+        "path": "./data/brz_stock_prices/"
     },
+    transformer={
+        "nodes": [
+            {
+                "spark_func_name": "select",
+                "spark_func_args": [
+                    "symbol",
+                    "timestamp",
+                    "open",
+                    "close",
+                ],
+            },
+        ]
+    }
 )
 
-print(table)
-#> catalog_name='prod' columns=[Column(catalog_name='prod', comment=None, name='symbol', pii=None, schema_name='finance', spark_func_args=[], spark_func_kwargs={}, spark_func_name=None, sql_expression='data.symbol', table_name='brz_stock_prices', type='string', unit=None)] comment=None data=None grants=None name='brz_stock_prices' primary_key=None schema_name='finance' timestamp_key='data.created_at' builder=TableBuilder(drop_source_columns=True, drop_duplicates=None, event_source=None, joins=[], pipeline_name=None, table_source=TableDataSource(read_as_stream=True, catalog_name='prod', cdc=None, selects=None, filter=None, from_pipeline=True, name='brz_stock_prices', schema_name='finance', watermark=None), layer='SILVER')
+node_slv = models.PipelineNode(
+    name="slv_stock_prices",
+    layer="SILVER",
+    source={
+        "node_name": "brz_stock_prices"
+    },
+    sink={
+        "path": "./data/slv_stock_prices",
+        "mode": "OVERWRITE",
+        "format": "PARQUET",
+    },
+    transformer={
+        "nodes": [
+            {
+                "spark_func_name": "drop_duplicates",
+                "spark_func_kwargs": {
+                    "subset": ["timestamp", "symbol"]
+                }
+            },
+        ]
+    }
+)
+
+pipeline = models.Pipeline(
+    name="stock_prices",
+    nodes=[node_brz, node_slv],
+)
+
+print(pipeline)
+#> resource_name_=None options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None) variables={} databricks_job=None dlt=None name='stock_prices' nodes=[PipelineNode(variables={}, add_layer_columns=True, dlt_template='DEFAULT', description=None, drop_duplicates=None, drop_source_columns=False, transformer=SparkChain(variables={}, nodes=[SparkChainNode(variables={}, allow_missing_column_args=False, column=None, spark_func_args=[SparkFuncArg(variables={}, value='symbol'), SparkFuncArg(variables={}, value='timestamp'), SparkFuncArg(variables={}, value='open'), SparkFuncArg(variables={}, value='close')], spark_func_kwargs={}, spark_func_name='select', sql_expression=None)]), expectations=[], layer='BRONZE', name='brz_stock_prices', primary_key=None, sink=None, source=FileDataSource(variables={}, as_stream=False, broadcast=False, cdc=None, dataframe_type='SPARK', drops=None, filter=None, mock_df=None, renames=None, selects=None, watermark=None, format='PARQUET', header=True, multiline=False, path='./data/brz_stock_prices/', read_options={}, schema_location=None), timestamp_key=None), PipelineNode(variables={}, add_layer_columns=True, dlt_template='DEFAULT', description=None, drop_duplicates=None, drop_source_columns=True, transformer=SparkChain(variables={}, nodes=[SparkChainNode(variables={}, allow_missing_column_args=False, column=None, spark_func_args=[], spark_func_kwargs={'subset': SparkFuncArg(variables={}, value=['timestamp', 'symbol'])}, spark_func_name='drop_duplicates', sql_expression=None)]), expectations=[], layer='SILVER', name='slv_stock_prices', primary_key=None, sink=FileDataSink(variables={}, mode='OVERWRITE', checkpoint_location=None, format='PARQUET', path='./data/slv_stock_prices', write_options={}), source=PipelineNodeDataSource(variables={}, as_stream=False, broadcast=False, cdc=None, dataframe_type='SPARK', drops=None, filter=None, mock_df=None, renames=None, selects=None, watermark=None, node_name='brz_stock_prices', node=PipelineNode(variables={}, add_layer_columns=True, dlt_template='DEFAULT', description=None, drop_duplicates=None, drop_source_columns=False, transformer=SparkChain(variables={}, nodes=[SparkChainNode(variables={}, allow_missing_column_args=False, column=None, spark_func_args=[SparkFuncArg(variables={}, value='symbol'), SparkFuncArg(variables={}, value='timestamp'), SparkFuncArg(variables={}, value='open'), SparkFuncArg(variables={}, value='close')], spark_func_kwargs={}, spark_func_name='select', sql_expression=None)]), expectations=[], layer='BRONZE', name='brz_stock_prices', primary_key=None, sink=None, source=FileDataSource(variables={}, as_stream=False, broadcast=False, cdc=None, dataframe_type='SPARK', drops=None, filter=None, mock_df=None, renames=None, selects=None, watermark=None, format='PARQUET', header=True, multiline=False, path='./data/brz_stock_prices/', read_options={}, schema_location=None), timestamp_key=None)), timestamp_key=None)] orchestrator=None udfs=[]
+
+pipeline.execute(spark=spark)
 ```
 
 To get started with a more useful example, jump into the [Quickstart](https://www.laktory.ai/quickstart/).
 
 
-
-## A full Data Ops template
+## A Lakehouse DataOps Template
 A comprehensive template on how to deploy a lakehouse as code using Laktory is maintained here:
 https://github.com/okube-ai/lakehouse-as-code.
 
 In this template, 4 pulumi projects are used to:
 - `{cloud_provider}_infra`: Deploy the required resources on your cloud provider
-- `unity-catalog`: Setup users, groups, catalogs, schemas and manage grants
+- `unity-catalog`: Setup users, groups, catalogs, schemas and Lakehouse grant
 - `workspace-conf`: Setup secrets, clusters and warehouses
 - `workspace`: The data workflows to build your lakehouse.
 
