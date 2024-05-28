@@ -1,7 +1,4 @@
-import os
-
 from laktory.models.resources.databricks import Job
-from laktory import pulumi_outputs
 
 job = Job(
     name="job-stock-prices",
@@ -169,7 +166,6 @@ def test_job_model():
 
 
 def test_job_pulumi():
-    pulumi_outputs["dlt-pl-stock-prices.id"] = "12345"
     assert job.resource_name == "job-stock-prices"
     assert job.options.model_dump(exclude_none=True) == {
         "depends_on": [],
@@ -189,7 +185,7 @@ def test_job_pulumi():
             },
             {
                 "depends_ons": [{"task_key": "ingestion"}],
-                "pipeline_task": {"pipeline_id": "12345"},
+                "pipeline_task": {"pipeline_id": "${resources.dlt-pl-stock-prices.id}"},
                 "task_key": "pipeline",
             },
             {

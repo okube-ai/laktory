@@ -1,4 +1,3 @@
-import pulumi
 import yaml
 import json
 import os
@@ -173,36 +172,20 @@ class BaseModel(_BaseModel):
             values.
         """
 
-        from laktory.models.resources.pulumiresource import pulumi_outputs
-        from laktory.models.resources.pulumiresource import pulumi_resources
-
         # Build patterns
         _patterns = {}
         _vars = {}
-        _pvars = {}
 
         # User-defined variables
         for k, v in self.variables.items():
             _k = k
             if not is_pattern(_k):
                 _k = f"${{vars.{_k}}}"
-            if isinstance(v, pulumi.Output):
-                _vars[_k] = f"{{_pargs_{k}}}"
-                _pvars[f"_pargs_{k}"] = v
-            else:
-                _vars[_k] = v
+            _vars[_k] = v
 
         # Environment variables
         for k, v in os.environ.items():
             _vars[f"${{vars.{k}}}"] = v
-
-        # Pulumi resource outputs
-        for k, v in pulumi_outputs.items():
-            _vars[f"${{resources.{k}}}"] = v
-
-        # Pulumi resources
-        for k, v in pulumi_resources.items():
-            _vars[f"${{resources.{k}}}"] = v
 
         # Create patterns
         keys = list(_vars.keys())
@@ -235,26 +218,8 @@ class BaseModel(_BaseModel):
 
             return d
 
-        def apply_pulumi(d):
-            if isinstance(d, dict):
-                for key, value in d.items():
-                    d[key] = apply_pulumi(value)
-            elif isinstance(d, list):
-                for i, item in enumerate(d):
-                    d[i] = apply_pulumi(item)
-            elif isinstance(d, str) and "_pargs_" in d:
-                d = pulumi.Output.all(**_pvars).apply(
-                    lambda args, _d=d: _d.format_map(args)
-                )
-            else:
-                pass
-            return d
-
         # Replace variable with their values (except for pulumi output)
         for pattern, repl in _vars.items():
             d = search_and_replace(d, pattern, repl)
-
-        # Build pulumi output function where required
-        d = apply_pulumi(d)
 
         return d

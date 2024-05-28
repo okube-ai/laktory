@@ -1,4 +1,3 @@
-import pulumi
 from typing import Union
 from typing import Literal
 from laktory.models.basemodel import BaseModel
@@ -43,7 +42,7 @@ class StorageBlob(BaseModel, PulumiResource):
     content_type: str = None
     metadata: dict[str, str] = None
     resource_group_name: str = None
-    source: Union[pulumi.Asset, pulumi.Archive] = None
+    # source: Union[pulumi.Asset, pulumi.Archive] = None
     type: Literal["BLOCK", "APPEND"] = None
 
     # ----------------------------------------------------------------------- #

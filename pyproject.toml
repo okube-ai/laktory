@@ -40,9 +40,6 @@ dependencies = [
     "networkx",
     "planck",
     "prompt_toolkit",
-    "pulumi",
-    "pulumi_databricks>=1.36",  # required to monitor laktory usage
-    "pulumi_random",
     "pyyaml",
     "pydantic>=2",
     "python-dateutil",
@@ -51,6 +48,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+pulumi = [
+    "pulumi",
+    "pulumi_databricks>=1.36",  # required to monitor laktory usage
+]
 dev = [
     "black",
     "flit",

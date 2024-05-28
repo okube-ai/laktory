@@ -103,4 +103,3 @@ class AzurePulumiProvider(BaseProvider, PulumiResource):
     @property
     def pulumi_resource_type(self) -> str:
         return "pulumi:providers:azure_native"
-
