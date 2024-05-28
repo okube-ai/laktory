@@ -1,14 +1,11 @@
 # Release History
 
 ## [0.3.2] - Unreleased
-### Added
-* n/a
-### Fixed
-* n/a
 ### Updated
-* n/a
+* Install instructions
 ### Breaking changes
-* n/a
+* Re-organized optional dependencies
+* Remove support for Pulumi python
 
 ## [0.3.1] - 2024-05-28
 ### Fixed

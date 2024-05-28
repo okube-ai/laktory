@@ -136,12 +136,6 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
         return "databricks:Volume"
 
     @property
-    def pulumi_cls(self):
-        import pulumi_databricks as databricks
-
-        return databricks.Volume
-
-    @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["grants"]
 

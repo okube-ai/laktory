@@ -37,12 +37,6 @@ class SecretAcl(BaseModel, PulumiResource):
     def pulumi_resource_type(self) -> str:
         return "databricks:SecretAcl"
 
-    @property
-    def pulumi_cls(self):
-        import pulumi_databricks as databricks
-
-        return databricks.SecretAcl
-
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #

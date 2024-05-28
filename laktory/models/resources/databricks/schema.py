@@ -138,12 +138,6 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
         return "databricks:Schema"
 
     @property
-    def pulumi_cls(self):
-        import pulumi_databricks as databricks
-
-        return databricks.Schema
-
-    @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["tables", "volumes", "grants"]
 

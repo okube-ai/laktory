@@ -52,7 +52,10 @@ def test_dag():
     assert pl.sorted_nodes == [node_brz, node_meta, node_slv, node_gld]
     assert node_slv.source.node == node_brz
     assert node_gld.source.node == node_slv
-    assert node_slv.transformer.nodes[-1].spark_func_kwargs["other"].value.node == node_meta
+    assert (
+        node_slv.transformer.nodes[-1].spark_func_kwargs["other"].value.node
+        == node_meta
+    )
 
     # Test figure
     fig = pl.dag_figure()

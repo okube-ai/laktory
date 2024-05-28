@@ -203,9 +203,3 @@ class AWSProvider(BaseProvider, PulumiResource, TerraformResource):
     @property
     def pulumi_resource_type(self) -> str:
         return "pulumi:providers:aws"
-
-    @property
-    def pulumi_cls(self):
-        import pulumi_aws as aws
-
-        return aws.Provider

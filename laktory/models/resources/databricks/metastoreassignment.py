@@ -47,12 +47,6 @@ class MetastoreAssignment(BaseModel, PulumiResource, TerraformResource):
     def pulumi_resource_type(self) -> str:
         return "databricks:MetastoreAssignment"
 
-    @property
-    def pulumi_cls(self):
-        import pulumi_databricks as databricks
-
-        return databricks.MetastoreAssignment
-
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #

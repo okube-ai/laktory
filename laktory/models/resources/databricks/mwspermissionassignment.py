@@ -54,12 +54,6 @@ class MwsPermissionAssignment(BaseModel, PulumiResource, TerraformResource):
     def pulumi_resource_type(self) -> str:
         return "databricks:MwsPermissionAssignment"
 
-    @property
-    def pulumi_cls(self):
-        import pulumi_databricks as databricks
-
-        return databricks.MwsPermissionAssignment
-
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #

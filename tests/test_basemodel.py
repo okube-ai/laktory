@@ -1,4 +1,3 @@
-import pulumi
 import os
 
 from laktory.models import BaseModel
@@ -7,14 +6,11 @@ from laktory.models.resources.databricks import Schema
 from laktory.models.resources.databricks import Job
 from laktory import settings
 from laktory._testing import Paths
-from pulumi_random import RandomString
 
 paths = Paths(__file__)
 
-env = RandomString("env", length=3, upper=False, numeric=False, special=False)
-schema_name = RandomString(
-    "schema", length=5, upper=False, numeric=False, special=False
-)
+env = "env"
+schema_name = "schema"
 
 
 schema = Schema(
@@ -53,8 +49,8 @@ schema = Schema(
     ],
     variables={
         "DYNAMIC_COLUMN": "low",
-        "env": env.id,
-        "schema_name": schema_name.id,
+        "env": env,
+        "schema_name": schema_name,
         # r"\$\{resources\.([\w.]+)\}": r"\1",
         r"\$\{resources\.([\w.]+)\}": r"${ \1 }",
     },
@@ -272,8 +268,6 @@ def test_inject_vars():
     d0 = schema.model_dump()
     d1 = schema.inject_vars(d0)
     assert d1["tables"][-1]["columns"][0]["name"] == "low"
-    assert isinstance(d1["name"], pulumi.Output)
-    assert isinstance(d1["catalog_name"], pulumi.Output)
     assert d1["tables"][0]["columns"][1]["name"] == "${ close.id }"
 
 

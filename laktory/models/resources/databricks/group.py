@@ -56,12 +56,6 @@ class Group(BaseModel, PulumiResource, TerraformResource):
         return "databricks:Group"
 
     @property
-    def pulumi_cls(self):
-        import pulumi_databricks as databricks
-
-        return databricks.Group
-
-    @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["workspace_permission_assignments"]
 

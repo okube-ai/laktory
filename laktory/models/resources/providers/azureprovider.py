@@ -143,9 +143,3 @@ class AzureProvider(BaseProvider, PulumiResource, TerraformResource):
     @property
     def pulumi_resource_type(self) -> str:
         return "pulumi:providers:azure"
-
-    @property
-    def pulumi_cls(self):
-        import pulumi_azure as azure
-
-        return azure.Provider

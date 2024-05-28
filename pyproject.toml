@@ -35,14 +35,10 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "databricks-sdk",
     "inflect",
     "networkx",
     "planck",
     "prompt_toolkit",
-    "pulumi",
-    "pulumi_databricks>=1.36",  # required to monitor laktory usage
-    "pulumi_random",
     "pyyaml",
     "pydantic>=2",
     "python-dateutil",
@@ -51,6 +47,28 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+
+# IaC
+pulumi = [
+    "pulumi",
+    "pulumi_databricks>=1.36",  # required to monitor laktory usage
+]
+
+# DataFrame
+polars = [
+    "polars"
+]
+spark = [
+    "pyarrow",
+    "pyspark",
+]
+
+# Orchestrators
+databricks = [
+    "databricks-sdk",
+]
+
+# Dev
 dev = [
     "black",
     "flit",
@@ -61,21 +79,17 @@ dev = [
 #    "mkdocs-snippets",
     "plotly",
 ]
-spark = [
-    "pandas",
-    "pyarrow",
-    "pyspark",
-]
-polars = [
-    "polars"
-]
+
+# Test
 test = [
+    "pandas",
     "pytest",
     "pytest-cov",
     "pytest-examples",
-#    "tox"
     "yfinance",
 ]
+
+# Cloud
 azure = [
     "azure-identity",
     "azure-storage-blob",

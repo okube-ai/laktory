@@ -64,12 +64,6 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
         return "databricks:ServicePrincipal"
 
     @property
-    def pulumi_cls(self):
-        import pulumi_databricks as databricks
-
-        return databricks.ServicePrincipal
-
-    @property
     def resource_key(self) -> str:
         return self.display_name
 

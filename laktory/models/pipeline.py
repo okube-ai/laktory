@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import json
 from typing import Union
@@ -558,7 +559,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         for inode, node in enumerate(self.sorted_nodes):
             node.execute(spark=spark, udfs=udfs)
 
-    def dag_figure(self) -> "Figure":
+    def dag_figure(self) -> Figure:
         """
         [UNDER DEVELOPMENT] Generate a figure representation of the pipeline
         DAG.
@@ -568,7 +569,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         :
             Plotly figure representation of the pipeline.
         """
-
         import plotly.graph_objs as go
 
         dag = self.dag
@@ -696,10 +696,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_resource_type(self) -> str:
         return ""  # "databricks:Pipeline"
-
-    @property
-    def pulumi_cls(self):
-        return None
 
     #
     # @property
