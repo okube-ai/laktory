@@ -74,10 +74,16 @@ class PipelineNodeDataSource(BaseDataSource):
             from laktory.dlt import is_debug
 
             if is_debug():
-                logger.info(f"Reading pipeline node {self._id} from sink (DLT debug)")
                 df = None
-                if self.node.sink:
+                if self.node._output_df:
+                    logger.info(f"Reading pipeline node {self._id} from output DataFrame (DLT debug)")
+                    df = self.node._output_df
+                    logger.info(f"Reading pipeline node {self._id} from sink (DLT debug)")
+                elif self.node.sink:
                     df = self.node.sink.read(spark=spark, as_stream=self.as_stream)
+                else:
+                    logger.info(f"Can't read pipeline node {self._id} (DLT DEBUG)")
+
             else:
                 if self.as_stream:
                     logger.info(f"Reading pipeline node {self._id} with DLT as stream")
