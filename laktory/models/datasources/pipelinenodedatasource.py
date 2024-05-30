@@ -51,6 +51,8 @@ class PipelineNodeDataSource(BaseDataSource):
 
     node_name: Union[str, None]
     node: Any = Field(None, exclude=True)  # Add suggested type?
+    # include_failed_expectations: bool = True  # TODO: Implement
+    # include_passed_expectations: bool = True  # TODO: Implement
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
