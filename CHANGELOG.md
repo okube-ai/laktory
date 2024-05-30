@@ -1,6 +1,16 @@
 # Release History
 
-## [0.3.3] - Unreleased
+## [0.3.4] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.3.3] - 2024-05-30
 ### Added
 * Support for SQL expression in SparkChain node
 * Limit option to Data Sources
