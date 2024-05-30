@@ -1,19 +1,36 @@
 import time
+from typing import Union
 from pyspark.sql.dataframe import DataFrame
 
 
-def display(df: DataFrame, rows: int = 5, refresh_interval: float = 3.0) -> bool:
+def display(
+    df: DataFrame,
+    n: int = 10,
+    truncate: Union[bool, int] = False,
+    vertical: bool = False,
+    refresh_interval: float = 3.0,
+) -> None:
     """
-    Display both static and streaming dataframes
+    Prints the first n rows to the console. Compatible for both static and
+    streaming dataframes. In the case of a streaming dataframe, console will
+    be continuously updated until there is a keyboard input.
 
     Parameters
     ----------
     df:
         Input DataFrame
-    rows:
+    n:
         Number of rows to display
+    truncate:
+        If set to `True`, truncate strings longer than 20 chars by default. If
+        set to a number greater than one, truncates long strings to length
+        truncate and align cells right.
+    vertical:
+        If set to `True`, print output rows vertically (one line per column
+        value).
     refresh_interval:
-        Pause duration, in seconds, between each update
+        Pause duration, in seconds, between each update for streaming
+        dataframes
 
 
     Returns
@@ -26,9 +43,7 @@ def display(df: DataFrame, rows: int = 5, refresh_interval: float = 3.0) -> bool
 
     ```py
     import laktory  # noqa: F401
-    import pyspark.sql.types as T
     import pandas as pd
-
 
     df = spark.createDataFrame(
         pd.DataFrame(
@@ -39,19 +54,18 @@ def display(df: DataFrame, rows: int = 5, refresh_interval: float = 3.0) -> bool
             }
         )
     )
-    df.display(rows=10)
+    df.display(n=5, refresh_interval=2)
     ```
     """
 
     if not df.isStreaming:
-        df.limit(rows).show()
+        df.show(n=n, truncate=truncate, vertical=vertical)
 
     else:
 
         # Start the streaming query
         query = (
-            df.writeStream
-            .outputMode("append")
+            df.writeStream.outputMode("append")
             .format("memory")  # Store the results in-memory table
             .queryName("_laktory_tmp_view")
             .start()
@@ -60,7 +74,9 @@ def display(df: DataFrame, rows: int = 5, refresh_interval: float = 3.0) -> bool
         try:
             while True:
                 # Fetch and display the latest rows
-                df.sparkSession.sql(f"SELECT * FROM _laktory_tmp_view LIMIT {rows}").show(truncate=False)
+                df.sparkSession.sql(f"SELECT * FROM _laktory_tmp_view LIMIT {n}").show(
+                    truncate=truncate, vertical=vertical
+                )
                 time.sleep(refresh_interval)
         except KeyboardInterrupt:
             print("Stopped streaming display.")

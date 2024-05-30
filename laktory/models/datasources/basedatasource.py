@@ -17,6 +17,11 @@ from laktory._logger import get_logger
 logger = get_logger(__name__)
 
 
+class DataFrameSample(BaseModel):
+    fraction: float
+    seed: Union[int, None] = None
+
+
 class Watermark(BaseModel):
     """
     Definition of a spark structured streaming watermark for joining data
@@ -133,8 +138,10 @@ class BaseDataSource(BaseModel):
     dataframe_type: Literal["SPARK", "POLARS"] = "SPARK"
     drops: Union[list, None] = None
     filter: Union[str, None] = None
+    limit: Union[int, None] = None
     mock_df: Any = Field(default=None, exclude=True)
     renames: Union[dict[str, str], None] = None
+    sample: Union[DataFrameSample, None] = None
     selects: Union[list[str], dict[str, str], None] = None
     watermark: Union[Watermark, None] = None
     _pipeline_node: "PipelineNode" = None
@@ -259,6 +266,14 @@ class BaseDataSource(BaseModel):
         # Broadcast
         if self.broadcast:
             df = F.broadcast(df)
+
+        # Sample
+        if self.sample:
+            df = df.sample(fraction=self.sample.fraction, seed=self.sample.seed)
+
+        # Limit
+        if self.limit:
+            df = df.limit(self.limit)
 
         # SparkChain
         # if self.spark_chain:

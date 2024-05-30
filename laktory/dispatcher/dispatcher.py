@@ -94,13 +94,15 @@ class Dispatcher:
     def _workspace_arguments(self):
         data = {}
         if self.stack.backend == "pulumi":
-            config = self.stack.to_pulumi(env=self.env).model_dump()["config"]
+            config = self.stack.to_pulumi(env_name=self.env).model_dump()["config"]
             for k, v in config.items():
                 if k.startswith("databricks"):
                     _k = k.split(":")[1]
                     data[_k] = v
         elif self.stack.backend == "terraform":
-            providers = self.stack.to_terraform(env=self.env).model_dump()["provider"]
+            providers = self.stack.to_terraform(env_name=self.env).model_dump()[
+                "provider"
+            ]
             for k in providers:
                 if "databricks" in k.lower():
                     data = providers[k]

@@ -75,11 +75,15 @@ class PipelineNodeDataSource(BaseDataSource):
 
             if is_debug():
                 df = None
-                if self.node._output_df:
-                    logger.info(f"Reading pipeline node {self._id} from output DataFrame (DLT debug)")
-                    df = self.node._output_df
-                    logger.info(f"Reading pipeline node {self._id} from sink (DLT debug)")
+                if self.node.output_df:
+                    logger.info(
+                        f"Reading pipeline node {self._id} from output DataFrame (DLT debug)"
+                    )
+                    df = self.node.output_df
                 elif self.node.sink:
+                    logger.info(
+                        f"Reading pipeline node {self._id} from sink (DLT debug)"
+                    )
                     df = self.node.sink.read(spark=spark, as_stream=self.as_stream)
                 else:
                     logger.info(f"Can't read pipeline node {self._id} (DLT DEBUG)")
@@ -93,9 +97,9 @@ class PipelineNodeDataSource(BaseDataSource):
                     df = dlt_read(self.node.name)
 
         # Read from node output DataFrame (if available)
-        elif self.node._output_df:
+        elif self.node.output_df:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
-            df = self.node._output_df
+            df = self.node.output_df
 
         # Read from node sink
         elif self.node.sink:
@@ -110,9 +114,9 @@ class PipelineNodeDataSource(BaseDataSource):
     def _read_polars(self) -> PolarsDataFrame:
 
         # Read from node output DataFrame (if available)
-        if self.node._output_df:
+        if self.node.output_df:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
-            df = self.node._output_df
+            df = self.node.output_df
 
         # Read from node sink
         elif self.node.sink:

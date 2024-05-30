@@ -296,7 +296,7 @@ def test_stack_model():
 
 
 def test_pulumi_stack():
-    pstack = stack.to_pulumi(env=None)
+    pstack = stack.to_pulumi(env_name=None)
     assert pstack.organization == "okube"
     data_default = pstack.model_dump()
     data_default["config"]["databricks:token"] = "***"
@@ -423,7 +423,7 @@ def test_pulumi_stack():
     }
 
     # Dev
-    data = stack.to_pulumi(env="dev").model_dump()
+    data = stack.to_pulumi(env_name="dev").model_dump()
     data["config"]["databricks:token"] = "***"
     data["resources"]["databricks"]["properties"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
@@ -438,7 +438,7 @@ def test_pulumi_stack():
     assert data == data0
 
     # Prod
-    data = stack.to_pulumi(env="prod").model_dump()
+    data = stack.to_pulumi(env_name="prod").model_dump()
     data["config"]["databricks:token"] = "***"
     data["resources"]["databricks"]["properties"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
@@ -455,7 +455,7 @@ def test_pulumi_stack():
 
 
 def test_pulumi_preview():
-    pstack = stack.to_pulumi(env="dev")
+    pstack = stack.to_pulumi(env_name="dev")
     pstack.preview(stack="okube/dev")
 
 
@@ -570,7 +570,7 @@ def test_terraform_stack():
     }
 
     # Dev
-    data = stack.to_terraform(env="dev").model_dump()
+    data = stack.to_terraform(env_name="dev").model_dump()
     data["provider"]["databricks"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
     print(data0["resource"]["databricks_job"]["job-stock-prices-ut-stack"])
@@ -582,7 +582,7 @@ def test_terraform_stack():
     assert data == data0
 
     # Prod
-    data = stack.to_terraform(env="prod").model_dump()
+    data = stack.to_terraform(env_name="prod").model_dump()
     data["provider"]["databricks"]["token"] = "***"
     data0 = copy.deepcopy(data_default)
     cluster = data0["resource"]["databricks_job"]["job-stock-prices-ut-stack"][
@@ -595,7 +595,7 @@ def test_terraform_stack():
 
 
 def test_terraform_plan():
-    tstack = stack.to_terraform(env="dev")
+    tstack = stack.to_terraform(env_name="dev")
     tstack.terraform.backend = (
         None  # TODO: Add credentials to git actions to use azure backend
     )

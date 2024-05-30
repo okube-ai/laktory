@@ -215,6 +215,7 @@ nav:
     - CLI: api/cli.md
     - Spark:
       - DataFrame:
+        - display: api/spark/dataframe/display.md
         - groupby_and_agg: api/spark/dataframe/groupby_and_agg.md
         - has_column: api/spark/dataframe/has_column.md
         - schema_flat: api/spark/dataframe/schema_flat.md

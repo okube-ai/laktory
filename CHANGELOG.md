@@ -2,7 +2,14 @@
 
 ## [0.3.3] - Unreleased
 ### Added
-* Support for SQL expression in SparkChain node.
+* Support for SQL expression in SparkChain node
+* Limit option to Data Sources
+* Sample option to Data Sources
+* Display method for Spark DataFrames
+### Updated
+* Stack model environments to support overwrite of individual list element
+### Fixed
+* Pipeline Node data source read with DLT in debug mode
 
 ## [0.3.2] - 2024-05-28
 ### Updated

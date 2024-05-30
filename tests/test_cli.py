@@ -21,7 +21,7 @@ def test_preview_terraform():
 
     # Ideally, we would run `laktory init`, but the runner does not seem to handle running multiple commands
     with open(filepath, "r") as fp:
-        pstack = models.Stack.model_validate_yaml(fp).to_terraform(env="dev")
+        pstack = models.Stack.model_validate_yaml(fp).to_terraform(env_name="dev")
         pstack.init(flags=["-migrate-state", "-upgrade"])
 
     result = runner.invoke(
