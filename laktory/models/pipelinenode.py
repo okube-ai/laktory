@@ -246,6 +246,11 @@ class PipelineNode(BaseModel):
         }
 
     @property
+    def output_df(self) -> AnyDataFrame:
+        """Node Dataframe after reading source and applying transformer."""
+        return self._output_df
+
+    @property
     def layer_spark_chain(self):
         nodes = []
 
