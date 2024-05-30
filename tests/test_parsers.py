@@ -85,6 +85,6 @@ def test_merge_dicts():
 
 
 if __name__ == "__main__":
-    # test_camel_case()
-    # test_remove_empty()
+    test_camel_case()
+    test_remove_empty()
     test_merge_dicts()
