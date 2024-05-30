@@ -55,6 +55,13 @@ def merge_dicts(d1: dict, d2: dict) -> dict:
         for key, value in d2.items():
             if key in d1 and isinstance(d1[key], dict) and isinstance(value, dict):
                 _merge_dicts(d1[key], value)
+            elif key in d1 and isinstance(d1[key], list) and isinstance(value, dict):
+                for index, sub_value in value.items():
+                    idx = int(index)
+                    if isinstance(d1[key][idx], dict):
+                        _merge_dicts(d1[key][idx], sub_value)
+                    else:
+                        d1[key][idx] = sub_value
             else:
                 d1[key] = value
 

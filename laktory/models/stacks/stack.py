@@ -341,15 +341,19 @@ class Stack(BaseModel):
     _envs: dict[str, EnvironmentStack] = None
 
     # ----------------------------------------------------------------------- #
-    # Properties                                                              #
+    # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    @property
-    def envs(self) -> dict[str, EnvironmentStack]:
+    def get_env(self, env_name: str, inject_vars=True) -> EnvironmentStack:
         """
-        Complete definition of each of the stack environments. It takes into
+        Complete definition the stack for a given environment. It takes into
         account both the default stack values and environment-specific
         overwrites.
+
+        Parameters
+        ----------
+        env_name:
+            Name of the environment
 
         Returns
         -------
@@ -410,27 +414,32 @@ class Stack(BaseModel):
             _envs = d.pop("environments")
 
             envs = {}
-            for env_name, env in self.environments.items():
+            for _env_name, env in self.environments.items():
                 for k in ENV_FIELDS:
                     if k in d:
-                        d[k] = merge_dicts(d[k], _envs[env_name].get(k, {}))
-                envs[env_name] = EnvironmentStack(**d)
+                        d[k] = merge_dicts(d[k], _envs[_env_name].get(k, {}))
+
+                # Inject Variables
+                if inject_vars:
+                    d = self.environments[_env_name].inject_vars(d)
+
+                envs[_env_name] = EnvironmentStack(**d)
 
             self._envs = envs
 
-        return self._envs
+        return self._envs[env_name]
 
     # ----------------------------------------------------------------------- #
     # Pulumi Methods                                                          #
     # ----------------------------------------------------------------------- #
 
-    def to_pulumi(self, env: Union[str, None] = None):
+    def to_pulumi(self, env_name: Union[str, None] = None):
         """
         Create a pulumi stack for a given environment `env`.
 
         Parameters
         ----------
-        env:
+        env_name:
             Target environment. If `None`, used default stack values only.
 
         Returns
@@ -440,8 +449,8 @@ class Stack(BaseModel):
         """
         from laktory.models.stacks.pulumistack import PulumiStack
 
-        if env is not None and env in self.envs:
-            env = self.envs[env]
+        if env_name is not None and env_name in self.environments.keys():
+            env = self.get_env(env_name=env_name, inject_vars=False)
         else:
             env = self
 
@@ -466,13 +475,13 @@ class Stack(BaseModel):
     # Terraform Methods                                                       #
     # ----------------------------------------------------------------------- #
 
-    def to_terraform(self, env: Union[str, None] = None):
+    def to_terraform(self, env_name: Union[str, None] = None):
         """
         Create a terraform stack for a given environment `env`.
 
         Parameters
         ----------
-        env:
+        env_name:
             Target environment. If `None`, used default stack values only.
 
         Returns
@@ -482,8 +491,8 @@ class Stack(BaseModel):
         """
         from laktory.models.stacks.terraformstack import TerraformStack
 
-        if env is not None and env in self.envs:
-            env = self.envs[env]
+        if env_name is not None and env_name in self.environments.keys():
+            env = self.get_env(env_name=env_name, inject_vars=False)
         else:
             env = self
 

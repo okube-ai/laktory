@@ -95,11 +95,11 @@ class CLIController(BaseModel):
         if self.pulumi_stack_name is None:
             raise ValueError("Argument `stack` must be specified with pulumi backend")
 
-        pstack = self.stack.to_pulumi(env=self.env)
+        pstack = self.stack.to_pulumi(env_name=self.env)
         getattr(pstack, cmd)(stack=self.pulumi_stack_name, flags=self.pulumi_options)
 
     def terraform_call(self, cmd):
-        pstack = self.stack.to_terraform(env=self.env)
+        pstack = self.stack.to_terraform(env_name=self.env)
         getattr(pstack, cmd)(flags=self.terraform_options)
 
 

@@ -15,7 +15,7 @@ dlt.spark = spark
 logger = get_logger(__name__)
 
 # Read pipeline definition
-pl_name = spark.conf.get("pipeline_name", "pl-stock-prices")
+pl_name = spark.conf.get("pipeline_name", "dlt-stock-prices")
 filepath = f"/Workspace{settings.workspace_laktory_root}pipelines/{pl_name}.json"
 with open(filepath, "r") as fp:
     pl = models.Pipeline.model_validate_json(fp.read())

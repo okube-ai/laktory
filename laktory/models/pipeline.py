@@ -541,7 +541,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def execute(self, spark, udfs=None) -> None:
+    def execute(self, spark, udfs=None, write_sinks=True) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
         executing each node. The selected orchestrator might impact how
@@ -553,11 +553,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             Spark Session
         udfs:
             List of user-defined functions used in transformation chains.
+        write_sinks:
+            If `False` writing of node sinks will be skipped
         """
         logger.info("Executing Pipeline")
 
         for inode, node in enumerate(self.sorted_nodes):
-            node.execute(spark=spark, udfs=udfs)
+            node.execute(spark=spark, udfs=udfs, write_sink=write_sinks)
 
     def dag_figure(self) -> Figure:
         """

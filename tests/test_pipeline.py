@@ -66,22 +66,22 @@ def test_execute():
     pl.execute(spark)
 
     # In memory DataFrames
-    assert pl.nodes_dict["brz_stock_prices"]._output_df.columns == [
+    assert pl.nodes_dict["brz_stock_prices"].output_df.columns == [
         "name",
         "description",
         "producer",
         "data",
         "_bronze_at",
     ]
-    assert pl.nodes_dict["brz_stock_prices"]._output_df.count() == 80
-    assert pl.nodes_dict["slv_stock_meta"]._output_df.columns == [
+    assert pl.nodes_dict["brz_stock_prices"].output_df.count() == 80
+    assert pl.nodes_dict["slv_stock_meta"].output_df.columns == [
         "symbol2",
         "currency",
         "first_traded",
         "_silver_at",
     ]
-    assert pl.nodes_dict["slv_stock_meta"]._output_df.count() == 3
-    assert pl.nodes_dict["slv_stock_prices"]._output_df.columns == [
+    assert pl.nodes_dict["slv_stock_meta"].output_df.count() == 3
+    assert pl.nodes_dict["slv_stock_prices"].output_df.columns == [
         "_bronze_at",
         "created_at",
         "close",
@@ -90,14 +90,14 @@ def test_execute():
         "_silver_at",
         "symbol",
     ]
-    assert pl.nodes_dict["slv_stock_prices"]._output_df.count() == 80
-    assert pl.nodes_dict["gld_max_stock_prices"]._output_df.columns == [
+    assert pl.nodes_dict["slv_stock_prices"].output_df.count() == 80
+    assert pl.nodes_dict["gld_max_stock_prices"].output_df.columns == [
         "symbol",
         "max_price",
         "min_price",
         "_gold_at",
     ]
-    assert pl.nodes_dict["gld_max_stock_prices"]._output_df.count() == 4
+    assert pl.nodes_dict["gld_max_stock_prices"].output_df.count() == 4
 
     # Sinks
     _df_slv = spark.read.format("PARQUET").load(slv_sink_path)
@@ -135,7 +135,9 @@ def test_pipeline_dlt():
         "dataframe_type": "SPARK",
         "drops": None,
         "filter": None,
+        "limit": None,
         "renames": None,
+        "sample": None,
         "selects": None,
         "watermark": None,
         "catalog_name": "dev",
@@ -202,7 +204,9 @@ def test_pipeline_dlt():
                     "dataframe_type": "SPARK",
                     "drops": None,
                     "filter": None,
+                    "limit": None,
                     "renames": None,
+                    "sample": None,
                     "selects": None,
                     "watermark": None,
                     "format": "JSON",
@@ -289,7 +293,9 @@ def test_pipeline_dlt():
                     "dataframe_type": "SPARK",
                     "drops": None,
                     "filter": None,
+                    "limit": None,
                     "renames": None,
+                    "sample": None,
                     "selects": None,
                     "watermark": None,
                     "node_name": "brz_stock_prices",

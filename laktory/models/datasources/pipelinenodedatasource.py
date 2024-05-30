@@ -51,6 +51,8 @@ class PipelineNodeDataSource(BaseDataSource):
 
     node_name: Union[str, None]
     node: Any = Field(None, exclude=True)  # Add suggested type?
+    # include_failed_expectations: bool = True  # TODO: Implement
+    # include_passed_expectations: bool = True  # TODO: Implement
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -74,10 +76,20 @@ class PipelineNodeDataSource(BaseDataSource):
             from laktory.dlt import is_debug
 
             if is_debug():
-                logger.info(f"Reading pipeline node {self._id} from sink (DLT debug)")
                 df = None
-                if self.node.sink:
+                if self.node.output_df:
+                    logger.info(
+                        f"Reading pipeline node {self._id} from output DataFrame (DLT debug)"
+                    )
+                    df = self.node.output_df
+                elif self.node.sink:
+                    logger.info(
+                        f"Reading pipeline node {self._id} from sink (DLT debug)"
+                    )
                     df = self.node.sink.read(spark=spark, as_stream=self.as_stream)
+                else:
+                    logger.info(f"Can't read pipeline node {self._id} (DLT DEBUG)")
+
             else:
                 if self.as_stream:
                     logger.info(f"Reading pipeline node {self._id} with DLT as stream")
@@ -87,9 +99,9 @@ class PipelineNodeDataSource(BaseDataSource):
                     df = dlt_read(self.node.name)
 
         # Read from node output DataFrame (if available)
-        elif self.node._output_df:
+        elif self.node.output_df:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
-            df = self.node._output_df
+            df = self.node.output_df
 
         # Read from node sink
         elif self.node.sink:
@@ -104,9 +116,9 @@ class PipelineNodeDataSource(BaseDataSource):
     def _read_polars(self) -> PolarsDataFrame:
 
         # Read from node output DataFrame (if available)
-        if self.node._output_df:
+        if self.node.output_df:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
-            df = self.node._output_df
+            df = self.node.output_df
 
         # Read from node sink
         elif self.node.sink:
