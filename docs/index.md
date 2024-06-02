@@ -26,9 +26,13 @@ At its core, Laktory provides a pipeline model defined as a collection of
 nodes, each producing a dataframe by reading a source, applying
 transformations, and optionally writing the output to a sink.
 
+<img src="images/pipeline_concept.png" alt="what is laktory" width="400"/>
+
 Transformations are defined through a chain of Spark (or Polars) function
 calls, offering a highly scalable, flexible, and customizable framework,
 particularly well-suited for streaming operations.
+
+<img src="images/pl_node_concept.png" alt="what is laktory" width="400"/>
 
 The entire pipeline definition is serializable, making it an ideal candidate
 for a DataOps approach using infrastructure as code.
@@ -36,7 +40,7 @@ for a DataOps approach using infrastructure as code.
 More details available [here](concepts/pipeline.md).
 
 ## DataOps
-<img src="images/what_is_laktory.png" alt="what is laktory" width="400"/>
+<img src="images/laktory_dataops.png" alt="what is laktory" width="400"/>
 
 ### Declare
 Declarative definition of your data transformations using Spark functions.
