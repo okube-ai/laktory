@@ -156,7 +156,8 @@ class BaseDataSource(BaseModel):
             self.dataframe_type = "POLARS"
 
         if self.dataframe_type == "SPARK":
-            pass
+            if self.format in ["EXCEL", ]:
+                raise ValueError(f"'{self.format}' format is not supported with Spark")
         elif self.dataframe_type == "POLARS":
             if self.as_stream:
                 raise ValueError("Polars DataFrames don't support streaming read.")
@@ -282,4 +283,24 @@ class BaseDataSource(BaseModel):
         return df
 
     def _post_read_polars(self, df: PolarsDataFrame) -> PolarsDataFrame:
-        raise NotImplementedError()
+
+        import polars as pl
+
+        def _get_polars_column(name):
+            names = name.split(".")
+            col = pl.col(names[0])
+            for n in names[1:]:
+                col = col.struct.field(n)
+            return col
+
+        # Columns
+        cols = []
+        if self.selects:
+            if isinstance(self.selects, list):
+                cols += [_get_polars_column(c) for c in self.selects]
+            elif isinstance(self.selects, dict):
+                cols += [_get_polars_column(k).alias(v) for k, v in self.selects.items()]
+            df = df.select(cols)
+
+        return df
+        # raise NotImplementedError()

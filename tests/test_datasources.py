@@ -48,6 +48,24 @@ def test_file_data_source_read():
     ]
 
 
+def test_file_data_source_polars():
+    source = FileDataSource(
+        path=os.path.join(paths.data, "./brz_stock_prices/part-00000-877096dd-1964-482e-9873-76361150a331-c000.snappy.parquet"),
+        format="PARQUET",
+        dataframe_type="POLARS",
+        selects={
+            "data.created_at": "created_at",
+            "data.symbol": "symbol",
+            "data.open": "open",
+            "data.close": "close",
+            "data.high": "high",
+            "data.low": "low",
+        }
+    )
+    df = source.read()
+    print(df)
+    return df
+
 def test_memory_data_source(df0=df0):
     source = MemoryDataSource(
         df=df0,
@@ -96,7 +114,8 @@ def test_table_data_source():
 
 
 if __name__ == "__main__":
-    test_file_data_source()
-    test_file_data_source_read()
-    test_memory_data_source()
-    test_table_data_source()
+    # test_file_data_source()
+    # test_file_data_source_read()
+    df = test_file_data_source_polars()
+    # test_memory_data_source()
+    # test_table_data_source()
