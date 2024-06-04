@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import polars as pl
 
 from laktory.models.datasources import FileDataSource
 from laktory.models.datasources import MemoryDataSource
@@ -53,18 +54,35 @@ def test_file_data_source_polars():
         path=os.path.join(paths.data, "./brz_stock_prices/part-00000-877096dd-1964-482e-9873-76361150a331-c000.snappy.parquet"),
         format="PARQUET",
         dataframe_type="POLARS",
+        filter="data.open > 300",
         selects={
             "data.created_at": "created_at",
             "data.symbol": "symbol",
             "data.open": "open",
             "data.close": "close",
-            "data.high": "high",
-            "data.low": "low",
+            "data.high": "high2",
+            "data.low": "low2",
+            "data._created_at": "_created_at",
+        },
+        drops=[
+            "_created_at",
+        ],
+        renames={
+            "low2": "low",
+            "high2": "high",
+        },
+        sample={
+            "fraction": 0.5,
         }
     )
     df = source.read()
-    print(df)
+
+    assert df["open"].min() > 300
+    assert df.columns == ['created_at', 'symbol', 'open', 'close', 'high', 'low']
+    assert df.height == 10
+
     return df
+
 
 def test_memory_data_source(df0=df0):
     source = MemoryDataSource(
