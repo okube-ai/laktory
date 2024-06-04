@@ -3,6 +3,8 @@ try:
 
     from polars import DataFrame as PolarsDataFrame
 
+    from .expressions import sql_expr
+
     def is_polars_dataframe(df):
         return isinstance(df, PolarsDataFrame)
 
