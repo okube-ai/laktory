@@ -6,7 +6,6 @@ from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
 
-# from laktory.models.spark.sparkchain import SparkChain
 from laktory.spark import SparkDataFrame
 from laktory.spark import is_spark_dataframe
 from laktory.polars import PolarsDataFrame
@@ -275,11 +274,48 @@ class BaseDataSource(BaseModel):
         if self.limit:
             df = df.limit(self.limit)
 
-        # SparkChain
-        # if self.spark_chain:
-        #     df = self.spark_chain.execute(df, udfs=None, spark=df.sparkSession)
-
         return df
 
     def _post_read_polars(self, df: PolarsDataFrame) -> PolarsDataFrame:
-        raise NotImplementedError()
+
+        from laktory.polars.expressions import _parse_token
+        from laktory.polars import sql_expr
+
+        # Apply filter
+        if self.filter:
+            df = df.filter(sql_expr(self.filter))
+
+        # Columns
+        cols = []
+        if self.selects:
+            if isinstance(self.selects, list):
+                cols += [_parse_token(c) for c in self.selects]
+            elif isinstance(self.selects, dict):
+                cols += [_parse_token(k).alias(v) for k, v in self.selects.items()]
+            df = df.select(cols)
+
+        # Apply drops
+        if self.drops:
+            df = df.drop(*self.drops)
+
+        # Renames
+        if self.renames:
+            df = df.rename(self.renames)
+
+        # Apply Watermark
+        if self.watermark:
+            raise NotImplementedError("Watermarking not supported with POLARS dataframe")
+
+        # Broadcast
+        if self.broadcast:
+            raise NotImplementedError("Broadcasting not supported with POLARS dataframe")
+
+        # Sample
+        if self.sample:
+            df = df.sample(fraction=self.sample.fraction, seed=self.sample.seed)
+
+        # Limit
+        if self.limit:
+            df = df.limit(self.limit)
+
+        return df

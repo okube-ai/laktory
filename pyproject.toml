@@ -56,7 +56,8 @@ pulumi = [
 
 # DataFrame
 polars = [
-    "polars"
+    "polars",
+    "sqlparse",
 ]
 spark = [
     "pyarrow",

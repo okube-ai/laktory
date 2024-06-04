@@ -1,6 +1,8 @@
 import os.path
 
 from typing import Literal
+from typing import Any
+from pydantic import model_validator
 
 from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory.spark import SparkDataFrame
@@ -44,12 +46,21 @@ class FileDataSource(BaseDataSource):
     ```
     """
 
-    format: Literal["CSV", "PARQUET", "DELTA", "JSON"] = "JSON"
+    format: Literal["CSV", "PARQUET", "DELTA", "JSON", "EXCEL"] = "JSON"
     header: bool = True
     multiline: bool = False
     path: str
     read_options: dict[str, str] = {}
     schema_location: str = None
+
+    @model_validator(mode="after")
+    def options(self) -> Any:
+
+        if self.dataframe_type == "SPARK":
+            if self.format in ["EXCEL", ]:
+                raise ValueError(f"'{self.format}' format is not supported with Spark")
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -101,5 +112,37 @@ class FileDataSource(BaseDataSource):
 
         # Not supported by UC
         # .withColumn("file", F.input_file_name())
+
+        return df
+
+    def _read_polars(self) -> PolarsDataFrame:
+
+        import polars as pl
+
+        if self.as_stream:
+            raise ValueError("Streaming read not supported with Pandas DataFrame. Please switch to Spark")
+
+        logger.info(f"Reading {self._id} as static")
+
+        if self.format.lower() == "csv":
+            df = pl.read_csv(self.path, **self.read_options)
+
+        elif self.format.lower() == "delta":
+            df = pl.read_delta(self.path, **self.read_options)
+
+        elif self.format.lower() == "excel":
+            df = pl.read_excel(self.path, **self.read_options)
+
+        elif self.format.lower() == "json":
+            if self.multiline:
+                df = pl.read_ndjson(self.path, **self.read_options)
+            else:
+                df = pl.read_json(self.path, **self.read_options)
+
+        elif self.format.lower() == "parquet":
+            df = pl.read_parquet(self.path, **self.read_options)
+
+        else:
+            raise ValueError(f"Format '{self.format}' is not supported.")
 
         return df
