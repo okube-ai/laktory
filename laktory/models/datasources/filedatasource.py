@@ -1,6 +1,8 @@
 import os.path
 
 from typing import Literal
+from typing import Any
+from pydantic import model_validator
 
 from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory.spark import SparkDataFrame
@@ -50,6 +52,15 @@ class FileDataSource(BaseDataSource):
     path: str
     read_options: dict[str, str] = {}
     schema_location: str = None
+
+    @model_validator(mode="after")
+    def options(self) -> Any:
+
+        if self.dataframe_type == "SPARK":
+            if self.format in ["EXCEL", ]:
+                raise ValueError(f"'{self.format}' format is not supported with Spark")
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
