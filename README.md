@@ -19,6 +19,8 @@ Leveraging Apache Spark and Polars (under development) as its core data
 transformation engines, Laktory ensures robust and scalable data processing
 capabilities.
 
+<img src="docs/images/concept_overview.png" alt="what is laktory" width="400"/>
+
 While a Laktory data pipeline can be run locally for small datasets or 
 prototyping, it really starts to shine when deployed and orchestrated on a 
 cloud data platform, such as Databricks. When combined with [Delta Live Tables](https://www.databricks.com/product/delta-live-tables),
@@ -28,8 +30,6 @@ Beyond just data pipelines, Laktory allows for the comprehensive definition
 and deployment of your entire data platform. This includes everything from 
 cloud infrastructure to data tables, security, and quality monitoring systems,
 providing an all-in-one solution for modern data platform management.
-
-<img src="docs/images/what_is_laktory.png" alt="what is laktory" width="400"/>
 
 ## Help
 See [documentation](https://www.laktory.ai/) for more details.

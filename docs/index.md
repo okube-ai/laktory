@@ -11,6 +11,8 @@ Leveraging Apache Spark and Polars (under development) as its core data
 transformation engines, Laktory ensures robust and scalable data processing
 capabilities.
 
+<img src="images/laktory_diagram.png" alt="what is laktory" width="800"/>
+
 While a Laktory data pipeline can be run locally for small datasets or 
 prototyping, it really starts to shine when deployed and orchestrated on a 
 cloud data platform, such as Databricks. When combined with [Delta Live Tables](https://www.databricks.com/product/delta-live-tables),
@@ -22,28 +24,33 @@ cloud infrastructure to data tables, security, and quality monitoring systems,
 providing an all-in-one solution for modern data platform management.
 
 ## Data Pipeline
-At its core, Laktory provides a pipeline model defined as a collection of 
-nodes, each producing a dataframe by reading a source, applying
-transformations, and optionally writing the output to a sink.
+At its core, Laktory provides a pipeline model defined as a collection of
+interconnected nodes.
 
-<img src="images/pipeline_concept.png" alt="what is laktory" width="400"/>
+<img src="images/pl_diagram.png" alt="data pipeline" width="400"/>
 
-Transformations are defined through a chain of Spark (or Polars) function
+Each node generate a dataframe by reading a source, applying transformations 
+through a transformer, and optionally writing the output to a sink.
+
+<img src="images/pl_node_diagram.png" alt="data pipeline node" width="300"/>
+
+
+The transformations are defined through a chain of Spark (or Polars) function
 calls, offering a highly scalable, flexible, and customizable framework,
 particularly well-suited for streaming operations.
-
-<img src="images/pl_node_concept.png" alt="what is laktory" width="400"/>
 
 The entire pipeline definition is serializable, making it an ideal candidate
 for a DataOps approach using infrastructure as code.
 
-More details available [here](concepts/pipeline.md).
+More details available [here](concepts/models/pipeline.md).
 
 ## DataOps
-<img src="images/laktory_dataops.png" alt="what is laktory" width="400"/>
+Laktory is designed from the ground up to adhere to DataOps best practices.
+
+<img src="images/dataops_diagram.png" alt="dataops" width="400"/>
 
 ### Declare
-Declarative definition of your data transformations using Spark functions.
+Declarative definition of your data transformations using dataframe operators.
 ```yaml title="pipeline_node.yaml"
 name: slv_stock_prices
 source:
@@ -82,7 +89,7 @@ with open("pipeline_node.yaml") as fp:
 ```
 
 ### Deploy
-Deployment of relevant resources to cloud provider and Databricks workspaces,
+Deployment of relevant resources to a cloud provider and Databricks workspaces,
 using Laktory CLI and leveraging Infrastructure-as-Code (IaC) tools.
 
 ```commandline title="command line"
@@ -120,3 +127,9 @@ It also provides you with the tools for building a UI within your organization f
 <img src="images/okube.png" alt="okube logo" width="85"/>
 
 Laktory is one of the *kubes* developed by [Okube](https://www.okube.ai), a company dedicated to building open source frameworks, empowering businesses to build, deploy and operate highly scalable data platforms and AI models.
+
+## Partners
+Okube and Laktory are official Databricks Technology Partners
+<img src="/images/okube_databricks.png" alt="okube-databricks" width="600"/>
+
+Learn more in our [Partners](partners.md) sections.
