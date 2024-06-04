@@ -119,6 +119,7 @@ nav:
     - Demos: demos.md
     - Installation: install.md
     - Quickstart: quickstart.md
+    - Partners: partners.md
 
   - Concepts:
     - Design Principles: concepts/design.md
@@ -126,8 +127,8 @@ nav:
       - Intro: concepts/models/models.md
       - Pipeline: concepts/models/pipeline.md
       - Data Sources and Sinks: concepts/models/sourcessinks.md
-      - Spark Chain: concepts/models/sparkchain.md
-      - Data Event: conceptsmodels/dataevent.md
+      - Transformers: concepts/models/transformers.md
+      - Data Event: concepts/models/dataevent.md
     - Stack: concepts/stack.md
     - Variables: concepts/variables.md
     - Deployment (IaC): concepts/deployment.md
