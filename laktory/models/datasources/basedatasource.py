@@ -155,8 +155,7 @@ class BaseDataSource(BaseModel):
             self.dataframe_type = "POLARS"
 
         if self.dataframe_type == "SPARK":
-            if self.format in ["EXCEL", ]:
-                raise ValueError(f"'{self.format}' format is not supported with Spark")
+            pass
         elif self.dataframe_type == "POLARS":
             if self.as_stream:
                 raise ValueError("Polars DataFrames don't support streaming read.")
