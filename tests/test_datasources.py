@@ -132,8 +132,8 @@ def test_table_data_source():
 
 
 if __name__ == "__main__":
-    # test_file_data_source()
-    # test_file_data_source_read()
+    test_file_data_source()
+    test_file_data_source_read()
     df = test_file_data_source_polars()
-    # test_memory_data_source()
-    # test_table_data_source()
+    test_memory_data_source()
+    test_table_data_source()
