@@ -19,7 +19,7 @@ Leveraging Apache Spark and Polars (under development) as its core data
 transformation engines, Laktory ensures robust and scalable data processing
 capabilities.
 
-<img src="docs/images/concept_overview.png" alt="what is laktory" width="400"/>
+<img src="docs/images/laktory_diagram.png" alt="what is laktory" width="400"/>
 
 While a Laktory data pipeline can be run locally for small datasets or 
 prototyping, it really starts to shine when deployed and orchestrated on a 
