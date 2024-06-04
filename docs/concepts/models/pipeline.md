@@ -5,9 +5,16 @@
 The Pipeline model is the cornerstone of Laktory. It specifies the process of 
 reading, transforming, and writing data.
 
+<img src="/../../images/pl_diagram.png" alt="data pipeline" width="400"/>
+
 A pipeline is structured as a sequence of nodes. Each node generates a 
 dataframe by reading a source, applying transformations, and optionally writing
 the output to a sink.
+
+<img src="/../../images/pl_node_diagram.png" alt="pipeline node" width="400"/>
+
+As any other Laktory resource, a pipeline is defined from a YAML configuration
+file. 
 
 ```yaml
 name: stock_prices
@@ -48,13 +55,18 @@ nodes:
 ```
 
 ### Sources and Sinks
+<img src="/../../images/source_logo.png" alt="node source" width="100"/>
+<img src="/../../images/sink_logo.png" alt="node sink" width="100"/>
+
 Laktory supports a variety of [sources and sinks](./sources.md), including
 data files and data warehouse tables. By designating a node as the source for
 another downstream node, you create dependencies between nodes, enabling the
 construction of a directed acyclic graph (DAG).
 
 ### Transformer
-Transformations are defined through a [chain](./sparkchain.md) of Spark 
+<img src="/../../images/transformer_logo.png" alt="node transformer" width="100"/>
+
+Transformations are defined through a [chain](./transformers.md) of Spark 
 (or Polars) function calls, offering a highly scalable, flexible, and 
 customizable framework. Usage of Spark and Spark Streaming also 
 enables streaming operations.
