@@ -2,7 +2,7 @@
 
 ## [0.3.4] - Unreleased
 ### Added
-* n/a
+* Support for Polars with FileDataSource
 ### Fixed
 * n/a
 ### Updated
