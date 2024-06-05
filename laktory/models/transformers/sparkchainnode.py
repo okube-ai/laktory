@@ -174,7 +174,7 @@ class SparkChainNode(BaseModel):
         return_col: bool = False,
     ) -> Union[SparkDataFrame, SparkColumn]:
         """
-        Build Spark Column
+        Execute spark chain node
 
         Parameters
         ----------
