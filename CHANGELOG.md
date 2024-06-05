@@ -3,6 +3,7 @@
 ## [0.3.4] - Unreleased
 ### Added
 * Support for Polars with FileDataSource
+* Support for Polars with FileDataSink
 ### Fixed
 * n/a
 ### Updated
