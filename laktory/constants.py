@@ -3,30 +3,48 @@ SUPPORTED_BACKENDS = [
     "terraform",
 ]
 
-SUPPORTED_TYPES = [
+SUPPORTED_DATATYPES = [
+
     "_any",
-    "data",
-    "void",
-    "atomic",
-    "numeric",
-    "integral",
-    "fractional",
-    "string",
+
     "binary",
-    "boolean",
-    "date",
-    "timestamp",
-    "timestamp_ntz",
-    "decimal(10,0)",
-    "double",
-    "float",
+
+    "byte",
+    "int8",
     "tinyint",
-    "int",
-    "bigint",
-    "interval day to second",
+
+    "short",
+    "int16",
     "smallint",
-    "struct<>",
-    "udt",
+
+    "int",
+    "int32",
+
+    "long",
+    "int64",
+    "bigint",
+
+    "float",
+    "float32",
+
+    "double",
+    "float64",
+
+    "boolean",
+
+    "string",
+    "utf8",
+
+    "date",
+
+    "timestamp",
+    "datetime",
+
+    # "struct<>",
+    # "struct",
+
+    # "array",
+    # "list",
 ]
 
 # CACHE_ROOT = "./laktory"
@@ -44,4 +62,4 @@ LAKTORY_WORKSPACE_ROOT = "/.laktory/"
 #         if not hasattr(typ, "simpleString"):
 #             continue
 #
-#         SUPPORTED_TYPES[typ.simpleString()] = typ
+#         SUPPORTED_DATATYPES[typ.simpleString()] = typ

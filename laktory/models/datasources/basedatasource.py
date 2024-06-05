@@ -205,7 +205,7 @@ class BaseDataSource(BaseModel):
         : DataFrame
             Resulting dataframe
         """
-        if self.mock_df:
+        if self.mock_df is not None:
             df = self.mock_df
         elif self.dataframe_type == "SPARK":
             df = self._read_spark(spark=spark)

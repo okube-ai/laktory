@@ -5,7 +5,7 @@ from typing import Union
 from typing import Callable
 
 from laktory._logger import get_logger
-from laktory.constants import SUPPORTED_TYPES
+from laktory.constants import SUPPORTED_DATATYPES
 from laktory.models.basemodel import BaseModel
 from laktory.models.transformers.sparkfuncarg import SparkFuncArg
 from laktory.spark import SparkDataFrame
@@ -45,9 +45,9 @@ class SparkChainNodeColumn(BaseModel):
         if "<" in v:
             return v
         else:
-            if v not in SUPPORTED_TYPES:
+            if v not in SUPPORTED_DATATYPES:
                 raise ValueError(
-                    f"Type {v} is not supported. Select one of {SUPPORTED_TYPES}"
+                    f"Type {v} is not supported. Select one of {SUPPORTED_DATATYPES}"
                 )
         return v
 
@@ -230,6 +230,7 @@ class SparkChainNode(BaseModel):
         from laktory.spark.dataframe import has_column
         from laktory.spark import functions as LF
         from laktory.spark import SparkDataFrame as LDF
+        from laktory.spark import DATATYPES_MAP
 
         if udfs is None:
             udfs = []
@@ -243,7 +244,7 @@ class SparkChainNode(BaseModel):
                 )
                 col = F.expr(self.sql_expression).alias(self.column.name)
                 if self.column.type not in ["_any"]:
-                    col = col.cast(self.column.type)
+                    col = col.cast(DATATYPES_MAP[self.column.type.lower()])
                 if return_col:
                     return col
                 return self.add_column(df, col)
@@ -347,7 +348,7 @@ class SparkChainNode(BaseModel):
         if self.is_column:
             col = f(*args, **kwargs)
             if self.column.type not in ["_any"]:
-                col = col.cast(self.column.type)
+                col = col.cast(DATATYPES_MAP[self.column.type.lower()])
             if return_col:
                 return col
             df = self.add_column(df, col)

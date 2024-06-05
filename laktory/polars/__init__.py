@@ -6,7 +6,8 @@ try:
 
     import laktory.polars.dataframe
     import laktory.polars.expressions
-    from .expressions import sql_expr
+    from laktory.polars.expressions import sql_expr
+    from laktory.polars.datatypes import DATATYPES_MAP
 
     def is_polars_dataframe(df):
         return isinstance(df, PolarsDataFrame)
@@ -22,3 +23,4 @@ except ModuleNotFoundError:
 
     def is_polars_dataframe(df):
         return False
+

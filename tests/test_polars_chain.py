@@ -104,55 +104,53 @@ def test_dataframe_sql_expression(df0=df0):
     assert df.columns == ["x", "a", "b", "c", "n", "pi", "p", "word", "x2"]
     assert df["x2"].to_list() == (df["x"] * 2).to_list()
 
-#
-#
-# def test_dataframe_table_input(df0=df0):
-#     df = df0.select(df0.columns)
-#
-#     sc = models.SparkChain(
-#         nodes=[
-#             {
-#                 "spark_func_name": "union",
-#                 "spark_func_args": [
-#                     {"mock_df": df},
-#                 ],
-#             }
-#         ]
-#     )
-#
-#     # Execute Chain
-#     df = sc.execute(df)
-#
-#     # Test
-#     assert df.count() == df0.count() * 2
-#     assert df.columns == df0.columns
-#
-#
-# def test_column(df0=df0):
-#     df = df0.select(df0.columns)
-#
-#     sc = models.SparkChain(
-#         nodes=[
-#             {
-#                 "column": {"name": "cos_x", "type": "double"},
-#                 "spark_func_name": "cos",
-#                 "spark_func_args": ["x"],
-#             },
-#             {
-#                 "column": {"name": "x2", "type": "double"},
-#                 "sql_expression": "x*2",
-#             },
-#         ]
-#     )
-#
-#     # Execute Chain
-#     df = sc.execute(df)
-#
-#     # Test
-#     pdf = df.toPandas()
-#     assert pdf["cos_x"].tolist() == np.cos(pdf["x"]).tolist()
-#     assert pdf["x2"].tolist() == (pdf["x"] * 2).tolist()
-#
+
+def test_dataframe_table_input(df0=df0):
+    df = df0.select(df0.columns)
+
+    sc = models.PolarsChain(
+        nodes=[
+            {
+                "polars_func_name": "laktory.union",
+                "polars_func_args": [
+                    {"mock_df": df},
+                ],
+            }
+        ]
+    )
+
+    # Execute Chain
+    df = sc.execute(df)
+
+    # Test
+    assert df.height == df0.height * 2
+    assert df.columns == df0.columns
+
+
+def test_column(df0=df0):
+    df = df0.select(df0.columns)
+
+    sc = models.PolarsChain(
+        nodes=[
+            {
+                "column": {"name": "cos_x", "type": "double"},
+                "polars_func_name": "cos",
+                "polars_func_args": ["col('x')"],
+            },
+            {
+                "column": {"name": "x2", "type": "double"},
+                "sql_expression": "x*2",
+            },
+        ]
+    )
+
+    # Execute Chain
+    df = sc.execute(df)
+
+    # Test
+    assert df["cos_x"].to_list() == np.cos(df["x"]).to_list()
+    assert df["x2"].to_list() == (df["x"] * 2).to_list()
+
 #
 # def test_udfs(df0=df0):
 #     df = df0.select(df0.columns)
@@ -296,9 +294,9 @@ def test_dataframe_sql_expression(df0=df0):
 if __name__ == "__main__":
     # test_polars_func_arg()
     # test_dataframe_df_input()
-    test_dataframe_sql_expression()
+    # test_dataframe_sql_expression()
     # test_dataframe_table_input()
-    # test_column()
+    test_column()
     # test_udfs()
     # test_nested()
     # test_exceptions()

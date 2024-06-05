@@ -5,7 +5,7 @@ from typing import Union
 from typing import Callable
 
 from laktory._logger import get_logger
-from laktory.constants import SUPPORTED_TYPES
+from laktory.constants import SUPPORTED_DATATYPES
 from laktory.models.basemodel import BaseModel
 from laktory.models.transformers.polarsfuncarg import PolarsFuncArg
 from laktory.polars import PolarsDataFrame
@@ -44,9 +44,9 @@ class PolarsChainNodeColumn(BaseModel):
         if "<" in v:
             return v
         else:
-            if v not in SUPPORTED_TYPES:
+            if v not in SUPPORTED_DATATYPES:
                 raise ValueError(
-                    f"Type {v} is not supported. Select one of {SUPPORTED_TYPES}"
+                    f"Type {v} is not supported. Select one of {SUPPORTED_DATATYPES}"
                 )
         return v
 
@@ -193,7 +193,7 @@ class PolarsChainNode(BaseModel):
         return "df"
 
     def add_column(self, df, col):
-        return df.with_colmns(**{self.column.name: col})
+        return df.with_columns(**{self.column.name: col})
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
@@ -225,6 +225,7 @@ class PolarsChainNode(BaseModel):
         from polars import DataFrame
         from polars import Expr
         import polars.functions as F
+        from laktory.polars.datatypes import DATATYPES_MAP
 
         # from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
         # from pyspark.sql import Column
@@ -243,9 +244,9 @@ class PolarsChainNode(BaseModel):
                 logger.info(
                     f"{self.column.name}[{self.column.type}] as `{self.sql_expression}`)"
                 )
-                col = F.expr(self.sql_expression).alias(self.column.name)
+                col = F.sql_expr(self.sql_expression).alias(self.column.name)
                 if self.column.type not in ["_any"]:
-                    col = col.cast(self.column.type)
+                    col = col.cast(DATATYPES_MAP[self.column.type.lower()])
                 if return_col:
                     return col
                 return self.add_column(df, col)
@@ -271,9 +272,9 @@ class PolarsChainNode(BaseModel):
             if self.is_column:
                 if "." in func_name:
                     vals = func_name.split(".")
-                    f = getattr(getattr(F, vals[0]), vals[1], None)
+                    f = getattr(getattr(Expr, vals[0]), vals[1], None)
                 else:
-                    f = getattr(F, func_name, None)
+                    f = getattr(Expr, func_name, None)
             else:
                 if "." in func_name:
                     vals = func_name.split(".")
@@ -317,7 +318,7 @@ class PolarsChainNode(BaseModel):
             if df is not None:
                 # Check if explicitly defined columns are available
                 if isinstance(parg, Expr):
-                    cname = str(parg).split("'")[1]
+                    cname = str(parg).split('"')[1]
                     if not df.laktory.has_column(cname):
                         missing_column_names += [cname]
                         if not self.allow_missing_column_args:
@@ -367,7 +368,7 @@ class PolarsChainNode(BaseModel):
         if self.is_column:
             col = f(*args, **kwargs)
             if self.column.type not in ["_any"]:
-                col = col.cast(self.column.type)
+                col = col.cast(DATATYPES_MAP[self.column.type.lower()])
             if return_col:
                 return col
             df = self.add_column(df, col)
