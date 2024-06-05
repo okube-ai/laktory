@@ -2,6 +2,7 @@ import polars as pl
 
 from laktory.polars.dataframe.schema_flat import schema_flat
 from laktory.polars.dataframe.has_column import has_column
+from laktory.polars.dataframe.union import union
 
 
 @pl.api.register_expr_namespace("laktory")
@@ -34,3 +35,4 @@ class LaktoryDataFrame:
 
 LaktoryDataFrame.has_column = has_column
 LaktoryDataFrame.schema_flat = schema_flat
+LaktoryDataFrame.union = union

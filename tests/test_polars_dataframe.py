@@ -68,6 +68,13 @@ def test_df_has_column():
     assert df.laktory.has_column("u[0].a")
 
 
+def test_union():
+    df2 = df.laktory.union(df)
+
+    assert df2.height == df.height * 2
+    assert df2.schema == df.schema
+
+
 # def test_join():
 #     left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(
 #         F.col("symbol") != "GOOGL"
@@ -317,8 +324,9 @@ def test_df_has_column():
 
 
 if __name__ == "__main__":
-    test_df_schema_flat()
-    test_df_has_column()
+    # test_df_schema_flat()
+    # test_df_has_column()
+    test_union()
     # test_watermark()
     # test_join()
     # test_join_outer()
