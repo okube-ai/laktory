@@ -8,5 +8,5 @@ from .pipeline import Pipeline
 from .pipelinenode import PipelineNode
 from .pipelinenodeexpectation import PipelineNodeExpectation
 from .resources import *
-from .spark import *
+from .transformers import *
 from .stacks import *

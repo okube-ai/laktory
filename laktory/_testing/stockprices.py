@@ -32,4 +32,3 @@ for filename in os.listdir(dirpath):
     if filename.endswith(".parquet"):
         break
 df_slv_polars = pl.read_parquet(os.path.join(dirpath, filename))
-

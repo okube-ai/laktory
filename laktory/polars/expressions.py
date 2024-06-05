@@ -79,9 +79,9 @@ def sql_expr(sql: str):
         i = 1
         while i < len(expressions) - 1:
             if expressions[i] == "AND":
-                expr = expr & expressions[i+1]
+                expr = expr & expressions[i + 1]
             elif expressions[i] == "OR":
-                expr = expr | expressions[i+1]
+                expr = expr | expressions[i + 1]
             i += 2
 
         return expr

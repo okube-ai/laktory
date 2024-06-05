@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import field_validator
 from pydantic import ValidationError
 
-from laktory.models.spark.sparkfuncarg import SparkFuncArg
+from laktory.models.transformers.sparkfuncarg import SparkFuncArg
 
 
 @field_validator("spark_func_args")

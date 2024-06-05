@@ -205,14 +205,14 @@ nav:
           - AzurePulumiProvider: api/resources/models/providers/azurepulumi.md
           - AWSProvider: api/models/resources/providers/aws.md
           - DatabricksProvider: api/resources/models/providers/databricks.md
-      - Spark:
-        - SparkChain: api/models/spark/sparkchain.md
-        - SparkChainNode: api/models/spark/sparkchainnode.md
-        - SparkFuncArg: api/models/spark/sparkfuncarg.md
       - Stacks:
           - Stack: api/models/stacks/stack.md
           - PulumiStack: api/models/stacks/pulumistack.md
           - TerraformStack: api/models/stacks/terraformstack.md
+      - Transformers:
+        - SparkChain: api/models/transformers/sparkchain.md
+        - SparkChainNode: api/models/transformers/sparkchainnode.md
+        - SparkFuncArg: api/models/transformers/sparkfuncarg.md
     - CLI: api/cli.md
     - Spark:
       - DataFrame:

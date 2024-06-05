@@ -6,11 +6,11 @@ from typing import Callable
 from laktory._logger import get_logger
 from laktory.constants import SUPPORTED_TYPES
 from laktory.models.basemodel import BaseModel
-from laktory.models.spark.sparkfuncarg import SparkFuncArg
+from laktory.models.transformers.sparkfuncarg import SparkFuncArg
 from laktory.spark import SparkDataFrame
 from laktory.spark import SparkColumn
-from laktory.models.spark._common import parse_args
-from laktory.models.spark._common import parse_kwargs
+from laktory.models.transformers._common import parse_args
+from laktory.models.transformers._common import parse_kwargs
 from laktory.exceptions import MissingColumnError
 from laktory.exceptions import MissingColumnsError
 

@@ -112,10 +112,14 @@ class FileDataSink(BaseDataSink):
 
         if self.format != "DELTA":
             if mode:
-                raise ValueError("'mode' configuration with Polars only supported by 'DELTA' format")
+                raise ValueError(
+                    "'mode' configuration with Polars only supported by 'DELTA' format"
+                )
         else:
             if not mode:
-                raise ValueError("'mode' configuration required with Polars 'DELTA' format")
+                raise ValueError(
+                    "'mode' configuration required with Polars 'DELTA' format"
+                )
 
         if self.format == "CSV":
             df.write_csv(self.path, **self.write_options)

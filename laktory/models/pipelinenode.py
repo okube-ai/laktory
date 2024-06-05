@@ -10,8 +10,8 @@ from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import BaseDataSource
 from laktory.models.datasinks import DataSinksUnion
 from laktory.models.pipelinenodeexpectation import PipelineNodeExpectation
-from laktory.models.spark.sparkchain import SparkChain
-from laktory.models.spark.sparkchainnode import SparkChainNode
+from laktory.models.transformers.sparkchain import SparkChain
+from laktory.models.transformers.sparkchainnode import SparkChainNode
 from laktory.spark import SparkSession
 from laktory.types import AnyDataFrame
 from laktory._logger import get_logger

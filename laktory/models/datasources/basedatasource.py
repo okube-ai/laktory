@@ -304,11 +304,15 @@ class BaseDataSource(BaseModel):
 
         # Apply Watermark
         if self.watermark:
-            raise NotImplementedError("Watermarking not supported with POLARS dataframe")
+            raise NotImplementedError(
+                "Watermarking not supported with POLARS dataframe"
+            )
 
         # Broadcast
         if self.broadcast:
-            raise NotImplementedError("Broadcasting not supported with POLARS dataframe")
+            raise NotImplementedError(
+                "Broadcasting not supported with POLARS dataframe"
+            )
 
         # Sample
         if self.sample:

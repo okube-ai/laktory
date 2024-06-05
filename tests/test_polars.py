@@ -19,7 +19,7 @@ df = pl.DataFrame(
             {"open": 0, "close": 1},
             {"open": 2, "close": 5},
             {"open": 4, "close": 6},
-        ]
+        ],
     },
 )
 
@@ -28,10 +28,8 @@ def test_sql_expr(df0=df):
 
     print(df0)
 
-    expr0 = (
-        (pl.col("data").struct.field("open") >= 2)
-        & (pl.col("x") > 0)
-        | (pl.col("symbol") == "AAPL")
+    expr0 = (pl.col("data").struct.field("open") >= 2) & (pl.col("x") > 0) | (
+        pl.col("symbol") == "AAPL"
     )
     expr1 = lpl.sql_expr("data.open >= 2 AND x > 0 OR symbol == 'AAPL'")
 

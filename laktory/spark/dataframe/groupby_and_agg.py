@@ -3,7 +3,7 @@ from typing import Union
 from pyspark.sql.dataframe import DataFrame
 
 from laktory._logger import get_logger
-from laktory.models.spark.sparkchainnode import SparkChainNode
+from laktory.models.transformers.sparkchainnode import SparkChainNode
 
 
 logger = get_logger(__name__)

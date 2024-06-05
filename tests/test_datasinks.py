@@ -100,7 +100,7 @@ def test_file_data_sink_polars_delta():
     df = sink.as_source().read()
 
     # Test
-    assert df.height == df_slv.count()*2
+    assert df.height == df_slv.count() * 2
     assert df.columns == df_slv.columns
 
     # Cleanup

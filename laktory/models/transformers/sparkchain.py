@@ -2,7 +2,7 @@ from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
-from laktory.models.spark.sparkchainnode import SparkChainNode
+from laktory.models.transformers.sparkchainnode import SparkChainNode
 from laktory.spark import SparkDataFrame
 
 logger = get_logger(__name__)
