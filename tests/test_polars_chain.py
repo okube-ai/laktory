@@ -65,26 +65,25 @@ def test_polars_func_arg(df0=df0):
         assert v1 == v0
 
 
-#
-# def test_dataframe_df_input(df0=df0):
-#     df = df0.select(df0.columns)
-#
-#     # Define Chain
-#     sc = models.SparkChain(
-#         nodes=[
-#             {
-#                 "spark_func_name": "union",
-#                 "spark_func_args": [df1],
-#             },
-#         ]
-#     )
-#
-#     # Execute Chain
-#     df = sc.execute(df)
-#
-#     # Test
-#     assert df.count() == df0.count() * 2
-#     assert df.columns == df0.columns
+def test_dataframe_df_input(df0=df0):
+    df = df0.select(df0.columns)
+
+    # Define Chain
+    sc = models.PolarsChain(
+        nodes=[
+            {
+                "polars_func_name": "laktory.union",
+                "polars_func_args": [df1],
+            },
+        ]
+    )
+
+    # Execute Chain
+    df = sc.execute(df)
+
+    # Test
+    assert df.height == df0.height * 2
+    assert df.columns == df0.columns
 #
 #
 # def test_dataframe_sql_expression(df0=df0):
@@ -297,8 +296,8 @@ def test_polars_func_arg(df0=df0):
 
 
 if __name__ == "__main__":
-    test_polars_func_arg()
-    # test_dataframe_df_input()
+    # test_polars_func_arg()
+    test_dataframe_df_input()
     # test_dataframe_sql_expression()
     # test_dataframe_table_input()
     # test_column()

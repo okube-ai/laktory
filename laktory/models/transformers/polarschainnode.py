@@ -7,10 +7,9 @@ from typing import Callable
 from laktory._logger import get_logger
 from laktory.constants import SUPPORTED_TYPES
 from laktory.models.basemodel import BaseModel
-from laktory.models.transformers.sparkfuncarg import SparkFuncArg
-from laktory.spark import SparkDataFrame
-from laktory.spark import SparkColumn
-
+from laktory.models.transformers.polarsfuncarg import PolarsFuncArg
+from laktory.polars import PolarsDataFrame
+from laktory.polars import PolarsExpr
 from laktory.exceptions import MissingColumnError
 from laktory.exceptions import MissingColumnsError
 
@@ -22,9 +21,9 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 
 
-class SparkChainNodeColumn(BaseModel):
+class PolarsChainNodeColumn(BaseModel):
     """
-    Spark chain node column definition
+    Polars chain node column definition
 
     Attributes
     ----------
@@ -52,13 +51,13 @@ class SparkChainNodeColumn(BaseModel):
         return v
 
 
-class SparkChainNode(BaseModel):
+class PolarsChainNode(BaseModel):
     """
-    SparkChain node that output a dataframe upon execution. As a convenience,
-    `column` can be specified to create a new column. In this case, the spark
-    function or sql expression is expected to return a column instead of a
-    dataframe. Each node is executed sequentially in the provided order. A node
-    may also be another Spark Chain.
+    PolarsChain node that output a dataframe upon execution. As a convenience,
+    `column` can be specified to create a new column. In this case, the polars
+    function is expected to return a column instead of a dataframe. Each node
+    is executed sequentially in the provided order. A node may also be another
+    Polars Chain.
 
     Attributes
     ----------
@@ -68,31 +67,31 @@ class SparkChainNode(BaseModel):
     column:
         Column definition. If not `None`, the spark function or sql expression
         is expected to return a column instead of a dataframe.
-    spark_func_args:
-        List of arguments to be passed to the spark function.
+    polars_func_args:
+        List of arguments to be passed to the polars function.
         To support spark functions expecting column argument, col("x"),
         lit("3") and expr("x*2") can be provided.
-    spark_func_kwargs:
-        List of keyword arguments to be passed to the spark function.
-        To support spark functions expecting column argument, col("x"),
+    polars_func_kwargs:
+        List of keyword arguments to be passed to the polars function.
+        To support polars functions expecting column argument, col("x"),
         lit("3") and expr("x*2") can be provided.
-    spark_func_name:
-        Name of the spark function to build the dataframe. If `column` is
-        specified, the spark function should return a column instead. Mutually
+    polars_func_name:
+        Name of the polars function to build the dataframe. If `column` is
+        specified, the polars function should return a column instead. Mutually
          exclusive to `sql_expression`.
-    sql_expression:
-        SQL Expression using `{df}` to reference upstream dataframe and
-        defining how to build the output dataframe. If `column` is
-        specified, the sql expression should define a column instead. Mutually
-         exclusive to `spark_func_name`
+    # sql_expression:
+    #     SQL Expression using `{df}` to reference upstream dataframe and
+    #     defining how to build the output dataframe. If `column` is
+    #     specified, the sql expression should define a column instead. Mutually
+    #      exclusive to `spark_func_name`
 
     Examples
     --------
     ```py
-    import pandas as pd
+    import polars as pl
     from laktory import models
 
-    df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 2, 3]}))
+    df0 = pl.DataFrame({"x": [1, 2, 2, 3]})
 
     node = models.SparkChainNode(
         column={
@@ -141,44 +140,44 @@ class SparkChainNode(BaseModel):
     """
 
     allow_missing_column_args: Union[bool, None] = False
-    column: Union[SparkChainNodeColumn, None] = None
-    spark_func_args: list[Union[Any, SparkFuncArg]] = []
-    spark_func_kwargs: dict[str, Union[Any, SparkFuncArg]] = {}
-    spark_func_name: Union[str, None] = None
+    column: Union[PolarsChainNodeColumn, None] = None
+    polars_func_args: list[Union[Any, PolarsFuncArg]] = []
+    polars_func_kwargs: dict[str, Union[Any, PolarsFuncArg]] = {}
+    polars_func_name: Union[str, None] = None
     sql_expression: Union[str, None] = None
 
-    @field_validator("spark_func_args")
-    def parse_args(cls, args: list[Union[Any, SparkFuncArg]]) -> list[SparkFuncArg]:
+    @field_validator("polars_func_args")
+    def parse_args(cls, args: list[Union[Any, PolarsFuncArg]]) -> list[PolarsFuncArg]:
         _args = []
         for a in args:
             try:
-                a = SparkFuncArg(**a)
+                a = PolarsFuncArg(**a)
             except (ValidationError, TypeError):
                 pass
 
-            if isinstance(a, SparkFuncArg):
+            if isinstance(a, PolarsFuncArg):
                 pass
             else:
-                a = SparkFuncArg(value=a)
+                a = PolarsFuncArg(value=a)
             _args += [a]
         return _args
 
-    @field_validator("spark_func_kwargs")
+    @field_validator("polars_func_kwargs")
     def parse_kwargs(
-            cls, kwargs: dict[str, Union[str, SparkFuncArg]]
-    ) -> dict[str, SparkFuncArg]:
+            cls, kwargs: dict[str, Union[str, PolarsFuncArg]]
+    ) -> dict[str, PolarsFuncArg]:
         _kwargs = {}
         for k, a in kwargs.items():
 
             try:
-                a = SparkFuncArg(**a)
+                a = PolarsFuncArg(**a)
             except (ValidationError, TypeError):
                 pass
 
-            if isinstance(a, SparkFuncArg):
+            if isinstance(a, PolarsFuncArg):
                 pass
             else:
-                a = SparkFuncArg(value=a)
+                a = PolarsFuncArg(value=a)
 
             _kwargs[k] = a
         return _kwargs
@@ -194,7 +193,7 @@ class SparkChainNode(BaseModel):
         return "df"
 
     def add_column(self, df, col):
-        return df.withColumn(self.column.name, col)
+        return df.with_colmns(**{self.column.name: col})
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
@@ -202,12 +201,12 @@ class SparkChainNode(BaseModel):
 
     def execute(
         self,
-        df: SparkDataFrame,
-        udfs: list[Callable[[...], Union[SparkColumn, SparkDataFrame]]] = None,
+        df: PolarsDataFrame,
+        udfs: list[Callable[[...], Union[PolarsExpr, PolarsDataFrame]]] = None,
         return_col: bool = False,
-    ) -> Union[SparkDataFrame, SparkColumn]:
+    ) -> Union[PolarsDataFrame, PolarsExpr]:
         """
-        Execute spark chain node
+        Execute polars chain node
 
         Parameters
         ----------
@@ -216,76 +215,77 @@ class SparkChainNode(BaseModel):
         udfs:
             User-defined functions
         return_col
-            If `True` and column specified, function returns `Column` object
+            If `True` and column specified, function returns `Expr` object
             instead of dataframe.
 
         Returns
         -------
             Output dataframe
         """
-        import pyspark.sql.functions as F
-        from pyspark.sql.dataframe import DataFrame
-        from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
-        from pyspark.sql import Column
-        from laktory.spark.dataframe import has_column
-        from laktory.spark import functions as LF
-        from laktory.spark import SparkDataFrame as LDF
+        from polars import DataFrame
+        from polars import Expr
+        import polars.functions as F
+
+        # from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
+        # from pyspark.sql import Column
+        # from laktory.spark.dataframe import has_column
+        # from laktory.spark import functions as LF
+        # from laktory.spark import SparkDataFrame as LDF
 
         if udfs is None:
             udfs = []
         udfs = {f.__name__: f for f in udfs}
 
         # From SQL expression
-        if self.sql_expression:
-            if self.is_column:
-                logger.info(
-                    f"{self.column.name}[{self.column.type}] as `{self.sql_expression}`)"
-                )
-                col = F.expr(self.sql_expression).alias(self.column.name)
-                if self.column.type not in ["_any"]:
-                    col = col.cast(self.column.type)
-                if return_col:
-                    return col
-                return self.add_column(df, col)
-            else:
-                df = df.sparkSession.sql(self.sql_expression, df=df)
-                return df
+        # TODO: Check if supported
+        # if self.sql_expression:
+        #     if self.is_column:
+        #         logger.info(
+        #             f"{self.column.name}[{self.column.type}] as `{self.sql_expression}`)"
+        #         )
+        #         col = F.expr(self.sql_expression).alias(self.column.name)
+        #         if self.column.type not in ["_any"]:
+        #             col = col.cast(self.column.type)
+        #         if return_col:
+        #             return col
+        #         return self.add_column(df, col)
+        #     else:
+        #         df = df.sparkSession.sql(self.sql_expression, df=df)
+        #         return df
 
         # From Spark Function
-        func_name = self.spark_func_name
-        if self.spark_func_name is None:
+        func_name = self.polars_func_name
+        if self.polars_func_name is None:
             if self.is_column:
                 func_name = "coalesce"
             else:
                 raise ValueError(
-                    "`spark_func_name` must be specified if `sql_expression` is not specified"
+                    "`polars_func_name` must be specified if `sql_expression` is not specified"
                 )
 
         # Get from UDFs
         f = udfs.get(func_name, None)
 
-        # Get from built-in spark functions
+        # Get from built-in polars and polars extension (including Laktory) functions
         if f is None:
             if self.is_column:
-                f = getattr(F, func_name, None)
-            else:
-                if isinstance(df, DataFrameConnect):
-                    f = getattr(DataFrameConnect, func_name, None)
+                if "." in func_name:
+                    vals = func_name.split(".")
+                    f = getattr(getattr(F, vals[0]), vals[1], None)
                 else:
-                    f = getattr(DataFrame, func_name, None)
-
-        # Get from laktory functions
-        if f is None:
-            if self.is_column:
-                f = getattr(LF, func_name, None)
+                    f = getattr(F, func_name, None)
             else:
-                f = getattr(LDF, func_name, None)
+                if "." in func_name:
+                    vals = func_name.split(".")
+                    f = getattr(getattr(df, vals[0]), vals[1], None)
+                else:
+                    f = getattr(df, func_name, None)
 
         if f is None:
             raise ValueError(f"Function {func_name} is not available")
 
-        _args = self.spark_func_args
-        _kwargs = self.spark_func_kwargs
+        _args = self.polars_func_args
+        _kwargs = self.polars_func_kwargs
 
         # Build log
         func_log = f"{func_name}("
@@ -310,9 +310,9 @@ class SparkChainNode(BaseModel):
 
             if df is not None:
                 # Check if explicitly defined columns are available
-                if isinstance(parg, Column):
+                if isinstance(parg, Expr):
                     cname = str(parg).split("'")[1]
-                    if not has_column(df, cname):
+                    if not df.laktory.has_column(cname):
                         missing_column_names += [cname]
                         if not self.allow_missing_column_args:
                             logger.error(
@@ -339,7 +339,7 @@ class SparkChainNode(BaseModel):
         # Build kwargs
         kwargs = {}
         for k, _arg in _kwargs.items():
-            kwargs[k] = _arg.eval(df.sparkSession)
+            kwargs[k] = _arg.eval()
 
         # Function call
         logger.info(f"{self.id} as {func_name}({args}, {kwargs})")
@@ -352,6 +352,6 @@ class SparkChainNode(BaseModel):
                 return col
             df = self.add_column(df, col)
         else:
-            df = f(df, *args, **kwargs)
+            df = f(*args, **kwargs)
 
         return df
