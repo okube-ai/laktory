@@ -16,6 +16,8 @@ class BaseDataSink(BaseModel):
 
     Attributes
     ----------
+    dataframe_type:
+        Type of dataframe
     mode:
         Write mode.
         - overwrite: Overwrite existing data
@@ -25,6 +27,7 @@ class BaseDataSink(BaseModel):
         - complete: Overwrite for streaming dataframes
     """
 
+    dataframe_type: Literal["SPARK", "POLARS"] = "SPARK"
     mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE"], None] = (
         None
     )
@@ -61,8 +64,6 @@ class BaseDataSink(BaseModel):
         if is_spark_dataframe(df):
             self._write_spark(df, mode=mode)
         elif is_polars_dataframe(df):
-            if self.as_stream:
-                raise ValueError("Polars dataframes don't support streaming write.")
             self._write_polars(df, mode=mode)
         else:
             raise ValueError()

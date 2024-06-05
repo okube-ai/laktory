@@ -3,6 +3,7 @@ from typing import Literal
 from typing import Union
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
+from laktory.polars import PolarsDataFrame
 from laktory.models.datasources.filedatasource import FileDataSource
 from laktory._logger import get_logger
 
@@ -51,7 +52,7 @@ class FileDataSink(BaseDataSink):
     """
 
     checkpoint_location: Union[str, None] = None
-    format: Literal["CSV", "PARQUET", "DELTA", "JSON"] = "DELTA"
+    format: Literal["CSV", "PARQUET", "DELTA", "JSON", "EXCEL"] = "DELTA"
     path: str
     write_options: dict[str, str] = {}
 
@@ -75,8 +76,11 @@ class FileDataSink(BaseDataSink):
 
     def _write_spark(self, df: SparkDataFrame, mode=None) -> None:
 
+        if self.format in ["EXCEL"]:
+            raise ValueError(f"'{self.format}' format is not supported with Spark")
+
         if df.isStreaming:
-            logger.info(f"Writing df as stream to {self.path}")
+            logger.info(f"Writing df as stream {self.format} to {self.path}")
 
             writer = df.writeStream.option(
                 "checkpointlocation", self._checkpoint_location
@@ -85,7 +89,7 @@ class FileDataSink(BaseDataSink):
             )  # TODO: Add option for trigger?
 
         else:
-            logger.info(f"Writing df as static to {self.path}")
+            logger.info(f"Writing df as static {self.format} to {self.path}")
             writer = df.write
 
         writer = writer.mode(mode).format(self.format).option("mergeSchema", "true")
@@ -94,6 +98,35 @@ class FileDataSink(BaseDataSink):
             writer = writer.options(**self.write_options)
 
         writer.save(self.path)
+
+    def _write_polars(self, df: PolarsDataFrame, mode=None) -> None:
+
+        isStreaming = False
+
+        if isStreaming:
+            pass
+            logger.info(f"Writing df as stream {self.format} to {self.path}")
+
+        else:
+            logger.info(f"Writing df as static {self.format} to {self.path}")
+
+        if self.format != "DELTA":
+            if mode:
+                raise ValueError("'mode' configuration with Polars only supported by 'DELTA' format")
+        else:
+            if not mode:
+                raise ValueError("'mode' configuration required with Polars 'DELTA' format")
+
+        if self.format == "CSV":
+            df.write_csv(self.path, **self.write_options)
+        elif self.format == "DELTA":
+            df.write_delta(self.path, mode=mode, **self.write_options)
+        elif self.format == "EXCEL":
+            df.write_excel(self.path, **self.write_options)
+        elif self.format == "JSON":
+            df.write_json(self.path, **self.write_options)
+        elif self.format == "PARQUET":
+            df.write_parquet(self.path, **self.write_options)
 
     def as_source(self, as_stream: bool = None) -> FileDataSource:
         """
@@ -113,6 +146,7 @@ class FileDataSink(BaseDataSink):
         source = FileDataSource(
             path=self.path,
             format=self.format,
+            dataframe_type=self.dataframe_type,
         )
         if as_stream:
             source.as_stream = as_stream
