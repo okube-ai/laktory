@@ -1,23 +1,25 @@
-import json
-import polars as pl
+import re
 
 
-def schema_flat(self) -> list[str]:
+def has_column(self, col: str) -> bool:
     """
-    Returns a flattened list of columns
+    Check if column `col` exists in `df`
 
     Parameters
     ----------
     df:
         Input DataFrame
+    col
+        Column name
 
     Returns
     -------
     :
-        List of columns
+        Result
 
     Examples
     --------
+
     ```py
     import laktory  # noqa: F401
     import pyspark.sql.types as T
@@ -67,42 +69,16 @@ def schema_flat(self) -> list[str]:
     ]
 
     df = spark.createDataFrame(data, schema=schema)
-    print(df.schema_flat())
-    '''
-    [
-        'indexx',
-        'stock',
-        'stock.symbol',
-        'stock.name',
-        'prices',
-        'prices[*].open',
-        'prices[*].close',
-    ]
-    '''
+    print(df.has_column("symbol"))
+    #> False
+    print(df.has_column("`stock`.`symbol`"))
+    #> True
+    print(df.has_column("`prices[2]`.`close`"))
+    #> True
     ```
     """
 
     df = self._df
-
-    def get_fields(schema):
-        field_names = []
-        for f_name, f_type in schema.items():
-
-            if isinstance(f_type, pl.Struct):
-                _field_names = get_fields(dict(f_type))
-                field_names += [f_name]
-                field_names += [f"{f_name}.{v}" for v in _field_names]
-
-            elif isinstance(f_type, pl.List):
-                field_names += [f_name]
-                if isinstance(f_type.inner, pl.Struct):
-                    _field_names = get_fields(dict(f_type.inner))
-                    field_names += [f"{f_name}[*].{v}" for v in _field_names]
-
-            else:
-
-                field_names += [f_name]
-
-        return field_names
-
-    return get_fields(df.schema)
+    _col = re.sub(r"\[(\d+)\]", r"[*]", col)
+    _col = re.sub(r"`", "", _col)
+    return _col in df.laktory.schema_flat()

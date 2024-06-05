@@ -1,4 +1,5 @@
 import os
+
 # from pyspark.sql import SparkSession
 # from pyspark.sql import types as T
 # from pyspark.sql import functions as F
@@ -6,34 +7,37 @@ import os
 import polars as pl
 
 import laktory
+
 # from laktory._testing.stockprices import spark
 # from laktory._testing.stockprices import df_slv
 # from laktory._testing.stockprices import df_meta
 
-df = pl.DataFrame([
-    (
-        1,
-        ["a", "b"],
-        {"id": 3, "email": "@gmail.com"},
-        [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
-        [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
-    ),
-    (
-        2,
-        ["b", "c"],
-        {"id": 2, "email": "@gmail.com"},
-        [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
-        [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
-    ),
-    (
-        3,
-        ["c", "d"],
-        {"id": 1, "email": "@gmail.com"},
-        [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
-        [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
-    ),
-], schema=["x@x", "y", "z",  "u", "u2"])
-
+df = pl.DataFrame(
+    [
+        (
+            1,
+            ["a", "b"],
+            {"id": 3, "email": "@gmail.com"},
+            [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
+            [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
+        ),
+        (
+            2,
+            ["b", "c"],
+            {"id": 2, "email": "@gmail.com"},
+            [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
+            [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
+        ),
+        (
+            3,
+            ["c", "d"],
+            {"id": 1, "email": "@gmail.com"},
+            [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
+            [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
+        ),
+    ],
+    schema=["x@x", "y", "z", "u", "u2"],
+)
 
 
 def test_df_schema_flat():
@@ -56,25 +60,14 @@ def test_df_schema_flat():
         "u2[*].a",
         "u2[*].b",
     ]
-#
-#
-# def test_df_has_column():
-#     assert df.has_column("x@x")
-#     assert df.has_column("`x@x`")
-#     assert df.has_column("u[0].a")
-#
-#
-# def test_watermark():
-#     df = df_slv.withWatermark("created_at", "1 hour")
-#
-#     wm = df.watermark()
-#
-#     assert wm.column == "created_at"
-#     assert wm.threshold == "1 hours"
-#
-#     # TODO: Add test for spark connect DataFrame
-#
-#
+
+
+def test_df_has_column():
+    assert df.laktory.has_column("x@x")
+    assert df.laktory.has_column("`x@x`")
+    assert df.laktory.has_column("u[0].a")
+
+
 # def test_join():
 #     left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(
 #         F.col("symbol") != "GOOGL"
@@ -325,7 +318,7 @@ def test_df_schema_flat():
 
 if __name__ == "__main__":
     test_df_schema_flat()
-    # test_df_has_column()
+    test_df_has_column()
     # test_watermark()
     # test_join()
     # test_join_outer()
