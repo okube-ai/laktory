@@ -79,11 +79,11 @@ class PolarsChainNode(BaseModel):
         Name of the polars function to build the dataframe. If `column` is
         specified, the polars function should return a column instead. Mutually
          exclusive to `sql_expression`.
-    # sql_expression:
-    #     SQL Expression using `{df}` to reference upstream dataframe and
-    #     defining how to build the output dataframe. If `column` is
-    #     specified, the sql expression should define a column instead. Mutually
-    #      exclusive to `spark_func_name`
+    sql_expression:
+        SQL Expression using `self` to reference upstream dataframe and
+        defining how to build the output dataframe. If `column` is
+        specified, the sql expression should define a column instead. Mutually
+        exclusive to `spark_func_name`
 
     Examples
     --------
@@ -238,20 +238,20 @@ class PolarsChainNode(BaseModel):
 
         # From SQL expression
         # TODO: Check if supported
-        # if self.sql_expression:
-        #     if self.is_column:
-        #         logger.info(
-        #             f"{self.column.name}[{self.column.type}] as `{self.sql_expression}`)"
-        #         )
-        #         col = F.expr(self.sql_expression).alias(self.column.name)
-        #         if self.column.type not in ["_any"]:
-        #             col = col.cast(self.column.type)
-        #         if return_col:
-        #             return col
-        #         return self.add_column(df, col)
-        #     else:
-        #         df = df.sparkSession.sql(self.sql_expression, df=df)
-        #         return df
+        if self.sql_expression:
+            if self.is_column:
+                logger.info(
+                    f"{self.column.name}[{self.column.type}] as `{self.sql_expression}`)"
+                )
+                col = F.expr(self.sql_expression).alias(self.column.name)
+                if self.column.type not in ["_any"]:
+                    col = col.cast(self.column.type)
+                if return_col:
+                    return col
+                return self.add_column(df, col)
+            else:
+                df = df.sql(self.sql_expression)
+                return df
 
         # From Spark Function
         func_name = self.polars_func_name
@@ -290,9 +290,15 @@ class PolarsChainNode(BaseModel):
         # Build log
         func_log = f"{func_name}("
         for a in _args:
-            func_log += f"{a.value},"
+            if isinstance(a.value, DataFrame):
+                func_log += f"df {a.value.laktory.schema_flat()},"
+            else:
+                func_log += f"{a.value},"
         for k, a in _kwargs.items():
-            func_log += f"{k}={a.value},"
+            if isinstance(a.value, DataFrame):
+                func_log += f"{k}=df {a.value.laktory.schema_flat()},"
+            else:
+                func_log += f"{k}={a.value},"
         if func_log.endswith(","):
             func_log = func_log[:-1]
         func_log += ")"
@@ -341,8 +347,22 @@ class PolarsChainNode(BaseModel):
         for k, _arg in _kwargs.items():
             kwargs[k] = _arg.eval()
 
-        # Function call
-        logger.info(f"{self.id} as {func_name}({args}, {kwargs})")
+        # Build log
+        func_log = f"{func_name}("
+        for a in args:
+            if isinstance(a, DataFrame):
+                func_log += f"df {a.laktory.schema_flat()},"
+            else:
+                func_log += f"{a},"
+        for k, a in kwargs.items():
+            if isinstance(a, DataFrame):
+                func_log += f"{k}=df {a.laktory.schema_flat()},"
+            else:
+                func_log += f"{k}={a},"
+        if func_log.endswith(","):
+            func_log = func_log[:-1]
+        func_log += ")"
+        logger.info(f"{self.id} as {func_log}")
 
         if self.is_column:
             col = f(*args, **kwargs)
