@@ -278,12 +278,12 @@ class BaseDataSource(BaseModel):
 
     def _post_read_polars(self, df: PolarsDataFrame) -> PolarsDataFrame:
 
-        from laktory.polars.expressions import _parse_token
-        from laktory.polars import sql_expr
+        from laktory.polars.expressions.sql import _parse_token
+        import polars as pl
 
         # Apply filter
         if self.filter:
-            df = df.filter(sql_expr(self.filter))
+            df = df.filter(pl.Expr.laktory.sql_expr(self.filter))
 
         # Columns
         cols = []

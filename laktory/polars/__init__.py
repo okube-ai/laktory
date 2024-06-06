@@ -6,7 +6,6 @@ try:
 
     import laktory.polars.dataframe
     import laktory.polars.expressions
-    from laktory.polars.expressions import sql_expr
     from laktory.polars.datatypes import DATATYPES_MAP
 
     def is_polars_dataframe(df):

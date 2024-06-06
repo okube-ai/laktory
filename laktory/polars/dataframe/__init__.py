@@ -5,21 +5,6 @@ from laktory.polars.dataframe.has_column import has_column
 from laktory.polars.dataframe.union import union
 
 
-@pl.api.register_expr_namespace("laktory")
-class LaktoryExpression:
-    def __init__(self, expr: pl.Expr):
-        self._expr = expr
-
-    # def hello(self) -> pl.Expr:
-    #     return (pl.lit("Hello ") + self._expr).alias("hi there")
-    #
-    # def goodbye(self) -> pl.Expr:
-    #     return (pl.lit("Sayōnara ") + self._expr).alias("bye")
-
-
-# LaktoryExpression.has_column = has_column
-
-
 @pl.api.register_dataframe_namespace("laktory")
 class LaktoryDataFrame:
     def __init__(self, df: pl.DataFrame):
