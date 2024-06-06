@@ -268,6 +268,7 @@ class PolarsChainNode(BaseModel):
         f = udfs.get(func_name, None)
 
         # Get from built-in polars and polars extension (including Laktory) functions
+        input_df = True
         if f is None:
             if self.is_column:
                 if "." in func_name:
@@ -276,11 +277,13 @@ class PolarsChainNode(BaseModel):
                 else:
                     f = getattr(Expr, func_name, None)
             else:
+                # Get function from namespace extension
                 if "." in func_name:
+                    input_df = False
                     vals = func_name.split(".")
                     f = getattr(getattr(df, vals[0]), vals[1], None)
                 else:
-                    f = getattr(df, func_name, None)
+                    f = getattr(DataFrame, func_name, None)
 
         if f is None:
             raise ValueError(f"Function {func_name} is not available")
@@ -373,6 +376,9 @@ class PolarsChainNode(BaseModel):
                 return col
             df = self.add_column(df, col)
         else:
-            df = f(*args, **kwargs)
+            if input_df:
+                df = f(df, *args, **kwargs)
+            else:
+                df = f(*args, **kwargs)
 
         return df

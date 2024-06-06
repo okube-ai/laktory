@@ -151,48 +151,47 @@ def test_column(df0=df0):
     assert df["cos_x"].to_list() == np.cos(df["x"]).to_list()
     assert df["x2"].to_list() == (df["x"] * 2).to_list()
 
-#
-# def test_udfs(df0=df0):
-#     df = df0.select(df0.columns)
-#
-#     def mul3(c):
-#         return 3 * c
-#
-#     def add_new_col(df, column_name, s=1):
-#         return df.withColumn(column_name, F.col("x") * s)
-#
-#     sc = models.SparkChain(
-#         nodes=[
-#             {
-#                 "column": {
-#                     "name": "rp",
-#                     "type": "double",
-#                 },
-#                 "spark_func_name": "roundp",
-#                 "spark_func_args": ["p"],
-#                 "spark_func_kwargs": {"p": 0.1},
-#             },
-#             {
-#                 "column": {"name": "x3", "type": "double"},
-#                 "spark_func_name": "mul3",
-#                 "spark_func_args": [F.col("x")],
-#             },
-#             {
-#                 "spark_func_name": "add_new_col",
-#                 "spark_func_args": ["y"],
-#                 "spark_func_kwargs": {"s": 5},
-#             },
-#         ]
-#     )
-#
-#     # Execute Chain
-#     df = sc.execute(df, udfs=[mul3, add_new_col])
-#
-#     # Test
-#     pdf = df.toPandas()
-#     assert pdf["rp"].tolist() == [2.0, 0.2, 0.1]
-#     assert pdf["x3"].tolist() == (pdf["x"] * 3).tolist()
-#     assert pdf["y"].tolist() == (pdf["x"] * 5).tolist()
+
+def test_udfs(df0=df0):
+    df = df0.select(df0.columns)
+
+    def mul3(c):
+        return 3 * c
+
+    def add_new_col(df, column_name, s=1):
+        return df.with_columns(**{column_name: pl.col("x") * s})
+
+    sc = models.PolarsChain(
+        nodes=[
+            # {
+            #     "column": {
+            #         "name": "rp",
+            #         "type": "double",
+            #     },
+            #     "polars_func_name": "roundp",
+            #     "polars_func_args": ["p"],
+            #     "polars_func_kwargs": {"p": 0.1},
+            # },
+            {
+                "column": {"name": "x3", "type": "double"},
+                "polars_func_name": "mul3",
+                "polars_func_args": [pl.col("x")],
+            },
+            {
+                "polars_func_name": "add_new_col",
+                "polars_func_args": ["y"],
+                "polars_func_kwargs": {"s": 5},
+            },
+        ]
+    )
+
+    # Execute Chain
+    df = sc.execute(df, udfs=[mul3, add_new_col])
+
+    # Test
+    assert df["rp"].to_list() == [2.0, 0.2, 0.1]
+    assert df["x3"].to_list() == (df["x"] * 3).to_list()
+    assert df["y"].to_list() == (df["x"] * 5).to_list()
 #
 #
 # def test_nested(df0=df0):
@@ -237,7 +236,7 @@ def test_column(df0=df0):
 #     # Test
 #     pdf = df.toPandas()
 #     assert "x_tmp" not in pdf.columns
-#     assert pdf["x2"].tolist() == pdf["_x2"].tolist()
+#     assert pdf["x2"].to_list() == pdf["_x2"].to_list()
 #     assert sc.columns == [
 #         ["x", "a", "b", "c", "n", "pi", "p", "word", "_x2"],
 #         ["x", "a", "b", "c", "n", "pi", "p", "word", "_x2", "cos_x"],
@@ -292,10 +291,10 @@ def test_column(df0=df0):
 
 
 if __name__ == "__main__":
-    # test_polars_func_arg()
-    # test_dataframe_df_input()
-    # test_dataframe_sql_expression()
-    # test_dataframe_table_input()
+    test_polars_func_arg()
+    test_dataframe_df_input()
+    test_dataframe_sql_expression()
+    test_dataframe_table_input()
     test_column()
     # test_udfs()
     # test_nested()
