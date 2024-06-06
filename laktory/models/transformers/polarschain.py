@@ -78,7 +78,7 @@ class PolarsChain(BaseModel):
     df = sc.execute(df0)
 
     # Print result
-    print(df.toPandas().to_string())
+    print(df.to_pandas())
     '''
           cos_x        x2
     0  0.540302  1.000000

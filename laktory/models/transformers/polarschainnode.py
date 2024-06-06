@@ -138,9 +138,9 @@ class PolarsChainNode(BaseModel):
     print(df.to_pandas())
     '''
        x      cosx   xy
-    0  3 -0.989992  3.0
+    0  1  0.540302  1.0
     1  2 -0.416147  2.0
-    2  1  0.540302  1.0
+    2  3 -0.989992  3.0
     '''
     ```
     """
