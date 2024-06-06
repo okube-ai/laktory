@@ -15,7 +15,7 @@ import pandas as pd
 import laktory.spark.functions as LF
 
 df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
-df = df.withColumn("y", LF.poly1("x", -1, 1.0))
+df = df.withColumn("y", F.laktory.poly1("x", -1, 1.0))
 ```
 These functions are by default available when declaring a column in a pipeline `Table` model.
 

@@ -52,7 +52,7 @@ def add(
     import laktory.spark.functions as LF
 
     df = spark.createDataFrame([[8], [6]], ["x"])
-    df = df.withColumn("y", LF.poly1("x", a=2))
+    df = df.withColumn("y", F.laktory.poly1("x", a=2))
     print(df.show_string())
     '''
     +---+----+
@@ -93,7 +93,7 @@ def sub(
     import laktory.spark.functions as LF
 
     df = spark.createDataFrame([[8], [6]], ["x"])
-    df = df.withColumn("y", LF.poly1("x", a=2))
+    df = df.withColumn("y", F.laktory.poly1("x", a=2))
     print(df.show_string())
     '''
     +---+----+
@@ -134,7 +134,7 @@ def mul(
     import laktory.spark.functions as LF
 
     df = spark.createDataFrame([[8], [6]], ["x"])
-    df = df.withColumn("y", LF.poly1("x", a=2))
+    df = df.withColumn("y", F.laktory.poly1("x", a=2))
     print(df.show_string())
     '''
     +---+----+
@@ -175,7 +175,7 @@ def div(
     import laktory.spark.functions as LF
 
     df = spark.createDataFrame([[8], [6]], ["x"])
-    df = df.withColumn("y", LF.poly1("x", a=2))
+    df = df.withColumn("y", F.laktory.poly1("x", a=2))
     print(df.show_string())
     '''
     +---+----+
@@ -224,7 +224,7 @@ def poly1(
     import laktory.spark.functions as LF
 
     df = spark.createDataFrame([[9]], ["x"])
-    df = df.withColumn("y", LF.poly1("x", a=-1, b=2))
+    df = df.withColumn("y", F.laktory.poly1("x", a=-1, b=2))
     print(df.show_string())
     '''
     +---+---+
@@ -270,7 +270,7 @@ def poly2(
     import laktory.spark.functions as LF
 
     df = spark.createDataFrame([[9]], ["x"])
-    df = df.withColumn("y", LF.poly2("x", a=-1, b=2))
+    df = df.withColumn("y", F.laktory.poly2("x", a=-1, b=2))
     print(df.show_string())
     '''
     +---+-----+
@@ -318,7 +318,7 @@ def scaled_power(
     import laktory.spark.functions as LF
 
     df = spark.createDataFrame([[9]], ["x"])
-    df = df.withColumn("y", LF.scaled_power("x", a=-3, n=2))
+    df = df.withColumn("y", F.laktory.scaled_power("x", a=-3, n=2))
     print(df.show_string())
     '''
     +---+------+
@@ -362,7 +362,7 @@ def roundp(
     import laktory.spark.functions as LF
 
     df = spark.createDataFrame([[0.781], [13.0]], ["x"])
-    df = df.withColumn("y", LF.roundp("x", p=5))
+    df = df.withColumn("y", F.laktory.roundp("x", p=5))
     print(df.show_string())
     '''
     +-----+----+
@@ -373,7 +373,7 @@ def roundp(
     +-----+----+
     '''
 
-    df = df.withColumn("y", LF.roundp("x", p=0.25))
+    df = df.withColumn("y", F.laktory.roundp("x", p=0.25))
     print(df.show_string())
     '''
     +-----+----+

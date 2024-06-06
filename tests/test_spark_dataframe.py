@@ -79,7 +79,7 @@ spark.conf.set("spark.sql.session.timeZone", "UTC")
 def test_df_schema_flat():
     df.show()
     df.printSchema()
-    schema = df.schema_flat()
+    schema = df.laktory.schema_flat()
     assert schema == [
         "x@x",
         "y",
@@ -96,15 +96,15 @@ def test_df_schema_flat():
 
 
 def test_df_has_column():
-    assert df.has_column("x@x")
-    assert df.has_column("`x@x`")
-    assert df.has_column("u[0].a")
+    assert df.laktory.has_column("x@x")
+    assert df.laktory.has_column("`x@x`")
+    assert df.laktory.has_column("u[0].a")
 
 
 def test_watermark():
     df = df_slv.withWatermark("created_at", "1 hour")
 
-    wm = df.watermark()
+    wm = df.laktory.watermark()
 
     assert wm.column == "created_at"
     assert wm.threshold == "1 hours"
@@ -120,7 +120,7 @@ def test_join():
 
     other.show()
 
-    df = left.smart_join(
+    df = left.laktory.smart_join(
         other=other,
         on=["symbol"],
         how="left",
@@ -170,7 +170,7 @@ def test_join():
     ]
 
     # Join expression
-    df2 = left.smart_join(
+    df2 = left.laktory.smart_join(
         other=other,
         on_expression="left.symbol == other.symbol",
     )
@@ -183,7 +183,7 @@ def test_join_outer():
     )
     other = df_meta.withColumnRenamed("symbol2", "symbol")
 
-    df = left.smart_join(
+    df = left.laktory.smart_join(
         other=other,
         on=["symbol"],
         how="full_outer",
@@ -243,7 +243,7 @@ def test_aggregation():
     _df.show()
 
     # Window
-    df = _df.groupby_and_agg(
+    df = _df.laktory.groupby_and_agg(
         groupby_window={
             "time_column": "created_at",
             "window_duration": "1 day",
@@ -266,7 +266,7 @@ def test_aggregation():
     assert pdf["max_open"].round(2).to_list() == [331.31, 329.0, 333.38]
 
     # Symbol
-    df = _df.groupby_and_agg(
+    df = _df.laktory.groupby_and_agg(
         groupby_columns=["symbol"],
         agg_expressions=[
             {
@@ -280,7 +280,7 @@ def test_aggregation():
     assert pdf["mean_close"].round(2).to_list() == [187.36, 136.92, 135.3, 331.7]
 
     # Symbol and window
-    df = _df.groupby_and_agg(
+    df = _df.laktory.groupby_and_agg(
         groupby_window={
             "time_column": "created_at",
             "window_duration": "1 day",
@@ -306,7 +306,7 @@ def test_aggregation():
 
 
 def test_window_filter():
-    df = df_slv.window_filter(
+    df = df_slv.laktory.window_filter(
         partition_by=["symbol"],
         order_by=[
             {"sql_expression": "created_at", "desc": True},

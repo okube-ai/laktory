@@ -228,8 +228,6 @@ class SparkChainNode(BaseModel):
         from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
         from pyspark.sql import Column
         from laktory.spark.dataframe import has_column
-        from laktory.spark import functions as LF
-        from laktory.spark import SparkDataFrame as LDF
         from laktory.spark import DATATYPES_MAP
 
         if udfs is None:
@@ -265,22 +263,30 @@ class SparkChainNode(BaseModel):
         # Get from UDFs
         f = udfs.get(func_name, None)
 
-        # Get from built-in spark functions
+        # Get from built-in spark and spark extension (including Laktory) functions
+        input_df = True
         if f is None:
             if self.is_column:
-                f = getattr(F, func_name, None)
+                if "." in func_name:
+                    vals = func_name.split(".")
+                    f = getattr(getattr(F, vals[0]), vals[1], None)
+                else:
+                    f = getattr(F, func_name, None)
             else:
                 if isinstance(df, DataFrameConnect):
-                    f = getattr(DataFrameConnect, func_name, None)
+                    if "." in func_name:
+                        input_df = True
+                        vals = func_name.split(".")
+                        f = getattr(getattr(DataFrameConnect, vals[0]), vals[1], None)
+                    else:
+                        f = getattr(DataFrameConnect, func_name, None)
                 else:
-                    f = getattr(DataFrame, func_name, None)
-
-        # Get from laktory functions
-        if f is None:
-            if self.is_column:
-                f = getattr(LF, func_name, None)
-            else:
-                f = getattr(LDF, func_name, None)
+                    if "." in func_name:
+                        input_df = False
+                        vals = func_name.split(".")
+                        f = getattr(getattr(df, vals[0]), vals[1], None)
+                    else:
+                        f = getattr(DataFrame, func_name, None)
 
         if f is None:
             raise ValueError(f"Function {func_name} is not available")
@@ -313,7 +319,7 @@ class SparkChainNode(BaseModel):
                 # Check if explicitly defined columns are available
                 if isinstance(parg, Column):
                     cname = str(parg).split("'")[1]
-                    if not has_column(df, cname):
+                    if not df.laktory.has_column(cname):
                         missing_column_names += [cname]
                         if not self.allow_missing_column_args:
                             logger.error(
@@ -353,6 +359,9 @@ class SparkChainNode(BaseModel):
                 return col
             df = self.add_column(df, col)
         else:
-            df = f(df, *args, **kwargs)
+            if input_df:
+                df = f(df, *args, **kwargs)
+            else:
+                df = f(*args, **kwargs)
 
         return df

@@ -62,7 +62,7 @@ def compare(
     df = spark.createDataFrame([[0.45], [0.55]], ["x"])
     df = df.withColumn(
         "y",
-        LF.compare(
+        F.laktory.compare(
             "x",
             F.lit(0.5),
             operator=">",

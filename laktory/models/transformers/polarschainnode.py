@@ -222,9 +222,9 @@ class PolarsChainNode(BaseModel):
         -------
             Output dataframe
         """
-        from polars import DataFrame
-        from polars import Expr
         import polars.functions as F
+        from polars import Expr
+        from polars import DataFrame
         from laktory.polars.datatypes import DATATYPES_MAP
 
         # from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
@@ -238,7 +238,6 @@ class PolarsChainNode(BaseModel):
         udfs = {f.__name__: f for f in udfs}
 
         # From SQL expression
-        # TODO: Check if supported
         if self.sql_expression:
             if self.is_column:
                 logger.info(

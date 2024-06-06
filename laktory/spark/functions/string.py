@@ -53,7 +53,7 @@ def string_split(
     spark = SparkSession.builder.getOrCreate()
 
     df = spark.range(1).withColumn("x", F.lit("price_close"))
-    df = df.withColumn("y", LF.string_split("x", pattern="_", key=1))
+    df = df.withColumn("y", F.laktory.string_split("x", pattern="_", key=1))
     print(df.show_string())
     '''
     +---+-----------+-----+
@@ -87,7 +87,7 @@ def uuid() -> Column:
     import laktory.spark.functions as LF
 
     df = spark.range(3)
-    df = df.withColumn("uuid", LF.uuid())
+    df = df.withColumn("uuid", F.laktory.uuid())
     '''
     +---+--------------------+
     | id|                uuid|

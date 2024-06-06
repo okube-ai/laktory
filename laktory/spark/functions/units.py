@@ -50,7 +50,7 @@ def convert_units(
     import laktory.spark.functions as LF
 
     df = spark.createDataFrame([[1.0]], ["x"])
-    df = df.withColumn("y", LF.convert_units("x", input_unit="m", output_unit="ft"))
+    df = df.withColumn("y", F.laktory.convert_units("x", input_unit="m", output_unit="ft"))
     print(df.show_string())
     '''
     +---+-----------------+

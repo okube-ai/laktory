@@ -4,12 +4,15 @@
 ### Added
 * Support for Polars with FileDataSource
 * Support for Polars with FileDataSink
+* Support for PolarsChain transformer
+* Polars DataFrame extension
+* Polars Expressions extension
 ### Fixed
 * n/a
 ### Updated
 * n/a
 ### Breaking changes
-* n/a
+* Moved laktory Spark dataframe custom functions under a laktory namespace.
 
 ## [0.3.3] - 2024-05-30
 ### Added

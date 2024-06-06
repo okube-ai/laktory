@@ -177,7 +177,7 @@ def test_udfs(df0=df0):
                     "name": "rp",
                     "type": "double",
                 },
-                "spark_func_name": "roundp",
+                "spark_func_name": "laktory.roundp",
                 "spark_func_args": ["p"],
                 "spark_func_kwargs": {"p": 0.1},
             },

@@ -250,7 +250,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
               - value: producer
               - value: name
               - value: description
-            - spark_func_name: smart_join
+            - spark_func_name: laktory.smart_join
               spark_func_kwargs:
                 'on':
                   - symbol
@@ -331,7 +331,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
               - value: producer
               - value: name
               - value: description
-            - spark_func_name: smart_join
+            - spark_func_name: laktory.smart_join
               spark_func_kwargs:
                 'on':
                   - symbol
