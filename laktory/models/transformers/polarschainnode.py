@@ -275,7 +275,7 @@ class PolarsChainNode(BaseModel):
                     vals = func_name.split(".")
                     f = getattr(getattr(Expr, vals[0]), vals[1], None)
                 else:
-                    f = getattr(Expr, func_name, None)
+                    f = getattr(F, func_name, getattr(Expr, func_name, None))
             else:
                 # Get function from namespace extension
                 if "." in func_name:

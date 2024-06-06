@@ -5,7 +5,6 @@ from laktory.polars.expressions._common import (
     FLOAT_OR_EXPR,
     STRING_OR_EXPR,
     _to_expr,
-    _to_lit,
 )
 
 __all__ = [
@@ -390,4 +389,4 @@ def roundp(
     # if precision < eps0:
     #     raise ValueError("Precision must be greater than 1.0e-16")
 
-    return (_to_expr(x) / _to_lit(p)).round() * _to_lit(p)
+    return (_to_expr(x) / _to_expr(p)).round() * _to_expr(p)

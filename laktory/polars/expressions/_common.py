@@ -17,22 +17,8 @@ STRING_OR_EXPR = Union[str, pl.Expr]
 def _to_expr(expr: str) -> pl.Expr:
     from laktory.polars.expressions import LaktoryExpression
 
-    if isinstance(expr, pl.Expr):
-        return expr
-
     if isinstance(expr, LaktoryExpression):
-        return expr._expr
+        expr = expr._expr
 
-    return pl.sql_expr(expr)
+    return expr
 
-
-def _to_lit(expr: str) -> pl.Expr:
-    from laktory.polars.expressions import LaktoryExpression
-
-    if isinstance(expr, pl.Expr):
-        return expr
-
-    if isinstance(expr, LaktoryExpression):
-        return expr._expr
-
-    return pl.lit(expr)
