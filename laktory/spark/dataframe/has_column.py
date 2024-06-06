@@ -72,11 +72,11 @@ def has_column(df: DataFrame, col: str) -> bool:
     ]
 
     df = spark.createDataFrame(data, schema=schema)
-    print(df.has_column("symbol"))
+    print(df.laktory.has_column("symbol"))
     #> False
-    print(df.has_column("`stock`.`symbol`"))
+    print(df.laktory.has_column("`stock`.`symbol`"))
     #> True
-    print(df.has_column("`prices[2]`.`close`"))
+    print(df.laktory.has_column("`prices[2]`.`close`"))
     #> True
     ```
     """

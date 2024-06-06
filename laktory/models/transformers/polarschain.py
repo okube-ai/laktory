@@ -31,10 +31,10 @@ class PolarsChain(BaseModel):
     Examples
     --------
     ```py
-    import pandas as pd
+    import polars as pl
     from laktory import models
 
-    df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
+    df0 = pl.DataFrame({"x": [1, 2, 3]})
 
     # Build Chain
     sc = models.PolarsChain(
@@ -45,15 +45,14 @@ class PolarsChain(BaseModel):
                     "type": "double",
                 },
                 "polars_func_name": "cos",
-                "polars_func_args": ["x"],
+                "polars_func_args": ["col('x')"],
             },
             {
                 "nodes": [
                     {
-                        "polars_func_name": "withColumnRenamed",
+                        "polars_func_name": "rename",
                         "polars_func_args": [
-                            "x",
-                            "x_tmp",
+                            {"x": "x_tmp"},
                         ],
                     },
                     {
@@ -62,7 +61,7 @@ class PolarsChain(BaseModel):
                             "type": "double",
                         },
                         "polars_func_name": "sqrt",
-                        "polars_func_args": ["x_tmp"],
+                        "polars_func_args": ["col('x_tmp')"],
                     },
                 ],
             },

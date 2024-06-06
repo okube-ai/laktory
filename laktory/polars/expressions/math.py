@@ -51,7 +51,7 @@ __all__ = [
 #
 #     df = spark.createDataFrame([[8], [6]], ["x"])
 #     df = df.withColumn("y", LF.poly1("x", a=2))
-#     print(df.show_string())
+#     print(df.laktory.show_string())
 #     '''
 #     +---+----+
 #     |  x|   y|
@@ -92,7 +92,7 @@ __all__ = [
 #
 #     df = spark.createDataFrame([[8], [6]], ["x"])
 #     df = df.withColumn("y", LF.poly1("x", a=2))
-#     print(df.show_string())
+#     print(df.laktory.show_string())
 #     '''
 #     +---+----+
 #     |  x|   y|
@@ -133,7 +133,7 @@ __all__ = [
 #
 #     df = spark.createDataFrame([[8], [6]], ["x"])
 #     df = df.withColumn("y", LF.poly1("x", a=2))
-#     print(df.show_string())
+#     print(df.laktory.show_string())
 #     '''
 #     +---+----+
 #     |  x|   y|
@@ -174,7 +174,7 @@ __all__ = [
 #
 #     df = spark.createDataFrame([[8], [6]], ["x"])
 #     df = df.withColumn("y", LF.poly1("x", a=2))
-#     print(df.show_string())
+#     print(df.laktory.show_string())
 #     '''
 #     +---+----+
 #     |  x|   y|
@@ -223,7 +223,7 @@ __all__ = [
 #
 #     df = spark.createDataFrame([[9]], ["x"])
 #     df = df.withColumn("y", LF.poly1("x", a=-1, b=2))
-#     print(df.show_string())
+#     print(df.laktory.show_string())
 #     '''
 #     +---+---+
 #     |  x|  y|
@@ -269,7 +269,7 @@ __all__ = [
 #
 #     df = spark.createDataFrame([[9]], ["x"])
 #     df = df.withColumn("y", LF.poly2("x", a=-1, b=2))
-#     print(df.show_string())
+#     print(df.laktory.show_string())
 #     '''
 #     +---+-----+
 #     |  x|    y|
@@ -317,7 +317,7 @@ __all__ = [
 #
 #     df = spark.createDataFrame([[9]], ["x"])
 #     df = df.withColumn("y", LF.scaled_power("x", a=-3, n=2))
-#     print(df.show_string())
+#     print(df.laktory.show_string())
 #     '''
 #     +---+------+
 #     |  x|     y|
@@ -362,7 +362,7 @@ def roundp(
 
     df = spark.createDataFrame([[0.781], [13.0]], ["x"])
     df = df.withColumn("y", LF.roundp("x", p=5))
-    print(df.show_string())
+    print(df.laktory.show_string())
     '''
     +-----+----+
     |    x|   y|
@@ -373,7 +373,7 @@ def roundp(
     '''
 
     df = df.withColumn("y", LF.roundp("x", p=0.25))
-    print(df.show_string())
+    print(df.laktory.show_string())
     '''
     +-----+----+
     |    x|   y|

@@ -88,33 +88,40 @@ class PolarsChainNode(BaseModel):
     Examples
     --------
     ```py
-    import polars as pl
     from laktory import models
+    import polars as pl
 
     df0 = pl.DataFrame({"x": [1, 2, 2, 3]})
+    print(df0.to_pandas())
+    '''
+       x
+    0  1
+    1  2
+    2  2
+    3  3
+    '''
 
-    node = models.SparkChainNode(
+    node = models.PolarsChainNode(
         column={
             "name": "cosx",
             "type": "double",
         },
-        spark_func_name="cos",
-        spark_func_args=["x"],
+        polars_func_name="cos",
+        polars_func_args=["col('x')"],
     )
     df = node.execute(df0)
 
-    node = models.SparkChainNode(
+    node = models.PolarsChainNode(
         column={
             "name": "xy",
             "type": "double",
         },
-        spark_func_name="coalesce",
-        spark_func_args=["col('x')", "F.col('y')"],
+        polars_func_name="coalesce",
+        polars_func_args=["col('x')", "F.col('y')"],
         allow_missing_column_args=True,
     )
     df = node.execute(df)
-
-    print(df.toPandas().to_string())
+    print(df.to_pandas())
     '''
        x      cosx   xy
     0  1  0.540302  1.0
@@ -123,18 +130,17 @@ class PolarsChainNode(BaseModel):
     3  3 -0.989992  3.0
     '''
 
-    node = models.SparkChainNode(
-        spark_func_name="drop_duplicates",
-        spark_func_args=[["x"]],
+    node = models.PolarsChainNode(
+        polars_func_name="unique",
+        polars_func_args=[["x"]],
     )
-    df = node.execute(df0)
-
-    print(df.toPandas().to_string())
+    df = node.execute(df)
+    print(df.to_pandas())
     '''
-       x
-    0  1
-    1  2
-    2  3
+       x      cosx   xy
+    0  3 -0.989992  3.0
+    1  2 -0.416147  2.0
+    2  1  0.540302  1.0
     '''
     ```
     """

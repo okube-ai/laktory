@@ -5,38 +5,34 @@
 Apache Spark, an open-source, distributed computing system. Apache Spark is designed for big data processing and analytics and provides a fast and general-purpose cluster-computing framework.
 It supports various programming languages, including Scala, Java, Python, and R.
 
-To facilitate the transformation of your data Laktory extends spark native functions.
+To facilitate the transformation of your data Laktory extends spark native functions by in a `laktory` namespace.
 
 ## Functions
 The first extension is the provision of a library of functions that can be used to build columns from other columns or constants.
 
 ```py
+import laktory
 import pandas as pd
-import laktory.spark.functions as LF
+import pyspark.sql.functions as F
 
 df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
 df = df.withColumn("y", F.laktory.poly1("x", -1, 1.0))
 ```
-These functions are by default available when declaring a column in a pipeline `Table` model.
+Here function `poly1` is a Laktory-specific function and is available because of the `import laktory` statement. All 
+other custom functions are also available from the `pyspark.sql.functions.laktory` namespace.
 
 ## Dataframe methods
 In this case the methods are designed to be applied directly on a spark dataframe.
 ```py
-import pandas as pd
-from laktory.spark.dataframe import has_column
-
-df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
-has_column(df, "x")
-```
-
-Laktory is monkey patching the DataFrame class from spark by assigning all the custom methods at runtime. In other words,
-you can also do the following to get the same results
-```py
+import laktory
 import pandas as pd
 
 df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
-df.has_column("x")
+df.laktory.has_column("x")
 ```
+
+Laktory is monkey patching the DataFrame class from spark by assigning all the custom methods under the `laktory`
+namespace at runtime. 
 
 Some methods of interest are:
 

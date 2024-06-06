@@ -1,11 +1,16 @@
 from functools import wraps
+import pyspark.sql.functions as F
 
 import laktory.spark.functions.logical
 import laktory.spark.functions.math
 import laktory.spark.functions.string
 import laktory.spark.functions.units
 
-import pyspark.sql.functions as F
+# For documentation
+from laktory.spark.functions.logical import *
+from laktory.spark.functions.math import *
+from laktory.spark.functions.string import *
+from laktory.spark.functions.units import *
 
 
 class LaktoryFunctions:

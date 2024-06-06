@@ -54,7 +54,7 @@ def display(
             }
         )
     )
-    df.display(n=5, refresh_interval=2)
+    df.laktory.display(n=5, refresh_interval=2)
     ```
     """
 

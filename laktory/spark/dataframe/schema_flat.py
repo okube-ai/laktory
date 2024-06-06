@@ -67,7 +67,7 @@ def schema_flat(df: DataFrame) -> list[str]:
     ]
 
     df = spark.createDataFrame(data, schema=schema)
-    print(df.schema_flat())
+    print(df.laktory.schema_flat())
     '''
     [
         'indexx',

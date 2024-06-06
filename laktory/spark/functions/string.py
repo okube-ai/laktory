@@ -48,13 +48,12 @@ def string_split(
     ```py
     from pyspark.sql import SparkSession
     import pyspark.sql.functions as F
-    import laktory.spark.functions as LF
 
     spark = SparkSession.builder.getOrCreate()
 
     df = spark.range(1).withColumn("x", F.lit("price_close"))
     df = df.withColumn("y", F.laktory.string_split("x", pattern="_", key=1))
-    print(df.show_string())
+    print(df.laktory.show_string())
     '''
     +---+-----------+-----+
     | id|          x|    y|
@@ -84,7 +83,8 @@ def uuid() -> Column:
     Examples
     --------
     ```py
-    import laktory.spark.functions as LF
+    import laktory  # noqa: F401
+    import pyspark.sql.functions as F
 
     df = spark.range(3)
     df = df.withColumn("uuid", F.laktory.uuid())

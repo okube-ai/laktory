@@ -63,6 +63,7 @@ def groupby_and_agg(
     Examples
     --------
     ```py
+    import laktory  # noqa: F401
     import pandas as pd
 
     df0 = spark.createDataFrame(
@@ -75,7 +76,7 @@ def groupby_and_agg(
         )
     )
 
-    df = df0.groupby_and_agg(
+    df = df0.laktory.groupby_and_agg(
         groupby_window={
             "time_column": "tstamp",
             "window_duration": "1 day",
