@@ -27,9 +27,13 @@ def row_number(
     import laktory  # noqa: F401
     import polars as pl
 
-    df = pl.DataFrame({"x": ["a", "a", "b", "b", "b", "c"]})
+    df = pl.DataFrame({
+        "x": ["a", "a", "b", "b", "b", "c"],
+        "z": ["11", "10", "22", "21", "20", "30"],
+    })
     df = df.with_columns(y1=pl.Expr.laktory.row_number())
     df = df.with_columns(y2=pl.Expr.laktory.row_number().over("x"))
+    df = df.with_columns(y3=pl.Expr.laktory.row_number().sort_by("z").over("x"))
     print(df.glimpse(return_as_string=True))
     '''
     Rows: 6
@@ -40,4 +44,4 @@ def row_number(
     '''
     ```
     """
-    return pl.int_range(1, pl.len()+1)
+    return pl.int_range(1, pl.len()+1, dtype=pl.UInt32)
