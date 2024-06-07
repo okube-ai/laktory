@@ -1,16 +1,16 @@
 from pydantic import field_validator
+from pydantic import ValidationError
 from typing import Any
 from typing import Union
 from typing import Callable
 
 from laktory._logger import get_logger
-from laktory.constants import SUPPORTED_TYPES
+from laktory.constants import SUPPORTED_DATATYPES
 from laktory.models.basemodel import BaseModel
-from laktory.models.spark.sparkfuncarg import SparkFuncArg
+from laktory.models.transformers.sparkfuncarg import SparkFuncArg
 from laktory.spark import SparkDataFrame
 from laktory.spark import SparkColumn
-from laktory.models.spark._common import parse_args
-from laktory.models.spark._common import parse_kwargs
+
 from laktory.exceptions import MissingColumnError
 from laktory.exceptions import MissingColumnsError
 
@@ -45,9 +45,9 @@ class SparkChainNodeColumn(BaseModel):
         if "<" in v:
             return v
         else:
-            if v not in SUPPORTED_TYPES:
+            if v not in SUPPORTED_DATATYPES:
                 raise ValueError(
-                    f"Type {v} is not supported. Select one of {SUPPORTED_TYPES}"
+                    f"Type {v} is not supported. Select one of {SUPPORTED_DATATYPES}"
                 )
         return v
 
@@ -147,8 +147,41 @@ class SparkChainNode(BaseModel):
     spark_func_name: Union[str, None] = None
     sql_expression: Union[str, None] = None
 
-    parse_args = parse_args
-    parse_kwargs = parse_kwargs
+    @field_validator("spark_func_args")
+    def parse_args(cls, args: list[Union[Any, SparkFuncArg]]) -> list[SparkFuncArg]:
+        _args = []
+        for a in args:
+            try:
+                a = SparkFuncArg(**a)
+            except (ValidationError, TypeError):
+                pass
+
+            if isinstance(a, SparkFuncArg):
+                pass
+            else:
+                a = SparkFuncArg(value=a)
+            _args += [a]
+        return _args
+
+    @field_validator("spark_func_kwargs")
+    def parse_kwargs(
+        cls, kwargs: dict[str, Union[str, SparkFuncArg]]
+    ) -> dict[str, SparkFuncArg]:
+        _kwargs = {}
+        for k, a in kwargs.items():
+
+            try:
+                a = SparkFuncArg(**a)
+            except (ValidationError, TypeError):
+                pass
+
+            if isinstance(a, SparkFuncArg):
+                pass
+            else:
+                a = SparkFuncArg(value=a)
+
+            _kwargs[k] = a
+        return _kwargs
 
     @property
     def is_column(self):
@@ -174,7 +207,7 @@ class SparkChainNode(BaseModel):
         return_col: bool = False,
     ) -> Union[SparkDataFrame, SparkColumn]:
         """
-        Build Spark Column
+        Execute spark chain node
 
         Parameters
         ----------
@@ -195,8 +228,7 @@ class SparkChainNode(BaseModel):
         from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
         from pyspark.sql import Column
         from laktory.spark.dataframe import has_column
-        from laktory.spark import functions as LF
-        from laktory.spark import SparkDataFrame as LDF
+        from laktory.spark import DATATYPES_MAP
 
         if udfs is None:
             udfs = []
@@ -210,7 +242,7 @@ class SparkChainNode(BaseModel):
                 )
                 col = F.expr(self.sql_expression).alias(self.column.name)
                 if self.column.type not in ["_any"]:
-                    col = col.cast(self.column.type)
+                    col = col.cast(DATATYPES_MAP[self.column.type.lower()])
                 if return_col:
                     return col
                 return self.add_column(df, col)
@@ -231,22 +263,30 @@ class SparkChainNode(BaseModel):
         # Get from UDFs
         f = udfs.get(func_name, None)
 
-        # Get from built-in spark functions
+        # Get from built-in spark and spark extension (including Laktory) functions
+        input_df = True
         if f is None:
             if self.is_column:
-                f = getattr(F, func_name, None)
+                if "." in func_name:
+                    vals = func_name.split(".")
+                    f = getattr(getattr(F, vals[0]), vals[1], None)
+                else:
+                    f = getattr(F, func_name, None)
             else:
                 if isinstance(df, DataFrameConnect):
-                    f = getattr(DataFrameConnect, func_name, None)
+                    if "." in func_name:
+                        input_df = True
+                        vals = func_name.split(".")
+                        f = getattr(getattr(DataFrameConnect, vals[0]), vals[1], None)
+                    else:
+                        f = getattr(DataFrameConnect, func_name, None)
                 else:
-                    f = getattr(DataFrame, func_name, None)
-
-        # Get from laktory functions
-        if f is None:
-            if self.is_column:
-                f = getattr(LF, func_name, None)
-            else:
-                f = getattr(LDF, func_name, None)
+                    if "." in func_name:
+                        input_df = False
+                        vals = func_name.split(".")
+                        f = getattr(getattr(df, vals[0]), vals[1], None)
+                    else:
+                        f = getattr(DataFrame, func_name, None)
 
         if f is None:
             raise ValueError(f"Function {func_name} is not available")
@@ -279,7 +319,7 @@ class SparkChainNode(BaseModel):
                 # Check if explicitly defined columns are available
                 if isinstance(parg, Column):
                     cname = str(parg).split("'")[1]
-                    if not has_column(df, cname):
+                    if not df.laktory.has_column(cname):
                         missing_column_names += [cname]
                         if not self.allow_missing_column_args:
                             logger.error(
@@ -314,11 +354,14 @@ class SparkChainNode(BaseModel):
         if self.is_column:
             col = f(*args, **kwargs)
             if self.column.type not in ["_any"]:
-                col = col.cast(self.column.type)
+                col = col.cast(DATATYPES_MAP[self.column.type.lower()])
             if return_col:
                 return col
             df = self.add_column(df, col)
         else:
-            df = f(df, *args, **kwargs)
+            if input_df:
+                df = f(df, *args, **kwargs)
+            else:
+                df = f(*args, **kwargs)
 
         return df

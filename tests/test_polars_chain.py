@@ -1,15 +1,15 @@
-import pandas as pd
+# import pandas as pd
+import polars as pl
 import numpy as np
 import pytest
-from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
-from pyspark.sql import types as T
+import polars.functions as F
+import polars.datatypes as T
 
 from laktory import models
 from laktory.exceptions import MissingColumnError
 from laktory.exceptions import MissingColumnsError
 
-pdf = pd.DataFrame(
+df = pl.DataFrame(
     {
         "x": [1, 2, 3],
         "a": [1, -1, 1],
@@ -21,13 +21,11 @@ pdf = pd.DataFrame(
         "word": ["dog_cat", "dog_cat_mouse", "dog"],
     },
 )
-spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
-
-df0 = spark.createDataFrame(pdf)
-df1 = spark.createDataFrame(pdf)
+df0 = df.select(df.columns)
+df1 = df.select(df.columns)
 
 
-def test_spark_func_arg(df0=df0):
+def test_polars_func_arg(df0=df0):
     df = df0.select(df0.columns)
 
     new_cols = []
@@ -39,34 +37,31 @@ def test_spark_func_arg(df0=df0):
             "lit('3')",
             "col('x')",
             "col('x') + lit(3)",
-            "expr('2*x+a')",
+            "sql_expr('2*x+a')",
         ]
     ):
         new_col = f"c{i}"
-        a = models.SparkFuncArg(value=v)
-        df = df.withColumn(new_col, a.eval(spark))
+        a = models.PolarsFuncArg(value=v)
+        df = df.with_columns(**{new_col: a.eval()})
         new_cols += [new_col]
 
-    df.show()
-
     # Test new column types
-    assert df.select(new_cols).schema == T.StructType(
-        [
-            T.StructField("c0", T.IntegerType(), False),
-            T.StructField("c1", T.DoubleType(), False),
-            T.StructField("c2", T.StringType(), False),
-            T.StructField("c3", T.LongType(), True),
-            T.StructField("c4", T.LongType(), True),
-            T.StructField("c5", T.LongType(), True),
-        ]
-    )
+    data = dict(df.select(new_cols).schema)
+    assert data == {
+        "c0": T.Int32,
+        "c1": T.Float64,
+        "c2": T.String,
+        "c3": T.Int64,
+        "c4": T.Int64,
+        "c5": T.Int64,
+    }
 
     # Values not to parse
     for v0 in [
         "x",
         "3",
     ]:
-        v1 = models.SparkFuncArg(value=v0).eval(spark)
+        v1 = models.PolarsFuncArg(value=v0).eval()
         assert v1 == v0
 
 
@@ -74,11 +69,11 @@ def test_dataframe_df_input(df0=df0):
     df = df0.select(df0.columns)
 
     # Define Chain
-    sc = models.SparkChain(
+    sc = models.PolarsChain(
         nodes=[
             {
-                "spark_func_name": "union",
-                "spark_func_args": [df1],
+                "polars_func_name": "laktory.union",
+                "polars_func_args": [df1],
             },
         ]
     )
@@ -87,17 +82,17 @@ def test_dataframe_df_input(df0=df0):
     df = sc.execute(df)
 
     # Test
-    assert df.count() == df0.count() * 2
+    assert df.height == df0.height * 2
     assert df.columns == df0.columns
 
 
 def test_dataframe_sql_expression(df0=df0):
     df = df0.select(df0.columns)
 
-    sc = models.SparkChain(
+    sc = models.PolarsChain(
         nodes=[
             {
-                "sql_expression": "SELECT *, x*2 AS x2 FROM {df}",
+                "sql_expression": "SELECT *, x*2 AS x2 FROM self",
             },
         ]
     )
@@ -106,21 +101,18 @@ def test_dataframe_sql_expression(df0=df0):
     df = sc.execute(df)
 
     # Test
-    pdf = df.toPandas()
-    assert pdf.columns.tolist() == ["x", "a", "b", "c", "n", "pi", "p", "word", "x2"]
-    assert pdf["x2"].tolist() == (pdf["x"] * 2).tolist()
-
-    df.show()
+    assert df.columns == ["x", "a", "b", "c", "n", "pi", "p", "word", "x2"]
+    assert df["x2"].to_list() == (df["x"] * 2).to_list()
 
 
 def test_dataframe_table_input(df0=df0):
     df = df0.select(df0.columns)
 
-    sc = models.SparkChain(
+    sc = models.PolarsChain(
         nodes=[
             {
-                "spark_func_name": "union",
-                "spark_func_args": [
+                "polars_func_name": "laktory.union",
+                "polars_func_args": [
                     {"mock_df": df},
                 ],
             }
@@ -131,19 +123,19 @@ def test_dataframe_table_input(df0=df0):
     df = sc.execute(df)
 
     # Test
-    assert df.count() == df0.count() * 2
+    assert df.height == df0.height * 2
     assert df.columns == df0.columns
 
 
 def test_column(df0=df0):
     df = df0.select(df0.columns)
 
-    sc = models.SparkChain(
+    sc = models.PolarsChain(
         nodes=[
             {
                 "column": {"name": "cos_x", "type": "double"},
-                "spark_func_name": "cos",
-                "spark_func_args": ["x"],
+                "polars_func_name": "cos",
+                "polars_func_args": ["col('x')"],
             },
             {
                 "column": {"name": "x2", "type": "double"},
@@ -156,9 +148,8 @@ def test_column(df0=df0):
     df = sc.execute(df)
 
     # Test
-    pdf = df.toPandas()
-    assert pdf["cos_x"].tolist() == np.cos(pdf["x"]).tolist()
-    assert pdf["x2"].tolist() == (pdf["x"] * 2).tolist()
+    assert df["cos_x"].to_list() == np.cos(df["x"]).to_list()
+    assert df["x2"].to_list() == (df["x"] * 2).to_list()
 
 
 def test_udfs(df0=df0):
@@ -168,28 +159,28 @@ def test_udfs(df0=df0):
         return 3 * c
 
     def add_new_col(df, column_name, s=1):
-        return df.withColumn(column_name, F.col("x") * s)
+        return df.with_columns(**{column_name: pl.col("x") * s})
 
-    sc = models.SparkChain(
+    sc = models.PolarsChain(
         nodes=[
             {
                 "column": {
                     "name": "rp",
                     "type": "double",
                 },
-                "spark_func_name": "laktory.roundp",
-                "spark_func_args": ["p"],
-                "spark_func_kwargs": {"p": 0.1},
+                "polars_func_name": "laktory.roundp",
+                "polars_func_args": ["col('p')"],
+                "polars_func_kwargs": {"p": 0.1},
             },
             {
                 "column": {"name": "x3", "type": "double"},
-                "spark_func_name": "mul3",
-                "spark_func_args": [F.col("x")],
+                "polars_func_name": "mul3",
+                "polars_func_args": [pl.col("x")],
             },
             {
-                "spark_func_name": "add_new_col",
-                "spark_func_args": ["y"],
-                "spark_func_kwargs": {"s": 5},
+                "polars_func_name": "add_new_col",
+                "polars_func_args": ["y"],
+                "polars_func_kwargs": {"s": 5},
             },
         ]
     )
@@ -198,42 +189,40 @@ def test_udfs(df0=df0):
     df = sc.execute(df, udfs=[mul3, add_new_col])
 
     # Test
-    pdf = df.toPandas()
-    assert pdf["rp"].tolist() == [2.0, 0.2, 0.1]
-    assert pdf["x3"].tolist() == (pdf["x"] * 3).tolist()
-    assert pdf["y"].tolist() == (pdf["x"] * 5).tolist()
+    assert df["rp"].to_list() == [2.0, 0.2, 0.1]
+    assert df["x3"].to_list() == (df["x"] * 3).to_list()
+    assert df["y"].to_list() == (df["x"] * 5).to_list()
 
 
 def test_nested(df0=df0):
     df = df0.select(df0.columns)
-    df = df.withColumn("_x2", F.sqrt("x"))
+    df = df.with_columns(_x2=pl.col("x").sqrt())
 
-    sc = models.SparkChain(
+    sc = models.PolarsChain(
         nodes=[
             {
                 "column": {"name": "cos_x", "type": "double"},
-                "spark_func_name": "cos",
-                "spark_func_args": ["x"],
+                "polars_func_name": "cos",
+                "polars_func_args": ["col('x')"],
             },
             {
                 "nodes": [
                     {
-                        "spark_func_name": "withColumnRenamed",
-                        "spark_func_args": [
-                            "x",
-                            "x_tmp",
+                        "polars_func_name": "rename",
+                        "polars_func_args": [
+                            {"x": "x_tmp"},
                         ],
                     },
                     {
                         "column": {"name": "x2", "type": "double"},
-                        "spark_func_name": "sqrt",
-                        "spark_func_args": ["x_tmp"],
+                        "polars_func_name": "sqrt",
+                        "polars_func_args": ["col('x_tmp')"],
                     },
                 ],
             },
             {
-                "spark_func_name": "drop",
-                "spark_func_args": [
+                "polars_func_name": "drop",
+                "polars_func_args": [
                     "x_tmp",
                 ],
             },
@@ -244,9 +233,8 @@ def test_nested(df0=df0):
     df = sc.execute(df)
 
     # Test
-    pdf = df.toPandas()
-    assert "x_tmp" not in pdf.columns
-    assert pdf["x2"].tolist() == pdf["_x2"].tolist()
+    assert "x_tmp" not in df.columns
+    assert df["x2"].to_list() == df["_x2"].to_list()
     assert sc.columns == [
         ["x", "a", "b", "c", "n", "pi", "p", "word", "_x2"],
         ["x", "a", "b", "c", "n", "pi", "p", "word", "_x2", "cos_x"],
@@ -258,12 +246,12 @@ def test_exceptions():
     df = df0.select(df0.columns)
 
     # Input missing - missing not allowed
-    sc = models.SparkChain(
+    sc = models.PolarsChain(
         nodes=[
             {
                 "column": {"name": "cos_x", "type": "double"},
-                "spark_func_name": "cos",
-                "spark_func_args": ["col('y')"],
+                "polars_func_name": "cos",
+                "polars_func_args": ["col('y')"],
                 "allow_missing_column_args": False,
             },
         ]
@@ -272,12 +260,12 @@ def test_exceptions():
         df = sc.execute(df)
 
     # Input missing - missing allowed
-    sc = models.SparkChain(
+    sc = models.PolarsChain(
         nodes=[
             {
                 "column": {"name": "xy", "type": "double"},
-                "spark_func_name": "coalesce",
-                "spark_func_args": ["col('x')", "col('y')"],
+                "polars_func_name": "coalesce",
+                "polars_func_args": ["col('x')", "col('y')"],
                 "allow_missing_column_args": True,
             },
         ]
@@ -286,12 +274,12 @@ def test_exceptions():
     assert "xy" in df.columns
 
     # All inputs missing
-    sc = models.SparkChain(
+    sc = models.PolarsChain(
         nodes=[
             {
                 "column": {"name": "xy", "type": "double"},
-                "spark_func_name": "coalesce",
-                "spark_func_args": ["col('z')", "col('y')"],
+                "polars_func_name": "coalesce",
+                "polars_func_args": ["col('z')", "col('y')"],
                 "allow_missing_column_args": True,
             },
         ]
@@ -301,11 +289,11 @@ def test_exceptions():
 
 
 if __name__ == "__main__":
-    # test_spark_func_arg()
-    # test_dataframe_df_input()
+    test_polars_func_arg()
+    test_dataframe_df_input()
     test_dataframe_sql_expression()
-    # test_dataframe_table_input()
-    # test_column()
-    # test_udfs()
-    # test_nested()
-    # test_exceptions()
+    test_dataframe_table_input()
+    test_column()
+    test_udfs()
+    test_nested()
+    test_exceptions()

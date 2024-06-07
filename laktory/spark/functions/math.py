@@ -49,11 +49,11 @@ def add(
     --------
     ```py
     import laktory  # noqa: F401
-    import laktory.spark.functions as LF
+    import pyspark.sql.functions as F
 
     df = spark.createDataFrame([[8], [6]], ["x"])
-    df = df.withColumn("y", LF.poly1("x", a=2))
-    print(df.show_string())
+    df = df.withColumn("y", F.laktory.poly1("x", a=2))
+    print(df.laktory.show_string())
     '''
     +---+----+
     |  x|   y|
@@ -90,11 +90,11 @@ def sub(
     --------
     ```py
     import laktory  # noqa: F401
-    import laktory.spark.functions as LF
+    import pyspark.sql.functions as F
 
     df = spark.createDataFrame([[8], [6]], ["x"])
-    df = df.withColumn("y", LF.poly1("x", a=2))
-    print(df.show_string())
+    df = df.withColumn("y", F.laktory.poly1("x", a=2))
+    print(df.laktory.show_string())
     '''
     +---+----+
     |  x|   y|
@@ -131,11 +131,11 @@ def mul(
     --------
     ```py
     import laktory  # noqa: F401
-    import laktory.spark.functions as LF
+    import pyspark.sql.functions as F
 
     df = spark.createDataFrame([[8], [6]], ["x"])
-    df = df.withColumn("y", LF.poly1("x", a=2))
-    print(df.show_string())
+    df = df.withColumn("y", F.laktory.poly1("x", a=2))
+    print(df.laktory.show_string())
     '''
     +---+----+
     |  x|   y|
@@ -172,11 +172,11 @@ def div(
     --------
     ```py
     import laktory  # noqa: F401
-    import laktory.spark.functions as LF
+    import pyspark.sql.functions as F
 
     df = spark.createDataFrame([[8], [6]], ["x"])
-    df = df.withColumn("y", LF.poly1("x", a=2))
-    print(df.show_string())
+    df = df.withColumn("y", F.laktory.poly1("x", a=2))
+    print(df.laktory.show_string())
     '''
     +---+----+
     |  x|   y|
@@ -221,11 +221,11 @@ def poly1(
     --------
     ```py
     import laktory  # noqa: F401
-    import laktory.spark.functions as LF
+    import pyspark.sql.functions as F
 
     df = spark.createDataFrame([[9]], ["x"])
-    df = df.withColumn("y", LF.poly1("x", a=-1, b=2))
-    print(df.show_string())
+    df = df.withColumn("y", F.laktory.poly1("x", a=-1, b=2))
+    print(df.laktory.show_string())
     '''
     +---+---+
     |  x|  y|
@@ -267,11 +267,12 @@ def poly2(
     Examples
     --------
     ```py
-    import laktory.spark.functions as LF
+    import laktory  # noqa: F401
+    import pyspark.sql.functions as F
 
     df = spark.createDataFrame([[9]], ["x"])
-    df = df.withColumn("y", LF.poly2("x", a=-1, b=2))
-    print(df.show_string())
+    df = df.withColumn("y", F.laktory.poly2("x", a=-1, b=2))
+    print(df.laktory.show_string())
     '''
     +---+-----+
     |  x|    y|
@@ -315,11 +316,12 @@ def scaled_power(
     Examples
     --------
     ```py
-    import laktory.spark.functions as LF
+    import laktory  # noqa: F401
+    import pyspark.sql.functions as F
 
     df = spark.createDataFrame([[9]], ["x"])
-    df = df.withColumn("y", LF.scaled_power("x", a=-3, n=2))
-    print(df.show_string())
+    df = df.withColumn("y", F.laktory.scaled_power("x", a=-3, n=2))
+    print(df.laktory.show_string())
     '''
     +---+------+
     |  x|     y|
@@ -359,11 +361,12 @@ def roundp(
     Examples
     --------
     ```py
-    import laktory.spark.functions as LF
+    import laktory  # noqa: F401
+    import pyspark.sql.functions as F
 
     df = spark.createDataFrame([[0.781], [13.0]], ["x"])
-    df = df.withColumn("y", LF.roundp("x", p=5))
-    print(df.show_string())
+    df = df.withColumn("y", F.laktory.roundp("x", p=5))
+    print(df.laktory.show_string())
     '''
     +-----+----+
     |    x|   y|
@@ -373,8 +376,8 @@ def roundp(
     +-----+----+
     '''
 
-    df = df.withColumn("y", LF.roundp("x", p=0.25))
-    print(df.show_string())
+    df = df.withColumn("y", F.laktory.roundp("x", p=0.25))
+    print(df.laktory.show_string())
     '''
     +-----+----+
     |    x|   y|

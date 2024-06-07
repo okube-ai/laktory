@@ -46,8 +46,8 @@ def watermark(df: DataFrame) -> Watermark:
     Examples
     --------
     ```py
-    import pandas as pd
     import laktory  # noqa: F401
+    import pandas as pd
 
     df = spark.createDataFrame(
         pd.DataFrame(
@@ -60,7 +60,7 @@ def watermark(df: DataFrame) -> Watermark:
     )
     df = df.withWatermark("tstamp", "1 hour")
 
-    watermark = df.watermark()
+    watermark = df.laktory.watermark()
     ```
     """
 

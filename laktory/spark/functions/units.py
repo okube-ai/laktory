@@ -47,11 +47,11 @@ def convert_units(
     --------
     ```py
     import laktory  # noqa: F401
-    import laktory.spark.functions as LF
+    import pyspark.sql.functions as F
 
     df = spark.createDataFrame([[1.0]], ["x"])
-    df = df.withColumn("y", LF.convert_units("x", input_unit="m", output_unit="ft"))
-    print(df.show_string())
+    df = df.withColumn("y", F.laktory.convert_units("x", input_unit="m", output_unit="ft"))
+    print(df.laktory.show_string())
     '''
     +---+-----------------+
     |  x|                y|

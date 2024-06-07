@@ -1,8 +1,6 @@
 import re
 from pyspark.sql.dataframe import DataFrame
 
-from laktory.spark.dataframe.schema_flat import schema_flat
-
 
 def has_column(df: DataFrame, col: str) -> bool:
     """
@@ -72,14 +70,14 @@ def has_column(df: DataFrame, col: str) -> bool:
     ]
 
     df = spark.createDataFrame(data, schema=schema)
-    print(df.has_column("symbol"))
+    print(df.laktory.has_column("symbol"))
     #> False
-    print(df.has_column("`stock`.`symbol`"))
+    print(df.laktory.has_column("`stock`.`symbol`"))
     #> True
-    print(df.has_column("`prices[2]`.`close`"))
+    print(df.laktory.has_column("`prices[2]`.`close`"))
     #> True
     ```
     """
     _col = re.sub(r"\[(\d+)\]", r"[*]", col)
     _col = re.sub(r"`", "", _col)
-    return _col in schema_flat(df)
+    return _col in df.laktory.schema_flat()

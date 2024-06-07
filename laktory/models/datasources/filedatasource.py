@@ -57,7 +57,9 @@ class FileDataSource(BaseDataSource):
     def options(self) -> Any:
 
         if self.dataframe_type == "SPARK":
-            if self.format in ["EXCEL", ]:
+            if self.format in [
+                "EXCEL",
+            ]:
                 raise ValueError(f"'{self.format}' format is not supported with Spark")
 
         return self
@@ -120,7 +122,9 @@ class FileDataSource(BaseDataSource):
         import polars as pl
 
         if self.as_stream:
-            raise ValueError("Streaming read not supported with Pandas DataFrame. Please switch to Spark")
+            raise ValueError(
+                "Streaming read not supported with Pandas DataFrame. Please switch to Spark"
+            )
 
         logger.info(f"Reading {self._id} as static")
 

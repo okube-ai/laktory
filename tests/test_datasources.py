@@ -51,7 +51,10 @@ def test_file_data_source_read():
 
 def test_file_data_source_polars():
     source = FileDataSource(
-        path=os.path.join(paths.data, "./brz_stock_prices/part-00000-877096dd-1964-482e-9873-76361150a331-c000.snappy.parquet"),
+        path=os.path.join(
+            paths.data,
+            "./brz_stock_prices/part-00000-877096dd-1964-482e-9873-76361150a331-c000.snappy.parquet",
+        ),
         format="PARQUET",
         dataframe_type="POLARS",
         filter="data.open > 300",
@@ -73,12 +76,12 @@ def test_file_data_source_polars():
         },
         sample={
             "fraction": 0.5,
-        }
+        },
     )
     df = source.read()
 
     assert df["open"].min() > 300
-    assert df.columns == ['created_at', 'symbol', 'open', 'close', 'high', 'low']
+    assert df.columns == ["created_at", "symbol", "open", "close", "high", "low"]
     assert df.height == 10
 
     return df

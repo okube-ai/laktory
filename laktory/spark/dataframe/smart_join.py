@@ -51,6 +51,7 @@ def smart_join(
     --------
     ```py
     import pandas as pd
+    import laktory  # noqa: F401
 
     df_prices = spark.createDataFrame(
         pd.DataFrame(
@@ -70,7 +71,7 @@ def smart_join(
         )
     )
 
-    df = df_prices.smart_join(
+    df = df_prices.laktory.smart_join(
         other=df_meta,
         on=["symbol"],
     )

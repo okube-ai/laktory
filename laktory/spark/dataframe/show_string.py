@@ -35,7 +35,7 @@ def show_string(
     import laktory  # noqa: F401
 
     df = spark.createDataFrame([[7, "a"], [8, "b"], [9, "c"]], ["x", "y"])
-    print(df.show_string())
+    print(df.laktory.show_string())
     '''
     +---+---+
     |  x|  y|

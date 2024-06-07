@@ -8,6 +8,7 @@ try:
 
     import laktory.spark.dataframe
     import laktory.spark.functions
+    from laktory.spark.datatypes import DATATYPES_MAP
 
     def is_spark_dataframe(df):
         """Check if dataframe is Spark DataFrame or Spark Connect DataFrame"""

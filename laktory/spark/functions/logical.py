@@ -56,19 +56,19 @@ def compare(
     Examples
     --------
     ```py
+    import laktory  # noqa: F401
     import pyspark.sql.functions as F
-    import laktory.spark.functions as LF
 
     df = spark.createDataFrame([[0.45], [0.55]], ["x"])
     df = df.withColumn(
         "y",
-        LF.compare(
+        F.laktory.compare(
             "x",
             F.lit(0.5),
             operator=">",
         ),
     )
-    print(df.show_string())
+    print(df.laktory.show_string())
     '''
     +----+-----+
     |   x|    y|

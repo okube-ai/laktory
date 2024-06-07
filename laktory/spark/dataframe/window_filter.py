@@ -43,6 +43,7 @@ def window_filter(
     Examples
     --------
     ```py
+    import laktory  # noqa: F401
     import pyspark.sql.functions as F
 
     from laktory._testing import spark
@@ -59,7 +60,7 @@ def window_filter(
         ["created_at", "symbol", "price"],
     ).withColumn("created_at", F.col("created_at").cast("timestamp"))
 
-    df = df0.window_filter(
+    df = df0.laktory.window_filter(
         partition_by=["symbol"],
         order_by=[
             {"sql_expression": "created_at", "desc": True},

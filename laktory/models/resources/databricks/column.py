@@ -2,7 +2,7 @@ from pydantic import field_validator
 from typing import Union
 
 from laktory._logger import get_logger
-from laktory.constants import SUPPORTED_TYPES
+from laktory.constants import SUPPORTED_DATATYPES
 from laktory.models.basemodel import BaseModel
 
 logger = get_logger(__name__)
@@ -44,14 +44,11 @@ class Column(BaseModel):
     unit: Union[str, None] = None
 
     @field_validator("type")
-    def default_load_path(cls, v: str) -> str:
-        if "<" in v:
-            return v
-        else:
-            if v not in SUPPORTED_TYPES:
-                raise ValueError(
-                    f"Type {v} is not supported. Select one of {SUPPORTED_TYPES}"
-                )
+    def validate_type(cls, v: str) -> str:
+        if v not in SUPPORTED_DATATYPES:
+            raise ValueError(
+                f"Type {v} is not supported. Select one of {SUPPORTED_DATATYPES}"
+            )
         return v
 
     # ----------------------------------------------------------------------- #

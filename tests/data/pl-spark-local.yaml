@@ -35,7 +35,7 @@ nodes:
       - value: producer
       - value: name
       - value: description
-    - spark_func_name: smart_join
+    - spark_func_name: laktory.smart_join
       spark_func_kwargs:
         'on':
           - symbol
@@ -54,7 +54,7 @@ nodes:
     path: /tests/tmp/pl_gld_sink
   transformer:
     nodes:
-    - spark_func_name: groupby_and_agg
+    - spark_func_name: laktory.groupby_and_agg
       spark_func_kwargs:
         agg_expressions:
         - column:

@@ -3,7 +3,7 @@ from typing import Union
 from pyspark.sql.dataframe import DataFrame
 
 from laktory._logger import get_logger
-from laktory.models.spark.sparkchainnode import SparkChainNode
+from laktory.models.transformers.sparkchainnode import SparkChainNode
 
 
 logger = get_logger(__name__)
@@ -63,6 +63,7 @@ def groupby_and_agg(
     Examples
     --------
     ```py
+    import laktory  # noqa: F401
     import pandas as pd
 
     df0 = spark.createDataFrame(
@@ -75,7 +76,7 @@ def groupby_and_agg(
         )
     )
 
-    df = df0.groupby_and_agg(
+    df = df0.laktory.groupby_and_agg(
         groupby_window={
             "time_column": "tstamp",
             "window_duration": "1 day",

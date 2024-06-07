@@ -79,6 +79,40 @@ def test_docstrings_models(example: CodeExample, eval_example: EvalExample):
 
 
 # --------------------------------------------------------------------------- #
+# Polars DataFrame                                                            #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize(
+    "example", find_examples("./laktory/polars/dataframe"), ids=str
+)
+def test_docstrings_polars_dataframe(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format(example)
+        eval_example.run_print_update(example)
+    else:
+        eval_example.lint(example)
+        eval_example.run_print_check(example)
+
+
+# --------------------------------------------------------------------------- #
+# Polars Expressions                                                          #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize(
+    "example", find_examples("./laktory/polars/expressions"), ids=str
+)
+def test_docstrings_polars_expressions(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format(example)
+        eval_example.run_print_update(example)
+    else:
+        eval_example.lint(example)
+        eval_example.run_print_check(example)
+
+
+# --------------------------------------------------------------------------- #
 # Spark DataFrame                                                             #
 # --------------------------------------------------------------------------- #
 
