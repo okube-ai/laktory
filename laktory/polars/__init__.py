@@ -22,4 +22,3 @@ except ModuleNotFoundError:
 
     def is_polars_dataframe(df):
         return False
-

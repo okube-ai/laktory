@@ -2,6 +2,7 @@ import polars as pl
 import numpy as np
 import pytest
 import laktory
+
 # from uuid import UUID
 # from pyspark.sql import SparkSession
 # from pyspark.sql import functions as F
@@ -71,6 +72,7 @@ def test_sql_expr():
     expr1 = pl.Expr.laktory.sql_expr("data.open >= 2 AND x > 0 OR symbol == 'AAPL'")
 
     assert str(expr1) == str(expr0)
+
 
 #
 #

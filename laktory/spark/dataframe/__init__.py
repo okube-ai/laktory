@@ -54,6 +54,7 @@ DataFrame.laktory: LaktoryDataFrame = property(lambda self: LaktoryDataFrame(sel
 # Spark Connect DataFrame Extensions
 try:
     from pyspark.sql.connect.dataframe import DataFrame
+
     DataFrame.laktory = property(lambda self: LaktoryDataFrame(self))
 except:
     pass

@@ -30,4 +30,3 @@ def test_polars_datatypes():
 if __name__ == "__main__":
     test_spark_datatypes()
     test_polars_datatypes()
-

@@ -31,26 +31,32 @@ class LaktoryFunctions:
     @wraps(math.add)
     def add(*args, **kwargs):
         return math.add(*args, **kwargs)
+
     @staticmethod
     @wraps(math.sub)
     def sub(*args, **kwargs):
         return math.sub(*args, **kwargs)
+
     @staticmethod
     @wraps(math.mul)
     def mul(*args, **kwargs):
         return math.mul(*args, **kwargs)
+
     @staticmethod
     @wraps(math.div)
     def div(*args, **kwargs):
         return math.div(*args, **kwargs)
+
     @staticmethod
     @wraps(math.poly1)
     def poly1(*args, **kwargs):
         return math.poly1(*args, **kwargs)
+
     @staticmethod
     @wraps(math.poly2)
     def poly2(*args, **kwargs):
         return math.poly2(*args, **kwargs)
+
     @staticmethod
     @wraps(math.add)
     def scaled_power(*args, **kwargs):

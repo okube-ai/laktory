@@ -170,7 +170,7 @@ class PolarsChainNode(BaseModel):
 
     @field_validator("polars_func_kwargs")
     def parse_kwargs(
-            cls, kwargs: dict[str, Union[str, PolarsFuncArg]]
+        cls, kwargs: dict[str, Union[str, PolarsFuncArg]]
     ) -> dict[str, PolarsFuncArg]:
         _kwargs = {}
         for k, a in kwargs.items():

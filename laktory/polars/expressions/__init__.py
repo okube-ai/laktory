@@ -38,6 +38,3 @@ class LaktoryExpression:
 
 # TODO: Enable?
 # pl.expr.laktory = pl.Expr.laktory
-
-
-

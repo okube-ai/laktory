@@ -4,45 +4,31 @@ SUPPORTED_BACKENDS = [
 ]
 
 SUPPORTED_DATATYPES = [
-
     "_any",
-
     "binary",
-
     "byte",
     "int8",
     "tinyint",
-
     "short",
     "int16",
     "smallint",
-
     "int",
     "int32",
-
     "long",
     "int64",
     "bigint",
-
     "float",
     "float32",
-
     "double",
     "float64",
-
     "boolean",
-
     "string",
     "utf8",
-
     "date",
-
     "timestamp",
     "datetime",
-
     # "struct<>",
     # "struct",
-
     # "array",
     # "list",
 ]
