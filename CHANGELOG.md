@@ -1,6 +1,6 @@
 # Release History
 
-## [0.3.4] - Unreleased
+## [0.4.0] - Unreleased
 ### Added
 * Support for Polars with FileDataSource
 * Support for Polars with FileDataSink
