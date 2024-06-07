@@ -15,7 +15,9 @@ def smart_join(
     how: str = "left",
     on: list[str] = None,
     on_expression: str = None,
+    left_on: list[str] = None,
     left_watermark: Watermark = None,
+    other_on: list[str] = None,
     other_watermark: Watermark = None,
     time_constraint_interval_lower: str = "60 seconds",
     time_constraint_interval_upper: str = None,
@@ -38,8 +40,12 @@ def smart_join(
     on_expression:
         String expression the join on condition. The expression can include
         `left` and `other` dataframe references.
+    left_on:
+        Name(s) of the left join column(s).
     left_watermark
         Watermark for left dataframe
+    other_on:
+        Name(s) of the right join column(s).
     other_watermark
         Watermark for other dataframe
     time_constraint_interval_lower:
@@ -94,9 +100,29 @@ def smart_join(
 
     logger.info(f"Executing {left} {how} JOIN {other}")
 
+    # Validate inputs
+    if left_on or other_on:
+        if not other_on:
+            raise ValueError("If `left_on` is set, `other_on` should also be set")
+        if not left_on:
+            raise ValueError("If `other_on` is set, `left_on` should also be set")
+    if not (on or left_on or on_expression):
+        raise ValueError("Either `on` or (`left_on` and `other_on`) or `on_expression` should be set")
+
     # Parse inputs
     if on is None:
         on = []
+    elif isinstance(on, str):
+        on = [on]
+    if left_on is None:
+        left_on = []
+    elif isinstance(left_on, str):
+        left_on = [left_on]
+    if other_on is None:
+        other_on = []
+    elif isinstance(other_on, str):
+        other_on = [other_on]
+
     wml = left_watermark
     wmo = other_watermark
     if wml is not None and not isinstance(wml, Watermark):
@@ -134,6 +160,8 @@ def smart_join(
     _join = []
     for c in on:
         _join += [f"left.{c} == other.{c}"]
+    for l, o in zip(left_on, other_on):
+        _join += [f"left.{l} == other.{o}"]
     if on_expression:
         _join += [on_expression]
 
@@ -149,12 +177,8 @@ def smart_join(
     _join = " AND ".join(_join)
 
     logger.info(f"   ON {_join}")
-
-    logger.info(f"Left Schema:")
-    left.printSchema()
-
-    logger.info(f"Other Schema:")
-    other.printSchema()
+    logger.debug(f"Left Schema: {left.schema}")
+    logger.debug(f"Other Schema: {other.schema}")
 
     df = (
         left.alias("left")
@@ -183,8 +207,7 @@ def smart_join(
     # Drop watermark column
     if wmo is not None:
         df = df.drop(F.col(f"other._other_wc"))
-    logger.info(f"Joined Schema:")
-    df.printSchema()
+    logger.debug(f"Joined Schema: {df.schema}")
 
     return df
 

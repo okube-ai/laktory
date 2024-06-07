@@ -118,8 +118,6 @@ def test_join():
     )
     other = df_meta.withColumnRenamed("symbol2", "symbol")
 
-    other.show()
-
     df = left.laktory.smart_join(
         other=other,
         on=["symbol"],
@@ -171,10 +169,22 @@ def test_join():
 
     # Join expression
     df2 = left.laktory.smart_join(
-        other=other,
-        on_expression="left.symbol == other.symbol",
+        other=df_meta.drop("symbol"),
+        on_expression="left.symbol == other.symbol2",
     )
-    assert df2.toPandas().equals(df.toPandas())
+    assert "symbol" in df2.columns
+    assert "symbol2" in df2.columns
+    assert df2.select(df.columns).toPandas().equals(df.toPandas())
+
+    # Left/Right expression
+    df3 = left.laktory.smart_join(
+        other=df_meta.drop("symbol"),
+        left_on="symbol",
+        other_on="symbol2",
+    )
+    assert "symbol" in df3.columns
+    assert "symbol2" in df3.columns
+    assert df3.toPandas().equals(df2.toPandas())
 
 
 def test_join_outer():
@@ -361,11 +371,11 @@ def test_window_filter():
 
 
 if __name__ == "__main__":
-    test_df_schema_flat()
-    test_df_has_column()
-    test_watermark()
+    # test_df_schema_flat()
+    # test_df_has_column()
+    # test_watermark()
     test_join()
-    test_join_outer()
-    test_join_watermark()
-    test_aggregation()
-    test_window_filter()
+    # test_join_outer()
+    # test_join_watermark()
+    # test_aggregation()
+    # test_window_filter()
