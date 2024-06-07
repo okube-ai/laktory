@@ -3,9 +3,10 @@ import polars as pl
 
 from laktory.polars.expressions.math import roundp
 from laktory.polars.expressions.sql import sql_expr
+from laktory.polars.expressions.sort import row_number
 
 
-def _parse_expr(expr):
+def _parse_args(args):
     """
     Polars expressions are designed to be chained to each other. When an
     extension expression is called, the calling expression is stored as
@@ -17,9 +18,11 @@ def _parse_expr(expr):
     we check the value first argument received in an expression and return
     value._expr when appropriate.
     """
-    if isinstance(expr, LaktoryExpression):
-        return expr._expr
-    return expr
+    if len(args) > 0 and isinstance(args[0], LaktoryExpression):
+        args = list(args)
+        args[0] = args[0]._expr
+        return tuple(args)
+    return args
 
 
 @pl.api.register_expr_namespace("laktory")
@@ -28,12 +31,16 @@ class LaktoryExpression:
         self._expr = expr
 
     @wraps(roundp)
-    def roundp(self, *args, **kwargs):
-        return roundp(_parse_expr(self), *args, **kwargs)
+    def roundp(*args, **kwargs):
+        return roundp(*_parse_args(args), **kwargs)
+
+    @wraps(row_number)
+    def row_number(*args, **kwargs):
+        return row_number(*_parse_args(args), **kwargs)
 
     @wraps(sql_expr)
-    def sql_expr(self, *args, **kwargs):
-        return sql_expr(_parse_expr(self), *args, **kwargs)
+    def sql_expr(*args, **kwargs):
+        return sql_expr(*_parse_args(args), **kwargs)
 
 
 # TODO: Enable?

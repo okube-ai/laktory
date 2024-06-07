@@ -32,3 +32,9 @@ for filename in os.listdir(dirpath):
     if filename.endswith(".parquet"):
         break
 df_slv_polars = pl.read_parquet(os.path.join(dirpath, filename))
+
+dirpath = os.path.join(data_dirpath, "slv_stock_meta")
+for filename in os.listdir(dirpath):
+    if filename.endswith(".parquet"):
+        break
+df_meta_polars = pl.read_parquet(os.path.join(dirpath, filename))

@@ -64,6 +64,22 @@ def test_roundp(df0=df0):
     assert df["roundp_2"].to_list() == pytest.approx([4, 3.20, 3.15], abs=0.0001)
 
 
+def test_row_number():
+
+    df = pl.DataFrame(
+        {
+            "x": ["a", "a", "b", "b", "b", "c"],
+            "z": ["11", "10", "22", "21", "20", "30"],
+        }
+    )
+    df = df.with_columns(y1=pl.Expr.laktory.row_number())
+    df = df.with_columns(y2=pl.Expr.laktory.row_number().over("x"))
+    df = df.with_columns(y3=pl.Expr.laktory.row_number().over("x").sort_by("z"))
+    assert df["y1"].to_list() == [1, 2, 3, 4, 5, 6]
+    assert df["y2"].to_list() == [1, 2, 1, 2, 3, 1]
+    assert df["y3"].to_list() == [2, 1, 3, 2, 1, 1]
+
+
 def test_sql_expr():
 
     expr0 = (pl.col("data").struct.field("open") >= 2) & (pl.col("x") > 0) | (
@@ -112,7 +128,8 @@ if __name__ == "__main__":
     # test_compare()
     # test_poly()
     # test_power()
-    test_roundp()
+    # test_roundp()
+    test_row_number()
     # test_sql_expr()
     # test_string_split()
     # test_uuid()
