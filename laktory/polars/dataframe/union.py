@@ -1,10 +1,8 @@
 import polars as pl
 
 
-def union(self, other: pl.DataFrame) -> pl.DataFrame:
+def union(df: pl.DataFrame, other: pl.DataFrame) -> pl.DataFrame:
     """
     """
-
-    df = self._df
     return pl.concat([df, other])
 

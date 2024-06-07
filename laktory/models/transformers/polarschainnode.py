@@ -92,13 +92,11 @@ class PolarsChainNode(BaseModel):
     import polars as pl
 
     df0 = pl.DataFrame({"x": [1, 2, 2, 3]})
-    print(df0.to_pandas())
+    print(df0.glimpse(return_as_string=True))
     '''
-       x
-    0  1
-    1  2
-    2  2
-    3  3
+    Rows: 4
+    Columns: 1
+    $ x <i64> 1, 2, 2, 3
     '''
 
     node = models.PolarsChainNode(
@@ -121,26 +119,28 @@ class PolarsChainNode(BaseModel):
         allow_missing_column_args=True,
     )
     df = node.execute(df)
-    print(df.to_pandas())
+    print(df.glimpse(return_as_string=True))
     '''
-       x      cosx   xy
-    0  1  0.540302  1.0
-    1  2 -0.416147  2.0
-    2  2 -0.416147  2.0
-    3  3 -0.989992  3.0
+    Rows: 4
+    Columns: 3
+    $ x    <i64> 1, 2, 2, 3
+    $ cosx <f64> 0.5403023058681398, -0.4161468365471424, -0.4161468365471424, -0.9899924966004454
+    $ xy   <f64> 1.0, 2.0, 2.0, 3.0
     '''
 
     node = models.PolarsChainNode(
         polars_func_name="unique",
         polars_func_args=[["x"]],
+        polars_func_kwargs={"maintain_order": True},
     )
     df = node.execute(df)
-    print(df.to_pandas())
+    print(df.glimpse(return_as_string=True))
     '''
-       x      cosx   xy
-    0  1  0.540302  1.0
-    1  2 -0.416147  2.0
-    2  3 -0.989992  3.0
+    Rows: 3
+    Columns: 3
+    $ x    <i64> 1, 2, 3
+    $ cosx <f64> 0.5403023058681398, -0.4161468365471424, -0.9899924966004454
+    $ xy   <f64> 1.0, 2.0, 3.0
     '''
     ```
     """

@@ -1,8 +1,7 @@
-import json
 import polars as pl
 
 
-def schema_flat(self) -> list[str]:
+def schema_flat(df: pl.DataFrame) -> list[str]:
     """
     Returns a flattened list of columns
 
@@ -20,54 +19,25 @@ def schema_flat(self) -> list[str]:
     --------
     ```py
     import laktory  # noqa: F401
-    import pyspark.sql.types as T
+    import polars as pl
 
-    schema = T.StructType(
-        [
-            T.StructField("indexx", T.IntegerType()),
-            T.StructField(
-                "stock",
-                T.StructType(
-                    [
-                        T.StructField("symbol", T.StringType()),
-                        T.StructField("name", T.StringType()),
-                    ]
-                ),
-            ),
-            T.StructField(
-                "prices",
-                T.ArrayType(
-                    T.StructType(
-                        [
-                            T.StructField("open", T.IntegerType()),
-                            T.StructField("close", T.IntegerType()),
-                        ]
-                    )
-                ),
-            ),
-        ]
+    df = pl.DataFrame(
+        {
+            "indexx": [1, 2, 3],
+            "stock": [
+                {"symbol": "AAPL", "name": "Apple"},
+                {"symbol": "MSFT", "name": "Microsoft"},
+                {"symbol": "GOOGL", "name": "Google"},
+            ],
+            "prices": [
+                [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
+                [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
+                [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
+            ],
+        }
     )
 
-    data = [
-        (
-            1,
-            {"symbol": "AAPL", "name": "Apple"},
-            [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
-        ),
-        (
-            2,
-            {"symbol": "MSFT", "name": "Microsoft"},
-            [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
-        ),
-        (
-            3,
-            {"symbol": "GOOGL", "name": "Google"},
-            [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
-        ),
-    ]
-
-    df = spark.createDataFrame(data, schema=schema)
-    print(df.schema_flat())
+    print(df.laktory.schema_flat())
     '''
     [
         'indexx',
@@ -81,8 +51,6 @@ def schema_flat(self) -> list[str]:
     '''
     ```
     """
-
-    df = self._df
 
     def get_fields(schema):
         field_names = []

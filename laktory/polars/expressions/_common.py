@@ -12,13 +12,3 @@ FLOAT_OR_EXPR = Union[float, pl.Expr, str]
 
 STRING_OR_EXPR = Union[str, pl.Expr]
 """string or polars expression"""
-
-
-def _to_expr(expr: str) -> pl.Expr:
-    from laktory.polars.expressions import LaktoryExpression
-
-    if isinstance(expr, LaktoryExpression):
-        expr = expr._expr
-
-    return expr
-

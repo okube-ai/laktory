@@ -1,6 +1,7 @@
 import polars as pl
 import numpy as np
 import pytest
+import laktory
 # from uuid import UUID
 # from pyspark.sql import SparkSession
 # from pyspark.sql import functions as F
@@ -53,9 +54,9 @@ df0 = pl.DataFrame(
 
 def test_roundp(df0=df0):
 
-    df = df0.with_columns(roundp_1=pl.Expr.laktory.roundp("pi", p=0.2))
+    df = df0.with_columns(roundp_1=pl.Expr.laktory.roundp(pl.col("pi"), p=0.2))
     df = df.with_columns(roundp_11=pl.col("pi").laktory.roundp(p=0.2))
-    df = df.with_columns(roundp_2=pl.Expr.laktory.roundp("pi", p=pl.col("p")))
+    df = df.with_columns(roundp_2=pl.Expr.laktory.roundp(pl.col("pi"), p=pl.col("p")))
 
     assert df["roundp_1"].to_list() == pytest.approx([3.2, 3.2, 3.2], abs=0.0001)
     assert df["roundp_11"].to_list() == pytest.approx([3.2, 3.2, 3.2], abs=0.0001)
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     # test_poly()
     # test_power()
     test_roundp()
-    test_sql_expr()
+    # test_sql_expr()
     # test_string_split()
     # test_uuid()
     # test_units()

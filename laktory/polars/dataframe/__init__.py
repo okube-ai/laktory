@@ -1,3 +1,4 @@
+from functools import wraps
 import polars as pl
 
 from laktory.polars.dataframe.schema_flat import schema_flat
@@ -10,14 +11,14 @@ class LaktoryDataFrame:
     def __init__(self, df: pl.DataFrame):
         self._df = df
 
-    # def by_alternate_rows(self) -> list[pl.DataFrame]:
-    #     df = self._df.with_row_index(name="n")
-    #     return [
-    #         df.filter((pl.col("n") % 2) == 0).drop("n"),
-    #         df.filter((pl.col("n") % 2) != 0).drop("n"),
-    #     ]
+    @wraps(has_column)
+    def has_column(self, *args, **kwargs):
+        return has_column(self._df, *args, **kwargs)
 
+    @wraps(schema_flat)
+    def schema_flat(self, *args, **kwargs):
+        return schema_flat(self._df, *args, **kwargs)
 
-LaktoryDataFrame.has_column = has_column
-LaktoryDataFrame.schema_flat = schema_flat
-LaktoryDataFrame.union = union
+    @wraps(union)
+    def union(self, *args, **kwargs):
+        return union(self._df, *args, **kwargs)

@@ -4,7 +4,6 @@ from laktory.polars.expressions._common import (
     INT_OR_EXPR,
     FLOAT_OR_EXPR,
     STRING_OR_EXPR,
-    _to_expr,
 )
 
 __all__ = [
@@ -336,7 +335,6 @@ __all__ = [
 
 
 def roundp(
-    # self,
     x: EXPR_OR_NAME,
     p: FLOAT_OR_EXPR = 1.0,
 ) -> pl.Expr:
@@ -358,35 +356,27 @@ def roundp(
     Examples
     --------
     ```py
-    import laktory.spark.functions as LF
+    import laktory  # noqa: F401
+    import polars as pl
 
-    df = spark.createDataFrame([[0.781], [13.0]], ["x"])
-    df = df.withColumn("y", LF.roundp("x", p=5))
-    print(df.laktory.show_string())
+    df = pl.DataFrame([[0.781], [13.0]], ["x"])
+    df = df.with_columns(y=pl.Expr.laktory.roundp(pl.col("x"), p=5))
+    print(df.glimpse(return_as_string=True))
     '''
-    +-----+----+
-    |    x|   y|
-    +-----+----+
-    |0.781| 0.0|
-    | 13.0|15.0|
-    +-----+----+
+    Rows: 2
+    Columns: 2
+    $ x <f64> 0.781, 13.0
+    $ y <f64> 0.0, 15.0
     '''
 
-    df = df.withColumn("y", LF.roundp("x", p=0.25))
-    print(df.laktory.show_string())
+    df = df.with_columns(y=pl.Expr.laktory.roundp(pl.col("x"), p=0.25))
+    print(df.glimpse(return_as_string=True))
     '''
-    +-----+----+
-    |    x|   y|
-    +-----+----+
-    |0.781|0.75|
-    | 13.0|13.0|
-    +-----+----+
+    Rows: 2
+    Columns: 2
+    $ x <f64> 0.781, 13.0
+    $ y <f64> 0.75, 13.0
     '''
     ```
     """
-    # eps0 = 1.0e-16
-    # precision = float(precision)
-    # if precision < eps0:
-    #     raise ValueError("Precision must be greater than 1.0e-16")
-
-    return (_to_expr(x) / _to_expr(p)).round() * _to_expr(p)
+    return (x / p).round() * p

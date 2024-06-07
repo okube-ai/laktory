@@ -78,12 +78,12 @@ class PolarsChain(BaseModel):
     df = sc.execute(df0)
 
     # Print result
-    print(df.to_pandas())
+    print(df.glimpse(return_as_string=True))
     '''
-          cos_x        x2
-    0  0.540302  1.000000
-    1 -0.416147  1.414214
-    2 -0.989992  1.732051
+    Rows: 3
+    Columns: 2
+    $ cos_x <f64> 0.5403023058681398, -0.4161468365471424, -0.9899924966004454
+    $ x2    <f64> 1.0, 1.4142135623730951, 1.7320508075688772
     '''
     ```
     """
