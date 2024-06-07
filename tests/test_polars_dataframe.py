@@ -1,15 +1,10 @@
+from datetime import datetime
 import os
-
-# from pyspark.sql import SparkSession
-# from pyspark.sql import types as T
-# from pyspark.sql import functions as F
-# from pandas import Timestamp
 import polars as pl
 
 import laktory
-
+from laktory._testing.stockprices import df_slv_polars
 # from laktory._testing.stockprices import spark
-# from laktory._testing.stockprices import df_slv
 # from laktory._testing.stockprices import df_meta
 
 df = pl.DataFrame(
@@ -199,75 +194,26 @@ def test_union():
 # def test_join_watermark():
 #     # TODO
 #     pass
-#
-#
-# def test_aggregation():
-#     _df = df_slv.filter(F.col("created_at") < "2023-09-07T00:00:00Z")
-#     _df.show()
-#
-#     # Window
-#     df = _df.groupby_and_agg(
-#         groupby_window={
-#             "time_column": "created_at",
-#             "window_duration": "1 day",
-#         },
-#         agg_expressions=[
-#             {
-#                 "column": {"name": "min_open"},
-#                 "spark_func_name": "min",
-#                 "spark_func_args": ["open"],
-#             },
-#             {
-#                 "column": {"name": "max_open"},
-#                 "sql_expression": "max(open)",
-#             },
-#         ],
-#     ).sort("window")
-#     pdf = df.toPandas()
-#     assert "window" in df.columns
-#     assert pdf["min_open"].round(2).to_list() == [137.46, 135.44, 136.02]
-#     assert pdf["max_open"].round(2).to_list() == [331.31, 329.0, 333.38]
-#
-#     # Symbol
-#     df = _df.groupby_and_agg(
-#         groupby_columns=["symbol"],
-#         agg_expressions=[
-#             {
-#                 "column": {"name": "mean_close"},
-#                 "sql_expression": "mean(close)",
-#             },
-#         ],
-#     ).sort("symbol")
-#     pdf = df.toPandas()
-#     assert "symbol" in df.columns
-#     assert pdf["mean_close"].round(2).to_list() == [187.36, 136.92, 135.3, 331.7]
-#
-#     # Symbol and window
-#     df = _df.groupby_and_agg(
-#         groupby_window={
-#             "time_column": "created_at",
-#             "window_duration": "1 day",
-#         },
-#         groupby_columns=["symbol"],
-#         agg_expressions=[
-#             {
-#                 "column": {"name": "count"},
-#                 "sql_expression": "count(close)",
-#             },
-#         ],
-#     ).sort("symbol", "window")
-#     pdf = df.toPandas()
-#     assert "symbol" in df.columns
-#     assert "window" in df.columns
-#     assert (
-#         pdf["count"].tolist()
-#         == [
-#             1,
-#         ]
-#         * _df.count()
-#     )
-#
-#
+
+
+def test_aggregation():
+    _df = df_slv_polars.filter(pl.col("created_at") < datetime(2023, 9, 7))
+
+    # Symbol
+    df = _df.laktory.groupby_and_agg(
+        groupby_columns=["symbol"],
+        agg_expressions=[
+            {
+                "column": {"name": "mean_close"},
+                "polars_func_name": "mean",
+                "polars_func_args": ["close"]
+            },
+        ],
+    ).sort("symbol")
+    assert "symbol" in df.columns
+    assert df["mean_close"].round(2).to_list() == [187.36, 136.92, 135.3, 331.7]
+
+
 # def test_window_filter():
 #     df = df_slv.window_filter(
 #         partition_by=["symbol"],
@@ -322,14 +268,12 @@ def test_union():
 #         },
 #     ]
 
-
 if __name__ == "__main__":
     # test_df_schema_flat()
     # test_df_has_column()
-    test_union()
-    # test_watermark()
+    # test_union()
     # test_join()
     # test_join_outer()
     # test_join_watermark()
-    # test_aggregation()
+    test_aggregation()
     # test_window_filter()

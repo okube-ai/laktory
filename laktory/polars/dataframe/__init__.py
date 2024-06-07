@@ -1,8 +1,9 @@
 from functools import wraps
 import polars as pl
 
-from laktory.polars.dataframe.schema_flat import schema_flat
+from laktory.polars.dataframe.groupby_and_agg import groupby_and_agg
 from laktory.polars.dataframe.has_column import has_column
+from laktory.polars.dataframe.schema_flat import schema_flat
 from laktory.polars.dataframe.union import union
 
 
@@ -10,6 +11,10 @@ from laktory.polars.dataframe.union import union
 class LaktoryDataFrame:
     def __init__(self, df: pl.DataFrame):
         self._df = df
+
+    @wraps(groupby_and_agg)
+    def groupby_and_agg(self, *args, **kwargs):
+        return groupby_and_agg(self._df, *args, **kwargs)
 
     @wraps(has_column)
     def has_column(self, *args, **kwargs):
