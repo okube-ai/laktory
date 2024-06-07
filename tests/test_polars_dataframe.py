@@ -37,10 +37,6 @@ df = pl.DataFrame(
 def test_df_schema_flat():
 
     schema = df.laktory.schema_flat()
-    print(df)
-    print(df.schema)
-    print(schema)
-
     assert schema == [
         "x@x",
         "y",
@@ -172,66 +168,39 @@ def test_aggregation():
     assert df["mean_close"].round(2).to_list() == [187.36, 136.92, 135.3, 331.7]
 
 
-# def test_window_filter():
-#     df = df_slv.window_filter(
-#         partition_by=["symbol"],
-#         order_by=[
-#             {"sql_expression": "created_at", "desc": True},
-#         ],
-#         drop_row_index=False,
-#         rows_to_keep=2,
-#     ).select("created_at", "symbol", "_row_index")
-#
-#     data = df.toPandas().to_dict(orient="records")
-#     assert data == [
-#         {
-#             "created_at": Timestamp("2023-09-29 00:00:00"),
-#             "symbol": "AAPL",
-#             "_row_index": 1,
-#         },
-#         {
-#             "created_at": Timestamp("2023-09-28 00:00:00"),
-#             "symbol": "AAPL",
-#             "_row_index": 2,
-#         },
-#         {
-#             "created_at": Timestamp("2023-09-29 00:00:00"),
-#             "symbol": "AMZN",
-#             "_row_index": 1,
-#         },
-#         {
-#             "created_at": Timestamp("2023-09-28 00:00:00"),
-#             "symbol": "AMZN",
-#             "_row_index": 2,
-#         },
-#         {
-#             "created_at": Timestamp("2023-09-29 00:00:00"),
-#             "symbol": "GOOGL",
-#             "_row_index": 1,
-#         },
-#         {
-#             "created_at": Timestamp("2023-09-28 00:00:00"),
-#             "symbol": "GOOGL",
-#             "_row_index": 2,
-#         },
-#         {
-#             "created_at": Timestamp("2023-09-29 00:00:00"),
-#             "symbol": "MSFT",
-#             "_row_index": 1,
-#         },
-#         {
-#             "created_at": Timestamp("2023-09-28 00:00:00"),
-#             "symbol": "MSFT",
-#             "_row_index": 2,
-#         },
-#     ]
+def test_window_filter():
+    df = df_slv_polars.laktory.window_filter(
+        partition_by=["symbol"],
+        order_by=[
+            {"sql_expression": "created_at", "desc": True},
+        ],
+        drop_row_index=False,
+        rows_to_keep=2,
+    ).select("created_at", "symbol", "_row_index")
+
+    data = df.to_dict(as_series=False)
+    print(data)
+    assert data == {
+        "created_at": [
+            datetime.datetime(2023, 9, 28, 0, 0),
+            datetime.datetime(2023, 9, 29, 0, 0),
+            datetime.datetime(2023, 9, 28, 0, 0),
+            datetime.datetime(2023, 9, 29, 0, 0),
+            datetime.datetime(2023, 9, 28, 0, 0),
+            datetime.datetime(2023, 9, 29, 0, 0),
+            datetime.datetime(2023, 9, 28, 0, 0),
+            datetime.datetime(2023, 9, 29, 0, 0),
+        ],
+        "symbol": ["AAPL", "AAPL", "AMZN", "AMZN", "GOOGL", "GOOGL", "MSFT", "MSFT"],
+        "_row_index": [2, 1, 2, 1, 2, 1, 2, 1],
+    }
+
 
 if __name__ == "__main__":
-    # test_df_schema_flat()
-    # test_df_has_column()
-    # test_union()
-    # test_join()
+    test_df_schema_flat()
+    test_df_has_column()
+    test_union()
+    test_join()
     test_join_outer()
-    # test_join_watermark()
-    # test_aggregation()
-    # test_window_filter()
+    test_aggregation()
+    test_window_filter()

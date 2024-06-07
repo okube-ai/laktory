@@ -66,16 +66,18 @@ def test_roundp(df0=df0):
 
 def test_row_number():
 
-    df = pl.DataFrame({
-        "x": ["a", "a", "b", "b", "b", "c"],
-        "z": ["11", "10", "22", "21", "20", "30"],
-    })
+    df = pl.DataFrame(
+        {
+            "x": ["a", "a", "b", "b", "b", "c"],
+            "z": ["11", "10", "22", "21", "20", "30"],
+        }
+    )
     df = df.with_columns(y1=pl.Expr.laktory.row_number())
     df = df.with_columns(y2=pl.Expr.laktory.row_number().over("x"))
     df = df.with_columns(y3=pl.Expr.laktory.row_number().over("x").sort_by("z"))
-    assert df["y1"].to_list() == [1,2,3,4,5,6]
-    assert df["y2"].to_list() == [1,2,1,2,3,1]
-    assert df["y3"].to_list() == [2,1,3,2,1,1]
+    assert df["y1"].to_list() == [1, 2, 3, 4, 5, 6]
+    assert df["y2"].to_list() == [1, 2, 1, 2, 3, 1]
+    assert df["y3"].to_list() == [2, 1, 3, 2, 1, 1]
 
 
 def test_sql_expr():
