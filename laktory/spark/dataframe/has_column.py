@@ -1,8 +1,6 @@
 import re
 from pyspark.sql.dataframe import DataFrame
 
-from laktory.spark.dataframe.schema_flat import schema_flat
-
 
 def has_column(df: DataFrame, col: str) -> bool:
     """
@@ -82,4 +80,4 @@ def has_column(df: DataFrame, col: str) -> bool:
     """
     _col = re.sub(r"\[(\d+)\]", r"[*]", col)
     _col = re.sub(r"`", "", _col)
-    return _col in schema_flat(df)
+    return _col in df.laktory.schema_flat()
