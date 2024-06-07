@@ -1,10 +1,7 @@
 import polars as pl
 
 
-def union(
-        df: pl.DataFrame,
-        other: pl.DataFrame
-) -> pl.DataFrame:
+def union(df: pl.DataFrame, other: pl.DataFrame) -> pl.DataFrame:
     """
     Return a new DataFrame containing the union of rows in this and another
     DataFrame.

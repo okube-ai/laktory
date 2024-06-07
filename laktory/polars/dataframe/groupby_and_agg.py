@@ -70,9 +70,7 @@ def groupby_and_agg(
     if groupby_columns is None:
         groupby_columns = []
 
-    logger.info(
-        f"Executing groupby ({groupby_columns}) with {agg_expressions}"
-    )
+    logger.info(f"Executing groupby ({groupby_columns}) with {agg_expressions}")
 
     # Groupby arguments
     groupby = []

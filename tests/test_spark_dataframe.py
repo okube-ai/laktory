@@ -371,11 +371,11 @@ def test_window_filter():
 
 
 if __name__ == "__main__":
-    # test_df_schema_flat()
-    # test_df_has_column()
-    # test_watermark()
+    test_df_schema_flat()
+    test_df_has_column()
+    test_watermark()
     test_join()
-    # test_join_outer()
-    # test_join_watermark()
-    # test_aggregation()
-    # test_window_filter()
+    test_join_outer()
+    test_join_watermark()
+    test_aggregation()
+    test_window_filter()

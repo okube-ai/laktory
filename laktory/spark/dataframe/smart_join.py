@@ -107,7 +107,9 @@ def smart_join(
         if not left_on:
             raise ValueError("If `other_on` is set, `left_on` should also be set")
     if not (on or left_on or on_expression):
-        raise ValueError("Either `on` or (`left_on` and `other_on`) or `on_expression` should be set")
+        raise ValueError(
+            "Either `on` or (`left_on` and `other_on`) or `on_expression` should be set"
+        )
 
     # Parse inputs
     if on is None:
@@ -180,13 +182,10 @@ def smart_join(
     logger.debug(f"Left Schema: {left.schema}")
     logger.debug(f"Other Schema: {other.schema}")
 
-    df = (
-        left.alias("left")
-        .join(
-            other=other.alias("other"),
-            on=F.expr(_join),
-            how=how,
-        )
+    df = left.alias("left").join(
+        other=other.alias("other"),
+        on=F.expr(_join),
+        how=how,
     )
 
     # Find duplicated columns (because of join)
@@ -196,6 +195,7 @@ def smart_join(
 
     # Drop duplicated columns
     for c, v in d.items():
+        print(f"DROPPING {c}")
         if v < 2 or c not in _join:
             continue
         df = df.withColumn("__tmp", F.coalesce(f"left.{c}", f"other.{c}"))

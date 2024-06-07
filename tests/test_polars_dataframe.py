@@ -70,9 +70,9 @@ def test_union():
 
 
 def test_join():
-    left = df_slv_polars.filter(pl.col("created_at") == datetime.datetime(2023, 9, 1)).filter(
-        pl.col("symbol") != "GOOGL"
-    )
+    left = df_slv_polars.filter(
+        pl.col("created_at") == datetime.datetime(2023, 9, 1)
+    ).filter(pl.col("symbol") != "GOOGL")
     other = df_meta_polars.rename({"symbol2": "symbol"})
 
     df = left.laktory.smart_join(
@@ -103,78 +103,55 @@ def test_join():
     }
 
     # Left and Other on
-    print(left)
-    print(df_meta_polars)
     df2 = left.laktory.smart_join(
         other=df_meta_polars.drop("symbol"),
         left_on="symbol",
         other_on="symbol2",
     )
-    print(df2)
     assert "symbol" in df2.columns
     assert "symbol2" in df2.columns
-    assert df2.equals(df)
+    assert df2.select(df.columns).equals(df)
 
-#
-# def test_join_outer():
-#     left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(
-#         F.col("symbol") != "GOOGL"
-#     )
-#     other = df_meta.withColumnRenamed("symbol2", "symbol")
-#
-#     df = left.smart_join(
-#         other=other,
-#         on=["symbol"],
-#         how="full_outer",
-#     )
-#
-#     # Test join columns uniqueness
-#     _df = df.withColumn("symbol2", F.lit("a"))
-#     _df = df.withColumn("symbol", F.lit("a"))
-#     _df = _df.select("symbol")
-#
-#     # Test data
-#     data = df.toPandas().fillna(-1).to_dict(orient="records")
-#     print(data)
-#     assert data == [
-#         {
-#             "created_at": Timestamp("2023-09-01 00:00:00"),
-#             "open": 189.49000549316406,
-#             "close": 189.4600067138672,
-#             "currency": "USD",
-#             "first_traded": "1980-12-12T14:30:00.000Z",
-#             "symbol": "AAPL",
-#         },
-#         {
-#             "created_at": Timestamp("2023-09-01 00:00:00"),
-#             "open": 139.4600067138672,
-#             "close": 138.1199951171875,
-#             "currency": "USD",
-#             "first_traded": "1997-05-15T13:30:00.000Z",
-#             "symbol": "AMZN",
-#         },
-#         {
-#             "created_at": -1,
-#             "open": -1,
-#             "close": -1,
-#             "currency": "USD",
-#             "first_traded": "2004-08-19T13:30:00.00Z",
-#             "symbol": "GOOGL",
-#         },
-#         {
-#             "created_at": Timestamp("2023-09-01 00:00:00"),
-#             "open": 331.30999755859375,
-#             "close": 328.6600036621094,
-#             "currency": -1,
-#             "first_traded": -1,
-#             "symbol": "MSFT",
-#         },
-#     ]
-#
-#
-# def test_join_watermark():
-#     # TODO
-#     pass
+
+def test_join_outer():
+    left = df_slv_polars.filter(
+        pl.col("created_at") == datetime.datetime(2023, 9, 1)
+    ).filter(pl.col("symbol") != "GOOGL")
+    other = df_meta_polars.rename({"symbol2": "symbol"})
+
+    df = left.laktory.smart_join(
+        other=other,
+        on=["symbol"],
+        how="outer",
+    )
+
+    # Test join columns uniqueness
+    _df = df.with_columns(symbol2=pl.lit("a"))
+    _df = df.with_columns(symbol=pl.lit("a"))
+    _df = _df.select("symbol")
+
+    # Test data
+    data = df.to_dict(as_series=False)
+    print(data)
+    assert data == {
+        "created_at": [
+            datetime.datetime(2023, 9, 1, 0, 0),
+            None,
+            datetime.datetime(2023, 9, 1, 0, 0),
+            datetime.datetime(2023, 9, 1, 0, 0),
+        ],
+        "symbol": ["AAPL", None, "AMZN", "MSFT"],
+        "open": [189.49000549316406, None, 139.4600067138672, 331.30999755859375],
+        "close": [189.4600067138672, None, 138.1199951171875, 328.6600036621094],
+        "symbol_right": ["AAPL", "GOOGL", "AMZN", None],
+        "currency": ["USD", "USD", "USD", None],
+        "first_traded": [
+            "1980-12-12T14:30:00.000Z",
+            "2004-08-19T13:30:00.00Z",
+            "1997-05-15T13:30:00.000Z",
+            None,
+        ],
+    }
 
 
 def test_aggregation():
@@ -253,8 +230,8 @@ if __name__ == "__main__":
     # test_df_schema_flat()
     # test_df_has_column()
     # test_union()
-    test_join()
-    # test_join_outer()
+    # test_join()
+    test_join_outer()
     # test_join_watermark()
     # test_aggregation()
     # test_window_filter()

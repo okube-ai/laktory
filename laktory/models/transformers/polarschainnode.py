@@ -300,12 +300,12 @@ class PolarsChainNode(BaseModel):
         func_log = f"{func_name}("
         for a in _args:
             if isinstance(a.value, DataFrame):
-                func_log += f"df {a.value.laktory.schema_flat()},"
+                func_log += f"{a.value.laktory.signature()},"
             else:
                 func_log += f"{a.value},"
         for k, a in _kwargs.items():
             if isinstance(a.value, DataFrame):
-                func_log += f"{k}=df {a.value.laktory.schema_flat()},"
+                func_log += f"{k}={a.value.laktory.signature()},"
             else:
                 func_log += f"{k}={a.value},"
         if func_log.endswith(","):
@@ -360,12 +360,12 @@ class PolarsChainNode(BaseModel):
         func_log = f"{func_name}("
         for a in args:
             if isinstance(a, DataFrame):
-                func_log += f"df {a.laktory.schema_flat()},"
+                func_log += f"{a.laktory.signature()},"
             else:
                 func_log += f"{a},"
         for k, a in kwargs.items():
             if isinstance(a, DataFrame):
-                func_log += f"{k}=df {a.laktory.schema_flat()},"
+                func_log += f"{k}={a.laktory.signature()},"
             else:
                 func_log += f"{k}={a},"
         if func_log.endswith(","):
