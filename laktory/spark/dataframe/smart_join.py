@@ -187,7 +187,6 @@ def smart_join(
             on=F.expr(_join),
             how=how,
         )
-        .drop()
     )
 
     # Find duplicated columns (because of join)
