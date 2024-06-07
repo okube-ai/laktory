@@ -93,6 +93,4 @@ def groupby_and_agg(
             ).alias(expr.column.name)
         ]
 
-    print(aggs)
-
     return df.groupby(groupby).agg(*aggs)
