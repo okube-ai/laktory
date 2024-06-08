@@ -4,6 +4,7 @@ import polars as pl
 from laktory.polars.expressions.math import roundp
 from laktory.polars.expressions.sql import sql_expr
 from laktory.polars.expressions.sort import row_number
+from laktory.polars.expressions.units import convert_units
 
 
 def _parse_args(args):
@@ -30,6 +31,10 @@ class LaktoryExpression:
     def __init__(self, expr: pl.Expr):
         self._expr = expr
 
+    @wraps(convert_units)
+    def convert_units(*args, **kwargs):
+        return convert_units(*_parse_args(args), **kwargs)
+
     @wraps(roundp)
     def roundp(*args, **kwargs):
         return roundp(*_parse_args(args), **kwargs)
@@ -41,6 +46,7 @@ class LaktoryExpression:
     @wraps(sql_expr)
     def sql_expr(*args, **kwargs):
         return sql_expr(*_parse_args(args), **kwargs)
+
 
 
 # TODO: Enable?

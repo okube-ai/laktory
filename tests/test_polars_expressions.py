@@ -109,19 +109,18 @@ def test_sql_expr():
 #         assert str(UUID(_uuid)) == _uuid
 #
 #     assert pdf["uuid"].nunique() == 3
-#
-#
-# def test_units(df0=df0):
-#     df = df0.withColumn("ft", LF.convert_units("x", "m", "ft"))
-#     df = df.withColumn("kelvin", LF.convert_units("x", "C", "K"))
-#     pdf = df.toPandas()
-#
-#     assert pdf["ft"].to_list() == [
-#         3.280839895013124,
-#         6.561679790026248,
-#         9.842519685039372,
-#     ]
-#     assert pdf["kelvin"].to_list() == [274.15, 275.15, 276.15]
+
+
+def test_units(df0=df0):
+    df = df0.with_columns(ft=pl.Expr.laktory.convert_units(pl.col("x"), "m", "ft"))
+    df = df.with_columns(kelvin=pl.Expr.laktory.convert_units(pl.col("x"), "C", "K"))
+
+    assert df["ft"].to_list() == [
+        3.280839895013124,
+        6.561679790026248,
+        9.842519685039372,
+    ]
+    assert df["kelvin"].to_list() == [274.15, 275.15, 276.15]
 
 
 if __name__ == "__main__":
@@ -129,8 +128,8 @@ if __name__ == "__main__":
     # test_poly()
     # test_power()
     # test_roundp()
-    test_row_number()
+    # test_row_number()
     # test_sql_expr()
     # test_string_split()
     # test_uuid()
-    # test_units()
+    test_units()
