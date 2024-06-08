@@ -1,10 +1,4 @@
 import polars as pl
-from laktory.polars.expressions._common import (
-    EXPR_OR_NAME,
-    INT_OR_EXPR,
-    FLOAT_OR_EXPR,
-    STRING_OR_EXPR,
-)
 
 __all__ = [
     "row_number",

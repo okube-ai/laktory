@@ -61,7 +61,31 @@ def _parse_compare(condition: str):
     return condition
 
 
-def sql_expr(sql: str):
+def sql_expr(sql: str) -> pl.Expr:
+    """
+    Parse SQL expression to polars expression(s) with support for nested
+    structure
+
+    Parameters
+    ----------
+    sql :
+        SQL expression
+
+    Returns
+    -------
+    :
+        Polar expression
+
+    ```py
+    import laktory  # noqa: F401
+    import polars as pl
+
+    exp = pl.Expr.laktory.sql_expr("data.close > 5.0")
+
+    print(exp)
+    #> [(col("data").struct.field_by_name(close)()) > (dyn float: 5.0)]
+    ```
+    """
     try:
         return pl.sql_expr(sql)
 

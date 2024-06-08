@@ -1,13 +1,6 @@
 import polars as pl
 from planck import units
 
-from laktory.polars.expressions._common import (
-    EXPR_OR_NAME,
-    INT_OR_EXPR,
-    FLOAT_OR_EXPR,
-    STRING_OR_EXPR,
-)
-
 __all__ = [
     "convert_units",
 ]
@@ -19,7 +12,7 @@ __all__ = [
 
 
 def convert_units(
-    x: EXPR_OR_NAME,
+    x: pl.Expr,
     input_unit: str,
     output_unit: str,
 ) -> pl.Expr:
@@ -44,17 +37,18 @@ def convert_units(
     --------
     ```py
     import laktory  # noqa: F401
-    import pyspark.sql.functions as F
+    import polars as pl
 
-    df = spark.createDataFrame([[1.0]], ["x"])
-    df = df.withColumn("y", F.laktory.convert_units("x", input_unit="m", output_unit="ft"))
-    print(df.laktory.show_string())
+    df = pl.DataFrame({"x": [1.0]})
+    df = df.with_columns(
+        y=pl.Expr.laktory.convert_units(pl.col("x"), input_unit="m", output_unit="ft")
+    )
+    print(df.glimpse(return_as_string=True))
     '''
-    +---+-----------------+
-    |  x|                y|
-    +---+-----------------+
-    |1.0|3.280839895013124|
-    +---+-----------------+
+    Rows: 1
+    Columns: 2
+    $ x <f64> 1.0
+    $ y <f64> 3.280839895013124
     '''
     ```
 

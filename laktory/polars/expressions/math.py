@@ -1,10 +1,5 @@
+from typing import Union
 import polars as pl
-from laktory.polars.expressions._common import (
-    EXPR_OR_NAME,
-    INT_OR_EXPR,
-    FLOAT_OR_EXPR,
-    STRING_OR_EXPR,
-)
 
 __all__ = [
     # "add",
@@ -335,8 +330,8 @@ __all__ = [
 
 
 def roundp(
-    x: EXPR_OR_NAME,
-    p: FLOAT_OR_EXPR = 1.0,
+    x: pl.Expr,
+    p: Union[float, pl.Expr] = 1.0,
 ) -> pl.Expr:
     """
     Evenly round to the given precision
