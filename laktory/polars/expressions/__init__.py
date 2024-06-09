@@ -8,6 +8,9 @@ from laktory.polars.expressions.units import convert_units
 from laktory.polars.expressions.string import string_split
 from laktory.polars.expressions.string import uuid
 from laktory.polars.expressions.logical import compare
+from laktory.polars.expressions.math import poly1
+from laktory.polars.expressions.math import poly2
+from laktory.polars.expressions.math import scaled_power
 
 
 def _parse_args(args):
@@ -42,13 +45,27 @@ class LaktoryExpression:
     def convert_units(*args, **kwargs):
         return convert_units(*_parse_args(args), **kwargs)
 
+    @wraps(poly1)
+    def poly1(*args, **kwargs):
+        return poly1(*_parse_args(args), **kwargs)
+
+    @wraps(poly2)
+    def poly2(*args, **kwargs):
+        return poly2(*_parse_args(args), **kwargs)
+
+
     @wraps(roundp)
     def roundp(*args, **kwargs):
         return roundp(*_parse_args(args), **kwargs)
 
+
     @wraps(row_number)
     def row_number(*args, **kwargs):
         return row_number(*_parse_args(args), **kwargs)
+
+    @wraps(scaled_power)
+    def scaled_power(*args, **kwargs):
+        return scaled_power(*_parse_args(args), **kwargs)
 
     @wraps(sql_expr)
     def sql_expr(*args, **kwargs):

@@ -28,28 +28,24 @@ def test_compare(df0=df0):
     df = df.with_columns(compare2=pl.expr.laktory.compare(
         pl.col("x"), pl.col("a"), operator=">", where=pl.col("a") > 0
     ))
-
     assert df["compare1"].to_list() == [True, False, False]
     assert df["compare2"].to_list() == [False, None, True]
 
-#
-# def test_poly(df0=df0):
-#     df = df0.withColumn("poly1_1", LF.poly1("x", -1, 1.0))
-#     df = df.withColumn("poly1_2", LF.poly1("x", F.col("a"), F.col("b")))
-#     df = df.withColumn("poly2", LF.poly2("x", 1, c=-1))
-#     pdf = df.toPandas()
-#
-#     assert pdf["poly1_1"].to_list() == [0, -1, -2]
-#     assert pdf["poly1_2"].to_list() == [3, -2, 5]
-#     assert pdf["poly1_2"].to_list() == [3, -2, 5]
-#     assert pdf["poly2"].to_list() == [0, 3, 8]
-#
-#
-# def test_power(df0=df0):
-#     df = df0.withColumn("power", LF.scaled_power("x", n=F.col("b")))
-#     pdf = df.toPandas()
-#
-#     assert pdf["power"].to_list() == [1, 1, 9]
+
+def test_poly(df0=df0):
+    df = df0.with_columns(poly1_1=pl.expr.laktory.poly1(pl.col("x"), -1, 1.0))
+    df = df.with_columns(poly1_2=pl.expr.laktory.poly1(pl.col("x"), pl.col("a"), pl.col("b")))
+    df = df.with_columns(poly2=pl.expr.laktory.poly2(pl.col("x"), 1, c=-1))
+
+    assert df["poly1_1"].to_list() == [0, -1, -2]
+    assert df["poly1_2"].to_list() == [3, -2, 5]
+    assert df["poly1_2"].to_list() == [3, -2, 5]
+    assert df["poly2"].to_list() == [0, 3, 8]
+
+
+def test_power(df0=df0):
+    df = df0.with_columns(power=pl.expr.laktory.scaled_power(pl.col("x"), n=pl.col("b")))
+    assert df["power"].to_list() == [1, 1, 9]
 
 
 def test_roundp(df0=df0):
@@ -120,11 +116,11 @@ def test_units(df0=df0):
 
 if __name__ == "__main__":
     test_compare()
-    # test_poly()
-    # test_power()
-    # test_roundp()
-    # test_row_number()
-    # test_sql_expr()
-    # test_string_split()
-    # test_uuid()
-    # test_units()
+    test_poly()
+    test_power()
+    test_roundp()
+    test_row_number()
+    test_sql_expr()
+    test_string_split()
+    test_uuid()
+    test_units()
