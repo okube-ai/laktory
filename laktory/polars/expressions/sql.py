@@ -80,8 +80,10 @@ def sql_expr(sql: str) -> pl.Expr:
     import laktory  # noqa: F401
     import polars as pl
 
+    exp = pl.Expr.laktory.sql_expr("data.close")
+    print(exp)
+    #> col("data").struct.field_by_name(close)()
     exp = pl.Expr.laktory.sql_expr("data.close > 5.0")
-
     print(exp)
     #> [(col("data").struct.field_by_name(close)()) > (dyn float: 5.0)]
     ```
@@ -94,14 +96,16 @@ def sql_expr(sql: str) -> pl.Expr:
         expressions = []
 
         for token in parsed.tokens:
-            print("TOKEN", token)
             if isinstance(token, Comparison):
                 expressions += [_parse_compare(str(token))]
             elif token.ttype is Keyword and token.value.upper() in ["AND", "OR"]:
                 expressions.append(token.value.upper())
+            elif str(token).replace(" ", "") == "":
+                pass
             else:
                 expressions += [_parse_token(str(token))]
 
+        print(expressions)
         expr = expressions[0]
         i = 1
         while i < len(expressions) - 1:
