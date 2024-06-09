@@ -4,11 +4,6 @@ import numpy as np
 import pytest
 import laktory
 
-# from pyspark.sql import SparkSession
-# from pyspark.sql import functions as F
-
-# import laktory.spark.functions as LF
-
 df0 = pl.DataFrame(
     {
         "x": [1, 2, 3],
