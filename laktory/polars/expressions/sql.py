@@ -105,7 +105,6 @@ def sql_expr(sql: str) -> pl.Expr:
             else:
                 expressions += [_parse_token(str(token))]
 
-        print(expressions)
         expr = expressions[0]
         i = 1
         while i < len(expressions) - 1:
