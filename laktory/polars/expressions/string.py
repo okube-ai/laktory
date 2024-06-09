@@ -81,7 +81,7 @@ def uuid() -> pl.Expr:
     Rows: 3
     Columns: 2
     $ id   <i64> 0, 1, 2
-    $ uuid <str> None, None, None
+    $ uuid <str> 'a02f890c-7039-422b-9ca4-cb83c32cae3e', 'c8ae3659-917e-48fe-9325-07ac1b6a4ce7', 'ab473cf4-27ab-4190-8311-1e987d0596bc'
     '''
     ```
     """

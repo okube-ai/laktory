@@ -7,6 +7,7 @@ from laktory.polars.expressions.sort import row_number
 from laktory.polars.expressions.units import convert_units
 from laktory.polars.expressions.string import string_split
 from laktory.polars.expressions.string import uuid
+from laktory.polars.expressions.logical import compare
 
 
 def _parse_args(args):
@@ -32,6 +33,10 @@ def _parse_args(args):
 class LaktoryExpression:
     def __init__(self, expr: pl.Expr):
         self._expr = expr
+
+    @wraps(compare)
+    def compare(*args, **kwargs):
+        return compare(*_parse_args(args), **kwargs)
 
     @wraps(convert_units)
     def convert_units(*args, **kwargs):

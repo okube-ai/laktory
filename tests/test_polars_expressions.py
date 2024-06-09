@@ -22,17 +22,16 @@ df0 = pl.DataFrame(
     },
 )
 
-#
-# def test_compare(df0=df0):
-#     df = df0.withColumn("compare1", LF.compare("x", "a"))
-#     df = df.withColumn(
-#         "compare2", LF.compare("x", "a", operator=">", where=F.col("a") > 0)
-#     )
-#     pdf = df.toPandas()
-#
-#     assert pdf["compare1"].to_list() == [True, False, False]
-#     assert pdf["compare2"].to_list() == [False, None, True]
-#
+
+def test_compare(df0=df0):
+    df = df0.with_columns(compare1=pl.expr.laktory.compare(pl.col("x"), pl.col("a")))
+    df = df.with_columns(compare2=pl.expr.laktory.compare(
+        pl.col("x"), pl.col("a"), operator=">", where=pl.col("a") > 0
+    ))
+
+    assert df["compare1"].to_list() == [True, False, False]
+    assert df["compare2"].to_list() == [False, None, True]
+
 #
 # def test_poly(df0=df0):
 #     df = df0.withColumn("poly1_1", LF.poly1("x", -1, 1.0))
@@ -120,12 +119,12 @@ def test_units(df0=df0):
 
 
 if __name__ == "__main__":
-    # test_compare()
+    test_compare()
     # test_poly()
     # test_power()
-    test_roundp()
-    test_row_number()
-    test_sql_expr()
-    test_string_split()
-    test_uuid()
-    test_units()
+    # test_roundp()
+    # test_row_number()
+    # test_sql_expr()
+    # test_string_split()
+    # test_uuid()
+    # test_units()
