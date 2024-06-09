@@ -1,6 +1,11 @@
+polars_installed = True
 try:
     import polars
+except ModuleNotFoundError:
+    polars_installed = False
 
+
+if polars_installed:
     from polars import DataFrame as PolarsDataFrame
     from polars import Expr as PolarsExpr
 
@@ -11,7 +16,7 @@ try:
     def is_polars_dataframe(df):
         return isinstance(df, PolarsDataFrame)
 
-except ModuleNotFoundError:
+else:
     # Mocks when polars is not installed
 
     class PolarsDataFrame:

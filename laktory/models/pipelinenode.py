@@ -12,6 +12,8 @@ from laktory.models.datasinks import DataSinksUnion
 from laktory.models.pipelinenodeexpectation import PipelineNodeExpectation
 from laktory.models.transformers.sparkchain import SparkChain
 from laktory.models.transformers.sparkchainnode import SparkChainNode
+from laktory.models.transformers.polarschain import PolarsChain
+from laktory.models.transformers.polarschainnode import PolarsChainNode
 from laktory.spark import SparkSession
 from laktory.types import AnyDataFrame
 from laktory._logger import get_logger
@@ -134,7 +136,7 @@ class PipelineNode(BaseModel):
     description: str = None
     drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
-    transformer: Union[SparkChain, None] = None
+    transformer: Union[SparkChain, PolarsChain, None] = None
     expectations: list[PipelineNodeExpectation] = []
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
     name: Union[str, None] = None
@@ -331,6 +333,85 @@ class PipelineNode(BaseModel):
 
         return SparkChain(nodes=nodes)
 
+    @property
+    def layer_polars_chain(self):
+        nodes = []
+
+        if self.layer == "BRONZE":
+            if self.add_layer_columns:
+                nodes += [
+                    PolarsChainNode(
+                        column={
+                            "name": "_bronze_at",
+                            "type": "timestamp",
+                        },
+                        polars_func_name="laktory.current_timestamp",
+                    ),
+                ]
+
+        elif self.layer == "SILVER":
+            if self.timestamp_key:
+                nodes += [
+                    PolarsChainNode(
+                        column={
+                            "name": "_tstamp",
+                            "type": "timestamp",
+                        },
+                        sql_expression=self.timestamp_key,
+                    )
+                ]
+
+            if self.add_layer_columns:
+                nodes += [
+                    PolarsChainNode(
+                        column={
+                            "name": "_silver_at",
+                            "type": "timestamp",
+                        },
+                        polars_func_name="laktory.current_timestamp",
+                    )
+                ]
+
+        elif self.layer == "GOLD":
+            if self.add_layer_columns:
+                nodes += [
+                    PolarsChainNode(
+                        column={
+                            "name": "_gold_at",
+                            "type": "timestamp",
+                        },
+                        polars_func_name="laktory.current_timestamp",
+                    )
+                ]
+
+        if self.drop_duplicates:
+            subset = None
+            if isinstance(self.drop_duplicates, list):
+                subset = self.drop_duplicates
+            elif self.primary_key:
+                subset = [self.primary_key]
+
+            nodes += [
+                PolarsChainNode(polars_func_name="unique", polars_func_args=[subset])
+            ]
+
+        if self.drop_source_columns and self.transformer:
+            nodes += [
+                PolarsChainNode(
+                    polars_func_name="drop",
+                    polars_func_args=[
+                        c
+                        for c in self.transformer.columns[0]
+                        if c not in ["_bronze_at", "_silver_at", "_gold_at"]
+                    ],
+                )
+            ]
+
+        if len(nodes) == 0:
+            return None
+
+        return PolarsChain(nodes=nodes)
+
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
@@ -342,13 +423,23 @@ class PipelineNode(BaseModel):
             sources += [self.source]
 
         if self.transformer:
-            for sn in self.transformer.nodes:
-                for a in sn.spark_func_args:
-                    if isinstance(a.value, cls):
-                        sources += [a.value]
-                for a in sn.spark_func_kwargs.values():
-                    if isinstance(a.value, cls):
-                        sources += [a.value]
+
+            if isinstance(self.transformer, SparkChain):
+                for sn in self.transformer.nodes:
+                    for a in sn.spark_func_args:
+                        if isinstance(a.value, cls):
+                            sources += [a.value]
+                    for a in sn.spark_func_kwargs.values():
+                        if isinstance(a.value, cls):
+                            sources += [a.value]
+            elif isinstance(self.transformer, PolarsChain):
+                for pn in self.transformer.nodes:
+                    for a in pn.polars_func_args:
+                        if isinstance(a.value, cls):
+                            sources += [a.value]
+                    for a in pn.polars_func_kwargs.values():
+                        if isinstance(a.value, cls):
+                            sources += [a.value]
 
         return sources
 
@@ -400,12 +491,24 @@ class PipelineNode(BaseModel):
             # https://www.linkedin.com/pulse/implementing-slowly-changing-dimension-2-using-lau-johansson-yemxf/
 
         # Apply transformer
-        if apply_transformer and self.transformer:
-            self._output_df = self.transformer.execute(self._output_df, udfs=udfs)
+        if apply_transformer:
+            if self.transformer:
+                self._output_df = self.transformer.execute(self._output_df, udfs=udfs)
 
-        # Apply layer-specific chain
-        if apply_transformer and self.layer_spark_chain:
-            self._output_df = self.layer_spark_chain.execute(self._output_df, udfs=udfs)
+            # Apply layer-specific spark chain
+            if "spark" in str(type(self._output_df)).lower() and self.layer_spark_chain:
+                self._output_df = self.layer_spark_chain.execute(
+                    self._output_df, udfs=udfs
+                )
+
+            # Apply layer-specific polars chain
+            if (
+                "polars" in str(type(self._output_df)).lower()
+                and self.layer_polars_chain
+            ):
+                self._output_df = self.layer_polars_chain.execute(
+                    self._output_df, udfs=udfs
+                )
 
         # Output to sink
         if write_sink and self.sink:

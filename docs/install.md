@@ -27,18 +27,12 @@ laktory --help
 ```
 
 ## Optional Dependencies
-### Infrastructure as Code
-If you are using Pulumi as the IaC backend, you will want to run 
-
-```cmd
-pip install laktory[pulumi]
-```
 
 ### Dataframes
 
 If you want to run your pipeline locally or test some of the transformations,
 you will have to install the dataframe library used by your transformations.
-Available options are `spark` and `polars` (under development).
+Available options are `spark` and `polars`.
 
 * Apache Spark
   ```cmd
@@ -46,14 +40,23 @@ Available options are `spark` and `polars` (under development).
   ```
   For running spark locally, you also need to follow instructions provided [here](https://www.machinelearningplus.com/pyspark/install-pyspark-on-mac/). 
   If you use homebrew to install java, your `JAVA_HOME` and `SPARK_HOME` environment variables should look something like:
-  * `JAVA_HOME=/opt/homebrew/opt/java`
-  * `SPARK_HOME=/opt/homebrew/Cellar/apache-spark/3.5.0/libexec`
+    * `JAVA_HOME=/opt/homebrew/opt/java`
+    * `SPARK_HOME=/opt/homebrew/Cellar/apache-spark/3.5.0/libexec`
+
 
 
 * Polars
 ```cmd
 pip install laktory[polars]
 ```
+
+### Infrastructure as Code
+If you are using Pulumi as the IaC backend, you will want to run 
+
+```cmd
+pip install laktory[pulumi]
+```
+
 
 ### Orchestrator
 If you want to run your pipeline remotely using one of the supported 
@@ -89,20 +92,6 @@ Laktory supports multiple IaC backends. You will need to install the CLI of your
 
 * [terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 * [pulumi](https://www.pulumi.com/docs/install/)
-
-## Spark installation
-Laktory facilitate building and deploying custom spark functions. 
-If you wish to test these functions locally, we recommend also installing the spark optional dependency.
-
-For running spark locally, you also need to follow instructions provided [here](https://www.machinelearningplus.com/pyspark/install-pyspark-on-mac/). 
-If you use homebrew to install java, your `JAVA_HOME` and `SPARK_HOME` environment variables should look something like:
-* `JAVA_HOME=/opt/homebrew/opt/java`
-* `SPARK_HOME=/opt/homebrew/Cellar/apache-spark/3.5.0/libexec`
-
-
-```bash
-pip install laktory[spark]
-```
 
 ## Git-based installation
 If you need or prefer installing Laktory from git, you can use:

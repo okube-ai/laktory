@@ -61,7 +61,33 @@ def _parse_compare(condition: str):
     return condition
 
 
-def sql_expr(sql: str):
+def sql_expr(sql: str) -> pl.Expr:
+    """
+    Parse SQL expression to polars expression(s) with support for nested
+    structure
+
+    Parameters
+    ----------
+    sql :
+        SQL expression
+
+    Returns
+    -------
+    :
+        Polar expression
+
+    ```py
+    import laktory  # noqa: F401
+    import polars as pl
+
+    exp = pl.Expr.laktory.sql_expr("data.close")
+    print(exp)
+    #> col("data").struct.field_by_name(close)()
+    exp = pl.Expr.laktory.sql_expr("data.close > 5.0")
+    print(exp)
+    #> [(col("data").struct.field_by_name(close)()) > (dyn float: 5.0)]
+    ```
+    """
     try:
         return pl.sql_expr(sql)
 
@@ -74,6 +100,10 @@ def sql_expr(sql: str):
                 expressions += [_parse_compare(str(token))]
             elif token.ttype is Keyword and token.value.upper() in ["AND", "OR"]:
                 expressions.append(token.value.upper())
+            elif str(token).replace(" ", "") == "":
+                pass
+            else:
+                expressions += [_parse_token(str(token))]
 
         expr = expressions[0]
         i = 1

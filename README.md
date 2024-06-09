@@ -15,9 +15,8 @@ DataOps approach.
 Laktory, the lakehouse factory, is an open-source framework designed for 
 building, deploying, and executing data pipelines while adhering to essential
 DevOps best practices such as source control, code reviews, and CI/CD. 
-Leveraging Apache Spark and Polars (under development) as its core data
-transformation engines, Laktory ensures robust and scalable data processing
-capabilities.
+Leveraging Apache Spark and Polars as its core data transformation engines,
+Laktory ensures robust and scalable data processing capabilities.
 
 <img src="docs/images/laktory_diagram.png" alt="what is laktory" width="400"/>
 

@@ -99,7 +99,7 @@ class PipelineNodeDataSource(BaseDataSource):
                     df = dlt_read(self.node.name)
 
         # Read from node output DataFrame (if available)
-        elif self.node.output_df:
+        elif self.node.output_df is not None:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
             df = self.node.output_df
 

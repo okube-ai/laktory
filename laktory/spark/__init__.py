@@ -1,6 +1,10 @@
+spark_installed = True
 try:
     import pyspark
+except ModuleNotFoundError:
+    spark_installed = False
 
+if spark_installed:
     from pyspark.sql.connect.dataframe import DataFrame as SparkConnectDataFrame
     from pyspark.sql.dataframe import DataFrame as SparkDataFrame
     from pyspark.sql.column import Column as SparkColumn
@@ -21,7 +25,7 @@ try:
 
         return False
 
-except ModuleNotFoundError:
+else:
     # Mocks when pyspark is not installed
 
     class SparkDataFrame:

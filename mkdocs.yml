@@ -129,6 +129,7 @@ nav:
       - Data Sources and Sinks: concepts/models/sourcessinks.md
       - Transformers: concepts/models/transformers.md
       - Data Event: concepts/models/dataevent.md
+    - DataFrames: concepts/dataframes.md
     - Stack: concepts/stack.md
     - Variables: concepts/variables.md
     - Deployment (IaC): concepts/deployment.md
@@ -226,6 +227,7 @@ nav:
       - Functions:
         - constants: api/spark/functions/_constants.md
         - add: api/spark/functions/add.md
+        - add: api/spark/functions/compare.md
         - convert_units: api/spark/functions/convert_units.md
         - div: api/spark/functions/div.md
         - mul: api/spark/functions/mul.md
@@ -236,6 +238,26 @@ nav:
         - string_split: api/spark/functions/string_split.md
         - sub: api/spark/functions/sub.md
         - uuid: api/spark/functions/uuid.md
+    - Polars:
+      - DataFrame:
+        - groupby_and_agg: api/polars/dataframe/groupby_and_agg.md
+        - has_column: api/polars/dataframe/has_column.md
+        - schema_flat: api/polars/dataframe/schema_flat.md
+        - signature: api/polars/dataframe/signature.md
+        - smart_join: api/polars/dataframe/smart_join.md
+        - union: api/polars/dataframe/union.md
+        - window_filter: api/polars/dataframe/window_filter.md
+      - Expressions:
+        - compare: api/polars/expressions/compare.md
+        - convert_units: api/polars/expressions/convert_units.md
+        - current_timestamp: api/polars/expressions/current_timestamp.md
+        - poly1: api/polars/expressions/poly1.md
+        - poly2: api/polars/expressions/poly2.md
+        - roundp: api/polars/expressions/roundp.md
+        - row_number: api/polars/expressions/row_number.md
+        - scaled_power: api/polars/expressions/scaled_power.md
+        - string_split: api/polars/expressions/string_split.md
+        - uuid: api/polars/expressions/uuid.md
     - DLT:
       - apply_changes: api/dlt/apply_changes.md
       - get_df: api/dlt/get_df.md

@@ -7,10 +7,6 @@
 * Support for PolarsChain transformer
 * Polars DataFrame extension
 * Polars Expressions extension
-### Fixed
-* n/a
-### Updated
-* n/a
 ### Breaking changes
 * Moved laktory Spark dataframe custom functions under a laktory namespace.
 

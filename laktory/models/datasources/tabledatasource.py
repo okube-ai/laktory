@@ -1,10 +1,6 @@
-from laktory.spark import SparkDataFrame
 from typing import Union
 from typing import Literal
-from typing import Any
-from pydantic import model_validator
 
-from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory.spark import SparkDataFrame
 from laktory._logger import get_logger
@@ -15,7 +11,7 @@ logger = get_logger(__name__)
 class TableDataSource(BaseDataSource):
     """
     Data source using a data warehouse data table, generally used in the
-    context of a data pipeline.
+    context of a data pipeline. Currently only supported by Spark dataframes.
 
     Attributes
     ----------

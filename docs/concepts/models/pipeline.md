@@ -7,9 +7,9 @@ reading, transforming, and writing data.
 
 <img src="/../../images/pl_diagram.png" alt="data pipeline" width="400"/>
 
-A pipeline is structured as a sequence of nodes. Each node generates a 
-dataframe by reading a source, applying transformations, and optionally writing
-the output to a sink.
+A pipeline is structured as a sequence of nodes. Each node generates a Spark 
+or Polars dataframe by reading a source, applying transformations, and
+optionally writing the output to a sink.
 
 <img src="/../../images/pl_node_diagram.png" alt="pipeline node" width="400"/>
 

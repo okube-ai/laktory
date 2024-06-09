@@ -233,12 +233,6 @@ class PolarsChainNode(BaseModel):
         from polars import DataFrame
         from laktory.polars.datatypes import DATATYPES_MAP
 
-        # from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
-        # from pyspark.sql import Column
-        # from laktory.spark.dataframe import has_column
-        # from laktory.spark import functions as LF
-        # from laktory.spark import SparkDataFrame as LDF
-
         if udfs is None:
             udfs = []
         udfs = {f.__name__: f for f in udfs}
