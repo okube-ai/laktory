@@ -1,9 +1,9 @@
+from uuid import UUID
 import polars as pl
 import numpy as np
 import pytest
 import laktory
 
-# from uuid import UUID
 # from pyspark.sql import SparkSession
 # from pyspark.sql import functions as F
 
@@ -90,25 +90,21 @@ def test_sql_expr():
     assert str(expr1) == str(expr0)
 
 
-#
-#
-# def test_string_split(df0=df0):
-#     df = df0.withColumn("split_1", LF.string_split(F.col("word"), "_", 0))
-#     df = df.withColumn("split_2", LF.string_split(F.col("word"), "_", 1))
-#     pdf = df.toPandas()
-#
-#     assert pdf["split_1"].to_list() == ["dog", "dog", "dog"]
-#     assert pdf["split_2"].to_list() == ["cat", "cat", None]
-#
-#
-# def test_uuid(df0=df0):
-#     df = df0.withColumn("uuid", LF.uuid())
-#     pdf = df.toPandas()
-#
-#     for _uuid in pdf["uuid"]:
-#         assert str(UUID(_uuid)) == _uuid
-#
-#     assert pdf["uuid"].nunique() == 3
+def test_string_split(df0=df0):
+    df = df0.with_columns(split_1=pl.Expr.laktory.string_split(pl.col("word"), "_", 0))
+    df = df.with_columns(split_2=pl.Expr.laktory.string_split(pl.col("word"), "_", 1))
+
+    assert df["split_1"].to_list() == ["dog", "dog", "dog"]
+    assert df["split_2"].to_list() == ["cat", "cat", None]
+
+
+def test_uuid(df0=df0):
+    df = df0.with_columns(uuid=pl.Expr.laktory.uuid())
+
+    for _uuid in df["uuid"]:
+        assert str(UUID(_uuid)) == _uuid
+
+    assert df["uuid"].n_unique() == 3
 
 
 def test_units(df0=df0):
@@ -127,9 +123,9 @@ if __name__ == "__main__":
     # test_compare()
     # test_poly()
     # test_power()
-    # test_roundp()
-    # test_row_number()
-    # test_sql_expr()
-    # test_string_split()
-    # test_uuid()
+    test_roundp()
+    test_row_number()
+    test_sql_expr()
+    test_string_split()
+    test_uuid()
     test_units()

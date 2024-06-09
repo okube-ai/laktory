@@ -5,6 +5,8 @@ from laktory.polars.expressions.math import roundp
 from laktory.polars.expressions.sql import sql_expr
 from laktory.polars.expressions.sort import row_number
 from laktory.polars.expressions.units import convert_units
+from laktory.polars.expressions.string import string_split
+from laktory.polars.expressions.string import uuid
 
 
 def _parse_args(args):
@@ -47,7 +49,13 @@ class LaktoryExpression:
     def sql_expr(*args, **kwargs):
         return sql_expr(*_parse_args(args), **kwargs)
 
+    @wraps(string_split)
+    def string_split(*args, **kwargs):
+        return string_split(*_parse_args(args), **kwargs)
+
+    @wraps(uuid)
+    def uuid(*args, **kwargs):
+        return uuid(*_parse_args(args), **kwargs)
 
 
-# TODO: Enable?
-# pl.expr.laktory = pl.Expr.laktory
+pl.expr.laktory = pl.Expr.laktory
