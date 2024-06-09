@@ -81,13 +81,14 @@ def uuid() -> pl.Expr:
     Rows: 3
     Columns: 2
     $ id   <i64> 0, 1, 2
-    $ uuid <str> 'd56727ac-0084-4f29-8a7b-6ae72e4c51a0', 'c3f78486-6e18-41ed-9e10-1113d249212c', '22abcee3-3e02-49ff-9359-ee5ff074458f'
+    $ uuid <str> 'afe77a6d-adae-4032-9478-9ecfcf5273a9', '55025292-0be6-46b6-ae3c-acd6280c77c1', '7435f80f-4bfe-46f1-97a8-91275859b1d5'
     '''
     ```
     """
 
     def generate_uuid():
         import uuid
+
         return str(uuid.uuid4())
 
     return pl.first().apply(lambda _: generate_uuid(), return_dtype=pl.Utf8)

@@ -1,0 +1,1 @@
+::: laktory.polars.expressions.scaled_power

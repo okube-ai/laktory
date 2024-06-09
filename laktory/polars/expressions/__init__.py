@@ -53,11 +53,9 @@ class LaktoryExpression:
     def poly2(*args, **kwargs):
         return poly2(*_parse_args(args), **kwargs)
 
-
     @wraps(roundp)
     def roundp(*args, **kwargs):
         return roundp(*_parse_args(args), **kwargs)
-
 
     @wraps(row_number)
     def row_number(*args, **kwargs):

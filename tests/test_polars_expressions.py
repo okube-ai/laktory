@@ -20,16 +20,20 @@ df0 = pl.DataFrame(
 
 def test_compare(df0=df0):
     df = df0.with_columns(compare1=pl.expr.laktory.compare(pl.col("x"), pl.col("a")))
-    df = df.with_columns(compare2=pl.expr.laktory.compare(
-        pl.col("x"), pl.col("a"), operator=">", where=pl.col("a") > 0
-    ))
+    df = df.with_columns(
+        compare2=pl.expr.laktory.compare(
+            pl.col("x"), pl.col("a"), operator=">", where=pl.col("a") > 0
+        )
+    )
     assert df["compare1"].to_list() == [True, False, False]
     assert df["compare2"].to_list() == [False, None, True]
 
 
 def test_poly(df0=df0):
     df = df0.with_columns(poly1_1=pl.expr.laktory.poly1(pl.col("x"), -1, 1.0))
-    df = df.with_columns(poly1_2=pl.expr.laktory.poly1(pl.col("x"), pl.col("a"), pl.col("b")))
+    df = df.with_columns(
+        poly1_2=pl.expr.laktory.poly1(pl.col("x"), pl.col("a"), pl.col("b"))
+    )
     df = df.with_columns(poly2=pl.expr.laktory.poly2(pl.col("x"), 1, c=-1))
 
     assert df["poly1_1"].to_list() == [0, -1, -2]
@@ -39,7 +43,9 @@ def test_poly(df0=df0):
 
 
 def test_power(df0=df0):
-    df = df0.with_columns(power=pl.expr.laktory.scaled_power(pl.col("x"), n=pl.col("b")))
+    df = df0.with_columns(
+        power=pl.expr.laktory.scaled_power(pl.col("x"), n=pl.col("b"))
+    )
     assert df["power"].to_list() == [1, 1, 9]
 
 
