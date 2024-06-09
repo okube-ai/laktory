@@ -1,16 +1,17 @@
 from functools import wraps
 import polars as pl
 
-from laktory.polars.expressions.math import roundp
-from laktory.polars.expressions.sql import sql_expr
-from laktory.polars.expressions.sort import row_number
-from laktory.polars.expressions.units import convert_units
-from laktory.polars.expressions.string import string_split
-from laktory.polars.expressions.string import uuid
+from laktory.polars.expressions.datetime import current_timestamp
 from laktory.polars.expressions.logical import compare
 from laktory.polars.expressions.math import poly1
 from laktory.polars.expressions.math import poly2
+from laktory.polars.expressions.math import roundp
 from laktory.polars.expressions.math import scaled_power
+from laktory.polars.expressions.sort import row_number
+from laktory.polars.expressions.sql import sql_expr
+from laktory.polars.expressions.string import string_split
+from laktory.polars.expressions.string import uuid
+from laktory.polars.expressions.units import convert_units
 
 
 def _parse_args(args):
@@ -44,6 +45,10 @@ class LaktoryExpression:
     @wraps(convert_units)
     def convert_units(*args, **kwargs):
         return convert_units(*_parse_args(args), **kwargs)
+
+    @wraps(current_timestamp)
+    def current_timestamp(*args, **kwargs):
+        return current_timestamp(*_parse_args(args), **kwargs)
 
     @wraps(poly1)
     def poly1(*args, **kwargs):

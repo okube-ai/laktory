@@ -248,8 +248,9 @@ nav:
         - union: api/polars/dataframe/union.md
         - window_filter: api/polars/dataframe/window_filter.md
       - Expressions:
-        - convert_units: api/polars/expressions/compare.md
+        - compare: api/polars/expressions/compare.md
         - convert_units: api/polars/expressions/convert_units.md
+        - current_timestamp: api/polars/expressions/current_timestamp.md
         - poly1: api/polars/expressions/poly1.md
         - poly2: api/polars/expressions/poly2.md
         - roundp: api/polars/expressions/roundp.md

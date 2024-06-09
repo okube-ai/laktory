@@ -94,10 +94,13 @@ def sql_expr(sql: str) -> pl.Expr:
         expressions = []
 
         for token in parsed.tokens:
+            print("TOKEN", token)
             if isinstance(token, Comparison):
                 expressions += [_parse_compare(str(token))]
             elif token.ttype is Keyword and token.value.upper() in ["AND", "OR"]:
                 expressions.append(token.value.upper())
+            else:
+                expressions += [_parse_token(str(token))]
 
         expr = expressions[0]
         i = 1

@@ -541,7 +541,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def execute(self, spark, udfs=None, write_sinks=True) -> None:
+    def execute(self, spark=None, udfs=None, write_sinks=True) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
         executing each node. The selected orchestrator might impact how
