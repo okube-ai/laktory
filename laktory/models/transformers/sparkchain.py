@@ -40,35 +40,33 @@ class SparkChain(BaseModel):
     sc = models.SparkChain(
         nodes=[
             {
-                "column": {
+                "with_column": {
                     "name": "cos_x",
                     "type": "double",
+                    "expr": "F.cos('x')",
                 },
-                "spark_func_name": "cos",
-                "spark_func_args": ["x"],
             },
             {
                 "nodes": [
                     {
-                        "spark_func_name": "withColumnRenamed",
-                        "spark_func_args": [
+                        "func_name": "withColumnRenamed",
+                        "func_args": [
                             "x",
                             "x_tmp",
                         ],
                     },
                     {
-                        "column": {
+                        "with_column": {
                             "name": "x2",
                             "type": "double",
+                            "expr": "F.sqrt('x_tmp')",
                         },
-                        "spark_func_name": "sqrt",
-                        "spark_func_args": ["x_tmp"],
                     },
                 ],
             },
             {
-                "spark_func_name": "drop",
-                "spark_func_args": [
+                "func_name": "drop",
+                "func_args": [
                     "x_tmp",
                 ],
             },

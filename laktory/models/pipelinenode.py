@@ -110,19 +110,17 @@ class PipelineNode(BaseModel):
           table_name: slv_stock_prices
         transformer:
           nodes:
-          - column:
+          - with_column:
               name: created_at
               type: timestamp
-            sql_expression: data.created_at
-          - column:
+              sql_expr: data.created_at
+          - with_column:
               name: symbol
-            func_name: coalesce
-            func_args:
-            - value: data.symbol
-          - column:
+              sql_expr: data.symbol
+          - with_column:
               name: close
               type: double
-            sql_expression: data.close
+              sql_expr: data.close
     '''
 
     node = models.PipelineNode.model_validate_yaml(io.StringIO(node_yaml))

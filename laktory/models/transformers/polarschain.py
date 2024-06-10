@@ -40,34 +40,32 @@ class PolarsChain(BaseModel):
     sc = models.PolarsChain(
         nodes=[
             {
-                "column": {
+                "with_column": {
                     "name": "cos_x",
                     "type": "double",
+                    "expr": "pl.col('x').cos()",
                 },
-                "polars_func_name": "cos",
-                "polars_func_args": ["col('x')"],
             },
             {
                 "nodes": [
                     {
-                        "polars_func_name": "rename",
-                        "polars_func_args": [
+                        "func_name": "rename",
+                        "func_args": [
                             {"x": "x_tmp"},
                         ],
                     },
                     {
-                        "column": {
+                        "with_column": {
                             "name": "x2",
                             "type": "double",
+                            "expr": "pl.col('x_tmp').sqrt()",
                         },
-                        "polars_func_name": "sqrt",
-                        "polars_func_args": ["col('x_tmp')"],
                     },
                 ],
             },
             {
-                "polars_func_name": "drop",
-                "polars_func_args": [
+                "func_name": "drop",
+                "func_args": [
                     "x_tmp",
                 ],
             },

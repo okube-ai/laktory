@@ -60,8 +60,8 @@ sink:
 layer: SILVER
 transformer:
   nodes:
-  - spark_func_name: select
-    spark_func_args:
+  - func_name: select
+    func_args:
       - timestamp
       - symbol
       - open
@@ -69,8 +69,8 @@ transformer:
       - high
       - low
       - volume
-  - spark_func_name: drop_duplicates
-    spark_func_kwargs:
+  - func_name: drop_duplicates
+    func_kwargs:
       subset:
         - symbol
         - timestamp

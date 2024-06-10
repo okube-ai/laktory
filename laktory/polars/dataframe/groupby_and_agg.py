@@ -47,7 +47,7 @@ def groupby_and_agg(
         agg_expressions=[
             {
                 "name": "mean_price",
-                "expression": "pl.col('price').mean()",
+                "expr": "pl.col('price').mean()",
             },
         ],
     )

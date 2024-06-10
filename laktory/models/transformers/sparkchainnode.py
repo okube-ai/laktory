@@ -50,7 +50,7 @@ class SparkChainNode(BaseChainNode):
         SQL Expression using `{df}` to reference upstream dataframe and
         defining how to build the output dataframe. If `column` is
         specified, the sql expression should define a column instead. Mutually
-         exclusive to `spark_func_name`
+         exclusive to `func_name`
 
     Examples
     --------
@@ -61,23 +61,20 @@ class SparkChainNode(BaseChainNode):
     df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 2, 3]}))
 
     node = models.SparkChainNode(
-        column={
+        with_column={
             "name": "cosx",
             "type": "double",
+            "expr": "F.cos('x')",
         },
-        spark_func_name="cos",
-        spark_func_args=["x"],
     )
     df = node.execute(df0)
 
     node = models.SparkChainNode(
-        column={
+        with_column={
             "name": "xy",
             "type": "double",
+            "expr": "F.coalesce('x')",
         },
-        spark_func_name="coalesce",
-        spark_func_args=["col('x')", "F.col('y')"],
-        allow_missing_column_args=True,
     )
     df = node.execute(df)
 
@@ -91,8 +88,8 @@ class SparkChainNode(BaseChainNode):
     '''
 
     node = models.SparkChainNode(
-        spark_func_name="drop_duplicates",
-        spark_func_args=[["x"]],
+        func_name="drop_duplicates",
+        func_args=[["x"]],
     )
     df = node.execute(df0)
 

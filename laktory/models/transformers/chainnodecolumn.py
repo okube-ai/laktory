@@ -149,22 +149,20 @@ class BaseChainNode(BaseModel):
     '''
 
     node = models.PolarsChainNode(
-        column={
+        with_column={
             "name": "cosx",
             "type": "double",
+            "expr": "pl.col('x').cos()",
         },
-        polars_func_name="cos",
-        polars_func_args=["col('x')"],
     )
     df = node.execute(df0)
 
     node = models.PolarsChainNode(
-        column={
+        with_column={
             "name": "xy",
             "type": "double",
+            "expr": "pl.coalesce('x')",
         },
-        polars_func_name="coalesce",
-        polars_func_args=["col('x')", "F.col('y')"],
     )
     df = node.execute(df)
     print(df.glimpse(return_as_string=True))
@@ -177,9 +175,9 @@ class BaseChainNode(BaseModel):
     '''
 
     node = models.PolarsChainNode(
-        polars_func_name="unique",
-        polars_func_args=[["x"]],
-        polars_func_kwargs={"maintain_order": True},
+        func_name="unique",
+        func_args=[["x"]],
+        func_kwargs={"maintain_order": True},
     )
     df = node.execute(df)
     print(df.glimpse(return_as_string=True))
@@ -305,7 +303,7 @@ class BaseChainNode(BaseModel):
         func_name = self.func_name
         if self.func_name is None:
             raise ValueError(
-                "`polars_func_name` must be specified if `sql_expression` is not specified"
+                "`func_name` must be specified if `sql_expression` is not specified"
             )
 
         # Get from UDFs

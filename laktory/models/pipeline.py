@@ -160,21 +160,19 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             path: ./dataframes/slv_stock_prices
           transformer:
             nodes:
-            - column:
+            - with_column:
                 name: created_at
                 type: timestamp
-              sql_expression: data.created_at
-            - column:
+                sql_expr: data.created_at
+            - with_column:
                 name: symbol
-              spark_func_name: coalesce
-              spark_func_args:
-              - value: data.symbol
-            - column:
+                sql_expr: data.symbol
+            - with_column:
                 name: close
                 type: double
-              sql_expression: data.close
-            - spark_func_name: drop
-              spark_func_args:
+                sql_expr: data.close
+            - func_name: drop
+              func_args:
               - value: data
               - value: producer
               - value: name
@@ -231,27 +229,25 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
               mode: OVERWRITE
           transformer:
             nodes:
-            - column:
+            - with_column:
                 name: created_at
                 type: timestamp
-              sql_expression: data.created_at
-            - column:
+                sql_expr: data.created_at
+            - with_column:
                 name: symbol
-              spark_func_name: coalesce
-              spark_func_args:
-              - value: data.symbol
-            - column:
+                sql_expr: data.symbol
+            - with_column:
                 name: close
                 type: double
-              sql_expression: data.close
-            - spark_func_name: drop
-              spark_func_args:
+                sql_expr: data.close
+            - func_name: drop
+              func_args:
               - value: data
               - value: producer
               - value: name
               - value: description
-            - spark_func_name: laktory.smart_join
-              spark_func_kwargs:
+            - func_name: laktory.smart_join
+              func_kwargs:
                 'on':
                   - symbol
                 other:
@@ -312,27 +308,25 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             table_name: slv_stock_prices
           transformer:
             nodes:
-            - column:
+            - with_column:
                 name: created_at
                 type: timestamp
-              sql_expression: data.created_at
-            - column:
+                sql_expr: data.created_at
+            - with_column:
                 name: symbol
-              spark_func_name: coalesce
-              spark_func_args:
-              - value: data.symbol
-            - column:
+                sql_expr: data.symbol
+            - with_column:
                 name: close
                 type: double
-              sql_expression: data.close
-            - spark_func_name: drop
-              spark_func_args:
+                sql_expr: data.close
+            - func_name: drop
+              func_args:
               - value: data
               - value: producer
               - value: name
               - value: description
-            - spark_func_name: laktory.smart_join
-              spark_func_kwargs:
+            - func_name: laktory.smart_join
+              func_kwargs:
                 'on':
                   - symbol
                 other:

@@ -46,7 +46,7 @@ class PolarsChainNode(BaseChainNode):
         SQL Expression using `self` to reference upstream dataframe and
         defining how to build the output dataframe. If `column` is
         specified, the sql expression should define a column instead. Mutually
-        exclusive to `spark_func_name`
+        exclusive to `func_name`
 
     Examples
     --------
@@ -63,22 +63,16 @@ class PolarsChainNode(BaseChainNode):
     '''
 
     node = models.PolarsChainNode(
-        column={
-            "name": "cosx",
-            "type": "double",
-        },
-        polars_func_name="cos",
-        polars_func_args=["col('x')"],
+        with_column={"name": "cosx", "type": "double", "expr": "pl.col('x').cos()"},
     )
     df = node.execute(df0)
 
     node = models.PolarsChainNode(
-        column={
+        with_column={
             "name": "xy",
             "type": "double",
+            "expr": "pl.coalesce('x')",
         },
-        polars_func_name="coalesce",
-        polars_func_args=["col('x')", "F.col('y')"],
     )
     df = node.execute(df)
     print(df.glimpse(return_as_string=True))
@@ -91,9 +85,9 @@ class PolarsChainNode(BaseChainNode):
     '''
 
     node = models.PolarsChainNode(
-        polars_func_name="unique",
-        polars_func_args=[["x"]],
-        polars_func_kwargs={"maintain_order": True},
+        func_name="unique",
+        func_args=[["x"]],
+        func_kwargs={"maintain_order": True},
     )
     df = node.execute(df)
     print(df.glimpse(return_as_string=True))

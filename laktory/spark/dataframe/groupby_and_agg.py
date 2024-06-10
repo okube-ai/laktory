@@ -83,9 +83,8 @@ def groupby_and_agg(
         },
         agg_expressions=[
             {
-                "column": {"name": "mean_price"},
-                "spark_func_name": "mean",
-                "spark_func_args": ["price"],
+                "name": "mean_price",
+                "expr": "F.mean('price')",
             },
         ],
     )

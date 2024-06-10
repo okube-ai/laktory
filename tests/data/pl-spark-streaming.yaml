@@ -32,15 +32,15 @@ nodes:
       sql_expression: data.created_at
     - column:
         name: symbol
-      spark_func_name: coalesce
-      spark_func_args:
+      func_name: coalesce
+      func_args:
       - value: data.symbol
     - column:
         name: close
         type: double
       sql_expression: data.close
-    - spark_func_name: drop
-      spark_func_args:
+    - func_name: drop
+      func_args:
       - value: data
       - value: producer
       - value: name
