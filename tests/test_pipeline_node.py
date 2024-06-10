@@ -25,23 +25,31 @@ def test_execute():
             "mock_df": df_brz,
         },
         transformer={
+            "spark": True,
             "nodes": [
                 {
-                    "column": {"name": "created_at", "type": "timestamp"},
-                    "sql_expression": "data.created_at",
+                    "with_column": {
+                        "name": "created_at",
+                        "type": "timestamp",
+                        "sql_expr": "data.created_at"
+                    },
                 },
                 {
-                    "column": {"name": "symbol"},
-                    "spark_func_name": "coalesce",
-                    "spark_func_args": ["data.symbol"],
+                    "with_column": {
+                        "name": "symbol",
+                        "sql_expr": "data.symbol"
+                    },
                 },
                 {
-                    "column": {"name": "close", "type": "double"},
-                    "sql_expression": "data.close",
+                    "with_column": {
+                        "name": "close",
+                        "type": "double",
+                        "sql_expr": "data.close"
+                    },
                 },
                 {
-                    "spark_func_name": "drop",
-                    "spark_func_args": ["data", "producer", "name", "description"],
+                    "func_name": "drop",
+                    "func_args": ["data", "producer", "name", "description"],
                 },
             ]
         },
@@ -73,8 +81,10 @@ def test_bronze():
         transformer={
             "nodes": [
                 {
-                    "column": {"name": "symbol", "type": "string"},
-                    "sql_expression": "data.symbol",
+                    "with_column": {
+                        "name": "symbol",
+                        "sql_expr": "data.symbol"
+                    },
                 },
             ]
         },
@@ -113,8 +123,11 @@ def test_silver():
         transformer={
             "nodes": [
                 {
-                    "column": {"name": "symbol", "type": "string"},
-                    "sql_expression": "data.symbol",
+                    "with_column": {
+                        "name": "symbol",
+                        "type": "string",
+                        "sql_expr": "data.symbol",
+                    },
                 },
             ]
         },

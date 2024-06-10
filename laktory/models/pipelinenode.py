@@ -116,8 +116,8 @@ class PipelineNode(BaseModel):
             sql_expression: data.created_at
           - column:
               name: symbol
-            spark_func_name: coalesce
-            spark_func_args:
+            func_name: coalesce
+            func_args:
             - value: data.symbol
           - column:
               name: close
@@ -260,11 +260,11 @@ class PipelineNode(BaseModel):
             if self.add_layer_columns:
                 nodes += [
                     SparkChainNode(
-                        column={
+                        with_column={
                             "name": "_bronze_at",
                             "type": "timestamp",
+                            "expr": "F.current_timestamp()"
                         },
-                        spark_func_name="current_timestamp",
                     ),
                 ]
 
@@ -272,22 +272,22 @@ class PipelineNode(BaseModel):
             if self.timestamp_key:
                 nodes += [
                     SparkChainNode(
-                        column={
+                        with_column={
                             "name": "_tstamp",
                             "type": "timestamp",
+                            "sql_expr": self.timestamp_key,
                         },
-                        sql_expression=self.timestamp_key,
                     )
                 ]
 
             if self.add_layer_columns:
                 nodes += [
                     SparkChainNode(
-                        column={
+                        with_column={
                             "name": "_silver_at",
                             "type": "timestamp",
+                            "expr": "F.current_timestamp()"
                         },
-                        spark_func_name="current_timestamp",
                     )
                 ]
 
@@ -295,11 +295,11 @@ class PipelineNode(BaseModel):
             if self.add_layer_columns:
                 nodes += [
                     SparkChainNode(
-                        column={
+                        with_column={
                             "name": "_gold_at",
                             "type": "timestamp",
+                            "expr": "F.current_timestamp()"
                         },
-                        spark_func_name="current_timestamp",
                     )
                 ]
 
@@ -312,15 +312,15 @@ class PipelineNode(BaseModel):
 
             nodes += [
                 SparkChainNode(
-                    spark_func_name="dropDuplicates", spark_func_args=[subset]
+                    func_name="dropDuplicates", func_args=[subset]
                 )
             ]
 
         if self.drop_source_columns and self.transformer:
             nodes += [
                 SparkChainNode(
-                    spark_func_name="drop",
-                    spark_func_args=[
+                    func_name="drop",
+                    func_args=[
                         c
                         for c in self.transformer.columns[0]
                         if c not in ["_bronze_at", "_silver_at", "_gold_at"]
@@ -341,11 +341,11 @@ class PipelineNode(BaseModel):
             if self.add_layer_columns:
                 nodes += [
                     PolarsChainNode(
-                        column={
+                        with_column={
                             "name": "_bronze_at",
                             "type": "timestamp",
+                            "expr": "pl.exp.laktory.current_timestamp()"
                         },
-                        polars_func_name="laktory.current_timestamp",
                     ),
                 ]
 
@@ -353,22 +353,22 @@ class PipelineNode(BaseModel):
             if self.timestamp_key:
                 nodes += [
                     PolarsChainNode(
-                        column={
+                        with_column={
                             "name": "_tstamp",
                             "type": "timestamp",
+                            "sql_expr": self.timestamp_key
                         },
-                        sql_expression=self.timestamp_key,
                     )
                 ]
 
             if self.add_layer_columns:
                 nodes += [
                     PolarsChainNode(
-                        column={
+                        with_column={
                             "name": "_silver_at",
                             "type": "timestamp",
+                            "expr": "pl.exp.laktory.current_timestamp()"
                         },
-                        polars_func_name="laktory.current_timestamp",
                     )
                 ]
 
@@ -376,11 +376,11 @@ class PipelineNode(BaseModel):
             if self.add_layer_columns:
                 nodes += [
                     PolarsChainNode(
-                        column={
+                        with_column={
                             "name": "_gold_at",
                             "type": "timestamp",
+                            "expr": "pl.exp.laktory.current_timestamp()"
                         },
-                        polars_func_name="laktory.current_timestamp",
                     )
                 ]
 
@@ -392,14 +392,14 @@ class PipelineNode(BaseModel):
                 subset = [self.primary_key]
 
             nodes += [
-                PolarsChainNode(polars_func_name="unique", polars_func_args=[subset])
+                PolarsChainNode(func_name="unique", func_args=[subset])
             ]
 
         if self.drop_source_columns and self.transformer:
             nodes += [
                 PolarsChainNode(
-                    polars_func_name="drop",
-                    polars_func_args=[
+                    func_name="drop",
+                    func_args=[
                         c
                         for c in self.transformer.columns[0]
                         if c not in ["_bronze_at", "_silver_at", "_gold_at"]
@@ -426,18 +426,18 @@ class PipelineNode(BaseModel):
 
             if isinstance(self.transformer, SparkChain):
                 for sn in self.transformer.nodes:
-                    for a in sn.spark_func_args:
+                    for a in sn.func_args:
                         if isinstance(a.value, cls):
                             sources += [a.value]
-                    for a in sn.spark_func_kwargs.values():
+                    for a in sn.func_kwargs.values():
                         if isinstance(a.value, cls):
                             sources += [a.value]
             elif isinstance(self.transformer, PolarsChain):
                 for pn in self.transformer.nodes:
-                    for a in pn.polars_func_args:
+                    for a in pn.func_args:
                         if isinstance(a.value, cls):
                             sources += [a.value]
-                    for a in pn.polars_func_kwargs.values():
+                    for a in pn.func_kwargs.values():
                         if isinstance(a.value, cls):
                             sources += [a.value]
 
