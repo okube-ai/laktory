@@ -15,18 +15,18 @@ logger = get_logger(__name__)
 
 class PolarsChain(BaseModel):
     """
-    The Polars Chain class defines a series of transformation to be applied to
-    a dataframe. Each transformation is expressed as a node (PolarsChainNode
-    object) that, upon execution, returns a new dataframe. As a convenience,
-    `column` can be specified to create a new column. In this case, the polars
-    function or sql expression is expected to return a column instead of a
-    dataframe. Each node is executed sequentially in the provided order. A node
-    may also be another Polars Chain.
+    The `PolarsChain` class defines a series of Polars transformation to be
+    applied to a dataframe. Each transformation is expressed as a node
+    (`PolarsChainNode` object) that, upon execution, returns a new dataframe.
+    Each node is executed sequentially in the provided order. A node may also
+    be another `PolarsChain`.
 
     Attributes
     ----------
     nodes:
         The list of transformations to be executed.
+    polars:
+        Dummy configuration attribute to identify chain as Polars
 
     Examples
     --------

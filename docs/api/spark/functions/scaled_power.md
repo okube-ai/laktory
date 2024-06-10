@@ -1,1 +1,0 @@
-::: laktory.spark.functions.scaled_power

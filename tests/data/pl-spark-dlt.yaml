@@ -41,7 +41,7 @@ nodes:
         sql_expr: data.close
     - func_name: drop
       func_args:
-      - value: data
-      - value: producer
-      - value: name
-      - value: description
+      - data
+      - producer
+      - name
+      - description

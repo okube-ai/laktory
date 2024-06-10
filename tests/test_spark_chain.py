@@ -43,7 +43,7 @@ def test_func_arg(df0=df0):
         ]
     ):
         new_col = f"c{i}"
-        a = models.ChainNodeFuncArg(value=v, dataframe_type="SPARK")
+        a = models.SparkChainNodeFuncArg(value=v)
         df = df.withColumn(new_col, a.eval())
         new_cols += [new_col]
 
@@ -66,7 +66,7 @@ def test_func_arg(df0=df0):
         "x",
         "3",
     ]:
-        v1 = models.ChainNodeFuncArg(value=v0, dataframe_type="SPARK").eval()
+        v1 = models.SparkChainNodeFuncArg(value=v0).eval()
         assert v1 == v0
 
 

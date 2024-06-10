@@ -36,7 +36,7 @@ def test_func_arg(df0=df0):
         ]
     ):
         new_col = f"c{i}"
-        a = models.ChainNodeFuncArg(value=v, dataframe_type="POLARS")
+        a = models.PolarsChainNodeFuncArg(value=v)
         df = df.with_columns(**{new_col: a.eval()})
         new_cols += [new_col]
 
@@ -56,7 +56,7 @@ def test_func_arg(df0=df0):
         "x",
         "3",
     ]:
-        v1 = models.ChainNodeFuncArg(value=v0, dataframe_type="POLARS").eval()
+        v1 = models.PolarsChainNodeFuncArg(value=v0).eval()
         assert v1 == v0
 
 

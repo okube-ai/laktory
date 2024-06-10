@@ -418,18 +418,18 @@ class PipelineNode(BaseModel):
 
             if isinstance(self.transformer, SparkChain):
                 for sn in self.transformer.nodes:
-                    for a in sn.func_args:
+                    for a in sn.parsed_func_args:
                         if isinstance(a.value, cls):
                             sources += [a.value]
-                    for a in sn.func_kwargs.values():
+                    for a in sn.parsed_func_kwargs.values():
                         if isinstance(a.value, cls):
                             sources += [a.value]
             elif isinstance(self.transformer, PolarsChain):
                 for pn in self.transformer.nodes:
-                    for a in pn.func_args:
+                    for a in pn.parsed_func_args:
                         if isinstance(a.value, cls):
                             sources += [a.value]
-                    for a in pn.func_kwargs.values():
+                    for a in pn.parsed_func_kwargs.values():
                         if isinstance(a.value, cls):
                             sources += [a.value]
 

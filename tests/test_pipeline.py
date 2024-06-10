@@ -52,7 +52,10 @@ def test_dag():
     assert pl.sorted_nodes == [node_brz, node_meta, node_slv, node_gld]
     assert node_slv.source.node == node_brz
     assert node_gld.source.node == node_slv
-    assert node_slv.transformer.nodes[-1].func_kwargs["other"].value.node == node_meta
+    assert (
+        node_slv.transformer.nodes[-1].parsed_func_kwargs["other"].value.node
+        == node_meta
+    )
 
     # Test figure
     fig = pl.dag_figure()
@@ -235,7 +238,6 @@ def test_pipeline_dlt():
                                 "unit": None,
                                 "expr": None,
                                 "sql_expr": "data.created_at",
-                                "dataframe_type": "SPARK",
                             },
                             "with_columns": [
                                 {
@@ -244,7 +246,6 @@ def test_pipeline_dlt():
                                     "unit": None,
                                     "expr": None,
                                     "sql_expr": "data.created_at",
-                                    "dataframe_type": "SPARK",
                                 }
                             ],
                         },
@@ -259,7 +260,6 @@ def test_pipeline_dlt():
                                 "unit": None,
                                 "expr": None,
                                 "sql_expr": "data.symbol",
-                                "dataframe_type": "SPARK",
                             },
                             "with_columns": [
                                 {
@@ -268,7 +268,6 @@ def test_pipeline_dlt():
                                     "unit": None,
                                     "expr": None,
                                     "sql_expr": "data.symbol",
-                                    "dataframe_type": "SPARK",
                                 }
                             ],
                         },
@@ -283,7 +282,6 @@ def test_pipeline_dlt():
                                 "unit": None,
                                 "expr": None,
                                 "sql_expr": "data.close",
-                                "dataframe_type": "SPARK",
                             },
                             "with_columns": [
                                 {
@@ -292,17 +290,11 @@ def test_pipeline_dlt():
                                     "unit": None,
                                     "expr": None,
                                     "sql_expr": "data.close",
-                                    "dataframe_type": "SPARK",
                                 }
                             ],
                         },
                         {
-                            "func_args": [
-                                {"value": "data", "dataframe_type": "SPARK"},
-                                {"value": "producer", "dataframe_type": "SPARK"},
-                                {"value": "name", "dataframe_type": "SPARK"},
-                                {"value": "description", "dataframe_type": "SPARK"},
-                            ],
+                            "func_args": ["data", "producer", "name", "description"],
                             "func_kwargs": {},
                             "func_name": "drop",
                             "sql_expr": None,

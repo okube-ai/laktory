@@ -1,17 +1,108 @@
 from typing import Union
 from typing import Callable
 from typing import Any
-from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.transformers.basechainnode import BaseChainNode
-from laktory.models.transformers.chainnodecolumn import ChainNodeColumn
-from laktory.models.transformers.chainnodefuncarg import ChainNodeFuncArg
+from laktory.models.transformers.basechainnode import BaseChainNodeColumn
+from laktory.models.transformers.basechainnode import BaseChainNodeFuncArg
 from laktory.spark import SparkColumn
 from laktory.spark import SparkDataFrame
 
 
 logger = get_logger(__name__)
+
+
+# --------------------------------------------------------------------------- #
+# Helper Classes                                                              #
+# --------------------------------------------------------------------------- #
+
+
+class SparkChainNodeFuncArg(BaseChainNodeFuncArg):
+    """
+    Spark function argument
+
+    Attributes
+    ----------
+    value:
+        Value of the argument
+    """
+
+    value: Union[Any]
+
+    def eval(self):
+        from laktory.models.datasources.basedatasource import BaseDataSource
+
+        v = self.value
+
+        if isinstance(v, BaseDataSource):
+            v = self.value.read()
+
+        elif isinstance(v, str):
+
+            # Imports required to evaluate expressions
+            import pyspark.sql.functions as F
+            from pyspark.sql.functions import lit
+            from pyspark.sql.functions import col
+            from pyspark.sql.functions import expr
+
+            targets = ["lit(", "col(", "expr(", "F."]
+
+            for f in targets:
+                if f in v:
+                    v = eval(v)
+                    break
+
+        return v
+
+
+class SparkChainNodeColumn(BaseChainNodeColumn):
+    """
+    Chain node column definition
+
+    Attributes
+    ----------
+    name:
+        Column name
+    type:
+        Column data type
+    unit:
+        Column units
+    expr:
+        String representation of a polars expression
+    sql_expr:
+        SQL expression
+    """
+
+    name: str
+    type: str = "string"
+    unit: Union[str, None] = None
+    expr: Union[str, None] = None
+    sql_expr: Union[str, None] = None
+
+    def eval(self, udfs=None):
+
+        # Adding udfs to global variables
+        if udfs is None:
+            udfs = {}
+        for k, v in udfs.items():
+            globals()[k] = v
+
+        # Imports required to evaluate expressions
+        import pyspark.sql.functions as F
+        from pyspark.sql.functions import col
+        from pyspark.sql.functions import lit
+
+        if self.sql_expr:
+            return F.expr(self.sql_expr)
+
+        expr = eval(self.expr)
+
+        # Cleaning up global variables
+        for k, v in udfs.items():
+            del globals()[k]
+
+        return expr
 
 
 # --------------------------------------------------------------------------- #
@@ -101,18 +192,30 @@ class SparkChainNode(BaseChainNode):
     ```
     """
 
-    func_args: list[Union[Any, ChainNodeFuncArg]] = []
-    func_kwargs: dict[str, Union[Any, ChainNodeFuncArg]] = {}
+    func_args: list[Union[Any]] = []
+    func_kwargs: dict[str, Union[Any]] = {}
     func_name: Union[str, None] = None
     sql_expr: Union[str, None] = None
-    with_column: Union[ChainNodeColumn, None] = None
-    with_columns: Union[list[ChainNodeColumn], None] = []
+    with_column: Union[SparkChainNodeColumn, None] = None
+    with_columns: Union[list[SparkChainNodeColumn], None] = []
+    _parsed_func_args: list = None
+    _parsed_func_kwargs: dict = None
 
-    @model_validator(mode="after")
-    def dataframe_types(self) -> Any:
-        for c in self._with_columns:
-            c.dataframe_type = "SPARK"
-        return self
+    @property
+    def parsed_func_args(self):
+        if not self._parsed_func_args:
+            self._parsed_func_args = [
+                SparkChainNodeFuncArg(value=a) for a in self.func_args
+            ]
+        return self._parsed_func_args
+
+    @property
+    def parsed_func_kwargs(self):
+        if not self._parsed_func_kwargs:
+            self._parsed_func_kwargs = {
+                k: SparkChainNodeFuncArg(value=v) for k, v in self.func_kwargs.items()
+            }
+        return self._parsed_func_kwargs
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
@@ -122,7 +225,6 @@ class SparkChainNode(BaseChainNode):
         self,
         df: SparkDataFrame,
         udfs: list[Callable[[...], Union[SparkColumn, SparkDataFrame]]] = None,
-        return_col: bool = False,
     ) -> Union[SparkDataFrame]:
         """
         Execute spark chain node
@@ -133,9 +235,6 @@ class SparkChainNode(BaseChainNode):
             Input dataframe
         udfs:
             User-defined functions
-        return_col
-            If `True` and column specified, function returns `Column` object
-            instead of dataframe.
 
         Returns
         -------
@@ -166,7 +265,7 @@ class SparkChainNode(BaseChainNode):
                 )
             return df
 
-            # From SQL expression
+        # From SQL expression
         if self.sql_expr:
             df = df.sparkSession.sql(self.sql_expr, df=df)
             return df
@@ -202,8 +301,8 @@ class SparkChainNode(BaseChainNode):
         if f is None:
             raise ValueError(f"Function {func_name} is not available")
 
-        _args = self.func_args
-        _kwargs = self.func_kwargs
+        _args = self.parsed_func_args
+        _kwargs = self.parsed_func_kwargs
 
         # Build log
         func_log = f"{func_name}("

@@ -1,11 +1,9 @@
-from __future__ import annotations
 import polars as pl
-from typing import TYPE_CHECKING
+from typing import Any
 
 from laktory._logger import get_logger
 
-if TYPE_CHECKING:
-    from laktory.models.transformers.chainnodecolumn import ChainNodeColumn
+# from laktory.models.transformers.basechainnode import BaseChainNodeColumn
 
 
 logger = get_logger(__name__)
@@ -14,7 +12,7 @@ logger = get_logger(__name__)
 def groupby_and_agg(
     df,
     groupby_columns: list[str] = None,
-    agg_expressions: list[ChainNodeColumn] = None,
+    agg_expressions: list[Any] = None,
 ) -> pl.DataFrame:
     """
     Apply a groupby and create aggregation columns.
@@ -61,7 +59,7 @@ def groupby_and_agg(
     '''
     ```
     """
-    from laktory.models.transformers.chainnodecolumn import ChainNodeColumn
+    from laktory.models.transformers.polarschainnode import PolarsChainNodeColumn
 
     # Parse inputs
     if agg_expressions is None:
@@ -80,8 +78,8 @@ def groupby_and_agg(
     # Agg arguments
     aggs = []
     for expr in agg_expressions:
-        if not isinstance(expr, ChainNodeColumn):
-            expr = ChainNodeColumn(**expr, dataframe_type="POLARS")
+        if not isinstance(expr, PolarsChainNodeColumn):
+            expr = PolarsChainNodeColumn(**expr)
 
         expr.type = "_any"
         aggs += [expr.eval().alias(expr.name)]
