@@ -222,7 +222,7 @@ def test_nested(df0=df0):
                 "with_column": {
                     "name": "cos_x",
                     "type": "double",
-                    "expr": "F.cos('x')"
+                    "expr": "F.cos('x')",
                 },
             },
             {
@@ -238,7 +238,7 @@ def test_nested(df0=df0):
                         "with_column": {
                             "name": "x2",
                             "type": "double",
-                            "expr": "F.sqrt('x_tmp')"
+                            "expr": "F.sqrt('x_tmp')",
                         },
                     },
                 ],
@@ -270,7 +270,6 @@ def atest_exceptions():
 
     # TODO: Re-enable when coalesce is ready
     return
-
 
     df = df0.select(df0.columns)
 

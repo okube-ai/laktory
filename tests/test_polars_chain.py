@@ -128,20 +128,18 @@ def test_column(df0=df0):
     sc = models.PolarsChain(
         nodes=[
             {
-                "with_column":
-                    {
-                        "name": "cos_x",
-                        "type": "double",
-                        "expr": "col('x').cos()",
-                    },
+                "with_column": {
+                    "name": "cos_x",
+                    "type": "double",
+                    "expr": "col('x').cos()",
+                },
             },
             {
-                "with_column":
-                    {
-                        "name": "x2",
-                        "type": "double",
-                        "sql_expr": "x*2",
-                    },
+                "with_column": {
+                    "name": "x2",
+                    "type": "double",
+                    "sql_expr": "x*2",
+                },
             },
         ]
     )
@@ -157,8 +155,7 @@ def test_column(df0=df0):
     sc = models.PolarsChain(
         nodes=[
             {
-                "with_columns":
-                [
+                "with_columns": [
                     {
                         "name": "sin_x",
                         "type": "double",
@@ -234,7 +231,7 @@ def test_nested(df0=df0):
                 "with_column": {
                     "name": "cos_x",
                     "type": "double",
-                    "expr": "pl.col('x').cos()"
+                    "expr": "pl.col('x').cos()",
                 },
             },
             {
@@ -249,9 +246,9 @@ def test_nested(df0=df0):
                         "with_column": {
                             "name": "x2",
                             "type": "double",
-                            "expr": "pl.col('x_tmp').sqrt()"
+                            "expr": "pl.col('x_tmp').sqrt()",
                         },
-                    }
+                    },
                 ],
             },
             {

@@ -261,7 +261,7 @@ class PipelineNode(BaseModel):
                         with_column={
                             "name": "_bronze_at",
                             "type": "timestamp",
-                            "expr": "F.current_timestamp()"
+                            "expr": "F.current_timestamp()",
                         },
                     ),
                 ]
@@ -284,7 +284,7 @@ class PipelineNode(BaseModel):
                         with_column={
                             "name": "_silver_at",
                             "type": "timestamp",
-                            "expr": "F.current_timestamp()"
+                            "expr": "F.current_timestamp()",
                         },
                     )
                 ]
@@ -296,7 +296,7 @@ class PipelineNode(BaseModel):
                         with_column={
                             "name": "_gold_at",
                             "type": "timestamp",
-                            "expr": "F.current_timestamp()"
+                            "expr": "F.current_timestamp()",
                         },
                     )
                 ]
@@ -308,11 +308,7 @@ class PipelineNode(BaseModel):
             elif self.primary_key:
                 subset = [self.primary_key]
 
-            nodes += [
-                SparkChainNode(
-                    func_name="dropDuplicates", func_args=[subset]
-                )
-            ]
+            nodes += [SparkChainNode(func_name="dropDuplicates", func_args=[subset])]
 
         if self.drop_source_columns and self.transformer:
             nodes += [
@@ -342,7 +338,7 @@ class PipelineNode(BaseModel):
                         with_column={
                             "name": "_bronze_at",
                             "type": "timestamp",
-                            "expr": "pl.exp.laktory.current_timestamp()"
+                            "expr": "pl.exp.laktory.current_timestamp()",
                         },
                     ),
                 ]
@@ -354,7 +350,7 @@ class PipelineNode(BaseModel):
                         with_column={
                             "name": "_tstamp",
                             "type": "timestamp",
-                            "sql_expr": self.timestamp_key
+                            "sql_expr": self.timestamp_key,
                         },
                     )
                 ]
@@ -365,7 +361,7 @@ class PipelineNode(BaseModel):
                         with_column={
                             "name": "_silver_at",
                             "type": "timestamp",
-                            "expr": "pl.exp.laktory.current_timestamp()"
+                            "expr": "pl.exp.laktory.current_timestamp()",
                         },
                     )
                 ]
@@ -377,7 +373,7 @@ class PipelineNode(BaseModel):
                         with_column={
                             "name": "_gold_at",
                             "type": "timestamp",
-                            "expr": "pl.exp.laktory.current_timestamp()"
+                            "expr": "pl.exp.laktory.current_timestamp()",
                         },
                     )
                 ]
@@ -389,9 +385,7 @@ class PipelineNode(BaseModel):
             elif self.primary_key:
                 subset = [self.primary_key]
 
-            nodes += [
-                PolarsChainNode(func_name="unique", func_args=[subset])
-            ]
+            nodes += [PolarsChainNode(func_name="unique", func_args=[subset])]
 
         if self.drop_source_columns and self.transformer:
             nodes += [

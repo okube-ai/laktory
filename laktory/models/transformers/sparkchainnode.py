@@ -149,8 +149,16 @@ class SparkChainNode(BaseChainNode):
         # Build Columns
         if self._with_columns:
             for column in self._with_columns:
-                logger.info(f"Building column {column.name} as {column.expr or column.sql_expr}")
-                df = df.withColumns({column.name: column.eval(udfs=udfs).cast(DATATYPES_MAP[column.type])})
+                logger.info(
+                    f"Building column {column.name} as {column.expr or column.sql_expr}"
+                )
+                df = df.withColumns(
+                    {
+                        column.name: column.eval(udfs=udfs).cast(
+                            DATATYPES_MAP[column.type]
+                        )
+                    }
+                )
             return df
 
             # From SQL expression

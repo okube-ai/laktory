@@ -7,6 +7,7 @@ from laktory.polars.expressions.math import poly1
 from laktory.polars.expressions.math import poly2
 from laktory.polars.expressions.math import roundp
 from laktory.polars.expressions.math import scaled_power
+
 # from laktory.polars.expressions.sort import coalesce
 from laktory.polars.expressions.sort import row_number
 from laktory.polars.expressions.sql import sql_expr

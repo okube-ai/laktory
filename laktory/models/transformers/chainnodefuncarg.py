@@ -72,7 +72,9 @@ class ChainNodeFuncArg(BaseModel):
                 targets = ["lit(", "col(", "sql_expr(", "pl."]
 
             else:
-                raise ValueError(f"DataFrame type '{self.dataframe_type}' is not supported")
+                raise ValueError(
+                    f"DataFrame type '{self.dataframe_type}' is not supported"
+                )
 
             for f in targets:
                 if f in v:
@@ -86,6 +88,7 @@ class ChainNodeFuncArg(BaseModel):
             return str(self.value)
         elif self.dataframe_type == "POLARS":
             import polars as pl
+
             eval = self.eval()
             if isinstance(eval, pl.DataFrame):
                 return f"{eval.laktory.signature()}"
@@ -93,4 +96,3 @@ class ChainNodeFuncArg(BaseModel):
                 return f"{self.value}"
         else:
             raise ValueError(f"DataFrame type '{self.dataframe_type}' is not supported")
-

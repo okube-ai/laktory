@@ -31,27 +31,24 @@ def test_execute():
                     "with_column": {
                         "name": "created_at",
                         "type": "timestamp",
-                        "sql_expr": "data.created_at"
+                        "sql_expr": "data.created_at",
                     },
                 },
                 {
-                    "with_column": {
-                        "name": "symbol",
-                        "sql_expr": "data.symbol"
-                    },
+                    "with_column": {"name": "symbol", "sql_expr": "data.symbol"},
                 },
                 {
                     "with_column": {
                         "name": "close",
                         "type": "double",
-                        "sql_expr": "data.close"
+                        "sql_expr": "data.close",
                     },
                 },
                 {
                     "func_name": "drop",
                     "func_args": ["data", "producer", "name", "description"],
                 },
-            ]
+            ],
         },
         sink={
             "path": sink_path,
@@ -81,10 +78,7 @@ def test_bronze():
         transformer={
             "nodes": [
                 {
-                    "with_column": {
-                        "name": "symbol",
-                        "sql_expr": "data.symbol"
-                    },
+                    "with_column": {"name": "symbol", "sql_expr": "data.symbol"},
                 },
             ]
         },

@@ -22,9 +22,17 @@ def atest_coalesce(df0=df0):
     return
     # TODO: re-introduce
     df = df0.with_columns(xb0=pl.expr.laktory.coalesce(pl.col("x"), pl.col("b")))
-    df = df.with_columns(xb1=pl.expr.laktory.coalesce(pl.col("x"), pl.col("b"), available_columns=["b"]))
-    df = df.with_columns(xb2=pl.expr.laktory.coalesce(["x", "b"], available_columns=["b"]))
-    df = df.with_columns(xb3=pl.expr.laktory.coalesce(pl.col("x").sqrt(), pl.col("b").sqrt(), available_columns=["b"]))
+    df = df.with_columns(
+        xb1=pl.expr.laktory.coalesce(pl.col("x"), pl.col("b"), available_columns=["b"])
+    )
+    df = df.with_columns(
+        xb2=pl.expr.laktory.coalesce(["x", "b"], available_columns=["b"])
+    )
+    df = df.with_columns(
+        xb3=pl.expr.laktory.coalesce(
+            pl.col("x").sqrt(), pl.col("b").sqrt(), available_columns=["b"]
+        )
+    )
     assert df["xb0"].to_list() == [1, 2, 3]
     assert df["xb1"].to_list() == [2, 0, 2]
     assert df["xb2"].to_list() == [2, 0, 2]

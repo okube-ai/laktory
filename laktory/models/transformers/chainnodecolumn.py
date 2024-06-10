@@ -199,7 +199,9 @@ class BaseChainNode(BaseModel):
     with_columns: Union[list[ChainNodeColumn], None] = []
 
     @field_validator("func_args")
-    def parse_args(cls, args: list[Union[Any, ChainNodeFuncArg]]) -> list[ChainNodeFuncArg]:
+    def parse_args(
+        cls, args: list[Union[Any, ChainNodeFuncArg]]
+    ) -> list[ChainNodeFuncArg]:
         _args = []
         for a in args:
             try:
@@ -290,8 +292,16 @@ class BaseChainNode(BaseModel):
         # Build Columns
         if self._with_columns:
             for column in self._with_columns:
-                logger.info(f"Building column {column.name} as {column.expr or column.sql_expr}")
-                df = df.with_columns(**{column.name: column.eval(udfs=udfs).cast(DATATYPES_MAP[column.type])})
+                logger.info(
+                    f"Building column {column.name} as {column.expr or column.sql_expr}"
+                )
+                df = df.with_columns(
+                    **{
+                        column.name: column.eval(udfs=udfs).cast(
+                            DATATYPES_MAP[column.type]
+                        )
+                    }
+                )
             return df
 
         # From SQL expression
