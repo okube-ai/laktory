@@ -90,6 +90,7 @@ class SparkChain(BaseModel):
     """
 
     nodes: list[Union[SparkChainNode, "SparkChain"]]
+    spark: bool = True
     _columns: list[list[str]] = []
 
     @property

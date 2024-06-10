@@ -102,6 +102,7 @@ def groupby_and_agg(
 
     * [pyspark window](https://spark.apache.org/docs/3.1.3/api/python/reference/api/pyspark.sql.functions.window.html)
     """
+    from laktory.models.transformers.chainnodecolumn import ChainNodeColumn
     import pyspark.sql.functions as F
 
     # Parse inputs
@@ -134,16 +135,10 @@ def groupby_and_agg(
     # Agg arguments
     aggs = []
     for expr in agg_expressions:
-        if not isinstance(expr, SparkChainNode):
-            expr = SparkChainNode(**expr)
+        if not isinstance(expr, ChainNodeColumn):
+            expr = ChainNodeColumn(**expr, dataframe_type="SPARK")
 
-        expr.column.type = "_any"
-        aggs += [
-            expr.execute(
-                df=df,
-                # udfs=udfs,
-                return_col=True,
-            ).alias(expr.column.name)
-        ]
+        expr.type = "_any"
+        aggs += [expr.eval().alias(expr.name)]
 
     return df.groupby(groupby).agg(*aggs)

@@ -196,10 +196,10 @@ def test_window_filter():
 
 
 if __name__ == "__main__":
-    # test_df_schema_flat()
-    # test_df_has_column()
-    # test_union()
-    # test_join()
-    # test_join_outer()
+    test_df_schema_flat()
+    test_df_has_column()
+    test_union()
+    test_join()
+    test_join_outer()
     test_aggregation()
-    # test_window_filter()
+    test_window_filter()

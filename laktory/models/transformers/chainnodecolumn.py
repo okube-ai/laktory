@@ -42,7 +42,7 @@ class ChainNodeColumn(BaseModel):
     unit: Union[str, None] = None
     expr: Union[str, None] = None
     sql_expr: Union[str, None] = None
-    dataframe_type: Literal["SPARK", "POLRAS"] = "SPARK"
+    dataframe_type: Literal["SPARK", "POLARS"] = "SPARK"
 
     @model_validator(mode="after")
     def expression_valid(self) -> Any:

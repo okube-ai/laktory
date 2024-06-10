@@ -53,7 +53,7 @@ def test_dag():
     assert node_slv.source.node == node_brz
     assert node_gld.source.node == node_slv
     assert (
-        node_slv.transformer.nodes[-1].spark_func_kwargs["other"].value.node
+        node_slv.transformer.nodes[-1].func_kwargs["other"].value.node
         == node_meta
     )
 

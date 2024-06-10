@@ -204,7 +204,7 @@ def test_udfs(df0=df0):
                 "with_column": {
                     "name": "x3",
                     "type": "double",
-                    "expr": "mul3(pl.col('x'))",
+                    "expr": "mul3(col('x'))",
                 },
             },
             {
