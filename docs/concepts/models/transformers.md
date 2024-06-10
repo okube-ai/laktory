@@ -15,7 +15,7 @@ transformation applied to a dataframe. A node declare the spark function
 responsible for the transformation and the arguments to pass to that function.
 Each function is expected to output a dataframe and receive as an input the
 output of the previous node. As a convenience, a node can also declare a new
-column. In this case, the function is expected to output a column.
+column from a sql or spark expression.
 
 For example, consider a simple dataframe with column `x` for which you want to:
 
@@ -35,16 +35,15 @@ df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 2, 3]}))
 sc = models.SparkChain(
     nodes=[
         {
-            "spark_func_name": "withColumnRenamed",
-            "spark_func_args": ["x", "theta"],
+            "func_name": "withColumnRenamed",
+            "func_args": ["x", "theta"],
         },
         {
-            "column": {
+            "with_column": {
                 "name": "cos",
                 "type": "double",
+                "expr": "F.cos('theta')",
             },
-            "spark_func_name": "cos",
-            "spark_func_args": ["theta"],
         },
         {
             "spark_func_name": "drop",
@@ -63,3 +62,13 @@ over many of the benefits offered by SparkChain, have a look at these
 and
 [SparkChain](https://www.linkedin.com/pulse/laktory-sparkchain-serializable-spark-based-data-olivier-soucy-oihxe/)
 blog posts.
+
+
+### Polars Chain
+??? "API Documentation"
+    [`laktory.models.SparkChain`][laktory.models.SparkChain]<br>
+
+The Polars chain is very similar to the Spark Chain as it defines a series of
+core data transformations, except that it uses Polars instead of Spark as its
+engine. The supported functions and syntax are also slightly different to
+accommodate for Polars.
