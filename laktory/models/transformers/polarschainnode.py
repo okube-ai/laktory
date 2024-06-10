@@ -4,9 +4,11 @@ from typing import Any
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory.models.transformers.basechainnode import BaseChainNode
+from laktory.models.transformers.chainnodecolumn import ChainNodeColumn
+from laktory.models.transformers.chainnodefuncarg import ChainNodeFuncArg
 from laktory.polars import PolarsDataFrame
 from laktory.polars import PolarsExpr
-from laktory.models.transformers.basechainnode import BaseChainNode
 
 
 logger = get_logger(__name__)
@@ -20,33 +22,34 @@ logger = get_logger(__name__)
 class PolarsChainNode(BaseChainNode):
     """
     PolarsChain node that output a dataframe upon execution. As a convenience,
-    `column` can be specified to create a new column. In this case, the polars
-    function is expected to return a column instead of a dataframe. Each node
-    is executed sequentially in the provided order. A node may also be another
-    Polars Chain.
+    `with_column` argument can be specified to create a new column from a
+    polars or sql expression. Each node is executed sequentially in the
+    provided order. A node may also be another Polars Chain.
 
     Attributes
     ----------
-    column:
-        Column definition. If not `None`, the spark function or sql expression
-        is expected to return a column instead of a dataframe.
     func_args:
-        List of arguments to be passed to the polars function.
-        To support spark functions expecting column argument, col("x"),
-        lit("3") and expr("x*2") can be provided.
+        List of arguments to be passed to the polars function. If the function
+        expects a polars expression, its string representation can be provided
+        with support for `col`, `lit`, `sql_expr` and `pl.`.
     func_kwargs:
-        List of keyword arguments to be passed to the polars function.
-        To support polars functions expecting column argument, col("x"),
-        lit("3") and expr("x*2") can be provided.
+        List of keyword arguments to be passed to the polars function.If the
+        function expects a polars expression, its string representation can be
+        provided with support for `col`, `lit`, `sql_expr` and `pl.`.
     func_name:
-        Name of the polars function to build the dataframe. If `column` is
-        specified, the polars function should return a column instead. Mutually
-         exclusive to `sql_expression`.
-    sql_expression:
+        Name of the polars function to build the dataframe. Mutually
+        exclusive to `sql_expr` and `with_column`.
+    sql_expr:
         SQL Expression using `self` to reference upstream dataframe and
-        defining how to build the output dataframe. If `column` is
-        specified, the sql expression should define a column instead. Mutually
-        exclusive to `func_name`
+        defining how to build the output dataframe. Mutually exclusive to
+        `func_name` and `with_column`.
+    with_column:
+        Syntactic sugar for adding a column. Mutually exclusive to `func_name`
+        and `sql_expr`.
+    with_columns:
+        Syntactic sugar for adding columns. Mutually exclusive to `func_name`
+        and `sql_expr`.
+
 
     Examples
     --------
@@ -100,6 +103,13 @@ class PolarsChainNode(BaseChainNode):
     '''
     ```
     """
+
+    func_args: list[Union[Any, ChainNodeFuncArg]] = []
+    func_kwargs: dict[str, Union[Any, ChainNodeFuncArg]] = {}
+    func_name: Union[str, None] = None
+    sql_expr: Union[str, None] = None
+    with_column: Union[ChainNodeColumn, None] = None
+    with_columns: Union[list[ChainNodeColumn], None] = []
 
     @model_validator(mode="after")
     def dataframe_types(self) -> Any:

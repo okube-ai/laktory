@@ -4,10 +4,11 @@ from typing import Any
 from pydantic import model_validator
 
 from laktory._logger import get_logger
-from laktory.models.basemodel import BaseModel
-from laktory.spark import SparkDataFrame
-from laktory.spark import SparkColumn
 from laktory.models.transformers.basechainnode import BaseChainNode
+from laktory.models.transformers.chainnodecolumn import ChainNodeColumn
+from laktory.models.transformers.chainnodefuncarg import ChainNodeFuncArg
+from laktory.spark import SparkColumn
+from laktory.spark import SparkDataFrame
 
 
 logger = get_logger(__name__)
@@ -20,37 +21,34 @@ logger = get_logger(__name__)
 
 class SparkChainNode(BaseChainNode):
     """
-    SparkChain node that output a dataframe upon execution. As a convenience,
-    `column` can be specified to create a new column. In this case, the spark
-    function or sql expression is expected to return a column instead of a
-    dataframe. Each node is executed sequentially in the provided order. A node
-    may also be another Spark Chain.
+    PolarsChain node that output a dataframe upon execution. As a convenience,
+    `with_column` argument can be specified to create a new column from a
+    spark or sql expression. Each node is executed sequentially in the
+    provided order. A node may also be another Spark Chain.
 
     Attributes
     ----------
-    allow_missing_column_args:
-        If `True`, spark func column arguments are allowed to be missing
-        without raising an exception.
-    column:
-        Column definition. If not `None`, the spark function or sql expression
-        is expected to return a column instead of a dataframe.
     func_args:
-        List of arguments to be passed to the spark function.
-        To support spark functions expecting column argument, col("x"),
-        lit("3") and expr("x*2") can be provided.
+        List of arguments to be passed to the spark function. If the function
+        expects a spark column, its string representation can be provided
+        with support for `col`, `lit`, `expr` and `F.`.
     func_kwargs:
-        List of keyword arguments to be passed to the spark function.
-        To support spark functions expecting column argument, col("x"),
-        lit("3") and expr("x*2") can be provided.
+        List of keyword arguments to be passed to the spark function. If the
+        function expects a spark column, its string representation can be
+        provided with support for `col`, `lit`, `expr` and `F.`.
     func_name:
-        Name of the spark function to build the dataframe. If `column` is
-        specified, the spark function should return a column instead. Mutually
-         exclusive to `sql_expression`.
+        Name of the spark function to build the dataframe. Mutually
+        exclusive to `sql_expr` and `with_column`.
     sql_expr:
         SQL Expression using `{df}` to reference upstream dataframe and
-        defining how to build the output dataframe. If `column` is
-        specified, the sql expression should define a column instead. Mutually
-         exclusive to `func_name`
+        defining how to build the output dataframe. Mutually exclusive to
+        `func_name` and `with_column`.
+    with_column:
+        Syntactic sugar for adding a column. Mutually exclusive to `func_name`
+        and `sql_expr`.
+    with_columns:
+        Syntactic sugar for adding columns. Mutually exclusive to `func_name`
+        and `sql_expr`.
 
     Examples
     --------
@@ -91,17 +89,24 @@ class SparkChainNode(BaseChainNode):
         func_name="drop_duplicates",
         func_args=[["x"]],
     )
-    df = node.execute(df0)
+    df = node.execute(df)
 
     print(df.toPandas().to_string())
     '''
-       x
-    0  1
-    1  2
-    2  3
+       x      cosx   xy
+    0  1  0.540302  1.0
+    1  2 -0.416147  2.0
+    2  3 -0.989992  3.0
     '''
     ```
     """
+
+    func_args: list[Union[Any, ChainNodeFuncArg]] = []
+    func_kwargs: dict[str, Union[Any, ChainNodeFuncArg]] = {}
+    func_name: Union[str, None] = None
+    sql_expr: Union[str, None] = None
+    with_column: Union[ChainNodeColumn, None] = None
+    with_columns: Union[list[ChainNodeColumn], None] = []
 
     @model_validator(mode="after")
     def dataframe_types(self) -> Any:
