@@ -1,13 +1,16 @@
+from pydantic import field_validator
+from pydantic import ValidationError
+from typing import Any
 from typing import Union
 from typing import Callable
-from typing import Any
-from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory.models.basemodel import BaseModel
+from laktory.models.transformers.chainnodefuncarg import ChainNodeFuncArg
 from laktory.polars import PolarsDataFrame
 from laktory.polars import PolarsExpr
-from laktory.models.transformers.basechainnode import BaseChainNode
-
+from laktory.types import AnyDataFrame
+from laktory.models.transformers.chainnodecolumn import ChainNodeColumn
 
 logger = get_logger(__name__)
 
@@ -16,8 +19,7 @@ logger = get_logger(__name__)
 # Main Class                                                                  #
 # --------------------------------------------------------------------------- #
 
-
-class PolarsChainNode(BaseChainNode):
+class BaseChainNode(BaseModel):
     """
     PolarsChain node that output a dataframe upon execution. As a convenience,
     `column` can be specified to create a new column. In this case, the polars
@@ -27,9 +29,6 @@ class PolarsChainNode(BaseChainNode):
 
     Attributes
     ----------
-    column:
-        Column definition. If not `None`, the spark function or sql expression
-        is expected to return a column instead of a dataframe.
     func_args:
         List of arguments to be passed to the polars function.
         To support spark functions expecting column argument, col("x"),
@@ -42,11 +41,18 @@ class PolarsChainNode(BaseChainNode):
         Name of the polars function to build the dataframe. If `column` is
         specified, the polars function should return a column instead. Mutually
          exclusive to `sql_expression`.
-    sql_expression:
+    sql_expr:
         SQL Expression using `self` to reference upstream dataframe and
         defining how to build the output dataframe. If `column` is
         specified, the sql expression should define a column instead. Mutually
         exclusive to `spark_func_name`
+    with_column:
+        Column definition. If not `None`, the spark function or sql expression
+        is expected to return a column instead of a dataframe.
+    with_columns:
+        Columns definition. If not `None`, the spark function or sql expression
+        is expected to return a column instead of a dataframe.
+
 
     Examples
     --------
@@ -107,15 +113,65 @@ class PolarsChainNode(BaseChainNode):
     ```
     """
 
-    @model_validator(mode="after")
-    def dataframe_types(self) -> Any:
-        for c in self._with_columns:
-            c.dataframe_type = "POLARS"
-        for a in self.func_args:
-            a.dataframe_type = "POLARS"
-        for a in self.func_kwargs.values():
-            a.dataframe_type = "POLARS"
-        return self
+    func_args: list[Union[Any, ChainNodeFuncArg]] = []
+    func_kwargs: dict[str, Union[Any, ChainNodeFuncArg]] = {}
+    func_name: Union[str, None] = None
+    sql_expr: Union[str, None] = None
+    with_column: Union[ChainNodeColumn, None] = None
+    with_columns: Union[list[ChainNodeColumn], None] = []
+
+    @field_validator("func_args")
+    def parse_args(cls, args: list[Union[Any, ChainNodeFuncArg]]) -> list[ChainNodeFuncArg]:
+        _args = []
+        for a in args:
+            try:
+                a = ChainNodeFuncArg(**a)
+            except (ValidationError, TypeError):
+                pass
+
+            if isinstance(a, ChainNodeFuncArg):
+                pass
+            else:
+                a = ChainNodeFuncArg(value=a)
+            _args += [a]
+        return _args
+
+    @field_validator("func_kwargs")
+    def parse_kwargs(
+        cls, kwargs: dict[str, Union[str, ChainNodeFuncArg]]
+    ) -> dict[str, ChainNodeFuncArg]:
+        _kwargs = {}
+        for k, a in kwargs.items():
+
+            try:
+                a = ChainNodeFuncArg(**a)
+            except (ValidationError, TypeError):
+                pass
+
+            if isinstance(a, ChainNodeFuncArg):
+                pass
+            else:
+                a = ChainNodeFuncArg(value=a)
+
+            _kwargs[k] = a
+        return _kwargs
+
+    @property
+    def _with_columns(self) -> list[ChainNodeColumn]:
+        with_columns = self.with_columns
+        if self.with_column:
+            with_columns += [self.with_column]
+        return with_columns
+
+    @property
+    def is_column(self):
+        return len(self._with_columns) > 0
+
+    @property
+    def id(self):
+        if self.is_column:
+            return "-".join([c.name for c in self.with_columns])
+        return "df"
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
@@ -123,10 +179,10 @@ class PolarsChainNode(BaseChainNode):
 
     def execute(
         self,
-        df: PolarsDataFrame,
+        df: AnyDataFrame,
         udfs: list[Callable[[...], Union[PolarsExpr, PolarsDataFrame]]] = None,
         return_col: bool = False,
-    ) -> Union[PolarsDataFrame]:
+    ) -> Union[AnyDataFrame, PolarsExpr]:
         """
         Execute polars chain node
 
@@ -169,7 +225,7 @@ class PolarsChainNode(BaseChainNode):
         func_name = self.func_name
         if self.func_name is None:
             raise ValueError(
-                "`func_name` must be specified if `sql_expr` is not specified"
+                "`polars_func_name` must be specified if `sql_expression` is not specified"
             )
 
         # Get from UDFs

@@ -7,6 +7,7 @@ from laktory.polars.expressions.math import poly1
 from laktory.polars.expressions.math import poly2
 from laktory.polars.expressions.math import roundp
 from laktory.polars.expressions.math import scaled_power
+# from laktory.polars.expressions.sort import coalesce
 from laktory.polars.expressions.sort import row_number
 from laktory.polars.expressions.sql import sql_expr
 from laktory.polars.expressions.string import string_split
@@ -37,6 +38,10 @@ def _parse_args(args):
 class LaktoryExpression:
     def __init__(self, expr: pl.Expr):
         self._expr = expr
+
+    # @wraps(coalesce)
+    # def coalesce(*args, **kwargs):
+    #     return coalesce(*_parse_args(args), **kwargs)
 
     @wraps(compare)
     def compare(*args, **kwargs):

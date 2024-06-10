@@ -18,6 +18,19 @@ df0 = pl.DataFrame(
 )
 
 
+def atest_coalesce(df0=df0):
+    return
+    # TODO: re-introduce
+    df = df0.with_columns(xb0=pl.expr.laktory.coalesce(pl.col("x"), pl.col("b")))
+    df = df.with_columns(xb1=pl.expr.laktory.coalesce(pl.col("x"), pl.col("b"), available_columns=["b"]))
+    df = df.with_columns(xb2=pl.expr.laktory.coalesce(["x", "b"], available_columns=["b"]))
+    df = df.with_columns(xb3=pl.expr.laktory.coalesce(pl.col("x").sqrt(), pl.col("b").sqrt(), available_columns=["b"]))
+    assert df["xb0"].to_list() == [1, 2, 3]
+    assert df["xb1"].to_list() == [2, 0, 2]
+    assert df["xb2"].to_list() == [2, 0, 2]
+    assert df["xb3"].to_list() == [np.sqrt(2), 0, np.sqrt(2)]
+
+
 def test_compare(df0=df0):
     df = df0.with_columns(compare1=pl.expr.laktory.compare(pl.col("x"), pl.col("a")))
     df = df.with_columns(
@@ -116,6 +129,7 @@ def test_units(df0=df0):
 
 
 if __name__ == "__main__":
+    atest_coalesce()
     test_compare()
     test_poly()
     test_power()

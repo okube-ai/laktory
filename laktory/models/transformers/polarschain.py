@@ -89,6 +89,7 @@ class PolarsChain(BaseModel):
     """
 
     nodes: list[Union[PolarsChainNode, "PolarsChain"]]
+    polars: bool = True
     _columns: list[list[str]] = []
 
     @property
