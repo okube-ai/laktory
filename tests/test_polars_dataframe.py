@@ -158,9 +158,8 @@ def test_aggregation():
         groupby_columns=["symbol"],
         agg_expressions=[
             {
-                "column": {"name": "mean_close"},
-                "polars_func_name": "mean",
-                "polars_func_args": ["close"],
+                "name": "mean_close",
+                "expr": "pl.col('close').mean()",
             },
         ],
     ).sort("symbol")
@@ -197,10 +196,10 @@ def test_window_filter():
 
 
 if __name__ == "__main__":
-    test_df_schema_flat()
-    test_df_has_column()
-    test_union()
-    test_join()
-    test_join_outer()
+    # test_df_schema_flat()
+    # test_df_has_column()
+    # test_union()
+    # test_join()
+    # test_join_outer()
     test_aggregation()
-    test_window_filter()
+    # test_window_filter()
