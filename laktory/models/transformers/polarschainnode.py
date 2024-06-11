@@ -55,15 +55,6 @@ class PolarsChainNodeFuncArg(BaseChainNodeFuncArg):
 
         return v
 
-    def signature(self):
-        import polars as pl
-
-        eval = self.eval()
-        if isinstance(eval, pl.DataFrame):
-            return f"{eval.laktory.signature()}"
-        else:
-            return f"{self.value}"
-
 
 class PolarsChainNodeColumn(BaseChainNodeColumn):
     """
@@ -324,7 +315,7 @@ class PolarsChainNode(BaseChainNode):
         # Build log
         func_log = f"{func_name}("
         func_log += ",".join([a.signature() for a in _args])
-        func_log += ",".join([f"{k}:{a.signature()}" for k, a in _kwargs.items()])
+        func_log += ",".join([f"{k}={a.signature()}" for k, a in _kwargs.items()])
         func_log += ")"
         logger.info(f"DataFrame {self.id} as {func_log}")
 

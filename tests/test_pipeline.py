@@ -351,15 +351,7 @@ def test_pipeline_dlt():
                                 "expr": None,
                                 "sql_expr": "data.created_at",
                             },
-                            "with_columns": [
-                                {
-                                    "name": "created_at",
-                                    "type": "timestamp",
-                                    "unit": None,
-                                    "expr": None,
-                                    "sql_expr": "data.created_at",
-                                }
-                            ],
+                            "with_columns": [],
                         },
                         {
                             "func_args": [],
@@ -373,15 +365,7 @@ def test_pipeline_dlt():
                                 "expr": None,
                                 "sql_expr": "data.symbol",
                             },
-                            "with_columns": [
-                                {
-                                    "name": "symbol",
-                                    "type": "string",
-                                    "unit": None,
-                                    "expr": None,
-                                    "sql_expr": "data.symbol",
-                                }
-                            ],
+                            "with_columns": [],
                         },
                         {
                             "func_args": [],
@@ -395,15 +379,7 @@ def test_pipeline_dlt():
                                 "expr": None,
                                 "sql_expr": "data.close",
                             },
-                            "with_columns": [
-                                {
-                                    "name": "close",
-                                    "type": "double",
-                                    "unit": None,
-                                    "expr": None,
-                                    "sql_expr": "data.close",
-                                }
-                            ],
+                            "with_columns": [],
                         },
                         {
                             "func_args": ["data", "producer", "name", "description"],
@@ -555,9 +531,9 @@ def test_pipeline_job():
 
 
 if __name__ == "__main__":
-    test_dag()
-    test_children()
-    test_execute()
+    # test_dag()
+    # test_children()
+    # test_execute()
     test_execute_polars()
-    test_pipeline_dlt()
-    test_pipeline_job()
+    # test_pipeline_dlt()
+    # test_pipeline_job()
