@@ -3,10 +3,9 @@ import polars as pl
 
 from laktory.polars.expressions.datetime import current_timestamp
 from laktory.polars.expressions.logical import compare
-from laktory.polars.expressions.math import poly1
-from laktory.polars.expressions.math import poly2
 from laktory.polars.expressions.math import roundp
-from laktory.polars.expressions.math import scaled_power
+
+# from laktory.polars.expressions.sort import coalesce
 from laktory.polars.expressions.sort import row_number
 from laktory.polars.expressions.sql import sql_expr
 from laktory.polars.expressions.string import string_split
@@ -38,6 +37,10 @@ class LaktoryExpression:
     def __init__(self, expr: pl.Expr):
         self._expr = expr
 
+    # @wraps(coalesce)
+    # def coalesce(*args, **kwargs):
+    #     return coalesce(*_parse_args(args), **kwargs)
+
     @wraps(compare)
     def compare(*args, **kwargs):
         return compare(*_parse_args(args), **kwargs)
@@ -50,14 +53,6 @@ class LaktoryExpression:
     def current_timestamp(*args, **kwargs):
         return current_timestamp(*_parse_args(args), **kwargs)
 
-    @wraps(poly1)
-    def poly1(*args, **kwargs):
-        return poly1(*_parse_args(args), **kwargs)
-
-    @wraps(poly2)
-    def poly2(*args, **kwargs):
-        return poly2(*_parse_args(args), **kwargs)
-
     @wraps(roundp)
     def roundp(*args, **kwargs):
         return roundp(*_parse_args(args), **kwargs)
@@ -65,10 +60,6 @@ class LaktoryExpression:
     @wraps(row_number)
     def row_number(*args, **kwargs):
         return row_number(*_parse_args(args), **kwargs)
-
-    @wraps(scaled_power)
-    def scaled_power(*args, **kwargs):
-        return scaled_power(*_parse_args(args), **kwargs)
 
     @wraps(sql_expr)
     def sql_expr(*args, **kwargs):

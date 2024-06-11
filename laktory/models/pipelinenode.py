@@ -1,10 +1,11 @@
 import uuid
 from typing import Any
+from typing import Callable
 from typing import Literal
 from typing import Union
-from typing import Callable
 from pydantic import model_validator
 
+from laktory.constants import DEFAULT_DFTYPE
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import BaseDataSource
@@ -110,19 +111,17 @@ class PipelineNode(BaseModel):
           table_name: slv_stock_prices
         transformer:
           nodes:
-          - column:
+          - with_column:
               name: created_at
               type: timestamp
-            sql_expression: data.created_at
-          - column:
+              sql_expr: data.created_at
+          - with_column:
               name: symbol
-            spark_func_name: coalesce
-            spark_func_args:
-            - value: data.symbol
-          - column:
+              sql_expr: data.symbol
+          - with_column:
               name: close
               type: double
-            sql_expression: data.close
+              sql_expr: data.close
     '''
 
     node = models.PipelineNode.model_validate_yaml(io.StringIO(node_yaml))
@@ -133,6 +132,7 @@ class PipelineNode(BaseModel):
 
     add_layer_columns: bool = True
     dlt_template: Union[str, None] = "DEFAULT"
+    dataframe_type: Literal["SPARK", "DATABRICKS"] = DEFAULT_DFTYPE
     description: str = None
     drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
@@ -145,7 +145,7 @@ class PipelineNode(BaseModel):
     source: DataSourcesUnion
     timestamp_key: str = None
     _output_df: Any = None
-    _pipeline: Any = None
+    _parent: "Pipeline" = None
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
@@ -174,13 +174,22 @@ class PipelineNode(BaseModel):
         if self.name is None:
             self.name = str(uuid.uuid4())
 
+        return self
+
+    @model_validator(mode="after")
+    def update_children(self) -> Any:
+
         # Assign node to sources
         for s in self.get_sources():
-            s._pipeline_node = self
+            s._parent = self
 
         # Assign node to sinks
         if self.sink:
-            self.sink._pipeline_node = self
+            self.sink._parent = self
+
+        # Assign node to transformers
+        if self.transformer:
+            self.transformer._parent = self
 
         return self
 
@@ -189,10 +198,21 @@ class PipelineNode(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @property
+    def user_dftype(self) -> Union[str, None]:
+        """
+        User-configured dataframe type directly from model or from parent.
+        """
+        if "dataframe_type" in self.__fields_set__:
+            return self.dataframe_type
+        if self._parent:
+            return self._parent.user_dftype
+        return None
+
+    @property
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline node is used in the context of a DLT pipeline"""
         is_orchestrator_dlt = False
-        if self._pipeline and self._pipeline.is_orchestrator_dlt:
+        if self._parent and self._parent.is_orchestrator_dlt:
             is_orchestrator_dlt = True
         return is_orchestrator_dlt
 
@@ -260,11 +280,11 @@ class PipelineNode(BaseModel):
             if self.add_layer_columns:
                 nodes += [
                     SparkChainNode(
-                        column={
+                        with_column={
                             "name": "_bronze_at",
                             "type": "timestamp",
+                            "expr": "F.current_timestamp()",
                         },
-                        spark_func_name="current_timestamp",
                     ),
                 ]
 
@@ -272,22 +292,22 @@ class PipelineNode(BaseModel):
             if self.timestamp_key:
                 nodes += [
                     SparkChainNode(
-                        column={
+                        with_column={
                             "name": "_tstamp",
                             "type": "timestamp",
+                            "sql_expr": self.timestamp_key,
                         },
-                        sql_expression=self.timestamp_key,
                     )
                 ]
 
             if self.add_layer_columns:
                 nodes += [
                     SparkChainNode(
-                        column={
+                        with_column={
                             "name": "_silver_at",
                             "type": "timestamp",
+                            "expr": "F.current_timestamp()",
                         },
-                        spark_func_name="current_timestamp",
                     )
                 ]
 
@@ -295,11 +315,11 @@ class PipelineNode(BaseModel):
             if self.add_layer_columns:
                 nodes += [
                     SparkChainNode(
-                        column={
+                        with_column={
                             "name": "_gold_at",
                             "type": "timestamp",
+                            "expr": "F.current_timestamp()",
                         },
-                        spark_func_name="current_timestamp",
                     )
                 ]
 
@@ -310,17 +330,13 @@ class PipelineNode(BaseModel):
             elif self.primary_key:
                 subset = [self.primary_key]
 
-            nodes += [
-                SparkChainNode(
-                    spark_func_name="dropDuplicates", spark_func_args=[subset]
-                )
-            ]
+            nodes += [SparkChainNode(func_name="dropDuplicates", func_args=[subset])]
 
         if self.drop_source_columns and self.transformer:
             nodes += [
                 SparkChainNode(
-                    spark_func_name="drop",
-                    spark_func_args=[
+                    func_name="drop",
+                    func_args=[
                         c
                         for c in self.transformer.columns[0]
                         if c not in ["_bronze_at", "_silver_at", "_gold_at"]
@@ -341,11 +357,11 @@ class PipelineNode(BaseModel):
             if self.add_layer_columns:
                 nodes += [
                     PolarsChainNode(
-                        column={
+                        with_column={
                             "name": "_bronze_at",
                             "type": "timestamp",
+                            "expr": "pl.expr.laktory.current_timestamp()",
                         },
-                        polars_func_name="laktory.current_timestamp",
                     ),
                 ]
 
@@ -353,22 +369,22 @@ class PipelineNode(BaseModel):
             if self.timestamp_key:
                 nodes += [
                     PolarsChainNode(
-                        column={
+                        with_column={
                             "name": "_tstamp",
                             "type": "timestamp",
+                            "sql_expr": self.timestamp_key,
                         },
-                        sql_expression=self.timestamp_key,
                     )
                 ]
 
             if self.add_layer_columns:
                 nodes += [
                     PolarsChainNode(
-                        column={
+                        with_column={
                             "name": "_silver_at",
                             "type": "timestamp",
+                            "expr": "pl.expr.laktory.current_timestamp()",
                         },
-                        polars_func_name="laktory.current_timestamp",
                     )
                 ]
 
@@ -376,11 +392,11 @@ class PipelineNode(BaseModel):
             if self.add_layer_columns:
                 nodes += [
                     PolarsChainNode(
-                        column={
+                        with_column={
                             "name": "_gold_at",
                             "type": "timestamp",
+                            "expr": "pl.expr.laktory.current_timestamp()",
                         },
-                        polars_func_name="laktory.current_timestamp",
                     )
                 ]
 
@@ -391,15 +407,13 @@ class PipelineNode(BaseModel):
             elif self.primary_key:
                 subset = [self.primary_key]
 
-            nodes += [
-                PolarsChainNode(polars_func_name="unique", polars_func_args=[subset])
-            ]
+            nodes += [PolarsChainNode(func_name="unique", func_args=[subset])]
 
         if self.drop_source_columns and self.transformer:
             nodes += [
                 PolarsChainNode(
-                    polars_func_name="drop",
-                    polars_func_args=[
+                    func_name="drop",
+                    func_args=[
                         c
                         for c in self.transformer.columns[0]
                         if c not in ["_bronze_at", "_silver_at", "_gold_at"]
@@ -426,18 +440,18 @@ class PipelineNode(BaseModel):
 
             if isinstance(self.transformer, SparkChain):
                 for sn in self.transformer.nodes:
-                    for a in sn.spark_func_args:
+                    for a in sn.parsed_func_args:
                         if isinstance(a.value, cls):
                             sources += [a.value]
-                    for a in sn.spark_func_kwargs.values():
+                    for a in sn.parsed_func_kwargs.values():
                         if isinstance(a.value, cls):
                             sources += [a.value]
             elif isinstance(self.transformer, PolarsChain):
                 for pn in self.transformer.nodes:
-                    for a in pn.polars_func_args:
+                    for a in pn.parsed_func_args:
                         if isinstance(a.value, cls):
                             sources += [a.value]
-                    for a in pn.polars_func_kwargs.values():
+                    for a in pn.parsed_func_kwargs.values():
                         if isinstance(a.value, cls):
                             sources += [a.value]
 

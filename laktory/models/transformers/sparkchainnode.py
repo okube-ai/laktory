@@ -1,30 +1,64 @@
-from pydantic import field_validator
-from pydantic import ValidationError
-from typing import Any
 from typing import Union
 from typing import Callable
+from typing import Any
 
 from laktory._logger import get_logger
-from laktory.constants import SUPPORTED_DATATYPES
-from laktory.models.basemodel import BaseModel
-from laktory.models.transformers.sparkfuncarg import SparkFuncArg
-from laktory.spark import SparkDataFrame
+from laktory.models.transformers.basechainnode import BaseChainNode
+from laktory.models.transformers.basechainnode import BaseChainNodeColumn
+from laktory.models.transformers.basechainnode import BaseChainNodeFuncArg
 from laktory.spark import SparkColumn
+from laktory.spark import SparkDataFrame
 
-from laktory.exceptions import MissingColumnError
-from laktory.exceptions import MissingColumnsError
 
 logger = get_logger(__name__)
 
 
 # --------------------------------------------------------------------------- #
-# Main Class                                                                  #
+# Helper Classes                                                              #
 # --------------------------------------------------------------------------- #
 
 
-class SparkChainNodeColumn(BaseModel):
+class SparkChainNodeFuncArg(BaseChainNodeFuncArg):
     """
-    Spark chain node column definition
+    Spark function argument
+
+    Attributes
+    ----------
+    value:
+        Value of the argument
+    """
+
+    value: Union[Any]
+
+    def eval(self):
+        from laktory.models.datasources.basedatasource import BaseDataSource
+
+        v = self.value
+
+        if isinstance(v, BaseDataSource):
+            v = self.value.read()
+
+        elif isinstance(v, str):
+
+            # Imports required to evaluate expressions
+            import pyspark.sql.functions as F
+            from pyspark.sql.functions import lit
+            from pyspark.sql.functions import col
+            from pyspark.sql.functions import expr
+
+            targets = ["lit(", "col(", "expr(", "F."]
+
+            for f in targets:
+                if f in v:
+                    v = eval(v)
+                    break
+
+        return v
+
+
+class SparkChainNodeColumn(BaseChainNodeColumn):
+    """
+    Chain node column definition
 
     Attributes
     ----------
@@ -34,57 +68,78 @@ class SparkChainNodeColumn(BaseModel):
         Column data type
     unit:
         Column units
+    expr:
+        String representation of a polars expression
+    sql_expr:
+        SQL expression
     """
 
     name: str
     type: str = "string"
     unit: Union[str, None] = None
+    expr: Union[str, None] = None
+    sql_expr: Union[str, None] = None
 
-    @field_validator("type")
-    def check_type(cls, v: str) -> str:
-        if "<" in v:
-            return v
-        else:
-            if v not in SUPPORTED_DATATYPES:
-                raise ValueError(
-                    f"Type {v} is not supported. Select one of {SUPPORTED_DATATYPES}"
-                )
-        return v
+    def eval(self, udfs=None):
+
+        # Adding udfs to global variables
+        if udfs is None:
+            udfs = {}
+        for k, v in udfs.items():
+            globals()[k] = v
+
+        # Imports required to evaluate expressions
+        import pyspark.sql.functions as F
+        from pyspark.sql.functions import col
+        from pyspark.sql.functions import lit
+
+        if self.sql_expr:
+            return F.expr(self.sql_expr)
+
+        expr = eval(self.expr)
+
+        # Cleaning up global variables
+        for k, v in udfs.items():
+            del globals()[k]
+
+        return expr
 
 
-class SparkChainNode(BaseModel):
+# --------------------------------------------------------------------------- #
+# Main Class                                                                  #
+# --------------------------------------------------------------------------- #
+
+
+class SparkChainNode(BaseChainNode):
     """
-    SparkChain node that output a dataframe upon execution. As a convenience,
-    `column` can be specified to create a new column. In this case, the spark
-    function or sql expression is expected to return a column instead of a
-    dataframe. Each node is executed sequentially in the provided order. A node
-    may also be another Spark Chain.
+    PolarsChain node that output a dataframe upon execution. As a convenience,
+    `with_column` argument can be specified to create a new column from a
+    spark or sql expression. Each node is executed sequentially in the
+    provided order. A node may also be another Spark Chain.
 
     Attributes
     ----------
-    allow_missing_column_args:
-        If `True`, spark func column arguments are allowed to be missing
-        without raising an exception.
-    column:
-        Column definition. If not `None`, the spark function or sql expression
-        is expected to return a column instead of a dataframe.
-    spark_func_args:
-        List of arguments to be passed to the spark function.
-        To support spark functions expecting column argument, col("x"),
-        lit("3") and expr("x*2") can be provided.
-    spark_func_kwargs:
-        List of keyword arguments to be passed to the spark function.
-        To support spark functions expecting column argument, col("x"),
-        lit("3") and expr("x*2") can be provided.
-    spark_func_name:
-        Name of the spark function to build the dataframe. If `column` is
-        specified, the spark function should return a column instead. Mutually
-         exclusive to `sql_expression`.
-    sql_expression:
+    func_args:
+        List of arguments to be passed to the spark function. If the function
+        expects a spark column, its string representation can be provided
+        with support for `col`, `lit`, `expr` and `F.`.
+    func_kwargs:
+        List of keyword arguments to be passed to the spark function. If the
+        function expects a spark column, its string representation can be
+        provided with support for `col`, `lit`, `expr` and `F.`.
+    func_name:
+        Name of the spark function to build the dataframe. Mutually
+        exclusive to `sql_expr` and `with_column`.
+    sql_expr:
         SQL Expression using `{df}` to reference upstream dataframe and
-        defining how to build the output dataframe. If `column` is
-        specified, the sql expression should define a column instead. Mutually
-         exclusive to `spark_func_name`
+        defining how to build the output dataframe. Mutually exclusive to
+        `func_name` and `with_column`.
+    with_column:
+        Syntactic sugar for adding a column. Mutually exclusive to `func_name`
+        and `sql_expr`.
+    with_columns:
+        Syntactic sugar for adding columns. Mutually exclusive to `func_name`
+        and `sql_expr`.
 
     Examples
     --------
@@ -95,23 +150,20 @@ class SparkChainNode(BaseModel):
     df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 2, 3]}))
 
     node = models.SparkChainNode(
-        column={
+        with_column={
             "name": "cosx",
             "type": "double",
+            "expr": "F.cos('x')",
         },
-        spark_func_name="cos",
-        spark_func_args=["x"],
     )
     df = node.execute(df0)
 
     node = models.SparkChainNode(
-        column={
+        with_column={
             "name": "xy",
             "type": "double",
+            "expr": "F.coalesce('x')",
         },
-        spark_func_name="coalesce",
-        spark_func_args=["col('x')", "F.col('y')"],
-        allow_missing_column_args=True,
     )
     df = node.execute(df)
 
@@ -125,76 +177,58 @@ class SparkChainNode(BaseModel):
     '''
 
     node = models.SparkChainNode(
-        spark_func_name="drop_duplicates",
-        spark_func_args=[["x"]],
+        func_name="drop_duplicates",
+        func_args=[["x"]],
     )
-    df = node.execute(df0)
+    df = node.execute(df)
 
     print(df.toPandas().to_string())
     '''
-       x
-    0  1
-    1  2
-    2  3
+       x      cosx   xy
+    0  1  0.540302  1.0
+    1  2 -0.416147  2.0
+    2  3 -0.989992  3.0
     '''
     ```
     """
 
-    allow_missing_column_args: Union[bool, None] = False
-    column: Union[SparkChainNodeColumn, None] = None
-    spark_func_args: list[Union[Any, SparkFuncArg]] = []
-    spark_func_kwargs: dict[str, Union[Any, SparkFuncArg]] = {}
-    spark_func_name: Union[str, None] = None
-    sql_expression: Union[str, None] = None
-
-    @field_validator("spark_func_args")
-    def parse_args(cls, args: list[Union[Any, SparkFuncArg]]) -> list[SparkFuncArg]:
-        _args = []
-        for a in args:
-            try:
-                a = SparkFuncArg(**a)
-            except (ValidationError, TypeError):
-                pass
-
-            if isinstance(a, SparkFuncArg):
-                pass
-            else:
-                a = SparkFuncArg(value=a)
-            _args += [a]
-        return _args
-
-    @field_validator("spark_func_kwargs")
-    def parse_kwargs(
-        cls, kwargs: dict[str, Union[str, SparkFuncArg]]
-    ) -> dict[str, SparkFuncArg]:
-        _kwargs = {}
-        for k, a in kwargs.items():
-
-            try:
-                a = SparkFuncArg(**a)
-            except (ValidationError, TypeError):
-                pass
-
-            if isinstance(a, SparkFuncArg):
-                pass
-            else:
-                a = SparkFuncArg(value=a)
-
-            _kwargs[k] = a
-        return _kwargs
+    func_args: list[Union[Any]] = []
+    func_kwargs: dict[str, Union[Any]] = {}
+    func_name: Union[str, None] = None
+    sql_expr: Union[str, None] = None
+    with_column: Union[SparkChainNodeColumn, None] = None
+    with_columns: Union[list[SparkChainNodeColumn], None] = []
+    _parent: "SparkChain" = None
+    _parsed_func_args: list = None
+    _parsed_func_kwargs: dict = None
 
     @property
-    def is_column(self):
-        return self.column is not None
+    def parsed_func_args(self):
+        if not self._parsed_func_args:
+            self._parsed_func_args = [
+                SparkChainNodeFuncArg(value=a) for a in self.func_args
+            ]
+        return self._parsed_func_args
 
     @property
-    def id(self):
-        if self.is_column:
-            return self.column.name
-        return "df"
+    def parsed_func_kwargs(self):
+        if not self._parsed_func_kwargs:
+            self._parsed_func_kwargs = {
+                k: SparkChainNodeFuncArg(value=v) for k, v in self.func_kwargs.items()
+            }
+        return self._parsed_func_kwargs
 
-    def add_column(self, df, col):
-        return df.withColumn(self.column.name, col)
+    @property
+    def user_dftype(self) -> Union[str, None]:
+        """
+        User-configured dataframe type directly from model or from parent.
+        """
+        return "SPARK"
+        # if "dataframe_type" in self.__fields_set__:
+        #     return self.dataframe_type
+        # if self._parent:
+        #     return self._parent.user_dftype
+        # return None
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
@@ -204,8 +238,7 @@ class SparkChainNode(BaseModel):
         self,
         df: SparkDataFrame,
         udfs: list[Callable[[...], Union[SparkColumn, SparkDataFrame]]] = None,
-        return_col: bool = False,
-    ) -> Union[SparkDataFrame, SparkColumn]:
+    ) -> Union[SparkDataFrame]:
         """
         Execute spark chain node
 
@@ -215,9 +248,6 @@ class SparkChainNode(BaseModel):
             Input dataframe
         udfs:
             User-defined functions
-        return_col
-            If `True` and column specified, function returns `Column` object
-            instead of dataframe.
 
         Returns
         -------
@@ -227,38 +257,38 @@ class SparkChainNode(BaseModel):
         from pyspark.sql.dataframe import DataFrame
         from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
         from pyspark.sql import Column
-        from laktory.spark.dataframe import has_column
         from laktory.spark import DATATYPES_MAP
 
         if udfs is None:
             udfs = []
         udfs = {f.__name__: f for f in udfs}
 
-        # From SQL expression
-        if self.sql_expression:
-            if self.is_column:
+        # Build Columns
+        if self._with_columns:
+            for column in self._with_columns:
                 logger.info(
-                    f"{self.column.name}[{self.column.type}] as `{self.sql_expression}`)"
+                    f"Building column {column.name} as {column.expr or column.sql_expr}"
                 )
-                col = F.expr(self.sql_expression).alias(self.column.name)
-                if self.column.type not in ["_any"]:
-                    col = col.cast(DATATYPES_MAP[self.column.type.lower()])
-                if return_col:
-                    return col
-                return self.add_column(df, col)
-            else:
-                df = df.sparkSession.sql(self.sql_expression, df=df)
-                return df
+                df = df.withColumns(
+                    {
+                        column.name: column.eval(udfs=udfs).cast(
+                            DATATYPES_MAP[column.type]
+                        )
+                    }
+                )
+            return df
 
-        # From Spark Function
-        func_name = self.spark_func_name
-        if self.spark_func_name is None:
-            if self.is_column:
-                func_name = "coalesce"
-            else:
-                raise ValueError(
-                    "`spark_func_name` must be specified if `sql_expression` is not specified"
-                )
+        # From SQL expression
+        if self.sql_expr:
+            df = df.sparkSession.sql(self.sql_expr, df=df)
+            return df
+
+        # Get Function
+        func_name = self.func_name
+        if self.func_name is None:
+            raise ValueError(
+                "`func_name` must be specified if `sql_expr` is not specified"
+            )
 
         # Get from UDFs
         f = udfs.get(func_name, None)
@@ -266,102 +296,48 @@ class SparkChainNode(BaseModel):
         # Get from built-in spark and spark extension (including Laktory) functions
         input_df = True
         if f is None:
-            if self.is_column:
+            if isinstance(df, DataFrameConnect):
                 if "." in func_name:
+                    input_df = True
                     vals = func_name.split(".")
-                    f = getattr(getattr(F, vals[0]), vals[1], None)
+                    f = getattr(getattr(DataFrameConnect, vals[0]), vals[1], None)
                 else:
-                    f = getattr(F, func_name, None)
+                    f = getattr(DataFrameConnect, func_name, None)
             else:
-                if isinstance(df, DataFrameConnect):
-                    if "." in func_name:
-                        input_df = True
-                        vals = func_name.split(".")
-                        f = getattr(getattr(DataFrameConnect, vals[0]), vals[1], None)
-                    else:
-                        f = getattr(DataFrameConnect, func_name, None)
+                if "." in func_name:
+                    input_df = False
+                    vals = func_name.split(".")
+                    f = getattr(getattr(df, vals[0]), vals[1], None)
                 else:
-                    if "." in func_name:
-                        input_df = False
-                        vals = func_name.split(".")
-                        f = getattr(getattr(df, vals[0]), vals[1], None)
-                    else:
-                        f = getattr(DataFrame, func_name, None)
+                    f = getattr(DataFrame, func_name, None)
 
         if f is None:
             raise ValueError(f"Function {func_name} is not available")
 
-        _args = self.spark_func_args
-        _kwargs = self.spark_func_kwargs
+        _args = self.parsed_func_args
+        _kwargs = self.parsed_func_kwargs
 
         # Build log
         func_log = f"{func_name}("
-        for a in _args:
-            func_log += f"{a.value},"
-        for k, a in _kwargs.items():
-            func_log += f"{k}={a.value},"
-        if func_log.endswith(","):
-            func_log = func_log[:-1]
+        func_log += ",".join([a.signature() for a in _args])
+        func_log += ",".join([f"{k}:{a.signature()}" for k, a in _kwargs.items()])
         func_log += ")"
-        if self.is_column:
-            logger.info(f"Column {self.id}[{self.column.type}] as {func_log}")
-        else:
-            logger.info(f"DataFrame {self.id} as {func_log}")
+        logger.info(f"DataFrame {self.id} as {func_log}")
 
         # Build args
         args = []
-        missing_column_names = []
         for i, _arg in enumerate(_args):
-            parg = _arg.eval()
-            cname = _arg.value
-
-            if df is not None:
-                # Check if explicitly defined columns are available
-                if isinstance(parg, Column):
-                    cname = str(parg).split("'")[1]
-                    if not df.laktory.has_column(cname):
-                        missing_column_names += [cname]
-                        if not self.allow_missing_column_args:
-                            logger.error(
-                                f"Input column {cname} is missing. Abort building {self.id}"
-                            )
-                            raise MissingColumnError(cname)
-                        else:
-                            logger.warn(
-                                f"Input column {cname} is missing for building {self.id}"
-                            )
-                            continue
-
-                else:
-                    pass
-                    # TODO: We could try to check if the function expect columns and if it's the case assume
-                    # that a string argument is intended to be a column name, but I feel this will be a rabbit
-                    # hole with tons of exceptions.
-
-            args += [parg]
-
-        if len(_args) > 0 and len(args) < 1:
-            raise MissingColumnsError(missing_column_names)
+            args += [_arg.eval()]
 
         # Build kwargs
         kwargs = {}
         for k, _arg in _kwargs.items():
-            kwargs[k] = _arg.eval(df.sparkSession)
+            kwargs[k] = _arg.eval()
 
-        # Function call
-        logger.info(f"{self.id} as {func_name}({args}, {kwargs})")
-
-        if self.is_column:
-            col = f(*args, **kwargs)
-            if self.column.type not in ["_any"]:
-                col = col.cast(DATATYPES_MAP[self.column.type.lower()])
-            if return_col:
-                return col
-            df = self.add_column(df, col)
+        # Call function
+        if input_df:
+            df = f(df, *args, **kwargs)
         else:
-            if input_df:
-                df = f(df, *args, **kwargs)
-            else:
-                df = f(*args, **kwargs)
+            df = f(*args, **kwargs)
 
         return df

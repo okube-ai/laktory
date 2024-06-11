@@ -8,6 +8,7 @@
 * Polars DataFrame extension
 * Polars Expressions extension
 ### Breaking changes
+* Refactored column creation inside a transformer node
 * Moved laktory Spark dataframe custom functions under a laktory namespace.
 
 ## [0.3.3] - 2024-05-30

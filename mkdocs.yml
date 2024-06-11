@@ -211,9 +211,9 @@ nav:
           - PulumiStack: api/models/stacks/pulumistack.md
           - TerraformStack: api/models/stacks/terraformstack.md
       - Transformers:
+#        - BaseChainNode: api/models/transformers/basechainnode.md
+        - PolarsChain: api/models/transformers/polarschain.md
         - SparkChain: api/models/transformers/sparkchain.md
-        - SparkChainNode: api/models/transformers/sparkchainnode.md
-        - SparkFuncArg: api/models/transformers/sparkfuncarg.md
     - CLI: api/cli.md
     - Spark:
       - DataFrame:
@@ -226,15 +226,9 @@ nav:
         - window_filter: api/spark/dataframe/window_filter.md
       - Functions:
         - constants: api/spark/functions/_constants.md
-        - add: api/spark/functions/add.md
-        - add: api/spark/functions/compare.md
+        - compare: api/spark/functions/compare.md
         - convert_units: api/spark/functions/convert_units.md
-        - div: api/spark/functions/div.md
-        - mul: api/spark/functions/mul.md
-        - poly1: api/spark/functions/poly1.md
-        - poly2: api/spark/functions/poly2.md
         - roundp: api/spark/functions/roundp.md
-        - scaled_power: api/spark/functions/scaled_power.md
         - string_split: api/spark/functions/string_split.md
         - sub: api/spark/functions/sub.md
         - uuid: api/spark/functions/uuid.md
@@ -251,8 +245,6 @@ nav:
         - compare: api/polars/expressions/compare.md
         - convert_units: api/polars/expressions/convert_units.md
         - current_timestamp: api/polars/expressions/current_timestamp.md
-        - poly1: api/polars/expressions/poly1.md
-        - poly2: api/polars/expressions/poly2.md
         - roundp: api/polars/expressions/roundp.md
         - row_number: api/polars/expressions/row_number.md
         - scaled_power: api/polars/expressions/scaled_power.md

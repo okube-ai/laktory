@@ -116,7 +116,7 @@ class PipelineNodeDataSource(BaseDataSource):
     def _read_polars(self) -> PolarsDataFrame:
 
         # Read from node output DataFrame (if available)
-        if self.node.output_df:
+        if self.node.output_df is not None:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
             df = self.node.output_df
 

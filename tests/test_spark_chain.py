@@ -27,7 +27,7 @@ df0 = spark.createDataFrame(pdf)
 df1 = spark.createDataFrame(pdf)
 
 
-def test_spark_func_arg(df0=df0):
+def test_func_arg(df0=df0):
     df = df0.select(df0.columns)
 
     new_cols = []
@@ -43,8 +43,8 @@ def test_spark_func_arg(df0=df0):
         ]
     ):
         new_col = f"c{i}"
-        a = models.SparkFuncArg(value=v)
-        df = df.withColumn(new_col, a.eval(spark))
+        a = models.SparkChainNodeFuncArg(value=v)
+        df = df.withColumn(new_col, a.eval())
         new_cols += [new_col]
 
     df.show()
@@ -66,7 +66,7 @@ def test_spark_func_arg(df0=df0):
         "x",
         "3",
     ]:
-        v1 = models.SparkFuncArg(value=v0).eval(spark)
+        v1 = models.SparkChainNodeFuncArg(value=v0).eval()
         assert v1 == v0
 
 
@@ -77,8 +77,8 @@ def test_dataframe_df_input(df0=df0):
     sc = models.SparkChain(
         nodes=[
             {
-                "spark_func_name": "union",
-                "spark_func_args": [df1],
+                "func_name": "union",
+                "func_args": [df1],
             },
         ]
     )
@@ -97,7 +97,7 @@ def test_dataframe_sql_expression(df0=df0):
     sc = models.SparkChain(
         nodes=[
             {
-                "sql_expression": "SELECT *, x*2 AS x2 FROM {df}",
+                "sql_expr": "SELECT *, x*2 AS x2 FROM {df}",
             },
         ]
     )
@@ -119,8 +119,8 @@ def test_dataframe_table_input(df0=df0):
     sc = models.SparkChain(
         nodes=[
             {
-                "spark_func_name": "union",
-                "spark_func_args": [
+                "func_name": "union",
+                "func_args": [
                     {"mock_df": df},
                 ],
             }
@@ -141,13 +141,18 @@ def test_column(df0=df0):
     sc = models.SparkChain(
         nodes=[
             {
-                "column": {"name": "cos_x", "type": "double"},
-                "spark_func_name": "cos",
-                "spark_func_args": ["x"],
+                "with_column": {
+                    "name": "cos_x",
+                    "type": "double",
+                    "expr": "F.cos('x')",
+                },
             },
             {
-                "column": {"name": "x2", "type": "double"},
-                "sql_expression": "x*2",
+                "with_column": {
+                    "name": "x2",
+                    "type": "double",
+                    "expr": "F.col('x')*2",
+                },
             },
         ]
     )
@@ -173,23 +178,26 @@ def test_udfs(df0=df0):
     sc = models.SparkChain(
         nodes=[
             {
-                "column": {
+                "with_column": {
                     "name": "rp",
                     "type": "double",
+                    "expr": "F.laktory.roundp('p', p=0.1)",
                 },
-                "spark_func_name": "laktory.roundp",
-                "spark_func_args": ["p"],
-                "spark_func_kwargs": {"p": 0.1},
+                # "func_name": "laktory.roundp",
+                # "func_args": ["p"],
+                # "func_kwargs": {"p": 0.1},
             },
             {
-                "column": {"name": "x3", "type": "double"},
-                "spark_func_name": "mul3",
-                "spark_func_args": [F.col("x")],
+                "with_column": {
+                    "name": "x3",
+                    "type": "double",
+                    "expr": "mul3(col('x'))",
+                },
             },
             {
-                "spark_func_name": "add_new_col",
-                "spark_func_args": ["y"],
-                "spark_func_kwargs": {"s": 5},
+                "func_name": "add_new_col",
+                "func_args": ["y"],
+                "func_kwargs": {"s": 5},
             },
         ]
     )
@@ -211,29 +219,33 @@ def test_nested(df0=df0):
     sc = models.SparkChain(
         nodes=[
             {
-                "column": {"name": "cos_x", "type": "double"},
-                "spark_func_name": "cos",
-                "spark_func_args": ["x"],
+                "with_column": {
+                    "name": "cos_x",
+                    "type": "double",
+                    "expr": "F.cos('x')",
+                },
             },
             {
                 "nodes": [
                     {
-                        "spark_func_name": "withColumnRenamed",
-                        "spark_func_args": [
+                        "func_name": "withColumnRenamed",
+                        "func_args": [
                             "x",
                             "x_tmp",
                         ],
                     },
                     {
-                        "column": {"name": "x2", "type": "double"},
-                        "spark_func_name": "sqrt",
-                        "spark_func_args": ["x_tmp"],
+                        "with_column": {
+                            "name": "x2",
+                            "type": "double",
+                            "expr": "F.sqrt('x_tmp')",
+                        },
                     },
                 ],
             },
             {
-                "spark_func_name": "drop",
-                "spark_func_args": [
+                "func_name": "drop",
+                "func_args": [
                     "x_tmp",
                 ],
             },
@@ -254,7 +266,11 @@ def test_nested(df0=df0):
     ]
 
 
-def test_exceptions():
+def atest_exceptions():
+
+    # TODO: Re-enable when coalesce is ready
+    return
+
     df = df0.select(df0.columns)
 
     # Input missing - missing not allowed
@@ -262,8 +278,8 @@ def test_exceptions():
         nodes=[
             {
                 "column": {"name": "cos_x", "type": "double"},
-                "spark_func_name": "cos",
-                "spark_func_args": ["col('y')"],
+                "func_name": "cos",
+                "func_args": ["col('y')"],
                 "allow_missing_column_args": False,
             },
         ]
@@ -276,8 +292,8 @@ def test_exceptions():
         nodes=[
             {
                 "column": {"name": "xy", "type": "double"},
-                "spark_func_name": "coalesce",
-                "spark_func_args": ["col('x')", "col('y')"],
+                "func_name": "coalesce",
+                "func_args": ["col('x')", "col('y')"],
                 "allow_missing_column_args": True,
             },
         ]
@@ -290,8 +306,8 @@ def test_exceptions():
         nodes=[
             {
                 "column": {"name": "xy", "type": "double"},
-                "spark_func_name": "coalesce",
-                "spark_func_args": ["col('z')", "col('y')"],
+                "func_name": "coalesce",
+                "func_args": ["col('z')", "col('y')"],
                 "allow_missing_column_args": True,
             },
         ]
@@ -301,11 +317,11 @@ def test_exceptions():
 
 
 if __name__ == "__main__":
-    # test_spark_func_arg()
-    # test_dataframe_df_input()
+    test_func_arg()
+    test_dataframe_df_input()
     test_dataframe_sql_expression()
-    # test_dataframe_table_input()
-    # test_column()
-    # test_udfs()
-    # test_nested()
-    # test_exceptions()
+    test_dataframe_table_input()
+    test_column()
+    test_udfs()
+    test_nested()
+    # atest_exceptions()

@@ -11,6 +11,7 @@ import networkx as nx
 from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
+from laktory.constants import DEFAULT_DFTYPE
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
 from laktory.models.datasinks.tabledatasink import TableDataSink
@@ -160,21 +161,19 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             path: ./dataframes/slv_stock_prices
           transformer:
             nodes:
-            - column:
+            - with_column:
                 name: created_at
                 type: timestamp
-              sql_expression: data.created_at
-            - column:
+                sql_expr: data.created_at
+            - with_column:
                 name: symbol
-              spark_func_name: coalesce
-              spark_func_args:
-              - value: data.symbol
-            - column:
+                sql_expr: data.symbol
+            - with_column:
                 name: close
                 type: double
-              sql_expression: data.close
-            - spark_func_name: drop
-              spark_func_args:
+                sql_expr: data.close
+            - func_name: drop
+              func_args:
               - value: data
               - value: producer
               - value: name
@@ -231,27 +230,25 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
               mode: OVERWRITE
           transformer:
             nodes:
-            - column:
+            - with_column:
                 name: created_at
                 type: timestamp
-              sql_expression: data.created_at
-            - column:
+                sql_expr: data.created_at
+            - with_column:
                 name: symbol
-              spark_func_name: coalesce
-              spark_func_args:
-              - value: data.symbol
-            - column:
+                sql_expr: data.symbol
+            - with_column:
                 name: close
                 type: double
-              sql_expression: data.close
-            - spark_func_name: drop
-              spark_func_args:
+                sql_expr: data.close
+            - func_name: drop
+              func_args:
               - value: data
               - value: producer
               - value: name
               - value: description
-            - spark_func_name: laktory.smart_join
-              spark_func_kwargs:
+            - func_name: laktory.smart_join
+              func_kwargs:
                 'on':
                   - symbol
                 other:
@@ -312,27 +309,25 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             table_name: slv_stock_prices
           transformer:
             nodes:
-            - column:
+            - with_column:
                 name: created_at
                 type: timestamp
-              sql_expression: data.created_at
-            - column:
+                sql_expr: data.created_at
+            - with_column:
                 name: symbol
-              spark_func_name: coalesce
-              spark_func_args:
-              - value: data.symbol
-            - column:
+                sql_expr: data.symbol
+            - with_column:
                 name: close
                 type: double
-              sql_expression: data.close
-            - spark_func_name: drop
-              spark_func_args:
+                sql_expr: data.close
+            - func_name: drop
+              func_args:
               - value: data
               - value: producer
               - value: name
               - value: description
-            - spark_func_name: laktory.smart_join
-              spark_func_kwargs:
+            - func_name: laktory.smart_join
+              func_kwargs:
                 'on':
                   - symbol
                 other:
@@ -355,6 +350,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     """
 
     databricks_job: Union[PipelineDatabricksJob, None] = None
+    dataframe_type: Literal["SPARK", "POLARS"] = DEFAULT_DFTYPE
     dlt: Union[DLTPipeline, None] = None
     name: str
     nodes: list[Union[PipelineNode]]
@@ -369,13 +365,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         return data
 
     @model_validator(mode="after")
-    def update_nodes(self) -> Any:
+    def update_children(self) -> Any:
         # Build dag
         _ = self.dag
 
+        # Assign pipeline
         for n in self.nodes:
-            # Assign pipeline
-            n._pipeline = self
+            n._parent = self
 
         return self
 
@@ -459,6 +455,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def user_dftype(self) -> Union[str, None]:
+        """User-configured dataframe type"""
+        if "dataframe_type" in self.__fields_set__:
+            return self.dataframe_type
+        return None
 
     @property
     def is_orchestrator_dlt(self) -> bool:

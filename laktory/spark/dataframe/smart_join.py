@@ -195,7 +195,6 @@ def smart_join(
 
     # Drop duplicated columns
     for c, v in d.items():
-        print(f"DROPPING {c}")
         if v < 2 or c not in _join:
             continue
         df = df.withColumn("__tmp", F.coalesce(f"left.{c}", f"other.{c}"))

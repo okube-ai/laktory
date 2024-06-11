@@ -3,7 +3,7 @@ from typing import Union
 from pyspark.sql.dataframe import DataFrame
 
 from laktory._logger import get_logger
-from laktory.models.transformers.sparkchainnode import SparkChainNode
+from laktory.models.transformers.sparkchainnode import SparkChainNodeColumn
 
 
 logger = get_logger(__name__)
@@ -44,7 +44,7 @@ def groupby_and_agg(
     df,
     groupby_window: TimeWindow = None,
     groupby_columns: list[str] = None,
-    agg_expressions: list[SparkChainNode] = None,
+    agg_expressions: list[SparkChainNodeColumn] = None,
 ) -> DataFrame:
     """
     Apply a groupby and create aggregation columns.
@@ -83,9 +83,8 @@ def groupby_and_agg(
         },
         agg_expressions=[
             {
-                "column": {"name": "mean_price"},
-                "spark_func_name": "mean",
-                "spark_func_args": ["price"],
+                "name": "mean_price",
+                "expr": "F.mean('price')",
             },
         ],
     )
@@ -134,16 +133,10 @@ def groupby_and_agg(
     # Agg arguments
     aggs = []
     for expr in agg_expressions:
-        if not isinstance(expr, SparkChainNode):
-            expr = SparkChainNode(**expr)
+        if not isinstance(expr, SparkChainNodeColumn):
+            expr = SparkChainNodeColumn(**expr)
 
-        expr.column.type = "_any"
-        aggs += [
-            expr.execute(
-                df=df,
-                # udfs=udfs,
-                return_col=True,
-            ).alias(expr.column.name)
-        ]
+        expr.type = "_any"
+        aggs += [expr.eval().alias(expr.name)]
 
     return df.groupby(groupby).agg(*aggs)

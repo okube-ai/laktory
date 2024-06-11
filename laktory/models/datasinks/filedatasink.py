@@ -150,7 +150,6 @@ class FileDataSink(BaseDataSink):
         source = FileDataSource(
             path=self.path,
             format=self.format,
-            dataframe_type=self.dataframe_type,
         )
         if as_stream:
             source.as_stream = as_stream

@@ -1,8 +1,33 @@
+from typing import Union
 import polars as pl
 
 __all__ = [
+    # "coalesce",
     "row_number",
 ]
+
+
+# def coalesce(exprs: Union[str, pl.Expr, list[str], list[pl.Expr]], *more_exprs, available_columns=None):
+#
+#     if not available_columns:
+#         return pl.coalesce(exprs, *more_exprs)
+#
+#     # Parse inputs
+#     if not isinstance(exprs, list):
+#         exprs = [exprs]
+#     exprs = [e for e in exprs] + [e for e in more_exprs]
+#
+#     _exprs = []
+#     for e in exprs:
+#         if isinstance(e, str) and e in available_columns:
+#             _exprs += [e]
+#
+#         elif isinstance(e, pl.Expr):
+#             found = all([c in available_columns for c in e.meta.root_names()])
+#             if found:
+#                 _exprs += [e]
+#
+#     return pl.coalesce(_exprs)
 
 
 def row_number() -> pl.Expr:

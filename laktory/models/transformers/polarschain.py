@@ -1,4 +1,6 @@
+from typing import Any
 from typing import Union
+from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
@@ -15,18 +17,18 @@ logger = get_logger(__name__)
 
 class PolarsChain(BaseModel):
     """
-    The Polars Chain class defines a series of transformation to be applied to
-    a dataframe. Each transformation is expressed as a node (PolarsChainNode
-    object) that, upon execution, returns a new dataframe. As a convenience,
-    `column` can be specified to create a new column. In this case, the polars
-    function or sql expression is expected to return a column instead of a
-    dataframe. Each node is executed sequentially in the provided order. A node
-    may also be another Polars Chain.
+    The `PolarsChain` class defines a series of Polars transformation to be
+    applied to a dataframe. Each transformation is expressed as a node
+    (`PolarsChainNode` object) that, upon execution, returns a new dataframe.
+    Each node is executed sequentially in the provided order. A node may also
+    be another `PolarsChain`.
 
     Attributes
     ----------
     nodes:
         The list of transformations to be executed.
+    polars:
+        Dummy configuration attribute to identify chain as Polars
 
     Examples
     --------
@@ -38,40 +40,39 @@ class PolarsChain(BaseModel):
 
     # Build Chain
     sc = models.PolarsChain(
+        polars=True,
         nodes=[
             {
-                "column": {
+                "with_column": {
                     "name": "cos_x",
                     "type": "double",
+                    "expr": "pl.col('x').cos()",
                 },
-                "polars_func_name": "cos",
-                "polars_func_args": ["col('x')"],
             },
             {
                 "nodes": [
                     {
-                        "polars_func_name": "rename",
-                        "polars_func_args": [
+                        "func_name": "rename",
+                        "func_args": [
                             {"x": "x_tmp"},
                         ],
                     },
                     {
-                        "column": {
+                        "with_column": {
                             "name": "x2",
                             "type": "double",
+                            "expr": "pl.col('x_tmp').sqrt()",
                         },
-                        "polars_func_name": "sqrt",
-                        "polars_func_args": ["col('x_tmp')"],
                     },
                 ],
             },
             {
-                "polars_func_name": "drop",
-                "polars_func_args": [
+                "func_name": "drop",
+                "func_args": [
                     "x_tmp",
                 ],
             },
-        ]
+        ],
     )
 
     # Execute Chain
@@ -89,11 +90,31 @@ class PolarsChain(BaseModel):
     """
 
     nodes: list[Union[PolarsChainNode, "PolarsChain"]]
+    polars: bool = True
     _columns: list[list[str]] = []
+    _parent: "PipelineNode" = None
+
+    @model_validator(mode="after")
+    def update_children(self) -> Any:
+        for n in self.nodes:
+            n._parent = self
+        return self
 
     @property
     def columns(self):
         return self._columns
+
+    @property
+    def user_dftype(self) -> Union[str, None]:
+        """
+        User-configured dataframe type directly from model or from parent.
+        """
+        return "POLARS"
+        # if "dataframe_type" in self.__fields_set__:
+        #     return self.dataframe_type
+        # if self._parent:
+        #     return self._parent.user_dftype
+        # return None
 
     def execute(self, df, udfs=None) -> PolarsDataFrame:
         logger.info("Executing Polars chain")

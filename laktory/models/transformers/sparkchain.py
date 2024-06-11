@@ -1,4 +1,6 @@
+from typing import Any
 from typing import Union
+from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
@@ -15,18 +17,18 @@ logger = get_logger(__name__)
 
 class SparkChain(BaseModel):
     """
-    The Spark Chain class defines a series of transformation to be applied to
-    a dataframe. Each transformation is expressed as a node (SparkChainNode
-    object) that, upon execution, returns a new dataframe. As a convenience,
-    `column` can be specified to create a new column. In this case, the spark
-    function or sql expression is expected to return a column instead of a
-    dataframe. Each node is executed sequentially in the provided order. A node
-    may also be another Spark Chain.
+    The `SparkChain` class defines a series of Spark transformation to be
+    applied to a dataframe. Each transformation is expressed as a node
+    (`SparkChainNode` object) that, upon execution, returns a new dataframe.
+    Each node is executed sequentially in the provided order. A node may also
+    be another `SparkChain`.
 
     Attributes
     ----------
     nodes:
         The list of transformations to be executed.
+    spark:
+        Dummy configuration attribute to identify chain as Spark
 
     Examples
     --------
@@ -40,35 +42,33 @@ class SparkChain(BaseModel):
     sc = models.SparkChain(
         nodes=[
             {
-                "column": {
+                "with_column": {
                     "name": "cos_x",
                     "type": "double",
+                    "expr": "F.cos('x')",
                 },
-                "spark_func_name": "cos",
-                "spark_func_args": ["x"],
             },
             {
                 "nodes": [
                     {
-                        "spark_func_name": "withColumnRenamed",
-                        "spark_func_args": [
+                        "func_name": "withColumnRenamed",
+                        "func_args": [
                             "x",
                             "x_tmp",
                         ],
                     },
                     {
-                        "column": {
+                        "with_column": {
                             "name": "x2",
                             "type": "double",
+                            "expr": "F.sqrt('x_tmp')",
                         },
-                        "spark_func_name": "sqrt",
-                        "spark_func_args": ["x_tmp"],
                     },
                 ],
             },
             {
-                "spark_func_name": "drop",
-                "spark_func_args": [
+                "func_name": "drop",
+                "func_args": [
                     "x_tmp",
                 ],
             },
@@ -90,11 +90,31 @@ class SparkChain(BaseModel):
     """
 
     nodes: list[Union[SparkChainNode, "SparkChain"]]
+    spark: bool = True
     _columns: list[list[str]] = []
+    _parent: "PipelineNode" = None
+
+    @model_validator(mode="after")
+    def update_children(self) -> Any:
+        for n in self.nodes:
+            n._parent = self
+        return self
 
     @property
     def columns(self):
         return self._columns
+
+    @property
+    def user_dftype(self) -> Union[str, None]:
+        """
+        User-configured dataframe type directly from model or from parent.
+        """
+        return "SPARK"
+        # if "dataframe_type" in self.__fields_set__:
+        #     return self.dataframe_type
+        # if self._parent:
+        #     return self._parent.user_dftype
+        # return None
 
     def execute(self, df, udfs=None) -> SparkDataFrame:
         logger.info("Executing Spark chain")

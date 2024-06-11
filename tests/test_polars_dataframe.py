@@ -158,9 +158,8 @@ def test_aggregation():
         groupby_columns=["symbol"],
         agg_expressions=[
             {
-                "column": {"name": "mean_close"},
-                "polars_func_name": "mean",
-                "polars_func_args": ["close"],
+                "name": "mean_close",
+                "expr": "pl.col('close').mean()",
             },
         ],
     ).sort("symbol")

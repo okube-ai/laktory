@@ -1,6 +1,7 @@
 import os
 import shutil
 import networkx as nx
+import polars
 
 from laktory import models
 from laktory._testing import spark
@@ -15,6 +16,10 @@ with open(os.path.join(paths.data, "pl-spark-local.yaml"), "r") as fp:
     pl = models.Pipeline.model_validate_yaml(fp)
 
 
+with open(os.path.join(paths.data, "pl-polars-local.yaml"), "r") as fp:
+    pl_polars = models.Pipeline.model_validate_yaml(fp)
+
+
 with open(os.path.join(paths.data, "pl-spark-dlt.yaml"), "r") as fp:
     pl_dlt = models.Pipeline.model_validate_yaml(fp)  # also used in test_stack
 
@@ -22,10 +27,20 @@ with open(os.path.join(paths.data, "pl-spark-dlt.yaml"), "r") as fp:
 # Update paths
 slv_sink_path = os.path.join(paths.tmp, "pl_slv_sink")
 gld_sink_path = os.path.join(paths.tmp, "pl_gld_sink")
-pl.nodes[0].source.path = os.path.join(paths.data, "brz_stock_prices")
-pl.nodes[3].source.path = os.path.join(paths.data, "slv_stock_meta")
-pl.nodes[1].sink.path = os.path.join(paths.tmp, slv_sink_path)
-pl.nodes[2].sink.path = os.path.join(paths.tmp, gld_sink_path)
+for _pl in [pl, pl_polars]:
+    _pl.nodes[0].source.path = os.path.join(paths.data, "brz_stock_prices")
+    _pl.nodes[3].source.path = os.path.join(paths.data, "slv_stock_meta")
+    _pl.nodes[1].sink.path = os.path.join(paths.tmp, slv_sink_path)
+    _pl.nodes[2].sink.path = os.path.join(paths.tmp, gld_sink_path)
+    if _pl.name == pl_polars.name:
+        for i in [0, 3]:
+            _dirpath = _pl.nodes[i].source.path
+            filenames = [
+                filename
+                for filename in os.listdir(_dirpath)
+                if filename.endswith(".parquet")
+            ]
+            _pl.nodes[i].source.path = os.path.join(_dirpath, filenames[0])
 
 # Save nodes
 node_brz = pl.nodes[0]
@@ -53,7 +68,7 @@ def test_dag():
     assert node_slv.source.node == node_brz
     assert node_gld.source.node == node_slv
     assert (
-        node_slv.transformer.nodes[-1].spark_func_kwargs["other"].value.node
+        node_slv.transformer.nodes[-1].parsed_func_kwargs["other"].value.node
         == node_meta
     )
 
@@ -62,7 +77,26 @@ def test_dag():
     fig.write_html(os.path.join(paths.tmp, "dag.html"), auto_open=OPEN_FIGURES)
 
 
+def test_children():
+
+    for pn in pl.nodes:
+        assert pn._parent == pl
+        assert pn.source._parent == pn
+        if pn.transformer is not None:
+            assert pn.transformer._parent == pn
+        if pn.sink is not None:
+            assert pn.sink._parent == pn
+
+        if pn.transformer:
+            for tn in pn.transformer.nodes:
+                assert tn._parent == pn.transformer
+
+        for s in pn.get_sources():
+            assert s._parent == pn
+
+
 def test_execute():
+
     pl.execute(spark)
 
     # In memory DataFrames
@@ -120,6 +154,82 @@ def test_execute():
     shutil.rmtree(gld_sink_path)
 
 
+def test_execute_polars():
+
+    _pl = pl_polars
+
+    # Check dataframe type assignment
+    assert _pl.dataframe_type == "POLARS"
+    assert _pl.user_dftype == "POLARS"
+    for node in _pl.nodes:
+        assert node.dataframe_type == "SPARK"
+        assert node.user_dftype == "POLARS"
+        assert node.source.dataframe_type == "SPARK"
+        assert node.source.user_dftype == "POLARS"
+        assert node.source.dftype == "POLARS"
+        for s in node.get_sources():
+            assert s.dataframe_type == "SPARK"
+            assert s.user_dftype == "POLARS"
+            assert s.dftype == "POLARS"
+
+    _pl.execute()
+
+    # In memory DataFrames
+    assert _pl.nodes_dict["brz_stock_prices"].output_df.columns == [
+        "name",
+        "description",
+        "producer",
+        "data",
+        "_bronze_at",
+    ]
+    assert _pl.nodes_dict["brz_stock_prices"].output_df.height == 80
+    assert _pl.nodes_dict["slv_stock_meta"].output_df.columns == [
+        "symbol2",
+        "currency",
+        "first_traded",
+        "_silver_at",
+    ]
+    assert _pl.nodes_dict["slv_stock_meta"].output_df.height == 3
+    print(_pl.nodes_dict["slv_stock_prices"].output_df.columns)
+    assert _pl.nodes_dict["slv_stock_prices"].output_df.columns == [
+        "_bronze_at",
+        "created_at",
+        "symbol",
+        "close",
+        "currency",
+        "first_traded",
+        "_silver_at",
+    ]
+    assert _pl.nodes_dict["slv_stock_prices"].output_df.height == 80
+    assert _pl.nodes_dict["gld_max_stock_prices"].output_df.columns == [
+        "symbol",
+        "max_price",
+        "min_price",
+        "_gold_at",
+    ]
+    assert _pl.nodes_dict["gld_max_stock_prices"].output_df.height == 4
+
+    # Sinks
+    _df_slv = polars.read_parquet(slv_sink_path)
+    _df_gld = polars.read_parquet(gld_sink_path)
+    assert _df_slv.columns == [
+        "_bronze_at",
+        "created_at",
+        "symbol",
+        "close",
+        "currency",
+        "first_traded",
+        "_silver_at",
+    ]
+    assert _df_slv.height == 80
+    assert _df_gld.columns == ["symbol", "max_price", "min_price", "_gold_at"]
+    assert _df_gld.height == 4
+
+    # Cleanup
+    os.remove(slv_sink_path)
+    os.remove(gld_sink_path)
+
+
 def test_pipeline_dlt():
 
     # Test Sink as Source
@@ -150,6 +260,7 @@ def test_pipeline_dlt():
     print(data)
     assert data == {
         "databricks_job": None,
+        "dataframe_type": "SPARK",
         "dlt": {
             "access_controls": [
                 {
@@ -180,6 +291,7 @@ def test_pipeline_dlt():
             {
                 "add_layer_columns": True,
                 "dlt_template": "DEFAULT",
+                "dataframe_type": "SPARK",
                 "description": None,
                 "drop_duplicates": None,
                 "drop_source_columns": False,
@@ -192,7 +304,6 @@ def test_pipeline_dlt():
                     "mode": None,
                     "catalog_name": "dev",
                     "checkpoint_location": None,
-                    "dataframe_type": "SPARK",
                     "format": "DELTA",
                     "schema_name": "sandbox",
                     "table_name": "brz_stock_prices",
@@ -222,57 +333,88 @@ def test_pipeline_dlt():
             {
                 "add_layer_columns": True,
                 "dlt_template": "DEFAULT",
+                "dataframe_type": "SPARK",
                 "description": None,
                 "drop_duplicates": None,
                 "drop_source_columns": True,
                 "transformer": {
                     "nodes": [
                         {
-                            "allow_missing_column_args": False,
-                            "column": {
+                            "func_args": [],
+                            "func_kwargs": {},
+                            "func_name": None,
+                            "sql_expr": None,
+                            "with_column": {
                                 "name": "created_at",
                                 "type": "timestamp",
                                 "unit": None,
+                                "expr": None,
+                                "sql_expr": "data.created_at",
                             },
-                            "spark_func_args": [],
-                            "spark_func_kwargs": {},
-                            "spark_func_name": None,
-                            "sql_expression": "data.created_at",
+                            "with_columns": [
+                                {
+                                    "name": "created_at",
+                                    "type": "timestamp",
+                                    "unit": None,
+                                    "expr": None,
+                                    "sql_expr": "data.created_at",
+                                }
+                            ],
                         },
                         {
-                            "allow_missing_column_args": False,
-                            "column": {
+                            "func_args": [],
+                            "func_kwargs": {},
+                            "func_name": None,
+                            "sql_expr": None,
+                            "with_column": {
                                 "name": "symbol",
                                 "type": "string",
                                 "unit": None,
+                                "expr": None,
+                                "sql_expr": "data.symbol",
                             },
-                            "spark_func_args": [{"value": "data.symbol"}],
-                            "spark_func_kwargs": {},
-                            "spark_func_name": "coalesce",
-                            "sql_expression": None,
-                        },
-                        {
-                            "allow_missing_column_args": False,
-                            "column": {"name": "close", "type": "double", "unit": None},
-                            "spark_func_args": [],
-                            "spark_func_kwargs": {},
-                            "spark_func_name": None,
-                            "sql_expression": "data.close",
-                        },
-                        {
-                            "allow_missing_column_args": False,
-                            "column": None,
-                            "spark_func_args": [
-                                {"value": "data"},
-                                {"value": "producer"},
-                                {"value": "name"},
-                                {"value": "description"},
+                            "with_columns": [
+                                {
+                                    "name": "symbol",
+                                    "type": "string",
+                                    "unit": None,
+                                    "expr": None,
+                                    "sql_expr": "data.symbol",
+                                }
                             ],
-                            "spark_func_kwargs": {},
-                            "spark_func_name": "drop",
-                            "sql_expression": None,
                         },
-                    ]
+                        {
+                            "func_args": [],
+                            "func_kwargs": {},
+                            "func_name": None,
+                            "sql_expr": None,
+                            "with_column": {
+                                "name": "close",
+                                "type": "double",
+                                "unit": None,
+                                "expr": None,
+                                "sql_expr": "data.close",
+                            },
+                            "with_columns": [
+                                {
+                                    "name": "close",
+                                    "type": "double",
+                                    "unit": None,
+                                    "expr": None,
+                                    "sql_expr": "data.close",
+                                }
+                            ],
+                        },
+                        {
+                            "func_args": ["data", "producer", "name", "description"],
+                            "func_kwargs": {},
+                            "func_name": "drop",
+                            "sql_expr": None,
+                            "with_column": None,
+                            "with_columns": [],
+                        },
+                    ],
+                    "spark": True,
                 },
                 "expectations": [],
                 "layer": "SILVER",
@@ -282,7 +424,6 @@ def test_pipeline_dlt():
                     "mode": None,
                     "catalog_name": "dev",
                     "checkpoint_location": None,
-                    "dataframe_type": "SPARK",
                     "format": "DELTA",
                     "schema_name": "sandbox",
                     "table_name": "slv_stock_prices",
@@ -415,6 +556,8 @@ def test_pipeline_job():
 
 if __name__ == "__main__":
     test_dag()
+    test_children()
     test_execute()
+    test_execute_polars()
     test_pipeline_dlt()
     test_pipeline_job()
