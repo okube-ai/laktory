@@ -327,13 +327,6 @@ class SparkChainNode(BaseChainNode):
         for k, _arg in _kwargs.items():
             kwargs[k] = _arg.eval()
 
-        # Build log
-        func_log = f"{func_name}("
-        func_log += ",".join([str(a) for a in args])
-        func_log += ",".join([f"{k}={str(a)}" for k, a in kwargs.items()])
-        func_log += ")"
-        logger.info(f"DataFrame {self.id} as {func_log}")
-
         # Call function
         if input_df:
             df = f(df, *args, **kwargs)

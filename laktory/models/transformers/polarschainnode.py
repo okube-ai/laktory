@@ -55,15 +55,6 @@ class PolarsChainNodeFuncArg(BaseChainNodeFuncArg):
 
         return v
 
-    def signature(self):
-        import polars as pl
-
-        eval = self.eval()
-        if isinstance(eval, pl.DataFrame):
-            return f"{eval.laktory.signature()}"
-        else:
-            return f"{self.value}"
-
 
 class PolarsChainNodeColumn(BaseChainNodeColumn):
     """

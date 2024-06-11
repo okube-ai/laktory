@@ -46,6 +46,15 @@ class BaseChainNodeFuncArg(BaseModel):
         raise NotImplementedError()
 
     def signature(self):
+        from laktory.models.datasources import PipelineNodeDataSource
+        from laktory.models.datasources import FileDataSource
+        from laktory.models.datasources import TableDataSource
+        if isinstance(self.value, PipelineNodeDataSource):
+            return f"node.{self.value.node_name}"
+        elif isinstance(self.value, FileDataSource):
+            return f"file {self.value.path}"
+        elif isinstance(self.value, TableDataSource):
+            return f"table {self.value.full_name}"
         return str(self.value)
 
 

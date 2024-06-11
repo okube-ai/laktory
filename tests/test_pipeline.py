@@ -531,9 +531,9 @@ def test_pipeline_job():
 
 
 if __name__ == "__main__":
-    test_dag()
-    test_children()
-    test_execute()
+    # test_dag()
+    # test_children()
+    # test_execute()
     test_execute_polars()
-    test_pipeline_dlt()
-    test_pipeline_job()
+    # test_pipeline_dlt()
+    # test_pipeline_job()
