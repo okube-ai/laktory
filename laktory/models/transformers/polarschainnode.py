@@ -324,7 +324,7 @@ class PolarsChainNode(BaseChainNode):
         # Build log
         func_log = f"{func_name}("
         func_log += ",".join([a.signature() for a in _args])
-        func_log += ",".join([f"{k}:{a.signature()}" for k, a in _kwargs.items()])
+        func_log += ",".join([f"{k}={a.signature()}" for k, a in _kwargs.items()])
         func_log += ")"
         logger.info(f"DataFrame {self.id} as {func_log}")
 

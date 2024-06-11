@@ -296,20 +296,13 @@ class SparkChainNode(BaseChainNode):
         # Get from built-in spark and spark extension (including Laktory) functions
         input_df = True
         if f is None:
-            if isinstance(df, DataFrameConnect):
-                if "." in func_name:
-                    input_df = True
-                    vals = func_name.split(".")
-                    f = getattr(getattr(df, vals[0]), vals[1], None)
-                else:
-                    f = getattr(DataFrameConnect, func_name, None)
+            # Get function from namespace extension
+            if "." in func_name:
+                input_df = False
+                vals = func_name.split(".")
+                f = getattr(getattr(df, vals[0]), vals[1], None)
             else:
-                if "." in func_name:
-                    input_df = False
-                    vals = func_name.split(".")
-                    f = getattr(getattr(df, vals[0]), vals[1], None)
-                else:
-                    f = getattr(DataFrame, func_name, None)
+                f = getattr(type(df), func_name, None)
 
         if f is None:
             raise ValueError(f"Function {func_name} is not available")
@@ -320,7 +313,7 @@ class SparkChainNode(BaseChainNode):
         # Build log
         func_log = f"{func_name}("
         func_log += ",".join([a.signature() for a in _args])
-        func_log += ",".join([f"{k}:{a.signature()}" for k, a in _kwargs.items()])
+        func_log += ",".join([f"{k}={a.signature()}" for k, a in _kwargs.items()])
         func_log += ")"
         logger.info(f"DataFrame {self.id} as {func_log}")
 
@@ -336,8 +329,8 @@ class SparkChainNode(BaseChainNode):
 
         # Build log
         func_log = f"{func_name}("
-        func_log += ",".join([a.signature() for a in args])
-        func_log += ",".join([f"{k}:{a.signature()}" for k, a in kwargs.items()])
+        func_log += ",".join([str(a) for a in args])
+        func_log += ",".join([f"{k}={str(a)}" for k, a in kwargs.items()])
         func_log += ")"
         logger.info(f"DataFrame {self.id} as {func_log}")
 
