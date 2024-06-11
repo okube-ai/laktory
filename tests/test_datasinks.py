@@ -57,7 +57,6 @@ def test_file_data_sink_polars_parquet():
     sink = FileDataSink(
         path=filepath,
         format="PARQUET",
-        dataframe_type="POLARS",
     )
     sink.write(df_slv_polars)
 
@@ -66,7 +65,9 @@ def test_file_data_sink_polars_parquet():
         sink.write(df_slv_polars, mode="append")
 
     # Read back
-    df = sink.as_source().read(filepath)
+    source = sink.as_source()
+    source.dataframe_type = "POLARS"
+    df = source.read(filepath)
 
     # Test
     assert df.height == df_slv.count()
@@ -88,7 +89,6 @@ def test_file_data_sink_polars_delta():
         path=dirpath,
         format="DELTA",
         mode="OVERWRITE",
-        dataframe_type="POLARS",
     )
     sink.write(df_slv_polars)
 
@@ -97,7 +97,8 @@ def test_file_data_sink_polars_delta():
 
     # Read back
     source = sink.as_source()
-    df = sink.as_source().read()
+    source.dataframe_type = "POLARS"
+    df = source.read()
 
     # Test
     assert df.height == df_slv.count() * 2

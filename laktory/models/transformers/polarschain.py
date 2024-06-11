@@ -72,7 +72,7 @@ class PolarsChain(BaseModel):
                     "x_tmp",
                 ],
             },
-        ]
+        ],
     )
 
     # Execute Chain

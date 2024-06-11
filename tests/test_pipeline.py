@@ -260,6 +260,7 @@ def test_pipeline_dlt():
     print(data)
     assert data == {
         "databricks_job": None,
+        "dataframe_type": "SPARK",
         "dlt": {
             "access_controls": [
                 {
@@ -290,6 +291,7 @@ def test_pipeline_dlt():
             {
                 "add_layer_columns": True,
                 "dlt_template": "DEFAULT",
+                "dataframe_type": "SPARK",
                 "description": None,
                 "drop_duplicates": None,
                 "drop_source_columns": False,
@@ -299,7 +301,6 @@ def test_pipeline_dlt():
                 "name": "brz_stock_prices",
                 "primary_key": None,
                 "sink": {
-                    "dataframe_type": "SPARK",
                     "mode": None,
                     "catalog_name": "dev",
                     "checkpoint_location": None,
@@ -332,6 +333,7 @@ def test_pipeline_dlt():
             {
                 "add_layer_columns": True,
                 "dlt_template": "DEFAULT",
+                "dataframe_type": "SPARK",
                 "description": None,
                 "drop_duplicates": None,
                 "drop_source_columns": True,
@@ -419,7 +421,6 @@ def test_pipeline_dlt():
                 "name": "slv_stock_prices",
                 "primary_key": None,
                 "sink": {
-                    "dataframe_type": "SPARK",
                     "mode": None,
                     "catalog_name": "dev",
                     "checkpoint_location": None,

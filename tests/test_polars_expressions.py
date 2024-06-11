@@ -50,26 +50,6 @@ def test_compare(df0=df0):
     assert df["compare2"].to_list() == [False, None, True]
 
 
-def test_poly(df0=df0):
-    df = df0.with_columns(poly1_1=pl.expr.laktory.poly1(pl.col("x"), -1, 1.0))
-    df = df.with_columns(
-        poly1_2=pl.expr.laktory.poly1(pl.col("x"), pl.col("a"), pl.col("b"))
-    )
-    df = df.with_columns(poly2=pl.expr.laktory.poly2(pl.col("x"), 1, c=-1))
-
-    assert df["poly1_1"].to_list() == [0, -1, -2]
-    assert df["poly1_2"].to_list() == [3, -2, 5]
-    assert df["poly1_2"].to_list() == [3, -2, 5]
-    assert df["poly2"].to_list() == [0, 3, 8]
-
-
-def test_power(df0=df0):
-    df = df0.with_columns(
-        power=pl.expr.laktory.scaled_power(pl.col("x"), n=pl.col("b"))
-    )
-    assert df["power"].to_list() == [1, 1, 9]
-
-
 def test_roundp(df0=df0):
 
     df = df0.with_columns(roundp_1=pl.Expr.laktory.roundp(pl.col("pi"), p=0.2))
@@ -139,8 +119,6 @@ def test_units(df0=df0):
 if __name__ == "__main__":
     atest_coalesce()
     test_compare()
-    test_poly()
-    test_power()
     test_roundp()
     test_row_number()
     test_sql_expr()

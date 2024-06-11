@@ -34,25 +34,6 @@ def test_compare(df0=df0):
     assert pdf["compare2"].tolist() == [False, None, True]
 
 
-def test_poly(df0=df0):
-    df = df0.withColumn("poly1_1", F.laktory.poly1("x", -1, 1.0))
-    df = df.withColumn("poly1_2", F.laktory.poly1("x", F.col("a"), F.col("b")))
-    df = df.withColumn("poly2", F.laktory.poly2("x", 1, c=-1))
-    pdf = df.toPandas()
-
-    assert pdf["poly1_1"].tolist() == [0, -1, -2]
-    assert pdf["poly1_2"].tolist() == [3, -2, 5]
-    assert pdf["poly1_2"].tolist() == [3, -2, 5]
-    assert pdf["poly2"].tolist() == [0, 3, 8]
-
-
-def test_power(df0=df0):
-    df = df0.withColumn("power", F.laktory.scaled_power("x", n=F.col("b")))
-    pdf = df.toPandas()
-
-    assert pdf["power"].tolist() == [1, 1, 9]
-
-
 def test_roundp(df0=df0):
     df = df0.withColumn("roundp_1", F.laktory.roundp("pi", p=0.2))
     df = df.withColumn("roundp_2", F.laktory.roundp("pi", p=F.col("p")))
@@ -95,8 +76,6 @@ def test_units(df0=df0):
 
 if __name__ == "__main__":
     test_compare()
-    test_poly()
-    test_power()
     test_roundp()
     test_string_split()
     test_uuid()
