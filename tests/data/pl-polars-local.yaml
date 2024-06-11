@@ -6,6 +6,9 @@ nodes:
   source:
     format: PARQUET
     path: ./data/brz_stock_prices/
+  sink:
+    format: PARQUET
+    path: ../tmp/pl_brz_sink.parquet
 
 - name: slv_stock_prices
   layer: SILVER
@@ -70,3 +73,7 @@ nodes:
   source:
     format: PARQUET
     path: ./data/slv_stock_meta
+  sink:
+    format: PARQUET
+    path: /tests/tmp/pl_slv_meta_sink
+

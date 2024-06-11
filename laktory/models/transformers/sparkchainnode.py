@@ -30,13 +30,13 @@ class SparkChainNodeFuncArg(BaseChainNodeFuncArg):
 
     value: Union[Any]
 
-    def eval(self):
+    def eval(self, spark=None):
         from laktory.models.datasources.basedatasource import BaseDataSource
 
         v = self.value
 
         if isinstance(v, BaseDataSource):
-            v = self.value.read()
+            v = self.value.read(spark=spark)
 
         elif isinstance(v, str):
 
@@ -320,12 +320,12 @@ class SparkChainNode(BaseChainNode):
         # Build args
         args = []
         for i, _arg in enumerate(_args):
-            args += [_arg.eval()]
+            args += [_arg.eval(spark=df.sparkSession)]
 
         # Build kwargs
         kwargs = {}
         for k, _arg in _kwargs.items():
-            kwargs[k] = _arg.eval()
+            kwargs[k] = _arg.eval(spark=df.sparkSession)
 
         # Call function
         if input_df:

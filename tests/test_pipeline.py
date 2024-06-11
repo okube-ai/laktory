@@ -25,13 +25,17 @@ with open(os.path.join(paths.data, "pl-spark-dlt.yaml"), "r") as fp:
 
 
 # Update paths
+brz_sink_path = os.path.join(paths.tmp, "pl_brz_sink")
 slv_sink_path = os.path.join(paths.tmp, "pl_slv_sink")
 gld_sink_path = os.path.join(paths.tmp, "pl_gld_sink")
+meta_sink_path = os.path.join(paths.tmp, "pl_slv_meta_sink")
 for _pl in [pl, pl_polars]:
     _pl.nodes[0].source.path = os.path.join(paths.data, "brz_stock_prices")
     _pl.nodes[3].source.path = os.path.join(paths.data, "slv_stock_meta")
+    _pl.nodes[0].sink.path = os.path.join(paths.tmp, brz_sink_path)
     _pl.nodes[1].sink.path = os.path.join(paths.tmp, slv_sink_path)
     _pl.nodes[2].sink.path = os.path.join(paths.tmp, gld_sink_path)
+    _pl.nodes[3].sink.path = os.path.join(paths.tmp, meta_sink_path)
     if _pl.name == pl_polars.name:
         for i in [0, 3]:
             _dirpath = _pl.nodes[i].source.path
@@ -97,6 +101,11 @@ def test_children():
 
 def test_execute():
 
+    # Cleanup
+    shutil.rmtree(brz_sink_path)
+    shutil.rmtree(slv_sink_path)
+    shutil.rmtree(gld_sink_path)
+
     pl.execute(spark)
 
     # In memory DataFrames
@@ -150,8 +159,25 @@ def test_execute():
     assert _df_gld.count() == 4
 
     # Cleanup
+    shutil.rmtree(brz_sink_path)
     shutil.rmtree(slv_sink_path)
     shutil.rmtree(gld_sink_path)
+
+
+def test_execute_node():
+
+    # Execute each node individually and clear intermediate output dataframe
+    for inode, node in enumerate(pl.sorted_nodes):
+        node.execute(spark=spark)
+        if inode < len(pl.nodes)-1:
+            node._output_df = None
+
+    assert pl.nodes_dict["gld_max_stock_prices"].output_df.count() == 4
+
+    # Cleanup
+    shutil.rmtree(brz_sink_path)
+    shutil.rmtree(slv_sink_path)
+    shutil.rmtree(meta_sink_path)
 
 
 def test_execute_polars():
@@ -531,9 +557,10 @@ def test_pipeline_job():
 
 
 if __name__ == "__main__":
-    # test_dag()
-    # test_children()
-    # test_execute()
+    test_dag()
+    test_children()
+    test_execute()
+    test_execute_node()
     test_execute_polars()
-    # test_pipeline_dlt()
-    # test_pipeline_job()
+    test_pipeline_dlt()
+    test_pipeline_job()
