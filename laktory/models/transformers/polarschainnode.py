@@ -210,14 +210,37 @@ class PolarsChainNode(BaseChainNode):
     sql_expr: Union[str, None] = None
     with_column: Union[PolarsChainNodeColumn, None] = None
     with_columns: Union[list[PolarsChainNodeColumn], None] = []
+    _parent: "PolarsChain" = None
+    _parsed_func_args: list = None
+    _parsed_func_kwargs: dict = None
 
     @property
     def parsed_func_args(self):
-        return [PolarsChainNodeFuncArg(value=a) for a in self.func_args]
+        if not self._parsed_func_args:
+            self._parsed_func_args = [
+                PolarsChainNodeFuncArg(value=a) for a in self.func_args
+            ]
+        return self._parsed_func_args
 
     @property
     def parsed_func_kwargs(self):
-        return {k: PolarsChainNodeFuncArg(value=v) for k, v in self.func_kwargs.items()}
+        if not self._parsed_func_kwargs:
+            self._parsed_func_kwargs = {
+                k: PolarsChainNodeFuncArg(value=v) for k, v in self.func_kwargs.items()
+            }
+        return self._parsed_func_kwargs
+
+    @property
+    def user_dftype(self) -> Union[str, None]:
+        """
+        User-configured dataframe type directly from model or from parent.
+        """
+        return "POLARS"
+        # if "dataframe_type" in self.__fields_set__:
+        #     return self.dataframe_type
+        # if self._parent:
+        #     return self._parent.user_dftype
+        # return None
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #

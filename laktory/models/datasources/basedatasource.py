@@ -5,7 +5,7 @@ from pydantic import model_validator
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-
+from laktory.constants import DEFAULT_DFTYPE
 from laktory.spark import SparkDataFrame
 from laktory.spark import is_spark_dataframe
 from laktory.polars import PolarsDataFrame
@@ -134,7 +134,7 @@ class BaseDataSource(BaseModel):
     as_stream: bool = False
     broadcast: Union[bool, None] = False
     cdc: Union[DataSourceCDC, None] = None
-    dataframe_type: Literal["SPARK", "POLARS"] = "SPARK"
+    dataframe_type: Literal["SPARK", "POLARS"] = DEFAULT_DFTYPE
     drops: Union[list, None] = None
     filter: Union[str, None] = None
     limit: Union[int, None] = None
@@ -143,7 +143,7 @@ class BaseDataSource(BaseModel):
     sample: Union[DataFrameSample, None] = None
     selects: Union[list[str], dict[str, str], None] = None
     watermark: Union[Watermark, None] = None
-    _pipeline_node: "PipelineNode" = None
+    _parent: "PipelineNode" = None
 
     @model_validator(mode="after")
     def options(self) -> Any:
@@ -154,9 +154,9 @@ class BaseDataSource(BaseModel):
         elif is_polars_dataframe(self.mock_df):
             self.dataframe_type = "POLARS"
 
-        if self.dataframe_type == "SPARK":
+        if self.dftype == "SPARK":
             pass
-        elif self.dataframe_type == "POLARS":
+        elif self.dftype == "POLARS":
             if self.as_stream:
                 raise ValueError("Polars DataFrames don't support streaming read.")
             if self.watermark:
@@ -180,10 +180,27 @@ class BaseDataSource(BaseModel):
         return self.cdc is not None
 
     @property
+    def user_dftype(self) -> Union[str, None]:
+        """
+        User-configured dataframe type directly from model or from parent.
+        """
+        if "dataframe_type" in self.__fields_set__:
+            return self.dataframe_type
+        if self._parent:
+            return self._parent.user_dftype
+        return None
+
+    @property
+    def dftype(self):
+        if self.user_dftype:
+            return self.user_dftype
+        return self.dataframe_type
+
+    @property
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, data source is used in the context of a DLT pipeline"""
         is_orchestrator_dlt = False
-        if self._pipeline_node and self._pipeline_node.is_orchestrator_dlt:
+        if self._parent and self._parent.is_orchestrator_dlt:
             is_orchestrator_dlt = True
         return is_orchestrator_dlt
 
@@ -207,9 +224,9 @@ class BaseDataSource(BaseModel):
         """
         if self.mock_df is not None:
             df = self.mock_df
-        elif self.dataframe_type == "SPARK":
+        elif self.dftype == "SPARK":
             df = self._read_spark(spark=spark)
-        elif self.dataframe_type == "POLARS":
+        elif self.dftype == "POLARS":
             df = self._read_polars()
         else:
             raise ValueError(

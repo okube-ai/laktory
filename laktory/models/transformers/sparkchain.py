@@ -1,4 +1,6 @@
+from typing import Any
 from typing import Union
+from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
@@ -90,10 +92,29 @@ class SparkChain(BaseModel):
     nodes: list[Union[SparkChainNode, "SparkChain"]]
     spark: bool = True
     _columns: list[list[str]] = []
+    _parent: "PipelineNode" = None
+
+    @model_validator(mode="after")
+    def update_children(self) -> Any:
+        for n in self.nodes:
+            n._parent = self
+        return self
 
     @property
     def columns(self):
         return self._columns
+
+    @property
+    def user_dftype(self) -> Union[str, None]:
+        """
+        User-configured dataframe type directly from model or from parent.
+        """
+        return "SPARK"
+        # if "dataframe_type" in self.__fields_set__:
+        #     return self.dataframe_type
+        # if self._parent:
+        #     return self._parent.user_dftype
+        # return None
 
     def execute(self, df, udfs=None) -> SparkDataFrame:
         logger.info("Executing Spark chain")

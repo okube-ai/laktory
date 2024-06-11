@@ -3,6 +3,13 @@ SUPPORTED_BACKENDS = [
     "terraform",
 ]
 
+SUPPORTED_DFTYPES = [
+    "POLARS",
+    "SPARK",
+]
+
+DEFAULT_DFTYPE = "SPARK"
+
 SUPPORTED_DATATYPES = [
     "_any",
     "binary",

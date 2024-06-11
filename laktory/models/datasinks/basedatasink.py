@@ -16,8 +16,6 @@ class BaseDataSink(BaseModel):
 
     Attributes
     ----------
-    dataframe_type:
-        Type of dataframe
     mode:
         Write mode.
         - overwrite: Overwrite existing data
@@ -27,11 +25,10 @@ class BaseDataSink(BaseModel):
         - complete: Overwrite for streaming dataframes
     """
 
-    dataframe_type: Literal["SPARK", "POLARS"] = "SPARK"
     mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE"], None] = (
         None
     )
-    _pipeline_node: "PipelineNode" = None
+    _parent: "PipelineNode" = None
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

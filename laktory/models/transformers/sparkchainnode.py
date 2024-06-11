@@ -198,6 +198,7 @@ class SparkChainNode(BaseChainNode):
     sql_expr: Union[str, None] = None
     with_column: Union[SparkChainNodeColumn, None] = None
     with_columns: Union[list[SparkChainNodeColumn], None] = []
+    _parent: "SparkChain" = None
     _parsed_func_args: list = None
     _parsed_func_kwargs: dict = None
 
@@ -216,6 +217,18 @@ class SparkChainNode(BaseChainNode):
                 k: SparkChainNodeFuncArg(value=v) for k, v in self.func_kwargs.items()
             }
         return self._parsed_func_kwargs
+
+    @property
+    def user_dftype(self) -> Union[str, None]:
+        """
+        User-configured dataframe type directly from model or from parent.
+        """
+        return "SPARK"
+        # if "dataframe_type" in self.__fields_set__:
+        #     return self.dataframe_type
+        # if self._parent:
+        #     return self._parent.user_dftype
+        # return None
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #

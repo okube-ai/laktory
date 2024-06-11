@@ -1,10 +1,11 @@
 import uuid
 from typing import Any
+from typing import Callable
 from typing import Literal
 from typing import Union
-from typing import Callable
 from pydantic import model_validator
 
+from laktory.constants import DEFAULT_DFTYPE
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import BaseDataSource
@@ -131,6 +132,7 @@ class PipelineNode(BaseModel):
 
     add_layer_columns: bool = True
     dlt_template: Union[str, None] = "DEFAULT"
+    dataframe_type: Literal["SPARK", "DATABRICKS"] = DEFAULT_DFTYPE
     description: str = None
     drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
@@ -143,7 +145,7 @@ class PipelineNode(BaseModel):
     source: DataSourcesUnion
     timestamp_key: str = None
     _output_df: Any = None
-    _pipeline: Any = None
+    _parent: "Pipeline" = None
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
@@ -172,13 +174,22 @@ class PipelineNode(BaseModel):
         if self.name is None:
             self.name = str(uuid.uuid4())
 
+        return self
+
+    @model_validator(mode="after")
+    def update_children(self) -> Any:
+
         # Assign node to sources
         for s in self.get_sources():
-            s._pipeline_node = self
+            s._parent = self
 
         # Assign node to sinks
         if self.sink:
-            self.sink._pipeline_node = self
+            self.sink._parent = self
+
+        # Assign node to transformers
+        if self.transformer:
+            self.transformer._parent = self
 
         return self
 
@@ -187,10 +198,21 @@ class PipelineNode(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @property
+    def user_dftype(self) -> Union[str, None]:
+        """
+        User-configured dataframe type directly from model or from parent.
+        """
+        if "dataframe_type" in self.__fields_set__:
+            return self.dataframe_type
+        if self._parent:
+            return self._parent.user_dftype
+        return None
+
+    @property
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline node is used in the context of a DLT pipeline"""
         is_orchestrator_dlt = False
-        if self._pipeline and self._pipeline.is_orchestrator_dlt:
+        if self._parent and self._parent.is_orchestrator_dlt:
             is_orchestrator_dlt = True
         return is_orchestrator_dlt
 
@@ -338,7 +360,7 @@ class PipelineNode(BaseModel):
                         with_column={
                             "name": "_bronze_at",
                             "type": "timestamp",
-                            "expr": "pl.exp.laktory.current_timestamp()",
+                            "expr": "pl.expr.laktory.current_timestamp()",
                         },
                     ),
                 ]
@@ -361,7 +383,7 @@ class PipelineNode(BaseModel):
                         with_column={
                             "name": "_silver_at",
                             "type": "timestamp",
-                            "expr": "pl.exp.laktory.current_timestamp()",
+                            "expr": "pl.expr.laktory.current_timestamp()",
                         },
                     )
                 ]
@@ -373,7 +395,7 @@ class PipelineNode(BaseModel):
                         with_column={
                             "name": "_gold_at",
                             "type": "timestamp",
-                            "expr": "pl.exp.laktory.current_timestamp()",
+                            "expr": "pl.expr.laktory.current_timestamp()",
                         },
                     )
                 ]

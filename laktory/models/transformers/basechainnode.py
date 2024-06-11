@@ -126,6 +126,9 @@ class BaseChainNode(BaseModel):
     sql_expr: Union[str, None] = None
     with_column: Union[BaseChainNodeColumn, None] = None
     with_columns: Union[list[BaseChainNodeColumn], None] = []
+    _parent: "BaseChain" = None
+    _parsed_func_args: list = None
+    _parsed_func_kwargs: dict = None
 
     @model_validator(mode="after")
     def selected_flow(self) -> Any:
