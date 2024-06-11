@@ -156,7 +156,7 @@ class BaseChainNode(BaseModel):
 
     @property
     def _with_columns(self) -> list[BaseChainNodeColumn]:
-        with_columns = self.with_columns
+        with_columns = [c for c in self.with_columns]
         if self.with_column:
             with_columns += [self.with_column]
         return with_columns
