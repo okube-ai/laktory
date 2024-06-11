@@ -1,4 +1,5 @@
-name: pl-stock-prices
+name: pl-stock-prices-polars
+dataframe_type: POLARS
 nodes:
 - name: brz_stock_prices
   layer: BRONZE
@@ -12,22 +13,24 @@ nodes:
     node_name: brz_stock_prices
   sink:
     format: PARQUET
-    mode: OVERWRITE
-    path: ../tmp/pl_slv_sink
+    path: ../tmp/pl_slv_sink.parquet
   transformer:
+    polars: True
     nodes:
     - with_column:
         name: created_at
         type: timestamp
-        expr: F.expr('data._created_at')
+        expr: pl.expr.laktory.sql_expr('data._created_at')
 
     - with_column:
         name: symbol
         sql_expr: data.symbol
+
     - with_column:
         name: close
         type: double
         sql_expr: data.close
+
     - func_name: drop
       func_args:
       - data
@@ -49,8 +52,7 @@ nodes:
     node_name: slv_stock_prices
   sink:
     format: PARQUET
-    mode: OVERWRITE
-    path: /tests/tmp/pl_gld_sink
+    path: /tests/tmp/pl_gld_sink.parquet
   transformer:
     nodes:
     - func_name: laktory.groupby_and_agg
