@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.4.1] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Accessing custom DataFrame functions in custom namespace in SparkChainNode execution
 
 ## [0.4.0] - 2024-06-11
 ### Added

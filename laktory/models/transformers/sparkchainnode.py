@@ -300,7 +300,7 @@ class SparkChainNode(BaseChainNode):
                 if "." in func_name:
                     input_df = True
                     vals = func_name.split(".")
-                    f = getattr(getattr(DataFrameConnect, vals[0]), vals[1], None)
+                    f = getattr(getattr(df, vals[0]), vals[1], None)
                 else:
                     f = getattr(DataFrameConnect, func_name, None)
             else:
