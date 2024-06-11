@@ -1,6 +1,16 @@
 # Release History
 
-## [0.4.2] - Unreleased
+## [0.4.3] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.4.2] - 2024-06-11
 ### Fixed
 * Creation of the same column multiple times in a transformer node
 
