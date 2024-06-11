@@ -1,6 +1,9 @@
 install:
 	pip install ./
 
+install-with-dbks:
+	pip install './[databricks]'
+
 dev:
 	pip install -e './[pulumi, polars, spark, databricks, dev, test, azure, aws, gcp]'
 
