@@ -1,6 +1,16 @@
 # Release History
 
-## [0.4.3] - Unreleased
+## [0.4.4] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.4.3] - 2024-06-12
 ### Updated
 * Dataframe type propagation through all pipeline children
 ### Fixed
