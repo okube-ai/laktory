@@ -25,7 +25,6 @@ def test_execute():
             "mock_df": df_brz,
         },
         transformer={
-            "spark": True,
             "nodes": [
                 {
                     "with_column": {

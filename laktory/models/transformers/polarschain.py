@@ -38,7 +38,6 @@ class PolarsChain(BaseChain):
 
     # Build Chain
     sc = models.PolarsChain(
-        polars=True,
         nodes=[
             {
                 "with_column": {
