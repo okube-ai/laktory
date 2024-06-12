@@ -1,6 +1,8 @@
 # Release History
 
 ## [0.4.3] - Unreleased
+### Updated
+* Dataframe type propagation through all pipeline children
 ### Fixed
 * Reading pipeline node data source is isolation mode
 
