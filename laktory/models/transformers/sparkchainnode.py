@@ -1,6 +1,7 @@
 from typing import Union
 from typing import Callable
 from typing import Any
+from typing import Literal
 
 from laktory._logger import get_logger
 from laktory.models.transformers.basechainnode import BaseChainNode
@@ -192,6 +193,7 @@ class SparkChainNode(BaseChainNode):
     ```
     """
 
+    dataframe_type: Literal["SPARK"] = "SPARK"
     func_args: list[Union[Any]] = []
     func_kwargs: dict[str, Union[Any]] = {}
     func_name: Union[str, None] = None
@@ -217,18 +219,6 @@ class SparkChainNode(BaseChainNode):
                 k: SparkChainNodeFuncArg(value=v) for k, v in self.func_kwargs.items()
             }
         return self._parsed_func_kwargs
-
-    @property
-    def user_dftype(self) -> Union[str, None]:
-        """
-        User-configured dataframe type directly from model or from parent.
-        """
-        return "SPARK"
-        # if "dataframe_type" in self.__fields_set__:
-        #     return self.dataframe_type
-        # if self._parent:
-        #     return self._parent.user_dftype
-        # return None
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #

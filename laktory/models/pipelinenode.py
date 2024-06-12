@@ -132,7 +132,7 @@ class PipelineNode(BaseModel):
 
     add_layer_columns: bool = True
     dlt_template: Union[str, None] = "DEFAULT"
-    dataframe_type: Literal["SPARK", "DATABRICKS"] = DEFAULT_DFTYPE
+    dataframe_type: Literal["SPARK", "POLARS"] = DEFAULT_DFTYPE
     description: str = None
     drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
@@ -146,6 +146,21 @@ class PipelineNode(BaseModel):
     timestamp_key: str = None
     _output_df: Any = None
     _parent: "Pipeline" = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def push_dftype(cls, data: Any) -> Any:
+        dftype = data.get("dataframe_type", None)
+        if dftype:
+            if "source" in data.keys():
+                data["source"]["dataframe_type"] = data["source"].get(
+                    "dataframe_type", dftype
+                )
+            if "transformer" in data.keys():
+                data["transformer"]["dataframe_type"] = data["transformer"].get(
+                    "dataframe_type", dftype
+                )
+        return data
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
@@ -196,17 +211,6 @@ class PipelineNode(BaseModel):
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def user_dftype(self) -> Union[str, None]:
-        """
-        User-configured dataframe type directly from model or from parent.
-        """
-        if "dataframe_type" in self.__fields_set__:
-            return self.dataframe_type
-        if self._parent:
-            return self._parent.user_dftype
-        return None
 
     @property
     def is_orchestrator_dlt(self) -> bool:
@@ -431,29 +435,14 @@ class PipelineNode(BaseModel):
     # ----------------------------------------------------------------------- #
 
     def get_sources(self, cls=BaseDataSource) -> list[BaseDataSource]:
+        """Get all sources feeding the pipeline node"""
         sources = []
 
         if isinstance(self.source, cls):
             sources += [self.source]
 
         if self.transformer:
-
-            if isinstance(self.transformer, SparkChain):
-                for sn in self.transformer.nodes:
-                    for a in sn.parsed_func_args:
-                        if isinstance(a.value, cls):
-                            sources += [a.value]
-                    for a in sn.parsed_func_kwargs.values():
-                        if isinstance(a.value, cls):
-                            sources += [a.value]
-            elif isinstance(self.transformer, PolarsChain):
-                for pn in self.transformer.nodes:
-                    for a in pn.parsed_func_args:
-                        if isinstance(a.value, cls):
-                            sources += [a.value]
-                    for a in pn.parsed_func_kwargs.values():
-                        if isinstance(a.value, cls):
-                            sources += [a.value]
+            sources += self.transformer.get_sources(cls)
 
         return sources
 

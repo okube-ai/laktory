@@ -18,7 +18,6 @@ nodes:
     format: PARQUET
     path: ../tmp/pl_slv_sink.parquet
   transformer:
-    polars: True
     nodes:
     - with_column:
         name: created_at

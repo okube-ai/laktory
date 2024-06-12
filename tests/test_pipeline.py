@@ -101,11 +101,6 @@ def test_children():
 
 def test_execute():
 
-    # Cleanup
-    shutil.rmtree(brz_sink_path)
-    shutil.rmtree(slv_sink_path)
-    shutil.rmtree(gld_sink_path)
-
     pl.execute(spark)
 
     # In memory DataFrames
@@ -162,6 +157,7 @@ def test_execute():
     shutil.rmtree(brz_sink_path)
     shutil.rmtree(slv_sink_path)
     shutil.rmtree(gld_sink_path)
+    shutil.rmtree(meta_sink_path)
 
 
 def test_execute_node():
@@ -169,7 +165,7 @@ def test_execute_node():
     # Execute each node individually and clear intermediate output dataframe
     for inode, node in enumerate(pl.sorted_nodes):
         node.execute(spark=spark)
-        if inode < len(pl.nodes)-1:
+        if inode < len(pl.nodes) - 1:
             node._output_df = None
 
     assert pl.nodes_dict["gld_max_stock_prices"].output_df.count() == 4
@@ -177,6 +173,7 @@ def test_execute_node():
     # Cleanup
     shutil.rmtree(brz_sink_path)
     shutil.rmtree(slv_sink_path)
+    shutil.rmtree(gld_sink_path)
     shutil.rmtree(meta_sink_path)
 
 
@@ -186,17 +183,11 @@ def test_execute_polars():
 
     # Check dataframe type assignment
     assert _pl.dataframe_type == "POLARS"
-    assert _pl.user_dftype == "POLARS"
     for node in _pl.nodes:
-        assert node.dataframe_type == "SPARK"
-        assert node.user_dftype == "POLARS"
-        assert node.source.dataframe_type == "SPARK"
-        assert node.source.user_dftype == "POLARS"
-        assert node.source.dftype == "POLARS"
+        assert node.dataframe_type == "POLARS"
+        assert node.source.dataframe_type == "POLARS"
         for s in node.get_sources():
-            assert s.dataframe_type == "SPARK"
-            assert s.user_dftype == "POLARS"
-            assert s.dftype == "POLARS"
+            assert s.dataframe_type == "POLARS"
 
     _pl.execute()
 
@@ -216,7 +207,6 @@ def test_execute_polars():
         "_silver_at",
     ]
     assert _pl.nodes_dict["slv_stock_meta"].output_df.height == 3
-    print(_pl.nodes_dict["slv_stock_prices"].output_df.columns)
     assert _pl.nodes_dict["slv_stock_prices"].output_df.columns == [
         "_bronze_at",
         "created_at",
@@ -252,8 +242,10 @@ def test_execute_polars():
     assert _df_gld.height == 4
 
     # Cleanup
+    os.remove(brz_sink_path)
     os.remove(slv_sink_path)
     os.remove(gld_sink_path)
+    os.remove(meta_sink_path)
 
 
 def test_pipeline_dlt():
@@ -364,8 +356,10 @@ def test_pipeline_dlt():
                 "drop_duplicates": None,
                 "drop_source_columns": True,
                 "transformer": {
+                    "dataframe_type": "SPARK",
                     "nodes": [
                         {
+                            "dataframe_type": "SPARK",
                             "func_args": [],
                             "func_kwargs": {},
                             "func_name": None,
@@ -380,6 +374,7 @@ def test_pipeline_dlt():
                             "with_columns": [],
                         },
                         {
+                            "dataframe_type": "SPARK",
                             "func_args": [],
                             "func_kwargs": {},
                             "func_name": None,
@@ -394,6 +389,7 @@ def test_pipeline_dlt():
                             "with_columns": [],
                         },
                         {
+                            "dataframe_type": "SPARK",
                             "func_args": [],
                             "func_kwargs": {},
                             "func_name": None,
@@ -408,6 +404,7 @@ def test_pipeline_dlt():
                             "with_columns": [],
                         },
                         {
+                            "dataframe_type": "SPARK",
                             "func_args": ["data", "producer", "name", "description"],
                             "func_kwargs": {},
                             "func_name": "drop",
@@ -416,7 +413,6 @@ def test_pipeline_dlt():
                             "with_columns": [],
                         },
                     ],
-                    "spark": True,
                 },
                 "expectations": [],
                 "layer": "SILVER",

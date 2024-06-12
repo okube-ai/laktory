@@ -359,9 +359,21 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="before")
     @classmethod
-    def assign_to_dlt(cls, data: Any) -> Any:
+    def assign_name_to_dlt(cls, data: Any) -> Any:
+
         if "dlt" in data.keys():
             data["dlt"]["name"] = data.get("name", None)
+
+        return data
+
+    @model_validator(mode="before")
+    @classmethod
+    def push_dftype(cls, data: Any) -> Any:
+        dftype = data.get("dataframe_type", None)
+        if dftype:
+            if "nodes" in data.keys():
+                for n in data["nodes"]:
+                    n["dataframe_type"] = n.get("dataframe_type", dftype)
         return data
 
     @model_validator(mode="after")
@@ -455,13 +467,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def user_dftype(self) -> Union[str, None]:
-        """User-configured dataframe type"""
-        if "dataframe_type" in self.__fields_set__:
-            return self.dataframe_type
-        return None
 
     @property
     def is_orchestrator_dlt(self) -> bool:

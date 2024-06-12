@@ -162,8 +162,12 @@ def test_column(df0=df0):
 
     # Test
     pdf = df.toPandas()
-    assert [(c.name, c.expr) for c in sc.nodes[0]._with_columns] == [('cos_x', "F.cos('x')")]
-    assert [(c.name, c.expr) for c in sc.nodes[1]._with_columns] == [('x2', "F.col('x')*2")]
+    assert [(c.name, c.expr) for c in sc.nodes[0]._with_columns] == [
+        ("cos_x", "F.cos('x')")
+    ]
+    assert [(c.name, c.expr) for c in sc.nodes[1]._with_columns] == [
+        ("x2", "F.col('x')*2")
+    ]
     assert pdf["cos_x"].tolist() == np.cos(pdf["x"]).tolist()
     assert pdf["x2"].tolist() == (pdf["x"] * 2).tolist()
 

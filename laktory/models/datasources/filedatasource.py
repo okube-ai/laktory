@@ -56,7 +56,7 @@ class FileDataSource(BaseDataSource):
     @model_validator(mode="after")
     def options(self) -> Any:
 
-        if self.dftype == "SPARK":
+        if self.dataframe_type == "SPARK":
             if self.format in [
                 "EXCEL",
             ]:
