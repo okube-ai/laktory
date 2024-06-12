@@ -25,13 +25,17 @@ with open(os.path.join(paths.data, "pl-spark-dlt.yaml"), "r") as fp:
 
 
 # Update paths
+brz_sink_path = os.path.join(paths.tmp, "pl_brz_sink")
 slv_sink_path = os.path.join(paths.tmp, "pl_slv_sink")
 gld_sink_path = os.path.join(paths.tmp, "pl_gld_sink")
+meta_sink_path = os.path.join(paths.tmp, "pl_slv_meta_sink")
 for _pl in [pl, pl_polars]:
     _pl.nodes[0].source.path = os.path.join(paths.data, "brz_stock_prices")
     _pl.nodes[3].source.path = os.path.join(paths.data, "slv_stock_meta")
+    _pl.nodes[0].sink.path = os.path.join(paths.tmp, brz_sink_path)
     _pl.nodes[1].sink.path = os.path.join(paths.tmp, slv_sink_path)
     _pl.nodes[2].sink.path = os.path.join(paths.tmp, gld_sink_path)
+    _pl.nodes[3].sink.path = os.path.join(paths.tmp, meta_sink_path)
     if _pl.name == pl_polars.name:
         for i in [0, 3]:
             _dirpath = _pl.nodes[i].source.path
@@ -150,8 +154,27 @@ def test_execute():
     assert _df_gld.count() == 4
 
     # Cleanup
+    shutil.rmtree(brz_sink_path)
     shutil.rmtree(slv_sink_path)
     shutil.rmtree(gld_sink_path)
+    shutil.rmtree(meta_sink_path)
+
+
+def test_execute_node():
+
+    # Execute each node individually and clear intermediate output dataframe
+    for inode, node in enumerate(pl.sorted_nodes):
+        node.execute(spark=spark)
+        if inode < len(pl.nodes) - 1:
+            node._output_df = None
+
+    assert pl.nodes_dict["gld_max_stock_prices"].output_df.count() == 4
+
+    # Cleanup
+    shutil.rmtree(brz_sink_path)
+    shutil.rmtree(slv_sink_path)
+    shutil.rmtree(gld_sink_path)
+    shutil.rmtree(meta_sink_path)
 
 
 def test_execute_polars():
@@ -160,17 +183,11 @@ def test_execute_polars():
 
     # Check dataframe type assignment
     assert _pl.dataframe_type == "POLARS"
-    assert _pl.user_dftype == "POLARS"
     for node in _pl.nodes:
-        assert node.dataframe_type == "SPARK"
-        assert node.user_dftype == "POLARS"
-        assert node.source.dataframe_type == "SPARK"
-        assert node.source.user_dftype == "POLARS"
-        assert node.source.dftype == "POLARS"
+        assert node.dataframe_type == "POLARS"
+        assert node.source.dataframe_type == "POLARS"
         for s in node.get_sources():
-            assert s.dataframe_type == "SPARK"
-            assert s.user_dftype == "POLARS"
-            assert s.dftype == "POLARS"
+            assert s.dataframe_type == "POLARS"
 
     _pl.execute()
 
@@ -190,7 +207,6 @@ def test_execute_polars():
         "_silver_at",
     ]
     assert _pl.nodes_dict["slv_stock_meta"].output_df.height == 3
-    print(_pl.nodes_dict["slv_stock_prices"].output_df.columns)
     assert _pl.nodes_dict["slv_stock_prices"].output_df.columns == [
         "_bronze_at",
         "created_at",
@@ -226,8 +242,10 @@ def test_execute_polars():
     assert _df_gld.height == 4
 
     # Cleanup
+    os.remove(brz_sink_path)
     os.remove(slv_sink_path)
     os.remove(gld_sink_path)
+    os.remove(meta_sink_path)
 
 
 def test_pipeline_dlt():
@@ -338,8 +356,10 @@ def test_pipeline_dlt():
                 "drop_duplicates": None,
                 "drop_source_columns": True,
                 "transformer": {
+                    "dataframe_type": "SPARK",
                     "nodes": [
                         {
+                            "dataframe_type": "SPARK",
                             "func_args": [],
                             "func_kwargs": {},
                             "func_name": None,
@@ -354,6 +374,7 @@ def test_pipeline_dlt():
                             "with_columns": [],
                         },
                         {
+                            "dataframe_type": "SPARK",
                             "func_args": [],
                             "func_kwargs": {},
                             "func_name": None,
@@ -368,6 +389,7 @@ def test_pipeline_dlt():
                             "with_columns": [],
                         },
                         {
+                            "dataframe_type": "SPARK",
                             "func_args": [],
                             "func_kwargs": {},
                             "func_name": None,
@@ -382,6 +404,7 @@ def test_pipeline_dlt():
                             "with_columns": [],
                         },
                         {
+                            "dataframe_type": "SPARK",
                             "func_args": ["data", "producer", "name", "description"],
                             "func_kwargs": {},
                             "func_name": "drop",
@@ -390,7 +413,6 @@ def test_pipeline_dlt():
                             "with_columns": [],
                         },
                     ],
-                    "spark": True,
                 },
                 "expectations": [],
                 "layer": "SILVER",
@@ -531,9 +553,10 @@ def test_pipeline_job():
 
 
 if __name__ == "__main__":
-    # test_dag()
-    # test_children()
-    # test_execute()
+    test_dag()
+    test_children()
+    test_execute()
+    test_execute_node()
     test_execute_polars()
-    # test_pipeline_dlt()
-    # test_pipeline_job()
+    test_pipeline_dlt()
+    test_pipeline_job()

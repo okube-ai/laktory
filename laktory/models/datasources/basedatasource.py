@@ -154,9 +154,9 @@ class BaseDataSource(BaseModel):
         elif is_polars_dataframe(self.mock_df):
             self.dataframe_type = "POLARS"
 
-        if self.dftype == "SPARK":
+        if self.dataframe_type == "SPARK":
             pass
-        elif self.dftype == "POLARS":
+        elif self.dataframe_type == "POLARS":
             if self.as_stream:
                 raise ValueError("Polars DataFrames don't support streaming read.")
             if self.watermark:
@@ -178,23 +178,6 @@ class BaseDataSource(BaseModel):
     def is_cdc(self) -> bool:
         """If `True` source data is a change data capture (CDC)"""
         return self.cdc is not None
-
-    @property
-    def user_dftype(self) -> Union[str, None]:
-        """
-        User-configured dataframe type directly from model or from parent.
-        """
-        if "dataframe_type" in self.__fields_set__:
-            return self.dataframe_type
-        if self._parent:
-            return self._parent.user_dftype
-        return None
-
-    @property
-    def dftype(self):
-        if self.user_dftype:
-            return self.user_dftype
-        return self.dataframe_type
 
     @property
     def is_orchestrator_dlt(self) -> bool:
@@ -224,9 +207,9 @@ class BaseDataSource(BaseModel):
         """
         if self.mock_df is not None:
             df = self.mock_df
-        elif self.dftype == "SPARK":
+        elif self.dataframe_type == "SPARK":
             df = self._read_spark(spark=spark)
-        elif self.dftype == "POLARS":
+        elif self.dataframe_type == "POLARS":
             df = self._read_polars()
         else:
             raise ValueError(

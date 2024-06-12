@@ -69,7 +69,9 @@ def smart_join(
     '''
     ```
     """
-    logger.info(f"Executing {left.laktory.signature()} {how} JOIN {other.laktory.signature()}")
+    logger.info(
+        f"Executing {left.laktory.signature()} {how} JOIN {other.laktory.signature()}"
+    )
 
     # Validate inputs
     if left_on or other_on:

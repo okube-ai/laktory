@@ -1,8 +1,11 @@
+from __future__ import annotations
 from pydantic import field_validator
 from pydantic import model_validator
 from typing import Any
 from typing import Union
 from typing import Callable
+from typing import Literal
+from typing import TYPE_CHECKING
 import abc
 
 from laktory._logger import get_logger
@@ -11,6 +14,10 @@ from laktory.models.basemodel import BaseModel
 from laktory.polars import PolarsDataFrame
 from laktory.polars import PolarsExpr
 from laktory.types import AnyDataFrame
+
+if TYPE_CHECKING:
+    from laktory.models.datasources.basedatasource import BaseDataSource
+
 
 logger = get_logger(__name__)
 
@@ -49,6 +56,7 @@ class BaseChainNodeFuncArg(BaseModel):
         from laktory.models.datasources import PipelineNodeDataSource
         from laktory.models.datasources import FileDataSource
         from laktory.models.datasources import TableDataSource
+
         if isinstance(self.value, PipelineNodeDataSource):
             return f"node.{self.value.node_name}"
         elif isinstance(self.value, FileDataSource):
@@ -129,6 +137,7 @@ class BaseChainNodeColumn(BaseModel):
 
 class BaseChainNode(BaseModel):
 
+    dataframe_type: Literal["SPARK", "POLARS", None] = "SPARK"
     func_args: list[Union[Any]] = []
     func_kwargs: dict[str, Union[Any]] = {}
     func_name: Union[str, None] = None
@@ -183,6 +192,23 @@ class BaseChainNode(BaseModel):
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
     # ----------------------------------------------------------------------- #
+
+    def get_sources(self, cls=None) -> list[BaseDataSource]:
+        """Get all sources feeding the Chain Node"""
+
+        from laktory.models.datasources.basedatasource import BaseDataSource
+
+        if cls is None:
+            cls = BaseDataSource
+
+        sources = []
+        for a in self.parsed_func_args:
+            if isinstance(a.value, cls):
+                sources += [a.value]
+        for a in self.parsed_func_kwargs.values():
+            if isinstance(a.value, cls):
+                sources += [a.value]
+        return sources
 
     @abc.abstractmethod
     def execute(

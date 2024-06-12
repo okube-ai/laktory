@@ -5,6 +5,10 @@ nodes:
   source:
     format: PARQUET
     path: ./data/brz_stock_prices/
+  sink:
+    format: PARQUET
+    mode: OVERWRITE
+    path: ../tmp/pl_brz_sink
 
 - name: slv_stock_prices
   layer: SILVER
@@ -24,10 +28,12 @@ nodes:
     - with_column:
         name: symbol
         sql_expr: data.symbol
+
     - with_column:
         name: close
         type: double
         sql_expr: data.close
+
     - func_name: drop
       func_args:
       - data
@@ -68,3 +74,8 @@ nodes:
   source:
     format: PARQUET
     path: ./data/slv_stock_meta
+  sink:
+    format: PARQUET
+    mode: OVERWRITE
+    path: /tests/tmp/pl_slv_meta_sink
+
