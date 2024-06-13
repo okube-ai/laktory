@@ -27,7 +27,7 @@ One key component in the Kappa architecture is the use of an immutable log or ev
 
 The Kappa architecture simplifies the overall system design and maintenance, making it easier to reason about and manage real-time data processing without the complexities of managing separate batch and stream processing paths.
 
-Learn more in this [blog post](https://www.youtube.com/watch?v=myLiFw9AUKY) or read by reading this [blog post](https://pradeepl.com/blog/kappa-architecture/).
+Learn more by reading this [blog post](https://pradeepl.com/blog/kappa-architecture/).
 
 ## Event-based architecture
 An event-based data architecture is a design approach where the components of the platform communicate and synchronize through the exchange of events. 
