@@ -130,5 +130,5 @@ Output:
 
 
 ### Demo
-Watch Laktory in action! 
-![type:video](https://www.youtube.com/embed/dlaUQm5yUa4)
+Watch Laktory Quickstart in action! 
+![type:video](https://www.youtube.com/embed/9zDAGhedZyk)

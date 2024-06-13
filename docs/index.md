@@ -113,8 +113,9 @@ laktory run -p pl-stock-prices --env dev
 ```
 
 ## Demo
-Watch how Laktory brings your pipeline definition into usable data tables. 
-![type:video](https://www.youtube.com/embed/dlaUQm5yUa4)
+Watch how to configure a laktory data pipeline, run it locally and deploy it on Databricks Delta Live Tables. 
+
+![type:video](https://www.youtube.com/embed/010w2iWrN0w)
 
 ## Who is it for?
 Laktory is built by data engineers for data engineers. 
