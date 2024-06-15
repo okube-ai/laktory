@@ -6,7 +6,7 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Changed pipeline JSON file permission from `account users` to `users`
 ### Breaking changes
 * n/a
 

@@ -288,7 +288,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             catalog: dev
             target: sandbox
             access_controls:
-            - group_name: account users
+            - group_name: users
               permission_level: CAN_VIEW
 
         nodes:
@@ -683,7 +683,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                 access_controls=[
                     AccessControl(
                         permission_level="CAN_READ",
-                        group_name="account users",
+                        group_name="users",
                     )
                 ],
                 workspace_file_path=filepath,
