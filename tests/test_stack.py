@@ -367,7 +367,7 @@ def test_pulumi_stack():
                 "type": "databricks:Permissions",
                 "properties": {
                     "accessControls": [
-                        {"groupName": "account users", "permissionLevel": "CAN_READ"}
+                        {"groupName": "users", "permissionLevel": "CAN_READ"}
                     ],
                     "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                 },
@@ -538,7 +538,7 @@ def test_terraform_stack():
                 "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                     "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "access_control": [
-                        {"group_name": "account users", "permission_level": "CAN_READ"}
+                        {"group_name": "users", "permission_level": "CAN_READ"}
                     ],
                     "depends_on": [
                         "databricks_workspace_file.workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json"
