@@ -146,6 +146,7 @@ class PipelineNode(BaseModel):
     timestamp_key: str = None
     _output_df: Any = None
     _parent: "Pipeline" = None
+    _source_columns: list[str] = []
 
     @model_validator(mode="before")
     @classmethod
@@ -342,7 +343,7 @@ class PipelineNode(BaseModel):
                     func_name="drop",
                     func_args=[
                         c
-                        for c in self.transformer.columns[0]
+                        for c in self._source_columns
                         if c not in ["_bronze_at", "_silver_at", "_gold_at"]
                     ],
                 )
@@ -419,7 +420,7 @@ class PipelineNode(BaseModel):
                     func_name="drop",
                     func_args=[
                         c
-                        for c in self.transformer.columns[0]
+                        for c in self._source_columns
                         if c not in ["_bronze_at", "_silver_at", "_gold_at"]
                     ],
                 )
@@ -480,10 +481,14 @@ class PipelineNode(BaseModel):
 
         # Parse DLT
         if self.is_orchestrator_dlt:
+            logger.info("DLT orchestrator selected. Sinks writing will be skipped.")
             write_sink = False
 
         # Read Source
         self._output_df = self.source.read(spark)
+
+        # Save source
+        self._source_columns = self._output_df.columns
 
         if self.source.is_cdc and not self.is_orchestrator_dlt:
             pass
@@ -495,23 +500,32 @@ class PipelineNode(BaseModel):
 
         # Apply transformer
         if apply_transformer:
-            if self.transformer:
-                self._output_df = self.transformer.execute(self._output_df, udfs=udfs)
 
-            # Apply layer-specific spark chain
-            if "spark" in str(type(self._output_df)).lower() and self.layer_spark_chain:
-                self._output_df = self.layer_spark_chain.execute(
-                    self._output_df, udfs=udfs
-                )
+            if "spark" in str(type(self._output_df)).lower():
+                dftype = "spark"
+            elif "polars" in str(type(self._output_df)).lower():
+                dftype = "polars"
+            else:
+                raise ValueError("DataFrame type not supported")
 
-            # Apply layer-specific polars chain
-            if (
-                "polars" in str(type(self._output_df)).lower()
-                and self.layer_polars_chain
-            ):
-                self._output_df = self.layer_polars_chain.execute(
-                    self._output_df, udfs=udfs
-                )
+            # Set Transformer
+            transformer = self.transformer
+            if transformer is None:
+                if dftype == "spark":
+                    transformer = SparkChain(nodes=[])
+                elif dftype == "polars":
+                    transformer = PolarsChain(nodes=[])
+            else:
+                transformer = transformer.copy()
+
+            # Add layer-specific chain nodes
+            if dftype == "spark" and self.layer_spark_chain:
+                transformer.nodes += self.layer_spark_chain.nodes
+            elif dftype == "polars" and self.layer_polars_chain:
+                transformer.nodes += self.layer_polars_chain.nodes
+
+            if transformer.nodes:
+                self._output_df = transformer.execute(self._output_df, udfs=udfs)
 
         # Output to sink
         if write_sink and self.sink:
