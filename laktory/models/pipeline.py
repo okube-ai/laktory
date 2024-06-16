@@ -100,6 +100,10 @@ class PipelineWorkspaceFile(WorkspaceFile):
         return data
 
     @property
+    def resource_type_id(self):
+        return "workspace-file"
+
+    @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return super().pulumi_excludes + ["pipeline_name"]
 
