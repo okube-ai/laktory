@@ -446,6 +446,7 @@ def test_pipeline_dlt():
         ],
         "orchestrator": "DLT",
         "udfs": [],
+        "workspacefile": None,
     }
 
     # Test resources

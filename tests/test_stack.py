@@ -245,6 +245,7 @@ def test_stack_model():
                     "nodes": [],
                     "orchestrator": "DLT",
                     "udfs": [],
+                    "workspacefile": None,
                 }
             },
             "providers": {
