@@ -245,6 +245,7 @@ def test_stack_model():
                     "nodes": [],
                     "orchestrator": "DLT",
                     "udfs": [],
+                    "workspacefile": None,
                 }
             },
             "providers": {
@@ -355,7 +356,7 @@ def test_pulumi_stack():
                 },
                 "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
-            "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+            "pipeline-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
                 "properties": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
@@ -363,7 +364,7 @@ def test_pulumi_stack():
                 },
                 "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
-            "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+            "permissions-pipeline-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:Permissions",
                 "properties": {
                     "accessControls": [
@@ -373,7 +374,7 @@ def test_pulumi_stack():
                 },
                 "options": {
                     "dependsOn": [
-                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}"
+                        "${pipeline-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}"
                     ],
                     "deleteBeforeReplace": True,
                 },
@@ -529,19 +530,19 @@ def test_terraform_stack():
                 }
             },
             "databricks_workspace_file": {
-                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                "pipeline-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "./tmp-pl-stock-prices-ut-stack.json",
                 }
             },
             "databricks_permissions": {
-                "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                "permissions-pipeline-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                     "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "access_control": [
                         {"group_name": "users", "permission_level": "CAN_READ"}
                     ],
                     "depends_on": [
-                        "databricks_workspace_file.workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json"
+                        "databricks_workspace_file.pipeline-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json"
                     ],
                 },
                 "permissions-dlt-custom-name": {

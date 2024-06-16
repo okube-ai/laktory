@@ -2,7 +2,7 @@
 
 ## [0.4.4] - Unreleased
 ### Added
-* n/a
+* WorkspaceFile attribute to Pipeline class to customize acces controls
 ### Fixed
 * n/a
 ### Updated

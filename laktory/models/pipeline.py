@@ -6,6 +6,7 @@ from typing import Literal
 from typing import TYPE_CHECKING
 from typing import Any
 from pydantic import model_validator
+from pydantic import Field
 import networkx as nx
 
 from laktory._logger import get_logger
@@ -77,6 +78,32 @@ class PipelineDatabricksJob(Job):
         return super().pulumi_excludes + ["laktory_version", "notebook_path"]
 
 
+class PipelineWorkspaceFile(WorkspaceFile):
+    """
+    Workspace File with default value for path and access controls and forced
+    value for source given a pipeline name.
+    """
+
+    pipeline_name: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def default_values(cls, data: Any) -> Any:
+        pl_name = data.get("pipeline_name", None)
+        data["source"] = os.path.join(CACHE_ROOT, f"tmp-{pl_name}.json")
+        if "path" not in data:
+            data["path"] = f"{settings.workspace_laktory_root}pipelines/{pl_name}.json"
+        if "access_controls" not in data:
+            data["access_controls"] = [
+                {"permission_level": "CAN_READ", "group_name": "users"}
+            ]
+        return data
+
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return super().pulumi_excludes + ["pipeline_name"]
+
+
 # --------------------------------------------------------------------------- #
 # Main Class                                                                  #
 # --------------------------------------------------------------------------- #
@@ -126,6 +153,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
           the upstream node sink.
     udfs:
         List of user defined functions provided to the transformer.
+    workspacefile:
+        Workspace file used to store the JSON definition of the pipeline.
+
 
     Examples
     --------
@@ -356,6 +386,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     nodes: list[Union[PipelineNode]]
     orchestrator: Union[Literal["DLT", "DATABRICKS_JOB"], None] = None
     udfs: list[PipelineUDF] = []
+    workspacefile: PipelineWorkspaceFile = None
 
     @model_validator(mode="before")
     @classmethod
@@ -364,6 +395,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         if "dlt" in data.keys():
             data["dlt"]["name"] = data.get("name", None)
 
+        return data
+
+    @model_validator(mode="before")
+    @classmethod
+    def assign_name_to_workspacefile(cls, data: Any) -> Any:
+        workspacefile = data.get("workspacefile", None)
+        if workspacefile:
+            workspacefile["pipeline_name"] = data["name"]
         return data
 
     @model_validator(mode="before")
@@ -669,33 +708,20 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         s = json.dumps(d, indent=4)
         with open(source, "w", newline="\n") as fp:
             fp.write(s)
-        filepath = f"{settings.workspace_laktory_root}pipelines/{self.name}.json"
-        file = WorkspaceFile(
-            path=filepath,
-            source=source,
-        )
 
-        resources = [file]
+        resources = []
+        if self.orchestrator in ["DATABRICKS_JOB", "DLT"]:
 
-        resources += [
-            Permissions(
-                resource_name=f"permissions-{file.resource_name}",
-                access_controls=[
-                    AccessControl(
-                        permission_level="CAN_READ",
-                        group_name="users",
-                    )
-                ],
-                workspace_file_path=filepath,
-                options={"depends_on": [f"${{resources.{file.resource_name}}}"]},
-            )
-        ]
+            file = self.workspacefile
+            if file is None:
+                file = PipelineWorkspaceFile(pipeline_name=self.name)
+            resources += [file]
 
-        if self.is_orchestrator_dlt:
-            resources += [self.dlt]
+            if self.is_orchestrator_dlt:
+                resources += [self.dlt]
 
-        if self.orchestrator == "DATABRICKS_JOB":
-            resources += [self.databricks_job]
+            if self.orchestrator == "DATABRICKS_JOB":
+                resources += [self.databricks_job]
 
         return resources
 
