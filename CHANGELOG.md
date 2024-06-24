@@ -5,6 +5,7 @@
 * WorkspaceFile attribute to Pipeline class to customize access controls
 ### Fixed
 * Spark dependencies
+* Fixed encoding when reading from yaml files
 ### Updated
 * Changed pipeline JSON file permission from `account users` to `users`
 * Smart join to support coalesce of columns outside of the join

@@ -100,7 +100,7 @@ class BaseModel(_BaseModel):
                 path = d.replace("${include.", "")[:-1]
                 if not os.path.isabs(path):
                     path = os.path.join(dirpath, path)
-                with open(path, "r") as _fp:
+                with open(path, "r", encoding="utf-8") as _fp:
                     d = yaml.safe_load(_fp)
                     d = inject_includes(d)
             return d
