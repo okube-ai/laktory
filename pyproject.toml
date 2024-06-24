@@ -62,7 +62,7 @@ polars = [
 ]
 spark = [
     "pyarrow",
-    "pyspark",
+    "pyspark[connect]",
 ]
 
 # Orchestrators
