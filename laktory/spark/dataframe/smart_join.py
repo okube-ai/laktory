@@ -21,9 +21,11 @@ def smart_join(
     other_watermark: Watermark = None,
     time_constraint_interval_lower: str = "60 seconds",
     time_constraint_interval_upper: str = None,
+    coalesce: bool = False,
 ) -> DataFrame:
     """
-    Join tables, clean up duplicated columns and support watermarking for
+     Join tables and coalesce join columns. Optionally coalesce columns found
+    in both left and other not used in join. Support for watermarking for
     streaming joins.
 
     Parameters
@@ -52,6 +54,8 @@ def smart_join(
         Lower bound for a spark streaming event-time constraint
     time_constraint_interval_upper:
         Upper bound for a spark streaming event-time constraint
+    coalesce:
+        If `True` columns present in both left and other are coalesced.
 
     Examples
     --------
@@ -195,7 +199,10 @@ def smart_join(
 
     # Drop duplicated columns
     for c, v in d.items():
-        if v < 2 or c not in _join:
+        if v < 2:
+            continue
+
+        if not (coalesce or c in _join):
             continue
         df = df.withColumn("__tmp", F.coalesce(f"left.{c}", f"other.{c}"))
         df = df.drop(c)

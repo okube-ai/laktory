@@ -105,8 +105,41 @@ def test_join():
         other_on="symbol2",
     )
     assert "symbol" in df2.columns
-    assert "symbol2" in df2.columns
+    assert "symbol2" not in df2.columns
     assert df2.select(df.columns).equals(df)
+
+    # Not Coalesce
+    df4 = left.with_columns(open=pl.lit(None)).laktory.smart_join(
+        other=df_meta_polars.with_columns(open=pl.lit(2)),
+        left_on="symbol",
+        other_on="symbol2",
+    )
+    assert df4.columns == [
+        "created_at",
+        "symbol",
+        "open",
+        "close",
+        "currency",
+        "first_traded",
+        "open_right",
+    ]
+
+    # With Coalesce
+    df5 = left.with_columns(open=pl.lit(None)).laktory.smart_join(
+        other=df_meta_polars.with_columns(open=pl.lit(2)),
+        left_on="symbol",
+        other_on="symbol2",
+        coalesce=True,
+    )
+    assert df5.columns == [
+        "created_at",
+        "symbol",
+        "open",
+        "close",
+        "currency",
+        "first_traded",
+    ]
+    assert df5["open"].fill_null(-1).to_list() == [2, 2, -1]
 
 
 def test_join_outer():
@@ -136,10 +169,9 @@ def test_join_outer():
             datetime.datetime(2023, 9, 1, 0, 0),
             datetime.datetime(2023, 9, 1, 0, 0),
         ],
-        "symbol": ["AAPL", None, "AMZN", "MSFT"],
+        "symbol": ["AAPL", "GOOGL", "AMZN", "MSFT"],
         "open": [189.49000549316406, None, 139.4600067138672, 331.30999755859375],
         "close": [189.4600067138672, None, 138.1199951171875, 328.6600036621094],
-        "symbol_right": ["AAPL", "GOOGL", "AMZN", None],
         "currency": ["USD", "USD", "USD", None],
         "first_traded": [
             "1980-12-12T14:30:00.000Z",

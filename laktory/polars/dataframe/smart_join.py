@@ -14,9 +14,11 @@ def smart_join(
     on: list[str] = None,
     left_on: list[str] = None,
     other_on: list[str] = None,
+    coalesce: bool = False,
 ) -> pl.DataFrame:
     """
-    Join tables and clean up duplicated columns.
+    Join tables and coalesce join columns. Optionally coalesce columns found
+    in both left and other not used in join.
 
     Parameters
     ----------
@@ -33,6 +35,9 @@ def smart_join(
         Name(s) of the left join column(s).
     other_on:
         Name(s) of the right join column(s).
+    coalesce:
+        If `True` columns present in both left and other are coalesced.
+        Columns part of the join are always coalesced.
 
     Examples
     --------
@@ -104,19 +109,23 @@ def smart_join(
     logger.debug(f"Left Schema: {left.laktory.signature()}")
     logger.debug(f"Other Schema: {other.laktory.signature()}")
 
+    suffix = "_right"
     df = left.join(
         other=other,
         on=on,
         left_on=left_on,
         right_on=other_on,
+        suffix=suffix,
         how=how,
-        coalesce=None,  # to be consistent with Spark smart_join
+        coalesce=True,  # to be consistent with Spark smart_join
     )
 
-    # Copy back coalesced columns to be consistent with Spark smart_join
-    for l, o in zip(left_on, other_on):
-        if o not in df.columns:
-            df = df.with_columns(**{o: pl.col(l)})
+    if coalesce:
+        for c1 in df.columns:
+            if c1.endswith(suffix):
+                c0 = c1.replace(suffix, "")
+                df = df.with_columns(**{c0: pl.coalesce(pl.col(c0), pl.col(c1))})
+                df = df.drop(c1)
 
     # Drop watermark column
     logger.debug(f"Joined Schema: {df.schema}")

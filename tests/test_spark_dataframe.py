@@ -186,6 +186,42 @@ def test_join():
     assert "symbol2" in df3.columns
     assert df3.toPandas().equals(df2.toPandas())
 
+    # Not Coalesce
+    df4 = left.withColumn("open", F.lit(None)).laktory.smart_join(
+        other=df_meta.drop("symbol").withColumn("open", F.lit(2)),
+        left_on="symbol",
+        other_on="symbol2",
+    )
+    df4.printSchema()
+    assert df4.columns == [
+        "created_at",
+        "symbol",
+        "open",
+        "close",
+        "symbol2",
+        "currency",
+        "first_traded",
+        "open",
+    ]
+
+    # With Coalesce
+    df5 = left.withColumn("open", F.lit(None)).laktory.smart_join(
+        other=df_meta.drop("symbol").withColumn("open", F.lit(2)),
+        left_on="symbol",
+        other_on="symbol2",
+        coalesce=True,
+    )
+    assert df5.columns == [
+        "created_at",
+        "symbol",
+        "close",
+        "symbol2",
+        "currency",
+        "first_traded",
+        "open",
+    ]
+    assert df5.toPandas()["open"].fillna(-1).to_list() == [2, 2, -1]
+
 
 def test_join_outer():
     left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(
