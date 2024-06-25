@@ -124,6 +124,7 @@ def test_dataframe_table_input(df0=df0):
 
 def test_column(df0=df0):
     df = df0.select(df0.columns)
+    df = df.with_columns(xs=pl.lit([1, 2, 2]))
 
     sc = models.PolarsChain(
         nodes=[
@@ -141,6 +142,13 @@ def test_column(df0=df0):
                     "sql_expr": "x*2",
                 },
             },
+            {
+                "with_column": {
+                    "name": "xplode",
+                    "type": None,
+                    "expr": "pl.col('xs').list.unique()",
+                },
+            },
         ]
     )
 
@@ -154,6 +162,9 @@ def test_column(df0=df0):
     assert [(c.name, c.sql_expr) for c in sc.nodes[1]._with_columns] == [("x2", "x*2")]
     assert df["cos_x"].to_list() == np.cos(df["x"]).to_list()
     assert df["x2"].to_list() == (df["x"] * 2).to_list()
+
+    # Test explode
+    assert df["xplode"].to_list() == [[1, 2], [1, 2], [1, 2]]
 
     # Multi-columns
     sc = models.PolarsChain(

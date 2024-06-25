@@ -137,6 +137,7 @@ def test_dataframe_table_input(df0=df0):
 
 def test_column(df0=df0):
     df = df0.select(df0.columns)
+    df = df.withColumn("xs", F.lit([1, 2, 3]))
 
     sc = models.SparkChain(
         nodes=[
@@ -152,6 +153,13 @@ def test_column(df0=df0):
                     "name": "x2",
                     "type": "double",
                     "expr": "F.col('x')*2",
+                },
+            },
+            {
+                "with_column": {
+                    "name": "xplode",
+                    "type": None,
+                    "expr": "F.explode('xs')",
                 },
             },
         ]
@@ -170,6 +178,9 @@ def test_column(df0=df0):
     ]
     assert pdf["cos_x"].tolist() == np.cos(pdf["x"]).tolist()
     assert pdf["x2"].tolist() == (pdf["x"] * 2).tolist()
+
+    # Test explode
+    assert pdf["xplode"].tolist() == [1, 2, 3, 1, 2, 3, 1, 2, 3]
 
 
 def test_udfs(df0=df0):

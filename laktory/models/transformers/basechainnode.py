@@ -81,7 +81,8 @@ class BaseChainNodeColumn(BaseModel):
 
     @field_validator("type")
     def check_type(cls, v: str) -> str:
-        if "<" in v:
+
+        if v is None or "<" in v:
             return v
         else:
             if v not in SUPPORTED_DATATYPES:

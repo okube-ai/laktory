@@ -11,7 +11,6 @@ SUPPORTED_DFTYPES = [
 DEFAULT_DFTYPE = "SPARK"
 
 SUPPORTED_DATATYPES = [
-    "_any",
     "binary",
     "byte",
     "int8",

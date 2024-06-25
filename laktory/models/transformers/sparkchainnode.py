@@ -76,7 +76,7 @@ class SparkChainNodeColumn(BaseChainNodeColumn):
     """
 
     name: str
-    type: str = "string"
+    type: Union[str, None] = "string"
     unit: Union[str, None] = None
     expr: Union[str, None] = None
     sql_expr: Union[str, None] = None
@@ -259,13 +259,10 @@ class SparkChainNode(BaseChainNode):
                 logger.info(
                     f"Building column {column.name} as {column.expr or column.sql_expr}"
                 )
-                df = df.withColumns(
-                    {
-                        column.name: column.eval(udfs=udfs).cast(
-                            DATATYPES_MAP[column.type]
-                        )
-                    }
-                )
+                _col = column.eval(udfs=udfs)
+                if column.type:
+                    _col = _col.cast(DATATYPES_MAP[column.type])
+                df = df.withColumns({column.name: _col})
             return df
 
         # From SQL expression
