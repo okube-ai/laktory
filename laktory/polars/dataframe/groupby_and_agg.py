@@ -81,7 +81,7 @@ def groupby_and_agg(
         if not isinstance(expr, PolarsChainNodeColumn):
             expr = PolarsChainNodeColumn(**expr)
 
-        expr.type = "_any"
+        expr.type = None
         aggs += [expr.eval().alias(expr.name)]
 
     return df.groupby(groupby).agg(*aggs)
