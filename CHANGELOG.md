@@ -1,6 +1,16 @@
 # Release History
 
-## [0.4.5] - Unreleased
+## [0.4.6] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.4.5] - 2024-06-25
 ### Updated
 * `with_column` transformer node method to allow for `None` type
 
