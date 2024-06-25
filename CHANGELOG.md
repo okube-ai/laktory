@@ -1,6 +1,16 @@
 # Release History
 
-## [0.4.4] - Unreleased
+## [0.4.5] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.4.4] - 2024-06-25
 ### Added
 * WorkspaceFile attribute to Pipeline class to customize access controls
 ### Fixed
