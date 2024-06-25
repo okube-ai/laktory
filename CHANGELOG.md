@@ -9,8 +9,7 @@
 ### Updated
 * Changed pipeline JSON file permission from `account users` to `users`
 * Smart join to support coalesce of columns outside of the join
-### Breaking changes
-* n/a
+
 
 ## [0.4.3] - 2024-06-12
 ### Updated
