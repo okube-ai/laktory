@@ -707,7 +707,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         """
         # Configuration file
         source = os.path.join(CACHE_ROOT, f"tmp-{self.name}.json")
-        d = self.model_dump(exclude_none=True)
+        d = self.model_dump(exclude_unset=True)
         d = self.inject_vars(d)
         s = json.dumps(d, indent=4)
         with open(source, "w", newline="\n") as fp:

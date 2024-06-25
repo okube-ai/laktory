@@ -367,7 +367,7 @@ def test_pulumi_stack():
     assert data_default == {
         "variables": {},
         "name": "unit-testing",
-        "description": None,
+        "runtime": "yaml",
         "config": {
             "databricks:host": "https://adb-2211091707396001.1.azuredatabricks.net/",
             "databricks:token": "***",
@@ -377,6 +377,8 @@ def test_pulumi_stack():
                 "type": "databricks:Job",
                 "properties": {
                     "name": "job-stock-prices-ut-stack",
+                    "parameters": [],
+                    "tags": {},
                     "tasks": [
                         {
                             "libraries": [
@@ -398,17 +400,21 @@ def test_pulumi_stack():
                         {
                             "jobClusterKey": "main",
                             "newCluster": {
+                                "dataSecurityMode": "USER_ISOLATION",
+                                "initScripts": [],
                                 "nodeTypeId": "${vars.node_type_id}",
+                                "sparkConf": {},
                                 "sparkEnvVars": {
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "${vars.env}",
                                 },
                                 "sparkVersion": "14.0.x-scala2.12",
+                                "sshPublicKeys": [],
                             },
                         }
                     ],
                 },
-                "options": {},
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
             "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
@@ -416,7 +422,7 @@ def test_pulumi_stack():
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "./tmp-pl-stock-prices-ut-stack.json",
                 },
-                "options": {"dependsOn": []},
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
             "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:Permissions",
@@ -429,18 +435,27 @@ def test_pulumi_stack():
                 "options": {
                     "dependsOn": [
                         "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}"
-                    ]
+                    ],
+                    "deleteBeforeReplace": True,
                 },
             },
             "dlt-custom-name": {
                 "type": "databricks:Pipeline",
                 "properties": {
+                    "channel": "PREVIEW",
+                    "clusters": [],
+                    "configuration": {},
                     "libraries": [
                         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
                     ],
                     "name": "pl-stock-prices-ut-stack",
+                    "notifications": [],
                 },
-                "options": {"provider": "${databricks}", "dependsOn": []},
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": [],
+                    "deleteBeforeReplace": True,
+                },
             },
             "permissions-dlt-custom-name": {
                 "type": "databricks:Permissions",
@@ -454,6 +469,7 @@ def test_pulumi_stack():
                 "options": {
                     "provider": "${databricks}",
                     "dependsOn": ["${dlt-custom-name}"],
+                    "deleteBeforeReplace": True,
                 },
             },
             "databricks": {
@@ -462,115 +478,7 @@ def test_pulumi_stack():
                     "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
                     "token": "***",
                 },
-                "options": {},
-            },
-        },
-        "outputs": {},
-    }
-
-    # Dev
-    data = stack.to_pulumi(env_name="dev").model_dump()
-    data["config"]["databricks:token"] = "***"
-    print(data)
-    assert data == {
-        "variables": {"env": "dev", "is_dev": True, "node_type_id": "Standard_DS3_v2"},
-        "name": "unit-testing",
-        "description": None,
-        "config": {
-            "databricks:host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-            "databricks:token": "***",
-        },
-        "resources": {
-            "job-stock-prices-ut-stack": {
-                "type": "databricks:Job",
-                "properties": {
-                    "name": "job-stock-prices-ut-stack",
-                    "tasks": [
-                        {
-                            "libraries": [
-                                {"pypi": {"package": "laktory==0.0.27"}},
-                                {"pypi": {"package": "yfinance"}},
-                            ],
-                            "jobClusterKey": "main",
-                            "notebookTask": {
-                                "notebookPath": "/jobs/ingest_stock_metadata.py"
-                            },
-                            "taskKey": "ingest-metadata",
-                        },
-                        {
-                            "pipelineTask": {"pipelineId": "${dlt-custom-name.id}"},
-                            "taskKey": "run-pipeline",
-                        },
-                    ],
-                    "jobClusters": [
-                        {
-                            "jobClusterKey": "main",
-                            "newCluster": {
-                                "nodeTypeId": "Standard_DS3_v2",
-                                "sparkEnvVars": {
-                                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
-                                    "LAKTORY_WORKSPACE_ENV": "dev",
-                                },
-                                "sparkVersion": "14.0.x-scala2.12",
-                            },
-                        }
-                    ],
-                },
-                "options": {},
-            },
-            "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
-                "type": "databricks:WorkspaceFile",
-                "properties": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
-                    "source": "./tmp-pl-stock-prices-ut-stack.json",
-                },
-                "options": {"dependsOn": []},
-            },
-            "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
-                "type": "databricks:Permissions",
-                "properties": {
-                    "accessControls": [
-                        {"groupName": "users", "permissionLevel": "CAN_READ"}
-                    ],
-                    "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
-                },
-                "options": {
-                    "dependsOn": [
-                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}"
-                    ]
-                },
-            },
-            "dlt-custom-name": {
-                "type": "databricks:Pipeline",
-                "properties": {
-                    "libraries": [
-                        {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
-                    ],
-                    "name": "pl-stock-prices-ut-stack",
-                },
-                "options": {"provider": "${databricks}", "dependsOn": []},
-            },
-            "permissions-dlt-custom-name": {
-                "type": "databricks:Permissions",
-                "properties": {
-                    "accessControls": [
-                        {"groupName": "account users", "permissionLevel": "CAN_VIEW"},
-                        {"groupName": "role-engineers", "permissionLevel": "CAN_RUN"},
-                    ],
-                    "pipelineId": "${dlt-custom-name.id}",
-                },
-                "options": {
-                    "provider": "${databricks}",
-                    "dependsOn": ["${dlt-custom-name}"],
-                },
-            },
-            "databricks": {
-                "type": "pulumi:providers:databricks",
-                "properties": {
-                    "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-                    "token": "dapic54f989beb4ef1b924b4fcfcf0962593-3",
-                },
-                "options": {},
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
         },
         "outputs": {},
@@ -587,7 +495,7 @@ def test_pulumi_stack():
             "node_type_id": "Standard_DS4_v2",
         },
         "name": "unit-testing",
-        "description": None,
+        "runtime": "yaml",
         "config": {
             "databricks:host": "https://adb-2211091707396001.1.azuredatabricks.net/",
             "databricks:token": "***",
@@ -597,6 +505,8 @@ def test_pulumi_stack():
                 "type": "databricks:Job",
                 "properties": {
                     "name": "job-stock-prices-ut-stack",
+                    "parameters": [],
+                    "tags": {},
                     "tasks": [
                         {
                             "libraries": [
@@ -618,17 +528,21 @@ def test_pulumi_stack():
                         {
                             "jobClusterKey": "main",
                             "newCluster": {
+                                "dataSecurityMode": "USER_ISOLATION",
+                                "initScripts": [],
                                 "nodeTypeId": "Standard_DS3_v2",
+                                "sparkConf": {},
                                 "sparkEnvVars": {
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "dev",
                                 },
                                 "sparkVersion": "14.0.x-scala2.12",
+                                "sshPublicKeys": [],
                             },
                         }
                     ],
                 },
-                "options": {},
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
             "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
@@ -636,7 +550,7 @@ def test_pulumi_stack():
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "./tmp-pl-stock-prices-ut-stack.json",
                 },
-                "options": {"dependsOn": []},
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
             "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:Permissions",
@@ -649,19 +563,28 @@ def test_pulumi_stack():
                 "options": {
                     "dependsOn": [
                         "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}"
-                    ]
+                    ],
+                    "deleteBeforeReplace": True,
                 },
             },
             "dlt-custom-name": {
                 "type": "databricks:Pipeline",
                 "properties": {
+                    "channel": "PREVIEW",
+                    "clusters": [],
+                    "configuration": {},
                     "development": False,
                     "libraries": [
                         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
                     ],
                     "name": "pl-stock-prices-ut-stack",
+                    "notifications": [],
                 },
-                "options": {"provider": "${databricks}", "dependsOn": []},
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": [],
+                    "deleteBeforeReplace": True,
+                },
             },
             "permissions-dlt-custom-name": {
                 "type": "databricks:Permissions",
@@ -675,6 +598,7 @@ def test_pulumi_stack():
                 "options": {
                     "provider": "${databricks}",
                     "dependsOn": ["${dlt-custom-name}"],
+                    "deleteBeforeReplace": True,
                 },
             },
             "databricks": {
@@ -683,7 +607,7 @@ def test_pulumi_stack():
                     "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
                     "token": "dapic54f989beb4ef1b924b4fcfcf0962593-3",
                 },
-                "options": {},
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
         },
         "outputs": {},
@@ -723,6 +647,8 @@ def test_terraform_stack():
             "databricks_job": {
                 "job-stock-prices-ut-stack": {
                     "name": "job-stock-prices-ut-stack",
+                    "tags": {},
+                    "parameter": [],
                     "task": [
                         {
                             "job_cluster_key": "main",
@@ -746,12 +672,16 @@ def test_terraform_stack():
                         {
                             "job_cluster_key": "main",
                             "new_cluster": {
+                                "data_security_mode": "USER_ISOLATION",
+                                "init_scripts": [],
                                 "node_type_id": "${vars.node_type_id}",
+                                "spark_conf": {},
                                 "spark_env_vars": {
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "${vars.env}",
                                 },
                                 "spark_version": "14.0.x-scala2.12",
+                                "ssh_public_keys": [],
                             },
                         }
                     ],
@@ -785,10 +715,14 @@ def test_terraform_stack():
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
+                    "channel": "PREVIEW",
+                    "configuration": {},
                     "name": "pl-stock-prices-ut-stack",
+                    "cluster": [],
                     "library": [
                         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
                     ],
+                    "notification": [],
                     "provider": "databricks",
                 }
             },
@@ -803,8 +737,7 @@ def test_terraform_stack():
         "terraform": {
             "required_providers": {
                 "databricks": {"source": "databricks/databricks", "version": ">=1.39"}
-            },
-            "backend": None,
+            }
         },
         "provider": {
             "databricks": {
@@ -816,6 +749,8 @@ def test_terraform_stack():
             "databricks_job": {
                 "job-stock-prices-ut-stack": {
                     "name": "job-stock-prices-ut-stack",
+                    "tags": {},
+                    "parameter": [],
                     "task": [
                         {
                             "job_cluster_key": "main",
@@ -839,12 +774,16 @@ def test_terraform_stack():
                         {
                             "job_cluster_key": "main",
                             "new_cluster": {
+                                "data_security_mode": "USER_ISOLATION",
+                                "init_scripts": [],
                                 "node_type_id": "Standard_DS3_v2",
+                                "spark_conf": {},
                                 "spark_env_vars": {
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "dev",
                                 },
                                 "spark_version": "14.0.x-scala2.12",
+                                "ssh_public_keys": [],
                             },
                         }
                     ],
@@ -878,10 +817,14 @@ def test_terraform_stack():
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
+                    "channel": "PREVIEW",
+                    "configuration": {},
                     "name": "pl-stock-prices-ut-stack",
+                    "cluster": [],
                     "library": [
                         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
                     ],
+                    "notification": [],
                     "provider": "databricks",
                 }
             },
@@ -896,8 +839,7 @@ def test_terraform_stack():
         "terraform": {
             "required_providers": {
                 "databricks": {"source": "databricks/databricks", "version": ">=1.39"}
-            },
-            "backend": None,
+            }
         },
         "provider": {
             "databricks": {
@@ -909,6 +851,8 @@ def test_terraform_stack():
             "databricks_job": {
                 "job-stock-prices-ut-stack": {
                     "name": "job-stock-prices-ut-stack",
+                    "tags": {},
+                    "parameter": [],
                     "task": [
                         {
                             "job_cluster_key": "main",
@@ -932,12 +876,16 @@ def test_terraform_stack():
                         {
                             "job_cluster_key": "main",
                             "new_cluster": {
+                                "data_security_mode": "USER_ISOLATION",
+                                "init_scripts": [],
                                 "node_type_id": "Standard_DS3_v2",
+                                "spark_conf": {},
                                 "spark_env_vars": {
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "dev",
                                 },
                                 "spark_version": "14.0.x-scala2.12",
+                                "ssh_public_keys": [],
                             },
                         }
                     ],
@@ -971,11 +919,15 @@ def test_terraform_stack():
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
+                    "channel": "PREVIEW",
+                    "configuration": {},
                     "development": False,
                     "name": "pl-stock-prices-ut-stack",
+                    "cluster": [],
                     "library": [
                         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
                     ],
+                    "notification": [],
                     "provider": "databricks",
                 }
             },
@@ -1048,7 +1000,7 @@ if __name__ == "__main__":
     test_stack_model()
     test_stack_env_model()
     test_pulumi_stack()
-    # test_pulumi_preview()
+    test_pulumi_preview()
     test_terraform_stack()
     test_terraform_plan()
-    # test_all_resources()
+    test_all_resources()

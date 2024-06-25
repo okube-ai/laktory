@@ -14,7 +14,11 @@ resources:
     pl-custom-name:
       name: pl-stock-prices-ut-stack
       orchestrator: DLT
-      nodes: []
+      nodes:
+        - name: first_node
+          source:
+            path: /tmp/
+          dlt_template: null
       dlt:
         resource_name: dlt-custom-name
         libraries:

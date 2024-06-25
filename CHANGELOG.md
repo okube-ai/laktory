@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.4.6] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Issue with getting environment stack on null properties
 
 ## [0.4.5] - 2024-06-25
 ### Updated
