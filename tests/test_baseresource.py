@@ -7,7 +7,7 @@ class BaseResource2(BaseResource):
 
 def test_resource_name():
     r1 = BaseResource()
-    dump = r1.model_dump(exclude_none=True)
+    dump = r1.model_dump(exclude_unset=True)
     if r1.resource_name_ is not None:
         dump["resource_name_"] = r1.resource_name_
     r1_ = BaseResource2(**dump)
@@ -20,7 +20,7 @@ def test_resource_name():
     assert r1_.resource_name == "base-resource2"
 
     r2 = BaseResource(resource_name="r2")
-    dump = r2.model_dump(exclude_none=True)
+    dump = r2.model_dump(exclude_unset=True)
     if r2.resource_name_ is not None:
         dump["resource_name_"] = r2.resource_name_
     r2_ = BaseResource2(**dump)

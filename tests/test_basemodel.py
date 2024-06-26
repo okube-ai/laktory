@@ -95,7 +95,7 @@ def test_read_yaml():
 
 
 def test_dump_yaml():
-    assert schema.model_dump_yaml(exclude_none=True).startswith(
+    assert schema.model_dump_yaml(exclude_unset=True).startswith(
         "catalog_name: ${vars.env}"
     )
 

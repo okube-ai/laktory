@@ -75,7 +75,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     name: str
     primary_key: Union[str, None] = None
     schema_name: Union[str, None] = None
-    table_type: Literal["MANAGED", "EXTERNA", "VIEW"] = "MANAGED"
+    table_type: Literal["MANAGED", "EXTERNAL", "VIEW"] = "MANAGED"
     view_definition: str = None
     warehouse_id: str = None
 

@@ -53,7 +53,7 @@ def test_quickstart_pulumi():
     with open(filepath) as fp:
         stack = models.Stack.model_validate_yaml(fp)
 
-    data = stack.model_dump(exclude_none=True)
+    data = stack.model_dump(exclude_unset=True)
 
     assert stack.backend == "pulumi"
     assert stack.name == "quickstart"
@@ -84,7 +84,7 @@ def test_quickstart_terraform():
     with open(filepath) as fp:
         stack = models.Stack.model_validate_yaml(fp)
 
-    data = stack.model_dump(exclude_none=True)
+    data = stack.model_dump(exclude_unset=True)
 
     assert stack.backend == "terraform"
     assert stack.name == "quickstart"

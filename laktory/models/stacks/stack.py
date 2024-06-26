@@ -380,14 +380,14 @@ class Stack(BaseModel):
 
                 # Get model dump
                 model = obj
-                data = model.model_dump(exclude_none=True)
+                data = model.model_dump(exclude_unset=True)
 
                 # Loop through all model fields
                 for field_name, field in model.model_fields.items():
 
                     # Explicitly dump options if found in the model
                     if field_name == "options" and field.annotation == ResourceOptions:
-                        data["options"] = model.options.model_dump(exclude_none=True)
+                        data["options"] = model.options.model_dump(exclude_unset=True)
 
                     if field_name == "resource_name_" and model.resource_name_:
                         data["resource_name_"] = model.resource_name_
@@ -416,8 +416,11 @@ class Stack(BaseModel):
             envs = {}
             for _env_name, env in self.environments.items():
                 for k in ENV_FIELDS:
+                    v1 = _envs[_env_name].get(k, {})
                     if k in d:
-                        d[k] = merge_dicts(d[k], _envs[_env_name].get(k, {}))
+                        d[k] = merge_dicts(d[k], v1)
+                    elif k in _envs[_env_name]:
+                        d[k] = v1
 
                 # Inject Variables
                 if inject_vars:

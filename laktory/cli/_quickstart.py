@@ -161,7 +161,7 @@ def quickstart(
         )
 
     # Dump data
-    data = stack.model_dump(exclude_none=True)
+    data = stack.model_dump(exclude_unset=True)
     data = remove_empty(data)
 
     # Clean up resources

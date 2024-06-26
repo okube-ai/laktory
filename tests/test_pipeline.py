@@ -491,25 +491,18 @@ def test_pipeline_job():
 
     # Test job
     job = pl.databricks_job
-    data = job.model_dump(exclude_none=True)
+    data = job.model_dump(exclude_unset=True)
     print(data)
     assert data == {
-        "access_controls": [],
         "clusters": [
             {
-                "data_security_mode": "USER_ISOLATION",
-                "init_scripts": [],
                 "name": "node-cluster",
                 "node_type_id": "Standard_DS3_v2",
-                "spark_conf": {},
-                "spark_env_vars": {},
                 "spark_version": "14.0.x-scala2.12",
-                "ssh_public_keys": [],
             }
         ],
         "name": "job-pl-stock-prices",
-        "parameters": [{"name": "pipeline_name", "default": "pl-stock-prices"}],
-        "tags": {},
+        "parameters": [{"default": "pl-stock-prices", "name": "pipeline_name"}],
         "tasks": [
             {
                 "depends_ons": [],

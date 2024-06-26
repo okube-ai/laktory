@@ -45,7 +45,7 @@ def test_dataevent_root():
     # Custom value for events root
     header = models.DataEvent(name="my-event", events_root="test")
     # header2 = models.DataEvent(
-    #     **header.model_dump(by_alias=True, exclude_none=True)
+    #     **header.model_dump(by_alias=True, exclude_unset=True)
     # )
     assert header.events_root == "test"
     # assert header2.events_root == "test"
@@ -54,7 +54,7 @@ def test_dataevent_root():
     header = models.DataEvent(name="my-event")
     assert header.events_root == "/Volumes/dev/sources/landing/events/"
     root0 = settings.workspace_landing_root
-    header2 = models.DataEvent(**header.model_dump(by_alias=True, exclude_none=True))
+    header2 = models.DataEvent(**header.model_dump(by_alias=True, exclude_unset=True))
     settings.workspace_landing_root = "custom_root/"
     assert header.events_root == "custom_root/events/"
     assert header2.events_root == "custom_root/events/"
@@ -64,7 +64,7 @@ def test_dataevent_root():
     header = models.DataEvent(name="my-event", event_root="/Landing/my_event")
     print(header)
     assert header.event_root == "/Landing/my_event"
-    header = models.DataEvent(**header.model_dump(exclude_none=True))
+    header = models.DataEvent(**header.model_dump(exclude_unset=True))
 
 
 def test_dataevent():
