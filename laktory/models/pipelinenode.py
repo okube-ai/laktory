@@ -11,6 +11,7 @@ from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import BaseDataSource
 from laktory.models.datasinks import DataSinksUnion
 from laktory.models.pipelinenodeexpectation import PipelineNodeExpectation
+from laktory.models.transformers.basechain import BaseChain
 from laktory.models.transformers.sparkchain import SparkChain
 from laktory.models.transformers.sparkchainnode import SparkChainNode
 from laktory.models.transformers.polarschain import PolarsChain
@@ -154,13 +155,19 @@ class PipelineNode(BaseModel):
         dftype = data.get("dataframe_type", None)
         if dftype:
             if "source" in data.keys():
-                data["source"]["dataframe_type"] = data["source"].get(
-                    "dataframe_type", dftype
-                )
+                if isinstance(data["source"], BaseDataSource):
+                    data["source"].dataframe_type = dftype
+                else:
+                    data["source"]["dataframe_type"] = data["source"].get(
+                        "dataframe_type", dftype
+                    )
             if "transformer" in data.keys():
-                data["transformer"]["dataframe_type"] = data["transformer"].get(
-                    "dataframe_type", dftype
-                )
+                if isinstance(data["transformer"], BaseChain):
+                    data["transformer"].dataframe_type = dftype
+                else:
+                    data["transformer"]["dataframe_type"] = data["transformer"].get(
+                        "dataframe_type", dftype
+                    )
         return data
 
     @model_validator(mode="after")

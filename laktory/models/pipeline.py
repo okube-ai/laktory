@@ -416,7 +416,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         if dftype:
             if "nodes" in data.keys():
                 for n in data["nodes"]:
-                    n["dataframe_type"] = n.get("dataframe_type", dftype)
+                    if isinstance(n, PipelineNode):
+                        n.dataframe_type = dftype
+                    else:
+                        n["dataframe_type"] = n.get("dataframe_type", dftype)
         return data
 
     @model_validator(mode="after")
