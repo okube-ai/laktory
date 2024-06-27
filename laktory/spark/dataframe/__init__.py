@@ -19,7 +19,7 @@ class LaktoryDataFrame:
     def display(self, *args, **kwargs):
         return display(self._df, *args, **kwargs)
 
-    @wraps(display)
+    @wraps(groupby_and_agg)
     def groupby_and_agg(self, *args, **kwargs):
         return groupby_and_agg(self._df, *args, **kwargs)
 

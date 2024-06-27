@@ -1,3 +1,4 @@
+from functools import wraps
 from pyspark.sql.session import SparkSession
 
 _sql = SparkSession.sql
@@ -13,6 +14,7 @@ class LaktorySparkSession:
     def __init__(self, spark: SparkSession):
         self._spark = spark
 
+    @wraps(SparkSession.sql)
     def sql(self, *args, **kwargs):
         return _sql(self._spark, *args, **kwargs)
 
