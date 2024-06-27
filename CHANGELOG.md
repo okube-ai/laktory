@@ -1,6 +1,16 @@
 # Release History
 
-## [0.4.7] - Unreleased
+## [0.4.8] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.4.7] - 2024-06-27
 ### Fixed
 * Support for parametrized queries when DLT module is loaded
 
