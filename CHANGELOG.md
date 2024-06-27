@@ -1,6 +1,8 @@
 # Release History
 
 ## [0.4.6] - Unreleased
+### Added
+* Support for parametrized queries when DLT module is loaded
 ### Fixed
 * Issue with getting environment stack on null properties
 

@@ -267,7 +267,7 @@ class SparkChainNode(BaseChainNode):
 
         # From SQL expression
         if self.sql_expr:
-            df = df.sparkSession.sql(self.sql_expr, df=df)
+            df = df.sparkSession.laktory.sql(self.sql_expr, df=df)
             return df
 
         # Get Function
