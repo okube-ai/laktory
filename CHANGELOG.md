@@ -2,7 +2,7 @@
 
 ## [0.4.7] - Unreleased
 ### Added
-* n/a
+* Support for terraform alias providers
 ### Fixed
 * n/a
 ### Updated

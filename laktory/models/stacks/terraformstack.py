@@ -10,6 +10,7 @@ from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.providers.baseprovider import BaseProvider
 
 logger = get_logger(__name__)
 
@@ -57,7 +58,7 @@ class TerraformStack(BaseModel):
         if self.terraform.required_providers is None:
             providers = {}
             for p in self.providers.values():
-                providers[p.resource_name] = TerraformRequiredProvider(
+                providers[p.resource_name_without_alias] = TerraformRequiredProvider(
                     source=p.source, version=p.version
                 )
             self.terraform.required_providers = providers
@@ -78,25 +79,28 @@ class TerraformStack(BaseModel):
         d["resource"] = dict(d["resource"])
         settings.singular_serialization = False
 
-        # Pulumi YAML requires the keyword "resources." to be removed and the
+        # Terraform JSON requires the keyword "resources." to be removed and the
         # resource_name to be replaced with resource_type.resource_name.
         patterns = []
         for r in list(self.resources.values()) + list(self.providers.values()):
             k0 = r.resource_name
             k1 = f"{r.terraform_resource_type}.{r.resource_name}"
-            # special treatment for resources without type (providers)
-            if r.terraform_resource_type is None:
-                k1 = k0
+            if isinstance(r, BaseProvider):
+                # ${resources.resource_name} -> resource_name
+                pattern = r"\$\{resources."+k0+"}"
+                self.variables[pattern] = k0
+                patterns += [pattern]
 
-            # ${resources.resource_name} -> resource_type.resource_name
-            pattern = r"\$\{resources\." + k0 + r"\}"
-            self.variables[pattern] = k1
-            patterns += [pattern]
+            else:
+                # ${resources.resource_name} -> resource_type.resource_name
+                pattern = r"\$\{resources\." + k0 + r"\}"
+                self.variables[pattern] = k1
+                patterns += [pattern]
 
-            # ${resources.resource_name.property} -> ${resource_type.resource_name.property}
-            pattern = r"\$\{resources\." + k0 + r"\.(.*?)\}"
-            self.variables[pattern] = rf"${{{k1}.\1}}"
-            patterns += [pattern]
+                # ${resources.resource_name.property} -> ${resource_type.resource_name.property}
+                pattern = r"\$\{resources\." + k0 + r"\.(.*?)\}"
+                self.variables[pattern] = rf"${{{k1}.\1}}"
+                patterns += [pattern]
 
         d = self.inject_vars(d)
         for p in patterns:
@@ -122,8 +126,19 @@ class TerraformStack(BaseModel):
         if not os.path.exists(CACHE_ROOT):
             os.makedirs(CACHE_ROOT)
 
+        text = json.dumps(self.model_dump(), indent=4)
+
+        # Special treatment of providers with aliases
+        for _, p in self.providers.items():
+            if p.alias is not None:
+                text = text.replace(
+                    f'"{p.resource_name}":',
+                    f'"{p.resource_name_without_alias}":',
+                )
+
+        # Output
         with open(filepath, "w") as fp:
-            json.dump(self.model_dump(), fp, indent=4)
+            fp.write(text)
 
         return filepath
 
