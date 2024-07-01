@@ -7,6 +7,7 @@ from typing import Callable
 from typing import Literal
 from typing import TYPE_CHECKING
 import abc
+import re
 
 from laktory._logger import get_logger
 from laktory.constants import SUPPORTED_DATATYPES
@@ -17,6 +18,7 @@ from laktory.types import AnyDataFrame
 
 if TYPE_CHECKING:
     from laktory.models.datasources.basedatasource import BaseDataSource
+    from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
 
 
 logger = get_logger(__name__)
@@ -131,6 +133,43 @@ class BaseChainNodeColumn(BaseModel):
         return expr
 
 
+class BaseChainNodeSQLExpr(BaseModel):
+    """
+    Chain node SQL expression
+
+    Attributes
+    ----------
+    expr:
+        SQL expression
+    """
+    expr: str
+    _node_data_sources: list[PipelineNodeDataSource] = None
+
+    @property
+    def parsed_expr(self):
+        return self.expr
+
+    @property
+    def node_data_sources(self) -> list[PipelineNodeDataSource]:
+
+        if self.expr is None:
+            return []
+
+        if self._node_data_sources is None:
+
+            from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
+            sources = []
+
+            pattern = r'\{nodes\.(.*?)\}'
+            matches = re.findall(pattern, self.expr)
+            for m in matches:
+                sources += [PipelineNodeDataSource(node_name=m)]
+
+            self._node_data_sources = sources
+
+        return self._node_data_sources
+
+
 # --------------------------------------------------------------------------- #
 # Main Class                                                                  #
 # --------------------------------------------------------------------------- #
@@ -148,6 +187,7 @@ class BaseChainNode(BaseModel):
     _parent: "BaseChain" = None
     _parsed_func_args: list = None
     _parsed_func_kwargs: dict = None
+    _parsed_sql_expr: BaseChainNodeSQLExpr = None
 
     @model_validator(mode="after")
     def selected_flow(self) -> Any:
@@ -209,6 +249,10 @@ class BaseChainNode(BaseModel):
         for a in self.parsed_func_kwargs.values():
             if isinstance(a.value, cls):
                 sources += [a.value]
+
+        if self.sql_expr:
+            sources += self.parsed_sql_expr.node_data_sources
+
         return sources
 
     @abc.abstractmethod

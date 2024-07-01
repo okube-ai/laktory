@@ -177,6 +177,29 @@ def test_execute_node():
     shutil.rmtree(meta_sink_path)
 
 
+def test_pipeline_sql():
+    _pl = pl.copy()
+
+    # Select join node
+    node = _pl.nodes_dict["slv_stock_prices"]
+    t4 = node.transformer.nodes[4]
+
+    t4.sql_expr = """
+    SELECT 
+        *
+    FROM 
+        {df} as df
+    LEFT JOIN 
+        {nodes.slv_stock_meta} as meta
+    ON df.symbol = meta.symbol2
+    ;
+    """
+
+    _pl.execute(spark=spark, write_sinks=False)
+    df = node.output_df
+    assert df.columns == ['_bronze_at', 'created_at', 'symbol', 'close', 'symbol2', 'currency', 'first_traded', '_silver_at']
+
+
 def test_execute_polars():
 
     _pl = pl_polars
@@ -246,6 +269,29 @@ def test_execute_polars():
     os.remove(slv_sink_path)
     os.remove(gld_sink_path)
     os.remove(meta_sink_path)
+
+
+def test_execute_polars_sql():
+    _pl = pl_polars.copy()
+
+    # Select join node
+    node = _pl.nodes_dict["slv_stock_prices"]
+    t4 = node.transformer.nodes[4]
+
+    t4.sql_expr = """
+    SELECT 
+        *
+    FROM 
+        {df} as df
+    LEFT JOIN 
+        {nodes.slv_stock_meta} as meta
+    ON df.symbol = meta.symbol2
+    ;
+    """
+
+    _pl.execute(spark=spark, write_sinks=False)
+    df = node.output_df
+    assert df.columns == ['_bronze_at', 'created_at', 'symbol', 'close', 'currency', 'first_traded', '_silver_at']
 
 
 def test_pipeline_dlt():
@@ -551,6 +597,8 @@ if __name__ == "__main__":
     test_children()
     test_execute()
     test_execute_node()
+    test_pipeline_sql()
     test_execute_polars()
+    test_execute_polars_sql()
     test_pipeline_dlt()
     test_pipeline_job()

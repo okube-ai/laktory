@@ -7,3 +7,7 @@
 --
 
 ::: laktory.models.SparkChainNodeColumn
+
+--
+
+::: laktory.models.SparkChainNodeSQLExpr

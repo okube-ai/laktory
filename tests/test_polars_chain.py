@@ -60,7 +60,7 @@ def test_func_arg(df0=df0):
         assert v1 == v0
 
 
-def test_dataframe_df_input(df0=df0):
+def test_df_input(df0=df0):
     df = df0.select(df0.columns)
 
     # Define Chain
@@ -81,13 +81,13 @@ def test_dataframe_df_input(df0=df0):
     assert df.columns == df0.columns
 
 
-def test_dataframe_sql_expression(df0=df0):
+def test_sql_expression(df0=df0):
     df = df0.select(df0.columns)
 
     sc = models.PolarsChain(
         nodes=[
             {
-                "sql_expr": "SELECT *, x*2 AS x2 FROM self",
+                "sql_expr": "SELECT *, x*2 AS x2 FROM df",
             },
         ]
     )
@@ -96,11 +96,32 @@ def test_dataframe_sql_expression(df0=df0):
     df = sc.execute(df)
 
     # Test
+    df = df.collect()
     assert df.columns == ["x", "a", "b", "c", "n", "pi", "p", "word", "x2"]
     assert df["x2"].to_list() == (df["x"] * 2).to_list()
 
 
-def test_dataframe_table_input(df0=df0):
+def test_sql_with_nodes():
+
+    sc = models.PolarsChain(
+        nodes=[
+            {
+                "sql_expr": "SELECT * FROM df",
+            },
+            {
+                "sql_expr": "SELECT * FROM {df} UNION SELECT * FROM {nodes.node_01} UNION SELECT * FROM {nodes.node_02}",
+            },
+        ]
+    )
+
+    assert sc.nodes[0].parsed_sql_expr.node_data_sources == []
+    assert sc.nodes[1].parsed_sql_expr.node_data_sources == [
+        models.PipelineNodeDataSource(node_name="node_01", dataframe_type="POLARS"),
+        models.PipelineNodeDataSource(node_name="node_02", dataframe_type="POLARS"),
+    ]
+
+
+def test_table_input(df0=df0):
     df = df0.select(df0.columns)
 
     sc = models.PolarsChain(
@@ -327,9 +348,10 @@ def atest_exceptions():
 
 if __name__ == "__main__":
     test_func_arg()
-    test_dataframe_df_input()
-    test_dataframe_sql_expression()
-    test_dataframe_table_input()
+    test_df_input()
+    test_sql_expression()
+    test_sql_with_nodes()
+    test_table_input()
     test_column()
     test_udfs()
     test_nested()
