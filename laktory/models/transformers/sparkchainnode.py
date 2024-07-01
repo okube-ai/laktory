@@ -7,6 +7,7 @@ from laktory._logger import get_logger
 from laktory.models.transformers.basechainnode import BaseChainNode
 from laktory.models.transformers.basechainnode import BaseChainNodeColumn
 from laktory.models.transformers.basechainnode import BaseChainNodeFuncArg
+from laktory.models.transformers.basechainnode import BaseChainNodeSQLExpr
 from laktory.spark import SparkColumn
 from laktory.spark import SparkDataFrame
 
@@ -106,6 +107,27 @@ class SparkChainNodeColumn(BaseChainNodeColumn):
         return expr
 
 
+class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
+    """
+    Chain node SQL expression
+
+    Attributes
+    ----------
+    expr:
+        SQL expression
+    """
+
+    def eval(self, df):
+
+        class Nodes:
+            pass
+
+        nodes = Nodes()
+        for source in self.node_data_sources:
+            setattr(nodes, source.node.name, source.read(spark=df.sparkSession))
+        return df.sparkSession.laktory.sql(self.parsed_expr, df=df, nodes=nodes)
+
+
 # --------------------------------------------------------------------------- #
 # Main Class                                                                  #
 # --------------------------------------------------------------------------- #
@@ -134,7 +156,8 @@ class SparkChainNode(BaseChainNode):
     sql_expr:
         SQL Expression using `{df}` to reference upstream dataframe and
         defining how to build the output dataframe. Mutually exclusive to
-        `func_name` and `with_column`.
+        `func_name` and `with_column`. Other pipeline nodes can also be
+        referenced using {nodes.node_name}.
     with_column:
         Syntactic sugar for adding a column. Mutually exclusive to `func_name`
         and `sql_expr`.
@@ -203,6 +226,7 @@ class SparkChainNode(BaseChainNode):
     _parent: "SparkChain" = None
     _parsed_func_args: list = None
     _parsed_func_kwargs: dict = None
+    _parsed_sql_expr: SparkChainNodeSQLExpr = None
 
     @property
     def parsed_func_args(self):
@@ -219,6 +243,14 @@ class SparkChainNode(BaseChainNode):
                 k: SparkChainNodeFuncArg(value=v) for k, v in self.func_kwargs.items()
             }
         return self._parsed_func_kwargs
+
+    @property
+    def parsed_sql_expr(self):
+        if self.sql_expr is None:
+            return None
+        if not self._parsed_sql_expr:
+            self._parsed_sql_expr = SparkChainNodeSQLExpr(expr=self.sql_expr)
+        return self._parsed_sql_expr
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
@@ -267,8 +299,7 @@ class SparkChainNode(BaseChainNode):
 
         # From SQL expression
         if self.sql_expr:
-            df = df.sparkSession.laktory.sql(self.sql_expr, df=df)
-            return df
+            return self.parsed_sql_expr.eval(df)
 
         # Get Function
         func_name = self.func_name

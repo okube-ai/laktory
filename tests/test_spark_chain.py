@@ -70,7 +70,7 @@ def test_func_arg(df0=df0):
         assert v1 == v0
 
 
-def test_dataframe_df_input(df0=df0):
+def test_df_input(df0=df0):
     df = df0.select(df0.columns)
 
     # Define Chain
@@ -91,7 +91,7 @@ def test_dataframe_df_input(df0=df0):
     assert df.columns == df0.columns
 
 
-def test_dataframe_sql_expression(df0=df0):
+def test_sql_expression(df0=df0):
     df = df0.select(df0.columns)
 
     sc = models.SparkChain(
@@ -113,7 +113,27 @@ def test_dataframe_sql_expression(df0=df0):
     df.show()
 
 
-def test_dataframe_table_input(df0=df0):
+def test_sql_with_nodes():
+
+    sc = models.SparkChain(
+        nodes=[
+            {
+                "sql_expr": "SELECT * FROM {df}",
+            },
+            {
+                "sql_expr": "SELECT * FROM {df} UNION SELECT * FROM {nodes.node_01} UNION SELECT * FROM {nodes.node_02}",
+            },
+        ]
+    )
+
+    assert sc.nodes[0].parsed_sql_expr.node_data_sources == []
+    assert sc.nodes[1].parsed_sql_expr.node_data_sources == [
+        models.PipelineNodeDataSource(node_name="node_01"),
+        models.PipelineNodeDataSource(node_name="node_02"),
+    ]
+
+
+def test_table_input(df0=df0):
     df = df0.select(df0.columns)
 
     sc = models.SparkChain(
@@ -335,9 +355,10 @@ def atest_exceptions():
 
 if __name__ == "__main__":
     test_func_arg()
-    test_dataframe_df_input()
-    test_dataframe_sql_expression()
-    test_dataframe_table_input()
+    test_df_input()
+    test_sql_expression()
+    test_sql_with_nodes()
+    test_table_input()
     test_column()
     test_udfs()
     test_nested()

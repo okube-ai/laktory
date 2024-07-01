@@ -19,6 +19,8 @@ with open(os.path.join(paths.data, "pl-spark-local.yaml"), "r") as fp:
 with open(os.path.join(paths.data, "pl-polars-local.yaml"), "r") as fp:
     pl_polars = models.Pipeline.model_validate_yaml(fp)
 
+with open(os.path.join(paths.data, "pl-polars-local.yaml"), "r") as fp:
+    pl_polars2 = models.Pipeline.model_validate_yaml(fp)
 
 with open(os.path.join(paths.data, "pl-spark-dlt.yaml"), "r") as fp:
     pl_dlt = models.Pipeline.model_validate_yaml(fp)  # also used in test_stack
@@ -29,7 +31,7 @@ brz_sink_path = os.path.join(paths.tmp, "pl_brz_sink")
 slv_sink_path = os.path.join(paths.tmp, "pl_slv_sink")
 gld_sink_path = os.path.join(paths.tmp, "pl_gld_sink")
 meta_sink_path = os.path.join(paths.tmp, "pl_slv_meta_sink")
-for _pl in [pl, pl_polars]:
+for _pl in [pl, pl_polars, pl_polars2]:
     _pl.nodes[0].source.path = os.path.join(paths.data, "brz_stock_prices")
     _pl.nodes[3].source.path = os.path.join(paths.data, "slv_stock_meta")
     _pl.nodes[0].sink.path = os.path.join(paths.tmp, brz_sink_path)
@@ -177,6 +179,29 @@ def test_execute_node():
     shutil.rmtree(meta_sink_path)
 
 
+def test_pipeline_sql():
+    _pl = pl.copy()
+
+    # Select join node
+    node = _pl.nodes_dict["slv_stock_prices"]
+    t4 = node.transformer.nodes[4]
+
+    t4.sql_expr = """
+    SELECT 
+        *
+    FROM 
+        {df} as df
+    LEFT JOIN 
+        {nodes.slv_stock_meta} as meta
+    ON df.symbol = meta.symbol2
+    ;
+    """
+
+    _pl.execute(spark=spark, write_sinks=False)
+    df = node.output_df
+    assert df.columns == ['_bronze_at', 'created_at', 'symbol', 'close', 'symbol2', 'currency', 'first_traded', '_silver_at']
+
+
 def test_execute_polars():
 
     _pl = pl_polars
@@ -246,6 +271,30 @@ def test_execute_polars():
     os.remove(slv_sink_path)
     os.remove(gld_sink_path)
     os.remove(meta_sink_path)
+
+
+def test_execute_polars_sql():
+
+    _pl =pl_polars2.copy()
+
+    # Select join node
+    node = _pl.nodes_dict["slv_stock_prices"]
+    t3 = node.transformer.nodes[3]
+
+    t3.sql_expr = """
+    SELECT 
+        *
+    FROM 
+        {df} as df
+    LEFT JOIN 
+        {nodes.slv_stock_meta} as meta
+    ON df.symbol = meta.symbol2
+    ;
+    """
+
+    _pl.execute(spark=spark, write_sinks=False)
+    df = node.output_df
+    assert df.columns == ['_bronze_at', 'created_at', 'symbol', 'close', 'symbol2', 'currency', 'first_traded', '_silver_at']
 
 
 def test_pipeline_dlt():
@@ -551,6 +600,8 @@ if __name__ == "__main__":
     test_children()
     test_execute()
     test_execute_node()
+    test_pipeline_sql()
     test_execute_polars()
+    test_execute_polars_sql()
     test_pipeline_dlt()
     test_pipeline_job()

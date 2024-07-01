@@ -2,11 +2,11 @@
 
 ## [0.4.8] - Unreleased
 ### Added
-* n/a
+* Support for referencing nodes in SQL queries
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Support for Polars 1.0
 ### Breaking changes
 * n/a
 

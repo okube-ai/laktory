@@ -33,12 +33,6 @@ nodes:
         type: double
         sql_expr: data.close
 
-    - func_name: drop
-      func_args:
-      - data
-      - producer
-      - name
-      - description
     - func_name: laktory.smart_join
       func_kwargs:
         'on':
