@@ -106,7 +106,7 @@ def test_sql_with_nodes():
     sc = models.PolarsChain(
         nodes=[
             {
-                "sql_expr": "SELECT * FROM df",
+                "sql_expr": "SELECT * FROM {df}",
             },
             {
                 "sql_expr": "SELECT * FROM {df} UNION SELECT * FROM {nodes.node_01} UNION SELECT * FROM {nodes.node_02}",
