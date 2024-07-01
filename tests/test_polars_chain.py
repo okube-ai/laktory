@@ -87,7 +87,7 @@ def test_sql_expression(df0=df0):
     sc = models.PolarsChain(
         nodes=[
             {
-                "sql_expr": "SELECT *, x*2 AS x2 FROM df",
+                "sql_expr": "SELECT *, x*2 AS x2 FROM {df}",
             },
         ]
     )
