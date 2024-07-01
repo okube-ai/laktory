@@ -84,4 +84,4 @@ def groupby_and_agg(
         expr.type = None
         aggs += [expr.eval().alias(expr.name)]
 
-    return df.groupby(groupby).agg(*aggs)
+    return df.group_by(groupby).agg(*aggs)

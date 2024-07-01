@@ -100,7 +100,7 @@ def test_join():
 
     # Left and Other on
     df2 = left.laktory.smart_join(
-        other=df_meta_polars.drop("symbol"),
+        other=df_meta_polars,
         left_on="symbol",
         other_on="symbol2",
     )
@@ -228,10 +228,10 @@ def test_window_filter():
 
 
 if __name__ == "__main__":
-    test_df_schema_flat()
-    test_df_has_column()
-    test_union()
-    test_join()
-    test_join_outer()
+    # test_df_schema_flat()
+    # test_df_has_column()
+    # test_union()
+    # test_join()
+    # test_join_outer()
     test_aggregation()
-    test_window_filter()
+    # test_window_filter()
