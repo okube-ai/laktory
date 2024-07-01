@@ -57,7 +57,7 @@ pulumi = [
 # DataFrame
 polars = [
     "deltalake",
-    "polars",
+    "polars>=1.0",
     "sqlparse",
 ]
 spark = [

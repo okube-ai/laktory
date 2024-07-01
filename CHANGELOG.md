@@ -6,7 +6,7 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Support for Polars 1.0
 ### Breaking changes
 * n/a
 
