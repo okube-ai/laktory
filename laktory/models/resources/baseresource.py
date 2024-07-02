@@ -1,7 +1,9 @@
 import re
 from typing import Any
+from typing import Literal
 from pydantic import AliasChoices
 from pydantic import Field
+from pydantic import model_validator
 from pydantic import BaseModel as _BaseModel
 from laktory.models.basemodel import BaseModel
 
@@ -55,6 +57,19 @@ class ResourceOptions(BaseModel):
     replace_on_changes: list[str] = None
 
 
+class ResourceLookup(BaseModel):
+    """
+    Lookup existing resource.
+
+    Attributes
+    ----------
+    id:
+        Resource id
+    """
+
+    id: str
+
+
 class BaseResource(_BaseModel):
     """
     Parent class for all Laktory models deployable as one or multiple cloud
@@ -63,6 +78,8 @@ class BaseResource(_BaseModel):
 
     Attributes
     ----------
+    lookup_id:
+        Get existing resource using id. Mutually exclusive to other attributes.
     resource_name:
         Name of the resource in the context of infrastructure as code. If None,
         `default_resource_name` will be used instead.
@@ -76,7 +93,40 @@ class BaseResource(_BaseModel):
         exclude=True,
     )
     options: ResourceOptions = Field(ResourceOptions(), exclude=True)
+    lookup_existing: ResourceLookup = Field(None, exclude=True)
     _core_resources: list[Any] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def base_lookup(cls, data: Any) -> Any:
+
+        if "lookup_existing" not in data:
+            return data
+
+        for fname, f in cls.model_fields.items():
+            if f.is_required():
+                if f.annotation == str:
+                    data[fname] = ""
+                elif isinstance(f.annotation, type(Literal[0])):
+                    _ann = (
+                        str(f.annotation)
+                        .replace("typing.Literal[", "")
+                        .replace("]", "")
+                        .replace("'", "")
+                    )
+                    options = _ann.split(",")
+                    data[fname] = options[0]
+                elif str(f.annotation).startswith("list"):
+                    data[fname] = []
+
+        for k, v in cls.lookup_defaults().items():
+            data[k] = v
+
+        return data
+
+    @classmethod
+    def lookup_defaults(cls) -> dict:
+        return {}
 
     @property
     def resource_name(self) -> str:

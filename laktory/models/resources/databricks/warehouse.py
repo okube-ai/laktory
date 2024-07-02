@@ -115,7 +115,7 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     jdbc_url: str = None
     max_num_clusters: int = None
     min_num_clusters: int = None
-    name: str = None
+    name: str
     num_clusters: int = None
     # odbc_params
     spot_instance_policy: Union[
@@ -161,9 +161,9 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     def pulumi_properties(self):
         d = super().pulumi_properties
         if settings.camel_serialization:
-            d["channel"] = {"name": d.pop("channelName")}
+            d["channel"] = {"name": d.pop("channelName", None)}
         else:
-            d["channel"] = {"name": d.pop("channel_name")}
+            d["channel"] = {"name": d.pop("channel_name", None)}
         return d
 
     # ----------------------------------------------------------------------- #
@@ -175,11 +175,15 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
         return "databricks_sql_endpoint"
 
     @property
+    def terraform_resource_lookup_type(self) -> str:
+        return "databricks_sql_warehouse"
+
+    @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
         return self.pulumi_excludes
 
     @property
     def terraform_properties(self) -> dict:
         d = super().terraform_properties
-        d["channel"] = {"name": d.pop("channel_name")}
+        d["channel"] = {"name": d.pop("channel_name", None)}
         return d

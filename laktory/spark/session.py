@@ -18,6 +18,7 @@ class LaktorySparkSession:
     definition from the disk and assign it to a laktory namespace so that it
     can be used in addition to the overwritten sql.
     """
+
     def __init__(self, spark: SparkSession):
         self._spark = spark
 
@@ -25,4 +26,7 @@ class LaktorySparkSession:
     def sql(self, *args, **kwargs):
         return spark0.SparkSession.sql(self._spark, *args, **kwargs)
 
-SparkSession.laktory: LaktorySparkSession = property(lambda self: LaktorySparkSession(self))
+
+SparkSession.laktory: LaktorySparkSession = property(
+    lambda self: LaktorySparkSession(self)
+)

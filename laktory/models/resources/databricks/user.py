@@ -16,9 +16,6 @@ class User(BaseModel, PulumiResource, TerraformResource):
         If `True` user is disabled instead of delete when the resource is deleted
     display_name:
         Display name for the user
-    id:
-        Id of the user. Generally used when the user is externally managed
-        with an identity provider such as Azure AD, Okta or OneLogin.
     group_ids:
         List of the group ids that the user should be member of.
     roles:
@@ -45,7 +42,6 @@ class User(BaseModel, PulumiResource, TerraformResource):
 
     disable_as_user_deletion: bool = False
     display_name: str = None
-    id: Union[str, None] = None
     group_ids: list[str] = []
     roles: list[str] = []
     user_name: str
@@ -95,7 +91,7 @@ class User(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["groups", "roles", "id", "group_ids"]
+        return ["groups", "roles", "group_ids"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

@@ -60,10 +60,6 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:ServicePrincipal"
-
-    @property
     def resource_key(self) -> str:
         return self.display_name
 
@@ -96,6 +92,10 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:ServicePrincipal"
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:

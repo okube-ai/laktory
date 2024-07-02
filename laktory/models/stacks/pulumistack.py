@@ -54,6 +54,14 @@ class PulumiStack(BaseModel):
                 "properties": r.pulumi_properties,
                 "options": r.options.model_dump(exclude_none=True),
             }
+
+            lookup = r.lookup_existing
+            if lookup is not None:
+                d["resources"][r.resource_name]["get"] = lookup.model_dump(
+                    exclude_unset=True
+                )
+                del d["resources"][r.resource_name]["properties"]
+
         settings.camel_serialization = False
 
         # Pulumi YAML requires the keyword "resources." to be removed

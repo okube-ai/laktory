@@ -122,7 +122,7 @@ class PolarsChainNodeSQLExpr(BaseChainNodeSQLExpr):
     @property
     def parsed_expr(self) -> str:
         expr = self.expr.replace("{df}", "df")
-        pattern = r'\{nodes\.(.*?)\}'
+        pattern = r"\{nodes\.(.*?)\}"
         matches = re.findall(pattern, expr)
         for m in matches:
             expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
@@ -135,6 +135,7 @@ class PolarsChainNodeSQLExpr(BaseChainNodeSQLExpr):
         for source in self.node_data_sources:
             kwargs[f"nodes__{source.node.name}"] = source.read()
         return pl.SQLContext(frames=kwargs).execute(self.parsed_expr)
+
 
 # --------------------------------------------------------------------------- #
 # Main Class                                                                  #

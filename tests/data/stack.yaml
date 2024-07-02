@@ -58,6 +58,14 @@ resources:
 #            pipeline_id: ${databricks_pipeline.pl-custom-name.id}  # TERRAFORM STYLE
 #            pipeline_id: ${pl-custom-name.id}  # PULUMI STYLE
 
+  databricks_warehouses:
+    warehouse-external:
+      lookup_existing:
+        id: "d2fa41bf94858c4b"
+      access_controls:
+      - group_name: role-analysts
+        permission_level: CAN_USE
+
 environments:
   dev:
     variables:
