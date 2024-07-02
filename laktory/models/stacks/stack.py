@@ -392,6 +392,11 @@ class Stack(BaseModel):
                     if field_name == "resource_name_" and model.resource_name_:
                         data["resource_name_"] = model.resource_name_
 
+                    if field_name == "lookup_existing" and model.lookup_existing:
+                        data["lookup_existing"] = model.lookup_existing.model_dump(
+                            exclude_unset=True
+                        )
+
                     # Parse list
                     if isinstance(data.get(field_name, None), list):
                         data[field_name] = [

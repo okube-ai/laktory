@@ -8,7 +8,6 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
-from laktory.models.datasources.tabledatasource import TableDataSource
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -237,6 +236,10 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     serverless: bool = None
     storage: str = None
     target: str = None
+
+    @classmethod
+    def lookup_id_alias(cls) -> str:
+        return "name"
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

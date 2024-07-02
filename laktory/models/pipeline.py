@@ -555,7 +555,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             for s in n.get_sources(PipelineNodeDataSource):
                 dag.add_edge(s.node_name, n.name)
                 if s.node_name not in self.nodes_dict:
-                    raise ValueError(f"Pipeline node data source '{s.node_name}' is not defined in pipeline '{self.name}'")
+                    raise ValueError(
+                        f"Pipeline node data source '{s.node_name}' is not defined in pipeline '{self.name}'"
+                    )
                 s.node = self.nodes_dict[s.node_name]
 
         if not nx.is_directed_acyclic_graph(dag):

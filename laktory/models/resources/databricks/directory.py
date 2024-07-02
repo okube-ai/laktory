@@ -35,6 +35,10 @@ class Directory(BaseModel, PulumiResource, TerraformResource):
     path: str
     delete_recursive: Union[bool, None] = None
 
+    @classmethod
+    def lookup_id_alias(cls) -> str:
+        return "path"
+
     @property
     def resource_key(self) -> str:
         """path with special characters `/`, `.`, `\\` replaced with `-`"""

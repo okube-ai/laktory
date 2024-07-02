@@ -17,9 +17,6 @@ class Group(BaseModel, PulumiResource, TerraformResource):
         When `True`, the group is allowed to have cluster create permissions
     display_name:
         Display name for the group.
-    id:
-        Id of the group. Generally used when the group is externally managed
-        with an identity provider such as Azure AD, Okta or OneLogin.
     workspace_access
         When `True`, the group is allowed to have workspace access
 
@@ -34,9 +31,12 @@ class Group(BaseModel, PulumiResource, TerraformResource):
 
     allow_cluster_create: bool = False
     display_name: str
-    id: Union[str, None] = None
     workspace_access: bool = None
     workspace_permission_assignments: list[MwsPermissionAssignment] = None
+
+    @classmethod
+    def lookup_id_alias(cls) -> str:
+        return "display_name"
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

@@ -714,6 +714,10 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     trigger: JobTrigger = None
     webhook_notifications: JobWebhookNotifications = None
 
+    @classmethod
+    def lookup_id_alias(cls) -> str:
+        return "name"
+
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #

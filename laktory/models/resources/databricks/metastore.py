@@ -91,6 +91,10 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     workspace_provider: str = None
     workspace_assignments: list[MetastoreAssignment] = None
 
+    @classmethod
+    def lookup_id_alias(cls) -> str:
+        return "name"
+
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #

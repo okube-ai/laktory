@@ -90,6 +90,10 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     schemas: list[Schema] = []
     storage_root: str = None
 
+    @classmethod
+    def lookup_id_alias(cls) -> str:
+        return "name"
+
     def model_post_init(self, __context):
         super().model_post_init(__context)
         for schema in self.schemas:

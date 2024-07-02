@@ -1,5 +1,7 @@
 from typing import Literal
 from typing import Union
+from typing import Any
+from pydantic import model_validator
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -125,6 +127,18 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     tags: WarehouseTags = None
     warehouse_type: Union[Literal["CLASSIC", "PRO"], str] = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def lookup(cls, data: Any) -> Any:
+        if "lookup_existing" in data:
+            data["cluster_size"] = "2X-Small"
+
+        return data
+
+    @classmethod
+    def lookup_id_alias(cls) -> str:
+        return "name"
+
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
@@ -161,9 +175,9 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     def pulumi_properties(self):
         d = super().pulumi_properties
         if settings.camel_serialization:
-            d["channel"] = {"name": d.pop("channelName")}
+            d["channel"] = {"name": d.pop("channelName", None)}
         else:
-            d["channel"] = {"name": d.pop("channel_name")}
+            d["channel"] = {"name": d.pop("channel_name", None)}
         return d
 
     # ----------------------------------------------------------------------- #
@@ -181,5 +195,5 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_properties(self) -> dict:
         d = super().terraform_properties
-        d["channel"] = {"name": d.pop("channel_name")}
+        d["channel"] = {"name": d.pop("channel_name", None)}
         return d

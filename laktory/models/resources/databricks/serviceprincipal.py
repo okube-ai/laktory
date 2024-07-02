@@ -55,13 +55,13 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     group_ids: list[str] = []
     roles: list[str] = []
 
+    @classmethod
+    def lookup_id_alias(cls) -> str:
+        return "display_name"
+
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:ServicePrincipal"
 
     @property
     def resource_key(self) -> str:
@@ -96,6 +96,10 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_resource_type(self) -> str:
+        return "databricks:ServicePrincipal"
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:

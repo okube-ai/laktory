@@ -313,6 +313,10 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     ssh_public_keys: list[str] = []
     # workload_type:
 
+    @classmethod
+    def lookup_id_alias(cls) -> str:
+        return "name"
+
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #

@@ -142,6 +142,7 @@ class BaseChainNodeSQLExpr(BaseModel):
     expr:
         SQL expression
     """
+
     expr: str
     _node_data_sources: list[PipelineNodeDataSource] = None
 
@@ -157,10 +158,13 @@ class BaseChainNodeSQLExpr(BaseModel):
 
         if self._node_data_sources is None:
 
-            from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
+            from laktory.models.datasources.pipelinenodedatasource import (
+                PipelineNodeDataSource,
+            )
+
             sources = []
 
-            pattern = r'\{nodes\.(.*?)\}'
+            pattern = r"\{nodes\.(.*?)\}"
             matches = re.findall(pattern, self.expr)
             for m in matches:
                 sources += [PipelineNodeDataSource(node_name=m)]

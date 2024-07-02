@@ -3,6 +3,7 @@
 ## [0.4.8] - Unreleased
 ### Added
 * Support for referencing nodes in SQL queries
+* Support for looking up existing resources
 ### Fixed
 * n/a
 ### Updated

@@ -2,6 +2,7 @@ import re
 from typing import Any
 from pydantic import AliasChoices
 from pydantic import Field
+from pydantic import model_validator
 from pydantic import BaseModel as _BaseModel
 from laktory.models.basemodel import BaseModel
 
@@ -55,6 +56,19 @@ class ResourceOptions(BaseModel):
     replace_on_changes: list[str] = None
 
 
+class ResourceLookup(BaseModel):
+    """
+    Lookup existing resource.
+
+    Attributes
+    ----------
+    id:
+        Resource id
+    """
+
+    id: str
+
+
 class BaseResource(_BaseModel):
     """
     Parent class for all Laktory models deployable as one or multiple cloud
@@ -63,6 +77,8 @@ class BaseResource(_BaseModel):
 
     Attributes
     ----------
+    lookup_id:
+        Get existing resource using id. Mutually exclusive to other attributes.
     resource_name:
         Name of the resource in the context of infrastructure as code. If None,
         `default_resource_name` will be used instead.
@@ -76,7 +92,24 @@ class BaseResource(_BaseModel):
         exclude=True,
     )
     options: ResourceOptions = Field(ResourceOptions(), exclude=True)
+    lookup_existing: ResourceLookup = Field(None, exclude=True)
     _core_resources: list[Any] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def base_lookup(cls, data: Any) -> Any:
+        if (
+            "lookup_existing" in data
+            and "id" in data["lookup_existing"]
+            and cls.lookup_id_alias()
+        ):
+            data[cls.lookup_id_alias()] = data["lookup_existing"]["id"]
+
+        return data
+
+    @classmethod
+    def lookup_id_alias(cls) -> str:
+        return None
 
     @property
     def resource_name(self) -> str:
