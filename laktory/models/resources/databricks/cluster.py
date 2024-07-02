@@ -1,9 +1,8 @@
 from typing import Literal
 from typing import Union
-from typing import Any
 from pydantic import Field
-from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.accesscontrol import AccessControl
@@ -122,6 +121,17 @@ class ClusterLibrary(BaseModel):
     whl: str = None
 
 
+class ClusterLookup(ResourceLookup):
+    """
+    Attributes
+    ----------
+    cluster_id:
+        The id of the cluster
+    """
+
+    cluster_id: str = Field(serialization_alias="id")
+
+
 class Cluster(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks cluster
@@ -212,6 +222,9 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
         Databricks documentation for actual number).
     libraries:
         List of libraries specifications
+    lookup_existing:
+        Specifications for looking up existing resource. Other attributes will
+        be ignored.
     name:
         Cluster name, which doesn’t have to be unique. If not specified at
         creation, the cluster name will be an empty string.
@@ -303,6 +316,7 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     instance_pool_id: str = None
     is_pinned: bool = True
     libraries: list[ClusterLibrary] = []
+    lookup_existing: ClusterLookup = Field(None, exclude=True)
     name: str = None
     node_type_id: str = Field(...)
     num_workers: int = None

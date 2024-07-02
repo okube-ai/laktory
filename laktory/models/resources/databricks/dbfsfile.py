@@ -2,11 +2,27 @@ import os
 from typing import Any
 from typing import Union
 from pydantic import model_validator
+from pydantic import Field
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
+
+
+class DbfsFileLookup(ResourceLookup):
+    """
+    Attributes
+    ----------
+    path:
+        Path on DBFS for the file from which to get content.
+    limit_file_size:
+        Do not load content for files larger than 4MB.
+    """
+
+    path: str = Field(serialization_alias="id")
+    limit_file_size: bool = True
 
 
 class DbfsFile(BaseModel, PulumiResource, TerraformResource):
@@ -20,6 +36,9 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
     dirpath:
         Workspace directory containing the file. Filename will be assumed to be the same as local filepath. Used if path
         is not specified.
+    lookup_existing:
+        Specifications for looking up existing resource. Other attributes will
+        be ignored.
     path:
          DBFS filepath for the file
     source:
@@ -28,6 +47,7 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
 
     access_controls: list[AccessControl] = []
     dirpath: str = None
+    lookup_existing: DbfsFileLookup = Field(None, exclude=True)
     path: str = None
     source: str
 

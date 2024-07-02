@@ -1,11 +1,24 @@
 from typing import Union
+from pydantic import Field
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
 from laktory.models.grants.metastoregrant import MetastoreGrant
 from laktory.models.resources.databricks.grants import Grants
+
+
+class MetastoreLookup(ResourceLookup):
+    """
+    Attributes
+    ----------
+    metastore_id:
+        ID of the metastore
+    """
+
+    metastore_id: str = Field(serialization_alias="id")
 
 
 class Metastore(BaseModel, PulumiResource, TerraformResource):
@@ -41,6 +54,9 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         todo
     grants:
         List of grants operating on the metastore
+    lookup_existing:
+        Specifications for looking up existing resource. Other attributes will
+        be ignored.
     metastore_id:
         todo
     name:
@@ -80,6 +96,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     force_destroy: bool = None
     global_metastore_id: str = None
     grants: list[MetastoreGrant] = None
+    lookup_existing: MetastoreLookup = Field(None, exclude=True)
     metastore_id: str = None
     name: str = None
     owner: str = None

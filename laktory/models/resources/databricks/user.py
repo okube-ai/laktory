@@ -1,9 +1,22 @@
 from typing import Union
+from pydantic import Field
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.userrole import UserRole
 from laktory.models.resources.databricks.groupmember import GroupMember
+
+
+class UserLookup(ResourceLookup):
+    """
+    Attributes
+    ----------
+    user_id:
+         ID of the user
+    """
+
+    user_id: str = Field(serialization_alias="id")
 
 
 class User(BaseModel, PulumiResource, TerraformResource):
@@ -18,6 +31,9 @@ class User(BaseModel, PulumiResource, TerraformResource):
         Display name for the user
     group_ids:
         List of the group ids that the user should be member of.
+    lookup_existing:
+        Specifications for looking up existing resource. Other attributes will
+        be ignored.
     roles:
         List of roles assigned to the user e.g. ("account_admin")
     workspace_access
@@ -43,6 +59,7 @@ class User(BaseModel, PulumiResource, TerraformResource):
     disable_as_user_deletion: bool = False
     display_name: str = None
     group_ids: list[str] = []
+    lookup_existing: UserLookup = Field(None, exclude=True)
     roles: list[str] = []
     user_name: str
     workspace_access: bool = None

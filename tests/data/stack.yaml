@@ -66,6 +66,14 @@ resources:
       - group_name: role-analysts
         permission_level: CAN_USE
 
+  databricks_notebooks:
+    notebook-external:
+      lookup_existing:
+        path: "/Workspace/external"
+      access_controls:
+      - group_name: role-analysts
+        permission_level: CAN_READ
+
 environments:
   dev:
     variables:

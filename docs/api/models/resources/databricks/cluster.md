@@ -35,3 +35,7 @@
 ---
 
 ::: laktory.models.resources.databricks.cluster.ClusterLibrary
+
+---
+
+::: laktory.models.resources.databricks.cluster.ClusterLookup

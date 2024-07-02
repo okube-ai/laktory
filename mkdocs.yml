@@ -173,7 +173,10 @@ nav:
         - TerraformResource: api/models/resources/terraformresource.md
         - Databricks:
           - AccessControl: api/models/resources/databricks/accesscontrol.md
+          - api/models/resources/databricks/catalog.md
           - api/models/resources/databricks/cluster.md
+          - api/models/resources/databricks/column.md
+          - DbfsFile: api/models/resources/databricks/dbfsfile.md
           - api/models/resources/databricks/directory.md
           - DLT Pipeline: api/models/resources/databricks/dltpipeline.md
           - ExternalLocation: api/models/resources/databricks/externallocation.md
@@ -184,23 +187,20 @@ nav:
           - MetastoreAssignment: api/models/resources/databricks/metastoreassignment.md
           - MetastoreDataAccess: api/models/resources/databricks/metastoredataaccess.md
           - MwsPermissionAssignment: api/models/resources/databricks/mwspermissionassignment.md
-          - api/models/resources/databricks/mws.md
           - api/models/resources/databricks/notebook.md
+          - api/models/resources/databricks/schema.md
           - api/models/resources/databricks/secret.md
           - SecretAcl: api/models/resources/databricks/secretacl.md
           - SecretScope: api/models/resources/databricks/secretscope.md
           - ServicePrincipal: api/models/resources/databricks/serviceprincipal.md
           - ServicePrincipalRole: api/models/resources/databricks/serviceprincipalrole.md
           - SqlQuery: api/models/resources/databricks/sqlquery.md
+          - api/models/resources/databricks/table.md
           - api/models/resources/databricks/user.md
           - UserRole: api/models/resources/databricks/userrole.md
+          - api/models/resources/databricks/volume.md
           - api/models/resources/databricks/warehouse.md
           - WorkspaceFile: api/models/resources/databricks/workspacefile.md
-          - api/models/resources/databricks/catalog.md
-          - api/models/resources/databricks/column.md
-          - api/models/resources/databricks/schema.md
-          - api/models/resources/databricks/table.md
-          - api/models/resources/databricks/volume.md
         - Providers:
           - AzureProvider: api/models/resources/providers/azure.md
           - AzurePulumiProvider: api/resources/models/providers/azurepulumi.md
