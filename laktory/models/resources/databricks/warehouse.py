@@ -1,7 +1,5 @@
 from typing import Literal
 from typing import Union
-from typing import Any
-from pydantic import model_validator
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -117,7 +115,7 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     jdbc_url: str = None
     max_num_clusters: int = None
     min_num_clusters: int = None
-    name: str = None
+    name: str
     num_clusters: int = None
     # odbc_params
     spot_instance_policy: Union[
@@ -126,18 +124,6 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     # state
     tags: WarehouseTags = None
     warehouse_type: Union[Literal["CLASSIC", "PRO"], str] = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def lookup(cls, data: Any) -> Any:
-        if "lookup_existing" in data:
-            data["cluster_size"] = "2X-Small"
-
-        return data
-
-    @classmethod
-    def lookup_id_alias(cls) -> str:
-        return "name"
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

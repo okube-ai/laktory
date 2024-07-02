@@ -33,8 +33,8 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     source: str
 
     @classmethod
-    def lookup_id_alias(cls) -> str:
-        return "source"
+    def lookup_defaults(cls) -> dict:
+        return {"path": ""}
 
     @property
     def filename(self) -> str:

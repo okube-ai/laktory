@@ -218,7 +218,7 @@ def test_stack_model():
                     "jdbc_url": None,
                     "max_num_clusters": None,
                     "min_num_clusters": None,
-                    "name": "d2fa41bf94858c4b",
+                    "name": "",
                     "num_clusters": None,
                     "spot_instance_policy": None,
                     "tags": None,

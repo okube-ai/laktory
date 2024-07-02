@@ -1,5 +1,6 @@
 import re
 from typing import Any
+from typing import Literal
 from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import model_validator
@@ -98,18 +99,34 @@ class BaseResource(_BaseModel):
     @model_validator(mode="before")
     @classmethod
     def base_lookup(cls, data: Any) -> Any:
-        if (
-            "lookup_existing" in data
-            and "id" in data["lookup_existing"]
-            and cls.lookup_id_alias()
-        ):
-            data[cls.lookup_id_alias()] = data["lookup_existing"]["id"]
+
+        if "lookup_existing" not in data:
+            return data
+
+        for fname, f in cls.model_fields.items():
+            if f.is_required():
+                if f.annotation == str:
+                    data[fname] = ""
+                elif isinstance(f.annotation, type(Literal[0])):
+                    _ann = (
+                        str(f.annotation)
+                        .replace("typing.Literal[", "")
+                        .replace("]", "")
+                        .replace("'", "")
+                    )
+                    options = _ann.split(",")
+                    data[fname] = options[0]
+                elif str(f.annotation).startswith("list"):
+                    data[fname] = []
+
+        for k, v in cls.lookup_defaults().items():
+            data[k] = v
 
         return data
 
     @classmethod
-    def lookup_id_alias(cls) -> str:
-        return None
+    def lookup_defaults(cls) -> dict:
+        return {}
 
     @property
     def resource_name(self) -> str:

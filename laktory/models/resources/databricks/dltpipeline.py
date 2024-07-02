@@ -237,10 +237,6 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     storage: str = None
     target: str = None
 
-    @classmethod
-    def lookup_id_alias(cls) -> str:
-        return "name"
-
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #

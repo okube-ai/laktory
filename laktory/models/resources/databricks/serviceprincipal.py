@@ -55,10 +55,6 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     group_ids: list[str] = []
     roles: list[str] = []
 
-    @classmethod
-    def lookup_id_alias(cls) -> str:
-        return "display_name"
-
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #

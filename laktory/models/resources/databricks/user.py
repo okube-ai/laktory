@@ -47,10 +47,6 @@ class User(BaseModel, PulumiResource, TerraformResource):
     user_name: str
     workspace_access: bool = None
 
-    @classmethod
-    def lookup_id_alias(cls) -> str:
-        return "user_name"
-
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #

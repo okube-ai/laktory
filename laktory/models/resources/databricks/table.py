@@ -79,10 +79,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     view_definition: str = None
     warehouse_id: str = None
 
-    @classmethod
-    def lookup_id_alias(cls) -> str:
-        return "name"
-
     # ----------------------------------------------------------------------- #
     # Validators                                                              #
     # ----------------------------------------------------------------------- #

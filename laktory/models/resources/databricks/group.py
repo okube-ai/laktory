@@ -34,10 +34,6 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     workspace_access: bool = None
     workspace_permission_assignments: list[MwsPermissionAssignment] = None
 
-    @classmethod
-    def lookup_id_alias(cls) -> str:
-        return "display_name"
-
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #

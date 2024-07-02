@@ -62,10 +62,6 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     tables: list[Table] = []
     volumes: list[Volume] = []
 
-    @classmethod
-    def lookup_id_alias(cls) -> str:
-        return "name"
-
     def model_post_init(self, __context):
         super().model_post_init(__context)
         for table in self.tables:

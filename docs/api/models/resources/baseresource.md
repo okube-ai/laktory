@@ -5,3 +5,7 @@
 ---
 
 ::: laktory.models.resources.baseresource.ResourceOptions
+
+---
+
+::: laktory.models.resources.baseresource.ResourceLookup
