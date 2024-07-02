@@ -1,11 +1,24 @@
 from typing import Union
+from pydantic import Field
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.serviceprincipalrole import (
     ServicePrincipalRole,
 )
 from laktory.models.resources.databricks.groupmember import GroupMember
+
+
+class ServicePrincipalLookup(ResourceLookup):
+    """
+    Attributes
+    ----------
+    application_id:
+        ID of the service principal. The service principal must exist before this resource can be retrieved.
+    """
+
+    application_id: str = Field(serialization_alias="id")
 
 
 class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
@@ -26,6 +39,9 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
         Display name for the service principal
     group_ids:
         List of the group ids that the user should be member of.
+    lookup_existing:
+        Specifications for looking up existing resource. Other attributes will
+        be ignored.
     roles:
         List of roles assigned to the user e.g. ("account_admin")
 
@@ -52,6 +68,7 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     application_id: str = None
     disable_as_user_deletion: bool = False
     display_name: str
+    lookup_existing: ServicePrincipalLookup = Field(None, exclude=True)
     group_ids: list[str] = []
     roles: list[str] = []
 

@@ -5,6 +5,7 @@ from pydantic import model_validator
 from pydantic import Field
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.cluster import ClusterLibrary
 from laktory.models.resources.databricks.accesscontrol import AccessControl
@@ -589,6 +590,17 @@ class JobWebhookNotifications(BaseModel):
     on_successes: list[JobWebhookNotificationsOnSuccess] = None
 
 
+class JobLookup(ResourceLookup):
+    """
+    Attributes
+    ----------
+    id:
+        The id of the databricks job
+    """
+
+    id: str = Field(serialization_alias="id")
+
+
 class Job(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Job
@@ -612,6 +624,9 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     format:
     health:
         Health specifications
+    lookup_existing:
+        Specifications for looking up existing resource. Other attributes will
+        be ignored.
     max_concurrent_runs:
         An optional maximum allowed number of concurrent runs of the job. Defaults to 1.
     max_retries:
@@ -698,6 +713,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     email_notifications: JobEmailNotifications = None
     format: str = None
     health: JobHealth = None
+    lookup_existing: JobLookup = Field(None, exclude=True)
     max_concurrent_runs: int = None
     max_retries: int = None
     min_retry_interval_millis: int = None

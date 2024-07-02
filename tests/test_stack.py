@@ -189,7 +189,22 @@ def test_stack_model():
             },
             "databricks_metastoredataaccesses": {},
             "databricks_metastores": {},
-            "databricks_notebooks": {},
+            "databricks_notebooks": {
+                "notebook-external": {
+                    "access_controls": [
+                        {
+                            "group_name": "role-analysts",
+                            "permission_level": "CAN_READ",
+                            "service_principal_name": None,
+                            "user_name": None,
+                        }
+                    ],
+                    "dirpath": None,
+                    "language": None,
+                    "path": None,
+                    "source": "",
+                }
+            },
             "databricks_dltpipelines": {},
             "databricks_schemas": {},
             "databricks_secrets": {},
@@ -441,6 +456,24 @@ def test_pulumi_stack():
                 },
                 "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
+            "notebook-external": {
+                "type": "databricks:Notebook",
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "get": {"id": "/Workspace/external"},
+            },
+            "permissions-notebook-external": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "role-analysts", "permissionLevel": "CAN_READ"}
+                    ],
+                    "notebookPath": "${notebook-external.path}",
+                },
+                "options": {
+                    "dependsOn": ["${notebook-external}"],
+                    "deleteBeforeReplace": True,
+                },
+            },
             "warehouse-external": {
                 "type": "databricks:SqlEndpoint",
                 "options": {"dependsOn": [], "deleteBeforeReplace": True},
@@ -586,6 +619,24 @@ def test_pulumi_stack():
                     ],
                 },
                 "options": {"dependsOn": [], "deleteBeforeReplace": True},
+            },
+            "notebook-external": {
+                "type": "databricks:Notebook",
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "get": {"id": "/Workspace/external"},
+            },
+            "permissions-notebook-external": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "role-analysts", "permissionLevel": "CAN_READ"}
+                    ],
+                    "notebookPath": "${notebook-external.path}",
+                },
+                "options": {
+                    "dependsOn": ["${notebook-external}"],
+                    "deleteBeforeReplace": True,
+                },
             },
             "warehouse-external": {
                 "type": "databricks:SqlEndpoint",
@@ -749,6 +800,13 @@ def test_terraform_stack():
                 }
             },
             "databricks_permissions": {
+                "permissions-notebook-external": {
+                    "notebook_path": "${data.databricks_notebook.notebook-external.path}",
+                    "access_control": [
+                        {"group_name": "role-analysts", "permission_level": "CAN_READ"}
+                    ],
+                    "depends_on": ["data.databricks_notebook.notebook-external"],
+                },
                 "permissions-warehouse-external": {
                     "sql_endpoint_id": "${data.databricks_sql_warehouse.warehouse-external.id}",
                     "access_control": [
@@ -796,9 +854,12 @@ def test_terraform_stack():
             },
         },
         "data": {
+            "databricks_notebook": {
+                "notebook-external": {"path": "/Workspace/external", "format": "SOURCE"}
+            },
             "databricks_sql_warehouse": {
                 "warehouse-external": {"id": "d2fa41bf94858c4b"}
-            }
+            },
         },
     }
 
@@ -863,6 +924,13 @@ def test_terraform_stack():
                 }
             },
             "databricks_permissions": {
+                "permissions-notebook-external": {
+                    "notebook_path": "${data.databricks_notebook.notebook-external.path}",
+                    "access_control": [
+                        {"group_name": "role-analysts", "permission_level": "CAN_READ"}
+                    ],
+                    "depends_on": ["data.databricks_notebook.notebook-external"],
+                },
                 "permissions-warehouse-external": {
                     "sql_endpoint_id": "${data.databricks_sql_warehouse.warehouse-external.id}",
                     "access_control": [
@@ -910,9 +978,12 @@ def test_terraform_stack():
             },
         },
         "data": {
+            "databricks_notebook": {
+                "notebook-external": {"path": "/Workspace/external", "format": "SOURCE"}
+            },
             "databricks_sql_warehouse": {
                 "warehouse-external": {"id": "d2fa41bf94858c4b"}
-            }
+            },
         },
     }
 
@@ -977,6 +1048,13 @@ def test_terraform_stack():
                 }
             },
             "databricks_permissions": {
+                "permissions-notebook-external": {
+                    "notebook_path": "${data.databricks_notebook.notebook-external.path}",
+                    "access_control": [
+                        {"group_name": "role-analysts", "permission_level": "CAN_READ"}
+                    ],
+                    "depends_on": ["data.databricks_notebook.notebook-external"],
+                },
                 "permissions-warehouse-external": {
                     "sql_endpoint_id": "${data.databricks_sql_warehouse.warehouse-external.id}",
                     "access_control": [
@@ -1025,9 +1103,12 @@ def test_terraform_stack():
             },
         },
         "data": {
+            "databricks_notebook": {
+                "notebook-external": {"path": "/Workspace/external", "format": "SOURCE"}
+            },
             "databricks_sql_warehouse": {
                 "warehouse-external": {"id": "d2fa41bf94858c4b"}
-            }
+            },
         },
     }
 

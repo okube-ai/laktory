@@ -1,12 +1,12 @@
 from typing import Any
 from typing import Union
 from typing import Literal
-
 from pydantic import model_validator
-
+from pydantic import Field
 from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.grants import Grants
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -14,6 +14,17 @@ from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.column import Column
 
 logger = get_logger(__name__)
+
+
+class TableLookup(ResourceLookup):
+    """
+    Attributes
+    ----------
+    name:
+        Full name of the databricks_table: `catalog`.`schema`.`table`
+    """
+
+    name: str = Field(serialization_alias="id")
 
 
 class Table(BaseModel, PulumiResource, TerraformResource):
@@ -33,6 +44,9 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         Data to be used to populate the rows
     grants:
         List of grants operating on the schema
+    lookup_existing:
+        Specifications for looking up existing resource. Other attributes will
+        be ignored.
     name:
         Name of the table
     primary_key:
@@ -72,6 +86,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     comment: Union[str, None] = None
     data_source_format: str = "DELTA"
     grants: list[TableGrant] = None
+    lookup_existing: TableLookup = Field(None, exclude=True)
     name: str
     primary_key: Union[str, None] = None
     schema_name: Union[str, None] = None

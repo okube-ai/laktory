@@ -3,12 +3,28 @@ from typing import Any
 from typing import Literal
 from typing import Union
 from pydantic import model_validator
+from pydantic import Field
 from laktory import constants
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
+
+
+class NotebookLookup(ResourceLookup):
+    """
+    Attributes
+    ----------
+    path:
+        Notebook path on the workspace
+    format:
+        Notebook format to export. Either `SOURCE`, `HTML`, `JUPYTER`, or `DBC`
+    """
+
+    path: str = Field(serialization_alias="id")
+    format: str = "SOURCE"
 
 
 class Notebook(BaseModel, PulumiResource, TerraformResource):
@@ -24,6 +40,9 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         if path is not specified.
     language:
          Notebook programming language
+    lookup_existing:
+        Specifications for looking up existing resource. Other attributes will
+        be ignored.
     path:
         Workspace filepath for the notebook
     source:
@@ -51,6 +70,7 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
     access_controls: list[AccessControl] = []
     dirpath: str = None
     language: Literal["SCALA", "PYTHON", "SQL", "R"] = None
+    lookup_existing: NotebookLookup = Field(None, exclude=True)
     path: str = None
     source: str
 
