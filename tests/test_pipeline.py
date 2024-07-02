@@ -199,7 +199,16 @@ def test_pipeline_sql():
 
     _pl.execute(spark=spark, write_sinks=False)
     df = node.output_df
-    assert df.columns == ['_bronze_at', 'created_at', 'symbol', 'close', 'symbol2', 'currency', 'first_traded', '_silver_at']
+    assert df.columns == [
+        "_bronze_at",
+        "created_at",
+        "symbol",
+        "close",
+        "symbol2",
+        "currency",
+        "first_traded",
+        "_silver_at",
+    ]
 
 
 def test_execute_polars():
@@ -275,7 +284,7 @@ def test_execute_polars():
 
 def test_execute_polars_sql():
 
-    _pl =pl_polars2.copy()
+    _pl = pl_polars2.copy()
 
     # Select join node
     node = _pl.nodes_dict["slv_stock_prices"]
@@ -294,7 +303,16 @@ def test_execute_polars_sql():
 
     _pl.execute(spark=spark, write_sinks=False)
     df = node.output_df
-    assert df.columns == ['_bronze_at', 'created_at', 'symbol', 'close', 'symbol2', 'currency', 'first_traded', '_silver_at']
+    assert df.columns == [
+        "_bronze_at",
+        "created_at",
+        "symbol",
+        "close",
+        "symbol2",
+        "currency",
+        "first_traded",
+        "_silver_at",
+    ]
 
 
 def test_pipeline_dlt():

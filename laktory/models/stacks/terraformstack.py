@@ -72,9 +72,18 @@ class TerraformStack(BaseModel):
 
         # Special treatment of resources
         d["resource"] = defaultdict(lambda: {})
+        d["data"] = defaultdict(lambda: {})
         for r in self.resources.values():
-            _d = r.terraform_properties
-            d["resource"][r.terraform_resource_type][r.resource_name] = _d
+            if r.lookup_existing:
+                d["data"][r.terraform_resource_lookup_type][
+                    r.resource_name
+                ] = r.lookup_existing.model_dump()
+            else:
+                _d = r.terraform_properties
+                d["resource"][r.terraform_resource_type][r.resource_name] = _d
+        d["data"] = dict(d["data"])
+        if len(d["data"]) == 0:
+            del d["data"]
         d["resource"] = dict(d["resource"])
         settings.singular_serialization = False
 
@@ -84,6 +93,9 @@ class TerraformStack(BaseModel):
         for r in list(self.resources.values()) + list(self.providers.values()):
             k0 = r.resource_name
             k1 = f"{r.terraform_resource_type}.{r.resource_name}"
+            # special treatment for data sources
+            if r.lookup_existing:
+                k1 = f"data.{r.terraform_resource_lookup_type}.{r.resource_name}"
             # special treatment for resources without type (providers)
             if r.terraform_resource_type is None:
                 k1 = k0

@@ -189,6 +189,10 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
         return "databricks_sql_endpoint"
 
     @property
+    def terraform_resource_lookup_type(self) -> str:
+        return "databricks_sql_warehouse"
+
+    @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
         return self.pulumi_excludes
 

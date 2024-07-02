@@ -199,7 +199,32 @@ def test_stack_model():
             "databricks_tables": {},
             "databricks_users": {},
             "databricks_volumes": {},
-            "databricks_warehouses": {},
+            "databricks_warehouses": {
+                "warehouse-external": {
+                    "cluster_size": "2X-Small",
+                    "access_controls": [
+                        {
+                            "group_name": "role-analysts",
+                            "permission_level": "CAN_USE",
+                            "service_principal_name": None,
+                            "user_name": None,
+                        }
+                    ],
+                    "auto_stop_mins": None,
+                    "channel_name": None,
+                    "enable_photon": None,
+                    "enable_serverless_compute": None,
+                    "instance_profile_arn": None,
+                    "jdbc_url": None,
+                    "max_num_clusters": None,
+                    "min_num_clusters": None,
+                    "name": "d2fa41bf94858c4b",
+                    "num_clusters": None,
+                    "spot_instance_policy": None,
+                    "tags": None,
+                    "warehouse_type": None,
+                }
+            },
             "databricks_workspacefiles": {},
             "pipelines": {
                 "pl-custom-name": {
@@ -416,6 +441,24 @@ def test_pulumi_stack():
                 },
                 "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
+            "warehouse-external": {
+                "type": "databricks:SqlEndpoint",
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "get": {"id": "d2fa41bf94858c4b"},
+            },
+            "permissions-warehouse-external": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "role-analysts", "permissionLevel": "CAN_USE"}
+                    ],
+                    "sqlEndpointId": "${warehouse-external.id}",
+                },
+                "options": {
+                    "dependsOn": ["${warehouse-external}"],
+                    "deleteBeforeReplace": True,
+                },
+            },
             "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
                 "properties": {
@@ -543,6 +586,24 @@ def test_pulumi_stack():
                     ],
                 },
                 "options": {"dependsOn": [], "deleteBeforeReplace": True},
+            },
+            "warehouse-external": {
+                "type": "databricks:SqlEndpoint",
+                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "get": {"id": "d2fa41bf94858c4b"},
+            },
+            "permissions-warehouse-external": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "role-analysts", "permissionLevel": "CAN_USE"}
+                    ],
+                    "sqlEndpointId": "${warehouse-external.id}",
+                },
+                "options": {
+                    "dependsOn": ["${warehouse-external}"],
+                    "deleteBeforeReplace": True,
+                },
             },
             "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
@@ -687,13 +748,14 @@ def test_terraform_stack():
                     ],
                 }
             },
-            "databricks_workspace_file": {
-                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
-                    "source": "./tmp-pl-stock-prices-ut-stack.json",
-                }
-            },
             "databricks_permissions": {
+                "permissions-warehouse-external": {
+                    "sql_endpoint_id": "${data.databricks_sql_warehouse.warehouse-external.id}",
+                    "access_control": [
+                        {"group_name": "role-analysts", "permission_level": "CAN_USE"}
+                    ],
+                    "depends_on": ["data.databricks_sql_warehouse.warehouse-external"],
+                },
                 "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                     "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "access_control": [
@@ -713,6 +775,12 @@ def test_terraform_stack():
                     "provider": "databricks",
                 },
             },
+            "databricks_workspace_file": {
+                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                    "source": "./tmp-pl-stock-prices-ut-stack.json",
+                }
+            },
             "databricks_pipeline": {
                 "dlt-custom-name": {
                     "channel": "PREVIEW",
@@ -726,6 +794,11 @@ def test_terraform_stack():
                     "provider": "databricks",
                 }
             },
+        },
+        "data": {
+            "databricks_sql_warehouse": {
+                "warehouse-external": {"id": "d2fa41bf94858c4b"}
+            }
         },
     }
 
@@ -789,13 +862,14 @@ def test_terraform_stack():
                     ],
                 }
             },
-            "databricks_workspace_file": {
-                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
-                    "source": "./tmp-pl-stock-prices-ut-stack.json",
-                }
-            },
             "databricks_permissions": {
+                "permissions-warehouse-external": {
+                    "sql_endpoint_id": "${data.databricks_sql_warehouse.warehouse-external.id}",
+                    "access_control": [
+                        {"group_name": "role-analysts", "permission_level": "CAN_USE"}
+                    ],
+                    "depends_on": ["data.databricks_sql_warehouse.warehouse-external"],
+                },
                 "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                     "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "access_control": [
@@ -815,6 +889,12 @@ def test_terraform_stack():
                     "provider": "databricks",
                 },
             },
+            "databricks_workspace_file": {
+                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                    "source": "./tmp-pl-stock-prices-ut-stack.json",
+                }
+            },
             "databricks_pipeline": {
                 "dlt-custom-name": {
                     "channel": "PREVIEW",
@@ -828,6 +908,11 @@ def test_terraform_stack():
                     "provider": "databricks",
                 }
             },
+        },
+        "data": {
+            "databricks_sql_warehouse": {
+                "warehouse-external": {"id": "d2fa41bf94858c4b"}
+            }
         },
     }
 
@@ -891,13 +976,14 @@ def test_terraform_stack():
                     ],
                 }
             },
-            "databricks_workspace_file": {
-                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
-                    "source": "./tmp-pl-stock-prices-ut-stack.json",
-                }
-            },
             "databricks_permissions": {
+                "permissions-warehouse-external": {
+                    "sql_endpoint_id": "${data.databricks_sql_warehouse.warehouse-external.id}",
+                    "access_control": [
+                        {"group_name": "role-analysts", "permission_level": "CAN_USE"}
+                    ],
+                    "depends_on": ["data.databricks_sql_warehouse.warehouse-external"],
+                },
                 "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                     "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "access_control": [
@@ -917,6 +1003,12 @@ def test_terraform_stack():
                     "provider": "databricks",
                 },
             },
+            "databricks_workspace_file": {
+                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                    "source": "./tmp-pl-stock-prices-ut-stack.json",
+                }
+            },
             "databricks_pipeline": {
                 "dlt-custom-name": {
                     "channel": "PREVIEW",
@@ -931,6 +1023,11 @@ def test_terraform_stack():
                     "provider": "databricks",
                 }
             },
+        },
+        "data": {
+            "databricks_sql_warehouse": {
+                "warehouse-external": {"id": "d2fa41bf94858c4b"}
+            }
         },
     }
 
