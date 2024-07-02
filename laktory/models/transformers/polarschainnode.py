@@ -1,3 +1,4 @@
+import re
 from typing import Union
 from typing import Callable
 from typing import Any
@@ -7,6 +8,7 @@ from laktory._logger import get_logger
 from laktory.models.transformers.basechainnode import BaseChainNode
 from laktory.models.transformers.basechainnode import BaseChainNodeColumn
 from laktory.models.transformers.basechainnode import BaseChainNodeFuncArg
+from laktory.models.transformers.basechainnode import BaseChainNodeSQLExpr
 from laktory.polars import PolarsDataFrame
 from laktory.polars import PolarsExpr
 
@@ -107,6 +109,34 @@ class PolarsChainNodeColumn(BaseChainNodeColumn):
         return expr
 
 
+class PolarsChainNodeSQLExpr(BaseChainNodeSQLExpr):
+    """
+    Chain node SQL expression
+
+    Attributes
+    ----------
+    expr:
+        SQL expression
+    """
+
+    @property
+    def parsed_expr(self) -> str:
+        expr = self.expr.replace("{df}", "df")
+        pattern = r"\{nodes\.(.*?)\}"
+        matches = re.findall(pattern, expr)
+        for m in matches:
+            expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
+        return expr
+
+    def eval(self, df):
+        import polars as pl
+
+        kwargs = {"df": df}
+        for source in self.node_data_sources:
+            kwargs[f"nodes__{source.node.name}"] = source.read()
+        return pl.SQLContext(frames=kwargs).execute(self.parsed_expr)
+
+
 # --------------------------------------------------------------------------- #
 # Main Class                                                                  #
 # --------------------------------------------------------------------------- #
@@ -132,9 +162,10 @@ class PolarsChainNode(BaseChainNode):
         Name of the polars function to build the dataframe. Mutually
         exclusive to `sql_expr` and `with_column`.
     sql_expr:
-        SQL Expression using `self` to reference upstream dataframe and
+        SQL Expression using `{df}` to reference upstream dataframe and
         defining how to build the output dataframe. Mutually exclusive to
-        `func_name` and `with_column`.
+        `func_name` and `with_column`. Other pipeline nodes can also be
+        referenced using {nodes.node_name}.
     with_column:
         Syntactic sugar for adding a column. Mutually exclusive to `func_name`
         and `sql_expr`.
@@ -206,6 +237,7 @@ class PolarsChainNode(BaseChainNode):
     _parent: "PolarsChain" = None
     _parsed_func_args: list = None
     _parsed_func_kwargs: dict = None
+    _parsed_sql_expr: PolarsChainNodeSQLExpr = None
 
     @property
     def parsed_func_args(self):
@@ -222,6 +254,14 @@ class PolarsChainNode(BaseChainNode):
                 k: PolarsChainNodeFuncArg(value=v) for k, v in self.func_kwargs.items()
             }
         return self._parsed_func_kwargs
+
+    @property
+    def parsed_sql_expr(self):
+        if self.sql_expr is None:
+            return None
+        if not self._parsed_sql_expr:
+            self._parsed_sql_expr = PolarsChainNodeSQLExpr(expr=self.sql_expr)
+        return self._parsed_sql_expr
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
@@ -269,8 +309,7 @@ class PolarsChainNode(BaseChainNode):
 
         # From SQL expression
         if self.sql_expr:
-            df = df.sql(self.sql_expr)
-            return df
+            return self.parsed_sql_expr.eval(df)
 
         # Get Function
         func_name = self.func_name

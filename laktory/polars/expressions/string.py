@@ -51,7 +51,7 @@ def string_split(
     '''
     ```
     """
-    return x.str.split(by=pattern).list.get(key)
+    return x.str.split(by=pattern).list.get(key, null_on_oob=True)
 
 
 # --------------------------------------------------------------------------- #
@@ -84,4 +84,4 @@ def uuid() -> pl.Expr:
 
         return str(uuid.uuid4())
 
-    return pl.first().apply(lambda _: generate_uuid(), return_dtype=pl.Utf8)
+    return pl.first().map_elements(lambda _: generate_uuid(), return_dtype=pl.Utf8)

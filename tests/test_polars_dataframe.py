@@ -100,7 +100,7 @@ def test_join():
 
     # Left and Other on
     df2 = left.laktory.smart_join(
-        other=df_meta_polars.drop("symbol"),
+        other=df_meta_polars,
         left_on="symbol",
         other_on="symbol2",
     )

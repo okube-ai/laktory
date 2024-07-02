@@ -31,6 +31,10 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
     path: str = None
     source: str
 
+    @classmethod
+    def lookup_defaults(cls) -> dict:
+        return {"path": ""}
+
     @property
     def filename(self) -> str:
         """File filename"""

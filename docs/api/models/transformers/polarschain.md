@@ -7,3 +7,7 @@
 --
 
 ::: laktory.models.PolarsChainNodeColumn
+
+--
+
+::: laktory.models.PolarsChainNodeSQLExpr

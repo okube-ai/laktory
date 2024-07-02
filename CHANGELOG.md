@@ -1,14 +1,20 @@
 # Release History
 
-## [0.4.7] - Unreleased
+## [0.4.8] - Unreleased
 ### Added
+* Support for referencing nodes in SQL queries
+* Support for looking up existing resources
 * Support for terraform alias providers
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Support for Polars 1.0
 ### Breaking changes
 * n/a
+
+## [0.4.7] - 2024-06-27
+### Fixed
+* Support for parametrized queries when DLT module is loaded
 
 ## [0.4.6] - 2024-06-27
 ### Added

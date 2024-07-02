@@ -20,6 +20,10 @@ class TerraformResource(BaseResource):
         raise NotImplementedError()
 
     @property
+    def terraform_resource_lookup_type(self) -> str:
+        return self.terraform_resource_type
+
+    @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
         """List of fields to exclude when dumping model to terraform"""
         return []
