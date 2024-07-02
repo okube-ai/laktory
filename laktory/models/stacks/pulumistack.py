@@ -57,9 +57,7 @@ class PulumiStack(BaseModel):
 
             lookup = r.lookup_existing
             if lookup is not None:
-                d["resources"][r.resource_name]["get"] = lookup.model_dump(
-                    exclude_unset=True
-                )
+                d["resources"][r.resource_name]["get"] = lookup.pulumi_dump()
                 del d["resources"][r.resource_name]["properties"]
 
         settings.camel_serialization = False

@@ -116,3 +116,6 @@
 
 ::: laktory.models.resources.databricks.job.JobWebhookNotifications
 
+--
+
+::: laktory.models.resources.databricks.job.JobLookup

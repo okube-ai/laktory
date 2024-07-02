@@ -7,3 +7,7 @@
 ---
 
 ::: laktory.models.resources.databricks.warehouse.WarehouseCustomTag
+
+--
+
+::: laktory.models.resources.databricks.warehouse.WarehouseLookup

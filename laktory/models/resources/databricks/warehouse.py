@@ -1,7 +1,9 @@
 from typing import Literal
 from typing import Union
+from pydantic import Field
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.accesscontrol import AccessControl
@@ -37,6 +39,17 @@ class WarehouseTags(BaseModel):
     custom_tags: list[WarehouseCustomTag] = []
 
 
+class WarehouseLookup(ResourceLookup):
+    """
+    Attributes
+    ----------
+    id:
+        The ID of the SQL warehouse.
+    """
+
+    id: str = Field(serialization_alias="id")
+
+
 class Warehouse(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Warehouse
@@ -60,6 +73,9 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
         TODO
     jdbc_url:
         JDBC connection string.
+    lookup_existing:
+        Specifications for looking up existing resource. Other attributes will
+        be ignored.
     max_num_clusters:
         Maximum number of clusters available when a SQL warehouse is running.
     min_num_clusters:
@@ -113,6 +129,7 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     enable_serverless_compute: bool = None
     instance_profile_arn: str = None
     jdbc_url: str = None
+    lookup_existing: WarehouseLookup = Field(None, exclude=True)
     max_num_clusters: int = None
     min_num_clusters: int = None
     name: str

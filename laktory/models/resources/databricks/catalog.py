@@ -1,11 +1,24 @@
 from typing import Union
 from typing import Literal
+from pydantic import Field
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.schema import Schema
 from laktory.models.grants.cataloggrant import CatalogGrant
 from laktory.models.resources.databricks.grants import Grants
+
+
+class CatalogLookup(ResourceLookup):
+    """
+    Attributes
+    ----------
+    name:
+        Catalog name
+    """
+
+    name: str = Field(serialization_alias="id")
 
 
 class Catalog(BaseModel, PulumiResource, TerraformResource):
@@ -25,6 +38,9 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
         Whether the catalog is accessible from all workspaces or a specific set
         of workspaces. Can be ISOLATED or OPEN. Setting the catalog to ISOLATED
         will automatically allow access from the current workspace.
+    lookup_existing:
+        Specifications for looking up existing resource. Other attributes will
+        be ignored.
     name:
         Name of the catalog
     owner:
@@ -85,6 +101,7 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     force_destroy: bool = True
     grants: list[CatalogGrant] = None
     isolation_mode: Union[Literal["OPEN", "ISOLATED"], str] = "OPEN"
+    lookup_existing: CatalogLookup = Field(None, exclude=True)
     name: str
     owner: str = None
     schemas: list[Schema] = []

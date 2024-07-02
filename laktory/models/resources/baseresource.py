@@ -3,6 +3,7 @@ from typing import Any
 from typing import Literal
 from pydantic import AliasChoices
 from pydantic import Field
+from pydantic import ConfigDict
 from pydantic import model_validator
 from pydantic import BaseModel as _BaseModel
 from laktory.models.basemodel import BaseModel
@@ -57,17 +58,12 @@ class ResourceOptions(BaseModel):
     replace_on_changes: list[str] = None
 
 
-class ResourceLookup(BaseModel):
-    """
-    Lookup existing resource.
-
-    Attributes
-    ----------
-    id:
-        Resource id
-    """
-
-    id: str
+class ResourceLookup(_BaseModel):
+    # model_config = ConfigDict(populate_by_name=True)
+    def pulumi_dump(self, *args, **kwargs):
+        kwargs["by_alias"] = kwargs.get("by_alias", True)
+        kwargs["exclude_unset"] = kwargs.get("exclude_unset", True)
+        return self.model_dump(*args, **kwargs)
 
 
 class BaseResource(_BaseModel):
@@ -78,8 +74,6 @@ class BaseResource(_BaseModel):
 
     Attributes
     ----------
-    lookup_id:
-        Get existing resource using id. Mutually exclusive to other attributes.
     resource_name:
         Name of the resource in the context of infrastructure as code. If None,
         `default_resource_name` will be used instead.
@@ -93,7 +87,7 @@ class BaseResource(_BaseModel):
         exclude=True,
     )
     options: ResourceOptions = Field(ResourceOptions(), exclude=True)
-    lookup_existing: ResourceLookup = Field(None, exclude=True)
+    lookup_existing: ResourceLookup = Field(None, exclude=True, frozen=True)
     _core_resources: list[Any] = None
 
     @model_validator(mode="before")
