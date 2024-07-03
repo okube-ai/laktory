@@ -13,6 +13,7 @@ if spark_installed:
     import laktory.spark.dataframe
     import laktory.spark.functions
     import laktory.spark.session
+    import laktory.spark.connectsession
     from laktory.spark.datatypes import DATATYPES_MAP
 
     def is_spark_dataframe(df):

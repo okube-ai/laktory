@@ -21,7 +21,7 @@ class BaseProvider(BaseModel):
         alias_pattern = ""
         if self.alias is not None:
             alias_pattern = "."
-        pattern = re.compile(r"^[a-zA-Z][a-zA-Z0-9-_"+alias_pattern+"]*$")
+        pattern = re.compile(r"^[a-zA-Z][a-zA-Z0-9-_" + alias_pattern + "]*$")
 
         if self.alias:
             if not name.endswith(f".{self.alias}"):
@@ -40,10 +40,7 @@ class BaseProvider(BaseModel):
     def resource_name_without_alias(self):
         if self.alias is None:
             return self.resource_name
-        return self.resource_name.replace(
-            f".{self.alias}",
-            ""
-        )
+        return self.resource_name.replace(f".{self.alias}", "")
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #

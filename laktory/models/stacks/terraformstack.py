@@ -100,7 +100,7 @@ class TerraformStack(BaseModel):
 
             if isinstance(r, BaseProvider):
                 # ${resources.resource_name} -> resource_name
-                pattern = r"\$\{resources."+k0+"}"
+                pattern = r"\$\{resources." + k0 + "}"
                 self.variables[pattern] = k0
                 patterns += [pattern]
 

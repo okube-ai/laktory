@@ -325,6 +325,7 @@ def test_stack_model():
             },
             "providers": {
                 "databricks": {
+                    "alias": None,
                     "account_id": None,
                     "auth_type": None,
                     "azure_client_id": None,

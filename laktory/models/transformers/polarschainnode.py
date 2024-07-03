@@ -119,22 +119,21 @@ class PolarsChainNodeSQLExpr(BaseChainNodeSQLExpr):
         SQL expression
     """
 
-    @property
-    def parsed_expr(self) -> str:
-        expr = self.expr.replace("{df}", "df")
+    def parsed_expr(self, df_id="df") -> str:
+        expr = self.expr.replace("{df}", df_id)
         pattern = r"\{nodes\.(.*?)\}"
         matches = re.findall(pattern, expr)
         for m in matches:
             expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
         return expr
 
-    def eval(self, df):
+    def eval(self, df, chain_node=None):
         import polars as pl
 
         kwargs = {"df": df}
         for source in self.node_data_sources:
             kwargs[f"nodes__{source.node.name}"] = source.read()
-        return pl.SQLContext(frames=kwargs).execute(self.parsed_expr)
+        return pl.SQLContext(frames=kwargs).execute(self.parsed_expr())
 
 
 # --------------------------------------------------------------------------- #
