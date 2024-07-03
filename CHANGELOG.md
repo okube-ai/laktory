@@ -6,6 +6,8 @@
 * Support for looking up existing resources
 * Support for terraform alias providers
 * `laktory` namespace to spark.sql.connect
+### Fixed
+* Parametrized SQL expressions used in the context of DLT
 ### Updated
 * Support for Polars 1.0
 
