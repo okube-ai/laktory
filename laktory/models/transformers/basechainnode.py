@@ -146,8 +146,7 @@ class BaseChainNodeSQLExpr(BaseModel):
     expr: str
     _node_data_sources: list[PipelineNodeDataSource] = None
 
-    @property
-    def parsed_expr(self):
+    def parsed_expr(self, df_id="df"):
         return self.expr
 
     @property
@@ -172,6 +171,9 @@ class BaseChainNodeSQLExpr(BaseModel):
             self._node_data_sources = sources
 
         return self._node_data_sources
+
+    def eval(self, df, chain_node=None):
+        raise NotImplementedError()
 
 
 # --------------------------------------------------------------------------- #

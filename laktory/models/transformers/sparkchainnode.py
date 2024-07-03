@@ -2,6 +2,7 @@ from typing import Union
 from typing import Callable
 from typing import Any
 from typing import Literal
+import re
 
 from laktory._logger import get_logger
 from laktory.models.transformers.basechainnode import BaseChainNode
@@ -117,15 +118,55 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
         SQL expression
     """
 
-    def eval(self, df):
+    def parsed_expr(self, df_id="df") -> str:
+        expr = self.expr.replace("{df}", df_id)
+        pattern = r"\{nodes\.(.*?)\}"
+        matches = re.findall(pattern, expr)
+        for m in matches:
+            expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
+        return expr
 
-        class Nodes:
-            pass
+    def eval(self, df, chain_node=None):
 
-        nodes = Nodes()
+        # We wanted to use parametrized queries to inject dataframes into the
+        # query, but it does not seem to be mature enough to do so:
+        # - as of Spark 3.5, spark connect does not support kwargs in .sql
+        # - DLT does not currently support parametrized queries. Even if we
+        #   bypass DLT custom sql function, the method org.apache.spark.sql.internal.CatalogImpl.dropTempView used in
+        #   parametrized queries is not whitelisted and result in a py4j.security.Py4JSecurityException
+        #
+        # For now, we will create temp views manually.
+
+        _spark = df.sparkSession
+
+        # Get pipeline node if executed from pipeline
+        pipeline_node = None
+        if chain_node is not None:
+            spark_chain = chain_node._parent
+            if spark_chain is not None:
+                pipeline_node = spark_chain._parent
+
+        # Set df id (to avoid temp view with conflicting names)
+        df_id = "df"
+        if pipeline_node:
+            df_id = f"df_{pipeline_node.name}"
+
+        # Create views
+        df.createOrReplaceTempView(df_id)
         for source in self.node_data_sources:
-            setattr(nodes, source.node.name, source.read(spark=df.sparkSession))
-        return df.sparkSession.laktory.sql(self.parsed_expr, df=df, nodes=nodes)
+            _df = source.read(spark=_spark)
+            _df.createOrReplaceTempView(f"nodes__{source.node.name}")
+
+        # Run query
+        return _spark.laktory.sql(self.parsed_expr(df_id))
+
+        # class Nodes:
+        #     pass
+        #
+        # nodes = Nodes()
+        # for source in self.node_data_sources:
+        #     setattr(nodes, source.node.name, source.read(spark=df.sparkSession))
+        # return df.sparkSession.laktory.sql(self.parsed_expr, df=df, nodes=nodes)
 
 
 # --------------------------------------------------------------------------- #
@@ -299,7 +340,7 @@ class SparkChainNode(BaseChainNode):
 
         # From SQL expression
         if self.sql_expr:
-            return self.parsed_sql_expr.eval(df)
+            return self.parsed_sql_expr.eval(df, chain_node=self)
 
         # Get Function
         func_name = self.func_name

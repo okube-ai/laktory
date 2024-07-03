@@ -3,7 +3,7 @@ from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
 
-class SecretAcl(BaseModel, PulumiResource):
+class SecretAcl(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks secret ACL
 

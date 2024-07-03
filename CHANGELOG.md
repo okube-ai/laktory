@@ -4,12 +4,12 @@
 ### Added
 * Support for referencing nodes in SQL queries
 * Support for looking up existing resources
+* Support for terraform alias providers
+* `laktory` namespace to spark.sql.connect
 ### Fixed
-* n/a
+* Parametrized SQL expressions used in the context of DLT
 ### Updated
 * Support for Polars 1.0
-### Breaking changes
-* n/a
 
 ## [0.4.7] - 2024-06-27
 ### Fixed
