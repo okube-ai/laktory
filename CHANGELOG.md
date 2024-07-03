@@ -1,6 +1,16 @@
 # Release History
 
-## [0.4.8] - Unreleased
+## [0.4.9] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.4.8] - 2024-07-03
 ### Added
 * Support for referencing nodes in SQL queries
 * Support for looking up existing resources
