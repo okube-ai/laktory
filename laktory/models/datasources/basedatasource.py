@@ -171,6 +171,12 @@ class BaseDataSource(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @property
+    def user_dftype(self):
+        if "dataframe_type" in self.__fields_set__:
+            return self.dataframe_type
+        return None
+
+    @property
     def _id(self):
         return str(self)
 

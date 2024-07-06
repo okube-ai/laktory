@@ -411,13 +411,24 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="before")
     @classmethod
-    def push_dftype(cls, data: Any) -> Any:
+    def push_dftype_before(cls, data: Any) -> Any:
         dftype = data.get("dataframe_type", None)
         if dftype:
             if "nodes" in data.keys():
                 for n in data["nodes"]:
-                    n["dataframe_type"] = n.get("dataframe_type", dftype)
+                    if isinstance(n, dict):
+                        n["dataframe_type"] = n.get("dataframe_type", dftype)
         return data
+
+    @model_validator(mode="after")
+    def push_dftype_after(self) -> Any:
+        dftype = self.user_dftype
+        if dftype:
+            for node in self.nodes:
+                node.dataframe_type = node.user_dftype or dftype
+                node.push_dftype_after()
+        return self
+
 
     @model_validator(mode="after")
     def update_children(self) -> Any:
@@ -510,6 +521,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def user_dftype(self):
+        if "dataframe_type" in self.__fields_set__:
+            return self.dataframe_type
+        return None
 
     @property
     def is_orchestrator_dlt(self) -> bool:

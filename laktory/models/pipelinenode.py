@@ -11,6 +11,7 @@ from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import BaseDataSource
 from laktory.models.datasinks import DataSinksUnion
 from laktory.models.pipelinenodeexpectation import PipelineNodeExpectation
+from laktory.models.transformers.basechain import BaseChain
 from laktory.models.transformers.sparkchain import SparkChain
 from laktory.models.transformers.sparkchainnode import SparkChainNode
 from laktory.models.transformers.polarschain import PolarsChain
@@ -150,18 +151,31 @@ class PipelineNode(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def push_dftype(cls, data: Any) -> Any:
+    def push_dftype_before(cls, data: Any) -> Any:
         dftype = data.get("dataframe_type", None)
         if dftype:
             if "source" in data.keys():
-                data["source"]["dataframe_type"] = data["source"].get(
-                    "dataframe_type", dftype
-                )
+                if isinstance(data["source"], dict):
+                    data["source"]["dataframe_type"] = data["source"].get(
+                        "dataframe_type", dftype
+                    )
             if "transformer" in data.keys():
-                data["transformer"]["dataframe_type"] = data["transformer"].get(
-                    "dataframe_type", dftype
-                )
+                if isinstance(data["transformer"], dict):
+                    data["transformer"]["dataframe_type"] = data["transformer"].get(
+                        "dataframe_type", dftype
+                    )
+
         return data
+
+    @model_validator(mode="after")
+    def push_dftype_after(self) -> Any:
+        dftype = self.user_dftype
+        if dftype:
+            self.source.dataframe_type = self.source.user_dftype or dftype
+            if self.transformer:
+                self.transformer.dataframe_type = self.transformer.user_dftype or dftype
+                self.transformer.push_dftype()
+        return self
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
@@ -212,6 +226,12 @@ class PipelineNode(BaseModel):
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def user_dftype(self):
+        if "dataframe_type" in self.__fields_set__:
+            return self.dataframe_type
+        return None
 
     @property
     def is_orchestrator_dlt(self) -> bool:
