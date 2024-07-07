@@ -95,7 +95,7 @@ class SparkChain(BaseChain):
 
     @property
     def user_dftype(self):
-        return "POLARS"
+        return "SPARK"
 
 
 SparkChain.model_rebuild()
