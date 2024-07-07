@@ -93,4 +93,9 @@ class SparkChain(BaseChain):
     _parent: "PipelineNode" = None
 
 
+    @property
+    def user_dftype(self):
+        return "SPARK"
+
+
 SparkChain.model_rebuild()

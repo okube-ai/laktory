@@ -91,5 +91,9 @@ class PolarsChain(BaseChain):
     _columns: list[list[str]] = []
     _parent: "PipelineNode" = None
 
+    @property
+    def user_dftype(self):
+        return "POLARS"
+
 
 PolarsChain.model_rebuild()

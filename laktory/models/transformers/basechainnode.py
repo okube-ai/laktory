@@ -236,6 +236,12 @@ class BaseChainNode(BaseModel):
             return "-".join([c.name for c in self.with_columns])
         return "df"
 
+    @property
+    def user_dftype(self):
+        if "dataframe_type" in self.__fields_set__:
+            return self.dataframe_type
+        return None
+
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
     # ----------------------------------------------------------------------- #
