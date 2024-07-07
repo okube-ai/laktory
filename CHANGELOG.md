@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* DataFrame type propagation when models are used as inputs to other models
 ### Updated
 * n/a
 ### Breaking changes
