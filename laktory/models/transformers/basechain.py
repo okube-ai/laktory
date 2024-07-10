@@ -35,11 +35,18 @@ class BaseChain(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def update_sources(self) -> Any:
-        for s in self.get_sources():
-            if "dataframe_type" not in s.__fields_set__:
-                s.dataframe_type = self.dataframe_type
+    def push_dftype(self) -> Any:
+        dftype = self.user_dftype
+        if dftype:
+            for s in self.get_sources():
+                s.dataframe_type = s.user_dftype or dftype
         return self
+
+    @property
+    def user_dftype(self):
+        if "dataframe_type" in self.__fields_set__:
+            return self.dataframe_type
+        return None
 
     @property
     def columns(self):
