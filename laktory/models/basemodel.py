@@ -127,7 +127,7 @@ class BaseModel(_BaseModel):
                         path = os.path.join(dirpath, path)
                     with open(path, "r", encoding="utf-8") as _fp:
                         new_lines = _fp.readlines()
-                        _lines += [indent + __line for __line in parse_lines(new_lines)]
+                        _lines += [indent + __line for __line in inject_includes(new_lines)]
                 elif "${include." in line:
                     _lines += [line.split("${include")[0]]
                     indent = indent + " " * 2
