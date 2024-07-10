@@ -1,9 +1,13 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from typing import Any
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 
-from databricks.sdk import WorkspaceClient
+if TYPE_CHECKING:
+    from databricks.sdk import WorkspaceClient
 
 
 class DispatcherRunner(BaseModel):
