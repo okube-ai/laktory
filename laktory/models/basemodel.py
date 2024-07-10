@@ -70,18 +70,40 @@ class BaseModel(_BaseModel):
     @classmethod
     def model_validate_yaml(cls, fp: TextIO) -> Model:
         """
-        Load model from yaml file object. Other yaml files can be referenced
-        using the ${include.other_yaml_filepath} syntax.
+            Load model from yaml file object. Other yaml files can be referenced
+            using the ${include.other_yaml_filepath} syntax. You can also merge
+            lists with -< ${include.other_yaml_filepath} and dictionaries with
+            <<: ${include.other_yaml_filepath}.
 
-        Parameters
-        ----------
-        fp:
-            file object structured as a yaml file
+            Parameters
+            ----------
+            fp:
+                file object structured as a yaml file
 
-        Returns
-        -------
-        :
-            Model instance
+            Returns
+            -------
+            :
+                Model instance
+
+        Examples
+        --------
+        ```yaml
+        businesses:
+          apple:
+            symbol: aapl
+            address: ${include.addresses.yaml}
+            <<: ${include.common.yaml}
+            emails:
+              - jane.doe@apple.com
+              -< ${include.emails.yaml}
+          amazon:
+            symbol: amzn
+            address: ${include.addresses.yaml}
+            <<: ${include.common.yaml}
+            emails:
+              - john.doe@amazon.com
+              -< ${include.emails.yaml}
+        ```
         """
 
         if hasattr(fp, "name"):
@@ -89,23 +111,42 @@ class BaseModel(_BaseModel):
         else:
             dirpath = "./"
 
-        def inject_includes(d):
-            if isinstance(d, dict):
-                for key, value in d.items():
-                    d[key] = inject_includes(value)
-            elif isinstance(d, list):
-                for i, item in enumerate(d):
-                    d[i] = inject_includes(item)
-            elif "${include." in str(d):
-                path = d.replace("${include.", "")[:-1]
-                if not os.path.isabs(path):
-                    path = os.path.join(dirpath, path)
-                with open(path, "r", encoding="utf-8") as _fp:
-                    d = yaml.safe_load(_fp)
-                    d = inject_includes(d)
-            return d
+        def inject_includes(lines):
+            _lines = []
+            for line in lines:
+                line = line.replace("\n", "")
+                indent = " " * (len(line) - len(line.lstrip()))
+                if line.strip().startswith("#"):
+                    continue
+                if "<<: ${include." in line or "-< ${include." in line:
+                    if "<<" in line:
+                        path = line.replace("<<: ${include.", "").strip()[:-1]
+                    else:
+                        path = line.replace("-< ${include.", "").strip()[:-1]
+                    if not os.path.isabs(path):
+                        path = os.path.join(dirpath, path)
+                    with open(path, "r", encoding="utf-8") as _fp:
+                        new_lines = _fp.readlines()
+                        _lines += [indent + __line for __line in inject_includes(new_lines)]
+                elif "${include." in line:
+                    _lines += [line.split("${include")[0]]
+                    indent = indent + " " * 2
+                    path = line.split("${include.")[1].strip()[:-1]
+                    if not os.path.isabs(path):
+                        path = os.path.join(dirpath, path)
+                    with open(path, "r", encoding="utf-8") as _fp:
+                        new_lines = _fp.readlines()
+                        _lines += [
+                            indent + __line for __line in inject_includes(new_lines)
+                        ]
 
-        data = inject_includes(yaml.safe_load(fp))
+                else:
+                    _lines += [line]
+
+            return _lines
+
+        lines = inject_includes(fp.readlines())
+        data = yaml.safe_load("\n".join(lines))
 
         return cls.model_validate(data)
 

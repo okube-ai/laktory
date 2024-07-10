@@ -2,8 +2,9 @@
 
 ## [0.4.9] - Unreleased
 ### Added
-* n/a
+* Support for yaml merge
 ### Fixed
+* DLT Debug mode when source is streaming and node is not
 * DataFrame type propagation when models are used as inputs to other models
 ### Updated
 * n/a

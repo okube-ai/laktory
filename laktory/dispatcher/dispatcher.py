@@ -1,10 +1,14 @@
-from databricks.sdk import WorkspaceClient
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
 from laktory._useragent import DATABRICKS_USER_AGENT
 from laktory._useragent import VERSION
 from laktory.models.stacks.stack import Stack
 from laktory.dispatcher.dltpipelinerunner import DLTPipelineRunner
 from laktory.dispatcher.jobrunner import JobRunner
+
+if TYPE_CHECKING:
+    from databricks.sdk import WorkspaceClient
 
 
 class Dispatcher:
@@ -141,6 +145,8 @@ class Dispatcher:
     @property
     def wc(self) -> WorkspaceClient:
         """Databricks Workspace Client"""
+        from databricks.sdk import WorkspaceClient
+
         if self._wc is None:
             self._wc = WorkspaceClient(**self._workspace_arguments)
             self._wc.config.with_user_agent_extra(

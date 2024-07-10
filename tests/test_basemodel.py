@@ -1,3 +1,4 @@
+from pydantic import ConfigDict
 import os
 
 from laktory.models import BaseModel
@@ -271,9 +272,57 @@ def test_inject_vars():
     assert d1["tables"][0]["columns"][1]["name"] == "${ close.id }"
 
 
+def test_inject_includes():
+
+    class Business(BaseModel):
+        model_config = ConfigDict(extra="allow")
+
+    with open(os.path.join(paths.data, "model_businesses.yaml"), "r") as fp:
+        b = Business.model_validate_yaml(fp)
+
+    data = b.model_dump()
+    print(data)
+    assert data == {
+        "businesses": {
+            "apple": {
+                "symbol": "aapl",
+                "address": {"street": "Sand Hill", "city": "Palo Alto"},
+                "query": "SELECT\n    *\nFROM\n    table\n;\n",
+            },
+            "amazon": {
+                "symbol": "amzn",
+                "address": {"street": "Sand Hill", "city": "Palo Alto"},
+                "sector": "tech",
+                "profitable": True,
+            },
+            "google": {
+                "symbol": "googl",
+                "emails": [
+                    "mr.ceo@gmail.com",
+                    "john.doe@gmail.com",
+                    "jane.doe@gmail.com",
+                    "sam.doe@gmail.com",
+                ],
+            },
+            "microsoft": {
+                "symbol": "msft",
+                "address": {"street": "Sand Hill", "city": "Palo Alto"},
+                "sector": "tech",
+                "profitable": True,
+                "emails": [
+                    "john.doe@gmail.com",
+                    "jane.doe@gmail.com",
+                    "sam.doe@gmail.com",
+                ],
+            },
+        }
+    }
+
+
 if __name__ == "__main__":
     test_read_yaml()
     test_dump_yaml()
     test_camelize()
     test_singular()
     test_inject_vars()
+    test_inject_includes()
