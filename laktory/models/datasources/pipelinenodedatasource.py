@@ -78,7 +78,11 @@ class PipelineNodeDataSource(BaseDataSource):
             if is_debug():
                 df = None
 
-                stream_to_batch = not self.as_stream and self.node.output_df and self.node.output_df.isStreaming
+                stream_to_batch = (
+                    not self.as_stream
+                    and self.node.output_df
+                    and self.node.output_df.isStreaming
+                )
 
                 if self.node.output_df and not stream_to_batch:
                     logger.info(

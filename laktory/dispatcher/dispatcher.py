@@ -145,6 +145,8 @@ class Dispatcher:
     @property
     def wc(self) -> WorkspaceClient:
         """Databricks Workspace Client"""
+        from databricks.sdk import WorkspaceClient
+
         if self._wc is None:
             self._wc = WorkspaceClient(**self._workspace_arguments)
             self._wc.config.with_user_agent_extra(
