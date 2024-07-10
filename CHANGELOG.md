@@ -2,9 +2,9 @@
 
 ## [0.4.9] - Unreleased
 ### Added
-* n/a
+* Support for yaml merge
 ### Fixed
-* n/a
+* DLT Debug mode when source is streaming and node is not
 ### Updated
 * n/a
 ### Breaking changes

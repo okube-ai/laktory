@@ -271,6 +271,86 @@ def test_inject_vars():
     assert d1["tables"][0]["columns"][1]["name"] == "${ close.id }"
 
 
+def test_inject_includes():
+
+    import yaml
+
+    class M(BaseModel):
+        a: list[int]
+        b: list[int]
+
+    def read_yaml(fp):
+        if hasattr(fp, "name"):
+            dirpath = os.path.dirname(fp.name)
+        else:
+            dirpath = "./"
+
+        # def merge_includes(lines):
+
+        def inject_includes(d):
+            if isinstance(d, dict):
+                for key, value in d.items():
+                    d[key] = inject_includes(value)
+            elif isinstance(d, list):
+                for i, item in enumerate(d):
+                    d[i] = inject_includes(item)
+            elif "${include." in str(d):
+                path = d.replace("${include.", "")[:-1]
+                if not os.path.isabs(path):
+                    path = os.path.join(dirpath, path)
+                with open(path, "r", encoding="utf-8") as _fp:
+                    d = yaml.safe_load(_fp)
+                    d = inject_includes(d)
+            return d
+
+        # lines = fp.readlines()
+
+        def parse_lines(lines):
+            _lines = []
+            for line in lines:
+                line = line.replace("\n", "")
+                indent = " " * (len(line) - len(line.lstrip()))
+                if line.strip().startswith("#"):
+                    continue
+                if "<<: ${include." in line:
+                    path = line.replace("<<: ${include.", "").strip()[:-1]
+                    if not os.path.isabs(path):
+                        path = os.path.join(dirpath, path)
+                    with open(path, "r", encoding="utf-8") as _fp:
+                        new_lines = _fp.readlines()
+                        _lines += [indent + __line for __line in parse_lines(new_lines)]
+                elif "${include." in line:
+                    _lines += [line.split("${include")[0]]
+                    indent = indent + " " * 2
+                    path = line.split("${include.")[1].strip()[:-1]
+                    if not os.path.isabs(path):
+                        path = os.path.join(dirpath, path)
+                    with open(path, "r", encoding="utf-8") as _fp:
+                        new_lines = _fp.readlines()
+                        _lines += [indent + __line for __line in parse_lines(new_lines)]
+
+                else:
+                    _lines += [line]
+
+            return _lines
+
+        lines = parse_lines(fp.readlines())
+
+        for l in lines:
+            print(l)
+
+        data = yaml.safe_load("\n".join(lines))
+
+        return data
+
+    with open("m-1.yaml", "r") as fp:
+        # d = yaml.safe_load(fp)
+        d = read_yaml(fp)
+        # m = M.model_validate_yaml(fp)
+
+    print(d)
+
+
 if __name__ == "__main__":
     test_read_yaml()
     test_dump_yaml()
