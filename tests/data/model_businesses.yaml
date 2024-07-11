@@ -2,7 +2,8 @@ businesses:
   apple:
     symbol: aapl
     address: ${include.model_addresses.yaml}
-    query: | ${include.model_query.sql}
+    queries:
+      - ${include.model_query.sql}
   amazon:
     symbol: amzn
     address: ${include.model_addresses.yaml}
