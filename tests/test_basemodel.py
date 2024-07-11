@@ -287,7 +287,7 @@ def test_inject_includes():
             "apple": {
                 "symbol": "aapl",
                 "address": {"street": "Sand Hill", "city": "Palo Alto"},
-                "query": "SELECT\n    *\nFROM\n    table\n;\n",
+                "queries": ["SELECT\n--    name,\n    *\nFROM\n    table\n;"],
             },
             "amazon": {
                 "symbol": "amzn",

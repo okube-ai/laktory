@@ -429,7 +429,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                 node.push_dftype_after()
         return self
 
-
     @model_validator(mode="after")
     def update_children(self) -> Any:
         # Build dag

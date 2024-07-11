@@ -1,4 +1,5 @@
 SELECT
+--    name,
     *
 FROM
     table

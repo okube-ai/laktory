@@ -73,7 +73,8 @@ class BaseModel(_BaseModel):
             Load model from yaml file object. Other yaml files can be referenced
             using the ${include.other_yaml_filepath} syntax. You can also merge
             lists with -< ${include.other_yaml_filepath} and dictionaries with
-            <<: ${include.other_yaml_filepath}.
+            <<: ${include.other_yaml_filepath}. Including multi-lines and
+            commented SQL files is also possible.
 
             Parameters
             ----------
@@ -118,27 +119,48 @@ class BaseModel(_BaseModel):
                 indent = " " * (len(line) - len(line.lstrip()))
                 if line.strip().startswith("#"):
                     continue
-                if "<<: ${include." in line or "-< ${include." in line:
-                    if "<<" in line:
-                        path = line.replace("<<: ${include.", "").strip()[:-1]
+
+                if "${include." in line:
+                    pattern = r"\{include\.(.*?)\}"
+                    matches = re.findall(pattern, line)
+                    path = matches[0]
+                    path0 = path
+                    if not os.path.isabs(path):
+                        path = os.path.join(dirpath, path)
+                    path_ext = path.split(".")[-1]
+                    if path_ext not in ["yaml", "yml", "sql"]:
+                        raise ValueError(
+                            f"Include file of format {path_ext} ({path}) is not supported."
+                        )
+
+                    # Merge include
+                    if "<<: ${include." in line or "-< ${include." in line:
+                        with open(path, "r", encoding="utf-8") as _fp:
+                            new_lines = _fp.readlines()
+                            _lines += [
+                                indent + __line for __line in inject_includes(new_lines)
+                            ]
+
+                    # Direct Include
                     else:
-                        path = line.replace("-< ${include.", "").strip()[:-1]
-                    if not os.path.isabs(path):
-                        path = os.path.join(dirpath, path)
-                    with open(path, "r", encoding="utf-8") as _fp:
-                        new_lines = _fp.readlines()
-                        _lines += [indent + __line for __line in inject_includes(new_lines)]
-                elif "${include." in line:
-                    _lines += [line.split("${include")[0]]
-                    indent = indent + " " * 2
-                    path = line.split("${include.")[1].strip()[:-1]
-                    if not os.path.isabs(path):
-                        path = os.path.join(dirpath, path)
-                    with open(path, "r", encoding="utf-8") as _fp:
-                        new_lines = _fp.readlines()
-                        _lines += [
-                            indent + __line for __line in inject_includes(new_lines)
-                        ]
+                        if path.endswith(".sql"):
+                            with open(path, "r", encoding="utf-8") as _fp:
+                                new_lines = _fp.read()
+                            _lines += [
+                                line.replace(
+                                    "${include." + path0 + "}",
+                                    '"' + new_lines.replace("\n", "\\n") + '"',
+                                )
+                            ]
+
+                        elif path.endswith(".yaml") or path.endswith("yml"):
+                            indent = indent + " " * 2
+                            _lines += [line.split("${include")[0]]
+                            with open(path, "r", encoding="utf-8") as _fp:
+                                new_lines = _fp.readlines()
+                            _lines += [
+                                indent + __line for __line in inject_includes(new_lines)
+                            ]
 
                 else:
                     _lines += [line]

@@ -39,7 +39,7 @@ class CLIController(BaseModel):
         # Read stack
         if self.stack_filepath is None:
             self.stack_filepath = "./stack.yaml"
-        with open(self.stack_filepath, "r") as fp:
+        with open(self.stack_filepath, "r", encoding="utf-8") as fp:
             self.stack = Stack.model_validate_yaml(fp)
 
         # Set backend

@@ -92,7 +92,6 @@ class SparkChain(BaseChain):
     _columns: list[list[str]] = []
     _parent: "PipelineNode" = None
 
-
     @property
     def user_dftype(self):
         return "SPARK"
