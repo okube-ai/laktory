@@ -1,6 +1,9 @@
+from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
+
+from laktory.models.resources.databricks.mwsnccbinding import MwsNccBinding
 
 
 class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule(BaseModel):
@@ -10,10 +13,13 @@ class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule(BaseMo
     cidr_blocks:
         todo
     """
+
     cidr_blocks: list[str] = None
 
 
-class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRule(BaseModel):
+class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRule(
+    BaseModel
+):
     """
     Attributes
     ----------
@@ -24,6 +30,7 @@ class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRu
     target_services:
         todo
     """
+
     subnets: list[str] = None
     target_region: str = None
     target_services: list[str] = None
@@ -39,11 +46,18 @@ class MwsNetworkConnectivityConfigEgressConfigDefaultRules(BaseModel):
         This provides a list of subnets. These subnets need to be allowed in your Azure resources in order for
         Databricks to access.
     """
-    aws_stable_ip_rule: MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule = None
-    azure_service_endpoint_rule: MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRule = None
+
+    aws_stable_ip_rule: (
+        MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule
+    ) = None
+    azure_service_endpoint_rule: (
+        MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRule
+    ) = None
 
 
-class MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRule(BaseModel):
+class MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRule(
+    BaseModel
+):
     """
     Attributes
     ----------
@@ -68,6 +82,7 @@ class MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRul
     updated_time:
         todo
     """
+
     connection_state: str = None
     creation_time: int = None
     deactivated: bool = None
@@ -87,7 +102,10 @@ class MwsNetworkConnectivityConfigEgressConfigTargetRules(BaseModel):
     azure_private_endpoint_rules:
         todo
     """
-    azure_private_endpoint_rules: list[MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRule] = None
+
+    azure_private_endpoint_rules: list[
+        MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRule
+    ] = None
 
 
 class MwsNetworkConnectivityConfigEgressConfig(BaseModel):
@@ -141,10 +159,27 @@ class MwsNetworkConnectivityConfig(BaseModel, PulumiResource, TerraformResource)
     network_connectivity_config_id: str = None
     region: str
     updated_time: int = None
+    workspace_bindings: list[MwsNccBinding] = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def additional_core_resources(self) -> list[PulumiResource]:
+        """
+        - workspace bindings
+        """
+        resources = []
+
+        if self.workspace_bindings:
+            for b in self.workspace_bindings:
+                b.network_connectivity_config_id = (
+                    f"${{resources.{self.resource_name}.network_connectivity_config_id}}"
+                )
+                resources += [b]
+
+        return resources
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
@@ -154,6 +189,12 @@ class MwsNetworkConnectivityConfig(BaseModel, PulumiResource, TerraformResource)
     def pulumi_resource_type(self) -> str:
         return "databricks:MwsNetworkConnectivityConfig"
 
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return [
+            "workspace_bindings",
+        ]
+
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
@@ -161,3 +202,7 @@ class MwsNetworkConnectivityConfig(BaseModel, PulumiResource, TerraformResource)
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_mws_network_connectivity_config"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes

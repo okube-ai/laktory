@@ -18,7 +18,9 @@ from laktory.models.resources.databricks.group import Group
 from laktory.models.resources.databricks.job import Job
 from laktory.models.resources.databricks.metastore import Metastore
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
-from laktory.models.resources.databricks.mwsnetworkconnectivityconfig import MwsNetworkConnectivityConfig
+from laktory.models.resources.databricks.mwsnetworkconnectivityconfig import (
+    MwsNetworkConnectivityConfig,
+)
 from laktory.models.resources.databricks.notebook import Notebook
 from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.databricks.secret import Secret

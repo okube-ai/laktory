@@ -13,6 +13,7 @@ from .metastore import Metastore
 from .metastoreassignment import MetastoreAssignment
 from .metastoredataaccess import MetastoreDataAccess
 from .mwspermissionassignment import MwsPermissionAssignment
+from .mwsnccbinding import MwsNccBinding
 from .mwsnetworkconnectivityconfig import MwsNetworkConnectivityConfig
 from .notebook import Notebook
 from .permissions import Permissions
