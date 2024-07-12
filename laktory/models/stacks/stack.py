@@ -18,6 +18,7 @@ from laktory.models.resources.databricks.group import Group
 from laktory.models.resources.databricks.job import Job
 from laktory.models.resources.databricks.metastore import Metastore
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
+from laktory.models.resources.databricks.mwsnetworkconnectivityconfig import MwsNetworkConnectivityConfig
 from laktory.models.resources.databricks.notebook import Notebook
 from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.databricks.secret import Secret
@@ -84,6 +85,8 @@ class StackResources(BaseModel):
         Databricks Jobs
     databricks_metastores:
         Databricks Metastores
+    databricks_networkconnectivityconfig
+        Databricks Network Connectivity Config
     databricks_notebooks:
         Databricks Notebooks
     databricks_dltpipelines:
@@ -121,6 +124,7 @@ class StackResources(BaseModel):
     databricks_jobs: dict[str, Job] = {}
     databricks_metastoredataaccesses: dict[str, MetastoreDataAccess] = {}
     databricks_metastores: dict[str, Metastore] = {}
+    databricks_networkconnectivityconfig: dict[str, MwsNetworkConnectivityConfig] = {}
     databricks_notebooks: dict[str, Notebook] = {}
     databricks_dltpipelines: dict[str, DLTPipeline] = {}
     databricks_schemas: dict[str, Schema] = {}
