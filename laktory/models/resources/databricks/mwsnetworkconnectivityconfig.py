@@ -174,9 +174,7 @@ class MwsNetworkConnectivityConfig(BaseModel, PulumiResource, TerraformResource)
 
         if self.workspace_bindings:
             for b in self.workspace_bindings:
-                b.network_connectivity_config_id = (
-                    f"${{resources.{self.resource_name}.network_connectivity_config_id}}"
-                )
+                b.network_connectivity_config_id = f"${{resources.{self.resource_name}.network_connectivity_config_id}}"
                 resources += [b]
 
         return resources

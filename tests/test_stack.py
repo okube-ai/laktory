@@ -189,6 +189,7 @@ def test_stack_model():
             },
             "databricks_metastoredataaccesses": {},
             "databricks_metastores": {},
+            "databricks_networkconnectivityconfig": {},
             "databricks_notebooks": {
                 "notebook-external": {
                     "access_controls": [
@@ -564,6 +565,7 @@ def test_pulumi_stack():
     # Prod
     data = stack.to_pulumi(env_name="prod").model_dump()
     data["config"]["databricks:token"] = "***"
+    data["resources"]["databricks"]["properties"]["token"] = "***"
     print(data)
     assert data == {
         "variables": {
@@ -718,7 +720,7 @@ def test_pulumi_stack():
                 "type": "pulumi:providers:databricks",
                 "properties": {
                     "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-                    "token": "dapic54f989beb4ef1b924b4fcfcf0962593-3",
+                    "token": "***",
                 },
                 "options": {"dependsOn": [], "deleteBeforeReplace": True},
             },
