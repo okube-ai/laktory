@@ -187,6 +187,8 @@ nav:
           - MetastoreAssignment: api/models/resources/databricks/metastoreassignment.md
           - MetastoreDataAccess: api/models/resources/databricks/metastoredataaccess.md
           - MwsPermissionAssignment: api/models/resources/databricks/mwspermissionassignment.md
+          - MwsNccBinding: api/models/resources/databricks/mwsnccbinding.md
+          - MwsNetworkConnectivityConfig: api/models/resources/databricks/mwsnetworkconnectivityconfig.md
           - api/models/resources/databricks/notebook.md
           - api/models/resources/databricks/schema.md
           - api/models/resources/databricks/secret.md
