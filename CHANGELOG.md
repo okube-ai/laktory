@@ -6,6 +6,7 @@
 * MwsNccBinding databricks resource
 * MwsNetworkConnectivityConfig databricks resource
 * Support for Databricks Table `storage_credential_name` and `storage_location` properties 
+* Support for `BINARYFILE` (PDF) format in `FileDataSource` with Spark
 ### Fixed
 * DLT Debug mode when source is streaming and node is not
 * DataFrame type propagation when models are used as inputs to other models
