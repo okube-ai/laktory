@@ -46,7 +46,7 @@ class FileDataSource(BaseDataSource):
     ```
     """
 
-    format: Literal["CSV", "PARQUET", "DELTA", "JSON", "EXCEL"] = "JSON"
+    format: Literal["CSV", "PARQUET", "DELTA", "JSON", "EXCEL", "BINARYFILE"] = "JSON"
     header: bool = True
     multiline: bool = False
     path: str
@@ -61,6 +61,12 @@ class FileDataSource(BaseDataSource):
                 "EXCEL",
             ]:
                 raise ValueError(f"'{self.format}' format is not supported with Spark")
+
+        elif self.dataframe_type == "POLARS":
+            if self.format in [
+                "BINARYFILE",
+            ]:
+                raise ValueError(f"'{self.format}' format is not supported with Polars")
 
         return self
 
