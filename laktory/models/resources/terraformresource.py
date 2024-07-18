@@ -63,5 +63,13 @@ class TerraformResource(BaseResource):
             if value:
                 d[k] = value
 
+        d["lifecycle"] = {}
+        for k in ["ignore_changes"]:
+            value = self.options.model_dump(exclude_none=True).get(k, None)
+            if value:
+                d["lifecycle"][k] = value
+        if d["lifecycle"] == {}:
+            del d["lifecycle"]
+
         d = self.inject_vars(d)
         return d

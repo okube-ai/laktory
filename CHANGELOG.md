@@ -2,7 +2,7 @@
 
 ## [0.4.9] - Unreleased
 ### Added
-* Support for yaml merge
+* Support for models yaml merge
 * MwsNccBinding databricks resource
 * MwsNetworkConnectivityConfig databricks resource
 * Support for Databricks Table `storage_credential_name` and `storage_location` properties 

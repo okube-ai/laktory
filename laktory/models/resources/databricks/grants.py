@@ -72,6 +72,7 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
     )  # required not to overwrite BaseModel attribute
     share: str = None
     storage_credential: str = None
+    table: str = None
     view: str = None
     volume: str = None
 
