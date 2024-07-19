@@ -5,7 +5,7 @@ from laktory._version import VERSION
 
 
 def show_version_info() -> str:
-    from importlib.metadata import distributions
+    from importlib.metadata import version
 
     package_names = {
         "azure-identity",
@@ -13,25 +13,24 @@ def show_version_info() -> str:
         "black",
         "boto3",
         "databricks-sdk",
+        "deltalake",
         "flit",
         "inflect",
         "mkdocs",
         "mkdocs-material",
         "mkdocs-video",
-        "mkdocstrings[python]",
+        "mkdocstrings",
         "networkx",
+        "numpy",
         "pandas",
         "planck",
         "plotly",
         "polars",
         "prompt_toolkit",
         "pulumi",
-        "pulumi_aws",
-        "pulumi_azure",
-        "pulumi_azure_native",
-        "pulumi_databricks>=1.36",
+        "pulumi_databricks",
         "pyarrow",
-        "pydantic>=2",
+        "pydantic",
         "pyspark",
         "pytest",
         "pytest-cov",
@@ -39,18 +38,24 @@ def show_version_info() -> str:
         "python-dateutil",
         "pyyaml",
         "settus",
-        "settus[aws]",
-        "settus[azure]",
-        "settus[gcp]",
-        "typer[all]",
+        "sqlparse",
+        "typer",
+        "typing_extensions",
         "yfinance",
     }
     packages = {}
 
-    for d in distributions():
-        name = d.metadata["Name"]
-        if name in package_names:
-            packages[name] = d.version
+    # for d in distributions():
+    #     name = d.metadata["Name"]
+    #     if name in package_names:
+    #         packages[name] = d.version
+    # packages = dict(sorted(packages.items()))
+
+    for name in package_names:
+        try:
+            packages[name] = version(name)
+        except:
+            packages[name] = "NOT FOUND"
     packages = dict(sorted(packages.items()))
 
     _packages = {

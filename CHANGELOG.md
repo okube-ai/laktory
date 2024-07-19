@@ -9,8 +9,9 @@
 ### Fixed
 * DLT Debug mode when source is streaming and node is not
 * DataFrame type propagation when models are used as inputs to other models
+* `show_version_info()` method to display correct packages version
 ### Updated
-* n/a
+* Changed default value for mergeSchema to `False` when mode is `COMPLETE` or `OVERWRITE`
 ### Breaking changes
 * n/a
 

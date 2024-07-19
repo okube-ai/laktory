@@ -28,6 +28,7 @@ for udf in pl.udfs:
     if udf.module_path:
         sys.path.append(os.path.abspath(udf.module_path))
     module = importlib.import_module(udf.module_name)
+    module = importlib.reload(module)
     udfs += [getattr(module, udf.function_name)]
 
 # --------------------------------------------------------------------------- #

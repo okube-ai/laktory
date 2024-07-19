@@ -23,11 +23,14 @@ class BaseDataSink(BaseModel):
         - error: Throw and exception if data already exists
         - ignore: Silently ignore this operation if data already exists
         - complete: Overwrite for streaming dataframes
+    write_options:
+        Other options passed to `spark.write.options`
     """
 
     mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE"], None] = (
         None
     )
+    write_options: dict[str, str] = {}
     _parent: "PipelineNode" = None
 
     # ----------------------------------------------------------------------- #
