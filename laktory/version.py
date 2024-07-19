@@ -5,7 +5,6 @@ from laktory._version import VERSION
 
 
 def show_version_info() -> str:
-    from importlib.metadata import distributions
     from importlib.metadata import version
 
     package_names = {
@@ -56,6 +55,7 @@ def show_version_info() -> str:
             packages[name] = version(name)
         except:
             packages[name] = "NOT FOUND"
+    packages = dict(sorted(packages.items()))
 
     _packages = {
         "laktory": VERSION,
