@@ -40,6 +40,7 @@ def show_version_info() -> str:
         "settus",
         "sqlparse",
         "typer",
+        "typing_extensions",
         "yfinance",
     }
     packages = {}
