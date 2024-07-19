@@ -83,7 +83,7 @@ class CLIController(BaseModel):
             options += ["-auto-approve"]
 
         if self.terraform_options_str:
-            options = self.terraform_options_str.split(",")
+            options += self.terraform_options_str.split(",")
 
         return options
 

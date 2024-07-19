@@ -121,6 +121,14 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         if self.warehouse_id is None:
             self.warehouse_id = settings.databricks_warehouse_id
 
+        # Because properties are dynamically changed by Databricks (for Delta operations)
+        # we ignore properties by default for triggering a resources change
+        # Unfortunately, this did not work because ingore_changes does not apply to changes
+        # made outside of terraform.
+        # if "properties" not in self.options.__fields_set__:
+        #     # self.options.ignore_changes = ["properties"]
+        #     self.properties = {"a": "b"}
+
         return self
 
     # ----------------------------------------------------------------------- #
@@ -145,6 +153,10 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @property
     def full_name(self) -> str:
         """Table full name `{catalog_name}.{schema_name}.{table_name}`"""
+
+        if self.lookup_existing:
+            return self.lookup_existing.name
+
         _id = self.name
         if self.parent_full_name is not None:
             _id = f"{self.parent_full_name}.{_id}"
@@ -233,6 +245,10 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_sql_table"
+
+    @property
+    def terraform_resource_lookup_type(self) -> str:
+        return "databricks_table"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

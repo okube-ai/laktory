@@ -10,6 +10,7 @@
 ### Fixed
 * DLT Debug mode when source is streaming and node is not
 * DataFrame type propagation when models are used as inputs to other models
+* Terraform auto-approve when other options are used
 ### Updated
 * n/a
 ### Breaking changes
