@@ -387,6 +387,7 @@ def test_pipeline_dlt():
                 "primary_key": None,
                 "sink": {
                     "mode": None,
+                    "write_options": {},
                     "catalog_name": "dev",
                     "checkpoint_location": None,
                     "format": "DELTA",
@@ -487,6 +488,7 @@ def test_pipeline_dlt():
                 "primary_key": None,
                 "sink": {
                     "mode": None,
+                    "write_options": {},
                     "catalog_name": "dev",
                     "checkpoint_location": None,
                     "format": "DELTA",
