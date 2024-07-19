@@ -1,5 +1,6 @@
 import typer
 from laktory._version import VERSION
+
 APP_NAME = "laktory-cli"
 
 app = typer.Typer(

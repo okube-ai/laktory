@@ -23,8 +23,6 @@ class FileDataSink(BaseDataSink):
         Format of the data files
     path:
         Path to which the DataFrame needs to be written.
-    write_options:
-        Other options passed to `spark.read.options`
 
     Examples
     ---------
@@ -54,7 +52,6 @@ class FileDataSink(BaseDataSink):
     checkpoint_location: Union[str, None] = None
     format: Literal["CSV", "PARQUET", "DELTA", "JSON", "EXCEL"] = "DELTA"
     path: str
-    write_options: dict[str, str] = {}
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -76,19 +73,24 @@ class FileDataSink(BaseDataSink):
 
     def _write_spark(self, df: SparkDataFrame, mode=None) -> None:
 
-        merge_schema = "true"
-        if self.mode in ["OVERWRITE", "COMPLETE"]:
-            merge_schema = "false"
-
         if self.format in ["EXCEL"]:
             raise ValueError(f"'{self.format}' format is not supported with Spark")
+
+        # Default Options
+        _options = {"merge_schema": "true"}
+        if self.mode in ["OVERWRITE", "COMPLETE"]:
+            _options["merge_schema"] = "false"
+        if df.isStreaming:
+            _options["checkpointLocation"] = self._checkpoint_location
+
+        # User Options
+        for k, v in self.write_options.items():
+            _options[k] = v
 
         if df.isStreaming:
             logger.info(f"Writing df as stream {self.format} to {self.path}")
 
-            writer = df.writeStream.option(
-                "checkpointlocation", self._checkpoint_location
-            ).trigger(
+            writer = df.writeStream.trigger(
                 availableNow=True
             )  # TODO: Add option for trigger?
 
@@ -96,10 +98,7 @@ class FileDataSink(BaseDataSink):
             logger.info(f"Writing df as static {self.format} to {self.path}")
             writer = df.write
 
-        writer = writer.mode(mode).format(self.format).option("mergeSchema", merge_schema)
-
-        if self.write_options:
-            writer = writer.options(**self.write_options)
+        writer = writer.mode(mode).format(self.format).options(**_options)
 
         writer.save(self.path)
 
