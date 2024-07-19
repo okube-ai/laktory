@@ -76,6 +76,10 @@ class FileDataSink(BaseDataSink):
 
     def _write_spark(self, df: SparkDataFrame, mode=None) -> None:
 
+        merge_schema = "true"
+        if self.mode in ["OVERWRITE", "COMPLETE"]:
+            merge_schema = "false"
+
         if self.format in ["EXCEL"]:
             raise ValueError(f"'{self.format}' format is not supported with Spark")
 
@@ -92,7 +96,7 @@ class FileDataSink(BaseDataSink):
             logger.info(f"Writing df as static {self.format} to {self.path}")
             writer = df.write
 
-        writer = writer.mode(mode).format(self.format).option("mergeSchema", "true")
+        writer = writer.mode(mode).format(self.format).option("mergeSchema", merge_schema)
 
         if self.write_options:
             writer = writer.options(**self.write_options)

@@ -109,13 +109,17 @@ class TableDataSink(BaseDataSink):
 
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
 
+        merge_schema = "true"
+        if self.mode in ["OVERWRITE", "COMPLETE"]:
+            merge_schema = "false"
+
         if df.isStreaming:
             logger.info(f"Writing {self._id} as stream with mode {self.mode}")
             writer = (
                 df.writeStream.outputMode(self.mode)
                 .format(self.format)
                 .trigger(availableNow=True)  # TODO: Add option for trigger?
-                .option("mergeSchema", "true")
+                .option("mergeSchema", merge_schema)
             )
 
             if self.checkpoint_location:
@@ -128,7 +132,7 @@ class TableDataSink(BaseDataSink):
             (
                 df.write.format(self.format)
                 .mode(mode)
-                .option("mergeSchema", "true")
+                .option("mergeSchema", merge_schema)
                 .saveAsTable(self.full_name)
             )
 
