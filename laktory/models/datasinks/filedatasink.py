@@ -77,9 +77,9 @@ class FileDataSink(BaseDataSink):
             raise ValueError(f"'{self.format}' format is not supported with Spark")
 
         # Default Options
-        _options = {"merge_schema": "true"}
+        _options = {"mergeSchema": "true"}
         if self.mode in ["OVERWRITE", "COMPLETE"]:
-            _options["merge_schema"] = "false"
+            _options["mergeSchema"] = "false"
         if df.isStreaming:
             _options["checkpointLocation"] = self._checkpoint_location
 

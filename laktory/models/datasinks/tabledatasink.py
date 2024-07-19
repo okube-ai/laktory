@@ -110,9 +110,9 @@ class TableDataSink(BaseDataSink):
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
 
         # Default Options
-        _options = {"merge_schema": "true"}
+        _options = {"mergeSchema": "true"}
         if self.mode in ["OVERWRITE", "COMPLETE"]:
-            _options["merge_schema"] = "false"
+            _options["mergeSchema"] = "false"
         if self.checkpoint_location:
             _options["checkpointLocation"] = self.checkpoint_location
 
