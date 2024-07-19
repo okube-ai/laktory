@@ -6,6 +6,7 @@ from laktory._version import VERSION
 
 def show_version_info() -> str:
     from importlib.metadata import distributions
+    from importlib.metadata import version
 
     package_names = {
         "azure-identity",
@@ -44,11 +45,17 @@ def show_version_info() -> str:
     }
     packages = {}
 
-    for d in distributions():
-        name = d.metadata["Name"]
-        if name in package_names:
-            packages[name] = d.version
-    packages = dict(sorted(packages.items()))
+    # for d in distributions():
+    #     name = d.metadata["Name"]
+    #     if name in package_names:
+    #         packages[name] = d.version
+    # packages = dict(sorted(packages.items()))
+
+    for name in package_names:
+        try:
+            packages[name] = version(name)
+        except:
+            packages[name] = "NOT FOUND"
 
     _packages = {
         "laktory": VERSION,
