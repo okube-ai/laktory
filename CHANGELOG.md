@@ -1,6 +1,16 @@
 # Release History
 
-## [0.4.9] - Unreleased
+## [0.4.10] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.4.9] - 2024-07-20
 ### Added
 * Support for models yaml merge
 * MwsNccBinding databricks resource
