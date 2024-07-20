@@ -87,20 +87,18 @@ class FileDataSink(BaseDataSink):
         for k, v in self.write_options.items():
             _options[k] = v
 
+        t = "static"
         if df.isStreaming:
-            logger.info(f"Writing df as stream {self.format} to {self.path}")
-
+            t = "stream"
             writer = df.writeStream.trigger(
                 availableNow=True
             )  # TODO: Add option for trigger?
 
         else:
-            logger.info(f"Writing df as static {self.format} to {self.path}")
             writer = df.write
 
-        writer = writer.mode(mode).format(self.format).options(**_options)
-
-        writer.save(self.path)
+        logger.info(f"Writing df as {t} {self.format} to {self.path} with options {_options}")
+        writer.mode(mode).format(self.format).options(**_options).save(self.path)
 
     def _write_polars(self, df: PolarsDataFrame, mode=None) -> None:
 
