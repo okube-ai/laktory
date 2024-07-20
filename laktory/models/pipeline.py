@@ -523,7 +523,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def user_dftype(self):
-        if "dataframe_type" in self.__fields_set__:
+        if "dataframe_type" in self.model_fields_set:
             return self.dataframe_type
         return None
 

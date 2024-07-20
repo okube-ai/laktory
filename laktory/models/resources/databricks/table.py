@@ -125,7 +125,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         # we ignore properties by default for triggering a resources change
         # Unfortunately, this did not work because ingore_changes does not apply to changes
         # made outside of terraform.
-        # if "properties" not in self.options.__fields_set__:
+        # if "properties" not in self.options.model_fields_set:
         #     # self.options.ignore_changes = ["properties"]
         #     self.properties = {"a": "b"}
 

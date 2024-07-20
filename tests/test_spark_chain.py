@@ -1,3 +1,5 @@
+import os
+import sys
 import pandas as pd
 import numpy as np
 import pytest
@@ -209,6 +211,8 @@ def test_udfs(df0=df0):
 
     def add_new_col(df, column_name, s=1):
         return df.withColumn(column_name, F.col("x") * s)
+
+    sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
     module = importlib.import_module("user_defined_functions")
     module = importlib.reload(module)
