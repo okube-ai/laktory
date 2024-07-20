@@ -151,7 +151,7 @@ def test_join_outer():
     df = left.laktory.smart_join(
         other=other,
         on=["symbol"],
-        how="outer",
+        how="full",
     )
 
     # Test join columns uniqueness

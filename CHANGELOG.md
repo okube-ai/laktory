@@ -12,10 +12,6 @@
 * DataFrame type propagation when models are used as inputs to other models
 * Terraform auto-approve when other options are used
 * `show_version_info()` method to display correct packages version
-### Updated
-* n/a
-### Breaking changes
-* n/a
 
 ## [0.4.8] - 2024-07-03
 ### Added
