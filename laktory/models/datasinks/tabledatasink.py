@@ -135,7 +135,7 @@ class TableDataSink(BaseDataSink):
             (
                 df.write.format(self.format)
                 .mode(mode)
-                .option(**_options)
+                .options(**_options)
                 .saveAsTable(self.full_name)
             )
 
