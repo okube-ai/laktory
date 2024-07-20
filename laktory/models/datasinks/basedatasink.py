@@ -27,7 +27,7 @@ class BaseDataSink(BaseModel):
         Other options passed to `spark.write.options`
     """
 
-    mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE"], None] = (
+    mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE", "UPDATE"], None] = (
         None
     )
     write_options: dict[str, str] = {}

@@ -109,10 +109,14 @@ class TableDataSink(BaseDataSink):
 
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
 
+        if self.format in ["EXCEL"]:
+            raise ValueError(f"'{self.format}' format is not supported with Spark")
+
         # Default Options
-        _options = {"mergeSchema": "true"}
-        if not df.isStreaming and self.mode in ["OVERWRITE", "COMPLETE"]:
+        _options = {"mergeSchema": "true", "overwriteSchema": "false"}
+        if mode in ["OVERWRITE", "COMPLETE"]:
             _options["mergeSchema"] = "false"
+            _options["overwriteSchema"] = "true"
         if self.checkpoint_location:
             _options["checkpointLocation"] = self.checkpoint_location
 
@@ -121,9 +125,9 @@ class TableDataSink(BaseDataSink):
             _options[k] = v
 
         if df.isStreaming:
-            logger.info(f"Writing {self._id} as stream with mode {self.mode} and options {_options}")
+            logger.info(f"Writing {self._id} {self.format}  as stream with mode {mode} and options {_options}")
             writer = (
-                df.writeStream.outputMode(self.mode)
+                df.writeStream.outputMode(mode)
                 .format(self.format)
                 .trigger(availableNow=True)  # TODO: Add option for trigger?
                 .options(**_options)
@@ -131,7 +135,7 @@ class TableDataSink(BaseDataSink):
             writer.toTable(self.full_name)
 
         else:
-            logger.info(f"Writing {self._id} as static with mode {self.mode} and options {_options}")
+            logger.info(f"Writing {self._id} {self.format}  as static with mode {mode} and options {_options}")
             (
                 df.write.format(self.format)
                 .mode(mode)

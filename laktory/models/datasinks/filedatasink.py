@@ -76,10 +76,15 @@ class FileDataSink(BaseDataSink):
         if self.format in ["EXCEL"]:
             raise ValueError(f"'{self.format}' format is not supported with Spark")
 
+        # Set mode
+        if mode is None:
+            mode = self.mode
+
         # Default Options
-        _options = {"mergeSchema": "true"}
-        if self.mode in ["OVERWRITE", "COMPLETE"]:
+        _options = {"mergeSchema": "true", "overwriteSchema": "false"}
+        if mode in ["OVERWRITE", "COMPLETE"]:
             _options["mergeSchema"] = "false"
+            _options["overwriteSchema"] = "true"
         if df.isStreaming:
             _options["checkpointLocation"] = self._checkpoint_location
 
@@ -97,7 +102,7 @@ class FileDataSink(BaseDataSink):
         else:
             writer = df.write
 
-        logger.info(f"Writing df as {t} {self.format} to {self.path} with options {_options}")
+        logger.info(f"Writing df as {t} {self.format} to {self.path} with mode {mode} and options {_options}")
         writer.mode(mode).format(self.format).options(**_options).save(self.path)
 
     def _write_polars(self, df: PolarsDataFrame, mode=None) -> None:
