@@ -229,7 +229,7 @@ class PipelineNode(BaseModel):
 
     @property
     def user_dftype(self):
-        if "dataframe_type" in self.__fields_set__:
+        if "dataframe_type" in self.model_fields_set:
             return self.dataframe_type
         return None
 
@@ -536,7 +536,7 @@ class PipelineNode(BaseModel):
                 elif dftype == "polars":
                     transformer = PolarsChain(nodes=[])
             else:
-                transformer = transformer.copy()
+                transformer = transformer.model_copy()
 
             # Add layer-specific chain nodes
             if dftype == "spark" and self.layer_spark_chain:

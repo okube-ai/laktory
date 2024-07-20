@@ -1,6 +1,9 @@
+import os
+import sys
 import pandas as pd
 import numpy as np
 import pytest
+import importlib
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
@@ -206,11 +209,17 @@ def test_column(df0=df0):
 def test_udfs(df0=df0):
     df = df0.select(df0.columns)
 
-    def mul3(c):
-        return 3 * c
-
     def add_new_col(df, column_name, s=1):
         return df.withColumn(column_name, F.col("x") * s)
+
+    sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+
+    module = importlib.import_module("user_defined_functions")
+    module = importlib.reload(module)
+    udfs = [
+        module.mul3,
+        add_new_col
+    ]
 
     sc = models.SparkChain(
         nodes=[
@@ -240,7 +249,7 @@ def test_udfs(df0=df0):
     )
 
     # Execute Chain
-    df = sc.execute(df, udfs=[mul3, add_new_col])
+    df = sc.execute(df, udfs=udfs)
 
     # Test
     pdf = df.toPandas()

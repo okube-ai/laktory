@@ -39,7 +39,7 @@ class Directory(BaseModel, PulumiResource, TerraformResource):
     d = models.resources.databricks.Directory(path="/queries/views")
     print(d)
     '''
-    resource_name_=None options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None) lookup_existing=None variables={} delete_recursive=None path='/queries/views'
+    resource_name_=None options=ResourceOptions(variables={}, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None) lookup_existing=None variables={} delete_recursive=None path='/queries/views'
     '''
     print(d.resource_key)
     #> queries-views

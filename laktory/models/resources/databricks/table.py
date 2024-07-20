@@ -40,8 +40,10 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         List of columns stored in the table
     comment:
         Text description of the catalog
-    data:
-        Data to be used to populate the rows
+    data_source_format:
+        External tables are supported in multiple data source formats. The string constants identifying these formats
+        are DELTA, CSV, JSON, AVRO, PARQUET, ORC, TEXT. Change forces creation of a new resource. Not supported for
+        MANAGED tables or VIEW.
     grants:
         List of grants operating on the schema
     lookup_existing:
@@ -54,6 +56,11 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         by the builder to drop duplicated rows.
     schema_name:
         Name of the schema storing the table
+    storage_credential_name:
+        For EXTERNAL Tables only: the name of storage credential to use. Change forces creation of a new resource.
+    storage_location:
+        URL of storage location for Table data (required for EXTERNAL Tables). Not supported for VIEW or MANAGED
+        table_type.
     table_type:
         Distinguishes a view vs. managed/external Table.
     view_definition:
@@ -82,17 +89,20 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     """
 
     catalog_name: Union[str, None] = None
-    columns: list[Column] = []
+    columns: Union[list[Column], None] = None
     comment: Union[str, None] = None
     data_source_format: str = "DELTA"
     grants: list[TableGrant] = None
     lookup_existing: TableLookup = Field(None, exclude=True)
     name: str
+    properties: Union[dict[str, str], None] = None
     primary_key: Union[str, None] = None
     schema_name: Union[str, None] = None
+    storage_credential_name: Union[str, None] = None
+    storage_location: Union[str, None] = None
     table_type: Literal["MANAGED", "EXTERNAL", "VIEW"] = "MANAGED"
-    view_definition: str = None
-    warehouse_id: str = None
+    view_definition: Union[str, None] = None
+    warehouse_id: Union[str, None] = None
 
     # ----------------------------------------------------------------------- #
     # Validators                                                              #
@@ -101,14 +111,23 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @model_validator(mode="after")
     def assign_catalog_schema(self) -> Any:
         # Assign to columns
-        for c in self.columns:
-            c.table_name = self.name
-            c.catalog_name = self.catalog_name
-            c.schema_name = self.schema_name
+        if self.columns:
+            for c in self.columns:
+                c.table_name = self.name
+                c.catalog_name = self.catalog_name
+                c.schema_name = self.schema_name
 
         # Warehouse ID
         if self.warehouse_id is None:
             self.warehouse_id = settings.databricks_warehouse_id
+
+        # Because properties are dynamically changed by Databricks (for Delta operations)
+        # we ignore properties by default for triggering a resources change
+        # Unfortunately, this did not work because ingore_changes does not apply to changes
+        # made outside of terraform.
+        # if "properties" not in self.options.model_fields_set:
+        #     # self.options.ignore_changes = ["properties"]
+        #     self.properties = {"a": "b"}
 
         return self
 
@@ -134,6 +153,10 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @property
     def full_name(self) -> str:
         """Table full name `{catalog_name}.{schema_name}.{table_name}`"""
+
+        if self.lookup_existing:
+            return self.lookup_existing.name
+
         _id = self.name
         if self.parent_full_name is not None:
             _id = f"{self.parent_full_name}.{_id}"
@@ -202,6 +225,8 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_properties(self):
         d = super().pulumi_properties
+        if not self.columns:
+            return d
         d["columns"] = []
         for i, c in enumerate(self.columns):
             d["columns"] += [
@@ -222,12 +247,18 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         return "databricks_sql_table"
 
     @property
+    def terraform_resource_lookup_type(self) -> str:
+        return "databricks_table"
+
+    @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
         return self.pulumi_excludes
 
     @property
     def terraform_properties(self) -> dict:
         d = super().terraform_properties
+        if not self.columns:
+            return d
         d["column"] = []
         for i, c in enumerate(self.columns):
             d["column"] += [

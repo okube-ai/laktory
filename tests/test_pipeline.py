@@ -180,7 +180,7 @@ def test_execute_node():
 
 
 def test_pipeline_sql():
-    _pl = pl.copy()
+    _pl = pl.model_copy()
 
     # Select join node
     node = _pl.nodes_dict["slv_stock_prices"]
@@ -284,7 +284,7 @@ def test_execute_polars():
 
 def test_execute_polars_sql():
 
-    _pl = pl_polars2.copy()
+    _pl = pl_polars2.model_copy()
 
     # Select join node
     node = _pl.nodes_dict["slv_stock_prices"]

@@ -48,11 +48,11 @@ class ResourceOptions(BaseModel):
     # pulumi + terraform
     depends_on: list[str] = []
     provider: str = None
+    ignore_changes: list[str] = None
 
     # pulumi only
     aliases: list[str] = None
     delete_before_replace: bool = True
-    ignore_changes: list[str] = None
     import_: str = None
     parent: str = None
     replace_on_changes: list[str] = None
