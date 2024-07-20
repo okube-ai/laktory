@@ -111,7 +111,7 @@ class TableDataSink(BaseDataSink):
 
         # Default Options
         _options = {"mergeSchema": "true"}
-        if self.mode in ["OVERWRITE", "COMPLETE"]:
+        if not df.isStreaming and self.mode in ["OVERWRITE", "COMPLETE"]:
             _options["mergeSchema"] = "false"
         if self.checkpoint_location:
             _options["checkpointLocation"] = self.checkpoint_location
