@@ -288,8 +288,8 @@ class JobTaskRunJobTask(BaseModel):
         Job parameters for the task
     """
 
-    job_id: str = None
-    job_parameters: dict[str, Any]
+    job_id: Union[int, str] = None
+    job_parameters: dict[str, Any] = None
 
 
 class JobTaskSqlTaskQuery(BaseModel):

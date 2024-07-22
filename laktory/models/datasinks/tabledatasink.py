@@ -1,3 +1,4 @@
+import os
 from typing import Literal
 from typing import Union
 from laktory.models.datasinks.basedatasink import BaseDataSink
@@ -91,6 +92,12 @@ class TableDataSink(BaseDataSink):
     def _id(self) -> str:
         return self.full_name
 
+    @property
+    def _checkpoint_location(self):
+        if self.checkpoint_location:
+            return self.checkpoint_location
+        raise ValueError("Checkpoint must be provided for streaming table sink.")
+
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
@@ -117,8 +124,8 @@ class TableDataSink(BaseDataSink):
         if mode in ["OVERWRITE", "COMPLETE"]:
             _options["mergeSchema"] = "false"
             _options["overwriteSchema"] = "true"
-        if self.checkpoint_location:
-            _options["checkpointLocation"] = self.checkpoint_location
+        if df.isStreaming:
+            _options["checkpointLocation"] = self._checkpoint_location
 
         # User Options
         for k, v in self.write_options.items():
