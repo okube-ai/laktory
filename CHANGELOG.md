@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* Default value for checkpoint location of `TableDataSink`
 ### Updated
 * n/a
 ### Breaking changes
