@@ -96,7 +96,7 @@ class TableDataSink(BaseDataSink):
     def _checkpoint_location(self):
         if self.checkpoint_location:
             return self.checkpoint_location
-        return os.path.dirname(self.path)
+        raise ValueError("Checkpoint must be provided for streaming table sink.")
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
@@ -124,7 +124,7 @@ class TableDataSink(BaseDataSink):
         if mode in ["OVERWRITE", "COMPLETE"]:
             _options["mergeSchema"] = "false"
             _options["overwriteSchema"] = "true"
-        if self.checkpoint_location:
+        if df.isStreaming:
             _options["checkpointLocation"] = self._checkpoint_location
 
         # User Options
