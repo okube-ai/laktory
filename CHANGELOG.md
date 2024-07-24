@@ -2,7 +2,8 @@
 
 ## [0.4.11] - Unreleased
 ### Added
-* n/a
+* `VectorSearchIndex` Databricks resource
+* `VectorSearchEndpoint` Databricks resource
 ### Fixed
 * Checkpoint location of `TableDataSink`
 ### Updated
