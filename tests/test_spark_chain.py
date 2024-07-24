@@ -216,10 +216,7 @@ def test_udfs(df0=df0):
 
     module = importlib.import_module("user_defined_functions")
     module = importlib.reload(module)
-    udfs = [
-        module.mul3,
-        add_new_col
-    ]
+    udfs = [module.mul3, add_new_col]
 
     sc = models.SparkChain(
         nodes=[

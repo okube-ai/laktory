@@ -102,7 +102,9 @@ class FileDataSink(BaseDataSink):
         else:
             writer = df.write
 
-        logger.info(f"Writing df as {t} {self.format} to {self.path} with mode {mode} and options {_options}")
+        logger.info(
+            f"Writing df as {t} {self.format} to {self.path} with mode {mode} and options {_options}"
+        )
         writer.mode(mode).format(self.format).options(**_options).save(self.path)
 
     def _write_polars(self, df: PolarsDataFrame, mode=None) -> None:

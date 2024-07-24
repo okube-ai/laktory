@@ -7,10 +7,9 @@ vector_search_index = VectorSearchIndex(
     index_type="DELTA_SYNC",
     delta_sync_index_spec={
         "source_table": "dev.finances.market_news",
-        "embedding_vector_columns": [{
-            "name": "embedding",
-            "embedding_dimension": 4095
-        }],
+        "embedding_vector_columns": [
+            {"name": "embedding", "embedding_dimension": 4095}
+        ],
         "pipeline_type": "TRIGGERED",
     },
 )

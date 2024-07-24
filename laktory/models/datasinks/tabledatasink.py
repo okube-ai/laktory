@@ -132,7 +132,9 @@ class TableDataSink(BaseDataSink):
             _options[k] = v
 
         if df.isStreaming:
-            logger.info(f"Writing {self._id} {self.format}  as stream with mode {mode} and options {_options}")
+            logger.info(
+                f"Writing {self._id} {self.format}  as stream with mode {mode} and options {_options}"
+            )
             writer = (
                 df.writeStream.outputMode(mode)
                 .format(self.format)
@@ -142,7 +144,9 @@ class TableDataSink(BaseDataSink):
             writer.toTable(self.full_name)
 
         else:
-            logger.info(f"Writing {self._id} {self.format}  as static with mode {mode} and options {_options}")
+            logger.info(
+                f"Writing {self._id} {self.format}  as static with mode {mode} and options {_options}"
+            )
             (
                 df.write.format(self.format)
                 .mode(mode)

@@ -29,7 +29,9 @@ from laktory.models.resources.databricks.serviceprincipal import ServicePrincipa
 from laktory.models.resources.databricks.sqlquery import SqlQuery
 from laktory.models.resources.databricks.table import Table
 from laktory.models.resources.databricks.user import User
-from laktory.models.resources.databricks.vectorsearchendpoint import VectorSearchEndpoint
+from laktory.models.resources.databricks.vectorsearchendpoint import (
+    VectorSearchEndpoint,
+)
 from laktory.models.resources.databricks.vectorsearchindex import VectorSearchIndex
 from laktory.models.resources.databricks.volume import Volume
 from laktory.models.resources.databricks.warehouse import Warehouse

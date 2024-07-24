@@ -17,6 +17,7 @@ class VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn(BaseModel):
         Three-level name of the Vector Search Index to create
         (catalog.schema.index_name).
     """
+
     embedding_model_endpoint_name: str
     name: str
 
@@ -31,6 +32,7 @@ class VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn(BaseModel):
         Three-level name of the Vector Search Index to create
         (catalog.schema.index_name).
     """
+
     embedding_dimension: int
     name: str
 
@@ -66,8 +68,12 @@ class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
             "embedding_vector_columns": "embedding_vector_columns",
         }
 
-    embedding_source_columns: list[VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn] = None
-    embedding_vector_columns: list[VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn] = None
+    embedding_source_columns: list[
+        VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn
+    ] = None
+    embedding_vector_columns: list[
+        VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn
+    ] = None
     embedding_writeback_table: str = None
     pipeline_id: str = None
     pipeline_type: Literal["TRIGGERED", "CONTINUOUS"] = None
@@ -95,8 +101,12 @@ class VectorSearchIndexDirectAccessIndexSpec(BaseModel):
             "embedding_vector_columns": "embedding_vector_columns",
         }
 
-    embedding_source_columns: list[VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn] = None
-    embedding_vector_columns: list[VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn] = None
+    embedding_source_columns: list[
+        VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn
+    ] = None
+    embedding_vector_columns: list[
+        VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn
+    ] = None
     # schema_json: str
 
 
@@ -164,10 +174,14 @@ class VectorSearchIndex(BaseModel, PulumiResource, TerraformResource):
     def check_index_spec(self) -> Any:
 
         if self.index_type == "DELTA_SYNC" and self.delta_sync_index_spec is None:
-            raise ValueError("`delta_sync_index_spec` must be set with `index_type` = 'DELTA_SYNC'")
+            raise ValueError(
+                "`delta_sync_index_spec` must be set with `index_type` = 'DELTA_SYNC'"
+            )
 
         if self.index_type == "DIRECT_ACCESS" and self.direct_access_index_spec is None:
-            raise ValueError("`direct_access_index_spec` must be set with `index_type` = 'DIRECT_ACCESS'")
+            raise ValueError(
+                "`direct_access_index_spec` must be set with `index_type` = 'DIRECT_ACCESS'"
+            )
 
         return self
 
@@ -198,4 +212,3 @@ class VectorSearchIndex(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
         return self.pulumi_excludes
-
