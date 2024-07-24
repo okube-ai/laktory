@@ -52,7 +52,6 @@ class BaseModel(_BaseModel):
             fields = self.model_fields
             keys = list(dump.keys())
             for k in keys:
-                print(k)
                 if k in self.singularizations:
                     # Explicit singularization
                     k_singular = self.singularizations[k] or k
