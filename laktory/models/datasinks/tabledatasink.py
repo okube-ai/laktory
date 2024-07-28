@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import Literal
 from typing import Union
 from laktory.models.datasinks.basedatasink import BaseDataSink
@@ -153,6 +154,29 @@ class TableDataSink(BaseDataSink):
                 .options(**_options)
                 .saveAsTable(self.full_name)
             )
+
+    # ----------------------------------------------------------------------- #
+    # Purge                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    def purge(self, spark=None):
+        """
+        Delete sink data and checkpoints
+        """
+        if self._checkpoint_location:
+            logger.info(f"Deleting checkpoint at {self._checkpoint_location}")
+            shutil.rmtree(self._checkpoint_location)
+
+        if self.warehouse == "DATABRICKS":
+            spark.sql(f"DROP TABLE {self.full_name}")
+        else:
+            raise NotImplementedError(
+                f"Warehouse '{self.warehouse}' is not yet supported."
+            )
+
+    # ----------------------------------------------------------------------- #
+    # Source                                                                  #
+    # ----------------------------------------------------------------------- #
 
     def as_source(self, as_stream=None) -> TableDataSource:
         """

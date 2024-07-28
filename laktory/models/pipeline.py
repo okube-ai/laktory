@@ -612,7 +612,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def execute(self, spark=None, udfs=None, write_sinks=True) -> None:
+    def execute(self, spark=None, udfs=None, write_sinks=True, refresh: bool = False) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
         executing each node. The selected orchestrator might impact how
@@ -626,11 +626,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             List of user-defined functions used in transformation chains.
         write_sinks:
             If `False` writing of node sinks will be skipped
+        refresh:
+            If `True` all nodes will be completely re-processed by deleting
+            existing data and checkpoints before processing.
         """
         logger.info("Executing Pipeline")
 
         for inode, node in enumerate(self.sorted_nodes):
-            node.execute(spark=spark, udfs=udfs, write_sink=write_sinks)
+            node.execute(spark=spark, udfs=udfs, write_sink=write_sinks, refresh=refresh)
 
     def dag_figure(self) -> Figure:
         """

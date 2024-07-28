@@ -75,6 +75,16 @@ class BaseDataSink(BaseModel):
         raise NotImplementedError("Not implemented for Polars dataframe")
 
     # ----------------------------------------------------------------------- #
+    # Purge                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    def purge(self):
+        """
+        Delete sink data and checkpoints
+        """
+        raise NotImplementedError()
+
+    # ----------------------------------------------------------------------- #
     # Sources                                                                 #
     # ----------------------------------------------------------------------- #
 

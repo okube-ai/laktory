@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import Literal
 from typing import Union
 from laktory.models.datasinks.basedatasink import BaseDataSink
@@ -65,7 +66,7 @@ class FileDataSink(BaseDataSink):
     def _checkpoint_location(self):
         if self.checkpoint_location:
             return self.checkpoint_location
-        return os.path.dirname(self.path)
+        return os.path.join(os.path.dirname(self.path), "checkpoint/")
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
@@ -139,6 +140,34 @@ class FileDataSink(BaseDataSink):
             df.write_json(self.path, **self.write_options)
         elif self.format == "PARQUET":
             df.write_parquet(self.path, **self.write_options)
+
+    # ----------------------------------------------------------------------- #
+    # Purge                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    def purge(self, spark=None):
+        """
+        Delete sink data and checkpoints
+        """
+        # Remove Data
+        if os.path.exists(self.path):
+            is_dir = os.path.isdir(self.path)
+            if is_dir:
+                logger.info(f"Deleting data dir {self.path}")
+                shutil.rmtree(self.path)
+            else:
+                logger.info(f"Deleting data file {self.path}")
+                os.remove(self.path)
+
+        # Remove Checkpoint
+        if self._checkpoint_location:
+            logger.info(f"Deleting checkpoint at {self._checkpoint_location}")
+            if os.path.exists(self._checkpoint_location):
+                shutil.rmtree(self._checkpoint_location)
+
+    # ----------------------------------------------------------------------- #
+    # Source                                                                  #
+    # ----------------------------------------------------------------------- #
 
     def as_source(self, as_stream: bool = None) -> FileDataSource:
         """
