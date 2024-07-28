@@ -161,8 +161,9 @@ class FileDataSink(BaseDataSink):
 
         # Remove Checkpoint
         if self._checkpoint_location:
-            logger.info(f"Deleting checkpoint at {self._checkpoint_location}")
-            if os.path.exists(self._checkpoint_location):
+            _exists = os.path.exists(self._checkpoint_location)
+            logger.info(f"Deleting checkpoint at {self._checkpoint_location}? {_exists}", )
+            if _exists:
                 shutil.rmtree(self._checkpoint_location)
 
     # ----------------------------------------------------------------------- #
