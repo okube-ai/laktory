@@ -97,7 +97,7 @@ class TableDataSink(BaseDataSink):
     def _checkpoint_location(self):
         if self.checkpoint_location:
             return self.checkpoint_location
-        raise None
+        return None
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
