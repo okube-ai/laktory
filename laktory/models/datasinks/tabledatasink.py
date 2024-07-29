@@ -97,13 +97,16 @@ class TableDataSink(BaseDataSink):
     def _checkpoint_location(self):
         if self.checkpoint_location:
             return self.checkpoint_location
-        raise ValueError("Checkpoint must be provided for streaming table sink.")
+        raise None
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
     def _write_spark(self, df: SparkDataFrame, mode=None) -> None:
+
+        if df.isStreaming and self._checkpoint_location is None:
+            raise ValueError("Checkpoint must be provided for streaming table sink.")
 
         if mode is None:
             mode = self.mode
