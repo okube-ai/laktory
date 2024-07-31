@@ -172,6 +172,7 @@ class TableDataSink(BaseDataSink):
                 shutil.rmtree(self._checkpoint_location)
 
         if self.warehouse == "DATABRICKS":
+            logger.info(f"Dropping table {self.full_name}", )
             spark.sql(f"DROP TABLE IF EXISTS {self.full_name}")
         else:
             raise NotImplementedError(
