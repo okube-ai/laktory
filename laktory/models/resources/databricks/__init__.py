@@ -12,9 +12,9 @@ from .job import Job
 from .metastore import Metastore
 from .metastoreassignment import MetastoreAssignment
 from .metastoredataaccess import MetastoreDataAccess
-from .mwspermissionassignment import MwsPermissionAssignment
 from .mwsnccbinding import MwsNccBinding
 from .mwsnetworkconnectivityconfig import MwsNetworkConnectivityConfig
+from .mwspermissionassignment import MwsPermissionAssignment
 from .notebook import Notebook
 from .permissions import Permissions
 from .schema import Schema
@@ -27,6 +27,8 @@ from .sqlquery import SqlQuery
 from .table import Table
 from .user import User
 from .userrole import UserRole
+from .vectorsearchendpoint import VectorSearchEndpoint
+from .vectorsearchindex import VectorSearchIndex
 from .volume import Volume
 from .warehouse import Warehouse
 from .workspacefile import WorkspaceFile

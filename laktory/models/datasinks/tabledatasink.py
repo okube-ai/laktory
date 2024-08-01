@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import Literal
 from typing import Union
 from laktory.models.datasinks.basedatasink import BaseDataSink
@@ -96,13 +97,16 @@ class TableDataSink(BaseDataSink):
     def _checkpoint_location(self):
         if self.checkpoint_location:
             return self.checkpoint_location
-        raise ValueError("Checkpoint must be provided for streaming table sink.")
+        return None
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
     def _write_spark(self, df: SparkDataFrame, mode=None) -> None:
+
+        if df.isStreaming and self._checkpoint_location is None:
+            raise ValueError("Checkpoint must be provided for streaming table sink.")
 
         if mode is None:
             mode = self.mode
@@ -132,7 +136,9 @@ class TableDataSink(BaseDataSink):
             _options[k] = v
 
         if df.isStreaming:
-            logger.info(f"Writing {self._id} {self.format}  as stream with mode {mode} and options {_options}")
+            logger.info(
+                f"Writing {self._id} {self.format}  as stream with mode {mode} and options {_options}"
+            )
             writer = (
                 df.writeStream.outputMode(mode)
                 .format(self.format)
@@ -142,13 +148,40 @@ class TableDataSink(BaseDataSink):
             writer.toTable(self.full_name)
 
         else:
-            logger.info(f"Writing {self._id} {self.format}  as static with mode {mode} and options {_options}")
+            logger.info(
+                f"Writing {self._id} {self.format}  as static with mode {mode} and options {_options}"
+            )
             (
                 df.write.format(self.format)
                 .mode(mode)
                 .options(**_options)
                 .saveAsTable(self.full_name)
             )
+
+    # ----------------------------------------------------------------------- #
+    # Purge                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    def purge(self, spark=None):
+        """
+        Delete sink data and checkpoints
+        """
+        if self._checkpoint_location:
+            if os.path.exists(self._checkpoint_location):
+                logger.info(f"Deleting checkpoint at {self._checkpoint_location}", )
+                shutil.rmtree(self._checkpoint_location)
+
+        if self.warehouse == "DATABRICKS":
+            logger.info(f"Dropping table {self.full_name}", )
+            spark.sql(f"DROP TABLE IF EXISTS {self.full_name}")
+        else:
+            raise NotImplementedError(
+                f"Warehouse '{self.warehouse}' is not yet supported."
+            )
+
+    # ----------------------------------------------------------------------- #
+    # Source                                                                  #
+    # ----------------------------------------------------------------------- #
 
     def as_source(self, as_stream=None) -> TableDataSource:
         """

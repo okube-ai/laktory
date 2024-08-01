@@ -215,6 +215,8 @@ def test_stack_model():
             "databricks_tables": {},
             "databricks_users": {},
             "databricks_volumes": {},
+            "databricks_vectorsearchendpoints": {},
+            "databricks_vectorsearchindexes": {},
             "databricks_warehouses": {
                 "warehouse-external": {
                     "cluster_size": "2X-Small",
@@ -1137,6 +1139,8 @@ def test_all_resources():
     from tests.test_user import user
     from tests.test_user import group
     from tests.test_workspacefile import workspace_file
+    from tests.test_vectorsearchendpoint import vector_search_endpoint
+    from tests.test_vectorsearchindex import vector_search_index
     from laktory._testing import Paths
 
     paths = Paths(__file__)
@@ -1155,6 +1159,8 @@ def test_all_resources():
             "databricks_sqlqueries": [query],
             "databricks_groups": [group],
             "databricks_users": [user],
+            "databricks_vectorsearchendpoints": [vector_search_endpoint],
+            "databricks_vectorsearchindexes": [vector_search_index],
             "databricks_workspacefiles": [workspace_file],
             "pipelines": [pl_dlt],  # required by job
         },

@@ -16,7 +16,7 @@ paths = Paths(__file__)
 
 def test_file_data_sink():
 
-    dirpath = os.path.join(paths.tmp, "df_slv_sink")
+    dirpath = os.path.join(paths.tmp, "df_slv_sink/")
     if os.path.exists(dirpath):
         shutil.rmtree(dirpath)
 
@@ -42,8 +42,9 @@ def test_file_data_sink():
     assert df.count() == 2 * df_slv.count()
 
     # Cleanup
-    if os.path.exists(dirpath):
-        shutil.rmtree(dirpath)
+    sink.purge()
+    assert not os.path.exists(sink.path)
+    assert not os.path.exists(sink._checkpoint_location)
 
 
 def test_file_data_sink_polars_parquet():
@@ -74,8 +75,9 @@ def test_file_data_sink_polars_parquet():
     assert df.columns == df_slv.columns
 
     # Cleanup
-    if os.path.exists(filepath):
-        os.remove(filepath)
+    sink.purge()
+    assert not os.path.exists(sink.path)
+    assert not os.path.exists(sink._checkpoint_location)
 
 
 def test_file_data_sink_polars_delta():
@@ -105,8 +107,9 @@ def test_file_data_sink_polars_delta():
     assert df.columns == df_slv.columns
 
     # Cleanup
-    if os.path.exists(dirpath):
-        shutil.rmtree(dirpath)
+    sink.purge()
+    assert not os.path.exists(sink.path)
+    assert not os.path.exists(sink._checkpoint_location)
 
 
 def test_table_data_sink():

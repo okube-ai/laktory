@@ -27,9 +27,9 @@ class BaseDataSink(BaseModel):
         Other options passed to `spark.write.options`
     """
 
-    mode: Union[Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE", "UPDATE"], None] = (
-        None
-    )
+    mode: Union[
+        Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE", "UPDATE"], None
+    ] = None
     write_options: dict[str, str] = {}
     _parent: "PipelineNode" = None
 
@@ -73,6 +73,16 @@ class BaseDataSink(BaseModel):
 
     def _write_polars(self, df: PolarsDataFrame, mode=mode) -> None:
         raise NotImplementedError("Not implemented for Polars dataframe")
+
+    # ----------------------------------------------------------------------- #
+    # Purge                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    def purge(self):
+        """
+        Delete sink data and checkpoints
+        """
+        raise NotImplementedError()
 
     # ----------------------------------------------------------------------- #
     # Sources                                                                 #
