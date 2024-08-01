@@ -168,11 +168,15 @@ class TableDataSink(BaseDataSink):
         """
         if self._checkpoint_location:
             if os.path.exists(self._checkpoint_location):
-                logger.info(f"Deleting checkpoint at {self._checkpoint_location}", )
+                logger.info(
+                    f"Deleting checkpoint at {self._checkpoint_location}",
+                )
                 shutil.rmtree(self._checkpoint_location)
 
         if self.warehouse == "DATABRICKS":
-            logger.info(f"Dropping table {self.full_name}", )
+            logger.info(
+                f"Dropping table {self.full_name}",
+            )
             spark.sql(f"DROP TABLE IF EXISTS {self.full_name}")
         else:
             raise NotImplementedError(

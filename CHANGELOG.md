@@ -8,10 +8,6 @@
 * `refresh` option for pipeline and pipeline node
 ### Fixed
 * Checkpoint location of `TableDataSink`
-### Updated
-* n/a
-### Breaking changes
-* n/a
 
 ## [0.4.10] - 2024-07-20
 ### Fixed
