@@ -485,7 +485,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             )
 
         job = self.databricks_job
-        job.parameters = [JobParameter(name="pipeline_name", default=self.name)]
+        job.parameters = [
+            JobParameter(name="pipeline_name", default=self.name),
+            JobParameter(name="refresh", default="false"),
+        ]
 
         notebook_path = self.databricks_job.notebook_path
         if notebook_path is None:
@@ -612,7 +615,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def execute(self, spark=None, udfs=None, write_sinks=True, refresh: bool = False) -> None:
+    def execute(
+        self, spark=None, udfs=None, write_sinks=True, refresh: bool = False
+    ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
         executing each node. The selected orchestrator might impact how
@@ -633,7 +638,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         logger.info("Executing Pipeline")
 
         for inode, node in enumerate(self.sorted_nodes):
-            node.execute(spark=spark, udfs=udfs, write_sink=write_sinks, refresh=refresh)
+            node.execute(
+                spark=spark, udfs=udfs, write_sink=write_sinks, refresh=refresh
+            )
 
     def dag_figure(self) -> Figure:
         """
