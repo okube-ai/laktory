@@ -645,7 +645,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
         for inode, node in enumerate(self.sorted_nodes):
             node.execute(
-                spark=spark, udfs=udfs, write_sink=write_sinks, full_refresh=full_refresh
+                spark=spark,
+                udfs=udfs,
+                write_sink=write_sinks,
+                full_refresh=full_refresh,
             )
 
     def dag_figure(self) -> Figure:
