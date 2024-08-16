@@ -487,7 +487,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         job = self.databricks_job
         job.parameters = [
             JobParameter(name="pipeline_name", default=self.name),
-            JobParameter(name="refresh", default="false"),
+            JobParameter(name="full_refresh", default="false"),
         ]
 
         notebook_path = self.databricks_job.notebook_path
@@ -616,7 +616,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     def execute(
-        self, spark=None, udfs=None, write_sinks=True, refresh: bool = False
+        self, spark=None, udfs=None, write_sinks=True, full_refresh: bool = False
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -631,7 +631,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             List of user-defined functions used in transformation chains.
         write_sinks:
             If `False` writing of node sinks will be skipped
-        refresh:
+        full_refresh:
             If `True` all nodes will be completely re-processed by deleting
             existing data and checkpoints before processing.
         """
@@ -639,7 +639,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
         for inode, node in enumerate(self.sorted_nodes):
             node.execute(
-                spark=spark, udfs=udfs, write_sink=write_sinks, refresh=refresh
+                spark=spark, udfs=udfs, write_sink=write_sinks, full_refresh=full_refresh
             )
 
     def dag_figure(self) -> Figure:

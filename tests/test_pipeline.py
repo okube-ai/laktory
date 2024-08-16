@@ -573,7 +573,7 @@ def test_pipeline_job():
         "name": "job-pl-stock-prices",
         "parameters": [
             {"default": "pl-stock-prices", "name": "pipeline_name"},
-            {"default": "false", "name": "refresh"},
+            {"default": "false", "name": "full_refresh"},
         ],
         "tasks": [
             {

@@ -5,7 +5,7 @@
 * `VectorSearchIndex` Databricks resource
 * `VectorSearchEndpoint` Databricks resource
 * `purge` method for data sink
-* `refresh` option for pipeline and pipeline node
+* `full_refresh` option for pipeline and pipeline node
 ### Fixed
 * Checkpoint location of `TableDataSink`
 
