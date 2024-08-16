@@ -499,7 +499,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             package += f"=={self.databricks_job.laktory_version}"
 
         job.tasks = []
-        for node in self.sorted_nodes:
+
+        # Sorting Node Names to prevent job update trigger with Pulumi
+        node_names = [node.name for node in self.nodes]
+        node_names.sort()
+        for node_name in node_names:
+
+            node = self.nodes_dict[node_name]
 
             depends_on = []
             for edge in self.dag.in_edges(node.name):
