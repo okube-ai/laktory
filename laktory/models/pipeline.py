@@ -479,15 +479,15 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         for c in self.databricks_job.clusters:
             if c.name == "node-cluster":
                 cluster_found = True
-        if not cluster_found:
-            raise ValueError(
-                "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
-            )
+        # if not cluster_found:
+        #     raise ValueError(
+        #         "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
+        #     )
 
         job = self.databricks_job
         job.parameters = [
             JobParameter(name="pipeline_name", default=self.name),
-            JobParameter(name="refresh", default="false"),
+            JobParameter(name="full_refresh", default="false"),
         ]
 
         notebook_path = self.databricks_job.notebook_path
@@ -499,7 +499,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             package += f"=={self.databricks_job.laktory_version}"
 
         job.tasks = []
-        for node in self.sorted_nodes:
+
+        # Sorting Node Names to prevent job update trigger with Pulumi
+        node_names = [node.name for node in self.nodes]
+        node_names.sort()
+        for node_name in node_names:
+
+            node = self.nodes_dict[node_name]
 
             depends_on = []
             for edge in self.dag.in_edges(node.name):
@@ -512,11 +518,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                         "base_parameters": {"node_name": node.name},
                         "notebook_path": notebook_path,
                     },
-                    libraries=[{"pypi": {"package": package}}],
+                    # libraries=[{"pypi": {"package": package}}],
                     depends_ons=depends_on,
-                    job_cluster_key="node-cluster",
+                    # job_cluster_key=job_cluster_key,
                 )
             ]
+            if cluster_found:
+                job.tasks[-1].job_cluster_key = "node-cluster"
 
         return self
 
@@ -616,7 +624,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     def execute(
-        self, spark=None, udfs=None, write_sinks=True, refresh: bool = False
+        self, spark=None, udfs=None, write_sinks=True, full_refresh: bool = False
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -631,7 +639,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             List of user-defined functions used in transformation chains.
         write_sinks:
             If `False` writing of node sinks will be skipped
-        refresh:
+        full_refresh:
             If `True` all nodes will be completely re-processed by deleting
             existing data and checkpoints before processing.
         """
@@ -639,7 +647,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
         for inode, node in enumerate(self.sorted_nodes):
             node.execute(
-                spark=spark, udfs=udfs, write_sink=write_sinks, refresh=refresh
+                spark=spark,
+                udfs=udfs,
+                write_sink=write_sinks,
+                full_refresh=full_refresh,
             )
 
     def dag_figure(self) -> Figure:

@@ -573,13 +573,12 @@ def test_pipeline_job():
         "name": "job-pl-stock-prices",
         "parameters": [
             {"default": "pl-stock-prices", "name": "pipeline_name"},
-            {"default": "false", "name": "refresh"},
+            {"default": "false", "name": "full_refresh"},
         ],
         "tasks": [
             {
                 "depends_ons": [],
                 "job_cluster_key": "node-cluster",
-                "libraries": [{"pypi": {"package": "laktory==0.3.0"}}],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "brz_stock_prices"},
@@ -589,7 +588,6 @@ def test_pipeline_job():
             {
                 "depends_ons": [],
                 "job_cluster_key": "node-cluster",
-                "libraries": [{"pypi": {"package": "laktory==0.3.0"}}],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "slv_stock_meta"},
@@ -602,7 +600,6 @@ def test_pipeline_job():
                     {"task_key": "node-slv_stock_meta"},
                 ],
                 "job_cluster_key": "node-cluster",
-                "libraries": [{"pypi": {"package": "laktory==0.3.0"}}],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "slv_stock_prices"},

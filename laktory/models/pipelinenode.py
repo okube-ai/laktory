@@ -473,7 +473,7 @@ class PipelineNode(BaseModel):
         spark: SparkSession = None,
         udfs: list[Callable] = None,
         write_sink: bool = True,
-        refresh: bool = False,
+        full_refresh: bool = False,
     ) -> AnyDataFrame:
         """
         Execute pipeline node by:
@@ -492,7 +492,7 @@ class PipelineNode(BaseModel):
             User-defined functions
         write_sink:
             Flag to include writing sink in the execution
-        refresh:
+        full_refresh:
             If `True` dataframe will be completely re-processed by deleting
             existing data and checkpoint before processing.
 
@@ -507,10 +507,10 @@ class PipelineNode(BaseModel):
         if self.is_orchestrator_dlt:
             logger.info("DLT orchestrator selected. Sinks writing will be skipped.")
             write_sink = False
-            refresh = False
+            full_refresh = False
 
         # Refresh
-        if refresh:
+        if full_refresh:
             if self.sink:
                 self.sink.purge(spark=spark)
 
