@@ -1,6 +1,16 @@
 # Release History
 
-## [0.4.11] - Unreleased
+## [0.4.12] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.4.11] - 2024-08-16
 ### Added
 * `VectorSearchIndex` Databricks resource
 * `VectorSearchEndpoint` Databricks resource
