@@ -479,10 +479,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         for c in self.databricks_job.clusters:
             if c.name == "node-cluster":
                 cluster_found = True
-        if not cluster_found:
-            raise ValueError(
-                "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
-            )
+        # if not cluster_found:
+        #     raise ValueError(
+        #         "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
+        #     )
 
         job = self.databricks_job
         job.parameters = [
@@ -518,11 +518,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                         "base_parameters": {"node_name": node.name},
                         "notebook_path": notebook_path,
                     },
-                    libraries=[{"pypi": {"package": package}}],
+                    # libraries=[{"pypi": {"package": package}}],
                     depends_ons=depends_on,
-                    job_cluster_key="node-cluster",
+                    # job_cluster_key=job_cluster_key,
                 )
             ]
+            if cluster_found:
+                job.tasks[-1].job_cluster_key = "node-cluster"
 
         return self
 
