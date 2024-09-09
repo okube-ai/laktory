@@ -161,7 +161,7 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
         # Run query
         _df = None
         for expr in self.parsed_expr(df_id):
-            if expr.strip == "":
+            if expr.replace("\n", " ").strip() == "":
                 continue
             _df = _spark.laktory.sql(expr)
         if _df is None:
