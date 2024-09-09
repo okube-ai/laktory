@@ -2,13 +2,7 @@
 
 ## [0.4.12] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Supported for multiple SQL statements
 
 ## [0.4.11] - 2024-08-16
 ### Added
