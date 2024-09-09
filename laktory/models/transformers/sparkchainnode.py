@@ -118,13 +118,14 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
         SQL expression
     """
 
-    def parsed_expr(self, df_id="df") -> str:
+    def parsed_expr(self, df_id="df") -> list[str]:
         expr = self.expr.replace("{df}", df_id)
         pattern = r"\{nodes\.(.*?)\}"
         matches = re.findall(pattern, expr)
         for m in matches:
             expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
-        return expr
+
+        return expr.split(";")
 
     def eval(self, df, chain_node=None):
 
@@ -158,7 +159,14 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
             _df.createOrReplaceTempView(f"nodes__{source.node.name}")
 
         # Run query
-        return _spark.laktory.sql(self.parsed_expr(df_id))
+        _df = None
+        for expr in self.parsed_expr(df_id):
+            if expr.replace("\n", " ").strip() == "":
+                continue
+            _df = _spark.laktory.sql(expr)
+        if _df is None:
+            raise ValueError(f"SQL Expression '{self.expr}' is invalid")
+        return _df
 
         # class Nodes:
         #     pass

@@ -97,16 +97,27 @@ def test_df_input(df0=df0):
 def test_sql_expression(df0=df0):
     df = df0.select(df0.columns)
 
+    view = """
+    CREATE OR REPLACE TEMP VIEW 
+        people_view (id, name)
+    AS VALUES
+        (1, 'john'),
+        (2, 'jane')
+    ;
+    """
+
     sc = models.SparkChain(
         nodes=[
             {
-                "sql_expr": "SELECT *, x*2 AS x2 FROM {df}",
+                "sql_expr": f"{view} SELECT *, x*2 AS x2 FROM {{df}}",
             },
         ]
     )
 
     # Execute Chain
     df = sc.execute(df)
+
+    print(df)
 
     # Test
     pdf = df.toPandas()
@@ -368,4 +379,4 @@ if __name__ == "__main__":
     test_column()
     test_udfs()
     test_nested()
-    # atest_exceptions()
+    atest_exceptions()
