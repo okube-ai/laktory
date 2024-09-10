@@ -118,8 +118,16 @@ class Worker:
                 raise e
             else:
                 print(f"An error occurred while executing '{_cmd}': {str(e)}")
-                if "The system cannot find the file specified" in str(e):
-                    if _cmd.startswith("terraform"):
-                        print("Make sure terraform is installed and part of the PATH")
-                    if _cmd.startswith("pulumi"):
-                        print("Make sure pulumi is installed and part of the PATH")
+
+                # Windows
+                c1 = _cmd.startswith("terraform") and "The system cannot find the file specified".lower() in str(e).lower()
+                c2 = _cmd.startswith("pulumi") and "The system cannot find the file specified".lower() in str(e).lower()
+
+                # Mac/Linux
+                c3 = "No such file or directory: 'terraform'".lower() in str(e).lower()
+                c4 = "No such file or directory: 'pulumi'".lower() in str(e).lower()
+
+                if c1 or c3:
+                    print("Terraform is selected as IaC backend. Make sure it is installed and part of the PATH")
+                elif c2 or c4:
+                    print("Pulumi is selected as IaC backend. Make sure it is installed and part of the PATH")
