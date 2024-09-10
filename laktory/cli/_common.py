@@ -113,7 +113,13 @@ class Worker:
             )
 
         except Exception as e:
+            _cmd = " ".join(cmd)
             if raise_exceptions:
                 raise e
             else:
-                print("An error occurred:", str(e))
+                print(f"An error occurred while executing '{_cmd}': {str(e)}")
+                if "The system cannot find the file specified" in str(e):
+                    if _cmd.startswith("terraform"):
+                        print("Make sure terraform is installed and part of the PATH")
+                    if _cmd.startswith("pulumi"):
+                        print("Make sure pulumi is installed and part of the PATH")
