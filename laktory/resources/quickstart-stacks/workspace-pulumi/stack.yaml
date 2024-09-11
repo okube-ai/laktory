@@ -1,0 +1,18 @@
+name: workspace
+organization: my_organization
+description: Lakehouse - Workspace Configuration
+backend: pulumi
+pulumi:
+  config:
+    databricks:host: ${vars.DATABRICKS_HOST}
+    databricks:token: ${vars.DATABRICKS_TOKEN}
+resources:
+  databricks_directories: ${include.resources/directories.yaml}
+  databricks_warehouses: ${include.resources/warehouses.yaml}
+environments:
+  dev:
+    variables:
+      env: dev
+  prd:
+    variables:
+      env: prd

@@ -7,10 +7,21 @@ from prompt_toolkit.validation import ValidationError
 
 from laktory.models.stacks.stack import Stack
 from laktory.constants import SUPPORTED_BACKENDS
+from laktory.constants import QUICKSTART_TEMPLATES
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 DIRPATH = os.path.dirname(__file__)
+
+
+class TemplateValidator(Validator):
+    def validate(self, document):
+        text = document.text
+        if text.lower() not in QUICKSTART_TEMPLATES:
+            raise ValidationError(
+                message=f"Please enter one of the supported template {QUICKSTART_TEMPLATES}",
+                cursor_position=len(text),
+            )  # Move cursor to end
 
 
 class BackendValidator(Validator):
