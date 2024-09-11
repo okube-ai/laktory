@@ -10,6 +10,7 @@ from laktory.models.pipeline import Pipeline
 from laktory.models.resources.baseresource import ResourceOptions
 from laktory.models.resources.databricks.catalog import Catalog
 from laktory.models.resources.databricks.cluster import Cluster
+from laktory.models.resources.databricks.dashboard import Dashboard
 from laktory.models.resources.databricks.dbfsfile import DbfsFile
 from laktory.models.resources.databricks.directory import Directory
 from laktory.models.resources.databricks.dltpipeline import DLTPipeline
@@ -81,6 +82,8 @@ class StackResources(BaseModel):
         Databricks Catalogs
     databricks_clusters:
         Databricks Clusters
+    databricks_dashboards:
+        Databricks Dashboards
     databricks_directories:
         Databricks Directories
     databricks_externallocations:
@@ -125,6 +128,7 @@ class StackResources(BaseModel):
         Laktory Pipelines
     """
 
+    databricks_dashboards: dict[str, Dashboard] = {}
     databricks_dbfsfiles: dict[str, DbfsFile] = {}
     databricks_catalogs: dict[str, Catalog] = {}
     databricks_clusters: dict[str, Cluster] = {}

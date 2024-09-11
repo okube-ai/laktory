@@ -51,7 +51,7 @@ dependencies = [
 # IaC
 pulumi = [
     "pulumi",
-    "pulumi_databricks>=1.36",  # required to monitor laktory usage
+    "pulumi_databricks>=1.49",  # required to support Databricks Lakeview Dashboard
 ]
 
 # DataFrame

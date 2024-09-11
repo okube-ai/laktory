@@ -2,6 +2,7 @@ from .accesscontrol import AccessControl
 from .catalog import Catalog
 from .cluster import Cluster
 from .column import Column
+from .dashboard import Dashboard
 from .dbfsfile import DbfsFile
 from .directory import Directory
 from .dltpipeline import DLTPipeline
