@@ -60,11 +60,9 @@ def quickstart(
             validator=BackendValidator(),
         )
 
-    template_name = f"{template}-{backend}"
-
     # Copy template
     stacks_dir = os.path.join(os.path.dirname(__file__), "../resources/quickstart-stacks/")
-    source_dir = os.path.join(stacks_dir, template_name)
+    source_dir = os.path.join(stacks_dir, template)
     target_dir = "./"
 
     # Iterate through files
@@ -81,4 +79,18 @@ def quickstart(
             target_filepath = os.path.join(_target_dir, filename)
 
             print(f"Writing {target_filepath}...")
+
+            # Rename stack files
+            if filename == "stack_pulumi.yaml":
+                if backend == "terraform":
+                    continue
+                else:
+                    target_filepath = target_filepath.replace("stack_pulumi.yaml", "stack.yaml")
+
+            elif filename == "stack_terra.yaml":
+                if backend == "pulumi":
+                    continue
+                else:
+                    target_filepath = target_filepath.replace("stack_terra.yaml", "stack.yaml")
+
             shutil.copy2(source_filepath, target_filepath)
