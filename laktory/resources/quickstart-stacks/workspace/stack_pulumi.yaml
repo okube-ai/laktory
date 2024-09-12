@@ -8,6 +8,7 @@ pulumi:
     databricks:token: ${vars.DATABRICKS_TOKEN}
 resources:
   databricks_directories: ${include.resources/directories.yaml}
+  databricks_secretscopes: ${include.resources/secretscopes.yaml}
   databricks_warehouses: ${include.resources/warehouses.yaml}
 environments:
   dev:

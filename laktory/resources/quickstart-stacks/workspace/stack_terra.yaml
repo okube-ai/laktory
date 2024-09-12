@@ -4,6 +4,7 @@ description: Lakehouse - Workspace Configuration
 backend: terraform
 resources:
   databricks_directories: ${include.resources/directories.yaml}
+  databricks_secretscopes: ${include.resources/secretscopes.yaml}
   databricks_warehouses: ${include.resources/warehouses.yaml}
   providers:
     databricks:

@@ -1,4 +1,4 @@
-# MAGIC %pip install laktory
+# MAGIC %pip install 'laktory==<laktory_version>'
 
 # COMMAND ----------
 import importlib

@@ -10,6 +10,7 @@ from laktory.cli._common import TemplateValidator
 from laktory.cli.app import app
 from laktory.constants import QUICKSTART_TEMPLATES
 from laktory.constants import SUPPORTED_BACKENDS
+from laktory._version import VERSION
 
 
 @app.command()
@@ -93,4 +94,13 @@ def quickstart(
                 else:
                     target_filepath = target_filepath.replace("stack_terra.yaml", "stack.yaml")
 
+            # Copy file
             shutil.copy2(source_filepath, target_filepath)
+
+            # Update laktory version
+            if target_filepath.endswith("requirements.txt") or target_filepath.endswith(".py"):
+                with open(target_filepath, "r") as fp:
+                    data = fp.read()
+
+                with open(target_filepath, "w") as fp:
+                    fp.write(data.replace("<laktory_version>", VERSION))

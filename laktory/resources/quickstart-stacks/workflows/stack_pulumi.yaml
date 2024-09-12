@@ -1,0 +1,25 @@
+name: workflows
+organization: my_organization
+description: Lakehouse - Workflows
+backend: pulumi
+pulumi:
+  config:
+    databricks:host: ${vars.DATABRICKS_HOST}
+    databricks:token: ${vars.DATABRICKS_TOKEN}
+resources:
+  databricks_dbfsfiles: ${include.resources/dbfsfiles.yaml}
+  databricks_notebooks: ${include.resources/notebooks.yaml}
+  pipelines:
+    pl-quickstart: ${include.resources/pipeline_quickstart.yaml}
+  providers:
+    databricks:
+      host: ${vars.DATABRICKS_HOST}
+      token: ${vars.DATABRICKS_TOKEN}
+environments:
+  dev:
+    variables:
+      env: dev
+      is_dev: true
+  prd:
+    variables:
+      env: prd

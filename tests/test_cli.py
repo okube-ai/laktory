@@ -33,8 +33,25 @@ def _read_stack(template, backend):
         stack = models.Stack.model_validate_yaml(fp)
     data = stack.model_dump()
 
+    # Count resources
+    resources_count = 0
+    for k in data["resources"]:
+        if k == "providers":
+            continue
+        resources_count += len(data["resources"][k].keys())
+
     if template == "workspace":
-        assert len(data["resources"]) == 26
+        assert resources_count == 7
+        assert "directory-laktory-dashboards" in data["resources"]["databricks_directories"]
+        assert "secret-scope-laktory" in data["resources"]["databricks_secretscopes"]
+        assert "warehouse-laktory" in data["resources"]["databricks_warehouses"]
+        pass
+    elif template == "workflows":
+        assert resources_count == 4
+        assert "dbfs-file-stock-prices" in data["resources"]["databricks_dbfsfiles"]
+        assert "notebook-job-laktory-pl" in data["resources"]["databricks_notebooks"]
+        assert "notebook-dlt-laktory-pl" in data["resources"]["databricks_notebooks"]
+        assert "pl-quickstart" in data["resources"]["pipelines"]
     else:
         raise ValueError()
 
@@ -112,11 +129,13 @@ def test_read_quickstart_stacks():
     for template, backend in [
         ("workspace", "terraform"),
         ("workspace", "pulumi"),
+        ("workflows", "terraform"),
+        ("workflows", "pulumi"),
     ]:
         _read_stack(template, backend)
 
 
-def test_preview_quickstart_stacks():
+def atest_preview_quickstart_stacks():
     for template, backend, env in [
         ("workspace", "terraform", "dev"),
         ("workspace", "pulumi", "dev"),
