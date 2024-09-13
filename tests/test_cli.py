@@ -42,16 +42,18 @@ def _read_stack(template, backend):
 
     if template == "workspace":
         assert resources_count == 7
-        assert "directory-laktory-dashboards" in data["resources"]["databricks_directories"]
-        assert "secret-scope-laktory" in data["resources"]["databricks_secretscopes"]
-        assert "warehouse-laktory" in data["resources"]["databricks_warehouses"]
+        assert "directory-laktory-dashboards" in data["resources"]["databricks_directories"].keys()
+        assert "secret-scope-laktory" in data["resources"]["databricks_secretscopes"].keys()
+        assert "warehouse-laktory" in data["resources"]["databricks_warehouses"].keys()
         pass
     elif template == "workflows":
-        assert resources_count == 4
-        assert "dbfs-file-stock-prices" in data["resources"]["databricks_dbfsfiles"]
-        assert "notebook-job-laktory-pl" in data["resources"]["databricks_notebooks"]
-        assert "notebook-dlt-laktory-pl" in data["resources"]["databricks_notebooks"]
-        assert "pl-quickstart" in data["resources"]["pipelines"]
+        assert resources_count == 7
+        assert "dbfs-file-stock-prices" in data["resources"]["databricks_dbfsfiles"].keys()
+        assert "notebook-job-laktory-pl" in data["resources"]["databricks_notebooks"].keys()
+        assert "notebook-dlt-laktory-pl" in data["resources"]["databricks_notebooks"].keys()
+        assert "job-hello" in data["resources"]["databricks_jobs"].keys()
+        assert "pl-stocks-sql" in data["resources"]["pipelines"].keys()
+        assert "pl-stocks-spark-dlt" in data["resources"]["pipelines"].keys()
     else:
         raise ValueError()
 
@@ -135,7 +137,7 @@ def test_read_quickstart_stacks():
         _read_stack(template, backend)
 
 
-def atest_preview_quickstart_stacks():
+def test_preview_quickstart_stacks():
     for template, backend, env in [
         ("workspace", "terraform", "dev"),
         ("workspace", "pulumi", "dev"),
