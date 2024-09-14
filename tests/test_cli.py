@@ -54,6 +54,12 @@ def _read_stack(template, backend):
         assert "job-hello" in data["resources"]["databricks_jobs"].keys()
         assert "pl-stocks-sql" in data["resources"]["pipelines"].keys()
         assert "pl-stocks-spark-dlt" in data["resources"]["pipelines"].keys()
+    elif template == "unity-catalog":
+        assert resources_count == 8
+        assert "group-laktory-friends" in data["resources"]["databricks_groups"].keys()
+        assert "user-kubic-okube-ai" in data["resources"]["databricks_users"].keys()
+        assert "catalog-lqs-prd" in data["resources"]["databricks_catalogs"].keys()
+
     else:
         raise ValueError()
 
@@ -133,6 +139,8 @@ def test_read_quickstart_stacks():
         ("workspace", "pulumi"),
         ("workflows", "terraform"),
         ("workflows", "pulumi"),
+        ("unity-catalog", "terraform"),
+        ("unity-catalog", "pulumi"),
     ]:
         _read_stack(template, backend)
 
@@ -141,6 +149,10 @@ def test_preview_quickstart_stacks():
     for template, backend, env in [
         ("workspace", "terraform", "dev"),
         ("workspace", "pulumi", "dev"),
+        ("workflows", "terraform", "dev"),
+        ("workflows", "pulumi", "dev"),
+        ("unity-catalog", "terraform", None),
+        ("unity-catalog", "pulumi", None),
     ]:
         _preview_stack(template, backend, env)
 
@@ -149,6 +161,10 @@ def atest_deploy_quickstart_stacks():
     for template, backend, env in [
         ("workspace", "terraform", "dev"),
         ("workspace", "pulumi", "dev"),
+        ("workflows", "terraform", "dev"),
+        ("workflows", "pulumi", "dev"),
+        ("unity-catalog", "terraform"),
+        ("unity-catalog", "pulumi"),
     ]:
         _deploy_stack(template, backend, env)
 
