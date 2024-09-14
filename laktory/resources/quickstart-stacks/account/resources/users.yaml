@@ -1,0 +1,18 @@
+user-john-doe-okube-ai:
+  user_name: john.doe@okube.ai
+  group_ids:
+  - ${resources.group-laktory-friends.id}
+
+user-jane-doe-okube-ai:
+  user_name: jane.doe@okube.ai
+  group_ids:
+  - ${resources.group-laktory-friends.id}
+
+user-kubic-okube-ai:
+  user_name: kubic@okube.ai
+  group_ids:
+  - ${resources.group-laktory-friends.id}
+  - ${resources.group-metastore-admins.id}
+  - ${resources.group-workspace-admins.id}
+  roles:
+    - account_admin
