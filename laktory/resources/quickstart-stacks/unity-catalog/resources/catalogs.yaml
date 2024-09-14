@@ -1,0 +1,61 @@
+# --------------------------------------------------------------------------- #
+# dev                                                                         #
+# --------------------------------------------------------------------------- #
+
+catalog-lqs-dev:
+  name: lqs-dev
+  isolation_mode: OPEN
+  grants:
+    - principal: account users
+      privileges:
+        - USE_CATALOG
+        - USE_SCHEMA
+    - principal: metastore-admins
+      privileges:
+        - ALL_PRIVILEGES
+  schemas:
+    -< ${include.resources/schemas.yaml}
+    - name: sources
+    # For simplicity, Volumes are outside the scope of this quickstart, but
+    # for a complete example, refer to:
+    # https://github.com/okube-ai/lakehouse-as-code/blob/main/unity-catalog/resources/catalogs.yaml
+
+  options:
+    # The provider must be specified because catalogs are deployed at the
+    # workspace level. If the catalog is isolated
+    # (https://learn.microsoft.com/en-us/azure/databricks/catalogs/binding),
+    # it will only be available in the workspace designated by the provider.
+    provider: ${resources.databricks.dev}
+
+
+
+# --------------------------------------------------------------------------- #
+# prod                                                                        #
+# --------------------------------------------------------------------------- #
+
+catalog-lqs-prd:
+  name: lqs-prd
+  isolation_mode: OPEN
+  grants:
+    - principal: account users
+      privileges:
+        - USE_CATALOG
+        - USE_SCHEMA
+    - principal: metastore-admins
+      privileges:
+        - ALL_PRIVILEGES
+  schemas:
+    -< ${include.resources/schemas.yaml}
+    - name: sources
+    # For simplicity, Volumes are outside the scope of this quickstart, but
+    # for a complete example, refer to:
+    # https://github.com/okube-ai/lakehouse-as-code/blob/main/unity-catalog/resources/catalogs.yaml
+
+  options:
+    # The provider must be specified because catalogs are deployed at the
+    # workspace level. If the catalog is isolated
+    # (https://learn.microsoft.com/en-us/azure/databricks/catalogs/binding),
+    # it will only be available in the workspace designated by the provider.
+    # Typically, the lqs-prd catalog would be deployed with
+    # ${resources.databricks.prd}, but for simplicity, we used dev.
+    provider: ${resources.databricks.dev}

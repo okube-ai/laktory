@@ -76,6 +76,15 @@ def quickstart(
 
         # Copy each file
         for filename in filenames:
+
+            if filename in [
+                "read_env.sh",
+                "stack.yaml",  # stack_terra.yaml or stack_pulumi.yaml will be used instead
+            ]:
+                continue
+
+            # TODO: ADD FILTERING BASED IN GITIGNORE?
+
             source_filepath = os.path.join(root, filename)
             target_filepath = os.path.join(_target_dir, filename)
 
@@ -103,4 +112,19 @@ def quickstart(
                     data = fp.read()
 
                 with open(target_filepath, "w") as fp:
-                    fp.write(data.replace("<laktory_version>", VERSION))
+                    fp.write(data.replace(
+                        "<laktory_version>",
+                        VERSION
+                    ))
+
+            if backend == "pulumi" and target_filepath.endswith("catalogs.yaml"):
+                with open(target_filepath, "r") as fp:
+                    data = fp.read()
+
+                with open(target_filepath, "w") as fp:
+                    fp.write(data.replace(
+                        "provider: ${resources.databricks.",
+                        "provider: ${resources.provider-databricks-"
+                    ))
+
+
