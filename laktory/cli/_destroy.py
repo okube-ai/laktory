@@ -7,21 +7,13 @@ from laktory.constants import SUPPORTED_BACKENDS
 
 
 @app.command()
-def deploy(
+def destroy(
     environment: Annotated[
         str, typer.Option("--env", "-e", help="Name of the environment")
     ] = None,
     filepath: Annotated[
         str, typer.Option(help="Stack (yaml) filepath.")
     ] = "./stack.yaml",
-    auto_approve: Annotated[
-        bool,
-        typer.Option(
-            "--yes",
-            "-y",
-            help="Automatically approve and perform the update after previewing it",
-        ),
-    ] = False,
     options: Annotated[
         str,
         typer.Option(
@@ -30,7 +22,7 @@ def deploy(
     ] = None,
 ):
     """
-    Execute deployment.
+    Destroy all remote objects managed by the stack
 
     Parameters
     ----------
@@ -38,33 +30,30 @@ def deploy(
         Name of the environment.
     filepath:
         Stack (yaml) filepath.
-    auto_approve:
-        Automatically approve and perform the update after previewing it
     options:
         Comma separated IaC backend options (flags).
 
     Examples
     --------
     ```cmd
-    laktory deploy --env dev --filepath my-stack.yaml
+    laktory destroy --env dev
     ```
 
     References
     ----------
-    - pulumi [up](https://www.pulumi.com/docs/cli/commands/pulumi_up/)
-    - terraform [apply](https://developer.hashicorp.com/terraform/cli/commands/apply)
+    - terraform [destroy](https://developer.hashicorp.com/terraform/cli/commands/destroy)
+    - pulumi [destroy](https://www.pulumi.com/docs/cli/commands/pulumi_destroy/)
     """
     controller = CLIController(
         env=environment,
-        auto_approve=auto_approve,
         stack_filepath=filepath,
         options_str=options,
     )
 
     # Call
     if controller.backend == "pulumi":
-        controller.pulumi_call("up")
+        controller.pulumi_call("destroy")
     elif controller.backend == "terraform":
-        controller.terraform_call("apply")
+        controller.terraform_call("destroy")
     else:
         raise ValueError(f"backend should be {SUPPORTED_BACKENDS}")

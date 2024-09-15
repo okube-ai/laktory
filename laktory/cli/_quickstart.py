@@ -16,11 +16,10 @@ from laktory._version import VERSION
 @app.command()
 def quickstart(
     template: Annotated[
-        str, typer.Option(
-            "--template",
-            "-t",
-            help="Tempalte [unity-catalog, workspace, workflows]"
-        )
+        str,
+        typer.Option(
+            "--template", "-t", help="Template [unity-catalog, workspace, workflows]"
+        ),
     ] = None,
     backend: Annotated[
         str, typer.Option("--backend", "-b", help="IaC backend [terraform, pulumi]")
@@ -62,7 +61,9 @@ def quickstart(
         )
 
     # Copy template
-    stacks_dir = os.path.join(os.path.dirname(__file__), "../resources/quickstart-stacks/")
+    stacks_dir = os.path.join(
+        os.path.dirname(__file__), "../resources/quickstart-stacks/"
+    )
     source_dir = os.path.join(stacks_dir, template)
     target_dir = "./"
 
@@ -95,36 +96,39 @@ def quickstart(
                 if backend == "terraform":
                     continue
                 else:
-                    target_filepath = target_filepath.replace("stack_pulumi.yaml", "stack.yaml")
+                    target_filepath = target_filepath.replace(
+                        "stack_pulumi.yaml", "stack.yaml"
+                    )
 
             elif filename == "stack_terra.yaml":
                 if backend == "pulumi":
                     continue
                 else:
-                    target_filepath = target_filepath.replace("stack_terra.yaml", "stack.yaml")
+                    target_filepath = target_filepath.replace(
+                        "stack_terra.yaml", "stack.yaml"
+                    )
 
             # Copy file
             shutil.copy2(source_filepath, target_filepath)
 
             # Update laktory version
-            if target_filepath.endswith("requirements.txt") or target_filepath.endswith(".py"):
+            if target_filepath.endswith("requirements.txt") or target_filepath.endswith(
+                ".py"
+            ):
                 with open(target_filepath, "r") as fp:
                     data = fp.read()
 
                 with open(target_filepath, "w") as fp:
-                    fp.write(data.replace(
-                        "<laktory_version>",
-                        VERSION
-                    ))
+                    fp.write(data.replace("<laktory_version>", VERSION))
 
             if backend == "pulumi" and target_filepath.endswith("catalogs.yaml"):
                 with open(target_filepath, "r") as fp:
                     data = fp.read()
 
                 with open(target_filepath, "w") as fp:
-                    fp.write(data.replace(
-                        "provider: ${resources.databricks.",
-                        "provider: ${resources.provider-databricks-"
-                    ))
-
-
+                    fp.write(
+                        data.replace(
+                            "provider: ${resources.databricks.",
+                            "provider: ${resources.provider-databricks-",
+                        )
+                    )

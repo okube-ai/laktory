@@ -611,11 +611,11 @@ def test_pulumi_stack():
                             "newCluster": {
                                 "dataSecurityMode": "USER_ISOLATION",
                                 "initScripts": [],
-                                "nodeTypeId": "Standard_DS3_v2",
+                                "nodeTypeId": "Standard_DS4_v2",
                                 "sparkConf": {},
                                 "sparkEnvVars": {
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
-                                    "LAKTORY_WORKSPACE_ENV": "dev",
+                                    "LAKTORY_WORKSPACE_ENV": "prod",
                                 },
                                 "sparkVersion": "14.0.x-scala2.12",
                                 "sshPublicKeys": [],
@@ -1039,11 +1039,11 @@ def test_terraform_stack():
                             "new_cluster": {
                                 "data_security_mode": "USER_ISOLATION",
                                 "init_scripts": [],
-                                "node_type_id": "Standard_DS3_v2",
+                                "node_type_id": "Standard_DS4_v2",
                                 "spark_conf": {},
                                 "spark_env_vars": {
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
-                                    "LAKTORY_WORKSPACE_ENV": "dev",
+                                    "LAKTORY_WORKSPACE_ENV": "prod",
                                 },
                                 "spark_version": "14.0.x-scala2.12",
                                 "ssh_public_keys": [],

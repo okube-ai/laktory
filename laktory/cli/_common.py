@@ -36,12 +36,9 @@ class BackendValidator(Validator):
 
 class CLIController(BaseModel):
     stack_filepath: Union[str, None] = None
-    backend: Union[str, None] = None
-    organization: Union[str, None] = None
     env: Union[str, None] = None
     auto_approve: Union[bool, None] = False
-    pulumi_options_str: Union[str, None] = None
-    terraform_options_str: Union[str, None] = None
+    options_str: Union[str, None] = None
     stack: Union[Stack, None] = None
 
     def model_post_init(self, __context):
@@ -53,20 +50,6 @@ class CLIController(BaseModel):
         with open(self.stack_filepath, "r", encoding="utf-8") as fp:
             self.stack = Stack.model_validate_yaml(fp)
 
-        # Set backend
-        if self.backend is None:
-            self.backend = self.stack.backend
-        if self.backend is None:
-            raise ValueError(
-                "backend ['pulumi', 'terraform'] must be specified in stack file or as CLI option "
-            )
-
-        # Set organization
-        if self.organization is None:
-            self.organization = self.stack.organization
-        if self.organization is None and self.backend == "pulumi":
-            raise ValueError("organization must be specified with pulumi backend")
-
         # Check environment
         if self.env is None:
             env_names = list(self.stack.environments.keys())
@@ -77,13 +60,21 @@ class CLIController(BaseModel):
                 self.env = env_names[0]
 
     @property
+    def backend(self) -> str:
+        return self.stack.backend
+
+    @property
+    def organization(self) -> str:
+        return self.stack.organization
+
+    @property
     def pulumi_options(self):
         options = []
         if self.auto_approve:
             options += ["--yes"]
 
-        if self.pulumi_options_str:
-            options += self.pulumi_options_str.split(",")
+        if self.options_str:
+            options += self.options_str.split(",")
 
         return options
 
@@ -93,8 +84,8 @@ class CLIController(BaseModel):
         if self.auto_approve:
             options += ["-auto-approve"]
 
-        if self.terraform_options_str:
-            options += self.terraform_options_str.split(",")
+        if self.options_str:
+            options += self.options_str.split(",")
 
         return options
 
@@ -131,14 +122,26 @@ class Worker:
                 print(f"An error occurred while executing '{_cmd}': {str(e)}")
 
                 # Windows
-                c1 = _cmd.startswith("terraform") and "The system cannot find the file specified".lower() in str(e).lower()
-                c2 = _cmd.startswith("pulumi") and "The system cannot find the file specified".lower() in str(e).lower()
+                c1 = (
+                    _cmd.startswith("terraform")
+                    and "The system cannot find the file specified".lower()
+                    in str(e).lower()
+                )
+                c2 = (
+                    _cmd.startswith("pulumi")
+                    and "The system cannot find the file specified".lower()
+                    in str(e).lower()
+                )
 
                 # Mac/Linux
                 c3 = "No such file or directory: 'terraform'".lower() in str(e).lower()
                 c4 = "No such file or directory: 'pulumi'".lower() in str(e).lower()
 
                 if c1 or c3:
-                    print("Terraform is selected as IaC backend. Make sure it is installed and part of the PATH")
+                    print(
+                        "Terraform is selected as IaC backend. Make sure it is installed and part of the PATH"
+                    )
                 elif c2 or c4:
-                    print("Pulumi is selected as IaC backend. Make sure it is installed and part of the PATH")
+                    print(
+                        "Pulumi is selected as IaC backend. Make sure it is installed and part of the PATH"
+                    )

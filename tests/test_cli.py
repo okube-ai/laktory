@@ -15,7 +15,9 @@ paths = Paths(__file__)
 
 def _read_stack(template, backend):
 
-    dirpath = os.path.join(paths.tmp, f"quickstart_{template}_{backend}_{str(uuid.uuid4())}")
+    dirpath = os.path.join(
+        paths.tmp, f"quickstart_{template}_{backend}_{str(uuid.uuid4())}"
+    )
     stack_filepath = os.path.join(dirpath, "stack.yaml")
 
     # Change dir
@@ -42,15 +44,29 @@ def _read_stack(template, backend):
 
     if template == "workspace":
         assert resources_count == 7
-        assert "directory-laktory-dashboards" in data["resources"]["databricks_directories"].keys()
-        assert "secret-scope-laktory" in data["resources"]["databricks_secretscopes"].keys()
+        assert (
+            "directory-laktory-dashboards"
+            in data["resources"]["databricks_directories"].keys()
+        )
+        assert (
+            "secret-scope-laktory"
+            in data["resources"]["databricks_secretscopes"].keys()
+        )
         assert "warehouse-laktory" in data["resources"]["databricks_warehouses"].keys()
         pass
     elif template == "workflows":
         assert resources_count == 7
-        assert "dbfs-file-stock-prices" in data["resources"]["databricks_dbfsfiles"].keys()
-        assert "notebook-job-laktory-pl" in data["resources"]["databricks_notebooks"].keys()
-        assert "notebook-dlt-laktory-pl" in data["resources"]["databricks_notebooks"].keys()
+        assert (
+            "dbfs-file-stock-prices" in data["resources"]["databricks_dbfsfiles"].keys()
+        )
+        assert (
+            "notebook-job-laktory-pl"
+            in data["resources"]["databricks_notebooks"].keys()
+        )
+        assert (
+            "notebook-dlt-laktory-pl"
+            in data["resources"]["databricks_notebooks"].keys()
+        )
         assert "job-hello" in data["resources"]["databricks_jobs"].keys()
         assert "pl-stocks-sql" in data["resources"]["pipelines"].keys()
         assert "pl-stocks-spark-dlt" in data["resources"]["pipelines"].keys()
@@ -69,7 +85,9 @@ def _read_stack(template, backend):
 
 def _preview_stack(template, backend, env):
 
-    dirpath = os.path.join(paths.tmp, f"quickstart_{template}_{backend}_{str(uuid.uuid4())}")
+    dirpath = os.path.join(
+        paths.tmp, f"quickstart_{template}_{backend}_{str(uuid.uuid4())}"
+    )
     stack_filepath = os.path.join(dirpath, "stack.yaml")
 
     # Change dir
@@ -100,7 +118,9 @@ def _preview_stack(template, backend, env):
 
 def _deploy_stack(template, backend, env):
 
-    dirpath = os.path.join(paths.tmp, f"quickstart_{template}_{backend}_{str(uuid.uuid4())}")
+    dirpath = os.path.join(
+        paths.tmp, f"quickstart_{template}_{backend}_{str(uuid.uuid4())}"
+    )
     stack_filepath = os.path.join(dirpath, "stack.yaml")
 
     # Change dir

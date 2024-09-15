@@ -751,6 +751,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         d = self.model_dump(exclude_unset=True)
         d = self.inject_vars(d)
         s = json.dumps(d, indent=4)
+        print("source=", source)
         with open(source, "w", newline="\n") as fp:
             fp.write(s)
 
