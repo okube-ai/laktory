@@ -1,4 +1,4 @@
-name: pl-stock-prices
+name: pl-spark-job
 orchestrator: DATABRICKS_JOB
 databricks_job:
   name: job-pl-stock-prices

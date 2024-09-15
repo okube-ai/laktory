@@ -24,9 +24,7 @@ def deploy(
     ] = False,
     options: Annotated[
         str,
-        typer.Option(
-            "--options", help="Comma separated IaC backend options (flags)."
-        ),
+        typer.Option("--options", help="Comma separated IaC backend options (flags)."),
     ] = None,
 ):
     """

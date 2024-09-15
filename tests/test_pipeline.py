@@ -15,7 +15,6 @@ OPEN_FIGURES = False
 with open(os.path.join(paths.data, "pl-spark-local.yaml"), "r") as fp:
     pl = models.Pipeline.model_validate_yaml(fp)
 
-
 with open(os.path.join(paths.data, "pl-polars-local.yaml"), "r") as fp:
     pl_polars = models.Pipeline.model_validate_yaml(fp)
 
@@ -364,14 +363,14 @@ def test_pipeline_dlt():
             "development": None,
             "edition": None,
             "libraries": None,
-            "name": "pl-stock-prices",
+            "name": "pl-spark-dlt",
             "notifications": [],
             "photon": None,
             "serverless": None,
             "storage": None,
             "target": "sandbox",
         },
-        "name": "pl-stock-prices",
+        "name": "pl-spark-dlt",
         "nodes": [
             {
                 "add_layer_columns": True,
@@ -532,12 +531,12 @@ def test_pipeline_dlt():
     assert isinstance(dlt, models.resources.databricks.DLTPipeline)
     assert isinstance(dltp, models.resources.databricks.Permissions)
 
-    assert dlt.resource_name == "dlt-pl-stock-prices"
-    assert dltp.resource_name == "permissions-dlt-pl-stock-prices"
-    assert wsf.resource_name == "workspace-file-laktory-pipelines-pl-stock-prices-json"
+    assert dlt.resource_name == "pl-spark-dlt"
+    assert dltp.resource_name == "permissions-pl-spark-dlt"
+    assert wsf.resource_name == "workspace-file-laktory-pipelines-pl-spark-dlt-json"
     assert (
         wsfp.resource_name
-        == "permissions-workspace-file-laktory-pipelines-pl-stock-prices-json"
+        == "permissions-workspace-file-laktory-pipelines-pl-spark-dlt-json"
     )
 
     assert dlt.options.provider == "${resources.databricks2}"
@@ -546,10 +545,10 @@ def test_pipeline_dlt():
     assert wsfp.options.provider == "${resources.databricks1}"
 
     assert dlt.options.depends_on == []
-    assert dltp.options.depends_on == ["${resources.dlt-pl-stock-prices}"]
+    assert dltp.options.depends_on == ["${resources.pl-spark-dlt}"]
     assert wsf.options.depends_on == []
     assert wsfp.options.depends_on == [
-        "${resources.workspace-file-laktory-pipelines-pl-stock-prices-json}"
+        "${resources.workspace-file-laktory-pipelines-pl-spark-dlt-json}"
     ]
 
 
@@ -572,7 +571,7 @@ def test_pipeline_job():
         ],
         "name": "job-pl-stock-prices",
         "parameters": [
-            {"default": "pl-stock-prices", "name": "pipeline_name"},
+            {"default": "pl-spark-job", "name": "pipeline_name"},
             {"default": "false", "name": "full_refresh"},
         ],
         "tasks": [

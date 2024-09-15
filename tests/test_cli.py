@@ -1,6 +1,8 @@
 import os
 import shutil
 import uuid
+from pathlib import Path
+from py import path as pypath
 
 from laktory import app
 from laktory import settings
@@ -15,20 +17,20 @@ paths = Paths(__file__)
 
 def _read_stack(template, backend):
 
-    dirpath = os.path.join(
-        paths.tmp, f"quickstart_{template}_{backend}_{str(uuid.uuid4())}"
+    dirpath = pypath.local(
+        f"{paths.tmp}/quickstart_{template}_{backend}_{str(uuid.uuid4())}"
     )
-    stack_filepath = os.path.join(dirpath, "stack.yaml")
+    stack_filepath = dirpath / "stack.yaml"
 
     # Change dir
     os.mkdir(dirpath)
-    os.chdir(dirpath)
 
     # Copy Stack
-    _ = runner.invoke(
-        app,
-        ["quickstart", "--template", template, "--backend", backend],
-    )
+    with dirpath.as_cwd():
+        _ = runner.invoke(
+            app,
+            ["quickstart", "--template", template, "--backend", backend],
+        )
 
     # Read Stack
     with open(stack_filepath) as fp:
@@ -85,20 +87,20 @@ def _read_stack(template, backend):
 
 def _preview_stack(template, backend, env):
 
-    dirpath = os.path.join(
-        paths.tmp, f"quickstart_{template}_{backend}_{str(uuid.uuid4())}"
+    dirpath = pypath.local(
+        f"{paths.tmp}/quickstart_{template}_{backend}_{str(uuid.uuid4())}"
     )
-    stack_filepath = os.path.join(dirpath, "stack.yaml")
+    stack_filepath = dirpath / "stack.yaml"
 
     # Change dir
     os.mkdir(dirpath)
-    os.chdir(dirpath)
 
     # Copy Stack
-    _ = runner.invoke(
-        app,
-        ["quickstart", "--template", template, "--backend", backend],
-    )
+    with dirpath.as_cwd():
+        _ = runner.invoke(
+            app,
+            ["quickstart", "--template", template, "--backend", backend],
+        )
 
     if backend == "terraform":
         # Ideally, we would run `laktory init`, but the runner does not seem to handle running multiple commands
@@ -118,20 +120,20 @@ def _preview_stack(template, backend, env):
 
 def _deploy_stack(template, backend, env):
 
-    dirpath = os.path.join(
-        paths.tmp, f"quickstart_{template}_{backend}_{str(uuid.uuid4())}"
+    dirpath = pypath.local(
+        f"{paths.tmp}/quickstart_{template}_{backend}_{str(uuid.uuid4())}"
     )
-    stack_filepath = os.path.join(dirpath, "stack.yaml")
+    stack_filepath = dirpath / "stack.yaml"
 
     # Change dir
     os.mkdir(dirpath)
-    os.chdir(dirpath)
 
     # Copy Stack
-    _ = runner.invoke(
-        app,
-        ["quickstart", "--template", template, "--backend", backend],
-    )
+    with dirpath.as_cwd():
+        _ = runner.invoke(
+            app,
+            ["quickstart", "--template", template, "--backend", backend],
+        )
 
     if backend == "terraform":
         # Ideally, we would run `laktory init`, but the runner does not seem to handle running multiple commands
@@ -192,4 +194,4 @@ def atest_deploy_quickstart_stacks():
 if __name__ == "__main__":
     test_read_quickstart_stacks()
     test_preview_quickstart_stacks()
-    atest_deploy_quickstart_stacks()
+    # atest_deploy_quickstart_stacks()
