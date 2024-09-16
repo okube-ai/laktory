@@ -1,0 +1,43 @@
+name: run-quickstarts
+
+on:
+#  pull_request:
+#    types:
+#      - opened
+#      - synchronize
+  workflow_dispatch:
+    logLevel:
+      description: 'Log level'
+      default: 'info'
+    branches:
+      - main
+  workflow_call:
+    inputs:
+      env:
+        type: string
+        required: true
+
+jobs:
+  laktory-quickstart-unity-catalog:
+    uses: ./.github/workflows/run_quickstart.yml
+    with:
+      cwd:  ./run_quickstart_unity_catalog
+      template: unity-catalog
+      run_workflows: false
+    secrets: inherit
+
+  laktory-quickstart-workspace:
+    uses: ./.github/workflows/run_quickstart.yml
+    with:
+      cwd:  ./run_quickstart_workspace
+      template: workspace
+      run_workflows: false
+    secrets: inherit
+
+  laktory-quickstart-workflows:
+    uses: ./.github/workflows/run_quickstart.yml
+    with:
+      cwd:  ./run_quickstart_workflows
+      template: workflows
+      run_workflows: true
+    secrets: inherit

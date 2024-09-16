@@ -1,0 +1,47 @@
+name: unity-catalog
+description: Lakehouse - Unity Catalog Configuration
+backend: terraform
+
+# List of Resources to deploy
+resources:
+
+  # Account Groups
+  databricks_groups: ${include.resources/groups.yaml}
+
+  # Account Users
+  databricks_users: ${include.resources/users.yaml}
+
+  # Metastore and external locations are essential for a Unity Catalog
+  # deployment, but they require cloud-specific configurations and
+  # authentication, which go beyond the scope of this quickstart.
+  # For detailed setup instructions, refer to
+  # https://github.com/okube-ai/lakehouse-as-code/blob/main/unity-catalog/stack.yaml
+
+  # Catalogs
+  databricks_catalogs: ${include.resources/catalogs.yaml}
+
+  # Databricks Providers Configuration
+  providers:
+
+    # Account Provider
+    # The account-level provider configuration varies by cloud provider.
+    # For more details, visit
+    # https://docs.databricks.com/en/dev-tools/auth/oauth-m2m.html
+    databricks:
+      host: https://accounts.azuredatabricks.net
+      account_id: ${vars.DATABRICKS_ACCOUNT_ID}
+      azure_tenant_id: ${vars.AZURE_TENANT_ID}
+      azure_client_id: ${vars.AZURE_CLIENT_ID}
+      azure_client_secret: ${vars.AZURE_CLIENT_SECRET}
+      auth_type: azure-client-secret
+
+    # Workspace Providers
+    # Required for the deployment of catalogs to bind a catalog to a specific
+    # workspace, even if catalogs may be shared across all workspaces.
+    databricks.dev:
+      alias: dev
+      host: ${vars.DATABRICKS_HOST_DEV}
+      token: ${vars.DATABRICKS_TOKEN_DEV}
+
+variables:
+  workspace_id_dev: 2211091707396001  # TODO: CUSTOMIZE WITH YOUR WORKSPACE ID

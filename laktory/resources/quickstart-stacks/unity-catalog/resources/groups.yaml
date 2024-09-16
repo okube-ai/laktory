@@ -1,0 +1,13 @@
+group-laktory-friends:
+  display_name: laktory-friends
+  workspace_permission_assignments:
+    - workspace_id: ${vars.workspace_id_dev}
+group-metastore-admins:
+  display_name: metastore-admins
+  workspace_permission_assignments:
+    - workspace_id: ${vars.workspace_id_dev}
+group-workspace-admins:
+  display_name: workspace-admins
+  workspace_permission_assignments:
+    - workspace_id: ${vars.workspace_id_dev}
+      permissions: [ADMIN]

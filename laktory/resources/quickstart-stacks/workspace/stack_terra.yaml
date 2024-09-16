@@ -1,0 +1,33 @@
+name: workspace
+description: Lakehouse - Workspace Configuration
+backend: terraform
+
+# List of Resources to deploy
+resources:
+
+  # Workspace Directories
+  databricks_directories: ${include.resources/directories.yaml}
+
+  # Secret scopes and secret values
+  databricks_secretscopes: ${include.resources/secretscopes.yaml}
+
+  # SQL Warehouses
+  databricks_warehouses: ${include.resources/warehouses.yaml}
+
+  # Databricks Provider Configuration
+  providers:
+    databricks:
+      host: ${vars.DATABRICKS_HOST}
+      token: ${vars.DATABRICKS_TOKEN}
+
+# Environment Specific Settings
+environments:
+
+  dev:
+    variables:
+      env: dev
+
+  prd:
+    variables:
+      env: prd
+

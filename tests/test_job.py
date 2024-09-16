@@ -19,7 +19,7 @@ job = Job(
         },
         {
             "depends_ons": [{"task_key": "ingestion"}],
-            "pipeline_task": {"pipeline_id": "${resources.dlt-pl-stock-prices.id}"},
+            "pipeline_task": {"pipeline_id": "${resources.pl-spark-dlt.id}"},
             "task_key": "pipeline",
         },
         {
@@ -120,7 +120,7 @@ def test_job_model():
                 "notebook_task": None,
                 "notification_settings": None,
                 "pipeline_task": {
-                    "pipeline_id": "${resources.dlt-pl-stock-prices.id}",
+                    "pipeline_id": "${resources.pl-spark-dlt.id}",
                     "full_refresh": None,
                 },
                 "retry_on_timeout": None,
@@ -185,7 +185,7 @@ def test_job_pulumi():
             },
             {
                 "depends_ons": [{"task_key": "ingestion"}],
-                "pipeline_task": {"pipeline_id": "${resources.dlt-pl-stock-prices.id}"},
+                "pipeline_task": {"pipeline_id": "${resources.pl-spark-dlt.id}"},
                 "task_key": "pipeline",
             },
             {

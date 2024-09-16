@@ -1,0 +1,6 @@
+notebook-dlt-laktory-pl:
+  source: ./notebooks/dlt/dlt_laktory_pl.py
+notebook-job-laktory-pl:
+  source: ./notebooks/jobs/job_laktory_pl.py
+notebook-job-hello:
+  source: ./notebooks/jobs/job_hello.py

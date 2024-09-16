@@ -139,3 +139,16 @@ class PulumiStack(BaseModel):
             List of flags / options for pulumi up
         """
         self._call("up", stack=stack, flags=flags)
+
+    def destroy(self, stack: str = None, flags: list[str] = None):
+        """
+        Runs `pulumi destroy`
+
+        Parameters
+        ----------
+        stack:
+            Name of the stack to use
+        flags:
+            List of flags / options for pulumi up
+        """
+        self._call("destroy", stack=stack, flags=flags)

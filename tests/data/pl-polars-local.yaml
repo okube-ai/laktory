@@ -1,4 +1,4 @@
-name: pl-stock-prices-polars
+name: pl-polars-local
 dataframe_type: POLARS
 nodes:
 - name: brz_stock_prices

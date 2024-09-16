@@ -1,66 +1,39 @@
 import typer
-import yaml
+import shutil
 import os
 from typing import Annotated
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit import prompt
 
 from laktory.cli._common import BackendValidator
-from laktory.cli._common import DIRPATH
+from laktory.cli._common import TemplateValidator
 from laktory.cli.app import app
-from laktory._parsers import remove_empty
-from laktory.models.stacks.stack import Stack
+from laktory.constants import QUICKSTART_TEMPLATES
 from laktory.constants import SUPPORTED_BACKENDS
-
-
-def read_template():
-
-    filepath = os.path.join(os.path.dirname(__file__), "quickstart_stack.yaml")
-
-    with open(filepath, "r") as fp:
-        stack = Stack.model_validate_yaml(fp)
-
-    return stack
+from laktory._version import VERSION
 
 
 @app.command()
 def quickstart(
+    template: Annotated[
+        str,
+        typer.Option(
+            "--template", "-t", help="Template [unity-catalog, workspace, workflows]"
+        ),
+    ] = None,
     backend: Annotated[
-        str, typer.Option("--backend", "-b", help="IaC backend [terraform, terraform]")
+        str, typer.Option("--backend", "-b", help="IaC backend [terraform, pulumi]")
     ] = None,
-    organization: Annotated[
-        str,
-        typer.Option(
-            "--org",
-            "-o",
-            help="Name of the organization in associated with the pulumi stack.",
-        ),
-    ] = None,
-    node_type: Annotated[
-        str,
-        typer.Option(
-            "--node",
-            "-n",
-            help="Type of nodes for compute (e.g.: Standard_DS3_v2, c5.2xlarge,)",
-        ),
-    ] = None,
-    filepath: Annotated[
-        str, typer.Option(help="Stack (yaml) filepath.")
-    ] = "./stack.yaml",
 ):
     """
     Build get started stack in the calling directory.
 
     Parameters
     ----------
+    template:
+        Stack template [unity-catalog, workspace, workflows]
     backend:
         IaC backend [pulumi, terraform]
-    organization:
-        Name of the organization associated with the Pulumi stack.
-    node_type:
-        Type of nodes for compute (e.g.: Standard_DS3_v2, c5.2xlarge,).
-    filepath:
-        Filepath of the generated stack yaml file.
 
     Examples
     --------
@@ -68,6 +41,15 @@ def quickstart(
     laktory quickstart
     ```
     """
+
+    # Template
+    completer = WordCompleter(QUICKSTART_TEMPLATES, ignore_case=True)
+    if template is None:
+        template = prompt(
+            f"Select template {QUICKSTART_TEMPLATES}: ",
+            completer=completer,
+            validator=TemplateValidator(),
+        )
 
     # Backend
     completer = WordCompleter(SUPPORTED_BACKENDS, ignore_case=True)
@@ -78,115 +60,75 @@ def quickstart(
             validator=BackendValidator(),
         )
 
-    # Stack
-    stack = "quickstart"
+    # Copy template
+    stacks_dir = os.path.join(
+        os.path.dirname(__file__), "../resources/quickstart-stacks/"
+    )
+    source_dir = os.path.join(stacks_dir, template)
+    target_dir = "./"
 
-    # Organization
-    if backend == "pulumi":
-        if organization is None:
-            organization = prompt(f"Pulumi Organization: ")
-        if stack is None:
-            stack = prompt(f"Stack Name (must match Pulumi project name): ")
-    elif backend == "terraform":
-        if stack is None:
-            stack = prompt(f"Stack Name: ")
-    else:
-        raise ValueError(f"Supported backends are {SUPPORTED_BACKENDS}")
+    # Iterate through files
+    for root, dits, filenames in os.walk(source_dir):
 
-    # Node type id
-    if node_type is None:
-        node_type = prompt(
-            f"Node type for pipeline (e.g.: Standard_DS3_v2, c5.2xlarge, etc.): "
-        )
+        _target_dir = os.path.join(target_dir, os.path.relpath(root, source_dir))
 
-    if not os.path.exists("./notebooks/dlt"):
-        os.makedirs("./notebooks/dlt")
-    if not os.path.exists("./data"):
-        os.makedirs("./data")
+        # Build directories
+        os.makedirs(_target_dir, exist_ok=True)
 
-    # Copy notebooks
-    for filename in [
-        "dlt_laktory_pl.py",
-    ]:
-        with open(os.path.join(DIRPATH, f"../resources/notebooks/{filename}")) as fp:
-            data = fp.read()
-            data = data.replace("pl-stock-prices", "pl-quickstart")
+        # Copy each file
+        for filename in filenames:
 
-        with open(f"./notebooks/dlt/{filename}", "w") as fp:
-            fp.write(data)
+            if filename in [
+                "read_env.sh",
+                "stack.yaml",  # stack_terra.yaml or stack_pulumi.yaml will be used instead
+            ]:
+                continue
 
-    # Copy data
-    for filename in [
-        "stock_prices.json",
-    ]:
-        with open(os.path.join(DIRPATH, f"../resources/data/{filename}")) as fp:
-            data = fp.read()
+            # TODO: ADD FILTERING BASED IN GITIGNORE?
 
-        with open(f"./data/{filename}", "w") as fp:
-            fp.write(data)
+            source_filepath = os.path.join(root, filename)
+            target_filepath = os.path.join(_target_dir, filename)
 
-    # Read template stack
-    template_stack = read_template()
-    template_stack.backend = backend
-    template_stack.resources.pipelines["pl-quickstart"].dlt.clusters[
-        0
-    ].node_type_id = node_type
+            print(f"Writing {target_filepath}...")
 
-    # Build stack
-    if backend == "pulumi":
+            # Rename stack files
+            if filename == "stack_pulumi.yaml":
+                if backend == "terraform":
+                    continue
+                else:
+                    target_filepath = target_filepath.replace(
+                        "stack_pulumi.yaml", "stack.yaml"
+                    )
 
-        template_stack.resources.providers = {}
-        stack = Stack(
-            organization=template_stack.organization,
-            name=stack,
-            backend=backend,
-            pulumi={
-                "config": {
-                    "databricks:host": "${vars.DATABRICKS_HOST}",
-                    "databricks:token": "${vars.DATABRICKS_TOKEN}",
-                }
-            },
-            resources=template_stack.resources,
-            environments=template_stack.environments,
-        )
-        stack.pulumi.outputs = None
+            elif filename == "stack_terra.yaml":
+                if backend == "pulumi":
+                    continue
+                else:
+                    target_filepath = target_filepath.replace(
+                        "stack_terra.yaml", "stack.yaml"
+                    )
 
-    else:
-        stack = Stack(
-            organization=template_stack.organization,
-            name=stack,
-            backend=backend,
-            resources=template_stack.resources,
-            environments=template_stack.environments,
-        )
+            # Copy file
+            shutil.copy2(source_filepath, target_filepath)
 
-    # Dump data
-    data = stack.model_dump(exclude_unset=True)
-    data = remove_empty(data)
+            # Update laktory version
+            if target_filepath.endswith("requirements.txt") or target_filepath.endswith(
+                ".py"
+            ):
+                with open(target_filepath, "r") as fp:
+                    data = fp.read()
 
-    # Clean up resources
-    if backend != "pulumi" and "pulumi" in data.keys():
-        del data["pulumi"]
-    for k, n in data["resources"]["databricks_notebooks"].items():
-        del data["resources"]["databricks_notebooks"][k]["path"]
+                with open(target_filepath, "w") as fp:
+                    fp.write(data.replace("<laktory_version>", VERSION))
 
-    # Sort data
-    d = {}
-    for k in [
-        "name",
-        "organization",
-        "backend",
-        "pulumi",
-        "resources",
-        "environments",
-    ]:
-        if k in data:
-            d[k] = data[k]
+            if backend == "pulumi" and target_filepath.endswith("catalogs.yaml"):
+                with open(target_filepath, "r") as fp:
+                    data = fp.read()
 
-    for k in data.keys():
-        if k not in d:
-            d[k] = data[k]
-
-    # Output Stack
-    with open(filepath, "w") as fp:
-        yaml.safe_dump(d, fp, sort_keys=False)
+                with open(target_filepath, "w") as fp:
+                    fp.write(
+                        data.replace(
+                            "provider: ${resources.databricks.",
+                            "provider: ${resources.provider-databricks-",
+                        )
+                    )

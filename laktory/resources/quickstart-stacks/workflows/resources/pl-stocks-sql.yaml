@@ -1,0 +1,47 @@
+#
+# This is an example of a pipeline that uses Delta Live Tables as the
+# orchestrator and SQL for data transformations between and bronze and
+# silver layers. It runs in batch mode (as_stream = `False`), meaning
+# that each table is re-computed entirely at each run.
+#
+name: pl-stocks-sql
+
+# Select Orchestrator
+orchestrator: DATABRICKS_JOB
+
+# Configure Orchestrator
+databricks_job:
+  name: job-pl-stock-sql
+  clusters:
+    - name: node-cluster
+      autoscale:
+        min_workers: 1
+        max_workers: 2
+      spark_version: 15.2.x-scala2.12
+      node_type_id: Standard_DS3_v2  # TODO: Change to your desired cloud-specific node type
+
+# Define nodes (each node is a table or a view)
+nodes:
+
+# Bronze Table
+- name: brz_stock_prices_sql
+  source:
+    path: dbfs:/Workspace/.laktory/data/stock_prices/
+    as_stream: false
+    format: JSON
+  sink:
+    table_name: brz_stock_prices_sql
+    mode: OVERWRITE
+
+# Silver Table
+- name: slv_stock_prices_sql
+  source:
+    node_name: brz_stock_prices_sql
+    as_stream: false
+  sink:
+    table_name: slv_stock_prices_sql
+    mode: OVERWRITE
+  # Define the transformer as a SQL statement
+  transformer:
+    nodes:
+    - sql_expr: ${include.sql/slv_stock_prices.sql}

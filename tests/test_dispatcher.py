@@ -48,4 +48,4 @@ def test_resources():
 
 if __name__ == "__main__":
     test_workspace_client()
-    test_resources()
+    # test_resources()

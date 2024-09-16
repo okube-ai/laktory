@@ -199,7 +199,7 @@ class TerraformStack(BaseModel):
 
     def apply(self, flags: list[str] = None):
         """
-        Runs `pulumi apply`
+        Runs `terraform apply`
 
         Parameters
         ----------
@@ -207,3 +207,14 @@ class TerraformStack(BaseModel):
             List of flags / options for terraform apply
         """
         self._call("apply", flags=flags)
+
+    def destroy(self, flags: list[str] = None):
+        """
+        Runs `terraform destroy`
+
+        Parameters
+        ----------
+        flags:
+            List of flags / options for terraform destroy
+        """
+        self._call("destroy", flags=flags)

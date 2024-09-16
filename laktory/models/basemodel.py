@@ -3,6 +3,7 @@ import json
 import os
 import re
 import inflect
+import copy
 from typing import Any
 from typing import TypeVar
 from typing import TextIO
@@ -234,6 +235,9 @@ class BaseModel(_BaseModel):
             Dump in which variable expressions have been replaced with their
             values.
         """
+
+        # Create deep copy to prevent inplace modifications
+        d = copy.deepcopy(d)
 
         # Build patterns
         _patterns = {}
