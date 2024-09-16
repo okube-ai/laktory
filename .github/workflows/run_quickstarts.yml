@@ -16,64 +16,12 @@ on:
       env:
         type: string
         required: true
-env:
-  CWD: ./.run_quickstart
-
 
 jobs:
-  laktory-preview:
-    runs-on: ubuntu-latest
-    steps:
-
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-
-      - name: env vars
-        run: |
-          import os
-          for k, v in os.environ.items():
-            print(k, "|", v)
-        shell: python
-
-      - name: Install Laktory
-        run: make install-with-dbks
-
-      - name: make dir
-        run: |
-          mkdir $CWD
-
-      - name: run quickstart
-        run: laktory quickstart -b terraform -n Standard_DS3_v2
-        working-directory: ${{ env.CWD }}
-
-      - name: update stack
-        run: python ../.github/scripts/update_quickstart_stack.py ${{ github.ref }}
-        working-directory: ${{ env.CWD }}
-
-      - name: laktory init
-        run: laktory init
-        working-directory: ${{ env.CWD }}
-
-      - name: laktory preview
-        run: laktory preview -e dev
-        working-directory: ${{ env.CWD }}
-        env:
-          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-
-      - name: laktory deploy
-        run: laktory deploy -e dev -y
-        working-directory: ${{ env.CWD }}
-        env:
-          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-
-      - name: laktory run
-        run: laktory run -e dev -dlt pl-quickstart
-        working-directory: ${{ env.CWD }}
-        env:
-          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+  laktory-quickstart-workflows:
+    uses: ./github/workflows/run_quickstart.yaml
+    with:
+      cwd:  ./.run_quickstart_workflows
+      template: workflows
+      databricks_host: ${{ vars.DATABRICKS_HOST }}
+      databricks_token: ${{ secrets.DATABRICKS_TOKEN }}
