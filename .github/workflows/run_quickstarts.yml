@@ -19,7 +19,7 @@ on:
 
 jobs:
   laktory-quickstart-workflows:
-    uses: ./github/workflows/run_quickstart.yml
+    uses: ./.github/workflows/run_quickstart.yml
     with:
       cwd:  ./run_quickstart_workflows
       template: workflows
