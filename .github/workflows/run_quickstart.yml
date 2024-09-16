@@ -4,9 +4,11 @@ on:
   workflow_call:
     inputs:
       cwd:
+        type: string
         description: 'Working Directory'
         required: true
       template:
+        type: string
         description: 'Quickstart Template'
         required: true
 env:
