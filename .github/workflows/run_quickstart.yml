@@ -60,8 +60,16 @@ jobs:
         run: laktory deploy -e dev -y
         working-directory: ${{ env.CWD }}
 
-      - name: laktory run
-        run: laktory run -e dev -dlt pl-quickstart
+      - name: laktory run hello
+        run: laktory run -e dev -job job-hello
+        working-directory: ${{ env.CWD }}
+
+      - name: laktory run job
+        run: laktory run -e dev -job job-pl-stock-sql
+        working-directory: ${{ env.CWD }}
+
+      - name: laktory run dlt
+        run: laktory run -e dev -dlt pl-stocks-spark-dlt
         working-directory: ${{ env.CWD }}
 
       - name: laktory destroy
