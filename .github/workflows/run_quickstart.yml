@@ -22,11 +22,11 @@ on:
 env:
   DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
   DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  DATABRICKS_HOST_DEV: ${{ secrets.DATABRICKS_HOST_DEV }}
-  DATABRICKS_TOKEN_DEV: ${{ secrets.DATABRICKS_TOKEN_DEV }}
+#  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+#  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+#  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+#  DATABRICKS_HOST_DEV: ${{ secrets.DATABRICKS_HOST_DEV }}
+#  DATABRICKS_TOKEN_DEV: ${{ secrets.DATABRICKS_TOKEN_DEV }}
   CWD: ${{ inputs.cwd }}
 
 jobs:
@@ -66,29 +66,33 @@ jobs:
         working-directory: ${{ env.CWD }}
 
       - name: laktory preview
-        run: laktory preview -e dev
+        run: |
+          set -e
+          laktory preview
         working-directory: ${{ env.CWD }}
 
       - name: laktory deploy
-        run: laktory deploy -e dev -y
+        run: laktory deploy
         working-directory: ${{ env.CWD }}
 
+      # TODO: Convert to serverless in update_quickstart_stack.py to save
+      #       compute time?
       - name: laktory run hello
         if: ${{ inputs.run_workflows }}
-        run: laktory run -e dev --job job-hello
+        run: laktory run --job job-hello
         working-directory: ${{ env.CWD }}
 
       - name: laktory run job
         if: ${{ inputs.run_workflows }}
-        run: laktory run -e dev --job job-pl-stock-sql
+        run: laktory run --job job-pl-stock-sql
         working-directory: ${{ env.CWD }}
 
       - name: laktory run dlt
         if: ${{ inputs.run_workflows }}
-        run: laktory run -e dev --dlt pl-stocks-spark-dlt
+        run: laktory run --dlt pl-stocks-spark-dlt
         working-directory: ${{ env.CWD }}
 
       - name: laktory destroy
         if: ${{ inputs.destroy }}
-        run: laktory destroy -e dev
+        run: laktory destroy
         working-directory: ${{ env.CWD }}

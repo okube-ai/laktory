@@ -39,5 +39,5 @@ jobs:
     with:
       cwd:  ./run_quickstart_workflows
       template: workflows
-      run_workflows: true
+      run_workflows: false
     secrets: inherit
