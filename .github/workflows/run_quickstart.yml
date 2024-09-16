@@ -9,12 +9,14 @@ on:
       template:
         description: 'Quickstart Template'
         required: true
+env:
+  DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+  CWD: ${{ inputs.cwd }}
 
 jobs:
   laktory-quickstart:
     runs-on: ubuntu-latest
-    env:
-      CWD: ${{ inputs.cwd }}
     steps:
       - uses: actions/checkout@v4
 
@@ -51,27 +53,15 @@ jobs:
       - name: laktory preview
         run: laktory preview -e dev
         working-directory: ${{ env.CWD }}
-        env:
-          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
       - name: laktory deploy
         run: laktory deploy -e dev -y
         working-directory: ${{ env.CWD }}
-        env:
-          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
       - name: laktory run
         run: laktory run -e dev -dlt pl-quickstart
         working-directory: ${{ env.CWD }}
-        env:
-          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
       - name: laktory destroy
         run: laktory destroy -e dev
         working-directory: ${{ env.CWD }}
-        env:
-          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}

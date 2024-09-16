@@ -1,4 +1,4 @@
-name: run-quickstart
+name: run-quickstarts
 
 on:
 #  pull_request:
