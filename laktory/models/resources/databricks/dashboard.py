@@ -36,6 +36,7 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
 
     # Define job
     job_yaml = '''
+    display_name: databricks-costs
     file_path: ./dashboards/databricks_costs.json
     parent_path: /.laktory/dashboards
     warehouse_id: a7d9f2kl8mp3q6rt
@@ -45,7 +46,9 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
         - group_name: account users
           permission_level: CAN_RUN
     '''
-    dashboard = models.resources.databricks.Dashboard.model_validate_yaml(io.StringIO(job_yaml))
+    dashboard = models.resources.databricks.Dashboard.model_validate_yaml(
+        io.StringIO(job_yaml)
+    )
     ```
     """
 
