@@ -14,6 +14,14 @@ def destroy(
     filepath: Annotated[
         str, typer.Option(help="Stack (yaml) filepath.")
     ] = "./stack.yaml",
+    auto_approve: Annotated[
+        bool,
+        typer.Option(
+            "--yes",
+            "-y",
+            help="Automatically approve and perform the destroy after previewing it",
+        ),
+    ] = False,
     options: Annotated[
         str,
         typer.Option("--options", help="Comma separated IaC backend options (flags)."),
@@ -28,6 +36,8 @@ def destroy(
         Name of the environment.
     filepath:
         Stack (yaml) filepath.
+    auto_approve:
+        Automatically approve and perform the destroy after previewing it
     options:
         Comma separated IaC backend options (flags).
 
@@ -44,6 +54,7 @@ def destroy(
     """
     controller = CLIController(
         env=environment,
+        auto_approve=auto_approve,
         stack_filepath=filepath,
         options_str=options,
     )

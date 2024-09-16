@@ -4,17 +4,35 @@ on:
   workflow_call:
     inputs:
       cwd:
+        type: string
         description: 'Working Directory'
         required: true
       template:
+        type: string
         description: 'Quickstart Template'
         required: true
+      run_workflows:
+        type: boolean
+        description: 'Run workflows or not'
+        required: true
+      destroy:
+        type: boolean
+        description: 'Destroy stack after deployment'
+        default: true
+env:
+  DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  DATABRICKS_ACCOUNT_ID: ${{ secrets.DATABRICKS_ACCOUNT_ID }}
+  DATABRICKS_HOST_DEV: ${{ secrets.DATABRICKS_HOST_DEV }}
+  DATABRICKS_TOKEN_DEV: ${{ secrets.DATABRICKS_TOKEN_DEV }}
+  CWD: ${{ inputs.cwd }}
 
 jobs:
   laktory-quickstart:
     runs-on: ubuntu-latest
-    env:
-      CWD: ${{ inputs.cwd }}
     steps:
       - uses: actions/checkout@v4
 
@@ -37,7 +55,7 @@ jobs:
           mkdir -p ${{ env.CWD }}
 
       - name: run quickstart
-        run: laktory quickstart -t ${{ inputs.template }}
+        run: laktory quickstart -t ${{ inputs.template }} -b terraform
         working-directory: ${{ env.CWD }}
 
       - name: update stack
@@ -49,29 +67,33 @@ jobs:
         working-directory: ${{ env.CWD }}
 
       - name: laktory preview
-        run: laktory preview -e dev
+        run: |
+          set -e
+          laktory preview
         working-directory: ${{ env.CWD }}
-        env:
-          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
       - name: laktory deploy
-        run: laktory deploy -e dev -y
+        run: laktory deploy -y
         working-directory: ${{ env.CWD }}
-        env:
-          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
-      - name: laktory run
-        run: laktory run -e dev -dlt pl-quickstart
+      # TODO: Convert to serverless in update_quickstart_stack.py to save
+      #       compute time?
+      - name: laktory run hello
+        if: ${{ inputs.run_workflows }}
+        run: laktory run --job job-hello
         working-directory: ${{ env.CWD }}
-        env:
-          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+      - name: laktory run job
+        if: ${{ inputs.run_workflows }}
+        run: laktory run --job job-pl-stock-sql
+        working-directory: ${{ env.CWD }}
+
+      - name: laktory run dlt
+        if: ${{ inputs.run_workflows }}
+        run: laktory run --dlt pl-stocks-spark-dlt
+        working-directory: ${{ env.CWD }}
 
       - name: laktory destroy
-        run: laktory destroy -e dev
+        if: ${{ inputs.destroy }}
+        run: laktory destroy -y
         working-directory: ${{ env.CWD }}
-        env:
-          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}

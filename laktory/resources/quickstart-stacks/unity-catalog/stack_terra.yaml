@@ -33,6 +33,7 @@ resources:
       azure_tenant_id: ${vars.AZURE_TENANT_ID}
       azure_client_id: ${vars.AZURE_CLIENT_ID}
       azure_client_secret: ${vars.AZURE_CLIENT_SECRET}
+      auth_type: azure-client-secret
 
     # Workspace Providers
     # Required for the deployment of catalogs to bind a catalog to a specific
