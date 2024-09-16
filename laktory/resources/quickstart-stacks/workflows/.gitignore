@@ -1,0 +1,12 @@
+# Python
+*.pyc
+venv/
+
+# Secret values
+secrets/*.*
+
+# Laktory Outputs
+Pulumi.yaml
+stack.tf.json
+*terraform*
+tmp-*

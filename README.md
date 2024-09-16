@@ -112,9 +112,9 @@ https://github.com/okube-ai/lakehouse-as-code.
 
 In this template, 4 pulumi projects are used to:
 - `{cloud_provider}_infra`: Deploy the required resources on your cloud provider
-- `unity-catalog`: Setup users, groups, catalogs, schemas and Lakehouse grant
-- `workspace-conf`: Setup secrets, clusters and warehouses
-- `workspace`: The data workflows to build your lakehouse.
+- `unity-catalog`: Setup users, groups, catalogs, schemas and manage grants
+- `workspace`: Setup secrets, clusters and warehouses and common files/notebooks
+- `workflows`: The data workflows to build your lakehouse
 
 ## Okube Company
 <img src="docs/images/okube.png" alt="okube logo" width="85"/>

@@ -1,3 +1,9 @@
+QUICKSTART_TEMPLATES = [
+    "unity-catalog",
+    "workspace",
+    "workflows",
+]
+
 SUPPORTED_BACKENDS = [
     "pulumi",
     "terraform",

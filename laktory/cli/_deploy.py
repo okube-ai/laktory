@@ -8,17 +8,6 @@ from laktory.constants import SUPPORTED_BACKENDS
 
 @app.command()
 def deploy(
-    backend: Annotated[
-        str, typer.Option(help="IaC backend [pulumi, terraform]")
-    ] = None,
-    organization: Annotated[
-        str,
-        typer.Option(
-            "--org",
-            "-o",
-            help="Name of the organization in associated with the pulumi stack.",
-        ),
-    ] = None,
     environment: Annotated[
         str, typer.Option("--env", "-e", help="Name of the environment")
     ] = None,
@@ -33,17 +22,9 @@ def deploy(
             help="Automatically approve and perform the update after previewing it",
         ),
     ] = False,
-    pulumi_options: Annotated[
+    options: Annotated[
         str,
-        typer.Option(
-            "--pulumi-options", help="Comma separated pulumi options (flags)."
-        ),
-    ] = None,
-    terraform_options: Annotated[
-        str,
-        typer.Option(
-            "--terraform-options", help="Comma separated terraform options (flags)."
-        ),
+        typer.Option("--options", help="Comma separated IaC backend options (flags)."),
     ] = None,
 ):
     """
@@ -51,20 +32,14 @@ def deploy(
 
     Parameters
     ----------
-    backend:
-        IaC backend [pulumi, terraform]
-    organization:
-        Name of the organization associated with the Pulumi stack.
     environment:
         Name of the environment.
     filepath:
         Stack (yaml) filepath.
     auto_approve:
         Automatically approve and perform the update after previewing it
-    pulumi_options:
-        Comma separated pulumi options (flags).
-    terraform_options:
-        Comma separated terraform options (flags).
+    options:
+        Comma separated IaC backend options (flags).
 
     Examples
     --------
@@ -74,16 +49,14 @@ def deploy(
 
     References
     ----------
-    - pulumi up [options](https://www.pulumi.com/docs/cli/commands/pulumi_up/)
+    - pulumi [up](https://www.pulumi.com/docs/cli/commands/pulumi_up/)
+    - terraform [apply](https://developer.hashicorp.com/terraform/cli/commands/apply)
     """
     controller = CLIController(
-        backend=backend,
-        organization=organization,
         env=environment,
         auto_approve=auto_approve,
         stack_filepath=filepath,
-        pulumi_options_str=pulumi_options,
-        terraform_options_str=terraform_options,
+        options_str=options,
     )
 
     # Call

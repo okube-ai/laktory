@@ -1,0 +1,76 @@
+#
+# This is an example of a pipeline that uses Delta Live Tables as the
+# orchestrator and a Spark Chain (serialized spark) for data transformations
+# between and bronze and silver layers. It runs in stream mode
+# (as_stream = `True`), meaning that new files are incrementally pushed
+# downstream as new rows instead of re-computing entirely the downstream
+# tables.
+#
+name: pl-stocks-spark-dlt
+
+# Select Orchestrator
+orchestrator: DLT
+
+# Configure Orchestrator
+dlt:
+  development: ${vars.is_dev}
+  target: default
+  clusters:
+  - name: default
+    node_type_id: Standard_DS3_v2  # TODO: Change to your desired cloud-specific node type
+    autoscale:
+      min_workers: 1
+      max_workers: 2
+  configuration:
+    pipeline_name: pl-stocks-spark-dlt
+  libraries:
+  - notebook:
+      path: /.laktory/dlt/dlt_laktory_pl.py
+
+# Define nodes (each node is a table or a view)
+nodes:
+
+# Bronze Table
+- name: brz_stock_prices_spark
+  source:
+    path: dbfs:/Workspace/.laktory/data/stock_prices/
+    as_stream: true
+    format: JSON
+  sink:
+    table_name: brz_stock_prices_spark
+
+# Silver Table
+- name: slv_stock_prices_spark
+  expectations:
+  - name: positive_price
+    expression: open > 0
+    action: FAIL
+  source:
+    node_name: brz_stock_prices_spark
+    as_stream: true
+  sink:
+    table_name: slv_stock_prices_spark
+  # Define the transformer as a Spark Chain (serialized spark operations)
+  transformer:
+    nodes:
+    - with_column:
+        name: created_at
+        type: timestamp
+        sql_expr: data.created_at
+    - with_column:
+        name: symbol
+        sql_expr: data.symbol
+    - with_column:
+        name: open
+        type: double
+        sql_expr: data.open
+    - with_column:
+        name: close
+        type: double
+        sql_expr: data.close
+    - func_name: drop
+      func_args:
+        - data
+        - description
+        - name
+        - producer

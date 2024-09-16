@@ -1,4 +1,4 @@
-name: pl-stock-prices
+name: pl-spark-dlt
 dlt:
   catalog: dev
   target: sandbox

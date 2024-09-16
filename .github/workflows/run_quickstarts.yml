@@ -1,0 +1,28 @@
+name: run-quickstart
+
+on:
+#  pull_request:
+#    types:
+#      - opened
+#      - synchronize
+  workflow_dispatch:
+    logLevel:
+      description: 'Log level'
+      default: 'info'
+    branches:
+      - main
+  workflow_call:
+    inputs:
+      env:
+        type: string
+        required: true
+
+jobs:
+  laktory-quickstart-workflows:
+    uses: ./.github/workflows/run_quickstart.yml
+    with:
+      cwd:  ./run_quickstart_workflows
+      template: workflows
+      databricks_host: ${{ vars.DATABRICKS_HOST }}
+      databricks_token: ${{ secrets.DATABRICKS_TOKEN }}
+    secrets: inherit

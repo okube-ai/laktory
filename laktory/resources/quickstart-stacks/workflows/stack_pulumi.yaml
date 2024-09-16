@@ -1,0 +1,45 @@
+name: workflows
+organization: my_organization  # Will be used as Pulumi organization
+description: Lakehouse - Workflows
+backend: pulumi
+
+# Databricks Provider Configuration
+pulumi:
+  config:
+    databricks:host: ${vars.DATABRICKS_HOST}
+    databricks:token: ${vars.DATABRICKS_TOKEN}
+
+# List of Resources to deploy
+resources:
+
+  # DBFS Files: Stock prices data json file
+  databricks_dbfsfiles: ${include.resources/dbfsfiles.yaml}
+
+  # Notebooks for jobs and pipelines
+  databricks_notebooks: ${include.resources/notebooks.yaml}
+
+  # Simple sample job
+  databricks_jobs:
+    job-hello: ${include.resources/job-hello.yaml}
+
+  # Laktory Sample Pipelines
+  #   - Deployed resources depend on selected orchestrator
+  #   - pl-stocks-sql: Deployed as a Job with SQL transformations
+  #   - pl-stocks-spark-dlt: Deployed as a Delta Live Tables with spark transformations
+  pipelines:
+    pl-stocks-sql: ${include.resources/pl-stocks-sql.yaml}
+    pl-stocks-spark-dlt: ${include.resources/pl-stocks-spark-dlt.yaml}
+
+
+# Environment Specific Settings
+environments:
+
+  dev:
+    variables:
+      env: dev
+      is_dev: true
+
+  prd:
+    variables:
+      env: prd
+      is_dev: false

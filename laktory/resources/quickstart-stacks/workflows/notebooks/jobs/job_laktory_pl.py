@@ -4,7 +4,7 @@ dbutils.widgets.text("node_name", "")
 dbutils.widgets.text("full_refresh", "False")
 
 # COMMAND ----------
-# MAGIC %pip install 'laktory==0.4.11'
+# MAGIC %pip install 'laktory==<laktory_version>'
 # MAGIC %restart_python
 
 # COMMAND ----------

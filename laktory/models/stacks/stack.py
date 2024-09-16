@@ -1,3 +1,4 @@
+import copy
 from typing import Union
 from typing import Any
 from typing import Literal
@@ -431,11 +432,12 @@ class Stack(BaseModel):
 
                 return data
 
-            d = dump_with_options(self)
-            _envs = d.pop("environments")
-
             envs = {}
             for _env_name, env in self.environments.items():
+
+                d = dump_with_options(self)
+                _envs = d.pop("environments")
+
                 for k in ENV_FIELDS:
                     v1 = _envs[_env_name].get(k, {})
                     if k in d:

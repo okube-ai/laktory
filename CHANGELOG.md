@@ -3,8 +3,13 @@
 ## [0.4.12] - Unreleased
 ### Added
 * Support for multi-segments (semi-column ; separated) SQL statements 
+* CLI `destroy` command
+* `unity-catalog`, `workspace` and `workflows` template choices for CLI `quickstart`
 ### Updated
 * Better feedback when terraform is not installed
+### Breaking changes
+* Removed `backend` and `organization` arguments for CLI
+* Combined CLI `pulumi-options` and `terraform-options` into `options`
 
 ## [0.4.11] - 2024-08-16
 ### Added

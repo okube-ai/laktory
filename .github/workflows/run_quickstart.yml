@@ -1,30 +1,21 @@
 name: run-quickstart
 
 on:
-#  pull_request:
-#    types:
-#      - opened
-#      - synchronize
-  workflow_dispatch:
-    logLevel:
-      description: 'Log level'
-      default: 'info'
-    branches:
-      - main
   workflow_call:
     inputs:
-      env:
-        type: string
+      cwd:
+        description: 'Working Directory'
         required: true
-env:
-  CWD: ./.run_quickstart
-
+      template:
+        description: 'Quickstart Template'
+        required: true
 
 jobs:
-  laktory-preview:
+  laktory-quickstart:
     runs-on: ubuntu-latest
+    env:
+      CWD: ${{ inputs.cwd }}
     steps:
-
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v4
@@ -43,10 +34,10 @@ jobs:
 
       - name: make dir
         run: |
-          mkdir $CWD
+          mkdir -p ${{ env.CWD }}
 
       - name: run quickstart
-        run: laktory quickstart -b terraform -n Standard_DS3_v2
+        run: laktory quickstart -t ${{ inputs.template }}
         working-directory: ${{ env.CWD }}
 
       - name: update stack
@@ -73,6 +64,13 @@ jobs:
 
       - name: laktory run
         run: laktory run -e dev -dlt pl-quickstart
+        working-directory: ${{ env.CWD }}
+        env:
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+      - name: laktory destroy
+        run: laktory destroy -e dev
         working-directory: ${{ env.CWD }}
         env:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}

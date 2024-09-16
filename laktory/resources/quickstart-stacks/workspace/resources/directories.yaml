@@ -1,0 +1,10 @@
+directory-laktory-dashboards:
+  path: /.laktory/dashboards/
+directory-laktory-dlt:
+  path: /.laktory/dlt/
+directory-laktory-jobs:
+  path: /.laktory/jobs/
+directory-laktory-pipelines:
+  path: /.laktory/pipelines/
+directory-laktory-queries:
+  path: /.laktory/queries/
