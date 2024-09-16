@@ -26,6 +26,14 @@ jobs:
       run_workflows: false
     secrets: inherit
 
+  laktory-quickstart-workspace:
+    uses: ./.github/workflows/run_quickstart.yml
+    with:
+      cwd:  ./run_quickstart_workspace
+      template: workspace
+      run_workflows: false
+    secrets: inherit
+
   laktory-quickstart-workflows:
     uses: ./.github/workflows/run_quickstart.yml
     with:
