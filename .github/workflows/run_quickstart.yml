@@ -41,7 +41,7 @@ jobs:
           mkdir -p ${{ env.CWD }}
 
       - name: run quickstart
-        run: laktory quickstart -t ${{ inputs.template }}
+        run: laktory quickstart -t ${{ inputs.template }} -b terraform
         working-directory: ${{ env.CWD }}
 
       - name: update stack
