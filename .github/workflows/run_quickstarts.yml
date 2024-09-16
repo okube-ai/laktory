@@ -23,6 +23,4 @@ jobs:
     with:
       cwd:  ./run_quickstart_workflows
       template: workflows
-      databricks_host: ${{ vars.DATABRICKS_HOST }}
-      databricks_token: ${{ secrets.DATABRICKS_TOKEN }}
     secrets: inherit
