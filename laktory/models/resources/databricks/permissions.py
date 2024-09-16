@@ -9,6 +9,7 @@ class Permissions(BaseModel, PulumiResource, TerraformResource):
     pipeline_id: str = None
     job_id: str = None
     cluster_id: str = None
+    dashboard_id: str = None
     directory_id: str = None
     directory_path: str = None
     experiment_id: str = None

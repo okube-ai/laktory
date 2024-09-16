@@ -3,6 +3,7 @@
 ## [0.4.12] - Unreleased
 ### Added
 * Support for multi-segments (semi-column ; separated) SQL statements 
+* Support for Databricks Lakeview Dashboard resource
 * CLI `destroy` command
 * `unity-catalog`, `workspace` and `workflows` template choices for CLI `quickstart`
 ### Updated

@@ -93,7 +93,9 @@ class DatabricksProvider(BaseProvider, PulumiResource, TerraformResource):
     """
 
     source: str = Field("databricks/databricks", exclude=True)
-    version: str = Field(">=1.39", exclude=True)  # Required to monitor laktory usage
+    version: str = Field(
+        ">=1.49", exclude=True
+    )  # Required to support Databricks dashboard
 
     account_id: str = None
     auth_type: str = None

@@ -57,6 +57,7 @@ def test_stack_model():
             "outputs": {},
         },
         "resources": {
+            "databricks_dashboards": {},
             "databricks_dbfsfiles": {},
             "databricks_catalogs": {},
             "databricks_clusters": {},
@@ -743,7 +744,7 @@ def test_terraform_stack():
     assert data_default == {
         "terraform": {
             "required_providers": {
-                "databricks": {"source": "databricks/databricks", "version": ">=1.39"}
+                "databricks": {"source": "databricks/databricks", "version": ">=1.49"}
             },
             "backend": {
                 "azurerm": {
@@ -875,7 +876,7 @@ def test_terraform_stack():
     assert data == {
         "terraform": {
             "required_providers": {
-                "databricks": {"source": "databricks/databricks", "version": ">=1.39"}
+                "databricks": {"source": "databricks/databricks", "version": ">=1.49"}
             }
         },
         "provider": {
@@ -999,7 +1000,7 @@ def test_terraform_stack():
     assert data == {
         "terraform": {
             "required_providers": {
-                "databricks": {"source": "databricks/databricks", "version": ">=1.39"}
+                "databricks": {"source": "databricks/databricks", "version": ">=1.49"}
             }
         },
         "provider": {
@@ -1130,6 +1131,7 @@ def test_terraform_plan():
 def test_all_resources():
     from tests.test_catalog import catalog
     from tests.test_directory import directory
+    from tests.test_dashboard import dashboard
     from tests.test_job import job
     from tests.test_pipeline import pl_dlt
     from tests.test_metastore import metastore
@@ -1151,6 +1153,7 @@ def test_all_resources():
     validator = StackValidator(
         resources={
             "databricks_catalogs": [catalog],
+            "databricks_dashboards": [dashboard],
             "databricks_directories": [directory],
             "databricks_jobs": [job],
             "databricks_metastores": [metastore],
