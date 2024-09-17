@@ -26,6 +26,13 @@ The pip installation not only install the python package, but also Laktory CLI t
 laktory --help
 ```
 
+## IaC Backends
+Laktory supports multiple IaC backends. You will need to install the CLI of your desired backend manually:
+
+* [terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+* [pulumi](https://www.pulumi.com/docs/install/)
+
+
 ## Optional Dependencies
 
 ### Dataframes
@@ -86,12 +93,6 @@ cloud-specific packages.
     ```bash
     pip install laktory[gcp]
     ```
-
-## IaC Backends
-Laktory supports multiple IaC backends. You will need to install the CLI of your desired backend manually:
-
-* [terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
-* [pulumi](https://www.pulumi.com/docs/install/)
 
 ## Git-based installation
 If you need or prefer installing Laktory from git, you can use:
