@@ -16,9 +16,6 @@ class Settings(BaseSettings):
         False, alias="LAKTORY_CLI_RAISE_EXTERNAL_EXCEPTIONS"
     )
 
-    # Configuration
-    iac_backend: Union[str, None] = Field("pulumi", alias="LAKTORY_IAC_BACKEND")
-
     # Models
     camel_serialization: bool = Field(False)
     singular_serialization: bool = Field(False)

@@ -8,6 +8,7 @@
 * `unity-catalog`, `workspace` and `workflows` template choices for CLI `quickstart`
 ### Updated
 * Better feedback when terraform is not installed
+* Added SQL query to pipeline node transformer logs
 ### Breaking changes
 * Removed `backend` and `organization` arguments for CLI
 * Combined CLI `pulumi-options` and `terraform-options` into `options`
