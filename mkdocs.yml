@@ -116,13 +116,14 @@ plugins:
 nav:
   - Get Started:
     - About: index.md
-    - Demos: demos.md
     - Installation: install.md
     - Quickstart: quickstart.md
+    - Demos: demos.md
     - Partners: partners.md
 
   - Concepts:
-    - Design Principles: concepts/design.md
+#    - Design Principles: concepts/design.md
+    - DataOps: concepts/dataops.md
     - Models:
       - Intro: concepts/models/models.md
       - Pipeline: concepts/models/pipeline.md
