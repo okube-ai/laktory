@@ -7,28 +7,34 @@
 [![versions](https://img.shields.io/pypi/pyversions/laktory.svg)](https://github.com/okube-ai/laktory)
 [![license](https://img.shields.io/github/license/okube-ai/laktory.svg)](https://github.com/okube-ai/laktory/blob/main/LICENSE)
 
-An open-source, dataframe-centric ETL framework for building lakehouses with a 
-DataOps approach.
+An open-source DataOps and dataframe-centric ETL framework for building 
+lakehouses.
 
 <img src="docs/images/logo_sg.png" alt="laktory logo" width="85"/>
 
-Laktory, the lakehouse factory, is an open-source framework designed for 
-building, deploying, and executing data pipelines while adhering to essential
-DevOps best practices such as source control, code reviews, and CI/CD. 
-Leveraging Apache Spark and Polars as its core data transformation engines,
-Laktory ensures robust and scalable data processing capabilities.
+Laktory is your all-in-one solution for defining both data transformations and 
+Databricks resources. Imagine if Terraform, Databricks Asset Bundles, and dbt
+combined forces—that’s essentially Laktory.
 
-<img src="docs/images/laktory_diagram.png" alt="what is laktory" width="400"/>
+This open-source framework simplifies the creation, deployment, and execution 
+of data pipelines while adhering to essential DevOps practices like version 
+control, code reviews, and CI/CD integration. With Apache Spark and Polars
+driving its data transformation, Laktory ensures reliable and scalable data
+processing. Its modular, flexible approach allows you to seamlessly combine SQL
+statements with DataFrame operations.
 
-While a Laktory data pipeline can be run locally for small datasets or 
-prototyping, it really starts to shine when deployed and orchestrated on a 
-cloud data platform, such as Databricks. When combined with [Delta Live Tables](https://www.databricks.com/product/delta-live-tables),
-it provides a top-tier, simple and low maintenance fully managed solution.  
+<img src="images/laktory_diagram.png" alt="what is laktory" width="800"/>
 
-Beyond just data pipelines, Laktory allows for the comprehensive definition
-and deployment of your entire data platform. This includes everything from 
-cloud infrastructure to data tables, security, and quality monitoring systems,
-providing an all-in-one solution for modern data platform management.
+Since Laktory pipelines are built on top of Spark and Polars, they can run in
+any environment that supports python—from your local machine to a Kubernetes 
+cluster. They can also be deployed and orchestrated as Databricks Jobs or
+[Delta Live Tables](https://www.databricks.com/product/delta-live-tables),
+offering a simple, fully managed, and low-maintenance solution.
+
+But Laktory goes beyond data pipelines. It empowers you to define and deploy 
+your entire Databricks data platform—from Unity Catalog and access grants
+to compute and quality monitoring—providing a complete, modern solution
+for data platform management.
 
 ## Help
 See [documentation](https://www.laktory.ai/) for more details.

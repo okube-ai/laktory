@@ -24,10 +24,9 @@ class LaktorySparkConnectSession:
 
     @wraps(spark0.SparkSession.sql)
     def sql(self, *args, **kwargs):
-        import inspect
-
-        print(spark0)
-        print(inspect.getsource(spark0.SparkSession.sql))
+        # import inspect
+        # print(spark0)
+        # print(inspect.getsource(spark0.SparkSession.sql))
         return spark0.SparkSession.sql(self._spark, *args, **kwargs)
 
 

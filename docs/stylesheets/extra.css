@@ -6,3 +6,7 @@
 [data-md-color-scheme="default"] {
   --md-primary-fg-color: #06d49e;
 }
+
+.code-output {
+    font-size: 0.5rem; /* Adjust the size as needed */
+}
