@@ -86,6 +86,8 @@ node_slv = models.PipelineNode(
     },
     transformer={
         "nodes": [
+            
+            # SQL Transformation
             {
                 "sql_expr": """
                     SELECT
@@ -100,6 +102,8 @@ node_slv = models.PipelineNode(
                       {df}
                 """   
             },
+            
+            # Spark Transformation
             {
                 "func_name": "drop_duplicates",
                 "func_kwargs": {
