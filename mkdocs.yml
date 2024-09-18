@@ -122,21 +122,24 @@ nav:
     - Partners: partners.md
 
   - Concepts:
-#    - Design Principles: concepts/design.md
-    - DataOps: concepts/dataops.md
     - Models:
-      - Intro: concepts/models/models.md
-      - Pipeline: concepts/models/pipeline.md
-      - Data Sources and Sinks: concepts/models/sourcessinks.md
-      - Transformers: concepts/models/transformers.md
-      - Data Event: concepts/models/dataevent.md
-    - DataFrames: concepts/dataframes.md
-    - Stack: concepts/stack.md
-    - Variables: concepts/variables.md
-    - Deployment (IaC): concepts/deployment.md
-    - CLI: concepts/cli.md
-    - Spark Extension: concepts/spark.md
-    - Data Governance: concepts/governance.md
+      - Models: concepts/models.md
+      - Stack: concepts/stack.md
+      - Variables: concepts/variables.md
+#    - Design Principles: concepts/design.md
+    - ETL:
+      - Data Pipeline: concepts/pipeline.md
+      - Data Sources and Sinks: concepts/sourcessinks.md
+      - Data Transformer: concepts/transformer.md
+      - Data Event: concepts/dataevent.md
+      - DataFrames: concepts/dataframes.md
+      - Spark Extension: concepts/spark.md
+    - DataOps:
+      - DataOps: concepts/dataops.md
+      - Infrastructure-as-Code: concepts/iac.md
+      - CLI: concepts/cli.md
+    - Best Practices:
+      - Data Governance: concepts/governance.md
 
   - How-To Guides:
     - Data Catalog: guides/catalog.md

@@ -1,8 +1,9 @@
 ??? "API Documentation"
     [`laktory.models.Stack`][laktory.models.Stack]<br>
-Depending on your deployment strategy and/or backend, you might need to include the model or resources as part of a Stack
 
-The stack act as a container for the resources, but also as a configuration object for your deployment through multiple environments.
+The stack is the main entry point for Laktory and acts as a container for 
+resources, while also serving as a configuration object for deployment across 
+multiple environments.
 
 
 ```yaml
@@ -45,23 +46,21 @@ environments:
           development: False
 ```
 ### Backend configuration
-The attributes `name`, `backend` and `config` define the IaC backend to use and how the different resources providers
-(azure, aws, gcp, databricks, etc) should be configured for secure access.
+The `name`, `backend`, and `config` attributes define the Infrastructure-as-Code (IaC) backend to use, and how to 
+configure resource providers (such as Azure, AWS, GCP, Databricks) for secure access.
 
 ### Resources
-The `resources` attribute is the list of laktory models or resources to be deployed. It's structured as nested dictionaries
-with the following 3 levels `resource_type`.`resource_name`.`resource_properties`
+The `resources` attribute lists the Laktory models or resources to be deployed. This is structured as nested
+dictionaries with three levels: `resource_type.resource_name.resource_properties`.
 
 ### Variables
-The `variables` attribute declares a list of variables that can be used to parametrize a model declaration. More 
-details [here](variables.md).
+The `variables` attribute declares variables that can be used to parameterize a model declaration. More details can be found [here](variables.md).
 
 ### Environments
-The `environments` attribute define environment-specific properties for `config`, `resources` or `variables`. 
-The structure is the same as the root structure and each statement is an overwrite to the default value defined at the
-root. 
+The `environments` attribute defines environment-specific properties for `config`, `resources`, or `variables`. Each
+environment is structured similarly to the root and overwrites the default values at the root level.
 
-For example, in this case, both `dev` and `prod` environment will be populated with a pipeline named `pl-stock-prices`
-having 1 associated notebook, but only in `dev` environment will the `development` property set to `True`.
+For example, both the `dev` and `prod` environments will include a pipeline named `pl-stock-prices` with an associated 
+notebook. However, in the `dev` environment, the `development` property will be set to `True`.
 
-Each environment will be deployed as a standalone set of resources or stack
+Each environment will be deployed as a standalone set of resources or stack.

@@ -6,15 +6,16 @@ When Laktory is pip installed, it also installs the Laktory CLI that can be invo
 ```cmd
 laktory --help
 ```
-The CLI supports 3 main commands `preview`, `deploy` and `run` providing full support for common CI/CD operations, 
-whether locally from the terminal or using your favorite a CI/CD tool like GitHub actions, Azure DevOps or Gitlab.
+The CLI supports 4 main commands `preview`, `deploy`, `run` and `destroy` providing full support for common CI/CD
+operations, whether locally from the terminal or using your favorite a CI/CD tool like GitHub actions, Azure DevOps or 
+Gitlab.
 
 The CLI also offers a `quickstart` command for quickly setting up a working example of a Laktory stack.
 
 ### commands
 
 #### quickstart
-`laktory quickstart` setup a working example of a stock prices pipeline that you can use as a baseline. See [Quickstart](/quickstart) for more details.
+`laktory quickstart` setup a working example of a deployable stack that you can use as a baseline. See [Quickstart](/quickstart) for more details.
 
 #### init
 `laktory init` setups IaC backend and download required resources. Only available with Terraform backend.
@@ -27,6 +28,9 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 
 #### run
 `laktory run` execute remote job or DLT pipeline and monitor failures until completion. Local execution (without an orchestrator) of a pipeline is not yet supported.
+
+#### destroy
+`laktory destroy` destroy all resources declared in your stack. Similar to `pulumi destroy` or `terraform destroy`
 
 ### CI/CD
 These commands can be run locally, but really start to provide value in the context of a CI/CD pipeline in which 
