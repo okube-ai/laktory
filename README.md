@@ -23,7 +23,7 @@ driving its data transformation, Laktory ensures reliable and scalable data
 processing. Its modular, flexible approach allows you to seamlessly combine SQL
 statements with DataFrame operations.
 
-<img src="images/laktory_diagram.png" alt="what is laktory" width="800"/>
+<img src="docs/images/laktory_diagram.png" alt="what is laktory" width="800"/>
 
 Since Laktory pipelines are built on top of Spark and Polars, they can run in
 any environment that supports python—from your local machine to a Kubernetes 
@@ -34,7 +34,16 @@ offering a simple, fully managed, and low-maintenance solution.
 But Laktory goes beyond data pipelines. It empowers you to define and deploy 
 your entire Databricks data platform—from Unity Catalog and access grants
 to compute and quality monitoring—providing a complete, modern solution
-for data platform management.
+for data platform management. This empowers your data team to take full 
+ownership of the solution, eliminating the need to juggle multiple technologies.
+Say goodbye to relying on external Terraform experts to handle compute, workspace
+configuration, and Unity Catalog, while your data engineers and analysts try 
+to combine Databricks Asset Bundles and dbt to build data pipelines. Laktory
+consolidates these functions, simplifying the entire process and reducing
+the overall cost.
+
+<img src="docs/images/why_simplicity.png" alt="dataops" width="500"/>
+
 
 ## Help
 See [documentation](https://www.laktory.ai/) for more details.
@@ -42,9 +51,8 @@ See [documentation](https://www.laktory.ai/) for more details.
 ## Installation
 Install using 
 ```commandline
-pip install laktory[{cloud_provider}]
+pip install laktory
 ```
-where `{cloud_provider}` is `azure`, `aws` or `gcp`. 
 
 For more installation options,
 see the [Install](https://www.laktory.ai/install/) section in the documentation.
@@ -53,31 +61,21 @@ see the [Install](https://www.laktory.ai/install/) section in the documentation.
 ```py
 from laktory import models
 
+
 node_brz = models.PipelineNode(
     name="brz_stock_prices",
-    layer="BRONZE",
     source={
         "format": "PARQUET",
         "path": "./data/brz_stock_prices/"
     },
     transformer={
         "nodes": [
-            {
-                "func_name": "select",
-                "func_args": [
-                    "symbol",
-                    "timestamp",
-                    "open",
-                    "close",
-                ],
-            },
         ]
     }
 )
 
 node_slv = models.PipelineNode(
     name="slv_stock_prices",
-    layer="SILVER",
     source={
         "node_name": "brz_stock_prices"
     },
@@ -88,10 +86,28 @@ node_slv = models.PipelineNode(
     },
     transformer={
         "nodes": [
+            
+            # SQL Transformation
+            {
+                "sql_expr": """
+                    SELECT
+                      data.created_at AS created_at,
+                      data.symbol AS symbol,
+                      data.open AS open,
+                      data.close AS close,
+                      data.high AS high,
+                      data.low AS low,
+                      data.volume AS volume
+                    FROM
+                      {df}
+                """   
+            },
+            
+            # Spark Transformation
             {
                 "func_name": "drop_duplicates",
                 "func_kwargs": {
-                    "subset": ["timestamp", "symbol"]
+                    "subset": ["created_at", "symbol"]
                 }
             },
         ]
