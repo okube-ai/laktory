@@ -180,6 +180,7 @@ nav:
           - api/models/resources/databricks/catalog.md
           - api/models/resources/databricks/cluster.md
           - api/models/resources/databricks/column.md
+          - Dashboard: api/models/resources/databricks/dashboard.md
           - DbfsFile: api/models/resources/databricks/dbfsfile.md
           - api/models/resources/databricks/directory.md
           - DLT Pipeline: api/models/resources/databricks/dltpipeline.md
