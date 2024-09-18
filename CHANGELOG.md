@@ -1,6 +1,16 @@
 # Release History
 
-## [0.4.12] - Unreleased
+## [0.4.13] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.4.12] - 2024-09-18
 ### Added
 * Support for multi-segments (semi-column ; separated) SQL statements 
 * Support for Databricks Lakeview Dashboard resource
