@@ -120,12 +120,18 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         """
         resources = []
 
+        depends_on = []
         if self.workspace_assignments:
             for a in self.workspace_assignments:
                 a.metastore_id = f"${{resources.{self.resource_name}.id}}"
+                depends_on += [f"${{resources.{a.resource_name}}}"]
                 resources += [a]
 
         if self.grants:
+            options = {"provider": self.workspace_provider}
+            if depends_on:
+                options["depends_on"] = depends_on
+
             resources += Grants(
                 resource_name=f"grants-{self.resource_name}",
                 metastore=f"${{resources.{self.resource_name}.id}}",
@@ -133,17 +139,21 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
                     {"principal": g.principal, "privileges": g.privileges}
                     for g in self.grants
                 ],
-                options={"provider": self.workspace_provider},
+                options=options,
             ).core_resources
 
+            depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
+
         if self.data_accesses:
+
             for data_access in self.data_accesses:
                 data_access.metastore_id = f"${{resources.{self.resource_name}.id}}"
-                # TODO: Add dependency on grants
                 _core_resources = data_access.core_resources
                 for r in _core_resources[1:]:
                     if r.options.provider is None:
                         r.options.provider = self.workspace_provider
+                    if depends_on:
+                        r.options.depends_on = depends_on
                 resources += _core_resources
 
         return resources

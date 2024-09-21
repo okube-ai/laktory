@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* Missing dependencies when deploying grants and data access with Metastore
 ### Updated
 * n/a
 ### Breaking changes
