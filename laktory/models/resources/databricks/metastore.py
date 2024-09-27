@@ -54,6 +54,8 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         todo
     grants:
         List of grants operating on the metastore
+    grants_provider:
+        Provider used for deploying grants
     lookup_existing:
         Specifications for looking up existing resource. Other attributes will
         be ignored.
@@ -96,16 +98,16 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     force_destroy: bool = None
     global_metastore_id: str = None
     grants: list[MetastoreGrant] = None
+    grants_provider: str = None
     lookup_existing: MetastoreLookup = Field(None, exclude=True)
     metastore_id: str = None
     name: str = None
     owner: str = None
     region: str = None
     storage_root: str = None
-    storage_root_credential_id: str = None
+    storage_root_credential_id: Union[str, None] = None
     updated_at: int = None
     updated_by: str = None
-    workspace_provider: str = None
     workspace_assignments: list[MetastoreAssignment] = None
 
     # ----------------------------------------------------------------------- #
@@ -128,7 +130,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
                 resources += [a]
 
         if self.grants:
-            options = {"provider": self.workspace_provider}
+            options = {"provider": self.grants_provider}
             if depends_on:
                 options["depends_on"] = depends_on
 
@@ -151,7 +153,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
                 _core_resources = data_access.core_resources
                 for r in _core_resources[1:]:
                     if r.options.provider is None:
-                        r.options.provider = self.workspace_provider
+                        r.options.provider = self.grants_provider
                     if depends_on:
                         r.options.depends_on = depends_on
                 resources += _core_resources
@@ -171,8 +173,8 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         return [
             "workspace_assignments",
             "grants",
+            "grants_provider",
             "data_accesses",
-            "workspace_provider",
         ]
 
     # ----------------------------------------------------------------------- #
