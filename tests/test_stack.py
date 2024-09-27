@@ -63,6 +63,7 @@ def test_stack_model():
             "databricks_clusters": {},
             "databricks_directories": {},
             "databricks_externallocations": {},
+            "databricks_grants": {},
             "databricks_groups": {},
             "databricks_jobs": {
                 "job-stock-prices-ut-stack": {
