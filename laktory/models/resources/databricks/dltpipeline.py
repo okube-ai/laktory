@@ -88,6 +88,7 @@ class PipelineCluster(Cluster):
     * `idempotency_token`
     * `is_pinned`
     * `libraries`
+    * `no_wait`
     * `node_type_id`
     * `runtime_engine`
     * `single_user_name`
@@ -104,6 +105,7 @@ class PipelineCluster(Cluster):
     is_pinned: bool = Field(None, exclude=True)
     libraries: list[Any] = Field(None, exclude=True)
     node_type_id: str = None
+    no_wait: bool = Field(None, exclude=True)
     runtime_engine: str = Field(None, exclude=True)
     single_user_name: str = Field(None, exclude=True)
     spark_version: str = Field(None, exclude=True)
@@ -118,6 +120,7 @@ class PipelineCluster(Cluster):
             "idempotency_token",
             "is_pinned",
             "libraries",
+            "no_wait",
             "runtime_engine",
             "single_user_name",
             "spark_version",

@@ -231,6 +231,12 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     node_type_id:
         Any supported databricks.getNodeType id. If instance_pool_id is
         specified, this field is not needed.
+    no_wait:
+        If true, the provider will not wait for the cluster to reach RUNNING
+        state when creating the cluster, allowing cluster creation and library
+        installation to continue asynchronously. Defaults to false (the
+        provider will wait for cluster creation and library installation to
+        succeed).
     num_workers:
         Number of worker nodes that this cluster should have. A cluster has one Spark driver and num_workers executors
         for a total of num_workers + 1 Spark nodes.
@@ -319,6 +325,7 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     lookup_existing: ClusterLookup = Field(None, exclude=True)
     name: str = None
     node_type_id: str = Field(...)
+    no_wait: bool = None
     num_workers: int = None
     policy_id: str = None
     runtime_engine: Literal["STANDARD", "PHOTON"] = None
