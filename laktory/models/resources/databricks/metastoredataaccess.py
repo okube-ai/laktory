@@ -176,7 +176,7 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
         if self.grants:
             grant = Grants(
                 resource_name=f"grants-{self.resource_name}",
-                storage_credential=self.name,
+                storage_credential=f"${{resources.{self.resource_name}.name}}",
                 grants=[
                     {"principal": g.principal, "privileges": g.privileges}
                     for g in self.grants

@@ -7,7 +7,7 @@ metastore = Metastore(
     storage_root="abfss://metastore@o3stglakehousedev.dfs.core.windows.net/",
     region="eastus",
     force_destroy=True,
-    workspace_provider="${resources.provider-workspace-neptune}",
+    grants_provider="${resources.provider-workspace-neptune}",
     workspace_assignments=[{"workspace_id": 0}],
     grants=[
         {
@@ -102,7 +102,7 @@ def test_metastore():
         "storage_root_credential_id": None,
         "updated_at": None,
         "updated_by": None,
-        "workspace_provider": "${resources.provider-workspace-neptune}",
+        "grants_provider": "${resources.provider-workspace-neptune}",
         "workspace_assignments": [
             {"default_catalog_name": None, "metastore_id": None, "workspace_id": 0}
         ],

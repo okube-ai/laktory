@@ -88,13 +88,9 @@ def smart_join(
         raise ValueError("Either `on` or (`left_on` and `other_on`) should be set")
 
     # Parse inputs
-    if left_on is None:
-        left_on = []
-    elif isinstance(left_on, str):
+    if isinstance(left_on, str):
         left_on = [left_on]
-    if other_on is None:
-        other_on = []
-    elif isinstance(other_on, str):
+    if isinstance(other_on, str):
         other_on = [other_on]
 
     # Drop duplicates to prevent adding rows to left
