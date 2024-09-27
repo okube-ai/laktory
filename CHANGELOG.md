@@ -2,13 +2,13 @@
 
 ## [0.4.13] - Unreleased
 ### Added
-* n/a
+* Grants resources to Stack
 ### Fixed
 * Missing dependencies when deploying grants and data access with Metastore
 ### Updated
 * n/a
 ### Breaking changes
-* n/a
+* Renamed workspace provider to grants provider in Metastore resource
 
 ## [0.4.12] - 2024-09-18
 ### Added
