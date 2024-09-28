@@ -3,6 +3,7 @@
 ## [0.4.13] - Unreleased
 ### Added
 * Grants resources to Stack
+* `no_wait` option for Cluster resources
 ### Fixed
 * Missing dependencies when deploying grants and data access with Metastore
 ### Updated
