@@ -21,6 +21,7 @@ class JobCluster(Cluster):
     * `access_controls`
     * `is_pinned`
     * `libraries`
+    * `no_wait`
 
     that are not allowed.
     """
@@ -28,13 +29,15 @@ class JobCluster(Cluster):
     access_controls: list[Any] = Field(None, exclude=True)
     is_pinned: bool = Field(None, exclude=True)
     libraries: list[Any] = Field(None, exclude=True)
+    no_wait: bool = Field(None, exclude=True)
 
     @model_validator(mode="after")
     def excluded_fields(self) -> Any:
         for f in [
+            "access_controls",
             "is_pinned",
             "libraries",
-            "permissions",
+            "no_wait",
         ]:
             if getattr(self, f, None) not in [None, [], {}]:
                 raise ValueError(f"Field {f} should be null")
