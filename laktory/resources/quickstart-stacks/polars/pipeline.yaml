@@ -1,6 +1,10 @@
 name: pl-stock-prices
 dataframe_type: POLARS
 
+# --------------------------------------------------------------------------- #
+# Stock Prices                                                                #
+# --------------------------------------------------------------------------- #
+
 nodes:
 - name: brz_stock_prices
   source:
@@ -39,6 +43,10 @@ nodes:
         keep:
           first
 
+# --------------------------------------------------------------------------- #
+# Metadata                                                                    #
+# --------------------------------------------------------------------------- #
+
 - name: brz_stock_metadata
   layer: BRONZE
   source:
@@ -49,7 +57,6 @@ nodes:
       format: PARQUET
 
 - name: slv_stock_metadata
-  layer: SILVER
   source:
     node_name: brz_stock_metadata
   transformer:
@@ -64,10 +71,15 @@ nodes:
       - name: first_traded
         type: timestamp
         sql_expr: data.firstTradeDate
+    - func_name: drop
+      func_args:
+        - data
+
+# --------------------------------------------------------------------------- #
+# Joins                                                                       #
+# --------------------------------------------------------------------------- #
 
 - name: slv_stocks
-  layer: SILVER
-  drop_source_columns: False
   source:
     node_name: slv_stock_prices
     as_stream: false
@@ -91,7 +103,6 @@ nodes:
         expr: pl.col("created_at").dt.truncate("1d")
 
 - name: gld_stocks_prices_by_1d
-  layer: GOLD
   source:
     node_name: slv_stocks
     as_stream: false

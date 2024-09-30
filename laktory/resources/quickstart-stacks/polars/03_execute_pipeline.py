@@ -8,17 +8,21 @@ with open("./pipeline.yaml", "r") as fp:
     pipeline = models.Pipeline.model_validate_yaml(fp)
 
 # --------------------------------------------------------------------------- #
-# List Nodes Pipeline                                                         #
+# Execute Pipeline                                                            #
 # --------------------------------------------------------------------------- #
 
-print("Pipeline Nodes:")
-for node_name in pipeline.sorted_node_names:
-    print(f"   {node_name}")
-print()
+# In the previous examples, we showed that each node can be executed
+# individually by passing the output of an upstream node to a downstream
+# one. Although convenient for debugging and prototyping, a pipeline is
+# generally executed simply by calling its execute method:
+pipeline.execute()
+
 
 # --------------------------------------------------------------------------- #
-# Visualize Pipeline DAG                                                      #
+# Review Data                                                                 #
 # --------------------------------------------------------------------------- #
 
-fig = pipeline.dag_figure()
-fig.write_html("./dag.html", auto_open=True)
+# Once the pipeline is executed, the output dataframe of each node is
+# available.
+for node in pipeline.sorted_nodes:
+    print(f"{node.name} schema | {node.output_df.schema}")
