@@ -18,7 +18,9 @@ def quickstart(
     template: Annotated[
         str,
         typer.Option(
-            "--template", "-t", help="Template [unity-catalog, workspace, workflows]"
+            "--template",
+            "-t",
+            help="Template [unity-catalog, workspace, workflows, local-pipeline]",
         ),
     ] = None,
     backend: Annotated[

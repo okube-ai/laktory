@@ -1,5 +1,4 @@
 from laktory import models
-import polars as pl
 
 # --------------------------------------------------------------------------- #
 # Code Pipeline                                                               #
@@ -61,7 +60,7 @@ node_slv = models.PipelineNode(
                 func_kwargs={
                     "subset": ["symbol", "created_at"],
                     "keep": "first",
-                }
+                },
             ),
         ]
     ),
@@ -72,7 +71,9 @@ node_slv = models.PipelineNode(
 # Gold Node                                                                   #
 # --------------------------------------------------------------------------- #
 
+
 def process_stocks(df):
+    import polars as pl
 
     df = df.with_columns(
         open_rounder=pl.col("open").round(2),
