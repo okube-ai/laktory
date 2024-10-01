@@ -1,6 +1,16 @@
 # Release History
 
-## [0.4.13] - Unreleased
+## [0.4.14] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.4.13] - 2024-10-01
 ### Added
 * Grants resources to Stack
 * `no_wait` option for Cluster resources
