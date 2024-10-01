@@ -308,6 +308,7 @@ class PolarsChainNode(BaseChainNode):
 
         # From SQL expression
         if self.sql_expr:
+            logger.info(f"DataFrame {self.id} as \n{self.sql_expr.strip()}")
             return self.parsed_sql_expr.eval(df)
 
         # Get Function

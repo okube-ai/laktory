@@ -1,0 +1,129 @@
+name: pl-stock-prices
+dataframe_type: POLARS
+
+# --------------------------------------------------------------------------- #
+# Stock Prices                                                                #
+# --------------------------------------------------------------------------- #
+
+nodes:
+- name: brz_stock_prices
+  source:
+    path: ./data/stock_prices.json
+    multiline: True
+  sink:
+    path: ./data/brz_stock_prices.parquet
+    format: PARQUET
+
+- name: slv_stock_prices
+  source:
+    node_name: brz_stock_prices
+    as_stream: false
+  sink:
+    path: ./data/slv_stock_prices.parquet
+    format: PARQUET
+  transformer:
+    nodes:
+    - sql_expr: |
+        SELECT
+          CAST(data.created_at AS TIMESTAMP) AS created_at,
+          data.symbol AS name,
+          data.symbol AS symbol,
+          data.open AS open,
+          data.close AS close,
+          data.high AS high,
+          data.low AS low,
+          data.volume AS volume
+        FROM
+          {df}
+    - func_name: unique
+      func_kwargs:
+        subset:
+          - symbol
+          - created_at
+        keep:
+          first
+
+# --------------------------------------------------------------------------- #
+# Metadata                                                                    #
+# --------------------------------------------------------------------------- #
+
+- name: brz_stock_metadata
+  layer: BRONZE
+  source:
+    path: ./data/stock_metadata.json
+    multiline: True
+  sink:
+      path: ./data/brz_stock_metadata.parquet
+      format: PARQUET
+
+- name: slv_stock_metadata
+  source:
+    node_name: brz_stock_metadata
+  transformer:
+    nodes:
+    - with_columns:
+      - name: symbol
+        type: string
+        sql_expr: data.symbol
+      - name: currency
+        type: string
+        sql_expr: data.currency
+      - name: first_traded
+        type: timestamp
+        sql_expr: data.firstTradeDate
+    - func_name: drop
+      func_args:
+        - data
+
+# --------------------------------------------------------------------------- #
+# Joins                                                                       #
+# --------------------------------------------------------------------------- #
+
+- name: slv_stocks
+  source:
+    node_name: slv_stock_prices
+    as_stream: false
+  sink:
+      path: ./data/slv_stocks.parquet
+      format: PARQUET
+  transformer:
+    nodes:
+    - func_name: laktory.smart_join
+      func_kwargs:
+        other:
+          node_name: slv_stock_metadata
+          selects:
+            - symbol
+            - currency
+            - first_traded
+        "on":
+          - symbol
+    - with_column:
+        name: day_id
+        expr: pl.col("created_at").dt.truncate("1d")
+
+- name: gld_stocks_prices_by_1d
+  source:
+    node_name: slv_stocks
+    as_stream: false
+  sink:
+      path: ./data/gld_stocks_prices_by_1d.parquet
+      format: PARQUET
+  transformer:
+    nodes:
+    - func_name: laktory.groupby_and_agg
+      func_kwargs:
+        groupby_columns:
+          - symbol
+          - day_id
+        agg_expressions:
+          - name: count
+            expr: pl.col('symbol').count()
+          - name: low
+            expr: pl.col('low').min()
+          - name: high
+            expr: pl.col('high').max()
+          - name: open
+            expr: pl.col('open').first()
+          - name: close
+            expr: pl.col('close').last()

@@ -4,10 +4,11 @@
 ### Added
 * Grants resources to Stack
 * `no_wait` option for Cluster resources
+* Polars quickstart
 ### Fixed
 * Missing dependencies when deploying grants and data access with Metastore
 ### Updated
-* n/a
+* Added SQL expression to logs when processing Polars DataFrame
 ### Breaking changes
 * Renamed workspace provider to grants provider in Metastore resource
 

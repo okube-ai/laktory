@@ -18,7 +18,9 @@ def quickstart(
     template: Annotated[
         str,
         typer.Option(
-            "--template", "-t", help="Template [unity-catalog, workspace, workflows]"
+            "--template",
+            "-t",
+            help="Template [unity-catalog, workspace, workflows, local-pipeline]",
         ),
     ] = None,
     backend: Annotated[
@@ -53,7 +55,7 @@ def quickstart(
 
     # Backend
     completer = WordCompleter(SUPPORTED_BACKENDS, ignore_case=True)
-    if backend is None:
+    if backend is None and template not in ["local-pipeline"]:
         backend = prompt(
             f"Select IaC backend {SUPPORTED_BACKENDS}: ",
             completer=completer,

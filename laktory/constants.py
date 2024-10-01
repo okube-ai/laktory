@@ -2,6 +2,7 @@ QUICKSTART_TEMPLATES = [
     "unity-catalog",
     "workspace",
     "workflows",
+    "local-pipeline",
 ]
 
 SUPPORTED_BACKENDS = [

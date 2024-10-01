@@ -191,7 +191,43 @@ def atest_deploy_quickstart_stacks():
         _deploy_stack(template, backend, env)
 
 
+def test_quickstart_localpipeline():
+
+    dirpath = pypath.local(f"{paths.tmp}/quickstart_local_pipeline_{str(uuid.uuid4())}")
+    # stack_filepath = dirpath / "stack.yaml"
+
+    # Change dir
+    os.mkdir(dirpath)
+
+    with dirpath.as_cwd():
+
+        # Run Quickstart
+        _ = runner.invoke(
+            app,
+            ["quickstart", "--template", "local-pipeline"],
+        )
+
+        # Run Scripts
+        for filename in [
+            "00_explore_pipeline.py",
+            "01_execute_node_bronze.py",
+            "02_execute_node_silver.py",
+            "03_execute_pipeline.py",
+            "04_code_pipeline.py",
+        ]:
+            with open(filename, "r") as f:
+                print(f"----- Executing {filename}")
+                code = f.read()
+                exec(code)
+                print("")
+                print(f"----- Execution completed\n\n")
+
+    # Cleanup
+    shutil.rmtree(dirpath)
+
+
 if __name__ == "__main__":
     test_read_quickstart_stacks()
     test_preview_quickstart_stacks()
-    # atest_deploy_quickstart_stacks()
+    atest_deploy_quickstart_stacks()
+    test_quickstart_localpipeline()
