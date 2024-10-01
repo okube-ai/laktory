@@ -204,7 +204,7 @@ def test_quickstart_localpipeline():
         # Run Quickstart
         _ = runner.invoke(
             app,
-            ["quickstart", "--template", "local-pipeline", "--backend", "terraform"],
+            ["quickstart", "--template", "local-pipeline"],
         )
 
         # Run Scripts

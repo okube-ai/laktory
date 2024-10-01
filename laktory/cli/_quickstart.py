@@ -55,7 +55,7 @@ def quickstart(
 
     # Backend
     completer = WordCompleter(SUPPORTED_BACKENDS, ignore_case=True)
-    if backend is None:
+    if backend is None and template not in ["local-pipeline"]:
         backend = prompt(
             f"Select IaC backend {SUPPORTED_BACKENDS}: ",
             completer=completer,

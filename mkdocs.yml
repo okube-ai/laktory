@@ -117,7 +117,13 @@ nav:
   - Get Started:
     - About: index.md
     - Installation: install.md
-    - Quickstart: quickstart.md
+    - Quickstarts:
+      - Quickstart : quickstarts/quickstart.md
+      - Workflows: quickstarts/workflows.md
+      - Workspace: quickstarts/workspace.md
+      - Unity Catalog: quickstarts/unity-catalog.md
+      - Local Pipeline: quickstarts/local-pipeline.md
+
     - Demos: demos.md
     - Partners: partners.md
 
