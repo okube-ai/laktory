@@ -144,11 +144,11 @@ databricks_grants.grants-schema-lqs-prd-sandbox: Creation complete after 1s [id=
 
 <br>
 After the deployment is complete, you can check the Databricks account for the newly created users and groups.
-![account-users](../images/quickstart_uc_users.png)
-![account-groups](../images/quickstart_uc_groups.png)
+![account-users](../images/quickstarts/uc_users.png)
+![account-groups](../images/quickstarts/uc_groups.png)
 
 In the workspace, you'll see the catalogs and schemas that were deployed.
-![workspace-schemas](../images/quickstart_uc_catalogs_schemas.png)
+![workspace-schemas](../images/quickstarts/uc_catalogs_schemas.png)
 
 ### Demo
 As part of the **Lakhouse As Code** mini-series, watch how to set the foundation
