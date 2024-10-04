@@ -6,7 +6,8 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Workflows quickstart to include debug script
+* Workflows quickstart to better align DLT and job pipeline.
 ### Breaking changes
 * n/a
 

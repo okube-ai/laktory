@@ -1,17 +1,16 @@
 #
-# This is an example of a pipeline that uses Delta Live Tables as the
-# orchestrator and SQL for data transformations between and bronze and
-# silver layers. It runs in batch mode (as_stream = `False`), meaning
+# This is an example of a pipeline that uses Databricks Jobs as the
+# orchestrator. It runs in batch mode (as_stream = `False`), meaning
 # that each table is re-computed entirely at each run.
 #
-name: pl-stocks-sql
+name: pl-stocks-job
 
 # Select Orchestrator
 orchestrator: DATABRICKS_JOB
 
 # Configure Orchestrator
 databricks_job:
-  name: job-pl-stock-sql
+  name: job-pl-stocks
   clusters:
     - name: node-cluster
       autoscale:
@@ -24,24 +23,30 @@ databricks_job:
 nodes:
 
 # Bronze Table
-- name: brz_stock_prices_sql
+- name: brz_stock_prices
   source:
     path: dbfs:/Workspace/.laktory/data/stock_prices/
     as_stream: false
     format: JSON
   sink:
-    table_name: brz_stock_prices_sql
+    table_name: brz_stock_prices_job
     mode: OVERWRITE
 
 # Silver Table
-- name: slv_stock_prices_sql
+- name: slv_stock_prices
   source:
-    node_name: brz_stock_prices_sql
+    node_name: brz_stock_prices
     as_stream: false
   sink:
-    table_name: slv_stock_prices_sql
+    table_name: slv_stock_prices_job
     mode: OVERWRITE
-  # Define the transformer as a SQL statement
+
+  # The transformer is a chain of SQL statements and / or serialized spark
+  # functions. In this case, we use SQL to select some columns from the
+  # source and we use Spark df.drop_duplicates to clean the data.
   transformer:
     nodes:
     - sql_expr: ${include.sql/slv_stock_prices.sql}
+    - func_name: drop_duplicates
+      func_kwargs:
+        subset: ["created_at", "symbol"]
