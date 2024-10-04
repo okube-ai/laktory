@@ -119,7 +119,7 @@ Do you want to perform these actions?
 <br>
 After deployment, you can check the Databricks workspace to confirm that the pipeline job has been successfully deployed.
 
-![pl-stock-prices](../images/quickstarts/job_pl_stock.png)
+![pl-stocks](../images/quickstarts/job_pl_stocks.png)
 
 When a Laktory pipeline is deployed as a job, you don't have to manually create
 each task, they are automatically created based on the nodes defined in your
@@ -206,11 +206,11 @@ INFO - Task job-pl-stocks.node-slv_stock_prices terminated with RunResultState.S
 </div>
 You can also lookup the resulting run from the workspace.
 
-![pl-stock-prices](../images/quickstarts/job_pl_stock_run.png)
+![pl-stocks-run](../images/quickstarts/job_pl_stocks_run.png)
 
 ### Run Pipeline DLT
 
 For the pipeline we deployed as a Delta Live Tables, we can also run it using
 the CLI or simply from the UI.
 
-![pl-stock-prices](../images/quickstarts/dlt_pl_stock_run.png)
+![dlt-pl-stocks-run](../images/quickstarts/dlt_pl_stocks_run.png)
