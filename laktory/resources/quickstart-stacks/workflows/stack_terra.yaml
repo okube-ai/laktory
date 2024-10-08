@@ -17,11 +17,11 @@ resources:
 
   # Laktory Sample Pipelines
   #   - Deployed resources depend on selected orchestrator
-  #   - pl-stocks-sql: Deployed as a Job with SQL transformations
-  #   - pl-stocks-spark-dlt: Deployed as a Delta Live Tables with spark transformations
+  #   - pl-stocks-job: Deployed as a Job with SQL transformations
+  #   - pl-stocks-dlt: Deployed as a Delta Live Tables with spark transformations
   pipelines:
-    pl-stocks-sql: ${include.resources/pl-stocks-sql.yaml}
-    pl-stocks-spark-dlt: ${include.resources/pl-stocks-spark-dlt.yaml}
+    pl-stocks-job: ${include.resources/pl-stocks-job.yaml}
+    pl-stocks-dlt: ${include.resources/pl-stocks-dlt.yaml}
 
   # Databricks Provider Configuration
   providers:

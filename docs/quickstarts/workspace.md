@@ -109,7 +109,7 @@ Apply complete! Resources: 7 added, 0 changed, 1 destroyed.
 <br>
 Once the deployment completes, you can verify that the SQL warehouse and other 
 resources have been successfully created by checking the Databricks workspace.
-![quickstart-workspace-warehouse](../images/warehouse_laktory_quickstart.png)
+![quickstart-workspace-warehouse](../images/quickstarts/ws_warehouse.png)
 
 ### Demo
 As part of the **Lakhouse As Code** mini-series, watch how to configure a

@@ -70,8 +70,8 @@ def _read_stack(template, backend):
             in data["resources"]["databricks_notebooks"].keys()
         )
         assert "job-hello" in data["resources"]["databricks_jobs"].keys()
-        assert "pl-stocks-sql" in data["resources"]["pipelines"].keys()
-        assert "pl-stocks-spark-dlt" in data["resources"]["pipelines"].keys()
+        assert "pl-stocks-job" in data["resources"]["pipelines"].keys()
+        assert "pl-stocks-dlt" in data["resources"]["pipelines"].keys()
     elif template == "unity-catalog":
         assert resources_count == 8
         assert "group-laktory-friends" in data["resources"]["databricks_groups"].keys()

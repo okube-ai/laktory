@@ -1,12 +1,10 @@
 #
 # This is an example of a pipeline that uses Delta Live Tables as the
-# orchestrator and a Spark Chain (serialized spark) for data transformations
-# between and bronze and silver layers. It runs in stream mode
-# (as_stream = `True`), meaning that new files are incrementally pushed
-# downstream as new rows instead of re-computing entirely the downstream
-# tables.
+# orchestrator. It runs in stream mode (as_stream = `True`), meaning that
+# new files are incrementally pushed downstream as new rows instead of
+# re-computing entirely the downstream tables.
 #
-name: pl-stocks-spark-dlt
+name: pl-stocks-dlt
 
 # Select Orchestrator
 orchestrator: DLT
@@ -22,7 +20,7 @@ dlt:
       min_workers: 1
       max_workers: 2
   configuration:
-    pipeline_name: pl-stocks-spark-dlt
+    pipeline_name: pl-stocks-dlt
   libraries:
   - notebook:
       path: /.laktory/dlt/dlt_laktory_pl.py
@@ -31,46 +29,45 @@ dlt:
 nodes:
 
 # Bronze Table
-- name: brz_stock_prices_spark
+- name: brz_stock_prices
   source:
     path: dbfs:/Workspace/.laktory/data/stock_prices/
     as_stream: true
     format: JSON
   sink:
-    table_name: brz_stock_prices_spark
+    table_name: brz_stock_prices
 
 # Silver Table
-- name: slv_stock_prices_spark
+- name: slv_stock_prices
   expectations:
   - name: positive_price
     expression: open > 0
     action: FAIL
   source:
-    node_name: brz_stock_prices_spark
+    node_name: brz_stock_prices
     as_stream: true
+  drop_source_columns: True
   sink:
-    table_name: slv_stock_prices_spark
-  # Define the transformer as a Spark Chain (serialized spark operations)
+    table_name: slv_stock_prices
+
+  # The transformer is a chain of SQL statements and / or serialized spark
+  # functions. In this case, we use `with_columns` helper function to easily
+  # create columns using a spark-like syntax and we use Spark
+  # df.drop_duplicates to clean the data.
   transformer:
     nodes:
-    - with_column:
-        name: created_at
+    - with_columns:
+      - name: created_at
         type: timestamp
         sql_expr: data.created_at
-    - with_column:
-        name: symbol
+      - name: symbol
         sql_expr: data.symbol
-    - with_column:
-        name: open
+      - name: open
         type: double
         sql_expr: data.open
-    - with_column:
-        name: close
+      - name: close
         type: double
         sql_expr: data.close
-    - func_name: drop
-      func_args:
-        - data
-        - description
-        - name
-        - producer
+    - func_name: drop_duplicates
+      func_kwargs:
+        subset: ["created_at", "symbol"]
