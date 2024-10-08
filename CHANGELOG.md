@@ -1,15 +1,9 @@
 # Release History
 
 ## [0.4.14] - Unreleased
-### Added
-* n/a
-### Fixed
-* n/a
 ### Updated
 * Workflows quickstart to include debug script
 * Workflows quickstart to better align DLT and job pipeline.
-### Breaking changes
-* n/a
 
 ## [0.4.13] - 2024-10-01
 ### Added
