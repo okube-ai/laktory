@@ -4,6 +4,7 @@
 
 # Compiled files
 **pytest_cache**
+**__pycache__**
 **/**.pyc
 
 # --------------------------------------------------------------------------- #
@@ -35,19 +36,13 @@ coverage.xml
 htmlcov
 
 # Test data
-tests/data_tmp
+tests/*terraform*
 tests/Pulumi.yaml
+tests/stack.tf.json
 tests/tmp*
-tmp*
+tests/.terraform/
 
 # Test results
 junit
-
-# Tox files - Global
-#.tox_pip_cache_sdist
-#.tox_pip_cache_whl
-
-# Tox files - Package-specific
-#**/.tox/**
 
 

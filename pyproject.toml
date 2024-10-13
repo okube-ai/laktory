@@ -56,11 +56,13 @@ pulumi = [
 
 # DataFrame
 polars = [
+#    "great_expectations",
     "deltalake",
     "polars>=1.0",
     "sqlparse",
 ]
 spark = [
+    "great_expectations",
     "pyarrow",
     "pyspark[connect]",
 ]
