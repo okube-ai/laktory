@@ -29,7 +29,7 @@ df = pd.read_csv(
 ], axis=1)
 
 # --------------------------------------------------------------------------- #
-# Execution                                                                   #
+# Configuration                                                               #
 # --------------------------------------------------------------------------- #
 
 # Initialize Soda Scan object
@@ -40,7 +40,10 @@ scan.add_pandas_dataframe(data_source_name=data_source_name, dataset_name=datase
 # Add the checks
 scan.add_sodacl_yaml_str(checks)
 
-# Execute the scan
+# --------------------------------------------------------------------------- #
+# Execution                                                                   #
+# --------------------------------------------------------------------------- #
+
 scan.set_verbose(True)
 scan.execute()
 
