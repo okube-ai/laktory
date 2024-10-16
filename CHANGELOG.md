@@ -2,7 +2,7 @@
 
 ## [0.4.15] - Unreleased
 ### Added
-* n/a
+* DataFrameExpression model
 ### Fixed
 * n/a
 ### Updated

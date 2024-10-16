@@ -62,7 +62,6 @@ polars = [
     "sqlparse",
 ]
 spark = [
-    "great_expectations",
     "pyarrow",
     "pyspark[connect]",
 ]
