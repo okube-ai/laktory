@@ -130,20 +130,26 @@ class DataQualityExpectation(BaseModel):
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def pass_filter(self):
+        return self.expr.eval()
+
+    @property
+    def fail_filter(self):
+        return ~self.expr.eval()
+
     # ----------------------------------------------------------------------- #
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
 
     def check(self, df: Any) -> DataQualityCheck:
 
-        spark_expr = self.expr.eval()
-
         logger.info(f"Checking expectation '{self.name}' | {self.expr.value} ({self.type})")
 
         rows_count = df.count()
 
         if self.type == "ROW":
-            df_fail = df.filter(~spark_expr)
+            df_fail = df.filter(self.fail_filter)
 
             fails_count = df_fail.count()
 
@@ -169,9 +175,9 @@ class DataQualityExpectation(BaseModel):
             import pyspark.sql.functions as F
 
             if self.expr.type == "SQL":
-                _df = df.select(spark_expr).toPandas()
+                _df = df.select(self.expr.eval()).toPandas()
             else:
-                _df = df.agg(spark_expr).toPandas()
+                _df = df.agg(self.expr.eval()).toPandas()
 
             status = _df.iloc[0].values[0]
 

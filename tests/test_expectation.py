@@ -20,19 +20,18 @@ def test_expectations_abs():
     dqe = models.DataQualityExpectation(
         name="price less than 300", action="ALLOW", expr="F.col('close') < 300"
     )
-
     check = dqe.check(df)
-
     assert check.rows_count == 80
     assert check.fails_count == 20
     assert check.failure_rate == 0.25
     assert check.status == "FAIL"
+    assert str(check.expectation.pass_filter) == str(F.col('close') < 300)
+    assert str(check.expectation.fail_filter) == str(~(F.col('close') < 300))
 
     # SQL Expression
     dqe = models.DataQualityExpectation(
         name="price less than 300", action="ALLOW", expr="close < 300"
     )
-
     check = dqe.check(df)
     assert check.rows_count == 80
     assert check.fails_count == 20
@@ -48,7 +47,6 @@ def test_expectations_rel():
         expr="close > 127",
         tolerance={"rel": 0.05},
     )
-
     check = dqe.check(df)
     assert check.rows_count == 80
     assert check.fails_count == 3
