@@ -160,7 +160,7 @@ def test_column(df0=df0):
                 "with_column": {
                     "name": "x2",
                     "type": "double",
-                    "sql_expr": "x*2",
+                    "expr": "x*2",
                 },
             },
             {
@@ -177,10 +177,10 @@ def test_column(df0=df0):
     df = sc.execute(df)
 
     # Test
-    assert [(c.name, c.expr) for c in sc.nodes[0]._with_columns] == [
+    assert [(c.name, c.expr.value) for c in sc.nodes[0]._with_columns] == [
         ("cos_x", "col('x').cos()")
     ]
-    assert [(c.name, c.sql_expr) for c in sc.nodes[1]._with_columns] == [("x2", "x*2")]
+    assert [(c.name, c.expr.value) for c in sc.nodes[1]._with_columns] == [("x2", "x*2")]
     assert df["cos_x"].to_list() == np.cos(df["x"]).to_list()
     assert df["x2"].to_list() == (df["x"] * 2).to_list()
 
@@ -200,7 +200,7 @@ def test_column(df0=df0):
                     {
                         "name": "x3",
                         "type": "double",
-                        "sql_expr": "x*3",
+                        "expr": "x*3",
                     },
                 ]
             },

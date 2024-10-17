@@ -6,7 +6,7 @@ from typing import Literal
 
 from laktory._logger import get_logger
 from laktory.models.transformers.basechainnode import BaseChainNode
-from laktory.models.transformers.basechainnode import BaseChainNodeColumn
+from laktory.models.transformers.basechainnode import ChainNodeColumn
 from laktory.models.transformers.basechainnode import BaseChainNodeFuncArg
 from laktory.models.transformers.basechainnode import BaseChainNodeSQLExpr
 from laktory.polars import PolarsDataFrame
@@ -57,56 +57,6 @@ class PolarsChainNodeFuncArg(BaseChainNodeFuncArg):
                     break
 
         return v
-
-
-class PolarsChainNodeColumn(BaseChainNodeColumn):
-    """
-    Chain node column definition
-
-    Attributes
-    ----------
-    name:
-        Column name
-    type:
-        Column data type
-    unit:
-        Column units
-    expr:
-        String representation of a polars expression
-    sql_expr:
-        SQL expression
-    """
-
-    name: str
-    type: Union[str, None] = "string"
-    unit: Union[str, None] = None
-    expr: Union[str, None] = None
-    sql_expr: Union[str, None] = None
-
-    def eval(self, udfs=None):
-
-        # Adding udfs to global variables
-        if udfs is None:
-            udfs = {}
-        for k, v in udfs.items():
-            globals()[k] = v
-
-        # Imports required to evaluate expressions
-        import polars as pl
-        import polars.functions as F
-        from polars import col
-        from polars import lit
-
-        if self.sql_expr:
-            return pl.Expr.laktory.sql_expr(self.sql_expr)
-
-        expr = eval(self.expr)
-
-        # Cleaning up global variables
-        for k, v in udfs.items():
-            del globals()[k]
-
-        return expr
 
 
 class PolarsChainNodeSQLExpr(BaseChainNodeSQLExpr):
@@ -231,8 +181,8 @@ class PolarsChainNode(BaseChainNode):
     func_kwargs: dict[str, Union[Any]] = {}
     func_name: Union[str, None] = None
     sql_expr: Union[str, None] = None
-    with_column: Union[PolarsChainNodeColumn, None] = None
-    with_columns: Union[list[PolarsChainNodeColumn], None] = []
+    with_column: Union[ChainNodeColumn, None] = None
+    with_columns: Union[list[ChainNodeColumn], None] = []
     _parent: "PolarsChain" = None
     _parsed_func_args: list = None
     _parsed_func_kwargs: dict = None
@@ -300,7 +250,7 @@ class PolarsChainNode(BaseChainNode):
                 logger.info(
                     f"Building column {column.name} as {column.expr or column.sql_expr}"
                 )
-                _col = column.eval(udfs=udfs)
+                _col = column.eval(udfs=udfs, dataframe_type="POLARS")
                 if column.type:
                     _col = _col.cast(DATATYPES_MAP[column.type])
                 df = df.with_columns(**{column.name: _col})

@@ -3,7 +3,7 @@ from typing import Any
 
 from laktory._logger import get_logger
 
-# from laktory.models.transformers.basechainnode import BaseChainNodeColumn
+# from laktory.models.transformers.basechainnode import ChainNodeColumn
 
 
 logger = get_logger(__name__)
@@ -59,7 +59,7 @@ def groupby_and_agg(
     '''
     ```
     """
-    from laktory.models.transformers.polarschainnode import PolarsChainNodeColumn
+    from laktory.models.transformers.basechainnode import ChainNodeColumn
 
     # Parse inputs
     if agg_expressions is None:
@@ -78,10 +78,10 @@ def groupby_and_agg(
     # Agg arguments
     aggs = []
     for expr in agg_expressions:
-        if not isinstance(expr, PolarsChainNodeColumn):
-            expr = PolarsChainNodeColumn(**expr)
+        if not isinstance(expr, ChainNodeColumn):
+            expr = ChainNodeColumn(**expr)
 
         expr.type = None
-        aggs += [expr.eval().alias(expr.name)]
+        aggs += [expr.eval(dataframe_type="POLARS").alias(expr.name)]
 
     return df.group_by(groupby).agg(*aggs)

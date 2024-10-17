@@ -25,7 +25,7 @@ def test_expression_types():
           data.volume AS volume
         FROM
           {df}
-        """
+        """,
     ]:
         print("Test SQL: ", e)
         expr = models.DataFrameExpression(expr=e)

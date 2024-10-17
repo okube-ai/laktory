@@ -1,6 +1,6 @@
 # Release History
 
-## [0.4.15] - Unreleased
+## [0.5.0] - Unreleased
 ### Added
 * DataFrameExpression model
 ### Fixed
@@ -8,7 +8,7 @@
 ### Updated
 * n/a
 ### Breaking changes
-* n/a
+* Renamed `sql_expr` to `expr` as `expr` now supports both SQL and DataFrame expressions (auto-detection)
 
 ## [0.4.14] - 2024-10-08
 ### Updated

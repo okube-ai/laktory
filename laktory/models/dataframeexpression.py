@@ -16,7 +16,7 @@ class DataFrameExpression(BaseModel):
 
     Attributes
     ----------
-    expr:
+    value:
         String representation
     type:
         Expression type: DF or SQL. If `None` is specified, type is guessed.
@@ -39,7 +39,8 @@ class DataFrameExpression(BaseModel):
     #> Column<'abs(close)'>
     ```
     """
-    expr: str
+
+    value: str
     type: Literal["SQL", "DF"] = None
 
     @model_validator(mode="after")
@@ -48,10 +49,10 @@ class DataFrameExpression(BaseModel):
         if self.type:
             return self
 
-        expr_clean = self.expr.strip().replace("\n", " ")
+        expr_clean = self.value.strip().replace("\n", " ")
 
         type = "SQL"
-        if re.findall(r'\w+\.\w+\(', expr_clean):
+        if re.findall(r"\w+\.\w+\(", expr_clean):
             type = "DF"
         if "lit(" in expr_clean:
             type = "DF"
@@ -71,11 +72,11 @@ class DataFrameExpression(BaseModel):
     # ----------------------------------------------------------------------- #
 
     def df_expr(self, dataframe_type="SPARK"):
-        expr = self.expr
+        expr = self.value
         if self.type == "SQL":
-            expr = f"F.expr('{self.expr}')"
+            expr = f"F.expr('{self.value}')"
             if dataframe_type == "POLARS":
-                expr = f"pl.Expr.laktory.sql_expr('{self.expr}')"
+                expr = f"pl.Expr.laktory.sql_expr('{self.value}')"
 
         return expr
 

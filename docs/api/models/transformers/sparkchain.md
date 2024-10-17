@@ -4,9 +4,6 @@
 
 ::: laktory.models.SparkChainNode
 
---
-
-::: laktory.models.SparkChainNodeColumn
 
 --
 

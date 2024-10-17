@@ -30,17 +30,17 @@ def test_execute():
                     "with_column": {
                         "name": "created_at",
                         "type": "timestamp",
-                        "sql_expr": "data.created_at",
+                        "expr": "data.created_at",
                     },
                 },
                 {
-                    "with_column": {"name": "symbol", "sql_expr": "data.symbol"},
+                    "with_column": {"name": "symbol", "expr": "data.symbol"},
                 },
                 {
                     "with_column": {
                         "name": "close",
                         "type": "double",
-                        "sql_expr": "data.close",
+                        "expr": "data.close",
                     },
                 },
                 {
@@ -77,7 +77,7 @@ def test_bronze():
         transformer={
             "nodes": [
                 {
-                    "with_column": {"name": "symbol", "sql_expr": "data.symbol"},
+                    "with_column": {"name": "symbol", "expr": "data.symbol"},
                 },
             ]
         },
@@ -119,7 +119,7 @@ def test_silver():
                     "with_column": {
                         "name": "symbol",
                         "type": "string",
-                        "sql_expr": "data.symbol",
+                        "expr": "data.symbol",
                     },
                 },
             ]
