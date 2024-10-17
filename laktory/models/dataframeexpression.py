@@ -103,7 +103,6 @@ class DataFrameExpression(BaseModel):
             from polars import lit
 
         _expr_str = self.df_expr(dataframe_type=dataframe_type)
-        print(_expr_str)
         expr = eval(_expr_str)
 
         # Cleaning up global variables
