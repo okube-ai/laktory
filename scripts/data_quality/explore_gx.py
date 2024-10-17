@@ -31,7 +31,9 @@ batch = batch_definition.get_batch(batch_parameters={"dataframe": df})
 
 # Create expectation
 expectation = gx.expectations.ExpectColumnValuesToBeBetween(
-    column="passenger_count", min_value=1, max_value=3,
+    column="passenger_count",
+    min_value=1,
+    max_value=3,
     result_format="COMPLETE",
 )
 

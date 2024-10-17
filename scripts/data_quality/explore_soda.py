@@ -22,11 +22,14 @@ checks for {dataset_name}:
 
 df = pd.read_csv(
     "https://raw.githubusercontent.com/great-expectations/gx_tutorials/main/data/yellow_tripdata_sample_2019-01.csv"
-).drop([
-    "pickup_datetime",
-    "dropoff_datetime",
-    "store_and_fwd_flag",
-], axis=1)
+).drop(
+    [
+        "pickup_datetime",
+        "dropoff_datetime",
+        "store_and_fwd_flag",
+    ],
+    axis=1,
+)
 
 # --------------------------------------------------------------------------- #
 # Configuration                                                               #
@@ -35,7 +38,9 @@ df = pd.read_csv(
 # Initialize Soda Scan object
 scan = Scan()
 scan.set_data_source_name(data_source_name)
-scan.add_pandas_dataframe(data_source_name=data_source_name, dataset_name=dataset_name, pandas_df=df)
+scan.add_pandas_dataframe(
+    data_source_name=data_source_name, dataset_name=dataset_name, pandas_df=df
+)
 
 # Add the checks
 scan.add_sodacl_yaml_str(checks)
