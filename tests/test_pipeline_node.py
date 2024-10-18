@@ -1,11 +1,13 @@
 import os
 import shutil
 
+import pytest
 from pyspark.sql import functions as F
 
 from laktory import models
 from laktory._testing import spark
 from laktory._testing import Paths
+from laktory.exceptions import DataQualityCheckFailedError
 
 paths = Paths(__file__)
 
@@ -157,36 +159,98 @@ def test_cdc():
     print(node)
 
 
-#
-#     assert table.builder.apply_changes_kwargs == {
-#         "apply_as_deletes": "operation = 'DELETE'",
-#         "apply_as_truncates": None,
-#         "column_list": [],
-#         "except_column_list": ["operation", "sequenceNum"],
-#         "ignore_null_updates": None,
-#         "keys": ["userId"],
-#         "sequence_by": "sequenceNum",
-#         "source": "brz_users_cdc",
-#         "stored_as_scd_type": 1,
-#         "target": "brz_users_type1",
-#         "track_history_column_list": None,
-#         "track_history_except_column_list": None,
-#     }
-#     assert table.builder.is_from_cdc
-#
-#     # TODO: Run test with demo data
-#     # from pyspark.sql import SparkSession
-#
-#     # spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
-#     #
-#     # df_cdc = spark.createDataFrame(pd.DataFrame({
-#     #     "userId": [124, 123, 125, 126, 123, 125, 125, 123],
-#     #     "name": ["Raul", "Isabel", "Mercedes", "Lily", None, "Mercedes", "Mercedes", "Isabel"],
-#     #     "city": ["Oaxaca", "Monterrey", "Tijuana", "Cancun", None, "Guadalajara", "Mexicali", "Chihuahua"],
-#     #     "operation": ["INSERT", "INSERT", "INSERT", "INSERT", "DELETE", "UPDATE", "UPDATE", "UPDATE"],
-#     #     "sequenceNum": [1, 1, 2, 2, 6, 6, 5, 5],
-#     # }))
-#     # df_cdc.show()
+def test_expectations():
+
+    # Test Warn / Drop
+    node = models.PipelineNode(
+        name="slv_stock_prices",
+        source={
+            "table_name": "brz_stock_prices",
+            "mock_df": df_brz,
+        },
+        drop_source_columns=True,
+        transformer={
+            "nodes": [
+                {
+                    "with_columns": [
+                        {
+                            "name": "symbol",
+                            "expr": "data.symbol",
+                        },
+                        {
+                            "name": "close",
+                            "expr": "data.close",
+                            "type": "double",
+                        },
+                    ]
+                },
+            ],
+        },
+        expectations=[
+            {
+                "name": "max price pass",
+                "expr": "close < 300",
+                "action": "WARN",
+            },
+            {
+                "name": "max price drop",
+                "expr": "close < 325",
+                "action": "DROP",
+            },
+            {
+                "name": "max price drop",
+                "expr": "close < 330",
+                "action": "QUARANTINE",
+            },
+            # {
+            #     "name": "min price fail",
+            #     "expr": "close > 0",
+            #     "action": "FAIL",
+            # },
+        ],
+    )
+    node.execute()
+    o = node.output_df.toPandas()
+    q = node.quarantine_df.toPandas()
+
+    assert node.checks[0].status == "FAIL"
+    assert node.checks[0].rows_count == 80
+    assert node.checks[0].fails_count == 20
+    assert node.checks[1].status == "FAIL"
+    assert node.checks[1].rows_count == 80
+    assert node.checks[1].fails_count == 12
+    assert node.checks[2].status == "FAIL"
+    assert node.checks[2].rows_count == 80
+    assert node.checks[2].fails_count == 8
+    assert len(o) == 68
+    assert len(q) == 8
+    assert o["close"].max() < 325
+    assert q["close"].min() >= 330
+
+    # Test Fail
+    node.expectations = [
+        models.DataQualityExpectation(
+            name="not Apple",
+            expr="symbol != 'AAPL'",
+            action="FAIL",
+        ),
+    ]
+    with pytest.raises(DataQualityCheckFailedError):
+        node.execute()
+    assert node.checks[0].status == "FAIL"
+
+    # Test Aggregate
+    node.expectations = [
+        models.DataQualityExpectation(
+            name="rows count",
+            expr="count(*) > 100",
+            type="AGGREGATE",
+            action="FAIL",
+        ),
+    ]
+    with pytest.raises(DataQualityCheckFailedError):
+        node.execute()
+    assert node.checks[0].status == "FAIL"
 
 
 if __name__ == "__main__":
@@ -194,3 +258,4 @@ if __name__ == "__main__":
     test_bronze()
     test_silver()
     test_cdc()
+    test_expectations()

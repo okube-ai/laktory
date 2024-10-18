@@ -73,7 +73,7 @@ class BaseChainNodeFuncArg(BaseModel):
 class ChainNodeColumn(BaseModel):
     expr: Union[str, DataFrameColumnExpression]
     name: str
-    type: str = "string"
+    type: Union[str, None] = "string"
     unit: Union[str, None] = None
 
     @model_validator(mode="after")

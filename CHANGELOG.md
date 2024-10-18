@@ -2,13 +2,17 @@
 
 ## [0.5.0] - Unreleased
 ### Added
-* DataFrameExpression model
+* DataFrameColumnExpression model
+* Data Quality Expectations
+* Data Quality Checks
 ### Fixed
 * n/a
 ### Updated
 * n/a
 ### Breaking changes
 * Renamed `sql_expr` to `expr` as `expr` now supports both SQL and DataFrame expressions (auto-detection)
+* DLT Expectation action "ALLOW" renamed to "WARN"
+* Added prefix `dlt_` to pipeline node `warning_expectations`, `warning_expectations` and `warning_expectations` properties 
 
 ## [0.4.14] - 2024-10-08
 ### Updated

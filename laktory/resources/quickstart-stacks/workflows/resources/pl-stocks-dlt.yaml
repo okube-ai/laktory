@@ -41,7 +41,7 @@ nodes:
 - name: slv_stock_prices
   expectations:
   - name: positive_price
-    expression: open > 0
+    expr: open > 0
     action: FAIL
   source:
     node_name: brz_stock_prices

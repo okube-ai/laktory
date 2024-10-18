@@ -14,6 +14,7 @@ from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
 from laktory.constants import DEFAULT_DFTYPE
 from laktory.models.basemodel import BaseModel
+from laktory.models.dataquality.check import DataQualityCheck
 from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
 from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipelinenode import PipelineNode
@@ -198,14 +199,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             - with_column:
                 name: created_at
                 type: timestamp
-                sql_expr: data.created_at
+                expr: data.created_at
             - with_column:
                 name: symbol
-                sql_expr: data.symbol
+                expr: data.symbol
             - with_column:
                 name: close
                 type: double
-                sql_expr: data.close
+                expr: data.close
             - func_name: drop
               func_args:
               - value: data
@@ -267,14 +268,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             - with_column:
                 name: created_at
                 type: timestamp
-                sql_expr: data.created_at
+                expr: data.created_at
             - with_column:
                 name: symbol
-                sql_expr: data.symbol
+                expr: data.symbol
             - with_column:
                 name: close
                 type: double
-                sql_expr: data.close
+                expr: data.close
             - func_name: drop
               func_args:
               - value: data
@@ -346,14 +347,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             - with_column:
                 name: created_at
                 type: timestamp
-                sql_expr: data.created_at
+                expr: data.created_at
             - with_column:
                 name: symbol
-                sql_expr: data.symbol
+                expr: data.symbol
             - with_column:
                 name: close
                 type: double
-                sql_expr: data.close
+                expr: data.close
             - func_name: drop
               func_args:
               - value: data
@@ -542,6 +543,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline orchestrator is DLT"""
         return self.orchestrator == "DLT"
+
+    @property
+    def checks(self) -> list[DataQualityCheck]:
+        checks = []
+        for node in self.nodes:
+            checks += node.checks
+        return checks
 
     @property
     def nodes_dict(self) -> dict[str, PipelineNode]:

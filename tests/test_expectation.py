@@ -18,7 +18,7 @@ def test_expectations_abs():
 
     # Spark Expression
     dqe = models.DataQualityExpectation(
-        name="price less than 300", action="ALLOW", expr="F.col('close') < 300"
+        name="price less than 300", action="WARN", expr="F.col('close') < 300"
     )
     check = dqe.check(df)
     assert check.rows_count == 80
@@ -30,7 +30,7 @@ def test_expectations_abs():
 
     # SQL Expression
     dqe = models.DataQualityExpectation(
-        name="price less than 300", action="ALLOW", expr="close < 300"
+        name="price less than 300", action="WARN", expr="close < 300"
     )
     check = dqe.check(df)
     assert check.rows_count == 80
@@ -43,7 +43,7 @@ def test_expectations_rel():
 
     dqe = models.DataQualityExpectation(
         name="price higher than 10",
-        action="ALLOW",
+        action="WARN",
         expr="close > 127",
         tolerance={"rel": 0.05},
     )

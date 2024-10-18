@@ -18,3 +18,10 @@ class DataQualityCheck(BaseModel):
         if self.expectation.type != "ROW":
             return None
         return self.fails_count / self.rows_count
+
+    @property
+    def log_msg(self) -> str:
+        msg = f"expr: {self.expectation.expr.value} | status: {self.status}"
+        if self.expectation.type == "ROW":
+            msg += f" | fails count: {self.fails_count} / {self.rows_count} ({100*self.failure_rate:5.2f} %)"
+        return msg

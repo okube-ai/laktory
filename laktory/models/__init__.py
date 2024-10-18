@@ -8,7 +8,6 @@ from .datasources import *
 from .grants import *
 from .pipeline import Pipeline
 from .pipelinenode import PipelineNode
-from .pipelinenodeexpectation import PipelineNodeExpectation
 from .resources import *
 from .stacks import *
 from .transformers import *

@@ -4,7 +4,7 @@ from typing import Union
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.dataframeexpression import DataFrameExpression
+from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
 from laktory.models.dataquality.check import DataQualityCheck
 from laktory._logger import get_logger
 
@@ -63,10 +63,11 @@ class DataQualityExpectation(BaseModel):
     ----------
     action:
         Action to take when expectation is not met.
-        `ALLOW`: Write invalid records to the output DataFrame, but log
+        `WARN`: Write invalid records to the output DataFrame, but log
         exception.
         `DROP`: Drop Invalid records to the output DataFrame and log exception.
         `FAIL`: Raise exception when invalid records are found.
+        `QUARANTINE`: Forward invalid data for quarantine.
     type:
         Type of expectation:
         `"ROW"`: Row-specific condition. Must be a boolean expression.
@@ -87,11 +88,14 @@ class DataQualityExpectation(BaseModel):
 
     dqe = models.DataQualityExpectation(
         name="price higher than 10",
-        action="ALLOW",
+        action="WARN",
         expr="close > 127",
         tolerance={"rel": 0.05},
     )
     print(dqe)
+    '''
+    variables={} action='WARN' type='ROW' name='price higher than 10' expr=DataFrameColumnExpression(variables={}, value='close > 127', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=None, rel=0.05)
+    '''
 
     dqe = models.DataQualityExpectation(
         name="rows count",
@@ -99,6 +103,9 @@ class DataQualityExpectation(BaseModel):
         type="AGGREGATE",
     )
     print(dqe)
+    '''
+    variables={} action='WARN' type='AGGREGATE' name='rows count' expr=DataFrameColumnExpression(variables={}, value='COUNT(*) > 50', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=0, rel=None)
+    '''
     ```
 
     References
@@ -107,23 +114,31 @@ class DataQualityExpectation(BaseModel):
     * [DLT Table Expectations](https://docs.databricks.com/en/delta-live-tables/expectations.html)
     """
 
-    action: Literal["ALLOW", "DROP", "FAIL"] = "ALLOW"
+    action: Literal["WARN", "DROP", "FAIL", "QUARANTINE"] = "WARN"
     type: Literal["AGGREGATE", "ROW"] = "ROW"
     name: str
-    expr: Union[str, DataFrameExpression] = None
+    expr: Union[str, DataFrameColumnExpression] = None
     tolerance: ExpectationTolerance = ExpectationTolerance(abs=0)
     _check: DataQualityCheck = None
 
     @model_validator(mode="after")
     def parse_expr(self) -> Any:
         if isinstance(self.expr, str):
-            self.expr = DataFrameExpression(value=self.expr)
+            self.expr = DataFrameColumnExpression(value=self.expr)
         return self
 
     @model_validator(mode="after")
     def validate_action(self) -> Any:
-        if self.type == "AGGREGATE" and self.action == "DROP":
-            raise ValueError("'DROP' action is not supported for 'AGGREGATE' type.")
+        if self.type == "AGGREGATE" and self.action in ["DROP", "QUARANTINE"]:
+            raise ValueError(f"'{self.type}' action is not supported for 'AGGREGATE' type.")
+        return self
+
+    @model_validator(mode="after")
+    def warn_invalid_type(self):
+        msg = self.type_warning_msg
+        if msg:
+            import warnings
+            warnings.warn(msg)
         return self
 
     # ----------------------------------------------------------------------- #
@@ -138,18 +153,46 @@ class DataQualityExpectation(BaseModel):
     def fail_filter(self):
         return ~self.expr.eval()
 
+    @property
+    def type_warning_msg(self):
+        msg = None
+        if self.type != "AGGREGATE":
+            for k in [
+                "count(",
+                "sum(",
+                "avg(",
+                "mean(",
+                "max(",
+                "min(",
+                "variance(",
+                "stddev(",
+                "row_number(",
+                "rank(",
+            ]:
+                if k in self.expr.value.lower():
+                    msg = f"'ROW' type is selected for expectation '{self.name}' ({self.expr.value}). Should probably be 'AGGREGATE'."
+                    break
+        return msg
+
     # ----------------------------------------------------------------------- #
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
 
     def check(self, df: Any) -> DataQualityCheck:
 
-        logger.info(f"Checking expectation '{self.name}' | {self.expr.value} ({self.type})")
+        logger.info(f"Checking expectation '{self.name}' | {self.expr.value} (type: {self.type})")
 
         rows_count = df.count()
 
         if self.type == "ROW":
-            df_fail = df.filter(self.fail_filter)
+            print(self.expr.value, self.pass_filter, self.fail_filter)
+
+            try:
+                df_fail = df.filter(self.fail_filter)
+            except Exception as e:
+                if "Rewrite the query to avoid window functions" in getattr(e, "desc", ""):
+                    e.desc += f"\n{self.type_warning_msg}"
+                raise e
 
             fails_count = df_fail.count()
 
@@ -168,8 +211,11 @@ class DataQualityExpectation(BaseModel):
                 status=status,
                 rows_count=rows_count,
             )
-            logger.info(f"Checking expectation '{self.name}' | failed rows : {fails_count} ({self._check.failure_rate:5.2f}%)")
-            logger.info(f"Checking expectation '{self.name}' | status : {status}")
+            failure_str = f"({100*self._check.failure_rate:5.2f}%)"
+            if status == "PASS":
+                logger.info(f"Checking expectation '{self.name}' | status : {status}")
+            else:
+                logger.info(f"Checking expectation '{self.name}' | status : {status} - failed rows : {fails_count} {failure_str}")
 
         if self.type == "AGGREGATE":
             import pyspark.sql.functions as F
@@ -188,6 +234,9 @@ class DataQualityExpectation(BaseModel):
                 status=status,
                 rows_count=rows_count,
             )
-            logger.info(f"Checking expectation '{self.name}' | status : {status}")
+            if status == "PASS":
+                logger.info(f"Checking expectation '{self.name}' | status : {status}")
+            else:
+                logger.error(f"Checking expectation '{self.name}' | status : {status}")
 
         return self._check
