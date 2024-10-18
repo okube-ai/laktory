@@ -483,8 +483,11 @@ class Stack(BaseModel):
         """
         from laktory.models.stacks.pulumistack import PulumiStack
 
-        if env_name is not None and env_name in self.environments.keys():
-            env = self.get_env(env_name=env_name, inject_vars=False)
+        if env_name is not None:
+            if env_name in self.environments.keys():
+                env = self.get_env(env_name=env_name, inject_vars=False)
+            else:
+                raise ValueError(f"Environment '{env_name}' is not declared in the stack.")
         else:
             env = self
 
@@ -525,8 +528,11 @@ class Stack(BaseModel):
         """
         from laktory.models.stacks.terraformstack import TerraformStack
 
-        if env_name is not None and env_name in self.environments.keys():
-            env = self.get_env(env_name=env_name, inject_vars=False)
+        if env_name is not None:
+            if env_name in self.environments.keys():
+                env = self.get_env(env_name=env_name, inject_vars=False)
+            else:
+                raise ValueError(f"Environment '{env_name}' is not declared in the stack.")
         else:
             env = self
 
