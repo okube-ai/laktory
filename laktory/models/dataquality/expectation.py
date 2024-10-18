@@ -185,8 +185,6 @@ class DataQualityExpectation(BaseModel):
         rows_count = df.count()
 
         if self.type == "ROW":
-            print(self.expr.value, self.pass_filter, self.fail_filter)
-
             try:
                 df_fail = df.filter(self.fail_filter)
             except Exception as e:

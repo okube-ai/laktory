@@ -577,7 +577,7 @@ class PipelineNode(BaseModel):
             if transformer.nodes:
                 self._output_df = transformer.execute(self._output_df, udfs=udfs)
 
-        logger.info(f"Output Schema:")
+        logger.info(f"Output DataFrame schema:")
         self._output_df.printSchema()
 
         # Check expectations
