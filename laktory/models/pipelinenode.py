@@ -245,6 +245,13 @@ class PipelineNode(BaseModel):
         return is_orchestrator_dlt
 
     @property
+    def is_dlt_active(self) -> bool:
+        if not self.is_orchestrator_dlt:
+            return False
+        from laktory.dlt import is_debug
+        return not is_debug()
+
+    @property
     def is_from_cdc(self) -> bool:
         """If `True` CDC source is used to build the table"""
         if self.source is None:
@@ -533,7 +540,7 @@ class PipelineNode(BaseModel):
         # Save source
         self._source_columns = self._output_df.columns
 
-        if self.source.is_cdc and not self.is_orchestrator_dlt:
+        if self.source.is_cdc and not self.is_dlt_active:
             pass
             # TODO: Apply SCD transformations
             #       Best strategy is probably to build a spark dataframe function and add a node in the chain with
@@ -584,8 +591,6 @@ class PipelineNode(BaseModel):
 
     def check_expectations(self):
 
-        from laktory.dlt import is_debug
-
         # Data Quality Checks
         keep_filter = None
         quarantine_filter = None
@@ -618,6 +623,6 @@ class PipelineNode(BaseModel):
             logger.info(f"Building quarantine DataFrame")
             self._quarantine_df = self._output_df.filter(quarantine_filter)
 
-        if keep_filter is not None and (not self.is_orchestrator_dlt or is_debug()):
+        if keep_filter is not None and not self.is_dlt_active:
             logger.info(f"Dropping invalid rows")
             self._output_df = self._output_df.filter(keep_filter)
