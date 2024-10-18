@@ -200,7 +200,7 @@ class DataQualityExpectation(BaseModel):
                 if fails_count > self.tolerance.abs:
                     status = "FAIL"
             elif self.tolerance.rel is not None:
-                if fails_count / rows_count > self.tolerance.rel:
+                if rows_count > 0 and fails_count / rows_count > self.tolerance.rel:
                     status = "FAIL"
 
             self._check = DataQualityCheck(
