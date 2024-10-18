@@ -66,8 +66,8 @@ class DataQualityExpectation(BaseModel):
         `WARN`: Write invalid records to the output DataFrame, but log
         exception.
         `DROP`: Drop Invalid records to the output DataFrame and log exception.
-        `FAIL`: Raise exception when invalid records are found.
         `QUARANTINE`: Forward invalid data for quarantine.
+        `FAIL`: Raise exception when invalid records are found.
     type:
         Type of expectation:
         `"ROW"`: Row-specific condition. Must be a boolean expression.
@@ -114,7 +114,7 @@ class DataQualityExpectation(BaseModel):
     * [DLT Table Expectations](https://docs.databricks.com/en/delta-live-tables/expectations.html)
     """
 
-    action: Literal["WARN", "DROP", "FAIL", "QUARANTINE"] = "WARN"
+    action: Literal["WARN", "DROP", "QUARANTINE", "FAIL"] = "WARN"
     type: Literal["AGGREGATE", "ROW"] = "ROW"
     name: str
     expr: Union[str, DataFrameColumnExpression] = None
