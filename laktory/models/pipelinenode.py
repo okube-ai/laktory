@@ -606,7 +606,7 @@ class PipelineNode(BaseModel):
                 if e.action == "FAIL":
                     raise DataQualityCheckFailedError(check, self)
 
-                if e.action == "WARN":
+                else:
                     warnings.warn(f"Expectation '{e.name}' for node '{self.name}' FAILED | {check.log_msg}")
 
             # ROW Type
