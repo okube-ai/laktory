@@ -9,10 +9,10 @@ from laktory._logger import get_logger
 logger = get_logger(__name__)
 
 
-class DataFrameExpression(BaseModel):
+class DataFrameColumnExpression(BaseModel):
     """
-    DataFrame Expression supporting SQL statements or string representation of
-    DataFrame API expression.
+    DataFrame Column Expression supporting SQL statements or string
+    representation of DataFrame API expression.
 
     Attributes
     ----------
@@ -26,14 +26,14 @@ class DataFrameExpression(BaseModel):
     ```py
     from laktory import models
 
-    e1 = models.DataFrameExpression(
-        expr="MAX(close)",
+    e1 = models.DataFrameColumnExpression(
+        value="MAX(close)",
     )
     print(e1.eval())
     #> Column<'MAX(close)'>
 
-    e2 = models.DataFrameExpression(
-        expr="F.abs('close')",
+    e2 = models.DataFrameColumnExpression(
+        value="F.abs('close')",
     )
     print(e2.eval())
     #> Column<'abs(close)'>
@@ -74,9 +74,10 @@ class DataFrameExpression(BaseModel):
     def df_expr(self, dataframe_type="SPARK"):
         expr = self.value
         if self.type == "SQL":
-            expr = f"F.expr('{self.value}')"
+            _value = repr(self.value.replace("\n", " "))
+            expr = f"F.expr({_value})"
             if dataframe_type == "POLARS":
-                expr = f"pl.Expr.laktory.sql_expr('{self.value}')"
+                expr = f"pl.Expr.laktory.sql_expr({_value})"
 
         return expr
 
@@ -101,6 +102,9 @@ class DataFrameExpression(BaseModel):
             import polars.functions as F
             from polars import col
             from polars import lit
+
+        else:
+            raise ValueError(f"`dataframe_type` '{dataframe_type}' is not supported.")
 
         _expr_str = self.df_expr(dataframe_type=dataframe_type)
         expr = eval(_expr_str)

@@ -12,23 +12,14 @@ def test_expression_types():
         "MAX(close)",
         "close > 30",
         "symbol == 'AAPL'",
+        """symbol == 'AAPL'""",
+        'symbol == "AAPL"',
         "data.symbol",
         "data.created_at",
-        """
-        SELECT
-          data.created_at AS created_at,
-          data.symbol AS symbol,
-          data.open AS open,
-          data.close AS close,
-          data.high AS high,
-          data.low AS low,
-          data.volume AS volume
-        FROM
-          {df}
-        """,
     ]:
         print("Test SQL: ", e)
-        expr = models.DataFrameExpression(expr=e)
+        expr = models.DataFrameColumnExpression(value=e)
+        _ = expr.eval()
         assert expr.type == "SQL"
 
     for e in [
@@ -41,21 +32,21 @@ def test_expression_types():
         "pl.col('open').first()",
     ]:
         print("Test DF: ", e)
-        expr = models.DataFrameExpression(expr=e)
+        expr = models.DataFrameColumnExpression(value=e)
         assert expr.type == "DF"
 
 
 def test_eval():
 
     # Spark
-    e1 = models.DataFrameExpression(expr="symbol")
-    e2 = models.DataFrameExpression(expr="F.col('symbol')")
+    e1 = models.DataFrameColumnExpression(value="symbol")
+    e2 = models.DataFrameColumnExpression(value="F.col('symbol')")
     assert str(e1.eval()) == str(F.col("symbol"))
     assert str(e2.eval()) == str(F.col("symbol"))
 
     # Polars
-    e1 = models.DataFrameExpression(expr="symbol")
-    e2 = models.DataFrameExpression(expr="pl.col('symbol')")
+    e1 = models.DataFrameColumnExpression(value="symbol")
+    e2 = models.DataFrameColumnExpression(value="pl.col('symbol')")
     assert str(e1.eval(dataframe_type="POLARS")) == str(pl.col("symbol"))
     assert str(e2.eval(dataframe_type="POLARS")) == str(pl.col("symbol"))
 

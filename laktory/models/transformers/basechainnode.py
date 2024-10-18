@@ -13,7 +13,7 @@ from laktory._logger import get_logger
 from laktory.constants import SUPPORTED_DATATYPES
 from laktory.constants import DEFAULT_DFTYPE
 from laktory.models.basemodel import BaseModel
-from laktory.models.dataframeexpression import DataFrameExpression
+from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
 from laktory.polars import PolarsDataFrame
 from laktory.polars import PolarsExpr
 from laktory.types import AnyDataFrame
@@ -71,7 +71,7 @@ class BaseChainNodeFuncArg(BaseModel):
 
 
 class ChainNodeColumn(BaseModel):
-    expr: Union[str, DataFrameExpression]
+    expr: Union[str, DataFrameColumnExpression]
     name: str
     type: str = "string"
     unit: Union[str, None] = None
@@ -79,7 +79,7 @@ class ChainNodeColumn(BaseModel):
     @model_validator(mode="after")
     def parse_expr(self) -> Any:
         if isinstance(self.expr, str):
-            self.expr = DataFrameExpression(value=self.expr)
+            self.expr = DataFrameColumnExpression(value=self.expr)
         return self
 
     @field_validator("type")

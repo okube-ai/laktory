@@ -291,7 +291,7 @@ class SparkChainNode(BaseChainNode):
                 logger.info(
                     f"Building column {column.name} as {column.expr or column.sql_expr}"
                 )
-                _col = column.eval(udfs=udfs, dataframe_type="spark")
+                _col = column.eval(udfs=udfs, dataframe_type="SPARK")
                 if column.type:
                     _col = _col.cast(DATATYPES_MAP[column.type])
                 df = df.withColumns({column.name: _col})

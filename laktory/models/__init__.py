@@ -1,6 +1,6 @@
 from .basemodel import BaseModel
 from .dataevent import DataEvent
-from .dataframeexpression import DataFrameExpression
+from .dataframecolumnexpression import DataFrameColumnExpression
 from .dataproducer import DataProducer
 from .dataquality import *
 from .datasinks import *
