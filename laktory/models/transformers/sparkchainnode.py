@@ -6,7 +6,7 @@ import re
 
 from laktory._logger import get_logger
 from laktory.models.transformers.basechainnode import BaseChainNode
-from laktory.models.transformers.basechainnode import BaseChainNodeColumn
+from laktory.models.transformers.basechainnode import ChainNodeColumn
 from laktory.models.transformers.basechainnode import BaseChainNodeFuncArg
 from laktory.models.transformers.basechainnode import BaseChainNodeSQLExpr
 from laktory.spark import SparkColumn
@@ -57,55 +57,6 @@ class SparkChainNodeFuncArg(BaseChainNodeFuncArg):
                     break
 
         return v
-
-
-class SparkChainNodeColumn(BaseChainNodeColumn):
-    """
-    Chain node column definition
-
-    Attributes
-    ----------
-    name:
-        Column name
-    type:
-        Column data type
-    unit:
-        Column units
-    expr:
-        String representation of a polars expression
-    sql_expr:
-        SQL expression
-    """
-
-    name: str
-    type: Union[str, None] = "string"
-    unit: Union[str, None] = None
-    expr: Union[str, None] = None
-    sql_expr: Union[str, None] = None
-
-    def eval(self, udfs=None):
-
-        # Adding udfs to global variables
-        if udfs is None:
-            udfs = {}
-        for k, v in udfs.items():
-            globals()[k] = v
-
-        # Imports required to evaluate expressions
-        import pyspark.sql.functions as F
-        from pyspark.sql.functions import col
-        from pyspark.sql.functions import lit
-
-        if self.sql_expr:
-            return F.expr(self.sql_expr)
-
-        expr = eval(self.expr)
-
-        # Cleaning up global variables
-        for k, v in udfs.items():
-            del globals()[k]
-
-        return expr
 
 
 class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
@@ -270,8 +221,8 @@ class SparkChainNode(BaseChainNode):
     func_kwargs: dict[str, Union[Any]] = {}
     func_name: Union[str, None] = None
     sql_expr: Union[str, None] = None
-    with_column: Union[SparkChainNodeColumn, None] = None
-    with_columns: Union[list[SparkChainNodeColumn], None] = []
+    with_column: Union[ChainNodeColumn, None] = None
+    with_columns: Union[list[ChainNodeColumn], None] = []
     _parent: "SparkChain" = None
     _parsed_func_args: list = None
     _parsed_func_kwargs: dict = None
@@ -340,7 +291,7 @@ class SparkChainNode(BaseChainNode):
                 logger.info(
                     f"Building column {column.name} as {column.expr or column.sql_expr}"
                 )
-                _col = column.eval(udfs=udfs)
+                _col = column.eval(udfs=udfs, dataframe_type="SPARK")
                 if column.type:
                     _col = _col.cast(DATATYPES_MAP[column.type])
                 df = df.withColumns({column.name: _col})

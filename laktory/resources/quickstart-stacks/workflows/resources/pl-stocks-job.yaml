@@ -34,6 +34,10 @@ nodes:
 
 # Silver Table
 - name: slv_stock_prices
+  expectations:
+  - name: positive_price
+    expr: open > 0
+    action: DROP
   source:
     node_name: brz_stock_prices
     as_stream: false

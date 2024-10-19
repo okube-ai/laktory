@@ -12,3 +12,13 @@ class MissingColumnsError(Exception):
         if column_names:
             message = f"Column {column_names} are missing"
         super().__init__(message)
+
+
+class DataQualityCheckFailedError(Exception):
+    def __init__(self, check, node=None):
+
+        message = f"Expectation '{check.expectation.name}' failed"
+        if node:
+            message += f" on node '{node.name}'"
+        message += f" | {check.log_msg}"
+        super().__init__(message)

@@ -3,14 +3,16 @@ from typing import Any
 from typing import Callable
 from typing import Literal
 from typing import Union
+import warnings
 from pydantic import model_validator
 
 from laktory.constants import DEFAULT_DFTYPE
+from laktory.exceptions import DataQualityCheckFailedError
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import BaseDataSource
 from laktory.models.datasinks import DataSinksUnion
-from laktory.models.pipelinenodeexpectation import PipelineNodeExpectation
+from laktory.models.dataquality.expectation import DataQualityExpectation
 from laktory.models.transformers.basechain import BaseChain
 from laktory.models.transformers.sparkchain import SparkChain
 from laktory.models.transformers.sparkchainnode import SparkChainNode
@@ -115,14 +117,14 @@ class PipelineNode(BaseModel):
           - with_column:
               name: created_at
               type: timestamp
-              sql_expr: data.created_at
+              expr: data.created_at
           - with_column:
               name: symbol
-              sql_expr: data.symbol
+              expr: data.symbol
           - with_column:
               name: close
               type: double
-              sql_expr: data.close
+              expr: data.close
     '''
 
     node = models.PipelineNode.model_validate_yaml(io.StringIO(node_yaml))
@@ -138,7 +140,7 @@ class PipelineNode(BaseModel):
     drop_duplicates: Union[bool, list[str], None] = None
     drop_source_columns: Union[bool, None] = None
     transformer: Union[SparkChain, PolarsChain, None] = None
-    expectations: list[PipelineNodeExpectation] = []
+    expectations: list[DataQualityExpectation] = []
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
     name: Union[str, None] = None
     primary_key: str = None
@@ -146,6 +148,7 @@ class PipelineNode(BaseModel):
     source: DataSourcesUnion
     timestamp_key: str = None
     _output_df: Any = None
+    _quarantine_df: Any = None
     _parent: "Pipeline" = None
     _source_columns: list[str] = []
 
@@ -242,6 +245,13 @@ class PipelineNode(BaseModel):
         return is_orchestrator_dlt
 
     @property
+    def is_dlt_active(self) -> bool:
+        if not self.is_orchestrator_dlt:
+            return False
+        from laktory.dlt import is_debug
+        return not is_debug()
+
+    @property
     def is_from_cdc(self) -> bool:
         """If `True` CDC source is used to build the table"""
         if self.source is None:
@@ -250,27 +260,27 @@ class PipelineNode(BaseModel):
             return self.source.is_cdc
 
     @property
-    def warning_expectations(self) -> dict[str, str]:
+    def dlt_warning_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
-            if e.action == "WARN":
-                expectations[e.name] = e.expression
+            if e.is_dlt_compatible and e.action == "WARN":
+                expectations[e.name] = e.expr.value
         return expectations
 
     @property
-    def drop_expectations(self) -> dict[str, str]:
+    def dlt_drop_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
-            if e.action == "DROP":
-                expectations[e.name] = e.expression
+            if e.is_dlt_compatible and e.action in ["DROP", "QUARANTINE"]:
+                expectations[e.name] = e.expr.value
         return expectations
 
     @property
-    def fail_expectations(self) -> dict[str, str]:
+    def dlt_fail_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
-            if e.action == "FAIL":
-                expectations[e.name] = e.expression
+            if e.is_dlt_compatible and e.action == "FAIL":
+                expectations[e.name] = e.expr.value
         return expectations
 
     @property
@@ -296,6 +306,15 @@ class PipelineNode(BaseModel):
     def output_df(self) -> AnyDataFrame:
         """Node Dataframe after reading source and applying transformer."""
         return self._output_df
+
+    @property
+    def quarantine_df(self) -> AnyDataFrame:
+        """Node Dataframe after reading source and applying transformer."""
+        return self._quarantine_df
+
+    @property
+    def checks(self):
+        return [e._check for e in self.expectations]
 
     @property
     def layer_spark_chain(self):
@@ -480,6 +499,7 @@ class PipelineNode(BaseModel):
 
         - Reading the source
         - Applying the user defined (and layer-specific if applicable) transformations
+        - Checking expectations
         - Writing the sink
 
         Parameters
@@ -520,7 +540,7 @@ class PipelineNode(BaseModel):
         # Save source
         self._source_columns = self._output_df.columns
 
-        if self.source.is_cdc and not self.is_orchestrator_dlt:
+        if self.source.is_cdc and not self.is_dlt_active:
             pass
             # TODO: Apply SCD transformations
             #       Best strategy is probably to build a spark dataframe function and add a node in the chain with
@@ -557,8 +577,60 @@ class PipelineNode(BaseModel):
             if transformer.nodes:
                 self._output_df = transformer.execute(self._output_df, udfs=udfs)
 
+        # Check expectations
+        self.check_expectations()
+
         # Output to sink
         if write_sink and self.sink:
             self.sink.write(self._output_df)
 
         return self._output_df
+
+    def check_expectations(self):
+        """
+        Check expectations, raise errors, warnings where required and build
+        filtered and quarantine DataFrames.
+
+        Some actions have to be disabled when selected orchestrator is
+        Databricks DLT:
+            - Raising error on Failure when expectation is supported by DLT
+            - Dropping rows when expectation is supported by DLT
+        """
+
+        # Data Quality Checks
+        keep_filter = None
+        quarantine_filter = None
+        if not self.expectations:
+            return
+
+        logger.info(f"Checking Data Quality Expectations")
+
+        for e in self.expectations:
+
+            is_dlt_active = self.is_dlt_active and e.is_dlt_compatible
+
+            # Fail Message
+            check = e.check(self._output_df)
+            if check.status == "FAIL":
+                msg = f"Expectation '{e.name}' for node '{self.name}' FAILED | {check.log_msg}"
+                if e.action == "FAIL" and not is_dlt_active:
+                    raise DataQualityCheckFailedError(check, self)
+                else:
+                    warnings.warn(msg)
+
+            # Row Filters
+            if e.type == "ROW":
+                if check.fails_count > 0:
+                    if e.action in ["DROP", "QUARANTINE"]:
+                        if not is_dlt_active:
+                            keep_filter = e.pass_filter if keep_filter is None else keep_filter & e.pass_filter
+                    if e.action == "QUARANTINE":
+                        quarantine_filter = e.fail_filter if quarantine_filter is None else quarantine_filter & e.fail_filter
+
+        if quarantine_filter is not None:
+            logger.info(f"Building quarantine DataFrame")
+            self._quarantine_df = self._output_df.filter(quarantine_filter)
+
+        if keep_filter is not None:
+            logger.info(f"Dropping invalid rows")
+            self._output_df = self._output_df.filter(keep_filter)

@@ -1,0 +1,26 @@
+{
+    "python.envFile": "${workspaceFolder}/secrets/.env.dev",
+    // "python.terminal.activateEnvironment": true,
+    "terminal.integrated.profiles.osx": {
+        "dev": {
+            "name": "dev",
+            "path": "/bin/zsh",            
+            // work but in a different shell which does not activate the conda env
+            "args": ["-c", "source ${workspaceFolder}/secrets/.env.dev && exec /bin/zsh"],  
+            "overrideName": true
+        },
+        "prd": {
+            "name": "prd",
+            "path": "/bin/zsh",
+            // work but in a different shell which does not activate the conda env
+            "args": ["-c", "source ${workspaceFolder}/secrets/.env.prd && exec /bin/zsh"],  
+            "overrideName": true,
+        }
+    },
+    "terminal.integrated.defaultProfile.osx": "dev",
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+}

@@ -64,13 +64,13 @@ nodes:
     - with_columns:
       - name: symbol
         type: string
-        sql_expr: data.symbol
+        expr: data.symbol
       - name: currency
         type: string
-        sql_expr: data.currency
+        expr: data.currency
       - name: first_traded
         type: timestamp
-        sql_expr: data.firstTradeDate
+        expr: data.firstTradeDate
     - func_name: drop
       func_args:
         - data

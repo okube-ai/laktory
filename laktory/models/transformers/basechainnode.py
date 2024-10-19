@@ -11,7 +11,9 @@ import re
 
 from laktory._logger import get_logger
 from laktory.constants import SUPPORTED_DATATYPES
+from laktory.constants import DEFAULT_DFTYPE
 from laktory.models.basemodel import BaseModel
+from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
 from laktory.polars import PolarsDataFrame
 from laktory.polars import PolarsExpr
 from laktory.types import AnyDataFrame
@@ -68,17 +70,16 @@ class BaseChainNodeFuncArg(BaseModel):
         return str(self.value)
 
 
-class BaseChainNodeColumn(BaseModel):
+class ChainNodeColumn(BaseModel):
+    expr: Union[str, DataFrameColumnExpression]
     name: str
-    type: str = "string"
+    type: Union[str, None] = "string"
     unit: Union[str, None] = None
-    expr: Union[str, None] = None
-    sql_expr: Union[str, None] = None
 
     @model_validator(mode="after")
-    def expression_valid(self) -> Any:
-        if not (self.expr or self.sql_expr):
-            raise ValueError("Either `expr` or `sql_expr` must be defined.")
+    def parse_expr(self) -> Any:
+        if isinstance(self.expr, str):
+            self.expr = DataFrameColumnExpression(value=self.expr)
         return self
 
     @field_validator("type")
@@ -93,44 +94,8 @@ class BaseChainNodeColumn(BaseModel):
                 )
         return v
 
-    @abc.abstractmethod
-    def eval(self, udfs=None):
-        raise NotImplementedError()
-
-        # Adding udfs to global variables
-        if udfs is None:
-            udfs = {}
-        for k, v in udfs.items():
-            globals()[k] = v
-
-        if self.dataframe_type == "SPARK":
-
-            # Imports required to evaluate expressions
-            import pyspark.sql.functions as F
-            from pyspark.sql.functions import col
-            from pyspark.sql.functions import lit
-
-            if self.sql_expr:
-                return F.expr(self.sql_expr)
-
-        elif self.dataframe_type == "POLARS":
-
-            # Imports required to evaluate expressions
-            import polars as pl
-            import polars.functions as F
-            from polars import col
-            from polars import lit
-
-            if self.sql_expr:
-                return pl.Expr.laktory.sql_expr(self.sql_expr)
-
-        expr = eval(self.expr)
-
-        # Cleaning up global variables
-        for k, v in udfs.items():
-            del globals()[k]
-
-        return expr
+    def eval(self, udfs=None, dataframe_type=DEFAULT_DFTYPE):
+        return self.expr.eval(udfs=udfs, dataframe_type=dataframe_type)
 
 
 class BaseChainNodeSQLExpr(BaseModel):
@@ -188,8 +153,8 @@ class BaseChainNode(BaseModel):
     func_kwargs: dict[str, Union[Any]] = {}
     func_name: Union[str, None] = None
     sql_expr: Union[str, None] = None
-    with_column: Union[BaseChainNodeColumn, None] = None
-    with_columns: Union[list[BaseChainNodeColumn], None] = []
+    with_column: Union[ChainNodeColumn, None] = None
+    with_columns: Union[list[ChainNodeColumn], None] = []
     _parent: "BaseChain" = None
     _parsed_func_args: list = None
     _parsed_func_kwargs: dict = None
@@ -220,7 +185,7 @@ class BaseChainNode(BaseModel):
         return self
 
     @property
-    def _with_columns(self) -> list[BaseChainNodeColumn]:
+    def _with_columns(self) -> list[ChainNodeColumn]:
         with_columns = [c for c in self.with_columns]
         if self.with_column:
             with_columns += [self.with_column]

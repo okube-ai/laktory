@@ -27,12 +27,12 @@ nodes:
 
     - with_column:
         name: symbol
-        sql_expr: data.symbol
+        expr: data.symbol
 
     - with_column:
         name: close
         type: double
-        sql_expr: data.close
+        expr: data.close
 
     - func_name: drop
       func_args:

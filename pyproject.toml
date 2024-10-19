@@ -56,6 +56,7 @@ pulumi = [
 
 # DataFrame
 polars = [
+#    "great_expectations",
     "deltalake",
     "polars>=1.0",
     "sqlparse",

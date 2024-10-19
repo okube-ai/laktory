@@ -3,7 +3,7 @@ from typing import Union
 from pyspark.sql.dataframe import DataFrame
 
 from laktory._logger import get_logger
-from laktory.models.transformers.sparkchainnode import SparkChainNodeColumn
+from laktory.models.transformers.basechainnode import ChainNodeColumn
 
 
 logger = get_logger(__name__)
@@ -44,7 +44,7 @@ def groupby_and_agg(
     df,
     groupby_window: TimeWindow = None,
     groupby_columns: list[str] = None,
-    agg_expressions: list[SparkChainNodeColumn] = None,
+    agg_expressions: list[ChainNodeColumn] = None,
 ) -> DataFrame:
     """
     Apply a groupby and create aggregation columns.
@@ -133,10 +133,10 @@ def groupby_and_agg(
     # Agg arguments
     aggs = []
     for expr in agg_expressions:
-        if not isinstance(expr, SparkChainNodeColumn):
-            expr = SparkChainNodeColumn(**expr)
+        if not isinstance(expr, ChainNodeColumn):
+            expr = ChainNodeColumn(**expr)
 
         expr.type = None
-        aggs += [expr.eval().alias(expr.name)]
+        aggs += [expr.eval(dataframe_type="SPARK").alias(expr.name)]
 
     return df.groupby(groupby).agg(*aggs)

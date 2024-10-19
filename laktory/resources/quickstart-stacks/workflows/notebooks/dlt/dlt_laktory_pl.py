@@ -42,9 +42,9 @@ def define_table(node):
         comment=node.description,
         as_view=node.sink is None,
     )
-    @dlt.expect_all(node.warning_expectations)
-    @dlt.expect_all_or_drop(node.drop_expectations)
-    @dlt.expect_all_or_fail(node.fail_expectations)
+    @dlt.expect_all(node.dlt_warning_expectations)
+    @dlt.expect_all_or_drop(node.dlt_drop_expectations)
+    @dlt.expect_all_or_fail(node.dlt_fail_expectations)
     def get_df():
         logger.info(f"Building {node.name} node")
 
