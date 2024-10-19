@@ -590,6 +590,15 @@ class PipelineNode(BaseModel):
         return self._output_df
 
     def check_expectations(self):
+        """
+        Check expectations, raise errors, warnings where required and build
+        filtered and quarantine DataFrames.
+
+        Some actions have to be disabled when selected orchestrator is
+        Databricks DLT:
+            - Raising error on Failure when expectation is supported by DLT
+            - Dropping rows when expectation is supported by DLT
+        """
 
         # Data Quality Checks
         keep_filter = None
@@ -601,11 +610,13 @@ class PipelineNode(BaseModel):
 
         for e in self.expectations:
 
+            is_dlt_active = self.is_dlt_active and e.is_dlt_compatible
+
             # Fail Message
             check = e.check(self._output_df)
             if check.status == "FAIL":
                 msg = f"Expectation '{e.name}' for node '{self.name}' FAILED | {check.log_msg}"
-                if e.action == "FAIL" and not (self.is_dlt_active and e.is_dlt_compatible):
+                if e.action == "FAIL" and not is_dlt_active:
                     raise DataQualityCheckFailedError(check, self)
                 else:
                     warnings.warn(msg)
@@ -614,7 +625,8 @@ class PipelineNode(BaseModel):
             if e.type == "ROW":
                 if check.fails_count > 0:
                     if e.action in ["DROP", "QUARANTINE"]:
-                        keep_filter = e.pass_filter if keep_filter is None else keep_filter & e.pass_filter
+                        if not is_dlt_active:
+                            keep_filter = e.pass_filter if keep_filter is None else keep_filter & e.pass_filter
                     if e.action == "QUARANTINE":
                         quarantine_filter = e.fail_filter if quarantine_filter is None else quarantine_filter & e.fail_filter
 
@@ -622,6 +634,6 @@ class PipelineNode(BaseModel):
             logger.info(f"Building quarantine DataFrame")
             self._quarantine_df = self._output_df.filter(quarantine_filter)
 
-        if keep_filter is not None and not self.is_dlt_active:
+        if keep_filter is not None:
             logger.info(f"Dropping invalid rows")
             self._output_df = self._output_df.filter(keep_filter)
