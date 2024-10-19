@@ -15,8 +15,10 @@ class DataQualityCheck(BaseModel):
 
     @property
     def failure_rate(self):
-        if self.expectation.type != "ROW" or not self.rows_count:
+        if self.expectation.type != "ROW":
             return None
+        if self.rows_count == 0:
+            return 0
         return self.fails_count / self.rows_count
 
     @property

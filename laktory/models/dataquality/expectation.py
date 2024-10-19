@@ -182,7 +182,23 @@ class DataQualityExpectation(BaseModel):
 
         logger.info(f"Checking expectation '{self.name}' | {self.expr.value} (type: {self.type})")
 
+        is_streaming = getattr(df, "isStreaming", False)
+        if is_streaming:
+            def process_batch(batch_df, batch_id):
+                print("batch size", batch_df.count())
+
+            df = df.foreachBatch(process_batch)
+
         rows_count = df.count()
+
+        if rows_count == 0:
+            self._check = DataQualityCheck(
+                expectation=self,
+                fails_count=0,
+                status="PASS",
+                rows_count=0,
+            )
+            return self._check
 
         if self.type == "ROW":
             try:
@@ -193,9 +209,7 @@ class DataQualityExpectation(BaseModel):
                 raise e
 
             fails_count = df_fail.count()
-
             status = "PASS"
-
             if self.tolerance.abs is not None:
                 if fails_count > self.tolerance.abs:
                     status = "FAIL"
