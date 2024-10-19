@@ -79,7 +79,21 @@ def test_expectations_agg():
     assert check.status == "FAIL"
 
 
+def test_expectations_empty():
+
+    # Spark Expression
+    dqe = models.DataQualityExpectation(
+        name="price less than 300", action="WARN", expr="F.col('close') < 300"
+    )
+    check = dqe.check(df.filter("close < 0"))
+    assert check.rows_count == 0
+    assert check.fails_count == 0
+    assert check.failure_rate == 0
+    assert check.status == "PASS"
+
+
 if __name__ == "__main__":
     test_expectations_abs()
     test_expectations_rel()
     test_expectations_agg()
+    test_expectations_empty()
