@@ -264,7 +264,7 @@ class PipelineNode(BaseModel):
         expectations = {}
         for e in self.expectations:
             if e.is_dlt_compatible and e.action == "WARN":
-                expectations[e.name] = e.expression
+                expectations[e.name] = e.expr.value
         return expectations
 
     @property
@@ -272,7 +272,7 @@ class PipelineNode(BaseModel):
         expectations = {}
         for e in self.expectations:
             if e.is_dlt_compatible and e.action in ["DROP", "QUARANTINE"]:
-                expectations[e.name] = e.expression
+                expectations[e.name] = e.expr.value
         return expectations
 
     @property
