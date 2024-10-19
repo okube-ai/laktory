@@ -174,6 +174,10 @@ class DataQualityExpectation(BaseModel):
                     break
         return msg
 
+    @property
+    def is_dlt_compatible(self):
+        return self.expr.type == "SQL" and self.type == "ROW"
+
     # ----------------------------------------------------------------------- #
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
@@ -246,9 +250,6 @@ class DataQualityExpectation(BaseModel):
                 status=status,
                 rows_count=rows_count,
             )
-            if status == "PASS":
-                logger.info(f"Checking expectation '{self.name}' | status : {status}")
-            else:
-                logger.error(f"Checking expectation '{self.name}' | status : {status}")
+            logger.info(f"Checking expectation '{self.name}' | status : {status}")
 
         return self._check

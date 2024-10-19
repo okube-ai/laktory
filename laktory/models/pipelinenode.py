@@ -263,7 +263,7 @@ class PipelineNode(BaseModel):
     def dlt_warning_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
-            if e.type == "ROW" and e.expr.type == "SQL" and e.action == "WARN":
+            if e.is_dlt_compatible and e.action == "WARN":
                 expectations[e.name] = e.expression
         return expectations
 
@@ -271,7 +271,7 @@ class PipelineNode(BaseModel):
     def dlt_drop_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
-            if e.type == "ROW" and e.expr.type == "SQL" and e.action in ["DROP", "QUARANTINE"]:
+            if e.is_dlt_compatible and e.action in ["DROP", "QUARANTINE"]:
                 expectations[e.name] = e.expression
         return expectations
 
@@ -279,7 +279,7 @@ class PipelineNode(BaseModel):
     def dlt_fail_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
-            if e.type == "ROW" and e.expr.type == "SQL" and e.action == "FAIL":
+            if e.is_dlt_compatible and e.action == "FAIL":
                 expectations[e.name] = e.expr.value
         return expectations
 
@@ -601,18 +601,17 @@ class PipelineNode(BaseModel):
 
         for e in self.expectations:
 
+            # Fail Message
             check = e.check(self._output_df)
             if check.status == "FAIL":
-                if e.action == "FAIL":
+                msg = f"Expectation '{e.name}' for node '{self.name}' FAILED | {check.log_msg}"
+                if e.action == "FAIL" and not (self.is_dlt_active and e.is_dlt_compatible):
                     raise DataQualityCheckFailedError(check, self)
-
                 else:
-                    warnings.warn(f"Expectation '{e.name}' for node '{self.name}' FAILED | {check.log_msg}")
+                    warnings.warn(msg)
 
-            # ROW Type
+            # Row Filters
             if e.type == "ROW":
-
-                # Update filters
                 if check.fails_count > 0:
                     if e.action in ["DROP", "QUARANTINE"]:
                         keep_filter = e.pass_filter if keep_filter is None else keep_filter & e.pass_filter
