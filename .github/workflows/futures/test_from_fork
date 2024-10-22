@@ -1,0 +1,59 @@
+name: test from fork
+
+on:
+  # Manual approval of environment is required
+  pull_request_target:
+    branches:
+      - main
+#    paths-ignore:
+#      - ".devcontainer/**"
+#      - "README.md"
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pyVersion:
+          - '3.9'
+          - '3.10'
+          - '3.11'
+    steps:
+      - name: Check if run tests
+        env:
+          VERSION_BUMP: ${{ contains(github.event.pull_request.labels.*.name, 'version-bump') }}
+        run: |
+          if ${VERSION_BUMP} == true; then
+            echo "run_tests=false" >> $GITHUB_ENV
+            echo "tests will be skipped"
+          else
+            echo "run_tests=true" >> $GITHUB_ENV
+            echo "tests will be run"
+          fi
+
+      - name: Checkout
+        if: ${{ env.run_tests == 'true' && success()}}
+        uses: actions/checkout@v3
+
+#      - name: Unshallow
+#        run: git fetch --prune --unshallow
+
+      - uses: actions/setup-python@v4
+        if: ${{ env.run_tests == 'true' && success()}}
+        with:
+          python-version: ${{ matrix.pyVersion }}
+
+      - name: Run tests
+        if: ${{ env.run_tests == 'true' && success()}}
+        run: echo hello!
+
+      - name: print env
+        run: |
+          import os
+          print("host", os.getenv("DATABRICKS_HOST"))
+          print("tenant", os.getenv("AZURE_TENANT_ID"))
+        shell: python
+        env:
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}        
