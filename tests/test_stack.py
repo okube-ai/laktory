@@ -149,6 +149,7 @@ def test_stack_model():
                                 "notebook_path": "/jobs/ingest_stock_metadata.py",
                                 "base_parameters": None,
                                 "source": None,
+                                "warehouse_id": None,
                             },
                             "notification_settings": None,
                             "pipeline_task": None,

@@ -8,7 +8,7 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* `JobTaskNotebookTask` to support `warehouse_id` as compute
 ### Breaking changes
 * Renamed `sql_expr` to `expr` as `expr` now supports both SQL and DataFrame expressions (auto-detection)
 * DLT Expectation action "ALLOW" renamed to "WARN"
