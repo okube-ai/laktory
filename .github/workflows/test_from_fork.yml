@@ -47,3 +47,12 @@ jobs:
       - name: Run tests
         if: ${{ env.run_tests == 'true' && success()}}
         run: echo hello!
+
+      - name: print env
+        run: |
+          import os
+          print("host", os.getenv("DATABRICKS_HOST"))
+          print("tenant", os.getenv("AZURE_TENANT_ID"))
+        env:
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}        
