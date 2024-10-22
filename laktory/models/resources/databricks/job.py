@@ -251,6 +251,9 @@ class JobTaskNotebookTask(BaseModel):
         and in run-now, the value from run-now will be used. If the notebook takes a parameter that is not specified
         in the job’s base_parameters or the run-now override parameters, the default value from the notebook will be
         used. Retrieve these parameters in a notebook using dbutils.widgets.get.
+    warehouse_id:
+        The id of the SQL warehouse to execute this task. If a warehouse_id is specified, that SQL warehouse will be
+        used to execute SQL commands inside the specified notebook.
     source:
         Location type of the notebook, can only be WORKSPACE or GIT. When set to WORKSPACE, the notebook will be
         retrieved from the local Databricks workspace. When set to GIT, the notebook will be retrieved from a Git
@@ -260,6 +263,7 @@ class JobTaskNotebookTask(BaseModel):
 
     notebook_path: str
     base_parameters: dict[str, Any] = None
+    warehouse_id: str = None
     source: Literal["WORKSPACE", "GIT"] = None
 
 

@@ -96,6 +96,7 @@ def test_job_model():
                     "notebook_path": "job/ingest_stock_prices",
                     "base_parameters": None,
                     "source": None,
+                    "warehouse_id": None,
                 },
                 "notification_settings": None,
                 "pipeline_task": None,
