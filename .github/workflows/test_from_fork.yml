@@ -53,6 +53,7 @@ jobs:
           import os
           print("host", os.getenv("DATABRICKS_HOST"))
           print("tenant", os.getenv("AZURE_TENANT_ID"))
+        shell: python
         env:
           DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}        
