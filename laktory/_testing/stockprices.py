@@ -21,6 +21,7 @@ data_dirpath = os.path.join(os.path.dirname(__file__), "../../tests/data/")
 
 # Spark
 df_brz = spark.read.parquet(os.path.join(data_dirpath, "brz_stock_prices"))
+df_brz_delta = spark.readStream.format("delta").load(os.path.join(data_dirpath, "brz_stock_prices_delta"))
 df_slv = spark.read.parquet(os.path.join(data_dirpath, "slv_stock_prices"))
 df_slv_delta = spark.readStream.format("delta").load(os.path.join(data_dirpath, "slv_stock_prices_delta"))
 df_meta = spark.read.parquet(os.path.join(data_dirpath, "slv_stock_meta"))

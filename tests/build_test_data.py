@@ -124,6 +124,7 @@ df = spark.createDataFrame(
 )
 df = df.repartition(1)
 df.write.parquet(os.path.join(rootpath, "brz_stock_prices"), mode="OVERWRITE")
+df.write.mode("OVERWRITE").format("delta").save(os.path.join(rootpath, "brz_stock_prices_delta"))
 
 
 # --------------------------------------------------------------------------- #

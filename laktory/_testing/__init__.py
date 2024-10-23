@@ -1,6 +1,7 @@
 import os
 
 from .stockprices import df_brz
+from .stockprices import df_brz_delta
 from .stockprices import df_slv
 from .stockprices import df_slv_delta
 from .stockprices import df_slv_polars
