@@ -375,9 +375,15 @@ class JobTaskSqlTaskFile(BaseModel):
     ----------
     path:
         SQL filepath
+    source:
+        Location type of the notebook, can only be WORKSPACE or GIT. When set to WORKSPACE, the notebook will be
+        retrieved from the local Databricks workspace. When set to GIT, the notebook will be retrieved from a Git
+        repository defined in git_source. If the value is empty, the task will use GIT if git_source is defined and
+        WORKSPACE otherwise.        
     """
 
     path: str = None
+    source: Literal["WORKSPACE", "GIT"] = None
 
 
 class JobTaskSQLTask(BaseModel):
@@ -404,7 +410,7 @@ class JobTaskSQLTask(BaseModel):
     dashboard: JobTaskSqlTaskDashboard = None
     file: JobTaskSqlTaskFile = None
     parameters: dict[str, Any] = None
-    query: JobTaskSqlTaskQuery
+    query: JobTaskSqlTaskQuery = None
     warehouse_id: str = None
 
 
