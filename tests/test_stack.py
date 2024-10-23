@@ -148,8 +148,8 @@ def test_stack_model():
                             "notebook_task": {
                                 "notebook_path": "/jobs/ingest_stock_metadata.py",
                                 "base_parameters": None,
-                                "source": None,
                                 "warehouse_id": None,
+                                "source": None,
                             },
                             "notification_settings": None,
                             "pipeline_task": None,
@@ -203,9 +203,10 @@ def test_stack_model():
                             "user_name": None,
                         }
                     ],
-                    "dirpath": None,
+                    "rootpath": "/.laktory/",
+                    "dirpath": "",
                     "language": None,
-                    "path": None,
+                    "path": "/.laktory",
                     "source": "",
                 }
             },
