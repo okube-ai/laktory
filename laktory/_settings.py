@@ -31,7 +31,9 @@ class Settings(BaseSettings):
     # Databricks
     workspace_env: str = Field("dev", alias="LAKTORY_WORKSPACE_ENV")
     workspace_laktory_root: str = Field(
-        "/.laktory/", alias="LAKTORY_WORKSPACE_LAKTORY_ROOT"
+        # "/.laktory/", alias="LAKTORY_WORKSPACE_LAKTORY_ROOT"
+        "/.laktory/",
+        alias="LAKTORY_WORKSPACE_LAKTORY_ROOT",
     )  # TODO: Review variable name
     workspace_landing_root: str = Field("", alias="LAKTORY_WORKSPACE_LANDING_ROOT")
 

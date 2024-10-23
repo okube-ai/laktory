@@ -1,10 +1,11 @@
 import os
+from pathlib import Path
 from typing import Any
 from typing import Literal
 from typing import Union
 from pydantic import model_validator
 from pydantic import Field
-from laktory import constants
+from laktory import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -35,9 +36,14 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
     ----------
     access_controls:
         List of notebook access controls
+    rootpath:
+        Root directory to which all notebooks are deployed to. Can also be
+        configured by settings LAKTORY_WORKSPACE_LAKTORY_ROOT environment
+        variable. Default is `/.laktory/`. Used only if `path` is not
+        specified.
     dirpath:
-        Workspace directory containing the notebook. Filename will be assumed to be the same as local filepath. Used
-        if path is not specified.
+        Workspace directory inside rootpath in which the notebook is deployed.
+        Used only if `path` is not specified.
     language:
          Notebook programming language
     lookup_existing:
@@ -57,17 +63,27 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         source="./notebooks/dlt/dlt_laktory_pl.py",
     )
     print(notebook.path)
-    #> /.laktory/dlt/dlt_laktory_pl.py
+    #> /.laktory/dlt_laktory_pl.py
 
     notebook = models.resources.databricks.Notebook(
-        source="./notebooks/create_view.py", dirpath="/views/"
+        source="./notebooks/dlt/dlt_laktory_pl.py",
+        rootpath="/src/",
     )
     print(notebook.path)
-    #> /views/create_view.py
+    #> /src/dlt_laktory_pl.py
+
+    notebook = models.resources.databricks.Notebook(
+        source="./notebooks/dlt/dlt_laktory_pl.py",
+        rootpath="/src/",
+        dirpath="notebooks/dlt/",
+    )
+    print(notebook.path)
+    #> /src/notebooks/dlt/dlt_laktory_pl.py
     ```
     """
 
     access_controls: list[AccessControl] = []
+    rootpath: str = None
     dirpath: str = None
     language: Literal["SCALA", "PYTHON", "SQL", "R"] = None
     lookup_existing: NotebookLookup = Field(None, exclude=True)
@@ -80,17 +96,24 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         return os.path.basename(self.source)
 
     @model_validator(mode="after")
-    def default_path(self) -> Any:
+    def set_rootpath(self) -> Any:
+        if self.path is None and self.rootpath is None:
+            self.rootpath = settings.workspace_laktory_root
+        return self
+
+    @model_validator(mode="after")
+    def set_dirpath(self) -> Any:
+        if self.dirpath is None:
+            self.dirpath = ""
+        if self.dirpath.startswith("/"):
+            self.dirpath = self.dirpath[1:]
+        return self
+
+    @model_validator(mode="after")
+    def set_path(self) -> Any:
         if self.path is None:
-            if self.dirpath:
-                self.path = f"{self.dirpath}{self.filename}"
-
-            elif "/notebooks/" in self.source:
-                self.path = (
-                    constants.LAKTORY_WORKSPACE_ROOT
-                    + self.source.split("/notebooks/")[-1]
-                )
-
+            _path = Path(self.rootpath) / self.dirpath / self.filename
+            self.path = str(_path)
         return self
 
     # ----------------------------------------------------------------------- #
@@ -138,7 +161,7 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "dirpath"]
+        return ["access_controls", "rootpath", "dirpath"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

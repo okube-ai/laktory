@@ -1,6 +1,9 @@
 notebook-dlt-laktory-pl:
   source: ./notebooks/dlt/dlt_laktory_pl.py
+  dirpath: notebooks/dlt/
 notebook-job-laktory-pl:
   source: ./notebooks/jobs/job_laktory_pl.py
+  dirpath: notebooks/jobs/
 notebook-job-hello:
   source: ./notebooks/jobs/job_hello.py
+  dirpath: notebooks/jobs/
