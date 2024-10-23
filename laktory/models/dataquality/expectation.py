@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 from typing import Literal
 from typing import Union
@@ -290,8 +291,10 @@ class DataQualityExpectation(BaseModel):
                 e.desc += f"\n{self.type_warning_msg}"
             raise e
 
-        return DataQualityCheck(
+        _check = DataQualityCheck(
             expectation=self,
             is_streaming=True,
             status="UNDEFINED",
         )
+        logger.info(f"Checking expectation '{self.name}' | status : UNDEFINED (streaming)")
+        return _check
