@@ -20,6 +20,8 @@ class DataQualityCheck(BaseModel):
             return None
         if self.rows_count == 0:
             return 0
+        if self.rows_count is None:
+            return None
         return self.fails_count / self.rows_count
 
     @property

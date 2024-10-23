@@ -4,14 +4,11 @@ import shutil
 from pyspark.sql import functions as F
 
 from laktory import models
-from laktory._testing import spark
 from laktory._testing import Paths
+from laktory._testing import df_slv as df
+from laktory._testing import df_slv_delta as dfs
 
 paths = Paths(__file__)
-
-# Data
-df = spark.read.parquet(os.path.join(paths.data, "./slv_stock_prices"))
-df.printSchema()
 
 
 def test_expectations_abs():
@@ -92,8 +89,23 @@ def test_expectations_empty():
     assert check.status == "PASS"
 
 
+def test_expectations_streaming():
+
+    # Spark Expression
+    dqe = models.DataQualityExpectation(
+        name="price less than 300", action="DROP", expr="F.col('close') < 300"
+    )
+    check = dqe.check(dfs)
+    assert check.is_streaming
+    assert check.rows_count is None
+    assert check.fails_count is None
+    assert check.failure_rate is None
+    assert check.status == "UNDEFINED"
+
+
 if __name__ == "__main__":
     test_expectations_abs()
     test_expectations_rel()
     test_expectations_agg()
     test_expectations_empty()
+    test_expectations_streaming()

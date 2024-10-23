@@ -280,7 +280,7 @@ class DataQualityExpectation(BaseModel):
             logger.info(f"Checking expectation '{self.name}' | status : {status}")
             return _check
 
-    def _check_stream(self, df):
+    def _check_streaming(self, df):
         try:
             df.filter(self.fail_filter)
         except Exception as e:
