@@ -7,7 +7,7 @@ import warnings
 from pydantic import model_validator
 
 from laktory.constants import DEFAULT_DFTYPE
-from laktory.exceptions import DataQualityCheckFailedError
+from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import BaseDataSource
@@ -226,6 +226,14 @@ class PipelineNode(BaseModel):
 
         return self
 
+    @model_validator(mode="after")
+    def validate_expectations(self):
+        if self.source.as_stream:
+            for e in self.expectations:
+                if not e.is_streaming_compatible:
+                    raise DataQualityExpectationsNotSupported(e, self)
+        return self
+
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
@@ -245,10 +253,11 @@ class PipelineNode(BaseModel):
         return is_orchestrator_dlt
 
     @property
-    def is_dlt_active(self) -> bool:
+    def is_dlt_run(self) -> bool:
         if not self.is_orchestrator_dlt:
             return False
         from laktory.dlt import is_debug
+
         return not is_debug()
 
     @property
@@ -540,7 +549,7 @@ class PipelineNode(BaseModel):
         # Save source
         self._source_columns = self._output_df.columns
 
-        if self.source.is_cdc and not self.is_dlt_active:
+        if self.source.is_cdc and not self.is_dlt_run:
             pass
             # TODO: Apply SCD transformations
             #       Best strategy is probably to build a spark dataframe function and add a node in the chain with
@@ -579,6 +588,19 @@ class PipelineNode(BaseModel):
 
         # Check expectations
         self.check_expectations()
+        #
+        # def update_metrics(batch_df, batch_id):
+        #     # size = batch_df.count()
+        #     # aggregated = batch_df.groupBy("event_type").count()
+        #     print("FOR EACH BATCH!")
+        #     # for row in aggregated.collect():
+        #     #     send_to_dashboard(row.event_type, row["count"])
+        #
+        # # _writer = self.output_df.writeStream.format("memory").foreachBatch(update_metrics).start()
+        # if self.output_df.isStreaming:
+        #     print(type(self.output_df))
+        #     # _writer = self.output_df.writeStream.foreachBatch(update_metrics).start()
+        #     # print(_writer)
 
         # Output to sink
         if write_sink and self.sink:
@@ -607,25 +629,22 @@ class PipelineNode(BaseModel):
 
         for e in self.expectations:
 
-            is_dlt_active = self.is_dlt_active and e.is_dlt_compatible
+            is_dlt_managed = self.is_dlt_run and e.is_dlt_compatible
 
-            # Fail Message
+            # Run Check
             check = e.check(self._output_df)
-            if check.status == "FAIL":
-                msg = f"Expectation '{e.name}' for node '{self.name}' FAILED | {check.log_msg}"
-                if e.action == "FAIL" and not is_dlt_active:
-                    raise DataQualityCheckFailedError(check, self)
-                else:
-                    warnings.warn(msg)
 
-            # Row Filters
-            if e.type == "ROW":
-                if check.fails_count > 0:
-                    if e.action in ["DROP", "QUARANTINE"]:
-                        if not is_dlt_active:
-                            keep_filter = e.pass_filter if keep_filter is None else keep_filter & e.pass_filter
-                    if e.action == "QUARANTINE":
-                        quarantine_filter = e.fail_filter if quarantine_filter is None else quarantine_filter & e.fail_filter
+            # Raise Failure
+            check.raise_exception(node=self, warn=is_dlt_managed)
+
+            # Update Keep Filter
+            if not is_dlt_managed:
+                _filter = check.keep_filter
+                keep_filter = _filter if keep_filter is None else keep_filter & _filter
+
+            # Update Quarantine Filter
+            _filter = check.quarantine_filter
+            quarantine_filter = _filter if quarantine_filter is None else keep_filter & _filter
 
         if quarantine_filter is not None:
             logger.info(f"Building quarantine DataFrame")
