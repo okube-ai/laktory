@@ -2,6 +2,7 @@ from laktory.models.resources.databricks import WorkspaceFile
 
 workspace_file = WorkspaceFile(
     source="./test_workspacefile.py",
+    rootpath="/",
     dirpath="/init_scripts/",
     access_controls=[{"permission_level": "CAN_READ", "group_name": "account users"}],
 )

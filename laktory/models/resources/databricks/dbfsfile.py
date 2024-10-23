@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Any
 from typing import Union
 from pydantic import model_validator
@@ -33,9 +34,12 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
     ----------
     access_controls:
         List of file access controls
+    rootpath:
+        Root directory to which all DBFS files are deployed to. Used only if
+        `path` is not specified.
     dirpath:
-        Workspace directory containing the file. Filename will be assumed to be the same as local filepath. Used if path
-        is not specified.
+        Workspace directory inside rootpath in which the DBFS file is
+        deployed. Used only if `path` is not specified.
     lookup_existing:
         Specifications for looking up existing resource. Other attributes will
         be ignored.
@@ -43,9 +47,37 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
          DBFS filepath for the file
     source:
         Path to file on local filesystem.
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    file = models.resources.databricks.DbfsFile(
+        source="./data/stock_prices/prices.json",
+    )
+    print(file.path)
+    #> /prices.json
+
+    file = models.resources.databricks.DbfsFile(
+        source="./data/stock_prices/prices.json",
+        rootpath="/data/",
+    )
+    print(file.path)
+    #> /data/prices.json
+
+    file = models.resources.databricks.DbfsFile(
+        source="./data/stock_prices/prices.json",
+        rootpath="/data/",
+        dirpath="stock_prices/",
+    )
+    print(file.path)
+    #> /data/stock_prices/prices.json
+    ```
     """
 
     access_controls: list[AccessControl] = []
+    rootpath: str = "/"
     dirpath: str = None
     lookup_existing: DbfsFileLookup = Field(None, exclude=True)
     path: str = None
@@ -61,15 +93,18 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
         return os.path.basename(self.source)
 
     @model_validator(mode="after")
-    def default_path(self) -> Any:
-        if self.path is None:
-            if self.dirpath:
-                self.path = f"{self.dirpath}{self.filename}"
-            else:
-                raise ValueError(
-                    "A value for `dirpath` must be specified if `path` is not specified"
-                )
+    def set_dirpath(self) -> Any:
+        if self.dirpath is None:
+            self.dirpath = ""
+        if self.dirpath.startswith("/"):
+            self.dirpath = self.dirpath[1:]
+        return self
 
+    @model_validator(mode="after")
+    def set_path(self) -> Any:
+        if self.path is None:
+            _path = Path(self.rootpath) / self.dirpath / self.filename
+            self.path = str(_path)
         return self
 
     # ----------------------------------------------------------------------- #
@@ -112,7 +147,7 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "dirpath"]
+        return ["access_controls", "rootpath", "dirpath"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

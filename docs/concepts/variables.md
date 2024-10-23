@@ -89,7 +89,7 @@ name: my-job-${vars.env}
 tasks:
   - task_key: pipeline
     pipeline_task:
-      pipeline_id: {resources.my-pipeline.id}
+      pipeline_id: ${resources.my-pipeline.id}
 ...
 ```
 Here, the static pipeline ID is replaced by a dynamic reference to the pipeline resource `my-pipeline`.

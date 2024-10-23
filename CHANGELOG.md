@@ -12,7 +12,8 @@
 ### Breaking changes
 * Renamed `sql_expr` to `expr` as `expr` now supports both SQL and DataFrame expressions (auto-detection)
 * DLT Expectation action "ALLOW" renamed to "WARN"
-* Added prefix `dlt_` to pipeline node `warning_expectations`, `warning_expectations` and `warning_expectations` properties 
+* Added prefix `dlt_` to pipeline node `warning_expectations`, `warning_expectations` and `warning_expectations` properties
+* Refactored default path for `WorkspaceFile` and `DBFSFile` models to offer better control on the target location
 
 ## [0.4.14] - 2024-10-08
 ### Updated
