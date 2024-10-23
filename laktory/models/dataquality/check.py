@@ -10,8 +10,9 @@ logger = get_logger(__name__)
 class DataQualityCheck(BaseModel):
     expectation: Any
     fails_count: int = None
+    is_streaming: bool = None
     rows_count: int = None
-    status: Literal["PASS", "FAIL"]
+    status: Literal["PASS", "FAIL", "UNDEFINED"]
 
     @property
     def failure_rate(self):

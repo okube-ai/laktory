@@ -3,6 +3,7 @@ from typing import Literal
 from typing import Union
 from pydantic import model_validator
 
+from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
 from laktory.models.dataquality.check import DataQualityCheck
@@ -36,6 +37,7 @@ class ExpectationTolerance(BaseModel):
     rel:
         Relative number of rows with failure for a PASS status
     """
+
     abs: int = None
     rel: float = None
 
@@ -130,7 +132,9 @@ class DataQualityExpectation(BaseModel):
     @model_validator(mode="after")
     def validate_action(self) -> Any:
         if self.type == "AGGREGATE" and self.action in ["DROP", "QUARANTINE"]:
-            raise ValueError(f"'{self.type}' action is not supported for 'AGGREGATE' type.")
+            raise ValueError(
+                f"'{self.type}' action is not supported for 'AGGREGATE' type."
+            )
         return self
 
     @model_validator(mode="after")
@@ -138,6 +142,7 @@ class DataQualityExpectation(BaseModel):
         msg = self.type_warning_msg
         if msg:
             import warnings
+
             warnings.warn(msg)
         return self
 
@@ -178,37 +183,54 @@ class DataQualityExpectation(BaseModel):
     def is_dlt_compatible(self):
         return self.expr.type == "SQL" and self.type == "ROW"
 
+    @property
+    def is_streaming_compatible(self):
+        return (
+            self.type == "ROW"
+            and self.tolerance.rel is None
+            and self.tolerance.abs == 0
+        )
+
     # ----------------------------------------------------------------------- #
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
 
     def check(self, df: Any) -> DataQualityCheck:
 
-        logger.info(f"Checking expectation '{self.name}' | {self.expr.value} (type: {self.type})")
+        logger.info(
+            f"Checking expectation '{self.name}' | {self.expr.value} (type: {self.type})"
+        )
 
         is_streaming = getattr(df, "isStreaming", False)
+        if is_streaming and not self.is_streaming_compatible:
+            raise DataQualityExpectationsNotSupported(self)
+
         if is_streaming:
-            def process_batch(batch_df, batch_id):
-                print("batch size", batch_df.count())
+            self._check = self._check_streaming(df)
+        else:
+            self._check = self._check_batch(df)
 
-            df = df.foreachBatch(process_batch)
+        return self._check
 
+    def _check_batch(self, df):
         rows_count = df.count()
-
         if rows_count == 0:
-            self._check = DataQualityCheck(
+            _check = DataQualityCheck(
                 expectation=self,
                 fails_count=0,
+                is_streaming=False,
                 status="PASS",
                 rows_count=0,
             )
-            return self._check
+            return _check
 
         if self.type == "ROW":
             try:
                 df_fail = df.filter(self.fail_filter)
             except Exception as e:
-                if "Rewrite the query to avoid window functions" in getattr(e, "desc", ""):
+                if "Rewrite the query to avoid window functions" in getattr(
+                        e, "desc", ""
+                ):
                     e.desc += f"\n{self.type_warning_msg}"
                 raise e
 
@@ -221,17 +243,21 @@ class DataQualityExpectation(BaseModel):
                 if rows_count > 0 and fails_count / rows_count > self.tolerance.rel:
                     status = "FAIL"
 
-            self._check = DataQualityCheck(
+            _check = DataQualityCheck(
                 expectation=self,
                 fails_count=fails_count,
+                is_streaming=False,
                 status=status,
                 rows_count=rows_count,
             )
-            failure_str = f"({100*self._check.failure_rate:5.2f}%)"
+            failure_str = f"({100 * _check.failure_rate:5.2f}%)"
             if status == "PASS":
                 logger.info(f"Checking expectation '{self.name}' | status : {status}")
             else:
-                logger.info(f"Checking expectation '{self.name}' | status : {status} - failed rows : {fails_count} {failure_str}")
+                logger.info(
+                    f"Checking expectation '{self.name}' | status : {status} - failed rows : {fails_count} {failure_str}"
+                )
+            return _check
 
         if self.type == "AGGREGATE":
             import pyspark.sql.functions as F
@@ -245,11 +271,27 @@ class DataQualityExpectation(BaseModel):
 
             status = "PASS" if status else "FAIL"
 
-            self._check = DataQualityCheck(
+            _check = DataQualityCheck(
                 expectation=self,
+                is_streaming=False,
                 status=status,
                 rows_count=rows_count,
             )
             logger.info(f"Checking expectation '{self.name}' | status : {status}")
+            return _check
 
-        return self._check
+    def _check_stream(self, df):
+        try:
+            df.filter(self.fail_filter)
+        except Exception as e:
+            if "Rewrite the query to avoid window functions" in getattr(
+                    e, "desc", ""
+            ):
+                e.desc += f"\n{self.type_warning_msg}"
+            raise e
+
+        return DataQualityCheck(
+            expectation=self,
+            is_streaming=True,
+            status="UNDEFINED",
+        )
