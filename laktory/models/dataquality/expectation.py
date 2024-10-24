@@ -36,6 +36,7 @@ class ExpectationTolerance(BaseModel):
     rel:
         Relative number of rows with failure for a PASS status
     """
+
     abs: int = None
     rel: float = None
 
@@ -130,7 +131,9 @@ class DataQualityExpectation(BaseModel):
     @model_validator(mode="after")
     def validate_action(self) -> Any:
         if self.type == "AGGREGATE" and self.action in ["DROP", "QUARANTINE"]:
-            raise ValueError(f"'{self.type}' action is not supported for 'AGGREGATE' type.")
+            raise ValueError(
+                f"'{self.type}' action is not supported for 'AGGREGATE' type."
+            )
         return self
 
     @model_validator(mode="after")
@@ -138,6 +141,7 @@ class DataQualityExpectation(BaseModel):
         msg = self.type_warning_msg
         if msg:
             import warnings
+
             warnings.warn(msg)
         return self
 
@@ -184,10 +188,13 @@ class DataQualityExpectation(BaseModel):
 
     def check(self, df: Any) -> DataQualityCheck:
 
-        logger.info(f"Checking expectation '{self.name}' | {self.expr.value} (type: {self.type})")
+        logger.info(
+            f"Checking expectation '{self.name}' | {self.expr.value} (type: {self.type})"
+        )
 
         is_streaming = getattr(df, "isStreaming", False)
         if is_streaming:
+
             def process_batch(batch_df, batch_id):
                 print("batch size", batch_df.count())
 
@@ -208,7 +215,9 @@ class DataQualityExpectation(BaseModel):
             try:
                 df_fail = df.filter(self.fail_filter)
             except Exception as e:
-                if "Rewrite the query to avoid window functions" in getattr(e, "desc", ""):
+                if "Rewrite the query to avoid window functions" in getattr(
+                    e, "desc", ""
+                ):
                     e.desc += f"\n{self.type_warning_msg}"
                 raise e
 
@@ -231,7 +240,9 @@ class DataQualityExpectation(BaseModel):
             if status == "PASS":
                 logger.info(f"Checking expectation '{self.name}' | status : {status}")
             else:
-                logger.info(f"Checking expectation '{self.name}' | status : {status} - failed rows : {fails_count} {failure_str}")
+                logger.info(
+                    f"Checking expectation '{self.name}' | status : {status} - failed rows : {fails_count} {failure_str}"
+                )
 
         if self.type == "AGGREGATE":
             import pyspark.sql.functions as F

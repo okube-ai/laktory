@@ -25,8 +25,8 @@ def test_expectations_abs():
     assert check.fails_count == 20
     assert check.failure_rate == 0.25
     assert check.status == "FAIL"
-    assert str(check.expectation.pass_filter) == str(F.col('close') < 300)
-    assert str(check.expectation.fail_filter) == str(~(F.col('close') < 300))
+    assert str(check.expectation.pass_filter) == str(F.col("close") < 300)
+    assert str(check.expectation.fail_filter) == str(~(F.col("close") < 300))
 
     # SQL Expression
     dqe = models.DataQualityExpectation(
