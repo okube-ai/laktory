@@ -5,6 +5,7 @@
 * DataFrameColumnExpression model
 * Data Quality Expectations
 * Data Quality Checks
+* Description attribute to Databricks job
 ### Fixed
 * n/a
 ### Updated

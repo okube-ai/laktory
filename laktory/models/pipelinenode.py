@@ -249,6 +249,7 @@ class PipelineNode(BaseModel):
         if not self.is_orchestrator_dlt:
             return False
         from laktory.dlt import is_debug
+
         return not is_debug()
 
     @property
@@ -623,9 +624,17 @@ class PipelineNode(BaseModel):
                 if check.fails_count > 0:
                     if e.action in ["DROP", "QUARANTINE"]:
                         if not is_dlt_active:
-                            keep_filter = e.pass_filter if keep_filter is None else keep_filter & e.pass_filter
+                            keep_filter = (
+                                e.pass_filter
+                                if keep_filter is None
+                                else keep_filter & e.pass_filter
+                            )
                     if e.action == "QUARANTINE":
-                        quarantine_filter = e.fail_filter if quarantine_filter is None else quarantine_filter & e.fail_filter
+                        quarantine_filter = (
+                            e.fail_filter
+                            if quarantine_filter is None
+                            else quarantine_filter & e.fail_filter
+                        )
 
         if quarantine_filter is not None:
             logger.info(f"Building quarantine DataFrame")

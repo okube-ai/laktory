@@ -625,6 +625,8 @@ class Job(BaseModel, PulumiResource, TerraformResource):
         If `True`, the Databricks provider will stop and start the job as needed to ensure that the active run for the
         job reflects the deployed configuration. For continuous jobs, the provider respects the pause_status by
         stopping the current active run. This flag cannot be set for non-continuous jobs.
+    description:
+        An optional description for the job. The maximum length is 1024 characters in UTF-8 encoding.
     email_notifications:
         An optional set of email addresses notified when runs of this job begins, completes or fails. The default
         behavior is to not send any emails. This field is a block and is documented below.
@@ -717,6 +719,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     clusters: list[JobCluster] = []
     continuous: JobContinuous = None
     control_run_state: bool = None
+    description: str = None
     email_notifications: JobEmailNotifications = None
     format: str = None
     health: JobHealth = None

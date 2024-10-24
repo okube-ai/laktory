@@ -180,7 +180,9 @@ def test_column(df0=df0):
     assert [(c.name, c.expr.value) for c in sc.nodes[0]._with_columns] == [
         ("cos_x", "col('x').cos()")
     ]
-    assert [(c.name, c.expr.value) for c in sc.nodes[1]._with_columns] == [("x2", "x*2")]
+    assert [(c.name, c.expr.value) for c in sc.nodes[1]._with_columns] == [
+        ("x2", "x*2")
+    ]
     assert df["cos_x"].to_list() == np.cos(df["x"]).to_list()
     assert df["x2"].to_list() == (df["x"] * 2).to_list()
 
