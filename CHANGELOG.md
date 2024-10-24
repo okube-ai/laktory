@@ -6,7 +6,7 @@
 * Data Quality Expectations
 * Data Quality Checks
 ### Fixed
-* n/a
+* File Data Sink stream writer
 ### Updated
 * `JobTaskNotebookTask` to support `warehouse_id` as compute
 ### Breaking changes
