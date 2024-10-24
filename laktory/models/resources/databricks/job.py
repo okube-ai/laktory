@@ -374,10 +374,16 @@ class JobTaskSqlTaskFile(BaseModel):
     Attributes
     ----------
     path:
-        SQL filepath
+        If source is `GIT`: Relative path to the file in the repository specified
+        in the git_source block with SQL commands to execute. If source is
+        `WORKSPACE`: Absolute path to the file in the workspace with SQL
+        commands to execute.
+    source:
+        The source of the project. Possible values are `WORKSPACE` and `GIT`.
     """
 
     path: str = None
+    source: Literal["WORKSPACE", "GIT"] = None
 
 
 class JobTaskSQLTask(BaseModel):
