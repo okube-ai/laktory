@@ -1,9 +1,11 @@
 from pydantic import BaseModel
 from typing import Union
+from typing import TYPE_CHECKING
 from pyspark.sql.dataframe import DataFrame
 
 from laktory._logger import get_logger
-from laktory.models.transformers.basechainnode import ChainNodeColumn
+if TYPE_CHECKING:
+    from laktory.models.transformers.basechainnode import ChainNodeColumn
 
 
 logger = get_logger(__name__)
@@ -44,7 +46,7 @@ def groupby_and_agg(
     df,
     groupby_window: TimeWindow = None,
     groupby_columns: list[str] = None,
-    agg_expressions: list[ChainNodeColumn] = None,
+    agg_expressions: list["ChainNodeColumn"] = None,
 ) -> DataFrame:
     """
     Apply a groupby and create aggregation columns.
@@ -102,6 +104,7 @@ def groupby_and_agg(
     * [pyspark window](https://spark.apache.org/docs/3.1.3/api/python/reference/api/pyspark.sql.functions.window.html)
     """
     import pyspark.sql.functions as F
+    from laktory.models.transformers.basechainnode import ChainNodeColumn
 
     # Parse inputs
     if groupby_window and not isinstance(groupby_window, TimeWindow):

@@ -323,7 +323,7 @@ class PipelineNode(BaseModel):
 
     @property
     def checks(self):
-        return [e._check for e in self.expectations]
+        return [e.check for e in self.expectations]
 
     @property
     def layer_spark_chain(self):
@@ -530,7 +530,7 @@ class PipelineNode(BaseModel):
         :
             output Spark DataFrame
         """
-        logger.info(f"Executing pipeline node {self.name} ({self.layer})")
+        logger.info(f"Executing pipeline node {self.name}")
 
         # Parse DLT
         if self.is_orchestrator_dlt:
@@ -588,19 +588,6 @@ class PipelineNode(BaseModel):
 
         # Check expectations
         self.check_expectations()
-        #
-        # def update_metrics(batch_df, batch_id):
-        #     # size = batch_df.count()
-        #     # aggregated = batch_df.groupBy("event_type").count()
-        #     print("FOR EACH BATCH!")
-        #     # for row in aggregated.collect():
-        #     #     send_to_dashboard(row.event_type, row["count"])
-        #
-        # # _writer = self.output_df.writeStream.format("memory").foreachBatch(update_metrics).start()
-        # if self.output_df.isStreaming:
-        #     print(type(self.output_df))
-        #     # _writer = self.output_df.writeStream.foreachBatch(update_metrics).start()
-        #     # print(_writer)
 
         # Output to sink
         if write_sink and self.sink:
@@ -632,18 +619,19 @@ class PipelineNode(BaseModel):
             is_dlt_managed = self.is_dlt_run and e.is_dlt_compatible
 
             # Run Check
-            check = e.check(self._output_df)
-
-            # Raise Failure
-            check.raise_exception(node=self, warn=is_dlt_managed)
-
+            e.run_check(
+                self._output_df,
+                raise_or_warn=True,
+                force_warn=is_dlt_managed,
+                node=self,
+            )
             # Update Keep Filter
             if not is_dlt_managed:
-                _filter = check.keep_filter
+                _filter = e.keep_filter
                 keep_filter = _filter if keep_filter is None else keep_filter & _filter
 
             # Update Quarantine Filter
-            _filter = check.quarantine_filter
+            _filter = e.quarantine_filter
             quarantine_filter = _filter if quarantine_filter is None else keep_filter & _filter
 
         if quarantine_filter is not None:

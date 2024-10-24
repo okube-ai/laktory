@@ -15,12 +15,12 @@ class MissingColumnsError(Exception):
 
 
 class DataQualityCheckFailedError(Exception):
-    def __init__(self, check, node=None):
+    def __init__(self, expectation, node=None):
 
-        message = f"Expectation '{check.expectation.name}' failed"
+        message = f"Expectation '{expectation.name}' failed"
         if node:
             message += f" on node '{node.name}'"
-        message += f" | {check.log_msg}"
+        message += f" | {expectation.log_msg}"
         super().__init__(message)
 
 

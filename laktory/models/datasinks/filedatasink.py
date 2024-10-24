@@ -93,27 +93,37 @@ class FileDataSink(BaseDataSink):
         for k, v in self.write_options.items():
             _options[k] = v
 
-        t = "static"
         if df.isStreaming:
-            t = "stream"
-            writer = df.writeStream.trigger(
-                availableNow=True
-            )  # TODO: Add option for trigger?
 
+            logger.info(
+                f"Writing df as stream {self.format} to {self.path} with mode {mode} and options {_options}"
+            )
+            query = (
+                df.writeStream
+                .format(self.format)
+                .outputMode(mode)
+                .trigger(availableNow=True)  # TODO: Add option for trigger?
+                .options(**_options)
+                .start(self.path)
+            )
+            query.awaitTermination()
         else:
-            writer = df.write
-
-        logger.info(
-            f"Writing df as {t} {self.format} to {self.path} with mode {mode} and options {_options}"
-        )
-        writer.mode(mode).format(self.format).options(**_options).save(self.path)
+            logger.info(
+                f"Writing df as static {self.format} to {self.path} with mode {mode} and options {_options}"
+            )
+            (
+                df.write
+                .mode(mode)
+                .format(self.format)
+                .options(**_options)
+                .save(self.path)
+            )
 
     def _write_polars(self, df: PolarsDataFrame, mode=None) -> None:
 
         isStreaming = False
 
         if isStreaming:
-            pass
             logger.info(f"Writing df as stream {self.format} to {self.path}")
 
         else:

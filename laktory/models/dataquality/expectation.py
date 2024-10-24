@@ -1,29 +1,20 @@
-import logging
+import warnings
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Literal
 from typing import Union
 from pydantic import model_validator
 
+from laktory._logger import get_logger
+from laktory.exceptions import DataQualityCheckFailedError
 from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
 from laktory.models.dataquality.check import DataQualityCheck
-from laktory._logger import get_logger
+from laktory.types import AnyDataFrame
+from laktory.types import AnyDataFrameColumn
 
 logger = get_logger(__name__)
-
-
-# class ExpectationThresholds(BaseModel):
-#     min: float = None
-#     max: float = None
-#     strict_min: float = None
-#     strict_max: float = None
-#     in_: list[Any] = None
-#     not_in: list[Any] = None
-#     has: Any = None
-#     has_not: Any = None
-#     is_: Any = None
-#     is_not: Any = None
 
 
 class ExpectationTolerance(BaseModel):
@@ -57,10 +48,9 @@ class DataQualityExpectation(BaseModel):
     """
     Data Quality Expectation for a given DataFrame expressed as a row-specific
     condition (`type="ROW"`) or as an aggregated metric (`type="AGGREGATE"`).
+    Only row conditions are supported for streaming dataframes.
 
     The expression may be defined as a SQL statement or a DataFrame expression.
-
-    Upon failure, an action may be selected.
 
     Attributes
     ----------
@@ -143,21 +133,74 @@ class DataQualityExpectation(BaseModel):
         msg = self.type_warning_msg
         if msg:
             import warnings
-
             warnings.warn(msg)
         return self
 
     # ----------------------------------------------------------------------- #
-    # Properties                                                              #
+    # Filters                                                                 #
     # ----------------------------------------------------------------------- #
 
     @property
-    def pass_filter(self):
+    def pass_filter(self) -> Union[AnyDataFrameColumn, None]:
+        """Expression representing all rows meeting the expectation."""
         return self.expr.eval()
 
     @property
-    def fail_filter(self):
+    def fail_filter(self) -> Union[AnyDataFrameColumn, None]:
+        """Expression representing all rows not meeting the expectation."""
         return ~self.expr.eval()
+
+    @property
+    def keep_filter(self) -> Union[AnyDataFrameColumn, None]:
+        """
+        Expression representing all rows to keep, considering both the
+        expectation and the selected action.
+        """
+        if self._check is None:
+            raise ValueError()
+        if self.type != "ROW":
+            return None
+        if self.action not in ["DROP", "QUARANTINE"]:
+            return None
+        if self._check.fails_count == 0:
+            return None
+        return self.pass_filter
+
+    @property
+    def quarantine_filter(self) -> Union[AnyDataFrameColumn, None]:
+        """
+        Expression representing all rows to quarantine, considering both the
+        expectation and the selected action.
+        """
+        if self._check is None:
+            raise ValueError()
+        if self.type != "ROW":
+            return None
+        if self.action not in ["QUARANTINE"]:
+            return None
+        if self._check.fails_count == 0:
+            return None
+        return self.fail_filter
+
+    # ----------------------------------------------------------------------- #
+    # Compatibility                                                           #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def is_dlt_compatible(self):
+        return self.expr.type == "SQL" and self.type == "ROW"
+
+    @property
+    def is_streaming_compatible(self):
+        return (
+            self.type == "ROW"
+            and self.tolerance.rel is None
+            and self.tolerance.abs == 0
+        )
+
+    # ----------------------------------------------------------------------- #
+    # Logging                                                                 #
+    # ----------------------------------------------------------------------- #
 
     @property
     def type_warning_msg(self):
@@ -181,22 +224,45 @@ class DataQualityExpectation(BaseModel):
         return msg
 
     @property
-    def is_dlt_compatible(self):
-        return self.expr.type == "SQL" and self.type == "ROW"
+    def log_msg(self) -> str:
+        msg = f"expr: {self.expr.value} | status: {self.check.status}"
+        if self.type == "ROW" and self.check.fails_count:
+            msg += f" | fails count: {self.check.fails_count} / {self.check.rows_count} ({100*self.check.failure_rate:5.2f} %)"
+        return msg
+
+    # ----------------------------------------------------------------------- #
+    # Check                                                                   #
+    # ----------------------------------------------------------------------- #
 
     @property
-    def is_streaming_compatible(self):
-        return (
-            self.type == "ROW"
-            and self.tolerance.rel is None
-            and self.tolerance.abs == 0
-        )
+    def check(self):
+        return self._check
 
-    # ----------------------------------------------------------------------- #
-    # Execution                                                               #
-    # ----------------------------------------------------------------------- #
+    def run_check(self,
+              df: AnyDataFrame,
+              raise_or_warn: bool = False,
+              force_warn: bool = False,
+              node=None,
+              ) -> DataQualityCheck:
+        """
+        Check if expectation is met save result.
 
-    def check(self, df: Any) -> DataQualityCheck:
+        Parameters
+        ----------
+        df:
+            Input DataFrame for checking the expectation.
+        raise_or_warn:
+            Raise exception or issue warning if expectation is not met.
+        force_warn:
+            Issue warning instead of raising exception upon failure.
+        node:
+            Pipeline Node
+
+        Returns
+        -------
+        output: DataQualityCheck
+            Check result.
+        """
 
         logger.info(
             f"Checking expectation '{self.name}' | {self.expr.value} (type: {self.type})"
@@ -207,19 +273,20 @@ class DataQualityExpectation(BaseModel):
             raise DataQualityExpectationsNotSupported(self)
 
         if is_streaming:
-            self._check = self._check_streaming(df)
+            self._check = self._get_check_streaming(df)
         else:
-            self._check = self._check_batch(df)
+            self._check = self._get_check_batch(df)
+
+        if raise_or_warn:
+            self._raise_or_warn(df, force_warn, node)
 
         return self._check
 
-    def _check_batch(self, df):
+    def _get_check_batch(self, df):
         rows_count = df.count()
         if rows_count == 0:
             _check = DataQualityCheck(
-                expectation=self,
                 fails_count=0,
-                is_streaming=False,
                 status="PASS",
                 rows_count=0,
             )
@@ -245,9 +312,7 @@ class DataQualityExpectation(BaseModel):
                     status = "FAIL"
 
             _check = DataQualityCheck(
-                expectation=self,
                 fails_count=fails_count,
-                is_streaming=False,
                 status=status,
                 rows_count=rows_count,
             )
@@ -273,15 +338,13 @@ class DataQualityExpectation(BaseModel):
             status = "PASS" if status else "FAIL"
 
             _check = DataQualityCheck(
-                expectation=self,
-                is_streaming=False,
                 status=status,
                 rows_count=rows_count,
             )
             logger.info(f"Checking expectation '{self.name}' | status : {status}")
             return _check
 
-    def _check_streaming(self, df):
+    def _get_check_streaming(self, df):
         try:
             df.filter(self.fail_filter)
         except Exception as e:
@@ -291,10 +354,44 @@ class DataQualityExpectation(BaseModel):
                 e.desc += f"\n{self.type_warning_msg}"
             raise e
 
+        def _raise(batch_df, batch_id, check):
+            failed_rows = batch_df.filter(self.fail_filter)
+            fails_count = failed_rows.count()
+            if fails_count > 0:
+                check.status = "FAIL"
+
         _check = DataQualityCheck(
-            expectation=self,
-            is_streaming=True,
-            status="UNDEFINED",
+            status="PASS",
         )
-        logger.info(f"Checking expectation '{self.name}' | status : UNDEFINED (streaming)")
+        query = (
+            df.writeStream
+            .foreachBatch(lambda batch_df, batch_id: _raise(batch_df, batch_id, _check))
+            .trigger(availableNow=True)
+            .start()
+        )
+        query.awaitTermination()
+
+        logger.info(f"Checking expectation '{self.name}' | status : {_check.status}")
         return _check
+
+    def _raise_or_warn(self, df, force_warn, node) -> None:
+
+        # Failure Message
+        msg = f"Expectation '{self.name}'"
+        if node:
+            msg += f" for node '{node.name}'"
+        msg += f" FAILED | {self.log_msg}"
+
+        if self.check.status != "FAIL":
+            return
+
+        # Raise Exception
+        if self.action == "FAIL":
+            if force_warn:
+                warnings.warn(msg)
+            else:
+                raise DataQualityCheckFailedError(self, node)
+        else:
+            # actions: WARN, DROP, QUARANTINE
+            warnings.warn(msg)
+

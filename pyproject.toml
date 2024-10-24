@@ -85,6 +85,7 @@ dev = [
 
 # Test
 test = [
+    "delta-spark",
     "pandas",
     "pytest",
     "pytest-cov",
