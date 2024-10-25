@@ -21,4 +21,4 @@ print()
 # --------------------------------------------------------------------------- #
 
 fig = pipeline.dag_figure()
-fig.write_html("./dag.html", auto_open=True)
+fig.write_html("./dag.html", auto_open=False)

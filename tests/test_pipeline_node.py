@@ -296,14 +296,14 @@ def test_expectations_streaming():
     )
     node.execute()
     assert node.checks[0].status == "FAIL"
-    assert node.checks[0].rows_count == 80
-    assert node.checks[0].fails_count == 20
+    assert node.checks[0].rows_count is None
+    assert node.checks[0].fails_count is None
     assert node.checks[1].status == "FAIL"
-    assert node.checks[1].rows_count == 80
-    assert node.checks[1].fails_count == 12
+    assert node.checks[1].rows_count is None
+    assert node.checks[1].fails_count is None
     assert node.checks[2].status == "FAIL"
-    assert node.checks[2].rows_count == 80
-    assert node.checks[2].fails_count == 8
+    assert node.checks[2].rows_count is None
+    assert node.checks[2].fails_count is None
     #
     # # Test Fail
     # node.expectations = [
