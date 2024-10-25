@@ -8,7 +8,9 @@
 ### Fixed
 * File Data Sink stream writer
 ### Updated
+* `Job` to support `description
 * `JobTaskNotebookTask` to support `warehouse_id` as compute
+* `JobTaskSQLTask` to support null value for query
 ### Breaking changes
 * Renamed `sql_expr` to `expr` as `expr` now supports both SQL and DataFrame expressions (auto-detection)
 * DLT Expectation action "ALLOW" renamed to "WARN"

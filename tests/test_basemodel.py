@@ -219,6 +219,7 @@ def test_singular():
     assert dump == {
         "continuous": None,
         "control_run_state": None,
+        "description": None,
         "email_notifications": None,
         "format": None,
         "health": None,
@@ -268,6 +269,7 @@ def test_singular():
         "parameter": [],
         "task": [],
     }
+
     settings.singular_serialization = False
 
 

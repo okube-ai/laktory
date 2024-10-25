@@ -1,5 +1,4 @@
 import warnings
-from typing import TYPE_CHECKING
 from typing import Any
 from typing import Literal
 from typing import Union
@@ -133,6 +132,7 @@ class DataQualityExpectation(BaseModel):
         msg = self.type_warning_msg
         if msg:
             import warnings
+
             warnings.warn(msg)
         return self
 

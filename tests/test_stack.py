@@ -100,6 +100,7 @@ def test_stack_model():
                     ],
                     "continuous": None,
                     "control_run_state": None,
+                    "description": None,
                     "email_notifications": None,
                     "format": None,
                     "health": None,

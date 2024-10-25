@@ -67,6 +67,7 @@ def test_job_model():
         ],
         "continuous": None,
         "control_run_state": None,
+        "description": None,
         "email_notifications": None,
         "format": None,
         "health": None,
@@ -95,8 +96,8 @@ def test_job_model():
                 "notebook_task": {
                     "notebook_path": "job/ingest_stock_prices",
                     "base_parameters": None,
-                    "source": None,
                     "warehouse_id": None,
+                    "source": None,
                 },
                 "notification_settings": None,
                 "pipeline_task": None,
