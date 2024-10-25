@@ -7,6 +7,8 @@
 * Data Quality Checks
 ### Fixed
 * File Data Sink stream writer
+* `JobTaskSQLTask` to support null value for query
+* Singularization of attribute names in `JobEmailNotifications` for terraform
 ### Updated
 * `Job` to support `description
 * `JobTaskNotebookTask` to support `warehouse_id` as compute
