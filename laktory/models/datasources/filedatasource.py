@@ -86,19 +86,26 @@ class FileDataSource(BaseDataSource):
         if self.as_stream:
             logger.info(f"Reading {self._id} as stream")
 
-            schema_location = self.schema_location
-            if schema_location is None:
-                schema_location = os.path.dirname(self.path)
-
             # Set reader
-            reader = (
-                spark.readStream.format("cloudFiles")
-                .option("cloudFiles.format", self.format)
-                .option("cloudFiles.schemaLocation", schema_location)
-                .option("cloudFiles.inferColumnTypes", True)
-                .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
-                .option("cloudFiles.allowOverwrites", True)
-            )
+            if self.format == "DELTA":
+                reader = (
+                    spark.readStream
+                    .format(self.format)
+                )
+            else:
+
+                schema_location = self.schema_location
+                if schema_location is None:
+                    schema_location = os.path.dirname(self.path)
+
+                reader = (
+                    spark.readStream.format("cloudFiles")
+                    .option("cloudFiles.format", self.format)
+                    .option("cloudFiles.schemaLocation", schema_location)
+                    .option("cloudFiles.inferColumnTypes", True)
+                    .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
+                    .option("cloudFiles.allowOverwrites", True)
+                )
 
         else:
             logger.info(f"Reading {self._id} as static")
