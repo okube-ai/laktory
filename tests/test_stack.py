@@ -1186,7 +1186,6 @@ def test_all_resources():
             },
         },
     )
-
     validator.validate()
 
 

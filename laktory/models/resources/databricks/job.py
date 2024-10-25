@@ -75,7 +75,7 @@ class JobEmailNotifications(BaseModel):
         List of emails to notify when the run fails.
     on_starts:
         List of emails to notify when the run starts.
-    on_success:
+    on_successes:
         List of emails to notify when the run completes successfully.
     """
 
@@ -83,7 +83,16 @@ class JobEmailNotifications(BaseModel):
     on_duration_warning_threshold_exceededs: list[str] = None
     on_failures: list[str] = None
     on_starts: list[str] = None
-    on_success: list[str] = None
+    on_successes: list[str] = None
+
+    @property
+    def singularizations(self) -> dict[str, str]:
+        return {
+            "on_failures": "on_failure",
+            "on_starts": "on_start",
+            "on_successes": "on_success",
+            "on_duration_warning_threshold_exceededs": "on_duration_warning_threshold_exceeded",
+        }
 
 
 class JobHealthRule(BaseModel):
