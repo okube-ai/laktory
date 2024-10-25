@@ -3,18 +3,17 @@ import shutil
 
 import pytest
 from pyspark.sql import functions as F
+from pyspark.sql import Window
 
 from laktory import models
 from laktory._testing import spark
 from laktory._testing import Paths
 from laktory._testing import df_brz_stream
+from laktory._testing import df_brz
+from laktory._testing import df_slv
 from laktory.exceptions import DataQualityCheckFailedError
 
 paths = Paths(__file__)
-
-# Data
-df_brz = spark.read.parquet(os.path.join(paths.data, "./brz_stock_prices"))
-df_slv = spark.read.parquet(os.path.join(paths.data, "./slv_stock_prices"))
 
 
 def test_execute():
@@ -251,12 +250,22 @@ def test_expectations():
 
 def test_expectations_streaming():
 
+    w = Window.orderBy("data.symbol", "data.created_at")
+    _df_brz = df_brz.withColumn("index", F.row_number().over(w)-1)
+
+    # Create Stream Source
+    source_path = os.path.join(paths.tmp, "streamsource/")
+    if os.path.exists(source_path):
+        shutil.rmtree(source_path)
+    _df_brz.filter("index=0").write.format("delta").mode("OVERWRITE").save(source_path)
+
     # Test Warn / Drop
     node = models.PipelineNode(
         name="slv_stock_prices",
         source={
-            "table_name": "brz_stock_prices",
-            "mock_df": df_brz_stream,
+            "path": source_path,
+            "format": "DELTA",
+            "as_stream": True,
         },
         drop_source_columns=True,
         transformer={
@@ -294,16 +303,24 @@ def test_expectations_streaming():
             },
         ],
     )
-    node.execute()
-    assert node.checks[0].status == "FAIL"
+    node.execute(spark=spark)
+    assert node.checks[0].status == "PASS"
     assert node.checks[0].rows_count is None
     assert node.checks[0].fails_count is None
-    assert node.checks[1].status == "FAIL"
+    assert node.checks[1].status == "PASS"
     assert node.checks[1].rows_count is None
     assert node.checks[1].fails_count is None
-    assert node.checks[2].status == "FAIL"
+    assert node.checks[2].status == "PASS"
     assert node.checks[2].rows_count is None
     assert node.checks[2].fails_count is None
+
+    # Update source
+    _df_brz.filter("index>0 AND index<40").write.format("delta").mode("append").save(source_path)
+    node.execute(spark=spark)
+
+    _df_brz.filter("index>=40").write.format("delta").mode("append").save(source_path)
+    node.execute(spark=spark)
+
     #
     # # Test Fail
     # node.expectations = [
