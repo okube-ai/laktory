@@ -107,6 +107,7 @@ class FileDataSink(BaseDataSink):
                 .start(self.path)
             )
             query.awaitTermination()
+
         else:
             logger.info(
                 f"Writing df as static {self.format} to {self.path} with mode {mode} and options {_options}"
