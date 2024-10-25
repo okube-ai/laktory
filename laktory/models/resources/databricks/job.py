@@ -410,8 +410,8 @@ class JobTaskSQLTask(BaseModel):
     dashboard: JobTaskSqlTaskDashboard = None
     file: JobTaskSqlTaskFile = None
     parameters: dict[str, Any] = None
-    query: JobTaskSqlTaskQuery
-    warehouse_id: str = None
+    query: JobTaskSqlTaskQuery = None
+    warehouse_id: str
 
 
 class JobTask(BaseModel):
