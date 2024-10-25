@@ -30,6 +30,12 @@ job = Job(
             },
         },
     ],
+    email_notifications={
+        "on_duration_warning_threshold_exceededs": ["info@okube.ai"],
+        "on_failures": ["info@okube.ai"],
+        "on_starts": ["info@okube.ai"],
+        "on_successes": ["info@okube.ai"],
+    },
 )
 
 
@@ -68,7 +74,13 @@ def test_job_model():
         "continuous": None,
         "control_run_state": None,
         "description": None,
-        "email_notifications": None,
+        "email_notifications": {
+            "no_alert_for_skipped_runs": None,
+            "on_duration_warning_threshold_exceededs": ["info@okube.ai"],
+            "on_failures": ["info@okube.ai"],
+            "on_starts": ["info@okube.ai"],
+            "on_successes": ["info@okube.ai"],
+        },
         "format": None,
         "health": None,
         "max_concurrent_runs": None,
@@ -176,6 +188,12 @@ def test_job_pulumi():
     data = job.pulumi_properties
     print(data)
     assert data == {
+        "email_notifications": {
+            "on_duration_warning_threshold_exceededs": ["info@okube.ai"],
+            "on_failures": ["info@okube.ai"],
+            "on_starts": ["info@okube.ai"],
+            "on_successes": ["info@okube.ai"],
+        },
         "name": "job-stock-prices",
         "parameters": [],
         "tags": {},

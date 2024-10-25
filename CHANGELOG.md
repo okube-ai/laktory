@@ -6,11 +6,11 @@
 * Data Quality Expectations
 * Data Quality Checks
 ### Fixed
-* n/a
+* `JobTaskSQLTask` to support null value for query
+* Singularization of attribute names in `JobEmailNotifications` for terraform
 ### Updated
 * `Job` to support `description
 * `JobTaskNotebookTask` to support `warehouse_id` as compute
-* `JobTaskSQLTask` to support null value for query
 ### Breaking changes
 * Renamed `sql_expr` to `expr` as `expr` now supports both SQL and DataFrame expressions (auto-detection)
 * DLT Expectation action "ALLOW" renamed to "WARN"
