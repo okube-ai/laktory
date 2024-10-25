@@ -99,8 +99,7 @@ class FileDataSink(BaseDataSink):
                 f"Writing df as stream {self.format} to {self.path} with mode {mode} and options {_options}"
             )
             query = (
-                df.writeStream
-                .format(self.format)
+                df.writeStream.format(self.format)
                 .outputMode(mode)
                 .trigger(availableNow=True)  # TODO: Add option for trigger?
                 .options(**_options)
@@ -113,8 +112,7 @@ class FileDataSink(BaseDataSink):
                 f"Writing df as static {self.format} to {self.path} with mode {mode} and options {_options}"
             )
             (
-                df.write
-                .mode(mode)
+                df.write.mode(mode)
                 .format(self.format)
                 .options(**_options)
                 .save(self.path)

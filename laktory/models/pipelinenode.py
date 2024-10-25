@@ -141,6 +141,7 @@ class PipelineNode(BaseModel):
     drop_source_columns: Union[bool, None] = None
     transformer: Union[SparkChain, PolarsChain, None] = None
     expectations: list[DataQualityExpectation] = []
+    expectations_checkpoint_location: str = None
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
     name: Union[str, None] = None
     primary_key: str = None
@@ -228,10 +229,26 @@ class PipelineNode(BaseModel):
 
     @model_validator(mode="after")
     def validate_expectations(self):
+
         if self.source.as_stream:
+            # Expectations type
             for e in self.expectations:
                 if not e.is_streaming_compatible:
                     raise DataQualityExpectationsNotSupported(e, self)
+
+            # Expectations Checkpoint Location
+            for e in self.expectations:
+                if self.is_orchestrator_dlt:
+                    if not e.is_dlt_compatible:
+                        raise ValueError(
+                            "Expectations Checkpoint Location must be provided for non-DLT expectations"
+                        )
+                else:
+                    if self._expectations_checkpoint_location is None:
+                        raise ValueError(
+                            "Expectations Checkpoint Location must be provided for non-DLT expectations"
+                        )
+
         return self
 
     # ----------------------------------------------------------------------- #
@@ -291,6 +308,18 @@ class PipelineNode(BaseModel):
             if e.is_dlt_compatible and e.action == "FAIL":
                 expectations[e.name] = e.expr.value
         return expectations
+
+    @property
+    def _expectations_checkpoint_location(self) -> str:
+        checkpoint_location = self.expectations_checkpoint_location
+        if checkpoint_location is None and self.sink:
+            checkpoint_location = self.sink.checkpoint_location
+            if checkpoint_location:
+                if checkpoint_location.endswith("/"):
+                    checkpoint_location = checkpoint_location[:-1] + "_expectations/"
+                else:
+                    checkpoint_location = checkpoint_location + "_expectations"
+        return checkpoint_location
 
     @property
     def apply_changes_kwargs(self) -> dict[str, str]:
@@ -607,37 +636,78 @@ class PipelineNode(BaseModel):
         """
 
         # Data Quality Checks
-        keep_filter = None
-        quarantine_filter = None
+        is_streaming = getattr(self._output_df, "isStreaming", False)
+        filters = {"keep": None, "quarantine": None}
         if not self.expectations:
             return
 
         logger.info(f"Checking Data Quality Expectations")
 
-        for e in self.expectations:
+        def _batch_check(
+            df,
+            node,
+            filters,
+        ):
+            for e in node.expectations:
 
-            is_dlt_managed = self.is_dlt_run and e.is_dlt_compatible
+                is_dlt_managed = node.is_dlt_run and e.is_dlt_compatible
 
-            # Run Check
-            e.run_check(
-                self._output_df,
-                raise_or_warn=True,
-                force_warn=is_dlt_managed,
-                node=self,
+                # Run Check
+                e.run_check(
+                    df,
+                    raise_or_warn=True,
+                    force_warn=is_dlt_managed,
+                    node=node,
+                )
+
+                # Update Keep Filter
+                if not is_dlt_managed:
+                    _filter = e.keep_filter
+                    filters["keep"] = (
+                        _filter
+                        if filters["keep"] is None
+                        else filters["keep"] & _filter
+                    )
+
+                # Update Quarantine Filter
+                _filter = e.quarantine_filter
+                filters["quarantine"] = (
+                    _filter
+                    if filters["quarantine"] is None
+                    else filters["quarantine"] & _filter
+                )
+
+        def _stream_check(batch_df, batch_id, node):
+            _batch_check(
+                batch_df,
+                node,
+                filters,
             )
-            # Update Keep Filter
-            if not is_dlt_managed:
-                _filter = e.keep_filter
-                keep_filter = _filter if keep_filter is None else keep_filter & _filter
 
-            # Update Quarantine Filter
-            _filter = e.quarantine_filter
-            quarantine_filter = _filter if quarantine_filter is None else keep_filter & _filter
+        if is_streaming:
+            query = (
+                self._output_df.writeStream.foreachBatch(
+                    lambda batch_df, batch_id: _stream_check(batch_df, batch_id, self)
+                )
+                .trigger(availableNow=True)
+                .options(
+                    checkpointLocation=self._expectations_checkpoint_location,
+                )
+                .start()
+            )
+            query.awaitTermination()
 
-        if quarantine_filter is not None:
+        else:
+            _batch_check(
+                self._output_df,
+                self,
+                filters,
+            )
+
+        if filters["quarantine"] is not None:
             logger.info(f"Building quarantine DataFrame")
-            self._quarantine_df = self._output_df.filter(quarantine_filter)
+            self._quarantine_df = self._output_df.filter(filters["quarantine"])
 
-        if keep_filter is not None:
+        if filters["keep"] is not None:
             logger.info(f"Dropping invalid rows")
-            self._output_df = self._output_df.filter(keep_filter)
+            self._output_df = self._output_df.filter(filters["keep"])

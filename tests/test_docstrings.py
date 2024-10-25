@@ -6,7 +6,10 @@ spark = (
     SparkSession.builder.appName("Docs")
     .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.2.0")
     .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-    .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+    .config(
+        "spark.sql.catalog.spark_catalog",
+        "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+    )
     .getOrCreate()
 )
 spark.conf.set("spark.sql.session.timeZone", "UTC")

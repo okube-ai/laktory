@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from pyspark.sql.dataframe import DataFrame
 
 from laktory._logger import get_logger
+
 if TYPE_CHECKING:
     from laktory.models.transformers.basechainnode import ChainNodeColumn
 

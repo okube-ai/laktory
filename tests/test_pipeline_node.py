@@ -2,16 +2,16 @@ import os
 import shutil
 
 import pytest
+from pydantic_core._pydantic_core import ValidationError
 from pyspark.sql import functions as F
 from pyspark.sql import Window
 
 from laktory import models
 from laktory._testing import spark
 from laktory._testing import Paths
-from laktory._testing import df_brz_stream
 from laktory._testing import df_brz
-from laktory._testing import df_slv
 from laktory.exceptions import DataQualityCheckFailedError
+from laktory.exceptions import DataQualityExpectationsNotSupported
 
 paths = Paths(__file__)
 
@@ -251,10 +251,11 @@ def test_expectations():
 def test_expectations_streaming():
 
     w = Window.orderBy("data.symbol", "data.created_at")
-    _df_brz = df_brz.withColumn("index", F.row_number().over(w)-1)
+    _df_brz = df_brz.withColumn("index", F.row_number().over(w) - 1)
 
     # Create Stream Source
     source_path = os.path.join(paths.tmp, "streamsource/")
+    checkpoint_path = os.path.join(paths.tmp, "streamsource/checkpoint")
     if os.path.exists(source_path):
         shutil.rmtree(source_path)
     _df_brz.filter("index=0").write.format("delta").mode("OVERWRITE").save(source_path)
@@ -302,56 +303,123 @@ def test_expectations_streaming():
                 "action": "QUARANTINE",
             },
         ],
+        expectations_checkpoint_location=checkpoint_path,
     )
     node.execute(spark=spark)
     assert node.checks[0].status == "PASS"
-    assert node.checks[0].rows_count is None
-    assert node.checks[0].fails_count is None
+    assert node.checks[0].rows_count == 1
+    assert node.checks[0].fails_count == 0
     assert node.checks[1].status == "PASS"
-    assert node.checks[1].rows_count is None
-    assert node.checks[1].fails_count is None
+    assert node.checks[1].rows_count == 1
+    assert node.checks[1].fails_count == 0
     assert node.checks[2].status == "PASS"
-    assert node.checks[2].rows_count is None
-    assert node.checks[2].fails_count is None
+    assert node.checks[2].rows_count == 1
+    assert node.checks[2].fails_count == 0
 
     # Update source
-    _df_brz.filter("index>0 AND index<40").write.format("delta").mode("append").save(source_path)
+    _df_brz.filter("index>0 AND index<40").write.format("delta").mode("append").save(
+        source_path
+    )
     node.execute(spark=spark)
+    assert node.checks[0].status == "PASS"
+    assert node.checks[0].rows_count == 39
+    assert node.checks[0].fails_count == 0
+    assert node.checks[1].status == "PASS"
+    assert node.checks[1].rows_count == 39
+    assert node.checks[1].fails_count == 0
+    assert node.checks[2].status == "PASS"
+    assert node.checks[2].rows_count == 39
+    assert node.checks[2].fails_count == 0
 
     _df_brz.filter("index>=40").write.format("delta").mode("append").save(source_path)
     node.execute(spark=spark)
+    assert node.checks[0].status == "FAIL"
+    assert node.checks[0].rows_count == 40
+    assert node.checks[0].fails_count == 20
+    assert node.checks[1].status == "FAIL"
+    assert node.checks[1].rows_count == 40
+    assert node.checks[1].fails_count == 12
+    assert node.checks[2].status == "FAIL"
+    assert node.checks[2].rows_count == 40
+    assert node.checks[2].fails_count == 8
 
-    #
-    # # Test Fail
-    # node.expectations = [
-    #     models.DataQualityExpectation(
-    #         name="not Apple",
-    #         expr="symbol != 'AAPL'",
-    #         action="FAIL",
-    #     ),
-    # ]
-    # with pytest.raises(DataQualityCheckFailedError):
-    #     node.execute()
-    # assert node.checks[0].status == "FAIL"
-    #
-    # # Test Aggregate
-    # node.expectations = [
-    #     models.DataQualityExpectation(
-    #         name="rows count",
-    #         expr="count(*) > 100",
-    #         type="AGGREGATE",
-    #         action="FAIL",
-    #     ),
-    # ]
-    # with pytest.raises(DataQualityCheckFailedError):
-    #     node.execute()
-    # assert node.checks[0].status == "FAIL"
+    # Change action
+    node.expectations[2].action = "FAIL"
+    node.execute(spark=spark)
+    _df_brz.filter("index>=40").write.format("delta").mode("append").save(source_path)
+    # TODO: Find how to capture exception
+    # with pytest.raises(Exception):
+    #     node.execute(spark=spark)
+
+
+def test_expectations_invalid():
+
+    with pytest.raises(DataQualityExpectationsNotSupported):
+        node = models.PipelineNode(
+            name="slv_stock_prices",
+            source={
+                "path": "some_path",
+                "format": "DELTA",
+                "as_stream": True,
+            },
+            expectations=[
+                {
+                    "name": "max price pass",
+                    "expr": "close < 300",
+                    "action": "WARN",
+                },
+                {
+                    "name": "max price drop",
+                    "expr": "count(*) > 20",
+                    "type": "AGGREGATE",
+                },
+            ],
+            expectations_checkpoint_location="some_path",
+        )
+
+    with pytest.raises(DataQualityExpectationsNotSupported):
+        node = models.PipelineNode(
+            name="slv_stock_prices",
+            source={
+                "path": "some_path",
+                "format": "DELTA",
+                "as_stream": True,
+            },
+            expectations=[
+                {
+                    "name": "max price pass",
+                    "expr": "close < 300",
+                    "action": "WARN",
+                    "tolerance": {"abs": 20},
+                },
+            ],
+            expectations_checkpoint_location="some_path",
+        )
+
+    with pytest.raises(ValidationError):
+        node = models.PipelineNode(
+            name="slv_stock_prices",
+            source={
+                "path": "some_path",
+                "format": "DELTA",
+                "as_stream": True,
+            },
+            expectations=[
+                {
+                    "name": "max price pass",
+                    "expr": "F.('close') < 300",
+
+                },
+            ],
+            # expectations_checkpoint_location="some_path",
+        )
 
 
 if __name__ == "__main__":
-    # test_execute()
-    # test_bronze()
-    # test_silver()
-    # test_cdc()
-    # test_expectations()
+    test_execute()
+    test_bronze()
+    test_silver()
+    test_cdc()
+    test_expectations()
     test_expectations_streaming()
+    test_expectations_invalid()

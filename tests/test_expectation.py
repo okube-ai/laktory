@@ -131,21 +131,6 @@ def test_expectations_empty():
     assert dqe.quarantine_filter is None
 
 
-def test_expectations_streaming():
-
-    # Spark Expression
-    dqe = models.DataQualityExpectation(
-        name="price less than 300", action="DROP", expr="F.col('close') < 300"
-    )
-    check = dqe.run_check(dfs)
-    assert check.rows_count is None
-    assert check.fails_count is None
-    assert check.failure_rate is None
-    assert check.status == "FAIL"
-    assert str(dqe.keep_filter) == str(F.col("close") < 300)
-    assert dqe.quarantine_filter is None
-
-
 def test_expectations_exceptions_warnings():
 
     # No Failure
@@ -180,5 +165,4 @@ if __name__ == "__main__":
     test_expectations_rel()
     test_expectations_agg()
     test_expectations_empty()
-    test_expectations_streaming()
     test_expectations_exceptions_warnings()

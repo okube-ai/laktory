@@ -141,8 +141,7 @@ class TableDataSink(BaseDataSink):
                 f"Writing {self._id} {self.format}  as stream with mode {mode} and options {_options}"
             )
             writer = (
-                df.writeStream
-                .outputMode(mode)
+                df.writeStream.outputMode(mode)
                 .format(self.format)
                 .trigger(availableNow=True)  # TODO: Add option for trigger?
                 .options(**_options)

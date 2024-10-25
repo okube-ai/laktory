@@ -88,10 +88,7 @@ class FileDataSource(BaseDataSource):
 
             # Set reader
             if self.format == "DELTA":
-                reader = (
-                    spark.readStream
-                    .format(self.format)
-                )
+                reader = spark.readStream.format(self.format)
             else:
 
                 schema_location = self.schema_location

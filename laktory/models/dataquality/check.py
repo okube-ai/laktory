@@ -13,10 +13,9 @@ class DataQualityCheck(BaseModel):
     Attributes
     ----------
     fails_count:
-        Number of rows not meeting the expectation. Not computed for streaming
-        dataframes.
+        Number of rows not meeting the expectation.
     rows_count:
-        Total number of rows in dataset. Not computed for streaming dataframes.
+        Total number of rows in dataset.
     status:
         Result of comparison, considering the expectation criteria and
         tolerances.
@@ -56,17 +55,14 @@ class DataQualityCheck(BaseModel):
     def failure_rate(self):
         """
         Ratio of the number of rows not meeting the expectation to the total number of rows in the dataframe. Returns
-        `None` when the type is `"AGGREGATE"` or when dataframe is streaming.
+        `None` when the type is `"AGGREGATE"`.
         """
         # Empty DataFrame
         if self.rows_count == 0:
             return 0
 
-        # Aggregate Expectation or Streaming DataFrame
+        # Aggregate Expectation
         if self.fails_count is None:
             return None
-
-        # if self.rows_count is None:
-        #     return None
 
         return self.fails_count / self.rows_count

@@ -47,7 +47,6 @@ class DataQualityExpectation(BaseModel):
     """
     Data Quality Expectation for a given DataFrame expressed as a row-specific
     condition (`type="ROW"`) or as an aggregated metric (`type="AGGREGATE"`).
-    Only row conditions are supported for streaming dataframes.
 
     The expression may be defined as a SQL statement or a DataFrame expression.
 
@@ -238,12 +237,13 @@ class DataQualityExpectation(BaseModel):
     def check(self):
         return self._check
 
-    def run_check(self,
-              df: AnyDataFrame,
-              raise_or_warn: bool = False,
-              force_warn: bool = False,
-              node=None,
-              ) -> DataQualityCheck:
+    def run_check(
+        self,
+        df: AnyDataFrame,
+        raise_or_warn: bool = False,
+        force_warn: bool = False,
+        node=None,
+    ) -> DataQualityCheck:
         """
         Check if expectation is met save result.
 
@@ -268,14 +268,7 @@ class DataQualityExpectation(BaseModel):
             f"Checking expectation '{self.name}' | {self.expr.value} (type: {self.type})"
         )
 
-        is_streaming = getattr(df, "isStreaming", False)
-        if is_streaming and not self.is_streaming_compatible:
-            raise DataQualityExpectationsNotSupported(self)
-
-        if is_streaming:
-            self._check = self._get_check_streaming(df)
-        else:
-            self._check = self._get_check_batch(df)
+        self._check = self._get_check_batch(df)
 
         if raise_or_warn:
             self._raise_or_warn(df, force_warn, node)
@@ -297,7 +290,7 @@ class DataQualityExpectation(BaseModel):
                 df_fail = df.filter(self.fail_filter)
             except Exception as e:
                 if "Rewrite the query to avoid window functions" in getattr(
-                        e, "desc", ""
+                    e, "desc", ""
                 ):
                     e.desc += f"\n{self.type_warning_msg}"
                 raise e
@@ -344,36 +337,6 @@ class DataQualityExpectation(BaseModel):
             logger.info(f"Checking expectation '{self.name}' | status : {status}")
             return _check
 
-    def _get_check_streaming(self, df):
-        try:
-            df.filter(self.fail_filter)
-        except Exception as e:
-            if "Rewrite the query to avoid window functions" in getattr(
-                    e, "desc", ""
-            ):
-                e.desc += f"\n{self.type_warning_msg}"
-            raise e
-
-        def _raise(batch_df, batch_id, check):
-            failed_rows = batch_df.filter(self.fail_filter)
-            fails_count = failed_rows.count()
-            if fails_count > 0:
-                check.status = "FAIL"
-
-        _check = DataQualityCheck(
-            status="PASS",
-        )
-        query = (
-            df.writeStream
-            .foreachBatch(lambda batch_df, batch_id: _raise(batch_df, batch_id, _check))
-            .trigger(availableNow=True)
-            .start()
-        )
-        query.awaitTermination()
-
-        logger.info(f"Checking expectation '{self.name}' | status : {_check.status}")
-        return _check
-
     def _raise_or_warn(self, df, force_warn, node) -> None:
 
         # Failure Message
@@ -394,4 +357,3 @@ class DataQualityExpectation(BaseModel):
         else:
             # actions: WARN, DROP, QUARANTINE
             warnings.warn(msg)
-

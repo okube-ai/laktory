@@ -300,6 +300,7 @@ def test_stack_model():
                             "drop_source_columns": None,
                             "transformer": None,
                             "expectations": [],
+                            "expectations_checkpoint_location": None,
                             "layer": None,
                             "name": "first_node",
                             "primary_key": None,
