@@ -236,18 +236,8 @@ class PipelineNode(BaseModel):
                 if not e.is_streaming_compatible:
                     raise DataQualityExpectationsNotSupported(e, self)
 
-            # Expectations Checkpoint Location
-            for e in self.expectations:
-                if self.is_orchestrator_dlt:
-                    if not e.is_dlt_compatible:
-                        raise ValueError(
-                            "Expectations Checkpoint Location must be provided for non-DLT expectations"
-                        )
-                else:
-                    if self._expectations_checkpoint_location is None:
-                        raise ValueError(
-                            "Expectations Checkpoint Location must be provided for non-DLT expectations"
-                        )
+            if self.expectations and self._expectations_checkpoint_location is None:
+                warnings.warn(f"Node '{self.name}' requires `expectations_checkpoint_location` specified unless Delta Live Tables is selected as an orchestrator and expectations are compatbile with DLT.")
 
         return self
 
@@ -653,12 +643,12 @@ class PipelineNode(BaseModel):
                 is_dlt_managed = node.is_dlt_run and e.is_dlt_compatible
 
                 # Run Check
-                e.run_check(
-                    df,
-                    raise_or_warn=True,
-                    force_warn=is_dlt_managed,
-                    node=node,
-                )
+                if not is_dlt_managed:
+                    e.run_check(
+                        df,
+                        raise_or_warn=True,
+                        node=node,
+                    )
 
                 # Update Keep Filter
                 if not is_dlt_managed:

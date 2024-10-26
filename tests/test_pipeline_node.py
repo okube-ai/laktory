@@ -396,7 +396,7 @@ def test_expectations_invalid():
             expectations_checkpoint_location="some_path",
         )
 
-    with pytest.raises(ValidationError):
+    with pytest.warns(UserWarning):
         node = models.PipelineNode(
             name="slv_stock_prices",
             source={
@@ -411,7 +411,6 @@ def test_expectations_invalid():
 
                 },
             ],
-            # expectations_checkpoint_location="some_path",
         )
 
 

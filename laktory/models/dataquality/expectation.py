@@ -241,7 +241,6 @@ class DataQualityExpectation(BaseModel):
         self,
         df: AnyDataFrame,
         raise_or_warn: bool = False,
-        force_warn: bool = False,
         node=None,
     ) -> DataQualityCheck:
         """
@@ -253,8 +252,6 @@ class DataQualityExpectation(BaseModel):
             Input DataFrame for checking the expectation.
         raise_or_warn:
             Raise exception or issue warning if expectation is not met.
-        force_warn:
-            Issue warning instead of raising exception upon failure.
         node:
             Pipeline Node
 
@@ -268,14 +265,14 @@ class DataQualityExpectation(BaseModel):
             f"Checking expectation '{self.name}' | {self.expr.value} (type: {self.type})"
         )
 
-        self._check = self._get_check_batch(df)
+        self._check = self._check_df(df)
 
         if raise_or_warn:
-            self._raise_or_warn(df, force_warn, node)
+            self.raise_or_warn(node)
 
         return self._check
 
-    def _get_check_batch(self, df):
+    def _check_df(self, df):
         rows_count = df.count()
         if rows_count == 0:
             _check = DataQualityCheck(
@@ -337,7 +334,10 @@ class DataQualityExpectation(BaseModel):
             logger.info(f"Checking expectation '{self.name}' | status : {status}")
             return _check
 
-    def _raise_or_warn(self, df, force_warn, node) -> None:
+    def raise_or_warn(self, node=None) -> None:
+        """
+        Raise exception or issue warning if expectation is not met.
+        """
 
         # Failure Message
         msg = f"Expectation '{self.name}'"
@@ -350,10 +350,7 @@ class DataQualityExpectation(BaseModel):
 
         # Raise Exception
         if self.action == "FAIL":
-            if force_warn:
-                warnings.warn(msg)
-            else:
-                raise DataQualityCheckFailedError(self, node)
+            raise DataQualityCheckFailedError(self, node)
         else:
             # actions: WARN, DROP, QUARANTINE
             warnings.warn(msg)
