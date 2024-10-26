@@ -1,27 +1,19 @@
+import warnings
 from typing import Any
 from typing import Literal
 from typing import Union
 from pydantic import model_validator
 
+from laktory._logger import get_logger
+from laktory.exceptions import DataQualityCheckFailedError
+from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
 from laktory.models.dataquality.check import DataQualityCheck
-from laktory._logger import get_logger
+from laktory.types import AnyDataFrame
+from laktory.types import AnyDataFrameColumn
 
 logger = get_logger(__name__)
-
-
-# class ExpectationThresholds(BaseModel):
-#     min: float = None
-#     max: float = None
-#     strict_min: float = None
-#     strict_max: float = None
-#     in_: list[Any] = None
-#     not_in: list[Any] = None
-#     has: Any = None
-#     has_not: Any = None
-#     is_: Any = None
-#     is_not: Any = None
 
 
 class ExpectationTolerance(BaseModel):
@@ -57,8 +49,6 @@ class DataQualityExpectation(BaseModel):
     condition (`type="ROW"`) or as an aggregated metric (`type="AGGREGATE"`).
 
     The expression may be defined as a SQL statement or a DataFrame expression.
-
-    Upon failure, an action may be selected.
 
     Attributes
     ----------
@@ -146,16 +136,70 @@ class DataQualityExpectation(BaseModel):
         return self
 
     # ----------------------------------------------------------------------- #
-    # Properties                                                              #
+    # Filters                                                                 #
     # ----------------------------------------------------------------------- #
 
     @property
-    def pass_filter(self):
+    def pass_filter(self) -> Union[AnyDataFrameColumn, None]:
+        """Expression representing all rows meeting the expectation."""
         return self.expr.eval()
 
     @property
-    def fail_filter(self):
+    def fail_filter(self) -> Union[AnyDataFrameColumn, None]:
+        """Expression representing all rows not meeting the expectation."""
         return ~self.expr.eval()
+
+    @property
+    def keep_filter(self) -> Union[AnyDataFrameColumn, None]:
+        """
+        Expression representing all rows to keep, considering both the
+        expectation and the selected action.
+        """
+        if self._check is None:
+            raise ValueError()
+        if self.type != "ROW":
+            return None
+        if self.action not in ["DROP", "QUARANTINE"]:
+            return None
+        if self._check.fails_count == 0:
+            return None
+        return self.pass_filter
+
+    @property
+    def quarantine_filter(self) -> Union[AnyDataFrameColumn, None]:
+        """
+        Expression representing all rows to quarantine, considering both the
+        expectation and the selected action.
+        """
+        if self._check is None:
+            raise ValueError()
+        if self.type != "ROW":
+            return None
+        if self.action not in ["QUARANTINE"]:
+            return None
+        if self._check.fails_count == 0:
+            return None
+        return self.fail_filter
+
+    # ----------------------------------------------------------------------- #
+    # Compatibility                                                           #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def is_dlt_compatible(self):
+        return self.expr.type == "SQL" and self.type == "ROW"
+
+    @property
+    def is_streaming_compatible(self):
+        return (
+            self.type == "ROW"
+            and self.tolerance.rel is None
+            and self.tolerance.abs == 0
+        )
+
+    # ----------------------------------------------------------------------- #
+    # Logging                                                                 #
+    # ----------------------------------------------------------------------- #
 
     @property
     def type_warning_msg(self):
@@ -179,37 +223,64 @@ class DataQualityExpectation(BaseModel):
         return msg
 
     @property
-    def is_dlt_compatible(self):
-        return self.expr.type == "SQL" and self.type == "ROW"
+    def log_msg(self) -> str:
+        msg = f"expr: {self.expr.value} | status: {self.check.status}"
+        if self.type == "ROW" and self.check.fails_count:
+            msg += f" | fails count: {self.check.fails_count} / {self.check.rows_count} ({100*self.check.failure_rate:5.2f} %)"
+        return msg
 
     # ----------------------------------------------------------------------- #
-    # Execution                                                               #
+    # Check                                                                   #
     # ----------------------------------------------------------------------- #
 
-    def check(self, df: Any) -> DataQualityCheck:
+    @property
+    def check(self):
+        return self._check
+
+    def run_check(
+        self,
+        df: AnyDataFrame,
+        raise_or_warn: bool = False,
+        node=None,
+    ) -> DataQualityCheck:
+        """
+        Check if expectation is met save result.
+
+        Parameters
+        ----------
+        df:
+            Input DataFrame for checking the expectation.
+        raise_or_warn:
+            Raise exception or issue warning if expectation is not met.
+        node:
+            Pipeline Node
+
+        Returns
+        -------
+        output: DataQualityCheck
+            Check result.
+        """
 
         logger.info(
             f"Checking expectation '{self.name}' | {self.expr.value} (type: {self.type})"
         )
 
-        is_streaming = getattr(df, "isStreaming", False)
-        if is_streaming:
+        self._check = self._check_df(df)
 
-            def process_batch(batch_df, batch_id):
-                print("batch size", batch_df.count())
+        if raise_or_warn:
+            self.raise_or_warn(node)
 
-            df = df.foreachBatch(process_batch)
+        return self._check
 
+    def _check_df(self, df):
         rows_count = df.count()
-
         if rows_count == 0:
-            self._check = DataQualityCheck(
-                expectation=self,
+            _check = DataQualityCheck(
                 fails_count=0,
                 status="PASS",
                 rows_count=0,
             )
-            return self._check
+            return _check
 
         if self.type == "ROW":
             try:
@@ -230,19 +301,19 @@ class DataQualityExpectation(BaseModel):
                 if rows_count > 0 and fails_count / rows_count > self.tolerance.rel:
                     status = "FAIL"
 
-            self._check = DataQualityCheck(
-                expectation=self,
+            _check = DataQualityCheck(
                 fails_count=fails_count,
                 status=status,
                 rows_count=rows_count,
             )
-            failure_str = f"({100*self._check.failure_rate:5.2f}%)"
+            failure_str = f"({100 * _check.failure_rate:5.2f}%)"
             if status == "PASS":
                 logger.info(f"Checking expectation '{self.name}' | status : {status}")
             else:
                 logger.info(
                     f"Checking expectation '{self.name}' | status : {status} - failed rows : {fails_count} {failure_str}"
                 )
+            return _check
 
         if self.type == "AGGREGATE":
             import pyspark.sql.functions as F
@@ -256,11 +327,30 @@ class DataQualityExpectation(BaseModel):
 
             status = "PASS" if status else "FAIL"
 
-            self._check = DataQualityCheck(
-                expectation=self,
+            _check = DataQualityCheck(
                 status=status,
                 rows_count=rows_count,
             )
             logger.info(f"Checking expectation '{self.name}' | status : {status}")
+            return _check
 
-        return self._check
+    def raise_or_warn(self, node=None) -> None:
+        """
+        Raise exception or issue warning if expectation is not met.
+        """
+
+        # Failure Message
+        msg = f"Expectation '{self.name}'"
+        if node:
+            msg += f" for node '{node.name}'"
+        msg += f" FAILED | {self.log_msg}"
+
+        if self.check.status != "FAIL":
+            return
+
+        # Raise Exception
+        if self.action == "FAIL":
+            raise DataQualityCheckFailedError(self, node)
+        else:
+            # actions: WARN, DROP, QUARANTINE
+            warnings.warn(msg)

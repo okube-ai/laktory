@@ -3,6 +3,7 @@ from typing import Literal
 from typing import Any
 from pydantic import model_validator
 
+from laktory.types import AnyDataFrameColumn
 from laktory.models.basemodel import BaseModel
 from laktory._logger import get_logger
 
@@ -81,7 +82,7 @@ class DataFrameColumnExpression(BaseModel):
 
         return expr
 
-    def eval(self, udfs=None, dataframe_type="SPARK"):
+    def eval(self, udfs=None, dataframe_type="SPARK") -> AnyDataFrameColumn:
 
         # Adding udfs to global variables
         if udfs is None:

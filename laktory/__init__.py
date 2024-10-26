@@ -19,6 +19,7 @@ set_databricks_sdk_upstream()
 # Packages                                                                    #
 # --------------------------------------------------------------------------- #
 
+import laktory.types
 import laktory._parsers
 import laktory.models
 import laktory.spark

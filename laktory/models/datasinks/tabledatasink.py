@@ -136,6 +136,7 @@ class TableDataSink(BaseDataSink):
             _options[k] = v
 
         if df.isStreaming:
+
             logger.info(
                 f"Writing {self._id} {self.format}  as stream with mode {mode} and options {_options}"
             )

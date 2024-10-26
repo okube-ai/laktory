@@ -15,10 +15,23 @@ class MissingColumnsError(Exception):
 
 
 class DataQualityCheckFailedError(Exception):
-    def __init__(self, check, node=None):
+    def __init__(self, expectation, node=None):
 
-        message = f"Expectation '{check.expectation.name}' failed"
+        message = f"Expectation '{expectation.name}' failed"
         if node:
             message += f" on node '{node.name}'"
-        message += f" | {check.log_msg}"
+        message += f" | {expectation.log_msg}"
+        super().__init__(message)
+
+
+class DataQualityExpectationsNotSupported(Exception):
+    def __init__(self, expectation, node=None):
+        message = (
+            f"Expectation '{expectation.name}' not supported for streaming DataFrame"
+        )
+        if node:
+            message += f" on node '{node.name}'"
+        message += (
+            ". Only ROW type expectations with 0 absolute tolerances are allowed."
+        )
         super().__init__(message)

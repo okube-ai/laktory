@@ -38,6 +38,7 @@ nodes:
   - name: positive_price
     expr: open > 0
     action: DROP
+  expectations_checkpoint_location: dbfs:/Workspace/.laktory/pipelines/pl-stocks-job/slv_stock_prices/expectations_checkpoint/
   source:
     node_name: brz_stock_prices
     as_stream: false

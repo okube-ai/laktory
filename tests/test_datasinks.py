@@ -2,11 +2,13 @@ import os
 import shutil
 import pytest
 from pyspark.errors import AnalysisException
+from pyspark.errors import IllegalArgumentException
 import polars as pl
 
 from laktory.models import TableDataSink
 from laktory.models import FileDataSink
 from laktory._testing import df_slv
+from laktory._testing import df_slv_stream
 from laktory._testing import df_slv_polars
 from laktory._testing import Paths
 from laktory._testing import spark
@@ -14,9 +16,9 @@ from laktory._testing import spark
 paths = Paths(__file__)
 
 
-def test_file_data_sink():
+def test_file_data_sink_parquet():
 
-    dirpath = os.path.join(paths.tmp, "df_slv_sink/")
+    dirpath = os.path.join(paths.tmp, "df_slv_sink_parquet/")
     if os.path.exists(dirpath):
         shutil.rmtree(dirpath)
 
@@ -40,6 +42,74 @@ def test_file_data_sink():
 
     # Test
     assert df.count() == 2 * df_slv.count()
+
+    # Cleanup
+    sink.purge()
+    assert not os.path.exists(sink.path)
+    assert not os.path.exists(sink._checkpoint_location)
+
+
+def test_file_data_sink_delta():
+
+    dirpath = os.path.join(paths.tmp, "df_slv_sink_delta/")
+    if os.path.exists(dirpath):
+        shutil.rmtree(dirpath)
+
+    # Write as overwrite
+    sink = FileDataSink(
+        path=dirpath,
+        format="DELTA",
+        mode="OVERWRITE",
+    )
+    sink.write(df_slv)
+
+    # Write as append
+    sink.write(df_slv, mode="append")
+
+    # Write and raise error
+    with pytest.raises(AnalysisException):
+        sink.write(df_slv, mode="error")
+
+    # Read back
+    df = sink.as_source().read(spark=spark)
+
+    # Test
+    assert df.count() == 2 * df_slv.count()
+
+    # Cleanup
+    sink.purge()
+    assert not os.path.exists(sink.path)
+    assert not os.path.exists(sink._checkpoint_location)
+
+
+def test_file_data_sink_stream():
+
+    dirpath = os.path.join(paths.tmp, "df_slv_sink_stream/")
+    if os.path.exists(dirpath):
+        shutil.rmtree(dirpath)
+
+    # Write
+    sink = FileDataSink(
+        path=dirpath,
+        format="DELTA",
+        mode="APPEND",
+    )
+    sink.write(df_slv_stream)
+
+    # Write again
+    # Should not add any new row because it's a stream and
+    # source has not changed
+    sink.write(df_slv_stream, mode="append")
+
+    # Write and raise error
+    with pytest.raises(IllegalArgumentException):
+        sink.write(df_slv_stream, mode="error")
+
+    # Read back
+    df = sink.as_source().read(spark=spark)
+
+    # Test
+    assert df.count() == df_slv.count()
 
     # Cleanup
     sink.purge()
@@ -131,7 +201,9 @@ def test_table_data_sink():
 
 
 if __name__ == "__main__":
-    test_file_data_sink()
+    test_file_data_sink_parquet()
+    test_file_data_sink_delta()
+    test_file_data_sink_stream()
     test_file_data_sink_polars_parquet()
     test_file_data_sink_polars_delta()
     test_table_data_sink()

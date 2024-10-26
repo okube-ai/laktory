@@ -12,7 +12,16 @@ from datetime import datetime
 # Setup                                                                       #
 # --------------------------------------------------------------------------- #
 
-spark = SparkSession.builder.appName("UnitTesting").getOrCreate()
+spark = (
+    SparkSession.builder.appName("UnitTesting")
+    .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.2.0")
+    .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+    .config(
+        "spark.sql.catalog.spark_catalog",
+        "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+    )
+    .getOrCreate()
+)
 spark.conf.set("spark.sql.session.timeZone", "UTC")
 
 symbols = [
@@ -118,6 +127,9 @@ df = spark.createDataFrame(
 )
 df = df.repartition(1)
 df.write.parquet(os.path.join(rootpath, "brz_stock_prices"), mode="OVERWRITE")
+df.write.mode("OVERWRITE").format("delta").save(
+    os.path.join(rootpath, "brz_stock_prices_delta")
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -133,6 +145,10 @@ df = df.withColumn("close", F.col("data.close").cast(T.DoubleType()))
 df = df.drop(*cols0)
 df = df.repartition(1)
 df.write.parquet(os.path.join(rootpath, "slv_stock_prices"), mode="OVERWRITE")
+df.write.mode("OVERWRITE").format("delta").save(
+    os.path.join(rootpath, "slv_stock_prices_delta")
+)
+
 
 # Metadata
 df_meta = spark.createDataFrame(
