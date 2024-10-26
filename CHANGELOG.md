@@ -8,16 +8,17 @@
 ### Fixed
 * File Data Sink stream writer
 * `JobTaskSQLTask` to support null value for query
-* Singularization of attribute names in `JobEmailNotifications` for terraform
+* Singularization of attribute names in `JobEmailNotifications` for terraform [[#276](https://github.com/okube-ai/laktory/issues/276)]
+* Added missing attribute `source` to `JobTaskSqlTaskFile` [[#275](https://github.com/okube-ai/laktory/issues/275)]
 ### Updated
-* `Job` to support `description
-* `JobTaskNotebookTask` to support `warehouse_id` as compute
-* `JobTaskSQLTask` to support null value for query
+* `Job` to support `description [[#277](https://github.com/okube-ai/laktory/issues/277)]
+* `JobTaskNotebookTask` to support `warehouse_id` as compute [[#265](https://github.com/okube-ai/laktory/issues/265)]
+* `JobTaskSQLTask` to support null value for query [[#274](https://github.com/okube-ai/laktory/issues/274)]
 ### Breaking changes
 * Renamed `sql_expr` to `expr` as `expr` now supports both SQL and DataFrame expressions (auto-detection)
 * DLT Expectation action "ALLOW" renamed to "WARN"
 * Added prefix `dlt_` to pipeline node `warning_expectations`, `warning_expectations` and `warning_expectations` properties
-* Refactored default path for `WorkspaceFile` and `DBFSFile` models to offer better control on the target location
+* Refactored default path for `WorkspaceFile` and `DBFSFile` models to offer better control on the target location [[#263](https://github.com/okube-ai/laktory/issues/263)]
 
 ## [0.4.14] - 2024-10-08
 ### Updated
