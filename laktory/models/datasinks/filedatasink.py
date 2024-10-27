@@ -1,5 +1,6 @@
 import os
 import shutil
+from pathlib import Path
 from typing import Literal
 from typing import Union
 from laktory.models.datasinks.basedatasink import BaseDataSink
@@ -66,7 +67,15 @@ class FileDataSink(BaseDataSink):
     def _checkpoint_location(self):
         if self.checkpoint_location:
             return self.checkpoint_location
-        return os.path.join(os.path.dirname(self.path), "checkpoint/")
+
+        path = Path(self.path)
+        if path.suffix:
+            checkpoint_path = path.with_suffix('')
+            checkpoint_path = checkpoint_path.with_name(checkpoint_path.name + "_checkpoint")
+        else:
+            checkpoint_path = path / "_checkpoint"
+
+        return str(checkpoint_path)
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
