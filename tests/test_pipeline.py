@@ -108,7 +108,7 @@ def test_execute():
 
     # Create Stream Source
     source_path = str(pl_path / "landing_stock_prices")
-    w = Window.orderBy("data.symbol", "data.created_at")
+    w = Window.orderBy("data.created_at", "data.symbol")
     _df_brz = df_brz.withColumn("index", F.row_number().over(w) - 1)
 
     # Insert a single row
@@ -123,7 +123,6 @@ def test_execute():
     # Test - Slv Meta
     # df = pl.nodes_dict["slv_stock_meta"].sink.read(spark, as_stream=False)
     df = pl.nodes_dict["slv_stock_meta"].output_df
-    df.show()
     assert df.columns == ['symbol2', 'currency', 'first_traded']
     assert df.count() == 3
 
@@ -136,6 +135,24 @@ def test_execute():
     df = pl.nodes_dict["gld_stock_prices"].output_df
     assert df.columns == ['symbol', 'max_price', 'min_price']
     assert df.count() == 1
+
+    # Push next rows
+    _df_brz.filter("index>0 AND index<40").write.format("delta").mode("APPEND").save(source_path)
+    pl.execute(spark)
+    _df_brz.filter("index<=40").write.format("delta").mode("APPEND").save(source_path)
+    pl.execute(spark)
+
+    # Test Silver Stocks
+    df = pl.nodes_dict["slv_stock_prices"].sink.read(spark, as_stream=False)
+    assert df.count() == 45
+    assert df.toPandas()["close"].max() < 330    # not high price expectation
+    assert (df.toPandas()["symbol"] == "AMZN").sum() == 0   # not amazon expectation
+
+    # Test Silver Meta
+    df = pl.nodes_dict["slv_stock_meta"].output_df
+    assert df.count() == 3
+
+
 
     #
     # Cleanup
