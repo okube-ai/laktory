@@ -102,58 +102,42 @@ def test_children():
 
 def test_execute():
 
+    # Cleanup
+    if os.path.exists(str(pl_path)):
+        shutil.rmtree(str(pl_path))
+
+    # Create Stream Source
+    source_path = str(pl_path / "landing_stock_prices")
+    w = Window.orderBy("data.symbol", "data.created_at")
+    _df_brz = df_brz.withColumn("index", F.row_number().over(w) - 1)
+
+    # Insert a single row
+    _df_brz.filter("index=0").write.format("delta").mode("OVERWRITE").save(source_path)
     pl.execute(spark)
 
-    # In memory DataFrames
-    assert pl.nodes_dict["brz_stock_prices"].output_df.columns == [
-        "name",
-        "description",
-        "producer",
-        "data",
-        "_bronze_at",
-    ]
-    assert pl.nodes_dict["brz_stock_prices"].output_df.count() == 80
-    assert pl.nodes_dict["slv_stock_meta"].output_df.columns == [
-        "symbol2",
-        "currency",
-        "first_traded",
-        "_silver_at",
-    ]
-    assert pl.nodes_dict["slv_stock_meta"].output_df.count() == 3
-    assert pl.nodes_dict["slv_stock_prices"].output_df.columns == [
-        "_bronze_at",
-        "created_at",
-        "close",
-        "currency",
-        "first_traded",
-        "_silver_at",
-        "symbol",
-    ]
-    assert pl.nodes_dict["slv_stock_prices"].output_df.count() == 80
-    assert pl.nodes_dict["gld_max_stock_prices"].output_df.columns == [
-        "symbol",
-        "max_price",
-        "min_price",
-        "_gold_at",
-    ]
-    assert pl.nodes_dict["gld_max_stock_prices"].output_df.count() == 4
+    # Test - Brz Stocks
+    df = pl.nodes_dict["brz_stock_prices"].sink.read(spark, as_stream=False)
+    assert df.columns == ['name', 'description', 'producer', 'data', 'index', '_bronze_at']
+    assert df.count() == 1
 
-    # Sinks
-    _df_slv = spark.read.format("PARQUET").load(slv_sink_path)
-    _df_gld = spark.read.format("PARQUET").load(gld_sink_path)
-    assert _df_slv.columns == [
-        "_bronze_at",
-        "created_at",
-        "close",
-        "currency",
-        "first_traded",
-        "_silver_at",
-        "symbol",
-    ]
-    assert _df_slv.count() == 80
-    assert _df_gld.columns == ["symbol", "max_price", "min_price", "_gold_at"]
-    assert _df_gld.count() == 4
+    # Test - Slv Meta
+    # df = pl.nodes_dict["slv_stock_meta"].sink.read(spark, as_stream=False)
+    df = pl.nodes_dict["slv_stock_meta"].output_df
+    df.show()
+    assert df.columns == ['symbol2', 'currency', 'first_traded']
+    assert df.count() == 3
 
+    # Test - Slv Stocks
+    df = pl.nodes_dict["slv_stock_prices"].sink.read(spark, as_stream=False)
+    assert df.columns == ['_bronze_at', 'created_at', 'close', 'currency', 'first_traded', 'symbol', '_silver_at']
+    assert df.count() == 1
+
+    # Test - Gold
+    df = pl.nodes_dict["gld_stock_prices"].output_df
+    assert df.columns == ['symbol', 'max_price', 'min_price']
+    assert df.count() == 1
+
+    #
     # Cleanup
     shutil.rmtree(brz_sink_path)
     shutil.rmtree(slv_sink_path)
