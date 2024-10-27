@@ -1,4 +1,6 @@
 import uuid
+import os
+import shutil
 from typing import Any
 from typing import Callable
 from typing import Literal
@@ -514,6 +516,16 @@ class PipelineNode(BaseModel):
 
         return sources
 
+    def purge(self, spark=None):
+        if self.sink:
+            self.sink.purge(spark=spark)
+        if self._expectations_checkpoint_location:
+            if os.path.exists(self._checkpoint_location):
+                logger.info(
+                    f"Deleting expectations checkpoint at {self._checkpoint_location}",
+                )
+                shutil.rmtree(self._checkpoint_location)
+
     def execute(
         self,
         apply_transformer: bool = True,
@@ -559,8 +571,7 @@ class PipelineNode(BaseModel):
 
         # Refresh
         if full_refresh:
-            if self.sink:
-                self.sink.purge(spark=spark)
+            self.purge(spark)
 
         # Read Source
         self._output_df = self.source.read(spark)
