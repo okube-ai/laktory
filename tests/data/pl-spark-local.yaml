@@ -37,14 +37,14 @@ nodes:
           data.close as close
         FROM
           {df}
-#    - func_name: laktory.smart_join
-#      func_kwargs:
-#        'on':
-#          - symbol
-#        other:
-#          node_name: slv_stock_meta
-#          renames:
-#            symbol2: symbol
+    - func_name: laktory.smart_join
+      func_kwargs:
+        'on':
+          - symbol
+        other:
+          node_name: slv_stock_meta
+          renames:
+            symbol2: symbol
 
 - name: gld_stock_prices
   source:
@@ -62,6 +62,8 @@ nodes:
           expr: F.max('close')
         - name: min_price
           expr: F.min('close')
+        - name: mean_price
+          expr: F.mean('close')
         groupby_columns:
         - symbol
 
