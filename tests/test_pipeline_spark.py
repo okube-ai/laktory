@@ -121,7 +121,7 @@ def test_execute():
     pl.execute(spark)
 
     # Test - Brz Stocks
-    df = pl.nodes_dict["brz_stock_prices"].sink.read(spark, as_stream=False)
+    df = pl.nodes_dict["brz_stock_prices"].sink.read(spark)
     assert df.columns == ['name', 'description', 'producer', 'data', 'index', '_bronze_at']
     assert df.count() == 1
 
@@ -132,8 +132,8 @@ def test_execute():
     assert df.count() == 3
 
     # Test - Slv Stocks
-    df = pl.nodes_dict["slv_stock_prices"].sink.read(spark, as_stream=False)
-    # assert df.columns == ['_bronze_at', 'created_at', 'close', 'currency', 'first_traded', 'symbol', '_silver_at']
+    df = pl.nodes_dict["slv_stock_prices"].sink.read(spark)
+    assert df.columns == ['_bronze_at', 'created_at', 'close', 'currency', 'first_traded', 'symbol', '_silver_at']
     assert df.count() == 1
 
     # Test - Gold
