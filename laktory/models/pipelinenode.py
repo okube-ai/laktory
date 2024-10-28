@@ -305,7 +305,7 @@ class PipelineNode(BaseModel):
     def _expectations_checkpoint_location(self) -> str:
         checkpoint_location = self.expectations_checkpoint_location
         if checkpoint_location is None and self.sink:
-            checkpoint_location = self.sink.checkpoint_location
+            checkpoint_location = self.sink._checkpoint_location
             if checkpoint_location:
                 if checkpoint_location.endswith("/"):
                     checkpoint_location = checkpoint_location[:-1] + "_expectations/"
@@ -520,11 +520,11 @@ class PipelineNode(BaseModel):
         if self.sink:
             self.sink.purge(spark=spark)
         if self._expectations_checkpoint_location:
-            if os.path.exists(self._checkpoint_location):
+            if os.path.exists(self._expectations_checkpoint_location):
                 logger.info(
-                    f"Deleting expectations checkpoint at {self._checkpoint_location}",
+                    f"Deleting expectations checkpoint at {self._expectations_checkpoint_location}",
                 )
-                shutil.rmtree(self._checkpoint_location)
+                shutil.rmtree(self._expectations_checkpoint_location)
 
     def execute(
         self,
@@ -664,19 +664,19 @@ class PipelineNode(BaseModel):
                 # Update Keep Filter
                 if not is_dlt_managed:
                     _filter = e.keep_filter
-                    filters["keep"] = (
-                        _filter
-                        if filters["keep"] is None
-                        else filters["keep"] & _filter
-                    )
+                    if _filter is not None:
+                        if filters["keep"] is None:
+                            filters["keep"] = _filter
+                        else:
+                            filters["keep"] = filters["keep"] & _filter
 
                 # Update Quarantine Filter
                 _filter = e.quarantine_filter
-                filters["quarantine"] = (
-                    _filter
-                    if filters["quarantine"] is None
-                    else filters["quarantine"] & _filter
-                )
+                if _filter is not None:
+                    if filters["quarantine"] is None:
+                        filters["quarantine"] = _filter
+                    else:
+                        filters["quarantine"] = filters["quarantine"] & _filter
 
         def _stream_check(batch_df, batch_id, node):
             _batch_check(
@@ -686,6 +686,8 @@ class PipelineNode(BaseModel):
             )
 
         if is_streaming:
+            if self._expectations_checkpoint_location is None:
+                raise ValueError(f"Expectations Checkpoint not specified for node '{self.name}'")
             query = (
                 self._output_df.writeStream.foreachBatch(
                     lambda batch_df, batch_id: _stream_check(batch_df, batch_id, self)
