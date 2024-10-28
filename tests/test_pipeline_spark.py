@@ -21,7 +21,7 @@ testdir_path = Path(__file__).parent
 
 
 def get_pl():
-    pl_path = testdir_path / "tmp" / "test_pipeline" / str(uuid.uuid4())
+    pl_path = testdir_path / "tmp" / "test_pipeline_spark" / str(uuid.uuid4())
 
     with open(os.path.join(paths.data, "pl-spark-local.yaml"), "r") as fp:
         data = fp.read()

@@ -6,6 +6,7 @@ from typing import Union
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
 from laktory.polars import PolarsDataFrame
+from laktory.polars import PolarsLazyFrame
 from laktory.models.datasources.filedatasource import FileDataSource
 from laktory._logger import get_logger
 
@@ -147,6 +148,9 @@ class FileDataSink(BaseDataSink):
                 raise ValueError(
                     "'mode' configuration required with Polars 'DELTA' format"
                 )
+
+        if isinstance(df, PolarsLazyFrame):
+            df = df.collect()
 
         if self.format == "CSV":
             df.write_csv(self.path, **self.write_options)

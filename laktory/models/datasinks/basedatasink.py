@@ -66,7 +66,7 @@ class BaseDataSink(BaseModel):
         elif is_polars_dataframe(df):
             self._write_polars(df, mode=mode)
         else:
-            raise ValueError()
+            raise ValueError(f"DataFrame type '{type(df)}' not supported")
 
     def _write_spark(self, df: SparkDataFrame, mode=mode) -> None:
         raise NotImplementedError("Not implemented for Spark dataframe")

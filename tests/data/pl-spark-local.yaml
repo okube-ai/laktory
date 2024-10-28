@@ -27,6 +27,7 @@ nodes:
     - name: low price
       expr: close < 330
       action: QUARANTINE
+  drop_source_columns: False
   transformer:
     nodes:
     - sql_expr: |
