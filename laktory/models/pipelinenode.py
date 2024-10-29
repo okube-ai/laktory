@@ -239,7 +239,9 @@ class PipelineNode(BaseModel):
                     raise DataQualityExpectationsNotSupported(e, self)
 
             if self.expectations and self._expectations_checkpoint_location is None:
-                warnings.warn(f"Node '{self.name}' requires `expectations_checkpoint_location` specified unless Delta Live Tables is selected as an orchestrator and expectations are compatbile with DLT.")
+                warnings.warn(
+                    f"Node '{self.name}' requires `expectations_checkpoint_location` specified unless Delta Live Tables is selected as an orchestrator and expectations are compatbile with DLT."
+                )
 
         return self
 
@@ -687,7 +689,9 @@ class PipelineNode(BaseModel):
 
         if is_streaming:
             if self._expectations_checkpoint_location is None:
-                raise ValueError(f"Expectations Checkpoint not specified for node '{self.name}'")
+                raise ValueError(
+                    f"Expectations Checkpoint not specified for node '{self.name}'"
+                )
             query = (
                 self._output_df.writeStream.foreachBatch(
                     lambda batch_df, batch_id: _stream_check(batch_df, batch_id, self)

@@ -6,7 +6,7 @@ from laktory.models.basemodel import BaseModel
 from laktory.spark import is_spark_dataframe
 from laktory.spark import SparkDataFrame
 from laktory.polars import is_polars_dataframe
-from laktory.polars import PolarsDataFrame
+from laktory.polars import PolarsLazyFrame
 from laktory.types import AnyDataFrame
 
 
@@ -71,7 +71,7 @@ class BaseDataSink(BaseModel):
     def _write_spark(self, df: SparkDataFrame, mode=mode) -> None:
         raise NotImplementedError("Not implemented for Spark dataframe")
 
-    def _write_polars(self, df: PolarsDataFrame, mode=mode) -> None:
+    def _write_polars(self, df: PolarsLazyFrame, mode=mode) -> None:
         raise NotImplementedError("Not implemented for Polars dataframe")
 
     # ----------------------------------------------------------------------- #

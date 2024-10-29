@@ -21,8 +21,8 @@ OPEN_FIGURES = False
 testdir_path = Path(__file__).parent
 
 
-def get_pl():
-    pl_path = testdir_path / "tmp" / "test_pipeline" / str(uuid.uuid4())
+def get_pl(clean_path=False):
+    pl_path = testdir_path / "tmp" / "test_pipeline_polars" / str(uuid.uuid4())
 
     with open(os.path.join(paths.data, "pl-polars-local.yaml"), "r") as fp:
         data = fp.read()
@@ -30,97 +30,90 @@ def get_pl():
         data = data.replace("{pl_dir}", str(pl_path))
         pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
 
+    if clean_path and os.path.exists(str(pl_path)):
+        shutil.rmtree(str(pl_path))
+
     return pl, pl_path
 
 
-gld_target = pd.DataFrame({
-    "symbol": ["AAPL", "GOOGL", "MSFT"],
-    "max_price": [190.0,  138.0, 330.0],
-    "min_price": [170.0,  129.0, 312.0],
-    "mean_price": [177.0,  134.0, 320.0],
-})
+gld_target = pd.DataFrame(
+    {
+        "symbol": ["AAPL", "GOOGL", "MSFT"],
+        "max_price": [190.0, 138.0, 330.0],
+        "min_price": [170.0, 129.0, 312.0],
+        "mean_price": [177.0, 134.0, 320.0],
+    }
+)
 
 
-def test_execute():
+def test_df_type():
 
-    pl = get_pl()
+    pl, _ = get_pl()
 
     # Check dataframe type assignment
-    assert _pl.dataframe_type == "POLARS"
-    for node in _pl.nodes:
+    assert pl.dataframe_type == "POLARS"
+    for node in pl.nodes:
         assert node.dataframe_type == "POLARS"
         assert node.source.dataframe_type == "POLARS"
         for s in node.get_sources():
             assert s.dataframe_type == "POLARS"
 
-    _pl.execute()
-    #
-    # # In memory DataFrames
-    # assert _pl.nodes_dict["brz_stock_prices"].output_df.columns == [
-    #     "name",
-    #     "description",
-    #     "producer",
-    #     "data",
-    #     "_bronze_at",
-    # ]
-    # assert _pl.nodes_dict["brz_stock_prices"].output_df.height == 80
-    # assert _pl.nodes_dict["slv_stock_meta"].output_df.columns == [
-    #     "symbol2",
-    #     "currency",
-    #     "first_traded",
-    #     "_silver_at",
-    # ]
-    # assert _pl.nodes_dict["slv_stock_meta"].output_df.height == 3
-    # assert _pl.nodes_dict["slv_stock_prices"].output_df.columns == [
-    #     "_bronze_at",
-    #     "created_at",
-    #     "symbol",
-    #     "close",
-    #     "currency",
-    #     "first_traded",
-    #     "_silver_at",
-    # ]
-    # assert _pl.nodes_dict["slv_stock_prices"].output_df.height == 80
-    # assert _pl.nodes_dict["gld_max_stock_prices"].output_df.columns == [
-    #     "symbol",
-    #     "max_price",
-    #     "min_price",
-    #     "_gold_at",
-    # ]
-    # assert _pl.nodes_dict["gld_max_stock_prices"].output_df.height == 4
-    #
-    # # Sinks
-    # _df_slv = polars.read_parquet(slv_sink_path)
-    # _df_gld = polars.read_parquet(gld_sink_path)
-    # assert _df_slv.columns == [
-    #     "_bronze_at",
-    #     "created_at",
-    #     "symbol",
-    #     "close",
-    #     "currency",
-    #     "first_traded",
-    #     "_silver_at",
-    # ]
-    # assert _df_slv.height == 80
-    # assert _df_gld.columns == ["symbol", "max_price", "min_price", "_gold_at"]
-    # assert _df_gld.height == 4
-    #
-    # # Cleanup
-    # os.remove(brz_sink_path)
-    # os.remove(slv_sink_path)
-    # os.remove(gld_sink_path)
-    # os.remove(meta_sink_path)
+
+def test_execute():
+
+    pl, pl_path = get_pl(clean_path=True)
+
+    # Run
+    pl.execute()
+
+    # Test - Brz Stocks
+    df = pl.nodes_dict["brz_stock_prices"].sink.read().collect()
+    assert df.columns == ["name", "description", "producer", "data", "_bronze_at"]
+    assert df.height == 80
+
+    # Test - Slv Meta
+    df = pl.nodes_dict["slv_stock_meta"].output_df.collect()
+    assert df.columns == ["symbol2", "currency", "first_traded"]
+    assert df.height == 3
+
+    # Test - Slv Stocks
+    df = pl.nodes_dict["slv_stock_prices"].sink.read().collect()
+    assert df.columns == [
+        "_bronze_at",
+        "created_at",
+        "symbol",
+        "close",
+        "currency",
+        "first_traded",
+        "_silver_at",
+    ]
+    assert df.height == 52
+
+    # Test - Gold
+    df = (
+        pl.nodes_dict["gld_stock_prices"]
+        .output_df.collect()
+        .to_pandas()
+        .round(0)
+        .sort_values("symbol")
+        .reset_index(drop=True)
+    )
+    assert len(df) == 3
+    assert df.equals(gld_target)
+
+    # Cleanup
+    shutil.rmtree(pl_path)
 
 
-def test_execute_polars_sql():
+def test_sql_join():
 
-    _pl = pl_polars2.model_copy()
+    # Get Pipeline
+    pl, pl_path = get_pl(clean_path=True)
 
-    # Select join node
-    node = _pl.nodes_dict["slv_stock_prices"]
-    t3 = node.transformer.nodes[3]
-
-    t3.sql_expr = """
+    # Update join
+    node = pl.nodes_dict["slv_stock_prices"]
+    t4 = node.transformer.nodes[-1]
+    t4.sql_expr = """
     SELECT
         *
     FROM
@@ -131,8 +124,11 @@ def test_execute_polars_sql():
     ;
     """
 
-    _pl.execute(spark=spark, write_sinks=False)
-    df = node.output_df
+    # Execute
+    pl.execute(spark)
+
+    # Test
+    df = node.sink.read().collect()
     assert df.columns == [
         "_bronze_at",
         "created_at",
@@ -144,7 +140,11 @@ def test_execute_polars_sql():
         "_silver_at",
     ]
 
+    # Cleanup
+    shutil.rmtree(pl_path)
+
 
 if __name__ == "__main__":
+    test_df_type()
     test_execute()
-    # test_execute_polars_sql()
+    test_sql_join()

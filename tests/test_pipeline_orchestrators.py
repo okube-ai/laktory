@@ -1,13 +1,133 @@
 import os
-
+import io
+from pathlib import Path
 from laktory import models
 from laktory._testing import Paths
 
 paths = Paths(__file__)
+testdir_path = Path(__file__).parent
 
 
-with open(os.path.join(paths.data, "pl-spark-dlt.yaml"), "r") as fp:
-    pl_dlt = models.Pipeline.model_validate_yaml(fp)  # also used in test_stack
+def get_pl(extra=None):
+    with open(os.path.join(paths.data, "pl-spark-local.yaml"), "r") as fp:
+        data = fp.read()
+        data = data.replace("{data_dir}", "data")
+        data = data.replace("{pl_dir}", "")
+        if extra is not None:
+            data += extra
+        pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
+    return pl
+
+
+# Job
+pl_job = get_pl(
+    """
+name: pl-spark-job
+orchestrator: DATABRICKS_JOB
+databricks_job:
+  name: job-pl-stock-prices
+  laktory_version: 0.3.0
+  clusters:
+    - name: node-cluster
+      spark_version: 14.0.x-scala2.12
+      node_type_id: Standard_DS3_v2
+"""
+)
+
+# DLT
+pl_dlt = get_pl(
+    """
+name: pl-spark-dlt
+orchestrator: DLT
+dlt:
+  catalog: dev
+  target: sandbox
+  access_controls:
+  - group_name: account users
+    permission_level: CAN_VIEW
+  options:
+    provider: ${resources.databricks2}
+options:
+  provider: ${resources.databricks1}
+"""
+)
+
+
+def test_pipeline_job():
+
+    # Test job
+    job = pl_job.databricks_job
+    data = job.model_dump(exclude_unset=True)
+    print(data)
+    assert data == {
+        "clusters": [
+            {
+                "name": "node-cluster",
+                "node_type_id": "Standard_DS3_v2",
+                "spark_version": "14.0.x-scala2.12",
+            }
+        ],
+        "name": "job-pl-stock-prices",
+        "parameters": [
+            {"default": "pl-spark-job", "name": "pipeline_name"},
+            {"default": "false", "name": "full_refresh"},
+        ],
+        "tasks": [
+            {
+                "depends_ons": [],
+                "job_cluster_key": "node-cluster",
+                "notebook_task": {
+                    "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
+                    "base_parameters": {"node_name": "brz_stock_meta"},
+                },
+                "task_key": "node-brz_stock_meta",
+            },
+            {
+                "depends_ons": [],
+                "job_cluster_key": "node-cluster",
+                "notebook_task": {
+                    "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
+                    "base_parameters": {"node_name": "brz_stock_prices"},
+                },
+                "task_key": "node-brz_stock_prices",
+            },
+            {
+                "depends_ons": [{"task_key": "node-slv_stock_prices"}],
+                "job_cluster_key": "node-cluster",
+                "notebook_task": {
+                    "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
+                    "base_parameters": {"node_name": "gld_stock_prices"},
+                },
+                "task_key": "node-gld_stock_prices",
+            },
+            {
+                "depends_ons": [{"task_key": "node-brz_stock_meta"}],
+                "job_cluster_key": "node-cluster",
+                "notebook_task": {
+                    "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
+                    "base_parameters": {"node_name": "slv_stock_meta"},
+                },
+                "task_key": "node-slv_stock_meta",
+            },
+            {
+                "depends_ons": [
+                    {"task_key": "node-brz_stock_prices"},
+                    {"task_key": "node-slv_stock_meta"},
+                ],
+                "job_cluster_key": "node-cluster",
+                "notebook_task": {
+                    "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
+                    "base_parameters": {"node_name": "slv_stock_prices"},
+                },
+                "task_key": "node-slv_stock_prices",
+            },
+        ],
+        "laktory_version": "0.3.0",
+    }
+
+    # Test resources
+    resources = pl_job.core_resources
+    assert len(resources) == 3
 
 
 def test_pipeline_dlt():
@@ -30,39 +150,41 @@ def test_pipeline_dlt():
         "sample": None,
         "selects": None,
         "watermark": None,
-        "catalog_name": "dev",
-        "table_name": "brz_stock_prices",
-        "schema_name": "sandbox",
-        "warehouse": "DATABRICKS",
+        "format": "DELTA",
+        "header": True,
+        "multiline": False,
+        "path": "/brz_stock_prices",
+        "read_options": {},
+        "schema_location": None,
     }
 
     data = pl_dlt.dlt.model_dump()
     print(data)
     assert data == {
-            "access_controls": [
-                {
-                    "group_name": "account users",
-                    "permission_level": "CAN_VIEW",
-                    "service_principal_name": None,
-                    "user_name": None,
-                }
-            ],
-            "allow_duplicate_names": None,
-            "catalog": "dev",
-            "channel": "PREVIEW",
-            "clusters": [],
-            "configuration": {},
-            "continuous": None,
-            "development": None,
-            "edition": None,
-            "libraries": None,
-            "name": "pl-spark-dlt",
-            "notifications": [],
-            "photon": None,
-            "serverless": None,
-            "storage": None,
-            "target": "sandbox",
-        }
+        "access_controls": [
+            {
+                "group_name": "account users",
+                "permission_level": "CAN_VIEW",
+                "service_principal_name": None,
+                "user_name": None,
+            }
+        ],
+        "allow_duplicate_names": None,
+        "catalog": "dev",
+        "channel": "PREVIEW",
+        "clusters": [],
+        "configuration": {},
+        "continuous": None,
+        "development": None,
+        "edition": None,
+        "libraries": None,
+        "name": "pl-spark-dlt",
+        "notifications": [],
+        "photon": None,
+        "serverless": None,
+        "storage": None,
+        "target": "sandbox",
+    }
 
     # Test resources
     resources = pl_dlt.core_resources
@@ -99,68 +221,6 @@ def test_pipeline_dlt():
     ]
 
 
-def test_pipeline_job():
-
-    with open(os.path.join(paths.data, "pl-spark-job.yaml"), "r") as fp:
-        pl = models.Pipeline.model_validate_yaml(fp)
-
-    # Test job
-    job = pl.databricks_job
-    data = job.model_dump(exclude_unset=True)
-    print(data)
-    assert data == {
-        "clusters": [
-            {
-                "name": "node-cluster",
-                "node_type_id": "Standard_DS3_v2",
-                "spark_version": "14.0.x-scala2.12",
-            }
-        ],
-        "name": "job-pl-stock-prices",
-        "parameters": [
-            {"default": "pl-spark-job", "name": "pipeline_name"},
-            {"default": "false", "name": "full_refresh"},
-        ],
-        "tasks": [
-            {
-                "depends_ons": [],
-                "job_cluster_key": "node-cluster",
-                "notebook_task": {
-                    "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
-                    "base_parameters": {"node_name": "brz_stock_prices"},
-                },
-                "task_key": "node-brz_stock_prices",
-            },
-            {
-                "depends_ons": [],
-                "job_cluster_key": "node-cluster",
-                "notebook_task": {
-                    "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
-                    "base_parameters": {"node_name": "slv_stock_meta"},
-                },
-                "task_key": "node-slv_stock_meta",
-            },
-            {
-                "depends_ons": [
-                    {"task_key": "node-brz_stock_prices"},
-                    {"task_key": "node-slv_stock_meta"},
-                ],
-                "job_cluster_key": "node-cluster",
-                "notebook_task": {
-                    "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
-                    "base_parameters": {"node_name": "slv_stock_prices"},
-                },
-                "task_key": "node-slv_stock_prices",
-            },
-        ],
-        "laktory_version": "0.3.0",
-    }
-
-    # Test resources
-    resources = pl.core_resources
-    assert len(resources) == 3
-
-
 if __name__ == "__main__":
-    test_pipeline_dlt()
     test_pipeline_job()
+    test_pipeline_dlt()

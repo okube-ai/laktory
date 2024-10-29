@@ -6,7 +6,7 @@ from pydantic import model_validator
 
 from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory.spark import SparkDataFrame
-from laktory.polars import PolarsDataFrame
+from laktory.polars import PolarsLazyFrame
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
@@ -127,7 +127,7 @@ class FileDataSource(BaseDataSource):
 
         return df
 
-    def _read_polars(self) -> PolarsDataFrame:
+    def _read_polars(self) -> PolarsLazyFrame:
 
         import polars as pl
 
@@ -139,24 +139,27 @@ class FileDataSource(BaseDataSource):
         logger.info(f"Reading {self._id} as static")
 
         if self.format.lower() == "csv":
-            df = pl.read_csv(self.path, **self.read_options)
+            df = pl.scan_csv(self.path, **self.read_options)
 
         elif self.format.lower() == "delta":
-            df = pl.read_delta(self.path, **self.read_options)
+            df = pl.scan_delta(self.path, **self.read_options)
 
         elif self.format.lower() == "excel":
             df = pl.read_excel(self.path, **self.read_options)
 
         elif self.format.lower() == "json":
             if self.multiline:
-                df = pl.read_ndjson(self.path, **self.read_options)
+                df = pl.scan_ndjson(self.path, **self.read_options)
             else:
                 df = pl.read_json(self.path, **self.read_options)
 
         elif self.format.lower() == "parquet":
-            df = pl.read_parquet(self.path, **self.read_options)
+            df = pl.scan_parquet(self.path, **self.read_options)
 
         else:
             raise ValueError(f"Format '{self.format}' is not supported.")
+
+        if isinstance(df, pl.DataFrame):
+            df = df.lazy()
 
         return df

@@ -74,15 +74,15 @@ def test_file_data_source_polars():
             "low2": "low",
             "high2": "high",
         },
-        sample={
-            "fraction": 0.5,
-        },
+        # sample={
+        #     "fraction": 0.5,
+        # },
     )
-    df = source.read()
+    df = source.read().collect()
 
     assert df["open"].min() > 300
     assert df.columns == ["created_at", "symbol", "open", "close", "high", "low"]
-    assert df.height == 10
+    assert df.height == 20
 
 
 def test_memory_data_source(df0=df0):

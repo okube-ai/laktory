@@ -71,8 +71,10 @@ class FileDataSink(BaseDataSink):
 
         path = Path(self.path)
         if path.suffix:
-            checkpoint_path = path.with_suffix('')
-            checkpoint_path = checkpoint_path.with_name(checkpoint_path.name + "_checkpoint")
+            checkpoint_path = path.with_suffix("")
+            checkpoint_path = checkpoint_path.with_name(
+                checkpoint_path.name + "_checkpoint"
+            )
         else:
             checkpoint_path = path / "_checkpoint"
 
@@ -212,7 +214,11 @@ class FileDataSink(BaseDataSink):
             path=self.path,
             format=self.format,
         )
+
         if as_stream:
             source.as_stream = as_stream
+
+        if self._parent:
+            source.dataframe_type = self._parent.dataframe_type
 
         return source

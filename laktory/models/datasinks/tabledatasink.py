@@ -208,7 +208,11 @@ class TableDataSink(BaseDataSink):
             schema_name=self.schema_name,
             warehouse=self.warehouse,
         )
+
         if as_stream:
             source.as_stream = as_stream
+
+        if self._parent:
+            source.dataframe_type = self._parent.dataframe_type
 
         return source

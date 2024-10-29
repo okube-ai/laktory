@@ -20,7 +20,7 @@ OPEN_FIGURES = False
 testdir_path = Path(__file__).parent
 
 
-def get_pl():
+def get_pl(clean_path=False):
     pl_path = testdir_path / "tmp" / "test_pipeline_spark" / str(uuid.uuid4())
 
     with open(os.path.join(paths.data, "pl-spark-local.yaml"), "r") as fp:
@@ -28,6 +28,9 @@ def get_pl():
         data = data.replace("{data_dir}", str(testdir_path / "data"))
         data = data.replace("{pl_dir}", str(pl_path))
         pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
+
+    if clean_path and os.path.exists(str(pl_path)):
+        shutil.rmtree(str(pl_path))
 
     return pl, pl_path
 
@@ -40,12 +43,14 @@ def get_source(pl_path):
     return source, source_path
 
 
-gld_target = pd.DataFrame({
-    "symbol": ["AAPL", "GOOGL", "MSFT"],
-    "max_price": [190.0,  138.0, 330.0],
-    "min_price": [170.0,  129.0, 312.0],
-    "mean_price": [177.0,  134.0, 320.0],
-})
+gld_target = pd.DataFrame(
+    {
+        "symbol": ["AAPL", "GOOGL", "MSFT"],
+        "max_price": [190.0, 138.0, 330.0],
+        "min_price": [170.0, 129.0, 312.0],
+        "mean_price": [177.0, 134.0, 320.0],
+    }
+)
 
 
 def test_dag():
@@ -75,7 +80,10 @@ def test_dag():
         "gld_stock_prices",
     ]
     assert (
-        pl.nodes_dict["slv_stock_prices"].transformer.nodes[-1].parsed_func_kwargs["other"].value.node
+        pl.nodes_dict["slv_stock_prices"]
+        .transformer.nodes[-1]
+        .parsed_func_kwargs["other"]
+        .value.node
         == pl.nodes_dict["slv_stock_meta"]
     )
 
@@ -107,11 +115,7 @@ def test_children():
 def test_execute():
 
     # Get Pipeline
-    pl, pl_path = get_pl()
-
-    # Cleanup
-    if os.path.exists(str(pl_path)):
-        shutil.rmtree(str(pl_path))
+    pl, pl_path = get_pl(clean_path=True)
 
     # Create Stream Source
     source, source_path = get_source(pl_path)
@@ -122,18 +126,32 @@ def test_execute():
 
     # Test - Brz Stocks
     df = pl.nodes_dict["brz_stock_prices"].sink.read(spark)
-    assert df.columns == ['name', 'description', 'producer', 'data', 'index', '_bronze_at']
+    assert df.columns == [
+        "name",
+        "description",
+        "producer",
+        "data",
+        "index",
+        "_bronze_at",
+    ]
     assert df.count() == 1
 
     # Test - Slv Meta
-    # df = pl.nodes_dict["slv_stock_meta"].sink.read(spark, as_stream=False)
     df = pl.nodes_dict["slv_stock_meta"].output_df
-    assert df.columns == ['symbol2', 'currency', 'first_traded']
+    assert df.columns == ["symbol2", "currency", "first_traded"]
     assert df.count() == 3
 
     # Test - Slv Stocks
     df = pl.nodes_dict["slv_stock_prices"].sink.read(spark)
-    assert df.columns == ['_bronze_at', 'created_at', 'close', 'currency', 'first_traded', 'symbol', '_silver_at']
+    assert df.columns == [
+        "_bronze_at",
+        "created_at",
+        "close",
+        "currency",
+        "first_traded",
+        "symbol",
+        "_silver_at",
+    ]
     assert df.count() == 1
 
     # Test - Gold
@@ -142,7 +160,9 @@ def test_execute():
     assert df.count() == 1
 
     # Push next rows
-    source.filter("index>0 AND index<40").write.format("delta").mode("APPEND").save(source_path)
+    source.filter("index>0 AND index<40").write.format("delta").mode("APPEND").save(
+        source_path
+    )
     pl.execute(spark)
     source.filter("index>=40").write.format("delta").mode("APPEND").save(source_path)
     pl.execute(spark)
@@ -175,11 +195,7 @@ def test_execute():
 def test_execute_node():
 
     # Get Pipeline
-    pl, pl_path = get_pl()
-
-    # Cleanup
-    if os.path.exists(str(pl_path)):
-        shutil.rmtree(str(pl_path))
+    pl, pl_path = get_pl(clean_path=True)
 
     # Create Stream Source
     source, source_path = get_source(pl_path)
@@ -210,7 +226,7 @@ def test_execute_node():
 def test_sql_join():
 
     # Get Pipeline
-    pl, pl_path = get_pl()
+    pl, pl_path = get_pl(clean_path=True)
 
     # Update join
     node = pl.nodes_dict["slv_stock_prices"]
@@ -226,10 +242,6 @@ def test_sql_join():
     ;
     """
 
-    # Cleanup
-    if os.path.exists(str(pl_path)):
-        shutil.rmtree(str(pl_path))
-
     # Create Stream Source
     source, source_path = get_source(pl_path)
 
@@ -239,7 +251,16 @@ def test_sql_join():
 
     # Test
     df = node.sink.read(spark)
-    assert df.columns == ['_bronze_at', 'created_at', 'symbol', 'close', 'symbol2', 'currency', 'first_traded', '_silver_at']
+    assert df.columns == [
+        "_bronze_at",
+        "created_at",
+        "symbol",
+        "close",
+        "symbol2",
+        "currency",
+        "first_traded",
+        "_silver_at",
+    ]
 
 
 if __name__ == "__main__":

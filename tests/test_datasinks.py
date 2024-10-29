@@ -141,7 +141,7 @@ def test_file_data_sink_polars_parquet():
     # Read back
     source = sink.as_source()
     source.dataframe_type = "POLARS"
-    df = source.read(filepath)
+    df = source.read(filepath).collect()
 
     # Test
     assert df.height == df_slv.count()
@@ -174,7 +174,7 @@ def test_file_data_sink_polars_delta():
     # Read back
     source = sink.as_source()
     source.dataframe_type = "POLARS"
-    df = source.read()
+    df = source.read().collect()
 
     # Test
     assert df.height == df_slv.count() * 2

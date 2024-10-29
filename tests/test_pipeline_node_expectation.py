@@ -180,7 +180,9 @@ def test_multi():
 
 def test_streaming_multi():
 
-    node_path = testdir_path / "tmp" / "test_pipeline_node_expectations" / str(uuid.uuid4())
+    node_path = (
+        testdir_path / "tmp" / "test_pipeline_node_expectations" / str(uuid.uuid4())
+    )
     checkpoint_path = node_path / "_checkpoint_expectations"
 
     # Cleanup
@@ -327,7 +329,6 @@ def test_expectations_invalid():
                 {
                     "name": "max price pass",
                     "expr": "F.('close') < 300",
-
                 },
             ],
         )

@@ -290,6 +290,7 @@ class DataQualityExpectation(BaseModel):
             rows_count = df.count()
         elif self._dftype == "POLARS":
             import polars as pl
+
             rows_count = df.select(pl.len()).collect().item()
 
         if rows_count == 0:
@@ -314,6 +315,7 @@ class DataQualityExpectation(BaseModel):
                 fails_count = df_fail.count()
             elif self._dftype == "POLARS":
                 import polars as pl
+
                 fails_count = df_fail.select(pl.len()).collect().item()
 
             status = "PASS"

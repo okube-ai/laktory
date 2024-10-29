@@ -86,11 +86,11 @@ class PipelineNodeDataSource(BaseDataSource):
                 logger.info(f"Reading pipeline node {self._id} with DLT as static")
                 df = dlt_read(self.node.name)
 
-        elif stream_to_batch or not self.node.output_df:
+        elif stream_to_batch or self.node.output_df is None:
             logger.info(f"Reading pipeline node {self._id} from sink")
             df = self.node.sink.read(spark=spark, as_stream=self.as_stream)
 
-        elif self.node.output_df:
+        elif self.node.output_df is not None:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
             df = self.node.output_df
 

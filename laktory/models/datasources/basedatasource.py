@@ -322,7 +322,10 @@ class BaseDataSource(BaseModel):
 
         # Sample
         if self.sample:
-            df = df.sample(fraction=self.sample.fraction, seed=self.sample.seed)
+            raise NotImplementedError(
+                "Broadcasting not supported with POLARS lazyframe"
+            )
+            # df = df.sample(fraction=self.sample.fraction, seed=self.sample.seed)
 
         # Limit
         if self.limit:
