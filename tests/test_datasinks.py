@@ -42,6 +42,7 @@ def test_file_data_sink_parquet():
 
     # Test
     assert df.count() == 2 * df_slv.count()
+    assert sink._checkpoint_location.endswith("tmp/df_slv_sink_parquet/_checkpoint")
 
     # Cleanup
     sink.purge()
@@ -75,6 +76,7 @@ def test_file_data_sink_delta():
 
     # Test
     assert df.count() == 2 * df_slv.count()
+    assert sink._checkpoint_location.endswith("tmp/df_slv_sink_delta/_checkpoint")
 
     # Cleanup
     sink.purge()
@@ -110,6 +112,7 @@ def test_file_data_sink_stream():
 
     # Test
     assert df.count() == df_slv.count()
+    assert sink._checkpoint_location.endswith("tmp/df_slv_sink_stream/_checkpoint")
 
     # Cleanup
     sink.purge()
@@ -138,11 +141,12 @@ def test_file_data_sink_polars_parquet():
     # Read back
     source = sink.as_source()
     source.dataframe_type = "POLARS"
-    df = source.read(filepath)
+    df = source.read(filepath).collect()
 
     # Test
     assert df.height == df_slv.count()
     assert df.columns == df_slv.columns
+    assert sink._checkpoint_location.endswith("tests/tmp/df_slv_polars_sink_checkpoint")
 
     # Cleanup
     sink.purge()
@@ -170,11 +174,12 @@ def test_file_data_sink_polars_delta():
     # Read back
     source = sink.as_source()
     source.dataframe_type = "POLARS"
-    df = source.read()
+    df = source.read().collect()
 
     # Test
     assert df.height == df_slv.count() * 2
     assert df.columns == df_slv.columns
+    assert sink._checkpoint_location.endswith("tests/tmp/df_slv_polars_sink_checkpoint")
 
     # Cleanup
     sink.purge()

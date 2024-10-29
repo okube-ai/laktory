@@ -3,43 +3,41 @@ nodes:
 - name: brz_stock_prices
   layer: BRONZE
   source:
-    format: PARQUET
-    path: ./data/brz_stock_prices/
+    format: DELTA
+    path: {pl_dir}/landing_stock_prices/
+    as_stream: True
   sink:
-    format: PARQUET
-    mode: OVERWRITE
-    path: ../tmp/pl_brz_sink
+    format: DELTA
+    mode: APPEND
+    path: {pl_dir}/brz_stock_prices
 
 - name: slv_stock_prices
   layer: SILVER
   source:
     node_name: brz_stock_prices
+    as_stream: True
   sink:
-    format: PARQUET
-    mode: OVERWRITE
-    path: ../tmp/pl_slv_sink
+    format: DELTA
+    mode: APPEND
+    path: {pl_dir}/slv_stock_prices
+  expectations:
+    - name: not amazon
+      expr: symbol != 'AMZN'
+      action: DROP
+    - name: low price
+      expr: close < 330
+      action: QUARANTINE
+  drop_source_columns: False
   transformer:
     nodes:
-    - with_column:
-        name: created_at
-        type: timestamp
-        expr: F.expr('data._created_at')
-
-    - with_column:
-        name: symbol
-        expr: data.symbol
-
-    - with_column:
-        name: close
-        type: double
-        expr: data.close
-
-    - func_name: drop
-      func_args:
-      - data
-      - producer
-      - name
-      - description
+    - sql_expr: |
+        SELECT
+          _bronze_at,
+          CAST(data.created_at AS TIMESTAMP) AS created_at,
+          data.symbol as symbol,
+          data.close as close
+        FROM
+          {df}
     - func_name: laktory.smart_join
       func_kwargs:
         'on':
@@ -49,14 +47,13 @@ nodes:
           renames:
             symbol2: symbol
 
-- name: gld_max_stock_prices
-  layer: GOLD
+- name: gld_stock_prices
   source:
     node_name: slv_stock_prices
   sink:
-    format: PARQUET
+    format: DELTA
     mode: OVERWRITE
-    path: /tests/tmp/pl_gld_sink
+    path: {pl_dir}/gld_stock_prices
   transformer:
     nodes:
     - func_name: laktory.groupby_and_agg
@@ -66,16 +63,25 @@ nodes:
           expr: F.max('close')
         - name: min_price
           expr: F.min('close')
+        - name: mean_price
+          expr: F.mean('close')
         groupby_columns:
         - symbol
 
-- name: slv_stock_meta
-  layer: SILVER
+- name: brz_stock_meta
   source:
     format: PARQUET
-    path: ./data/slv_stock_meta
+    path: {data_dir}/slv_stock_meta
   sink:
     format: PARQUET
     mode: OVERWRITE
-    path: /tests/tmp/pl_slv_meta_sink
+    path: {pl_dir}/brz_stock_meta
+
+- name: slv_stock_meta
+  source:
+    node_name: brz_stock_meta
+  sink:
+    format: PARQUET
+    mode: OVERWRITE
+    path: {pl_dir}/slv_stock_meta
 

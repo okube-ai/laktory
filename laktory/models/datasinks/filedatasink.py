@@ -1,10 +1,12 @@
 import os
 import shutil
+from pathlib import Path
 from typing import Literal
 from typing import Union
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
 from laktory.polars import PolarsDataFrame
+from laktory.polars import PolarsLazyFrame
 from laktory.models.datasources.filedatasource import FileDataSource
 from laktory._logger import get_logger
 
@@ -66,7 +68,17 @@ class FileDataSink(BaseDataSink):
     def _checkpoint_location(self):
         if self.checkpoint_location:
             return self.checkpoint_location
-        return os.path.join(os.path.dirname(self.path), "checkpoint/")
+
+        path = Path(self.path)
+        if path.suffix:
+            checkpoint_path = path.with_suffix("")
+            checkpoint_path = checkpoint_path.with_name(
+                checkpoint_path.name + "_checkpoint"
+            )
+        else:
+            checkpoint_path = path / "_checkpoint"
+
+        return str(checkpoint_path)
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
@@ -139,6 +151,9 @@ class FileDataSink(BaseDataSink):
                     "'mode' configuration required with Polars 'DELTA' format"
                 )
 
+        if isinstance(df, PolarsLazyFrame):
+            df = df.collect()
+
         if self.format == "CSV":
             df.write_csv(self.path, **self.write_options)
         elif self.format == "DELTA":
@@ -199,7 +214,11 @@ class FileDataSink(BaseDataSink):
             path=self.path,
             format=self.format,
         )
+
         if as_stream:
             source.as_stream = as_stream
+
+        if self._parent:
+            source.dataframe_type = self._parent.dataframe_type
 
         return source

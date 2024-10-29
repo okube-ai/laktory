@@ -68,52 +68,31 @@ class PipelineNodeDataSource(BaseDataSource):
 
     def _read_spark(self, spark) -> SparkDataFrame:
 
-        # Reading from DLT
+        stream_to_batch = not self.as_stream and self.node.source.as_stream
+        is_dlt = False
         if self.is_orchestrator_dlt:
-
             from laktory.dlt import read as dlt_read
             from laktory.dlt import read_stream as dlt_read_stream
             from laktory.dlt import is_debug
 
-            if is_debug():
-                df = None
+            is_dlt = not is_debug()
 
-                stream_to_batch = (
-                    not self.as_stream
-                    and self.node.output_df
-                    and self.node.output_df.isStreaming
-                )
-
-                if self.node.output_df and not stream_to_batch:
-                    logger.info(
-                        f"Reading pipeline node {self._id} from output DataFrame (DLT debug)"
-                    )
-                    df = self.node.output_df
-                elif self.node.sink:
-                    logger.info(
-                        f"Reading pipeline node {self._id} from sink (DLT debug)"
-                    )
-                    df = self.node.sink.read(spark=spark, as_stream=self.as_stream)
-                else:
-                    logger.info(f"Can't read pipeline node {self._id} (DLT DEBUG)")
-
+        # Reading from DLT
+        if is_dlt:
+            if self.as_stream:
+                logger.info(f"Reading pipeline node {self._id} with DLT as stream")
+                df = dlt_read_stream(self.node.name)
             else:
-                if self.as_stream:
-                    logger.info(f"Reading pipeline node {self._id} with DLT as stream")
-                    df = dlt_read_stream(self.node.name)
-                else:
-                    logger.info(f"Reading pipeline node {self._id} with DLT as static")
-                    df = dlt_read(self.node.name)
+                logger.info(f"Reading pipeline node {self._id} with DLT as static")
+                df = dlt_read(self.node.name)
 
-        # Read from node output DataFrame (if available)
+        elif stream_to_batch or self.node.output_df is None:
+            logger.info(f"Reading pipeline node {self._id} from sink")
+            df = self.node.sink.read(spark=spark, as_stream=self.as_stream)
+
         elif self.node.output_df is not None:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
             df = self.node.output_df
-
-        # Read from node sink
-        elif self.node.sink:
-            logger.info(f"Reading pipeline node {self._id} from sink")
-            df = self.node.sink.read(spark=spark, as_stream=self.as_stream)
 
         else:
             raise ValueError(f"Pipeline Node {self._id} can't read DataFrame")

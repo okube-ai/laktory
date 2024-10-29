@@ -1,6 +1,3 @@
-import os
-import shutil
-
 import pytest
 from pyspark.sql import functions as F
 
@@ -8,7 +5,6 @@ from laktory import models
 from laktory.exceptions import DataQualityCheckFailedError
 from laktory._testing import Paths
 from laktory._testing import df_slv as df
-from laktory._testing import df_slv_stream as dfs
 
 paths = Paths(__file__)
 
