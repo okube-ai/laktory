@@ -1,7 +1,7 @@
 from typing import Any
 from typing import Literal
 from typing import Union
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic import Field
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
@@ -862,3 +862,8 @@ class Job(BaseModel, PulumiResource, TerraformResource):
             d[k] = _clusters
 
         return d
+
+    @field_validator('tasks')
+    @classmethod
+    def sort_tasks(cls, v: list[JobTask]) -> list[JobTask]:
+        return sorted(v, key=lambda task: task.task_key)
