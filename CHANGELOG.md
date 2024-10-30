@@ -11,6 +11,7 @@
 * Singularized attribute names in `JobEmailNotifications` for Terraform [[#276](https://github.com/okube-ai/laktory/issues/276)]
 * Added missing `source` attribute in `JobTaskSqlTaskFile` [[#275](https://github.com/okube-ai/laktory/issues/275)]
 ### Updated
+* `Job` to automatically alphabetically sort `tasks` [[#286](https://github.com/okube-ai/laktory/issues/286)]
 * `Job` now supports `description` [[#277](https://github.com/okube-ai/laktory/issues/277)]
 * `JobTaskNotebookTask` now allows `warehouse_id` for compute [[#265](https://github.com/okube-ai/laktory/issues/265)]
 * `JobTaskSQLTask` updated to support `null` for queries [[#274](https://github.com/okube-ai/laktory/issues/274)]
