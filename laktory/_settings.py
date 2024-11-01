@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     # Databricks
     workspace_env: str = Field("dev", alias="LAKTORY_WORKSPACE_ENV")
     workspace_laktory_root: str = Field(
-        "/.laktory/",
+        "/Workspace/.laktory/",   # /Workspace suffix is required to prevent triggering changes with IaC
         alias="LAKTORY_WORKSPACE_LAKTORY_ROOT",
     )
     workspace_landing_root: str = Field("", alias="LAKTORY_WORKSPACE_LANDING_ROOT")

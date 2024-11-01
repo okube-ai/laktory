@@ -93,7 +93,7 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     def set_path(self) -> Any:
         if self.path is None:
             _path = Path(self.rootpath) / self.dirpath / self.filename
-            self.path = str(_path)
+            self.path = _path.as_posix()
         return self
 
     # ----------------------------------------------------------------------- #
