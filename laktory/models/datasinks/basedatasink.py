@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Union
 from typing import Any
 from typing import Literal
@@ -16,6 +17,11 @@ class BaseDataSink(BaseModel):
 
     Attributes
     ----------
+    from_quarantine:
+        Only includes quarantined results based on node expectations.
+    primary:
+        A primary sink will be used to read data for downstream nodes when
+        moving from stream to batch. Don't apply for quarantine sinks.
     mode:
         Write mode.
         - overwrite: Overwrite existing data
@@ -27,9 +33,12 @@ class BaseDataSink(BaseModel):
         Other options passed to `spark.write.options`
     """
 
+    checkpoint_location: str = None
+    from_quarantine: bool = False
     mode: Union[
         Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE", "UPDATE"], None
     ] = None
+    primary: bool = True
     write_options: dict[str, str] = {}
     _parent: "PipelineNode" = None
 
@@ -40,6 +49,19 @@ class BaseDataSink(BaseModel):
     @property
     def _id(self):
         return str(self)
+
+    @property
+    def _checkpoint_location(self) -> Path:
+
+        if self.checkpoint_location:
+            return Path(self.checkpoint_location)
+
+        if self._parent and self._parent._root_path:
+            for i, s in enumerate(self._parent.all_sinks):
+                if s == self:
+                    return self._parent._root_path / f"sink-{i:03d}" / "checkpoint"
+
+        return None
 
     # ----------------------------------------------------------------------- #
     # Writers                                                                 #

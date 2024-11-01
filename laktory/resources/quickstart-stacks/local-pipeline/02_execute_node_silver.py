@@ -20,7 +20,7 @@ node_slv = pipeline.nodes_dict["slv_stock_prices"]
 
 # Execute bronze node without writing the sink. This operation populates
 # the output_dataframe property.
-node_brz.execute(write_sink=False)
+node_brz.execute(write_sinks=False)
 print(f"Output Schema: {node_brz.output_df.schema}")
 print("------------")
 

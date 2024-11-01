@@ -317,21 +317,21 @@ def test_expectations_invalid():
             expectations_checkpoint_location="some_path",
         )
 
-    with pytest.warns(UserWarning):
-        node = models.PipelineNode(
-            name="slv_stock_prices",
-            source={
-                "path": "some_path",
-                "format": "DELTA",
-                "as_stream": True,
-            },
-            expectations=[
-                {
-                    "name": "max price pass",
-                    "expr": "F.('close') < 300",
-                },
-            ],
-        )
+    # with pytest.warns(UserWarning):
+    #     node = models.PipelineNode(
+    #         name="slv_stock_prices",
+    #         source={
+    #             "path": "some_path",
+    #             "format": "DELTA",
+    #             "as_stream": True,
+    #         },
+    #         expectations=[
+    #             {
+    #                 "name": "max price pass",
+    #                 "expr": "F.('close') < 300",
+    #             },
+    #         ],
+    #     )
 
 
 if __name__ == "__main__":

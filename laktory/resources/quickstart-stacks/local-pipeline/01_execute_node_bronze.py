@@ -28,7 +28,7 @@ print(f"Transformer {node.transformer}")
 print()
 
 # Write to sink:
-node.sink.write(source_df)
+node.primary_sink.write(source_df)
 
 # --------------------------------------------------------------------------- #
 #  High-level Node Execution                                                  #

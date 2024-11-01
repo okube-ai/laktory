@@ -755,11 +755,12 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     timeout_seconds: int = None
     trigger: JobTrigger = None
     webhook_notifications: JobWebhookNotifications = None
-    @field_validator('tasks')
+
+    @field_validator("tasks")
     @classmethod
     def sort_tasks(cls, v: list[JobTask]) -> list[JobTask]:
         return sorted(v, key=lambda task: task.task_key)
-    
+
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #

@@ -304,7 +304,8 @@ def test_stack_model():
                             "layer": None,
                             "name": "first_node",
                             "primary_key": None,
-                            "sink": None,
+                            "sinks": None,
+                            "root_path": None,
                             "source": {
                                 "as_stream": False,
                                 "broadcast": False,
@@ -329,6 +330,7 @@ def test_stack_model():
                     ],
                     "orchestrator": "DLT",
                     "udfs": [],
+                    "root_path": None,
                     "workspacefile": None,
                 }
             },
