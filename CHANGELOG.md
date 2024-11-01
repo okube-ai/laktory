@@ -6,6 +6,7 @@
 * Data Quality Expectations
 * Data Quality Checks
 * Support for multiple sinks for a given node
+* Root path for laktory, pipelines and pipeline nodes
 ### Fixed
 * Stream writer `FileDataSink` 
 * Support for `null` value in `JobTaskSQLTask` queries
