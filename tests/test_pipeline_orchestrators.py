@@ -133,7 +133,7 @@ def test_pipeline_job():
 def test_pipeline_dlt():
 
     # Test Sink as Source
-    sink_source = pl_dlt.nodes[1].source.node.sink.as_source(
+    sink_source = pl_dlt.nodes[1].source.node.primary_sink.as_source(
         as_stream=pl_dlt.nodes[1].source.as_stream
     )
     data = sink_source.model_dump()

@@ -67,7 +67,7 @@ def test_execute():
     pl.execute()
 
     # Test - Brz Stocks
-    df = pl.nodes_dict["brz_stock_prices"].sink.read().collect()
+    df = pl.nodes_dict["brz_stock_prices"].primary_sink.read().collect()
     assert df.columns == ["name", "description", "producer", "data", "_bronze_at"]
     assert df.height == 80
 
@@ -77,7 +77,7 @@ def test_execute():
     assert df.height == 3
 
     # Test - Slv Stocks
-    df = pl.nodes_dict["slv_stock_prices"].sink.read().collect()
+    df = pl.nodes_dict["slv_stock_prices"].primary_sink.read().collect()
     assert df.columns == [
         "_bronze_at",
         "created_at",
@@ -128,7 +128,7 @@ def test_sql_join():
     pl.execute(spark)
 
     # Test
-    df = node.sink.read().collect()
+    df = node.primary_sink.read().collect()
     assert df.columns == [
         "_bronze_at",
         "created_at",

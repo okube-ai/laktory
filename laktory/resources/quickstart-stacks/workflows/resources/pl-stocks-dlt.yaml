@@ -34,8 +34,8 @@ nodes:
     path: dbfs:/Workspace/.laktory/data/stock_prices/
     as_stream: true
     format: JSON
-  sink:
-    table_name: brz_stock_prices
+  sinks:
+  - table_name: brz_stock_prices
 
 # Silver Table
 - name: slv_stock_prices
@@ -47,8 +47,8 @@ nodes:
     node_name: brz_stock_prices
     as_stream: true
   drop_source_columns: True
-  sink:
-    table_name: slv_stock_prices
+  sinks:
+  - table_name: slv_stock_prices
 
   # The transformer is a chain of SQL statements and / or serialized spark
   # functions. In this case, we use `with_columns` helper function to easily

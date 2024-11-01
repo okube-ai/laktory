@@ -66,19 +66,20 @@ class FileDataSink(BaseDataSink):
 
     @property
     def _checkpoint_location(self):
-        if self.checkpoint_location:
-            return self.checkpoint_location
+        checkpoint_location = super()._checkpoint_location
+        if checkpoint_location:
+            return checkpoint_location
 
         path = Path(self.path)
         if path.suffix:
-            checkpoint_path = path.with_suffix("")
-            checkpoint_path = checkpoint_path.with_name(
-                checkpoint_path.name + "_checkpoint"
+            checkpoint_location = path.with_suffix("")
+            checkpoint_location = checkpoint_location.with_name(
+                checkpoint_location.name + "_checkpoint"
             )
         else:
-            checkpoint_path = path / "_checkpoint"
+            checkpoint_location = path / "_checkpoint"
 
-        return str(checkpoint_path)
+        return checkpoint_location
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #

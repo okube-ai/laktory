@@ -219,9 +219,11 @@ def apply_changes(*args, node=None, **kwargs):
                     "scd_type": 2,
                 },
             },
-            sink={
-                "table_name": "brz_stock_prices",
-            },
+            sinks=[
+                {
+                    "table_name": "brz_stock_prices",
+                }
+            ],
         )
     )
     ```

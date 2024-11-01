@@ -5,12 +5,15 @@
 * DataFrameColumnExpression model
 * Data Quality Expectations
 * Data Quality Checks
+* Support for multiple sinks for a given node
+* Root path for laktory, pipelines and pipeline nodes
 ### Fixed
 * Stream writer `FileDataSink` 
 * Support for `null` value in `JobTaskSQLTask` queries
 * Singularized attribute names in `JobEmailNotifications` for Terraform [[#276](https://github.com/okube-ai/laktory/issues/276)]
 * Added missing `source` attribute in `JobTaskSqlTaskFile` [[#275](https://github.com/okube-ai/laktory/issues/275)]
 ### Updated
+* `Job` to automatically alphabetically sort `tasks` [[#286](https://github.com/okube-ai/laktory/issues/286)]
 * `Job` now supports `description` [[#277](https://github.com/okube-ai/laktory/issues/277)]
 * `JobTaskNotebookTask` now allows `warehouse_id` for compute [[#265](https://github.com/okube-ai/laktory/issues/265)]
 * `JobTaskSQLTask` updated to support `null` for queries [[#274](https://github.com/okube-ai/laktory/issues/274)]
@@ -20,6 +23,7 @@
 * Prefixed `dlt_` to `warning_expectations` properties in pipeline nodes
 * Refactored default paths for `WorkspaceFile` and `DBFSFile` models for improved target location control [[#263](https://github.com/okube-ai/laktory/issues/263)]
 * Refactored Polars reader to read as LazyFrame
+* Renamed `PipelineNode` attribute `sink` to `sinks` 
 
 ## [0.4.14] - 2024-10-08
 ### Updated

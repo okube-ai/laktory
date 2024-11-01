@@ -6,8 +6,8 @@ nodes:
     format: DELTA
     path: {pl_dir}/landing_stock_prices/
     as_stream: True
-  sink:
-    format: DELTA
+  sinks:
+  - format: DELTA
     mode: APPEND
     path: {pl_dir}/brz_stock_prices
 
@@ -16,10 +16,14 @@ nodes:
   source:
     node_name: brz_stock_prices
     as_stream: True
-  sink:
+  sinks:
+  - path: {pl_dir}/slv_stock_prices
     format: DELTA
     mode: APPEND
-    path: {pl_dir}/slv_stock_prices
+  - path: {pl_dir}/slv_stock_prices_quarantine
+    format: DELTA
+    mode: APPEND
+    from_quarantine: True
   expectations:
     - name: not amazon
       expr: symbol != 'AMZN'
@@ -50,8 +54,8 @@ nodes:
 - name: gld_stock_prices
   source:
     node_name: slv_stock_prices
-  sink:
-    format: DELTA
+  sinks:
+  - format: DELTA
     mode: OVERWRITE
     path: {pl_dir}/gld_stock_prices
   transformer:
@@ -72,16 +76,15 @@ nodes:
   source:
     format: PARQUET
     path: {data_dir}/slv_stock_meta
-  sink:
-    format: PARQUET
+  sinks:
+  - format: PARQUET
     mode: OVERWRITE
     path: {pl_dir}/brz_stock_meta
 
 - name: slv_stock_meta
   source:
     node_name: brz_stock_meta
-  sink:
-    format: PARQUET
+  sinks:
+  - format: PARQUET
     mode: OVERWRITE
     path: {pl_dir}/slv_stock_meta
-

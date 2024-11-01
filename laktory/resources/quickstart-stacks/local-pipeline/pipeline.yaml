@@ -10,16 +10,16 @@ nodes:
   source:
     path: ./data/stock_prices.json
     multiline: True
-  sink:
-    path: ./data/brz_stock_prices.parquet
+  sinks:
+  - path: ./data/brz_stock_prices.parquet
     format: PARQUET
 
 - name: slv_stock_prices
   source:
     node_name: brz_stock_prices
     as_stream: false
-  sink:
-    path: ./data/slv_stock_prices.parquet
+  sinks:
+  - path: ./data/slv_stock_prices.parquet
     format: PARQUET
   transformer:
     nodes:
@@ -52,8 +52,8 @@ nodes:
   source:
     path: ./data/stock_metadata.json
     multiline: True
-  sink:
-      path: ./data/brz_stock_metadata.parquet
+  sinks:
+  -   path: ./data/brz_stock_metadata.parquet
       format: PARQUET
 
 - name: slv_stock_metadata
@@ -83,8 +83,8 @@ nodes:
   source:
     node_name: slv_stock_prices
     as_stream: false
-  sink:
-      path: ./data/slv_stocks.parquet
+  sinks:
+  -   path: ./data/slv_stocks.parquet
       format: PARQUET
   transformer:
     nodes:
@@ -106,8 +106,8 @@ nodes:
   source:
     node_name: slv_stocks
     as_stream: false
-  sink:
-      path: ./data/gld_stocks_prices_by_1d.parquet
+  sinks:
+  -   path: ./data/gld_stocks_prices_by_1d.parquet
       format: PARQUET
   transformer:
     nodes:

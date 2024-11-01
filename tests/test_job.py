@@ -1,5 +1,6 @@
 from laktory.models.resources.databricks import Job
 
+
 job = Job(
     name="job-stock-prices",
     clusters=[
@@ -11,13 +12,6 @@ job = Job(
     ],
     tasks=[
         {
-            "job_cluster_key": "main",
-            "notebook_task": {
-                "notebook_path": "job/ingest_stock_prices",
-            },
-            "task_key": "ingestion",
-        },
-        {
             "depends_ons": [{"task_key": "ingestion"}],
             "pipeline_task": {"pipeline_id": "${resources.pl-spark-dlt.id}"},
             "task_key": "pipeline",
@@ -28,6 +22,13 @@ job = Job(
                 "query": {"query_id": "456"},
                 "warehouse_id": "123",
             },
+        },
+        {
+            "job_cluster_key": "main",
+            "notebook_task": {
+                "notebook_path": "job/ingest_stock_prices",
+            },
+            "task_key": "ingestion",
         },
     ],
     email_notifications={

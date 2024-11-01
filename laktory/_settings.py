@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     )
     workspace_landing_root: str = Field("", alias="LAKTORY_WORKSPACE_LANDING_ROOT")
 
+    # Paths
+    laktory_root: str = Field("/laktory/", alias="LAKTORY_ROOT")
+
     # Logging
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")
 
