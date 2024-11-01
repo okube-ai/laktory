@@ -5,15 +5,18 @@ from typing import Any
 from typing import Callable
 from typing import Literal
 from typing import Union
+from pathlib import Path
 import warnings
 from pydantic import model_validator
 
+from laktory._settings import settings
 from laktory.constants import DEFAULT_DFTYPE
 from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import BaseDataSource
 from laktory.models.datasinks import DataSinksUnion
+from laktory.models.datasinks import FileDataSink
 from laktory.models.dataquality.expectation import DataQualityExpectation
 from laktory.models.transformers.basechain import BaseChain
 from laktory.models.transformers.sparkchain import SparkChain
@@ -62,10 +65,13 @@ class PipelineNode(BaseModel):
     primary_key:
         Name of the column storing a unique identifier for each row. It is used
         by the node to drop duplicated rows.
+    root_path:
+        Location of the pipeline node root used to store logs, metrics and
+        checkpoints.
     source:
         Definition of the data source
-    sink:
-        Definition of the data sink
+    sinks:
+        Definition of the data sinks
     transformer:
         Spark or Polars chain defining the data transformations applied to the
         data source.
@@ -88,8 +94,8 @@ class PipelineNode(BaseModel):
         source:
             format: CSV
             path: ./raw/brz_stock_prices.csv
-        sink:
-            format: PARQUET
+        sinks:
+        -   format: PARQUET
             mode: OVERWRITE
             path: ./dataframes/brz_stock_prices
     '''
@@ -110,8 +116,8 @@ class PipelineNode(BaseModel):
         layer: SILVER
         source:
           node_name: brz_stock_prices
-        sink:
-          catalog_name: hive_metastore
+        sinks:
+        - catalog_name: hive_metastore
           schema_name: default
           table_name: slv_stock_prices
         transformer:
@@ -147,9 +153,12 @@ class PipelineNode(BaseModel):
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
     name: Union[str, None] = None
     primary_key: str = None
-    sink: Union[DataSinksUnion, None] = None
+    # sinks: list[DataSinksUnion] = None
+    sinks: list[DataSinksUnion] = None
+    root_path: str = None
     source: DataSourcesUnion
     timestamp_key: str = None
+    _stage_df: Any = None
     _output_df: Any = None
     _quarantine_df: Any = None
     _parent: "Pipeline" = None
@@ -220,13 +229,26 @@ class PipelineNode(BaseModel):
             s._parent = self
 
         # Assign node to sinks
-        if self.sink:
-            self.sink._parent = self
+        if self.sinks:
+            for s in self.sinks:
+                s._parent = self
 
         # Assign node to transformers
         if self.transformer:
             self.transformer._parent = self
 
+        return self
+
+    @model_validator(mode="after")
+    def validate_sinks(self):
+        if self.has_output_sinks:
+            count = 0
+            for s in self.output_sinks:
+                count += 1
+            if count != 1:
+                raise ValueError(
+                    f"Node '{self.name}' must have exactly one primary sink."
+                )
         return self
 
     @model_validator(mode="after")
@@ -246,7 +268,7 @@ class PipelineNode(BaseModel):
         return self
 
     # ----------------------------------------------------------------------- #
-    # Properties                                                              #
+    # DataFrame                                                               #
     # ----------------------------------------------------------------------- #
 
     @property
@@ -254,6 +276,10 @@ class PipelineNode(BaseModel):
         if "dataframe_type" in self.model_fields_set:
             return self.dataframe_type
         return None
+
+    # ----------------------------------------------------------------------- #
+    # Orchestrator                                                            #
+    # ----------------------------------------------------------------------- #
 
     @property
     def is_orchestrator_dlt(self) -> bool:
@@ -271,6 +297,103 @@ class PipelineNode(BaseModel):
 
         return not is_debug()
 
+    # ----------------------------------------------------------------------- #
+    # Paths                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def _root_path(self) -> Path:
+        if self.root_path:
+            return Path(self.root_path)
+
+        if self._parent and self._parent._root_path:
+            return self._parent._root_path / self.name
+
+        return Path(settings.laktory_root) / self.name
+
+    # ----------------------------------------------------------------------- #
+    # Outputs and Sinks                                                       #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def stage_df(self) -> AnyDataFrame:
+        """
+        Dataframe resulting from reading source and applying transformer, before data quality checks are applied.
+        """
+        return self._stage_df
+
+    @property
+    def output_df(self) -> AnyDataFrame:
+        """
+        Dataframe resulting from reading source, applying transformer and dropping rows not meeting data quality
+        expectations.
+        """
+        return self._output_df
+
+    @property
+    def quarantine_df(self) -> AnyDataFrame:
+        """
+        DataFrame storing `stage_df` rows not meeting data quality expectations.
+        """
+        return self._quarantine_df
+
+    @property
+    def output_sinks(self) -> list[DataSinksUnion]:
+        """List of sinks writing the output DataFrame"""
+        sinks = []
+        if self.sinks:
+            for s in self.sinks:
+                if not s.from_quarantine:
+                    sinks += [s]
+        return sinks
+
+    @property
+    def quarantine_sinks(self) -> list[DataSinksUnion]:
+        """List of sinks writing the quarantine DataFrame"""
+        sinks = []
+        if self.sinks:
+            for s in self.sinks:
+                if s.from_quarantine:
+                    sinks += [s]
+        return sinks
+
+    @property
+    def all_sinks(self):
+        """List of all sinks (output and quarantine)."""
+        return self.output_sinks + self.quarantine_sinks
+
+    @property
+    def sinks_count(self) -> int:
+        """Total number of sinks."""
+        return len(self.all_sinks)
+
+    @property
+    def has_output_sinks(self) -> bool:
+        """`True` if node has at least one output sink."""
+        return len(self.output_sinks) > 0
+
+    # @property
+    # def has_quarantine_sinks(self) -> bool:
+    #     """`True` if node has at least one quarantine sink."""
+    #     return len(self.quarantine_sinks) > 0
+
+    @property
+    def has_sinks(self) -> bool:
+        """`True` if node has at least one sink."""
+        return self.sinks_count > 0
+
+    @property
+    def primary_sink(self) -> Union[DataSinksUnion, None]:
+        """Primary output sink used as a source for downstream nodes."""
+        if not self.has_output_sinks:
+            return None
+
+        return self.output_sinks[0]
+
+    # ----------------------------------------------------------------------- #
+    # CDC                                                                     #
+    # ----------------------------------------------------------------------- #
+
     @property
     def is_from_cdc(self) -> bool:
         """If `True` CDC source is used to build the table"""
@@ -278,6 +401,29 @@ class PipelineNode(BaseModel):
             return False
         else:
             return self.source.is_cdc
+
+    @property
+    def apply_changes_kwargs(self) -> dict[str, str]:
+        """Keyword arguments for dlt.apply_changes function"""
+        cdc = self.source.cdc
+        return {
+            "apply_as_deletes": cdc.apply_as_deletes,
+            "apply_as_truncates": cdc.apply_as_truncates,
+            "column_list": cdc.columns,
+            "except_column_list": cdc.except_columns,
+            "ignore_null_updates": cdc.ignore_null_updates,
+            "keys": cdc.primary_keys,
+            "sequence_by": cdc.sequence_by,
+            "source": self.source.table_name,
+            "stored_as_scd_type": cdc.scd_type,
+            "target": self.primary_sink.table_name,
+            "track_history_column_list": cdc.track_history_columns,
+            "track_history_except_column_list": cdc.track_history_except_columns,
+        }
+
+    # ----------------------------------------------------------------------- #
+    # Expectations                                                            #
+    # ----------------------------------------------------------------------- #
 
     @property
     def dlt_warning_expectations(self) -> dict[str, str]:
@@ -304,49 +450,22 @@ class PipelineNode(BaseModel):
         return expectations
 
     @property
-    def _expectations_checkpoint_location(self) -> str:
-        checkpoint_location = self.expectations_checkpoint_location
-        if checkpoint_location is None and self.sink:
-            checkpoint_location = self.sink._checkpoint_location
-            if checkpoint_location:
-                if checkpoint_location.endswith("/"):
-                    checkpoint_location = checkpoint_location[:-1] + "_expectations/"
-                else:
-                    checkpoint_location = checkpoint_location + "_expectations"
-        return checkpoint_location
+    def _expectations_checkpoint_location(self) -> Path:
+        if self.expectations_checkpoint_location:
+            return Path(self.expectations_checkpoint_location)
 
-    @property
-    def apply_changes_kwargs(self) -> dict[str, str]:
-        """Keyword arguments for dlt.apply_changes function"""
-        cdc = self.source.cdc
-        return {
-            "apply_as_deletes": cdc.apply_as_deletes,
-            "apply_as_truncates": cdc.apply_as_truncates,
-            "column_list": cdc.columns,
-            "except_column_list": cdc.except_columns,
-            "ignore_null_updates": cdc.ignore_null_updates,
-            "keys": cdc.primary_keys,
-            "sequence_by": cdc.sequence_by,
-            "source": self.source.table_name,
-            "stored_as_scd_type": cdc.scd_type,
-            "target": self.sink.table_name,
-            "track_history_column_list": cdc.track_history_columns,
-            "track_history_except_column_list": cdc.track_history_except_columns,
-        }
+        if self._root_path:
+            return Path(self._root_path) / "expectations/checkpoint"
 
-    @property
-    def output_df(self) -> AnyDataFrame:
-        """Node Dataframe after reading source and applying transformer."""
-        return self._output_df
-
-    @property
-    def quarantine_df(self) -> AnyDataFrame:
-        """Node Dataframe after reading source and applying transformer."""
-        return self._quarantine_df
+        return None
 
     @property
     def checks(self):
         return [e.check for e in self.expectations]
+
+    # ----------------------------------------------------------------------- #
+    # Transformations                                                         #
+    # ----------------------------------------------------------------------- #
 
     @property
     def layer_spark_chain(self):
@@ -519,8 +638,9 @@ class PipelineNode(BaseModel):
         return sources
 
     def purge(self, spark=None):
-        if self.sink:
-            self.sink.purge(spark=spark)
+        if self.has_sinks:
+            for s in self.sinks:
+                s.purge(spark=spark)
         if self._expectations_checkpoint_location:
             if os.path.exists(self._expectations_checkpoint_location):
                 logger.info(
@@ -533,7 +653,7 @@ class PipelineNode(BaseModel):
         apply_transformer: bool = True,
         spark: SparkSession = None,
         udfs: list[Callable] = None,
-        write_sink: bool = True,
+        write_sinks: bool = True,
         full_refresh: bool = False,
     ) -> AnyDataFrame:
         """
@@ -542,7 +662,7 @@ class PipelineNode(BaseModel):
         - Reading the source
         - Applying the user defined (and layer-specific if applicable) transformations
         - Checking expectations
-        - Writing the sink
+        - Writing the sinks
 
         Parameters
         ----------
@@ -552,7 +672,7 @@ class PipelineNode(BaseModel):
             Spark session
         udfs:
             User-defined functions
-        write_sink:
+        write_sinks:
             Flag to include writing sink in the execution
         full_refresh:
             If `True` dataframe will be completely re-processed by deleting
@@ -568,7 +688,7 @@ class PipelineNode(BaseModel):
         # Parse DLT
         if self.is_orchestrator_dlt:
             logger.info("DLT orchestrator selected. Sinks writing will be skipped.")
-            write_sink = False
+            write_sinks = False
             full_refresh = False
 
         # Refresh
@@ -576,10 +696,10 @@ class PipelineNode(BaseModel):
             self.purge(spark)
 
         # Read Source
-        self._output_df = self.source.read(spark)
+        self._stage_df = self.source.read(spark)
 
         # Save source
-        self._source_columns = self._output_df.columns
+        self._source_columns = self._stage_df.columns
 
         if self.source.is_cdc and not self.is_dlt_run:
             pass
@@ -592,9 +712,9 @@ class PipelineNode(BaseModel):
         # Apply transformer
         if apply_transformer:
 
-            if "spark" in str(type(self._output_df)).lower():
+            if "spark" in str(type(self._stage_df)).lower():
                 dftype = "spark"
-            elif "polars" in str(type(self._output_df)).lower():
+            elif "polars" in str(type(self._stage_df)).lower():
                 dftype = "polars"
             else:
                 raise ValueError("DataFrame type not supported")
@@ -616,14 +736,18 @@ class PipelineNode(BaseModel):
                 transformer.nodes += self.layer_polars_chain.nodes
 
             if transformer.nodes:
-                self._output_df = transformer.execute(self._output_df, udfs=udfs)
+                self._stage_df = transformer.execute(self._stage_df, udfs=udfs)
 
         # Check expectations
         self.check_expectations()
 
-        # Output to sink
-        if write_sink and self.sink:
-            self.sink.write(self._output_df)
+        # Output and Quarantine to Sinks
+        if write_sinks:
+            for s in self.output_sinks:
+                s.write(self._output_df)
+            if self._quarantine_df is not None:
+                for s in self.quarantine_sinks:
+                    s.write(self._quarantine_df)
 
         return self._output_df
 
@@ -639,9 +763,11 @@ class PipelineNode(BaseModel):
         """
 
         # Data Quality Checks
-        is_streaming = getattr(self._output_df, "isStreaming", False)
+        is_streaming = getattr(self._stage_df, "isStreaming", False)
         filters = {"keep": None, "quarantine": None}
         if not self.expectations:
+            self._output_df = self._stage_df
+            self._quarantine_df = None
             return
 
         logger.info(f"Checking Data Quality Expectations")
@@ -693,12 +819,12 @@ class PipelineNode(BaseModel):
                     f"Expectations Checkpoint not specified for node '{self.name}'"
                 )
             query = (
-                self._output_df.writeStream.foreachBatch(
+                self._stage_df.writeStream.foreachBatch(
                     lambda batch_df, batch_id: _stream_check(batch_df, batch_id, self)
                 )
                 .trigger(availableNow=True)
                 .options(
-                    checkpointLocation=self._expectations_checkpoint_location,
+                    checkpointLocation=str(self._expectations_checkpoint_location),
                 )
                 .start()
             )
@@ -706,15 +832,19 @@ class PipelineNode(BaseModel):
 
         else:
             _batch_check(
-                self._output_df,
+                self._stage_df,
                 self,
                 filters,
             )
 
         if filters["quarantine"] is not None:
             logger.info(f"Building quarantine DataFrame")
-            self._quarantine_df = self._output_df.filter(filters["quarantine"])
+            self._quarantine_df = self._stage_df.filter(filters["quarantine"])
+        else:
+            self._quarantine_df = self._stage_df.filter("False")
 
         if filters["keep"] is not None:
             logger.info(f"Dropping invalid rows")
-            self._output_df = self._output_df.filter(filters["keep"])
+            self._output_df = self._stage_df.filter(filters["keep"])
+        else:
+            self._output_df = self._stage_df

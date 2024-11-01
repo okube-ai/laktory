@@ -5,6 +5,7 @@
 * DataFrameColumnExpression model
 * Data Quality Expectations
 * Data Quality Checks
+* Support for multiple sinks for a given node
 ### Fixed
 * Stream writer `FileDataSink` 
 * Support for `null` value in `JobTaskSQLTask` queries
@@ -21,6 +22,7 @@
 * Prefixed `dlt_` to `warning_expectations` properties in pipeline nodes
 * Refactored default paths for `WorkspaceFile` and `DBFSFile` models for improved target location control [[#263](https://github.com/okube-ai/laktory/issues/263)]
 * Refactored Polars reader to read as LazyFrame
+* Renamed `PipelineNode` attribute `sink` to `sinks` 
 
 ## [0.4.14] - 2024-10-08
 ### Updated

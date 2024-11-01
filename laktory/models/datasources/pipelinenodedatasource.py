@@ -34,13 +34,13 @@ class PipelineNodeDataSource(BaseDataSource):
     brz = models.PipelineNode(
         name="brz_stock_prices",
         source={"path": "/Volumes/sources/landing/events/yahoo-finance/stock_price"},
-        sink={"path": "/Volumes/sources/landing/tables/brz_stock_prices"},
+        sinks=[{"path": "/Volumes/sources/landing/tables/brz_stock_prices"}],
     )
 
     slv = models.PipelineNode(
         name="slv_stock_prices",
         source={"node_name": "brz_stock_prices"},
-        sink={"path": "/Volumes/sources/landing/tables/slv_stock_prices"},
+        sinks=[{"path": "/Volumes/sources/landing/tables/slv_stock_prices"}],
     )
 
     pl = models.Pipeline(name="pl-stock-prices", nodes=[brz, slv])
@@ -87,8 +87,9 @@ class PipelineNodeDataSource(BaseDataSource):
                 df = dlt_read(self.node.name)
 
         elif stream_to_batch or self.node.output_df is None:
-            logger.info(f"Reading pipeline node {self._id} from sink")
-            df = self.node.sink.read(spark=spark, as_stream=self.as_stream)
+
+            logger.info(f"Reading pipeline node {self._id} from primary sink")
+            df = self.node.primary_sink.read(spark=spark, as_stream=self.as_stream)
 
         elif self.node.output_df is not None:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
@@ -107,9 +108,9 @@ class PipelineNodeDataSource(BaseDataSource):
             df = self.node.output_df
 
         # Read from node sink
-        elif self.node.sink:
+        elif self.node.primary_sink:
             logger.info(f"Reading pipeline node {self._id} from sink")
-            df = self.node.sink.read(as_stream=self.as_stream)
+            df = self.node.primary_sink.read(as_stream=self.as_stream)
 
         else:
             raise ValueError(f"Pipeline Node {self._id} can't read DataFrame")

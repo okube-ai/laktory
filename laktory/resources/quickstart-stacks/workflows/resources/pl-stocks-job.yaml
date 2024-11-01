@@ -28,8 +28,8 @@ nodes:
     path: dbfs:/Workspace/.laktory/data/stock_prices/
     as_stream: false
     format: JSON
-  sink:
-    table_name: brz_stock_prices_job
+  sinks:
+  - table_name: brz_stock_prices_job
     mode: OVERWRITE
 
 # Silver Table
@@ -42,8 +42,8 @@ nodes:
   source:
     node_name: brz_stock_prices
     as_stream: false
-  sink:
-    table_name: slv_stock_prices_job
+  sinks:
+  - table_name: slv_stock_prices_job
     mode: OVERWRITE
 
   # The transformer is a chain of SQL statements and / or serialized spark

@@ -46,11 +46,13 @@ def test_execute():
                 },
             ],
         },
-        sink={
-            "path": sink_path,
-            "format": "PARQUET",
-            "mode": "OVERWRITE",
-        },
+        sinks=[
+            {
+                "path": sink_path,
+                "format": "PARQUET",
+                "mode": "OVERWRITE",
+            }
+        ],
     )
     df0 = node.execute()
     df1 = spark.read.format("PARQUET").load(sink_path)

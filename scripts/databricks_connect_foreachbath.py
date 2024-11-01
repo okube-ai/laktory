@@ -12,6 +12,7 @@ def update_metrics(batch_df, batch_id):
     size = batch_df.count()
     print(f"Batch size: {size}")
 
+
 writer = df.writeStream.foreachBatch(update_metrics).start()
 
 writer.awaitTermination()

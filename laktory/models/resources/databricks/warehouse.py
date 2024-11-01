@@ -37,12 +37,13 @@ class WarehouseTags(BaseModel):
     """
 
     custom_tags: list[WarehouseCustomTag] = []
-    
+
     @property
     def singularizations(self) -> dict[str, str]:
         return {
             "custom_tags": "custom_tags",
         }
+
 
 class WarehouseLookup(ResourceLookup):
     """
