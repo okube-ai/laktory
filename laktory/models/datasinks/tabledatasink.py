@@ -168,13 +168,7 @@ class TableDataSink(BaseDataSink):
         """
         Delete sink data and checkpoints
         """
-        if self._checkpoint_location:
-            if os.path.exists(self._checkpoint_location):
-                logger.info(
-                    f"Deleting checkpoint at {self._checkpoint_location}",
-                )
-                shutil.rmtree(self._checkpoint_location)
-
+        # Remove Data
         if self.warehouse == "DATABRICKS":
             logger.info(
                 f"Dropping table {self.full_name}",
@@ -184,6 +178,14 @@ class TableDataSink(BaseDataSink):
             raise NotImplementedError(
                 f"Warehouse '{self.warehouse}' is not yet supported."
             )
+
+        # Remove Checkpoint
+        if self._checkpoint_location:
+            if os.path.exists(self._checkpoint_location):
+                logger.info(
+                    f"Deleting checkpoint at {self._checkpoint_location}",
+                )
+                shutil.rmtree(self._checkpoint_location)
 
     # ----------------------------------------------------------------------- #
     # Source                                                                  #

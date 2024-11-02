@@ -638,6 +638,7 @@ class PipelineNode(BaseModel):
         return sources
 
     def purge(self, spark=None):
+        logger.info(f"Purging pipeline node {self.name}")
         if self.has_sinks:
             for s in self.sinks:
                 s.purge(spark=spark)

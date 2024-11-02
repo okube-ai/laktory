@@ -654,6 +654,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
+    def purge(self, spark=None) -> None:
+        logger.info("Purging Pipeline")
+
+        for inode, node in enumerate(self.sorted_nodes):
+            node.purge(
+                spark=spark,
+            )
+
     def execute(
         self, spark=None, udfs=None, write_sinks=True, full_refresh: bool = False
     ) -> None:
