@@ -1,14 +1,18 @@
+import os
 from pathlib import Path
 from typing import Union
 from typing import Any
 from typing import Literal
 from pydantic import Field
+from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.spark import is_spark_dataframe
 from laktory.spark import SparkDataFrame
 from laktory.polars import is_polars_dataframe
 from laktory.polars import PolarsLazyFrame
 from laktory.types import AnyDataFrame
+
+logger = get_logger(__name__)
 
 
 class BaseDataSink(BaseModel):
@@ -99,6 +103,34 @@ class BaseDataSink(BaseModel):
     # ----------------------------------------------------------------------- #
     # Purge                                                                   #
     # ----------------------------------------------------------------------- #
+
+    def _purge_checkpoint(self):
+        if self._checkpoint_location:
+            if os.path.exists(self._checkpoint_location):
+                logger.info(
+                    f"Deleting checkpoint at {self._checkpoint_location}",
+                )
+                shutil.rmtree(self._checkpoint_location)
+
+            is_databricks = False
+            try:
+                _ = dbutils
+                is_databricks = True
+            except NameError:
+                pass
+
+            if is_databricks:
+                try:
+                    dbutils.fs.ls(str(self._checkpoint_location))
+                    logger.info(
+                        f"Deleting checkpoint at /dbfs{self._checkpoint_location}",
+                    )
+                    dbutils.fs.rm(str(self._checkpoint_location), True)
+                except Exception as e:
+                    if "java.io.FileNotFoundException" in str(e):
+                        pass
+                    else:
+                        raise e
 
     def purge(self):
         """

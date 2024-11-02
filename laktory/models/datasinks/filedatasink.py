@@ -184,13 +184,10 @@ class FileDataSink(BaseDataSink):
                 logger.info(f"Deleting data file {self.path}")
                 os.remove(self.path)
 
+        # TODO: Add support for Databricks dbfs / workspace / Volume?
+
         # Remove Checkpoint
-        if self._checkpoint_location:
-            if os.path.exists(self._checkpoint_location):
-                logger.info(
-                    f"Deleting checkpoint at {self._checkpoint_location}",
-                )
-                shutil.rmtree(self._checkpoint_location)
+        self._purge_checkpoint()
 
     # ----------------------------------------------------------------------- #
     # Source                                                                  #

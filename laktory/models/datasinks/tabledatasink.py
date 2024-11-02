@@ -180,13 +180,7 @@ class TableDataSink(BaseDataSink):
             )
 
         # Remove Checkpoint
-        if self._checkpoint_location:
-            logger.info(f"cp location {type(self._checkpoint_location)} {self._checkpoint_location}")
-            if os.path.exists(self._checkpoint_location):
-                logger.info(
-                    f"Deleting checkpoint at {self._checkpoint_location}",
-                )
-                shutil.rmtree(self._checkpoint_location)
+        self._purge_checkpoint()
 
     # ----------------------------------------------------------------------- #
     # Source                                                                  #
