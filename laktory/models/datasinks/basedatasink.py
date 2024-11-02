@@ -117,12 +117,15 @@ class BaseDataSink(BaseModel):
                 return
 
             from pyspark.dbutils import DBUtils
+
             dbutils = DBUtils(spark)
 
             _path = self._checkpoint_location.as_posix()
             _path = self._checkpoint_location
             try:
-                dbutils.fs.ls(_path)  # TODO: Figure out why this does not work with databricks connect
+                dbutils.fs.ls(
+                    _path
+                )  # TODO: Figure out why this does not work with databricks connect
                 logger.info(
                     f"Deleting checkpoint at dbfs {_path}",
                 )
@@ -131,9 +134,13 @@ class BaseDataSink(BaseModel):
             except Exception as e:
                 if "java.io.FileNotFoundException" in str(e):
                     pass
-                elif "databricks.sdk.errors.platform.ResourceDoesNotExist" in str(type(e)):
+                elif "databricks.sdk.errors.platform.ResourceDoesNotExist" in str(
+                    type(e)
+                ):
                     pass
-                elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(type(e)):
+                elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
+                    type(e)
+                ):
                     # TODO: Figure out why this is happening. It seems that the databricks SDK
                     #       modify the path before sending to REST API.
                     logger.warn(f"dbutils could not delete checkpoint {_path}: {e}")

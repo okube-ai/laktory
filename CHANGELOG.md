@@ -5,7 +5,8 @@
 * DataFrameColumnExpression model
 * Data Quality Expectations
 * Data Quality Checks
-* Support for multiple sinks for a given node
+* Support for multiple sinks per pipeline node
+* Support for quarantine sink
 * Root path for laktory, pipelines and pipeline nodes
 ### Fixed
 * Stream writer `FileDataSink` 
@@ -24,6 +25,12 @@
 * Refactored default paths for `WorkspaceFile` and `DBFSFile` models for improved target location control [[#263](https://github.com/okube-ai/laktory/issues/263)]
 * Refactored Polars reader to read as LazyFrame
 * Renamed `PipelineNode` attribute `sink` to `sinks` 
+
+#TODO:
+* Re-think the default laktory root. Maybe change depending on the orchestrator?
+* Re-think the list of sinks. Should it be a dict? What should be the name of the checkpoint dict? sink001? Or some unique id?
+* Update doc
+* Test with job and DLT for quarantine
 
 ## [0.4.14] - 2024-10-08
 ### Updated
