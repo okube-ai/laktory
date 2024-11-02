@@ -1,4 +1,5 @@
 import os
+import shutil
 from pathlib import Path
 from typing import Union
 from typing import Any
@@ -105,17 +106,13 @@ class BaseDataSink(BaseModel):
     # ----------------------------------------------------------------------- #
 
     def _purge_checkpoint(self, spark=None):
-        logger.info("-----purging checkpoint")
         if self._checkpoint_location:
-            logger.info("-----I'm in!")
-
             if os.path.exists(self._checkpoint_location):
                 logger.info(
                     f"Deleting checkpoint at {self._checkpoint_location}",
                 )
                 shutil.rmtree(self._checkpoint_location)
 
-            logger.info("-----still going")
             if spark is None:
                 return
 
@@ -123,18 +120,23 @@ class BaseDataSink(BaseModel):
             dbutils = DBUtils(spark)
 
             _path = self._checkpoint_location.as_posix()
-            logger.info(f"-----databricks exists! {_path}")
+            _path = self._checkpoint_location
             try:
-                dbutils.fs.ls(_path)
-                logger.info("-----file listed!")
+                dbutils.fs.ls(_path)  # TODO: Figure out why this does not work with databricks connect
                 logger.info(
-                    f"Deleting checkpoint at /dbfs{_path}",
+                    f"Deleting checkpoint at dbfs {_path}",
                 )
                 dbutils.fs.rm(_path, True)
-                logger.info("-----remove completed!")
+
             except Exception as e:
                 if "java.io.FileNotFoundException" in str(e):
                     pass
+                elif "databricks.sdk.errors.platform.ResourceDoesNotExist" in str(type(e)):
+                    pass
+                elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(type(e)):
+                    # TODO: Figure out why this is happening. It seems that the databricks SDK
+                    #       modify the path before sending to REST API.
+                    logger.warn(f"dbutils could not delete checkpoint {_path}: {e}")
                 else:
                     raise e
 
