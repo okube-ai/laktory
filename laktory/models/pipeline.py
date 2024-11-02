@@ -522,6 +522,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                     # job_cluster_key=job_cluster_key,
                 )
             ]
+            job.sort_tasks(job.tasks)
+
             if cluster_found:
                 job.tasks[-1].job_cluster_key = "node-cluster"
 
