@@ -187,7 +187,7 @@ class FileDataSink(BaseDataSink):
         # TODO: Add support for Databricks dbfs / workspace / Volume?
 
         # Remove Checkpoint
-        self._purge_checkpoint()
+        self._purge_checkpoint(spark=spark)
 
     # ----------------------------------------------------------------------- #
     # Source                                                                  #

@@ -104,7 +104,7 @@ class BaseDataSink(BaseModel):
     # Purge                                                                   #
     # ----------------------------------------------------------------------- #
 
-    def _purge_checkpoint(self):
+    def _purge_checkpoint(self, spark=None):
         logger.info("-----purging checkpoint")
         if self._checkpoint_location:
             logger.info("-----I'm in!")
@@ -116,30 +116,27 @@ class BaseDataSink(BaseModel):
                 shutil.rmtree(self._checkpoint_location)
 
             logger.info("-----still going")
-            is_databricks = False
-            try:
-                _ = dbutils
-                is_databricks = True
-            except NameError:
-                pass
+            if spark is None:
+                return
 
-            logger.info(f"----- is Databricks {is_databricks}")
-            _ = dbutils
-            if is_databricks:
-                logger.info(f"-----databricks exists! {str(self._checkpoint_location)}")
-                try:
-                    dbutils.fs.ls(str(self._checkpoint_location))
-                    logger.info("-----file listed!")
-                    logger.info(
-                        f"Deleting checkpoint at /dbfs{self._checkpoint_location}",
-                    )
-                    dbutils.fs.rm(str(self._checkpoint_location), True)
-                    logger.info("-----remove completed!")
-                except Exception as e:
-                    if "java.io.FileNotFoundException" in str(e):
-                        pass
-                    else:
-                        raise e
+            from pyspark.dbutils import DBUtils
+            dbutils = DBUtils(spark)
+
+            _path = self._checkpoint_location.as_posix()
+            logger.info(f"-----databricks exists! {_path}")
+            try:
+                dbutils.fs.ls(_path)
+                logger.info("-----file listed!")
+                logger.info(
+                    f"Deleting checkpoint at /dbfs{_path}",
+                )
+                dbutils.fs.rm(_path, True)
+                logger.info("-----remove completed!")
+            except Exception as e:
+                if "java.io.FileNotFoundException" in str(e):
+                    pass
+                else:
+                    raise e
 
     def purge(self):
         """

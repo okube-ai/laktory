@@ -180,7 +180,7 @@ class TableDataSink(BaseDataSink):
             )
 
         # Remove Checkpoint
-        self._purge_checkpoint()
+        self._purge_checkpoint(spark=spark)
 
     # ----------------------------------------------------------------------- #
     # Source                                                                  #
