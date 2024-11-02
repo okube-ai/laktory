@@ -123,6 +123,8 @@ class BaseDataSink(BaseModel):
             except NameError:
                 pass
 
+            logger.info(f"----- is Databricks {is_databricks}")
+            _ = dbutils
             if is_databricks:
                 logger.info(f"-----databricks exists! {str(self._checkpoint_location)}")
                 try:
