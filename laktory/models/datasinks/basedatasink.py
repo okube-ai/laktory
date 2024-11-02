@@ -105,13 +105,17 @@ class BaseDataSink(BaseModel):
     # ----------------------------------------------------------------------- #
 
     def _purge_checkpoint(self):
+        logger.info("-----purging checkpoint")
         if self._checkpoint_location:
+            logger.info("-----I'm in!")
+
             if os.path.exists(self._checkpoint_location):
                 logger.info(
                     f"Deleting checkpoint at {self._checkpoint_location}",
                 )
                 shutil.rmtree(self._checkpoint_location)
 
+            logger.info("-----still going")
             is_databricks = False
             try:
                 _ = dbutils
@@ -120,12 +124,15 @@ class BaseDataSink(BaseModel):
                 pass
 
             if is_databricks:
+                logger.info(f"-----databricks exists! {str(self._checkpoint_location)}")
                 try:
                     dbutils.fs.ls(str(self._checkpoint_location))
+                    logger.info("-----file listed!")
                     logger.info(
                         f"Deleting checkpoint at /dbfs{self._checkpoint_location}",
                     )
                     dbutils.fs.rm(str(self._checkpoint_location), True)
+                    logger.info("-----remove completed!")
                 except Exception as e:
                     if "java.io.FileNotFoundException" in str(e):
                         pass
