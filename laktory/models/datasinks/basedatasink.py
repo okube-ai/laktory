@@ -116,7 +116,10 @@ class BaseDataSink(BaseModel):
             if spark is None:
                 return
 
-            from pyspark.dbutils import DBUtils
+            try:
+                from pyspark.dbutils import DBUtils
+            except ModuleNotFoundError:
+                return
 
             dbutils = DBUtils(spark)
 
