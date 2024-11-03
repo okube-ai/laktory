@@ -65,16 +65,22 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def update_laktory_root(self) -> Any:
 
+        print("UPDATING LAKTORY ROOT!")
+        print("current laktory root", self.laktory_root)
+        print("RUNTIME", os.getenv("DATABRICKS_RUNTIME_VERSION"))
+
         if self.laktory_root != "":
             return self
 
         # In Databricks
         # Could also use spark.conf.get("spark.databricks.cloudProvider") is not None
         if os.getenv("DATABRICKS_RUNTIME_VERSION"):
+            print("UPDATING ROOT to /laktory/")
             self.laktory_root = "/laktory/"
-
-        # Local execution
-        self.laktory_root = "./"
+        else:
+            print("UPDATING ROOT to ./")
+            # Local execution
+            self.laktory_root = "./"
 
         return self
 
