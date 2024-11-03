@@ -134,7 +134,6 @@ class BaseDataSink(BaseModel):
             dbutils = DBUtils(spark)
 
             _path = self._checkpoint_location.as_posix()
-            _path = self._checkpoint_location
             try:
                 dbutils.fs.ls(
                     _path
