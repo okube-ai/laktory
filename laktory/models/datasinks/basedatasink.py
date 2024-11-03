@@ -72,7 +72,9 @@ class BaseDataSink(BaseModel):
         if self._parent and self._parent._root_path:
             for i, s in enumerate(self._parent.all_sinks):
                 if s == self:
-                    return self._parent._root_path / "checkpoints" / f"sink-{self._uuid}"
+                    return (
+                        self._parent._root_path / "checkpoints" / f"sink-{self._uuid}"
+                    )
 
         return None
 
