@@ -1,4 +1,6 @@
 import os
+import hashlib
+import uuid
 import shutil
 from pathlib import Path
 from typing import Union
@@ -56,6 +58,12 @@ class BaseDataSink(BaseModel):
         return str(self)
 
     @property
+    def _uuid(self) -> str:
+        hash_object = hashlib.sha1(self._id.encode())
+        hash_digest = hash_object.hexdigest()
+        return str(uuid.UUID(hash_digest[:32]))
+
+    @property
     def _checkpoint_location(self) -> Path:
 
         if self.checkpoint_location:
@@ -64,7 +72,7 @@ class BaseDataSink(BaseModel):
         if self._parent and self._parent._root_path:
             for i, s in enumerate(self._parent.all_sinks):
                 if s == self:
-                    return self._parent._root_path / f"sink-{i:03d}" / "checkpoint"
+                    return self._parent._root_path / "checkpoints" / f"sink-{self._uuid}"
 
         return None
 

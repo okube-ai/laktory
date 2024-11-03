@@ -93,13 +93,6 @@ class TableDataSink(BaseDataSink):
     def _id(self) -> str:
         return self.full_name
 
-    #
-    # @property
-    # def _checkpoint_location(self):
-    #     if self.checkpoint_location:
-    #         return self.checkpoint_location
-    #     return None
-
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #

@@ -42,14 +42,10 @@ def test_file_data_sink_parquet():
 
     # Test
     assert df.count() == 2 * df_slv.count()
-    assert str(sink._checkpoint_location).endswith(
-        "tmp/df_slv_sink_parquet/_checkpoint"
-    )
 
     # Cleanup
     sink.purge()
     assert not os.path.exists(sink.path)
-    assert not os.path.exists(sink._checkpoint_location)
 
 
 def test_file_data_sink_delta():
@@ -78,12 +74,10 @@ def test_file_data_sink_delta():
 
     # Test
     assert df.count() == 2 * df_slv.count()
-    assert str(sink._checkpoint_location).endswith("tmp/df_slv_sink_delta/_checkpoint")
 
     # Cleanup
     sink.purge()
     assert not os.path.exists(sink.path)
-    assert not os.path.exists(sink._checkpoint_location)
 
 
 def test_file_data_sink_stream():
@@ -95,6 +89,7 @@ def test_file_data_sink_stream():
     # Write
     sink = FileDataSink(
         path=dirpath,
+        checkpoint_location=os.path.join(paths.tmp, "df_slv_sink_stream/checkpoint/"),
         format="DELTA",
         mode="APPEND",
     )
@@ -114,7 +109,7 @@ def test_file_data_sink_stream():
 
     # Test
     assert df.count() == df_slv.count()
-    assert str(sink._checkpoint_location).endswith("tmp/df_slv_sink_stream/_checkpoint")
+    assert str(sink._checkpoint_location).endswith("tmp/df_slv_sink_stream/checkpoint")
 
     # Cleanup
     sink.purge()
@@ -148,14 +143,10 @@ def test_file_data_sink_polars_parquet():
     # Test
     assert df.height == df_slv.count()
     assert df.columns == df_slv.columns
-    assert str(sink._checkpoint_location).endswith(
-        "tests/tmp/df_slv_polars_sink_checkpoint"
-    )
 
     # Cleanup
     sink.purge()
     assert not os.path.exists(sink.path)
-    assert not os.path.exists(sink._checkpoint_location)
 
 
 def test_file_data_sink_polars_delta():
@@ -183,14 +174,10 @@ def test_file_data_sink_polars_delta():
     # Test
     assert df.height == df_slv.count() * 2
     assert df.columns == df_slv.columns
-    assert str(sink._checkpoint_location).endswith(
-        "tests/tmp/df_slv_polars_sink_checkpoint"
-    )
 
     # Cleanup
     sink.purge()
     assert not os.path.exists(sink.path)
-    assert not os.path.exists(sink._checkpoint_location)
 
 
 def test_table_data_sink():
@@ -202,7 +189,8 @@ def test_table_data_sink():
         table_name="slv_stock_prices_sink",
         mode="OVERWRITE",
     )
-
+    assert sink._id == "hive_metastore.default.slv_stock_prices_sink"
+    assert sink._uuid == "e2c5cef7-9288-a1e5-050f-e4660ad1176b"
     assert sink.full_name == "hive_metastore.default.slv_stock_prices_sink"
     assert sink.format == "DELTA"
     assert sink.mode == "OVERWRITE"

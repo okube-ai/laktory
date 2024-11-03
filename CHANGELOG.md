@@ -28,7 +28,6 @@
 
 #TODO:
 * Re-think the default laktory root. Maybe change depending on the orchestrator?
-* Re-think the list of sinks. Should it be a dict? What should be the name of the checkpoint dict? sink001? Or some unique id?
 * Update doc
 * Test with job and DLT for quarantine
 

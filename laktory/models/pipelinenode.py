@@ -455,7 +455,7 @@ class PipelineNode(BaseModel):
             return Path(self.expectations_checkpoint_location)
 
         if self._root_path:
-            return Path(self._root_path) / "expectations/checkpoint"
+            return Path(self._root_path) / "checkpoints/expectations"
 
         return None
 
