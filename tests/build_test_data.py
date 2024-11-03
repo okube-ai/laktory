@@ -86,6 +86,20 @@ pdf = pd.DataFrame([e.model_dump() for e in events])
 
 
 # --------------------------------------------------------------------------- #
+# Build Quickstart Data                                                       #
+# --------------------------------------------------------------------------- #
+
+
+with open("../laktory/resources/quickstart-stacks/workflows/data/stock_prices.json", "w") as fp:
+    for _, row in pdf.iterrows():
+        del row["data"]["@id"]
+        for k in list(row["data"].keys()):
+            if k.startswith("_"):
+                del row["data"][k]
+
+        fp.write(row.to_json() + "\n")
+
+# --------------------------------------------------------------------------- #
 # Write Bronze DataFrame                                                      #
 # --------------------------------------------------------------------------- #
 
