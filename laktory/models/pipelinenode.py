@@ -825,7 +825,7 @@ class PipelineNode(BaseModel):
                 )
                 .trigger(availableNow=True)
                 .options(
-                    checkpointLocation=str(self._expectations_checkpoint_location),
+                    checkpointLocation=self._expectations_checkpoint_location,
                 )
                 .start()
             )

@@ -557,7 +557,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         if self.root_path:
             return Path(self.root_path)
 
-        return Path(settings.laktory_root) / self.name
+        return Path(settings.laktory_root) / "pipelines" / self.name
 
     # ----------------------------------------------------------------------- #
     # Expectations                                                            #
