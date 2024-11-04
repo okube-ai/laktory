@@ -826,22 +826,22 @@ class PipelineNode(BaseModel):
                         node=node,
                     )
 
-                # Update Keep Filter
-                if not is_dlt_managed:
-                    _filter = e.keep_filter
-                    if _filter is not None:
-                        if filters["keep"] is None:
-                            filters["keep"] = _filter
-                        else:
-                            filters["keep"] = filters["keep"] & _filter
-
-                # Update Quarantine Filter
-                _filter = e.quarantine_filter
-                if _filter is not None:
-                    if filters["quarantine"] is None:
-                        filters["quarantine"] = _filter
-                    else:
-                        filters["quarantine"] = filters["quarantine"] & _filter
+                # # Update Keep Filter
+                # if not is_dlt_managed:
+                #     _filter = e.keep_filter
+                #     if _filter is not None:
+                #         if filters["keep"] is None:
+                #             filters["keep"] = _filter
+                #         else:
+                #             filters["keep"] = filters["keep"] & _filter
+                #
+                # # Update Quarantine Filter
+                # _filter = e.quarantine_filter
+                # if _filter is not None:
+                #     if filters["quarantine"] is None:
+                #         filters["quarantine"] = _filter
+                #     else:
+                #         filters["quarantine"] = filters["quarantine"] & _filter
 
         def _stream_check(batch_df, batch_id, node, filters):
             _batch_check(
@@ -875,6 +875,28 @@ class PipelineNode(BaseModel):
                 self,
                 filters,
             )
+
+        # Build Filters
+        for e in self.expectations:
+
+            is_dlt_managed = self.is_dlt_run and e.is_dlt_compatible
+
+            # Update Keep Filter
+            if not is_dlt_managed:
+                _filter = e.keep_filter
+                if _filter is not None:
+                    if filters["keep"] is None:
+                        filters["keep"] = _filter
+                    else:
+                        filters["keep"] = filters["keep"] & _filter
+
+            # Update Quarantine Filter
+            _filter = e.quarantine_filter
+            if _filter is not None:
+                if filters["quarantine"] is None:
+                    filters["quarantine"] = _filter
+                else:
+                    filters["quarantine"] = filters["quarantine"] & _filter
 
         if filters["quarantine"] is not None:
             logger.info(f"Building quarantine DataFrame")
