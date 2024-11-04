@@ -157,14 +157,14 @@ class DataQualityExpectation(BaseModel):
         Expression representing all rows to keep, considering both the
         expectation and the selected action.
         """
-        if self._check is None:
-            raise ValueError()
+        # if self._check is None:
+        #     raise ValueError()
         if self.type != "ROW":
             return None
         if self.action not in ["DROP", "QUARANTINE"]:
             return None
-        if self._check.fails_count == 0:
-            return None
+        # if self._check.fails_count == 0:
+        #     return None
         return self.pass_filter
 
     @property
