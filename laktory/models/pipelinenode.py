@@ -801,7 +801,8 @@ class PipelineNode(BaseModel):
 
         # Data Quality Checks
         is_streaming = getattr(self._stage_df, "isStreaming", False)
-        filters = {"keep": None, "quarantine": None}
+        qfilter = None  # Quarantine filter
+        kfilter = None  # Keep filter
         if not self.expectations:
             self._output_df = self._stage_df
             self._quarantine_df = None
@@ -809,11 +810,7 @@ class PipelineNode(BaseModel):
 
         logger.info(f"Checking Data Quality Expectations")
 
-        def _batch_check(
-            df,
-            node,
-            filters,
-        ):
+        def _batch_check(df, node):
             for e in node.expectations:
 
                 is_dlt_managed = node.is_dlt_run and e.is_dlt_compatible
@@ -826,30 +823,13 @@ class PipelineNode(BaseModel):
                         node=node,
                     )
 
-                # # Update Keep Filter
-                # if not is_dlt_managed:
-                #     _filter = e.keep_filter
-                #     if _filter is not None:
-                #         if filters["keep"] is None:
-                #             filters["keep"] = _filter
-                #         else:
-                #             filters["keep"] = filters["keep"] & _filter
-                #
-                # # Update Quarantine Filter
-                # _filter = e.quarantine_filter
-                # if _filter is not None:
-                #     if filters["quarantine"] is None:
-                #         filters["quarantine"] = _filter
-                #     else:
-                #         filters["quarantine"] = filters["quarantine"] & _filter
-
-        def _stream_check(batch_df, batch_id, node, filters):
+        def _stream_check(batch_df, batch_id, node):
             _batch_check(
                 batch_df,
                 node,
-                filters,
             )
 
+        # Warn or Fail
         if is_streaming:
             if self._expectations_checkpoint_location is None:
                 raise ValueError(
@@ -857,7 +837,7 @@ class PipelineNode(BaseModel):
                 )
             query = (
                 self._stage_df.writeStream.foreachBatch(
-                    lambda batch_df, batch_id: _stream_check(batch_df, batch_id, self, filters)
+                    lambda batch_df, batch_id: _stream_check(batch_df, batch_id, self)
                 )
                 .trigger(availableNow=True)
                 .options(
@@ -865,15 +845,15 @@ class PipelineNode(BaseModel):
                 )
                 .start()
             )
-            while query.isActive:
-                print(f"query {query.id} | data avail. {query.status['isDataAvailable']} | active {query.isActive}")
-                query.awaitTermination()
+            # # while query.isActive:
+            # while query.status['isDataAvailable']:
+            print(f"query {query.id} | data avail. {query.status['isDataAvailable']} | active {query.isActive}")
+            query.awaitTermination()
 
         else:
             _batch_check(
                 self._stage_df,
                 self,
-                filters,
             )
 
         # Build Filters
@@ -885,27 +865,27 @@ class PipelineNode(BaseModel):
             if not is_dlt_managed:
                 _filter = e.keep_filter
                 if _filter is not None:
-                    if filters["keep"] is None:
-                        filters["keep"] = _filter
+                    if kfilter is None:
+                        kfilter = _filter
                     else:
-                        filters["keep"] = filters["keep"] & _filter
+                        kfilter = kfilter & _filter
 
             # Update Quarantine Filter
             _filter = e.quarantine_filter
             if _filter is not None:
-                if filters["quarantine"] is None:
-                    filters["quarantine"] = _filter
+                if qfilter is None:
+                    qfilter = _filter
                 else:
-                    filters["quarantine"] = filters["quarantine"] & _filter
+                    qfilter = qfilter & _filter
 
-        if filters["quarantine"] is not None:
+        if qfilter is not None:
             logger.info(f"Building quarantine DataFrame")
-            self._quarantine_df = self._stage_df.filter(filters["quarantine"])
+            self._quarantine_df = self._stage_df.filter(qfilter)
         else:
             self._quarantine_df = self._stage_df.filter("False")
 
-        if filters["keep"] is not None:
+        if kfilter is not None:
             logger.info(f"Dropping invalid rows")
-            self._output_df = self._stage_df.filter(filters["keep"])
+            self._output_df = self._stage_df.filter(kfilter)
         else:
             self._output_df = self._stage_df
