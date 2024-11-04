@@ -649,6 +649,42 @@ class PipelineNode(BaseModel):
                 )
                 shutil.rmtree(self._expectations_checkpoint_location)
 
+            if spark is None:
+                return
+
+            try:
+                from pyspark.dbutils import DBUtils
+            except ModuleNotFoundError:
+                return
+
+            dbutils = DBUtils(spark)
+
+            _path = self._expectations_checkpoint_location.as_posix()
+            try:
+                dbutils.fs.ls(
+                    _path
+                )  # TODO: Figure out why this does not work with databricks connect
+                logger.info(
+                    f"Deleting checkpoint at dbfs {_path}",
+                )
+                dbutils.fs.rm(_path, True)
+
+            except Exception as e:
+                if "java.io.FileNotFoundException" in str(e):
+                    pass
+                elif "databricks.sdk.errors.platform.ResourceDoesNotExist" in str(
+                    type(e)
+                ):
+                    pass
+                elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
+                    type(e)
+                ):
+                    # TODO: Figure out why this is happening. It seems that the databricks SDK
+                    #       modify the path before sending to REST API.
+                    logger.warn(f"dbutils could not delete checkpoint {_path}: {e}")
+                else:
+                    raise e
+
     def execute(
         self,
         apply_transformer: bool = True,
