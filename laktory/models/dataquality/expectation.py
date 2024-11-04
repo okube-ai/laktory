@@ -173,14 +173,14 @@ class DataQualityExpectation(BaseModel):
         Expression representing all rows to quarantine, considering both the
         expectation and the selected action.
         """
-        if self._check is None:
-            raise ValueError()
+        # if self._check is None:
+        #     raise ValueError()
         if self.type != "ROW":
             return None
         if self.action not in ["QUARANTINE"]:
             return None
-        if self._check.fails_count == 0:
-            return None
+        # if self._check.fails_count == 0:
+        #     return None
         return self.fail_filter
 
     # ----------------------------------------------------------------------- #
