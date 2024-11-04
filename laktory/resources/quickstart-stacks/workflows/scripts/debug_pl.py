@@ -19,7 +19,6 @@ spark = DatabricksSession.builder.clusterId("TODO: Fill cluster ID").getOrCreate
 
 udf_dirpath = "../workspacefiles/pipelines/"
 
-
 node_name = None
 
 # --------------------------------------------------------------------------- #

@@ -26,11 +26,6 @@
 * Refactored Polars reader to read as LazyFrame
 * Renamed `PipelineNode` attribute `sink` to `sinks` 
 
-#TODO:
-* Re-think the default laktory root. Maybe change depending on the orchestrator?
-* Update doc
-* Test with job and DLT for quarantine
-
 ## [0.4.14] - 2024-10-08
 ### Updated
 * Workflows quickstart to include debug script

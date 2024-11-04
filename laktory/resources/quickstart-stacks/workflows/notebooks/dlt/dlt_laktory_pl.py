@@ -51,6 +51,7 @@ def define_table(node, sink):
     name = node.name
     if sink is not None:
         name = sink.table_name
+
     @dlt.table_or_view(
         name=name,
         comment=node.description,
@@ -85,7 +86,6 @@ def define_table(node, sink):
 # --------------------------------------------------------------------------- #
 
 
-# TODO: Add support for multiple sinks
 def define_cdc_table(node):
     dlt.create_streaming_table(
         name=node.name,

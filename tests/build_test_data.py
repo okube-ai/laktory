@@ -90,7 +90,9 @@ pdf = pd.DataFrame([e.model_dump() for e in events])
 # --------------------------------------------------------------------------- #
 
 
-with open("../laktory/resources/quickstart-stacks/workflows/data/stock_prices.json", "w") as fp:
+with open(
+    "../laktory/resources/quickstart-stacks/workflows/data/stock_prices.json", "w"
+) as fp:
     for _, row in pdf.iterrows():
         del row["data"]["@id"]
         for k in list(row["data"].keys()):
