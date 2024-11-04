@@ -843,7 +843,7 @@ class PipelineNode(BaseModel):
                     else:
                         filters["quarantine"] = filters["quarantine"] & _filter
 
-        def _stream_check(batch_df, batch_id, node):
+        def _stream_check(batch_df, batch_id, node, filters):
             _batch_check(
                 batch_df,
                 node,
@@ -857,7 +857,7 @@ class PipelineNode(BaseModel):
                 )
             query = (
                 self._stage_df.writeStream.foreachBatch(
-                    lambda batch_df, batch_id: _stream_check(batch_df, batch_id, self)
+                    lambda batch_df, batch_id: _stream_check(batch_df, batch_id, self, filters)
                 )
                 .trigger(availableNow=True)
                 .options(
@@ -865,7 +865,9 @@ class PipelineNode(BaseModel):
                 )
                 .start()
             )
-            query.awaitTermination()
+            while query.isActive:
+                print(f"query {query.id} | data avail. {query.status['isDataAvailable']} | active {query.isActive}")
+                query.awaitTermination()
 
         else:
             _batch_check(
