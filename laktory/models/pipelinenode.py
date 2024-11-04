@@ -845,9 +845,6 @@ class PipelineNode(BaseModel):
                 )
                 .start()
             )
-            # # while query.isActive:
-            # while query.status['isDataAvailable']:
-            print(f"query {query.id} | data avail. {query.status['isDataAvailable']} | active {query.isActive}")
             query.awaitTermination()
 
         else:
