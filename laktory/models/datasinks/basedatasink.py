@@ -1,14 +1,21 @@
+import os
+import hashlib
+import uuid
+import shutil
 from pathlib import Path
 from typing import Union
 from typing import Any
 from typing import Literal
 from pydantic import Field
+from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.spark import is_spark_dataframe
 from laktory.spark import SparkDataFrame
 from laktory.polars import is_polars_dataframe
 from laktory.polars import PolarsLazyFrame
 from laktory.types import AnyDataFrame
+
+logger = get_logger(__name__)
 
 
 class BaseDataSink(BaseModel):
@@ -51,6 +58,12 @@ class BaseDataSink(BaseModel):
         return str(self)
 
     @property
+    def _uuid(self) -> str:
+        hash_object = hashlib.sha1(self._id.encode())
+        hash_digest = hash_object.hexdigest()
+        return str(uuid.UUID(hash_digest[:32]))
+
+    @property
     def _checkpoint_location(self) -> Path:
 
         if self.checkpoint_location:
@@ -59,7 +72,9 @@ class BaseDataSink(BaseModel):
         if self._parent and self._parent._root_path:
             for i, s in enumerate(self._parent.all_sinks):
                 if s == self:
-                    return self._parent._root_path / f"sink-{i:03d}" / "checkpoint"
+                    return (
+                        self._parent._root_path / "checkpoints" / f"sink-{self._uuid}"
+                    )
 
         return None
 
@@ -99,6 +114,50 @@ class BaseDataSink(BaseModel):
     # ----------------------------------------------------------------------- #
     # Purge                                                                   #
     # ----------------------------------------------------------------------- #
+
+    def _purge_checkpoint(self, spark=None):
+        if self._checkpoint_location:
+            if os.path.exists(self._checkpoint_location):
+                logger.info(
+                    f"Deleting checkpoint at {self._checkpoint_location}",
+                )
+                shutil.rmtree(self._checkpoint_location)
+
+            if spark is None:
+                return
+
+            try:
+                from pyspark.dbutils import DBUtils
+            except ModuleNotFoundError:
+                return
+
+            dbutils = DBUtils(spark)
+
+            _path = self._checkpoint_location.as_posix()
+            try:
+                dbutils.fs.ls(
+                    _path
+                )  # TODO: Figure out why this does not work with databricks connect
+                logger.info(
+                    f"Deleting checkpoint at dbfs {_path}",
+                )
+                dbutils.fs.rm(_path, True)
+
+            except Exception as e:
+                if "java.io.FileNotFoundException" in str(e):
+                    pass
+                elif "databricks.sdk.errors.platform.ResourceDoesNotExist" in str(
+                    type(e)
+                ):
+                    pass
+                elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
+                    type(e)
+                ):
+                    # TODO: Figure out why this is happening. It seems that the databricks SDK
+                    #       modify the path before sending to REST API.
+                    logger.warn(f"dbutils could not delete checkpoint {_path}: {e}")
+                else:
+                    raise e
 
     def purge(self):
         """

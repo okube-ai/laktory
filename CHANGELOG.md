@@ -5,7 +5,8 @@
 * DataFrameColumnExpression model
 * Data Quality Expectations
 * Data Quality Checks
-* Support for multiple sinks for a given node
+* Support for multiple sinks per pipeline node
+* Support for quarantine sink
 * Root path for laktory, pipelines and pipeline nodes
 ### Fixed
 * Stream writer `FileDataSink` 

@@ -497,6 +497,11 @@ class JobTask(BaseModel):
     task_key: str = None
     timeout_seconds: int = None
 
+    @field_validator("depends_ons")
+    @classmethod
+    def sort_depends_ons(cls, v: list[JobTaskDependsOn]) -> list[JobTaskDependsOn]:
+        return sorted(v, key=lambda task: task.task_key)
+
 
 class JobTriggerFileArrival(BaseModel):
     """

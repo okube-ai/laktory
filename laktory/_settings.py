@@ -1,3 +1,4 @@
+import os
 from pydantic import model_validator
 from typing import Union
 from typing import Any
@@ -37,7 +38,7 @@ class Settings(BaseSettings):
     workspace_landing_root: str = Field("", alias="LAKTORY_WORKSPACE_LANDING_ROOT")
 
     # Paths
-    laktory_root: str = Field("/laktory/", alias="LAKTORY_ROOT")
+    laktory_root: str = Field("", alias="LAKTORY_ROOT")
 
     # Logging
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")
@@ -58,6 +59,22 @@ class Settings(BaseSettings):
             self.workspace_landing_root = (
                 f"/Volumes/{self.workspace_env}/sources/landing/"
             )
+
+        return self
+
+    @model_validator(mode="after")
+    def update_laktory_root(self) -> Any:
+
+        if self.laktory_root != "":
+            return self
+
+        # In Databricks
+        # Could also use spark.conf.get("spark.databricks.cloudProvider") is not None
+        if os.getenv("DATABRICKS_RUNTIME_VERSION"):
+            self.laktory_root = "/laktory/"
+        else:
+            # Local execution
+            self.laktory_root = "./"
 
         return self
 

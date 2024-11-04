@@ -522,6 +522,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                     # job_cluster_key=job_cluster_key,
                 )
             ]
+            job.sort_tasks(job.tasks)
+
             if cluster_found:
                 job.tasks[-1].job_cluster_key = "node-cluster"
 
@@ -555,7 +557,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         if self.root_path:
             return Path(self.root_path)
 
-        return Path(settings.laktory_root) / self.name
+        return Path(settings.laktory_root) / "pipelines" / self.name
 
     # ----------------------------------------------------------------------- #
     # Expectations                                                            #
@@ -651,6 +653,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
+
+    def purge(self, spark=None) -> None:
+        logger.info("Purging Pipeline")
+
+        for inode, node in enumerate(self.sorted_nodes):
+            node.purge(
+                spark=spark,
+            )
 
     def execute(
         self, spark=None, udfs=None, write_sinks=True, full_refresh: bool = False

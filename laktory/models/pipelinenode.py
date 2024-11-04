@@ -455,7 +455,7 @@ class PipelineNode(BaseModel):
             return Path(self.expectations_checkpoint_location)
 
         if self._root_path:
-            return Path(self._root_path) / "expectations/checkpoint"
+            return Path(self._root_path) / "checkpoints/expectations"
 
         return None
 
@@ -638,6 +638,7 @@ class PipelineNode(BaseModel):
         return sources
 
     def purge(self, spark=None):
+        logger.info(f"Purging pipeline node {self.name}")
         if self.has_sinks:
             for s in self.sinks:
                 s.purge(spark=spark)
@@ -647,6 +648,42 @@ class PipelineNode(BaseModel):
                     f"Deleting expectations checkpoint at {self._expectations_checkpoint_location}",
                 )
                 shutil.rmtree(self._expectations_checkpoint_location)
+
+            if spark is None:
+                return
+
+            try:
+                from pyspark.dbutils import DBUtils
+            except ModuleNotFoundError:
+                return
+
+            dbutils = DBUtils(spark)
+
+            _path = self._expectations_checkpoint_location.as_posix()
+            try:
+                dbutils.fs.ls(
+                    _path
+                )  # TODO: Figure out why this does not work with databricks connect
+                logger.info(
+                    f"Deleting checkpoint at dbfs {_path}",
+                )
+                dbutils.fs.rm(_path, True)
+
+            except Exception as e:
+                if "java.io.FileNotFoundException" in str(e):
+                    pass
+                elif "databricks.sdk.errors.platform.ResourceDoesNotExist" in str(
+                    type(e)
+                ):
+                    pass
+                elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
+                    type(e)
+                ):
+                    # TODO: Figure out why this is happening. It seems that the databricks SDK
+                    #       modify the path before sending to REST API.
+                    logger.warn(f"dbutils could not delete checkpoint {_path}: {e}")
+                else:
+                    raise e
 
     def execute(
         self,
@@ -764,7 +801,8 @@ class PipelineNode(BaseModel):
 
         # Data Quality Checks
         is_streaming = getattr(self._stage_df, "isStreaming", False)
-        filters = {"keep": None, "quarantine": None}
+        qfilter = None  # Quarantine filter
+        kfilter = None  # Keep filter
         if not self.expectations:
             self._output_df = self._stage_df
             self._quarantine_df = None
@@ -772,11 +810,7 @@ class PipelineNode(BaseModel):
 
         logger.info(f"Checking Data Quality Expectations")
 
-        def _batch_check(
-            df,
-            node,
-            filters,
-        ):
+        def _batch_check(df, node):
             for e in node.expectations:
 
                 is_dlt_managed = node.is_dlt_run and e.is_dlt_compatible
@@ -789,31 +823,19 @@ class PipelineNode(BaseModel):
                         node=node,
                     )
 
-                # Update Keep Filter
-                if not is_dlt_managed:
-                    _filter = e.keep_filter
-                    if _filter is not None:
-                        if filters["keep"] is None:
-                            filters["keep"] = _filter
-                        else:
-                            filters["keep"] = filters["keep"] & _filter
-
-                # Update Quarantine Filter
-                _filter = e.quarantine_filter
-                if _filter is not None:
-                    if filters["quarantine"] is None:
-                        filters["quarantine"] = _filter
-                    else:
-                        filters["quarantine"] = filters["quarantine"] & _filter
-
         def _stream_check(batch_df, batch_id, node):
             _batch_check(
                 batch_df,
                 node,
-                filters,
             )
 
-        if is_streaming:
+        # Warn or Fail
+        if is_streaming and self.is_dlt_run:
+            # TODO: Enable when DLT supports foreachBatch (in case some expectations are not supported by DLT)
+            pass
+
+        elif is_streaming:
+
             if self._expectations_checkpoint_location is None:
                 raise ValueError(
                     f"Expectations Checkpoint not specified for node '{self.name}'"
@@ -824,7 +846,7 @@ class PipelineNode(BaseModel):
                 )
                 .trigger(availableNow=True)
                 .options(
-                    checkpointLocation=str(self._expectations_checkpoint_location),
+                    checkpointLocation=self._expectations_checkpoint_location,
                 )
                 .start()
             )
@@ -834,17 +856,38 @@ class PipelineNode(BaseModel):
             _batch_check(
                 self._stage_df,
                 self,
-                filters,
             )
 
-        if filters["quarantine"] is not None:
+        # Build Filters
+        for e in self.expectations:
+
+            is_dlt_managed = self.is_dlt_run and e.is_dlt_compatible
+
+            # Update Keep Filter
+            if not is_dlt_managed:
+                _filter = e.keep_filter
+                if _filter is not None:
+                    if kfilter is None:
+                        kfilter = _filter
+                    else:
+                        kfilter = kfilter & _filter
+
+            # Update Quarantine Filter
+            _filter = e.quarantine_filter
+            if _filter is not None:
+                if qfilter is None:
+                    qfilter = _filter
+                else:
+                    qfilter = qfilter & _filter
+
+        if qfilter is not None:
             logger.info(f"Building quarantine DataFrame")
-            self._quarantine_df = self._stage_df.filter(filters["quarantine"])
+            self._quarantine_df = self._stage_df.filter(qfilter)
         else:
             self._quarantine_df = self._stage_df.filter("False")
 
-        if filters["keep"] is not None:
+        if kfilter is not None:
             logger.info(f"Dropping invalid rows")
-            self._output_df = self._stage_df.filter(filters["keep"])
+            self._output_df = self._stage_df.filter(kfilter)
         else:
             self._output_df = self._stage_df

@@ -64,23 +64,6 @@ class FileDataSink(BaseDataSink):
     def _id(self):
         return str(self.path)
 
-    @property
-    def _checkpoint_location(self):
-        checkpoint_location = super()._checkpoint_location
-        if checkpoint_location:
-            return checkpoint_location
-
-        path = Path(self.path)
-        if path.suffix:
-            checkpoint_location = path.with_suffix("")
-            checkpoint_location = checkpoint_location.with_name(
-                checkpoint_location.name + "_checkpoint"
-            )
-        else:
-            checkpoint_location = path / "_checkpoint"
-
-        return checkpoint_location
-
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
@@ -184,13 +167,10 @@ class FileDataSink(BaseDataSink):
                 logger.info(f"Deleting data file {self.path}")
                 os.remove(self.path)
 
+        # TODO: Add support for Databricks dbfs / workspace / Volume?
+
         # Remove Checkpoint
-        if self._checkpoint_location:
-            if os.path.exists(self._checkpoint_location):
-                logger.info(
-                    f"Deleting checkpoint at {self._checkpoint_location}",
-                )
-                shutil.rmtree(self._checkpoint_location)
+        self._purge_checkpoint(spark=spark)
 
     # ----------------------------------------------------------------------- #
     # Source                                                                  #

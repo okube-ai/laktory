@@ -121,12 +121,12 @@ def test_paths():
         assert node._root_path == pl_path / node.name
         assert (
             node._expectations_checkpoint_location
-            == pl_path / node.name / "expectations/checkpoint"
+            == pl_path / node.name / "checkpoints" / "expectations"
         )
         for i, s in enumerate(node.all_sinks):
             assert (
                 s._checkpoint_location
-                == pl_path / node.name / f"sink-{i:03d}" / "checkpoint"
+                == pl_path / node.name / "checkpoints" / f"sink-{s._uuid}"
             )
 
 
