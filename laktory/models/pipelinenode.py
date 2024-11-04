@@ -830,7 +830,12 @@ class PipelineNode(BaseModel):
             )
 
         # Warn or Fail
-        if is_streaming:
+        if is_streaming and self.is_dlt_run:
+            # TODO: Enable when DLT supports foreachBatch (in case some expectations are not supported by DLT)
+            pass
+
+        elif is_streaming:
+
             if self._expectations_checkpoint_location is None:
                 raise ValueError(
                     f"Expectations Checkpoint not specified for node '{self.name}'"
