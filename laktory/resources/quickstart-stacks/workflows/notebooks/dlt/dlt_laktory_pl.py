@@ -42,7 +42,7 @@ def define_table(node, sink):
     dlt_warning_expectations = {}
     dlt_drop_expectations = {}
     dlt_fail_expectations = {}
-    if not sink.from_quarantine:
+    if not sink.is_quarantine:
         dlt_warning_expectations = node.dlt_warning_expectations
         dlt_drop_expectations = node.dlt_drop_expectations
         dlt_fail_expectations = node.dlt_fail_expectations
@@ -69,7 +69,7 @@ def define_table(node, sink):
 
         # Execute node
         node.execute(spark=spark, udfs=udfs)
-        if sink.from_quarantine:
+        if sink.is_quarantine:
             df = node.quarantine_df
         else:
             df = node.output_df
