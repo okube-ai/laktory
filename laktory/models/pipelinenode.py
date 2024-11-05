@@ -71,7 +71,8 @@ class PipelineNode(BaseModel):
     source:
         Definition of the data source
     sinks:
-        Definition of the data sinks
+        Definition of the data sink(s). Set `is_quarantine` to True to store
+        node quarantine DataFrame.
     transformer:
         Spark or Polars chain defining the data transformations applied to the
         data source.
@@ -244,7 +245,8 @@ class PipelineNode(BaseModel):
         if self.has_output_sinks:
             count = 0
             for s in self.output_sinks:
-                count += 1
+                if s.is_primary:
+                    count += 1
             if count != 1:
                 raise ValueError(
                     f"Node '{self.name}' must have exactly one primary sink."
@@ -343,7 +345,7 @@ class PipelineNode(BaseModel):
         sinks = []
         if self.sinks:
             for s in self.sinks:
-                if not s.from_quarantine:
+                if not s.is_quarantine:
                     sinks += [s]
         return sinks
 
@@ -353,7 +355,7 @@ class PipelineNode(BaseModel):
         sinks = []
         if self.sinks:
             for s in self.sinks:
-                if s.from_quarantine:
+                if s.is_quarantine:
                     sinks += [s]
         return sinks
 
@@ -388,7 +390,12 @@ class PipelineNode(BaseModel):
         if not self.has_output_sinks:
             return None
 
-        return self.output_sinks[0]
+        s = None
+        for s in self.output_sinks:
+            if s.is_primary:
+                break
+
+        return s
 
     # ----------------------------------------------------------------------- #
     # CDC                                                                     #
@@ -795,8 +802,9 @@ class PipelineNode(BaseModel):
 
         Some actions have to be disabled when selected orchestrator is
         Databricks DLT:
-            - Raising error on Failure when expectation is supported by DLT
-            - Dropping rows when expectation is supported by DLT
+
+        * Raising error on Failure when expectation is supported by DLT
+        * Dropping rows when expectation is supported by DLT
         """
 
         # Data Quality Checks
