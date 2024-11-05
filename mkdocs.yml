@@ -137,6 +137,7 @@ nav:
       - Data Pipeline: concepts/pipeline.md
       - Data Sources and Sinks: concepts/sourcessinks.md
       - Data Transformer: concepts/transformer.md
+      - Data Quality: concepts/dataquality.md
       - Data Event: concepts/dataevent.md
       - DataFrames: concepts/dataframes.md
       - Spark Extension: concepts/spark.md
@@ -162,6 +163,7 @@ nav:
       - BaseModel: api/models/basemodel.md
 #      - DataEventHeader: api/models/dataeventheader.md
       - DataEvent: api/models/dataevent.md
+      - DataFrameColumnExpression: api/models/dataframecolumnexpression.md
       - DataProducer: api/models/dataproducer.md
       - DataSinks:
         - BaseDataSink: api/models/datasinks/basedatasink.md
@@ -173,10 +175,12 @@ nav:
         - MemoryDataSource: api/models/datasources/memorydatasource.md
         - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
         - TableDataSource: api/models/datasources/tabledatasource.md
+      - DataQuality:
+        - DataQualityCheck: api/models/dataquality/check.md
+        - DataQualityExpectation: api/models/dataquality/expectation.md
       - Pipelines:
         - Pipeline: api/models/pipeline.md
         - PipelineNode: api/models/pipelinenode.md
-        - PipelineNodeExpectation: api/models/pipelinenodeexpectation.md
       - Resources:
         - BaseResource: api/models/resources/baseresource.md
         - PulumiResource: api/models/resources/pulumiresource.md

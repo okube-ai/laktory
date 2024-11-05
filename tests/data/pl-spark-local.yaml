@@ -23,7 +23,7 @@ nodes:
   - path: {pl_dir}/slv_stock_prices_quarantine
     format: DELTA
     mode: APPEND
-    from_quarantine: True
+    is_quarantine: True
   expectations:
     - name: not amazon
       expr: symbol != 'AMZN'

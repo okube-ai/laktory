@@ -24,11 +24,11 @@ class BaseDataSink(BaseModel):
 
     Attributes
     ----------
-    from_quarantine:
-        Only includes quarantined results based on node expectations.
-    primary:
+    is_primary:
         A primary sink will be used to read data for downstream nodes when
         moving from stream to batch. Don't apply for quarantine sinks.
+    is_quarantine:
+        Sink used to store quarantined results from node expectations.
     mode:
         Write mode.
         - overwrite: Overwrite existing data
@@ -40,12 +40,12 @@ class BaseDataSink(BaseModel):
         Other options passed to `spark.write.options`
     """
 
+    is_quarantine: bool = False
+    is_primary: bool = True
     checkpoint_location: str = None
-    from_quarantine: bool = False
     mode: Union[
         Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE", "UPDATE"], None
     ] = None
-    primary: bool = True
     write_options: dict[str, str] = {}
     _parent: "PipelineNode" = None
 
