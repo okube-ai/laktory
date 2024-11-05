@@ -1,6 +1,16 @@
 # Release History
 
-## [0.5.0] - Unreleased
+## [0.5.1] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.5.0] - 2024-11-05
 ### Added
 * DataFrameColumnExpression model
 * Data Quality Expectations
