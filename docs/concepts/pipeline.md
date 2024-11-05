@@ -10,25 +10,29 @@ The Pipeline model is the cornerstone of Laktory, facilitating the process of re
 ??? "API Documentation"
     [`laktory.models.PipelineNode`][laktory.models.PipelineNode]<br>
 
-A pipeline consists of a sequence of nodes. Each node generates a Spark or Polars DataFrame by reading from a source,
-applying transformations, and optionally writing the output to a sink.
-
+A pipeline is composed of a sequence of nodes, each designed to generate a Spark or Polars DataFrame. Each node reads
+from a designated source, applies specified transformations, and optionally writes the result to one or more sinks.
 <img src="/../../images/pl_node_diagram.png" alt="data pipeline node" width="300"/>
 
 ## Sources and Sinks
 <img src="/../../images/source_logo.png" alt="node source" width="100"/>
 <img src="/../../images/sink_logo.png" alt="node sink" width="100"/>
 
-Laktory supports various [sources and sinks](./sources.md), including data files and data warehouse tables. By 
-designating a node as the source for another downstream node, you create dependencies between nodes, forming a directed
-acyclic graph (DAG).
-
+Laktory supports a variety of [sources and sinks](./sources.md), including data files and warehouse tables. By linking 
+a node as the source for a downstream node, you establish dependencies, creating a directed acyclic graph (DAG).
 
 ## Transformer
 <img src="/../../images/transformer_logo.png" alt="node transformer" width="100"/>
 
 The transformations are defined through a [transformer](./transformers.md) which is a chain of SQL statements and/or 
-Spark/Polars. This flexible and highly modular framework supports scalable batch and streaming operations.
+Spark/Polars DataFrame API function calls. This flexible and highly modular framework supports scalable batch and
+streaming operations.
+
+## Expectations
+<img src="/../../images/expectations_logo.png" alt="node transformer" width="100"/>
+
+Data quality is achieved through the use of [expectations](./dataquality.md) and corresponding actions, which can drop,
+quarantine, or even halt pipelines if invalid data is detected before it reaches the output.
 
 ## Serialization
 The entire pipeline definition is serializable, ensuring portability for deployment on remote compute environments. 
@@ -39,21 +43,25 @@ Here is an example of a pipeline declaration:
 name: stock_prices
 nodes:
   - name: brz_stock_prices
-    layer: BRONZE
     source:
       path: "./events/stock_prices"
-    sink:
-      schema_name: finance
+    sinks:
+    - schema_name: finance
       table_name: brz_stock_prices
-    transformer: 
-      nodes: []
+
   - name: slv_stock_prices
-    layer: SILVER
     source:
       node_name: brz_stock_prices
-    sink:
-      schema_name: finance
-      table_name: brz_stock_prices
+    sinks:
+    - schema_name: finance
+      table_name: slv_stock_prices
+    - schema_name: finance
+      table_name: slv_stock_prices_quarantine
+      is_quarantine: True
+    expectations:
+    - name: positive price
+      expr: close > 0
+      action: QUARANTINE
     transformer:
       nodes:
       - sql_expr: |
@@ -75,11 +83,15 @@ nodes:
   ...
 ```
 
-## Layers
+[//]: # ()
+[//]: # (## Layers)
 
-Pipeline nodes allow you to select a target medallion architecture layer (`BRONZE`, `SILVER`, `GOLD`). Basic 
-transformations are preset based on the selected layer. For example, `SILVER` nodes automatically drop unnecessary 
-columns and duplicates by default.
+[//]: # ()
+[//]: # (Pipeline nodes allow you to select a target medallion architecture layer &#40;`BRONZE`, `SILVER`, `GOLD`&#41;. Basic )
+
+[//]: # (transformations are preset based on the selected layer. For example, `SILVER` nodes automatically drop unnecessary )
+
+[//]: # (columns and duplicates by default.)
 
 ## Execution
 ### Local
@@ -175,8 +187,7 @@ autoscaling.
 
 Each pipeline node runs inside a dlt.table() or dlt.view() function. In the context of DLT, node execution does not 
 trigger a sink write, as this operation is managed by DLT. When a source is a pipeline node, `dlt.read()` and
-`dlt.read_stream()` functions are called to ensure compatibility with the DLT framework. 
-
+`dlt.read_stream()` functions are called to ensure compatibility with the DLT framework.
 
 ```py title="dlt_laktory_pl"
 from laktory import dlt
@@ -186,19 +197,23 @@ with open("pipeline.yaml") as fp:
     pl = models.Pipeline.model_validate_yaml(fp.read())
 
 
-def define_table(node):
+def define_table(node, sink):
     @dlt.table_or_view(
-        name=node.name,
+        name=sink.name,
         comment=node.description,
-        as_view=node.sink is None,
+        as_view=sink is None,
     )
-    @dlt.expect_all(node.warning_expectations)
-    @dlt.expect_all_or_drop(node.drop_expectations)
-    @dlt.expect_all_or_fail(node.fail_expectations)
     def get_df():
 
+        logger.info(f"Building {node.name} node | sink: {sink.full_name}")
+
         # Execute node
-        df = node.execute(spark=spark)
+        node.execute(spark=spark, udfs=udfs)
+        if sink.is_quarantine:
+            df = node.quarantine_df
+        else:
+            df = node.output_df
+        df.printSchema()
 
         # Return
         return df
@@ -208,9 +223,10 @@ def define_table(node):
 
 # Build nodes
 for node in pl.nodes:
-    wrapper = define_table(node)
-    df = dlt.get_df(wrapper)
-    display(df)
+    for sink in node.sinks:
+        wrapper = define_table(node, sink)
+        df = dlt.get_df(wrapper)
+        display(df)
 ```
 
 Notice how `dlt` module is imported from laktory as it provides additional
@@ -260,8 +276,10 @@ else:
 ```
 
 #### Apache Airflow
-Support for Apache Airflow as an orchestrator is under development and will be available soon.
+Support for Apache Airflow as an orchestrator is on the roadmap.
 
+#### Dagster
+Support for Dagster as an orchestrator is on the roadmap.
 
 ## Streaming Operations
 

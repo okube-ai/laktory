@@ -15,8 +15,10 @@ A mini-series about setting up and end-to-end Databricks Lakehouse using Laktory
     ![type:video](https://www.youtube.com/embed/nwsyS2SU2mw)
 
 3. **Pipeline Job**: Declaring a Laktory pipeline and deploying it as a Databricks Job.
+    ![type:video](https://www.youtube.com/embed/dyArq_CUqKc)
 
-4. **Delta Live Tables**: Declaring a Laktory pipeline and deploying it as a Delta Live Tables
+4. **Delta Live Tables**: Declaring a Laktory pipeline and deploying it as a Delta Live Tables 
+    ![type:video](https://www.youtube.com/embed/cX3EPV_xWrM)
 
 5. **AI/BI Dashboard**: How to easily create an AI/BI Dashboard and deploy it to multiple workspaces.
 

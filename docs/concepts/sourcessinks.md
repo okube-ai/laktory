@@ -5,7 +5,9 @@ The `DataSource` models facilitate loading data into a dataframe. It provides
 reusable mechanisms for reading data of various nature given different
 configuration and various execution contexts.
 
-It is generally used as a component of a [pipeline](pipeline.md) node.
+It is generally used as a component of a [pipeline](pipeline.md) node. In this
+context, the sink may be used to store the output of the node or some
+quarantined data if [expectations](dataquality.md) are set and not met.
 
 
 #### File Data Source

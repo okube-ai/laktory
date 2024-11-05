@@ -1,0 +1,1 @@
+::: laktory.models.DataQualityCheck
