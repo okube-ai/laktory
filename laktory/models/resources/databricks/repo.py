@@ -66,7 +66,7 @@ class Repo(BaseModel, PulumiResource, TerraformResource):
 
     repo = models.resources.databricks.Repo(
         url="https://github.com/okube-ai/laktory",
-        path="olivier.soucy@okube.ai/laktory",
+        path="/Users/olivier.soucy@okube.ai/laktory-repo",
         branch="main",
         access_controls=[{"permission_level": "CAN_READ", "group_name": "account users"}],
     )
