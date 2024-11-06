@@ -2,13 +2,10 @@
 
 ## [0.5.1] - Unreleased
 ### Added
-* n/a
+* Support for `ClusterPolicy` Databricks resource
+* Support for `Repo` Databricks resource
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* ReadMe file code
 
 ## [0.5.0] - 2024-11-05
 ### Added

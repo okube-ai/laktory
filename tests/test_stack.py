@@ -61,6 +61,7 @@ def test_stack_model():
             "databricks_dbfsfiles": {},
             "databricks_catalogs": {},
             "databricks_clusters": {},
+            "databricks_clusterpolicies": {},
             "databricks_directories": {},
             "databricks_externallocations": {},
             "databricks_grants": {},
@@ -213,6 +214,7 @@ def test_stack_model():
             },
             "databricks_dltpipelines": {},
             "databricks_schemas": {},
+            "databricks_repos": {},
             "databricks_secrets": {},
             "databricks_secretscopes": {},
             "databricks_serviceprincipals": {},
@@ -1137,12 +1139,14 @@ def test_terraform_plan():
 
 def test_all_resources():
     from tests.test_catalog import catalog
+    from tests.test_cluster_policy import cluster_policy
     from tests.test_directory import directory
     from tests.test_dashboard import dashboard
     from tests.test_job import job
     from tests.test_pipeline_orchestrators import pl_dlt
     from tests.test_metastore import metastore
     from tests.test_notebook import nb
+    from tests.test_repo import repo
     from tests.test_schema import schema
     from tests.test_sql_query import query
     from tests.test_user import user
@@ -1160,11 +1164,13 @@ def test_all_resources():
     validator = StackValidator(
         resources={
             "databricks_catalogs": [catalog],
+            "databricks_clusterpolicies": [cluster_policy],
             "databricks_dashboards": [dashboard],
             "databricks_directories": [directory],
             "databricks_jobs": [job],
             "databricks_metastores": [metastore],
             "databricks_notebooks": [nb],
+            "databricks_repos": [repo],
             "databricks_schemas": [schema],
             "databricks_sqlqueries": [query],
             "databricks_groups": [group],

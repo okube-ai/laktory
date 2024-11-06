@@ -1,6 +1,7 @@
 from .accesscontrol import AccessControl
 from .catalog import Catalog
 from .cluster import Cluster
+from .clusterpolicy import ClusterPolicy
 from .column import Column
 from .dashboard import Dashboard
 from .dbfsfile import DbfsFile
@@ -18,6 +19,7 @@ from .mwsnetworkconnectivityconfig import MwsNetworkConnectivityConfig
 from .mwspermissionassignment import MwsPermissionAssignment
 from .notebook import Notebook
 from .permissions import Permissions
+from .repo import Repo
 from .schema import Schema
 from .secret import Secret
 from .secretacl import SecretAcl
