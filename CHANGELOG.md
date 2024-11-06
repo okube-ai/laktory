@@ -2,7 +2,7 @@
 
 ## [0.5.1] - Unreleased
 ### Added
-* n/a
+* Support for `ClusterPolicy` Databricks resource
 ### Fixed
 * n/a
 ### Updated

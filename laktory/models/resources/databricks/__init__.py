@@ -1,6 +1,7 @@
 from .accesscontrol import AccessControl
 from .catalog import Catalog
 from .cluster import Cluster
+from .clusterpolicy import ClusterPolicy
 from .column import Column
 from .dashboard import Dashboard
 from .dbfsfile import DbfsFile
