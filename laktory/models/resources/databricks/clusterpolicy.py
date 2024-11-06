@@ -1,5 +1,6 @@
 import json
 from typing import Union
+from typing import Any
 from pydantic import field_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
@@ -142,7 +143,7 @@ class ClusterPolicy(BaseModel, PulumiResource, TerraformResource):
     """
 
     access_controls: list[AccessControl] = []
-    definition: Union[str, dict[str, str]] = None
+    definition: Union[str, dict[str, Any]] = None
     description: str = None
     libraries: list[ClusterPolicyLibrary] = None
     max_clusters_per_user: int = None
