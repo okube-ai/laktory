@@ -44,7 +44,9 @@ def test_policy_cluster_as_dict():
                 }
             }
         ],
-        access_controls=[{"permission_level": "CAN_USE", "group_name": "account users"}],
+        access_controls=[
+            {"permission_level": "CAN_USE", "group_name": "account users"}
+        ],
     )
 
     assert cluster_policy.name == "okube"

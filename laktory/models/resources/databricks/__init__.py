@@ -19,6 +19,7 @@ from .mwsnetworkconnectivityconfig import MwsNetworkConnectivityConfig
 from .mwspermissionassignment import MwsPermissionAssignment
 from .notebook import Notebook
 from .permissions import Permissions
+from .repo import Repo
 from .schema import Schema
 from .secret import Secret
 from .secretacl import SecretAcl
