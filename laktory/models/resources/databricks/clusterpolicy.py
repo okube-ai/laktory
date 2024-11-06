@@ -106,7 +106,6 @@ class ClusterPolicy(BaseModel, PulumiResource, TerraformResource):
     --------
     ```py
     from laktory import models
-    import json
 
     cluster = models.resources.databricks.ClusterPolicy(
         name="okube",
