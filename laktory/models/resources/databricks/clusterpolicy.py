@@ -110,19 +110,17 @@ class ClusterPolicy(BaseModel, PulumiResource, TerraformResource):
 
     cluster = models.resources.databricks.ClusterPolicy(
         name="okube",
-        definition=json.dumps(
-            {
-                "dbus_per_hour": {
-                    "type": "range",
-                    "maxValue": 10,
-                },
-                "autotermination_minutes": {"type": "fixed", "value": 30, "hidden": True},
-                "custom_tags.team": {
-                    "type": "fixed",
-                    "value": "okube",
-                },
-            }
-        ),
+        definition={
+            "dbus_per_hour": {
+                "type": "range",
+                "maxValue": 10,
+            },
+            "autotermination_minutes": {"type": "fixed", "value": 30, "hidden": True},
+            "custom_tags.team": {
+                "type": "fixed",
+                "value": "okube",
+            },
+        },
         libraries=[
             {
                 "pypi": {
