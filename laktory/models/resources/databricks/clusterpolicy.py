@@ -1,4 +1,6 @@
+import json
 from typing import Union
+from pydantic import field_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
@@ -140,13 +142,19 @@ class ClusterPolicy(BaseModel, PulumiResource, TerraformResource):
     """
 
     access_controls: list[AccessControl] = []
-    definition: str = None
+    definition: Union[str, dict[str, str]] = None
     description: str = None
     libraries: list[ClusterPolicyLibrary] = None
     max_clusters_per_user: int = None
     name: str
     policy_family_definition_overrides: str = None
     policy_family_id: str = None
+
+    @field_validator("definition")
+    def validate_type(cls, v: Union[str, dict[str, str]]) -> str:
+        if isinstance(v, dict):
+            v = json.dumps(v)
+        return v
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
