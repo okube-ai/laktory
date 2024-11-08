@@ -1,4 +1,5 @@
-# MAGIC %pip install 'laktory==<laktory_version>'
+# MAGIC #%pip install git+https://github.com/okube-ai/laktory.git@node_reader
+# MAGIC %pip install 'laktory==0.5.0'
 
 # COMMAND ----------
 import importlib
@@ -15,7 +16,7 @@ dlt.spark = spark
 logger = get_logger(__name__)
 
 # Read pipeline definition
-pl_name = spark.conf.get("pipeline_name", "pl-stocks-dlt")
+pl_name = spark.conf.get("pipeline_name", "dlt-stock-prices")
 filepath = f"/Workspace{settings.workspace_laktory_root}pipelines/{pl_name}.json"
 with open(filepath, "r") as fp:
     pl = models.Pipeline.model_validate_json(fp.read())
@@ -42,7 +43,7 @@ def define_table(node, sink):
     dlt_warning_expectations = {}
     dlt_drop_expectations = {}
     dlt_fail_expectations = {}
-    if not sink.is_quarantine:
+    if sink and not sink.is_quarantine:
         dlt_warning_expectations = node.dlt_warning_expectations
         dlt_drop_expectations = node.dlt_drop_expectations
         dlt_fail_expectations = node.dlt_fail_expectations
@@ -69,7 +70,7 @@ def define_table(node, sink):
 
         # Execute node
         node.execute(spark=spark, udfs=udfs)
-        if sink.is_quarantine:
+        if sink and sink.is_quarantine:
             df = node.quarantine_df
         else:
             df = node.output_df
@@ -112,7 +113,7 @@ for node in pl.nodes:
         display(df)
         continue
 
-    if node.sinks is None:
+    if node.sinks is None or node.sinks == []:
         wrapper = define_table(node, None)
         df = dlt.get_df(wrapper)
         display(df)
