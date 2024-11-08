@@ -1,6 +1,16 @@
 # Release History
 
-## [0.5.1] - Unreleased
+## [0.5.2] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.5.1] - 2024-11-08
 ### Added
 * Support for `ClusterPolicy` Databricks resource
 * Support for `Repo` Databricks resource
