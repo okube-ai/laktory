@@ -1,3 +1,4 @@
+from typing import Union
 import os.path
 
 from typing import Literal
@@ -29,6 +30,8 @@ class FileDataSource(BaseDataSource):
         per line)
     read_options:
         Other options passed to `spark.read.options`
+    schema:
+        Target schema
     schema_location:
         Path for files schema. If `None`, parent directory of `path` is used
 
@@ -47,10 +50,9 @@ class FileDataSource(BaseDataSource):
     """
 
     format: Literal["CSV", "PARQUET", "DELTA", "JSON", "EXCEL", "BINARYFILE"] = "JSON"
-    header: bool = True
-    multiline: bool = False
     path: str
     read_options: dict[str, str] = {}
+    schema: Union[str, dict, list] = None
     schema_location: str = None
 
     @model_validator(mode="after")
@@ -83,47 +85,49 @@ class FileDataSource(BaseDataSource):
     # ----------------------------------------------------------------------- #
 
     def _read_spark(self, spark) -> SparkDataFrame:
-        if self.as_stream:
-            logger.info(f"Reading {self._id} as stream")
 
-            # Set reader
+        _options = {}
+        _mode = "stream"
+
+        if self.as_stream:
+            _mode = "stream"
+
             if self.format == "DELTA":
                 reader = spark.readStream.format(self.format)
+
             else:
-
-                schema_location = self.schema_location
-                if schema_location is None:
-                    schema_location = os.path.dirname(self.path)
-
                 reader = (
                     spark.readStream.format("cloudFiles")
-                    .option("cloudFiles.format", self.format)
-                    .option("cloudFiles.schemaLocation", schema_location)
-                    .option("cloudFiles.inferColumnTypes", True)
-                    .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
-                    .option("cloudFiles.allowOverwrites", True)
                 )
+                _options["cloudFiles.format"] = self.format
+
+                if self.schema:
+                    reader = reader.schema(self.schema)
+                else:
+                    schema_location = self.schema_location
+                    if schema_location is None:
+                        schema_location = os.path.dirname(self.path)
+                    _options["cloudFiles.schemaLocation"] = schema_location
+
+            _options["cloudFiles.inferColumnTypes"] = True
+            _options["cloudFiles.schemaEvolutionMode"] = "addNewColumns"
 
         else:
-            logger.info(f"Reading {self._id} as static")
-
-            # Set reader
+            _mode = "static"
             reader = spark.read.format(self.format)
 
-        reader = (
-            reader.option("multiLine", self.multiline)  # only apply to JSON format
-            .option("mergeSchema", True)
-            .option("recursiveFileLookup", True)
-            .option("header", self.header)  # only apply to CSV format
-        )
+        # User Options
+        _options["mergeSchema"] = True
+        _options["recursiveFileLookup"] = True
         if self.read_options:
-            reader = reader.options(**self.read_options)
+            for k, v in self.read_options.items():
+                _options[k] = v
+
+        reader = reader.options(**_options)
 
         # Load
+        logger.info(f"Reading {self._id} as {_mode} and options {_options}")  # TODO: Add schema
         df = reader.load(self.path)
-
-        # Not supported by UC
-        # .withColumn("file", F.input_file_name())
 
         return df
 
