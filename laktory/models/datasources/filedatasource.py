@@ -152,8 +152,9 @@ class FileDataSource(BaseDataSource):
                         schema_location = os.path.dirname(self.path)
                     _options["cloudFiles.schemaLocation"] = schema_location
 
-            _options["cloudFiles.inferColumnTypes"] = True
-            _options["cloudFiles.schemaEvolutionMode"] = "addNewColumns"
+            if self._schema is None:
+                _options["cloudFiles.inferColumnTypes"] = True
+                _options["cloudFiles.schemaEvolutionMode"] = "addNewColumns"
 
         else:
             _mode = "static"
