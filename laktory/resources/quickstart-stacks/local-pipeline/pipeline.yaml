@@ -9,7 +9,6 @@ nodes:
 - name: brz_stock_prices
   source:
     path: ./data/stock_prices.json
-    multiline: True
   sinks:
   - path: ./data/brz_stock_prices.parquet
     format: PARQUET
@@ -51,7 +50,6 @@ nodes:
   layer: BRONZE
   source:
     path: ./data/stock_metadata.json
-    multiline: True
   sinks:
   -   path: ./data/brz_stock_metadata.parquet
       format: PARQUET
