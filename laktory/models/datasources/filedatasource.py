@@ -130,10 +130,6 @@ class FileDataSource(BaseDataSource):
             _format = "JSON"
             _options["multiline"] = True
 
-        # CSV
-        if self.format == "CSV":
-            _options["header"] = True
-
         if self.as_stream:
             _mode = "stream"
 
