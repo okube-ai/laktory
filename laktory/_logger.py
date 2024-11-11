@@ -1,7 +1,36 @@
 import logging
 import sys
+import pytz
+from datetime import datetime
 
 from ._settings import settings
+
+
+# --------------------------------------------------------------------------- #
+# Custom Formatter                                                            #
+# --------------------------------------------------------------------------- #
+
+
+class LaktoryFormatter(logging.Formatter):
+    info_format = "%(asctime)s [laktory] %(message)s"
+    default_format = "%(asctime)s [%(name)s] %(levelname)s | %(message)s"
+
+    def __init__(self, fmt=default_format):
+        super().__init__(fmt=fmt, datefmt="%Y-%m-%d %H:%M:%S")
+
+    def formatTime(self, record, datefmt=None):
+        # Set timestamp to UTC
+        utc_time = datetime.fromtimestamp(record.created, pytz.utc)
+        return utc_time.strftime(datefmt or self.default_time_format)
+
+    def format(self, record):
+        # Use info-specific format, otherwise use default
+        if record.levelno == logging.INFO:
+            self._style._fmt = self.info_format
+        else:
+            self._style._fmt = self.default_format
+        return super().format(record)
+
 
 # --------------------------------------------------------------------------- #
 # Get logger                                                                  #
@@ -9,8 +38,9 @@ from ._settings import settings
 
 # Stream Handler
 stream_handler = logging.StreamHandler(sys.stdout)
-format = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
-stream_handler.setFormatter(format)
+# format = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
+# stream_handler.setFormatter(format)
+stream_handler.setFormatter(LaktoryFormatter())
 
 
 def get_logger(name, stream=True):

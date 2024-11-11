@@ -178,7 +178,7 @@ class BaseDataSource(BaseModel):
 
     @property
     def _id(self):
-        return str(self)
+        return str(self.df)
 
     @property
     def is_cdc(self) -> bool:
@@ -226,6 +226,8 @@ class BaseDataSource(BaseModel):
             df = self._post_read_spark(df)
         elif is_polars_dataframe(df):
             df = self._post_read_polars(df)
+
+        logger.info("Read completed.")
 
         return df
 

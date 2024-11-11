@@ -105,6 +105,8 @@ class BaseDataSink(BaseModel):
         else:
             raise ValueError(f"DataFrame type '{type(df)}' not supported")
 
+        logger.info("Write completed.")
+
     def _write_spark(self, df: SparkDataFrame, mode=mode) -> None:
         raise NotImplementedError("Not implemented for Spark dataframe")
 

@@ -16,7 +16,6 @@ node_brz = models.PipelineNode(
     name="brz_stock_prices",
     source=models.FileDataSource(
         path="./data/stock_prices.json",
-        multiline=True,
     ),
     sinks=[
         models.FileDataSink(

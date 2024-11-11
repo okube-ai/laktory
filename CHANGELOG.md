@@ -6,7 +6,9 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Logs to include timestamp
+* `FileDataSource` to support spark `read_options`
+* `FileDataSource` to support `schema` specification for weakly-typed formats
 ### Breaking changes
 * n/a
 

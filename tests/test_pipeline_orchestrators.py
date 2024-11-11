@@ -151,10 +151,9 @@ def test_pipeline_dlt():
         "selects": None,
         "watermark": None,
         "format": "DELTA",
-        "header": True,
-        "multiline": False,
         "path": "/brz_stock_prices",
         "read_options": {},
+        "schema": None,
         "schema_location": None,
     }
 
