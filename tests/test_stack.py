@@ -320,7 +320,7 @@ def test_stack_model():
                                 "sample": None,
                                 "selects": None,
                                 "watermark": None,
-                                "format": "JSON",
+                                "format": "JSONL",
                                 "path": "/tmp/",
                                 "read_options": {},
                                 "schema": None,

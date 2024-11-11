@@ -59,7 +59,7 @@ class FileDataSource(BaseDataSource):
     ```
     """
 
-    format: Literal["CSV", "PARQUET", "DELTA", "JSON", "NDJSON", "JSONL", "EXCEL", "BINARYFILE"] = "JSON"
+    format: Literal["CSV", "PARQUET", "DELTA", "JSON", "NDJSON", "JSONL", "EXCEL", "BINARYFILE"] = "JSONL"
     path: str
     read_options: dict[str, Any] = {}
     schema: Union[str, dict, list] = None
