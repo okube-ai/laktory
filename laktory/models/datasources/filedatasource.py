@@ -172,6 +172,13 @@ class FileDataSource(BaseDataSource):
 
         # Load
         logger.info(f"Reading {self._id} as {_mode} and options {_options}")
+        if self._schema:
+            schema_str = self._schema
+            if hasattr(schema_str, "simpleString"):
+                schema_str = schema_str.simpleString()
+            else:
+                schema_str = str(schema_str)
+            logger.info(f"Expected schema: {schema_str}")
         df = reader.load(self.path)
 
         return df
