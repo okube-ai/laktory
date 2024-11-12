@@ -609,7 +609,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             dag.add_node(n.name)
 
         # Build edges and assign nodes to pipeline node data sources
+        node_names = []
         for n in self.nodes:
+
+            if n.name in node_names:
+                raise ValueError(f"Pipeline node '{n.name}' is declared twice in pipeline '{self.name}'")
+            node_names += [n.name]
+
             for s in n.get_sources(PipelineNodeDataSource):
                 dag.add_edge(s.node_name, n.name)
                 if s.node_name not in self.nodes_dict:
@@ -619,8 +625,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                 s.node = self.nodes_dict[s.node_name]
 
         if not nx.is_directed_acyclic_graph(dag):
+            for n in dag.nodes:
+                logger.info(f"Pipeline {self.name} node: {n}")
+            for e in dag.edges:
+                logger.info(f"Pipeline {self.name} edge: {e[0]} -> {e[1]}")
             raise ValueError(
-                "Pipeline is not a DAG (directed acyclic graph)."
+                f"Pipeline '{self.name}' is not a DAG (directed acyclic graph)."
                 " A circular dependency has been detected. Please review nodes dependencies."
             )
 

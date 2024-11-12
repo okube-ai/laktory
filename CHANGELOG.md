@@ -1,7 +1,10 @@
 # Release History
 
 ## [0.5.2] - Unreleased
+### Added
+* Support for JSONL and NDJSON formats in `FileDataSource`
 ### Fixed
+* Missing stream query termination in `TableDataSink` model
 * Raise Exception when resource names are not unique [[#294](https://github.com/okube-ai/laktory/issues/294)]
 ### Updated
 * Logs to include timestamp

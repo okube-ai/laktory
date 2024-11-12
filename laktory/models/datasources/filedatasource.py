@@ -130,6 +130,10 @@ class FileDataSource(BaseDataSource):
             _format = "JSON"
             _options["multiline"] = True
 
+        # CSV
+        if self.format == "CSV":
+            _options["header"] = True
+
         if self.as_stream:
             _mode = "stream"
 
@@ -148,8 +152,9 @@ class FileDataSource(BaseDataSource):
                         schema_location = os.path.dirname(self.path)
                     _options["cloudFiles.schemaLocation"] = schema_location
 
-            _options["cloudFiles.inferColumnTypes"] = True
-            _options["cloudFiles.schemaEvolutionMode"] = "addNewColumns"
+            if self._schema is None:
+                _options["cloudFiles.inferColumnTypes"] = True
+                _options["cloudFiles.schemaEvolutionMode"] = "addNewColumns"
 
         else:
             _mode = "static"
@@ -168,6 +173,13 @@ class FileDataSource(BaseDataSource):
 
         # Load
         logger.info(f"Reading {self._id} as {_mode} and options {_options}")
+        if self._schema:
+            schema_str = self._schema
+            if hasattr(schema_str, "simpleString"):
+                schema_str = schema_str.simpleString()
+            else:
+                schema_str = str(schema_str)
+            logger.info(f"Expected schema: {schema_str}")
         df = reader.load(self.path)
 
         return df
