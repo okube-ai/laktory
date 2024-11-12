@@ -26,8 +26,9 @@ def get_pl(clean_path=False):
     with open(os.path.join(paths.data, "pl-spark-local.yaml"), "r") as fp:
         data = fp.read()
         data = data.replace("{data_dir}", str(testdir_path / "data"))
-        data = data.replace("{pl_dir}", str(pl_path))
+        data = data.replace("{pl_dir}", str(pl_path / "tables"))
         pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
+        pl.root_path = pl_path
 
     if clean_path and os.path.exists(str(pl_path)):
         shutil.rmtree(str(pl_path))
@@ -36,7 +37,7 @@ def get_pl(clean_path=False):
 
 
 def get_source(pl_path):
-    source_path = str(pl_path / "landing_stock_prices")
+    source_path = str(pl_path / "tables/landing_stock_prices")
     w = Window.orderBy("data.created_at", "data.symbol")
     source = df_brz.withColumn("index", F.row_number().over(w) - 1)
 
@@ -101,8 +102,8 @@ def test_children():
         assert pn.source._parent == pn
         if pn.transformer is not None:
             assert pn.transformer._parent == pn
-        if pn.sink is not None:
-            assert pn.sink._parent == pn
+        for s in pn.all_sinks:
+            assert s._parent == pn
 
         if pn.transformer:
             for tn in pn.transformer.nodes:
@@ -110,6 +111,23 @@ def test_children():
 
         for s in pn.get_sources():
             assert s._parent == pn
+
+
+def test_paths():
+    pl, pl_path = get_pl(clean_path=True)
+    assert pl._root_path == pl_path
+
+    for node in pl.nodes:
+        assert node._root_path == pl_path / node.name
+        assert (
+            node._expectations_checkpoint_location
+            == pl_path / node.name / "checkpoints" / "expectations"
+        )
+        for i, s in enumerate(node.all_sinks):
+            assert (
+                s._checkpoint_location
+                == pl_path / node.name / "checkpoints" / f"sink-{s._uuid}"
+            )
 
 
 def test_execute():
@@ -125,7 +143,7 @@ def test_execute():
     pl.execute(spark)
 
     # Test - Brz Stocks
-    df = pl.nodes_dict["brz_stock_prices"].sink.read(spark)
+    df = pl.nodes_dict["brz_stock_prices"].primary_sink.read(spark)
     assert df.columns == [
         "name",
         "description",
@@ -142,7 +160,7 @@ def test_execute():
     assert df.count() == 3
 
     # Test - Slv Stocks
-    df = pl.nodes_dict["slv_stock_prices"].sink.read(spark)
+    df = pl.nodes_dict["slv_stock_prices"].primary_sink.read(spark)
     assert df.columns == [
         "_bronze_at",
         "created_at",
@@ -154,9 +172,14 @@ def test_execute():
     ]
     assert df.count() == 1
 
+    # Test - Slv Quarantine
+    sink = pl.nodes_dict["slv_stock_prices"].quarantine_sinks[0]
+    df = sink.read(spark)
+    assert df.count() == 0
+
     # Test - Gold
     df = pl.nodes_dict["gld_stock_prices"].output_df
-    # assert df.columns == ['symbol', 'max_price', 'min_price']
+    assert df.columns == ["symbol", "max_price", "min_price", "mean_price"]
     assert df.count() == 1
 
     # Push next rows
@@ -168,14 +191,15 @@ def test_execute():
     pl.execute(spark)
 
     # Test
-    df = pl.nodes_dict["brz_stock_prices"].sink.read(spark)
+    df = pl.nodes_dict["brz_stock_prices"].primary_sink.read(spark)
     assert df.count() == 80
-    df = pl.nodes_dict["slv_stock_prices"].sink.read(spark)
+    df = pl.nodes_dict["slv_stock_prices"].primary_sink.read(spark)
     assert df.count() == 52
-    df = pl.nodes_dict["slv_stock_meta"].sink.read(spark)
+    df = pl.nodes_dict["slv_stock_prices"].quarantine_sinks[0].read(spark)
+    assert df.count() == 8
+    df = pl.nodes_dict["slv_stock_meta"].primary_sink.read(spark)
     assert df.count() == 3
-    df = pl.nodes_dict["gld_stock_prices"].sink.read(spark).toPandas()
-    print(df)
+    df = pl.nodes_dict["gld_stock_prices"].primary_sink.read(spark).toPandas()
     assert df.round(0).equals(gld_target)
 
     # Refresh after overwrite
@@ -183,8 +207,11 @@ def test_execute():
     pl.execute(spark, full_refresh=True)
 
     # Test
-    assert pl.nodes_dict["brz_stock_prices"].sink.read(spark).count() == 40
-    assert pl.nodes_dict["slv_stock_prices"].sink.read(spark).count() == 22
+    assert pl.nodes_dict["brz_stock_prices"].primary_sink.read(spark).count() == 40
+    assert pl.nodes_dict["slv_stock_prices"].primary_sink.read(spark).count() == 22
+    assert (
+        pl.nodes_dict["slv_stock_prices"].quarantine_sinks[0].read(spark).count() == 8
+    )
     assert pl.nodes_dict["slv_stock_meta"].output_df.count() == 3
     assert pl.nodes_dict["gld_stock_prices"].output_df.count() == 3
 
@@ -213,10 +240,13 @@ def test_execute_node():
         node._output_df = None
 
     # Tests
-    assert pl.nodes_dict["brz_stock_prices"].sink.read(spark).count() == 80
-    assert pl.nodes_dict["slv_stock_prices"].sink.read(spark).count() == 52
-    assert pl.nodes_dict["gld_stock_prices"].sink.read(spark).count() == 3
-    df_gld = pl.nodes_dict["gld_stock_prices"].sink.read(spark).toPandas()
+    assert pl.nodes_dict["brz_stock_prices"].primary_sink.read(spark).count() == 80
+    assert pl.nodes_dict["slv_stock_prices"].primary_sink.read(spark).count() == 52
+    assert (
+        pl.nodes_dict["slv_stock_prices"].quarantine_sinks[0].read(spark).count() == 8
+    )
+    assert pl.nodes_dict["gld_stock_prices"].primary_sink.read(spark).count() == 3
+    df_gld = pl.nodes_dict["gld_stock_prices"].primary_sink.read(spark).toPandas()
     assert df_gld.round(0).equals(gld_target)
 
     # Cleanup
@@ -250,7 +280,7 @@ def test_sql_join():
     pl.execute(spark)
 
     # Test
-    df = node.sink.read(spark)
+    df = node.primary_sink.read(spark)
     assert df.columns == [
         "_bronze_at",
         "created_at",
@@ -266,6 +296,7 @@ def test_sql_join():
 if __name__ == "__main__":
     test_dag()
     test_children()
+    test_paths()
     test_execute()
     test_execute_node()
     test_sql_join()

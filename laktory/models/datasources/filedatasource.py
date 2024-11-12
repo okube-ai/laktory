@@ -1,4 +1,6 @@
+from typing import Union
 import os.path
+import json
 
 from typing import Literal
 from typing import Any
@@ -21,16 +23,15 @@ class FileDataSource(BaseDataSource):
     ----------
     format:
         Format of the data files
-    header
-        If `True`, first line of CSV files is assumed to be the column names.
-    multiline
-        If `True`, JSON files are parsed assuming that an object maybe be
-        defined on multiple lines (as opposed to having a single object
-        per line)
     read_options:
         Other options passed to `spark.read.options`
+    schema:
+        Target schema specified as a list of columns, as a dict or a json
+        serialization. Only used when reading data from non-strongly typed
+        files such as JSON or csv files.
     schema_location:
-        Path for files schema. If `None`, parent directory of `path` is used
+        Path for schema inference when reading data as a stream. If `None`,
+        parent directory of `path` is used.
 
     Examples
     ---------
@@ -43,14 +44,25 @@ class FileDataSource(BaseDataSource):
         as_stream=False,
     )
     # df = source.read(spark)
+
+    # With Explicit Schema
+    source = models.FileDataSource(
+        path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
+        format="JSON",
+        as_stream=False,
+        schema=[
+            {"name": "description", "type": "string", "nullable": True},
+            {"name": "close", "type": "double", "nullable": False},
+        ],
+    )
+    # df = source.read(spark)
     ```
     """
 
-    format: Literal["CSV", "PARQUET", "DELTA", "JSON", "EXCEL", "BINARYFILE"] = "JSON"
-    header: bool = True
-    multiline: bool = False
+    format: Literal["CSV", "PARQUET", "DELTA", "JSON", "NDJSON", "JSONL", "EXCEL", "BINARYFILE"] = "JSONL"
     path: str
-    read_options: dict[str, str] = {}
+    read_options: dict[str, Any] = {}
+    schema: Union[str, dict, list] = None
     schema_location: str = None
 
     @model_validator(mode="after")
@@ -78,52 +90,97 @@ class FileDataSource(BaseDataSource):
     def _id(self):
         return str(self.path)
 
+    @property
+    def _schema(self):
+        schema = self.schema
+        if schema is None:
+            return schema
+        if isinstance(schema, list):
+            schema = {"fields": schema, "type": "struct"}
+
+        if isinstance(schema, str) and '"fields":[' in schema.replace("'", '"').replace(" ", ""):
+            schema = json.loads(schema)
+
+        # DDL format
+        if isinstance(schema, str):
+            pass
+
+        # Spark Struct format
+        elif isinstance(schema, dict):
+            import pyspark.sql.types as T
+            schema = T.StructType.fromJson(schema)
+
+        return schema
+
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
     def _read_spark(self, spark) -> SparkDataFrame:
+
+        _options = {}
+        _mode = "stream"
+
+        # JSON
+        _format = self.format
+        if self.format in ["NDJSON", "JSONL"]:
+            _format = "JSON"
+            _options["multiline"] = False
+        elif self.format == "JSON":
+            _format = "JSON"
+            _options["multiline"] = True
+
+        # CSV
+        if self.format == "CSV":
+            _options["header"] = True
+
         if self.as_stream:
-            logger.info(f"Reading {self._id} as stream")
+            _mode = "stream"
 
-            # Set reader
-            if self.format == "DELTA":
-                reader = spark.readStream.format(self.format)
+            if _format == "DELTA":
+                reader = spark.readStream.format(_format)
+
             else:
+                reader = spark.readStream.format("cloudFiles")
+                _options["cloudFiles.format"] = _format
 
-                schema_location = self.schema_location
-                if schema_location is None:
-                    schema_location = os.path.dirname(self.path)
+                if self._schema:
+                    reader = reader.schema(self._schema)
+                else:
+                    schema_location = self.schema_location
+                    if schema_location is None:
+                        schema_location = os.path.dirname(self.path)
+                    _options["cloudFiles.schemaLocation"] = schema_location
 
-                reader = (
-                    spark.readStream.format("cloudFiles")
-                    .option("cloudFiles.format", self.format)
-                    .option("cloudFiles.schemaLocation", schema_location)
-                    .option("cloudFiles.inferColumnTypes", True)
-                    .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
-                    .option("cloudFiles.allowOverwrites", True)
-                )
+            if self._schema is None:
+                _options["cloudFiles.inferColumnTypes"] = True
+                _options["cloudFiles.schemaEvolutionMode"] = "addNewColumns"
 
         else:
-            logger.info(f"Reading {self._id} as static")
+            _mode = "static"
+            reader = spark.read.format(_format)
+            if self._schema:
+                reader = reader.schema(self._schema)
 
-            # Set reader
-            reader = spark.read.format(self.format)
-
-        reader = (
-            reader.option("multiLine", self.multiline)  # only apply to JSON format
-            .option("mergeSchema", True)
-            .option("recursiveFileLookup", True)
-            .option("header", self.header)  # only apply to CSV format
-        )
+        # User Options
+        _options["mergeSchema"] = True
+        _options["recursiveFileLookup"] = True
         if self.read_options:
-            reader = reader.options(**self.read_options)
+            for k, v in self.read_options.items():
+                _options[k] = v
+
+        reader = reader.options(**_options)
 
         # Load
+        logger.info(f"Reading {self._id} as {_mode} and options {_options}")
+        if self._schema:
+            schema_str = self._schema
+            if hasattr(schema_str, "simpleString"):
+                schema_str = schema_str.simpleString()
+            else:
+                schema_str = str(schema_str)
+            logger.info(f"Expected schema: {schema_str}")
         df = reader.load(self.path)
-
-        # Not supported by UC
-        # .withColumn("file", F.input_file_name())
 
         return df
 
@@ -148,10 +205,10 @@ class FileDataSource(BaseDataSource):
             df = pl.read_excel(self.path, **self.read_options)
 
         elif self.format.lower() == "json":
-            if self.multiline:
-                df = pl.scan_ndjson(self.path, **self.read_options)
-            else:
-                df = pl.read_json(self.path, **self.read_options)
+            df = pl.read_json(self.path, **self.read_options)
+
+        elif self.format.lower() in ["jsonl", "ndjson"]:
+            df = pl.scan_ndjson(self.path, **self.read_options)
 
         elif self.format.lower() == "parquet":
             df = pl.scan_parquet(self.path, **self.read_options)

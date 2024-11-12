@@ -16,12 +16,13 @@ node_brz = models.PipelineNode(
     name="brz_stock_prices",
     source=models.FileDataSource(
         path="./data/stock_prices.json",
-        multiline=True,
     ),
-    sink=models.FileDataSink(
-        path="./data/brz_stock_prices.parquet",
-        format="PARQUET",
-    ),
+    sinks=[
+        models.FileDataSink(
+            path="./data/brz_stock_prices.parquet",
+            format="PARQUET",
+        )
+    ],
 )
 
 
@@ -34,10 +35,12 @@ node_slv = models.PipelineNode(
     source=models.PipelineNodeDataSource(
         node_name="brz_stock_prices",
     ),
-    sink=models.FileDataSink(
-        path="./data/slv_stock_prices.parquet",
-        format="PARQUET",
-    ),
+    sinks=[
+        models.FileDataSink(
+            path="./data/slv_stock_prices.parquet",
+            format="PARQUET",
+        )
+    ],
     transformer=models.PolarsChain(
         nodes=[
             models.PolarsChainNode(

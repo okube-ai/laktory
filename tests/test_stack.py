@@ -1,5 +1,6 @@
 import copy
 import os
+import pytest
 
 from laktory import models
 from laktory._testing.stackvalidator import StackValidator
@@ -61,6 +62,7 @@ def test_stack_model():
             "databricks_dbfsfiles": {},
             "databricks_catalogs": {},
             "databricks_clusters": {},
+            "databricks_clusterpolicies": {},
             "databricks_directories": {},
             "databricks_externallocations": {},
             "databricks_grants": {},
@@ -213,6 +215,7 @@ def test_stack_model():
             },
             "databricks_dltpipelines": {},
             "databricks_schemas": {},
+            "databricks_repos": {},
             "databricks_secrets": {},
             "databricks_secretscopes": {},
             "databricks_serviceprincipals": {},
@@ -304,7 +307,8 @@ def test_stack_model():
                             "layer": None,
                             "name": "first_node",
                             "primary_key": None,
-                            "sink": None,
+                            "sinks": None,
+                            "root_path": None,
                             "source": {
                                 "as_stream": False,
                                 "broadcast": False,
@@ -317,11 +321,10 @@ def test_stack_model():
                                 "sample": None,
                                 "selects": None,
                                 "watermark": None,
-                                "format": "JSON",
-                                "header": True,
-                                "multiline": False,
+                                "format": "JSONL",
                                 "path": "/tmp/",
                                 "read_options": {},
+                                "schema": None,
                                 "schema_location": None,
                             },
                             "timestamp_key": None,
@@ -329,6 +332,7 @@ def test_stack_model():
                     ],
                     "orchestrator": "DLT",
                     "udfs": [],
+                    "root_path": None,
                     "workspacefile": None,
                 }
             },
@@ -405,6 +409,27 @@ def test_stack_env_model():
     }
     assert pl.dlt.development == False
     assert pl.nodes[0].dlt_template is None
+
+
+def test_stack_resources_unique_name():
+
+    with pytest.raises(ValueError):
+        models.Stack(
+            name="stack",
+            organization="o3",
+            resources=models.StackResources(
+                databricks_schemas={
+                    "finance": {
+                        "name": "schema_finance"
+                    }
+                },
+                databricks_catalogs={
+                    "finance": {
+                        "name": "catalog_finance",
+                    }
+                }
+            )
+        )
 
 
 def test_pulumi_stack():
@@ -1135,12 +1160,14 @@ def test_terraform_plan():
 
 def test_all_resources():
     from tests.test_catalog import catalog
+    from tests.test_cluster_policy import cluster_policy
     from tests.test_directory import directory
     from tests.test_dashboard import dashboard
     from tests.test_job import job
     from tests.test_pipeline_orchestrators import pl_dlt
     from tests.test_metastore import metastore
     from tests.test_notebook import nb
+    from tests.test_repo import repo
     from tests.test_schema import schema
     from tests.test_sql_query import query
     from tests.test_user import user
@@ -1158,11 +1185,13 @@ def test_all_resources():
     validator = StackValidator(
         resources={
             "databricks_catalogs": [catalog],
+            "databricks_clusterpolicies": [cluster_policy],
             "databricks_dashboards": [dashboard],
             "databricks_directories": [directory],
             "databricks_jobs": [job],
             "databricks_metastores": [metastore],
             "databricks_notebooks": [nb],
+            "databricks_repos": [repo],
             "databricks_schemas": [schema],
             "databricks_sqlqueries": [query],
             "databricks_groups": [group],
@@ -1193,6 +1222,7 @@ def test_all_resources():
 if __name__ == "__main__":
     test_stack_model()
     test_stack_env_model()
+    test_stack_resources_unique_name()
     test_pulumi_stack()
     test_pulumi_preview()
     test_terraform_stack()

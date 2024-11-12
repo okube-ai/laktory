@@ -6,6 +6,7 @@ from typing import Literal
 from typing import TYPE_CHECKING
 from typing import Any
 from pydantic import model_validator
+from pathlib import Path
 from pydantic import Field
 import networkx as nx
 
@@ -158,6 +159,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
           the upstream node sink.
     udfs:
         List of user defined functions provided to the transformer.
+    root_path:
+        Location of the pipeline node root used to store logs, metrics and
+        checkpoints.
     workspacefile:
         Workspace file used to store the JSON definition of the pipeline.
 
@@ -181,8 +185,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
           source:
             format: CSV
             path: ./raw/brz_stock_prices.csv
-          sink:
-            format: PARQUET
+          sinks:
+          - format: PARQUET
             mode: OVERWRITE
             path: ./dataframes/brz_stock_prices
 
@@ -190,8 +194,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
           layer: SILVER
           source:
             node_name: brz_stock_prices
-          sink:
-            format: PARQUET
+          sinks:
+          - format: PARQUET
             mode: OVERWRITE
             path: ./dataframes/slv_stock_prices
           transformer:
@@ -252,16 +256,16 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
           layer: BRONZE
           source:
             path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
-          sink:
-              path: /Volumes/dev/sources/landing/tables/dev_stock_prices/
+          sinks:
+          -   path: /Volumes/dev/sources/landing/tables/dev_stock_prices/
               mode: OVERWRITE
 
         - name: slv_stock_prices
           layer: SILVER
           source:
             node_name: brz_stock_prices
-          sink:
-              path: /Volumes/dev/sources/landing/tables/slv_stock_prices/
+          sinks:
+          -   path: /Volumes/dev/sources/landing/tables/slv_stock_prices/
               mode: OVERWRITE
           transformer:
             nodes:
@@ -293,8 +297,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
           layer: SILVER
           source:
             path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_meta/
-          sink:
-            path: /Volumes/dev/sources/landing/tables/slv_stock_meta/
+          sinks:
+          - path: /Volumes/dev/sources/landing/tables/slv_stock_meta/
             mode: OVERWRITE
 
     '''
@@ -332,16 +336,16 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
           source:
             path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
             as_stream: true
-          sink:
-            table_name: brz_stock_prices
+          sinks:
+          - table_name: brz_stock_prices
 
         - name: slv_stock_prices
           layer: SILVER
           source:
             node_name: brz_stock_prices
             as_stream: true
-          sink:
-            table_name: slv_stock_prices
+          sinks:
+          - table_name: slv_stock_prices
           transformer:
             nodes:
             - with_column:
@@ -391,6 +395,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     nodes: list[Union[PipelineNode]]
     orchestrator: Union[Literal["DLT", "DATABRICKS_JOB"], None] = None
     udfs: list[PipelineUDF] = []
+    root_path: str = None
     workspacefile: PipelineWorkspaceFile = None
 
     @model_validator(mode="before")
@@ -451,17 +456,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             raise ValueError("dlt must be defined if DLT orchestrator is selected.")
 
         for n in self.nodes:
-
-            # Sink must be Table or None
-            if n.sink is None:
-                pass
-            if isinstance(n.sink, TableDataSink):
-                if n.sink.table_name != n.name:
-                    raise ValueError(
-                        "For DLT pipeline, table sink name must be the same as node id."
-                    )
-                n.sink.catalog_name = self.dlt.catalog
-                n.sink.schema_name = self.dlt.target
+            for s in n.all_sinks:
+                if isinstance(s, TableDataSink):
+                    s.catalog_name = self.dlt.catalog
+                    s.schema_name = self.dlt.target
 
         return self
 
@@ -524,13 +522,15 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                     # job_cluster_key=job_cluster_key,
                 )
             ]
+            job.sort_tasks(job.tasks)
+
             if cluster_found:
                 job.tasks[-1].job_cluster_key = "node-cluster"
 
         return self
 
     # ----------------------------------------------------------------------- #
-    # Properties                                                              #
+    # DataFrame                                                               #
     # ----------------------------------------------------------------------- #
 
     @property
@@ -539,10 +539,29 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             return self.dataframe_type
         return None
 
+    # ----------------------------------------------------------------------- #
+    # Orchestrator                                                            #
+    # ----------------------------------------------------------------------- #
+
     @property
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline orchestrator is DLT"""
         return self.orchestrator == "DLT"
+
+    # ----------------------------------------------------------------------- #
+    # Paths                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def _root_path(self) -> Path:
+        if self.root_path:
+            return Path(self.root_path)
+
+        return Path(settings.laktory_root) / "pipelines" / self.name
+
+    # ----------------------------------------------------------------------- #
+    # Expectations                                                            #
+    # ----------------------------------------------------------------------- #
 
     @property
     def checks(self) -> list[DataQualityCheck]:
@@ -550,6 +569,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         for node in self.nodes:
             checks += node.checks
         return checks
+
+    # ----------------------------------------------------------------------- #
+    # Nodes                                                                   #
+    # ----------------------------------------------------------------------- #
 
     @property
     def nodes_dict(self) -> dict[str, PipelineNode]:
@@ -586,7 +609,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             dag.add_node(n.name)
 
         # Build edges and assign nodes to pipeline node data sources
+        node_names = []
         for n in self.nodes:
+
+            if n.name in node_names:
+                raise ValueError(f"Pipeline node '{n.name}' is declared twice in pipeline '{self.name}'")
+            node_names += [n.name]
+
             for s in n.get_sources(PipelineNodeDataSource):
                 dag.add_edge(s.node_name, n.name)
                 if s.node_name not in self.nodes_dict:
@@ -596,8 +625,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                 s.node = self.nodes_dict[s.node_name]
 
         if not nx.is_directed_acyclic_graph(dag):
+            for n in dag.nodes:
+                logger.info(f"Pipeline {self.name} node: {n}")
+            for e in dag.edges:
+                logger.info(f"Pipeline {self.name} edge: {e[0]} -> {e[1]}")
             raise ValueError(
-                "Pipeline is not a DAG (directed acyclic graph)."
+                f"Pipeline '{self.name}' is not a DAG (directed acyclic graph)."
                 " A circular dependency has been detected. Please review nodes dependencies."
             )
 
@@ -631,6 +664,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
+    def purge(self, spark=None) -> None:
+        logger.info("Purging Pipeline")
+
+        for inode, node in enumerate(self.sorted_nodes):
+            node.purge(
+                spark=spark,
+            )
+
     def execute(
         self, spark=None, udfs=None, write_sinks=True, full_refresh: bool = False
     ) -> None:
@@ -657,7 +698,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             node.execute(
                 spark=spark,
                 udfs=udfs,
-                write_sink=write_sinks,
+                write_sinks=write_sinks,
                 full_refresh=full_refresh,
             )
 

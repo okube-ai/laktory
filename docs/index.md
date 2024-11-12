@@ -30,7 +30,8 @@ for data platform management.
 
 ## Why Laktory?
 Laktory is designed to accelerate value generation and reduce the total cost of
-operations by focusing on three key areas: simplicity, speed, and scalability.
+operations by focusing on four key areas: simplicity, speed, scalability and
+quality.
 
 ### Simplicity
 With Laktory, managing both Databricks resources and data transformations is 
@@ -60,6 +61,12 @@ ones. Switching between environments is effortless with a simple configuration
 change, ensuring that Laktory adapts to both small and large-scale needs
 without complexity.
 
+### Quality
+Elevate data quality to a first-class citizen. Laktory integrates robust data 
+quality expectations at both row and aggregate levels, ensuring that only 
+trusted data reaches production analytics. Invalid records can trigger pipline
+failure, be dropped, or automatically quarantined for later review.
+
 ## How does it work?
 Using YAML configuration files, define a [stack](concepts/stack.md) of
 resources, such as a data [pipelines](concepts/pipeline.md) with SQL-based and
@@ -69,8 +76,8 @@ Spark-based transformations.
 name: slv_stock_prices
 source:
   path: /Volumes/dev/sources/landing/tables/brz_stock_prices/
-sink:
-  schema_name: finance
+sinks:
+- schema_name: finance
   table_name: slv_stock_prices
 transformer:
   nodes:

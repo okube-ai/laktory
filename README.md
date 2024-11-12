@@ -79,11 +79,11 @@ node_slv = models.PipelineNode(
     source={
         "node_name": "brz_stock_prices"
     },
-    sink={
+    sinks=[{
         "path": "./data/slv_stock_prices",
         "mode": "OVERWRITE",
         "format": "PARQUET",
-    },
+    }],
     transformer={
         "nodes": [
             

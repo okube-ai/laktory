@@ -93,12 +93,6 @@ class TableDataSink(BaseDataSink):
     def _id(self) -> str:
         return self.full_name
 
-    @property
-    def _checkpoint_location(self):
-        if self.checkpoint_location:
-            return self.checkpoint_location
-        return None
-
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
@@ -140,13 +134,14 @@ class TableDataSink(BaseDataSink):
             logger.info(
                 f"Writing {self._id} {self.format}  as stream with mode {mode} and options {_options}"
             )
-            writer = (
+            query = (
                 df.writeStream.outputMode(mode)
                 .format(self.format)
                 .trigger(availableNow=True)  # TODO: Add option for trigger?
                 .options(**_options)
-            )
-            writer.toTable(self.full_name)
+            ).toTable(self.full_name)
+
+            query.awaitTermination()
 
         else:
             logger.info(
@@ -167,13 +162,7 @@ class TableDataSink(BaseDataSink):
         """
         Delete sink data and checkpoints
         """
-        if self._checkpoint_location:
-            if os.path.exists(self._checkpoint_location):
-                logger.info(
-                    f"Deleting checkpoint at {self._checkpoint_location}",
-                )
-                shutil.rmtree(self._checkpoint_location)
-
+        # Remove Data
         if self.warehouse == "DATABRICKS":
             logger.info(
                 f"Dropping table {self.full_name}",
@@ -183,6 +172,9 @@ class TableDataSink(BaseDataSink):
             raise NotImplementedError(
                 f"Warehouse '{self.warehouse}' is not yet supported."
             )
+
+        # Remove Checkpoint
+        self._purge_checkpoint(spark=spark)
 
     # ----------------------------------------------------------------------- #
     # Source                                                                  #
