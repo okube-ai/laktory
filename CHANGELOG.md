@@ -1,6 +1,16 @@
 # Release History
 
-## [0.5.2] - Unreleased
+## [0.5.3] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.5.2] - 2024-11-12
 ### Added
 * Support for JSONL and NDJSON formats in `FileDataSource`
 ### Fixed
