@@ -134,13 +134,14 @@ class TableDataSink(BaseDataSink):
             logger.info(
                 f"Writing {self._id} {self.format}  as stream with mode {mode} and options {_options}"
             )
-            writer = (
+            query = (
                 df.writeStream.outputMode(mode)
                 .format(self.format)
                 .trigger(availableNow=True)  # TODO: Add option for trigger?
                 .options(**_options)
-            )
-            writer.toTable(self.full_name)
+            ).toTable(self.full_name)
+
+            query.awaitTermination()
 
         else:
             logger.info(
