@@ -2,15 +2,13 @@
 
 ## [0.5.2] - Unreleased
 ### Added
-* n/a
+* Support for JSONL and NDJSON formats in `FileDataSource` 
 ### Fixed
-* n/a
+* Missing stream query termination in `TableDataSink` model
 ### Updated
 * Logs to include timestamp
 * `FileDataSource` to support spark `read_options`
 * `FileDataSource` to support `schema` specification for weakly-typed formats
-### Breaking changes
-* n/a
 
 ## [0.5.1] - 2024-11-08
 ### Added
