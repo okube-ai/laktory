@@ -1,5 +1,6 @@
 import copy
 import os
+import pytest
 
 from laktory import models
 from laktory._testing.stackvalidator import StackValidator
@@ -408,6 +409,27 @@ def test_stack_env_model():
     }
     assert pl.dlt.development == False
     assert pl.nodes[0].dlt_template is None
+
+
+def test_stack_resources_unique_name():
+
+    with pytest.raises(ValueError):
+        models.Stack(
+            name="stack",
+            organization="o3",
+            resources=models.StackResources(
+                databricks_schemas={
+                    "finance": {
+                        "name": "schema_finance"
+                    }
+                },
+                databricks_catalogs={
+                    "finance": {
+                        "name": "catalog_finance",
+                    }
+                }
+            )
+        )
 
 
 def test_pulumi_stack():
@@ -1200,6 +1222,7 @@ def test_all_resources():
 if __name__ == "__main__":
     test_stack_model()
     test_stack_env_model()
+    test_stack_resources_unique_name()
     test_pulumi_stack()
     test_pulumi_preview()
     test_terraform_stack()

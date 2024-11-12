@@ -188,6 +188,12 @@ class StackResources(BaseModel):
                 continue
 
             for resource_name, _r in getattr(self, resource_type).items():
+
+                if resource_name in resources.keys():
+                    raise ValueError(
+                        f"Stack resource names are not unique. '{resource_name}' is already used."
+                    )
+
                 if providers_excluded and isinstance(_r, BaseProvider):
                     continue
 

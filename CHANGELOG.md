@@ -1,16 +1,12 @@
 # Release History
 
 ## [0.5.2] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
+* Raise Exception when resource names are not unique [[#294](https://github.com/okube-ai/laktory/issues/294)]
 ### Updated
 * Logs to include timestamp
 * `FileDataSource` to support spark `read_options`
 * `FileDataSource` to support `schema` specification for weakly-typed formats
-### Breaking changes
-* n/a
 
 ## [0.5.1] - 2024-11-08
 ### Added
