@@ -18,6 +18,130 @@ from laktory.types import AnyDataFrame
 logger = get_logger(__name__)
 
 
+class DataSinkMergeCDCOptions(BaseModel):
+    """
+    Options for merging a change data capture (CDC).
+
+    They are also used to build the target using `apply_changes` method when
+    using Databricks DLT.
+
+    Attributes
+    ----------
+    delete_where:
+        Specifies when a CDC event should be treated as a DELETE rather than
+        an upsert.
+    apply_as_truncates:
+        Specifies when a CDC event should be treated as a full table TRUNCATE.
+        Because this clause triggers a full truncate of the target table, it
+        should be used only for specific use cases requiring this
+        functionality.
+    include_columns:
+        A subset of columns to include in the target table. Use
+        `include_columns` to specify the complete list of columns to include.
+    exclude_columns:
+        A subset of columns to exclude in the target table.
+    ignore_null_updates:
+        Allow ingesting updates containing a subset of the target columns.
+        When a CDC event matches an existing row and ignore_null_updates is
+        `True`, columns with a null will retain their existing values in the
+        target. This also applies to nested columns with a value of null. When
+        ignore_null_updates is `False`, existing values will be overwritten
+        with null values.
+    primary_keys:
+        The column or combination of columns that uniquely identify a row in
+        the source data. This is used to identify which CDC events apply to
+        specific records in the target table.
+    scd_type:
+        Whether to store records as SCD type 1 or SCD type 2.
+    order_by:
+        The column name specifying the logical order of CDC events in the
+        source data. Used to handle change events that arrive out of order.
+    track_history_columns:
+        A subset of output columns to be tracked for history in the target table.
+    track_history_except_columns:
+        A subset of output columns to be excluded from tracking.
+
+    References
+    ----------
+    https://docs.databricks.com/en/delta-live-tables/python-ref.html#change-data-capture-with-python-in-delta-live-tables
+    """
+
+    # apply_as_deletes: Union[str, None] = None
+    # apply_as_truncates: Union[str, None] = None
+    include_columns: list[str] = None
+    exclude_columns: list[str] = None
+    delete_where: str = None
+    ignore_null_updates: bool = False
+    order_by: str = None
+    # ignore_null_updates: Union[bool, None] = None
+    primary_keys: list[str]
+    scd_type: Literal[1, 2] = None
+    # track_history_columns: Union[list[str], None] = None
+    # track_history_except_columns: Union[list[str], None] = None
+
+    def execute(self, target_path, source: SparkDataFrame):
+
+        from delta.tables import DeltaTable
+        from pyspark.sql import Window
+        import pyspark.sql.functions as F
+
+        spark = source.sparkSession
+
+        logger.info(f"Executing merge on {target_path} with primary keys {self.primary_keys}")
+
+        # Select columns
+        if self.include_columns:
+            columns = [c for c in self.include_columns]
+        else:
+            columns = [c for c in source.columns if c not in self.primary_keys]
+            if self.exclude_columns:
+                columns = [c for c in columns if c not in self.exclude_columns]
+
+        # Drop Duplicates
+        if self.order_by:
+            w = Window.partitionBy(*self.primary_keys).orderBy(F.desc(self.order_by))
+            source = (
+                source
+                .withColumn("_row_number", F.row_number().over(w))
+                .filter(F.col("_row_number") == 1)
+                .drop("_row_number")
+            )
+
+        table_target = DeltaTable.forPath(spark, target_path)
+
+        # Define merge
+        merge = (
+            table_target.alias("target")
+            .merge(
+                source.alias("source"),
+                condition=" AND ".join([f"source.{c} = target.{c}" for c in self.primary_keys]),
+            )
+        )
+
+        # Update
+        _set = {f"target.{c}": f"source.{c}" for c in columns}
+        if self.ignore_null_updates:
+            _set = {
+                f"target.{c}": F.coalesce(F.col(f"source.{c}"), F.col(f"target.{c}")).alias(c)
+                for c in columns
+            }
+        if not self.delete_where:
+            merge = merge.whenMatchedUpdate(set=_set)
+        else:
+            merge = merge.whenMatchedUpdate(set=_set, condition=~F.expr(self.delete_where))
+
+        # Insert
+        merge = merge.whenNotMatchedInsert(
+            values={f"target.{c}": f"source.{c}" for c in self.primary_keys + columns}
+        )
+
+        # Delete
+        if self.delete_where:
+            merge = merge.whenMatchedDelete(condition=self.delete_where)
+
+        merge.execute()
+
+
 class BaseDataSink(BaseModel):
     """
     Base class for building data sink
@@ -29,6 +153,9 @@ class BaseDataSink(BaseModel):
         moving from stream to batch. Don't apply for quarantine sinks.
     is_quarantine:
         Sink used to store quarantined results from node expectations.
+    merge_cdc_options:
+        Merge options to handle input DataFrames that are Change Data Capture
+        (CDC). Only used when `merge` mode is selected.
     mode:
         Write mode.
         - overwrite: Overwrite existing data
@@ -36,6 +163,8 @@ class BaseDataSink(BaseModel):
         - error: Throw and exception if data already exists
         - ignore: Silently ignore this operation if data already exists
         - complete: Overwrite for streaming dataframes
+        - merge: Append, update and optionally delete records. Requires
+        cdc specification.
     write_options:
         Other options passed to `spark.write.options`
     """
@@ -43,8 +172,9 @@ class BaseDataSink(BaseModel):
     is_quarantine: bool = False
     is_primary: bool = True
     checkpoint_location: str = None
+    merge_cdc_options: DataSinkMergeCDCOptions = None  # TODO: Review parameter name
     mode: Union[
-        Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE", "UPDATE"], None
+        Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE", "UPDATE", "MERGE"], None
     ] = None
     write_options: dict[str, str] = {}
     _parent: "PipelineNode" = None

@@ -1,50 +1,40 @@
 import datetime
+import uuid
+import os
+import shutil
 import pandas as pd
+from pathlib import Path
 
-from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-from delta.tables import DeltaTable
 from laktory import models
 
-from laktory.types import AnyDataFrame
-from laktory.types import SparkDataFrame
-
-
-# --------------------------------------------------------------------------- #
-# Spark                                                                       #
-# --------------------------------------------------------------------------- #
-
-spark = (
-    SparkSession.builder.appName("WriteMerge")
-    .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.2.0")
-    .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-    .config(
-        "spark.sql.catalog.spark_catalog",
-        "org.apache.spark.sql.delta.catalog.DeltaCatalog",
-    )
-    .getOrCreate()
-)
-spark.conf.set("spark.sql.session.timeZone", "UTC")
+from laktory._testing import spark
+from laktory._testing import Paths
 
 
 # --------------------------------------------------------------------------- #
 # Functions                                                                   #
 # --------------------------------------------------------------------------- #
 
-path = "./stocks_target"
+
+paths = Paths(__file__)
+
+testdir_path = Path(__file__).parent
+
 price_cols = ["close", "open"]
 
 
-def build_df():
+def build_target(path=None):
+
+    if path is None:
+        path = testdir_path / "tmp" / "test_datasinks_merge" / str(uuid.uuid4())
 
     nstocks = 3
     nstamps = 5
 
     # Timestamps
     t0 = datetime.date(2024, 11, 1)
-    # t1 = t0 + timedelta(days=nstamps-1)
-    # timestamps = pd.date_range(t0, t1, freq="d")
     dates = [t0 + datetime.timedelta(days=i) for i in range(nstamps)]
 
     # Symbols
@@ -60,6 +50,7 @@ def build_df():
         df = df.withColumn(c, F.round(F.rand(seed=i), 2))
 
     df = df.withColumn("from", F.lit("target"))
+    df = df.sort("date", "symbol")
 
     first_symbols = F.col("symbol").isin([f"S{i:1d}" for i in [0]])
     last_symbols = F.col("symbol").isin([f"S{i:1d}" for i in [nstocks - 1]])
@@ -72,121 +63,153 @@ def build_df():
     df = df.withColumn("_is_updated", first_symbols & ~is_new)
     df = df.withColumn("_is_deleted", last_symbols & ~is_new)
 
-    df = df.sort("date", "symbol")
-
-    return df
-
-
-def write_target(df):
+    # Write Target
     (
         df.filter(~F.col("_is_new"))
         .drop("_is_new", "_is_updated", "_is_deleted")
         .write.format("delta")
         .mode("overwrite")
         .option("overwriteSchema", "true")
-        .save(path)
+        .save(str(path))
     )
 
-
-def get_source(df):
+    # Build Source
     c1 = F.col("_is_new")
     c2 = F.col("_is_updated")
     c3 = F.col("_is_deleted")
 
-    df = df.filter(c1 | c2 | c3)
-    df = df.drop("_is_new", "_is_updated")
-    df = df.withColumn("from", F.lit("source"))
+    dfs = df.filter(c1 | c2 | c3)
+    dfs = dfs.drop("_is_new", "_is_updated")
+    dfs = dfs.withColumn("from", F.lit("source"))
 
-    return df
-
-
-def read():
-    return spark.read.format("DELTA").load(path)
+    return path, dfs
 
 
-def execute_merge(
-    target_path,
-    source: SparkDataFrame,
-    primary_keys,
-    include_columns=None,
-    exclude_columns=None,
-    delete_where=None,
-):
-
-    # Select columns
-    if include_columns:
-        columns = [c for c in include_columns]
-    else:
-        columns = [c for c in source.columns if c not in primary_keys]
-        if exclude_columns:
-            columns = [c for c in columns if c not in exclude_columns]
-
-    table_target = DeltaTable.forPath(spark, target_path)
-
-    # Define merge
-    merge = (
-        table_target.alias("target")
-        .merge(
-            source.alias("source"),
-            condition=" AND ".join([f"source.{c} = target.{c}" for c in primary_keys]),
-        )
-    )
-
-    # Update
-    if not delete_where:
-        merge = merge.whenMatchedUpdate(
-            set={f"target.{c}": f"source.{c}" for c in columns},
-        )
-    else:
-        merge = merge.whenMatchedUpdate(
-            set={f"target.{c}": f"source.{c}" for c in columns},
-            condition=~F.expr(delete_where)
-        )
-
-    merge = merge.whenNotMatchedInsert(
-        values={f"target.{c}": f"source.{c}" for c in primary_keys + columns}
-    )
-
-    if delete_where:
-        merge = merge.whenMatchedDelete(
-            condition=delete_where,
-        )
-
-    merge.execute()
+def read(path):
+    return spark.read.format("DELTA").load(str(path))
 
 
-def test_merge():
+# --------------------------------------------------------------------------- #
+# Tests                                                                       #
+# --------------------------------------------------------------------------- #
 
-    # Build and write target
-    df = build_df()
-    write_target(df)
+def test_basic():
 
-    df0 = read().toPandas()
+    path, dfs = build_target()
+
+    # Test target
+    df0 = read(path).toPandas()
     assert len(df0) == 9  # 3 stocks * 3 timestamps
     assert df0["from"].unique().tolist() == ["target"]
 
-    # Build Source
-    dfs = get_source(df)
+    # Test Source
     _dfs = dfs.toPandas()
     assert len(_dfs) == 12  # 6 new + 3 updates + 3 deletes
     assert _dfs["from"].unique().tolist() == ["source"]
 
-    # Merge source with target
-    execute_merge(
-        target_path=path,
-        source=dfs,
-        primary_keys=["symbol", "date"],
-        delete_where="source._is_deleted = true",
-        exclude_columns=["_is_deleted"],
+    sink = models.FileDataSink(
+        mode="MERGE",
+        path=str(path),
+        merge_cdc_options=models.DataSinkMergeCDCOptions(
+            primary_keys=["symbol", "date"],
+            delete_where="source._is_deleted = true",
+            exclude_columns=["_is_deleted"],
+        ),
     )
+    sink.write(dfs)
 
     # Read updated target
-    df1 = read().sort("date", "symbol").toPandas()
+    df1 = read(path).sort("date", "symbol").toPandas()
     assert df1.columns.tolist() == ['date', 'symbol', 'close', 'open', 'from']
     assert len(df1) == 9 + 6 - 3  # 9 initial + 6 new - 3 deletes
     assert "S3" not in df1["symbol"].unique().tolist()  # deleted symbol
     assert (df1["from"] == "source").sum() == 9  # 6 new + 3 updates
 
+    # Cleanup
+    shutil.rmtree(path)
+
+
+def test_out_of_sequence():
+
+    path, _ = build_target()
+
+    # Test out-of-sequence
+    dfs = spark.createDataFrame(pd.DataFrame({
+        "symbol": ["S2", "S2"],
+        "date": [datetime.date(2024, 12, 1), datetime.date(2024, 12, 1)],
+        "close": [2.0, 1.0],
+        "open": [2.0, 1.0],
+        "from": ["source", "source"],
+        "index": [2, 1],
+    }))
+
+    sink = models.FileDataSink(
+        mode="MERGE",
+        path=str(path),
+        merge_cdc_options=models.DataSinkMergeCDCOptions(
+            primary_keys=["symbol", "date"],
+            exclude_columns=["index"],
+            order_by="index",
+        ),
+    )
+    sink.write(dfs)
+
+    df1 = read(path).sort("date", "symbol").toPandas()
+    row = df1.iloc[-1].to_dict()
+    assert row == {'date': datetime.date(2024, 12, 1), 'symbol': 'S2', 'close': 2.0, 'open': 2.0, 'from': 'source'}
+
+    # Cleanup
+    shutil.rmtree(path)
+
+
+def test_null_updates():
+
+    path, _ = build_target()
+
+    # Build Source Data
+    dfs = spark.createDataFrame(data=[
+        ("S2", datetime.date(2024, 11, 3), None, 2.0, "source")
+    ], schema=T.StructType([
+        T.StructField("symbol", T.StringType(), True),
+        T.StructField("date", T.DateType(), True),
+        T.StructField("close", T.DoubleType(), True),
+        T.StructField("open", T.DoubleType(), True),
+        T.StructField("from", T.StringType(), True)
+    ]))
+
+    # Update target without ignoring null updates
+    sink = models.FileDataSink(
+        mode="MERGE",
+        path=str(path),
+        merge_cdc_options=models.DataSinkMergeCDCOptions(
+            primary_keys=["symbol", "date"],
+        ),
+    )
+    dfs.show()
+    sink.write(dfs)
+
+    # Test
+    df1 = read(path).sort("date", "symbol").toPandas()
+    row = df1.iloc[-1].fillna(-1).to_dict()
+    assert row == {'date': datetime.date(2024, 11, 3), 'symbol': 'S2', 'close': -1, 'open': 2.0, 'from': 'source'}
+
+    # Reset target
+    _ = build_target(path)
+
+    # Ignore null updates
+    sink.merge_cdc_options.ignore_null_updates = True
+    sink.write(dfs)
+
+    # Test
+    df1 = read(path).sort("date", "symbol").toPandas()
+    row = df1.iloc[-1].to_dict()
+    assert row == {'date': datetime.date(2024, 11, 3), 'symbol': 'S2', 'close': 0.0, 'open': 2.0, 'from': 'source'}
+
+    # Cleanup
+    shutil.rmtree(path)
+
 
 if __name__ == "__main__":
-    test_merge()
+    test_basic()
+    test_out_of_sequence()
+    test_null_updates()

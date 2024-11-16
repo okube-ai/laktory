@@ -77,6 +77,13 @@ class FileDataSink(BaseDataSink):
         if mode is None:
             mode = self.mode
 
+        if mode.lower() == "merge":
+            self.merge_cdc_options.execute(
+                source=df,
+                target_path=self.path,
+            )
+            return
+
         # Default Options
         _options = {"mergeSchema": "true", "overwriteSchema": "false"}
         if mode in ["OVERWRITE", "COMPLETE"]:
