@@ -66,20 +66,45 @@ class DataSinkMergeCDCOptions(BaseModel):
     https://docs.databricks.com/en/delta-live-tables/python-ref.html#change-data-capture-with-python-in-delta-live-tables
     """
 
-    # apply_as_deletes: Union[str, None] = None
     # apply_as_truncates: Union[str, None] = None
     include_columns: list[str] = None
     exclude_columns: list[str] = None
     delete_where: str = None
     ignore_null_updates: bool = False
     order_by: str = None
-    # ignore_null_updates: Union[bool, None] = None
     primary_keys: list[str]
     scd_type: Literal[1, 2] = None
     # track_history_columns: Union[list[str], None] = None
     # track_history_except_columns: Union[list[str], None] = None
 
-    def execute(self, target_path, source: SparkDataFrame):
+    def execute(self, target_path, source: SparkDataFrame, node=None):
+
+        if source.isStreaming:
+
+            if node._checkpoint_location is None:
+                raise ValueError(
+                    f"Expectations Checkpoint not specified for node '{node.name}'"
+                )
+
+            query = (
+                source.writeStream.foreachBatch(
+                    lambda batch_df, batch_id: self._execute(
+                        target_path=target_path,
+                        source=batch_df,
+                    )
+                )
+                .trigger(availableNow=True)
+                .options(
+                    checkpointLocation=node._checkpoint_location,
+                )
+                .start()
+            )
+            query.awaitTermination()
+
+        else:
+            self._execute(target_path=target_path, source=source)
+
+    def _execute(self, target_path, source: SparkDataFrame):
 
         from delta.tables import DeltaTable
         from pyspark.sql import Window

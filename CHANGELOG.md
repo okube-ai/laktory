@@ -2,7 +2,7 @@
 
 ## [0.5.3] - Unreleased
 ### Added
-* n/a
+* `DataSinks` `merge` write mode for Change Data Capture 
 ### Fixed
 * n/a
 ### Updated
