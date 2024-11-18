@@ -78,10 +78,18 @@ class FileDataSink(BaseDataSink):
             mode = self.mode
 
         if mode.lower() == "merge":
+
+            init = False
+            try:
+                _ = self.as_source().read(spark=df.sparkSession)
+            except:
+                init = True
+
             self.merge_cdc_options.execute(
                 source=df,
                 target_path=self.path,
                 node=self,
+                init=init,
             )
             return
 

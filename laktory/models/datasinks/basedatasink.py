@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Union
 from typing import Any
 from typing import Literal
-from pydantic import Field
+from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.spark import is_spark_dataframe
@@ -73,11 +73,149 @@ class DataSinkMergeCDCOptions(BaseModel):
     ignore_null_updates: bool = False
     order_by: str = None
     primary_keys: list[str]
-    scd_type: Literal[1, 2] = None
+    scd_type: Literal[1, 2] = 1
     # track_history_columns: Union[list[str], None] = None
     # track_history_except_columns: Union[list[str], None] = None
 
-    def execute(self, target_path, source: SparkDataFrame, node=None):
+    @model_validator(mode="after")
+    def validate_scd_type(self) -> Any:
+        if self.scd_type == 2:
+            if self.order_by is None:
+                raise ValueError("SCD Type 2 merge requires specific of `order_by` attribute.")
+
+        return self
+
+    @model_validator(mode="after")
+    def selected_columns(self) -> Any:
+        if self.include_columns and self.exclude_columns:
+            raise ValueError("`include_columns` and `exclude_columns` attributes are mutually exclusive.")
+
+        return self
+
+    # ----------------------------------------------------------------------- #
+    # Methods                                                                 #
+    # ----------------------------------------------------------------------- #
+
+    def _get_columns(self, df) -> list[str]:
+        if self.include_columns:
+            columns = [c for c in self.include_columns]
+        else:
+            columns = [c for c in df.columns if c not in self.primary_keys]
+            if self.exclude_columns:
+                columns = [c for c in columns if c not in self.exclude_columns]
+        return columns
+
+    def _init_target(self, source, target_path):
+
+        spark = source.sparkSession
+        logger.info(f"Merge target not found. Creating empty table at {target_path}")
+        df = spark.createDataFrame(
+            data=[],
+            schema=source.select(self.primary_keys + self._get_columns(source)).schema
+        )
+        df.write.format("DELTA").mode("OVERWRITE").save(target_path)
+
+    def _execute(self, target_path, source: SparkDataFrame):
+
+        from delta.tables import DeltaTable
+        from pyspark.sql import Window
+        import pyspark.sql.functions as F
+
+        spark = source.sparkSession
+
+        logger.info(f"Executing merge on {target_path} with primary keys {self.primary_keys} and scd type {self.scd_type}")
+
+        # Select columns
+        columns = self._get_columns(source)
+
+        # Drop Duplicates
+        if self.order_by:
+            w = Window.partitionBy(*self.primary_keys).orderBy(F.desc(self.order_by))
+            source = (
+                source
+                .withColumn("_row_number", F.row_number().over(w))
+                .filter(F.col("_row_number") == 1)
+                .drop("_row_number")
+            )
+
+        table_target = DeltaTable.forPath(spark, target_path)
+
+        if self.scd_type == 2:
+            start_at_col = "__START_AT"
+            end_at_col = "__END_AT"
+            index_type = [field.dataType.simpleString() for field in source.schema.fields if field.name == self.order_by][0]
+
+            # Add SCD columns to source
+            source = (
+                source
+                .withColumn(start_at_col, F.col(self.order_by))
+                .withColumn(end_at_col, F.lit(None).cast(index_type))
+            )
+
+        # Define merge
+        merge = (
+            table_target.alias("target")
+            .merge(
+                source.alias("source"),
+                condition=" AND ".join([f"source.{c} = target.{c}" for c in self.primary_keys]),
+            )
+        )
+
+        if self.scd_type == 1:
+
+            # Update
+            _set = {f"target.{c}": f"source.{c}" for c in columns}
+            if self.ignore_null_updates:
+                _set = {
+                    f"target.{c}": F.coalesce(F.col(f"source.{c}"), F.col(f"target.{c}")).alias(c)
+                    for c in columns
+                }
+            if not self.delete_where:
+                merge = merge.whenMatchedUpdate(set=_set)
+            else:
+                merge = merge.whenMatchedUpdate(set=_set, condition=~F.expr(self.delete_where))
+
+            # Insert
+            merge = merge.whenNotMatchedInsert(
+                values={f"target.{c}": f"source.{c}" for c in self.primary_keys + columns}
+            )
+
+            # Delete
+            if self.delete_where:
+                merge = merge.whenMatchedDelete(condition=self.delete_where)
+
+            merge.execute()
+
+        elif self.scd_type == 2:
+
+            # When matched and values have changed, expire the current record
+            update_condition = " OR ".join(
+                [f"target.{c} != source.{c}" for c in columns]
+            )
+            _set = {f"target.{end_at_col}": f"source.{self.order_by}"}
+            merge = merge.whenMatchedUpdate(
+                # set={
+                #     end_at_col: current_timestamp,
+                # },
+                set=_set,
+                condition=F.expr(update_condition),
+            )
+
+            # Insert the new row for changes
+            merge = merge.whenNotMatchedInsert(
+                values={c: f"source.{c}" for c in
+                        self.primary_keys + columns + [start_at_col, end_at_col]}
+            )
+
+            merge.execute()
+
+        else:
+            raise ValueError(f"SCD Type {self.scd_type} is not supported.")
+
+    def execute(self, target_path, source: SparkDataFrame, node=None, init=False):
+
+        if init:
+            self._init_target(source, target_path)
 
         if source.isStreaming:
 
@@ -103,68 +241,6 @@ class DataSinkMergeCDCOptions(BaseModel):
 
         else:
             self._execute(target_path=target_path, source=source)
-
-    def _execute(self, target_path, source: SparkDataFrame):
-
-        from delta.tables import DeltaTable
-        from pyspark.sql import Window
-        import pyspark.sql.functions as F
-
-        spark = source.sparkSession
-
-        logger.info(f"Executing merge on {target_path} with primary keys {self.primary_keys}")
-
-        # Select columns
-        if self.include_columns:
-            columns = [c for c in self.include_columns]
-        else:
-            columns = [c for c in source.columns if c not in self.primary_keys]
-            if self.exclude_columns:
-                columns = [c for c in columns if c not in self.exclude_columns]
-
-        # Drop Duplicates
-        if self.order_by:
-            w = Window.partitionBy(*self.primary_keys).orderBy(F.desc(self.order_by))
-            source = (
-                source
-                .withColumn("_row_number", F.row_number().over(w))
-                .filter(F.col("_row_number") == 1)
-                .drop("_row_number")
-            )
-
-        table_target = DeltaTable.forPath(spark, target_path)
-
-        # Define merge
-        merge = (
-            table_target.alias("target")
-            .merge(
-                source.alias("source"),
-                condition=" AND ".join([f"source.{c} = target.{c}" for c in self.primary_keys]),
-            )
-        )
-
-        # Update
-        _set = {f"target.{c}": f"source.{c}" for c in columns}
-        if self.ignore_null_updates:
-            _set = {
-                f"target.{c}": F.coalesce(F.col(f"source.{c}"), F.col(f"target.{c}")).alias(c)
-                for c in columns
-            }
-        if not self.delete_where:
-            merge = merge.whenMatchedUpdate(set=_set)
-        else:
-            merge = merge.whenMatchedUpdate(set=_set, condition=~F.expr(self.delete_where))
-
-        # Insert
-        merge = merge.whenNotMatchedInsert(
-            values={f"target.{c}": f"source.{c}" for c in self.primary_keys + columns}
-        )
-
-        # Delete
-        if self.delete_where:
-            merge = merge.whenMatchedDelete(condition=self.delete_where)
-
-        merge.execute()
 
 
 class BaseDataSink(BaseModel):
@@ -203,6 +279,13 @@ class BaseDataSink(BaseModel):
     ] = None
     write_options: dict[str, str] = {}
     _parent: "PipelineNode" = None
+
+    @model_validator(mode="after")
+    def merge_has_options(self) -> Any:
+        if self.mode == "MERGE" and self.merge_cdc_options is None:
+            raise ValueError("If 'MERGE' `mode` is selected, `merge_cdc_options` must be specified.")
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
