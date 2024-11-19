@@ -94,7 +94,6 @@ class FileDataSink(BaseDataSink):
             self.merge_cdc_options.execute(
                 source=df,
                 target_path=self.path,
-                sink=self,
             )
             return
 

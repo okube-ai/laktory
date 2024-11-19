@@ -62,6 +62,7 @@ class DataSinkMergeCDCOptions(BaseModel):
 
     References
     ----------
+    https://iterationinsights.com/article/how-to-implement-slowly-changing-dimensions-scd-type-2-using-delta-table/
     https://docs.databricks.com/en/delta-live-tables/python-ref.html#change-data-capture-with-python-in-delta-live-tables
     """
 
@@ -77,6 +78,7 @@ class DataSinkMergeCDCOptions(BaseModel):
     start_at_column_name: str = "__start_at"
     # track_history_columns: Union[list[str], None] = None
     # track_history_except_columns: Union[list[str], None] = None
+    _parent: Any = None
     _source_schema: Any = None
     _source_columns: list[str] = None
 
@@ -102,6 +104,10 @@ class DataSinkMergeCDCOptions(BaseModel):
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def sink(self):
+        return self._parent
 
     @staticmethod
     def _add_alias(expr, prefix="source"):
@@ -366,7 +372,7 @@ class DataSinkMergeCDCOptions(BaseModel):
         else:
             raise ValueError(f"SCD Type {self.scd_type} is not supported.")
 
-    def execute(self, target_path, source: SparkDataFrame, sink=None):
+    def execute(self, target_path, source: SparkDataFrame):
 
         from delta.tables import DeltaTable
 
@@ -378,14 +384,12 @@ class DataSinkMergeCDCOptions(BaseModel):
 
         if source.isStreaming:
 
-            if sink is None:
-                raise ValueError(
-                    f"Sink value required to fetch checkpoint location."
-                )
+            if self.sink is None:
+                raise ValueError(f"Sink value required to fetch checkpoint location.")
 
-            if sink and sink._checkpoint_location is None:
+            if self.sink and self.sink._checkpoint_location is None:
                 raise ValueError(
-                    f"Checkpoint location not specified for sink '{sink}'"
+                    f"Checkpoint location not specified for sink '{self.sink}'"
                 )
 
             query = (
@@ -397,7 +401,7 @@ class DataSinkMergeCDCOptions(BaseModel):
                 )
                 .trigger(availableNow=True)
                 .options(
-                    checkpointLocation=sink._checkpoint_location,
+                    checkpointLocation=self.sink._checkpoint_location,
                 )
                 .start()
             )
@@ -449,10 +453,13 @@ class BaseDataSink(BaseModel):
 
     @model_validator(mode="after")
     def merge_has_options(self) -> Any:
-        if self.mode == "MERGE" and self.merge_cdc_options is None:
-            raise ValueError(
-                "If 'MERGE' `mode` is selected, `merge_cdc_options` must be specified."
-            )
+        if self.mode == "MERGE":
+            if self.merge_cdc_options is None:
+                raise ValueError(
+                    "If 'MERGE' `mode` is selected, `merge_cdc_options` must be specified."
+                )
+            else:
+                self.merge_cdc_options._parent = self
 
         return self
 
@@ -484,6 +491,39 @@ class BaseDataSink(BaseModel):
                     )
 
         return None
+
+    # ----------------------------------------------------------------------- #
+    # CDC                                                                     #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def is_cdc(self) -> bool:
+        return self.merge_cdc_options is not None
+
+    @property
+    def dlt_apply_changes_kwargs(self) -> dict[str, str]:
+        """Keyword arguments for dlt.apply_changes function"""
+
+        from laktory.models.datasinks.tabledatasink import TableDataSink
+
+        if not isinstance(self, TableDataSink):
+            raise ValueError("DLT only supports `TableDataSink` class")
+
+        cdc = self.merge_cdc_options
+        return {
+            "apply_as_deletes": cdc.delete_where,
+            # "apply_as_truncates": ,  # NOT SUPPORTED
+            "column_list": cdc.include_columns,
+            "except_column_list": cdc.exclude_columns,
+            "ignore_null_updates": cdc.ignore_null_updates,
+            "keys": cdc.primary_keys,
+            "sequence_by": cdc.order_by,
+            # "source": self.source.table_name,  # TO SET EXTERNALLY
+            "stored_as_scd_type": cdc.scd_type,
+            "target": self.table_name,
+            # "track_history_column_list": cdc.track_history_columns,  # NOT SUPPORTED
+            # "track_history_except_column_list": cdc.track_history_except_columns,  # NOT SUPPORTED
+        }
 
     # ----------------------------------------------------------------------- #
     # Writers                                                                 #

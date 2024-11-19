@@ -123,7 +123,6 @@ def test_file_data_source():
     assert source.path == "Volumes/sources/landing/events/yahoo_finance/stock_price"
     assert source.dataframe_type == "SPARK"
     assert not source.as_stream
-    assert not source.is_cdc
 
 
 def test_file_data_source_read():

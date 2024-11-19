@@ -398,37 +398,6 @@ class PipelineNode(BaseModel):
         return s
 
     # ----------------------------------------------------------------------- #
-    # CDC                                                                     #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def is_from_cdc(self) -> bool:
-        """If `True` CDC source is used to build the table"""
-        if self.source is None:
-            return False
-        else:
-            return self.source.is_cdc
-
-    @property
-    def apply_changes_kwargs(self) -> dict[str, str]:
-        """Keyword arguments for dlt.apply_changes function"""
-        cdc = self.source.cdc
-        return {
-            "apply_as_deletes": cdc.apply_as_deletes,
-            "apply_as_truncates": cdc.apply_as_truncates,
-            "column_list": cdc.columns,
-            "except_column_list": cdc.except_columns,
-            "ignore_null_updates": cdc.ignore_null_updates,
-            "keys": cdc.primary_keys,
-            "sequence_by": cdc.sequence_by,
-            "source": self.source.table_name,
-            "stored_as_scd_type": cdc.scd_type,
-            "target": self.primary_sink.table_name,
-            "track_history_column_list": cdc.track_history_columns,
-            "track_history_except_column_list": cdc.track_history_except_columns,
-        }
-
-    # ----------------------------------------------------------------------- #
     # Expectations                                                            #
     # ----------------------------------------------------------------------- #
 
@@ -744,14 +713,6 @@ class PipelineNode(BaseModel):
 
         # Save source
         self._source_columns = self._stage_df.columns
-
-        if self.source.is_cdc and not self.is_dlt_run:
-            pass
-            # TODO: Apply SCD transformations
-            #       Best strategy is probably to build a spark dataframe function and add a node in the chain with
-            #       that function
-            # https://iterationinsights.com/article/how-to-implement-slowly-changing-dimensions-scd-type-2-using-delta-table
-            # https://www.linkedin.com/pulse/implementing-slowly-changing-dimension-2-using-lau-johansson-yemxf/
 
         # Apply transformer
         if apply_transformer:

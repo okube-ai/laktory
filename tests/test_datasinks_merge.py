@@ -504,6 +504,33 @@ def test_stream_scd2():
     shutil.rmtree(source_path)
 
 
+def test_dlt_kwargs():
+    sink = models.TableDataSink(
+        mode="MERGE",
+        checkpoint_location="root/table/checkpoint",
+        table_name="my_table",
+        merge_cdc_options=models.DataSinkMergeCDCOptions(
+            primary_keys=["symbol", "date"],
+            exclude_columns=["index", "_is_deleted"],
+            delete_where="_is_deleted = true",
+            order_by="index",
+            scd_type=2,
+            start_at_column_name="start_at",
+        ),
+    )
+
+    assert sink.dlt_apply_changes_kwargs == {
+        "apply_as_deletes": "_is_deleted = true",
+        "column_list": None,
+        "except_column_list": ["index", "_is_deleted"],
+        "ignore_null_updates": False,
+        "keys": ["symbol", "date"],
+        "sequence_by": "index",
+        "stored_as_scd_type": 2,
+        "target": "my_table",
+    }
+
+
 if __name__ == "__main__":
     test_basic()
     test_out_of_sequence()
@@ -511,3 +538,4 @@ if __name__ == "__main__":
     test_null_updates()
     test_stream()
     test_stream_scd2()
+    test_dlt_kwargs()

@@ -2,7 +2,7 @@
 
 ## [0.5.3] - Unreleased
 ### Added
-* `DataSinks` `merge` write mode for Change Data Capture 
+* `DataSinks` `merge` write mode for Change Data Capture, supporting type 1 and type 2 SCD
 ### Fixed
 * n/a
 ### Updated

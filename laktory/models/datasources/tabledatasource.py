@@ -17,8 +17,6 @@ class TableDataSource(BaseDataSource):
     ----------
     catalog_name:
         Name of the catalog of the source table
-    cdc:
-        Change data capture specifications
     schema_name:
         Name of the schema of the source table
     table_name:

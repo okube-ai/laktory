@@ -203,29 +203,32 @@ def apply_changes(*args, node=None, **kwargs):
 
     dlt.spark = spark
 
-    def define_table(node):
-        dlt.create_streaming_table(name=node.name)
-        df = dlt.apply_changes(**node.apply_changes_kwargs)
+    def define_table(node, sink):
+        dlt.create_streaming_table(name=sink.table_name)
+        df = dlt.apply_changes(
+            source=node.source.table_name, **sink.dlt_apply_changes_kwargs
+        )
         return df
 
-    define_table(
-        models.PipelineNode(
-            name="slv_stock_prices",
-            source={
+    node = models.PipelineNode(
+        name="slv_stock_prices",
+        source={
+            "table_name": "brz_stock_prices",
+        },
+        sinks=[
+            {
                 "table_name": "brz_stock_prices",
-                "cdc": {
+                "mode": "MERGE",
+                "merge_cdc_options": {
                     "primary_keys": ["asset_symbol"],
-                    "sequence_by": "change_id",
+                    "order_by": "change_id",
                     "scd_type": 2,
                 },
-            },
-            sinks=[
-                {
-                    "table_name": "brz_stock_prices",
-                }
-            ],
-        )
+            }
+        ],
     )
+
+    define_table(node, node.primary_sink)
     ```
     """
     if is_debug():

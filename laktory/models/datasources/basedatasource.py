@@ -43,67 +43,6 @@ class Watermark(BaseModel):
     threshold: str
 
 
-class DataSourceCDC(BaseModel):
-    """
-    Defines the change data capture (CDC) properties of a data source. They are
-    used to build the target using `apply_changes` method from Databricks DLT.
-
-    Attributes
-    ----------
-    apply_as_deletes:
-        Specifies when a CDC event should be treated as a DELETE rather than
-        an upsert. To handle out-of-order data, the deleted row is temporarily
-        retained as a tombstone in the underlying Delta table, and a view is
-        created in the metastore that filters out these tombstones.
-    apply_as_truncates:
-        Specifies when a CDC event should be treated as a full table TRUNCATE.
-        Because this clause triggers a full truncate of the target table, it
-        should be used only for specific use cases requiring this
-        functionality.
-    columns:
-        A subset of columns to include in the target table. Use `columns` to
-        specify the complete list of columns to include.
-    except_columns:
-        A subset of columns to exclude in the target table.
-    ignore_null_updates:
-        Allow ingesting updates containing a subset of the target columns.
-        When a CDC event matches an existing row and ignore_null_updates is
-        `True`, columns with a null will retain their existing values in the
-        target. This also applies to nested columns with a value of null. When
-        ignore_null_updates is `False`, existing values will be overwritten
-        with null values.
-    primary_keys:
-        The column or combination of columns that uniquely identify a row in
-        the source data. This is used to identify which CDC events apply to
-        specific records in the target table.
-    scd_type:
-        Whether to store records as SCD type 1 or SCD type 2.
-    sequence_by:
-        The column name specifying the logical order of CDC events in the
-        source data. Delta Live Tables uses this sequencing to handle change
-        events that arrive out of order.
-    track_history_columns:
-        A subset of output columns to be tracked for history in the target table.
-    track_history_except_columns:
-        A subset of output columns to be excluded from tracking.
-
-    References
-    ----------
-    https://docs.databricks.com/en/delta-live-tables/python-ref.html#change-data-capture-with-python-in-delta-live-tables
-    """
-
-    apply_as_deletes: Union[str, None] = None
-    apply_as_truncates: Union[str, None] = None
-    columns: Union[list[str], None] = []
-    except_columns: Union[list[str], None] = []
-    ignore_null_updates: Union[bool, None] = None
-    primary_keys: list[str]
-    scd_type: Literal[1, 2] = None
-    sequence_by: str
-    track_history_columns: Union[list[str], None] = None
-    track_history_except_columns: Union[list[str], None] = None
-
-
 class BaseDataSource(BaseModel):
     """
     Base class for building data source
@@ -114,8 +53,6 @@ class BaseDataSource(BaseModel):
         If `True`source is read as a streaming DataFrame.
     broadcast:
         If `True` DataFrame is broadcasted
-    cdc:
-        Change data capture specifications
     dataframe_type:
         Type of dataframe
     drops:
@@ -133,7 +70,6 @@ class BaseDataSource(BaseModel):
 
     as_stream: bool = False
     broadcast: Union[bool, None] = False
-    cdc: Union[DataSourceCDC, None] = None
     dataframe_type: Literal["SPARK", "POLARS"] = DEFAULT_DFTYPE
     drops: Union[list, None] = None
     filter: Union[str, None] = None
@@ -179,11 +115,6 @@ class BaseDataSource(BaseModel):
     @property
     def _id(self):
         return str(self.df)
-
-    @property
-    def is_cdc(self) -> bool:
-        """If `True` source data is a change data capture (CDC)"""
-        return self.cdc is not None
 
     @property
     def is_orchestrator_dlt(self) -> bool:

@@ -312,7 +312,6 @@ def test_stack_model():
                             "source": {
                                 "as_stream": False,
                                 "broadcast": False,
-                                "cdc": None,
                                 "dataframe_type": "SPARK",
                                 "drops": None,
                                 "filter": None,
