@@ -30,11 +30,10 @@ class DataSinkMergeCDCOptions(BaseModel):
     delete_where:
         Specifies when a CDC event should be treated as a DELETE rather than
         an upsert.
-    apply_as_truncates:
-        Specifies when a CDC event should be treated as a full table TRUNCATE.
-        Because this clause triggers a full truncate of the target table, it
-        should be used only for specific use cases requiring this
-        functionality.
+    end_at_column_name:
+        When using SCD type 2, name of the column storing the end time (or
+        sequencing index) during which a row is active. This attribute is not
+        used when using Databricks DLT which does not allow column rename.
     include_columns:
         A subset of columns to include in the target table. Use
         `include_columns` to specify the complete list of columns to include.
@@ -47,19 +46,19 @@ class DataSinkMergeCDCOptions(BaseModel):
         target. This also applies to nested columns with a value of null. When
         ignore_null_updates is `False`, existing values will be overwritten
         with null values.
+    order_by:
+        The column name specifying the logical order of CDC events in the
+        source data. Used to handle change events that arrive out of order.
     primary_keys:
         The column or combination of columns that uniquely identify a row in
         the source data. This is used to identify which CDC events apply to
         specific records in the target table.
     scd_type:
         Whether to store records as SCD type 1 or SCD type 2.
-    order_by:
-        The column name specifying the logical order of CDC events in the
-        source data. Used to handle change events that arrive out of order.
-    track_history_columns:
-        A subset of output columns to be tracked for history in the target table.
-    track_history_except_columns:
-        A subset of output columns to be excluded from tracking.
+    start_at_column_name:
+        When using SCD type 2, name of the column storing the start time (or
+        sequencing index) during which a row is active. This attribute is not
+        used when using Databricks DLT which does not allow column rename.
 
     References
     ----------
@@ -67,28 +66,36 @@ class DataSinkMergeCDCOptions(BaseModel):
     """
 
     # apply_as_truncates: Union[str, None] = None
-    include_columns: list[str] = None
-    exclude_columns: list[str] = None
     delete_where: str = None
+    end_at_column_name: str = "__end_at"
+    exclude_columns: list[str] = None
     ignore_null_updates: bool = False
+    include_columns: list[str] = None
     order_by: str = None
     primary_keys: list[str]
     scd_type: Literal[1, 2] = 1
+    start_at_column_name: str = "__start_at"
     # track_history_columns: Union[list[str], None] = None
     # track_history_except_columns: Union[list[str], None] = None
+    _source_schema: Any = None
+    _source_columns: list[str] = None
 
     @model_validator(mode="after")
     def validate_scd_type(self) -> Any:
         if self.scd_type == 2:
             if self.order_by is None:
-                raise ValueError("SCD Type 2 merge requires specific of `order_by` attribute.")
+                raise ValueError(
+                    "SCD Type 2 merge requires specific of `order_by` attribute."
+                )
 
         return self
 
     @model_validator(mode="after")
     def selected_columns(self) -> Any:
         if self.include_columns and self.exclude_columns:
-            raise ValueError("`include_columns` and `exclude_columns` attributes are mutually exclusive.")
+            raise ValueError(
+                "`include_columns` and `exclude_columns` attributes are mutually exclusive."
+            )
 
         return self
 
@@ -96,23 +103,133 @@ class DataSinkMergeCDCOptions(BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _get_columns(self, df) -> list[str]:
+    @staticmethod
+    def _add_alias(expr, prefix="source"):
+
+        operators = ["=", ">", "<", "!", "*", "+", "-", "/", ","]
+
+        new_expr = expr
+        for o in operators:
+            new_expr = new_expr.replace(o, " ")
+
+        candidates = [c for c in new_expr.split(" ") if c != ""]
+
+        # Define other exclusions for SQL keywords or constants
+        exclusions = [
+            "TRUE",
+            "FALSE",
+            "CASE",
+            "WHEN",
+            "THEN",
+            "SELECT",
+            "FROM",
+            "WHERE",
+            "AND",
+            "OR",
+            "AS",
+            "END",
+            "ELSE",
+            "NOT",
+            "NULL",
+        ]
+
+        # Filter out identifiers that are constants or keywords
+        column_names = []
+        for c in candidates:
+            if c.upper() in exclusions:
+                continue
+            if c.startswith("'"):
+                continue
+            try:
+                float(c)
+                continue
+            except ValueError:
+                pass
+
+            column_names += [c]
+
+        new_expr = expr
+        for c in column_names:
+            if f"{prefix}." not in c:
+                new_expr = new_expr.replace(c, f"{prefix}.{c}")
+
+        return new_expr
+
+    @property
+    def start_at(self):
+        return self.start_at_column_name
+
+    @property
+    def end_at(self):
+        return self.end_at_column_name
+
+    @property
+    def index(self):
+        return self.order_by
+
+    @property
+    def index_fist(self):
+        return self.index + "_first"
+
+    @property
+    def hash_keys(self):
+        return "__hash_keys"
+
+    @property
+    def hash_cols(self):
+        return "__hash_cols"
+
+    @property
+    def source_columns(self):
+        return [f.name for f in self._source_schema]
+
+    @property
+    def update_columns(self):
         if self.include_columns:
             columns = [c for c in self.include_columns]
         else:
-            columns = [c for c in df.columns if c not in self.primary_keys]
+            columns = [c for c in self.source_columns if c not in self.primary_keys]
             if self.exclude_columns:
                 columns = [c for c in columns if c not in self.exclude_columns]
         return columns
 
+    @property
+    def extra_columns(self):
+        cols = [self.hash_keys]
+        if self.scd_type == 2:
+            cols += [self.start_at, self.end_at, self.hash_cols]
+        return cols
+
+    @property
+    def write_columns(self):
+        return self.primary_keys + self.update_columns + self.extra_columns
+
+    @property
+    def index_type(self):
+        return [
+            field.dataType
+            for field in self._source_schema.fields
+            if field.name == self.index
+        ][0]
+
+    @property
+    def source_delete_where(self):
+        return self._add_alias(self.delete_where)
+
     def _init_target(self, source, target_path):
+
+        import pyspark.sql.types as T
 
         spark = source.sparkSession
         logger.info(f"Merge target not found. Creating empty table at {target_path}")
-        df = spark.createDataFrame(
-            data=[],
-            schema=source.select(self.primary_keys + self._get_columns(source)).schema
-        )
+        schema = source.select(self.primary_keys + self.update_columns).schema
+        schema.add(T.StructField(self.hash_keys, T.StringType(), True))
+        if self.scd_type == 2:
+            schema.add(T.StructField(self.hash_cols, T.StringType(), True))
+            schema.add(T.StructField(self.start_at, self.index_type, True))
+            schema.add(T.StructField(self.end_at, self.index_type, True))
+
+        df = spark.createDataFrame(data=[], schema=schema)
         df.write.format("DELTA").mode("OVERWRITE").save(target_path)
 
     def _execute(self, target_path, source: SparkDataFrame):
@@ -123,98 +240,140 @@ class DataSinkMergeCDCOptions(BaseModel):
 
         spark = source.sparkSession
 
-        logger.info(f"Executing merge on {target_path} with primary keys {self.primary_keys} and scd type {self.scd_type}")
-
-        # Select columns
-        columns = self._get_columns(source)
-
-        # Drop Duplicates
-        if self.order_by:
-            w = Window.partitionBy(*self.primary_keys).orderBy(F.desc(self.order_by))
-            source = (
-                source
-                .withColumn("_row_number", F.row_number().over(w))
-                .filter(F.col("_row_number") == 1)
-                .drop("_row_number")
-            )
-
-        table_target = DeltaTable.forPath(spark, target_path)
-
-        if self.scd_type == 2:
-            start_at_col = "__START_AT"
-            end_at_col = "__END_AT"
-            index_type = [field.dataType.simpleString() for field in source.schema.fields if field.name == self.order_by][0]
-
-            # Add SCD columns to source
-            source = (
-                source
-                .withColumn(start_at_col, F.col(self.order_by))
-                .withColumn(end_at_col, F.lit(None).cast(index_type))
-            )
-
-        # Define merge
-        merge = (
-            table_target.alias("target")
-            .merge(
-                source.alias("source"),
-                condition=" AND ".join([f"source.{c} = target.{c}" for c in self.primary_keys]),
-            )
+        logger.info(
+            f"Executing merge on {target_path} with primary keys {self.primary_keys} and scd type {self.scd_type}"
         )
+
+        # Add internal columns
+        source = source.withColumn(
+            self.hash_keys, F.lit(F.sha2(F.concat_ws("~", *self.primary_keys), 256))
+        )
+        if self.scd_type == 2:
+            source = (
+                source.withColumn(self.start_at, F.col(self.index))
+                .withColumn(self.end_at, F.lit(None).cast(self.index_type))
+                .withColumn(
+                    self.hash_cols,
+                    F.lit(F.sha2(F.concat_ws("~", *self.update_columns), 256)),
+                )
+            )
+
+        # Process History
+        if self.index:
+            w = Window.partitionBy(*self.primary_keys).orderBy(F.desc(self.index))
+            source = source.withColumn("_row_number", F.row_number().over(w))
+            if self.scd_type == 1:
+                # Drop Duplicates
+                source = source.filter(F.col("_row_number") == 1)
+            elif self.scd_type == 2:
+                # Assign previous index to ends_at
+                w2 = Window.partitionBy(*self.primary_keys)
+                source = source.withColumn(self.end_at, F.lag(self.index, 1).over(w))
+                source = source.withColumn(self.index_fist, F.min(self.index).over(w2))
+            source = source.drop("_row_number")
+
+        # Read target
+        table_target = DeltaTable.forPath(spark, target_path)
 
         if self.scd_type == 1:
 
+            # Define merge
+            merge = table_target.alias("target").merge(
+                source.alias("source"),
+                condition=f"source.{self.hash_keys} = target.{self.hash_keys}",
+            )
+
             # Update
-            _set = {f"target.{c}": f"source.{c}" for c in columns}
+            _set = {f"target.{c}": f"source.{c}" for c in self.update_columns}
             if self.ignore_null_updates:
                 _set = {
-                    f"target.{c}": F.coalesce(F.col(f"source.{c}"), F.col(f"target.{c}")).alias(c)
-                    for c in columns
+                    f"target.{c}": F.coalesce(
+                        F.col(f"source.{c}"), F.col(f"target.{c}")
+                    ).alias(c)
+                    for c in self.update_columns
                 }
-            if not self.delete_where:
-                merge = merge.whenMatchedUpdate(set=_set)
-            else:
-                merge = merge.whenMatchedUpdate(set=_set, condition=~F.expr(self.delete_where))
+
+            condition = None
+            if self.delete_where:
+                condition = ~F.expr(self.source_delete_where)
+            merge = merge.whenMatchedUpdate(set=_set, condition=condition)
 
             # Insert
             merge = merge.whenNotMatchedInsert(
-                values={f"target.{c}": f"source.{c}" for c in self.primary_keys + columns}
+                values={f"target.{c}": f"source.{c}" for c in self.write_columns}
             )
 
             # Delete
             if self.delete_where:
-                merge = merge.whenMatchedDelete(condition=self.delete_where)
+                merge = merge.whenMatchedDelete(
+                    condition=F.expr(self.source_delete_where)
+                )
 
             merge.execute()
 
         elif self.scd_type == 2:
 
-            # When matched and values have changed, expire the current record
-            update_condition = " OR ".join(
-                [f"target.{c} != source.{c}" for c in columns]
-            )
-            _set = {f"target.{end_at_col}": f"source.{self.order_by}"}
-            merge = merge.whenMatchedUpdate(
-                # set={
-                #     end_at_col: current_timestamp,
-                # },
-                set=_set,
-                condition=F.expr(update_condition),
+            # Only select rows that have been updated
+            target = spark.read.format("DELTA").load(target_path)
+            upsert_or_delete = source.withColumn(
+                "__to_delete", F.expr(self.delete_where)
+            ).join(
+                other=target.withColumn("__to_delete", F.lit(False)),
+                on=[self.hash_cols, self.hash_keys, "__to_delete"],
+                how="leftanti",
             )
 
-            # Insert the new row for changes
-            merge = merge.whenNotMatchedInsert(
-                values={c: f"source.{c}" for c in
-                        self.primary_keys + columns + [start_at_col, end_at_col]}
+            # Merge
+            condition = F.expr(f"source.{self.hash_keys} = target.{self.hash_keys}")
+            condition = condition & F.expr(f"target.{self.end_at} IS NULL")
+            merge = table_target.alias("target").merge(
+                upsert_or_delete.filter(F.col(self.end_at).isNull()).alias("source"),
+                condition=condition,
             )
+
+            # Expire the current record
+            _set = {f"target.{self.end_at}": f"source.{self.index_fist}"}
+            merge = merge.whenMatchedUpdate(set=_set)
+            #
+            # # TODO: Review if required
+            # if not self.delete_where:
+            #     _set = {f"target.{self.end_at}": f"source.{self.order_by}"}
+            #     merge = merge.whenMatchedUpdate(set=_set)
+            # else:
+            #     where = F.expr(self.source_delete_where)
+            #     # deleting
+            #     # _set = {f"target.{self.end_at}": "NULL"}
+            #     _set = {f"target.{self.end_at}": f"source.{self.order_by}"}
+            #     merge = merge.whenMatchedUpdate(set=_set, condition=where)
+            #
+            #     # updating
+            #     _set = {f"target.{self.end_at}": f"source.{self.order_by}"}
+            #     merge = merge.whenMatchedUpdate(set=_set, condition=~where)
 
             merge.execute()
+
+            # Append rows
+            upsert = upsert_or_delete
+            if self.delete_where:
+                upsert = upsert.filter(~F.expr(self.delete_where))
+            (
+                upsert.select(self.write_columns)
+                .write.mode("APPEND")
+                .format("DELTA")
+                .save(target_path)
+            )
 
         else:
             raise ValueError(f"SCD Type {self.scd_type} is not supported.")
 
-    def execute(self, target_path, source: SparkDataFrame, node=None, init=False):
+    def execute(self, target_path, source: SparkDataFrame, node=None):
 
-        if init:
+        from delta.tables import DeltaTable
+
+        self._source_schema = source.schema
+        spark = source.sparkSession
+
+        if not DeltaTable.isDeltaTable(spark, target_path):
             self._init_target(source, target_path)
 
         if source.isStreaming:
@@ -275,7 +434,10 @@ class BaseDataSink(BaseModel):
     checkpoint_location: str = None
     merge_cdc_options: DataSinkMergeCDCOptions = None  # TODO: Review parameter name
     mode: Union[
-        Literal["OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE", "UPDATE", "MERGE"], None
+        Literal[
+            "OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE", "UPDATE", "MERGE"
+        ],
+        None,
     ] = None
     write_options: dict[str, str] = {}
     _parent: "PipelineNode" = None
@@ -283,7 +445,9 @@ class BaseDataSink(BaseModel):
     @model_validator(mode="after")
     def merge_has_options(self) -> Any:
         if self.mode == "MERGE" and self.merge_cdc_options is None:
-            raise ValueError("If 'MERGE' `mode` is selected, `merge_cdc_options` must be specified.")
+            raise ValueError(
+                "If 'MERGE' `mode` is selected, `merge_cdc_options` must be specified."
+            )
 
         return self
 
