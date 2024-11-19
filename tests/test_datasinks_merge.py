@@ -463,9 +463,51 @@ def test_stream():
     shutil.rmtree(source_path)
 
 
+def test_stream_scd2():
+
+    path, df = build_target(write_target=False, with_index=True)
+
+    # Build Source
+    dfs = get_scd2_source()
+
+    # Convert source to stream
+    source_path = str(testdir_path / "tmp" / "test_datasinks_merge" / str(uuid.uuid4()))
+    dfs.write.format("DELTA").mode("overwrite").save(source_path)
+    dfs = spark.readStream.format("DELTA").load(source_path)
+
+    # Create sink and write
+    sink = models.FileDataSink(
+        mode="MERGE",
+        checkpoint_location=str(path),
+        path=str(path),
+        merge_cdc_options=models.DataSinkMergeCDCOptions(
+            primary_keys=["symbol", "date"],
+            exclude_columns=["index", "_is_deleted"],
+            delete_where="_is_deleted = true",
+            order_by="index",
+            scd_type=2,
+            start_at_column_name="start_at",
+        ),
+    )
+    sink.write(df.drop("from"))
+    sink.write(dfs)
+
+    # Tests
+    df1 = read(path).sort("date", "symbol", "start_at").toPandas()
+    where = (df1["symbol"] == "S2") & (df1["date"] == datetime.date(2024, 11, 3))
+    assert len(df1) == df.count() + 3  # 3 updates | 1 delete does not add new row
+    assert df1["__end_at"].count() == 4  # 3 updates + 1 delete
+    assert df1.loc[where]["__end_at"].fillna(-1).tolist() == [2, 3, 4, -1]
+
+    # Cleanup
+    shutil.rmtree(path)
+    shutil.rmtree(source_path)
+
+
 if __name__ == "__main__":
     test_basic()
     test_out_of_sequence()
     test_scd2()
     test_null_updates()
     test_stream()
+    test_stream_scd2()

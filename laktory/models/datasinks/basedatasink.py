@@ -366,7 +366,7 @@ class DataSinkMergeCDCOptions(BaseModel):
         else:
             raise ValueError(f"SCD Type {self.scd_type} is not supported.")
 
-    def execute(self, target_path, source: SparkDataFrame, node=None):
+    def execute(self, target_path, source: SparkDataFrame, sink=None):
 
         from delta.tables import DeltaTable
 
@@ -378,9 +378,14 @@ class DataSinkMergeCDCOptions(BaseModel):
 
         if source.isStreaming:
 
-            if node._checkpoint_location is None:
+            if sink is None:
                 raise ValueError(
-                    f"Expectations Checkpoint not specified for node '{node.name}'"
+                    f"Sink value required to fetch checkpoint location."
+                )
+
+            if sink and sink._checkpoint_location is None:
+                raise ValueError(
+                    f"Checkpoint location not specified for sink '{sink}'"
                 )
 
             query = (
@@ -392,7 +397,7 @@ class DataSinkMergeCDCOptions(BaseModel):
                 )
                 .trigger(availableNow=True)
                 .options(
-                    checkpointLocation=node._checkpoint_location,
+                    checkpointLocation=sink._checkpoint_location,
                 )
                 .start()
             )
