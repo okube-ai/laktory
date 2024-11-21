@@ -222,12 +222,14 @@ class DataSinkMergeCDCOptions(BaseModel):
     def source_delete_where(self):
         return self._add_alias(self.delete_where)
 
-    def _init_target(self, source, target_path):
+    def _init_target(self, source, target_path=None, target_name=None):
+
+        _id = target_path or target_name
 
         import pyspark.sql.types as T
 
         spark = source.sparkSession
-        logger.info(f"Merge target not found. Creating empty table at {target_path}")
+        logger.info(f"Merge target not found. Creating empty table at {_id}")
         schema = source.select(self.primary_keys + self.update_columns).schema
         schema.add(T.StructField(self.hash_keys, T.StringType(), True))
         if self.scd_type == 2:
@@ -236,18 +238,25 @@ class DataSinkMergeCDCOptions(BaseModel):
             schema.add(T.StructField(self.end_at, self.index_type, True))
 
         df = spark.createDataFrame(data=[], schema=schema)
-        df.write.format("DELTA").mode("OVERWRITE").save(target_path)
 
-    def _execute(self, target_path, source: SparkDataFrame):
+        writer = df.write.format("DELTA").mode("OVERWRITE")
+        if target_path:
+            writer.save(target_path)
+        elif target_name:
+            writer.saveAsTable(target_name)
+
+    def _execute(self, source: SparkDataFrame, target_path: str = None, target_name: str = None):
 
         from delta.tables import DeltaTable
         from pyspark.sql import Window
         import pyspark.sql.functions as F
 
+        _id = target_path or target_name
+
         spark = source.sparkSession
 
         logger.info(
-            f"Executing merge on {target_path} with primary keys {self.primary_keys} and scd type {self.scd_type}"
+            f"Executing merge on {_id} with primary keys {self.primary_keys} and scd type {self.scd_type}"
         )
 
         # Add internal columns
@@ -279,7 +288,12 @@ class DataSinkMergeCDCOptions(BaseModel):
             source = source.drop("_row_number")
 
         # Read target
-        table_target = DeltaTable.forPath(spark, target_path)
+        if target_path:
+            table_target = DeltaTable.forPath(spark, target_path)
+        elif target_name:
+            table_target = DeltaTable.forName(spark, target_name)
+        else:
+            raise ValueError("Either `target_path` or `target_name` must be specified.")
 
         if self.scd_type == 1:
 
@@ -320,7 +334,10 @@ class DataSinkMergeCDCOptions(BaseModel):
         elif self.scd_type == 2:
 
             # Only select rows that have been updated
-            target = spark.read.format("DELTA").load(target_path)
+            if target_path:
+                target = spark.read.format("DELTA").load(target_path)
+            else:
+                target = spark.read.table(target_name)
             upsert_or_delete = source.withColumn(
                 "__to_delete", F.expr(self.delete_where)
             ).join(
@@ -362,25 +379,37 @@ class DataSinkMergeCDCOptions(BaseModel):
             upsert = upsert_or_delete
             if self.delete_where:
                 upsert = upsert.filter(~F.expr(self.delete_where))
-            (
+            writer = (
                 upsert.select(self.write_columns)
                 .write.mode("APPEND")
                 .format("DELTA")
-                .save(target_path)
             )
+            if target_path:
+                writer.save(target_path)
+            elif target_name:
+                writer.saveAsTable(target_name)
 
         else:
             raise ValueError(f"SCD Type {self.scd_type} is not supported.")
 
-    def execute(self, target_path, source: SparkDataFrame):
+    def execute(self, source: SparkDataFrame, target_path: str = None, target_name: str = None):
+
+        if target_path is None and target_name is None:
+            raise ValueError("Either `target_path` or `target_name` must be specified.")
 
         from delta.tables import DeltaTable
 
         self._source_schema = source.schema
         spark = source.sparkSession
 
-        if not DeltaTable.isDeltaTable(spark, target_path):
-            self._init_target(source, target_path)
+        if target_path:
+            if not DeltaTable.isDeltaTable(spark, target_path):
+                self._init_target(source, target_path=target_path)
+        else:
+            try:
+                spark.catalog.getTable(target_name)
+            except Exception as e:
+                self._init_target(source, target_name=target_name)
 
         if source.isStreaming:
 
@@ -395,8 +424,9 @@ class DataSinkMergeCDCOptions(BaseModel):
             query = (
                 source.writeStream.foreachBatch(
                     lambda batch_df, batch_id: self._execute(
-                        target_path=target_path,
                         source=batch_df,
+                        target_path=target_path,
+                        target_name=target_name,
                     )
                 )
                 .trigger(availableNow=True)
