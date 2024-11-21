@@ -102,12 +102,97 @@ class DataSinkMergeCDCOptions(BaseModel):
         return self
 
     # ----------------------------------------------------------------------- #
-    # Methods                                                                 #
+    # Sink                                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def sink(self):
         return self._parent
+
+    @property
+    def target_table(self):
+        if self._parent and "TableDataSink" in str(type(self._parent)):
+            return self._parent.full_name
+        return None
+
+    @property
+    def target_path(self):
+        if self._parent and "FileDataSink" in str(type(self._parent)):
+            return self._parent.path
+        return None
+
+    @property
+    def target_id(self):
+        return self.target_table or self.target_path
+
+    # ----------------------------------------------------------------------- #
+    # CDC Columns                                                             #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def index(self):
+        return self.order_by
+
+    @property
+    def start_at(self):
+        return self.start_at_column_name
+
+    @property
+    def end_at(self):
+        return self.end_at_column_name
+
+    @property
+    def index_fist(self):
+        return self.index + "_first"
+
+    @property
+    def hash_keys(self):
+        return "__hash_keys"
+
+    @property
+    def hash_cols(self):
+        return "__hash_cols"
+
+    @property
+    def source_columns(self):
+        return [f.name for f in self._source_schema]
+
+    @property
+    def update_columns(self):
+        if self.include_columns:
+            columns = [c for c in self.include_columns]
+        else:
+            columns = [c for c in self.source_columns if c not in self.primary_keys]
+            if self.exclude_columns:
+                columns = [c for c in columns if c not in self.exclude_columns]
+        return columns
+
+    @property
+    def extra_columns(self):
+        cols = [self.hash_keys]
+        if self.scd_type == 2:
+            cols += [self.start_at, self.end_at, self.hash_cols]
+        return cols
+
+    @property
+    def write_columns(self):
+        return self.primary_keys + self.update_columns + self.extra_columns
+
+    @property
+    def index_type(self):
+        return [
+            field.dataType
+            for field in self._source_schema.fields
+            if field.name == self.index
+        ][0]
+
+    @property
+    def source_delete_where(self):
+        return self._add_alias(self.delete_where)
+
+    # ----------------------------------------------------------------------- #
+    # Methods                                                                 #
+    # ----------------------------------------------------------------------- #
 
     @staticmethod
     def _add_alias(expr, prefix="source"):
@@ -161,75 +246,12 @@ class DataSinkMergeCDCOptions(BaseModel):
 
         return new_expr
 
-    @property
-    def start_at(self):
-        return self.start_at_column_name
-
-    @property
-    def end_at(self):
-        return self.end_at_column_name
-
-    @property
-    def index(self):
-        return self.order_by
-
-    @property
-    def index_fist(self):
-        return self.index + "_first"
-
-    @property
-    def hash_keys(self):
-        return "__hash_keys"
-
-    @property
-    def hash_cols(self):
-        return "__hash_cols"
-
-    @property
-    def source_columns(self):
-        return [f.name for f in self._source_schema]
-
-    @property
-    def update_columns(self):
-        if self.include_columns:
-            columns = [c for c in self.include_columns]
-        else:
-            columns = [c for c in self.source_columns if c not in self.primary_keys]
-            if self.exclude_columns:
-                columns = [c for c in columns if c not in self.exclude_columns]
-        return columns
-
-    @property
-    def extra_columns(self):
-        cols = [self.hash_keys]
-        if self.scd_type == 2:
-            cols += [self.start_at, self.end_at, self.hash_cols]
-        return cols
-
-    @property
-    def write_columns(self):
-        return self.primary_keys + self.update_columns + self.extra_columns
-
-    @property
-    def index_type(self):
-        return [
-            field.dataType
-            for field in self._source_schema.fields
-            if field.name == self.index
-        ][0]
-
-    @property
-    def source_delete_where(self):
-        return self._add_alias(self.delete_where)
-
-    def _init_target(self, source, target_path=None, target_name=None):
-
-        _id = target_path or target_name
+    def _init_target(self, source):
 
         import pyspark.sql.types as T
 
         spark = source.sparkSession
-        logger.info(f"Merge target not found. Creating empty table at {_id}")
+        logger.info(f"Merge target not found. Creating empty table at {self.target_id}")
         schema = source.select(self.primary_keys + self.update_columns).schema
         schema.add(T.StructField(self.hash_keys, T.StringType(), True))
         if self.scd_type == 2:
@@ -240,23 +262,21 @@ class DataSinkMergeCDCOptions(BaseModel):
         df = spark.createDataFrame(data=[], schema=schema)
 
         writer = df.write.format("DELTA").mode("OVERWRITE")
-        if target_path:
-            writer.save(target_path)
-        elif target_name:
-            writer.saveAsTable(target_name)
+        if self.target_path:
+            writer.save(self.target_path)
+        else:
+            writer.saveAsTable(self.target_name)
 
-    def _execute(self, source: SparkDataFrame, target_path: str = None, target_name: str = None):
+    def _execute(self, source: SparkDataFrame):
 
         from delta.tables import DeltaTable
         from pyspark.sql import Window
         import pyspark.sql.functions as F
 
-        _id = target_path or target_name
-
         spark = source.sparkSession
 
         logger.info(
-            f"Executing merge on {_id} with primary keys {self.primary_keys} and scd type {self.scd_type}"
+            f"Executing merge on {self.target_id} with primary keys {self.primary_keys} and scd type {self.scd_type}"
         )
 
         # Add internal columns
@@ -288,12 +308,10 @@ class DataSinkMergeCDCOptions(BaseModel):
             source = source.drop("_row_number")
 
         # Read target
-        if target_path:
-            table_target = DeltaTable.forPath(spark, target_path)
-        elif target_name:
-            table_target = DeltaTable.forName(spark, target_name)
+        if self.target_path:
+            table_target = DeltaTable.forPath(spark, self.target_path)
         else:
-            raise ValueError("Either `target_path` or `target_name` must be specified.")
+            table_target = DeltaTable.forName(spark, self.target_name)
 
         if self.scd_type == 1:
 
@@ -334,10 +352,10 @@ class DataSinkMergeCDCOptions(BaseModel):
         elif self.scd_type == 2:
 
             # Only select rows that have been updated
-            if target_path:
-                target = spark.read.format("DELTA").load(target_path)
+            if self.target_path:
+                target = spark.read.format("DELTA").load(self.target_path)
             else:
-                target = spark.read.table(target_name)
+                target = spark.read.table(self.target_name)
             upsert_or_delete = source.withColumn(
                 "__to_delete", F.expr(self.delete_where)
             ).join(
@@ -384,32 +402,29 @@ class DataSinkMergeCDCOptions(BaseModel):
                 .write.mode("APPEND")
                 .format("DELTA")
             )
-            if target_path:
-                writer.save(target_path)
-            elif target_name:
-                writer.saveAsTable(target_name)
+            if self.target_path:
+                writer.save(self.target_path)
+            else:
+                writer.saveAsTable(self.target_table)
 
         else:
             raise ValueError(f"SCD Type {self.scd_type} is not supported.")
 
-    def execute(self, source: SparkDataFrame, target_path: str = None, target_name: str = None):
-
-        if target_path is None and target_name is None:
-            raise ValueError("Either `target_path` or `target_name` must be specified.")
+    def execute(self, source: SparkDataFrame):
 
         from delta.tables import DeltaTable
 
         self._source_schema = source.schema
         spark = source.sparkSession
 
-        if target_path:
-            if not DeltaTable.isDeltaTable(spark, target_path):
-                self._init_target(source, target_path=target_path)
+        if self.target_path:
+            if not DeltaTable.isDeltaTable(spark, self.target_path):
+                self._init_target(source)
         else:
             try:
-                spark.catalog.getTable(target_name)
+                spark.catalog.getTable(self.target_name)
             except Exception as e:
-                self._init_target(source, target_name=target_name)
+                self._init_target(source)
 
         if source.isStreaming:
 
@@ -423,11 +438,7 @@ class DataSinkMergeCDCOptions(BaseModel):
 
             query = (
                 source.writeStream.foreachBatch(
-                    lambda batch_df, batch_id: self._execute(
-                        source=batch_df,
-                        target_path=target_path,
-                        target_name=target_name,
-                    )
+                    lambda batch_df, batch_id: self._execute(source=batch_df)
                 )
                 .trigger(availableNow=True)
                 .options(
@@ -438,7 +449,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             query.awaitTermination()
 
         else:
-            self._execute(target_path=target_path, source=source)
+            self._execute(source=source)
 
 
 class BaseDataSink(BaseModel):

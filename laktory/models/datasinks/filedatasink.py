@@ -91,10 +91,7 @@ class FileDataSink(BaseDataSink):
             mode = self.mode
 
         if mode.lower() == "merge":
-            self.merge_cdc_options.execute(
-                source=df,
-                target_path=self.path,
-            )
+            self.merge_cdc_options.execute(source=df)
             return
 
         # Default Options
