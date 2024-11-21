@@ -138,26 +138,7 @@ def test_silver():
     assert df.count() == 80
 
 
-def test_cdc():
-    node = models.PipelineNode(
-        source={
-            "table_name": "brz_users_type1",
-            "cdc": {
-                "primary_keys": ["userId"],
-                "sequence_by": "sequenceNum",
-                "apply_as_deletes": "operation = 'DELETE'",
-                "scd_type": 1,
-                "except_columns": ["operation", "sequenceNum"],
-            },
-        },
-    )
-
-    # TODO: Test CDC transformations when ready
-    print(node)
-
-
 if __name__ == "__main__":
     test_execute()
     test_bronze()
     test_silver()
-    test_cdc()

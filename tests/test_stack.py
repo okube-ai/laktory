@@ -312,7 +312,6 @@ def test_stack_model():
                             "source": {
                                 "as_stream": False,
                                 "broadcast": False,
-                                "cdc": None,
                                 "dataframe_type": "SPARK",
                                 "drops": None,
                                 "filter": None,
@@ -418,17 +417,13 @@ def test_stack_resources_unique_name():
             name="stack",
             organization="o3",
             resources=models.StackResources(
-                databricks_schemas={
-                    "finance": {
-                        "name": "schema_finance"
-                    }
-                },
+                databricks_schemas={"finance": {"name": "schema_finance"}},
                 databricks_catalogs={
                     "finance": {
                         "name": "catalog_finance",
                     }
-                }
-            )
+                },
+            ),
         )
 
 

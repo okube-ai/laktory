@@ -613,7 +613,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         for n in self.nodes:
 
             if n.name in node_names:
-                raise ValueError(f"Pipeline node '{n.name}' is declared twice in pipeline '{self.name}'")
+                raise ValueError(
+                    f"Pipeline node '{n.name}' is declared twice in pipeline '{self.name}'"
+                )
             node_names += [n.name]
 
             for s in n.get_sources(PipelineNodeDataSource):

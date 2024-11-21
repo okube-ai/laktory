@@ -117,6 +117,10 @@ class TableDataSink(BaseDataSink):
         if self.format in ["EXCEL"]:
             raise ValueError(f"'{self.format}' format is not supported with Spark")
 
+        if mode.lower() == "merge":
+            self.merge_cdc_options.execute(source=df)
+            return
+
         # Default Options
         _options = {"mergeSchema": "true", "overwriteSchema": "false"}
         if mode in ["OVERWRITE", "COMPLETE"]:

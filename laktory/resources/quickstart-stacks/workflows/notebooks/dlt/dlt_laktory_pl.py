@@ -87,13 +87,15 @@ def define_table(node, sink):
 # --------------------------------------------------------------------------- #
 
 
-def define_cdc_table(node):
+def define_cdc_table(node, sink):
     dlt.create_streaming_table(
-        name=node.name,
-        comment=node.comment,
+        name=sink.table_name,
+        comment=node.description,
     )
 
-    df = dlt.apply_changes(**node.apply_changes_kwargs)
+    df = dlt.apply_changes(
+        source=node.source.table_name, **sink.dlt_apply_changes_kwargs
+    )
 
     return df
 
@@ -108,18 +110,20 @@ for node in pl.nodes:
     if node.dlt_template != "DEFAULT":
         continue
 
-    if node.is_from_cdc:
-        df = define_cdc_table(node)
-        display(df)
-        continue
-
     if node.sinks is None or node.sinks == []:
         wrapper = define_table(node, None)
         df = dlt.get_df(wrapper)
         display(df)
 
     else:
+
         for sink in node.sinks:
-            wrapper = define_table(node, sink)
-            df = dlt.get_df(wrapper)
-            display(df)
+
+            if sink.is_cdc:
+                df = define_cdc_table(node, sink)
+                display(df)
+
+            else:
+                wrapper = define_table(node, sink)
+                df = dlt.get_df(wrapper)
+                display(df)

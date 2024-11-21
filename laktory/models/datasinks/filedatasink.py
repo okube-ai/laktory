@@ -3,6 +3,8 @@ import shutil
 from pathlib import Path
 from typing import Literal
 from typing import Union
+from typing import Any
+from pydantic import model_validator
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
 from laktory.polars import PolarsDataFrame
@@ -56,6 +58,17 @@ class FileDataSink(BaseDataSink):
     format: Literal["CSV", "PARQUET", "DELTA", "JSON", "EXCEL"] = "DELTA"
     path: str
 
+    @model_validator(mode="after")
+    def merge_and_format(self) -> Any:
+
+        if self.mode == "MERGE":
+            if self.format not in ["DELTA"]:
+                raise ValueError(
+                    "Merge write mode is only supported for 'DELTA' `format`"
+                )
+
+        return self
+
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
@@ -76,6 +89,10 @@ class FileDataSink(BaseDataSink):
         # Set mode
         if mode is None:
             mode = self.mode
+
+        if mode.lower() == "merge":
+            self.merge_cdc_options.execute(source=df)
+            return
 
         # Default Options
         _options = {"mergeSchema": "true", "overwriteSchema": "false"}

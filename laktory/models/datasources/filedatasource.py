@@ -59,7 +59,9 @@ class FileDataSource(BaseDataSource):
     ```
     """
 
-    format: Literal["CSV", "PARQUET", "DELTA", "JSON", "NDJSON", "JSONL", "EXCEL", "BINARYFILE"] = "JSONL"
+    format: Literal[
+        "CSV", "PARQUET", "DELTA", "JSON", "NDJSON", "JSONL", "EXCEL", "BINARYFILE"
+    ] = "JSONL"
     path: str
     read_options: dict[str, Any] = {}
     schema: Union[str, dict, list] = None
@@ -98,7 +100,9 @@ class FileDataSource(BaseDataSource):
         if isinstance(schema, list):
             schema = {"fields": schema, "type": "struct"}
 
-        if isinstance(schema, str) and '"fields":[' in schema.replace("'", '"').replace(" ", ""):
+        if isinstance(schema, str) and '"fields":[' in schema.replace("'", '"').replace(
+            " ", ""
+        ):
             schema = json.loads(schema)
 
         # DDL format
@@ -108,6 +112,7 @@ class FileDataSource(BaseDataSource):
         # Spark Struct format
         elif isinstance(schema, dict):
             import pyspark.sql.types as T
+
             schema = T.StructType.fromJson(schema)
 
         return schema

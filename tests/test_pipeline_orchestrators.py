@@ -141,7 +141,6 @@ def test_pipeline_dlt():
     assert data == {
         "as_stream": True,
         "broadcast": False,
-        "cdc": None,
         "dataframe_type": "SPARK",
         "drops": None,
         "filter": None,
