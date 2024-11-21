@@ -238,6 +238,7 @@ def test_basic():
             exclude_columns=["_is_deleted"],
         ),
     )
+    assert sink.is_cdc
     sink.write(df)
 
     # Test target
