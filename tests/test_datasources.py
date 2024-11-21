@@ -167,6 +167,10 @@ def test_file_data_source_read_schema():
         as_stream=False,
         schema=schema,
     )
+
+    # Dump and read source to ensure schema alias is properly handled
+    source = FileDataSource(**source.model_dump(exclude_unset=True))
+
     df = source.read(spark)
     assert df.count() == 80
     assert df.columns == [

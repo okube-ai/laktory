@@ -152,7 +152,7 @@ def test_pipeline_dlt():
         "format": "DELTA",
         "path": "/brz_stock_prices",
         "read_options": {},
-        "schema": None,
+        "schema_definition": None,
         "schema_location": None,
     }
 

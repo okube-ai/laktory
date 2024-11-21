@@ -5,10 +5,7 @@
 * `DataSinks` `merge` write mode for Change Data Capture, supporting type 1 and type 2 SCD
 ### Fixed
 * Source format in stock prices quickstart pipeline
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Removed warning due to usage of `FileDataSource` private attribute `schema`
 
 ## [0.5.2] - 2024-11-12
 ### Added

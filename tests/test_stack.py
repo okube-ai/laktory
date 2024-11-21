@@ -323,7 +323,7 @@ def test_stack_model():
                                 "format": "JSONL",
                                 "path": "/tmp/",
                                 "read_options": {},
-                                "schema": None,
+                                "schema_definition": None,
                                 "schema_location": None,
                             },
                             "timestamp_key": None,
