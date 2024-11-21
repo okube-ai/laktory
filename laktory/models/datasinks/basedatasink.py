@@ -110,7 +110,7 @@ class DataSinkMergeCDCOptions(BaseModel):
         return self._parent
 
     @property
-    def target_table(self):
+    def target_name(self):
         if self._parent and "TableDataSink" in str(type(self._parent)):
             return self._parent.full_name
         return None
@@ -123,7 +123,7 @@ class DataSinkMergeCDCOptions(BaseModel):
 
     @property
     def target_id(self):
-        return self.target_table or self.target_path
+        return self.target_name or self.target_path
 
     # ----------------------------------------------------------------------- #
     # CDC Columns                                                             #
@@ -405,7 +405,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             if self.target_path:
                 writer.save(self.target_path)
             else:
-                writer.saveAsTable(self.target_table)
+                writer.saveAsTable(self.target_name)
 
         else:
             raise ValueError(f"SCD Type {self.scd_type} is not supported.")
