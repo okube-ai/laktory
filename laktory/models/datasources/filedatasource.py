@@ -5,6 +5,8 @@ import json
 from typing import Literal
 from typing import Any
 from pydantic import model_validator
+from pydantic import Field
+from pydantic import ConfigDict
 
 from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory.spark import SparkDataFrame
@@ -58,13 +60,14 @@ class FileDataSource(BaseDataSource):
     # df = source.read(spark)
     ```
     """
+    model_config = ConfigDict(populate_by_name=True)
 
     format: Literal[
         "CSV", "PARQUET", "DELTA", "JSON", "NDJSON", "JSONL", "EXCEL", "BINARYFILE"
     ] = "JSONL"
     path: str
     read_options: dict[str, Any] = {}
-    schema: Union[str, dict, list] = None
+    schema_definition: Union[str, dict, list] = Field(None, validation_alias="schema")
     schema_location: str = None
 
     @model_validator(mode="after")
@@ -94,7 +97,7 @@ class FileDataSource(BaseDataSource):
 
     @property
     def _schema(self):
-        schema = self.schema
+        schema = self.schema_definition
         if schema is None:
             return schema
         if isinstance(schema, list):

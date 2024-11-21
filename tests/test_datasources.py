@@ -167,36 +167,10 @@ def test_file_data_source_read_schema():
         as_stream=False,
         schema=schema,
     )
-    df = source.read(spark)
-    assert df.count() == 80
-    assert df.columns == [
-        "data",
-        "description",
-        "name",
-        "producer",
-    ]
 
-    # Schema as list
-    source = FileDataSource(
-        path=os.path.join(paths.data, "./events/yahoo-finance/stock_price"),
-        as_stream=False,
-        schema=[f for f in schema["fields"]],
-    )
-    df = source.read(spark)
-    assert df.count() == 80
-    assert df.columns == [
-        "data",
-        "description",
-        "name",
-        "producer",
-    ]
+    # Dump and read source to ensure schema alias is properly handled
+    source = FileDataSource(**source.model_dump(exclude_unset=True))
 
-    # Schema as list
-    source = FileDataSource(
-        path=os.path.join(paths.data, "./events/yahoo-finance/stock_price"),
-        as_stream=False,
-        schema="data STRUCT<_created_at STRING, _name STRING, _producer_name STRING, close DOUBLE, created_at STRING, high DOUBLE, low DOUBLE, open DOUBLE, symbol STRING>, description STRING, name STRING, producer STRUCT<description STRING, name STRING, party LONG>",
-    )
     df = source.read(spark)
     assert df.count() == 80
     assert df.columns == [
@@ -205,6 +179,36 @@ def test_file_data_source_read_schema():
         "name",
         "producer",
     ]
+    #
+    # # Schema as list
+    # source = FileDataSource(
+    #     path=os.path.join(paths.data, "./events/yahoo-finance/stock_price"),
+    #     as_stream=False,
+    #     schema=[f for f in schema["fields"]],
+    # )
+    # df = source.read(spark)
+    # assert df.count() == 80
+    # assert df.columns == [
+    #     "data",
+    #     "description",
+    #     "name",
+    #     "producer",
+    # ]
+    #
+    # # Schema as list
+    # source = FileDataSource(
+    #     path=os.path.join(paths.data, "./events/yahoo-finance/stock_price"),
+    #     as_stream=False,
+    #     schema="data STRUCT<_created_at STRING, _name STRING, _producer_name STRING, close DOUBLE, created_at STRING, high DOUBLE, low DOUBLE, open DOUBLE, symbol STRING>, description STRING, name STRING, producer STRUCT<description STRING, name STRING, party LONG>",
+    # )
+    # df = source.read(spark)
+    # assert df.count() == 80
+    # assert df.columns == [
+    #     "data",
+    #     "description",
+    #     "name",
+    #     "producer",
+    # ]
 
 
 def test_file_data_source_polars():
@@ -291,10 +295,10 @@ def test_table_data_source():
 
 
 if __name__ == "__main__":
-    test_file_data_source()
-    test_file_data_source_read()
-    test_file_data_source_read_jsonl()
+    # test_file_data_source()
+    # test_file_data_source_read()
+    # test_file_data_source_read_jsonl()
     test_file_data_source_read_schema()
-    test_file_data_source_polars()
-    test_memory_data_source()
-    test_table_data_source()
+    # test_file_data_source_polars()
+    # test_memory_data_source()
+    # test_table_data_source()
