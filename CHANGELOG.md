@@ -4,7 +4,7 @@
 ### Added
 * `DataSinks` `merge` write mode for Change Data Capture, supporting type 1 and type 2 SCD
 ### Fixed
-* n/a
+* Source format in stock prices quickstart pipeline
 ### Updated
 * n/a
 ### Breaking changes
