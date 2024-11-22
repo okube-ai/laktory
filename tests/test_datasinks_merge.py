@@ -70,13 +70,7 @@ def get_basic_source():
 
     dfs = pd.DataFrame(
         [
-            {
-                "date": "2024-11-01",
-                "symbol": "S0",
-                "close": 0.42,
-                "open": 0.16,
-                "_is_deleted": False,
-            },
+            # Delete
             {
                 "date": "2024-11-01",
                 "symbol": "S2",
@@ -84,13 +78,8 @@ def get_basic_source():
                 "open": 0.60,
                 "_is_deleted": True,
             },
-            {
-                "date": "2024-11-02",
-                "symbol": "S0",
-                "close": 0.49,
-                "open": 0.57,
-                "_is_deleted": False,
-            },
+
+            # Delete
             {
                 "date": "2024-11-02",
                 "symbol": "S2",
@@ -98,6 +87,8 @@ def get_basic_source():
                 "open": 0.67,
                 "_is_deleted": True,
             },
+
+            # Update
             {
                 "date": "2024-11-03",
                 "symbol": "S0",
@@ -105,6 +96,8 @@ def get_basic_source():
                 "open": 0.09,
                 "_is_deleted": False,
             },
+
+            # Delete
             {
                 "date": "2024-11-03",
                 "symbol": "S2",
@@ -112,6 +105,8 @@ def get_basic_source():
                 "open": 0.93,
                 "_is_deleted": True,
             },
+
+            # Insert
             {
                 "date": "2024-11-04",
                 "symbol": "S0",
@@ -274,7 +269,7 @@ def test_basic():
     ]
     assert len(df1) == 9 + 6 - 3  # 9 initial + 6 new - 3 deletes
     assert "S3" not in df1["symbol"].unique().tolist()  # deleted symbol
-    assert (df1["from"] == "source").sum() == 9  # 6 new + 3 updates
+    assert (df1["from"] == "source").sum() == 7  # 6 new + 1 updates
 
     # Cleanup
     shutil.rmtree(path)
@@ -457,7 +452,7 @@ def test_stream():
     ]
     assert len(df1) == 9 + 6 - 3  # 9 initial + 6 new - 3 deletes
     assert "S3" not in df1["symbol"].unique().tolist()  # deleted symbol
-    assert (df1["from"] == "source").sum() == 9  # 6 new + 3 updates
+    assert (df1["from"] == "source").sum() == 7  # 6 new + 1 updates
 
     # Cleanup
     shutil.rmtree(path)

@@ -2,10 +2,6 @@
 
 ---
 
-::: laktory.models.datasources.basedatasource.DataSourceCDC
-
----
-
 ::: laktory.models.datasources.basedatasource.Watermark
 
 ---
