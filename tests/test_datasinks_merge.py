@@ -238,7 +238,6 @@ def test_basic():
 
     # Test target
     df0 = read(path).toPandas()
-    print(df0)
     assert len(df0) == 9  # 3 stocks * 3 timestamps
     assert df0["from"].unique().tolist() == ["target"]
     assert df0.columns.tolist() == [
@@ -252,14 +251,12 @@ def test_basic():
 
     # Build Source
     dfs = get_basic_source()
-    print(dfs.toPandas())
 
     # Merge source
     sink.write(dfs)
 
     # Read updated target
     df1 = read(path).sort("date", "symbol").toPandas()
-    print(df1.to_string())
 
     # Test Merge
     assert df1.columns.tolist() == [
