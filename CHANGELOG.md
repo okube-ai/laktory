@@ -1,6 +1,16 @@
 # Release History
 
-## [0.5.3] - Unreleased
+## [0.5.4] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.5.3] - 2024-11-22
 ### Added
 * `DataSinks` `merge` write mode for Change Data Capture, supporting type 1 and type 2 SCD
 ### Fixed
