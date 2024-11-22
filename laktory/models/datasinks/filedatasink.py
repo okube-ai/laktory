@@ -51,6 +51,18 @@ class FileDataSink(BaseDataSink):
         mode="OVERWRITE",
     )
     # sink.write(df)
+
+    # Sink with Change Data Capture processing
+    sink = models.FileDataSink(
+        path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
+        format="DELTA",
+        mode="MERGE",
+        merge_cdc_options={
+            "scd_type": 1,
+            "primary_keys": ["symbol", "tstamp"],
+        },
+    )
+    # sink.write(df)
     ```
     """
 
