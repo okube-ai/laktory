@@ -34,9 +34,6 @@ class DataSinkMergeCDCOptions(BaseModel):
         When using SCD type 2, name of the column storing the end time (or
         sequencing index) during which a row is active. This attribute is not
         used when using Databricks DLT which does not allow column rename.
-    include_columns:
-        A subset of columns to include in the target table. Use
-        `include_columns` to specify the complete list of columns to include.
     exclude_columns:
         A subset of columns to exclude in the target table.
     ignore_null_updates:
@@ -46,6 +43,9 @@ class DataSinkMergeCDCOptions(BaseModel):
         target. This also applies to nested columns with a value of null. When
         ignore_null_updates is `False`, existing values will be overwritten
         with null values.
+    include_columns:
+        A subset of columns to include in the target table. Use
+        `include_columns` to specify the complete list of columns to include.
     order_by:
         The column name specifying the logical order of CDC events in the
         source data. Used to handle change events that arrive out of order.
@@ -62,8 +62,8 @@ class DataSinkMergeCDCOptions(BaseModel):
 
     References
     ----------
-    https://iterationinsights.com/article/how-to-implement-slowly-changing-dimensions-scd-type-2-using-delta-table/
-    https://docs.databricks.com/en/delta-live-tables/python-ref.html#change-data-capture-with-python-in-delta-live-tables
+    - [How to Implement SCD 2 using Delta Table](https://iterationinsights.com/article/how-to-implement-slowly-changing-dimensions-scd-type-2-using-delta-table/)
+    - [Change Data Capture with Databricks DLT](https://docs.databricks.com/en/delta-live-tables/python-ref.html#change-data-capture-with-python-in-delta-live-tables)
     """
 
     # apply_as_truncates: Union[str, None] = None
@@ -299,6 +299,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             source = source.withColumn("_row_number", F.row_number().over(w))
             if self.scd_type == 1:
                 # Drop Duplicates
+                logger.info(f"Dropping duplicates using {self.primary_keys} and '{self.order_by}' as sequencing index")
                 source = source.filter(F.col("_row_number") == 1)
             elif self.scd_type == 2:
                 # Assign previous index to ends_at
@@ -306,6 +307,9 @@ class DataSinkMergeCDCOptions(BaseModel):
                 source = source.withColumn(self.end_at, F.lag(self.index, 1).over(w))
                 source = source.withColumn(self.index_fist, F.min(self.index).over(w2))
             source = source.drop("_row_number")
+        else:
+            logger.info(f"Dropping duplicates using {self.primary_keys}")
+            source = source.drop_duplicates(subset=self.primary_keys)
 
         # Read target
         if self.target_path:
@@ -411,6 +415,14 @@ class DataSinkMergeCDCOptions(BaseModel):
             raise ValueError(f"SCD Type {self.scd_type} is not supported.")
 
     def execute(self, source: SparkDataFrame):
+        """
+        Merge source into target delta from sink
+
+        Parameters
+        ----------
+        source:
+            Source DataFrame to merge into target (sink).
+        """
 
         from delta.tables import DeltaTable
 

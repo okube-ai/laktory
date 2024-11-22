@@ -137,6 +137,7 @@ nav:
       - Data Pipeline: concepts/pipeline.md
       - Data Sources and Sinks: concepts/sourcessinks.md
       - Data Transformer: concepts/transformer.md
+      - Change Data Capture: concepts/cdc.md
       - Data Quality: concepts/dataquality.md
       - Data Event: concepts/dataevent.md
       - DataFrames: concepts/dataframes.md

@@ -105,6 +105,8 @@ in various formats, adapting to different execution contexts.
 
 It is generally used as a component of a [pipeline](pipeline.md) node.
 
+Data sinks also support the merge of a [Change Data Capture (CDC)](cdc.md).
+
 #### File Data Sink
 ??? "API Documentation"
     [`laktory.models.FileDataSink`][laktory.models.FileDataSink]<br>
