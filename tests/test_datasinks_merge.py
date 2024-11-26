@@ -537,7 +537,7 @@ def test_stream_scd2():
         path=str(path),
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
-            exclude_columns=["index", "_is_deleted"],
+            exclude_columns=["_is_deleted"],
             delete_where="_is_deleted = true",
             order_by="index",
             scd_type=2,
