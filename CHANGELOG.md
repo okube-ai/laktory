@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* DataSink merge for out-of-order records with streaming DataFrame
 ### Updated
 * n/a
 ### Breaking changes

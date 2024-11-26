@@ -25,7 +25,7 @@ testdir_path = Path(__file__).parent
 price_cols = ["close", "open"]
 
 
-def build_target(write_target=True, path=None, with_index=False):
+def build_target(write_target=True, path=None, index=None):
 
     if path is None:
         path = testdir_path / "tmp" / "test_datasinks_merge" / str(uuid.uuid4())
@@ -48,11 +48,12 @@ def build_target(write_target=True, path=None, with_index=False):
     df0 = df0.withColumn("date", F.col("date").cast("date"))
     df0 = df0.withColumn("_is_deleted", F.lit(False))
     df0 = df0.withColumn("from", F.lit("target"))
-    if with_index:
-        df0 = df0.withColumn("index", F.lit(1))
+    if index:
+        df0 = df0.withColumn("index", F.lit(index))
 
     # Write Target
     if write_target:
+
         (
             df0.withColumn(
                 "__hash_keys", F.lit(F.sha2(F.concat_ws("~", *["symbol", "date"]), 256))
@@ -277,7 +278,7 @@ def test_basic():
 
 def test_out_of_sequence():
 
-    path, df0 = build_target(with_index=False)
+    path, df0 = build_target(index=1)
 
     # Out-of-sequence source
     dfs = spark.createDataFrame(
@@ -299,7 +300,6 @@ def test_out_of_sequence():
         path=str(path),
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
-            exclude_columns=["index"],
             order_by="index",
         ),
     )
@@ -315,6 +315,65 @@ def test_out_of_sequence():
         "close": 2.0,
         "open": 2.0,
         "from": "source",
+        "index": 2,
+    }
+
+    # Cleanup
+    shutil.rmtree(path)
+
+
+def test_outdated():
+
+    path, df0 = build_target(write_target=True, index=3)
+
+    # Out-of-sequence source
+    dfs = spark.createDataFrame(
+        pd.DataFrame(
+            {
+                "symbol": ["S1", "S2"],
+                "date": [datetime.date(2024, 11, 3), datetime.date(2024, 11, 3)],
+                "close": [4.0, 1.0],
+                "open": [4.0, 1.0],
+                "from": ["source", "source"],
+                "index": [4, 1],
+            }
+        )
+    )
+
+    # Merge
+    sink = models.FileDataSink(
+        mode="MERGE",
+        path=str(path),
+        merge_cdc_options=models.DataSinkMergeCDCOptions(
+            primary_keys=["symbol", "date"],
+            order_by="index",
+        ),
+    )
+    sink.write(dfs)
+
+    # Test - Updated Row
+    df1 = read(path).sort("date", "symbol").toPandas()
+    row = df1.iloc[-2].to_dict()
+    del row["__hash_keys"]
+    assert row == {
+        "date": datetime.date(2024, 11, 3),
+        "symbol": "S1",
+        "close": 4.0,
+        "open": 4.0,
+        "from": "source",
+        "index": 4,
+    }
+
+    # Test - Non-updated Row
+    row = df1.iloc[-3].to_dict()
+    del row["__hash_keys"]
+    assert row == {
+        "date": datetime.date(2024, 11, 3),
+        "symbol": "S0",
+        "close": 0.97,
+        "open": 0.09,
+        "from": "target",
+        "index": 3,
     }
 
     # Cleanup
@@ -323,7 +382,7 @@ def test_out_of_sequence():
 
 def test_scd2():
 
-    path, df = build_target(write_target=False, with_index=True)
+    path, df = build_target(write_target=False, index=1)
 
     # Build Source Data
     dfs = get_scd2_source()
@@ -334,7 +393,7 @@ def test_scd2():
         path=str(path),
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
-            exclude_columns=["index", "_is_deleted"],
+            exclude_columns=["_is_deleted"],
             delete_where="_is_deleted = true",
             order_by="index",
             scd_type=2,
@@ -461,7 +520,7 @@ def test_stream():
 
 def test_stream_scd2():
 
-    path, df = build_target(write_target=False, with_index=True)
+    path, df = build_target(write_target=False, index=1)
 
     # Build Source
     dfs = get_scd2_source()
@@ -507,7 +566,7 @@ def test_dlt_kwargs():
         table_name="my_table",
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
-            exclude_columns=["index", "_is_deleted"],
+            exclude_columns=["_is_deleted"],
             delete_where="_is_deleted = true",
             order_by="index",
             scd_type=2,
@@ -518,7 +577,7 @@ def test_dlt_kwargs():
     assert sink.dlt_apply_changes_kwargs == {
         "apply_as_deletes": "_is_deleted = true",
         "column_list": None,
-        "except_column_list": ["index", "_is_deleted"],
+        "except_column_list": ["_is_deleted"],
         "ignore_null_updates": False,
         "keys": ["symbol", "date"],
         "sequence_by": "index",
@@ -530,8 +589,8 @@ def test_dlt_kwargs():
 if __name__ == "__main__":
     test_basic()
     test_out_of_sequence()
+    test_outdated()
     test_scd2()
     test_null_updates()
     test_stream()
-    test_stream_scd2()
     test_dlt_kwargs()
