@@ -364,6 +364,7 @@ class DataSinkMergeCDCOptions(BaseModel):
                     condition=F.expr(self.source_delete_where)
                 )
 
+            logger.info(f"Executing merge...")
             merge.execute()
 
         elif self.scd_type == 2:
@@ -408,6 +409,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             #     _set = {f"target.{self.end_at}": f"source.{self.order_by}"}
             #     merge = merge.whenMatchedUpdate(set=_set, condition=~where)
 
+            logger.info(f"Executing merge...")
             merge.execute()
 
             # Append rows
@@ -419,6 +421,7 @@ class DataSinkMergeCDCOptions(BaseModel):
                 .write.mode("APPEND")
                 .format("DELTA")
             )
+            logger.info(f"Appending new rows...")
             if self.target_path:
                 writer.save(self.target_path)
             else:
