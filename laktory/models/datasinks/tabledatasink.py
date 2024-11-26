@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 class TableDataSink(BaseDataSink):
     """
-    Data Table data sink such as table on a Databricks catalog or on a
+    Table data sink on a metastore such as Hive, Unity Catalog or on a
     data warehouse such as Snowflake, BigQuery, etc.
 
     Attributes

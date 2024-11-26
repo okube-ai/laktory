@@ -99,6 +99,12 @@ class DataSinkMergeCDCOptions(BaseModel):
                 "`include_columns` and `exclude_columns` attributes are mutually exclusive."
             )
 
+        if self.exclude_columns and self.order_by:
+            if self.order_by in self.exclude_columns:
+                raise ValueError(
+                    f"`order_by` '{self.order_by}' can't be excluded as it will prevent proper merge of out-of-sequence records."
+                )
+
         return self
 
     # ----------------------------------------------------------------------- #
@@ -338,6 +344,13 @@ class DataSinkMergeCDCOptions(BaseModel):
             condition = None
             if self.delete_where:
                 condition = ~F.expr(self.source_delete_where)
+            if self.order_by:
+                _condition = F.expr(f"source.{self.order_by} > target.{self.order_by}")
+                if condition is None:
+                    condition = _condition
+                else:
+                    condition = condition & _condition
+
             merge = merge.whenMatchedUpdate(set=_set, condition=condition)
 
             # Insert
@@ -351,6 +364,7 @@ class DataSinkMergeCDCOptions(BaseModel):
                     condition=F.expr(self.source_delete_where)
                 )
 
+            logger.info(f"Executing merge...")
             merge.execute()
 
         elif self.scd_type == 2:
@@ -395,6 +409,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             #     _set = {f"target.{self.end_at}": f"source.{self.order_by}"}
             #     merge = merge.whenMatchedUpdate(set=_set, condition=~where)
 
+            logger.info(f"Executing merge...")
             merge.execute()
 
             # Append rows
@@ -406,6 +421,7 @@ class DataSinkMergeCDCOptions(BaseModel):
                 .write.mode("APPEND")
                 .format("DELTA")
             )
+            logger.info(f"Appending new rows...")
             if self.target_path:
                 writer.save(self.target_path)
             else:
