@@ -1,6 +1,16 @@
 # Release History
 
-## [0.5.4] - Unreleased
+## [0.5.5] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.5.4] - 2024-11-26
 ### Fixed
 * DataSink merge for out-of-order records with streaming DataFrame
 
