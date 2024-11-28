@@ -210,19 +210,14 @@ class BaseModel(_BaseModel):
         """
         Inject variables values into a dictionary (generally model dump).
 
-        There are 3 types of variables:
+        There are 2 types of variables:
 
         - User defined variables expressed as `${vars.variable_name}` and
-          defined in `self.variables` or in environment variables.
-        - Pulumi resources expressed as `${resources.resource_name}`. These
-          are available from `laktory.pulumi_resources` and are populated
-          automatically by Laktory.
-        - Pulumi resources output properties expressed as
-         `${resources.resource_name.output}`. These are available from
-         `laktory.pulumi_outputs` and are populated automatically by
-          Laktory.
-
-        Pulumi Outputs are also supported as variable values.
+          defined in `self.variables` (pulled from stack variables) or as
+          environment variables. Stack variables have priority over environment
+          variables.
+        - Resources output properties expressed as
+         `${resources.resource_name.output}`.
 
         Parameters
         ----------
@@ -243,16 +238,16 @@ class BaseModel(_BaseModel):
         _patterns = {}
         _vars = {}
 
+        # Environment variables
+        for k, v in os.environ.items():
+            _vars[f"${{vars.{k.lower()}}}"] = v
+
         # User-defined variables
         for k, v in self.variables.items():
             _k = k
             if not is_pattern(_k):
                 _k = f"${{vars.{_k}}}"
-            _vars[_k] = v
-
-        # Environment variables
-        for k, v in os.environ.items():
-            _vars[f"${{vars.{k}}}"] = v
+            _vars[_k.lower()] = v
 
         # Create patterns
         keys = list(_vars.keys())
