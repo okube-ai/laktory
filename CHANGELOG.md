@@ -1,6 +1,6 @@
 # Release History
 
-## [0.5.4] - Unreleased
+## [0.5.5] - Unreleased
 ### Added
 * Support for setting Laktory Databricks Workspace root from the stack file
 ### Fixed
@@ -11,6 +11,10 @@
 * `workflows` quickstart pipeline notebook to support custom laktory root
 ### Breaking Changes
 * Renamed `PipelineNode` attribute `primiary_key` to `primary_keys` to support multiple keys 
+
+## [0.5.4] - 2024-11-26
+### Fixed
+* DataSink merge for out-of-order records with streaming DataFrame
 
 ## [0.5.3] - 2024-11-22
 ### Added
