@@ -1,6 +1,16 @@
 # Release History
 
-## [0.5.5] - Unreleased
+## [0.5.6] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.5.5] - 2024-12-02
 ### Added
 * Support for setting Laktory Databricks Workspace root from the stack file
 * Support for Databricks Job Queuing [[#307](https://github.com/okube-ai/laktory/issues/307)]
