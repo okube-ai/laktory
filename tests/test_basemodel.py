@@ -213,6 +213,7 @@ def test_singular():
         "min_retry_interval_millis": None,
         "name": "my-job",
         "notification_settings": None,
+        "queue": None,
         "retry_on_timeout": None,
         "run_as": None,
         "schedule": None,
@@ -333,10 +334,9 @@ def test_inject_includes():
 
 
 if __name__ == "__main__":
-    # test_read_yaml()
-    # test_dump_yaml()
+    test_read_yaml()
+    test_dump_yaml()
     test_camelize()
     test_singular()
-    # test_inject_vars()
-    # test_inject_includes()
-#
+    test_inject_vars()
+    test_inject_includes()

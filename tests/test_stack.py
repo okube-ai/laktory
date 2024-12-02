@@ -115,6 +115,7 @@ def test_stack_model():
                     "name": "job-stock-prices-ut-stack",
                     "notification_settings": None,
                     "parameters": [],
+                    "queue": None,
                     "retry_on_timeout": None,
                     "run_as": None,
                     "schedule": None,
