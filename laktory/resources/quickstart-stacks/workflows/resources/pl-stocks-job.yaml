@@ -10,7 +10,6 @@ orchestrator: DATABRICKS_JOB
 
 # Configure Orchestrator
 databricks_job:
-  name: job-pl-stocks
   clusters:
     - name: node-cluster
       autoscale:
