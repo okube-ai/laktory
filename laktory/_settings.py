@@ -17,10 +17,6 @@ class Settings(BaseSettings):
         False, alias="LAKTORY_CLI_RAISE_EXTERNAL_EXCEPTIONS"
     )
 
-    # Models
-    camel_serialization: bool = Field(False)
-    singular_serialization: bool = Field(False)
-
     # Azure
     lakehouse_sa_conn_str: Union[str, None] = Field(None, alias="LAKEHOUSE_SA_CONN_STR")
 

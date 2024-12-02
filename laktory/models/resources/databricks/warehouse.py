@@ -183,7 +183,7 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_properties(self):
         d = super().pulumi_properties
-        if settings.camel_serialization:
+        if self._camel_serialization:
             d["channel"] = {"name": d.pop("channelName", None)}
         else:
             d["channel"] = {"name": d.pop("channel_name", None)}

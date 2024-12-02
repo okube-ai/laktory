@@ -102,9 +102,9 @@ def test_dump_yaml():
 
 
 def test_camelize():
-    settings.camel_serialization = True
+    schema._configure_serializer(camel=True)
     dump = schema.model_dump()
-    print(dump)
+    schema._configure_serializer(camel=False)
     assert dump == {
         "comment": None,
         "grants": None,
@@ -180,8 +180,6 @@ def test_camelize():
         "forceDestroy": True,
     }
 
-    settings.camel_serialization = False
-
 
 def test_singular():
     job = Job(
@@ -199,8 +197,9 @@ def test_singular():
         ],
     )
 
-    settings.singular_serialization = True
+    job._configure_serializer(singular=True)
     dump = job.model_dump()
+    job._configure_serializer(singular=False)
     print(dump)
     assert dump == {
         "continuous": None,
@@ -255,8 +254,6 @@ def test_singular():
         "parameter": [],
         "task": [],
     }
-
-    settings.singular_serialization = False
 
 
 def test_inject_vars():
@@ -336,9 +333,10 @@ def test_inject_includes():
 
 
 if __name__ == "__main__":
-    test_read_yaml()
-    test_dump_yaml()
+    # test_read_yaml()
+    # test_dump_yaml()
     test_camelize()
     test_singular()
-    test_inject_vars()
-    test_inject_includes()
+    # test_inject_vars()
+    # test_inject_includes()
+#

@@ -808,7 +808,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
         d = super().pulumi_properties
 
         _clusters = []
-        if settings.camel_serialization:
+        if self._camel_serialization:
             k = "jobClusters"
             if k in d:
                 for c in d[k]:

@@ -34,15 +34,20 @@ class BaseModel(_BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     variables: dict[str, Any] = Field(default={}, exclude=True)
+    _camel_serialization: bool = False
+    _singular_serialization: bool = False
 
     @model_serializer(mode="wrap")
-    def camel_serializer(self, handler) -> dict[str, Any]:
+    def custom_serializer(self, handler) -> dict[str, Any]:
         dump = handler(self)
         if dump is None:
             return dump
 
-        fields = self.model_fields
-        if settings.camel_serialization:
+        camel_serialization = self._camel_serialization
+        singular_serialization = self._singular_serialization
+
+        fields = {k: v for k, v in self.model_fields.items()}
+        if camel_serialization:
             keys = list(dump.keys())
             for k in keys:
                 k_camel = _snake_to_camel(k)
@@ -50,7 +55,7 @@ class BaseModel(_BaseModel):
                     dump[_snake_to_camel(k)] = dump.pop(k)
                     fields[_snake_to_camel(k)] = fields[k]
 
-        if settings.singular_serialization:
+        if singular_serialization:
             engine = inflect.engine()
             keys = list(dump.keys())
             for k in keys:
@@ -206,6 +211,23 @@ class BaseModel(_BaseModel):
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
+
+    def _configure_serializer(self, camel=False, singular=False):
+
+        self._camel_serialization = camel
+        self._singular_serialization = singular
+        for k in self.model_fields:
+            f = getattr(self, k)
+            if isinstance(f, BaseModel):
+                f._configure_serializer(camel, singular)
+            elif isinstance(f, list):
+                for i in f:
+                    if isinstance(i, BaseModel):
+                        i._configure_serializer(camel, singular)
+            elif isinstance(f, dict):
+                for i in f.values():
+                    if isinstance(i, BaseModel):
+                        i._configure_serializer(camel, singular)
 
     def inject_vars(self, d: dict) -> dict[str, Any]:
         """

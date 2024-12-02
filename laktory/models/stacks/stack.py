@@ -73,6 +73,7 @@ class LaktorySettings(BaseModel):
 
 
     """
+
     workspace_laktory_root: str = "/.laktory/"
     laktory_root: str = "/laktory/"
 
