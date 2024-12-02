@@ -79,7 +79,6 @@ def get_basic_source():
                 "open": 0.60,
                 "_is_deleted": True,
             },
-
             # Delete
             {
                 "date": "2024-11-02",
@@ -88,7 +87,6 @@ def get_basic_source():
                 "open": 0.67,
                 "_is_deleted": True,
             },
-
             # Update
             {
                 "date": "2024-11-03",
@@ -97,7 +95,6 @@ def get_basic_source():
                 "open": 0.09,
                 "_is_deleted": False,
             },
-
             # Delete
             {
                 "date": "2024-11-03",
@@ -106,7 +103,6 @@ def get_basic_source():
                 "open": 0.93,
                 "_is_deleted": True,
             },
-
             # Insert
             {
                 "date": "2024-11-04",

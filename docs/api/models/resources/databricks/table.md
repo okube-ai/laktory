@@ -2,4 +2,9 @@
 
 --
 
+::: laktory.models.resources.databricks.table.TableColumn
+
+--
+
 ::: laktory.models.resources.databricks.table.TableLookup
+

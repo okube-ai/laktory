@@ -67,7 +67,7 @@ class TerraformStack(BaseModel):
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         """Serialize model to match the structure of a Terraform json file."""
-        settings.singular_serialization = True
+        self._configure_serializer(singular=True)
         kwargs["exclude_none"] = kwargs.get("exclude_none", True)
         d = super().model_dump(*args, **kwargs)
 
@@ -86,7 +86,7 @@ class TerraformStack(BaseModel):
         if len(d["data"]) == 0:
             del d["data"]
         d["resource"] = dict(d["resource"])
-        settings.singular_serialization = False
+        self._configure_serializer(singular=False)
 
         # Terraform JSON requires the keyword "resources." to be removed and the
         # resource_name to be replaced with resource_type.resource_name.

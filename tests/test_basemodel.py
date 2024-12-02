@@ -102,9 +102,9 @@ def test_dump_yaml():
 
 
 def test_camelize():
-    settings.camel_serialization = True
+    schema._configure_serializer(camel=True)
     dump = schema.model_dump()
-    print(dump)
+    schema._configure_serializer(camel=False)
     assert dump == {
         "comment": None,
         "grants": None,
@@ -113,26 +113,20 @@ def test_camelize():
             {
                 "columns": [
                     {
-                        "comment": None,
                         "name": "open",
-                        "pii": None,
+                        "comment": None,
+                        "identity": None,
+                        "nullable": None,
                         "type": "double",
-                        "unit": None,
-                        "catalogName": None,
-                        "raiseMissingArgException": True,
-                        "schemaName": None,
-                        "tableName": "AAPL",
+                        "typeJson": None,
                     },
                     {
-                        "comment": None,
                         "name": "${resources.close.id}",
-                        "pii": None,
+                        "comment": None,
+                        "identity": None,
+                        "nullable": None,
                         "type": "double",
-                        "unit": None,
-                        "catalogName": None,
-                        "raiseMissingArgException": True,
-                        "schemaName": None,
-                        "tableName": "AAPL",
+                        "typeJson": None,
                     },
                 ],
                 "comment": None,
@@ -141,37 +135,30 @@ def test_camelize():
                 "properties": None,
                 "catalogName": "${vars.env}",
                 "dataSourceFormat": "DELTA",
-                "primaryKey": None,
                 "schemaName": "${vars.env}.${vars.schema_name}",
                 "storageCredentialName": None,
                 "storageLocation": None,
                 "tableType": "MANAGED",
                 "viewDefinition": None,
-                "warehouseId": "08b717ce051a0261",
+                "warehouseId": None,
             },
             {
                 "columns": [
                     {
-                        "comment": None,
                         "name": "${vars.dynamic_column}",
-                        "pii": None,
+                        "comment": None,
+                        "identity": None,
+                        "nullable": None,
                         "type": "double",
-                        "unit": None,
-                        "catalogName": None,
-                        "raiseMissingArgException": True,
-                        "schemaName": None,
-                        "tableName": "GOOGL",
+                        "typeJson": None,
                     },
                     {
-                        "comment": None,
                         "name": "high",
-                        "pii": None,
+                        "comment": None,
+                        "identity": None,
+                        "nullable": None,
                         "type": "double",
-                        "unit": None,
-                        "catalogName": None,
-                        "raiseMissingArgException": True,
-                        "schemaName": None,
-                        "tableName": "GOOGL",
+                        "typeJson": None,
                     },
                 ],
                 "comment": None,
@@ -180,21 +167,18 @@ def test_camelize():
                 "properties": None,
                 "catalogName": "${vars.env}",
                 "dataSourceFormat": "DELTA",
-                "primaryKey": None,
                 "schemaName": "${vars.env}.${vars.schema_name}",
                 "storageCredentialName": None,
                 "storageLocation": None,
                 "tableType": "MANAGED",
                 "viewDefinition": None,
-                "warehouseId": "08b717ce051a0261",
+                "warehouseId": None,
             },
         ],
         "volumes": [],
         "catalogName": "${vars.env}",
         "forceDestroy": True,
     }
-
-    settings.camel_serialization = False
 
 
 def test_singular():
@@ -213,8 +197,9 @@ def test_singular():
         ],
     )
 
-    settings.singular_serialization = True
+    job._configure_serializer(singular=True)
     dump = job.model_dump()
+    job._configure_serializer(singular=False)
     print(dump)
     assert dump == {
         "continuous": None,
@@ -270,14 +255,34 @@ def test_singular():
         "task": [],
     }
 
-    settings.singular_serialization = False
-
 
 def test_inject_vars():
+
+    env_name = "DYNAMIC_COLUMN"
+    v0 = schema.variables[env_name]
+    v1 = v0 + "_1"
+
+    # From internal variables
     d0 = schema.model_dump()
     d1 = schema.inject_vars(d0)
-    assert d1["tables"][-1]["columns"][0]["name"] == "low"
+    assert d1["tables"][-1]["columns"][0]["name"] == v0
     assert d1["tables"][0]["columns"][1]["name"] == "${ close.id }"
+
+    # With Env Var
+    os.environ[env_name] = v1
+    d0 = schema.model_dump()
+    d1 = schema.inject_vars(d0)
+    assert d1["tables"][-1]["columns"][0]["name"] == v0
+
+    # Disable internal variable
+    del schema.variables[env_name]
+    d0 = schema.model_dump()
+    d1 = schema.inject_vars(d0)
+    assert d1["tables"][-1]["columns"][0]["name"] == v1
+
+    # Reset
+    schema.variables[env_name] = v0
+    del os.environ[env_name]
 
 
 def test_inject_includes():
@@ -328,9 +333,10 @@ def test_inject_includes():
 
 
 if __name__ == "__main__":
-    test_read_yaml()
-    test_dump_yaml()
+    # test_read_yaml()
+    # test_dump_yaml()
     test_camelize()
     test_singular()
-    test_inject_vars()
-    test_inject_includes()
+    # test_inject_vars()
+    # test_inject_includes()
+#

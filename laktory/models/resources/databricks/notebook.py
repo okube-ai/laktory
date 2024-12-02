@@ -96,24 +96,22 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         return os.path.basename(self.source)
 
     @model_validator(mode="after")
-    def set_rootpath(self) -> Any:
+    def set_paths(self) -> Any:
+        # root
         if self.path is None and self.rootpath is None:
             self.rootpath = settings.workspace_laktory_root
-        return self
 
-    @model_validator(mode="after")
-    def set_dirpath(self) -> Any:
+        # dir
         if self.dirpath is None:
             self.dirpath = ""
         if self.dirpath.startswith("/"):
             self.dirpath = self.dirpath[1:]
-        return self
 
-    @model_validator(mode="after")
-    def set_path(self) -> Any:
+        # path
         if self.path is None:
             _path = Path(self.rootpath) / self.dirpath / self.filename
             self.path = _path.as_posix()
+
         return self
 
     # ----------------------------------------------------------------------- #

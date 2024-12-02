@@ -2,13 +2,15 @@
 
 ## [0.5.5] - Unreleased
 ### Added
-* n/a
+* Support for setting Laktory Databricks Workspace root from the stack file
 ### Fixed
-* n/a
+* Injection of variables into pipeline names
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* Given priority to stack variables over environment variables
+* Automatic assignation of pipeline name to Databricks Job name when selected as orchestrator
+* `workflows` quickstart pipeline notebook to support custom laktory root
+### Breaking Changes
+* Renamed `PipelineNode` attribute `primiary_key` to `primary_keys` to support multiple keys 
 
 ## [0.5.4] - 2024-11-26
 ### Fixed

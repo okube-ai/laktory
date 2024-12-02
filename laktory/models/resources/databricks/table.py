@@ -1,17 +1,13 @@
-from typing import Any
 from typing import Union
 from typing import Literal
-from pydantic import model_validator
 from pydantic import Field
 from laktory._logger import get_logger
-from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.grants import Grants
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.resources.databricks.column import Column
 
 logger = get_logger(__name__)
 
@@ -25,6 +21,36 @@ class TableLookup(ResourceLookup):
     """
 
     name: str = Field(serialization_alias="id")
+
+
+class TableColumn(BaseModel):
+    """
+    A table column.
+
+    Attributes
+    ----------
+    name:
+        User-visible name of column
+    comment:
+        User-supplied free-form text.
+    identity:
+        Whether field is an identity column. Can be `default`, `always` or
+        `unset`. It is `unset` by default.
+    nullable:
+        Whether field is nullable (Default: `true`)
+    type:
+        Column type spec (with metadata) as SQL text. Not supported for `VIEW`
+        table_type.
+    type_json:
+
+    """
+
+    name: str
+    comment: str = None
+    identity: str = None
+    nullable: bool = None
+    type: str = None
+    type_json: str = None
 
 
 class Table(BaseModel, PulumiResource, TerraformResource):
@@ -51,9 +77,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         be ignored.
     name:
         Name of the table
-    primary_key:
-        Name of the column storing a unique identifier for each row. It is used
-        by the builder to drop duplicated rows.
     schema_name:
         Name of the schema storing the table
     storage_credential_name:
@@ -89,14 +112,13 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     """
 
     catalog_name: Union[str, None] = None
-    columns: Union[list[Column], None] = None
+    columns: Union[list[TableColumn], None] = None
     comment: Union[str, None] = None
     data_source_format: str = "DELTA"
     grants: list[TableGrant] = None
     lookup_existing: TableLookup = Field(None, exclude=True)
     name: str
     properties: Union[dict[str, str], None] = None
-    primary_key: Union[str, None] = None
     schema_name: Union[str, None] = None
     storage_credential_name: Union[str, None] = None
     storage_location: Union[str, None] = None
@@ -107,29 +129,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Validators                                                              #
     # ----------------------------------------------------------------------- #
-
-    @model_validator(mode="after")
-    def assign_catalog_schema(self) -> Any:
-        # Assign to columns
-        if self.columns:
-            for c in self.columns:
-                c.table_name = self.name
-                c.catalog_name = self.catalog_name
-                c.schema_name = self.schema_name
-
-        # Warehouse ID
-        if self.warehouse_id is None:
-            self.warehouse_id = settings.databricks_warehouse_id
-
-        # Because properties are dynamically changed by Databricks (for Delta operations)
-        # we ignore properties by default for triggering a resources change
-        # Unfortunately, this did not work because ingore_changes does not apply to changes
-        # made outside of terraform.
-        # if "properties" not in self.options.model_fields_set:
-        #     # self.options.ignore_changes = ["properties"]
-        #     self.properties = {"a": "b"}
-
-        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -217,30 +216,18 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
-            "columns",
             "grants",
-            "primary_key",
         ]
-
-    @property
-    def pulumi_properties(self):
-        d = super().pulumi_properties
-        if not self.columns:
-            return d
-        d["columns"] = []
-        for i, c in enumerate(self.columns):
-            d["columns"] += [
-                {
-                    "name": c.name,
-                    "comment": c.comment,
-                    "type": c.type,
-                }
-            ]
-        return d
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def singularizations(self) -> dict[str, str]:
+        return {
+            "columns": "column",
+        }
 
     @property
     def terraform_resource_type(self) -> str:
@@ -253,19 +240,3 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
         return self.pulumi_excludes
-
-    @property
-    def terraform_properties(self) -> dict:
-        d = super().terraform_properties
-        if not self.columns:
-            return d
-        d["column"] = []
-        for i, c in enumerate(self.columns):
-            d["column"] += [
-                {
-                    "name": c.name,
-                    "comment": c.comment,
-                    "type": c.type,
-                }
-            ]
-        return d

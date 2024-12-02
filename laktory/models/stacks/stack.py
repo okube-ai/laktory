@@ -6,6 +6,7 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory._parsers import merge_dicts
+from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline import Pipeline
 from laktory.models.resources.baseresource import ResourceOptions
@@ -53,7 +54,39 @@ DIRPATH = "./"
 
 
 class Terraform(BaseModel):
-    backend: dict[str, Any] = None
+    backend: Union[dict[str, Any], None] = None
+
+
+class LaktorySettings(BaseModel):
+    """
+    Laktory Settings
+
+    Attributes
+    ----------
+    laktory_root:
+        Laktory cache root directory. Used when a pipeline needs to write
+        checkpoint files.
+    workspace_laktory_root:
+        Root directory of a Databricks Workspace (excluding `"/Workspace") to
+        which databricks objects like notebooks and workspace files are
+        deployed.
+
+
+    """
+
+    workspace_laktory_root: str = "/.laktory/"
+    laktory_root: str = "/laktory/"
+
+    @model_validator(mode="after")
+    def apply_settings(self) -> Any:
+
+        if self.workspace_laktory_root:
+            settings.workspace_laktory_root = self.workspace_laktory_root
+
+        if self.laktory_root:
+            settings.laktory_root = self.laktory_root
+
+        return self
 
 
 class Pulumi(BaseModel):
@@ -120,8 +153,6 @@ class StackResources(BaseModel):
         Databricks SQLQueries
     databricks_tables:
         Databricks Tables
-    providers:
-        Providers
     databricks_users:
         Databricks Users
     databricks_vectorsearchendpoint:
@@ -136,6 +167,8 @@ class StackResources(BaseModel):
         Databricks WorkspacFiles
     pipelines:
         Laktory Pipelines
+    providers:
+        Providers
     """
 
     databricks_dashboards: dict[str, Dashboard] = {}
@@ -226,6 +259,8 @@ class EnvironmentStack(BaseModel):
         Dictionary of resources to be deployed. Each key should be a resource
         type and each value should be a dictionary of resources who's keys are
         the resource names and the values the resources definitions.
+    settings:
+        Laktory settings
     terraform:
         Terraform-specific settings
     variables:
@@ -238,6 +273,7 @@ class EnvironmentStack(BaseModel):
     organization: str = None
     pulumi: Pulumi = Pulumi()
     resources: Union[StackResources, None] = StackResources()
+    settings: LaktorySettings = None
     terraform: Terraform = Terraform()
     variables: dict[str, Any] = {}
 
@@ -254,10 +290,13 @@ class EnvironmentSettings(BaseModel):
         the resource names and the values the resources definitions.
     variables:
         Dictionary of variables made available in the resources definition.
+    terraform:
+        Terraform-specific settings
     """
 
     resources: Any = None
     variables: dict[str, Any] = None
+    terraform: Terraform = Terraform()
 
 
 class Stack(BaseModel):
@@ -285,6 +324,8 @@ class Stack(BaseModel):
         Dictionary of resources to be deployed. Each key should be a resource
         type and each value should be a dictionary of resources who's keys are
         the resource names and the values the resources definitions.
+    settings:
+        Laktory settings
     terraform:
         Terraform-specific settings
     variables:
@@ -362,7 +403,7 @@ class Stack(BaseModel):
 
     print(stack)
     '''
-    variables={'org': 'okube'} backend='pulumi' description=None environments={'dev': EnvironmentSettings(variables={'is_dev': True}, resources=None), 'prod': EnvironmentSettings(variables={'is_dev': False}, resources=None)} name='workspace' organization=None pulumi=Pulumi(variables={}, config={'databricks:host': '${vars.DATABRICKS_HOST}', 'databricks:token': '${vars.DATABRICKS_TOKEN}'}, outputs={}) resources=StackResources(variables={}, databricks_dashboards={}, databricks_dbfsfiles={}, databricks_catalogs={}, databricks_clusters={}, databricks_clusterpolicies={}, databricks_directories={}, databricks_externallocations={}, databricks_grants={}, databricks_groups={}, databricks_jobs={'job-stock-prices': Job(resource_name_='job-stock-prices', options=ResourceOptions(variables={}, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None), lookup_existing=None, variables={}, access_controls=[], clusters=[JobCluster(resource_name_=None, options=ResourceOptions(variables={}, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None), lookup_existing=None, variables={}, access_controls=None, apply_policy_default_values=None, autoscale=None, autotermination_minutes=None, cluster_id=None, custom_tags=None, data_security_mode='USER_ISOLATION', driver_instance_pool_id=None, driver_node_type_id=None, enable_elastic_disk=None, enable_local_disk_encryption=None, idempotency_token=None, init_scripts=[], instance_pool_id=None, is_pinned=None, libraries=None, name='main', node_type_id='Standard_DS3_v2', no_wait=None, num_workers=None, policy_id=None, runtime_engine=None, single_user_name=None, spark_conf={}, spark_env_vars={}, spark_version='14.0.x-scala2.12', ssh_public_keys=[])], continuous=None, control_run_state=None, description=None, email_notifications=None, format=None, health=None, max_concurrent_runs=None, max_retries=None, min_retry_interval_millis=None, name='job-stock-prices', notification_settings=None, parameters=[], retry_on_timeout=None, run_as=None, schedule=None, tags={}, tasks=[JobTask(variables={}, condition_task=None, depends_ons=None, description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key='main', libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=JobTaskNotebookTask(variables={}, notebook_path='/.laktory/jobs/ingest_stock_prices.py', base_parameters=None, warehouse_id=None, source=None), notification_settings=None, pipeline_task=None, retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='ingest', timeout_seconds=None), JobTask(variables={}, condition_task=None, depends_ons=[JobTaskDependsOn(variables={}, task_key='ingest', outcome=None)], description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key=None, libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=None, notification_settings=None, pipeline_task=JobTaskPipelineTask(variables={}, pipeline_id='${resources.dlt-pl-stock-prices.id}', full_refresh=None), retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='pipeline', timeout_seconds=None)], timeout_seconds=None, trigger=None, webhook_notifications=None)}, databricks_metastoredataaccesses={}, databricks_metastores={}, databricks_networkconnectivityconfig={}, databricks_notebooks={}, databricks_dltpipelines={'pl-stock-prices': DLTPipeline(resource_name_='pl-stock-prices', options=ResourceOptions(variables={}, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None), lookup_existing=None, variables={}, access_controls=[], allow_duplicate_names=None, catalog=None, channel='PREVIEW', clusters=[], configuration={}, continuous=None, development='${vars.is_dev}', edition=None, libraries=[PipelineLibrary(variables={}, file=None, notebook=PipelineLibraryNotebook(variables={}, path='/pipelines/dlt_brz_template.py'))], name='pl-stock-prices', notifications=[], photon=None, serverless=None, storage=None, target=None)}, databricks_schemas={}, databricks_repos={}, databricks_secrets={}, databricks_secretscopes={}, databricks_serviceprincipals={}, databricks_sqlqueries={}, databricks_tables={}, databricks_users={}, databricks_volumes={}, databricks_vectorsearchendpoints={}, databricks_vectorsearchindexes={}, databricks_warehouses={}, databricks_workspacefiles={}, pipelines={}, providers={}) terraform=Terraform(variables={}, backend=None)
+    variables={'org': 'okube'} backend='pulumi' description=None environments={'dev': EnvironmentSettings(variables={'is_dev': True}, resources=None, terraform=Terraform(variables={}, backend=None)), 'prod': EnvironmentSettings(variables={'is_dev': False}, resources=None, terraform=Terraform(variables={}, backend=None))} name='workspace' organization=None pulumi=Pulumi(variables={}, config={'databricks:host': '${vars.DATABRICKS_HOST}', 'databricks:token': '${vars.DATABRICKS_TOKEN}'}, outputs={}) resources=StackResources(variables={}, databricks_dashboards={}, databricks_dbfsfiles={}, databricks_catalogs={}, databricks_clusters={}, databricks_clusterpolicies={}, databricks_directories={}, databricks_externallocations={}, databricks_grants={}, databricks_groups={}, databricks_jobs={'job-stock-prices': Job(resource_name_='job-stock-prices', options=ResourceOptions(variables={}, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None), lookup_existing=None, variables={}, access_controls=[], clusters=[JobCluster(resource_name_=None, options=ResourceOptions(variables={}, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None), lookup_existing=None, variables={}, access_controls=None, apply_policy_default_values=None, autoscale=None, autotermination_minutes=None, cluster_id=None, custom_tags=None, data_security_mode='USER_ISOLATION', driver_instance_pool_id=None, driver_node_type_id=None, enable_elastic_disk=None, enable_local_disk_encryption=None, idempotency_token=None, init_scripts=[], instance_pool_id=None, is_pinned=None, libraries=None, name='main', node_type_id='Standard_DS3_v2', no_wait=None, num_workers=None, policy_id=None, runtime_engine=None, single_user_name=None, spark_conf={}, spark_env_vars={}, spark_version='14.0.x-scala2.12', ssh_public_keys=[])], continuous=None, control_run_state=None, description=None, email_notifications=None, format=None, health=None, max_concurrent_runs=None, max_retries=None, min_retry_interval_millis=None, name='job-stock-prices', notification_settings=None, parameters=[], retry_on_timeout=None, run_as=None, schedule=None, tags={}, tasks=[JobTask(variables={}, condition_task=None, depends_ons=None, description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key='main', libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=JobTaskNotebookTask(variables={}, notebook_path='/.laktory/jobs/ingest_stock_prices.py', base_parameters=None, warehouse_id=None, source=None), notification_settings=None, pipeline_task=None, retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='ingest', timeout_seconds=None), JobTask(variables={}, condition_task=None, depends_ons=[JobTaskDependsOn(variables={}, task_key='ingest', outcome=None)], description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key=None, libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=None, notification_settings=None, pipeline_task=JobTaskPipelineTask(variables={}, pipeline_id='${resources.dlt-pl-stock-prices.id}', full_refresh=None), retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='pipeline', timeout_seconds=None)], timeout_seconds=None, trigger=None, webhook_notifications=None)}, databricks_metastoredataaccesses={}, databricks_metastores={}, databricks_networkconnectivityconfig={}, databricks_notebooks={}, databricks_dltpipelines={'pl-stock-prices': DLTPipeline(resource_name_='pl-stock-prices', options=ResourceOptions(variables={}, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None), lookup_existing=None, variables={}, access_controls=[], allow_duplicate_names=None, catalog=None, channel='PREVIEW', clusters=[], configuration={}, continuous=None, development='${vars.is_dev}', edition=None, libraries=[PipelineLibrary(variables={}, file=None, notebook=PipelineLibraryNotebook(variables={}, path='/pipelines/dlt_brz_template.py'))], name='pl-stock-prices', notifications=[], photon=None, serverless=None, storage=None, target=None)}, databricks_schemas={}, databricks_repos={}, databricks_secrets={}, databricks_secretscopes={}, databricks_serviceprincipals={}, databricks_sqlqueries={}, databricks_tables={}, databricks_users={}, databricks_volumes={}, databricks_vectorsearchendpoints={}, databricks_vectorsearchindexes={}, databricks_warehouses={}, databricks_workspacefiles={}, pipelines={}, providers={}) settings=None terraform=Terraform(variables={}, backend=None)
     '''
     ```
 
@@ -375,9 +416,20 @@ class Stack(BaseModel):
     organization: Union[str, None] = None
     pulumi: Pulumi = Pulumi()
     resources: Union[StackResources, None] = StackResources()
+    settings: LaktorySettings = None
     terraform: Terraform = Terraform()
     variables: dict[str, Any] = {}
     _envs: dict[str, EnvironmentStack] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def apply_settings(cls, data: Any) -> Any:
+        """Required to apply settings before instantiating resources and setting default values"""
+        settings = data.get("settings", None)
+        if settings:
+            LaktorySettings(**settings)
+
+        return data
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #

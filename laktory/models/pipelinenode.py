@@ -16,9 +16,7 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import BaseDataSource
 from laktory.models.datasinks import DataSinksUnion
-from laktory.models.datasinks import FileDataSink
 from laktory.models.dataquality.expectation import DataQualityExpectation
-from laktory.models.transformers.basechain import BaseChain
 from laktory.models.transformers.sparkchain import SparkChain
 from laktory.models.transformers.sparkchainnode import SparkChainNode
 from laktory.models.transformers.polarschain import PolarsChain
@@ -62,9 +60,17 @@ class PipelineNode(BaseModel):
         Layer in the medallion architecture
     name:
         Name given to the node. Required to reference a node in a data source.
-    primary_key:
-        Name of the column storing a unique identifier for each row. It is used
-        by the node to drop duplicated rows.
+    primary_keys:
+        A list of column names that uniquely identify each row in the
+        DataFrame. These columns are used to:
+            - Document the uniqueness constraints of the node's output data.
+            - Define the default subset for dropping duplicate rows if no
+              explicit subset is provided in `drop_duplicates`.
+            - Define the default primary keys for sinks CDC merge operations
+            - Referenced in expectations and unit tests.
+        While optional, specifying `primary_keys` helps enforce data integrity
+        and ensures that downstream operations, such as deduplication, are
+        consistent and reliable.
     root_path:
         Location of the pipeline node root used to store logs, metrics and
         checkpoints.
@@ -153,7 +159,7 @@ class PipelineNode(BaseModel):
     expectations_checkpoint_location: str = None
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
     name: Union[str, None] = None
-    primary_key: str = None
+    primary_keys: list[str] = None
     # sinks: list[DataSinksUnion] = None
     sinks: list[DataSinksUnion] = None
     root_path: str = None
@@ -205,7 +211,7 @@ class PipelineNode(BaseModel):
         if self.layer == "SILVER":
             if self.drop_source_columns is None:
                 self.drop_source_columns = True
-            if self.drop_duplicates is not None and self.primary_key:
+            if self.drop_duplicates is not None and self.primary_keys:
                 self.drop_duplicates = True
 
         #
@@ -237,6 +243,13 @@ class PipelineNode(BaseModel):
         # Assign node to transformers
         if self.transformer:
             self.transformer._parent = self
+
+        # Assign primary keys
+        if self.primary_keys and self.sinks:
+            for s in self.sinks:
+                if s.is_cdc:
+                    if s.merge_cdc_options.primary_keys is None:
+                        s.merge_cdc_options.primary_keys = self.primary_keys
 
         return self
 
@@ -498,8 +511,8 @@ class PipelineNode(BaseModel):
             subset = None
             if isinstance(self.drop_duplicates, list):
                 subset = self.drop_duplicates
-            elif self.primary_key:
-                subset = [self.primary_key]
+            elif self.primary_keys:
+                subset = self.primary_keys
 
             nodes += [SparkChainNode(func_name="dropDuplicates", func_args=[subset])]
 
@@ -575,8 +588,8 @@ class PipelineNode(BaseModel):
             subset = None
             if isinstance(self.drop_duplicates, list):
                 subset = self.drop_duplicates
-            elif self.primary_key:
-                subset = [self.primary_key]
+            elif self.primary_keys:
+                subset = self.primary_keys
 
             nodes += [PolarsChainNode(func_name="unique", func_args=[subset])]
 

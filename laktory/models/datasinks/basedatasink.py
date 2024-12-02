@@ -73,7 +73,7 @@ class DataSinkMergeCDCOptions(BaseModel):
     ignore_null_updates: bool = False
     include_columns: list[str] = None
     order_by: str = None
-    primary_keys: list[str]
+    primary_keys: list[str] = None
     scd_type: Literal[1, 2] = 1
     start_at_column_name: str = "__start_at"
     # track_history_columns: Union[list[str], None] = None
@@ -305,7 +305,9 @@ class DataSinkMergeCDCOptions(BaseModel):
             source = source.withColumn("_row_number", F.row_number().over(w))
             if self.scd_type == 1:
                 # Drop Duplicates
-                logger.info(f"Dropping duplicates using {self.primary_keys} and '{self.order_by}' as sequencing index")
+                logger.info(
+                    f"Dropping duplicates using {self.primary_keys} and '{self.order_by}' as sequencing index"
+                )
                 source = source.filter(F.col("_row_number") == 1)
             elif self.scd_type == 2:
                 # Assign previous index to ends_at
@@ -417,9 +419,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             if self.delete_where:
                 upsert = upsert.filter(~F.expr(self.delete_where))
             writer = (
-                upsert.select(self.write_columns)
-                .write.mode("APPEND")
-                .format("DELTA")
+                upsert.select(self.write_columns).write.mode("APPEND").format("DELTA")
             )
             logger.info(f"Appending new rows...")
             if self.target_path:
