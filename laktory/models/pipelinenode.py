@@ -16,9 +16,7 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import BaseDataSource
 from laktory.models.datasinks import DataSinksUnion
-from laktory.models.datasinks import FileDataSink
 from laktory.models.dataquality.expectation import DataQualityExpectation
-from laktory.models.transformers.basechain import BaseChain
 from laktory.models.transformers.sparkchain import SparkChain
 from laktory.models.transformers.sparkchainnode import SparkChainNode
 from laktory.models.transformers.polarschain import PolarsChain
@@ -68,6 +66,7 @@ class PipelineNode(BaseModel):
             - Document the uniqueness constraints of the node's output data.
             - Define the default subset for dropping duplicate rows if no
               explicit subset is provided in `drop_duplicates`.
+            - Define the default primary keys for sinks CDC merge operations
             - Referenced in expectations and unit tests.
         While optional, specifying `primary_keys` helps enforce data integrity
         and ensures that downstream operations, such as deduplication, are
@@ -244,6 +243,13 @@ class PipelineNode(BaseModel):
         # Assign node to transformers
         if self.transformer:
             self.transformer._parent = self
+
+        # Assign primary keys
+        if self.primary_keys and self.sinks:
+            for s in self.sinks:
+                if s.is_cdc:
+                    if s.merge_cdc_options.primary_keys is None:
+                        s.merge_cdc_options.primary_keys = self.primary_keys
 
         return self
 

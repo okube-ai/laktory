@@ -73,7 +73,7 @@ class DataSinkMergeCDCOptions(BaseModel):
     ignore_null_updates: bool = False
     include_columns: list[str] = None
     order_by: str = None
-    primary_keys: list[str]
+    primary_keys: list[str] = None
     scd_type: Literal[1, 2] = 1
     start_at_column_name: str = "__start_at"
     # track_history_columns: Union[list[str], None] = None

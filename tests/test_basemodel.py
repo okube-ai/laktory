@@ -260,10 +260,32 @@ def test_singular():
 
 
 def test_inject_vars():
+
+    env_name = "DYNAMIC_COLUMN"
+    v0 = schema.variables[env_name]
+    v1 = v0 + "_1"
+
+    # From internal variables
     d0 = schema.model_dump()
     d1 = schema.inject_vars(d0)
-    assert d1["tables"][-1]["columns"][0]["name"] == "low"
+    assert d1["tables"][-1]["columns"][0]["name"] == v0
     assert d1["tables"][0]["columns"][1]["name"] == "${ close.id }"
+
+    # With Env Var
+    os.environ[env_name] = v1
+    d0 = schema.model_dump()
+    d1 = schema.inject_vars(d0)
+    assert d1["tables"][-1]["columns"][0]["name"] == v0
+
+    # Disable internal variable
+    del schema.variables[env_name]
+    d0 = schema.model_dump()
+    d1 = schema.inject_vars(d0)
+    assert d1["tables"][-1]["columns"][0]["name"] == v1
+
+    # Reset
+    schema.variables[env_name] = v0
+    del os.environ[env_name]
 
 
 def test_inject_includes():

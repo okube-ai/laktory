@@ -3,6 +3,7 @@ import os
 import pytest
 
 from laktory import models
+from laktory._settings import settings
 from laktory._testing.stackvalidator import StackValidator
 from laktory._testing import Paths
 
@@ -1231,6 +1232,24 @@ def test_all_resources():
     validator.validate()
 
 
+def test_stack_settings():
+
+    current_root = settings.laktory_root
+    custom_root = "/custom/path/"
+
+    assert settings.laktory_root != custom_root
+
+    stack = models.Stack(
+        name="one_stack",
+        settings={
+            "laktory_root": custom_root
+        }
+    )
+
+    assert settings.laktory_root == custom_root
+    settings.laktory_root = current_root
+
+
 if __name__ == "__main__":
     test_stack_model()
     test_stack_env_model()
@@ -1240,3 +1259,4 @@ if __name__ == "__main__":
     test_terraform_stack()
     test_terraform_plan()
     test_all_resources()
+    test_stack_settings()
