@@ -6,6 +6,10 @@
 
 ---
 
+::: laktory.models.stacks.stack.LaktorySettings
+
+---
+
 ::: laktory.models.stacks.stack.EnvironmentSettings
 
 ---

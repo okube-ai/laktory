@@ -1239,7 +1239,7 @@ def test_stack_settings():
 
     assert settings.laktory_root != custom_root
 
-    stack = models.Stack(
+    _ = models.Stack(
         name="one_stack",
         settings={
             "laktory_root": custom_root

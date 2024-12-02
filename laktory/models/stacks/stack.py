@@ -57,7 +57,22 @@ class Terraform(BaseModel):
     backend: Union[dict[str, Any], None] = None
 
 
-class Settings(BaseModel):
+class LaktorySettings(BaseModel):
+    """
+    Laktory Settings
+
+    Attributes
+    ----------
+    laktory_root:
+        Laktory cache root directory. Used when a pipeline needs to write
+        checkpoint files.
+    workspace_laktory_root:
+        Root directory of a Databricks Workspace (excluding `"/Workspace") to
+        which databricks objects like notebooks and workspace files are
+        deployed.
+
+
+    """
     workspace_laktory_root: str = "/.laktory/"
     laktory_root: str = "/laktory/"
 
@@ -243,6 +258,8 @@ class EnvironmentStack(BaseModel):
         Dictionary of resources to be deployed. Each key should be a resource
         type and each value should be a dictionary of resources who's keys are
         the resource names and the values the resources definitions.
+    settings:
+        Laktory settings
     terraform:
         Terraform-specific settings
     variables:
@@ -255,7 +272,7 @@ class EnvironmentStack(BaseModel):
     organization: str = None
     pulumi: Pulumi = Pulumi()
     resources: Union[StackResources, None] = StackResources()
-    settings: Settings = None
+    settings: LaktorySettings = None
     terraform: Terraform = Terraform()
     variables: dict[str, Any] = {}
 
@@ -306,6 +323,8 @@ class Stack(BaseModel):
         Dictionary of resources to be deployed. Each key should be a resource
         type and each value should be a dictionary of resources who's keys are
         the resource names and the values the resources definitions.
+    settings:
+        Laktory settings
     terraform:
         Terraform-specific settings
     variables:
@@ -396,7 +415,7 @@ class Stack(BaseModel):
     organization: Union[str, None] = None
     pulumi: Pulumi = Pulumi()
     resources: Union[StackResources, None] = StackResources()
-    settings: Settings = None
+    settings: LaktorySettings = None
     terraform: Terraform = Terraform()
     variables: dict[str, Any] = {}
     _envs: dict[str, EnvironmentStack] = None
@@ -407,7 +426,7 @@ class Stack(BaseModel):
         """Required to apply settings before instantiating resources and setting default values"""
         settings = data.get("settings", None)
         if settings:
-            Settings(**settings)
+            LaktorySettings(**settings)
 
         return data
 
