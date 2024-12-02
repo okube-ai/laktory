@@ -3,6 +3,7 @@
 ## [0.5.5] - Unreleased
 ### Added
 * Support for setting Laktory Databricks Workspace root from the stack file
+* Support for Databricks Job Queuing [[#307](https://github.com/okube-ai/laktory/issues/307)]
 ### Fixed
 * Injection of variables into pipeline names
 ### Updated
