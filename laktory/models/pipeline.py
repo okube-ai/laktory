@@ -400,19 +400,18 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="before")
     @classmethod
-    def assign_name_to_dlt(cls, data: Any) -> Any:
+    def assign_name(cls, data: Any) -> Any:
 
         if "dlt" in data.keys():
             data["dlt"]["name"] = data.get("name", None)
 
-        return data
+        if "databricks_job" in data.keys():
+            data["databricks_job"]["name"] = data.get("name", None)
 
-    @model_validator(mode="before")
-    @classmethod
-    def assign_name_to_workspacefile(cls, data: Any) -> Any:
         workspacefile = data.get("workspacefile", None)
         if workspacefile:
             workspacefile["pipeline_name"] = data["name"]
+
         return data
 
     @model_validator(mode="before")
@@ -443,6 +442,15 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         # Assign pipeline
         for n in self.nodes:
             n._parent = self
+
+        return self
+
+    @model_validator(mode="after")
+    def default_workspacefile(self):
+
+        if self.orchestrator in ["DATABRICKS_JOB", "DLT"]:
+            if self.workspacefile is None:
+                self.workspacefile = PipelineWorkspaceFile(pipeline_name=self.name)
 
         return self
 
@@ -485,8 +493,11 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
         job = self.databricks_job
         job.parameters = [
-            JobParameter(name="pipeline_name", default=self.name),
             JobParameter(name="full_refresh", default="false"),
+            JobParameter(name="pipeline_name", default=self.name),
+            # JobParameter(name="pipeline_path", default=self.workspacefile.path),
+            # JobParameter(name="workspace_laktory_root", default=settings.workspace_laktory_root),
+            # JobParameter(name="laktory_root", default=settings.workspace_laktory_root),
         ]
 
         notebook_path = self.databricks_job.notebook_path
@@ -798,20 +809,17 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         - Databricks Job
         """
         # Configuration file
-        source = os.path.join(CACHE_ROOT, f"tmp-{self.name}.json")
         d = self.model_dump(exclude_unset=True)
         d = self.inject_vars(d)
         s = json.dumps(d, indent=4)
+        source = os.path.join(CACHE_ROOT, f"tmp-{d['name']}.json")
         with open(source, "w", newline="\n") as fp:
             fp.write(s)
 
         resources = []
         if self.orchestrator in ["DATABRICKS_JOB", "DLT"]:
 
-            file = self.workspacefile
-            if file is None:
-                file = PipelineWorkspaceFile(pipeline_name=self.name)
-            resources += [file]
+            resources += [self.workspacefile]
 
             if self.is_orchestrator_dlt:
                 resources += [self.dlt]

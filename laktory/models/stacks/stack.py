@@ -6,6 +6,7 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory._parsers import merge_dicts
+from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline import Pipeline
 from laktory.models.resources.baseresource import ResourceOptions
@@ -53,7 +54,23 @@ DIRPATH = "./"
 
 
 class Terraform(BaseModel):
-    backend: dict[str, Any] = None
+    backend: Union[dict[str, Any], None] = None
+
+
+class Settings(BaseModel):
+    workspace_laktory_root: str = "/.laktory/"
+    laktory_root: str = "/laktory/"
+
+    @model_validator(mode="after")
+    def apply_settings(self) -> Any:
+
+        if self.workspace_laktory_root:
+            settings.workspace_laktory_root = self.workspace_laktory_root
+
+        if self.laktory_root:
+            settings.laktory_root = self.laktory_root
+
+        return self
 
 
 class Pulumi(BaseModel):
@@ -120,8 +137,6 @@ class StackResources(BaseModel):
         Databricks SQLQueries
     databricks_tables:
         Databricks Tables
-    providers:
-        Providers
     databricks_users:
         Databricks Users
     databricks_vectorsearchendpoint:
@@ -136,6 +151,8 @@ class StackResources(BaseModel):
         Databricks WorkspacFiles
     pipelines:
         Laktory Pipelines
+    providers:
+        Providers
     """
 
     databricks_dashboards: dict[str, Dashboard] = {}
@@ -238,6 +255,7 @@ class EnvironmentStack(BaseModel):
     organization: str = None
     pulumi: Pulumi = Pulumi()
     resources: Union[StackResources, None] = StackResources()
+    settings: Settings = None
     terraform: Terraform = Terraform()
     variables: dict[str, Any] = {}
 
@@ -254,10 +272,13 @@ class EnvironmentSettings(BaseModel):
         the resource names and the values the resources definitions.
     variables:
         Dictionary of variables made available in the resources definition.
+    terraform:
+        Terraform-specific settings
     """
 
     resources: Any = None
     variables: dict[str, Any] = None
+    terraform: Terraform = Terraform()
 
 
 class Stack(BaseModel):
@@ -375,9 +396,20 @@ class Stack(BaseModel):
     organization: Union[str, None] = None
     pulumi: Pulumi = Pulumi()
     resources: Union[StackResources, None] = StackResources()
+    settings: Settings = None
     terraform: Terraform = Terraform()
     variables: dict[str, Any] = {}
     _envs: dict[str, EnvironmentStack] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def apply_settings(cls, data: Any) -> Any:
+        """Required to apply settings before instantiating resources and setting default values"""
+        settings = data.get("settings", None)
+        if settings:
+            Settings(**settings)
+
+        return data
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #

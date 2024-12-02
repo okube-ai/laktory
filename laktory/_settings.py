@@ -43,15 +43,6 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")
 
-    # https://learn.microsoft.com/en-ca/azure/databricks/dev-tools/auth#general-host-token-and-account-id-environment-variables-and-fields
-    # databricks_host: Union[str, None] = Field(None, alias="databricks_host")
-    # databricks_token: Union[str, None] = Field(None, alias="databricks_token")
-    # databricks_account_id: Union[str, None] = Field(None, alias="databricks_account_id")
-    # databricks_warehouse_id: Union[str, None] = Field(None, alias="databricks_warehouse_id")
-    databricks_host: Union[str, None] = Field(None)
-    databricks_token: Union[str, None] = Field(None)
-    databricks_account_id: Union[str, None] = Field(None)
-    databricks_warehouse_id: Union[str, None] = Field(None)
 
     @model_validator(mode="after")
     def update_landing_root(self) -> Any:

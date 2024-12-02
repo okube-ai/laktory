@@ -1,4 +1,5 @@
 # COMMAND ----------
+dbutils.widgets.text("workspace_laktory_root", "/.laktory/")
 dbutils.widgets.text("pipeline_name", "pl-stocks-job")
 dbutils.widgets.text("node_name", "")
 dbutils.widgets.text("full_refresh", "False")
@@ -18,21 +19,22 @@ from laktory import get_logger
 from laktory import settings
 
 logger = get_logger(__name__)
+notebook_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
 
 # --------------------------------------------------------------------------- #
 # Read Pipeline                                                               #
 # --------------------------------------------------------------------------- #
 
+laktory_root = "/Workspace" + notebook_path.split("/jobs/")[0]
 pl_name = dbutils.widgets.get("pipeline_name")
 node_name = dbutils.widgets.get("node_name")
 full_refresh = dbutils.widgets.get("full_refresh").lower() == "true"
-filepath = f"/Workspace{settings.workspace_laktory_root}pipelines/{pl_name}.json"
+filepath = f"{laktory_root}/pipelines/{pl_name}.json"
 with open(filepath, "r") as fp:
     pl = models.Pipeline.model_validate_json(fp.read())
 
-
 # Import User Defined Functions
-sys.path.append(f"/Workspace{settings.workspace_laktory_root}pipelines/")
+sys.path.append(f"{laktory_root}/pipelines/")
 udfs = []
 for udf in pl.udfs:
     if udf.module_path:
