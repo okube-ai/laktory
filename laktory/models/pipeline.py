@@ -402,10 +402,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     @classmethod
     def assign_name(cls, data: Any) -> Any:
 
-        if "dlt" in data.keys():
+        if "dlt" in data.keys() and data["dlt"].get("name", None) is None:
             data["dlt"]["name"] = data.get("name", None)
 
-        if "databricks_job" in data.keys() and data["databricks_job"]["name"] is None:
+        if "databricks_job" in data.keys() and data["databricks_job"].get("name", None) is None:
             data["databricks_job"]["name"] = data.get("name", None)
 
         workspacefile = data.get("workspacefile", None)
