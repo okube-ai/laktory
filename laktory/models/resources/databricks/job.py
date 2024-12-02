@@ -618,6 +618,17 @@ class JobWebhookNotifications(BaseModel):
     on_successes: list[JobWebhookNotificationsOnSuccess] = None
 
 
+class JobQueue(BaseModel):
+    """
+    Attributes
+    ----------
+    enabled:
+        If true, enable queueing for the job.
+    """
+
+    enabled: bool
+
+
 class JobLookup(ResourceLookup):
     """
     Attributes
@@ -751,7 +762,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     name: str = None
     notification_settings: JobNotificationSettings = None
     parameters: list[JobParameter] = []
-    # queue: Optional[JobQueueArgs] = None
+    queue: JobQueue = None
     retry_on_timeout: bool = None
     run_as: JobRunAs = None
     schedule: JobSchedule = None

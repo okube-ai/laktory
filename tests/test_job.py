@@ -90,6 +90,7 @@ def test_job_model():
         "name": "job-stock-prices",
         "notification_settings": None,
         "parameters": [],
+        "queue": None,
         "retry_on_timeout": None,
         "run_as": None,
         "schedule": None,
