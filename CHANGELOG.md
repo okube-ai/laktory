@@ -9,6 +9,8 @@
 * Given priority to stack variables over environment variables
 * Automatic assignation of pipeline name to Databricks Job name when selected as orchestrator
 * `workflows` quickstart pipeline notebook to support custom laktory root
+### Breaking Changes
+* Renamed `PipelineNode` attribute `primiary_key` to `primary_keys` to support multiple keys 
 
 ## [0.5.3] - 2024-11-22
 ### Added

@@ -299,7 +299,9 @@ class DataSinkMergeCDCOptions(BaseModel):
             source = source.withColumn("_row_number", F.row_number().over(w))
             if self.scd_type == 1:
                 # Drop Duplicates
-                logger.info(f"Dropping duplicates using {self.primary_keys} and '{self.order_by}' as sequencing index")
+                logger.info(
+                    f"Dropping duplicates using {self.primary_keys} and '{self.order_by}' as sequencing index"
+                )
                 source = source.filter(F.col("_row_number") == 1)
             elif self.scd_type == 2:
                 # Assign previous index to ends_at
@@ -402,9 +404,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             if self.delete_where:
                 upsert = upsert.filter(~F.expr(self.delete_where))
             writer = (
-                upsert.select(self.write_columns)
-                .write.mode("APPEND")
-                .format("DELTA")
+                upsert.select(self.write_columns).write.mode("APPEND").format("DELTA")
             )
             if self.target_path:
                 writer.save(self.target_path)

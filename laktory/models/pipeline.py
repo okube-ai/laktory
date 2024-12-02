@@ -405,7 +405,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         if "dlt" in data.keys():
             data["dlt"]["name"] = data.get("name", None)
 
-        if "databricks_job" in data.keys():
+        if "databricks_job" in data.keys() and data["databricks_job"]["name"] is None:
             data["databricks_job"]["name"] = data.get("name", None)
 
         workspacefile = data.get("workspacefile", None)

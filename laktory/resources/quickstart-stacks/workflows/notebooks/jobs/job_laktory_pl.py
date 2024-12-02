@@ -19,7 +19,13 @@ from laktory import get_logger
 from laktory import settings
 
 logger = get_logger(__name__)
-notebook_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
+notebook_path = (
+    dbutils.notebook.entry_point.getDbutils()
+    .notebook()
+    .getContext()
+    .notebookPath()
+    .get()
+)
 
 # --------------------------------------------------------------------------- #
 # Read Pipeline                                                               #

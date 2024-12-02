@@ -60,6 +60,7 @@ class FileDataSource(BaseDataSource):
     # df = source.read(spark)
     ```
     """
+
     model_config = ConfigDict(populate_by_name=True)
 
     format: Literal[

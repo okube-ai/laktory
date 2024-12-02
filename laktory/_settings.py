@@ -43,7 +43,6 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")
 
-
     @model_validator(mode="after")
     def update_landing_root(self) -> Any:
         if self.workspace_landing_root == "":

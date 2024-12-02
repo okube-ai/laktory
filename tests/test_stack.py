@@ -36,6 +36,7 @@ def test_stack_model():
                     "node_type_id": "Standard_DS3_v2",
                 },
                 "resources": None,
+                "terraform": {"backend": None},
             },
             "prod": {
                 "variables": {
@@ -46,6 +47,7 @@ def test_stack_model():
                 "resources": {
                     "pipelines": {"pl-custom-name": {"dlt": {"development": False}}}
                 },
+                "terraform": {"backend": None},
             },
         },
         "name": "unit-testing",
@@ -306,7 +308,7 @@ def test_stack_model():
                             "expectations_checkpoint_location": None,
                             "layer": None,
                             "name": "first_node",
-                            "primary_key": None,
+                            "primary_keys": None,
                             "sinks": None,
                             "root_path": None,
                             "source": {
@@ -332,7 +334,21 @@ def test_stack_model():
                     "orchestrator": "DLT",
                     "udfs": [],
                     "root_path": None,
-                    "workspacefile": None,
+                    "workspacefile": {
+                        "access_controls": [
+                            {
+                                "group_name": "users",
+                                "permission_level": "CAN_READ",
+                                "service_principal_name": None,
+                                "user_name": None,
+                            }
+                        ],
+                        "rootpath": None,
+                        "dirpath": "",
+                        "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                        "source": "./tmp-pl-stock-prices-ut-stack.json",
+                        "pipeline_name": "pl-stock-prices-ut-stack",
+                    },
                 }
             },
             "providers": {
@@ -370,6 +386,7 @@ def test_stack_model():
                 }
             },
         },
+        "settings": None,
         "terraform": {
             "backend": {
                 "azurerm": {

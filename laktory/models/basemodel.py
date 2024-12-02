@@ -41,16 +41,17 @@ class BaseModel(_BaseModel):
         if dump is None:
             return dump
 
+        fields = self.model_fields
         if settings.camel_serialization:
             keys = list(dump.keys())
             for k in keys:
                 k_camel = _snake_to_camel(k)
                 if k_camel != k:
                     dump[_snake_to_camel(k)] = dump.pop(k)
+                    fields[_snake_to_camel(k)] = fields[k]
 
         if settings.singular_serialization:
             engine = inflect.engine()
-            fields = self.model_fields
             keys = list(dump.keys())
             for k in keys:
                 if k in self.singularizations:

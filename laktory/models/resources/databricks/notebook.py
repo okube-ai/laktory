@@ -114,7 +114,6 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
 
         return self
 
-
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
