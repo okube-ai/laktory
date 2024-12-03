@@ -113,6 +113,8 @@ def test_stack_model():
                     "max_retries": None,
                     "min_retry_interval_millis": None,
                     "name": "job-stock-prices-ut-stack",
+                    "name_prefix": None,
+                    "name_suffix": None,
                     "notification_settings": None,
                     "parameters": [],
                     "queue": None,

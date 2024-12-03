@@ -4,12 +4,8 @@
 ### Added
 * Databricks job name prefix and suffix attributes
 * Propagation of stack variables to all resources
-### Fixed
-* n/a
 ### Updated
 * Removed unsafe characters from pipeline default root
-### Breaking changes
-* n/a
 
 ## [0.5.5] - 2024-12-02
 ### Added

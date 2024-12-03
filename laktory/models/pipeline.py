@@ -71,6 +71,7 @@ class PipelineDatabricksJob(Job):
         Path for the notebook. If `None`, default path for laktory job notebooks is used.
 
     """
+
     laktory_version: Union[str, None] = None
     notebook_path: Union[str, None] = None
 
