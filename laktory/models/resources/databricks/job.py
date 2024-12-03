@@ -680,6 +680,10 @@ class Job(BaseModel, PulumiResource, TerraformResource):
         The default behavior is that unsuccessful runs are immediately retried.
     name:
         Name of the job
+    name_prefix:
+        Prefix added to the job name
+    name_suffix:
+        Suffix added to the job name
     notification_settings:
         Notifications specifications
     parameters:
@@ -760,6 +764,8 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     max_retries: int = None
     min_retry_interval_millis: int = None
     name: str = None
+    name_prefix: str = None
+    name_suffix: str = None
     notification_settings: JobNotificationSettings = None
     parameters: list[JobParameter] = []
     queue: JobQueue = None
@@ -780,6 +786,19 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def full_name(self):
+        name = self.name
+        if self.name_prefix:
+            name = self.name_prefix + name
+        if self.name_suffix:
+            name = self.name_suffix
+        return name
+
+    @property
+    def resource_key(self) -> str:
+        return self.full_name
 
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
@@ -808,7 +827,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls"]
+        return ["access_controls", "name", "name_prefix", "name_suffix"]
 
     @property
     def pulumi_renames(self) -> dict[str, str]:
@@ -817,6 +836,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_properties(self):
         d = super().pulumi_properties
+        d["name"] = self.full_name
 
         _clusters = []
         if self._camel_serialization:
@@ -869,6 +889,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_properties(self) -> dict:
         d = super().terraform_properties
+        d["name"] = self.full_name
 
         _clusters = []
         k = "job_cluster"

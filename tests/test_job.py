@@ -3,6 +3,7 @@ from laktory.models.resources.databricks import Job
 
 job = Job(
     name="job-stock-prices",
+    name_prefix="osoucy]",
     clusters=[
         {
             "name": "main",
@@ -88,6 +89,8 @@ def test_job_model():
         "max_retries": None,
         "min_retry_interval_millis": None,
         "name": "job-stock-prices",
+        "name_prefix": "osoucy]",
+        "name_suffix": None,
         "notification_settings": None,
         "parameters": [],
         "queue": None,
@@ -182,7 +185,7 @@ def test_job_model():
 
 
 def test_job_pulumi():
-    assert job.resource_name == "job-stock-prices"
+    assert job.resource_name == "osoucy-job-stock-prices"
     assert job.options.model_dump(exclude_none=True) == {
         "depends_on": [],
         "delete_before_replace": True,
@@ -196,7 +199,6 @@ def test_job_pulumi():
             "on_starts": ["info@okube.ai"],
             "on_successes": ["info@okube.ai"],
         },
-        "name": "job-stock-prices",
         "parameters": [],
         "tags": {},
         "tasks": [
@@ -229,6 +231,7 @@ def test_job_pulumi():
                 },
             }
         ],
+        "name": "osoucy]job-stock-prices",
     }
 
 

@@ -212,6 +212,8 @@ def test_singular():
         "max_retries": None,
         "min_retry_interval_millis": None,
         "name": "my-job",
+        "name_prefix": None,
+        "name_suffix": None,
         "notification_settings": None,
         "queue": None,
         "retry_on_timeout": None,

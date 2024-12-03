@@ -188,7 +188,7 @@ class BaseResource(_BaseModel):
         name = re.sub(pattern, r"\1", name)
 
         # Replace special characters
-        chars = [".", "@", "{", "}", "[", "]", "$"]
+        chars = [".", "@", "{", "}", "[", "]", "$", "|"]
         for c in chars:
             name = name.replace(c, "-")
 

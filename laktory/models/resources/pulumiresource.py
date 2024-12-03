@@ -59,5 +59,4 @@ class PulumiResource(BaseResource):
                 v = _snake_to_camel(v)
             if k in d:
                 d[v] = d.pop(k)
-        d = self.inject_vars(d)
         return d

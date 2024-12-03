@@ -11,7 +11,6 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_serializer
-from laktory._settings import settings
 from laktory._parsers import _snake_to_camel
 
 Model = TypeVar("Model", bound="BaseModel")
@@ -73,6 +72,40 @@ class BaseModel(_BaseModel):
                     dump[k_singular] = dump.pop(k)
 
         return dump
+
+    def push_vars(self, update_core_resources=False) -> Any:
+        """Push variable values to all child recursively"""
+
+        def _update_model(m):
+            if not isinstance(m, BaseModel):
+                return
+            for k, v in self.variables.items():
+                m.variables[k] = m.variables.get(k, v)
+            m.push_vars()
+
+        def _push_vars(o):
+            if isinstance(o, list):
+                for _o in o:
+                    _push_vars(_o)
+            elif isinstance(o, dict):
+                for _o in o.values():
+                    _push_vars(_o)
+            else:
+                _update_model(o)
+
+        for k in self.model_fields.keys():
+            _push_vars(getattr(self, k))
+
+        if update_core_resources and hasattr(self, "core_resources"):
+            for r in self.core_resources:
+                if r != self:
+                    _push_vars(r)
+
+        return None
+
+    # ----------------------------------------------------------------------- #
+    # Class Methods                                                           #
+    # ----------------------------------------------------------------------- #
 
     @classmethod
     def model_validate_yaml(cls, fp: TextIO) -> Model:
