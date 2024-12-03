@@ -71,7 +71,6 @@ class PipelineDatabricksJob(Job):
         Path for the notebook. If `None`, default path for laktory job notebooks is used.
 
     """
-
     laktory_version: Union[str, None] = None
     notebook_path: Union[str, None] = None
 
@@ -100,6 +99,16 @@ class PipelineWorkspaceFile(WorkspaceFile):
                 {"permission_level": "CAN_READ", "group_name": "users"}
             ]
         return data
+
+    def write_source(self, pl):
+        d = pl.model_dump(exclude_unset=True)
+        d["root_path"] = pl._root_path.as_posix()
+        d = pl.inject_vars(d)
+        s = json.dumps(d, indent=4)
+
+        source = self.inject_vars({"source": self.source})["source"]
+        with open(source, "w", newline="\n") as fp:
+            fp.write(s)
 
     @property
     def resource_type_id(self):
@@ -544,6 +553,26 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         return self
 
     # ----------------------------------------------------------------------- #
+    # ID                                                                      #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def resolved_name(self) -> str:
+        return self.inject_vars({"name": self.name})["name"]
+
+    @property
+    def safe_name(self):
+
+        name = self.resolved_name
+
+        # Replace special characters
+        chars = [" ", ".", "@", "{", "}", "[", "]", "$", "|"]
+        for c in chars:
+            name = name.replace(c, "-")
+
+        return name
+
+    # ----------------------------------------------------------------------- #
     # DataFrame                                                               #
     # ----------------------------------------------------------------------- #
 
@@ -571,7 +600,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         if self.root_path:
             return Path(self.root_path)
 
-        return Path(settings.laktory_root) / "pipelines" / self.name
+        return Path(settings.laktory_root) / "pipelines" / self.safe_name
 
     # ----------------------------------------------------------------------- #
     # Expectations                                                            #
@@ -811,18 +840,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
         - Databricks Job
         """
-        # Configuration file
-        d = self.model_dump(exclude_unset=True)
-        d = self.inject_vars(d)
-        s = json.dumps(d, indent=4)
-        source = os.path.join(CACHE_ROOT, f"tmp-{d['name']}.json")
-        with open(source, "w", newline="\n") as fp:
-            fp.write(s)
 
         resources = []
         if self.orchestrator in ["DATABRICKS_JOB", "DLT"]:
 
             resources += [self.workspacefile]
+            resources[-1].write_source(self)
 
             if self.is_orchestrator_dlt:
                 resources += [self.dlt]

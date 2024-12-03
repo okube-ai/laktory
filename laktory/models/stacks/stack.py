@@ -435,7 +435,7 @@ class Stack(BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def get_env(self, env_name: str, inject_vars=True) -> EnvironmentStack:
+    def get_env(self, env_name: str) -> EnvironmentStack:
         """
         Complete definition the stack for a given environment. It takes into
         account both the default stack values and environment-specific
@@ -451,6 +451,16 @@ class Stack(BaseModel):
         :
             Environment definitions.
         """
+
+        if env_name is None:
+            env = self
+            env.push_vars()
+            return env
+
+        if env_name not in self.environments.keys():
+            raise ValueError(
+                f"Environment '{env_name}' is not declared in the stack."
+            )
 
         if self._envs is None:
 
@@ -519,11 +529,8 @@ class Stack(BaseModel):
                     elif k in _envs[_env_name]:
                         d[k] = v1
 
-                # Inject Variables
-                if inject_vars:
-                    d = self.environments[_env_name].inject_vars(d)
-
                 envs[_env_name] = EnvironmentStack(**d)
+                envs[_env_name].push_vars()
 
             self._envs = envs
 
@@ -549,15 +556,7 @@ class Stack(BaseModel):
         """
         from laktory.models.stacks.pulumistack import PulumiStack
 
-        if env_name is not None:
-            if env_name in self.environments.keys():
-                env = self.get_env(env_name=env_name, inject_vars=False)
-            else:
-                raise ValueError(
-                    f"Environment '{env_name}' is not declared in the stack."
-                )
-        else:
-            env = self
+        env = self.get_env(env_name=env_name)
 
         # Resources
         resources = {}
@@ -596,15 +595,7 @@ class Stack(BaseModel):
         """
         from laktory.models.stacks.terraformstack import TerraformStack
 
-        if env_name is not None:
-            if env_name in self.environments.keys():
-                env = self.get_env(env_name=env_name, inject_vars=False)
-            else:
-                raise ValueError(
-                    f"Environment '{env_name}' is not declared in the stack."
-                )
-        else:
-            env = self
+        env = self.get_env(env_name=env_name)
 
         # Providers
         providers = {}

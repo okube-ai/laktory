@@ -71,5 +71,4 @@ class TerraformResource(BaseResource):
         if d["lifecycle"] == {}:
             del d["lifecycle"]
 
-        d = self.inject_vars(d)
         return d
