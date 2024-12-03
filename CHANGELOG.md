@@ -1,6 +1,16 @@
 # Release History
 
-## [0.5.6] - Unreleased
+## [0.5.7] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.5.6] - 2024-12-03
 ### Added
 * Databricks job name prefix and suffix attributes
 * Propagation of stack variables to all resources
