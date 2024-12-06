@@ -1248,13 +1248,50 @@ def test_stack_settings():
     settings.laktory_root = current_root
 
 
+def test_get_env():
+    stack = models.Stack(
+        name="stack-${vars.v0}-${vars.v1}",
+        variables={
+            "v0": "value0",
+            "v1": "value1",
+        },
+        environments={
+            "dev": {
+                "variables": {
+                    "v1": "dev",
+                }
+            },
+            "prd": {
+                "variables": {
+                    "v1": "prd",
+                }
+            }
+        }
+    )
+
+    # dev = stack.get_env("dev", inject_vars=False)
+    # assert dev.name == "stack-${vars.v0}-${vars.v1}"
+
+    dev = stack.get_env("dev", inject_vars=False)
+    assert dev.name == "stack-${vars.v0}-${vars.v1}"
+
+    dev = stack.get_env("dev", inject_vars=True)
+    print(dev.name)
+    # assert dev.name ==
+
+    print("-------")
+    print(dev)
+    print(dev.name)
+
+
 if __name__ == "__main__":
-    test_stack_model()
-    test_stack_env_model()
-    test_stack_resources_unique_name()
-    test_pulumi_stack()
-    test_pulumi_preview()
-    test_terraform_stack()
-    test_terraform_plan()
-    test_all_resources()
-    test_stack_settings()
+    # test_stack_model()
+    # test_stack_env_model()
+    # test_stack_resources_unique_name()
+    # test_pulumi_stack()
+    # test_pulumi_preview()
+    # test_terraform_stack()
+    # test_terraform_plan()
+    # test_all_resources()
+    # test_stack_settings()
+    test_get_env()

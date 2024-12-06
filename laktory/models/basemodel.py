@@ -242,7 +242,7 @@ class BaseModel(_BaseModel):
         return {}
 
     # ----------------------------------------------------------------------- #
-    # Methods                                                                 #
+    # Serialization                                                           #
     # ----------------------------------------------------------------------- #
 
     def _configure_serializer(self, camel=False, singular=False):
@@ -261,6 +261,89 @@ class BaseModel(_BaseModel):
                 for i in f.values():
                     if isinstance(i, BaseModel):
                         i._configure_serializer(camel, singular)
+
+    # ----------------------------------------------------------------------- #
+    # Variables Injection                                                     #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def _vars(self):
+
+        # Build vars patterns
+        _vars = {}
+
+        # Environment variables
+        for k, v in os.environ.items():
+            _vars[f"${{vars.{k.lower()}}}"] = v
+
+        # User-defined variables
+        for k, v in self.variables.items():
+            _k = k
+            if not is_pattern(_k):
+                _k = f"${{vars.{_k}}}"
+            _vars[_k.lower()] = v
+
+        # Create patterns
+        keys = list(_vars.keys())
+        for k in keys:
+            v = _vars[k]
+            if isinstance(v, str) and not is_pattern(k):
+                pattern = re.escape(k)
+                pattern = rf"{pattern}"
+                _vars[pattern] = _vars.pop(k)
+
+        return _vars
+
+    def inject_vars2(self, inplace=False):
+
+        print("INJECTING VARS!")
+
+        _vars = self._vars
+
+        # Create copy
+        # if not inplace:
+        #     self = self.copy(deep=True)
+
+        # Replace with variables
+        def _replace(o, vars=_vars):
+            for pattern, repl in vars.items():
+                if o == pattern:
+                    print("REPLACING!", o, repl)
+                    o = repl  # required where d is not a string (bool or resource object)
+                elif isinstance(o, str) and re.findall(pattern, o, flags=re.IGNORECASE):
+                    print("REPLACING!", o, repl)
+                    o = re.sub(pattern, repl, o, flags=re.IGNORECASE)
+            return o
+
+        # Inject into mutable objects
+        def _inject_vars(o) -> Any:
+            if isinstance(o, BaseModel):
+                o.inject_vars2(inplace=True)
+            elif isinstance(o, list):
+                for i, _o in enumerate(o):
+                    print("O LIST", _o)
+                    o[i] = _inject_vars(_o)
+                    print(o[i])
+                    print("------")
+            elif isinstance(o, dict):
+                for k, _o in o.items():
+                    print("O DICT", _o)
+                    o[k] = _inject_vars(_o)
+            elif isinstance(o, str):
+                o = _replace(o)
+            return o
+
+        # Inject into field values
+        for k in self.model_fields.keys():
+            o = getattr(self, k)
+            if isinstance(o, BaseModel):
+                o.inject_vars2(inplace=True)
+            elif isinstance(o, dict) or isinstance(o, list):
+                _inject_vars(o)
+            else:
+                setattr(self, k, _replace(o))
+
+        return self
 
     def inject_vars(self, d: dict) -> dict[str, Any]:
         """
@@ -290,29 +373,7 @@ class BaseModel(_BaseModel):
         # Create deep copy to prevent inplace modifications
         d = copy.deepcopy(d)
 
-        # Build patterns
-        _patterns = {}
-        _vars = {}
-
-        # Environment variables
-        for k, v in os.environ.items():
-            _vars[f"${{vars.{k.lower()}}}"] = v
-
-        # User-defined variables
-        for k, v in self.variables.items():
-            _k = k
-            if not is_pattern(_k):
-                _k = f"${{vars.{_k}}}"
-            _vars[_k.lower()] = v
-
-        # Create patterns
-        keys = list(_vars.keys())
-        for k in keys:
-            v = _vars[k]
-            if isinstance(v, str) and not is_pattern(k):
-                pattern = re.escape(k)
-                pattern = rf"{pattern}"
-                _vars[pattern] = _vars.pop(k)
+        _vars = self._vars
 
         def search_and_replace(d, pattern, repl):
             if isinstance(d, dict):

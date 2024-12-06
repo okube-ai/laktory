@@ -6,7 +6,7 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Re-introduced inject_vars option into `Stack` `get_env` method.
 ### Breaking changes
 * n/a
 

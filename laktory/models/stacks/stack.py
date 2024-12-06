@@ -413,7 +413,7 @@ class Stack(BaseModel):
     description: str = None
     environments: dict[str, EnvironmentSettings] = {}
     name: str
-    organization: Union[str, None] = None
+    organization: Union [str, None] = None
     pulumi: Pulumi = Pulumi()
     resources: Union[StackResources, None] = StackResources()
     settings: LaktorySettings = None
@@ -435,7 +435,7 @@ class Stack(BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def get_env(self, env_name: str) -> EnvironmentStack:
+    def get_env(self, env_name: str, inject_vars=False) -> EnvironmentStack:
         """
         Complete definition the stack for a given environment. It takes into
         account both the default stack values and environment-specific
@@ -445,6 +445,8 @@ class Stack(BaseModel):
         ----------
         env_name:
             Name of the environment
+        inject_vars:
+            Inject variables into resource definitions.
 
         Returns
         -------
@@ -526,6 +528,15 @@ class Stack(BaseModel):
                         d[k] = merge_dicts(d[k], v1)
                     elif k in _envs[_env_name]:
                         d[k] = v1
+
+                # Inject Variables
+                if inject_vars:
+                    m = BaseModel(variables=d["variables"])
+                    print("d0")
+                    print(d)
+                    d = m.inject_vars(d)
+                    print("d1")
+                    print(d)
 
                 envs[_env_name] = EnvironmentStack(**d)
                 envs[_env_name].push_vars()
