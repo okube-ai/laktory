@@ -73,36 +73,6 @@ class BaseModel(_BaseModel):
 
         return dump
 
-    def push_vars(self, update_core_resources=False) -> Any:
-        """Push variable values to all child recursively"""
-
-        def _update_model(m):
-            if not isinstance(m, BaseModel):
-                return
-            for k, v in self.variables.items():
-                m.variables[k] = m.variables.get(k, v)
-            m.push_vars()
-
-        def _push_vars(o):
-            if isinstance(o, list):
-                for _o in o:
-                    _push_vars(_o)
-            elif isinstance(o, dict):
-                for _o in o.values():
-                    _push_vars(_o)
-            else:
-                _update_model(o)
-
-        for k in self.model_fields.keys():
-            _push_vars(getattr(self, k))
-
-        if update_core_resources and hasattr(self, "core_resources"):
-            for r in self.core_resources:
-                if r != self:
-                    _push_vars(r)
-
-        return None
-
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
     # ----------------------------------------------------------------------- #
@@ -266,8 +236,38 @@ class BaseModel(_BaseModel):
     # Variables Injection                                                     #
     # ----------------------------------------------------------------------- #
 
-    @property
-    def _vars(self):
+    def push_vars(self, update_core_resources=False) -> Any:
+        """Push variable values to all child recursively"""
+
+        def _update_model(m):
+            if not isinstance(m, BaseModel):
+                return
+            for k, v in self.variables.items():
+                m.variables[k] = m.variables.get(k, v)
+            m.push_vars()
+
+        def _push_vars(o):
+            if isinstance(o, list):
+                for _o in o:
+                    _push_vars(_o)
+            elif isinstance(o, dict):
+                for _o in o.values():
+                    _push_vars(_o)
+            else:
+                _update_model(o)
+
+        for k in self.model_fields.keys():
+            _push_vars(getattr(self, k))
+
+        if update_core_resources and hasattr(self, "core_resources"):
+            for r in self.core_resources:
+                if r != self:
+                    _push_vars(r)
+
+        return None
+
+    @staticmethod
+    def _get_var_patterns(vars):
 
         # Build vars patterns
         _vars = {}
@@ -277,7 +277,7 @@ class BaseModel(_BaseModel):
             _vars[f"${{vars.{k.lower()}}}"] = v
 
         # User-defined variables
-        for k, v in self.variables.items():
+        for k, v in vars.items():
             _k = k
             if not is_pattern(_k):
                 _k = f"${{vars.{_k}}}"
@@ -294,60 +294,9 @@ class BaseModel(_BaseModel):
 
         return _vars
 
-    def inject_vars2(self, inplace=False):
-
-        print("INJECTING VARS!")
-
-        _vars = self._vars
-
-        # Create copy
-        # if not inplace:
-        #     self = self.copy(deep=True)
-
-        # Replace with variables
-        def _replace(o, vars=_vars):
-            for pattern, repl in vars.items():
-                if o == pattern:
-                    print("REPLACING!", o, repl)
-                    o = repl  # required where d is not a string (bool or resource object)
-                elif isinstance(o, str) and re.findall(pattern, o, flags=re.IGNORECASE):
-                    print("REPLACING!", o, repl)
-                    o = re.sub(pattern, repl, o, flags=re.IGNORECASE)
-            return o
-
-        # Inject into mutable objects
-        def _inject_vars(o) -> Any:
-            if isinstance(o, BaseModel):
-                o.inject_vars2(inplace=True)
-            elif isinstance(o, list):
-                for i, _o in enumerate(o):
-                    print("O LIST", _o)
-                    o[i] = _inject_vars(_o)
-                    print(o[i])
-                    print("------")
-            elif isinstance(o, dict):
-                for k, _o in o.items():
-                    print("O DICT", _o)
-                    o[k] = _inject_vars(_o)
-            elif isinstance(o, str):
-                o = _replace(o)
-            return o
-
-        # Inject into field values
-        for k in self.model_fields.keys():
-            o = getattr(self, k)
-            if isinstance(o, BaseModel):
-                o.inject_vars2(inplace=True)
-            elif isinstance(o, dict) or isinstance(o, list):
-                _inject_vars(o)
-            else:
-                setattr(self, k, _replace(o))
-
-        return self
-
-    def inject_vars(self, d: dict) -> dict[str, Any]:
+    def inject_vars2(self, inplace: bool = False, vars: dict = None):
         """
-        Inject variables values into a dictionary (generally model dump).
+        Inject variables values into a model attributes.
 
         There are 2 types of variables:
 
@@ -360,45 +309,123 @@ class BaseModel(_BaseModel):
 
         Parameters
         ----------
-        d:
-            Model dump
+        inplace:
+            If `True` model is modified in place. Otherwise, a new model
+            instance is returned.
+        vars:
+            A dictionary of variables to be injected in addition to the
+            model internal variables.
+
 
         Returns
         -------
         :
-            Dump in which variable expressions have been replaced with their
-            values.
+            Model instance.
         """
 
-        # Create deep copy to prevent inplace modifications
-        d = copy.deepcopy(d)
+        # Setting vars
+        if vars is None:
+            vars = {}
+        for k, v in self.variables.items():
+            vars[k] = v
+        _vars = self._get_var_patterns(vars)
 
-        _vars = self._vars
+        # Create copy
+        if not inplace:
+            self = self.model_copy(deep=True)
 
-        def search_and_replace(d, pattern, repl):
-            if isinstance(d, dict):
-                for key, value in d.items():
-                    # if isinstance(key, str) and re.findall(pattern, key, flags=re.IGNORECASE):
-                    #     k2 = re.sub(pattern, repl, key, flags=re.IGNORECASE)
-                    #     d[k2] = search_and_replace(value, pattern, repl)
-                    #     if key != k2:
-                    #         del d[key]
-                    # else:
-                    d[key] = search_and_replace(value, pattern, repl)
-            elif isinstance(d, list):
-                for i, item in enumerate(d):
-                    d[i] = search_and_replace(item, pattern, repl)
-            elif (
-                d == pattern
-            ):  # required where d is not a string (bool or resource object)
-                d = repl
-            elif isinstance(d, str) and re.findall(pattern, d, flags=re.IGNORECASE):
-                d = re.sub(pattern, repl, d, flags=re.IGNORECASE)
+        # Replace with variables
+        def _replace(o, vars=_vars):
+            o0 = o
+            for pattern, repl in vars.items():
+                if o == pattern:
+                    o = repl  # required where d is not a string (bool or resource object)
+                elif isinstance(o, str) and re.findall(pattern, o, flags=re.IGNORECASE):
+                    o = re.sub(pattern, repl, o, flags=re.IGNORECASE)
 
-            return d
+            return o
 
-        # Replace variable with their values (except for pulumi output)
-        for pattern, repl in _vars.items():
-            d = search_and_replace(d, pattern, repl)
+        # Inject into mutable objects
+        def _inject_vars(o) -> Any:
+            if isinstance(o, BaseModel):
+                o.inject_vars2(inplace=True, vars=vars)
+            elif isinstance(o, list):
+                for i, _o in enumerate(o):
+                    o[i] = _inject_vars(_o)
+            elif isinstance(o, dict):
+                for k, _o in o.items():
+                    o[k] = _inject_vars(_o)
 
-        return d
+            elif isinstance(o, str):
+                o = _replace(o)
+            return o
+
+        # Inject into field values
+        for k in self.model_fields.keys():
+            o = getattr(self, k)
+            if isinstance(o, BaseModel):
+                o.inject_vars2(inplace=True, vars=vars)
+            elif isinstance(o, dict) or isinstance(o, list):
+                _inject_vars(o)
+            else:
+                setattr(self, k, _replace(o))
+
+        return self
+
+    # def inject_vars(self, d: dict) -> dict[str, Any]:
+    #     """
+    #     Inject variables values into a dictionary (generally model dump).
+    #
+    #     There are 2 types of variables:
+    #
+    #     - User defined variables expressed as `${vars.variable_name}` and
+    #       defined in `self.variables` (pulled from stack variables) or as
+    #       environment variables. Stack variables have priority over environment
+    #       variables.
+    #     - Resources output properties expressed as
+    #      `${resources.resource_name.output}`.
+    #
+    #     Parameters
+    #     ----------
+    #     d:
+    #         Model dump
+    #
+    #     Returns
+    #     -------
+    #     :
+    #         Dump in which variable expressions have been replaced with their
+    #         values.
+    #     """
+    #
+    #     # Create deep copy to prevent inplace modifications
+    #     d = copy.deepcopy(d)
+    #
+    #     _vars = self._vars
+    #
+    #     def search_and_replace(d, pattern, repl):
+    #         if isinstance(d, dict):
+    #             for key, value in d.items():
+    #                 # if isinstance(key, str) and re.findall(pattern, key, flags=re.IGNORECASE):
+    #                 #     k2 = re.sub(pattern, repl, key, flags=re.IGNORECASE)
+    #                 #     d[k2] = search_and_replace(value, pattern, repl)
+    #                 #     if key != k2:
+    #                 #         del d[key]
+    #                 # else:
+    #                 d[key] = search_and_replace(value, pattern, repl)
+    #         elif isinstance(d, list):
+    #             for i, item in enumerate(d):
+    #                 d[i] = search_and_replace(item, pattern, repl)
+    #         elif (
+    #             d == pattern
+    #         ):  # required where d is not a string (bool or resource object)
+    #             d = repl
+    #         elif isinstance(d, str) and re.findall(pattern, d, flags=re.IGNORECASE):
+    #             d = re.sub(pattern, repl, d, flags=re.IGNORECASE)
+    #
+    #         return d
+    #
+    #     # Replace variable with their values (except for pulumi output)
+    #     for pattern, repl in _vars.items():
+    #         d = search_and_replace(d, pattern, repl)
+    #
+    #     return d

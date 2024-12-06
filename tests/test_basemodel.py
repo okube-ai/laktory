@@ -264,34 +264,29 @@ def test_inject_vars():
     env_name = "DYNAMIC_COLUMN"
     v0 = schema.variables[env_name]
     v1 = v0 + "_1"
-    schema2 = schema.inject_vars2(inplace=True)
-
-    print(schema.tables[-1].columns[0])
-    print(schema2.tables[-1].columns[0])
+    schema2 = schema.inject_vars2(inplace=False)
 
     # From internal variables
-    # d0 = schema.model_dump()
-    # d1 = schema.inject_vars(d0)
-    # print(schema2.tables[-1].columns[0].name)
+    assert schema.name == "${vars.env}.${vars.schema_name}"
+    assert schema.catalog_name == "${vars.env}"
+    assert schema2.name == "env.schema"
+    assert schema2.catalog_name == "env"
     assert schema2.tables[-1].columns[0].name == v0
     assert schema2.tables[0].columns[1].name == "${ close.id }"
 
-    #
-    # # With Env Var
-    # os.environ[env_name] = v1
-    # d0 = schema.model_dump()
-    # d1 = schema.inject_vars(d0)
-    # assert d1["tables"][-1]["columns"][0]["name"] == v0
-    #
-    # # Disable internal variable
-    # del schema.variables[env_name]
-    # d0 = schema.model_dump()
-    # d1 = schema.inject_vars(d0)
-    # assert d1["tables"][-1]["columns"][0]["name"] == v1
-    #
-    # # Reset
-    # schema.variables[env_name] = v0
-    # del os.environ[env_name]
+    # With Env Var
+    os.environ[env_name] = v1
+    schema2 = schema.inject_vars2()
+    assert schema2.tables[-1].columns[0].name == v0
+
+    # Disable internal variable
+    del schema.variables[env_name]
+    schema2 = schema.inject_vars2()
+    assert schema2.tables[-1].columns[0].name == v1
+
+    # Reset
+    schema.variables[env_name] = v0
+    del os.environ[env_name]
 
 
 def test_inject_includes():
@@ -342,9 +337,9 @@ def test_inject_includes():
 
 
 if __name__ == "__main__":
-    # test_read_yaml()
-    # test_dump_yaml()
-    # test_camelize()
-    # test_singular()
+    test_read_yaml()
+    test_dump_yaml()
+    test_camelize()
+    test_singular()
     test_inject_vars()
-    # test_inject_includes()
+    test_inject_includes()
