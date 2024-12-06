@@ -1,5 +1,6 @@
 import laktory
 from laktory.models import BaseModel
+
 # from laktory._parsers import remove_empty
 from laktory._parsers import merge_dicts
 

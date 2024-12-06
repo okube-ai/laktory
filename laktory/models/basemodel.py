@@ -318,11 +318,7 @@ class BaseModel(_BaseModel):
             o = self._replace(o, vars)
         return o
 
-    def inject_vars(
-            self,
-            inplace: bool = False,
-            vars: dict = None
-    ):
+    def inject_vars(self, inplace: bool = False, vars: dict = None):
         """
         Inject variables values into a model attributes.
 
@@ -373,10 +369,7 @@ class BaseModel(_BaseModel):
             return self
 
     def inject_vars_into_dump(
-            self,
-            dump: dict[str, Any],
-            inplace: bool = False,
-            vars: dict[str, Any] = None
+        self, dump: dict[str, Any], inplace: bool = False, vars: dict[str, Any] = None
     ):
         """
         Inject variables values into a model dump.

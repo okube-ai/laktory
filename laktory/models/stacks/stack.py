@@ -413,7 +413,7 @@ class Stack(BaseModel):
     description: str = None
     environments: dict[str, EnvironmentSettings] = {}
     name: str
-    organization: Union [str, None] = None
+    organization: Union[str, None] = None
     pulumi: Pulumi = Pulumi()
     resources: Union[StackResources, None] = StackResources()
     settings: LaktorySettings = None

@@ -5,6 +5,7 @@ import copy
 # String Parsing                                                              #
 # --------------------------------------------------------------------------- #
 
+
 def _snake_to_camel(snake_str):
     components = snake_str.split("_")
     return components[0] + "".join(x.title() for x in components[1:])
@@ -55,6 +56,7 @@ def camelize_keys(d, parent=None, excluded_parents=None):
 # --------------------------------------------------------------------------- #
 # Dict Parsing                                                                #
 # --------------------------------------------------------------------------- #
+
 
 def merge_dicts(d1: dict, d2: dict) -> dict:
     dm = copy.deepcopy(d1)

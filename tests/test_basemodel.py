@@ -288,7 +288,9 @@ def test_inject_vars():
     schema3 = schema.model_copy(deep=True)
     schema2 = schema.inject_vars()
     schema3.inject_vars(inplace=True)
-    assert schema3.model_dump(exclude_unset=True) == schema2.model_dump(exclude_unset=True)
+    assert schema3.model_dump(exclude_unset=True) == schema2.model_dump(
+        exclude_unset=True
+    )
 
     # Check dump
     d0 = schema.model_dump(exclude_unset=True)
