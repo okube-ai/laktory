@@ -1,6 +1,6 @@
 import logging
 import sys
-import pytz
+from zoneinfo import ZoneInfo
 from datetime import datetime
 
 from ._settings import settings
@@ -20,7 +20,7 @@ class LaktoryFormatter(logging.Formatter):
 
     def formatTime(self, record, datefmt=None):
         # Set timestamp to UTC
-        utc_time = datetime.fromtimestamp(record.created, pytz.utc)
+        utc_time = datetime.fromtimestamp(record.created, tz=ZoneInfo("UTC"))
         return utc_time.strftime(datefmt or self.default_time_format)
 
     def format(self, record):
