@@ -65,7 +65,7 @@ class PulumiStack(BaseModel):
         # Pulumi YAML requires the keyword "resources." to be removed
         pattern = r"\$\{resources\.(.*?)\}"
         self.variables[pattern] = r"${\1}"
-        d = self.inject_vars(d)
+        d = self.inject_vars_into_dump(d)
         del self.variables[pattern]
 
         return d

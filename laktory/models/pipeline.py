@@ -102,12 +102,13 @@ class PipelineWorkspaceFile(WorkspaceFile):
         return data
 
     def write_source(self, pl):
+        pl.root_path = pl._root_path.as_posix()
+        pl = pl.inject_vars(inplace=False)
+
         d = pl.model_dump(exclude_unset=True)
-        d["root_path"] = pl._root_path.as_posix()
-        d = pl.inject_vars(d)
         s = json.dumps(d, indent=4)
 
-        source = self.inject_vars({"source": self.source})["source"]
+        source = self.inject_vars_into_dump({"source": self.source})["source"]
         with open(source, "w", newline="\n") as fp:
             fp.write(s)
 
@@ -559,7 +560,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def resolved_name(self) -> str:
-        return self.inject_vars({"name": self.name})["name"]
+        return self.inject_vars_into_dump({"name": self.name})["name"]
 
     @property
     def safe_name(self):
