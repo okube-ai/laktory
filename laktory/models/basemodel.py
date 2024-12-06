@@ -73,36 +73,6 @@ class BaseModel(_BaseModel):
 
         return dump
 
-    def push_vars(self, update_core_resources=False) -> Any:
-        """Push variable values to all child recursively"""
-
-        def _update_model(m):
-            if not isinstance(m, BaseModel):
-                return
-            for k, v in self.variables.items():
-                m.variables[k] = m.variables.get(k, v)
-            m.push_vars()
-
-        def _push_vars(o):
-            if isinstance(o, list):
-                for _o in o:
-                    _push_vars(_o)
-            elif isinstance(o, dict):
-                for _o in o.values():
-                    _push_vars(_o)
-            else:
-                _update_model(o)
-
-        for k in self.model_fields.keys():
-            _push_vars(getattr(self, k))
-
-        if update_core_resources and hasattr(self, "core_resources"):
-            for r in self.core_resources:
-                if r != self:
-                    _push_vars(r)
-
-        return None
-
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
     # ----------------------------------------------------------------------- #
@@ -242,7 +212,7 @@ class BaseModel(_BaseModel):
         return {}
 
     # ----------------------------------------------------------------------- #
-    # Methods                                                                 #
+    # Serialization                                                           #
     # ----------------------------------------------------------------------- #
 
     def _configure_serializer(self, camel=False, singular=False):
@@ -262,9 +232,95 @@ class BaseModel(_BaseModel):
                     if isinstance(i, BaseModel):
                         i._configure_serializer(camel, singular)
 
-    def inject_vars(self, d: dict) -> dict[str, Any]:
+    # ----------------------------------------------------------------------- #
+    # Variables Injection                                                     #
+    # ----------------------------------------------------------------------- #
+
+    def push_vars(self, update_core_resources=False) -> Any:
+        """Push variable values to all child recursively"""
+
+        def _update_model(m):
+            if not isinstance(m, BaseModel):
+                return
+            for k, v in self.variables.items():
+                m.variables[k] = m.variables.get(k, v)
+            m.push_vars()
+
+        def _push_vars(o):
+            if isinstance(o, list):
+                for _o in o:
+                    _push_vars(_o)
+            elif isinstance(o, dict):
+                for _o in o.values():
+                    _push_vars(_o)
+            else:
+                _update_model(o)
+
+        for k in self.model_fields.keys():
+            _push_vars(getattr(self, k))
+
+        if update_core_resources and hasattr(self, "core_resources"):
+            for r in self.core_resources:
+                if r != self:
+                    _push_vars(r)
+
+        return None
+
+    @staticmethod
+    def _get_patterns(vars):
+
+        # Build vars patterns
+        patterns = {}
+
+        # Environment variables
+        for k, v in os.environ.items():
+            patterns[f"${{vars.{k.lower()}}}"] = v
+
+        # User-defined variables
+        for k, v in vars.items():
+            _k = k
+            if not is_pattern(_k):
+                _k = f"${{vars.{_k}}}"
+            patterns[_k.lower()] = v
+
+        # Create patterns
+        keys = list(patterns.keys())
+        for k in keys:
+            v = patterns[k]
+            if isinstance(v, str) and not is_pattern(k):
+                pattern = re.escape(k)
+                pattern = rf"{pattern}"
+                patterns[pattern] = patterns.pop(k)
+
+        return patterns
+
+    def _replace(self, o, vars):
+        """Replace Variables in a simple object"""
+        patterns = self._get_patterns(vars)
+        for pattern, repl in patterns.items():
+            if o == pattern:
+                o = repl  # required where d is not a string (bool or resource object)
+            elif isinstance(o, str) and re.findall(pattern, o, flags=re.IGNORECASE):
+                o = re.sub(pattern, repl, o, flags=re.IGNORECASE)
+        return o
+
+    def _inject_vars(self, o, vars) -> Any:
+        """Inject Variables into a mutable object"""
+        if isinstance(o, BaseModel):
+            o.inject_vars(inplace=True, vars=vars)
+        elif isinstance(o, list):
+            for i, _o in enumerate(o):
+                o[i] = self._inject_vars(_o, vars)
+        elif isinstance(o, dict):
+            for k, _o in o.items():
+                o[k] = self._inject_vars(_o, vars)
+        else:
+            o = self._replace(o, vars)
+        return o
+
+    def inject_vars(self, inplace: bool = False, vars: dict = None):
         """
-        Inject variables values into a dictionary (generally model dump).
+        Inject variables values into a model attributes.
 
         There are 2 types of variables:
 
@@ -277,67 +333,87 @@ class BaseModel(_BaseModel):
 
         Parameters
         ----------
-        d:
-            Model dump
+        inplace:
+            If `True` model is modified in place. Otherwise, a new model
+            instance is returned.
+        vars:
+            A dictionary of variables to be injected in addition to the
+            model internal variables.
+
 
         Returns
         -------
         :
-            Dump in which variable expressions have been replaced with their
-            values.
+            Model instance.
         """
 
-        # Create deep copy to prevent inplace modifications
-        d = copy.deepcopy(d)
-
-        # Build patterns
-        _patterns = {}
-        _vars = {}
-
-        # Environment variables
-        for k, v in os.environ.items():
-            _vars[f"${{vars.{k.lower()}}}"] = v
-
-        # User-defined variables
+        # Setting vars
+        if vars is None:
+            vars = {}
         for k, v in self.variables.items():
-            _k = k
-            if not is_pattern(_k):
-                _k = f"${{vars.{_k}}}"
-            _vars[_k.lower()] = v
+            vars[k] = v
 
-        # Create patterns
-        keys = list(_vars.keys())
-        for k in keys:
-            v = _vars[k]
-            if isinstance(v, str) and not is_pattern(k):
-                pattern = re.escape(k)
-                pattern = rf"{pattern}"
-                _vars[pattern] = _vars.pop(k)
+        # Create copy
+        if not inplace:
+            self = self.model_copy(deep=True)
 
-        def search_and_replace(d, pattern, repl):
-            if isinstance(d, dict):
-                for key, value in d.items():
-                    # if isinstance(key, str) and re.findall(pattern, key, flags=re.IGNORECASE):
-                    #     k2 = re.sub(pattern, repl, key, flags=re.IGNORECASE)
-                    #     d[k2] = search_and_replace(value, pattern, repl)
-                    #     if key != k2:
-                    #         del d[key]
-                    # else:
-                    d[key] = search_and_replace(value, pattern, repl)
-            elif isinstance(d, list):
-                for i, item in enumerate(d):
-                    d[i] = search_and_replace(item, pattern, repl)
-            elif (
-                d == pattern
-            ):  # required where d is not a string (bool or resource object)
-                d = repl
-            elif isinstance(d, str) and re.findall(pattern, d, flags=re.IGNORECASE):
-                d = re.sub(pattern, repl, d, flags=re.IGNORECASE)
+        # Inject into field values
+        for k in self.model_fields_set:
+            o = getattr(self, k)
+            if isinstance(o, BaseModel) or isinstance(o, dict) or isinstance(o, list):
+                self._inject_vars(o, vars)
+            else:
+                setattr(self, k, self._replace(o, vars))
 
-            return d
+        if not inplace:
+            return self
 
-        # Replace variable with their values (except for pulumi output)
-        for pattern, repl in _vars.items():
-            d = search_and_replace(d, pattern, repl)
+    def inject_vars_into_dump(
+        self, dump: dict[str, Any], inplace: bool = False, vars: dict[str, Any] = None
+    ):
+        """
+        Inject variables values into a model dump.
 
-        return d
+        There are 2 types of variables:
+
+        - User defined variables expressed as `${vars.variable_name}` and
+          defined in `self.variables` (pulled from stack variables) or as
+          environment variables. Stack variables have priority over environment
+          variables.
+        - Resources output properties expressed as
+         `${resources.resource_name.output}`.
+
+        Parameters
+        ----------
+        dump:
+            Model dump (or any other general purpose dictionary)
+        inplace:
+            If `True` model is modified in place. Otherwise, a new model
+            instance is returned.
+        vars:
+            A dictionary of variables to be injected in addition to the
+            model internal variables.
+
+
+        Returns
+        -------
+        :
+            Model dump with injected variables.
+        """
+
+        # Setting vars
+        if vars is None:
+            vars = {}
+        for k, v in self.variables.items():
+            vars[k] = v
+        _vars = self._get_patterns(vars)
+
+        # Create copy
+        if not inplace:
+            dump = copy.deepcopy(dump)
+
+        # Inject into field values
+        self._inject_vars(dump, vars)
+
+        if not inplace:
+            return dump

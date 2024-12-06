@@ -87,7 +87,7 @@ class BaseResource(_BaseModel):
         exclude=True,
     )
     options: ResourceOptions = Field(ResourceOptions(), exclude=True)
-    lookup_existing: ResourceLookup = Field(None, exclude=True, frozen=True)
+    lookup_existing: ResourceLookup = Field(None, exclude=True, frozen=False)
     _core_resources: list[Any] = None
 
     @model_validator(mode="before")

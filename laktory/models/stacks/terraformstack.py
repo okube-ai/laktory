@@ -115,7 +115,7 @@ class TerraformStack(BaseModel):
                 self.variables[pattern] = rf"${{{k1}.\1}}"
                 patterns += [pattern]
 
-        d = self.inject_vars(d)
+        d = self.inject_vars_into_dump(d)
         for p in patterns:
             del self.variables[p]
 
