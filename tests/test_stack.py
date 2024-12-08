@@ -61,12 +61,14 @@ def test_stack_model():
             "outputs": {},
         },
         "resources": {
+            "databricks_alerts": {},
+            "databricks_catalogs": {},
+            "databricks_clusterpolicies": {},
+            "databricks_clusters": {},
             "databricks_dashboards": {},
             "databricks_dbfsfiles": {},
-            "databricks_catalogs": {},
-            "databricks_clusters": {},
-            "databricks_clusterpolicies": {},
             "databricks_directories": {},
+            "databricks_dltpipelines": {},
             "databricks_externallocations": {},
             "databricks_grants": {},
             "databricks_groups": {},
@@ -201,6 +203,9 @@ def test_stack_model():
             },
             "databricks_metastoredataaccesses": {},
             "databricks_metastores": {},
+            "databricks_mlflowexperiments": {},
+            "databricks_mlflowmodels": {},
+            "databricks_mlflowwebhooks": {},
             "databricks_networkconnectivityconfig": {},
             "databricks_notebooks": {
                 "notebook-external": {
@@ -219,18 +224,17 @@ def test_stack_model():
                     "source": "",
                 }
             },
-            "databricks_dltpipelines": {},
-            "databricks_schemas": {},
+            "databricks_queries": {},
             "databricks_repos": {},
+            "databricks_schemas": {},
             "databricks_secrets": {},
             "databricks_secretscopes": {},
             "databricks_serviceprincipals": {},
-            "databricks_sqlqueries": {},
             "databricks_tables": {},
             "databricks_users": {},
-            "databricks_volumes": {},
             "databricks_vectorsearchendpoints": {},
             "databricks_vectorsearchindexes": {},
+            "databricks_volumes": {},
             "databricks_warehouses": {
                 "warehouse-external": {
                     "cluster_size": "2X-Small",
@@ -1182,10 +1186,15 @@ def test_all_resources():
     from tests.test_job import job
     from tests.test_pipeline_orchestrators import pl_dlt
     from tests.test_metastore import metastore
+    from tests.test_mlflow_experiment import mlexp
+    from tests.test_mlflow_model import mlmodel
+    from tests.test_mlflow_webhook import mlwebhook
     from tests.test_notebook import nb
     from tests.test_repo import repo
     from tests.test_schema import schema
-    from tests.test_sql_query import query
+
+    from tests.test_alert import alert
+    from tests.test_query import query
     from tests.test_user import user
     from tests.test_user import group
     from tests.test_workspacefile import workspace_file
@@ -1200,16 +1209,20 @@ def test_all_resources():
 
     validator = StackValidator(
         resources={
+            "databricks_alerts": [alert],
             "databricks_catalogs": [catalog],
             "databricks_clusterpolicies": [cluster_policy],
             "databricks_dashboards": [dashboard],
             "databricks_directories": [directory],
             "databricks_jobs": [job],
             "databricks_metastores": [metastore],
+            "databricks_mlflowexperiments": [mlexp],
+            "databricks_mlflowmodels": [mlmodel],
+            "databricks_mlflowwebhooks": [mlwebhook],
             "databricks_notebooks": [nb],
+            "databricks_queries": [query],
             "databricks_repos": [repo],
             "databricks_schemas": [schema],
-            "databricks_sqlqueries": [query],
             "databricks_groups": [group],
             "databricks_users": [user],
             "databricks_vectorsearchendpoints": [vector_search_endpoint],

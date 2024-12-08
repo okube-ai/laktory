@@ -1,52 +1,58 @@
-import os
-from typing import Any
-from typing import Literal
 from typing import Union
-from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
-from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
-class SqlQuery(BaseModel, PulumiResource, TerraformResource):
+class MlflowModelTag(BaseModel):
     """
-    Databricks SQL Query
+    MLflow model Tags Specifications
+
+    Attributes
+    ----------
+    key:
+
+    value:
+
+    """
+
+    key: str
+    value: str
+
+
+class MLflowModel(BaseModel, PulumiResource, TerraformResource):
+    """
+    MLflow Model
 
     Attributes
     ----------
     access_controls:
-        SQL Query access controls
-    comment:
-        General description that conveys additional information about this query such as usage notes.
-    data_source_id:
-        Data source ID of the SQL warehouse that will be used to run the query.
+        MLflow model access controls
+    description:
+        The description of the MLflow model.
     name:
-        The title of this query that appears in list views, widget headings, and on the query page.
-    parent:
-        Id of the workspace folder storing the query
-    query:
-        The text of the query to be run.
-    run_as_role:
-        Run as role.
+        Name of MLflow model. Change of name triggers new resource.
     tags:
-        List of tags
+        Tags for the MLflow model.
 
     Examples
     --------
     ```py
     from laktory import models
 
-    q = models.resources.databricks.SqlQuery(
-        name="create-view",
-        query="CREATE VIEW google_stock_prices AS SELECT * FROM stock_prices WHERE symbol = 'GOOGL'",
-        data_source_id="09z739ce103q9374",
-        parent="folders/2479128258235163",
+    mlmodel = models.resources.databricks.MLflowModel(
+        name="My MLflow Model",
+        description="My MLflow model description",
+        tags=[
+            {"key": "key1", "value": "value1"},
+            {"key": "key2", "value": "value2"},
+        ],
         access_controls=[
             {
-                "group_name": "role-engineers",
-                "permission_level": "CAN_RUN",
+                "group_name": "account users",
+                "permission_level": "CAN_MANAGE_PRODUCTION_VERSIONS",
             }
         ],
     )
@@ -54,17 +60,17 @@ class SqlQuery(BaseModel, PulumiResource, TerraformResource):
     """
 
     access_controls: list[AccessControl] = []
-    comment: str = None
-    data_source_id: str
+    description: str = None
     name: str
-    parent: str
-    query: str
-    run_as_role: Literal["viewer", "owner"] = None
-    tags: list[str] = []
+    tags: list[MlflowModelTag] = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def resource_key(self) -> str:
+        return self.name.replace("/", "_").replace("\\", "_").replace(" ", "_")
 
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
@@ -77,9 +83,10 @@ class SqlQuery(BaseModel, PulumiResource, TerraformResource):
                 Permissions(
                     resource_name=f"permissions-{self.resource_name}",
                     access_controls=self.access_controls,
-                    sql_query_id=f"${{resources.{self.resource_name}.id}}",
+                    registered_model_id=f"${{resources.{self.resource_name}.registered_model_id}}",
                 )
             ]
+
         return resources
 
     # ----------------------------------------------------------------------- #
@@ -88,27 +95,25 @@ class SqlQuery(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_resource_type(self) -> str:
-        return "databricks:SqlQuery"
+        return "databricks:MlflowModel"
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "warehouse_id"]
-
-    @property
-    def pulumi_renames(self) -> dict[str, str]:
-        return {"comment": "description"}
+        return ["access_controls"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_sql_query"
+    def singularizations(self) -> dict[str, str]:
+        return {
+            "tags": "tags",
+        }
 
     @property
-    def terraform_renames(self) -> dict[str, str]:
-        return self.pulumi_renames
+    def terraform_resource_type(self) -> str:
+        return "databricks_mlflow_model"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

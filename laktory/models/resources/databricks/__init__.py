@@ -13,6 +13,9 @@ from .job import Job
 from .metastore import Metastore
 from .metastoreassignment import MetastoreAssignment
 from .metastoredataaccess import MetastoreDataAccess
+from .mlflowexperiment import MLflowExperiment
+from .mlflowmodel import MLflowModel
+from .mlflowwebhook import MLflowWebhook
 from .mwsnccbinding import MwsNccBinding
 from .mwsnetworkconnectivityconfig import MwsNetworkConnectivityConfig
 from .mwspermissionassignment import MwsPermissionAssignment
@@ -25,7 +28,8 @@ from .secretacl import SecretAcl
 from .secretscope import SecretScope
 from .serviceprincipal import ServicePrincipal
 from .serviceprincipalrole import ServicePrincipalRole
-from .sqlquery import SqlQuery
+from .alert import Alert
+from .query import Query
 from .table import Table
 from .user import User
 from .userrole import UserRole

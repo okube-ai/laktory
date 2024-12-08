@@ -3,12 +3,16 @@
 ## [0.5.7] - Unreleased
 ### Added
 * `inject_vars_into_dump` method for `BaseModel` class to inject variables into a dictionary 
+* `MlfflowExperiment` Databricks resource
+* `MlfflowModel` Databricks resource
+* `MlfflowWebhook` Databricks resource
+* `Alert` Databricks resource
+* `Query` Databricks resource
 ### Fixed
 * Removed dependency on `pytz`
-### Updated
-* n/a 
 ### Breaking changes
 * Refactored `BaseModel` `inject_vars` method to inject variables directly into the model, instead of into a dump.
+* Deprecated `SQLQuery` Databricks resource
 
 ## [0.5.6] - 2024-12-03
 ### Added
