@@ -36,11 +36,6 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
     ----------
     access_controls:
         List of notebook access controls
-    rootpath:
-        Root directory to which all notebooks are deployed to. Can also be
-        configured by settings LAKTORY_WORKSPACE_LAKTORY_ROOT environment
-        variable. Default is `/.laktory/`. Used only if `path` is not
-        specified.
     dirpath:
         Workspace directory inside rootpath in which the notebook is deployed.
         Used only if `path` is not specified.
@@ -50,7 +45,12 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         Specifications for looking up existing resource. Other attributes will
         be ignored.
     path:
-        Workspace filepath for the notebook
+        Workspace filepath for the notebook. Overwrite `rootpath` and `dirpath`.
+    rootpath:
+        Root directory to which all notebooks are deployed to. Can also be
+        configured by settings LAKTORY_WORKSPACE_LAKTORY_ROOT environment
+        variable. Default is `/.laktory/`. Used only if `path` is not
+        specified.
     source:
         Path to notebook in source code format on local filesystem.
 
@@ -83,11 +83,11 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
     """
 
     access_controls: list[AccessControl] = []
-    rootpath: str = None
     dirpath: str = None
     language: Literal["SCALA", "PYTHON", "SQL", "R"] = None
     lookup_existing: NotebookLookup = Field(None, exclude=True)
     path: str = None
+    rootpath: str = None
     source: str
 
     @property
@@ -97,8 +97,13 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="after")
     def set_paths(self) -> Any:
+
+        # Path set
+        if self.path:
+            return self
+
         # root
-        if self.path is None and self.rootpath is None:
+        if self.rootpath is None:
             self.rootpath = settings.workspace_laktory_root
 
         # dir
@@ -108,9 +113,8 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
             self.dirpath = self.dirpath[1:]
 
         # path
-        if self.path is None:
-            _path = Path(self.rootpath) / self.dirpath / self.filename
-            self.path = _path.as_posix()
+        _path = Path(self.rootpath) / self.dirpath / self.filename
+        self.path = _path.as_posix()
 
         return self
 
@@ -159,7 +163,7 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "rootpath", "dirpath"]
+        return ["access_controls", "dirpath", "rootpath"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

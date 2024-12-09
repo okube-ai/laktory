@@ -188,6 +188,7 @@ nav:
         - TerraformResource: api/models/resources/terraformresource.md
         - Databricks:
           - AccessControl: api/models/resources/databricks/accesscontrol.md
+          - api/models/resources/databricks/alert.md
           - api/models/resources/databricks/catalog.md
           - api/models/resources/databricks/cluster.md
           - ClusterPolicy: api/models/resources/databricks/clusterpolicy.md
@@ -202,10 +203,14 @@ nav:
           - api/models/resources/databricks/metastore.md
           - MetastoreAssignment: api/models/resources/databricks/metastoreassignment.md
           - MetastoreDataAccess: api/models/resources/databricks/metastoredataaccess.md
+          - MLflow Experiment: api/models/resources/databricks/mlflowexperiment.md
+          - MLflow Model: api/models/resources/databricks/mlflowmodel.md
+          - MLflow Webhook: api/models/resources/databricks/mlflowwebhook.md
           - MwsPermissionAssignment: api/models/resources/databricks/mwspermissionassignment.md
           - MwsNccBinding: api/models/resources/databricks/mwsnccbinding.md
           - MwsNetworkConnectivityConfig: api/models/resources/databricks/mwsnetworkconnectivityconfig.md
           - api/models/resources/databricks/notebook.md
+          - api/models/resources/databricks/query.md
           - api/models/resources/databricks/repo.md
           - api/models/resources/databricks/schema.md
           - api/models/resources/databricks/secret.md
@@ -213,7 +218,6 @@ nav:
           - SecretScope: api/models/resources/databricks/secretscope.md
           - ServicePrincipal: api/models/resources/databricks/serviceprincipal.md
           - ServicePrincipalRole: api/models/resources/databricks/serviceprincipalrole.md
-          - SqlQuery: api/models/resources/databricks/sqlquery.md
           - api/models/resources/databricks/table.md
           - api/models/resources/databricks/user.md
           - UserRole: api/models/resources/databricks/userrole.md

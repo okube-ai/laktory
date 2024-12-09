@@ -19,16 +19,16 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     ----------
     access_controls:
         List of file access controls
+    dirpath:
+        Workspace directory inside rootpath in which the workspace file is
+        deployed. Used only if `path` is not specified.
+    path:
+         Workspace filepath for the file. Overwrite `rootpath` and `dirpath`.
     rootpath:
         Root directory to which all workspace files are deployed to. Can also
         be configured by settings LAKTORY_WORKSPACE_LAKTORY_ROOT environment
         variable. Default is `/.laktory/`. Used only if `path` is not
         specified.
-    dirpath:
-        Workspace directory inside rootpath in which the workspace file is
-        deployed. Used only if `path` is not specified.
-    path:
-         Workspace filepath for the file
     source:
         Path to file on local filesystem.
 
@@ -61,9 +61,9 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     """
 
     access_controls: list[AccessControl] = []
-    rootpath: str = None
     dirpath: str = None
     path: str = None
+    rootpath: str = None
     source: str
 
     @classmethod
@@ -76,24 +76,26 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
         return os.path.basename(self.source)
 
     @model_validator(mode="after")
-    def set_rootpath(self) -> Any:
-        if self.path is None and self.rootpath is None:
-            self.rootpath = settings.workspace_laktory_root
-        return self
+    def set_paths(self) -> Any:
 
-    @model_validator(mode="after")
-    def set_dirpath(self) -> Any:
+        # Path set
+        if self.path:
+            return self
+
+        # root
+        if self.rootpath is None:
+            self.rootpath = settings.workspace_laktory_root
+
+        # dir
         if self.dirpath is None:
             self.dirpath = ""
         if self.dirpath.startswith("/"):
             self.dirpath = self.dirpath[1:]
-        return self
 
-    @model_validator(mode="after")
-    def set_path(self) -> Any:
-        if self.path is None:
-            _path = Path(self.rootpath) / self.dirpath / self.filename
-            self.path = _path.as_posix()
+        # path
+        _path = Path(self.rootpath) / self.dirpath / self.filename
+        self.path = _path.as_posix()
+
         return self
 
     # ----------------------------------------------------------------------- #
@@ -137,7 +139,7 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "rootpath", "dirpath"]
+        return ["access_controls", "dirpath", "rootpath"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

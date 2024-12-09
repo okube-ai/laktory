@@ -53,6 +53,16 @@ class BaseModel(_BaseModel):
                 if k_camel != k:
                     dump[_snake_to_camel(k)] = dump.pop(k)
                     fields[_snake_to_camel(k)] = fields[k]
+                    k = _snake_to_camel(k)
+
+                # TODO: Review and optimize (probably brittle)
+                #       This is used to rename properties names from snake to
+                #       camel keys when using Pulumi backend. Probably also
+                #       need to parse list and dicts.
+                if isinstance(dump[k], str) and dump[k].startswith("${resources."):
+                    values = dump[k].split(".")
+                    values[-1] = _snake_to_camel(values[-1])
+                    dump[k] = ".".join(values)
 
         if singular_serialization:
             engine = inflect.engine()
