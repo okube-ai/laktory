@@ -1,4 +1,8 @@
+from pathlib import Path
 from typing import Union
+from typing import Any
+from pydantic import model_validator
+from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -92,6 +96,9 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
         SQL Alert access controls
     condition:
         Trigger conditions of the alert.
+    dirpath:
+        Workspace directory inside rootpath in which the alert is deployed.
+        Used only if `parent_path` is not specified.
     display_name:
         Name of the alert.
     query_id:
@@ -108,8 +115,14 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
     owner_user_name:
         Alert owner's username.
     parent_path:
-        The path to a workspace folder containing the alert. The default is the
-         user's home folder. If changed, the alert will be recreated.
+        The path to a workspace folder containing the alert. Set to `None`
+        to use user's home folder. Overwrite `rootpath` and `dirpath`. If
+        changed, the alert will be recreated.
+    rootpath:
+        Root directory to which all alerts are deployed to. Can also be
+        configured by settings LAKTORY_WORKSPACE_LAKTORY_ROOT environment
+        variable. Default is `/.laktory/`. Used only if `parent_path` is not
+        specified.
     seconds_to_retrigger:
         Number of seconds an alert must wait after being triggered to rearm
         itself. After rearming, it can be triggered again. If 0 or not
@@ -135,6 +148,7 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
 
     access_controls: list[AccessControl] = []
     condition: AlertCondition
+    dirpath: str = None
     display_name: str
     query_id: str = None
     custom_body: str = None
@@ -142,7 +156,31 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
     notify_on_ok: bool = None
     owner_user_name: str = None
     parent_path: str = None
+    rootpath: str = None
     seconds_to_retrigger: int = None
+
+    @model_validator(mode="after")
+    def set_paths(self) -> Any:
+
+        # Parent Path explicitly set
+        if "parent_path" in self.model_fields_set:
+            return self
+
+        # root
+        if self.rootpath is None:
+            self.rootpath = settings.workspace_laktory_root
+
+        # dir
+        if self.dirpath is None:
+            self.dirpath = ""
+        if self.dirpath.startswith("/"):
+            self.dirpath = self.dirpath[1:]
+
+        # parent_path
+        _path = Path(self.rootpath) / self.dirpath
+        self.parent_path = _path.as_posix()
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -179,7 +217,7 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls"]
+        return ["access_controls", "dirpath", "rootpath"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

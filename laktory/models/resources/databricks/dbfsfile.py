@@ -4,6 +4,7 @@ from typing import Any
 from typing import Union
 from pydantic import model_validator
 from pydantic import Field
+from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -34,9 +35,6 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
     ----------
     access_controls:
         List of file access controls
-    rootpath:
-        Root directory to which all DBFS files are deployed to. Used only if
-        `path` is not specified.
     dirpath:
         Workspace directory inside rootpath in which the DBFS file is
         deployed. Used only if `path` is not specified.
@@ -44,7 +42,10 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
         Specifications for looking up existing resource. Other attributes will
         be ignored.
     path:
-         DBFS filepath for the file
+         DBFS filepath for the file. Overwrite `rootpath` and `dirpath`.
+    rootpath:
+        Root directory to which all DBFS files are deployed to. Used only if
+        `path` is not specified.
     source:
         Path to file on local filesystem.
 
@@ -77,10 +78,10 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
     """
 
     access_controls: list[AccessControl] = []
-    rootpath: str = "/"
     dirpath: str = None
     lookup_existing: DbfsFileLookup = Field(None, exclude=True)
     path: str = None
+    rootpath: str = "/"
     source: str
 
     @classmethod
@@ -93,18 +94,26 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
         return os.path.basename(self.source)
 
     @model_validator(mode="after")
-    def set_dirpath(self) -> Any:
+    def set_paths(self) -> Any:
+
+        # Path set
+        if self.path:
+            return self
+
+        # root
+        if self.rootpath is None:
+            self.rootpath = settings.workspace_laktory_root
+
+        # dir
         if self.dirpath is None:
             self.dirpath = ""
         if self.dirpath.startswith("/"):
             self.dirpath = self.dirpath[1:]
-        return self
 
-    @model_validator(mode="after")
-    def set_path(self) -> Any:
-        if self.path is None:
-            _path = Path(self.rootpath) / self.dirpath / self.filename
-            self.path = _path.as_posix()
+        # path
+        _path = Path(self.rootpath) / self.dirpath / self.filename
+        self.path = _path.as_posix()
+
         return self
 
     # ----------------------------------------------------------------------- #
@@ -147,7 +156,7 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "rootpath", "dirpath"]
+        return ["access_controls", "dirpath", "rootpath"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

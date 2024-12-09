@@ -1,7 +1,11 @@
+from pathlib import Path
 from typing import Literal
 from typing import Union
+from typing import Any
 from pydantic import Field
 from pydantic import AliasChoices
+from pydantic import model_validator
+from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -213,6 +217,9 @@ class Query(BaseModel, PulumiResource, TerraformResource):
     ----------
     access_controls:
         Query access controls
+    dirpath:
+        Workspace directory inside rootpath in which the query is deployed.
+        Used only if `parent_path` is not specified.
     display_name:
         Name of the query.
     query_text:
@@ -232,8 +239,14 @@ class Query(BaseModel, PulumiResource, TerraformResource):
         Query parameter definition. Consists of following attributes
         (one of `*_value` is required):
     parent_path:
-        The path to a workspace folder containing the query. The default is the
-        user's home folder. If changed, the query will be recreated.
+        The path to a workspace folder containing the query. Set to `None`
+        to use user's home folder. Overwrite `rootpath` and `dirpath`. If
+        changed, the query will be recreated.
+    rootpath:
+        Root directory to which all queries are deployed to. Can also be
+        configured by settings LAKTORY_WORKSPACE_LAKTORY_ROOT environment
+        variable. Default is `/.laktory/`. Used only if `parent_path` is not
+        specified.
     run_as_mode:
         Sets the "Run as" role for the object.
     schema:
@@ -257,20 +270,45 @@ class Query(BaseModel, PulumiResource, TerraformResource):
 
     access_controls: list[AccessControl] = []
     alert: Alert = None
-    display_name: str
-    query_text: str
-    warehouse_id: str
     apply_auto_limit: bool = None
     catalog: str = None
     description: str = None
+    dirpath: str = None
+    display_name: str
     owner_user_name: str = None
     parameters: list[QueryParameter] = None
-    parent_path: str = None
+    parent_path: Union[str, None] = None
+    query_text: str
+    rootpath: str = None
     run_as_mode: str = None
     schema_: str = Field(
         None, validation_alias=AliasChoices("schema", "schema_")
     )  # required not to overwrite BaseModel attribute
     tags: list[str] = None
+    warehouse_id: str
+
+    @model_validator(mode="after")
+    def set_paths(self) -> Any:
+
+        # Parent Path explicitly set
+        if "parent_path" in self.model_fields_set:
+            return self
+
+        # root
+        if self.rootpath is None:
+            self.rootpath = settings.workspace_laktory_root
+
+        # dir
+        if self.dirpath is None:
+            self.dirpath = ""
+        if self.dirpath.startswith("/"):
+            self.dirpath = self.dirpath[1:]
+
+        # parent_path
+        _path = Path(self.rootpath) / self.dirpath
+        self.parent_path = _path.as_posix()
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -312,7 +350,7 @@ class Query(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "alert"]
+        return ["access_controls", "alert", "dirpath", "rootpath"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

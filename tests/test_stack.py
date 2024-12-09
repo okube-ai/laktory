@@ -217,10 +217,10 @@ def test_stack_model():
                             "user_name": None,
                         }
                     ],
-                    "rootpath": "/.laktory/",
                     "dirpath": "",
                     "language": None,
                     "path": "/.laktory",
+                    "rootpath": "/.laktory/",
                     "source": "",
                 }
             },
@@ -351,9 +351,9 @@ def test_stack_model():
                                 "user_name": None,
                             }
                         ],
-                        "rootpath": None,
-                        "dirpath": "",
+                        "dirpath": None,
                         "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                        "rootpath": None,
                         "source": "./tmp-pl-stock-prices-ut-stack.json",
                         "pipeline_name": "pl-stock-prices-ut-stack",
                     },
@@ -1294,12 +1294,12 @@ def test_get_env():
 
 if __name__ == "__main__":
     test_stack_model()
-    test_stack_env_model()
-    test_stack_resources_unique_name()
-    test_pulumi_stack()
-    test_pulumi_preview()
-    test_terraform_stack()
-    test_terraform_plan()
-    test_all_resources()
-    test_stack_settings()
-    test_get_env()
+    # test_stack_env_model()
+    # test_stack_resources_unique_name()
+    # test_pulumi_stack()
+    # test_pulumi_preview()
+    # test_terraform_stack()
+    # test_terraform_plan()
+    # test_all_resources()
+    # test_stack_settings()
+    # test_get_env()
