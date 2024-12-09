@@ -1,6 +1,16 @@
 # Release History
 
-## [0.5.7] - Unreleased
+## [0.5.8] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.5.7] - 2024-12-09
 ### Added
 * `inject_vars_into_dump` method for `BaseModel` class to inject variables into a dictionary 
 * `MlfflowExperiment` Databricks resource
