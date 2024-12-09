@@ -275,6 +275,8 @@ class Query(BaseModel, PulumiResource, TerraformResource):
     description: str = None
     dirpath: str = None
     display_name: str
+    name_prefix: str = None
+    name_suffix: str = None
     owner_user_name: str = None
     parameters: list[QueryParameter] = None
     parent_path: Union[str, None] = None
@@ -310,9 +312,23 @@ class Query(BaseModel, PulumiResource, TerraformResource):
 
         return self
 
+    @model_validator(mode="after")
+    def update_name(self) -> Any:
+        if self.name_prefix:
+            self.display_name = self.name_prefix + self.display_name
+            self.name_prefix = ""
+        if self.name_suffix:
+            self.display_name = self.display_name + self.name_suffix
+            self.name_suffix = ""
+        return self
+
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def resource_key(self) -> str:
+        return self.display_name
 
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
@@ -350,7 +366,14 @@ class Query(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "alert", "dirpath", "rootpath"]
+        return [
+            "access_controls",
+            "alert",
+            "dirpath",
+            "rootpath",
+            "name_prefix",
+            "name_suffix",
+        ]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

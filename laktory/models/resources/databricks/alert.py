@@ -110,6 +110,10 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
         Custom subject of alert notification, if it exists. This includes email subject, Slack notification header, etc.
         See [Alerts API reference](https://docs.databricks.com/sql/user/alerts/index.html) for custom templating
         instructions.
+    name_prefix:
+        Prefix added to the alert display name
+    name_suffix:
+        Suffix added to the alert display name
     notify_on_ok:
         Whether to notify alert subscribers when alert returns back to normal.
     owner_user_name:
@@ -148,14 +152,16 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
 
     access_controls: list[AccessControl] = []
     condition: AlertCondition
-    dirpath: str = None
-    display_name: str
-    query_id: str = None
     custom_body: str = None
     custom_subject: str = None
+    dirpath: str = None
+    display_name: str
+    name_prefix: str = None
+    name_suffix: str = None
     notify_on_ok: bool = None
     owner_user_name: str = None
     parent_path: str = None
+    query_id: str = None
     rootpath: str = None
     seconds_to_retrigger: int = None
 
@@ -180,6 +186,16 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
         _path = Path(self.rootpath) / self.dirpath
         self.parent_path = _path.as_posix()
 
+        return self
+
+    @model_validator(mode="after")
+    def update_name(self) -> Any:
+        if self.name_prefix:
+            self.display_name = self.name_prefix + self.display_name
+            self.name_prefix = ""
+        if self.name_suffix:
+            self.display_name = self.display_name + self.name_suffix
+            self.name_suffix = ""
         return self
 
     # ----------------------------------------------------------------------- #
@@ -217,7 +233,7 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "dirpath", "rootpath"]
+        return ["access_controls", "dirpath", "rootpath", "name_prefix", "name_suffix"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

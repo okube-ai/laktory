@@ -783,22 +783,19 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     def sort_tasks(cls, v: list[JobTask]) -> list[JobTask]:
         return sorted(v, key=lambda task: task.task_key)
 
+    @model_validator(mode="after")
+    def update_name(self) -> Any:
+        if self.name_prefix:
+            self.name = self.name_prefix + self.name
+            self.name_prefix = ""
+        if self.name_suffix:
+            self.name = self.name + self.name_suffix
+            self.name_suffix = ""
+        return self
+
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def full_name(self):
-        name = self.name
-        if self.name_prefix:
-            name = self.name_prefix + name
-        if self.name_suffix:
-            name = self.name_suffix
-        return name
-
-    @property
-    def resource_key(self) -> str:
-        return self.full_name
 
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
@@ -827,7 +824,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "name", "name_prefix", "name_suffix"]
+        return ["access_controls", "name_prefix", "name_suffix"]
 
     @property
     def pulumi_renames(self) -> dict[str, str]:
@@ -836,7 +833,6 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_properties(self):
         d = super().pulumi_properties
-        d["name"] = self.full_name
 
         _clusters = []
         if self._camel_serialization:
@@ -889,7 +885,6 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_properties(self) -> dict:
         d = super().terraform_properties
-        d["name"] = self.full_name
 
         _clusters = []
         k = "job_cluster"

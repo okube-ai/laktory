@@ -8,6 +8,7 @@
 * `MlfflowWebhook` Databricks resource
 * `Alert` Databricks resource
 * `Query` Databricks resource
+* `name_prefix` and `name_suffix` options for `Alert`, `Dashboard` and `Query` resources. 
 ### Fixed
 * Removed dependency on `pytz`
 ### Breaking changes
