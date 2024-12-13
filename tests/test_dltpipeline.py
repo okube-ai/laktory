@@ -36,6 +36,7 @@ def test_pipeline_pulumi():
     assert pl.options.model_dump(exclude_none=True) == {
         "depends_on": [],
         "delete_before_replace": True,
+        "is_enabled": True,
     }
     print(pl.pulumi_properties)
     assert pl.pulumi_properties == {

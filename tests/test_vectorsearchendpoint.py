@@ -1,6 +1,7 @@
 from laktory.models.resources.databricks import VectorSearchEndpoint
 
 vector_search_endpoint = VectorSearchEndpoint(
+    endpoint_type="STANDARD",
     name="default",
 )
 

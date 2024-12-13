@@ -66,6 +66,12 @@ resources:
       - group_name: role-analysts
         permission_level: CAN_USE
 
+    warehouse-disabled:
+      name: disabled
+      cluster_size: "X-Small"
+      options:
+        is_enabled: False
+
   databricks_notebooks:
     notebook-external:
       lookup_existing:

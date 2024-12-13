@@ -259,7 +259,24 @@ def test_stack_model():
                     "spot_instance_policy": None,
                     "tags": None,
                     "warehouse_type": None,
-                }
+                },
+                "warehouse-disabled": {
+                    "cluster_size": "X-Small",
+                    "access_controls": [],
+                    "auto_stop_mins": None,
+                    "channel_name": None,
+                    "enable_photon": None,
+                    "enable_serverless_compute": None,
+                    "instance_profile_arn": None,
+                    "jdbc_url": None,
+                    "max_num_clusters": None,
+                    "min_num_clusters": None,
+                    "name": "disabled",
+                    "num_clusters": None,
+                    "spot_instance_policy": None,
+                    "tags": None,
+                    "warehouse_type": None,
+                },
             },
             "databricks_workspacefiles": {},
             "pipelines": {
@@ -509,11 +526,11 @@ def test_pulumi_stack():
                         }
                     ],
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
             },
             "notebook-external": {
                 "type": "databricks:Notebook",
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
                 "get": {"id": "/Workspace/external"},
             },
             "permissions-notebook-external": {
@@ -524,14 +541,11 @@ def test_pulumi_stack():
                     ],
                     "notebookPath": "${notebook-external.path}",
                 },
-                "options": {
-                    "dependsOn": ["${notebook-external}"],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"dependsOn": ["${notebook-external}"]},
             },
             "warehouse-external": {
                 "type": "databricks:SqlEndpoint",
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
                 "get": {"id": "d2fa41bf94858c4b"},
             },
             "permissions-warehouse-external": {
@@ -542,10 +556,7 @@ def test_pulumi_stack():
                     ],
                     "sqlEndpointId": "${warehouse-external.id}",
                 },
-                "options": {
-                    "dependsOn": ["${warehouse-external}"],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"dependsOn": ["${warehouse-external}"]},
             },
             "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
@@ -553,7 +564,7 @@ def test_pulumi_stack():
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "./tmp-pl-stock-prices-ut-stack.json",
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {"dependsOn": []},
             },
             "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:Permissions",
@@ -566,8 +577,7 @@ def test_pulumi_stack():
                 "options": {
                     "dependsOn": [
                         "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}"
-                    ],
-                    "deleteBeforeReplace": True,
+                    ]
                 },
             },
             "dlt-custom-name": {
@@ -582,11 +592,7 @@ def test_pulumi_stack():
                     "name": "pl-stock-prices-ut-stack",
                     "notifications": [],
                 },
-                "options": {
-                    "provider": "${databricks}",
-                    "dependsOn": [],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"provider": "${databricks}", "dependsOn": []},
             },
             "permissions-dlt-custom-name": {
                 "type": "databricks:Permissions",
@@ -600,7 +606,6 @@ def test_pulumi_stack():
                 "options": {
                     "provider": "${databricks}",
                     "dependsOn": ["${dlt-custom-name}"],
-                    "deleteBeforeReplace": True,
                 },
             },
             "databricks": {
@@ -609,7 +614,7 @@ def test_pulumi_stack():
                     "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
                     "token": "***",
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
             },
         },
         "outputs": {},
@@ -674,11 +679,11 @@ def test_pulumi_stack():
                         }
                     ],
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
             },
             "notebook-external": {
                 "type": "databricks:Notebook",
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
                 "get": {"id": "/Workspace/external"},
             },
             "permissions-notebook-external": {
@@ -689,14 +694,11 @@ def test_pulumi_stack():
                     ],
                     "notebookPath": "${notebook-external.path}",
                 },
-                "options": {
-                    "dependsOn": ["${notebook-external}"],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"dependsOn": ["${notebook-external}"]},
             },
             "warehouse-external": {
                 "type": "databricks:SqlEndpoint",
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
                 "get": {"id": "d2fa41bf94858c4b"},
             },
             "permissions-warehouse-external": {
@@ -707,10 +709,7 @@ def test_pulumi_stack():
                     ],
                     "sqlEndpointId": "${warehouse-external.id}",
                 },
-                "options": {
-                    "dependsOn": ["${warehouse-external}"],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"dependsOn": ["${warehouse-external}"]},
             },
             "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
@@ -718,7 +717,7 @@ def test_pulumi_stack():
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "./tmp-pl-stock-prices-ut-stack.json",
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {"dependsOn": []},
             },
             "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:Permissions",
@@ -731,8 +730,7 @@ def test_pulumi_stack():
                 "options": {
                     "dependsOn": [
                         "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}"
-                    ],
-                    "deleteBeforeReplace": True,
+                    ]
                 },
             },
             "dlt-custom-name": {
@@ -748,11 +746,7 @@ def test_pulumi_stack():
                     "name": "pl-stock-prices-ut-stack",
                     "notifications": [],
                 },
-                "options": {
-                    "provider": "${databricks}",
-                    "dependsOn": [],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"provider": "${databricks}", "dependsOn": []},
             },
             "permissions-dlt-custom-name": {
                 "type": "databricks:Permissions",
@@ -766,7 +760,6 @@ def test_pulumi_stack():
                 "options": {
                     "provider": "${databricks}",
                     "dependsOn": ["${dlt-custom-name}"],
-                    "deleteBeforeReplace": True,
                 },
             },
             "databricks": {
@@ -775,7 +768,7 @@ def test_pulumi_stack():
                     "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
                     "token": "***",
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
             },
         },
         "outputs": {},

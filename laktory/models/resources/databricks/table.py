@@ -101,6 +101,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
 
     table = models.resources.databricks.Table(
         name="slv_stock_prices",
+        table_type="MANAGED",
     )
     ```
 
@@ -122,7 +123,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     schema_name: Union[str, None] = None
     storage_credential_name: Union[str, None] = None
     storage_location: Union[str, None] = None
-    table_type: Literal["MANAGED", "EXTERNAL", "VIEW"] = "MANAGED"
+    table_type: Literal["MANAGED", "EXTERNAL", "VIEW"] = "MANAGED"  # required
     view_definition: Union[str, None] = None
     warehouse_id: Union[str, None] = None
 

@@ -30,9 +30,9 @@ class MwsPermissionAssignment(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    permissions: list[Literal["USER", "ADMIN"]] = ["USER"]
-    principal_id: Union[int, str] = None
-    workspace_id: Union[int, str] = None
+    permissions: list[Literal["USER", "ADMIN"]] = ["USER"]  # required
+    principal_id: Union[int, str] = None  # required
+    workspace_id: Union[int, str] = None  # required
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
