@@ -2,7 +2,7 @@
 
 ## [0.5.8] - Unreleased
 ### Added
-* n/a
+* `is_disabled` option to resources for disabling specific resources for specific environments or configurations.
 ### Fixed
 * n/a
 ### Updated

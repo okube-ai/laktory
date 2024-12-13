@@ -15,6 +15,10 @@ class ResourceOptions(BaseModel):
 
     Attributes
     ----------
+    is_enabled:
+        If `False`, resource is not passed to the IaC backend and is not
+        deployed. May be used for deploying resources to specific stack
+        environments only or for disabling resources when debugging.
     depends_on:
         Explicit list of resources dependencies.
         Supported by both pulumi and terraform.
@@ -45,6 +49,9 @@ class ResourceOptions(BaseModel):
         Pulumi only.
     """
 
+    # laktory
+    is_enabled: bool = True
+
     # pulumi + terraform
     depends_on: list[str] = []
     provider: str = None
@@ -56,6 +63,26 @@ class ResourceOptions(BaseModel):
     import_: str = None
     parent: str = None
     replace_on_changes: list[str] = None
+
+    @property
+    def pulumi_options(self) -> list[str]:
+        return [
+            "depends_on",
+            "provider",
+            "ignore_changes" "aliases",
+            "delete_before_replace",
+            "import_",
+            "parent",
+            "replace_on_changes",
+        ]
+
+    @property
+    def terraform_options(self) -> list[str]:
+        return [
+            "depends_on",
+            "provider",
+            "ignore_changes",
+        ]
 
 
 class ResourceLookup(_BaseModel):
@@ -212,7 +239,7 @@ class BaseResource(_BaseModel):
         if self._core_resources is None:
             # Add self
             self._core_resources = []
-            if self.self_as_core_resources:
+            if self.self_as_core_resources and self.options.is_enabled:
                 self._core_resources += [self]
 
             # Add additional
@@ -231,11 +258,12 @@ class BaseResource(_BaseModel):
                         do += [k0]
                     _r.options.depends_on = do
 
-                    if _r.self_as_core_resources:
+                    if _r.self_as_core_resources and _r.options.is_enabled:
                         resources += [_r]
 
                     for __r in get_additional_resources(_r):
-                        resources += [__r]
+                        if __r.options.is_enabled:
+                            resources += [__r]
 
                 return resources
 
