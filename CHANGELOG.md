@@ -3,6 +3,7 @@
 ## [0.5.8] - Unreleased
 ### Added
 * `is_disabled` option to resources for disabling specific resources for specific environments or configurations.
+* `name_prefix` and `name_suffix` options for DLT pipeline
 ### Fixed
 * n/a
 ### Updated

@@ -58,6 +58,15 @@ resources:
 #            pipeline_id: ${databricks_pipeline.pl-custom-name.id}  # TERRAFORM STYLE
 #            pipeline_id: ${pl-custom-name.id}  # PULUMI STYLE
 
+    job-disabled:
+        name: job-disabled
+        options:
+          is_enabled: False
+        tasks:
+          - task_key: ingest-metadata
+            notebook_task:
+              notebook_path: /jobs/ingest_stock_metadata.py
+
   databricks_warehouses:
     warehouse-external:
       lookup_existing:

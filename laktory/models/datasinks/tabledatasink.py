@@ -24,6 +24,8 @@ class TableDataSink(BaseDataSink):
         Name of the catalog of the source table
     table_name:
         Name of the source table
+    table_type:
+
     schema_name:
         Name of the schema of the source table
     warehouse:
@@ -73,6 +75,7 @@ class TableDataSink(BaseDataSink):
     format: Literal["DELTA", "PARQUET"] = "DELTA"
     schema_name: Union[str, None] = None
     table_name: Union[str, None]
+    # table_type: Literal["MATERIALIZED", "VIEW"] = "MATERIALIZED"
     warehouse: Union[Literal["DATABRICKS"], None] = "DATABRICKS"
 
     # ----------------------------------------------------------------------- #
