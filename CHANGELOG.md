@@ -3,6 +3,7 @@
 ## [0.5.8] - Unreleased
 ### Added
 * `is_disabled` option to resources for disabling specific resources for specific environments or configurations.
+* `--version` and `version` CLI commands
 ### Fixed
 * n/a
 ### Updated

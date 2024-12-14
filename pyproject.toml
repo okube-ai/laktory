@@ -56,7 +56,6 @@ pulumi = [
 
 # DataFrame
 polars = [
-#    "great_expectations",
     "deltalake",
     "polars>=1.0",
     "sqlparse",
@@ -69,6 +68,7 @@ spark = [
 # Orchestrators
 databricks = [
     "databricks-sdk",
+    "databricks-connect",
 ]
 
 # Dev

@@ -9,5 +9,22 @@ app = typer.Typer(
 )  # prevent display secret data
 
 
+@app.callback(invoke_without_command=True)
+def main(
+        ctx: typer.Context,
+        version: bool = typer.Option(
+            False,
+            "--version",
+            "-v",
+            help="Show laktory CLI version"
+        )
+):
+    """
+    """
+    if version:
+        print(f"Laktory CLI version {VERSION}")
+        raise typer.Exit()
+
+
 if __name__ == "__main__":
     app()
