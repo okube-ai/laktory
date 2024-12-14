@@ -6,7 +6,7 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Added laktory package as a task cluster dependency when Databricks Job is used as a pipeline orchestrator
 ### Breaking changes
 * n/a
 

@@ -10,6 +10,7 @@ from pathlib import Path
 from pydantic import Field
 import networkx as nx
 
+import laktory
 from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
@@ -79,6 +80,12 @@ class PipelineDatabricksJob(Job):
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return super().pulumi_excludes + ["laktory_version", "notebook_path"]
 
+    @property
+    def _laktory_version(self) -> str:
+        _version = self.laktory_version
+        if _version is None:
+            _version = laktory.__version__
+        return _version
 
 class PipelineWorkspaceFile(WorkspaceFile):
     """
@@ -518,10 +525,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         if notebook_path is None:
             notebook_path = f"{settings.workspace_laktory_root}jobs/job_laktory_pl.py"
 
-        package = "laktory"
-        if self.databricks_job.laktory_version:
-            package += f"=={self.databricks_job.laktory_version}"
-
         job.tasks = []
 
         # Sorting Node Names to prevent job update trigger with Pulumi
@@ -535,6 +538,11 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             for edge in self.dag.in_edges(node.name):
                 depends_on += [{"task_key": "node-" + edge[0]}]
 
+            libraries = []
+            if cluster_found:
+                package = f"laktory=={self.databricks_job._laktory_version}"
+                libraries = [{"pypi": {"package": package}}]
+
             job.tasks += [
                 JobTask(
                     task_key="node-" + node.name,
@@ -542,7 +550,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                         "base_parameters": {"node_name": node.name},
                         "notebook_path": notebook_path,
                     },
-                    # libraries=[{"pypi": {"package": package}}],
+                    libraries=libraries,
                     depends_ons=depends_on,
                     # job_cluster_key=job_cluster_key,
                 )
