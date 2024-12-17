@@ -10,7 +10,6 @@ import warnings
 from pydantic import model_validator
 
 from laktory._settings import settings
-from laktory.constants import DEFAULT_DFTYPE
 from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
@@ -150,21 +149,21 @@ class PipelineNode(BaseModel):
 
     add_layer_columns: bool = True
     dlt_template: Union[str, None] = "DEFAULT"
-    dataframe_type: Literal["SPARK", "POLARS"] = DEFAULT_DFTYPE
+    dataframe_backend: Literal["SPARK", "POLARS"] = None
     description: str = None
-    drop_duplicates: Union[bool, list[str], None] = None
-    drop_source_columns: Union[bool, None] = None
+    drop_duplicates: Union[bool, list[str], None] = None  # TODO: Migrate to transformer
+    drop_source_columns: Union[bool, None] = None  # TODO: Migrate to transformer
     transformer: Union[SparkChain, PolarsChain, None] = None
     expectations: list[DataQualityExpectation] = []
     expectations_checkpoint_location: str = None
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
     name: Union[str, None] = None
     primary_keys: list[str] = None
-    # sinks: list[DataSinksUnion] = None
     sinks: list[DataSinksUnion] = None
     root_path: str = None
     source: DataSourcesUnion
     timestamp_key: str = None
+    _view_definition: str = None
     _stage_df: Any = None
     _output_df: Any = None
     _quarantine_df: Any = None
@@ -173,31 +172,22 @@ class PipelineNode(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def push_dftype_before(cls, data: Any) -> Any:
-        dftype = data.get("dataframe_type", None)
-        if dftype:
+    def push_df_backend(cls, data: Any) -> Any:
+        """Need to push dataframe_backend which is required to differentiate between spark and polars transformer"""
+        df_backend = data.get("dataframe_backend", None)
+        if df_backend:
             if "source" in data.keys():
                 if isinstance(data["source"], dict):
-                    data["source"]["dataframe_type"] = data["source"].get(
-                        "dataframe_type", dftype
+                    data["source"]["dataframe_backend"] = data["source"].get(
+                        "dataframe_backend", df_backend
                     )
             if "transformer" in data.keys():
                 if isinstance(data["transformer"], dict):
-                    data["transformer"]["dataframe_type"] = data["transformer"].get(
-                        "dataframe_type", dftype
+                    data["transformer"]["dataframe_backend"] = data["transformer"].get(
+                        "dataframe_backend", df_backend
                     )
 
         return data
-
-    @model_validator(mode="after")
-    def push_dftype_after(self) -> Any:
-        dftype = self.user_dftype
-        if dftype:
-            self.source.dataframe_type = self.source.user_dftype or dftype
-            if self.transformer:
-                self.transformer.dataframe_type = self.transformer.user_dftype or dftype
-                self.transformer.push_dftype()
-        return self
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
@@ -232,7 +222,7 @@ class PipelineNode(BaseModel):
     def update_children(self) -> Any:
 
         # Assign node to sources
-        for s in self.get_sources():
+        for s in self.data_sources:
             s._parent = self
 
         # Assign node to sinks
@@ -281,16 +271,6 @@ class PipelineNode(BaseModel):
                 )
 
         return self
-
-    # ----------------------------------------------------------------------- #
-    # DataFrame                                                               #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def user_dftype(self):
-        if "dataframe_type" in self.model_fields_set:
-            return self.dataframe_type
-        return None
 
     # ----------------------------------------------------------------------- #
     # Orchestrator                                                            #
@@ -614,15 +594,21 @@ class PipelineNode(BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def get_sources(self, cls=BaseDataSource) -> list[BaseDataSource]:
+
+
+    @property
+    def data_sources(self) -> list[BaseDataSource]:
         """Get all sources feeding the pipeline node"""
         sources = []
 
-        if isinstance(self.source, cls):
+        if isinstance(self.source, BaseDataSource):
             sources += [self.source]
 
         if self.transformer:
-            sources += self.transformer.get_sources(cls)
+            sources += self.transformer.data_sources
+
+        for s in sources:
+            s._parent = self
 
         return sources
 
