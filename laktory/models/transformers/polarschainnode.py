@@ -81,7 +81,7 @@ class PolarsChainNodeSQLExpr(BaseChainNodeSQLExpr):
         import polars as pl
 
         kwargs = {"df": df}
-        for source in self.node_data_sources:
+        for source in self.data_sources:
             kwargs[f"nodes__{source.node.name}"] = source.read()
         return pl.SQLContext(frames=kwargs).execute(self.parsed_expr())
 
@@ -176,7 +176,7 @@ class PolarsChainNode(BaseChainNode):
     ```
     """
 
-    dataframe_type: Literal["POLARS"] = "POLARS"
+    dataframe_backend: Literal["POLARS"] = "POLARS"
     func_args: list[Union[Any]] = []
     func_kwargs: dict[str, Union[Any]] = {}
     func_name: Union[str, None] = None
@@ -250,7 +250,7 @@ class PolarsChainNode(BaseChainNode):
                 logger.info(
                     f"Building column {column.name} as {column.expr or column.sql_expr}"
                 )
-                _col = column.eval(udfs=udfs, dataframe_type="POLARS")
+                _col = column.eval(udfs=udfs, dataframe_backend="POLARS")
                 if column.type:
                     _col = _col.cast(DATATYPES_MAP[column.type])
                 df = df.with_columns(**{column.name: _col})

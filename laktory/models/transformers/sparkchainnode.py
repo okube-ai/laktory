@@ -105,7 +105,7 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
 
         # Create views
         df.createOrReplaceTempView(df_id)
-        for source in self.node_data_sources:
+        for source in self.data_sources:
             _df = source.read(spark=_spark)
             _df.createOrReplaceTempView(f"nodes__{source.node.name}")
 
@@ -216,7 +216,7 @@ class SparkChainNode(BaseChainNode):
     ```
     """
 
-    dataframe_type: Literal["SPARK"] = "SPARK"
+    dataframe_backend: Literal["SPARK"] = "SPARK"
     func_args: list[Union[Any]] = []
     func_kwargs: dict[str, Union[Any]] = {}
     func_name: Union[str, None] = None
@@ -291,7 +291,7 @@ class SparkChainNode(BaseChainNode):
                 logger.info(
                     f"Building column {column.name} as {column.expr or column.sql_expr}"
                 )
-                _col = column.eval(udfs=udfs, dataframe_type="SPARK")
+                _col = column.eval(udfs=udfs, dataframe_backend="SPARK")
                 if column.type:
                     _col = _col.cast(DATATYPES_MAP[column.type])
                 df = df.withColumns({column.name: _col})
