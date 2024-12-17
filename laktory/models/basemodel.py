@@ -11,6 +11,7 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_serializer
+from laktory._settings import settings
 from laktory._parsers import _snake_to_camel
 
 Model = TypeVar("Model", bound="BaseModel")
@@ -220,6 +221,22 @@ class BaseModel(_BaseModel):
     @property
     def singularizations(self) -> dict[str, str]:
         return {}
+
+    @property
+    def df_backend(self) -> str:
+
+        # Direct value
+        backend = getattr(self, "dataframe_backend", None)
+        if backend is not None:
+            return backend
+
+        # Value from parent
+        parent = getattr(self, "_parent", None)
+        if parent is not None:
+            return parent.df_backend
+
+        # Value from settings
+        return settings.dataframe_backend
 
     # ----------------------------------------------------------------------- #
     # Serialization                                                           #
