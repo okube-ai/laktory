@@ -240,6 +240,10 @@ class PolarsChainNode(BaseChainNode):
         from polars import DataFrame
         from laktory.polars.datatypes import DATATYPES_MAP
 
+        # Required to assign current polars chain node to all data sources
+        # before kwargs[f"nodes__{source.node.name}"] = source.read() is called.
+        self.update_children()
+
         if udfs is None:
             udfs = []
         udfs = {f.__name__: f for f in udfs}
