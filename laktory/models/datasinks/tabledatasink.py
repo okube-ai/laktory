@@ -126,6 +126,15 @@ class TableDataSink(BaseDataSink):
             )
 
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
+        #
+        # if self.table_type == "VIEW":
+        #     print("DO SOMETHING!!")
+        #
+        #     spark.sql("""
+        #     CREATE OR REPLACE VIEW
+        #     ...
+        #     """)
+        #
 
         if self.format in ["EXCEL"]:
             raise ValueError(f"'{self.format}' format is not supported with Spark")
@@ -221,7 +230,6 @@ class TableDataSink(BaseDataSink):
         if as_stream:
             source.as_stream = as_stream
 
-        if self._parent:
-            source.dataframe_type = self._parent.dataframe_type
+        source._parent = self._parent
 
         return source
