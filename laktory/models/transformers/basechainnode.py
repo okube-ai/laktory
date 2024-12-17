@@ -11,7 +11,6 @@ import re
 
 from laktory._logger import get_logger
 from laktory.constants import SUPPORTED_DATATYPES
-from laktory.constants import DEFAULT_DFTYPE
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
 from laktory.polars import PolarsDataFrame
@@ -94,8 +93,8 @@ class ChainNodeColumn(BaseModel):
                 )
         return v
 
-    def eval(self, udfs=None, dataframe_type=DEFAULT_DFTYPE):
-        return self.expr.eval(udfs=udfs, dataframe_type=dataframe_type)
+    def eval(self, udfs=None, dataframe_backend=None):
+        return self.expr.eval(udfs=udfs, dataframe_backend=dataframe_backend)
 
 
 class BaseChainNodeSQLExpr(BaseModel):
@@ -109,18 +108,19 @@ class BaseChainNodeSQLExpr(BaseModel):
     """
 
     expr: str
-    _node_data_sources: list[PipelineNodeDataSource] = None
+    _data_sources: list[PipelineNodeDataSource] = None
 
     def parsed_expr(self, df_id="df"):
         return self.expr
 
+
     @property
-    def node_data_sources(self) -> list[PipelineNodeDataSource]:
+    def data_sources(self) -> list[PipelineNodeDataSource]:
 
-        if self.expr is None:
-            return []
+        if self._data_sources is None:
 
-        if self._node_data_sources is None:
+            if self.expr is None:
+                return []
 
             from laktory.models.datasources.pipelinenodedatasource import (
                 PipelineNodeDataSource,
@@ -133,9 +133,9 @@ class BaseChainNodeSQLExpr(BaseModel):
             for m in matches:
                 sources += [PipelineNodeDataSource(node_name=m)]
 
-            self._node_data_sources = sources
+            self._data_sources = sources
 
-        return self._node_data_sources
+        return self._data_sources
 
     def eval(self, df, chain_node=None):
         raise NotImplementedError()
@@ -148,7 +148,7 @@ class BaseChainNodeSQLExpr(BaseModel):
 
 class BaseChainNode(BaseModel):
 
-    dataframe_type: Literal["SPARK", "POLARS", None] = "SPARK"
+    dataframe_backend: Literal["SPARK", "POLARS", None] = None
     func_args: list[Union[Any]] = []
     func_kwargs: dict[str, Union[Any]] = {}
     func_name: Union[str, None] = None
@@ -191,6 +191,12 @@ class BaseChainNode(BaseModel):
             with_columns += [self.with_column]
         return with_columns
 
+    @model_validator(mode="after")
+    def update_children(self):
+        for s in self.data_sources:
+            s._parent = self
+        return self
+
     @property
     def is_column(self):
         return len(self._with_columns) > 0
@@ -201,34 +207,26 @@ class BaseChainNode(BaseModel):
             return "-".join([c.name for c in self.with_columns])
         return "df"
 
-    @property
-    def user_dftype(self):
-        if "dataframe_type" in self.model_fields_set:
-            return self.dataframe_type
-        return None
-
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #
     # ----------------------------------------------------------------------- #
 
-    def get_sources(self, cls=None) -> list[BaseDataSource]:
+    @property
+    def data_sources(self) -> list[BaseDataSource]:
         """Get all sources feeding the Chain Node"""
 
         from laktory.models.datasources.basedatasource import BaseDataSource
 
-        if cls is None:
-            cls = BaseDataSource
-
         sources = []
         for a in self.parsed_func_args:
-            if isinstance(a.value, cls):
+            if isinstance(a.value, BaseDataSource):
                 sources += [a.value]
         for a in self.parsed_func_kwargs.values():
-            if isinstance(a.value, cls):
+            if isinstance(a.value, BaseDataSource):
                 sources += [a.value]
 
         if self.sql_expr:
-            sources += self.parsed_sql_expr.node_data_sources
+            sources += self.parsed_sql_expr.data_sources
 
         return sources
 
@@ -240,3 +238,4 @@ class BaseChainNode(BaseModel):
         return_col: bool = False,
     ) -> Union[AnyDataFrame]:
         raise NotImplementedError()
+
