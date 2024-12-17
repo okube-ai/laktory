@@ -49,16 +49,16 @@ class MemoryDataSource(BaseDataSource):
     df: Any
 
     @model_validator(mode="after")
-    def set_dataframe_type(self) -> Any:
+    def set_dataframe_backend(self) -> Any:
 
         if is_spark_dataframe(self.df):
-            dataframe_type = "SPARK"
+            dataframe_backend = "SPARK"
         elif is_polars_dataframe(self.df):
-            dataframe_type = "POLARS"
+            dataframe_backend = "POLARS"
         else:
             raise ValueError("DataFrame must be of type Spark or Polars")
 
-        self.dataframe_type = dataframe_type
+        self.dataframe_backend = dataframe_backend
 
         return self
 
