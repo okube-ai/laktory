@@ -141,6 +141,6 @@ def groupby_and_agg(
             expr = ChainNodeColumn(**expr)
 
         expr.type = None
-        aggs += [expr.eval(dataframe_type="SPARK").alias(expr.name)]
+        aggs += [expr.eval(dataframe_backend="SPARK").alias(expr.name)]
 
     return df.groupby(groupby).agg(*aggs)
