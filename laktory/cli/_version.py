@@ -9,8 +9,7 @@ logger = get_logger(__name__)
 
 
 @app.command()
-def version(
-):
+def version():
     """
     Return installed laktory version and installed dependencies.
 

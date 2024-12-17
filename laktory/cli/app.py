@@ -11,16 +11,12 @@ app = typer.Typer(
 
 @app.callback(invoke_without_command=True)
 def main(
-        ctx: typer.Context,
-        version: bool = typer.Option(
-            False,
-            "--version",
-            "-v",
-            help="Show laktory CLI version"
-        )
+    ctx: typer.Context,
+    version: bool = typer.Option(
+        False, "--version", "-v", help="Show laktory CLI version"
+    ),
 ):
-    """
-    """
+    """ """
     if version:
         print(f"Laktory CLI version {VERSION}")
         raise typer.Exit()
