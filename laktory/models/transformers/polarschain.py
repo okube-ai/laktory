@@ -23,7 +23,7 @@ class PolarsChain(BaseChain):
 
     Attributes
     ----------
-    dataframe_type:
+    dataframe_backend:
         Differentiator to select dataframe chain type
     nodes:
         The list of transformations to be executed.
@@ -86,14 +86,10 @@ class PolarsChain(BaseChain):
     ```
     """
 
-    dataframe_type: Literal["POLARS"] = "POLARS"
+    dataframe_backend: Literal["POLARS"] = "POLARS"
     nodes: list[Union[PolarsChainNode, "PolarsChain"]]
     _columns: list[list[str]] = []
     _parent: "PipelineNode" = None
-
-    @property
-    def user_dftype(self):
-        return "POLARS"
 
 
 PolarsChain.model_rebuild()
