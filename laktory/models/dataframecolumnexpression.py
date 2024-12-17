@@ -3,6 +3,7 @@ from typing import Literal
 from typing import Any
 from pydantic import model_validator
 
+from laktory._settings import settings
 from laktory.types import AnyDataFrameColumn
 from laktory.models.basemodel import BaseModel
 from laktory._logger import get_logger
@@ -72,17 +73,20 @@ class DataFrameColumnExpression(BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def df_expr(self, dataframe_type="SPARK"):
+    def df_expr(self, dataframe_backend="SPARK"):
         expr = self.value
         if self.type == "SQL":
             _value = repr(self.value.replace("\n", " "))
             expr = f"F.expr({_value})"
-            if dataframe_type == "POLARS":
+            if dataframe_backend == "POLARS":
                 expr = f"pl.Expr.laktory.sql_expr({_value})"
 
         return expr
 
-    def eval(self, udfs=None, dataframe_type="SPARK") -> AnyDataFrameColumn:
+    def eval(self, udfs=None, dataframe_backend=None) -> AnyDataFrameColumn:
+
+        if dataframe_backend is None:
+            dataframe_backend = settings.dataframe_backend
 
         # Adding udfs to global variables
         if udfs is None:
@@ -90,14 +94,14 @@ class DataFrameColumnExpression(BaseModel):
         for k, v in udfs.items():
             globals()[k] = v
 
-        if dataframe_type == "SPARK":
+        if dataframe_backend == "SPARK":
             # Imports required to evaluate expressions
             import pyspark.sql.functions as F
             import pyspark.sql.types as T
             from pyspark.sql.functions import col
             from pyspark.sql.functions import lit
 
-        elif dataframe_type == "POLARS":
+        elif dataframe_backend == "POLARS":
             # Imports required to evaluate expressions
             import polars as pl
             import polars.functions as F
@@ -105,9 +109,11 @@ class DataFrameColumnExpression(BaseModel):
             from polars import lit
 
         else:
-            raise ValueError(f"`dataframe_type` '{dataframe_type}' is not supported.")
+            raise ValueError(
+                f"`dataframe_backend` '{dataframe_backend}' is not supported."
+            )
 
-        _expr_str = self.df_expr(dataframe_type=dataframe_type)
+        _expr_str = self.df_expr(dataframe_backend=dataframe_backend)
         expr = eval(_expr_str)
 
         # Cleaning up global variables
