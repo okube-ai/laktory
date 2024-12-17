@@ -50,7 +50,6 @@ class PipelineNodeDataSource(BaseDataSource):
     """
 
     node_name: Union[str, None]
-    node: Any = Field(None, exclude=True)  # Add suggested type?
     # include_failed_expectations: bool = True  # TODO: Implement
     # include_passed_expectations: bool = True  # TODO: Implement
 
@@ -61,6 +60,28 @@ class PipelineNodeDataSource(BaseDataSource):
     @property
     def _id(self) -> str:
         return self.node_name
+
+    @property
+    def node(self):
+
+        from laktory.models.pipeline import Pipeline
+
+        def _get_node(o):
+            parent = getattr(o, "_parent", None)
+            if parent is None:
+                raise ValueError(
+                    f"Source '{self.node_name}' is not attached to a pipeline"
+                )
+            if isinstance(parent, Pipeline):
+                if self.node_name not in parent.sorted_node_names:
+                    raise ValueError(
+                        f"Node '{self.node_name}' does not exists in pipeline '{parent.name}'"
+                    )
+                return parent.nodes_dict[self.node_name]
+
+            return _get_node(parent)
+
+        return _get_node(self)
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
