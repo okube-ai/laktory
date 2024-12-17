@@ -67,6 +67,8 @@ class LaktorySettings(BaseModel):
 
     Attributes
     ----------
+    dataframe_backend:
+        DataFrame backend
     laktory_root:
         Laktory cache root directory. Used when a pipeline needs to write
         checkpoint files.
@@ -78,11 +80,15 @@ class LaktorySettings(BaseModel):
 
     """
 
+    dataframe_backend: str = None
     workspace_laktory_root: str = "/.laktory/"
     laktory_root: str = "/laktory/"
 
     @model_validator(mode="after")
     def apply_settings(self) -> Any:
+
+        if self.dataframe_backend:
+            settings.dataframe_backend = self.dataframe_backend
 
         if self.workspace_laktory_root:
             settings.workspace_laktory_root = self.workspace_laktory_root
