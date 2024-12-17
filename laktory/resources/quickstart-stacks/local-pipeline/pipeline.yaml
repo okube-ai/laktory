@@ -1,5 +1,5 @@
 name: pl-stock-prices
-dataframe_type: POLARS
+dataframe_backend: POLARS
 
 # --------------------------------------------------------------------------- #
 # Stock Prices                                                                #

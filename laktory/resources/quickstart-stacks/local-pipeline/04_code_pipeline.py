@@ -107,7 +107,7 @@ node_gld = models.PipelineNode(
 
 pipeline = models.Pipeline(
     name="pl-stock-prices",
-    dataframe_type="POLARS",
+    dataframe_backend="POLARS",
     nodes=[
         node_brz,
         node_slv,
