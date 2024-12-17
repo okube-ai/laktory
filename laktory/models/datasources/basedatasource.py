@@ -5,7 +5,6 @@ from pydantic import model_validator
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.constants import DEFAULT_DFTYPE
 from laktory.spark import SparkDataFrame
 from laktory.spark import is_spark_dataframe
 from laktory.polars import PolarsDataFrame
@@ -53,7 +52,7 @@ class BaseDataSource(BaseModel):
         If `True`source is read as a streaming DataFrame.
     broadcast:
         If `True` DataFrame is broadcasted
-    dataframe_type:
+    dataframe_backend:
         Type of dataframe
     drops:
         List of columns to drop
@@ -70,7 +69,7 @@ class BaseDataSource(BaseModel):
 
     as_stream: bool = False
     broadcast: Union[bool, None] = False
-    dataframe_type: Literal["SPARK", "POLARS"] = DEFAULT_DFTYPE
+    dataframe_backend: Literal["SPARK", "POLARS"] = None
     drops: Union[list, None] = None
     filter: Union[str, None] = None
     limit: Union[int, None] = None
@@ -86,13 +85,13 @@ class BaseDataSource(BaseModel):
 
         # Overwrite Dataframe type if mock dataframe is provided
         if is_spark_dataframe(self.mock_df):
-            self.dataframe_type = "SPARK"
+            self.dataframe_backend = "SPARK"
         elif is_polars_dataframe(self.mock_df):
-            self.dataframe_type = "POLARS"
+            self.dataframe_backend = "POLARS"
 
-        if self.dataframe_type == "SPARK":
+        if self.df_backend == "SPARK":
             pass
-        elif self.dataframe_type == "POLARS":
+        elif self.df_backend == "POLARS":
             if self.as_stream:
                 raise ValueError("Polars DataFrames don't support streaming read.")
             if self.watermark:
@@ -105,12 +104,6 @@ class BaseDataSource(BaseModel):
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def user_dftype(self):
-        if "dataframe_type" in self.model_fields_set:
-            return self.dataframe_type
-        return None
 
     @property
     def _id(self):
@@ -144,14 +137,12 @@ class BaseDataSource(BaseModel):
         """
         if self.mock_df is not None:
             df = self.mock_df
-        elif self.dataframe_type == "SPARK":
+        elif self.df_backend == "SPARK":
             df = self._read_spark(spark=spark)
-        elif self.dataframe_type == "POLARS":
+        elif self.df_backend == "POLARS":
             df = self._read_polars()
         else:
-            raise ValueError(
-                f"DataFrame type '{self.dataframe_type}' is not supported."
-            )
+            raise ValueError(f"DataFrame type '{self.df_backend}' is not supported.")
 
         if is_spark_dataframe(df):
             df = self._post_read_spark(df)
