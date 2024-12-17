@@ -74,13 +74,13 @@ class FileDataSource(BaseDataSource):
     @model_validator(mode="after")
     def options(self) -> Any:
 
-        if self.dataframe_type == "SPARK":
+        if self.dataframe_backend == "SPARK":
             if self.format in [
                 "EXCEL",
             ]:
                 raise ValueError(f"'{self.format}' format is not supported with Spark")
 
-        elif self.dataframe_type == "POLARS":
+        elif self.df_backend == "POLARS":
             if self.format in [
                 "BINARYFILE",
             ]:
