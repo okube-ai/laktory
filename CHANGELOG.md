@@ -1,6 +1,16 @@
 # Release History
 
-## [0.5.8] - Unreleased
+## [0.5.9] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.5.8] - 2024-12-18
 ### Added
 * `is_enabled` option to resources for disabling specific resources for specific environments or configurations.
 * `name_prefix` and `name_suffix` options for DLT pipeline
