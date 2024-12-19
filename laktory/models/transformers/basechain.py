@@ -7,6 +7,7 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
+from laktory.models.pipelinechild import PipelineChild
 from laktory.models.transformers.basechainnode import BaseChainNode
 from laktory.types import AnyDataFrame
 
@@ -21,26 +22,22 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 
 
-class BaseChain(BaseModel):
+class BaseChain(BaseModel, PipelineChild):
     dataframe_backend: Literal["SPARK", "POLARS"] = None
     nodes: list[Union[BaseChainNode, "BaseChain"]]
     _columns: list[list[str]] = []
-    _parent: "PipelineNode" = None
-
-    @model_validator(mode="after")
-    def update_children(self) -> Any:
-        for n in self.nodes:
-            n._parent = self
-        return self
 
     @property
     def columns(self):
         return self._columns
 
-    def get_sources(self, cls=None) -> list[BaseDataSource]:
-        """Get all sources feeding the Polars Chain"""
-
-        from laktory.models.datasources.basedatasource import BaseDataSource
+    @property
+    def upstream_node_names(self) -> list[str]:
+        """Pipeline node names required to apply transformer"""
+        names = []
+        for node in self.nodes:
+            names += node.upstream_node_names
+        return names
 
     @property
     def data_sources(self):
@@ -48,9 +45,19 @@ class BaseChain(BaseModel):
         sources = []
         for node in self.nodes:
             sources += node.data_sources
-        for s in sources:
-            s._parent = self
         return sources
+
+    # ----------------------------------------------------------------------- #
+    # Children                                                                #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def child_attribute_names(self):
+        return ["nodes"]
+
+    # ----------------------------------------------------------------------- #
+    # Execution                                                               #
+    # ----------------------------------------------------------------------- #
 
     def execute(self, df, udfs=None) -> AnyDataFrame:
         logger.info(f"Executing {self.df_backend} chain")

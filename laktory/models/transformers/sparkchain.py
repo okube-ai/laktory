@@ -91,7 +91,6 @@ class SparkChain(BaseChain):
     nodes: list[Union[SparkChainNode, "SparkChain"]]
     _view_definition: str = None
     _columns: list[list[str]] = []
-    _parent: "PipelineNode" = None
 
 
 SparkChain.model_rebuild()

@@ -1,5 +1,5 @@
 name: pl-polars-local
-dataframe_type: POLARS
+dataframe_backend: POLARS
 nodes:
 - name: brz_stock_prices
   layer: BRONZE

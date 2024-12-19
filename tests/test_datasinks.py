@@ -137,7 +137,7 @@ def test_file_data_sink_polars_parquet():
 
     # Read back
     source = sink.as_source()
-    source.dataframe_type = "POLARS"
+    source.dataframe_backend = "POLARS"
     df = source.read(filepath).collect()
 
     # Test
@@ -168,7 +168,7 @@ def test_file_data_sink_polars_delta():
 
     # Read back
     source = sink.as_source()
-    source.dataframe_type = "POLARS"
+    source.dataframe_backend = "POLARS"
     df = source.read().collect()
 
     # Test

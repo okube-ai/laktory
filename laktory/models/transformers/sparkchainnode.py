@@ -78,7 +78,7 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
 
         return expr.split(";")
 
-    def eval(self, df, chain_node=None):
+    def eval(self, df):
 
         # We wanted to use parametrized queries to inject dataframes into the
         # query, but it does not seem to be mature enough to do so:
@@ -92,11 +92,7 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
         _spark = df.sparkSession
 
         # Get pipeline node if executed from pipeline
-        pipeline_node = None
-        if chain_node is not None:
-            spark_chain = chain_node._parent
-            if spark_chain is not None:
-                pipeline_node = spark_chain._parent
+        pipeline_node = self.parent_pipeline_node
 
         # Set df id (to avoid temp view with conflicting names)
         df_id = "df"
@@ -223,9 +219,8 @@ class SparkChainNode(BaseChainNode):
     sql_expr: Union[str, None] = None
     with_column: Union[ChainNodeColumn, None] = None
     with_columns: Union[list[ChainNodeColumn], None] = []
-    _parent: "SparkChain" = None
-    _parsed_func_args: list = None
-    _parsed_func_kwargs: dict = None
+    _parsed_func_args: list[SparkChainNodeFuncArg] = None
+    _parsed_func_kwargs: dict[str, SparkChainNodeFuncArg] = None
     _parsed_sql_expr: SparkChainNodeSQLExpr = None
 
     @property
@@ -300,7 +295,7 @@ class SparkChainNode(BaseChainNode):
         # From SQL expression
         if self.sql_expr:
             logger.info(f"DataFrame {self.id} as \n{self.sql_expr.strip()}")
-            return self.parsed_sql_expr.eval(df, chain_node=self)
+            return self.parsed_sql_expr.eval(df)
 
         # Get Function
         func_name = self.func_name

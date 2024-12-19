@@ -64,24 +64,17 @@ class PipelineNodeDataSource(BaseDataSource):
     @property
     def node(self):
 
-        from laktory.models.pipeline import Pipeline
+        pl = self.parent_pipeline
 
-        def _get_node(o):
-            parent = getattr(o, "_parent", None)
-            if parent is None:
-                raise ValueError(
-                    f"Source '{self.node_name}' is not attached to a pipeline"
-                )
-            if isinstance(parent, Pipeline):
-                if self.node_name not in parent.sorted_node_names:
-                    raise ValueError(
-                        f"Node '{self.node_name}' does not exists in pipeline '{parent.name}'"
-                    )
-                return parent.nodes_dict[self.node_name]
+        if pl is None:
+            raise ValueError(f"Source '{self.node_name}' is not attached to a pipeline")
 
-            return _get_node(parent)
+        if self.node_name not in pl.sorted_node_names:
+            raise ValueError(
+                f"Node '{self.node_name}' does not exists in pipeline '{pl.name}'"
+            )
 
-        return _get_node(self)
+        return pl.nodes_dict[self.node_name]
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #

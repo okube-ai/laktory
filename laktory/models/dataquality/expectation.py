@@ -5,7 +5,6 @@ from typing import Union
 from pydantic import model_validator
 
 from laktory._logger import get_logger
-from laktory.constants import DEFAULT_DFTYPE
 from laktory.exceptions import DataQualityCheckFailedError
 from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
@@ -111,7 +110,7 @@ class DataQualityExpectation(BaseModel):
     name: str
     expr: Union[str, DataFrameColumnExpression] = None
     tolerance: ExpectationTolerance = ExpectationTolerance(abs=0)
-    _dftype: Literal["SPARK", "POLARS"] = DEFAULT_DFTYPE
+    _dataframe_backend: Literal["SPARK", "POLARS"] = None
     _check: DataQualityCheck = None
 
     @model_validator(mode="after")
@@ -144,12 +143,12 @@ class DataQualityExpectation(BaseModel):
     @property
     def pass_filter(self) -> Union[AnyDataFrameColumn, None]:
         """Expression representing all rows meeting the expectation."""
-        return self.expr.eval(dataframe_type=self._dftype)
+        return self.expr.eval(dataframe_backend=self._dataframe_backend)
 
     @property
     def fail_filter(self) -> Union[AnyDataFrameColumn, None]:
         """Expression representing all rows not meeting the expectation."""
-        return ~self.expr.eval(dataframe_type=self._dftype)
+        return ~self.expr.eval(dataframe_backend=self._dataframe_backend)
 
     @property
     def keep_filter(self) -> Union[AnyDataFrameColumn, None]:
@@ -270,9 +269,9 @@ class DataQualityExpectation(BaseModel):
         # Assign DataFrame type
         dtype = str(type(df)).lower()
         if "spark" in dtype:
-            self._dftype = "SPARK"
+            self._dataframe_backend = "SPARK"
         elif "polars" in dtype:
-            self._dftype = "POLARS"
+            self._dataframe_backend = "POLARS"
         else:
             raise ValueError(f"DataFrame type '{dtype}' not supported")
 
@@ -286,9 +285,9 @@ class DataQualityExpectation(BaseModel):
 
     def _check_df(self, df):
 
-        if self._dftype == "SPARK":
+        if self._dataframe_backend == "SPARK":
             rows_count = df.count()
-        elif self._dftype == "POLARS":
+        elif self._dataframe_backend == "POLARS":
             import polars as pl
 
             rows_count = df.select(pl.len()).collect().item()
@@ -311,9 +310,9 @@ class DataQualityExpectation(BaseModel):
                     e.desc += f"\n{self.type_warning_msg}"
                 raise e
 
-            if self._dftype == "SPARK":
+            if self._dataframe_backend == "SPARK":
                 fails_count = df_fail.count()
-            elif self._dftype == "POLARS":
+            elif self._dataframe_backend == "POLARS":
                 import polars as pl
 
                 fails_count = df_fail.select(pl.len()).collect().item()

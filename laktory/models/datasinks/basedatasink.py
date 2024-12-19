@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
+from laktory.models.pipelinechild import PipelineChild
 from laktory.spark import is_spark_dataframe
 from laktory.spark import SparkDataFrame
 from laktory.polars import is_polars_dataframe
@@ -480,7 +481,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             self._execute(source=source)
 
 
-class BaseDataSink(BaseModel):
+class BaseDataSink(BaseModel, PipelineChild):
     """
     Base class for building data sink
 
@@ -518,7 +519,6 @@ class BaseDataSink(BaseModel):
         None,
     ] = None
     write_options: dict[str, str] = {}
-    _parent: "PipelineNode" = None
 
     @model_validator(mode="after")
     def merge_has_options(self) -> Any:
@@ -552,12 +552,12 @@ class BaseDataSink(BaseModel):
         if self.checkpoint_location:
             return Path(self.checkpoint_location)
 
-        if self._parent and self._parent._root_path:
-            for i, s in enumerate(self._parent.all_sinks):
+        node = self.parent_pipeline_node
+
+        if node and node._root_path:
+            for i, s in enumerate(node.all_sinks):
                 if s == self:
-                    return (
-                        self._parent._root_path / "checkpoints" / f"sink-{self._uuid}"
-                    )
+                    return node._root_path / "checkpoints" / f"sink-{self._uuid}"
 
         return None
 
@@ -684,7 +684,7 @@ class BaseDataSink(BaseModel):
         raise NotImplementedError()
 
     # ----------------------------------------------------------------------- #
-    # Sources                                                                 #
+    # Data Sources                                                            #
     # ----------------------------------------------------------------------- #
 
     def as_source(self, as_stream=None):

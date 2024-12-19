@@ -140,8 +140,8 @@ def test_sql_with_nodes():
         ]
     )
 
-    assert sc.nodes[0].parsed_sql_expr.node_data_sources == []
-    assert sc.nodes[1].parsed_sql_expr.node_data_sources == [
+    assert sc.nodes[0].parsed_sql_expr.data_sources == []
+    assert sc.nodes[1].parsed_sql_expr.data_sources == [
         models.PipelineNodeDataSource(node_name="node_01"),
         models.PipelineNodeDataSource(node_name="node_02"),
     ]

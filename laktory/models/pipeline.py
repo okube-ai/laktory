@@ -15,10 +15,9 @@ from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
-from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
 from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipelinenode import PipelineNode
-from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.dltpipeline import DLTPipeline
 from laktory.models.resources.databricks.job import Job
 from laktory.models.resources.databricks.job import JobTask
@@ -125,7 +124,7 @@ class PipelineWorkspaceFile(WorkspaceFile):
 # --------------------------------------------------------------------------- #
 
 
-class Pipeline(BaseModel, PulumiResource, TerraformResource):
+class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     """
     Pipeline model to manage a full-fledged data pipeline including reading
     from data sources, applying data transformations through Spark and
@@ -440,17 +439,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         return data
 
     @model_validator(mode="after")
-    def update_children(self) -> Any:
-        # Build dag
-        _ = self.dag
-
-        # Assign pipeline
-        for n in self.nodes:
-            n._parent = self
-
-        return self
-
-    @model_validator(mode="after")
     def default_workspacefile(self):
 
         if self.orchestrator in ["DATABRICKS_JOB", "DLT"]:
@@ -544,6 +532,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                 job.tasks[-1].job_cluster_key = "node-cluster"
 
         return self
+
+    # ----------------------------------------------------------------------- #
+    # Children                                                                #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def child_attribute_names(self):
+        return ["nodes"]
 
     # ----------------------------------------------------------------------- #
     # ID                                                                      #
@@ -688,7 +684,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         return nodes
 
     # ----------------------------------------------------------------------- #
-    # Sources                                                                 #
+    # Data Sources                                                            #
     # ----------------------------------------------------------------------- #
 
     @property
@@ -696,8 +692,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         sources = []
         for n in self.nodes:
             sources += n.data_sources
-        for s in sources:
-            s._parent = self
         return sources
 
     # ----------------------------------------------------------------------- #

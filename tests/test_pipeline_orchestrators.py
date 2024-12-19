@@ -141,7 +141,7 @@ def test_pipeline_dlt():
     assert data == {
         "as_stream": True,
         "broadcast": False,
-        "dataframe_type": "SPARK",
+        "dataframe_backend": None,
         "drops": None,
         "filter": None,
         "limit": None,
@@ -155,6 +155,7 @@ def test_pipeline_dlt():
         "schema_definition": None,
         "schema_location": None,
     }
+    assert sink_source.df_backend == "SPARK"
 
     data = pl_dlt.dlt.model_dump()
     print(data)

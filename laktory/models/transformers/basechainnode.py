@@ -13,6 +13,7 @@ from laktory._logger import get_logger
 from laktory.constants import SUPPORTED_DATATYPES
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
+from laktory.models.pipelinechild import PipelineChild
 from laktory.polars import PolarsDataFrame
 from laktory.polars import PolarsExpr
 from laktory.types import AnyDataFrame
@@ -30,7 +31,7 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 
 
-class BaseChainNodeFuncArg(BaseModel):
+class BaseChainNodeFuncArg(BaseModel, PipelineChild):
     value: Union[Any]
 
     @field_validator("value")
@@ -69,7 +70,7 @@ class BaseChainNodeFuncArg(BaseModel):
         return str(self.value)
 
 
-class ChainNodeColumn(BaseModel):
+class ChainNodeColumn(BaseModel, PipelineChild):
     expr: Union[str, DataFrameColumnExpression]
     name: str
     type: Union[str, None] = "string"
@@ -97,7 +98,7 @@ class ChainNodeColumn(BaseModel):
         return self.expr.eval(udfs=udfs, dataframe_backend=dataframe_backend)
 
 
-class BaseChainNodeSQLExpr(BaseModel):
+class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
     """
     Chain node SQL expression
 
@@ -113,6 +114,20 @@ class BaseChainNodeSQLExpr(BaseModel):
     def parsed_expr(self, df_id="df"):
         return self.expr
 
+    @property
+    def upstream_node_names(self) -> list[str]:
+
+        if self.expr is None:
+            return []
+
+        names = []
+
+        pattern = r"\{nodes\.(.*?)\}"
+        matches = re.findall(pattern, self.expr)
+        for m in matches:
+            names += [m]
+
+        return names
 
     @property
     def data_sources(self) -> list[PipelineNodeDataSource]:
@@ -137,7 +152,7 @@ class BaseChainNodeSQLExpr(BaseModel):
 
         return self._data_sources
 
-    def eval(self, df, chain_node=None):
+    def eval(self, df):
         raise NotImplementedError()
 
 
@@ -146,7 +161,7 @@ class BaseChainNodeSQLExpr(BaseModel):
 # --------------------------------------------------------------------------- #
 
 
-class BaseChainNode(BaseModel):
+class BaseChainNode(BaseModel, PipelineChild):
 
     dataframe_backend: Literal["SPARK", "POLARS", None] = None
     func_args: list[Union[Any]] = []
@@ -155,7 +170,6 @@ class BaseChainNode(BaseModel):
     sql_expr: Union[str, None] = None
     with_column: Union[ChainNodeColumn, None] = None
     with_columns: Union[list[ChainNodeColumn], None] = []
-    _parent: "BaseChain" = None
     _parsed_func_args: list = None
     _parsed_func_kwargs: dict = None
     _parsed_sql_expr: BaseChainNodeSQLExpr = None
@@ -184,22 +198,9 @@ class BaseChainNode(BaseModel):
 
         return self
 
-    @property
-    def _with_columns(self) -> list[ChainNodeColumn]:
-        with_columns = [c for c in self.with_columns]
-        if self.with_column:
-            with_columns += [self.with_column]
-        return with_columns
-
-    @model_validator(mode="after")
-    def update_children(self):
-        for s in self.data_sources:
-            s._parent = self
-        return self
-
-    @property
-    def is_column(self):
-        return len(self._with_columns) > 0
+    # ----------------------------------------------------------------------- #
+    # Id                                                                      #
+    # ----------------------------------------------------------------------- #
 
     @property
     def id(self):
@@ -208,7 +209,35 @@ class BaseChainNode(BaseModel):
         return "df"
 
     # ----------------------------------------------------------------------- #
-    # Class Methods                                                           #
+    # Children                                                                #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def child_attribute_names(self):
+        return [
+            "data_sources",
+            "_parsed_func_args",
+            "_parsed_func_kwargs",
+            "_parsed_sql_expr",
+        ]
+
+    # ----------------------------------------------------------------------- #
+    # Columns Creation                                                        #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def _with_columns(self) -> list[ChainNodeColumn]:
+        with_columns = [c for c in self.with_columns]
+        if self.with_column:
+            with_columns += [self.with_column]
+        return with_columns
+
+    @property
+    def is_column(self):
+        return len(self._with_columns) > 0
+
+    # ----------------------------------------------------------------------- #
+    # Data Sources                                                            #
     # ----------------------------------------------------------------------- #
 
     @property
@@ -230,6 +259,35 @@ class BaseChainNode(BaseModel):
 
         return sources
 
+    # ----------------------------------------------------------------------- #
+    # Upstream Nodes                                                          #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def upstream_node_names(self) -> list[str]:
+        """Pipeline node names required to apply transformer node."""
+
+        from laktory.models.datasources.pipelinenodedatasource import (
+            PipelineNodeDataSource,
+        )
+
+        names = []
+        for a in self.parsed_func_args:
+            if isinstance(a.value, PipelineNodeDataSource):
+                names += [a.value.node_name]
+        for a in self.parsed_func_kwargs.values():
+            if isinstance(a.value, PipelineNodeDataSource):
+                names += [a.value.node_name]
+
+        if self.sql_expr:
+            names += self.parsed_sql_expr.upstream_node_names
+
+        return names
+
+    # ----------------------------------------------------------------------- #
+    # Execution                                                               #
+    # ----------------------------------------------------------------------- #
+
     @abc.abstractmethod
     def execute(
         self,
@@ -238,4 +296,3 @@ class BaseChainNode(BaseModel):
         return_col: bool = False,
     ) -> Union[AnyDataFrame]:
         raise NotImplementedError()
-

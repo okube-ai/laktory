@@ -77,7 +77,7 @@ class PolarsChainNodeSQLExpr(BaseChainNodeSQLExpr):
             expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
         return expr
 
-    def eval(self, df, chain_node=None):
+    def eval(self, df):
         import polars as pl
 
         kwargs = {"df": df}
@@ -183,9 +183,8 @@ class PolarsChainNode(BaseChainNode):
     sql_expr: Union[str, None] = None
     with_column: Union[ChainNodeColumn, None] = None
     with_columns: Union[list[ChainNodeColumn], None] = []
-    _parent: "PolarsChain" = None
-    _parsed_func_args: list = None
-    _parsed_func_kwargs: dict = None
+    _parsed_func_args: list[PolarsChainNodeFuncArg] = None
+    _parsed_func_kwargs: dict[str, PolarsChainNodeFuncArg] = None
     _parsed_sql_expr: PolarsChainNodeSQLExpr = None
 
     @property
@@ -239,10 +238,6 @@ class PolarsChainNode(BaseChainNode):
         from polars import Expr
         from polars import DataFrame
         from laktory.polars.datatypes import DATATYPES_MAP
-
-        # Required to assign current polars chain node to all data sources
-        # before kwargs[f"nodes__{source.node.name}"] = source.read() is called.
-        self.update_children()
 
         if udfs is None:
             udfs = []

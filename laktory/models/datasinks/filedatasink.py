@@ -228,7 +228,6 @@ class FileDataSink(BaseDataSink):
         if as_stream:
             source.as_stream = as_stream
 
-        if self._parent:
-            source.dataframe_type = self._parent.dataframe_type
+        source.parent = self.parent
 
         return source

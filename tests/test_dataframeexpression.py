@@ -47,8 +47,8 @@ def test_eval():
     # Polars
     e1 = models.DataFrameColumnExpression(value="symbol")
     e2 = models.DataFrameColumnExpression(value="pl.col('symbol')")
-    assert str(e1.eval(dataframe_type="POLARS")) == str(pl.col("symbol"))
-    assert str(e2.eval(dataframe_type="POLARS")) == str(pl.col("symbol"))
+    assert str(e1.eval(dataframe_backend="POLARS")) == str(pl.col("symbol"))
+    assert str(e2.eval(dataframe_backend="POLARS")) == str(pl.col("symbol"))
 
 
 if __name__ == "__main__":

@@ -98,19 +98,31 @@ def test_children():
     pl, _ = get_pl()
 
     for pn in pl.nodes:
-        assert pn._parent == pl
-        assert pn.source._parent == pn
-        if pn.transformer is not None:
-            assert pn.transformer._parent == pn
+        assert pn.parent == pl
+        assert pn.parent_pipeline == pl
+        assert pn.source.parent == pn
         for s in pn.all_sinks:
-            assert s._parent == pn
+            assert s.parent == pn
 
         if pn.transformer:
+            assert pn.transformer.parent == pn
+            assert pn.transformer.parent_pipeline == pl
             for tn in pn.transformer.nodes:
-                assert tn._parent == pn.transformer
+                assert tn.parent_pipeline == pl
+                assert tn.parent_pipeline_node == pn
+                assert tn.parent == pn.transformer
 
-        for s in pn.get_sources():
-            assert s._parent == pn
+        for s in pn.data_sources:
+            print("*****")
+            print(type(s))
+            print(s)
+            print(type(pn))
+            print(pn)
+            print(type(s.parent))
+            print(s.parent)
+            # assert s.parent == pn
+            assert s.parent_pipeline_node == pn
+            assert s.parent_pipeline == pl
 
 
 def test_paths():
@@ -118,6 +130,7 @@ def test_paths():
     assert pl._root_path == pl_path
 
     for node in pl.nodes:
+
         assert node._root_path == pl_path / node.name
         assert (
             node._expectations_checkpoint_location
@@ -271,6 +284,7 @@ def test_sql_join():
     ON df.symbol = meta.symbol2
     ;
     """
+    pl.update_children()
 
     # Create Stream Source
     source, source_path = get_source(pl_path)

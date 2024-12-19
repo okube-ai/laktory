@@ -9,25 +9,26 @@ from pathlib import Path
 import warnings
 from pydantic import model_validator
 
+from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
-from laktory.models.datasources import DataSourcesUnion
-from laktory.models.datasources import BaseDataSource
-from laktory.models.datasinks import DataSinksUnion
 from laktory.models.dataquality.expectation import DataQualityExpectation
-from laktory.models.transformers.sparkchain import SparkChain
-from laktory.models.transformers.sparkchainnode import SparkChainNode
+from laktory.models.datasinks import DataSinksUnion
+from laktory.models.datasources import BaseDataSource
+from laktory.models.datasources import DataSourcesUnion
+from laktory.models.pipelinechild import PipelineChild
 from laktory.models.transformers.polarschain import PolarsChain
 from laktory.models.transformers.polarschainnode import PolarsChainNode
+from laktory.models.transformers.sparkchain import SparkChain
+from laktory.models.transformers.sparkchainnode import SparkChainNode
 from laktory.spark import SparkSession
 from laktory.types import AnyDataFrame
-from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class PipelineNode(BaseModel):
+class PipelineNode(BaseModel, PipelineChild):
     """
     Pipeline base component generating a DataFrame by reading a data source and
     applying a transformer (chain of dataframe transformations). Optional
@@ -167,7 +168,6 @@ class PipelineNode(BaseModel):
     _stage_df: Any = None
     _output_df: Any = None
     _quarantine_df: Any = None
-    _parent: "Pipeline" = None
     _source_columns: list[str] = []
 
     @model_validator(mode="before")
@@ -219,20 +219,7 @@ class PipelineNode(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def update_children(self) -> Any:
-
-        # Assign node to sources
-        for s in self.data_sources:
-            s._parent = self
-
-        # Assign node to sinks
-        if self.sinks:
-            for s in self.sinks:
-                s._parent = self
-
-        # Assign node to transformers
-        if self.transformer:
-            self.transformer._parent = self
+    def push_primary_keys(self) -> Any:
 
         # Assign primary keys
         if self.primary_keys and self.sinks:
@@ -273,16 +260,28 @@ class PipelineNode(BaseModel):
         return self
 
     # ----------------------------------------------------------------------- #
+    # Children                                                                #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def child_attribute_names(self):
+        return [
+            "data_sources",
+            "transformer",
+            "sinks",
+        ]
+
+    # ----------------------------------------------------------------------- #
     # Orchestrator                                                            #
     # ----------------------------------------------------------------------- #
 
     @property
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline node is used in the context of a DLT pipeline"""
-        is_orchestrator_dlt = False
-        if self._parent and self._parent.is_orchestrator_dlt:
-            is_orchestrator_dlt = True
-        return is_orchestrator_dlt
+        pl = self.parent_pipeline
+        if pl:
+            return pl.is_orchestrator_dlt
+        return False
 
     @property
     def is_dlt_run(self) -> bool:
@@ -301,8 +300,9 @@ class PipelineNode(BaseModel):
         if self.root_path:
             return Path(self.root_path)
 
-        if self._parent and self._parent._root_path:
-            return self._parent._root_path / self.name
+        node = self.parent_pipeline
+        if node and node._root_path:
+            return node._root_path / self.name
 
         return Path(settings.laktory_root) / self.name
 
@@ -591,10 +591,29 @@ class PipelineNode(BaseModel):
         return PolarsChain(nodes=nodes)
 
     # ----------------------------------------------------------------------- #
-    # Methods                                                                 #
+    # Upstream Nodes                                                          #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def upstream_node_names(self) -> list[str]:
+        """Pipeline node names required to execute current node."""
+        from laktory.models.datasources.pipelinenodedatasource import (
+            PipelineNodeDataSource,
+        )
 
+        names = []
+
+        if isinstance(self.source, PipelineNodeDataSource):
+            names += [self.source.node_name]
+
+        if self.transformer:
+            names += self.transformer.upstream_node_names
+
+        return names
+
+    # ----------------------------------------------------------------------- #
+    # Data Sources                                                            #
+    # ----------------------------------------------------------------------- #
 
     @property
     def data_sources(self) -> list[BaseDataSource]:
@@ -607,10 +626,11 @@ class PipelineNode(BaseModel):
         if self.transformer:
             sources += self.transformer.data_sources
 
-        for s in sources:
-            s._parent = self
-
         return sources
+
+    # ----------------------------------------------------------------------- #
+    # Execution                                                               #
+    # ----------------------------------------------------------------------- #
 
     def purge(self, spark=None):
         logger.info(f"Purging pipeline node {self.name}")

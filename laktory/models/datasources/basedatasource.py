@@ -7,6 +7,7 @@ from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.spark import SparkDataFrame
 from laktory.spark import is_spark_dataframe
+from laktory.models.pipelinechild import PipelineChild
 from laktory.polars import PolarsDataFrame
 from laktory.polars import is_polars_dataframe
 from laktory.types import AnyDataFrame
@@ -42,7 +43,7 @@ class Watermark(BaseModel):
     threshold: str
 
 
-class BaseDataSource(BaseModel):
+class BaseDataSource(BaseModel, PipelineChild):
     """
     Base class for building data source
 
@@ -78,7 +79,6 @@ class BaseDataSource(BaseModel):
     sample: Union[DataFrameSample, None] = None
     selects: Union[list[str], dict[str, str], None] = None
     watermark: Union[Watermark, None] = None
-    _parent: "PipelineNode" = None
 
     @model_validator(mode="after")
     def options(self) -> Any:
@@ -112,10 +112,13 @@ class BaseDataSource(BaseModel):
     @property
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, data source is used in the context of a DLT pipeline"""
-        is_orchestrator_dlt = False
-        if self._parent and self._parent.is_orchestrator_dlt:
-            is_orchestrator_dlt = True
-        return is_orchestrator_dlt
+
+        pl = self.parent_pipeline
+
+        if pl is None:
+            return False
+
+        return pl.is_orchestrator_dlt
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #

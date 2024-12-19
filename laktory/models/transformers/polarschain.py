@@ -89,7 +89,6 @@ class PolarsChain(BaseChain):
     dataframe_backend: Literal["POLARS"] = "POLARS"
     nodes: list[Union[PolarsChainNode, "PolarsChain"]]
     _columns: list[list[str]] = []
-    _parent: "PipelineNode" = None
 
 
 PolarsChain.model_rebuild()
