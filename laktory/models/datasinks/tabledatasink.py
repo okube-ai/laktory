@@ -21,9 +21,11 @@ class TableDataSink(BaseDataSink):
         Path to which the checkpoint file for streaming dataframe should
         be written.
     catalog_name:
-        Name of the catalog of the source table
+        Name of the catalog of the sink table
     table_name:
-        Name of the source table
+        Name of the sink table
+    # table_type:
+    #     Type of table. `TABLE` and `VIEW` are currently supported.
     schema_name:
         Name of the schema of the source table
     warehouse:
@@ -230,6 +232,6 @@ class TableDataSink(BaseDataSink):
         if as_stream:
             source.as_stream = as_stream
 
-        source._parent = self._parent
+        source.parent = self.parent
 
         return source
