@@ -7,9 +7,10 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Replaced `dataframe_backend` propagation with dynamic parent lookup
+* Introduced `PipelineChild` internal class to manage child/parent relatioship
 ### Breaking changes
-* n/a
+* Renamed `dataframe_type` to `dataframe_backend`
 
 ## [0.5.7] - 2024-12-09
 ### Added
