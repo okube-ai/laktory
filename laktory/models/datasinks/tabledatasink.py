@@ -2,6 +2,7 @@ import os
 import shutil
 from typing import Literal
 from typing import Union
+from pydantic import model_validator
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
 from laktory.models.datasources.tabledatasource import TableDataSource
@@ -25,9 +26,11 @@ class TableDataSink(BaseDataSink):
     table_name:
         Name of the sink table
     table_type:
-        Type of table. `TABLE` and `VIEW` are currently supported.
+        Type of table. "TABLE" and "VIEW" are currently supported.
     schema_name:
         Name of the schema of the source table
+    view_definition:
+        View definition of "VIEW" `table_type` is selected.
     warehouse:
         Type of warehouse to which the table should be published
 
@@ -76,7 +79,14 @@ class TableDataSink(BaseDataSink):
     schema_name: Union[str, None] = None
     table_name: Union[str, None]
     table_type: Literal["TABLE", "VIEW"] = "TABLE"
+    view_definition: str = None
     warehouse: Union[Literal["DATABRICKS"], None] = "DATABRICKS"
+
+    @model_validator(mode="after")
+    def set_table_type(self):
+        if self.view_definition is not None:
+            self.table_type = "VIEW"
+        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -128,17 +138,10 @@ class TableDataSink(BaseDataSink):
                 f"Warehouse '{self.warehouse}' is not yet supported."
             )
 
-    def _write_spark_view(
-        self, view_definition: str, df: str = None, spark=None
-    ) -> None:
-
-        if df is None and spark is None:
-            raise ValueError("Either `spark` or `df` must be provided.")
-
-        if spark is None:
-            spark = df.sparkSession
-
+    def _write_spark_view(self, view_definition: str,  spark) -> None:
         df = spark.sql(f"CREATE OR REPLACE VIEW {self.full_name} AS {view_definition}")
+        if self.parent_pipeline_node:
+            self.parent_pipeline_node.output_df = df
 
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
 

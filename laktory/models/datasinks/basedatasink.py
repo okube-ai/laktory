@@ -617,18 +617,22 @@ class BaseDataSink(BaseModel, PipelineChild):
         spark:
             Spark Session for creating a view
         view_definition:
-            View definition
+            View definition. Overwrites view definition defined in the sink.
 
         Returns
         -------
         """
-        if view_definition:
+        _view_definition = view_definition
+        if _view_definition is None:
+            _view_definition = getattr(self, "view_definition", None)
+
+        if _view_definition:
             if self.df_backend == "SPARK":
                 if spark is None:
                     raise ValueError(
                         "Spark session must be provided for creating a view."
                     )
-                self._write_spark_view(view_definition=view_definition, spark=spark)
+                self._write_spark_view(view_definition=_view_definition, spark=spark)
             else:
                 raise ValueError(
                     f"'{self.df_backend}' DataFrame backend is not supported for creating views"
@@ -652,9 +656,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     def _write_spark(self, df: SparkDataFrame, mode: str = mode) -> None:
         raise NotImplementedError("Not implemented for Spark dataframe")
 
-    def _write_spark_view(
-        self, view_definition: str, df: AnyDataFrame = None, spark=None
-    ) -> None:
+    def _write_spark_view(self, view_definition: str, spark) -> None:
         raise NotImplementedError(
             f"View creation with spark is not implemented for type '{type(self)}'"
         )
