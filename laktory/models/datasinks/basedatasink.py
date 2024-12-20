@@ -285,6 +285,11 @@ class DataSinkMergeCDCOptions(BaseModel):
             f"Executing merge on {self.target_id} with primary keys {self.primary_keys} and scd type {self.scd_type}"
         )
 
+        if self.delete_where:
+            logger.info(
+                f"with delete on {self.delete_where}"
+            )
+
         # Add internal columns
         source = source.withColumn(
             self.hash_keys, F.lit(F.sha2(F.concat_ws("~", *self.primary_keys), 256))
@@ -327,6 +332,10 @@ class DataSinkMergeCDCOptions(BaseModel):
 
         if self.scd_type == 1:
 
+            if self.delete_where:
+                delete_condition = F.coalesce(F.expr(self.source_delete_where), F.lit(False))
+                not_delete_condition = ~delete_condition
+
             # Define merge
             merge = table_target.alias("target").merge(
                 source.alias("source"),
@@ -345,7 +354,7 @@ class DataSinkMergeCDCOptions(BaseModel):
 
             condition = None
             if self.delete_where:
-                condition = ~F.expr(self.source_delete_where)
+                condition = not_delete_condition
             if self.order_by:
                 _condition = F.expr(f"source.{self.order_by} > target.{self.order_by}")
                 if condition is None:
@@ -356,14 +365,18 @@ class DataSinkMergeCDCOptions(BaseModel):
             merge = merge.whenMatchedUpdate(set=_set, condition=condition)
 
             # Insert
+            condition = None
+            if self.delete_where:
+                condition = not_delete_condition
             merge = merge.whenNotMatchedInsert(
-                values={f"target.{c}": f"source.{c}" for c in self.write_columns}
+                values={f"target.{c}": f"source.{c}" for c in self.write_columns},
+                condition=condition,
             )
 
             # Delete
             if self.delete_where:
                 merge = merge.whenMatchedDelete(
-                    condition=F.expr(self.source_delete_where)
+                    condition=delete_condition
                 )
 
             logger.info(f"Executing merge...")
@@ -371,13 +384,16 @@ class DataSinkMergeCDCOptions(BaseModel):
 
         elif self.scd_type == 2:
 
+            delete_condition = F.coalesce(F.expr(self.delete_where), F.lit(False))
+            not_delete_condition = ~delete_condition
+
             # Only select rows that have been updated
             if self.target_path:
                 target = spark.read.format("DELTA").load(self.target_path)
             else:
                 target = spark.read.table(self.target_name)
             upsert_or_delete = source.withColumn(
-                "__to_delete", F.expr(self.delete_where)
+                "__to_delete", delete_condition
             ).join(
                 other=target.withColumn("__to_delete", F.lit(False)),
                 on=[self.hash_cols, self.hash_keys, "__to_delete"],
@@ -417,7 +433,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             # Append rows
             upsert = upsert_or_delete
             if self.delete_where:
-                upsert = upsert.filter(~F.expr(self.delete_where))
+                upsert = upsert.filter(not_delete_condition)
             writer = (
                 upsert.select(self.write_columns).write.mode("APPEND").format("DELTA")
             )

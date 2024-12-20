@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.5.9] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* CDC Merge when records flagged for delete don't exist in target
 
 ## [0.5.8] - 2024-12-18
 ### Added
