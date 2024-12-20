@@ -598,33 +598,62 @@ class BaseDataSink(BaseModel, PipelineChild):
     # Writers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def write(self, df: AnyDataFrame, mode=None) -> None:
+    def write(
+        self,
+        df: AnyDataFrame = None,
+        mode: str = None,
+        spark=None,
+        view_definition: str = None,
+    ) -> None:
         """
         Write dataframe into sink.
 
         Parameters
         ----------
         df:
-            Input dataframe
+            Input dataframe.
         mode:
             Write mode overwrite of the sink default mode.
+        spark:
+            Spark Session for creating a view
+        view_definition:
+            View definition
 
         Returns
         -------
         """
+        if view_definition:
+            if self.df_backend == "SPARK":
+                if spark is None:
+                    raise ValueError("Spark session must be provided for creating a view.")
+                self._write_spark_view(view_definition=view_definition, spark=spark)
+            else:
+                raise ValueError(f"'{self.df_backend}' DataFrame backend is not supported for creating views")
+
+            logger.info("View created.")
+            return
+
         if mode is None:
             mode = self.mode
+
         if is_spark_dataframe(df):
-            self._write_spark(df, mode=mode)
-        elif is_polars_dataframe(df):
+            self._write_spark(df=df, mode=mode)
+        elif is_polars_dataframe(df=df):
             self._write_polars(df, mode=mode)
         else:
             raise ValueError(f"DataFrame type '{type(df)}' not supported")
 
         logger.info("Write completed.")
 
-    def _write_spark(self, df: SparkDataFrame, mode=mode) -> None:
+    def _write_spark(self, df: SparkDataFrame, mode: str = mode) -> None:
         raise NotImplementedError("Not implemented for Spark dataframe")
+
+    def _write_spark_view(
+        self, view_definition: str, df: AnyDataFrame = None, spark=None
+    ) -> None:
+        raise NotImplementedError(
+            f"View creation with spark is not implemented for type '{type(self)}'"
+        )
 
     def _write_polars(self, df: PolarsLazyFrame, mode=mode) -> None:
         raise NotImplementedError("Not implemented for Polars dataframe")

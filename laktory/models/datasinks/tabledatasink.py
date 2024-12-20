@@ -75,6 +75,7 @@ class TableDataSink(BaseDataSink):
     format: Literal["DELTA", "PARQUET"] = "DELTA"
     schema_name: Union[str, None] = None
     table_name: Union[str, None]
+    table_type: Literal["TABLE", "VIEW"] = "TABLE"
     warehouse: Union[Literal["DATABRICKS"], None] = "DATABRICKS"
 
     # ----------------------------------------------------------------------- #
@@ -127,16 +128,19 @@ class TableDataSink(BaseDataSink):
                 f"Warehouse '{self.warehouse}' is not yet supported."
             )
 
+    def _write_spark_view(
+        self, view_definition: str, df: str = None, spark=None
+    ) -> None:
+
+        if df is None and spark is None:
+            raise ValueError("Either `spark` or `df` must be provided.")
+
+        if spark is None:
+            spark = df.sparkSession
+
+        df = spark.sql(f"CREATE OR REPLACE VIEW {self.full_name} AS {view_definition}")
+
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
-        #
-        # if self.table_type == "VIEW":
-        #     print("DO SOMETHING!!")
-        #
-        #     spark.sql("""
-        #     CREATE OR REPLACE VIEW
-        #     ...
-        #     """)
-        #
 
         if self.format in ["EXCEL"]:
             raise ValueError(f"'{self.format}' format is not supported with Spark")
@@ -192,10 +196,12 @@ class TableDataSink(BaseDataSink):
         """
         # Remove Data
         if self.warehouse == "DATABRICKS":
+
             logger.info(
-                f"Dropping table {self.full_name}",
+                f"Dropping {self.table_type} {self.full_name}",
             )
-            spark.sql(f"DROP TABLE IF EXISTS {self.full_name}")
+            spark.sql(f"DROP {self.table_type} IF EXISTS {self.full_name}")
+
         else:
             raise NotImplementedError(
                 f"Warehouse '{self.warehouse}' is not yet supported."
