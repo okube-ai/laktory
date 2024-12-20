@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* CDC Merge with delete option
 ### Updated
 * n/a
 ### Breaking changes
