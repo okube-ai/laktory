@@ -332,8 +332,9 @@ class DataSinkMergeCDCOptions(BaseModel):
 
         if self.scd_type == 1:
 
-            delete_condition = F.coalesce(F.expr(self.source_delete_where), F.lit(False))
-            not_delete_condition = ~delete_condition
+            if self.delete_where:
+                delete_condition = F.coalesce(F.expr(self.source_delete_where), F.lit(False))
+                not_delete_condition = ~delete_condition
 
             # Define merge
             merge = table_target.alias("target").merge(
