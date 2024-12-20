@@ -189,6 +189,7 @@ def test_job_pulumi():
     assert job.options.model_dump(exclude_none=True) == {
         "depends_on": [],
         "delete_before_replace": True,
+        "is_enabled": True,
     }
     data = job.pulumi_properties
     print(data)

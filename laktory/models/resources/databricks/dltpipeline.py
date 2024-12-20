@@ -160,6 +160,10 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
         Specifies pipeline code (notebooks) and required artifacts.
     name:
         Pipeline name
+    name_prefix:
+        Prefix added to the DLT pipeline name
+    name_suffix:
+        Suffix added to the DLT pipeline name
     notifications:
         Notifications specifications
     photon:
@@ -234,11 +238,23 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     # filters
     libraries: list[PipelineLibrary] = None
     name: str
+    name_prefix: str = None
+    name_suffix: str = None
     notifications: list[PipelineNotifications] = []
     photon: bool = None
     serverless: bool = None
     storage: str = None
     target: str = None
+
+    @model_validator(mode="after")
+    def update_name(self) -> Any:
+        if self.name_prefix:
+            self.name = self.name_prefix + self.name
+            self.name_prefix = ""
+        if self.name_suffix:
+            self.name = self.name + self.name_suffix
+            self.name_suffix = ""
+        return self
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -282,6 +298,8 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
         return {
             "access_controls": True,
             "clusters": {"__all__": {"access_controls"}},
+            "name_prefix": True,
+            "name_suffix": True,
         }
 
     @property

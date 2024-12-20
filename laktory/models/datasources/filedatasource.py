@@ -64,7 +64,18 @@ class FileDataSource(BaseDataSource):
     model_config = ConfigDict(populate_by_name=True)
 
     format: Literal[
-        "CSV", "PARQUET", "DELTA", "JSON", "NDJSON", "JSONL", "EXCEL", "BINARYFILE"
+        "AVRO",
+        "BINARYFILE",
+        "CSV",
+        "DELTA",
+        "EXCEL",
+        "JSON",
+        "JSONL",
+        "NDJSON",
+        "ORC",
+        "PARQUET",
+        "TEXT",
+        "XML",
     ] = "JSONL"
     path: str
     read_options: dict[str, Any] = {}
@@ -82,7 +93,11 @@ class FileDataSource(BaseDataSource):
 
         elif self.dataframe_type == "POLARS":
             if self.format in [
+                "AVRO",
                 "BINARYFILE",
+                "ORC",
+                "TEXT",
+                "XML",
             ]:
                 raise ValueError(f"'{self.format}' format is not supported with Polars")
 

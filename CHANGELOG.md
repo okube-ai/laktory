@@ -1,6 +1,6 @@
 # Release History
 
-## [0.5.8] - Unreleased
+## [0.5.9] - Unreleased
 ### Added
 * n/a
 ### Fixed
@@ -9,6 +9,12 @@
 * n/a
 ### Breaking changes
 * n/a
+
+## [0.5.8] - 2024-12-18
+### Added
+* `is_enabled` option to resources for disabling specific resources for specific environments or configurations.
+* `name_prefix` and `name_suffix` options for DLT pipeline
+* Support for "AVRO", "ORC", "TEXT" and "XML" format for file data source with spark dataframe backend.
 
 ## [0.5.7] - 2024-12-09
 ### Added

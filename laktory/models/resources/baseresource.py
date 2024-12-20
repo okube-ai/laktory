@@ -1,9 +1,9 @@
 import re
 from typing import Any
+from typing import Union
 from typing import Literal
 from pydantic import AliasChoices
 from pydantic import Field
-from pydantic import ConfigDict
 from pydantic import model_validator
 from pydantic import BaseModel as _BaseModel
 from laktory.models.basemodel import BaseModel
@@ -15,6 +15,10 @@ class ResourceOptions(BaseModel):
 
     Attributes
     ----------
+    is_enabled:
+        If `False`, resource is not passed to the IaC backend and is not
+        deployed. May be used for deploying resources to specific stack
+        environments only or for disabling resources when debugging.
     depends_on:
         Explicit list of resources dependencies.
         Supported by both pulumi and terraform.
@@ -45,6 +49,9 @@ class ResourceOptions(BaseModel):
         Pulumi only.
     """
 
+    # laktory
+    is_enabled: Union[bool, str] = True
+
     # pulumi + terraform
     depends_on: list[str] = []
     provider: str = None
@@ -56,6 +63,26 @@ class ResourceOptions(BaseModel):
     import_: str = None
     parent: str = None
     replace_on_changes: list[str] = None
+
+    @property
+    def pulumi_options(self) -> list[str]:
+        return [
+            "depends_on",
+            "provider",
+            "ignore_changes" "aliases",
+            "delete_before_replace",
+            "import_",
+            "parent",
+            "replace_on_changes",
+        ]
+
+    @property
+    def terraform_options(self) -> list[str]:
+        return [
+            "depends_on",
+            "provider",
+            "ignore_changes",
+        ]
 
 
 class ResourceLookup(_BaseModel):
@@ -212,7 +239,7 @@ class BaseResource(_BaseModel):
         if self._core_resources is None:
             # Add self
             self._core_resources = []
-            if self.self_as_core_resources:
+            if self.self_as_core_resources and self.options.is_enabled:
                 self._core_resources += [self]
 
             # Add additional
@@ -221,7 +248,12 @@ class BaseResource(_BaseModel):
 
                 provider = r.options.provider
                 k0 = f"${{resources.{r.resource_name}}}"
+
                 for _r in r.additional_core_resources:
+
+                    if not (r.options.is_enabled and _r.options.is_enabled):
+                        continue
+
                     if provider:
                         if _r.options.provider is None:
                             _r.options.provider = provider

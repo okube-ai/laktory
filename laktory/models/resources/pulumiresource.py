@@ -52,6 +52,10 @@ class PulumiResource(BaseResource):
         :
             Pulumi-safe model dump
         """
+        # `exclude_unset` should be used instead of exclude_none, but for now
+        # we set default values to facilitate instantiation of models within
+        # other models (permissions in MwsPermissionAssignment for example).
+        # A better approach should be used.
         d = super().model_dump(exclude=self.pulumi_excludes, exclude_none=True)
         for k, v in self.pulumi_renames.items():
             if self._camel_serialization:
