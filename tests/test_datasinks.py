@@ -216,9 +216,7 @@ def test_view_data_sink():
     # Create table
     table_path = Path(paths.tmp) / "hive" / f"slv_{str(uuid.uuid4())}"
     (
-        df_slv
-        .write
-        .mode("OVERWRITE")
+        df_slv.write.mode("OVERWRITE")
         .option("path", table_path)
         .saveAsTable("default.slv")
     )
@@ -235,7 +233,9 @@ def test_view_data_sink():
     assert sink.table_type == "VIEW"
 
     # Write
-    sink.write(view_definition="SELECT * FROM default.slv WHERE symbol = 'AAPL'", spark=spark)
+    sink.write(
+        view_definition="SELECT * FROM default.slv WHERE symbol = 'AAPL'", spark=spark
+    )
 
     # Read back
     df = sink.as_source().read(spark=spark)

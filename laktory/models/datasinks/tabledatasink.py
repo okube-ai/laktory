@@ -24,8 +24,8 @@ class TableDataSink(BaseDataSink):
         Name of the catalog of the sink table
     table_name:
         Name of the sink table
-    # table_type:
-    #     Type of table. `TABLE` and `VIEW` are currently supported.
+    table_type:
+        Type of table. `TABLE` and `VIEW` are currently supported.
     schema_name:
         Name of the schema of the source table
     warehouse:

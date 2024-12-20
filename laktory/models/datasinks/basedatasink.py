@@ -625,10 +625,14 @@ class BaseDataSink(BaseModel, PipelineChild):
         if view_definition:
             if self.df_backend == "SPARK":
                 if spark is None:
-                    raise ValueError("Spark session must be provided for creating a view.")
+                    raise ValueError(
+                        "Spark session must be provided for creating a view."
+                    )
                 self._write_spark_view(view_definition=view_definition, spark=spark)
             else:
-                raise ValueError(f"'{self.df_backend}' DataFrame backend is not supported for creating views")
+                raise ValueError(
+                    f"'{self.df_backend}' DataFrame backend is not supported for creating views"
+                )
 
             logger.info("View created.")
             return
