@@ -15,8 +15,10 @@ from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.expectation import DataQualityExpectation
 from laktory.models.datasinks import DataSinksUnion
+from laktory.models.datasinks import TableDataSink
 from laktory.models.datasources import BaseDataSource
 from laktory.models.datasources import DataSourcesUnion
+from laktory.models.datasources import TableDataSource
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.transformers.polarschain import PolarsChain
 from laktory.models.transformers.polarschainnode import PolarsChainNode
@@ -259,6 +261,55 @@ class PipelineNode(BaseModel, PipelineChild):
 
         return self
 
+    @model_validator(mode="after")
+    def validate_view(self):
+
+        if not self.is_view:
+            return
+
+        # Validate Source
+        if self.source:
+            if not isinstance(self.source, TableDataSource):
+                raise ValueError("VIEW sink only supports Table Data Source")
+
+            if self.source.as_stream:
+                raise ValueError("VIEW sink does not support stream read.")
+
+        # Validate Transformer
+        view_defined = False
+        if self.transformer:
+
+            m = f"node '{self.name}': "
+
+            if len(self.transformer.nodes) > 1:
+                raise ValueError(
+                    f"{m}VIEW sink only support transformers with a single SQL node"
+                )
+
+            if self.transformer.nodes[0].sql_expr is None:
+                raise ValueError(
+                    f"{m}VIEW sink only support transformers with a single SQL node"
+                )
+
+            view_defined = True
+
+        # Validate Sinks
+        for s in self.sinks:
+            if s.table_type != "VIEW":
+                raise ValueError(
+                    f"{m}If one pipeline node sink is a VIEW, all of them must be a view."
+                )
+
+            if not view_defined:
+                if s.view_definition is None:
+                    raise ValueError(
+                        f"View definition must be provided at at the transformer or at the sink."
+                    )
+
+        # Validate Expectations
+        if self.expectations:
+            raise ValueError(f"{m}Expectations not supported for a view sink.")
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #
@@ -309,6 +360,15 @@ class PipelineNode(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
     # Outputs and Sinks                                                       #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def is_view(self) -> bool:
+        is_view = False
+        for s in self.sinks:
+            if isinstance(s, TableDataSink) and s.table_type == "VIEW":
+                is_view = True
+                break
+        return is_view
 
     @property
     def stage_df(self) -> AnyDataFrame:
@@ -736,12 +796,15 @@ class PipelineNode(BaseModel, PipelineChild):
         # Apply transformer
         if apply_transformer:
 
+            if self.is_view and self.transformer:
+                self._view_definition = self.transformer.get_view_definition()
+
             if "spark" in str(type(self._stage_df)).lower():
                 dftype = "spark"
             elif "polars" in str(type(self._stage_df)).lower():
                 dftype = "polars"
             else:
-                raise ValueError("DataFrame type not supported")
+                raise ValueError("DataFrame backend not supported")
 
             # Set Transformer
             transformer = self.transformer
@@ -768,7 +831,12 @@ class PipelineNode(BaseModel, PipelineChild):
         # Output and Quarantine to Sinks
         if write_sinks:
             for s in self.output_sinks:
-                s.write(self._output_df)
+
+                if self.is_view:
+                    s.write(view_definition=self._view_definition, spark=spark)
+                    self._output_df = s.as_source().read(spark=spark)
+                else:
+                    s.write(self._output_df)
             if self._quarantine_df is not None:
                 for s in self.quarantine_sinks:
                     s.write(self._quarantine_df)

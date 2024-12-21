@@ -456,6 +456,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         if self.dlt is None:
             raise ValueError("dlt must be defined if DLT orchestrator is selected.")
 
+        for node in self.nodes:
+            if node.is_view:
+                raise ValueError(
+                    f"Node '{node.name}' is a view which is not supported with DLT orchestrator."
+                )
+
         for n in self.nodes:
             for s in n.all_sinks:
                 if isinstance(s, TableDataSink):
