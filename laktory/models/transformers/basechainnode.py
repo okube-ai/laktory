@@ -111,8 +111,43 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
     expr: str
     _data_sources: list[PipelineNodeDataSource] = None
 
-    def parsed_expr(self, df_id="df"):
-        return self.expr
+    def parsed_expr(self, df_id="df", view=False) -> list[str]:
+
+        if view:
+            pl_node = self.parent_pipeline_node
+
+            if pl_node and pl_node.source:
+                expr = self.expr.replace("{df}", pl_node.source.full_name)
+            pl = self.parent_pipeline
+            if pl:
+
+                from laktory.models.datasinks.tabledatasink import TableDataSink
+
+                pattern = r"\{nodes\.(.*?)\}"
+                matches = re.findall(pattern, expr)
+                for m in matches:
+                    if m not in pl.nodes_dict:
+                        raise ValueError(
+                            f"Node '{m}' is not available from pipeline '{pl.name}'"
+                        )
+                    sink = pl.nodes_dict[m]
+                    if not isinstance(sink, TableDataSink):
+                        raise ValueError(
+                            f"Node '{m}' used in view creation does not have a Table sink"
+                        )
+                    expr = expr.replace(
+                        "{nodes." + m + "}", pl.nodes_dict[m].primary_sink.full_name
+                    )
+
+            return expr
+
+        expr = self.expr.replace("{df}", df_id)
+        pattern = r"\{nodes\.(.*?)\}"
+        matches = re.findall(pattern, expr)
+        for m in matches:
+            expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
+
+        return expr.split(";")
 
     @property
     def upstream_node_names(self) -> list[str]:
@@ -296,3 +331,6 @@ class BaseChainNode(BaseModel, PipelineChild):
         return_col: bool = False,
     ) -> Union[AnyDataFrame]:
         raise NotImplementedError()
+
+    def get_view_definition(self):
+        return self._parsed_sql_expr.parsed_expr(view=True)

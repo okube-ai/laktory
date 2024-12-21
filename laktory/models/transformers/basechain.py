@@ -73,5 +73,9 @@ class BaseChain(BaseModel, PipelineChild):
 
         return df
 
+    def get_view_definition(self):
+        logger.info(f"Creating view definition")
+        return self.nodes[0].get_view_definition()
+
 
 BaseModel.model_rebuild()

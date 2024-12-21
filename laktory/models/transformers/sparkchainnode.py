@@ -69,15 +69,6 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
         SQL expression
     """
 
-    def parsed_expr(self, df_id="df") -> list[str]:
-        expr = self.expr.replace("{df}", df_id)
-        pattern = r"\{nodes\.(.*?)\}"
-        matches = re.findall(pattern, expr)
-        for m in matches:
-            expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
-
-        return expr.split(";")
-
     def eval(self, df):
 
         # We wanted to use parametrized queries to inject dataframes into the

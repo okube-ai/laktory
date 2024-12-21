@@ -138,10 +138,11 @@ class TableDataSink(BaseDataSink):
                 f"Warehouse '{self.warehouse}' is not yet supported."
             )
 
-    def _write_spark_view(self, view_definition: str,  spark) -> None:
+    def _write_spark_view(self, view_definition: str, spark) -> None:
+        logger.info(f"Creating view {self.full_name} AS {view_definition}")
         df = spark.sql(f"CREATE OR REPLACE VIEW {self.full_name} AS {view_definition}")
         if self.parent_pipeline_node:
-            self.parent_pipeline_node.output_df = df
+            self.parent_pipeline_node._output_df = df
 
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
 
