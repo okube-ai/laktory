@@ -1,5 +1,7 @@
 import os
 import shutil
+import uuid
+from pathlib import Path
 
 from pyspark.sql import functions as F
 
@@ -7,6 +9,7 @@ from laktory import models
 from laktory._testing import spark
 from laktory._testing import Paths
 from laktory._testing import df_brz
+from laktory._testing import df_slv
 
 paths = Paths(__file__)
 
@@ -63,6 +66,67 @@ def test_execute():
 
     # Cleanup
     shutil.rmtree(sink_path)
+
+
+def test_execute_view():
+
+    # Create table
+    table_path = Path(paths.tmp) / "hive" / f"slv_{str(uuid.uuid4())}"
+    (
+        df_slv.write.mode("OVERWRITE")
+        .option("path", table_path)
+        .saveAsTable("default.slv")
+    )
+
+    node1 = models.PipelineNode(
+        name="slv_stock_prices",
+        source={
+            "schema_name": "default",
+            "table_name": "slv",
+        },
+        transformer={
+            "nodes": [
+                {
+                    "sql_expr": "SELECT * FROM {df} WHERE symbol = 'AAPL'",
+                }
+            ],
+        },
+        sinks=[
+            {
+                "schema_name": "default",
+                "table_name": "slv_aapl",
+                "table_type": "VIEW",
+            }
+        ],
+    )
+    node2 = node1.model_copy(deep=True)
+    node2.transformer = None
+    node2.sinks = [
+        models.TableDataSink(
+            schema_name="default",
+            table_name="slv_amzn",
+            view_definition="SELECT * FROM {df} WHERE symbol = 'AMZN'",
+        ),
+        models.TableDataSink(
+            schema_name="default",
+            table_name="slv_msft",
+            view_definition="SELECT * FROM {df} WHERE symbol = 'MSFT'",
+        ),
+    ]
+    df1 = node1.execute(spark=spark).toPandas()
+    node2.execute(spark=spark)
+    df2 = node2.sinks[1].read(spark=spark)
+    df3 = spark.read.table("default.slv_msft")
+
+    # Test
+    assert node1.is_view
+    assert node2.is_view
+    assert df1["symbol"].unique().tolist() == ["AAPL"]
+    assert df2["symbol"].unique().tolist() == ["AMZN"]
+    assert df3["symbol"].unique().tolist() == ["MSFT"]
+
+    # Cleanup
+    shutil.rmtree(table_path)
 
 
 def test_bronze():
