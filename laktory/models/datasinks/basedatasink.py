@@ -287,9 +287,7 @@ class DataSinkMergeCDCOptions(BaseModel):
         )
 
         if self.delete_where:
-            logger.info(
-                f"with delete on {self.delete_where}"
-            )
+            logger.info(f"with delete on {self.delete_where}")
 
         # Add internal columns
         source = source.withColumn(
@@ -334,7 +332,9 @@ class DataSinkMergeCDCOptions(BaseModel):
         if self.scd_type == 1:
 
             if self.delete_where:
-                delete_condition = F.coalesce(F.expr(self.source_delete_where), F.lit(False))
+                delete_condition = F.coalesce(
+                    F.expr(self.source_delete_where), F.lit(False)
+                )
                 not_delete_condition = ~delete_condition
 
             # Define merge
@@ -376,9 +376,7 @@ class DataSinkMergeCDCOptions(BaseModel):
 
             # Delete
             if self.delete_where:
-                merge = merge.whenMatchedDelete(
-                    condition=delete_condition
-                )
+                merge = merge.whenMatchedDelete(condition=delete_condition)
 
             logger.info(f"Executing merge...")
             merge.execute()
@@ -393,9 +391,7 @@ class DataSinkMergeCDCOptions(BaseModel):
                 target = spark.read.format("DELTA").load(self.target_path)
             else:
                 target = spark.read.table(self.target_name)
-            upsert_or_delete = source.withColumn(
-                "__to_delete", delete_condition
-            ).join(
+            upsert_or_delete = source.withColumn("__to_delete", delete_condition).join(
                 other=target.withColumn("__to_delete", F.lit(False)),
                 on=[self.hash_cols, self.hash_keys, "__to_delete"],
                 how="leftanti",

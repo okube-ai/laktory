@@ -140,7 +140,9 @@ class TableDataSink(BaseDataSink):
         if self.view_definition is None:
             return None
         if not self._parsed_view_definition:
-            self._parsed_view_definition = BaseChainNodeSQLExpr(expr=self.view_definition)
+            self._parsed_view_definition = BaseChainNodeSQLExpr(
+                expr=self.view_definition
+            )
         return self._parsed_view_definition
 
     # ----------------------------------------------------------------------- #
