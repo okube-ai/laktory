@@ -59,6 +59,10 @@ class Dispatcher:
         """Set resource for each of the resources defined in the stack"""
 
         for k, pl in self.stack.resources.pipelines.items():
+
+            if not pl.options.is_enabled:
+                continue
+
             if pl.dlt is not None:
                 self.resources[pl.dlt.name] = DLTPipelineRunner(
                     dispatcher=self, name=pl.dlt.name
@@ -70,9 +74,13 @@ class Dispatcher:
                 )
 
         for k, pl in self.stack.resources.databricks_dltpipelines.items():
+            if not pl.options.is_enabled:
+                continue
             self.resources[pl.name] = DLTPipelineRunner(dispatcher=self, name=pl.name)
 
         for k, job in self.stack.resources.databricks_jobs.items():
+            if not job.options.is_enabled:
+                continue
             self.resources[job.name] = JobRunner(dispatcher=self, name=job.name)
 
     # ----------------------------------------------------------------------- #

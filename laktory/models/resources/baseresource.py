@@ -1,9 +1,9 @@
 import re
 from typing import Any
+from typing import Union
 from typing import Literal
 from pydantic import AliasChoices
 from pydantic import Field
-from pydantic import ConfigDict
 from pydantic import model_validator
 from pydantic import BaseModel as _BaseModel
 from laktory.models.basemodel import BaseModel
@@ -50,7 +50,7 @@ class ResourceOptions(BaseModel):
     """
 
     # laktory
-    is_enabled: bool = True
+    is_enabled: Union[bool, str] = True
 
     # pulumi + terraform
     depends_on: list[str] = []
@@ -248,7 +248,12 @@ class BaseResource(_BaseModel):
 
                 provider = r.options.provider
                 k0 = f"${{resources.{r.resource_name}}}"
+
                 for _r in r.additional_core_resources:
+
+                    if not (r.options.is_enabled and _r.options.is_enabled):
+                        continue
+
                     if provider:
                         if _r.options.provider is None:
                             _r.options.provider = provider
@@ -258,12 +263,11 @@ class BaseResource(_BaseModel):
                         do += [k0]
                     _r.options.depends_on = do
 
-                    if _r.self_as_core_resources and _r.options.is_enabled:
+                    if _r.self_as_core_resources:
                         resources += [_r]
 
                     for __r in get_additional_resources(_r):
-                        if __r.options.is_enabled:
-                            resources += [__r]
+                        resources += [__r]
 
                 return resources
 

@@ -1,8 +1,8 @@
 # Release History
 
-## [0.5.8] - Unreleased
+## [0.5.10] - Unreleased
 ### Added
-* `is_disabled` option to resources for disabling specific resources for specific environments or configurations.
+* Support for view creation from pipeline node
 * `--version` and `version` CLI commands
 ### Fixed
 * n/a
@@ -11,6 +11,16 @@
 * Introduced `PipelineChild` internal class to manage child/parent relationship
 ### Breaking changes
 * Renamed `dataframe_type` to `dataframe_backend`
+
+## [0.5.9] - 2024-12-20
+### Fixed
+* CDC Merge when records flagged for delete don't exist in target
+
+## [0.5.8] - 2024-12-18
+### Added
+* `is_enabled` option to resources for disabling specific resources for specific environments or configurations.
+* `name_prefix` and `name_suffix` options for DLT pipeline
+* Support for "AVRO", "ORC", "TEXT" and "XML" format for file data source with spark dataframe backend.
 
 ## [0.5.7] - 2024-12-09
 ### Added

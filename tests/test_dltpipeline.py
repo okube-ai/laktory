@@ -22,6 +22,8 @@ def test_pipeline():
         "edition": None,
         "libraries": None,
         "name": "pl-stock-prices",
+        "name_prefix": None,
+        "name_suffix": None,
         "notifications": [],
         "photon": None,
         "serverless": None,
