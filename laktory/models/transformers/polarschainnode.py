@@ -69,7 +69,13 @@ class PolarsChainNodeSQLExpr(BaseChainNodeSQLExpr):
         SQL expression
     """
 
-    pass
+    def eval(self, df, chain_node=None):
+        import polars as pl
+
+        kwargs = {"df": df}
+        for source in self.data_sources:
+            kwargs[f"nodes__{source.node.name}"] = source.read()
+        return pl.SQLContext(frames=kwargs).execute(";".join(self.parsed_expr()))
 
 
 # --------------------------------------------------------------------------- #

@@ -113,11 +113,13 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
 
     def parsed_expr(self, df_id="df", view=False) -> list[str]:
 
+        expr = self.expr
         if view:
             pl_node = self.parent_pipeline_node
 
             if pl_node and pl_node.source:
-                expr = self.expr.replace("{df}", pl_node.source.full_name)
+                expr = expr.replace("{df}", pl_node.source.full_name)
+
             pl = self.parent_pipeline
             if pl:
 
@@ -141,7 +143,7 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
 
             return expr
 
-        expr = self.expr.replace("{df}", df_id)
+        expr = expr.replace("{df}", df_id)
         pattern = r"\{nodes\.(.*?)\}"
         matches = re.findall(pattern, expr)
         for m in matches:

@@ -624,7 +624,9 @@ class BaseDataSink(BaseModel, PipelineChild):
         """
         _view_definition = view_definition
         if _view_definition is None:
-            _view_definition = getattr(self, "view_definition", None)
+            _view_definition = getattr(self, "parsed_view_definition", None)
+            if _view_definition:
+                _view_definition = _view_definition.parsed_expr(view=True)
 
         if _view_definition:
             if self.df_backend == "SPARK":

@@ -113,10 +113,11 @@ def test_execute_view():
             view_definition="SELECT * FROM {df} WHERE symbol = 'MSFT'",
         ),
     ]
+    node2.update_children()
     df1 = node1.execute(spark=spark).toPandas()
     node2.execute(spark=spark)
-    df2 = node2.sinks[1].read(spark=spark)
-    df3 = spark.read.table("default.slv_msft")
+    df2 = node2.sinks[0].read(spark=spark).toPandas()
+    df3 = spark.read.table("default.slv_msft").toPandas()
 
     # Test
     assert node1.is_view
@@ -204,5 +205,6 @@ def test_silver():
 
 if __name__ == "__main__":
     test_execute()
+    test_execute_view()
     test_bronze()
     test_silver()

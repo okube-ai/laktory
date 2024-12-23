@@ -6,6 +6,7 @@ from pydantic import model_validator
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
 from laktory.models.datasources.tabledatasource import TableDataSource
+from laktory.models.transformers.basechainnode import BaseChainNodeSQLExpr
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
@@ -81,6 +82,7 @@ class TableDataSink(BaseDataSink):
     table_type: Literal["TABLE", "VIEW"] = "TABLE"
     view_definition: str = None
     warehouse: Union[Literal["DATABRICKS"], None] = "DATABRICKS"
+    _parsed_view_definition: BaseChainNodeSQLExpr = None
 
     @model_validator(mode="after")
     def set_table_type(self):
@@ -118,6 +120,28 @@ class TableDataSink(BaseDataSink):
     @property
     def _id(self) -> str:
         return self.full_name
+
+    # ----------------------------------------------------------------------- #
+    # Children                                                                #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def child_attribute_names(self):
+        return [
+            "_parsed_view_definition",
+        ]
+
+    # ----------------------------------------------------------------------- #
+    # View Definition                                                         #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def parsed_view_definition(self):
+        if self.view_definition is None:
+            return None
+        if not self._parsed_view_definition:
+            self._parsed_view_definition = BaseChainNodeSQLExpr(expr=self.view_definition)
+        return self._parsed_view_definition
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #

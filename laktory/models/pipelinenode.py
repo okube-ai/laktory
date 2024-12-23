@@ -265,7 +265,7 @@ class PipelineNode(BaseModel, PipelineChild):
     def validate_view(self):
 
         if not self.is_view:
-            return
+            return self
 
         # Validate Source
         if self.source:
@@ -309,6 +309,8 @@ class PipelineNode(BaseModel, PipelineChild):
         # Validate Expectations
         if self.expectations:
             raise ValueError(f"{m}Expectations not supported for a view sink.")
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
@@ -363,6 +365,8 @@ class PipelineNode(BaseModel, PipelineChild):
 
     @property
     def is_view(self) -> bool:
+        if not self.sinks:
+            return False
         is_view = False
         for s in self.sinks:
             if isinstance(s, TableDataSink) and s.table_type == "VIEW":
@@ -685,6 +689,11 @@ class PipelineNode(BaseModel, PipelineChild):
 
         if self.transformer:
             sources += self.transformer.data_sources
+
+        if self.sinks:
+            for s in self.sinks:
+                if getattr(s, "view_definition", None):
+                    sources += s.parsed_view_definition.data_sources
 
         return sources
 
