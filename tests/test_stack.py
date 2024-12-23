@@ -335,8 +335,8 @@ def test_stack_model():
             "databricks_workspacefiles": {},
             "pipelines": {
                 "pl-custom-name": {
+                    "dataframe_backend": None,
                     "databricks_job": None,
-                    "dataframe_type": "SPARK",
                     "dlt": {
                         "access_controls": [
                             {
@@ -378,9 +378,9 @@ def test_stack_model():
                     "name": "pl-stock-prices-ut-stack",
                     "nodes": [
                         {
+                            "dataframe_backend": None,
                             "add_layer_columns": True,
                             "dlt_template": None,
-                            "dataframe_type": "SPARK",
                             "description": None,
                             "drop_duplicates": None,
                             "drop_source_columns": None,
@@ -393,9 +393,9 @@ def test_stack_model():
                             "sinks": None,
                             "root_path": None,
                             "source": {
+                                "dataframe_backend": None,
                                 "as_stream": False,
                                 "broadcast": False,
-                                "dataframe_type": "SPARK",
                                 "drops": None,
                                 "filter": None,
                                 "limit": None,
