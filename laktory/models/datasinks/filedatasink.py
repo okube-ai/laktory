@@ -74,7 +74,7 @@ class FileDataSink(BaseDataSink):
     def merge_and_format(self) -> Any:
 
         if self.mode == "MERGE":
-            if self.format not in ["DELTA"]:
+            if self.format.lower() not in ["delta"]:
                 raise ValueError(
                     "Merge write mode is only supported for 'DELTA' `format`"
                 )
@@ -124,7 +124,7 @@ class FileDataSink(BaseDataSink):
                 f"Writing df as stream {self.format} to {self.path} with mode {mode} and options {_options}"
             )
             query = (
-                df.writeStream.format(self.format)
+                df.writeStream.format(self.format.lower())
                 .outputMode(mode)
                 .trigger(availableNow=True)  # TODO: Add option for trigger?
                 .options(**_options)
@@ -138,7 +138,7 @@ class FileDataSink(BaseDataSink):
             )
             (
                 df.write.mode(mode)
-                .format(self.format)
+                .format(self.format.lower())
                 .options(**_options)
                 .save(self.path)
             )
@@ -167,15 +167,15 @@ class FileDataSink(BaseDataSink):
         if isinstance(df, PolarsLazyFrame):
             df = df.collect()
 
-        if self.format == "CSV":
+        if self.format.lower() == "csv":
             df.write_csv(self.path, **self.write_options)
-        elif self.format == "DELTA":
+        elif self.format.lower() == "delta":
             df.write_delta(self.path, mode=mode, **self.write_options)
-        elif self.format == "EXCEL":
+        elif self.format.lower() == "excel":
             df.write_excel(self.path, **self.write_options)
-        elif self.format == "JSON":
+        elif self.format.lower() == "json":
             df.write_json(self.path, **self.write_options)
-        elif self.format == "PARQUET":
+        elif self.format.lower() == "parquet":
             df.write_parquet(self.path, **self.write_options)
 
     # ----------------------------------------------------------------------- #

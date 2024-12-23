@@ -162,7 +162,7 @@ class FileDataSource(BaseDataSource):
             _mode = "stream"
 
             if _format == "DELTA":
-                reader = spark.readStream.format(_format)
+                reader = spark.readStream.format(_format.lower())
 
             else:
                 reader = spark.readStream.format("cloudFiles")
@@ -182,7 +182,7 @@ class FileDataSource(BaseDataSource):
 
         else:
             _mode = "static"
-            reader = spark.read.format(_format)
+            reader = spark.read.format(_format.lower())
             if self._schema:
                 reader = reader.schema(self._schema)
 

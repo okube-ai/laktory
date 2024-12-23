@@ -62,14 +62,15 @@ def test_dag():
 
     # Test Dag
     assert nx.is_directed_acyclic_graph(dag)
-    assert len(dag.nodes) == 5
-    assert len(dag.edges) == 4
+    assert len(dag.nodes) == 6
+    assert len(dag.edges) == 5
     assert list(nx.topological_sort(dag)) == [
-        "brz_stock_prices",
-        "brz_stock_meta",
-        "slv_stock_meta",
-        "slv_stock_prices",
-        "gld_stock_prices",
+        'brz_stock_prices',
+        'brz_stock_meta',
+        'slv_stock_meta',
+        'slv_stock_prices',
+        'slv_stock_aapl',
+        'gld_stock_prices'
     ]
 
     # Test nodes assignment
@@ -78,6 +79,7 @@ def test_dag():
         "brz_stock_meta",
         "slv_stock_meta",
         "slv_stock_prices",
+        "slv_stock_aapl",
         "gld_stock_prices",
     ]
     assert (
@@ -152,7 +154,7 @@ def test_execute():
     source, source_path = get_source(pl_path)
 
     # Insert a single row
-    source.filter("index=0").write.format("delta").mode("OVERWRITE").save(source_path)
+    source.filter("index=0").write.format("DELTA").mode("OVERWRITE").save(source_path)
     pl.execute(spark)
 
     # Test - Brz Stocks
@@ -221,12 +223,17 @@ def test_execute():
 
     # Test
     assert pl.nodes_dict["brz_stock_prices"].primary_sink.read(spark).count() == 40
+    print(pl.nodes_dict["slv_stock_prices"].primary_sink.read(spark).show())
     assert pl.nodes_dict["slv_stock_prices"].primary_sink.read(spark).count() == 22
     assert (
         pl.nodes_dict["slv_stock_prices"].quarantine_sinks[0].read(spark).count() == 8
     )
     assert pl.nodes_dict["slv_stock_meta"].output_df.count() == 3
     assert pl.nodes_dict["gld_stock_prices"].output_df.count() == 3
+
+    # Test views
+    df = spark.read.table("default.slv_stock_aapl")
+    df.show()
 
     # Cleanup
     shutil.rmtree(pl_path)

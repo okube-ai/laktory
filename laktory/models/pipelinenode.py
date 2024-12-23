@@ -19,6 +19,7 @@ from laktory.models.datasinks import TableDataSink
 from laktory.models.datasources import BaseDataSource
 from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import TableDataSource
+from laktory.models.datasources import PipelineNodeDataSource
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.transformers.polarschain import PolarsChain
 from laktory.models.transformers.polarschainnode import PolarsChainNode
@@ -269,8 +270,8 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Validate Source
         if self.source:
-            if not isinstance(self.source, TableDataSource):
-                raise ValueError("VIEW sink only supports Table Data Source")
+            if not (isinstance(self.source, TableDataSource) or isinstance(self.source, PipelineNodeDataSource)):
+                raise ValueError("VIEW sink only supports Table or Pipeline Node with Table sink Data Source")
 
             if self.source.as_stream:
                 raise ValueError("VIEW sink does not support stream read.")

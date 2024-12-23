@@ -20,6 +20,7 @@ from laktory.types import AnyDataFrame
 
 if TYPE_CHECKING:
     from laktory.models.datasources.basedatasource import BaseDataSource
+    from laktory.models.datasources.tabledatasource import TableDataSource
     from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
 
 
@@ -113,12 +114,22 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
 
     def parsed_expr(self, df_id="df", view=False) -> list[str]:
 
+        from laktory.models.datasources.tabledatasource import TableDataSource
+        from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
+
         expr = self.expr
         if view:
             pl_node = self.parent_pipeline_node
 
             if pl_node and pl_node.source:
-                expr = expr.replace("{df}", pl_node.source.full_name)
+                source = pl_node.source
+                if isinstance(source, TableDataSource):
+                    full_name = source.full_name
+                elif isinstance(source, PipelineNodeDataSource):
+                    full_name = source.sink_table_full_name
+                else:
+                    raise ValueError("VIEW sink only supports Table or Pipeline Node with Table sink data sources")
+                expr = expr.replace("{df}", full_name)
 
             pl = self.parent_pipeline
             if pl:

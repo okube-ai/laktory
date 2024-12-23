@@ -17,10 +17,16 @@ nodes:
     node_name: brz_stock_prices
     as_stream: True
   sinks:
-  - path: {pl_dir}/slv_stock_prices
+  - schema_name: default
+    table_name: slv_stock_prices
+    write_options:
+      path: {pl_dir}/slv_stock_prices_table
     format: DELTA
     mode: APPEND
-  - path: {pl_dir}/slv_stock_prices_quarantine
+  - schema_name: default
+    table_name: slv_stock_prices_quarantine
+    write_options:
+      path: {pl_dir}/slv_stock_prices_quarantine
     format: DELTA
     mode: APPEND
     is_quarantine: True
@@ -50,6 +56,17 @@ nodes:
           node_name: slv_stock_meta
           renames:
             symbol2: symbol
+
+- name: slv_stock_aapl
+  source:
+    node_name: slv_stock_prices
+  sinks:
+  - table_name: slv_stock_aapl
+    schema_name: default
+    table_type: VIEW
+  transformer:
+    nodes:
+      - sql_expr: "SELECT * FROM {df} WHERE symbol = 'AAPL'"
 
 - name: gld_stock_prices
   source:

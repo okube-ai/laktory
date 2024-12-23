@@ -76,6 +76,18 @@ class PipelineNodeDataSource(BaseDataSource):
 
         return pl.nodes_dict[self.node_name]
 
+    @property
+    def sink_table_full_name(self):
+
+        from laktory.models.datasinks.tabledatasink import TableDataSink
+
+        node = self.node
+        if not node.primary_sink:
+            raise ValueError(f"Source node '{self.node_name}' doest not have a sink defined")
+        if not isinstance(node.primary_sink, TableDataSink):
+            raise ValueError(f"Source node '{self.node_name}' sink is not of type `TableDataSink`")
+        return node.primary_sink.full_name
+
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #

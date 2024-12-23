@@ -198,7 +198,7 @@ class TableDataSink(BaseDataSink):
             )
             query = (
                 df.writeStream.outputMode(mode)
-                .format(self.format)
+                .format(self.format.lower())
                 .trigger(availableNow=True)  # TODO: Add option for trigger?
                 .options(**_options)
             ).toTable(self.full_name)
@@ -210,7 +210,7 @@ class TableDataSink(BaseDataSink):
                 f"Writing {self._id} {self.format}  as static with mode {mode} and options {_options}"
             )
             (
-                df.write.format(self.format)
+                df.write.format(self.format.lower())
                 .mode(mode)
                 .options(**_options)
                 .saveAsTable(self.full_name)

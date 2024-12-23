@@ -147,7 +147,7 @@ def read(*args, **kwargs) -> SparkDataFrame:
         return _read(*args, **kwargs)
 
 
-def read_stream(*args, fmt="delta", **kwargs):
+def read_stream(*args, fmt="DELTA", **kwargs):
     """
     When `is_debug()` is `True` read table from storage as stream, else read
     table from pipeline with native Databricks `dlt.read_stream`

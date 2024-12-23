@@ -268,7 +268,7 @@ class DataSinkMergeCDCOptions(BaseModel):
 
         df = spark.createDataFrame(data=[], schema=schema)
 
-        writer = df.write.format("DELTA").mode("OVERWRITE")
+        writer = df.write.format("delta").mode("OVERWRITE")
         if self.target_path:
             writer.save(self.target_path)
         else:
@@ -388,7 +388,7 @@ class DataSinkMergeCDCOptions(BaseModel):
 
             # Only select rows that have been updated
             if self.target_path:
-                target = spark.read.format("DELTA").load(self.target_path)
+                target = spark.read.format("delta").load(self.target_path)
             else:
                 target = spark.read.table(self.target_name)
             upsert_or_delete = source.withColumn("__to_delete", delete_condition).join(
