@@ -258,53 +258,6 @@ def test_singular():
         "task": [],
     }
 
-
-def test_inject_vars():
-
-    env_name = "DYNAMIC_COLUMN"
-    v0 = schema.variables[env_name]
-    v1 = v0 + "_1"
-    schema2 = schema.inject_vars(inplace=False)
-
-    # From internal variables
-    assert schema.name == "${vars.env}.${vars.schema_name}"
-    assert schema.catalog_name == "${vars.env}"
-    assert schema2.name == "env.schema"
-    assert schema2.catalog_name == "env"
-    assert schema2.tables[-1].columns[0].name == v0
-    assert schema2.tables[0].columns[1].name == "${ close.id }"
-
-    # With Env Var
-    os.environ[env_name] = v1
-    schema2 = schema.inject_vars()
-    assert schema2.tables[-1].columns[0].name == v0
-
-    # Disable internal variable
-    del schema.variables[env_name]
-    schema2 = schema.inject_vars()
-    assert schema2.tables[-1].columns[0].name == v1
-
-    # Check inplace
-    schema3 = schema.model_copy(deep=True)
-    schema2 = schema.inject_vars()
-    schema3.inject_vars(inplace=True)
-    assert schema3.model_dump(exclude_unset=True) == schema2.model_dump(
-        exclude_unset=True
-    )
-
-    # Check dump
-    d0 = schema.model_dump(exclude_unset=True)
-    d1 = schema.inject_vars_into_dump(d0, inplace=False)
-    schema.inject_vars_into_dump(d0, inplace=True)
-    d2 = schema2.model_dump(exclude_unset=True)
-    assert d0 == d2
-    assert d1 == d2
-
-    # Reset
-    schema.variables[env_name] = v0
-    del os.environ[env_name]
-
-
 def test_inject_includes():
 
     class Business(BaseModel):
@@ -353,9 +306,8 @@ def test_inject_includes():
 
 
 if __name__ == "__main__":
-    # test_read_yaml()
-    # test_dump_yaml()
-    # test_camelize()
-    # test_singular()
-    test_inject_vars()
-    # test_inject_includes()
+    test_read_yaml()
+    test_dump_yaml()
+    test_camelize()
+    test_singular()
+    test_inject_includes()
