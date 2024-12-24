@@ -68,6 +68,15 @@ nodes:
     nodes:
       - sql_expr: "SELECT * FROM {df} WHERE symbol = 'AAPL'"
 
+- name: slv_stock_msft
+  source:
+    node_name: slv_stock_prices
+  sinks:
+  - table_name: slv_stock_msft
+    schema_name: default
+    table_type: VIEW
+    view_definition: "SELECT * FROM {nodes.slv_stock_prices} WHERE symbol = 'MSFT'"
+
 - name: gld_stock_prices
   source:
     node_name: slv_stock_prices

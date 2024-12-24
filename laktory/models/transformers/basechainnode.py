@@ -143,13 +143,13 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
                         raise ValueError(
                             f"Node '{m}' is not available from pipeline '{pl.name}'"
                         )
-                    sink = pl.nodes_dict[m]
+                    sink = pl.nodes_dict[m].primary_sink
                     if not isinstance(sink, TableDataSink):
                         raise ValueError(
                             f"Node '{m}' used in view creation does not have a Table sink"
                         )
                     expr = expr.replace(
-                        "{nodes." + m + "}", pl.nodes_dict[m].primary_sink.full_name
+                        "{nodes." + m + "}", sink.full_name
                     )
 
             return expr

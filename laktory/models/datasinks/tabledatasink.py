@@ -232,6 +232,15 @@ class TableDataSink(BaseDataSink):
             )
             spark.sql(f"DROP {self.table_type} IF EXISTS {self.full_name}")
 
+            path = self.write_options.get("path", None)
+            if path and os.path.exists(path):
+                is_dir = os.path.isdir(path)
+                if is_dir:
+                    logger.info(f"Deleting data dir {path}")
+                    shutil.rmtree(path)
+                else:
+                    logger.info(f"Deleting data file {path}")
+                    os.remove(path)
         else:
             raise NotImplementedError(
                 f"Warehouse '{self.warehouse}' is not yet supported."

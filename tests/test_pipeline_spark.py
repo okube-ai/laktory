@@ -223,7 +223,6 @@ def test_execute():
 
     # Test
     assert pl.nodes_dict["brz_stock_prices"].primary_sink.read(spark).count() == 40
-    print(pl.nodes_dict["slv_stock_prices"].primary_sink.read(spark).show())
     assert pl.nodes_dict["slv_stock_prices"].primary_sink.read(spark).count() == 22
     assert (
         pl.nodes_dict["slv_stock_prices"].quarantine_sinks[0].read(spark).count() == 8
@@ -232,8 +231,8 @@ def test_execute():
     assert pl.nodes_dict["gld_stock_prices"].output_df.count() == 3
 
     # Test views
-    df = spark.read.table("default.slv_stock_aapl")
-    df.show()
+    assert spark.read.table("default.slv_stock_aapl").count() == 10
+    assert spark.read.table("default.slv_stock_msft").count() == 2
 
     # Cleanup
     shutil.rmtree(pl_path)
@@ -315,9 +314,9 @@ def test_sql_join():
 
 
 if __name__ == "__main__":
-    test_dag()
-    test_children()
-    test_paths()
+    # test_dag()
+    # test_children()
+    # test_paths()
     test_execute()
-    test_execute_node()
-    test_sql_join()
+    # test_execute_node()
+    # test_sql_join()
