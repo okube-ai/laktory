@@ -289,6 +289,13 @@ class BaseModel(_BaseModel):
 
         # User-defined variables
         for k, v in vars.items():
+
+            # Recursive replace (for vars defined with env vars or previous variables)
+            if isinstance(v, str) and "${vars." in v:
+                for _k in patterns:
+                    if _k.lower() in v.lower():
+                        v = v.lower().replace(_k.lower(), patterns[_k])
+
             _k = k
             if not is_pattern(_k):
                 _k = f"${{vars.{_k}}}"
