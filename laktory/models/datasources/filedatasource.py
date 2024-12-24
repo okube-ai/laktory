@@ -85,13 +85,13 @@ class FileDataSource(BaseDataSource):
     @model_validator(mode="after")
     def options(self) -> Any:
 
-        if self.dataframe_type == "SPARK":
+        if self.dataframe_backend == "SPARK":
             if self.format in [
                 "EXCEL",
             ]:
                 raise ValueError(f"'{self.format}' format is not supported with Spark")
 
-        elif self.dataframe_type == "POLARS":
+        elif self.df_backend == "POLARS":
             if self.format in [
                 "AVRO",
                 "BINARYFILE",
@@ -162,7 +162,7 @@ class FileDataSource(BaseDataSource):
             _mode = "stream"
 
             if _format == "DELTA":
-                reader = spark.readStream.format(_format)
+                reader = spark.readStream.format(_format.lower())
 
             else:
                 reader = spark.readStream.format("cloudFiles")
@@ -182,7 +182,7 @@ class FileDataSource(BaseDataSource):
 
         else:
             _mode = "static"
-            reader = spark.read.format(_format)
+            reader = spark.read.format(_format.lower())
             if self._schema:
                 reader = reader.schema(self._schema)
 

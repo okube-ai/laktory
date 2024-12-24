@@ -50,7 +50,6 @@ class PipelineNodeDataSource(BaseDataSource):
     """
 
     node_name: Union[str, None]
-    node: Any = Field(None, exclude=True)  # Add suggested type?
     # include_failed_expectations: bool = True  # TODO: Implement
     # include_passed_expectations: bool = True  # TODO: Implement
 
@@ -61,6 +60,37 @@ class PipelineNodeDataSource(BaseDataSource):
     @property
     def _id(self) -> str:
         return self.node_name
+
+    @property
+    def node(self):
+
+        pl = self.parent_pipeline
+
+        if pl is None:
+            raise ValueError(f"Source '{self.node_name}' is not attached to a pipeline")
+
+        if self.node_name not in pl.sorted_node_names:
+            raise ValueError(
+                f"Node '{self.node_name}' does not exists in pipeline '{pl.name}'"
+            )
+
+        return pl.nodes_dict[self.node_name]
+
+    @property
+    def sink_table_full_name(self):
+
+        from laktory.models.datasinks.tabledatasink import TableDataSink
+
+        node = self.node
+        if not node.primary_sink:
+            raise ValueError(
+                f"Source node '{self.node_name}' doest not have a sink defined"
+            )
+        if not isinstance(node.primary_sink, TableDataSink):
+            raise ValueError(
+                f"Source node '{self.node_name}' sink is not of type `TableDataSink`"
+            )
+        return node.primary_sink.full_name
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #

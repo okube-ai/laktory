@@ -69,21 +69,13 @@ class PolarsChainNodeSQLExpr(BaseChainNodeSQLExpr):
         SQL expression
     """
 
-    def parsed_expr(self, df_id="df") -> str:
-        expr = self.expr.replace("{df}", df_id)
-        pattern = r"\{nodes\.(.*?)\}"
-        matches = re.findall(pattern, expr)
-        for m in matches:
-            expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
-        return expr
-
     def eval(self, df, chain_node=None):
         import polars as pl
 
         kwargs = {"df": df}
-        for source in self.node_data_sources:
+        for source in self.data_sources:
             kwargs[f"nodes__{source.node.name}"] = source.read()
-        return pl.SQLContext(frames=kwargs).execute(self.parsed_expr())
+        return pl.SQLContext(frames=kwargs).execute(";".join(self.parsed_expr()))
 
 
 # --------------------------------------------------------------------------- #
@@ -176,16 +168,15 @@ class PolarsChainNode(BaseChainNode):
     ```
     """
 
-    dataframe_type: Literal["POLARS"] = "POLARS"
+    dataframe_backend: Literal["POLARS"] = "POLARS"
     func_args: list[Union[Any]] = []
     func_kwargs: dict[str, Union[Any]] = {}
     func_name: Union[str, None] = None
     sql_expr: Union[str, None] = None
     with_column: Union[ChainNodeColumn, None] = None
     with_columns: Union[list[ChainNodeColumn], None] = []
-    _parent: "PolarsChain" = None
-    _parsed_func_args: list = None
-    _parsed_func_kwargs: dict = None
+    _parsed_func_args: list[PolarsChainNodeFuncArg] = None
+    _parsed_func_kwargs: dict[str, PolarsChainNodeFuncArg] = None
     _parsed_sql_expr: PolarsChainNodeSQLExpr = None
 
     @property
@@ -250,7 +241,7 @@ class PolarsChainNode(BaseChainNode):
                 logger.info(
                     f"Building column {column.name} as {column.expr or column.sql_expr}"
                 )
-                _col = column.eval(udfs=udfs, dataframe_type="POLARS")
+                _col = column.eval(udfs=udfs, dataframe_backend="POLARS")
                 if column.type:
                     _col = _col.cast(DATATYPES_MAP[column.type])
                 df = df.with_columns(**{column.name: _col})

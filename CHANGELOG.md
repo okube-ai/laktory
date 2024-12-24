@@ -2,13 +2,15 @@
 
 ## [0.5.10] - Unreleased
 ### Added
-* n/a
+* Support for view creation from pipeline node
+* `--version` and `version` CLI commands
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Replaced `dataframe_backend` propagation with dynamic parent lookup
+* Introduced `PipelineChild` internal class to manage child/parent relationship
 ### Breaking changes
-* n/a
+* Renamed `dataframe_type` to `dataframe_backend`
 
 ## [0.5.9] - 2024-12-20
 ### Fixed

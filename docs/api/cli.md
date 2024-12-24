@@ -2,6 +2,10 @@
 
 ---
 
+::: laktory.cli.version
+
+---
+
 ::: laktory.cli.preview
 
 ---

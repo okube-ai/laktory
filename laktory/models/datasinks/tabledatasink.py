@@ -2,9 +2,11 @@ import os
 import shutil
 from typing import Literal
 from typing import Union
+from pydantic import model_validator
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.spark import SparkDataFrame
 from laktory.models.datasources.tabledatasource import TableDataSource
+from laktory.models.transformers.basechainnode import BaseChainNodeSQLExpr
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
@@ -21,11 +23,15 @@ class TableDataSink(BaseDataSink):
         Path to which the checkpoint file for streaming dataframe should
         be written.
     catalog_name:
-        Name of the catalog of the source table
+        Name of the catalog of the sink table
     table_name:
-        Name of the source table
+        Name of the sink table
+    table_type:
+        Type of table. "TABLE" and "VIEW" are currently supported.
     schema_name:
         Name of the schema of the source table
+    view_definition:
+        View definition of "VIEW" `table_type` is selected.
     warehouse:
         Type of warehouse to which the table should be published
 
@@ -73,7 +79,16 @@ class TableDataSink(BaseDataSink):
     format: Literal["DELTA", "PARQUET"] = "DELTA"
     schema_name: Union[str, None] = None
     table_name: Union[str, None]
+    table_type: Literal["TABLE", "VIEW"] = "TABLE"
+    view_definition: str = None
     warehouse: Union[Literal["DATABRICKS"], None] = "DATABRICKS"
+    _parsed_view_definition: BaseChainNodeSQLExpr = None
+
+    @model_validator(mode="after")
+    def set_table_type(self):
+        if self.view_definition is not None:
+            self.table_type = "VIEW"
+        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -107,6 +122,30 @@ class TableDataSink(BaseDataSink):
         return self.full_name
 
     # ----------------------------------------------------------------------- #
+    # Children                                                                #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def child_attribute_names(self):
+        return [
+            "_parsed_view_definition",
+        ]
+
+    # ----------------------------------------------------------------------- #
+    # View Definition                                                         #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def parsed_view_definition(self):
+        if self.view_definition is None:
+            return None
+        if not self._parsed_view_definition:
+            self._parsed_view_definition = BaseChainNodeSQLExpr(
+                expr=self.view_definition
+            )
+        return self._parsed_view_definition
+
+    # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
@@ -124,6 +163,12 @@ class TableDataSink(BaseDataSink):
             raise NotImplementedError(
                 f"Warehouse '{self.warehouse}' is not yet supported."
             )
+
+    def _write_spark_view(self, view_definition: str, spark) -> None:
+        logger.info(f"Creating view {self.full_name} AS {view_definition}")
+        df = spark.sql(f"CREATE OR REPLACE VIEW {self.full_name} AS {view_definition}")
+        if self.parent_pipeline_node:
+            self.parent_pipeline_node._output_df = df
 
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
 
@@ -153,7 +198,7 @@ class TableDataSink(BaseDataSink):
             )
             query = (
                 df.writeStream.outputMode(mode)
-                .format(self.format)
+                .format(self.format.lower())
                 .trigger(availableNow=True)  # TODO: Add option for trigger?
                 .options(**_options)
             ).toTable(self.full_name)
@@ -165,7 +210,7 @@ class TableDataSink(BaseDataSink):
                 f"Writing {self._id} {self.format}  as static with mode {mode} and options {_options}"
             )
             (
-                df.write.format(self.format)
+                df.write.format(self.format.lower())
                 .mode(mode)
                 .options(**_options)
                 .saveAsTable(self.full_name)
@@ -181,10 +226,21 @@ class TableDataSink(BaseDataSink):
         """
         # Remove Data
         if self.warehouse == "DATABRICKS":
+
             logger.info(
-                f"Dropping table {self.full_name}",
+                f"Dropping {self.table_type} {self.full_name}",
             )
-            spark.sql(f"DROP TABLE IF EXISTS {self.full_name}")
+            spark.sql(f"DROP {self.table_type} IF EXISTS {self.full_name}")
+
+            path = self.write_options.get("path", None)
+            if path and os.path.exists(path):
+                is_dir = os.path.isdir(path)
+                if is_dir:
+                    logger.info(f"Deleting data dir {path}")
+                    shutil.rmtree(path)
+                else:
+                    logger.info(f"Deleting data file {path}")
+                    os.remove(path)
         else:
             raise NotImplementedError(
                 f"Warehouse '{self.warehouse}' is not yet supported."
@@ -221,7 +277,6 @@ class TableDataSink(BaseDataSink):
         if as_stream:
             source.as_stream = as_stream
 
-        if self._parent:
-            source.dataframe_type = self._parent.dataframe_type
+        source.parent = self.parent
 
         return source

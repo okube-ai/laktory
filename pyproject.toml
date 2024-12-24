@@ -56,7 +56,6 @@ pulumi = [
 
 # DataFrame
 polars = [
-#    "great_expectations",
     "deltalake",
     "polars>=1.0",
     "sqlparse",
@@ -68,6 +67,7 @@ spark = [
 
 # Orchestrators
 databricks = [
+    "databricks-connect",
     "databricks-sdk",
 ]
 
@@ -86,6 +86,7 @@ dev = [
 # Test
 test = [
 #    "delta-spark",
+    "databricks-sdk",
     "pandas",
     "pytest",
     "pytest-cov",

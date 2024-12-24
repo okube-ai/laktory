@@ -46,17 +46,17 @@ gld_target = pd.DataFrame(
 )
 
 
-def test_df_type():
+def test_df_backend():
 
     pl, _ = get_pl()
 
     # Check dataframe type assignment
-    assert pl.dataframe_type == "POLARS"
+    assert pl.df_backend == "POLARS"
     for node in pl.nodes:
-        assert node.dataframe_type == "POLARS"
-        assert node.source.dataframe_type == "POLARS"
-        for s in node.get_sources():
-            assert s.dataframe_type == "POLARS"
+        assert node.df_backend == "POLARS"
+        assert node.source.df_backend == "POLARS"
+        for s in node.data_sources:
+            assert s.df_backend == "POLARS"
 
 
 def test_execute():
@@ -67,6 +67,8 @@ def test_execute():
     pl.execute()
 
     # Test - Brz Stocks
+    print(pl.nodes_dict["brz_stock_prices"].primary_sink.as_source())
+    print(pl.nodes_dict["brz_stock_prices"].primary_sink.as_source().parent)
     df = pl.nodes_dict["brz_stock_prices"].primary_sink.read().collect()
     assert df.columns == ["name", "description", "producer", "data", "_bronze_at"]
     assert df.height == 80
@@ -125,7 +127,7 @@ def test_sql_join():
     """
 
     # Execute
-    pl.execute(spark)
+    pl.execute()
 
     # Test
     df = node.primary_sink.read().collect()
@@ -145,6 +147,6 @@ def test_sql_join():
 
 
 if __name__ == "__main__":
-    test_df_type()
+    # test_df_backend()
     test_execute()
-    test_sql_join()
+    # test_sql_join()

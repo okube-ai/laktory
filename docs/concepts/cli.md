@@ -14,6 +14,9 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 
 ### commands
 
+#### version
+`laktory version` returns CLI version and installed dependencies.
+
 #### quickstart
 `laktory quickstart` setup a working example of a deployable stack that you can use as a baseline. See [Quickstart](/quickstart) for more details.
 

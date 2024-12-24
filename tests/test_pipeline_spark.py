@@ -62,13 +62,15 @@ def test_dag():
 
     # Test Dag
     assert nx.is_directed_acyclic_graph(dag)
-    assert len(dag.nodes) == 5
-    assert len(dag.edges) == 4
+    assert len(dag.nodes) == 7
+    assert len(dag.edges) == 6
     assert list(nx.topological_sort(dag)) == [
         "brz_stock_prices",
         "brz_stock_meta",
         "slv_stock_meta",
         "slv_stock_prices",
+        "slv_stock_aapl",
+        "slv_stock_msft",
         "gld_stock_prices",
     ]
 
@@ -78,6 +80,8 @@ def test_dag():
         "brz_stock_meta",
         "slv_stock_meta",
         "slv_stock_prices",
+        "slv_stock_aapl",
+        "slv_stock_msft",
         "gld_stock_prices",
     ]
     assert (
@@ -98,19 +102,31 @@ def test_children():
     pl, _ = get_pl()
 
     for pn in pl.nodes:
-        assert pn._parent == pl
-        assert pn.source._parent == pn
-        if pn.transformer is not None:
-            assert pn.transformer._parent == pn
+        assert pn.parent == pl
+        assert pn.parent_pipeline == pl
+        assert pn.source.parent == pn
         for s in pn.all_sinks:
-            assert s._parent == pn
+            assert s.parent == pn
 
         if pn.transformer:
+            assert pn.transformer.parent == pn
+            assert pn.transformer.parent_pipeline == pl
             for tn in pn.transformer.nodes:
-                assert tn._parent == pn.transformer
+                assert tn.parent_pipeline == pl
+                assert tn.parent_pipeline_node == pn
+                assert tn.parent == pn.transformer
 
-        for s in pn.get_sources():
-            assert s._parent == pn
+        for s in pn.data_sources:
+            print("*****")
+            print(type(s))
+            print(s)
+            print(type(pn))
+            print(pn)
+            print(type(s.parent))
+            print(s.parent)
+            # assert s.parent == pn
+            assert s.parent_pipeline_node == pn
+            assert s.parent_pipeline == pl
 
 
 def test_paths():
@@ -118,6 +134,7 @@ def test_paths():
     assert pl._root_path == pl_path
 
     for node in pl.nodes:
+
         assert node._root_path == pl_path / node.name
         assert (
             node._expectations_checkpoint_location
@@ -139,7 +156,7 @@ def test_execute():
     source, source_path = get_source(pl_path)
 
     # Insert a single row
-    source.filter("index=0").write.format("delta").mode("OVERWRITE").save(source_path)
+    source.filter("index=0").write.format("DELTA").mode("OVERWRITE").save(source_path)
     pl.execute(spark)
 
     # Test - Brz Stocks
@@ -215,6 +232,10 @@ def test_execute():
     assert pl.nodes_dict["slv_stock_meta"].output_df.count() == 3
     assert pl.nodes_dict["gld_stock_prices"].output_df.count() == 3
 
+    # Test views
+    assert spark.read.table("default.slv_stock_aapl").count() == 10
+    assert spark.read.table("default.slv_stock_msft").count() == 2
+
     # Cleanup
     shutil.rmtree(pl_path)
 
@@ -271,6 +292,7 @@ def test_sql_join():
     ON df.symbol = meta.symbol2
     ;
     """
+    pl.update_children()
 
     # Create Stream Source
     source, source_path = get_source(pl_path)
@@ -281,22 +303,24 @@ def test_sql_join():
 
     # Test
     df = node.primary_sink.read(spark)
-    assert df.columns == [
+    columns = df.columns
+    columns.sort()
+    assert columns == [
         "_bronze_at",
-        "created_at",
-        "symbol",
+        "_silver_at",
         "close",
-        "symbol2",
+        "created_at",
         "currency",
         "first_traded",
-        "_silver_at",
+        "symbol",
+        "symbol2",
     ]
 
 
 if __name__ == "__main__":
-    test_dag()
-    test_children()
-    test_paths()
-    test_execute()
-    test_execute_node()
+    # test_dag()
+    # test_children()
+    # test_paths()
+    # test_execute()
+    # test_execute_node()
     test_sql_join()

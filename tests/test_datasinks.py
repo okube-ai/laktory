@@ -1,9 +1,12 @@
 import os
 import shutil
+import uuid
+
 import pytest
+from pathlib import Path
+import pyspark.sql.functions as F
 from pyspark.errors import AnalysisException
 from pyspark.errors import IllegalArgumentException
-import polars as pl
 
 from laktory.models import TableDataSink
 from laktory.models import FileDataSink
@@ -137,7 +140,7 @@ def test_file_data_sink_polars_parquet():
 
     # Read back
     source = sink.as_source()
-    source.dataframe_type = "POLARS"
+    source.dataframe_backend = "POLARS"
     df = source.read(filepath).collect()
 
     # Test
@@ -168,7 +171,7 @@ def test_file_data_sink_polars_delta():
 
     # Read back
     source = sink.as_source()
-    source.dataframe_type = "POLARS"
+    source.dataframe_backend = "POLARS"
     df = source.read().collect()
 
     # Test
@@ -184,19 +187,89 @@ def test_table_data_sink():
 
     # Write as overwrite
     sink = TableDataSink(
-        catalog_name="hive_metastore",
         schema_name="default",
         table_name="slv_stock_prices_sink",
         mode="OVERWRITE",
     )
-    assert sink._id == "hive_metastore.default.slv_stock_prices_sink"
-    assert sink._uuid == "e2c5cef7-9288-a1e5-050f-e4660ad1176b"
-    assert sink.full_name == "hive_metastore.default.slv_stock_prices_sink"
+    assert sink._id == "default.slv_stock_prices_sink"
+    assert sink._uuid == "65e2c312-188a-f4e2-3d49-d9f15bec2956"
+    assert sink.full_name == "default.slv_stock_prices_sink"
     assert sink.format == "DELTA"
     assert sink.mode == "OVERWRITE"
 
-    # TODO: Test write using spark sessions on Databricks
-    # source.write(df_slv)
+    # Write
+    sink.write(df_slv)
+
+    # Read back
+    df = sink.as_source().read(spark=spark)
+
+    # Test
+    assert df.count() == df_slv.count()
+    assert df.columns == df_slv.columns
+
+    # Cleanup
+    sink.purge(spark=spark)
+
+
+def test_view_data_sink():
+
+    # Create table
+    table_path = Path(paths.tmp) / "hive" / f"slv_{str(uuid.uuid4())}"
+    (
+        df_slv.write.mode("OVERWRITE")
+        .option("path", table_path)
+        .saveAsTable("default.slv")
+    )
+
+    # View Definition
+    vd = "SELECT * FROM default.slv WHERE symbol = 'AAPL'"
+
+    # Create Sinks
+    sink1 = TableDataSink(
+        schema_name="default",
+        table_name="slv_aapl",
+        table_type="VIEW",
+    )
+    sink2 = TableDataSink(
+        schema_name="default",
+        table_name="slv_aapl2",
+        view_definition=vd,
+    )
+
+    # Write
+    sink1.write(view_definition=vd, spark=spark)
+    sink2.write(spark=spark)
+
+    # Read back
+    df1 = sink1.as_source().read(spark=spark)
+    df2 = sink2.as_source().read(spark=spark)
+
+    # Read Metastore
+    df_tables = spark.sql("SHOW TABLES").toPandas()
+
+    # Test
+    assert sink1._id == "default.slv_aapl"
+    assert sink1._uuid == "c8bc9f07-7611-cb73-c3b1-3cb69a5f3eb0"
+    assert sink1.full_name == "default.slv_aapl"
+    assert sink1.table_type == "VIEW"
+    assert sink2._id == "default.slv_aapl2"
+    assert sink2.full_name == "default.slv_aapl2"
+    assert sink2.table_type == "VIEW"
+
+    # Read Back
+    _df = df_slv.filter(F.col("symbol") == "AAPL")
+    assert df1.count() == _df.count()
+    assert df1.columns == _df.columns
+    assert df2.count() == _df.count()
+    assert df2.columns == _df.columns
+    assert "slv_aapl" in df_tables["tableName"].to_list()
+    assert "slv_aapl2" in df_tables["tableName"].to_list()
+
+    # Cleanup
+    sink1.purge(spark=spark)
+    sink2.purge(spark=spark)
+    if os.path.exists(table_path):
+        shutil.rmtree(table_path)
 
 
 if __name__ == "__main__":
@@ -206,3 +279,4 @@ if __name__ == "__main__":
     test_file_data_sink_polars_parquet()
     test_file_data_sink_polars_delta()
     test_table_data_sink()
+    test_view_data_sink()

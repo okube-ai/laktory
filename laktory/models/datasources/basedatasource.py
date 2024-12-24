@@ -5,9 +5,9 @@ from pydantic import model_validator
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.constants import DEFAULT_DFTYPE
 from laktory.spark import SparkDataFrame
 from laktory.spark import is_spark_dataframe
+from laktory.models.pipelinechild import PipelineChild
 from laktory.polars import PolarsDataFrame
 from laktory.polars import is_polars_dataframe
 from laktory.types import AnyDataFrame
@@ -43,7 +43,7 @@ class Watermark(BaseModel):
     threshold: str
 
 
-class BaseDataSource(BaseModel):
+class BaseDataSource(BaseModel, PipelineChild):
     """
     Base class for building data source
 
@@ -53,7 +53,7 @@ class BaseDataSource(BaseModel):
         If `True`source is read as a streaming DataFrame.
     broadcast:
         If `True` DataFrame is broadcasted
-    dataframe_type:
+    dataframe_backend:
         Type of dataframe
     drops:
         List of columns to drop
@@ -70,7 +70,7 @@ class BaseDataSource(BaseModel):
 
     as_stream: bool = False
     broadcast: Union[bool, None] = False
-    dataframe_type: Literal["SPARK", "POLARS"] = DEFAULT_DFTYPE
+    dataframe_backend: Literal["SPARK", "POLARS"] = None
     drops: Union[list, None] = None
     filter: Union[str, None] = None
     limit: Union[int, None] = None
@@ -79,20 +79,19 @@ class BaseDataSource(BaseModel):
     sample: Union[DataFrameSample, None] = None
     selects: Union[list[str], dict[str, str], None] = None
     watermark: Union[Watermark, None] = None
-    _parent: "PipelineNode" = None
 
     @model_validator(mode="after")
     def options(self) -> Any:
 
         # Overwrite Dataframe type if mock dataframe is provided
         if is_spark_dataframe(self.mock_df):
-            self.dataframe_type = "SPARK"
+            self.dataframe_backend = "SPARK"
         elif is_polars_dataframe(self.mock_df):
-            self.dataframe_type = "POLARS"
+            self.dataframe_backend = "POLARS"
 
-        if self.dataframe_type == "SPARK":
+        if self.df_backend == "SPARK":
             pass
-        elif self.dataframe_type == "POLARS":
+        elif self.df_backend == "POLARS":
             if self.as_stream:
                 raise ValueError("Polars DataFrames don't support streaming read.")
             if self.watermark:
@@ -107,22 +106,19 @@ class BaseDataSource(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @property
-    def user_dftype(self):
-        if "dataframe_type" in self.model_fields_set:
-            return self.dataframe_type
-        return None
-
-    @property
     def _id(self):
         return str(self.df)
 
     @property
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, data source is used in the context of a DLT pipeline"""
-        is_orchestrator_dlt = False
-        if self._parent and self._parent.is_orchestrator_dlt:
-            is_orchestrator_dlt = True
-        return is_orchestrator_dlt
+
+        pl = self.parent_pipeline
+
+        if pl is None:
+            return False
+
+        return pl.is_orchestrator_dlt
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
@@ -144,14 +140,12 @@ class BaseDataSource(BaseModel):
         """
         if self.mock_df is not None:
             df = self.mock_df
-        elif self.dataframe_type == "SPARK":
+        elif self.df_backend == "SPARK":
             df = self._read_spark(spark=spark)
-        elif self.dataframe_type == "POLARS":
+        elif self.df_backend == "POLARS":
             df = self._read_polars()
         else:
-            raise ValueError(
-                f"DataFrame type '{self.dataframe_type}' is not supported."
-            )
+            raise ValueError(f"DataFrame type '{self.df_backend}' is not supported.")
 
         if is_spark_dataframe(df):
             df = self._post_read_spark(df)

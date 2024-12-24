@@ -69,16 +69,7 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
         SQL expression
     """
 
-    def parsed_expr(self, df_id="df") -> list[str]:
-        expr = self.expr.replace("{df}", df_id)
-        pattern = r"\{nodes\.(.*?)\}"
-        matches = re.findall(pattern, expr)
-        for m in matches:
-            expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
-
-        return expr.split(";")
-
-    def eval(self, df, chain_node=None):
+    def eval(self, df):
 
         # We wanted to use parametrized queries to inject dataframes into the
         # query, but it does not seem to be mature enough to do so:
@@ -92,11 +83,7 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
         _spark = df.sparkSession
 
         # Get pipeline node if executed from pipeline
-        pipeline_node = None
-        if chain_node is not None:
-            spark_chain = chain_node._parent
-            if spark_chain is not None:
-                pipeline_node = spark_chain._parent
+        pipeline_node = self.parent_pipeline_node
 
         # Set df id (to avoid temp view with conflicting names)
         df_id = "df"
@@ -105,7 +92,7 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
 
         # Create views
         df.createOrReplaceTempView(df_id)
-        for source in self.node_data_sources:
+        for source in self.data_sources:
             _df = source.read(spark=_spark)
             _df.createOrReplaceTempView(f"nodes__{source.node.name}")
 
@@ -216,16 +203,15 @@ class SparkChainNode(BaseChainNode):
     ```
     """
 
-    dataframe_type: Literal["SPARK"] = "SPARK"
+    dataframe_backend: Literal["SPARK"] = "SPARK"
     func_args: list[Union[Any]] = []
     func_kwargs: dict[str, Union[Any]] = {}
     func_name: Union[str, None] = None
     sql_expr: Union[str, None] = None
     with_column: Union[ChainNodeColumn, None] = None
     with_columns: Union[list[ChainNodeColumn], None] = []
-    _parent: "SparkChain" = None
-    _parsed_func_args: list = None
-    _parsed_func_kwargs: dict = None
+    _parsed_func_args: list[SparkChainNodeFuncArg] = None
+    _parsed_func_kwargs: dict[str, SparkChainNodeFuncArg] = None
     _parsed_sql_expr: SparkChainNodeSQLExpr = None
 
     @property
@@ -291,7 +277,7 @@ class SparkChainNode(BaseChainNode):
                 logger.info(
                     f"Building column {column.name} as {column.expr or column.sql_expr}"
                 )
-                _col = column.eval(udfs=udfs, dataframe_type="SPARK")
+                _col = column.eval(udfs=udfs, dataframe_backend="SPARK")
                 if column.type:
                     _col = _col.cast(DATATYPES_MAP[column.type])
                 df = df.withColumns({column.name: _col})
@@ -300,7 +286,7 @@ class SparkChainNode(BaseChainNode):
         # From SQL expression
         if self.sql_expr:
             logger.info(f"DataFrame {self.id} as \n{self.sql_expr.strip()}")
-            return self.parsed_sql_expr.eval(df, chain_node=self)
+            return self.parsed_sql_expr.eval(df)
 
         # Get Function
         func_name = self.func_name
