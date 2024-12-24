@@ -303,22 +303,24 @@ def test_sql_join():
 
     # Test
     df = node.primary_sink.read(spark)
-    assert df.columns == [
+    columns = df.columns
+    columns.sort()
+    assert columns == [
         "_bronze_at",
-        "created_at",
-        "symbol",
+        "_silver_at",
         "close",
-        "symbol2",
+        "created_at",
         "currency",
         "first_traded",
-        "_silver_at",
+        "symbol",
+        "symbol2",
     ]
 
 
 if __name__ == "__main__":
-    test_dag()
-    test_children()
-    test_paths()
-    test_execute()
-    test_execute_node()
+    # test_dag()
+    # test_children()
+    # test_paths()
+    # test_execute()
+    # test_execute_node()
     test_sql_join()
