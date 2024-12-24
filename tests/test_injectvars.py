@@ -55,6 +55,7 @@ schema = Schema(
     },
 )
 
+
 def test_inject_stack_vars():
 
     schema2 = schema.inject_vars(inplace=False)
@@ -63,7 +64,14 @@ def test_inject_stack_vars():
     # Test values
     assert schema2.name == "dev.schema"
     assert schema2.catalog_name == "dev"
-    assert col_names == ['${ close.id }', 'dev', '${vars.VAR1}', '${vars.VAR1}_', '${vars.VAR_TWO}', '${vars.VAR1}_']
+    assert col_names == [
+        "${ close.id }",
+        "dev",
+        "${vars.VAR1}",
+        "${vars.VAR1}_",
+        "${vars.VAR_TWO}",
+        "${vars.VAR1}_",
+    ]
 
     # Test inplace
     schema3 = schema.model_copy(deep=True)
@@ -80,6 +88,7 @@ def test_inject_stack_vars():
     d2 = schema2.model_dump(exclude_unset=True)
     assert d0 == d2
     assert d1 == d2
+
 
 def test_inject_env_vars():
 
@@ -98,7 +107,7 @@ def test_inject_env_vars():
     # Test values
     assert schema2.name == "dev.schema"
     assert schema2.catalog_name == "dev"
-    assert col_names == ['${ close.id }', 'dev', 'VAR1', 'VAR1_', 'VAR2', 'VAR1_']
+    assert col_names == ["${ close.id }", "dev", "VAR1", "VAR1_", "VAR2", "VAR1_"]
 
     # Reset
     for k in env_vars:

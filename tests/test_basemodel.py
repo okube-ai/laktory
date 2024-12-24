@@ -5,18 +5,14 @@ from laktory.models import BaseModel
 from laktory.models.resources.databricks import Table
 from laktory.models.resources.databricks import Schema
 from laktory.models.resources.databricks import Job
-from laktory import settings
 from laktory._testing import Paths
 
 paths = Paths(__file__)
 
-env = "env"
-schema_name = "schema"
-
 
 schema = Schema(
-    name="${vars.env}.${vars.schema_name}",
-    catalog_name="${vars.env}",
+    name="my_schema",
+    catalog_name="my_catalog",
     tables=[
         Table(
             name="AAPL",
@@ -24,12 +20,9 @@ schema = Schema(
                 {
                     "name": "open",
                     "type": "double",
-                    # "spark_func_kwargs": {
-                    #     "window_length": 2
-                    # },  # window_length should not be converted to camel
                 },
                 {
-                    "name": "${resources.close.id}",
+                    "name": "close",
                     "type": "double",
                 },
             ],
@@ -38,7 +31,7 @@ schema = Schema(
             name="GOOGL",
             columns=[
                 {
-                    "name": "${vars.dynamic_column}",
+                    "name": "low",
                     "type": "double",
                 },
                 {
@@ -48,13 +41,6 @@ schema = Schema(
             ],
         ),
     ],
-    variables={
-        "DYNAMIC_COLUMN": "low",
-        "env": env,
-        "schema_name": schema_name,
-        # r"\$\{resources\.([\w.]+)\}": r"\1",
-        r"\$\{resources\.([\w.]+)\}": r"${ \1 }",
-    },
 )
 
 
@@ -97,7 +83,7 @@ def test_read_yaml():
 
 def test_dump_yaml():
     assert schema.model_dump_yaml(exclude_unset=True).startswith(
-        "catalog_name: ${vars.env}"
+        "catalog_name: my_catalog"
     )
 
 
@@ -105,10 +91,11 @@ def test_camelize():
     schema._configure_serializer(camel=True)
     dump = schema.model_dump()
     schema._configure_serializer(camel=False)
+    print(dump)
     assert dump == {
         "comment": None,
         "grants": None,
-        "name": "${vars.env}.${vars.schema_name}",
+        "name": "my_schema",
         "tables": [
             {
                 "columns": [
@@ -121,7 +108,7 @@ def test_camelize():
                         "typeJson": None,
                     },
                     {
-                        "name": "${resources.close.id}",
+                        "name": "close",
                         "comment": None,
                         "identity": None,
                         "nullable": None,
@@ -133,9 +120,9 @@ def test_camelize():
                 "grants": None,
                 "name": "AAPL",
                 "properties": None,
-                "catalogName": "${vars.env}",
+                "catalogName": "my_catalog",
                 "dataSourceFormat": "DELTA",
-                "schemaName": "${vars.env}.${vars.schema_name}",
+                "schemaName": "my_schema",
                 "storageCredentialName": None,
                 "storageLocation": None,
                 "tableType": "MANAGED",
@@ -145,7 +132,7 @@ def test_camelize():
             {
                 "columns": [
                     {
-                        "name": "${vars.dynamic_column}",
+                        "name": "low",
                         "comment": None,
                         "identity": None,
                         "nullable": None,
@@ -165,9 +152,9 @@ def test_camelize():
                 "grants": None,
                 "name": "GOOGL",
                 "properties": None,
-                "catalogName": "${vars.env}",
+                "catalogName": "my_catalog",
                 "dataSourceFormat": "DELTA",
-                "schemaName": "${vars.env}.${vars.schema_name}",
+                "schemaName": "my_schema",
                 "storageCredentialName": None,
                 "storageLocation": None,
                 "tableType": "MANAGED",
@@ -176,7 +163,7 @@ def test_camelize():
             },
         ],
         "volumes": [],
-        "catalogName": "${vars.env}",
+        "catalogName": "my_catalog",
         "forceDestroy": True,
     }
 
@@ -257,6 +244,7 @@ def test_singular():
         "parameter": [],
         "task": [],
     }
+
 
 def test_inject_includes():
 

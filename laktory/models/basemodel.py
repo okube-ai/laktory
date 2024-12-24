@@ -291,7 +291,7 @@ class BaseModel(_BaseModel):
         for k, v in vars.items():
 
             # Recursive replace (for vars defined with env vars or previous variables)
-            if "${vars." in v:
+            if isinstance(v, str) and "${vars." in v:
                 for _k in patterns:
                     if _k.lower() in v.lower():
                         v = v.lower().replace(_k.lower(), patterns[_k])
