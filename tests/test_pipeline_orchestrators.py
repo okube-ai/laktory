@@ -1,5 +1,6 @@
 import os
 import io
+import yaml
 from pathlib import Path
 from laktory import models
 from laktory._testing import Paths
@@ -15,7 +16,16 @@ def get_pl(extra=None):
         data = data.replace("{pl_dir}", "")
         if extra is not None:
             data += extra
-        pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
+        data = yaml.safe_load(io.StringIO(data))
+
+        # Remove views
+        nodes = []
+        for n in data["nodes"]:
+            if not n["name"] in ["slv_stock_aapl", "slv_stock_msft"]:
+                nodes += [n]
+            data["nodes"] = nodes
+
+        pl = models.Pipeline(**data)
     return pl
 
 

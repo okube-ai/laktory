@@ -83,9 +83,13 @@ class PipelineNodeDataSource(BaseDataSource):
 
         node = self.node
         if not node.primary_sink:
-            raise ValueError(f"Source node '{self.node_name}' doest not have a sink defined")
+            raise ValueError(
+                f"Source node '{self.node_name}' doest not have a sink defined"
+            )
         if not isinstance(node.primary_sink, TableDataSink):
-            raise ValueError(f"Source node '{self.node_name}' sink is not of type `TableDataSink`")
+            raise ValueError(
+                f"Source node '{self.node_name}' sink is not of type `TableDataSink`"
+            )
         return node.primary_sink.full_name
 
     # ----------------------------------------------------------------------- #

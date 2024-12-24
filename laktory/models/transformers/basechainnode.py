@@ -115,7 +115,9 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
     def parsed_expr(self, df_id="df", view=False) -> list[str]:
 
         from laktory.models.datasources.tabledatasource import TableDataSource
-        from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
+        from laktory.models.datasources.pipelinenodedatasource import (
+            PipelineNodeDataSource,
+        )
 
         expr = self.expr
         if view:
@@ -128,7 +130,9 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
                 elif isinstance(source, PipelineNodeDataSource):
                     full_name = source.sink_table_full_name
                 else:
-                    raise ValueError("VIEW sink only supports Table or Pipeline Node with Table sink data sources")
+                    raise ValueError(
+                        "VIEW sink only supports Table or Pipeline Node with Table sink data sources"
+                    )
                 expr = expr.replace("{df}", full_name)
 
             pl = self.parent_pipeline
@@ -148,9 +152,7 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
                         raise ValueError(
                             f"Node '{m}' used in view creation does not have a Table sink"
                         )
-                    expr = expr.replace(
-                        "{nodes." + m + "}", sink.full_name
-                    )
+                    expr = expr.replace("{nodes." + m + "}", sink.full_name)
 
             return expr
 

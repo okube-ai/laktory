@@ -62,15 +62,16 @@ def test_dag():
 
     # Test Dag
     assert nx.is_directed_acyclic_graph(dag)
-    assert len(dag.nodes) == 6
-    assert len(dag.edges) == 5
+    assert len(dag.nodes) == 7
+    assert len(dag.edges) == 6
     assert list(nx.topological_sort(dag)) == [
-        'brz_stock_prices',
-        'brz_stock_meta',
-        'slv_stock_meta',
-        'slv_stock_prices',
-        'slv_stock_aapl',
-        'gld_stock_prices'
+        "brz_stock_prices",
+        "brz_stock_meta",
+        "slv_stock_meta",
+        "slv_stock_prices",
+        "slv_stock_aapl",
+        "slv_stock_msft",
+        "gld_stock_prices",
     ]
 
     # Test nodes assignment
@@ -80,6 +81,7 @@ def test_dag():
         "slv_stock_meta",
         "slv_stock_prices",
         "slv_stock_aapl",
+        "slv_stock_msft",
         "gld_stock_prices",
     ]
     assert (
@@ -314,9 +316,9 @@ def test_sql_join():
 
 
 if __name__ == "__main__":
-    # test_dag()
-    # test_children()
-    # test_paths()
+    test_dag()
+    test_children()
+    test_paths()
     test_execute()
-    # test_execute_node()
-    # test_sql_join()
+    test_execute_node()
+    test_sql_join()
