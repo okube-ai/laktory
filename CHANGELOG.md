@@ -5,7 +5,7 @@
 * Support for view creation from pipeline node
 * `--version` and `version` CLI commands
 ### Fixed
-* n/a
+* Variables supports referencing environment variables and other variables 
 ### Updated
 * Replaced `dataframe_backend` propagation with dynamic parent lookup
 * Introduced `PipelineChild` internal class to manage child/parent relationship
