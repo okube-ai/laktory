@@ -424,7 +424,7 @@ class JobTaskSQLTask(BaseModel):
     warehouse_id: str
 
 
-class JobTask(BaseModel):
+class JobTaskForEachTaskTask(BaseModel):
     """
     Job Task specifications
 
@@ -501,6 +501,38 @@ class JobTask(BaseModel):
     @classmethod
     def sort_depends_ons(cls, v: list[JobTaskDependsOn]) -> list[JobTaskDependsOn]:
         return sorted(v, key=lambda task: task.task_key)
+
+
+class JobTaskForEachTask(BaseModel):
+    """
+    For Each Task specifications
+
+    Attributes
+    ----------
+    inputs:
+        Array for task to iterate on. This can be a JSON string or a reference to an array parameter.
+    task:
+        Task to run against the inputs list.
+    concurrency:
+        Controls the number of active iteration task runs. Default is 20, maximum allowed is 100.
+    """
+
+    inputs: str
+    task: JobTaskForEachTaskTask
+    concurrency: int = None
+
+
+class JobTask(JobTaskForEachTaskTask):
+    """
+    Job Task specifications
+
+    Attributes
+    ----------
+    for_each_task:
+        For each task configuration
+    """
+
+    for_each_task: JobTaskForEachTask = None
 
 
 class JobTriggerFileArrival(BaseModel):

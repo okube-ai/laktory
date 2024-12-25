@@ -170,6 +170,7 @@ def test_stack_model():
                             "sql_task": None,
                             "task_key": "ingest-metadata",
                             "timeout_seconds": None,
+                            "for_each_task": None,
                         },
                         {
                             "condition_task": None,
@@ -194,6 +195,7 @@ def test_stack_model():
                             "sql_task": None,
                             "task_key": "run-pipeline",
                             "timeout_seconds": None,
+                            "for_each_task": None,
                         },
                     ],
                     "timeout_seconds": None,
@@ -248,6 +250,7 @@ def test_stack_model():
                             "sql_task": None,
                             "task_key": "ingest-metadata",
                             "timeout_seconds": None,
+                            "for_each_task": None,
                         }
                     ],
                     "timeout_seconds": None,

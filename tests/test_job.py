@@ -124,6 +124,7 @@ def test_job_model():
                 "sql_task": None,
                 "task_key": "ingestion",
                 "timeout_seconds": None,
+                "for_each_task": None,
             },
             {
                 "condition_task": None,
@@ -148,6 +149,7 @@ def test_job_model():
                 "sql_task": None,
                 "task_key": "pipeline",
                 "timeout_seconds": None,
+                "for_each_task": None,
             },
             {
                 "condition_task": None,
@@ -176,6 +178,7 @@ def test_job_model():
                 },
                 "task_key": "view",
                 "timeout_seconds": None,
+                "for_each_task": None,
             },
         ],
         "timeout_seconds": None,
