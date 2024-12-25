@@ -86,6 +86,14 @@
 
 ---
 
+::: laktory.models.resources.databricks.job.JobTaskForEachTask
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskForEachTaskTask
+
+---
+
 ::: laktory.models.resources.databricks.job.JobTask
 
 ---
