@@ -1,3 +1,4 @@
+import json
 from typing import Any
 from typing import Literal
 from typing import Union
@@ -510,16 +511,28 @@ class JobTaskForEachTask(BaseModel):
     Attributes
     ----------
     inputs:
-        Array for task to iterate on. This can be a JSON string or a reference to an array parameter.
+        Array for task to iterate on. This can be a JSON string or a reference
+        to an array parameter. Laktory also supports a list input, which wil
+        be serialized.
     task:
         Task to run against the inputs list.
     concurrency:
-        Controls the number of active iteration task runs. Default is 20, maximum allowed is 100.
+        Controls the number of active iteration task runs. Default is 20,
+        maximum allowed is 100.
     """
 
-    inputs: str
+    inputs: Union[str, list]
     task: JobTaskForEachTaskTask
     concurrency: int = None
+
+    @field_validator("inputs")
+    def parse_inputs(cls, v: Union[str, list]) -> str:
+        if isinstance(v, list):
+            v = json.dumps(v)
+
+        v = v.replace("'", '"')
+
+        return v
 
 
 class JobTask(JobTaskForEachTaskTask):
@@ -772,6 +785,26 @@ class Job(BaseModel, PulumiResource, TerraformResource):
         permission_level: CAN_VIEW
       - group_name: role-engineers
         permission_level: CAN_MANAGE_RUN
+    '''
+    job = models.resources.databricks.Job.model_validate_yaml(io.StringIO(job_yaml))
+
+    # Define job with for each task
+    job_yaml = '''
+    name: job-hello
+    tasks:
+      - task_key: hello-loop
+        for_each_task:
+          inputs:
+            - id: 1
+              name: olivier
+            - id: 2
+              name: kubic
+          task:
+            task_key: hello-task
+            notebook_task:
+              notebook_path: /Workspace/Users/olivier.soucy@okube.ai/hello-world
+              base_parameters:
+                input: "{{input}}"
     '''
     job = models.resources.databricks.Job.model_validate_yaml(io.StringIO(job_yaml))
     ```
