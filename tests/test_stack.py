@@ -170,6 +170,7 @@ def test_stack_model():
                             "sql_task": None,
                             "task_key": "ingest-metadata",
                             "timeout_seconds": None,
+                            "for_each_task": None,
                         },
                         {
                             "condition_task": None,
@@ -194,6 +195,7 @@ def test_stack_model():
                             "sql_task": None,
                             "task_key": "run-pipeline",
                             "timeout_seconds": None,
+                            "for_each_task": None,
                         },
                     ],
                     "timeout_seconds": None,
@@ -248,6 +250,7 @@ def test_stack_model():
                             "sql_task": None,
                             "task_key": "ingest-metadata",
                             "timeout_seconds": None,
+                            "for_each_task": None,
                         }
                     ],
                     "timeout_seconds": None,
@@ -1232,7 +1235,7 @@ def test_all_resources():
     from tests.test_cluster_policy import cluster_policy
     from tests.test_directory import directory
     from tests.test_dashboard import dashboard
-    from tests.test_job import job
+    from tests.test_job import job, job_for_each
     from tests.test_pipeline_orchestrators import pl_dlt
     from tests.test_metastore import metastore
     from tests.test_mlflow_experiment import mlexp
@@ -1263,7 +1266,7 @@ def test_all_resources():
             "databricks_clusterpolicies": [cluster_policy],
             "databricks_dashboards": [dashboard],
             "databricks_directories": [directory],
-            "databricks_jobs": [job],
+            "databricks_jobs": [job, job_for_each],
             "databricks_metastores": [metastore],
             "databricks_mlflowexperiments": [mlexp],
             "databricks_mlflowmodels": [mlmodel],

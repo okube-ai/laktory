@@ -4,6 +4,7 @@
 ### Added
 * Support for view creation from pipeline node
 * `--version` and `version` CLI commands
+* Support for `for_each_task` in Databricks job resource
 ### Fixed
 * Variables supports referencing environment variables and other variables 
 ### Updated
