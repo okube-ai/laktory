@@ -267,6 +267,6 @@ def test_job_pulumi():
 
 
 if __name__ == "__main__":
-    # test_job_model()
+    test_job_model()
     test_job_for_each_task()
-    # test_job_pulumi()
+    test_job_pulumi()
