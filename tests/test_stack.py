@@ -170,6 +170,7 @@ def test_stack_model():
                             "sql_task": None,
                             "task_key": "ingest-metadata",
                             "timeout_seconds": None,
+                            "for_each_task": None,
                         },
                         {
                             "condition_task": None,
@@ -194,12 +195,68 @@ def test_stack_model():
                             "sql_task": None,
                             "task_key": "run-pipeline",
                             "timeout_seconds": None,
+                            "for_each_task": None,
                         },
                     ],
                     "timeout_seconds": None,
                     "trigger": None,
                     "webhook_notifications": None,
-                }
+                },
+                "job-disabled": {
+                    "access_controls": [],
+                    "clusters": [],
+                    "continuous": None,
+                    "control_run_state": None,
+                    "description": None,
+                    "email_notifications": None,
+                    "format": None,
+                    "health": None,
+                    "max_concurrent_runs": None,
+                    "max_retries": None,
+                    "min_retry_interval_millis": None,
+                    "name": "job-disabled",
+                    "name_prefix": None,
+                    "name_suffix": None,
+                    "notification_settings": None,
+                    "parameters": [],
+                    "queue": None,
+                    "retry_on_timeout": None,
+                    "run_as": None,
+                    "schedule": None,
+                    "tags": {},
+                    "tasks": [
+                        {
+                            "condition_task": None,
+                            "depends_ons": None,
+                            "description": None,
+                            "email_notifications": None,
+                            "existing_cluster_id": None,
+                            "health": None,
+                            "job_cluster_key": None,
+                            "libraries": None,
+                            "max_retries": None,
+                            "min_retry_interval_millis": None,
+                            "notebook_task": {
+                                "notebook_path": "/jobs/ingest_stock_metadata.py",
+                                "base_parameters": None,
+                                "warehouse_id": None,
+                                "source": None,
+                            },
+                            "notification_settings": None,
+                            "pipeline_task": None,
+                            "retry_on_timeout": None,
+                            "run_if": None,
+                            "run_job_task": None,
+                            "sql_task": None,
+                            "task_key": "ingest-metadata",
+                            "timeout_seconds": None,
+                            "for_each_task": None,
+                        }
+                    ],
+                    "timeout_seconds": None,
+                    "trigger": None,
+                    "webhook_notifications": None,
+                },
             },
             "databricks_metastoredataaccesses": {},
             "databricks_metastores": {},
@@ -259,13 +316,30 @@ def test_stack_model():
                     "spot_instance_policy": None,
                     "tags": None,
                     "warehouse_type": None,
-                }
+                },
+                "warehouse-disabled": {
+                    "cluster_size": "X-Small",
+                    "access_controls": [],
+                    "auto_stop_mins": None,
+                    "channel_name": None,
+                    "enable_photon": None,
+                    "enable_serverless_compute": None,
+                    "instance_profile_arn": None,
+                    "jdbc_url": None,
+                    "max_num_clusters": None,
+                    "min_num_clusters": None,
+                    "name": "disabled",
+                    "num_clusters": None,
+                    "spot_instance_policy": None,
+                    "tags": None,
+                    "warehouse_type": None,
+                },
             },
             "databricks_workspacefiles": {},
             "pipelines": {
                 "pl-custom-name": {
+                    "dataframe_backend": None,
                     "databricks_job": None,
-                    "dataframe_type": "SPARK",
                     "dlt": {
                         "access_controls": [
                             {
@@ -296,6 +370,8 @@ def test_stack_model():
                             }
                         ],
                         "name": "pl-stock-prices-ut-stack",
+                        "name_prefix": None,
+                        "name_suffix": None,
                         "notifications": [],
                         "photon": None,
                         "serverless": None,
@@ -305,9 +381,9 @@ def test_stack_model():
                     "name": "pl-stock-prices-ut-stack",
                     "nodes": [
                         {
+                            "dataframe_backend": None,
                             "add_layer_columns": True,
                             "dlt_template": None,
-                            "dataframe_type": "SPARK",
                             "description": None,
                             "drop_duplicates": None,
                             "drop_source_columns": None,
@@ -320,9 +396,9 @@ def test_stack_model():
                             "sinks": None,
                             "root_path": None,
                             "source": {
+                                "dataframe_backend": None,
                                 "as_stream": False,
                                 "broadcast": False,
-                                "dataframe_type": "SPARK",
                                 "drops": None,
                                 "filter": None,
                                 "limit": None,
@@ -509,11 +585,11 @@ def test_pulumi_stack():
                         }
                     ],
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
             },
             "notebook-external": {
                 "type": "databricks:Notebook",
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
                 "get": {"id": "/Workspace/external"},
             },
             "permissions-notebook-external": {
@@ -524,14 +600,11 @@ def test_pulumi_stack():
                     ],
                     "notebookPath": "${notebook-external.path}",
                 },
-                "options": {
-                    "dependsOn": ["${notebook-external}"],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"dependsOn": ["${notebook-external}"]},
             },
             "warehouse-external": {
                 "type": "databricks:SqlEndpoint",
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
                 "get": {"id": "d2fa41bf94858c4b"},
             },
             "permissions-warehouse-external": {
@@ -542,10 +615,7 @@ def test_pulumi_stack():
                     ],
                     "sqlEndpointId": "${warehouse-external.id}",
                 },
-                "options": {
-                    "dependsOn": ["${warehouse-external}"],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"dependsOn": ["${warehouse-external}"]},
             },
             "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
@@ -553,7 +623,7 @@ def test_pulumi_stack():
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "./tmp-pl-stock-prices-ut-stack.json",
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {"dependsOn": []},
             },
             "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:Permissions",
@@ -566,8 +636,7 @@ def test_pulumi_stack():
                 "options": {
                     "dependsOn": [
                         "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}"
-                    ],
-                    "deleteBeforeReplace": True,
+                    ]
                 },
             },
             "dlt-custom-name": {
@@ -582,11 +651,7 @@ def test_pulumi_stack():
                     "name": "pl-stock-prices-ut-stack",
                     "notifications": [],
                 },
-                "options": {
-                    "provider": "${databricks}",
-                    "dependsOn": [],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"provider": "${databricks}", "dependsOn": []},
             },
             "permissions-dlt-custom-name": {
                 "type": "databricks:Permissions",
@@ -600,7 +665,6 @@ def test_pulumi_stack():
                 "options": {
                     "provider": "${databricks}",
                     "dependsOn": ["${dlt-custom-name}"],
-                    "deleteBeforeReplace": True,
                 },
             },
             "databricks": {
@@ -609,7 +673,7 @@ def test_pulumi_stack():
                     "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
                     "token": "***",
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
             },
         },
         "outputs": {},
@@ -674,11 +738,11 @@ def test_pulumi_stack():
                         }
                     ],
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
             },
             "notebook-external": {
                 "type": "databricks:Notebook",
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
                 "get": {"id": "/Workspace/external"},
             },
             "permissions-notebook-external": {
@@ -689,14 +753,11 @@ def test_pulumi_stack():
                     ],
                     "notebookPath": "${notebook-external.path}",
                 },
-                "options": {
-                    "dependsOn": ["${notebook-external}"],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"dependsOn": ["${notebook-external}"]},
             },
             "warehouse-external": {
                 "type": "databricks:SqlEndpoint",
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
                 "get": {"id": "d2fa41bf94858c4b"},
             },
             "permissions-warehouse-external": {
@@ -707,10 +768,7 @@ def test_pulumi_stack():
                     ],
                     "sqlEndpointId": "${warehouse-external.id}",
                 },
-                "options": {
-                    "dependsOn": ["${warehouse-external}"],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"dependsOn": ["${warehouse-external}"]},
             },
             "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
@@ -718,7 +776,7 @@ def test_pulumi_stack():
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "./tmp-pl-stock-prices-ut-stack.json",
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {"dependsOn": []},
             },
             "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:Permissions",
@@ -731,8 +789,7 @@ def test_pulumi_stack():
                 "options": {
                     "dependsOn": [
                         "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json}"
-                    ],
-                    "deleteBeforeReplace": True,
+                    ]
                 },
             },
             "dlt-custom-name": {
@@ -748,11 +805,7 @@ def test_pulumi_stack():
                     "name": "pl-stock-prices-ut-stack",
                     "notifications": [],
                 },
-                "options": {
-                    "provider": "${databricks}",
-                    "dependsOn": [],
-                    "deleteBeforeReplace": True,
-                },
+                "options": {"provider": "${databricks}", "dependsOn": []},
             },
             "permissions-dlt-custom-name": {
                 "type": "databricks:Permissions",
@@ -766,7 +819,6 @@ def test_pulumi_stack():
                 "options": {
                     "provider": "${databricks}",
                     "dependsOn": ["${dlt-custom-name}"],
-                    "deleteBeforeReplace": True,
                 },
             },
             "databricks": {
@@ -775,7 +827,7 @@ def test_pulumi_stack():
                     "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
                     "token": "***",
                 },
-                "options": {"dependsOn": [], "deleteBeforeReplace": True},
+                "options": {},
             },
         },
         "outputs": {},
@@ -1183,7 +1235,7 @@ def test_all_resources():
     from tests.test_cluster_policy import cluster_policy
     from tests.test_directory import directory
     from tests.test_dashboard import dashboard
-    from tests.test_job import job
+    from tests.test_job import job, job_for_each
     from tests.test_pipeline_orchestrators import pl_dlt
     from tests.test_metastore import metastore
     from tests.test_mlflow_experiment import mlexp
@@ -1214,7 +1266,7 @@ def test_all_resources():
             "databricks_clusterpolicies": [cluster_policy],
             "databricks_dashboards": [dashboard],
             "databricks_directories": [directory],
-            "databricks_jobs": [job],
+            "databricks_jobs": [job, job_for_each],
             "databricks_metastores": [metastore],
             "databricks_mlflowexperiments": [mlexp],
             "databricks_mlflowmodels": [mlmodel],

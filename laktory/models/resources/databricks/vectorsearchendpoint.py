@@ -39,12 +39,13 @@ class VectorSearchEndpoint(BaseModel, PulumiResource, TerraformResource):
     from laktory import models
 
     endpoint = models.resources.databricks.VectorSearchEndpoint(
+        endpoint_type="STANDARD",
         name="default",
     )
     ```
     """
 
-    endpoint_type: Literal["STANDARD"] = "STANDARD"
+    endpoint_type: Literal["STANDARD"] = "STANDARD"  # required
     name: str = None
 
     # ----------------------------------------------------------------------- #

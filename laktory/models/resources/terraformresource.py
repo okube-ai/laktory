@@ -52,6 +52,10 @@ class TerraformResource(BaseResource):
         :
             Terraform-safe model dump
         """
+        # `exclude_unset` should be used instead of exclude_none, but for now
+        # we set default values to facilitate instantiation of models within
+        # other models (permissions in MwsPermissionAssignment for example).
+        # A better approach should be used.
         d = super().model_dump(exclude=self.terraform_excludes, exclude_none=True)
         for k, v in self.terraform_renames.items():
             if k in d:
@@ -59,13 +63,13 @@ class TerraformResource(BaseResource):
 
         # Add options
         for k in ["depends_on", "provider"]:
-            value = self.options.model_dump(exclude_none=True).get(k, None)
+            value = self.options.model_dump(exclude_unset=True).get(k, None)
             if value:
                 d[k] = value
 
         d["lifecycle"] = {}
         for k in ["ignore_changes"]:
-            value = self.options.model_dump(exclude_none=True).get(k, None)
+            value = self.options.model_dump(exclude_unset=True).get(k, None)
             if value:
                 d["lifecycle"][k] = value
         if d["lifecycle"] == {}:

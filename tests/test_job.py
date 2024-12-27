@@ -40,6 +40,25 @@ job = Job(
     },
 )
 
+job_for_each = Job(
+        name="job-hello",
+        tasks=[
+            {
+                "task_key": "hello-loop",
+                "for_each_task": {
+                    "inputs": [{"id": 1, "name": "olivier"}, {"id": 2, "name": "kubic"}],
+                    "task": {
+                        "task_key": "hello-task",
+                        "notebook_task": {
+                            "notebook_path": "Workspace/Users/olivier.soucy@okube.ai/hello-world",
+                            "base_parameters": {"input": "{{input}}"},
+                        },
+                    },
+                }
+            }
+        ],
+    )
+
 
 def test_job_model():
     data = job.model_dump()
@@ -124,6 +143,7 @@ def test_job_model():
                 "sql_task": None,
                 "task_key": "ingestion",
                 "timeout_seconds": None,
+                "for_each_task": None,
             },
             {
                 "condition_task": None,
@@ -148,6 +168,7 @@ def test_job_model():
                 "sql_task": None,
                 "task_key": "pipeline",
                 "timeout_seconds": None,
+                "for_each_task": None,
             },
             {
                 "condition_task": None,
@@ -176,6 +197,7 @@ def test_job_model():
                 },
                 "task_key": "view",
                 "timeout_seconds": None,
+                "for_each_task": None,
             },
         ],
         "timeout_seconds": None,
@@ -184,11 +206,20 @@ def test_job_model():
     }
 
 
+def test_job_for_each_task():
+
+    data = job_for_each.model_dump(exclude_unset=False)
+
+    print(data)
+    assert data == {'access_controls': [], 'clusters': [], 'continuous': None, 'control_run_state': None, 'description': None, 'email_notifications': None, 'format': None, 'health': None, 'max_concurrent_runs': None, 'max_retries': None, 'min_retry_interval_millis': None, 'name': 'job-hello', 'name_prefix': None, 'name_suffix': None, 'notification_settings': None, 'parameters': [], 'queue': None, 'retry_on_timeout': None, 'run_as': None, 'schedule': None, 'tags': {}, 'tasks': [{'condition_task': None, 'depends_ons': None, 'description': None, 'email_notifications': None, 'existing_cluster_id': None, 'health': None, 'job_cluster_key': None, 'libraries': None, 'max_retries': None, 'min_retry_interval_millis': None, 'notebook_task': None, 'notification_settings': None, 'pipeline_task': None, 'retry_on_timeout': None, 'run_if': None, 'run_job_task': None, 'sql_task': None, 'task_key': 'hello-loop', 'timeout_seconds': None, 'for_each_task': {'inputs': '[{"id": 1, "name": "olivier"}, {"id": 2, "name": "kubic"}]', 'task': {'condition_task': None, 'depends_ons': None, 'description': None, 'email_notifications': None, 'existing_cluster_id': None, 'health': None, 'job_cluster_key': None, 'libraries': None, 'max_retries': None, 'min_retry_interval_millis': None, 'notebook_task': {'notebook_path': 'Workspace/Users/olivier.soucy@okube.ai/hello-world', 'base_parameters': {'input': '{{input}}'}, 'warehouse_id': None, 'source': None}, 'notification_settings': None, 'pipeline_task': None, 'retry_on_timeout': None, 'run_if': None, 'run_job_task': None, 'sql_task': None, 'task_key': 'hello-task', 'timeout_seconds': None}, 'concurrency': None}}], 'timeout_seconds': None, 'trigger': None, 'webhook_notifications': None}
+
+
 def test_job_pulumi():
     assert job.resource_name == "osoucy-job-stock-prices"
     assert job.options.model_dump(exclude_none=True) == {
         "depends_on": [],
         "delete_before_replace": True,
+        "is_enabled": True,
     }
     data = job.pulumi_properties
     print(data)
@@ -237,4 +268,5 @@ def test_job_pulumi():
 
 if __name__ == "__main__":
     test_job_model()
+    test_job_for_each_task()
     test_job_pulumi()

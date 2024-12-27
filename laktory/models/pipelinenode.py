@@ -9,26 +9,29 @@ from pathlib import Path
 import warnings
 from pydantic import model_validator
 
+from laktory._logger import get_logger
 from laktory._settings import settings
-from laktory.constants import DEFAULT_DFTYPE
 from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
-from laktory.models.datasources import DataSourcesUnion
-from laktory.models.datasources import BaseDataSource
-from laktory.models.datasinks import DataSinksUnion
 from laktory.models.dataquality.expectation import DataQualityExpectation
-from laktory.models.transformers.sparkchain import SparkChain
-from laktory.models.transformers.sparkchainnode import SparkChainNode
+from laktory.models.datasinks import DataSinksUnion
+from laktory.models.datasinks import TableDataSink
+from laktory.models.datasources import BaseDataSource
+from laktory.models.datasources import DataSourcesUnion
+from laktory.models.datasources import TableDataSource
+from laktory.models.datasources import PipelineNodeDataSource
+from laktory.models.pipelinechild import PipelineChild
 from laktory.models.transformers.polarschain import PolarsChain
 from laktory.models.transformers.polarschainnode import PolarsChainNode
+from laktory.models.transformers.sparkchain import SparkChain
+from laktory.models.transformers.sparkchainnode import SparkChainNode
 from laktory.spark import SparkSession
 from laktory.types import AnyDataFrame
-from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class PipelineNode(BaseModel):
+class PipelineNode(BaseModel, PipelineChild):
     """
     Pipeline base component generating a DataFrame by reading a data source and
     applying a transformer (chain of dataframe transformations). Optional
@@ -150,54 +153,44 @@ class PipelineNode(BaseModel):
 
     add_layer_columns: bool = True
     dlt_template: Union[str, None] = "DEFAULT"
-    dataframe_type: Literal["SPARK", "POLARS"] = DEFAULT_DFTYPE
+    dataframe_backend: Literal["SPARK", "POLARS"] = None
     description: str = None
-    drop_duplicates: Union[bool, list[str], None] = None
-    drop_source_columns: Union[bool, None] = None
+    drop_duplicates: Union[bool, list[str], None] = None  # TODO: Migrate to transformer
+    drop_source_columns: Union[bool, None] = None  # TODO: Migrate to transformer
     transformer: Union[SparkChain, PolarsChain, None] = None
     expectations: list[DataQualityExpectation] = []
     expectations_checkpoint_location: str = None
     layer: Literal["BRONZE", "SILVER", "GOLD"] = None
     name: Union[str, None] = None
     primary_keys: list[str] = None
-    # sinks: list[DataSinksUnion] = None
     sinks: list[DataSinksUnion] = None
     root_path: str = None
     source: DataSourcesUnion
     timestamp_key: str = None
+    _view_definition: str = None
     _stage_df: Any = None
     _output_df: Any = None
     _quarantine_df: Any = None
-    _parent: "Pipeline" = None
     _source_columns: list[str] = []
 
     @model_validator(mode="before")
     @classmethod
-    def push_dftype_before(cls, data: Any) -> Any:
-        dftype = data.get("dataframe_type", None)
-        if dftype:
+    def push_df_backend(cls, data: Any) -> Any:
+        """Need to push dataframe_backend which is required to differentiate between spark and polars transformer"""
+        df_backend = data.get("dataframe_backend", None)
+        if df_backend:
             if "source" in data.keys():
                 if isinstance(data["source"], dict):
-                    data["source"]["dataframe_type"] = data["source"].get(
-                        "dataframe_type", dftype
+                    data["source"]["dataframe_backend"] = data["source"].get(
+                        "dataframe_backend", df_backend
                     )
             if "transformer" in data.keys():
                 if isinstance(data["transformer"], dict):
-                    data["transformer"]["dataframe_type"] = data["transformer"].get(
-                        "dataframe_type", dftype
+                    data["transformer"]["dataframe_backend"] = data["transformer"].get(
+                        "dataframe_backend", df_backend
                     )
 
         return data
-
-    @model_validator(mode="after")
-    def push_dftype_after(self) -> Any:
-        dftype = self.user_dftype
-        if dftype:
-            self.source.dataframe_type = self.source.user_dftype or dftype
-            if self.transformer:
-                self.transformer.dataframe_type = self.transformer.user_dftype or dftype
-                self.transformer.push_dftype()
-        return self
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
@@ -229,20 +222,7 @@ class PipelineNode(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def update_children(self) -> Any:
-
-        # Assign node to sources
-        for s in self.get_sources():
-            s._parent = self
-
-        # Assign node to sinks
-        if self.sinks:
-            for s in self.sinks:
-                s._parent = self
-
-        # Assign node to transformers
-        if self.transformer:
-            self.transformer._parent = self
+    def push_primary_keys(self) -> Any:
 
         # Assign primary keys
         if self.primary_keys and self.sinks:
@@ -282,15 +262,73 @@ class PipelineNode(BaseModel):
 
         return self
 
+    @model_validator(mode="after")
+    def validate_view(self):
+
+        if not self.is_view:
+            return self
+
+        # Validate Source
+        if self.source:
+            if not (
+                isinstance(self.source, TableDataSource)
+                or isinstance(self.source, PipelineNodeDataSource)
+            ):
+                raise ValueError(
+                    "VIEW sink only supports Table or Pipeline Node with Table sink Data Source"
+                )
+
+            if self.source.as_stream:
+                raise ValueError("VIEW sink does not support stream read.")
+
+        # Validate Transformer
+        view_defined = False
+        if self.transformer:
+
+            m = f"node '{self.name}': "
+
+            if len(self.transformer.nodes) > 1:
+                raise ValueError(
+                    f"{m}VIEW sink only support transformers with a single SQL node"
+                )
+
+            if self.transformer.nodes[0].sql_expr is None:
+                raise ValueError(
+                    f"{m}VIEW sink only support transformers with a single SQL node"
+                )
+
+            view_defined = True
+
+        # Validate Sinks
+        for s in self.sinks:
+            if s.table_type != "VIEW":
+                raise ValueError(
+                    f"{m}If one pipeline node sink is a VIEW, all of them must be a view."
+                )
+
+            if not view_defined:
+                if s.view_definition is None:
+                    raise ValueError(
+                        f"View definition must be provided at at the transformer or at the sink."
+                    )
+
+        # Validate Expectations
+        if self.expectations:
+            raise ValueError(f"{m}Expectations not supported for a view sink.")
+
+        return self
+
     # ----------------------------------------------------------------------- #
-    # DataFrame                                                               #
+    # Children                                                                #
     # ----------------------------------------------------------------------- #
 
     @property
-    def user_dftype(self):
-        if "dataframe_type" in self.model_fields_set:
-            return self.dataframe_type
-        return None
+    def child_attribute_names(self):
+        return [
+            "data_sources",
+            "transformer",
+            "sinks",
+        ]
 
     # ----------------------------------------------------------------------- #
     # Orchestrator                                                            #
@@ -299,10 +337,10 @@ class PipelineNode(BaseModel):
     @property
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline node is used in the context of a DLT pipeline"""
-        is_orchestrator_dlt = False
-        if self._parent and self._parent.is_orchestrator_dlt:
-            is_orchestrator_dlt = True
-        return is_orchestrator_dlt
+        pl = self.parent_pipeline
+        if pl:
+            return pl.is_orchestrator_dlt
+        return False
 
     @property
     def is_dlt_run(self) -> bool:
@@ -321,14 +359,26 @@ class PipelineNode(BaseModel):
         if self.root_path:
             return Path(self.root_path)
 
-        if self._parent and self._parent._root_path:
-            return self._parent._root_path / self.name
+        node = self.parent_pipeline
+        if node and node._root_path:
+            return node._root_path / self.name
 
         return Path(settings.laktory_root) / self.name
 
     # ----------------------------------------------------------------------- #
     # Outputs and Sinks                                                       #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def is_view(self) -> bool:
+        if not self.sinks:
+            return False
+        is_view = False
+        for s in self.sinks:
+            if isinstance(s, TableDataSink) and s.table_type == "VIEW":
+                is_view = True
+                break
+        return is_view
 
     @property
     def stage_df(self) -> AnyDataFrame:
@@ -611,20 +661,51 @@ class PipelineNode(BaseModel):
         return PolarsChain(nodes=nodes)
 
     # ----------------------------------------------------------------------- #
-    # Methods                                                                 #
+    # Upstream Nodes                                                          #
     # ----------------------------------------------------------------------- #
 
-    def get_sources(self, cls=BaseDataSource) -> list[BaseDataSource]:
+    @property
+    def upstream_node_names(self) -> list[str]:
+        """Pipeline node names required to execute current node."""
+        from laktory.models.datasources.pipelinenodedatasource import (
+            PipelineNodeDataSource,
+        )
+
+        names = []
+
+        if isinstance(self.source, PipelineNodeDataSource):
+            names += [self.source.node_name]
+
+        if self.transformer:
+            names += self.transformer.upstream_node_names
+
+        return names
+
+    # ----------------------------------------------------------------------- #
+    # Data Sources                                                            #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def data_sources(self) -> list[BaseDataSource]:
         """Get all sources feeding the pipeline node"""
         sources = []
 
-        if isinstance(self.source, cls):
+        if isinstance(self.source, BaseDataSource):
             sources += [self.source]
 
         if self.transformer:
-            sources += self.transformer.get_sources(cls)
+            sources += self.transformer.data_sources
+
+        if self.sinks:
+            for s in self.sinks:
+                if getattr(s, "view_definition", None):
+                    sources += s.parsed_view_definition.data_sources
 
         return sources
+
+    # ----------------------------------------------------------------------- #
+    # Execution                                                               #
+    # ----------------------------------------------------------------------- #
 
     def purge(self, spark=None):
         logger.info(f"Purging pipeline node {self.name}")
@@ -730,12 +811,15 @@ class PipelineNode(BaseModel):
         # Apply transformer
         if apply_transformer:
 
+            if self.is_view and self.transformer:
+                self._view_definition = self.transformer.get_view_definition()
+
             if "spark" in str(type(self._stage_df)).lower():
                 dftype = "spark"
             elif "polars" in str(type(self._stage_df)).lower():
                 dftype = "polars"
             else:
-                raise ValueError("DataFrame type not supported")
+                raise ValueError("DataFrame backend not supported")
 
             # Set Transformer
             transformer = self.transformer
@@ -762,7 +846,12 @@ class PipelineNode(BaseModel):
         # Output and Quarantine to Sinks
         if write_sinks:
             for s in self.output_sinks:
-                s.write(self._output_df)
+
+                if self.is_view:
+                    s.write(view_definition=self._view_definition, spark=spark)
+                    self._output_df = s.as_source().read(spark=spark)
+                else:
+                    s.write(self._output_df)
             if self._quarantine_df is not None:
                 for s in self.quarantine_sinks:
                     s.write(self._quarantine_df)

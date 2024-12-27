@@ -130,16 +130,30 @@ sink.write(df)
 ??? "API Documentation"
     [`laktory.models.TableDataSink`][laktory.models.TableDataSink]<br>
 
-The Table Data Sink allows writing the dataframe to a lakehouse or data 
-warehouse table.
+The TableDataSink class provides a convenient way to write a DataFrame to a 
+lakehouse or data warehouse table. It simplifies the process of persisting data
+in a structured format, supporting both physical tables and SQL views.
 
+To write a DataFrame to a physical table:
 ```py
 from laktory import models
 
-sink = models.FileDataSource(
+sink = models.TableDataSink(
     schema_name="finance",
     table_name="brz_stock_prices",
-    warehouse="DATABRICKS",
+)
+sink.write(df)
+``` 
+
+`TableDataSink` also supports creating non-materialized SQL views instead of 
+physical tables. To write a DataFrame as a SQL view:
+```py
+from laktory import models
+
+sink = models.TableDataSink(
+    schema_name="finance",
+    table_name="brz_stock_prices",
+    table_type="VIEW",
 )
 sink.write(df)
 ``` 

@@ -121,7 +121,7 @@ def test_file_data_source():
     )
 
     assert source.path == "Volumes/sources/landing/events/yahoo_finance/stock_price"
-    assert source.dataframe_type == "SPARK"
+    assert source.df_backend == "SPARK"
     assert not source.as_stream
 
 
@@ -218,7 +218,7 @@ def test_file_data_source_polars():
             "./brz_stock_prices/part-00000-877096dd-1964-482e-9873-76361150a331-c000.snappy.parquet",
         ),
         format="PARQUET",
-        dataframe_type="POLARS",
+        dataframe_backend="POLARS",
         filter="data.open > 300",
         selects={
             "data.created_at": "created_at",

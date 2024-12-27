@@ -52,7 +52,9 @@ class PulumiStack(BaseModel):
             d["resources"][r.resource_name] = {
                 "type": r.pulumi_resource_type,
                 "properties": r.pulumi_properties,
-                "options": r.options.model_dump(exclude_none=True),
+                "options": r.options.model_dump(
+                    include=r.options.pulumi_options, exclude_unset=True
+                ),
             }
 
             lookup = r.lookup_existing

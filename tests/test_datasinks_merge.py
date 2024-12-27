@@ -376,6 +376,45 @@ def test_outdated():
     shutil.rmtree(path)
 
 
+def test_delete_non_existent():
+
+    path, df0 = build_target(index=1)
+
+    # Source with rows "pre-deleted"
+    dfs = spark.createDataFrame(
+        pd.DataFrame(
+            {
+                "symbol": ["S2", "S1"],
+                "date": [datetime.date(2024, 12, 1), datetime.date(2024, 12, 1)],
+                "close": [2.0, 1.0],
+                "open": [2.0, 1.0],
+                "from": ["source", "source"],
+                "index": [1, 1],
+                "_is_deleted": [True, True],
+            }
+        )
+    )
+
+    # Merge
+    sink = models.FileDataSink(
+        mode="MERGE",
+        path=str(path),
+        merge_cdc_options=models.DataSinkMergeCDCOptions(
+            primary_keys=["symbol", "date"],
+            delete_where="_is_deleted = true",
+            exclude_columns=["_is_deleted"],
+        ),
+    )
+    sink.write(dfs)
+
+    # Test
+    df1 = read(path).sort("date", "symbol").toPandas()
+    assert len(df1) == df0.count()
+
+    # Cleanup
+    shutil.rmtree(path)
+
+
 def test_scd2():
 
     path, df = build_target(write_target=False, index=1)
@@ -583,10 +622,11 @@ def test_dlt_kwargs():
 
 
 if __name__ == "__main__":
-    test_basic()
-    test_out_of_sequence()
-    test_outdated()
-    test_scd2()
-    test_null_updates()
-    test_stream()
-    test_dlt_kwargs()
+    # test_basic()
+    # test_out_of_sequence()
+    # test_outdated()
+    test_delete_non_existent()
+    # test_scd2()
+    # test_null_updates()
+    # test_stream()
+    # test_dlt_kwargs()

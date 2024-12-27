@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
+from laktory.models.pipelinechild import PipelineChild
 from laktory.spark import is_spark_dataframe
 from laktory.spark import SparkDataFrame
 from laktory.polars import is_polars_dataframe
@@ -267,7 +268,7 @@ class DataSinkMergeCDCOptions(BaseModel):
 
         df = spark.createDataFrame(data=[], schema=schema)
 
-        writer = df.write.format("DELTA").mode("OVERWRITE")
+        writer = df.write.format("delta").mode("OVERWRITE")
         if self.target_path:
             writer.save(self.target_path)
         else:
@@ -284,6 +285,9 @@ class DataSinkMergeCDCOptions(BaseModel):
         logger.info(
             f"Executing merge on {self.target_id} with primary keys {self.primary_keys} and scd type {self.scd_type}"
         )
+
+        if self.delete_where:
+            logger.info(f"with delete on {self.delete_where}")
 
         # Add internal columns
         source = source.withColumn(
@@ -327,6 +331,12 @@ class DataSinkMergeCDCOptions(BaseModel):
 
         if self.scd_type == 1:
 
+            if self.delete_where:
+                delete_condition = F.coalesce(
+                    F.expr(self.source_delete_where), F.lit(False)
+                )
+                not_delete_condition = ~delete_condition
+
             # Define merge
             merge = table_target.alias("target").merge(
                 source.alias("source"),
@@ -345,7 +355,7 @@ class DataSinkMergeCDCOptions(BaseModel):
 
             condition = None
             if self.delete_where:
-                condition = ~F.expr(self.source_delete_where)
+                condition = not_delete_condition
             if self.order_by:
                 _condition = F.expr(f"source.{self.order_by} > target.{self.order_by}")
                 if condition is None:
@@ -356,29 +366,32 @@ class DataSinkMergeCDCOptions(BaseModel):
             merge = merge.whenMatchedUpdate(set=_set, condition=condition)
 
             # Insert
+            condition = None
+            if self.delete_where:
+                condition = not_delete_condition
             merge = merge.whenNotMatchedInsert(
-                values={f"target.{c}": f"source.{c}" for c in self.write_columns}
+                values={f"target.{c}": f"source.{c}" for c in self.write_columns},
+                condition=condition,
             )
 
             # Delete
             if self.delete_where:
-                merge = merge.whenMatchedDelete(
-                    condition=F.expr(self.source_delete_where)
-                )
+                merge = merge.whenMatchedDelete(condition=delete_condition)
 
             logger.info(f"Executing merge...")
             merge.execute()
 
         elif self.scd_type == 2:
 
+            delete_condition = F.coalesce(F.expr(self.delete_where), F.lit(False))
+            not_delete_condition = ~delete_condition
+
             # Only select rows that have been updated
             if self.target_path:
-                target = spark.read.format("DELTA").load(self.target_path)
+                target = spark.read.format("delta").load(self.target_path)
             else:
                 target = spark.read.table(self.target_name)
-            upsert_or_delete = source.withColumn(
-                "__to_delete", F.expr(self.delete_where)
-            ).join(
+            upsert_or_delete = source.withColumn("__to_delete", delete_condition).join(
                 other=target.withColumn("__to_delete", F.lit(False)),
                 on=[self.hash_cols, self.hash_keys, "__to_delete"],
                 how="leftanti",
@@ -417,7 +430,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             # Append rows
             upsert = upsert_or_delete
             if self.delete_where:
-                upsert = upsert.filter(~F.expr(self.delete_where))
+                upsert = upsert.filter(not_delete_condition)
             writer = (
                 upsert.select(self.write_columns).write.mode("APPEND").format("DELTA")
             )
@@ -480,7 +493,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             self._execute(source=source)
 
 
-class BaseDataSink(BaseModel):
+class BaseDataSink(BaseModel, PipelineChild):
     """
     Base class for building data sink
 
@@ -518,7 +531,6 @@ class BaseDataSink(BaseModel):
         None,
     ] = None
     write_options: dict[str, str] = {}
-    _parent: "PipelineNode" = None
 
     @model_validator(mode="after")
     def merge_has_options(self) -> Any:
@@ -552,12 +564,12 @@ class BaseDataSink(BaseModel):
         if self.checkpoint_location:
             return Path(self.checkpoint_location)
 
-        if self._parent and self._parent._root_path:
-            for i, s in enumerate(self._parent.all_sinks):
+        node = self.parent_pipeline_node
+
+        if node and node._root_path:
+            for i, s in enumerate(node.all_sinks):
                 if s == self:
-                    return (
-                        self._parent._root_path / "checkpoints" / f"sink-{self._uuid}"
-                    )
+                    return node._root_path / "checkpoints" / f"sink-{self._uuid}"
 
         return None
 
@@ -598,33 +610,70 @@ class BaseDataSink(BaseModel):
     # Writers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def write(self, df: AnyDataFrame, mode=None) -> None:
+    def write(
+        self,
+        df: AnyDataFrame = None,
+        mode: str = None,
+        spark=None,
+        view_definition: str = None,
+    ) -> None:
         """
         Write dataframe into sink.
 
         Parameters
         ----------
         df:
-            Input dataframe
+            Input dataframe.
         mode:
             Write mode overwrite of the sink default mode.
+        spark:
+            Spark Session for creating a view
+        view_definition:
+            View definition. Overwrites view definition defined in the sink.
 
         Returns
         -------
         """
+        _view_definition = view_definition
+        if _view_definition is None:
+            _view_definition = getattr(self, "parsed_view_definition", None)
+            if _view_definition:
+                _view_definition = _view_definition.parsed_expr(view=True)
+
+        if _view_definition:
+            if self.df_backend == "SPARK":
+                if spark is None:
+                    raise ValueError(
+                        "Spark session must be provided for creating a view."
+                    )
+                self._write_spark_view(view_definition=_view_definition, spark=spark)
+            else:
+                raise ValueError(
+                    f"'{self.df_backend}' DataFrame backend is not supported for creating views"
+                )
+
+            logger.info("View created.")
+            return
+
         if mode is None:
             mode = self.mode
+
         if is_spark_dataframe(df):
-            self._write_spark(df, mode=mode)
-        elif is_polars_dataframe(df):
+            self._write_spark(df=df, mode=mode)
+        elif is_polars_dataframe(df=df):
             self._write_polars(df, mode=mode)
         else:
             raise ValueError(f"DataFrame type '{type(df)}' not supported")
 
         logger.info("Write completed.")
 
-    def _write_spark(self, df: SparkDataFrame, mode=mode) -> None:
+    def _write_spark(self, df: SparkDataFrame, mode: str = mode) -> None:
         raise NotImplementedError("Not implemented for Spark dataframe")
+
+    def _write_spark_view(self, view_definition: str, spark) -> None:
+        raise NotImplementedError(
+            f"View creation with spark is not implemented for type '{type(self)}'"
+        )
 
     def _write_polars(self, df: PolarsLazyFrame, mode=mode) -> None:
         raise NotImplementedError("Not implemented for Polars dataframe")
@@ -684,7 +733,7 @@ class BaseDataSink(BaseModel):
         raise NotImplementedError()
 
     # ----------------------------------------------------------------------- #
-    # Sources                                                                 #
+    # Data Sources                                                            #
     # ----------------------------------------------------------------------- #
 
     def as_source(self, as_stream=None):

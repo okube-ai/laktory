@@ -14,13 +14,11 @@ import laktory
 from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
-from laktory.constants import DEFAULT_DFTYPE
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
-from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
 from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipelinenode import PipelineNode
-from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.dltpipeline import DLTPipeline
 from laktory.models.resources.databricks.job import Job
 from laktory.models.resources.databricks.job import JobTask
@@ -133,7 +131,7 @@ class PipelineWorkspaceFile(WorkspaceFile):
 # --------------------------------------------------------------------------- #
 
 
-class Pipeline(BaseModel, PulumiResource, TerraformResource):
+class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     """
     Pipeline model to manage a full-fledged data pipeline including reading
     from data sources, applying data transformations through Spark and
@@ -407,7 +405,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     """
 
     databricks_job: Union[PipelineDatabricksJob, None] = None
-    dataframe_type: Literal["SPARK", "POLARS"] = DEFAULT_DFTYPE
+    dataframe_backend: Literal["SPARK", "POLARS"] = None
     dlt: Union[DLTPipeline, None] = None
     name: str
     nodes: list[Union[PipelineNode]]
@@ -437,34 +435,15 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="before")
     @classmethod
-    def push_dftype_before(cls, data: Any) -> Any:
-        dftype = data.get("dataframe_type", None)
-        if dftype:
+    def push_df_backend(cls, data: Any) -> Any:
+        """Need to push dataframe_backend which is required to differentiate between spark and polars transformer"""
+        df_backend = data.get("dataframe_backend", None)
+        if df_backend:
             if "nodes" in data.keys():
                 for n in data["nodes"]:
                     if isinstance(n, dict):
-                        n["dataframe_type"] = n.get("dataframe_type", dftype)
+                        n["dataframe_backend"] = n.get("dataframe_backend", df_backend)
         return data
-
-    @model_validator(mode="after")
-    def push_dftype_after(self) -> Any:
-        dftype = self.user_dftype
-        if dftype:
-            for node in self.nodes:
-                node.dataframe_type = node.user_dftype or dftype
-                node.push_dftype_after()
-        return self
-
-    @model_validator(mode="after")
-    def update_children(self) -> Any:
-        # Build dag
-        _ = self.dag
-
-        # Assign pipeline
-        for n in self.nodes:
-            n._parent = self
-
-        return self
 
     @model_validator(mode="after")
     def default_workspacefile(self):
@@ -483,6 +462,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
         if self.dlt is None:
             raise ValueError("dlt must be defined if DLT orchestrator is selected.")
+
+        for node in self.nodes:
+            if node.is_view:
+                raise ValueError(
+                    f"Node '{node.name}' is a view which is not supported with DLT orchestrator."
+                )
 
         for n in self.nodes:
             for s in n.all_sinks:
@@ -563,6 +548,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         return self
 
     # ----------------------------------------------------------------------- #
+    # Children                                                                #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def child_attribute_names(self):
+        return ["nodes"]
+
+    # ----------------------------------------------------------------------- #
     # ID                                                                      #
     # ----------------------------------------------------------------------- #
 
@@ -581,16 +574,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
             name = name.replace(c, "-")
 
         return name
-
-    # ----------------------------------------------------------------------- #
-    # DataFrame                                                               #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def user_dftype(self):
-        if "dataframe_type" in self.model_fields_set:
-            return self.dataframe_type
-        return None
 
     # ----------------------------------------------------------------------- #
     # Orchestrator                                                            #
@@ -660,7 +643,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         # Build nodes
         for n in self.nodes:
             dag.add_node(n.name)
-
         # Build edges and assign nodes to pipeline node data sources
         node_names = []
         for n in self.nodes:
@@ -671,13 +653,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                 )
             node_names += [n.name]
 
-            for s in n.get_sources(PipelineNodeDataSource):
-                dag.add_edge(s.node_name, n.name)
-                if s.node_name not in self.nodes_dict:
+            # for s in n.get_sources(PipelineNodeDataSource):
+            for _node_name in n.upstream_node_names:
+                dag.add_edge(_node_name, n.name)
+                if _node_name not in self.nodes_dict:
                     raise ValueError(
-                        f"Pipeline node data source '{s.node_name}' is not defined in pipeline '{self.name}'"
+                        f"Pipeline node data source '{_node_name}' is not defined in pipeline '{self.name}'"
                     )
-                s.node = self.nodes_dict[s.node_name]
 
         if not nx.is_directed_acyclic_graph(dag):
             for n in dag.nodes:
@@ -714,6 +696,17 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
                     break
 
         return nodes
+
+    # ----------------------------------------------------------------------- #
+    # Data Sources                                                            #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def data_sources(self):
+        sources = []
+        for n in self.nodes:
+            sources += n.data_sources
+        return sources
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #

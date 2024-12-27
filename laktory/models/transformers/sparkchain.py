@@ -23,7 +23,7 @@ class SparkChain(BaseChain):
 
     Attributes
     ----------
-    dataframe_type:
+    dataframe_backend:
         Differentiator to select dataframe chain type
     nodes:
         The list of transformations to be executed.
@@ -87,14 +87,10 @@ class SparkChain(BaseChain):
     ```
     """
 
-    dataframe_type: Literal["SPARK"] = "SPARK"
+    dataframe_backend: Literal["SPARK"] = "SPARK"
     nodes: list[Union[SparkChainNode, "SparkChain"]]
+    _view_definition: str = None
     _columns: list[list[str]] = []
-    _parent: "PipelineNode" = None
-
-    @property
-    def user_dftype(self):
-        return "SPARK"
 
 
 SparkChain.model_rebuild()

@@ -114,11 +114,12 @@ def test_sql_with_nodes():
         ]
     )
 
-    assert sc.nodes[0].parsed_sql_expr.node_data_sources == []
-    assert sc.nodes[1].parsed_sql_expr.node_data_sources == [
-        models.PipelineNodeDataSource(node_name="node_01", dataframe_type="POLARS"),
-        models.PipelineNodeDataSource(node_name="node_02", dataframe_type="POLARS"),
-    ]
+    assert sc.nodes[0].parsed_sql_expr.data_sources == []
+    _s0 = models.PipelineNodeDataSource(node_name="node_01")
+    _s0._parent = sc.nodes[1]
+    _s1 = models.PipelineNodeDataSource(node_name="node_02")
+    _s1._parent = sc.nodes[1]
+    assert sc.nodes[1].parsed_sql_expr.data_sources == [_s0, _s1]
 
 
 def test_table_input(df0=df0):

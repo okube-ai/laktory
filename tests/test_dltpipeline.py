@@ -22,6 +22,8 @@ def test_pipeline():
         "edition": None,
         "libraries": None,
         "name": "pl-stock-prices",
+        "name_prefix": None,
+        "name_suffix": None,
         "notifications": [],
         "photon": None,
         "serverless": None,
@@ -36,6 +38,7 @@ def test_pipeline_pulumi():
     assert pl.options.model_dump(exclude_none=True) == {
         "depends_on": [],
         "delete_before_replace": True,
+        "is_enabled": True,
     }
     print(pl.pulumi_properties)
     assert pl.pulumi_properties == {

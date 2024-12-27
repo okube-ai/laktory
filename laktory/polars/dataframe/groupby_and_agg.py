@@ -82,6 +82,6 @@ def groupby_and_agg(
             expr = ChainNodeColumn(**expr)
 
         expr.type = None
-        aggs += [expr.eval(dataframe_type="POLARS").alias(expr.name)]
+        aggs += [expr.eval(dataframe_backend="POLARS").alias(expr.name)]
 
     return df.group_by(groupby).agg(*aggs)

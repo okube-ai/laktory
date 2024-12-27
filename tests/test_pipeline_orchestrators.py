@@ -1,5 +1,6 @@
 import os
 import io
+import yaml
 from pathlib import Path
 from laktory import models
 from laktory._testing import Paths
@@ -15,7 +16,16 @@ def get_pl(extra=None):
         data = data.replace("{pl_dir}", "")
         if extra is not None:
             data += extra
-        pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
+        data = yaml.safe_load(io.StringIO(data))
+
+        # Remove views
+        nodes = []
+        for n in data["nodes"]:
+            if not n["name"] in ["slv_stock_aapl", "slv_stock_msft"]:
+                nodes += [n]
+            data["nodes"] = nodes
+
+        pl = models.Pipeline(**data)
     return pl
 
 
@@ -141,7 +151,7 @@ def test_pipeline_dlt():
     assert data == {
         "as_stream": True,
         "broadcast": False,
-        "dataframe_type": "SPARK",
+        "dataframe_backend": None,
         "drops": None,
         "filter": None,
         "limit": None,
@@ -155,6 +165,7 @@ def test_pipeline_dlt():
         "schema_definition": None,
         "schema_location": None,
     }
+    assert sink_source.df_backend == "SPARK"
 
     data = pl_dlt.dlt.model_dump()
     print(data)
@@ -177,6 +188,8 @@ def test_pipeline_dlt():
         "edition": None,
         "libraries": None,
         "name": "pl-spark-dlt",
+        "name_prefix": None,
+        "name_suffix": None,
         "notifications": [],
         "photon": None,
         "serverless": None,
