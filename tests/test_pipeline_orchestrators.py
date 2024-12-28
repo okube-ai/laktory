@@ -2,6 +2,7 @@ import os
 import io
 import yaml
 from pathlib import Path
+from laktory import __version__
 from laktory import models
 from laktory._testing import Paths
 
@@ -34,22 +35,23 @@ pl_job = get_pl(
     """
 name: pl-spark-job
 orchestrator: DATABRICKS_JOB
+dependencies:
+    - yfinance            
 databricks_job:
-  name: job-pl-stock-prices
-  laktory_version: 0.3.0
   clusters:
     - name: node-cluster
       spark_version: 14.0.x-scala2.12
       node_type_id: Standard_DS3_v2
 """
 )
+#   name: job-pl-stock-prices
 
 # DLT
 pl_dlt = get_pl(
     """
 name: pl-spark-dlt
-orchestrator: DLT
-dlt:
+orchestrator: DATABRICKS_DLT
+databricks_dlt:
   catalog: dev
   target: sandbox
   access_controls:
@@ -77,15 +79,20 @@ def test_pipeline_job():
                 "spark_version": "14.0.x-scala2.12",
             }
         ],
-        "name": "job-pl-stock-prices",
+        "name": "pl-spark-job",
         "parameters": [
             {"default": "false", "name": "full_refresh"},
             {"default": "pl-spark-job", "name": "pipeline_name"},
+            {"default": "False", "name": "install_dependencies"},
         ],
         "tasks": [
             {
                 "depends_ons": [],
                 "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": f"laktory=={__version__}"}},
+                ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "brz_stock_meta"},
@@ -95,6 +102,10 @@ def test_pipeline_job():
             {
                 "depends_ons": [],
                 "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": f"laktory=={__version__}"}},
+                ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "brz_stock_prices"},
@@ -104,6 +115,10 @@ def test_pipeline_job():
             {
                 "depends_ons": [{"task_key": "node-slv_stock_prices"}],
                 "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": f"laktory=={__version__}"}},
+                ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "gld_stock_prices"},
@@ -113,6 +128,10 @@ def test_pipeline_job():
             {
                 "depends_ons": [{"task_key": "node-brz_stock_meta"}],
                 "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": f"laktory=={__version__}"}},
+                ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "slv_stock_meta"},
@@ -125,6 +144,10 @@ def test_pipeline_job():
                     {"task_key": "node-slv_stock_meta"},
                 ],
                 "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": f"laktory=={__version__}"}},
+                ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "slv_stock_prices"},
@@ -132,7 +155,6 @@ def test_pipeline_job():
                 "task_key": "node-slv_stock_prices",
             },
         ],
-        "laktory_version": "0.3.0",
     }
 
     # Test resources
