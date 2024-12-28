@@ -53,7 +53,9 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         self.parameters = [
             JobParameter(name="full_refresh", default="false"),
             JobParameter(name="pipeline_name", default=pl.name),
-            JobParameter(name="install_dependencies", default=str(not cluster_found).lower()),
+            JobParameter(
+                name="install_dependencies", default=str(not cluster_found).lower()
+            ),
             # JobParameter(name="pypi_packages", default=json.dumps(pypi_packages)),
             # JobParameter(name="pipeline_path", default=self.workspacefile.path),
             # JobParameter(name="workspace_laktory_root", default=settings.workspace_laktory_root),
@@ -109,7 +111,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
     @property
     def child_attribute_names(self):
-        return ["config_file"]
+        return ["config_file", "requirements_file"]
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

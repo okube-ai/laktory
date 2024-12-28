@@ -19,14 +19,14 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
     source: str = "{pl_name}"
     access_controls: list[AccessControl] = [
-        {"permission_level": "CAN_READ", "group_name": "users"}
+        AccessControl(permission_level="CAN_READ", group_name="users")
     ]
 
     def update_from_parent(self):
 
         pl = self.parent_pipeline
         pl_name = pl.name
-        self.source = os.path.join(CACHE_ROOT, f"tmp-{pl_name}.json")
+        self.source = os.path.join(CACHE_ROOT, f"tmp-{pl_name}-config.json")
         if "{pl_name}" in self.path:
             self.path = (
                 f"{settings.workspace_laktory_root}pipelines/{pl_name}/config.json"

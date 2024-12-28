@@ -83,7 +83,7 @@ def test_pipeline_job():
         "parameters": [
             {"default": "false", "name": "full_refresh"},
             {"default": "pl-spark-job", "name": "pipeline_name"},
-            {"default": "False", "name": "install_dependencies"},
+            {"default": "false", "name": "install_dependencies"},
         ],
         "tasks": [
             {
@@ -229,7 +229,7 @@ def test_pipeline_dlt():
                 }
             ],
             "dirpath": "",
-            "path": "/.laktory/pipelines/pl-spark-dlt/config-config.json",
+            "path": "/.laktory/pipelines/pl-spark-dlt/config.json",
             "rootpath": "/.laktory/",
             "source": "./tmp-pl-spark-dlt-config.json",
         },
