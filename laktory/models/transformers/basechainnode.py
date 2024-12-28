@@ -13,7 +13,7 @@ from laktory._logger import get_logger
 from laktory.constants import SUPPORTED_DATATYPES
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
-from laktory.models.pipelinechild import PipelineChild
+from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.polars import PolarsDataFrame
 from laktory.polars import PolarsExpr
 from laktory.types import AnyDataFrame
