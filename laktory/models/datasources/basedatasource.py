@@ -7,7 +7,7 @@ from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.spark import SparkDataFrame
 from laktory.spark import is_spark_dataframe
-from laktory.models.pipelinechild import PipelineChild
+from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.polars import PolarsDataFrame
 from laktory.polars import is_polars_dataframe
 from laktory.types import AnyDataFrame
