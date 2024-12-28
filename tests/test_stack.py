@@ -46,7 +46,9 @@ def test_stack_model():
                     "node_type_id": "Standard_DS4_v2",
                 },
                 "resources": {
-                    "pipelines": {"pl-custom-name": {"dlt": {"development": False}}}
+                    "pipelines": {
+                        "pl-custom-name": {"databricks_dlt": {"development": False}}
+                    }
                 },
                 "terraform": {"backend": None},
             },
@@ -340,7 +342,7 @@ def test_stack_model():
                 "pl-custom-name": {
                     "dataframe_backend": None,
                     "databricks_job": None,
-                    "dlt": {
+                    "databricks_dlt": {
                         "access_controls": [
                             {
                                 "group_name": "account users",
@@ -378,6 +380,7 @@ def test_stack_model():
                         "storage": None,
                         "target": None,
                     },
+                    "libraries": None,
                     "name": "pl-stock-prices-ut-stack",
                     "nodes": [
                         {
@@ -415,7 +418,7 @@ def test_stack_model():
                             "timestamp_key": None,
                         }
                     ],
-                    "orchestrator": "DLT",
+                    "orchestrator": "DATABRICKS_DLT",
                     "udfs": [],
                     "root_path": None,
                     "workspacefile": {
