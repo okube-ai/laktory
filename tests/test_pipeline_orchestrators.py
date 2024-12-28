@@ -189,9 +189,10 @@ def test_pipeline_dlt():
     }
     assert sink_source.df_backend == "SPARK"
 
-    data = pl_dlt.dlt.model_dump()
+    data = pl_dlt.databricks_dlt.model_dump()
     print(data)
     assert data == {
+        "dataframe_backend": None,
         "access_controls": [
             {
                 "group_name": "account users",
@@ -217,6 +218,22 @@ def test_pipeline_dlt():
         "serverless": None,
         "storage": None,
         "target": "sandbox",
+        "config_file": {
+            "dataframe_backend": None,
+            "access_controls": [
+                {
+                    "group_name": "users",
+                    "permission_level": "CAN_READ",
+                    "service_principal_name": None,
+                    "user_name": None,
+                }
+            ],
+            "dirpath": "",
+            "path": "/.laktory/pipelines/pl-spark-dlt/config-config.json",
+            "rootpath": "/.laktory/",
+            "source": "./tmp-pl-spark-dlt-config.json",
+        },
+        "requirements_file": None,
     }
 
     # Test resources
