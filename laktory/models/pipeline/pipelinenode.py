@@ -20,7 +20,7 @@ from laktory.models.datasources import BaseDataSource
 from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import TableDataSource
 from laktory.models.datasources import PipelineNodeDataSource
-from laktory.models.pipelinechild import PipelineChild
+from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.transformers.polarschain import PolarsChain
 from laktory.models.transformers.polarschainnode import PolarsChainNode
 from laktory.models.transformers.sparkchain import SparkChain
