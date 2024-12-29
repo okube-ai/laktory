@@ -6,8 +6,8 @@ from .dataquality import *
 from .datasinks import *
 from .datasources import *
 from .grants import *
-from .pipeline import Pipeline
-from .pipelinenode import PipelineNode
+from .pipeline.pipeline import Pipeline
+from .pipeline.pipelinenode import PipelineNode
 from .resources import *
 from .stacks import *
 from .transformers import *

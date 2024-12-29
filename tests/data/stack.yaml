@@ -13,13 +13,13 @@ resources:
   pipelines:
     pl-custom-name:
       name: pl-stock-prices-ut-stack
-      orchestrator: DLT
+      orchestrator: DATABRICKS_DLT
       nodes:
         - name: first_node
           source:
             path: /tmp/
           dlt_template: null
-      dlt:
+      databricks_dlt:
         resource_name: dlt-custom-name
         libraries:
           - notebook:
@@ -99,7 +99,7 @@ environments:
     resources:
       pipelines:
         pl-custom-name:
-          dlt:
+          databricks_dlt:
             development: False
     variables:
       env: prod

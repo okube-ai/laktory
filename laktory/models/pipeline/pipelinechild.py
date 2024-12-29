@@ -71,7 +71,7 @@ class PipelineChild(BaseModel):
     @property
     def parent_pipeline(self):
 
-        from laktory.models.pipeline import Pipeline
+        from laktory.models.pipeline.pipeline import Pipeline
 
         def _get_pl(o):
             parent = getattr(o, "_parent", None)
@@ -88,7 +88,7 @@ class PipelineChild(BaseModel):
     @property
     def parent_pipeline_node(self):
 
-        from laktory.models.pipelinenode import PipelineNode
+        from laktory.models.pipeline.pipelinenode import PipelineNode
 
         def _get_pl(o):
             parent = getattr(o, "_parent", None)

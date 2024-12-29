@@ -2,6 +2,7 @@ import os
 import io
 import yaml
 from pathlib import Path
+from laktory import __version__
 from laktory import models
 from laktory._testing import Paths
 
@@ -34,22 +35,23 @@ pl_job = get_pl(
     """
 name: pl-spark-job
 orchestrator: DATABRICKS_JOB
+dependencies:
+    - yfinance            
 databricks_job:
-  name: job-pl-stock-prices
-  laktory_version: 0.3.0
   clusters:
     - name: node-cluster
       spark_version: 14.0.x-scala2.12
       node_type_id: Standard_DS3_v2
 """
 )
+#   name: job-pl-stock-prices
 
 # DLT
 pl_dlt = get_pl(
     """
 name: pl-spark-dlt
-orchestrator: DLT
-dlt:
+orchestrator: DATABRICKS_DLT
+databricks_dlt:
   catalog: dev
   target: sandbox
   access_controls:
@@ -77,15 +79,20 @@ def test_pipeline_job():
                 "spark_version": "14.0.x-scala2.12",
             }
         ],
-        "name": "job-pl-stock-prices",
+        "name": "pl-spark-job",
         "parameters": [
             {"default": "false", "name": "full_refresh"},
             {"default": "pl-spark-job", "name": "pipeline_name"},
+            {"default": "false", "name": "install_dependencies"},
         ],
         "tasks": [
             {
                 "depends_ons": [],
                 "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": f"laktory=={__version__}"}},
+                ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "brz_stock_meta"},
@@ -95,6 +102,10 @@ def test_pipeline_job():
             {
                 "depends_ons": [],
                 "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": f"laktory=={__version__}"}},
+                ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "brz_stock_prices"},
@@ -104,6 +115,10 @@ def test_pipeline_job():
             {
                 "depends_ons": [{"task_key": "node-slv_stock_prices"}],
                 "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": f"laktory=={__version__}"}},
+                ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "gld_stock_prices"},
@@ -113,6 +128,10 @@ def test_pipeline_job():
             {
                 "depends_ons": [{"task_key": "node-brz_stock_meta"}],
                 "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": f"laktory=={__version__}"}},
+                ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "slv_stock_meta"},
@@ -125,6 +144,10 @@ def test_pipeline_job():
                     {"task_key": "node-slv_stock_meta"},
                 ],
                 "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": f"laktory=={__version__}"}},
+                ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
                     "base_parameters": {"node_name": "slv_stock_prices"},
@@ -132,12 +155,11 @@ def test_pipeline_job():
                 "task_key": "node-slv_stock_prices",
             },
         ],
-        "laktory_version": "0.3.0",
     }
 
     # Test resources
     resources = pl_job.core_resources
-    assert len(resources) == 3
+    assert len(resources) == 5
 
 
 def test_pipeline_dlt():
@@ -167,9 +189,10 @@ def test_pipeline_dlt():
     }
     assert sink_source.df_backend == "SPARK"
 
-    data = pl_dlt.dlt.model_dump()
+    data = pl_dlt.databricks_dlt.model_dump()
     print(data)
     assert data == {
+        "dataframe_backend": None,
         "access_controls": [
             {
                 "group_name": "account users",
@@ -182,7 +205,10 @@ def test_pipeline_dlt():
         "catalog": "dev",
         "channel": "PREVIEW",
         "clusters": [],
-        "configuration": {},
+        "configuration": {
+            "pipeline_name": "pl-spark-dlt",
+            "workspace_laktory_root": "/.laktory/",
+        },
         "continuous": None,
         "development": None,
         "edition": None,
@@ -195,40 +221,72 @@ def test_pipeline_dlt():
         "serverless": None,
         "storage": None,
         "target": "sandbox",
+        "config_file": {
+            "dataframe_backend": None,
+            "access_controls": [
+                {
+                    "group_name": "users",
+                    "permission_level": "CAN_READ",
+                    "service_principal_name": None,
+                    "user_name": None,
+                }
+            ],
+            "dirpath": "",
+            "path": "/.laktory/pipelines/pl-spark-dlt/config.json",
+            "rootpath": "/.laktory/",
+            "source": "./tmp-pl-spark-dlt-config.json",
+        },
+        "requirements_file": {
+            "dataframe_backend": None,
+            "access_controls": [
+                {
+                    "group_name": "users",
+                    "permission_level": "CAN_READ",
+                    "service_principal_name": None,
+                    "user_name": None,
+                }
+            ],
+            "dirpath": "",
+            "path": "/.laktory/pipelines/pl-spark-dlt/requirements.txt",
+            "rootpath": "/.laktory/",
+            "source": "./tmp-pl-spark-dlt-requirements.txt",
+        },
     }
 
     # Test resources
     resources = pl_dlt.core_resources
-    assert len(resources) == 4
+    assert len(resources) == 6
 
-    wsf = resources[0]
-    wsfp = resources[1]
-    dlt = resources[2]
-    dltp = resources[3]
+    dlt = resources[0]
+    dltp = resources[1]
+    wsf = resources[2]
+    wsfp = resources[3]
 
     assert isinstance(wsf, models.resources.databricks.WorkspaceFile)
     assert isinstance(wsfp, models.resources.databricks.Permissions)
     assert isinstance(dlt, models.resources.databricks.DLTPipeline)
     assert isinstance(dltp, models.resources.databricks.Permissions)
 
-    assert dlt.resource_name == "pl-spark-dlt"
-    assert dltp.resource_name == "permissions-pl-spark-dlt"
-    assert wsf.resource_name == "workspace-file-laktory-pipelines-pl-spark-dlt-json"
+    assert dlt.resource_name == "dlt-pipeline-pl-spark-dlt"
+    assert dltp.resource_name == "permissions-dlt-pipeline-pl-spark-dlt"
+    assert (
+        wsf.resource_name == "workspace-file-laktory-pipelines-pl-spark-dlt-config-json"
+    )
     assert (
         wsfp.resource_name
-        == "permissions-workspace-file-laktory-pipelines-pl-spark-dlt-json"
+        == "permissions-workspace-file-laktory-pipelines-pl-spark-dlt-config-json"
     )
 
     assert dlt.options.provider == "${resources.databricks2}"
     assert dltp.options.provider == "${resources.databricks2}"
-    assert wsf.options.provider == "${resources.databricks1}"
-    assert wsfp.options.provider == "${resources.databricks1}"
+    assert wsf.options.provider == "${resources.databricks2}"
+    assert wsfp.options.provider == "${resources.databricks2}"
 
     assert dlt.options.depends_on == []
-    assert dltp.options.depends_on == ["${resources.pl-spark-dlt}"]
-    assert wsf.options.depends_on == []
+    assert dltp.options.depends_on == ["${resources.dlt-pipeline-pl-spark-dlt}"]
+    assert wsf.options.depends_on == ["${resources.dlt-pipeline-pl-spark-dlt}"]
     assert wsfp.options.depends_on == [
-        "${resources.workspace-file-laktory-pipelines-pl-spark-dlt-json}"
+        "${resources.workspace-file-laktory-pipelines-pl-spark-dlt-config-json}"
     ]
 
 

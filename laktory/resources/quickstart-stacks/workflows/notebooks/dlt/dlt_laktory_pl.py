@@ -1,5 +1,10 @@
-# MAGIC #%pip install git+https://github.com/okube-ai/laktory.git@node_reader
-# MAGIC %pip install 'laktory==0.5.0'
+# COMMAND ----------
+# Install dependencies
+laktory_root = "/Workspace" + spark.conf.get("workspace_laktory_root", "/.laktory/")
+pl_name = spark.conf.get("pipeline_name", "dlt-stock-prices")
+filepath = f"{laktory_root}/pipelines/{pl_name}/requirements.txt"
+# MAGIC %pip install -r $filepath
+# MAGIC %restart_python
 
 # COMMAND ----------
 import importlib
@@ -10,26 +15,40 @@ import pyspark.sql.functions as F
 from laktory import dlt
 from laktory import models
 from laktory import get_logger
-from laktory import settings
 
 dlt.spark = spark
 logger = get_logger(__name__)
 
-# Read pipeline definition
-pl_name = spark.conf.get("pipeline_name", "dlt-stock-prices")
-filepath = f"/Workspace{settings.workspace_laktory_root}pipelines/{pl_name}.json"
+# --------------------------------------------------------------------------- #
+# Create Widgets                                                              #
+# --------------------------------------------------------------------------- #
+
+dbutils.widgets.text("pipeline_name", "dlt-stock-prices")
+dbutils.widgets.text("node_name", "")
+dbutils.widgets.text("workspace_laktory_root", "/.laktory/")
+
+# --------------------------------------------------------------------------- #
+# Read Pipeline                                                               #
+# --------------------------------------------------------------------------- #
+
+laktory_root = "/Workspace" + spark.conf.get(
+    "workspace_laktory_root", dbutils.widgets.get("workspace_laktory_root")
+)
+pl_name = spark.conf.get("pipeline_name", dbutils.widgets.get("pipeline_name"))
+node_name = dbutils.widgets.get("node_name")
+filepath = f"{laktory_root}/pipelines/{pl_name}/config.json"
 with open(filepath, "r") as fp:
     pl = models.Pipeline.model_validate_json(fp.read())
 
-
 # Import User Defined Functions
-sys.path.append(f"/Workspace{settings.workspace_laktory_root}pipelines/")
+sys.path.append(f"{laktory_root}/pipelines/")
 udfs = []
 for udf in pl.udfs:
     if udf.module_path:
         sys.path.append(os.path.abspath(udf.module_path))
     module = importlib.import_module(udf.module_name)
     module = importlib.reload(module)
+    globals()[udf.module_name] = module
     udfs += [getattr(module, udf.function_name)]
 
 # --------------------------------------------------------------------------- #
@@ -106,6 +125,9 @@ def define_cdc_table(node, sink):
 
 # Build nodes
 for node in pl.nodes:
+
+    if node_name and node.name != node_name:
+        continue
 
     if node.dlt_template != "DEFAULT":
         continue

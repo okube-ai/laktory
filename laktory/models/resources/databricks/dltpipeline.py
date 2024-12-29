@@ -265,7 +265,7 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
         """
         dlt
         """
-        return "dlt"
+        return "dlt-pipeline"
 
     @property
     def additional_core_resources(self) -> list[PulumiResource]:

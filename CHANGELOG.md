@@ -5,13 +5,18 @@
 * Support for view creation from pipeline node
 * `--version` and `version` CLI commands
 * Support for `for_each_task` in Databricks job resource
+* Support for external libraries in pipelines
 ### Fixed
 * Variables supports referencing environment variables and other variables 
 ### Updated
 * Replaced `dataframe_backend` propagation with dynamic parent lookup
 * Introduced `PipelineChild` internal class to manage child/parent relationship
+* Added laktory package as a task cluster dependency when Databricks Job is used as a pipeline orchestrator
 ### Breaking changes
 * Renamed `dataframe_type` to `dataframe_backend`
+* Renamed pipeline orchestrator from `"DLT"` to `"DATABRICKS_DLT"`
+* Renamed pipeline databricks job and dlt resource names. May cause a re-deployment.
+* Moved pipeline `notebook_path` under `databricks_job` attribute.
 
 ## [0.5.9] - 2024-12-20
 ### Fixed

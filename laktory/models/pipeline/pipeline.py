@@ -1,29 +1,25 @@
 from __future__ import annotations
-import os
-import json
 from typing import Union
 from typing import Literal
 from typing import TYPE_CHECKING
 from typing import Any
 from pydantic import model_validator
 from pathlib import Path
-from pydantic import Field
 import networkx as nx
 
+import laktory
 from laktory._logger import get_logger
 from laktory._settings import settings
-from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
-from laktory.models.datasinks.tabledatasink import TableDataSink
-from laktory.models.pipelinenode import PipelineNode
-from laktory.models.pipelinechild import PipelineChild
-from laktory.models.resources.databricks.dltpipeline import DLTPipeline
-from laktory.models.resources.databricks.job import Job
-from laktory.models.resources.databricks.job import JobTask
-from laktory.models.resources.databricks.job import JobParameter
-from laktory.models.resources.databricks.permissions import Permissions
-from laktory.models.resources.databricks.workspacefile import WorkspaceFile
+from laktory.models.pipeline.orchestrators.databricksdltorchestrator import (
+    DatabricksDLTOrchestrator,
+)
+from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
+    DatabricksJobOrchestrator,
+)
+from laktory.models.pipeline.pipelinenode import PipelineNode
+from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -57,68 +53,6 @@ class PipelineUDF(BaseModel):
     module_path: str = None
 
 
-class PipelineDatabricksJob(Job):
-    """
-    Databricks job specifically designed to run a Laktory pipeline
-
-    Attributes
-    ----------
-    laktory_version:
-        Laktory version to use in the notebook tasks
-    notebook_path:
-        Path for the notebook. If `None`, default path for laktory job notebooks is used.
-
-    """
-
-    laktory_version: Union[str, None] = None
-    notebook_path: Union[str, None] = None
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return super().pulumi_excludes + ["laktory_version", "notebook_path"]
-
-
-class PipelineWorkspaceFile(WorkspaceFile):
-    """
-    Workspace File with default value for path and access controls and forced
-    value for source given a pipeline name.
-    """
-
-    pipeline_name: str
-
-    @model_validator(mode="before")
-    @classmethod
-    def default_values(cls, data: Any) -> Any:
-        pl_name = data.get("pipeline_name", None)
-        data["source"] = os.path.join(CACHE_ROOT, f"tmp-{pl_name}.json")
-        if "path" not in data:
-            data["path"] = f"{settings.workspace_laktory_root}pipelines/{pl_name}.json"
-        if "access_controls" not in data:
-            data["access_controls"] = [
-                {"permission_level": "CAN_READ", "group_name": "users"}
-            ]
-        return data
-
-    def write_source(self, pl):
-        pl.root_path = pl._root_path.as_posix()
-        pl = pl.inject_vars(inplace=False)
-
-        d = pl.model_dump(exclude_unset=True)
-        s = json.dumps(d, indent=4)
-
-        source = self.inject_vars_into_dump({"source": self.source})["source"]
-        with open(source, "w", newline="\n") as fp:
-            fp.write(s)
-
-    @property
-    def resource_type_id(self):
-        return "workspace-file"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return super().pulumi_excludes + ["pipeline_name"]
-
-
 # --------------------------------------------------------------------------- #
 # Main Class                                                                  #
 # --------------------------------------------------------------------------- #
@@ -142,10 +76,17 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     ----------
     databricks_job:
         Defines the Databricks Job specifications when DATABRICKS_JOB is
-        selected as the orchestrator.
-    dlt:
-        Defines the Delta Live Tables specifications when DLT is selected as
-        the orchestrator.
+        selected as the orchestrator. Requires to add the supporting
+        [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/jobs/job_laktory_pl.py)
+        to the stack.
+    databricks_dlt:
+        Defines the Databricks DLT specifications when DATABRICKS_DLT is
+        selected as the orchestrator. Requires to add the supporting
+        [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py)
+        to the stack.
+    dependencies:
+        List of dependencies required to run the pipeline. If Laktory is not
+        provided, it's current version is added to the list.
     name:
         Name of the pipeline
     nodes:
@@ -155,12 +96,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         Orchestrator used for scheduling and executing the pipeline. The
         selected option defines which resources are to be deployed.
         Supported options are:
-        - `DLT`: When orchestrated through Databricks DLT, each pipeline node
-          creates a DLT table (or view, if no sink is defined). Behind the
-          scenes, `PipelineNodeDataSource` leverages native `dlt` `read` and
-          `read_stream` functions to defined the interdependencies between the
-          tables as in a standard DLT pipeline. This is the recommended
-          orchestrator as it is the most feature rich.
+
+        - `DATABRICKS_DLT`: When orchestrated through Databricks DLT, each
+          pipeline node creates a DLT table (or view, if no sink is defined).
+          Behind the scenes, `PipelineNodeDataSource` leverages native `dlt`
+          `read` and `read_stream` functions to defined the interdependencies
+          between the tables as in a standard DLT pipeline.
         - `DATABRICKS_JOB`: When deployed through a Databricks Job, a task
           is created for each pipeline node and all the required dependencies
           are set automatically. If a given task (or pipeline node) uses a
@@ -171,9 +112,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     root_path:
         Location of the pipeline node root used to store logs, metrics and
         checkpoints.
-    workspacefile:
-        Workspace file used to store the JSON definition of the pipeline.
-
 
     Examples
     --------
@@ -253,13 +191,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         orchestrator: DATABRICKS_JOB
         databricks_job:
           name: job-pl-stock-prices
-          laktory_version: 0.3.0
           notebook_path: /Workspace/.laktory/jobs/job_laktory_pl.py
           clusters:
             - name: node-cluster
               spark_version: 14.0.x-scala2.12
               node_type_id: Standard_DS3_v2
-
+        dependencies:
+            - laktory==0.3.0
+            - yfinance
         nodes:
         - name: brz_stock_prices
           layer: BRONZE
@@ -317,7 +256,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     Finally, we re-implement the previous pipeline, but with a few key
     differences:
 
-    - Orchestrator is `DLT` instead of a `DATABRICKS_JOB`
+    - Orchestrator is `DATABRICKS_DLT` instead of a `DATABRICKS_JOB`
     - Sinks are Unity Catalog tables instead of storage locations
     - Data is read as a stream in most nodes
     - `slv_stock_meta` is simply a DLT view since it does not have an associated
@@ -331,8 +270,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     pipeline_yaml = '''
         name: pl-stock-prices
-        orchestrator: DLT
-        dlt:
+        orchestrator: DATABRICKS_DLT
+        databricks_dlt:
             catalog: dev
             target: sandbox
             access_controls:
@@ -397,32 +336,31 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     """
 
-    databricks_job: Union[PipelineDatabricksJob, None] = None
+    databricks_job: Union[DatabricksJobOrchestrator, None] = None
+    databricks_dlt: Union[DatabricksDLTOrchestrator, None] = None
     dataframe_backend: Literal["SPARK", "POLARS"] = None
-    dlt: Union[DLTPipeline, None] = None
+    dependencies: list[str] = []
     name: str
     nodes: list[Union[PipelineNode]]
-    orchestrator: Union[Literal["DLT", "DATABRICKS_JOB"], None] = None
+    orchestrator: Union[Literal["DATABRICKS_DLT", "DATABRICKS_JOB"], None] = None
     udfs: list[PipelineUDF] = []
     root_path: str = None
-    workspacefile: PipelineWorkspaceFile = None
 
     @model_validator(mode="before")
     @classmethod
     def assign_name(cls, data: Any) -> Any:
 
-        if "dlt" in data.keys() and data["dlt"].get("name", None) is None:
-            data["dlt"]["name"] = data.get("name", None)
+        if (
+            "databricks_dlt" in data.keys()
+            and data["databricks_dlt"].get("name", None) is None
+        ):
+            data["databricks_dlt"]["name"] = data.get("name", None)
 
         if (
             "databricks_job" in data.keys()
             and data["databricks_job"].get("name", None) is None
         ):
             data["databricks_job"]["name"] = data.get("name", None)
-
-        workspacefile = data.get("workspacefile", None)
-        if workspacefile:
-            workspacefile["pipeline_name"] = data["name"]
 
         return data
 
@@ -439,103 +377,21 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         return data
 
     @model_validator(mode="after")
-    def default_workspacefile(self):
+    def validate_orchestrator(self):
 
-        if self.orchestrator in ["DATABRICKS_JOB", "DLT"]:
-            if self.workspacefile is None:
-                self.workspacefile = PipelineWorkspaceFile(pipeline_name=self.name)
-
-        return self
-
-    @model_validator(mode="after")
-    def validate_dlt(self) -> Any:
-
-        if not self.is_orchestrator_dlt:
-            return self
-
-        if self.dlt is None:
-            raise ValueError("dlt must be defined if DLT orchestrator is selected.")
-
-        for node in self.nodes:
-            if node.is_view:
+        if self.orchestrator == "DATABRICKS_JOB":
+            if self.databricks_job is None:
                 raise ValueError(
-                    f"Node '{node.name}' is a view which is not supported with DLT orchestrator."
+                    "databricks_job must be defined if DATABRICKS_JOB orchestrator is selected."
                 )
+            self.databricks_job.update_from_parent()
 
-        for n in self.nodes:
-            for s in n.all_sinks:
-                if isinstance(s, TableDataSink):
-                    s.catalog_name = self.dlt.catalog
-                    s.schema_name = self.dlt.target
-
-        return self
-
-    @model_validator(mode="after")
-    def validate_job(self) -> Any:
-
-        if not self.orchestrator == "DATABRICKS_JOB":
-            return self
-
-        if self.databricks_job is None:
-            raise ValueError(
-                "databricks_job must be defined if DATABRICKS_JOB orchestrator is selected."
-            )
-
-        cluster_found = False
-        for c in self.databricks_job.clusters:
-            if c.name == "node-cluster":
-                cluster_found = True
-        # if not cluster_found:
-        #     raise ValueError(
-        #         "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
-        #     )
-
-        job = self.databricks_job
-        job.parameters = [
-            JobParameter(name="full_refresh", default="false"),
-            JobParameter(name="pipeline_name", default=self.name),
-            # JobParameter(name="pipeline_path", default=self.workspacefile.path),
-            # JobParameter(name="workspace_laktory_root", default=settings.workspace_laktory_root),
-            # JobParameter(name="laktory_root", default=settings.workspace_laktory_root),
-        ]
-
-        notebook_path = self.databricks_job.notebook_path
-        if notebook_path is None:
-            notebook_path = f"{settings.workspace_laktory_root}jobs/job_laktory_pl.py"
-
-        package = "laktory"
-        if self.databricks_job.laktory_version:
-            package += f"=={self.databricks_job.laktory_version}"
-
-        job.tasks = []
-
-        # Sorting Node Names to prevent job update trigger with Pulumi
-        node_names = [node.name for node in self.nodes]
-        node_names.sort()
-        for node_name in node_names:
-
-            node = self.nodes_dict[node_name]
-
-            depends_on = []
-            for edge in self.dag.in_edges(node.name):
-                depends_on += [{"task_key": "node-" + edge[0]}]
-
-            job.tasks += [
-                JobTask(
-                    task_key="node-" + node.name,
-                    notebook_task={
-                        "base_parameters": {"node_name": node.name},
-                        "notebook_path": notebook_path,
-                    },
-                    # libraries=[{"pypi": {"package": package}}],
-                    depends_ons=depends_on,
-                    # job_cluster_key=job_cluster_key,
+        if self.orchestrator == "DATABRICKS_DLT":
+            if self.databricks_dlt is None:
+                raise ValueError(
+                    "databricks_job must be defined if DATABRICKS_DLT orchestrator is selected."
                 )
-            ]
-            job.sort_tasks(job.tasks)
-
-            if cluster_found:
-                job.tasks[-1].job_cluster_key = "node-cluster"
+            self.databricks_dlt.update_from_parent()
 
         return self
 
@@ -545,7 +401,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     @property
     def child_attribute_names(self):
-        return ["nodes"]
+        return ["nodes", "databricks_dlt", "databricks_job"]
 
     # ----------------------------------------------------------------------- #
     # ID                                                                      #
@@ -568,13 +424,32 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         return name
 
     # ----------------------------------------------------------------------- #
+    # Libraries                                                               #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def _dependencies(self):
+
+        laktory_found = False
+
+        dependencies = [d for d in self.dependencies]
+        for d in dependencies:
+            if "laktory" in d:
+                laktory_found = True
+
+        if not laktory_found:
+            dependencies += [f"laktory=={laktory.__version__}"]
+
+        return dependencies
+
+    # ----------------------------------------------------------------------- #
     # Orchestrator                                                            #
     # ----------------------------------------------------------------------- #
 
     @property
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline orchestrator is DLT"""
-        return self.orchestrator == "DLT"
+        return self.orchestrator == "DATABRICKS_DLT"
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
@@ -824,9 +699,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
         """
-        - configuration workspace file
-        - configuration workspace file permissions
-
         if orchestrator is `DLT`:
 
         - DLT Pipeline
@@ -837,16 +709,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         """
 
         resources = []
-        if self.orchestrator in ["DATABRICKS_JOB", "DLT"]:
 
-            resources += [self.workspacefile]
-            resources[-1].write_source(self)
+        if self.databricks_job:
+            resources += [self.databricks_job]
 
-            if self.is_orchestrator_dlt:
-                resources += [self.dlt]
-
-            if self.orchestrator == "DATABRICKS_JOB":
-                resources += [self.databricks_job]
+        if self.databricks_dlt:
+            resources += [self.databricks_dlt]
 
         return resources
 
@@ -856,29 +724,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     @property
     def pulumi_resource_type(self) -> str:
-        return ""  # "databricks:Pipeline"
-
-    #
-    # @property
-    # def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-    #     return {
-    #         "access_controls": True,
-    #         "tables": True,
-    #         "clusters": {"__all__": {"access_controls"}},
-    #         "udfs": True,
-    #     }
-    #
-    # @property
-    # def pulumi_properties(self):
-    #     d = super().pulumi_properties
-    #     k = "clusters"
-    #     if k in d:
-    #         _clusters = []
-    #         for c in d[k]:
-    #             c["label"] = c.pop("name")
-    #             _clusters += [c]
-    #         d[k] = _clusters
-    #     return d
+        return ""
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
@@ -887,20 +733,3 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     @property
     def terraform_resource_type(self) -> str:
         return ""
-
-    #
-    # @property
-    # def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-    #     return self.pulumi_excludes
-    #
-    # @property
-    # def terraform_properties(self) -> dict:
-    #     d = super().terraform_properties
-    #     k = "cluster"
-    #     if k in d:
-    #         _clusters = []
-    #         for c in d[k]:
-    #             c["label"] = c.pop("name")
-    #             _clusters += [c]
-    #         d[k] = _clusters
-    #     return d
