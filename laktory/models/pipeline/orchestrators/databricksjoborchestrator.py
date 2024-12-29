@@ -18,13 +18,25 @@ from laktory.models.resources.pulumiresource import PulumiResource
 
 class DatabricksJobOrchestrator(Job, PipelineChild):
     """
-    Databricks job used as an orchestrator to execute a Laktory pipeline
+    Databricks job used as an orchestrator to execute a Laktory pipeline.
+
+    Job orchestrator supports incremental workloads with Spark Structured
+    Streaming, but it does not support continuous processing.
+
+    Selecting this orchestrator requires to add the supporting
+    [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/jobs/job_laktory_pl.py)
+    to the stack.
 
     Attributes
     ----------
     notebook_path:
         Path for the notebook. If `None`, default path for laktory job notebooks is used.
-
+    config_file:
+        Pipeline configuration (json) file deployed to the workspace and used
+        by the job to read and execute the pipeline.
+    requirements_file:
+        Pipeline requirements (json) file deployed to the workspace and used
+        by the job to install the required python dependencies.
     """
 
     notebook_path: Union[str, None] = None

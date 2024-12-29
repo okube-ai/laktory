@@ -76,13 +76,17 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     ----------
     databricks_job:
         Defines the Databricks Job specifications when DATABRICKS_JOB is
-        selected as the orchestrator.
+        selected as the orchestrator. Requires to add the supporting
+        [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/jobs/job_laktory_pl.py)
+        to the stack.
     databricks_dlt:
         Defines the Databricks DLT specifications when DATABRICKS_DLT is
-        selected as the orchestrator.
-    depedencies:
-        List of dependencies required to run the pipeline. If None is provided
-        Laktory current version is added to the list.
+        selected as the orchestrator. Requires to add the supporting
+        [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py)
+        to the stack.
+    dependencies:
+        List of dependencies required to run the pipeline. If Laktory is not
+        provided, it's current version is added to the list.
     name:
         Name of the pipeline
     nodes:
@@ -92,6 +96,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         Orchestrator used for scheduling and executing the pipeline. The
         selected option defines which resources are to be deployed.
         Supported options are:
+
         - `DATABRICKS_DLT`: When orchestrated through Databricks DLT, each
           pipeline node creates a DLT table (or view, if no sink is defined).
           Behind the scenes, `PipelineNodeDataSource` leverages native `dlt`

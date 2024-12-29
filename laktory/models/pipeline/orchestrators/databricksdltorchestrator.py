@@ -15,11 +15,24 @@ from laktory.models.resources.pulumiresource import PulumiResource
 
 class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
     """
-    Databricks DLT used as an orchestrator to execute a Laktory pipeline
+    Databricks DLT used as an orchestrator to execute a Laktory pipeline.
+
+    DLT orchestrator does not support pipeline nodes with views (as opposed to
+    materialized tables). Also, it does not support writing to multiple
+    schemas within the same pipeline.
+
+    Selecting this orchestrator requires to add the supporting
+    [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py)
+    to the stack.
 
     Attributes
     ----------
-
+    config_file:
+        Pipeline configuration (json) file deployed to the workspace and used
+        by the job to read and execute the pipeline.
+    requirements_file:
+        Pipeline requirements (json) file deployed to the workspace and used
+        by the job to install the required python dependencies.
     """
 
     config_file: PipelineConfigWorkspaceFile = PipelineConfigWorkspaceFile()

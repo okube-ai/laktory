@@ -156,12 +156,10 @@ configured directly within the pipeline.
 ```yaml title="pipeline.yaml"
 - name: stock_prices
   nodes: ...
-  orchestrator: DLT
-  dlt:
+  orchestrator: DATABRICKS_DLT
+  databricks_dlt:
     catalog: dev
     target: finance
-    configuration:
-      pipeline_name: dlt-stock-prices
     
     clusters:
     - name : default
@@ -178,9 +176,57 @@ configured directly within the pipeline.
 The choice of orchestrator determines which resources are deployed when 
 running the `laktory deploy` CLI command. 
 
+#### Databricks Job
+A [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
+is a powerful orchestration mechanism. In this case, Laktory will create a 
+task for each node, enabling parallel execution of nodes. Each reading and 
+writing operation is entirely handled by Laktory source and sink. 
+
+![job](../../images/job_stock_prices.png)
+
+To use the `DATABRICKS_JOB` orchestrator, you must also add the supporting
+[notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/jobs/job_laktory_pl.py) 
+to your stack. 
+
+Here is a simplified version:
+```py title="job_laktory_pl"
+dbutils.widgets.text("pipeline_name", "pl-stock-prices")
+dbutils.widgets.text("node_name", "")
+
+from laktory import models
+from laktory import settings
+
+# --------------------------------------------------------------------------- #
+# Read Pipeline                                                               #
+# --------------------------------------------------------------------------- #
+
+pl_name = dbutils.widgets.get("pipeline_name")
+node_name = dbutils.widgets.get("node_name")
+filepath = f"/Workspace{settings.workspace_laktory_root}pipelines/{pl_name}.json"
+with open(filepath, "r") as fp:
+    pl = models.Pipeline.model_validate_json(fp.read())
+
+
+# --------------------------------------------------------------------------- #
+# Execution                                                                   #
+# --------------------------------------------------------------------------- #
+
+if node_name:
+    pl.nodes_dict[node_name].execute(spark=spark)
+else:
+    pl.execute(spark=spark)
+```
+
+The notebook reads the pipeline configuration using the pipeline name provided
+by the job and execute a node, also provided by the job.
+
+Selecting the `DATABRICKS_JOB` orchestrator will deploy a pipeline json 
+configuration file and a `requirements.txt` file for installing dependencies.
+Both can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{pipeline_name}/`.
+
 #### Delta Live Tables (DLT)
 [Databricks Delta Live Tables](https://www.databricks.com/product/delta-live-tables)
-is the recommended orchestrator, offering features like automatic schema change management, continuous execution, and 
+offers features like automatic schema change management, continuous execution, and 
 autoscaling. 
 
 ![dlt](../../images/dlt_stock_prices.png)
@@ -189,6 +235,11 @@ Each pipeline node runs inside a dlt.table() or dlt.view() function. In the cont
 trigger a sink write, as this operation is managed by DLT. When a source is a pipeline node, `dlt.read()` and
 `dlt.read_stream()` functions are called to ensure compatibility with the DLT framework.
 
+To use the `DATABRICKS_DLT` orchestrator, you must also add the supporting
+[notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py) 
+to your stack. 
+
+Here is a simplified version:
 ```py title="dlt_laktory_pl"
 from laktory import dlt
 from laktory import models
@@ -235,45 +286,9 @@ user cluster and will be able to inspect the resulting dataframe.
 
 ![dlt](../../images/dlt_debug.png)
 
-
-#### Databricks Job
-A [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
-is another powerful orchestration mechanism. In this case, Laktory will create a 
-task for each node, enabling parallel execution of nodes. Each reading and 
-writing operation is entirely handled by Laktory source and sink. 
-
-![job](../../images/job_stock_prices.png)
-
-The supporting notebook simply needs to load the pipeline model and retrieve
-the node name from the job.
-
-```py title="job_laktory_pl"
-dbutils.widgets.text("pipeline_name", "pl-stock-prices")
-dbutils.widgets.text("node_name", "")
-
-from laktory import models
-from laktory import settings
-
-# --------------------------------------------------------------------------- #
-# Read Pipeline                                                               #
-# --------------------------------------------------------------------------- #
-
-pl_name = dbutils.widgets.get("pipeline_name")
-node_name = dbutils.widgets.get("node_name")
-filepath = f"/Workspace{settings.workspace_laktory_root}pipelines/{pl_name}.json"
-with open(filepath, "r") as fp:
-    pl = models.Pipeline.model_validate_json(fp.read())
-
-
-# --------------------------------------------------------------------------- #
-# Execution                                                                   #
-# --------------------------------------------------------------------------- #
-
-if node_name:
-    pl.nodes_dict[node_name].execute(spark=spark)
-else:
-    pl.execute(spark=spark)
-```
+Selecting the `DATABRICKS_DLT` orchestrator will deploy a pipeline json 
+configuration file and a `requirements.txt` file for installing dependencies.
+Both can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{pipeline_name}/`.
 
 #### Apache Airflow
 Support for Apache Airflow as an orchestrator is on the roadmap.
