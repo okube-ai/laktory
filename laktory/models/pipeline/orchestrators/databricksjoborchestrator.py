@@ -1,8 +1,11 @@
 from typing import Union
 
 from laktory._settings import settings
-from laktory.models.pipeline.orchestrators.databricksconfigfile import (
+from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
+)
+from laktory.models.pipeline.orchestrators.pipelinerequirementsworkspacefile import (
+    PipelineRequirementsWorkspaceFile,
 )
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.cluster import ClusterLibrary
@@ -26,7 +29,9 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
     notebook_path: Union[str, None] = None
     config_file: PipelineConfigWorkspaceFile = PipelineConfigWorkspaceFile()
-    requirements_file: str = None
+    requirements_file: PipelineRequirementsWorkspaceFile = (
+        PipelineRequirementsWorkspaceFile()
+    )
 
     # ----------------------------------------------------------------------- #
     # Update Job                                                              #
@@ -45,21 +50,12 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         pl = self.parent_pipeline
 
-        # # Libraries
-        # pypi_packages = []
-        # for p in pl.pypi_packages:
-        #     pypi_packages += [p]
-
         self.parameters = [
             JobParameter(name="full_refresh", default="false"),
             JobParameter(name="pipeline_name", default=pl.name),
             JobParameter(
                 name="install_dependencies", default=str(not cluster_found).lower()
             ),
-            # JobParameter(name="pypi_packages", default=json.dumps(pypi_packages)),
-            # JobParameter(name="pipeline_path", default=self.workspacefile.path),
-            # JobParameter(name="workspace_laktory_root", default=settings.workspace_laktory_root),
-            # JobParameter(name="laktory_root", default=settings.workspace_laktory_root),
         ]
 
         notebook_path = self.notebook_path
@@ -105,6 +101,9 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         # Config file
         self.config_file.update_from_parent()
 
+        # Requirements file
+        self.requirements_file.update_from_parent()
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #
@@ -140,8 +139,9 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         """
 
         resources = []
-
         resources += [self.config_file]
-        resources[-1].write_source(self.parent_pipeline)
+        resources[-1].write_source()
+        resources += [self.requirements_file]
+        resources[-1].write_source()
 
         return resources

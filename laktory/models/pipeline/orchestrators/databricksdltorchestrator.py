@@ -1,8 +1,11 @@
 from typing import Union
 
 from laktory.models.datasinks.tabledatasink import TableDataSink
-from laktory.models.pipeline.orchestrators.databricksconfigfile import (
+from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
+)
+from laktory.models.pipeline.orchestrators.pipelinerequirementsworkspacefile import (
+    PipelineRequirementsWorkspaceFile,
 )
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.dltpipeline import DLTPipeline
@@ -19,7 +22,9 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
     """
 
     config_file: PipelineConfigWorkspaceFile = PipelineConfigWorkspaceFile()
-    requirements_file: str = None
+    requirements_file: PipelineRequirementsWorkspaceFile = (
+        PipelineRequirementsWorkspaceFile()
+    )
 
     # ----------------------------------------------------------------------- #
     # Update DLT                                                              #
@@ -43,6 +48,9 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
 
         # Config file
         self.config_file.update_from_parent()
+
+        # Requirements file
+        self.requirements_file.update_from_parent()
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
@@ -78,8 +86,9 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
         """
 
         resources = []
-
         resources += [self.config_file]
-        resources[-1].write_source(self.parent_pipeline)
+        resources[-1].write_source()
+        resources += [self.requirements_file]
+        resources[-1].write_source()
 
         return resources
