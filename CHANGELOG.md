@@ -15,6 +15,8 @@
 ### Breaking changes
 * Renamed `dataframe_type` to `dataframe_backend`
 * Renamed pipeline orchestrator from `"DLT"` to `"DATABRICKS_DLT"`
+* Renamed pipeline databricks job and dlt resource names. May cause a re-deployment.
+* Moved pipeline `notebook_path` under `databricks_job` attribute.
 
 ## [0.5.9] - 2024-12-20
 ### Fixed

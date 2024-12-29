@@ -182,6 +182,7 @@ nav:
       - Pipeline:
         - Pipeline: api/models/pipeline/pipeline.md
         - PipelineNode: api/models/pipeline/pipelinenode.md
+        - PipelineChild: api/models/pipeline/pipelinechild.md
         - Orchestrators:
             - Databricks Job: api/models/pipeline/orchestrators/databricksjoborchestrator.md
             - Databricks DLT: api/models/pipeline/orchestrators/databricksdltorchestrator.md
