@@ -63,9 +63,9 @@ class Dispatcher:
             if not pl.options.is_enabled:
                 continue
 
-            if pl.dlt is not None:
-                self.resources[pl.dlt.name] = DLTPipelineRunner(
-                    dispatcher=self, name=pl.dlt.name
+            if pl.databricks_dlt is not None:
+                self.resources[pl.databricks_dlt.name] = DLTPipelineRunner(
+                    dispatcher=self, name=pl.databricks_dlt.name
                 )
 
             if pl.databricks_job is not None:
