@@ -52,6 +52,10 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         with open(source, "w", newline="\n") as fp:
             fp.write(s)
 
+    # ----------------------------------------------------------------------- #
+    # Resource Properties                                                     #
+    # ----------------------------------------------------------------------- #
+
     @property
     def resource_type_id(self):
         return "workspace-file"

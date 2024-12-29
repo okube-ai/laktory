@@ -66,8 +66,7 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
 
     @property
     def resource_type_id(self) -> str:
-        """ """
-        return "dlt"  # For backward compatibility
+        return "dlt-pipeline"
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
@@ -85,7 +84,7 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
         - requirements workspace file permissions
         """
 
-        resources = []
+        resources = super().additional_core_resources
         resources += [self.config_file]
         resources[-1].write_source()
         resources += [self.requirements_file]

@@ -159,7 +159,7 @@ def test_pipeline_job():
 
     # Test resources
     resources = pl_job.core_resources
-    assert len(resources) == 3
+    assert len(resources) == 5
 
 
 def test_pipeline_dlt():
@@ -233,41 +233,56 @@ def test_pipeline_dlt():
             "rootpath": "/.laktory/",
             "source": "./tmp-pl-spark-dlt-config.json",
         },
-        "requirements_file": None,
+        "requirements_file": {
+            "dataframe_backend": None,
+            "access_controls": [
+                {
+                    "group_name": "users",
+                    "permission_level": "CAN_READ",
+                    "service_principal_name": None,
+                    "user_name": None,
+                }
+            ],
+            "dirpath": "",
+            "path": "/.laktory/pipelines/pl-spark-dlt/requirements.txt",
+            "rootpath": "/.laktory/",
+            "source": "./tmp-pl-spark-dlt-requirements.txt",
+        },
     }
 
     # Test resources
     resources = pl_dlt.core_resources
-    assert len(resources) == 4
+    assert len(resources) == 6
 
-    wsf = resources[0]
-    wsfp = resources[1]
-    dlt = resources[2]
-    dltp = resources[3]
+    dlt = resources[0]
+    dltp = resources[1]
+    wsf = resources[2]
+    wsfp = resources[3]
 
     assert isinstance(wsf, models.resources.databricks.WorkspaceFile)
     assert isinstance(wsfp, models.resources.databricks.Permissions)
     assert isinstance(dlt, models.resources.databricks.DLTPipeline)
     assert isinstance(dltp, models.resources.databricks.Permissions)
 
-    assert dlt.resource_name == "pl-spark-dlt"
-    assert dltp.resource_name == "permissions-pl-spark-dlt"
-    assert wsf.resource_name == "workspace-file-laktory-pipelines-pl-spark-dlt-json"
+    assert dlt.resource_name == "dlt-pipeline-pl-spark-dlt"
+    assert dltp.resource_name == "permissions-dlt-pipeline-pl-spark-dlt"
+    assert wsf.resource_name == "workspace-file-laktory-pipelines-pl-spark-dlt-config-json"
     assert (
         wsfp.resource_name
-        == "permissions-workspace-file-laktory-pipelines-pl-spark-dlt-json"
+        == "permissions-workspace-file-laktory-pipelines-pl-spark-dlt-config-json"
     )
 
     assert dlt.options.provider == "${resources.databricks2}"
     assert dltp.options.provider == "${resources.databricks2}"
-    assert wsf.options.provider == "${resources.databricks1}"
-    assert wsfp.options.provider == "${resources.databricks1}"
+    assert wsf.options.provider == "${resources.databricks2}"
+    assert wsfp.options.provider == "${resources.databricks2}"
 
     assert dlt.options.depends_on == []
-    assert dltp.options.depends_on == ["${resources.pl-spark-dlt}"]
-    assert wsf.options.depends_on == []
+    assert dltp.options.depends_on == ["${resources.dlt-pipeline-pl-spark-dlt}"]
+    assert wsf.options.depends_on == ['${resources.dlt-pipeline-pl-spark-dlt}']
+    print(wsfp.options.depends_on)
     assert wsfp.options.depends_on == [
-        "${resources.workspace-file-laktory-pipelines-pl-spark-dlt-json}"
+        '${resources.workspace-file-laktory-pipelines-pl-spark-dlt-config-json}'
     ]
 
 

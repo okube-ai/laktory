@@ -191,13 +191,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             - name: node-cluster
               spark_version: 14.0.x-scala2.12
               node_type_id: Standard_DS3_v2
-        libraries:
-            - pypi:
-                package:
-                    laktory==0.3.0
-            - pypi:
-                package:
-                    yfinance
+        dependencies:
+            - laktory==0.3.0
+            - yfinance
         nodes:
         - name: brz_stock_prices
           layer: BRONZE

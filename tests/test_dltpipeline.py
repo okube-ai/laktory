@@ -34,7 +34,7 @@ def test_pipeline():
 
 def test_pipeline_pulumi():
     print(pl.resource_name)
-    assert pl.resource_name == "dlt-pl-stock-prices"
+    assert pl.resource_name == "dlt-pipeline-pl-stock-prices"
     assert pl.options.model_dump(exclude_none=True) == {
         "depends_on": [],
         "delete_before_replace": True,

@@ -118,8 +118,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
     @property
     def resource_type_id(self) -> str:
-        """ """
-        return "pipeline-databricks-job"  # For backward compatibility
+        return "job"
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
@@ -138,7 +137,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         - requirements workspace file permissions
         """
 
-        resources = []
+        resources = super().additional_core_resources
         resources += [self.config_file]
         resources[-1].write_source()
         resources += [self.requirements_file]

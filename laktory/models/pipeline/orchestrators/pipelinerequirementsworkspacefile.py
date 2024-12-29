@@ -44,6 +44,10 @@ class PipelineRequirementsWorkspaceFile(WorkspaceFile, PipelineChild):
         with open(source, "w", newline="\n") as fp:
             fp.write("\n".join(pl._dependencies))
 
+    # ----------------------------------------------------------------------- #
+    # Resource Properties                                                     #
+    # ----------------------------------------------------------------------- #
+
     @property
     def resource_type_id(self):
         return "workspace-file"
