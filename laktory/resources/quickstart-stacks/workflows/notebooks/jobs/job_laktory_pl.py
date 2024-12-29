@@ -2,10 +2,24 @@
 dbutils.widgets.text("pipeline_name", "pl-stocks-job")
 dbutils.widgets.text("node_name", "")
 dbutils.widgets.text("full_refresh", "False")
+dbutils.widgets.text("install_dependencies", "True")
 
 # COMMAND ----------
-# MAGIC %pip install 'laktory==<laktory_version>'
-# MAGIC %restart_python
+install_dependencies = dbutils.widgets.get("install_dependencies").lower() == "true"
+pl_name = dbutils.widgets.get("pipeline_name")
+
+if install_dependencies:
+    notebook_path = (
+        dbutils.notebook.entry_point.getDbutils()
+        .notebook()
+        .getContext()
+        .notebookPath()
+        .get()
+    )
+    laktory_root = "/Workspace" + notebook_path.split("/jobs/")[0]
+    filepath = f"{laktory_root}/pipelines/{pl_name}/requirements.txt"
+    # MAGIC     %pip install -r $filepath
+    # MAGIC     %restart_python
 
 # COMMAND ----------
 import importlib
@@ -15,7 +29,6 @@ import pyspark.sql.functions as F
 
 from laktory import models
 from laktory import get_logger
-from laktory import settings
 
 logger = get_logger(__name__)
 notebook_path = (
@@ -34,7 +47,7 @@ laktory_root = "/Workspace" + notebook_path.split("/jobs/")[0]
 pl_name = dbutils.widgets.get("pipeline_name")
 node_name = dbutils.widgets.get("node_name")
 full_refresh = dbutils.widgets.get("full_refresh").lower() == "true"
-filepath = f"{laktory_root}/pipelines/{pl_name}.json"
+filepath = f"{laktory_root}/pipelines/{pl_name}/config.json"
 with open(filepath, "r") as fp:
     pl = models.Pipeline.model_validate_json(fp.read())
 
