@@ -7,10 +7,10 @@
 name: pl-stocks-dlt
 
 # Select Orchestrator
-orchestrator: DLT
+orchestrator: DATABRICKS_DLT
 
 # Configure Orchestrator
-dlt:
+databricks_dlt:
   development: ${vars.is_dev}
   target: default
   clusters:
@@ -19,8 +19,6 @@ dlt:
     autoscale:
       min_workers: 1
       max_workers: 2
-  configuration:
-    pipeline_name: pl-stocks-dlt
   libraries:
   - notebook:
       path: /.laktory/dlt/dlt_laktory_pl.py

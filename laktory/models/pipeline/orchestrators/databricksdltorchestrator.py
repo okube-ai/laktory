@@ -1,5 +1,6 @@
 from typing import Union
 
+from laktory._settings import settings
 from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
@@ -45,6 +46,10 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
                 if isinstance(s, TableDataSink):
                     s.catalog_name = self.catalog
                     s.schema_name = self.target
+
+        # Configuration
+        self.configuration["pipeline_name"] = pl.name
+        self.configuration["workspace_laktory_root"] = settings.workspace_laktory_root
 
         # Config file
         self.config_file.update_from_parent()

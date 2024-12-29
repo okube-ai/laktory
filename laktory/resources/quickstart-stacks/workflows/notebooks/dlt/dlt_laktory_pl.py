@@ -3,8 +3,8 @@
 laktory_root = "/Workspace" + spark.conf.get("workspace_laktory_root", "/.laktory/")
 pl_name = spark.conf.get("pipeline_name", "dlt-stock-prices")
 filepath = f"{laktory_root}/pipelines/{pl_name}/requirements.txt"
-#MAGIC %pip install -r $filepath
-#MAGIC %restart_python
+# MAGIC %pip install -r $filepath
+# MAGIC %restart_python
 
 # COMMAND ----------
 import importlib
@@ -31,7 +31,9 @@ dbutils.widgets.text("workspace_laktory_root", "/.laktory/")
 # Read Pipeline                                                               #
 # --------------------------------------------------------------------------- #
 
-laktory_root = "/Workspace" + spark.conf.get("workspace_laktory_root", dbutils.widgets.get("workspace_laktory_root"))
+laktory_root = "/Workspace" + spark.conf.get(
+    "workspace_laktory_root", dbutils.widgets.get("workspace_laktory_root")
+)
 pl_name = spark.conf.get("pipeline_name", dbutils.widgets.get("pipeline_name"))
 node_name = dbutils.widgets.get("node_name")
 filepath = f"{laktory_root}/pipelines/{pl_name}/config.json"

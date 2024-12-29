@@ -14,7 +14,9 @@ job = Job(
     tasks=[
         {
             "depends_ons": [{"task_key": "ingestion"}],
-            "pipeline_task": {"pipeline_id": "${resources.dlt-pipeline-pl-spark-dlt.id}"},
+            "pipeline_task": {
+                "pipeline_id": "${resources.dlt-pipeline-pl-spark-dlt.id}"
+            },
             "task_key": "pipeline",
         },
         {
@@ -318,7 +320,9 @@ def test_job_pulumi():
             },
             {
                 "depends_ons": [{"task_key": "ingestion"}],
-                "pipeline_task": {"pipeline_id": "${resources.dlt-pipeline-pl-spark-dlt.id}"},
+                "pipeline_task": {
+                    "pipeline_id": "${resources.dlt-pipeline-pl-spark-dlt.id}"
+                },
                 "task_key": "pipeline",
             },
             {

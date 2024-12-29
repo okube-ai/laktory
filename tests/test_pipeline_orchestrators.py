@@ -205,7 +205,10 @@ def test_pipeline_dlt():
         "catalog": "dev",
         "channel": "PREVIEW",
         "clusters": [],
-        "configuration": {},
+        "configuration": {
+            "pipeline_name": "pl-spark-dlt",
+            "workspace_laktory_root": "/.laktory/",
+        },
         "continuous": None,
         "development": None,
         "edition": None,
@@ -266,7 +269,9 @@ def test_pipeline_dlt():
 
     assert dlt.resource_name == "dlt-pipeline-pl-spark-dlt"
     assert dltp.resource_name == "permissions-dlt-pipeline-pl-spark-dlt"
-    assert wsf.resource_name == "workspace-file-laktory-pipelines-pl-spark-dlt-config-json"
+    assert (
+        wsf.resource_name == "workspace-file-laktory-pipelines-pl-spark-dlt-config-json"
+    )
     assert (
         wsfp.resource_name
         == "permissions-workspace-file-laktory-pipelines-pl-spark-dlt-config-json"
@@ -279,10 +284,9 @@ def test_pipeline_dlt():
 
     assert dlt.options.depends_on == []
     assert dltp.options.depends_on == ["${resources.dlt-pipeline-pl-spark-dlt}"]
-    assert wsf.options.depends_on == ['${resources.dlt-pipeline-pl-spark-dlt}']
-    print(wsfp.options.depends_on)
+    assert wsf.options.depends_on == ["${resources.dlt-pipeline-pl-spark-dlt}"]
     assert wsfp.options.depends_on == [
-        '${resources.workspace-file-laktory-pipelines-pl-spark-dlt-config-json}'
+        "${resources.workspace-file-laktory-pipelines-pl-spark-dlt-config-json}"
     ]
 
 
