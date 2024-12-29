@@ -1,24 +1,10 @@
 # COMMAND ----------
-dbutils.widgets.text("pipeline_name", "dlt-stock-prices")
-dbutils.widgets.text("node_name", "")
-dbutils.widgets.text("install_dependencies", "True")
-
-# COMMAND ----------
-install_dependencies = dbutils.widgets.get("install_dependencies").lower() == "true"
-pl_name = spark.conf.get("pipeline_name", dbutils.widgets.get("pipeline_name"))
-
-if install_dependencies:
-    notebook_path = (
-        dbutils.notebook.entry_point.getDbutils()
-        .notebook()
-        .getContext()
-        .notebookPath()
-        .get()
-    )
-    laktory_root = "/Workspace" + notebook_path.split("/dlt/")[0]
-    filepath = f"{laktory_root}/pipelines/{pl_name}/requirements.txt"
-    # MAGIC     %pip install -r $filepath
-    # MAGIC     %restart_python
+# Install dependencies
+laktory_root = "/Workspace" + spark.conf.get("workspace_laktory_root", "/.laktory/")
+pl_name = spark.conf.get("pipeline_name", "dlt-stock-prices")
+filepath = f"{laktory_root}/pipelines/{pl_name}/requirements.txt"
+#MAGIC %pip install -r $filepath
+#MAGIC %restart_python
 
 # COMMAND ----------
 import importlib
@@ -32,19 +18,20 @@ from laktory import get_logger
 
 dlt.spark = spark
 logger = get_logger(__name__)
-notebook_path = (
-    dbutils.notebook.entry_point.getDbutils()
-    .notebook()
-    .getContext()
-    .notebookPath()
-    .get()
-)
+
+# --------------------------------------------------------------------------- #
+# Create Widgets                                                              #
+# --------------------------------------------------------------------------- #
+
+dbutils.widgets.text("pipeline_name", "dlt-stock-prices")
+dbutils.widgets.text("node_name", "")
+dbutils.widgets.text("workspace_laktory_root", "/.laktory/")
 
 # --------------------------------------------------------------------------- #
 # Read Pipeline                                                               #
 # --------------------------------------------------------------------------- #
 
-laktory_root = "/Workspace" + notebook_path.split("/dlt/")[0]
+laktory_root = "/Workspace" + spark.conf.get("workspace_laktory_root", dbutils.widgets.get("workspace_laktory_root"))
 pl_name = spark.conf.get("pipeline_name", dbutils.widgets.get("pipeline_name"))
 node_name = dbutils.widgets.get("node_name")
 filepath = f"{laktory_root}/pipelines/{pl_name}/config.json"
