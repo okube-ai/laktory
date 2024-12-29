@@ -1,6 +1,16 @@
 # Release History
 
-## [0.5.10] - Unreleased
+## [0.5.11] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.5.10] - 2024-12-29
 ### Added
 * Support for view creation from pipeline node
 * `--version` and `version` CLI commands
