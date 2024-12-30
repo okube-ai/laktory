@@ -41,8 +41,10 @@ class PipelineRequirementsWorkspaceFile(WorkspaceFile, PipelineChild):
         pl = self.parent_pipeline
 
         source = self.inject_vars_into_dump({"source": self.source})["source"]
+        deps = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
+
         with open(source, "w", newline="\n") as fp:
-            fp.write("\n".join(pl._dependencies))
+            fp.write("\n".join(deps))
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
