@@ -55,7 +55,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         for c in self.clusters:
             if c.name == "node-cluster":
                 cluster_found = True
-        if not cluster_found:
+        if len(self.clusters) > 0 and not cluster_found:
             raise ValueError(
                 "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
             )
