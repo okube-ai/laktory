@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.5.12] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Injection of variables into pipeline requirements
 
 ## [0.5.11] - 2024-12-30
 ### Fixed
