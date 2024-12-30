@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.5.11] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Serverless pipeline job raises a validation error
 
 ## [0.5.10] - 2024-12-29
 ### Added
