@@ -100,9 +100,6 @@ include = ["laktory*"]
 [tool.hatch.version]
 path = "laktory/_version.py"
 
-[tool.uv.index]
-url="https://test.pypi.org/simple/"
-
 # CLI
 [project.scripts]
 laktory = "laktory.cli.app:app"
