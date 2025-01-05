@@ -5,7 +5,7 @@ install-with-dbks:
 	pip install './[databricks]'
 
 dev:
-	pip install -e './[pulumi, polars, spark, dev, test, azure, aws, gcp]'
+	pip install -e './[pulumi, polars, spark, dev, azure, aws, gcp]'
 
 test:
 	pytest --junitxml=junit/test-results.xml --cov=laktory --cov-report=xml --cov-report=html tests
@@ -14,11 +14,11 @@ coverage:
 	open htmlcov/index.html
 
 build:
-	pip install build
+	pip install build hatch
 	python -m build
 
 publish:
-	pip install build twine
+	pip install build hatch twine
 	python -m build
 	twine upload dist/*
 

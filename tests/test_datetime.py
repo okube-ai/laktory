@@ -19,6 +19,7 @@ def test_unix_timestamp():
     assert unix_timestamp(utstamp) == utstamp
     assert utc_datetime("2020-01-01T01:00:00") == dt
     assert unix_timestamp("2020-01-01T01:00:00") == utstamp
+    assert unix_timestamp("2020 01 01 01:00:00") == utstamp
 
     # Null value
     assert utc_datetime(np.datetime64("nat")) is None

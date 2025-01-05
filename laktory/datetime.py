@@ -1,6 +1,5 @@
 import numpy as np
 from typing import Union
-from dateutil import parser
 
 from datetime import datetime
 from datetime import timezone
@@ -50,7 +49,14 @@ def unix_timestamp(
     elif type(dt) == date:
         dt = datetime.combine(dt, datetime.min.time())
     elif isinstance(dt, str):
-        dt = parser.parse(dt)
+        try:
+            dt = datetime.fromisoformat(dt)
+        except ValueError:
+            try:
+                from dateutil import parser
+                dt = parser.parse(dt)
+            except ModuleNotFoundError:
+                raise ValueError(f"String '{dt}' is not a valid ISO 8601 datetime format. Install `dateutil` to support other formats.")
     elif isinstance(dt, np.datetime64):
         dt = dt.astype(datetime)
         if isinstance(dt, int):

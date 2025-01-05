@@ -37,7 +37,6 @@ def show_version_info() -> str:
         "pytest-examples",
         "python-dateutil",
         "pyyaml",
-        "settus",
         "sqlparse",
         "typer",
         "typing_extensions",
