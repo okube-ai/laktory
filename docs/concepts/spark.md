@@ -11,8 +11,7 @@ To facilitate the transformation of your data Laktory extends spark native funct
 The first extension is the provision of a library of functions that can be used to build columns from other columns or constants.
 
 ```py
-import laktory
-import pandas as pd
+import laktory  # noqa: F401
 import pyspark.sql.functions as F
 
 df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
@@ -24,7 +23,7 @@ other custom functions are also available from the `pyspark.sql.functions.laktor
 ## Dataframe methods
 In this case the methods are designed to be applied directly on a spark dataframe.
 ```py
-import laktory
+import laktory  # noqa: F401
 import pandas as pd
 
 df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))

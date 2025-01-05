@@ -256,10 +256,8 @@ def define_table(node, sink):
     )
     def get_df():
 
-        logger.info(f"Building {node.name} node | sink: {sink.full_name}")
-
         # Execute node
-        node.execute(spark=spark, udfs=udfs)
+        node.execute(spark=spark)
         if sink.is_quarantine:
             df = node.quarantine_df
         else:
