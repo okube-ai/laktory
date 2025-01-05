@@ -164,6 +164,6 @@ def test_docstrings_markdowns(example: CodeExample, eval_example: EvalExample):
     """
 
     if eval_example.update_examples:
-        eval_example.format_black(example)
+        eval_example.format_ruff(example)
     else:
-        eval_example.lint_black(example)
+        eval_example.lint_ruff(example)
