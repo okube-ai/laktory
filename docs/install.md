@@ -11,7 +11,6 @@ few core dependencies will be installed:
 [//]: # (* [`pulumi`]&#40;https://pypi.org/project/pulumi/&#41;: Infrastructure as code tool used to deploy resources.)
 * [`networkx`](https://pypi.org/project/networkx/): Creation manipulation of networks for creating pipeline DAG.
 * [`pydantic`](https://pypi.org/project/pydantic/): All laktory models derived from Pydantic `BaseModel`.
-* [`settus`](https://pypi.org/project/settus/): Cloud-based settings management system.
 * [`typer`](https://pypi.org/project/typer/): Library for building CLI applications. 
  
 For configuration-specific or more advanced features like testing 
@@ -27,11 +26,9 @@ laktory --help
 ```
 
 ## IaC Backends
-Laktory supports multiple IaC backends. You will need to install the CLI of your desired backend manually:
-
-* [terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
-* [pulumi](https://www.pulumi.com/docs/install/)
-
+Laktory supports multiple IaC backends. While, `Pulumi` can be installed as
+an optional dependency (see below), `Terraform` needs to be 
+[installed manually](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli).
 
 ## Optional Dependencies
 
@@ -53,9 +50,9 @@ Available options are `spark` and `polars`.
 
 
 * Polars
-```cmd
-pip install laktory[polars]
-```
+  ```cmd
+  pip install laktory[polars]
+  ```
 
 ### Infrastructure as Code
 If you are using Pulumi as the IaC backend, you will want to run 
@@ -70,14 +67,13 @@ If you want to run your pipeline remotely using one of the supported
 orchestrator you will have to install their respective packages.
 
 * Databricks
-```cmd
-pip install laktory[databricks]
-```
+  ```cmd
+  pip install laktory[databricks]
+  ```
 
 ### Cloud Provider
-If you plan on deployed cloud-specific resources or want to retreive values
-from a secrets manager through `settus`, you will have to install 
-cloud-specific packages.
+The `DataEvent` class lets you write data events to various cloud storage 
+accounts, but requires to install additional dependencies.
 
 * Microsoft Azure: 
   ```bash
@@ -88,11 +84,11 @@ cloud-specific packages.
     ```bash
     pip install laktory[aws]
     ```
-
-* Google Cloud Platform (GCP)
-    ```bash
-    pip install laktory[gcp]
-    ```
+  
+[//]: # (* Google Cloud Platform &#40;GCP&#41;)
+[//]: # (    ```bash)
+[//]: # (    pip install laktory[gcp])
+[//]: # (    ```)
 
 ## Git-based installation
 If you need or prefer installing Laktory from git, you can use:
