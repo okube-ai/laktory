@@ -4,7 +4,6 @@ from laktory.polars import DATATYPES_MAP as POLARS_DATATYPES_MAP
 
 
 def test_spark_datatypes():
-
     for dtype in SUPPORTED_DATATYPES:
         assert dtype in SPARK_DATATYPES_MAP
 
@@ -14,7 +13,6 @@ def test_spark_datatypes():
 
 
 def test_polars_datatypes():
-
     for dtype in SUPPORTED_DATATYPES:
         assert dtype in POLARS_DATATYPES_MAP
 

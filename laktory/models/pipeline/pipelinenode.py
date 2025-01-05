@@ -223,7 +223,6 @@ class PipelineNode(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def push_primary_keys(self) -> Any:
-
         # Assign primary keys
         if self.primary_keys and self.sinks:
             for s in self.sinks:
@@ -248,7 +247,6 @@ class PipelineNode(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def validate_expectations(self):
-
         if self.source.as_stream:
             # Expectations type
             for e in self.expectations:
@@ -264,7 +262,6 @@ class PipelineNode(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def validate_view(self):
-
         if not self.is_view:
             return self
 
@@ -284,7 +281,6 @@ class PipelineNode(BaseModel, PipelineChild):
         # Validate Transformer
         view_defined = False
         if self.transformer:
-
             m = f"node '{self.name}': "
 
             if len(self.transformer.nodes) > 1:
@@ -810,7 +806,6 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Apply transformer
         if apply_transformer:
-
             if self.is_view and self.transformer:
                 self._view_definition = self.transformer.get_view_definition()
 
@@ -846,7 +841,6 @@ class PipelineNode(BaseModel, PipelineChild):
         # Output and Quarantine to Sinks
         if write_sinks:
             for s in self.output_sinks:
-
                 if self.is_view:
                     s.write(view_definition=self._view_definition, spark=spark)
                     self._output_df = s.as_source().read(spark=spark)
@@ -883,7 +877,6 @@ class PipelineNode(BaseModel, PipelineChild):
 
         def _batch_check(df, node):
             for e in node.expectations:
-
                 is_dlt_managed = node.is_dlt_run and e.is_dlt_compatible
 
                 # Run Check
@@ -906,7 +899,6 @@ class PipelineNode(BaseModel, PipelineChild):
             pass
 
         elif is_streaming:
-
             if self._expectations_checkpoint_location is None:
                 raise ValueError(
                     f"Expectations Checkpoint not specified for node '{self.name}'"
@@ -931,7 +923,6 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Build Filters
         for e in self.expectations:
-
             is_dlt_managed = self.is_dlt_run and e.is_dlt_compatible
 
             # Update Keep Filter

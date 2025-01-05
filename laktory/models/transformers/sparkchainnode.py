@@ -42,7 +42,6 @@ class SparkChainNodeFuncArg(BaseChainNodeFuncArg):
             v = self.value.read(spark=spark)
 
         elif isinstance(v, str):
-
             # Imports required to evaluate expressions
             import pyspark.sql.functions as F
             from pyspark.sql.functions import lit
@@ -70,7 +69,6 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
     """
 
     def eval(self, df):
-
         # We wanted to use parametrized queries to inject dataframes into the
         # query, but it does not seem to be mature enough to do so:
         # - as of Spark 3.5, spark connect does not support kwargs in .sql

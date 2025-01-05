@@ -17,7 +17,6 @@ mlmodel = MLflowModel(
 
 
 def test_mlflow_model():
-
     assert mlmodel.name == "My MLflow Model"
     assert mlmodel.description == "My MLflow model description"
 

@@ -509,7 +509,6 @@ def test_stack_model():
 
 
 def test_stack_env_model():
-
     # dev
     _stack = stack.get_env("dev")
     pl = _stack.resources.pipelines["pl-custom-name"]
@@ -534,7 +533,6 @@ def test_stack_env_model():
 
 
 def test_stack_resources_unique_name():
-
     with pytest.raises(ValueError):
         models.Stack(
             name="stack",
@@ -1455,7 +1453,6 @@ def test_all_resources():
 
 
 def test_stack_settings():
-
     current_root = settings.laktory_root
     custom_root = "/custom/path/"
 

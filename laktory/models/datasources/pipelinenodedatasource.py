@@ -63,7 +63,6 @@ class PipelineNodeDataSource(BaseDataSource):
 
     @property
     def node(self):
-
         pl = self.parent_pipeline
 
         if pl is None:
@@ -78,7 +77,6 @@ class PipelineNodeDataSource(BaseDataSource):
 
     @property
     def sink_table_full_name(self):
-
         from laktory.models.datasinks.tabledatasink import TableDataSink
 
         node = self.node
@@ -97,7 +95,6 @@ class PipelineNodeDataSource(BaseDataSource):
     # ----------------------------------------------------------------------- #
 
     def _read_spark(self, spark) -> SparkDataFrame:
-
         stream_to_batch = not self.as_stream and self.node.source.as_stream
         is_dlt = False
         if self.is_orchestrator_dlt:
@@ -117,7 +114,6 @@ class PipelineNodeDataSource(BaseDataSource):
                 df = dlt_read(self.node.name)
 
         elif stream_to_batch or self.node.output_df is None:
-
             logger.info(f"Reading pipeline node {self._id} from primary sink")
             df = self.node.primary_sink.read(spark=spark, as_stream=self.as_stream)
 
@@ -131,7 +127,6 @@ class PipelineNodeDataSource(BaseDataSource):
         return df
 
     def _read_polars(self) -> PolarsDataFrame:
-
         # Read from node output DataFrame (if available)
         if self.node.output_df is not None:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")

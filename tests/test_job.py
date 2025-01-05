@@ -209,7 +209,6 @@ def test_job_model():
 
 
 def test_job_for_each_task():
-
     data = job_for_each.model_dump(exclude_unset=False)
 
     print(data)

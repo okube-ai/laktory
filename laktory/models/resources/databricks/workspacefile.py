@@ -77,7 +77,6 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="after")
     def set_paths(self) -> Any:
-
         # Path set
         if self.path:
             return self

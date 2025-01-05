@@ -203,7 +203,6 @@ class DataSinkMergeCDCOptions(BaseModel):
 
     @staticmethod
     def _add_alias(expr, prefix="source"):
-
         operators = ["=", ">", "<", "!", "*", "+", "-", "/", ","]
 
         new_expr = expr
@@ -254,7 +253,6 @@ class DataSinkMergeCDCOptions(BaseModel):
         return new_expr
 
     def _init_target(self, source):
-
         import pyspark.sql.types as T
 
         spark = source.sparkSession
@@ -275,7 +273,6 @@ class DataSinkMergeCDCOptions(BaseModel):
             writer.saveAsTable(self.target_name)
 
     def _execute(self, source: SparkDataFrame):
-
         from delta.tables import DeltaTable
         from pyspark.sql import Window
         import pyspark.sql.functions as F
@@ -330,7 +327,6 @@ class DataSinkMergeCDCOptions(BaseModel):
             table_target = DeltaTable.forName(spark, self.target_name)
 
         if self.scd_type == 1:
-
             if self.delete_where:
                 delete_condition = F.coalesce(
                     F.expr(self.source_delete_where), F.lit(False)
@@ -382,7 +378,6 @@ class DataSinkMergeCDCOptions(BaseModel):
             merge.execute()
 
         elif self.scd_type == 2:
-
             delete_condition = F.coalesce(F.expr(self.delete_where), F.lit(False))
             not_delete_condition = ~delete_condition
 
@@ -468,7 +463,6 @@ class DataSinkMergeCDCOptions(BaseModel):
                 self._init_target(source)
 
         if source.isStreaming:
-
             if self.sink is None:
                 raise ValueError(f"Sink value required to fetch checkpoint location.")
 
@@ -560,7 +554,6 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     @property
     def _checkpoint_location(self) -> Path:
-
         if self.checkpoint_location:
             return Path(self.checkpoint_location)
 

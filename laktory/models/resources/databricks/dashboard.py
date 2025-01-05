@@ -83,7 +83,6 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="after")
     def set_paths(self) -> Any:
-
         # Parent Path explicitly set
         if self.parent_path:
             return self

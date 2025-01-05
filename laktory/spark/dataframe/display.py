@@ -62,7 +62,6 @@ def display(
         df.show(n=n, truncate=truncate, vertical=vertical)
 
     else:
-
         # Start the streaming query
         query = (
             df.writeStream.outputMode("append")

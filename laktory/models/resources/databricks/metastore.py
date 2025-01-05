@@ -147,7 +147,6 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
             depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
 
         if self.data_accesses:
-
             for data_access in self.data_accesses:
                 data_access.metastore_id = f"${{resources.{self.resource_name}.id}}"
                 _core_resources = data_access.core_resources

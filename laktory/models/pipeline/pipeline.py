@@ -349,7 +349,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     @model_validator(mode="before")
     @classmethod
     def assign_name(cls, data: Any) -> Any:
-
         if (
             "databricks_dlt" in data.keys()
             and data["databricks_dlt"].get("name", None) is None
@@ -378,7 +377,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     @model_validator(mode="after")
     def validate_orchestrator(self):
-
         if self.orchestrator == "DATABRICKS_JOB":
             if self.databricks_job is None:
                 raise ValueError(
@@ -413,7 +411,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     @property
     def safe_name(self):
-
         name = self.resolved_name
 
         # Replace special characters
@@ -429,7 +426,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     @property
     def _dependencies(self):
-
         laktory_found = False
 
         dependencies = [d for d in self.dependencies]
@@ -513,7 +509,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         # Build edges and assign nodes to pipeline node data sources
         node_names = []
         for n in self.nodes:
-
             if n.name in node_names:
                 raise ValueError(
                     f"Pipeline node '{n.name}' is declared twice in pipeline '{self.name}'"

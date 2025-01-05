@@ -54,9 +54,12 @@ def unix_timestamp(
         except ValueError:
             try:
                 from dateutil import parser
+
                 dt = parser.parse(dt)
             except ModuleNotFoundError:
-                raise ValueError(f"String '{dt}' is not a valid ISO 8601 datetime format. Install `dateutil` to support other formats.")
+                raise ValueError(
+                    f"String '{dt}' is not a valid ISO 8601 datetime format. Install `dateutil` to support other formats."
+                )
     elif isinstance(dt, np.datetime64):
         dt = dt.astype(datetime)
         if isinstance(dt, int):

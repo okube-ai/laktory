@@ -160,7 +160,6 @@ def test_file_data_source_read_jsonl():
 
 
 def test_file_data_source_read_schema():
-
     # Schema as dict
     source = FileDataSource(
         path=os.path.join(paths.data, "./events/yahoo-finance/stock_price"),

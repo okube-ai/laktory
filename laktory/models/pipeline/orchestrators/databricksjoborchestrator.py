@@ -50,7 +50,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     def update_from_parent(self):
-
         cluster_found = False
         for c in self.clusters:
             if c.name == "node-cluster":
@@ -80,7 +79,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         node_names = [node.name for node in pl.nodes]
         node_names.sort()
         for node_name in node_names:
-
             node = pl.nodes_dict[node_name]
 
             depends_on = []

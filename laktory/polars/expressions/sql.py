@@ -5,7 +5,6 @@ from sqlparse.tokens import Keyword
 
 
 def _parse_token(token):
-
     # Numerical
     try:
         _ = float(token)
@@ -33,7 +32,6 @@ def _parse_token(token):
 
 
 def _parse_compare(condition: str):
-
     # Remove whitespaces
     condition = condition.replace(" ", "")
 

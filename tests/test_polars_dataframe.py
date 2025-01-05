@@ -35,7 +35,6 @@ df = pl.DataFrame(
 
 
 def test_df_schema_flat():
-
     schema = df.laktory.schema_flat()
     assert schema == [
         "x@x",

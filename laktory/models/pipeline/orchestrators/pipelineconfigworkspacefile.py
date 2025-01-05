@@ -28,7 +28,6 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
     ]
 
     def update_from_parent(self):
-
         pl = self.parent_pipeline
         pl_name = pl.name
         self.source = os.path.join(CACHE_ROOT, f"tmp-{pl_name}-config.json")
@@ -39,7 +38,6 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         self.set_paths()
 
     def write_source(self):
-
         pl = self.parent_pipeline
 
         pl.root_path = pl._root_path.as_posix()

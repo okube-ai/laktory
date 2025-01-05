@@ -172,7 +172,6 @@ class VectorSearchIndex(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="after")
     def check_index_spec(self) -> Any:
-
         if self.index_type == "DELTA_SYNC" and self.delta_sync_index_spec is None:
             raise ValueError(
                 "`delta_sync_index_spec` must be set with `index_type` = 'DELTA_SYNC'"

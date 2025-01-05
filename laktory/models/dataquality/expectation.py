@@ -284,7 +284,6 @@ class DataQualityExpectation(BaseModel):
         return self._check
 
     def _check_df(self, df):
-
         if self._dataframe_backend == "SPARK":
             rows_count = df.count()
         elif self._dataframe_backend == "POLARS":

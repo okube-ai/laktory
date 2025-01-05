@@ -47,12 +47,8 @@ class MwsNetworkConnectivityConfigEgressConfigDefaultRules(BaseModel):
         Databricks to access.
     """
 
-    aws_stable_ip_rule: (
-        MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule
-    ) = None
-    azure_service_endpoint_rule: (
-        MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRule
-    ) = None
+    aws_stable_ip_rule: MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule = None
+    azure_service_endpoint_rule: MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRule = None
 
 
 class MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRule(

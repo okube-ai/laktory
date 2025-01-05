@@ -72,7 +72,6 @@ class FileDataSink(BaseDataSink):
 
     @model_validator(mode="after")
     def merge_and_format(self) -> Any:
-
         if self.mode == "MERGE":
             if self.format.lower() not in ["delta"]:
                 raise ValueError(
@@ -94,7 +93,6 @@ class FileDataSink(BaseDataSink):
     # ----------------------------------------------------------------------- #
 
     def _write_spark(self, df: SparkDataFrame, mode=None) -> None:
-
         if self.format in ["EXCEL"]:
             raise ValueError(f"'{self.format}' format is not supported with Spark")
 
@@ -119,7 +117,6 @@ class FileDataSink(BaseDataSink):
             _options[k] = v
 
         if df.isStreaming:
-
             logger.info(
                 f"Writing df as stream {self.format} to {self.path} with mode {mode} and options {_options}"
             )
@@ -144,7 +141,6 @@ class FileDataSink(BaseDataSink):
             )
 
     def _write_polars(self, df: PolarsDataFrame, mode=None) -> None:
-
         isStreaming = False
 
         if isStreaming:

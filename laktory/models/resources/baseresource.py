@@ -120,7 +120,6 @@ class BaseResource(_BaseModel):
     @model_validator(mode="before")
     @classmethod
     def base_lookup(cls, data: Any) -> Any:
-
         if "lookup_existing" not in data:
             return data
 
@@ -250,7 +249,6 @@ class BaseResource(_BaseModel):
                 k0 = f"${{resources.{r.resource_name}}}"
 
                 for _r in r.additional_core_resources:
-
                     if not (r.options.is_enabled and _r.options.is_enabled):
                         continue
 

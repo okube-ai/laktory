@@ -35,7 +35,6 @@ def test_camel_case():
 
 
 def test_merge_dicts():
-
     baseline = {
         "name": "Apple",
         "symbols": {

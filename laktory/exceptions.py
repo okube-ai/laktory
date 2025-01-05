@@ -16,7 +16,6 @@ class MissingColumnsError(Exception):
 
 class DataQualityCheckFailedError(Exception):
     def __init__(self, expectation, node=None):
-
         message = f"Expectation '{expectation.name}' failed"
         if node:
             message += f" on node '{node.name}'"

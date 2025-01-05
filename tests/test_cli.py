@@ -16,7 +16,6 @@ paths = Paths(__file__)
 
 
 def _read_stack(template, backend):
-
     dirpath = pypath.local(
         f"{paths.tmp}/quickstart_{template}_{backend}_{str(uuid.uuid4())}"
     )
@@ -86,7 +85,6 @@ def _read_stack(template, backend):
 
 
 def _preview_stack(template, backend, env):
-
     dirpath = pypath.local(
         f"{paths.tmp}/quickstart_{template}_{backend}_{str(uuid.uuid4())}"
     )
@@ -119,7 +117,6 @@ def _preview_stack(template, backend, env):
 
 
 def _deploy_stack(template, backend, env):
-
     dirpath = pypath.local(
         f"{paths.tmp}/quickstart_{template}_{backend}_{str(uuid.uuid4())}"
     )
@@ -192,7 +189,6 @@ def atest_deploy_quickstart_stacks():
 
 
 def test_quickstart_localpipeline():
-
     dirpath = pypath.local(f"{paths.tmp}/quickstart_local_pipeline_{str(uuid.uuid4())}")
     # stack_filepath = dirpath / "stack.yaml"
 
@@ -200,7 +196,6 @@ def test_quickstart_localpipeline():
     os.mkdir(dirpath)
 
     with dirpath.as_cwd():
-
         # Run Quickstart
         _ = runner.invoke(
             app,

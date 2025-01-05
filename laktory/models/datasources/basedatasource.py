@@ -82,7 +82,6 @@ class BaseDataSource(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def options(self) -> Any:
-
         # Overwrite Dataframe type if mock dataframe is provided
         if is_spark_dataframe(self.mock_df):
             self.dataframe_backend = "SPARK"
@@ -163,7 +162,6 @@ class BaseDataSource(BaseModel, PipelineChild):
         raise NotImplementedError()
 
     def _post_read_spark(self, df: SparkDataFrame) -> SparkDataFrame:
-
         import pyspark.sql.functions as F
 
         # Apply filter
@@ -210,7 +208,6 @@ class BaseDataSource(BaseModel, PipelineChild):
         return df
 
     def _post_read_polars(self, df: PolarsDataFrame) -> PolarsDataFrame:
-
         from laktory.polars.expressions.sql import _parse_token
         import polars as pl
 

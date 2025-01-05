@@ -42,7 +42,6 @@ class PolarsChainNodeFuncArg(BaseChainNodeFuncArg):
             v = self.value.read()
 
         elif isinstance(v, str):
-
             # Imports required to evaluate expressions
             import polars as pl
             from polars import col

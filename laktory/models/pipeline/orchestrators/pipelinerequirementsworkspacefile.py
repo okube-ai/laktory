@@ -37,7 +37,6 @@ class PipelineRequirementsWorkspaceFile(WorkspaceFile, PipelineChild):
         self.set_paths()
 
     def write_source(self):
-
         pl = self.parent_pipeline
 
         source = self.inject_vars_into_dump({"source": self.source})["source"]

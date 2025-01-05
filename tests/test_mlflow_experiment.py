@@ -14,7 +14,6 @@ mlexp = MLflowExperiment(
 
 
 def test_mlflow_experiment():
-
     assert mlexp.name == "/.laktory/Sample"
     assert mlexp.description == "My MLflow experiment description"
 

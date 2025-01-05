@@ -102,7 +102,6 @@ def test_sql_expression(df0=df0):
 
 
 def test_sql_with_nodes():
-
     sc = models.PolarsChain(
         nodes=[
             {
@@ -314,7 +313,6 @@ def test_nested(df0=df0):
 
 # TODO: Re-enable when coalesce is ready
 def atest_exceptions():
-
     return
 
     df = df0.select(df0.columns)

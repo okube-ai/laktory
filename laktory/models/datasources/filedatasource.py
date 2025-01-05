@@ -84,7 +84,6 @@ class FileDataSource(BaseDataSource):
 
     @model_validator(mode="after")
     def options(self) -> Any:
-
         if self.dataframe_backend == "SPARK":
             if self.format in [
                 "EXCEL",
@@ -141,7 +140,6 @@ class FileDataSource(BaseDataSource):
     # ----------------------------------------------------------------------- #
 
     def _read_spark(self, spark) -> SparkDataFrame:
-
         _options = {}
         _mode = "stream"
 
@@ -209,7 +207,6 @@ class FileDataSource(BaseDataSource):
         return df
 
     def _read_polars(self) -> PolarsLazyFrame:
-
         import polars as pl
 
         if self.as_stream:

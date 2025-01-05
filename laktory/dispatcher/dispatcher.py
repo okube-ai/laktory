@@ -59,7 +59,6 @@ class Dispatcher:
         """Set resource for each of the resources defined in the stack"""
 
         for k, pl in self.stack.resources.pipelines.items():
-
             if not pl.options.is_enabled:
                 continue
 

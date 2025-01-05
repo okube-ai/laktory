@@ -51,7 +51,6 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def update_laktory_root(self) -> Any:
-
         if self.laktory_root != "":
             return self
 

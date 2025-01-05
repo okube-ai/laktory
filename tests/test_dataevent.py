@@ -25,7 +25,6 @@ header.data = None
 
 
 def test_dataevent_header():
-
     print(header.model_dump())
     assert header.model_dump() == {
         "data": None,

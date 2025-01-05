@@ -50,7 +50,6 @@ class MemoryDataSource(BaseDataSource):
 
     @model_validator(mode="after")
     def set_dataframe_backend(self) -> Any:
-
         if is_spark_dataframe(self.df):
             dataframe_backend = "SPARK"
         elif is_polars_dataframe(self.df):

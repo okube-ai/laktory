@@ -167,7 +167,6 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="after")
     def set_paths(self) -> Any:
-
         # Parent Path explicitly set
         if "parent_path" in self.model_fields_set:
             return self

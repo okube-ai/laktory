@@ -15,7 +15,6 @@ paths = Paths(__file__)
 
 
 def test_execute():
-
     sink_path = os.path.join(paths.tmp, "pl_node_sink")
 
     node = models.PipelineNode(
@@ -69,7 +68,6 @@ def test_execute():
 
 
 def test_execute_view():
-
     # Create table
     table_path = Path(paths.tmp) / "hive" / f"slv_{str(uuid.uuid4())}"
     (

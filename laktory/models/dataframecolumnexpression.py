@@ -47,7 +47,6 @@ class DataFrameColumnExpression(BaseModel):
 
     @model_validator(mode="after")
     def guess_type(self) -> Any:
-
         if self.type:
             return self
 
@@ -84,7 +83,6 @@ class DataFrameColumnExpression(BaseModel):
         return expr
 
     def eval(self, udfs=None, dataframe_backend=None) -> AnyDataFrameColumn:
-
         if dataframe_backend is None:
             dataframe_backend = settings.dataframe_backend
 

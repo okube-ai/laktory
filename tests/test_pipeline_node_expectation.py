@@ -19,7 +19,6 @@ testdir_path = Path(__file__).parent
 
 
 def get_node():
-
     return models.PipelineNode(
         name="slv_stock_prices",
         source={
@@ -56,7 +55,6 @@ def get_source(node_path):
 
 
 def test_warn():
-
     node = get_node()
     node.expectations = [
         models.DataQualityExpectation(
@@ -74,7 +72,6 @@ def test_warn():
 
 
 def test_drop():
-
     node = get_node()
     node.expectations = [
         models.DataQualityExpectation(
@@ -92,7 +89,6 @@ def test_drop():
 
 
 def test_quarantine():
-
     node = get_node()
     node.expectations = [
         models.DataQualityExpectation(
@@ -114,7 +110,6 @@ def test_quarantine():
 
 
 def test_fail():
-
     node = get_node()
     node.expectations = [
         models.DataQualityExpectation(
@@ -131,7 +126,6 @@ def test_fail():
 
 
 def test_aggregate():
-
     node = get_node()
     node.expectations = [
         models.DataQualityExpectation(
@@ -149,7 +143,6 @@ def test_aggregate():
 
 
 def test_multi():
-
     node = get_node()
     node.expectations = [
         models.DataQualityExpectation(
@@ -179,7 +172,6 @@ def test_multi():
 
 
 def test_streaming_multi():
-
     node_path = (
         testdir_path / "tmp" / "test_pipeline_node_expectations" / str(uuid.uuid4())
     )
@@ -274,7 +266,6 @@ def test_streaming_multi():
 
 
 def test_expectations_invalid():
-
     with pytest.raises(DataQualityExpectationsNotSupported):
         node = models.PipelineNode(
             name="slv_stock_prices",

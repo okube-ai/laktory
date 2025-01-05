@@ -247,7 +247,6 @@ def test_singular():
 
 
 def test_inject_includes():
-
     class Business(BaseModel):
         model_config = ConfigDict(extra="allow")
 

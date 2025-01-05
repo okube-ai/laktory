@@ -85,7 +85,6 @@ class ChainNodeColumn(BaseModel, PipelineChild):
 
     @field_validator("type")
     def check_type(cls, v: str) -> str:
-
         if v is None or "<" in v:
             return v
         else:
@@ -113,7 +112,6 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
     _data_sources: list[PipelineNodeDataSource] = None
 
     def parsed_expr(self, df_id="df", view=False) -> list[str]:
-
         from laktory.models.datasources.tabledatasource import TableDataSource
         from laktory.models.datasources.pipelinenodedatasource import (
             PipelineNodeDataSource,
@@ -137,7 +135,6 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
 
             pl = self.parent_pipeline
             if pl:
-
                 from laktory.models.datasinks.tabledatasink import TableDataSink
 
                 pattern = r"\{nodes\.(.*?)\}"
@@ -166,7 +163,6 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
 
     @property
     def upstream_node_names(self) -> list[str]:
-
         if self.expr is None:
             return []
 
@@ -181,9 +177,7 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
 
     @property
     def data_sources(self) -> list[PipelineNodeDataSource]:
-
         if self._data_sources is None:
-
             if self.expr is None:
                 return []
 
@@ -212,7 +206,6 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
 
 
 class BaseChainNode(BaseModel, PipelineChild):
-
     dataframe_backend: Literal["SPARK", "POLARS", None] = None
     func_args: list[Union[Any]] = []
     func_kwargs: dict[str, Union[Any]] = {}
@@ -226,7 +219,6 @@ class BaseChainNode(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def selected_flow(self) -> Any:
-
         if len(self._with_columns) > 0:
             if self.func_name:
                 raise ValueError(

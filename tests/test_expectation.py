@@ -10,7 +10,6 @@ paths = Paths(__file__)
 
 
 def test_expectations_abs():
-
     # Spark Expression - WARN
     dqe = models.DataQualityExpectation(
         name="price less than 300", action="WARN", expr="F.col('close') < 300"
@@ -67,7 +66,6 @@ def test_expectations_abs():
 
 
 def test_expectations_rel():
-
     dqe = models.DataQualityExpectation(
         name="price higher than 10",
         action="WARN",
@@ -84,7 +82,6 @@ def test_expectations_rel():
 
 
 def test_expectations_agg():
-
     dqe = models.DataQualityExpectation(
         name="rows count",
         expr="COUNT(*) > 50",
@@ -113,7 +110,6 @@ def test_expectations_agg():
 
 
 def test_expectations_empty():
-
     # Spark Expression
     dqe = models.DataQualityExpectation(
         name="price less than 300", action="WARN", expr="F.col('close') < 300"
@@ -128,7 +124,6 @@ def test_expectations_empty():
 
 
 def test_expectations_exceptions_warnings():
-
     # No Failure
     dqe = models.DataQualityExpectation(
         name="price less than 900", action="FAIL", expr="F.col('close') < 900"

@@ -47,7 +47,6 @@ gld_target = pd.DataFrame(
 
 
 def test_df_backend():
-
     pl, _ = get_pl()
 
     # Check dataframe type assignment
@@ -60,7 +59,6 @@ def test_df_backend():
 
 
 def test_execute():
-
     pl, pl_path = get_pl(clean_path=True)
 
     # Run
@@ -108,7 +106,6 @@ def test_execute():
 
 
 def test_sql_join():
-
     # Get Pipeline
     pl, pl_path = get_pl(clean_path=True)
 

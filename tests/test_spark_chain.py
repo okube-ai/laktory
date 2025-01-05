@@ -128,7 +128,6 @@ def test_sql_expression(df0=df0):
 
 
 def test_sql_with_nodes():
-
     sc = models.SparkChain(
         nodes=[
             {
@@ -321,7 +320,6 @@ def test_nested(df0=df0):
 
 
 def atest_exceptions():
-
     # TODO: Re-enable when coalesce is ready
     return
 

@@ -55,7 +55,6 @@ gld_target = pd.DataFrame(
 
 
 def test_dag():
-
     pl, _ = get_pl()
 
     dag = pl.dag
@@ -98,7 +97,6 @@ def test_dag():
 
 
 def test_children():
-
     pl, _ = get_pl()
 
     for pn in pl.nodes:
@@ -134,7 +132,6 @@ def test_paths():
     assert pl._root_path == pl_path
 
     for node in pl.nodes:
-
         assert node._root_path == pl_path / node.name
         assert (
             node._expectations_checkpoint_location
@@ -148,7 +145,6 @@ def test_paths():
 
 
 def test_execute():
-
     # Get Pipeline
     pl, pl_path = get_pl(clean_path=True)
 
@@ -241,7 +237,6 @@ def test_execute():
 
 
 def test_execute_node():
-
     # Get Pipeline
     pl, pl_path = get_pl(clean_path=True)
 
@@ -275,7 +270,6 @@ def test_execute_node():
 
 
 def test_sql_join():
-
     # Get Pipeline
     pl, pl_path = get_pl(clean_path=True)
 

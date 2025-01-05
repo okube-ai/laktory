@@ -227,7 +227,6 @@ class BaseModel(_BaseModel):
     # ----------------------------------------------------------------------- #
 
     def _configure_serializer(self, camel=False, singular=False):
-
         self._camel_serialization = camel
         self._singular_serialization = singular
         for k in self.model_fields:
@@ -279,7 +278,6 @@ class BaseModel(_BaseModel):
 
     @staticmethod
     def _get_patterns(vars):
-
         # Build vars patterns
         patterns = {}
 
@@ -289,7 +287,6 @@ class BaseModel(_BaseModel):
 
         # User-defined variables
         for k, v in vars.items():
-
             # Recursive replace (for vars defined with env vars or previous variables)
             if isinstance(v, str) and "${vars." in v:
                 for _k in patterns:

@@ -45,7 +45,6 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     def update_from_parent(self):
-
         pl = self.parent_pipeline
 
         for node in pl.nodes:
