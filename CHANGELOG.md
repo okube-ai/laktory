@@ -2,13 +2,10 @@
 
 ## [0.5.13] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
+* Support for Python 3.12
+* Support for Python 3.13
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* `uv` as the recommended package manager
 
 ## [0.5.12] - 2024-12-30
 ### Fixed

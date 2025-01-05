@@ -9,7 +9,7 @@ laktory quickstart -t workspace
 
 #### Files
 After running the command, the following structure will be generated:
-```bash
+```terminal
 .
 ├── read_env.sh
 ├── requirements.txt

@@ -10,7 +10,7 @@ laktory quickstart -t unit-catalog
 
 #### Files
 After running the command, the following structure will be generated:
-```bash
+```terminal
 .
 ├── read_env.sh
 ├── resources

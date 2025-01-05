@@ -1,27 +1,27 @@
+uv:
+	curl -LsSf https://astral.sh/uv/install.sh | sh
+
 install:
-	pip install ./
+	uv sync
+
+install-dev:
+	uv sync --all-extras
 
 install-with-dbks:
-	pip install './[databricks]'
-
-dev:
-	pip install -e './[pulumi, polars, spark, dev, test, azure, aws, gcp]'
+	uv sync --extra databricks
 
 test:
-	pytest --junitxml=junit/test-results.xml --cov=laktory --cov-report=xml --cov-report=html tests
+	uv run pytest --junitxml=junit/test-results.xml --cov=laktory --cov-report=xml --cov-report=html tests
 
 coverage:
 	open htmlcov/index.html
 
 build:
-	pip install build
-	python -m build
+	uv build
 
 publish:
-	pip install build twine
-	python -m build
-	twine upload dist/*
+	uv publish
 
 publishdoc:
-	pip install 'mkdocs<1.6' mkdocstrings[python] mkdocs-material mkdocs-video
+	uv pip install 'mkdocs<1.6' mkdocstrings[python] mkdocs-material mkdocs-video
 	mkdocs gh-deploy --force

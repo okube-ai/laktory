@@ -1,28 +1,18 @@
-# The preference build system would have been flit, but setuptools had to be
-# used to support `pip install git+http...` within Databricks. When trying
-# to parse the version using flit, it needs to import the full package
-# and some dependencies might be missing in the virtual environment.
-# Setuptools allow to explicitly set the location of the version without
-# having to import the package.
 [build-system]
-requires = [
-#    "flit_core >=3.2,<4",
-    "setuptools",
-    "setuptools-scm",
-]
-#build-backend = "flit_core.buildapi"
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "laktory"
+# version = dynamic
+requires-python = ">=3.9"
 authors = [
     {name = "Olivier Soucy", email = "olivier.soucy@okube.ai"},
 ]
-description = "A DataOps framework for building a lakehouse"
+description = "An ETL and DataOps framework for building a lakehouse"
 readme = "README.md"
-requires-python = ">=3.9"
-keywords = ["one", "two"]
-license = {text = "MIT"}
+keywords = ["data-pipeline", "dataframes", "etl", "sql", "infrastructure-as-code", "apache-spark",  "polars",  "python"]
+license = {file = "LICENSE.md"}
 classifiers = [
     "Development Status :: 4 - Beta",
     "Framework :: Pydantic :: 2",
@@ -32,29 +22,23 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 dynamic = ["version"]
 dependencies = [
     "inflect",
     "networkx",
-    "planck",
+    "planck>=0.0.8",
     "prompt_toolkit",
     "pyyaml",
     "pydantic>=2",
-    "python-dateutil",
-    "settus",
-    "typer[all]",
+    "pydantic-settings",
+    # "python-dateutil",
+    "typer",
 ]
 
 [project.optional-dependencies]
-
-# IaC
-pulumi = [
-    "pulumi",
-    "pulumi_databricks>=1.49",  # required to support Databricks Lakeview Dashboard
-]
-
-# DataFrame
 polars = [
     "deltalake",
     "polars>=1.0",
@@ -63,64 +47,58 @@ polars = [
 spark = [
     "pyarrow",
     "pyspark[connect]",
+    "setuptools; python_version >= '3.12'"
 ]
-
-# Orchestrators
-databricks = [
-    "databricks-connect",
-    "databricks-sdk",
-]
-
-# Dev
 dev = [
     "black",
+    "databricks-sdk",
     "flit",
     "mkdocs",
-    "mkdocstrings[python]",
     "mkdocs-material",
     "mkdocs-video",
-#    "mkdocs-snippets",
-    "plotly",
-]
-
-# Test
-test = [
-#    "delta-spark",
-    "databricks-sdk",
+    "mkdocstrings[python]",
     "pandas",
+    "plotly",
     "pytest",
     "pytest-cov",
     "pytest-examples",
     "ruff",
     "yfinance",
+#    "mkdocs-snippets",
 ]
 
-# Cloud
+# IaC
+pulumi = [
+    "pulumi",
+    "pulumi_databricks>=1.49",  # required to support Databricks Lakeview Dashboard
+]
+
+# Orchestrators
+databricks = [
+#    "databricks-connect",  # causing conflicts with local spark installation
+    "databricks-sdk",
+]
+
+# Cloud Storage
 azure = [
     "azure-identity",
     "azure-storage-blob",
-    "pulumi_azure",
-    "pulumi_azure_native",
-    "settus[azure]",
 ]
 aws = [
     "boto3",
-    "pulumi_aws",
-    "settus[aws]",
-]
-gcp = [
-    "settus[gcp]",
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/opencubes-ai/laktory"
+Homepage = "https://github.com/okube-ai/laktory"
+Documentation = "https://www.laktory.ai"
+Repository = "https://github.com/okube-ai/laktory"
 "Bug Tracker" = "https://github.com/opencubes-ai/laktory/issues"
 
-[tool.setuptools.packages.find]
+[tool.hatch.build]
 include = ["laktory*"]
 
-[tool.setuptools.dynamic]
-version = {attr = "laktory._version.VERSION"}
+[tool.hatch.version]
+path = "laktory/_version.py"
 
 # CLI
 [project.scripts]

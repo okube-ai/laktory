@@ -11,6 +11,12 @@
 # Environment and configurations                                              #
 # --------------------------------------------------------------------------- #
 
+# Virtual Environment
+.venv
+
+# Visual Studio
+.vscode
+
 # PyCharm configuration
 **/.idea/**
 

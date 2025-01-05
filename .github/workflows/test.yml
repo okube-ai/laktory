@@ -11,7 +11,7 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-22.04  # ubuntu-latest does not seem to have terraform available anymore
+    runs-on: ubuntu-22.04  # ubuntu-latest does not seem to have Terraform available anymore
     strategy:
       fail-fast: false
       matrix:
@@ -20,6 +20,7 @@ jobs:
           - '3.10'
           - '3.11'
           - '3.12'
+          - '3.13'
     steps:
       - name: Check if run tests
         env:
@@ -37,17 +38,20 @@ jobs:
         if: ${{ env.run_tests == 'true' && success()}}
         uses: actions/checkout@v3
 
-#      - name: Unshallow
-#        run: git fetch --prune --unshallow
-
       - uses: actions/setup-python@v4
         if: ${{ env.run_tests == 'true' && success()}}
         with:
           python-version: ${{ matrix.pyVersion }}
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.14"
+          python-version: ${{ matrix.python-version }}
+
       - name: Run tests
         if: ${{ env.run_tests == 'true' && success()}}
-        run: make dev test
+        run: make install-dev test
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

@@ -1,16 +1,14 @@
-import os
+from pydantic import ConfigDict
+from pydantic import Field
 from pydantic import model_validator
-from typing import Union
+from pydantic_settings import BaseSettings
 from typing import Any
-from settus import BaseSettings
-from settus import Field
-from settus import SettingsConfigDict
+from typing import Union
+import os
 
 
 class Settings(BaseSettings):
-    # model_config = SettingsConfigDict(
-    #     keyvault_url="LAKTORY_KEYVAULT_URL"
-    # )
+    model_config = ConfigDict(populate_by_name=True)
 
     # CLI
     cli_raise_external_exceptions: bool = Field(
