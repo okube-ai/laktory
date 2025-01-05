@@ -11,6 +11,8 @@ extra_css:
 markdown_extensions:
   - admonition
   - attr_list
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.snippets  # link between markdown (changelog)
   - pymdownx.superfences
   - pymdownx.details

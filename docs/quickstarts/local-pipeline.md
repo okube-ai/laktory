@@ -10,7 +10,7 @@ laktory quickstart -t local-pipeline
 #### Files
 After running the `quickstart` command, the following structure is created:
 
-```bash
+```terminal
 .
 ├── 00_explore_pipeline.py
 ├── 01_execute_node_bronze.py

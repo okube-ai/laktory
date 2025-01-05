@@ -1,4 +1,3 @@
-
 # Laktory
 
 [![pypi](https://img.shields.io/pypi/v/laktory.svg)](https://pypi.org/project/laktory/)

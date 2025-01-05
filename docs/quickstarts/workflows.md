@@ -10,7 +10,7 @@ laktory quickstart -t workflows
 #### Files
 After running the quickstart command, the following structure is created:
 
-```bash
+```terminal
 .
 ├── data
 │   └── stock_prices.json
