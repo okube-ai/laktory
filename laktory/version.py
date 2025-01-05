@@ -10,11 +10,9 @@ def show_version_info() -> str:
     package_names = {
         "azure-identity",
         "azure-storage-blob",
-        "black",
         "boto3",
         "databricks-sdk",
         "deltalake",
-        "flit",
         "inflect",
         "mkdocs",
         "mkdocs-material",
@@ -40,6 +38,7 @@ def show_version_info() -> str:
         "sqlparse",
         "typer",
         "typing_extensions",
+        "uv",
         "yfinance",
     }
     packages = {}
