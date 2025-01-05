@@ -11,6 +11,9 @@
 # Environment and configurations                                              #
 # --------------------------------------------------------------------------- #
 
+# Virtual Environment
+.venv
+
 # PyCharm configuration
 **/.idea/**
 
