@@ -75,7 +75,7 @@ pulumi = [
 
 # Orchestrators
 databricks = [
-    "databricks-connect",
+#    "databricks-connect",  # causing conflicts with local spark installation
     "databricks-sdk",
 ]
 
