@@ -6,7 +6,8 @@
 * Support for Python 3.13
 ### Updated
 * `uv` as the recommended package manager
-* Re-formated and linted with ruff (instead of black)
+* Formatting and linting with ruff (instead of black)
+* Added ruff formatting and linting as a pre-commit
 
 ## [0.5.12] - 2024-12-30
 ### Fixed
