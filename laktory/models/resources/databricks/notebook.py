@@ -63,14 +63,14 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         source="./notebooks/dlt/dlt_laktory_pl.py",
     )
     print(notebook.path)
-    #> /.laktory/dlt_laktory_pl.py
+    # > /.laktory/dlt_laktory_pl.py
 
     notebook = models.resources.databricks.Notebook(
         source="./notebooks/dlt/dlt_laktory_pl.py",
         rootpath="/src/",
     )
     print(notebook.path)
-    #> /src/dlt_laktory_pl.py
+    # > /src/dlt_laktory_pl.py
 
     notebook = models.resources.databricks.Notebook(
         source="./notebooks/dlt/dlt_laktory_pl.py",
@@ -78,7 +78,7 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         dirpath="notebooks/dlt/",
     )
     print(notebook.path)
-    #> /src/notebooks/dlt/dlt_laktory_pl.py
+    # > /src/notebooks/dlt/dlt_laktory_pl.py
     ```
     """
 

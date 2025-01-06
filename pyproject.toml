@@ -50,7 +50,6 @@ spark = [
     "setuptools; python_version >= '3.12'"
 ]
 dev = [
-    "black",
     "databricks-sdk",
     "flit",
     "mkdocs",
@@ -105,15 +104,23 @@ path = "laktory/_version.py"
 laktory = "laktory.cli.app:app"
 
 [tool.ruff]
-#line-length = 120
+builtins = ["spark", "display", "dbutils"]
+fix = true
+indent-width = 4
+line-length = 88  # default length. standard or many python projects
+target-version = "py39"
 #extend-select = ['Q', 'RUF100', 'C90', 'UP', 'I', 'D', 'T']
-extend-ignore = []
 #flake8-quotes = {inline-quotes = 'single', multiline-quotes = 'double'}
 #mccabe = { max-complexity = 14 }
 #isort = { known-first-party = ['pydantic', 'tests'] }
-target-version = "py39"
 #extend-exclude = ['pydantic/v1', 'tests/mypy/outputs']
-builtins = ["spark", "display"]
 
-[tool.ruff.pydocstyle]
-convention = "numpy"
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+extend-ignore = []
+pydocstyle.convention = "numpy"
+ignore = [
+    "E402",  # Module level import not at top of file
+]

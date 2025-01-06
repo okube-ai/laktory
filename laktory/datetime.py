@@ -35,11 +35,11 @@ def unix_timestamp(
 
     ts = unix_timestamp("2020-01-01T01:00:00")
     print(ts)
-    #> 1577840400.0
+    # > 1577840400.0
 
     ts = unix_timestamp(datetime(2020, 1, 1, 1, 0, 0))
     print(ts)
-    #> 1577840400.0
+    # > 1577840400.0
     ```
     """
     if dt is None:
@@ -107,11 +107,11 @@ def utc_datetime(
 
     dt = utc_datetime("2020-01-01T01:00:00")
     print(dt)
-    #> 2020-01-01 01:00:00
+    # > 2020-01-01 01:00:00
 
     dt = utc_datetime(1577840400)
     print(dt)
-    #> 2020-01-01 01:00:00
+    # > 2020-01-01 01:00:00
     ```
     """
     if not unixtime:

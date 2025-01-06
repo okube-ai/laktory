@@ -42,11 +42,11 @@ def has_column(df: pl.DataFrame, col: str) -> bool:
     )
 
     print(df.laktory.has_column("symbol"))
-    #> False
+    # > False
     print(df.laktory.has_column("`stock`.`symbol`"))
-    #> True
+    # > True
     print(df.laktory.has_column("`prices[2]`.`close`"))
-    #> True
+    # > True
     ```
     """
     _col = re.sub(r"\[(\d+)\]", r"[*]", col)

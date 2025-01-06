@@ -41,14 +41,14 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
         source="./notebooks/dlt/dlt_laktory_pl.py",
     )
     print(file.path)
-    #> /.laktory/dlt_laktory_pl.py
+    # > /.laktory/dlt_laktory_pl.py
 
     file = models.resources.databricks.WorkspaceFile(
         source="./notebooks/dlt/dlt_laktory_pl.py",
         rootpath="/src/",
     )
     print(file.path)
-    #> /src/dlt_laktory_pl.py
+    # > /src/dlt_laktory_pl.py
 
     file = models.resources.databricks.WorkspaceFile(
         source="./notebooks/dlt/dlt_laktory_pl.py",
@@ -56,7 +56,7 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
         dirpath="notebooks/dlt/",
     )
     print(file.path)
-    #> /src/notebooks/dlt/dlt_laktory_pl.py
+    # > /src/notebooks/dlt/dlt_laktory_pl.py
     ```
     """
 
