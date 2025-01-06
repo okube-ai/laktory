@@ -1,5 +1,6 @@
-import typer
 from typing import Annotated
+
+import typer
 
 from laktory.cli._common import CLIController
 from laktory.cli.app import app
@@ -67,7 +68,6 @@ def run(
     ```cmd
     laktory run --env dev --dlt pl-stock-prices --full_refresh --action CANCEL
     ```
-
     """
 
     # Set Resource Name

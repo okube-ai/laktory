@@ -1,18 +1,13 @@
-import os
 import io
-from pathlib import Path
+import os
 import shutil
 import uuid
-import networkx as nx
+from pathlib import Path
+
 import pandas as pd
-import polars
-from pyspark.sql import Window
-import pyspark.sql.functions as F
 
 from laktory import models
-from laktory._testing import spark
 from laktory._testing import Paths
-from laktory._testing import df_brz
 
 paths = Paths(__file__)
 
@@ -47,7 +42,6 @@ gld_target = pd.DataFrame(
 
 
 def test_df_backend():
-
     pl, _ = get_pl()
 
     # Check dataframe type assignment
@@ -60,7 +54,6 @@ def test_df_backend():
 
 
 def test_execute():
-
     pl, pl_path = get_pl(clean_path=True)
 
     # Run
@@ -108,7 +101,6 @@ def test_execute():
 
 
 def test_sql_join():
-
     # Get Pipeline
     pl, pl_path = get_pl(clean_path=True)
 

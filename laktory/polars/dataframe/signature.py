@@ -21,7 +21,7 @@ def signature(df: pl.DataFrame) -> str:
 
     df = pl.DataFrame({"x": [1, 2, 3], "label": ["a", "b", "c"]})
     print(df.laktory.signature())
-    #> DataFrame[x: Int64, label: String]
+    # > DataFrame[x: Int64, label: String]
     ```
 
     """

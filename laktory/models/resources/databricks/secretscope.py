@@ -1,13 +1,15 @@
-from typing import Literal
 from typing import Any
+from typing import Literal
 from typing import Union
+
 from pydantic import Field
 from pydantic import model_validator
+
 from laktory.models.basemodel import BaseModel
-from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.secret import Secret
 from laktory.models.resources.databricks.secretacl import SecretAcl
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
 class SecretScopePermission(BaseModel):

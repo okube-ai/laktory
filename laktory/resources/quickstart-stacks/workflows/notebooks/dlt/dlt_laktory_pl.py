@@ -8,13 +8,14 @@ filepath = f"{laktory_root}/pipelines/{pl_name}/requirements.txt"
 
 # COMMAND ----------
 import importlib
-import sys
 import os
-import pyspark.sql.functions as F
+import sys
+
+import pyspark.sql.functions as F  # noqa: F401
 
 from laktory import dlt
-from laktory import models
 from laktory import get_logger
+from laktory import models
 
 dlt.spark = spark
 logger = get_logger(__name__)
@@ -57,7 +58,6 @@ for udf in pl.udfs:
 
 
 def define_table(node, sink):
-
     # Get Expectations
     dlt_warning_expectations = {}
     dlt_drop_expectations = {}
@@ -81,7 +81,6 @@ def define_table(node, sink):
     @dlt.expect_all_or_drop(dlt_drop_expectations)
     @dlt.expect_all_or_fail(dlt_fail_expectations)
     def get_df():
-
         sink_str = ""
         if sink is not None:
             sink_str = f" | sink: {sink.full_name}"
@@ -125,7 +124,6 @@ def define_cdc_table(node, sink):
 
 # Build nodes
 for node in pl.nodes:
-
     if node_name and node.name != node_name:
         continue
 
@@ -138,9 +136,7 @@ for node in pl.nodes:
         display(df)
 
     else:
-
         for sink in node.sinks:
-
             if sink.is_cdc:
                 df = define_cdc_table(node, sink)
                 display(df)

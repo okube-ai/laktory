@@ -1,11 +1,11 @@
 import os
 
 from .stockprices import df_brz
-from .stockprices import df_slv
-from .stockprices import df_slv_stream
-from .stockprices import df_slv_polars
 from .stockprices import df_meta
 from .stockprices import df_meta_polars
+from .stockprices import df_slv
+from .stockprices import df_slv_polars
+from .stockprices import df_slv_stream
 from .stockprices import spark
 
 

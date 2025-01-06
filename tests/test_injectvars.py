@@ -1,8 +1,8 @@
 import os
 
-from laktory.models.resources.databricks import Table
-from laktory.models.resources.databricks import Schema
 from laktory._testing import Paths
+from laktory.models.resources.databricks import Schema
+from laktory.models.resources.databricks import Table
 
 paths = Paths(__file__)
 
@@ -57,7 +57,6 @@ schema = Schema(
 
 
 def test_inject_stack_vars():
-
     schema2 = schema.inject_vars(inplace=False)
     col_names = [c.name for c in schema2.tables[0].columns]
 
@@ -91,7 +90,6 @@ def test_inject_stack_vars():
 
 
 def test_inject_env_vars():
-
     env_vars = {
         "ENV": "PROD",
         "VAR1": "VAR1",

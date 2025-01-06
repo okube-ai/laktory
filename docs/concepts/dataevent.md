@@ -8,7 +8,7 @@ They can be used both in the context of generating and consuming data.
 ### Generation
 Suppose you have a scheduled- or trigger-based service that fetch stock prices and want to publish them to a storage account, the landing of your lakehouse.
 
-First declare the event and assign it some data
+Declare the event, assign it some data and publish it
 ```py
 from laktory import models
 from datetime import datetime
@@ -24,10 +24,8 @@ event = models.DataEvent(
         "close": 132.33,
     },
 )
-```
 
-Publishing is as simple as
-```py
+# Publish
 event.to_databricks()
 ```
 In this case, a Databricks Volume is used, but other methods like `event.to_path()` or `to_azure_storage_container()` are also available.

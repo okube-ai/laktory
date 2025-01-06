@@ -1,13 +1,11 @@
-import os
-from pyspark.sql import SparkSession
-from pyspark.sql import types as T
-from pyspark.sql import functions as F
 from pandas import Timestamp
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from pyspark.sql import types as T
 
-import laktory
-from laktory._testing.stockprices import spark
-from laktory._testing.stockprices import df_slv
 from laktory._testing.stockprices import df_meta
+from laktory._testing.stockprices import df_slv
+from laktory._testing.stockprices import spark
 
 schema = T.StructType(
     [

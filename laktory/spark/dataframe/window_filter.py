@@ -1,9 +1,9 @@
-from pydantic import BaseModel
 from typing import Union
+
+from pydantic import BaseModel
 from pyspark.sql.dataframe import DataFrame
 
 from laktory._logger import get_logger
-
 
 logger = get_logger(__name__)
 
@@ -82,8 +82,8 @@ def window_filter(
 
     * [pyspark window](https://spark.apache.org/docs/3.1.3/api/python/reference/api/pyspark.sql.functions.window.html)
     """
-    from pyspark.sql import Window
     import pyspark.sql.functions as F
+    from pyspark.sql import Window
 
     # Partition by
     w = Window.partitionBy(*partition_by)

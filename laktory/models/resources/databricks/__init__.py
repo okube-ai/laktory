@@ -1,4 +1,5 @@
 from .accesscontrol import AccessControl
+from .alert import Alert
 from .catalog import Catalog
 from .cluster import Cluster
 from .clusterpolicy import ClusterPolicy
@@ -21,6 +22,7 @@ from .mwsnetworkconnectivityconfig import MwsNetworkConnectivityConfig
 from .mwspermissionassignment import MwsPermissionAssignment
 from .notebook import Notebook
 from .permissions import Permissions
+from .query import Query
 from .repo import Repo
 from .schema import Schema
 from .secret import Secret
@@ -28,8 +30,6 @@ from .secretacl import SecretAcl
 from .secretscope import SecretScope
 from .serviceprincipal import ServicePrincipal
 from .serviceprincipalrole import ServicePrincipalRole
-from .alert import Alert
-from .query import Query
 from .table import Table
 from .user import User
 from .userrole import UserRole

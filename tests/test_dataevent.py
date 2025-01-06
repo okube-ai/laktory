@@ -1,7 +1,8 @@
-import os
 import json
+import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
 import pytest
 
 from laktory import models
@@ -25,7 +26,6 @@ header.data = None
 
 
 def test_dataevent_header():
-
     print(header.model_dump())
     assert header.model_dump() == {
         "data": None,
@@ -143,7 +143,7 @@ def test_event_without_tstamp():
 
 def test_to_azure_storage_container():
     try:
-        import azure.storage
+        import azure.storage  # noqa: F401
     except ModuleNotFoundError:
         return
 
@@ -155,7 +155,7 @@ def test_to_azure_storage_container():
 
 def test_to_aws_s3_bucket():
     try:
-        import boto3
+        import boto3  # noqa: F401
     except ModuleNotFoundError:
         return
 

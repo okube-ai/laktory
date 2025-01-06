@@ -1,9 +1,9 @@
 from typing import Union
+
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.mwsnccbinding import MwsNccBinding
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-
-from laktory.models.resources.databricks.mwsnccbinding import MwsNccBinding
 
 
 class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule(BaseModel):
@@ -47,12 +47,8 @@ class MwsNetworkConnectivityConfigEgressConfigDefaultRules(BaseModel):
         Databricks to access.
     """
 
-    aws_stable_ip_rule: (
-        MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule
-    ) = None
-    azure_service_endpoint_rule: (
-        MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRule
-    ) = None
+    aws_stable_ip_rule: MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule = None
+    azure_service_endpoint_rule: MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRule = None
 
 
 class MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRule(

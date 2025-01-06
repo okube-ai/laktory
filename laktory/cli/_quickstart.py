@@ -1,16 +1,17 @@
-import typer
-import shutil
 import os
+import shutil
 from typing import Annotated
-from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit import prompt
 
+import typer
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
+
+from laktory._version import VERSION
 from laktory.cli._common import BackendValidator
 from laktory.cli._common import TemplateValidator
 from laktory.cli.app import app
 from laktory.constants import QUICKSTART_TEMPLATES
 from laktory.constants import SUPPORTED_BACKENDS
-from laktory._version import VERSION
 
 
 @app.command()
@@ -71,7 +72,6 @@ def quickstart(
 
     # Iterate through files
     for root, dits, filenames in os.walk(source_dir):
-
         _target_dir = os.path.join(target_dir, os.path.relpath(root, source_dir))
 
         # Build directories
@@ -79,11 +79,13 @@ def quickstart(
 
         # Copy each file
         for filename in filenames:
-
-            if filename in [
-                "read_env.sh",
-                "stack.yaml",  # stack_terra.yaml or stack_pulumi.yaml will be used instead
-            ]:
+            if (
+                filename
+                in [
+                    "read_env.sh",
+                    "stack.yaml",  # stack_terra.yaml or stack_pulumi.yaml will be used instead
+                ]
+            ):
                 continue
 
             # TODO: ADD FILTERING BASED IN GITIGNORE?

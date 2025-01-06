@@ -11,12 +11,11 @@ To facilitate the transformation of your data Laktory extends spark native funct
 The first extension is the provision of a library of functions that can be used to build columns from other columns or constants.
 
 ```py
-import laktory
-import pandas as pd
+import laktory  # noqa: F401
 import pyspark.sql.functions as F
 
-df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
-df = df.withColumn("y", F.laktory.poly1("x", -1, 1.0))
+df = spark.createDataFrame([{"x": 1}, {"x": 2}, {"x": 3}])
+df = df.withColumn("y", F.laktory.convert_units("x", "ft", "m"))
 ```
 Here function `poly1` is a Laktory-specific function and is available because of the `import laktory` statement. All 
 other custom functions are also available from the `pyspark.sql.functions.laktory` namespace.
@@ -24,10 +23,9 @@ other custom functions are also available from the `pyspark.sql.functions.laktor
 ## Dataframe methods
 In this case the methods are designed to be applied directly on a spark dataframe.
 ```py
-import laktory
-import pandas as pd
+import laktory  # noqa: F401
 
-df = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))
+df = spark.createDataFrame([{"x": 1}, {"x": 2}, {"x": 3}])
 df.laktory.has_column("x")
 ```
 

@@ -1,5 +1,5 @@
-from laktory.models.resources.databricks import User
 from laktory.models.resources.databricks import Group
+from laktory.models.resources.databricks import User
 
 user = User(
     user_name="data.engineer@gmail.moc",

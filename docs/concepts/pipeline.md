@@ -193,13 +193,10 @@ Here is a simplified version:
 dbutils.widgets.text("pipeline_name", "pl-stock-prices")
 dbutils.widgets.text("node_name", "")
 
-from laktory import models
-from laktory import settings
+from laktory import models  # noqa: E402
+from laktory import settings  # noqa: E402
 
-# --------------------------------------------------------------------------- #
-# Read Pipeline                                                               #
-# --------------------------------------------------------------------------- #
-
+# Read Pipeline
 pl_name = dbutils.widgets.get("pipeline_name")
 node_name = dbutils.widgets.get("node_name")
 filepath = f"/Workspace{settings.workspace_laktory_root}pipelines/{pl_name}.json"
@@ -207,10 +204,7 @@ with open(filepath, "r") as fp:
     pl = models.Pipeline.model_validate_json(fp.read())
 
 
-# --------------------------------------------------------------------------- #
-# Execution                                                                   #
-# --------------------------------------------------------------------------- #
-
+# Execution
 if node_name:
     pl.nodes_dict[node_name].execute(spark=spark)
 else:
@@ -256,10 +250,8 @@ def define_table(node, sink):
     )
     def get_df():
 
-        logger.info(f"Building {node.name} node | sink: {sink.full_name}")
-
         # Execute node
-        node.execute(spark=spark, udfs=udfs)
+        node.execute(spark=spark)
         if sink.is_quarantine:
             df = node.quarantine_df
         else:

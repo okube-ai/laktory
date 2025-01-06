@@ -1,10 +1,9 @@
 import logging
 import sys
-from zoneinfo import ZoneInfo
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from ._settings import settings
-
 
 # --------------------------------------------------------------------------- #
 # Custom Formatter                                                            #

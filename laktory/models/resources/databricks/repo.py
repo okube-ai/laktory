@@ -1,4 +1,5 @@
 from typing import Union
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
@@ -68,7 +69,9 @@ class Repo(BaseModel, PulumiResource, TerraformResource):
         url="https://github.com/okube-ai/laktory",
         path="/Users/olivier.soucy@okube.ai/laktory-repo",
         branch="main",
-        access_controls=[{"permission_level": "CAN_READ", "group_name": "account users"}],
+        access_controls=[
+            {"permission_level": "CAN_READ", "group_name": "account users"}
+        ],
     )
     ```
 

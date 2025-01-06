@@ -1,19 +1,21 @@
-import os
 import hashlib
-import uuid
+import os
 import shutil
+import uuid
 from pathlib import Path
-from typing import Union
 from typing import Any
 from typing import Literal
+from typing import Union
+
 from pydantic import model_validator
+
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipelinechild import PipelineChild
-from laktory.spark import is_spark_dataframe
-from laktory.spark import SparkDataFrame
-from laktory.polars import is_polars_dataframe
 from laktory.polars import PolarsLazyFrame
+from laktory.polars import is_polars_dataframe
+from laktory.spark import SparkDataFrame
+from laktory.spark import is_spark_dataframe
 from laktory.types import AnyDataFrame
 
 logger = get_logger(__name__)
@@ -203,7 +205,6 @@ class DataSinkMergeCDCOptions(BaseModel):
 
     @staticmethod
     def _add_alias(expr, prefix="source"):
-
         operators = ["=", ">", "<", "!", "*", "+", "-", "/", ","]
 
         new_expr = expr
@@ -254,7 +255,6 @@ class DataSinkMergeCDCOptions(BaseModel):
         return new_expr
 
     def _init_target(self, source):
-
         import pyspark.sql.types as T
 
         spark = source.sparkSession
@@ -275,10 +275,9 @@ class DataSinkMergeCDCOptions(BaseModel):
             writer.saveAsTable(self.target_name)
 
     def _execute(self, source: SparkDataFrame):
-
+        import pyspark.sql.functions as F
         from delta.tables import DeltaTable
         from pyspark.sql import Window
-        import pyspark.sql.functions as F
 
         spark = source.sparkSession
 
@@ -330,7 +329,6 @@ class DataSinkMergeCDCOptions(BaseModel):
             table_target = DeltaTable.forName(spark, self.target_name)
 
         if self.scd_type == 1:
-
             if self.delete_where:
                 delete_condition = F.coalesce(
                     F.expr(self.source_delete_where), F.lit(False)
@@ -378,11 +376,10 @@ class DataSinkMergeCDCOptions(BaseModel):
             if self.delete_where:
                 merge = merge.whenMatchedDelete(condition=delete_condition)
 
-            logger.info(f"Executing merge...")
+            logger.info("Executing merge...")
             merge.execute()
 
         elif self.scd_type == 2:
-
             delete_condition = F.coalesce(F.expr(self.delete_where), F.lit(False))
             not_delete_condition = ~delete_condition
 
@@ -424,7 +421,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             #     _set = {f"target.{self.end_at}": f"source.{self.order_by}"}
             #     merge = merge.whenMatchedUpdate(set=_set, condition=~where)
 
-            logger.info(f"Executing merge...")
+            logger.info("Executing merge...")
             merge.execute()
 
             # Append rows
@@ -434,7 +431,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             writer = (
                 upsert.select(self.write_columns).write.mode("APPEND").format("DELTA")
             )
-            logger.info(f"Appending new rows...")
+            logger.info("Appending new rows...")
             if self.target_path:
                 writer.save(self.target_path)
             else:
@@ -464,13 +461,12 @@ class DataSinkMergeCDCOptions(BaseModel):
         else:
             try:
                 spark.catalog.getTable(self.target_name)
-            except Exception as e:
+            except Exception:
                 self._init_target(source)
 
         if source.isStreaming:
-
             if self.sink is None:
-                raise ValueError(f"Sink value required to fetch checkpoint location.")
+                raise ValueError("Sink value required to fetch checkpoint location.")
 
             if self.sink and self.sink._checkpoint_location is None:
                 raise ValueError(
@@ -560,7 +556,6 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     @property
     def _checkpoint_location(self) -> Path:
-
         if self.checkpoint_location:
             return Path(self.checkpoint_location)
 

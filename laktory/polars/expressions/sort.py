@@ -1,4 +1,3 @@
-from typing import Union
 import polars as pl
 
 __all__ = [

@@ -1,7 +1,9 @@
 import json
-from typing import Union
 from typing import Any
+from typing import Union
+
 from pydantic import field_validator
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
@@ -127,7 +129,9 @@ class ClusterPolicy(BaseModel, PulumiResource, TerraformResource):
                 }
             }
         ],
-        access_controls=[{"permission_level": "CAN_USE", "group_name": "account users"}],
+        access_controls=[
+            {"permission_level": "CAN_USE", "group_name": "account users"}
+        ],
     )
     ```
 

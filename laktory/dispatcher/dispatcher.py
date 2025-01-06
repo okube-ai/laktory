@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from laktory._useragent import DATABRICKS_USER_AGENT
 from laktory._useragent import VERSION
-from laktory.models.stacks.stack import Stack
 from laktory.dispatcher.dltpipelinerunner import DLTPipelineRunner
 from laktory.dispatcher.jobrunner import JobRunner
+from laktory.models.stacks.stack import Stack
 
 if TYPE_CHECKING:
     from databricks.sdk import WorkspaceClient
@@ -27,7 +28,7 @@ class Dispatcher:
 
     Examples
     --------
-    ```py
+    ```py tag:skip-run
     from laktory import models
     from laktory import Dispatcher
 
@@ -59,7 +60,6 @@ class Dispatcher:
         """Set resource for each of the resources defined in the stack"""
 
         for k, pl in self.stack.resources.pipelines.items():
-
             if not pl.options.is_enabled:
                 continue
 

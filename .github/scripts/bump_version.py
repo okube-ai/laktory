@@ -1,6 +1,6 @@
 import os
-import logging
 from datetime import datetime
+
 from packaging import version
 
 script_root = os.path.dirname(__file__)
@@ -23,7 +23,7 @@ def main():
     print(f"Bumping laktory to {v1}")
 
     # Update version file
-    print(f"Updating _version.py")
+    print("Updating _version.py")
     with open(version_filepath, "w") as fp:
         fp.write(f'VERSION = "{v1}"\n')
 
@@ -42,7 +42,7 @@ def main():
 
 def update_changelog(changelog_filepath, v0, v1):
     # Update CHANGELOG
-    print(f"Updating changelog")
+    print("Updating changelog")
     with open(changelog_filepath, "r") as fp:
         content = fp.read()
 

@@ -2,15 +2,17 @@ import os
 from pathlib import Path
 from typing import Any
 from typing import Union
-from pydantic import model_validator
+
 from pydantic import Field
+from pydantic import model_validator
+
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
-from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
 class DbfsFileLookup(ResourceLookup):
@@ -58,14 +60,14 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
         source="./data/stock_prices/prices.json",
     )
     print(file.path)
-    #> /prices.json
+    # > /prices.json
 
     file = models.resources.databricks.DbfsFile(
         source="./data/stock_prices/prices.json",
         rootpath="/data/",
     )
     print(file.path)
-    #> /data/prices.json
+    # > /data/prices.json
 
     file = models.resources.databricks.DbfsFile(
         source="./data/stock_prices/prices.json",
@@ -73,7 +75,7 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
         dirpath="stock_prices/",
     )
     print(file.path)
-    #> /data/stock_prices/prices.json
+    # > /data/stock_prices/prices.json
     ```
     """
 
@@ -95,7 +97,6 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="after")
     def set_paths(self) -> Any:
-
         # Path set
         if self.path:
             return self

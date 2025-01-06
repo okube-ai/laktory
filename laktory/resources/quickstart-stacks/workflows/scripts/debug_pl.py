@@ -1,10 +1,10 @@
-import sys
 import importlib
+import sys
 
 from databricks.connect import DatabricksSession
+
 from laktory import models
 from laktory import settings
-
 
 # --------------------------------------------------------------------------- #
 # Setup                                                                       #

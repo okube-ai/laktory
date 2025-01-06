@@ -1,13 +1,14 @@
 from typing import Literal
 from typing import Union
+
 from pydantic import Field
-from laktory._settings import settings
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
-from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
 class WarehouseCustomTag(BaseModel):
@@ -109,7 +110,9 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
         channel_name="CHANNEL_NAME_PREVIEW",
         enable_photon=True,
         enable_serverless_compute=True,
-        access_controls=[{"group_name": "account users", "permission_level": "CAN_USE"}],
+        access_controls=[
+            {"group_name": "account users", "permission_level": "CAN_USE"}
+        ],
     )
     ```
     """

@@ -13,7 +13,6 @@ mlwebhook = MLflowWebhook(
 
 
 def test_mlflow_webhook():
-
     assert mlwebhook.events == ["TRANSITION_REQUEST_CREATED"]
     assert mlwebhook.status == "ACTIVE"
 

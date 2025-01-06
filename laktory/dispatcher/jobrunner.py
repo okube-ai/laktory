@@ -1,17 +1,15 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import time
+from typing import TYPE_CHECKING
 from typing import Literal
 
-from laktory.dispatcher.dispatcherrunner import DispatcherRunner
 from laktory._logger import get_logger
+from laktory.dispatcher.dispatcherrunner import DispatcherRunner
 
 if TYPE_CHECKING:
-    from databricks.sdk.service.jobs import Wait
     from databricks.sdk.service.jobs import Run
-    from databricks.sdk.service.jobs import RunLifeCycleState
-    from databricks.sdk.errors import OperationFailed
+    from databricks.sdk.service.jobs import Wait
 
 logger = get_logger(__name__)
 
@@ -64,8 +62,8 @@ class JobRunner(DispatcherRunner):
         output:
             None
         """
-        from databricks.sdk.service.jobs import RunLifeCycleState
         from databricks.sdk.errors import OperationFailed
+        from databricks.sdk.service.jobs import RunLifeCycleState
 
         active_runs = list(self.wc.jobs.list_runs(job_id=self.id, active_only=True))
 

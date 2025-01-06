@@ -1,11 +1,10 @@
-import os
-import re
-import pathlib
 import argparse
+import os
+import pathlib
+import re
 
 
 def main(branch_name: str, stack_root: str):
-
     for dirpath, dirnames, filenames in os.walk(stack_root):
         dirpath = pathlib.Path(dirpath)
 

@@ -1,6 +1,7 @@
-from pydantic import BaseModel
-from typing import Union
 from typing import TYPE_CHECKING
+from typing import Union
+
+from pydantic import BaseModel
 from pyspark.sql.dataframe import DataFrame
 
 from laktory._logger import get_logger
@@ -105,6 +106,7 @@ def groupby_and_agg(
     * [pyspark window](https://spark.apache.org/docs/3.1.3/api/python/reference/api/pyspark.sql.functions.window.html)
     """
     import pyspark.sql.functions as F
+
     from laktory.models.transformers.basechainnode import ChainNodeColumn
 
     # Parse inputs

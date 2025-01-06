@@ -41,7 +41,9 @@ def string_split(
 
     df = pl.DataFrame({"x": ["price_close"]})
 
-    df = df.with_columns(y=pl.Expr.laktory.string_split(pl.col("x"), pattern="_", key=1))
+    df = df.with_columns(
+        y=pl.Expr.laktory.string_split(pl.col("x"), pattern="_", key=1)
+    )
     print(df.glimpse(return_as_string=True))
     '''
     Rows: 1

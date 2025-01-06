@@ -1,13 +1,13 @@
 import laktory
-from laktory.models import BaseModel
 
 # from laktory._parsers import remove_empty
 from laktory._parsers import merge_dicts
+from laktory.models import BaseModel
 
 
 class Camel(BaseModel):
-    d: dict = {}
-    l: list = []
+    d: dict = None
+    l: list = None
 
 
 def test_camel_case():
@@ -23,6 +23,7 @@ def test_camel_case():
     }
 
 
+#
 # def test_remove_empty():
 #     d = {
 #         "a": "a",
@@ -35,7 +36,6 @@ def test_camel_case():
 
 
 def test_merge_dicts():
-
     baseline = {
         "name": "Apple",
         "symbols": {

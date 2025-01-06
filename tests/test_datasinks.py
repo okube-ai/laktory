@@ -1,26 +1,25 @@
 import os
 import shutil
 import uuid
-
-import pytest
 from pathlib import Path
+
 import pyspark.sql.functions as F
+import pytest
 from pyspark.errors import AnalysisException
 from pyspark.errors import IllegalArgumentException
 
-from laktory.models import TableDataSink
-from laktory.models import FileDataSink
-from laktory._testing import df_slv
-from laktory._testing import df_slv_stream
-from laktory._testing import df_slv_polars
 from laktory._testing import Paths
+from laktory._testing import df_slv
+from laktory._testing import df_slv_polars
+from laktory._testing import df_slv_stream
 from laktory._testing import spark
+from laktory.models import FileDataSink
+from laktory.models import TableDataSink
 
 paths = Paths(__file__)
 
 
 def test_file_data_sink_parquet():
-
     dirpath = os.path.join(paths.tmp, "df_slv_sink_parquet/")
     if os.path.exists(dirpath):
         shutil.rmtree(dirpath)
@@ -52,7 +51,6 @@ def test_file_data_sink_parquet():
 
 
 def test_file_data_sink_delta():
-
     dirpath = os.path.join(paths.tmp, "df_slv_sink_delta/")
     if os.path.exists(dirpath):
         shutil.rmtree(dirpath)
@@ -84,7 +82,6 @@ def test_file_data_sink_delta():
 
 
 def test_file_data_sink_stream():
-
     dirpath = os.path.join(paths.tmp, "df_slv_sink_stream/")
     if os.path.exists(dirpath):
         shutil.rmtree(dirpath)
@@ -121,7 +118,6 @@ def test_file_data_sink_stream():
 
 
 def test_file_data_sink_polars_parquet():
-
     filepath = os.path.join(paths.tmp, "df_slv_polars_sink.parquet")
 
     if os.path.exists(filepath):
@@ -153,7 +149,6 @@ def test_file_data_sink_polars_parquet():
 
 
 def test_file_data_sink_polars_delta():
-
     dirpath = os.path.join(paths.tmp, "df_slv_polars_sink.delta")
     if os.path.exists(dirpath):
         shutil.rmtree(dirpath)
@@ -184,7 +179,6 @@ def test_file_data_sink_polars_delta():
 
 
 def test_table_data_sink():
-
     # Write as overwrite
     sink = TableDataSink(
         schema_name="default",
@@ -212,7 +206,6 @@ def test_table_data_sink():
 
 
 def test_view_data_sink():
-
     # Create table
     table_path = Path(paths.tmp) / "hive" / f"slv_{str(uuid.uuid4())}"
     (

@@ -2,13 +2,15 @@ import os
 from pathlib import Path
 from typing import Any
 from typing import Union
+
 from pydantic import model_validator
+
 from laktory import settings
 from laktory.models.basemodel import BaseModel
-from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
 class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
@@ -41,14 +43,14 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
         source="./notebooks/dlt/dlt_laktory_pl.py",
     )
     print(file.path)
-    #> /.laktory/dlt_laktory_pl.py
+    # > /.laktory/dlt_laktory_pl.py
 
     file = models.resources.databricks.WorkspaceFile(
         source="./notebooks/dlt/dlt_laktory_pl.py",
         rootpath="/src/",
     )
     print(file.path)
-    #> /src/dlt_laktory_pl.py
+    # > /src/dlt_laktory_pl.py
 
     file = models.resources.databricks.WorkspaceFile(
         source="./notebooks/dlt/dlt_laktory_pl.py",
@@ -56,7 +58,7 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
         dirpath="notebooks/dlt/",
     )
     print(file.path)
-    #> /src/notebooks/dlt/dlt_laktory_pl.py
+    # > /src/notebooks/dlt/dlt_laktory_pl.py
     ```
     """
 
@@ -77,7 +79,6 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="after")
     def set_paths(self) -> Any:
-
         # Path set
         if self.path:
             return self

@@ -1,13 +1,15 @@
 from typing import Union
+
 from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
+from laktory.models.grants.metastoregrant import MetastoreGrant
 from laktory.models.resources.baseresource import ResourceLookup
-from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
+from laktory.models.resources.databricks.grants import Grants
 from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
-from laktory.models.grants.metastoregrant import MetastoreGrant
-from laktory.models.resources.databricks.grants import Grants
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
 class MetastoreLookup(ResourceLookup):
@@ -147,7 +149,6 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
             depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
 
         if self.data_accesses:
-
             for data_access in self.data_accesses:
                 data_access.metastore_id = f"${{resources.{self.resource_name}.id}}"
                 _core_resources = data_access.core_resources

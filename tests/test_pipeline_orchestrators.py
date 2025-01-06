@@ -1,7 +1,9 @@
-import os
 import io
-import yaml
+import os
 from pathlib import Path
+
+import yaml
+
 from laktory import __version__
 from laktory import models
 from laktory._testing import Paths
@@ -22,7 +24,7 @@ def get_pl(extra=None):
         # Remove views
         nodes = []
         for n in data["nodes"]:
-            if not n["name"] in ["slv_stock_aapl", "slv_stock_msft"]:
+            if n["name"] not in ["slv_stock_aapl", "slv_stock_msft"]:
                 nodes += [n]
             data["nodes"] = nodes
 
@@ -66,7 +68,6 @@ options:
 
 
 def test_pipeline_job():
-
     # Test job
     job = pl_job.databricks_job
     data = job.model_dump(exclude_unset=True)
@@ -163,7 +164,6 @@ def test_pipeline_job():
 
 
 def test_pipeline_dlt():
-
     # Test Sink as Source
     sink_source = pl_dlt.nodes[1].source.node.primary_sink.as_source(
         as_stream=pl_dlt.nodes[1].source.as_stream

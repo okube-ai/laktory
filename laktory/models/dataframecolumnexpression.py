@@ -1,12 +1,13 @@
 import re
-from typing import Literal
 from typing import Any
+from typing import Literal
+
 from pydantic import model_validator
 
-from laktory._settings import settings
-from laktory.types import AnyDataFrameColumn
-from laktory.models.basemodel import BaseModel
 from laktory._logger import get_logger
+from laktory._settings import settings
+from laktory.models.basemodel import BaseModel
+from laktory.types import AnyDataFrameColumn
 
 logger = get_logger(__name__)
 
@@ -32,13 +33,13 @@ class DataFrameColumnExpression(BaseModel):
         value="MAX(close)",
     )
     print(e1.eval())
-    #> Column<'MAX(close)'>
+    # > Column<'MAX(close)'>
 
     e2 = models.DataFrameColumnExpression(
         value="F.abs('close')",
     )
     print(e2.eval())
-    #> Column<'abs(close)'>
+    # > Column<'abs(close)'>
     ```
     """
 
@@ -47,7 +48,6 @@ class DataFrameColumnExpression(BaseModel):
 
     @model_validator(mode="after")
     def guess_type(self) -> Any:
-
         if self.type:
             return self
 
@@ -84,7 +84,6 @@ class DataFrameColumnExpression(BaseModel):
         return expr
 
     def eval(self, udfs=None, dataframe_backend=None) -> AnyDataFrameColumn:
-
         if dataframe_backend is None:
             dataframe_backend = settings.dataframe_backend
 
@@ -96,17 +95,17 @@ class DataFrameColumnExpression(BaseModel):
 
         if dataframe_backend == "SPARK":
             # Imports required to evaluate expressions
-            import pyspark.sql.functions as F
-            import pyspark.sql.types as T
-            from pyspark.sql.functions import col
-            from pyspark.sql.functions import lit
+            import pyspark.sql.functions as F  # noqa: F401
+            import pyspark.sql.types as T  # noqa: F401
+            from pyspark.sql.functions import col  # noqa: F401
+            from pyspark.sql.functions import lit  # noqa: F401
 
         elif dataframe_backend == "POLARS":
             # Imports required to evaluate expressions
-            import polars as pl
-            import polars.functions as F
-            from polars import col
-            from polars import lit
+            import polars as pl  # noqa: F401
+            import polars.functions as F  # noqa: F401
+            from polars import col  # noqa: F401
+            from polars import lit  # noqa: F401
 
         else:
             raise ValueError(

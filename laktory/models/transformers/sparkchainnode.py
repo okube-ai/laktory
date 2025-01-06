@@ -1,17 +1,15 @@
-from typing import Union
-from typing import Callable
 from typing import Any
+from typing import Callable
 from typing import Literal
-import re
+from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.transformers.basechainnode import BaseChainNode
-from laktory.models.transformers.basechainnode import ChainNodeColumn
 from laktory.models.transformers.basechainnode import BaseChainNodeFuncArg
 from laktory.models.transformers.basechainnode import BaseChainNodeSQLExpr
+from laktory.models.transformers.basechainnode import ChainNodeColumn
 from laktory.spark import SparkColumn
 from laktory.spark import SparkDataFrame
-
 
 logger = get_logger(__name__)
 
@@ -42,12 +40,11 @@ class SparkChainNodeFuncArg(BaseChainNodeFuncArg):
             v = self.value.read(spark=spark)
 
         elif isinstance(v, str):
-
             # Imports required to evaluate expressions
-            import pyspark.sql.functions as F
-            from pyspark.sql.functions import lit
-            from pyspark.sql.functions import col
-            from pyspark.sql.functions import expr
+            import pyspark.sql.functions as F  # noqa: F401
+            from pyspark.sql.functions import col  # noqa: F401
+            from pyspark.sql.functions import expr  # noqa: F401
+            from pyspark.sql.functions import lit  # noqa: F401
 
             targets = ["lit(", "col(", "expr(", "F."]
 
@@ -70,7 +67,6 @@ class SparkChainNodeSQLExpr(BaseChainNodeSQLExpr):
     """
 
     def eval(self, df):
-
         # We wanted to use parametrized queries to inject dataframes into the
         # query, but it does not seem to be mature enough to do so:
         # - as of Spark 3.5, spark connect does not support kwargs in .sql
@@ -261,10 +257,6 @@ class SparkChainNode(BaseChainNode):
         -------
             Output dataframe
         """
-        import pyspark.sql.functions as F
-        from pyspark.sql.dataframe import DataFrame
-        from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
-        from pyspark.sql import Column
         from laktory.spark import DATATYPES_MAP
 
         if udfs is None:

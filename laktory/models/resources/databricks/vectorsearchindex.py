@@ -1,7 +1,9 @@
+from typing import Any
 from typing import Literal
 from typing import Union
-from typing import Any
+
 from pydantic import model_validator
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -172,7 +174,6 @@ class VectorSearchIndex(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="after")
     def check_index_spec(self) -> Any:
-
         if self.index_type == "DELTA_SYNC" and self.delta_sync_index_spec is None:
             raise ValueError(
                 "`delta_sync_index_spec` must be set with `index_type` = 'DELTA_SYNC'"

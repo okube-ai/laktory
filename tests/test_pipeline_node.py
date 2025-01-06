@@ -6,16 +6,15 @@ from pathlib import Path
 from pyspark.sql import functions as F
 
 from laktory import models
-from laktory._testing import spark
 from laktory._testing import Paths
 from laktory._testing import df_brz
 from laktory._testing import df_slv
+from laktory._testing import spark
 
 paths = Paths(__file__)
 
 
 def test_execute():
-
     sink_path = os.path.join(paths.tmp, "pl_node_sink")
 
     node = models.PipelineNode(
@@ -69,7 +68,6 @@ def test_execute():
 
 
 def test_execute_view():
-
     # Create table
     table_path = Path(paths.tmp) / "hive" / f"slv_{str(uuid.uuid4())}"
     (

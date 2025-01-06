@@ -1,10 +1,10 @@
-import re
 import io
+import re
 from contextlib import redirect_stdout
-from pydantic import BaseModel
 
-from pyspark.sql.dataframe import DataFrame
+from pydantic import BaseModel
 from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
+from pyspark.sql.dataframe import DataFrame
 
 
 class Watermark(BaseModel):

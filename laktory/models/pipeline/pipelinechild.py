@@ -1,10 +1,11 @@
 from typing import Any
 from typing import Literal
-from pydantic import model_validator
-from pydantic import BaseModel
 
-from laktory._settings import settings
+from pydantic import BaseModel
+from pydantic import model_validator
+
 from laktory._logger import get_logger
+from laktory._settings import settings
 
 logger = get_logger(__name__)
 
@@ -40,7 +41,6 @@ class PipelineChild(BaseModel):
 
     @property
     def df_backend(self) -> str:
-
         # Direct value
         backend = self.dataframe_backend
         if backend is not None:
@@ -70,7 +70,6 @@ class PipelineChild(BaseModel):
 
     @property
     def parent_pipeline(self):
-
         from laktory.models.pipeline.pipeline import Pipeline
 
         def _get_pl(o):
@@ -87,7 +86,6 @@ class PipelineChild(BaseModel):
 
     @property
     def parent_pipeline_node(self):
-
         from laktory.models.pipeline.pipelinenode import PipelineNode
 
         def _get_pl(o):

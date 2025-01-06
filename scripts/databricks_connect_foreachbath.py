@@ -1,4 +1,3 @@
-import os
 from databricks.connect import DatabricksSession
 
 # Setup

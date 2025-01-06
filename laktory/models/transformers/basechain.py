@@ -1,9 +1,8 @@
 from __future__ import annotations
-from typing import Any
-from typing import Union
-from typing import Literal
+
 from typing import TYPE_CHECKING
-from pydantic import model_validator
+from typing import Literal
+from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
@@ -12,7 +11,7 @@ from laktory.models.transformers.basechainnode import BaseChainNode
 from laktory.types import AnyDataFrame
 
 if TYPE_CHECKING:
-    from laktory.models.datasources.basedatasource import BaseDataSource
+    pass
 
 logger = get_logger(__name__)
 
@@ -74,7 +73,7 @@ class BaseChain(BaseModel, PipelineChild):
         return df
 
     def get_view_definition(self):
-        logger.info(f"Creating view definition")
+        logger.info("Creating view definition")
         return self.nodes[0].get_view_definition()
 
 

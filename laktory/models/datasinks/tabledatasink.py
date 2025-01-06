@@ -2,12 +2,14 @@ import os
 import shutil
 from typing import Literal
 from typing import Union
+
 from pydantic import model_validator
+
+from laktory._logger import get_logger
 from laktory.models.datasinks.basedatasink import BaseDataSink
-from laktory.spark import SparkDataFrame
 from laktory.models.datasources.tabledatasource import TableDataSource
 from laktory.models.transformers.basechainnode import BaseChainNodeSQLExpr
-from laktory._logger import get_logger
+from laktory.spark import SparkDataFrame
 
 logger = get_logger(__name__)
 
@@ -150,7 +152,6 @@ class TableDataSink(BaseDataSink):
     # ----------------------------------------------------------------------- #
 
     def _write_spark(self, df: SparkDataFrame, mode=None) -> None:
-
         if df.isStreaming and self._checkpoint_location is None:
             raise ValueError("Checkpoint must be provided for streaming table sink.")
 
@@ -171,7 +172,6 @@ class TableDataSink(BaseDataSink):
             self.parent_pipeline_node._output_df = df
 
     def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
-
         if self.format in ["EXCEL"]:
             raise ValueError(f"'{self.format}' format is not supported with Spark")
 
@@ -192,7 +192,6 @@ class TableDataSink(BaseDataSink):
             _options[k] = v
 
         if df.isStreaming:
-
             logger.info(
                 f"Writing {self._id} {self.format}  as stream with mode {mode} and options {_options}"
             )
@@ -226,7 +225,6 @@ class TableDataSink(BaseDataSink):
         """
         # Remove Data
         if self.warehouse == "DATABRICKS":
-
             logger.info(
                 f"Dropping {self.table_type} {self.full_name}",
             )

@@ -1,11 +1,13 @@
 from __future__ import annotations
-from typing import Union
-from typing import Literal
+
+from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
-from pydantic import model_validator
-from pathlib import Path
+from typing import Literal
+from typing import Union
+
 import networkx as nx
+from pydantic import model_validator
 
 import laktory
 from laktory._logger import get_logger
@@ -18,8 +20,8 @@ from laktory.models.pipeline.orchestrators.databricksdltorchestrator import (
 from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
     DatabricksJobOrchestrator,
 )
-from laktory.models.pipeline.pipelinenode import PipelineNode
 from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.pipeline.pipelinenode import PipelineNode
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -349,7 +351,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     @model_validator(mode="before")
     @classmethod
     def assign_name(cls, data: Any) -> Any:
-
         if (
             "databricks_dlt" in data.keys()
             and data["databricks_dlt"].get("name", None) is None
@@ -378,7 +379,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     @model_validator(mode="after")
     def validate_orchestrator(self):
-
         if self.orchestrator == "DATABRICKS_JOB":
             if self.databricks_job is None:
                 raise ValueError(
@@ -413,7 +413,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     @property
     def safe_name(self):
-
         name = self.resolved_name
 
         # Replace special characters
@@ -429,7 +428,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     @property
     def _dependencies(self):
-
         laktory_found = False
 
         dependencies = [d for d in self.dependencies]
@@ -513,7 +511,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         # Build edges and assign nodes to pipeline node data sources
         node_names = []
         for n in self.nodes:
-
             if n.name in node_names:
                 raise ValueError(
                     f"Pipeline node '{n.name}' is declared twice in pipeline '{self.name}'"

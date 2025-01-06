@@ -1,8 +1,9 @@
 import os
 import shutil
 import uuid
-from laktory._settings import settings
+
 from laktory import models
+from laktory._settings import settings
 
 
 class StackValidator:

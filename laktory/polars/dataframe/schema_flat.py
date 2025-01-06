@@ -55,7 +55,6 @@ def schema_flat(df: pl.DataFrame) -> list[str]:
     def get_fields(schema):
         field_names = []
         for f_name, f_type in schema.items():
-
             if isinstance(f_type, pl.Struct):
                 _field_names = get_fields(dict(f_type))
                 field_names += [f_name]
@@ -68,7 +67,6 @@ def schema_flat(df: pl.DataFrame) -> list[str]:
                     field_names += [f"{f_name}[*].{v}" for v in _field_names]
 
             else:
-
                 field_names += [f_name]
 
         return field_names

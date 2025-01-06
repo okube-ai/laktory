@@ -1,4 +1,5 @@
 from functools import wraps
+
 import polars as pl
 
 from laktory.polars.dataframe.groupby_and_agg import groupby_and_agg
@@ -11,7 +12,7 @@ from laktory.polars.dataframe.window_filter import window_filter
 
 
 @pl.api.register_dataframe_namespace("laktory")
-class LaktoryDataFrame:
+class LaktoryDataFrame:  # noqa: F811
     def __init__(self, df: pl.DataFrame):
         self._df = df
 
@@ -45,7 +46,7 @@ class LaktoryDataFrame:
 
 
 @pl.api.register_lazyframe_namespace("laktory")
-class LaktoryDataFrame:
+class LaktoryDataFrame:  # noqa: F811
     def __init__(self, df: pl.LazyFrame):
         self._df = df
 

@@ -1,4 +1,5 @@
 import json
+
 from laktory.models.resources.databricks import ClusterPolicy
 
 definition = {
@@ -33,7 +34,6 @@ def test_policy_cluster():
 
 
 def test_policy_cluster_as_dict():
-
     cp = ClusterPolicy(
         name="okube",
         definition=definition,

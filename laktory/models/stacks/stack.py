@@ -1,7 +1,7 @@
-import copy
-from typing import Union
 from typing import Any
 from typing import Literal
+from typing import Union
+
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -86,7 +86,6 @@ class LaktorySettings(BaseModel):
 
     @model_validator(mode="after")
     def apply_settings(self) -> Any:
-
         if self.dataframe_backend:
             settings.dataframe_backend = self.dataframe_backend
 
@@ -243,7 +242,6 @@ class StackResources(BaseModel):
                 continue
 
             for resource_name, _r in getattr(self, resource_type).items():
-
                 if resource_name in resources.keys():
                     raise ValueError(
                         f"Stack resource names are not unique. '{resource_name}' is already used."
@@ -483,14 +481,12 @@ class Stack(BaseModel):
             raise ValueError(f"Environment '{env_name}' is not declared in the stack.")
 
         if self._envs is None:
-
             ENV_FIELDS = ["pulumi", "resources", "terraform", "variables"]
 
             # Because options is an excluded field for all resources and
             # sub-resources, we need to manually dump it and add it to
             # the base dump
             def dump_with_options(obj: Any) -> Any:
-
                 # Check data type, call recursively if not a BaseModel
                 if isinstance(obj, list):
                     return [dump_with_options(v) for v in obj]
@@ -505,7 +501,6 @@ class Stack(BaseModel):
 
                 # Loop through all model fields
                 for field_name, field in model.model_fields.items():
-
                     # Explicitly dump options if found in the model
                     if field_name == "options" and field.annotation == ResourceOptions:
                         data["options"] = model.options.model_dump(exclude_unset=True)
@@ -538,7 +533,6 @@ class Stack(BaseModel):
 
             envs = {}
             for _env_name, env in self.environments.items():
-
                 d = dump_with_options(self)
                 _envs = d.pop("environments")
 

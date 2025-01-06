@@ -1,4 +1,3 @@
-import pytest
 from laktory import dlt
 
 

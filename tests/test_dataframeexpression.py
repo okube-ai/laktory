@@ -1,12 +1,10 @@
-from pyspark.sql import functions as F
 import polars as pl
+from pyspark.sql import functions as F
 
 from laktory import models
-from laktory._testing import spark
 
 
 def test_expression_types():
-
     for e in [
         "symbol",
         "MAX(close)",
@@ -37,7 +35,6 @@ def test_expression_types():
 
 
 def test_eval():
-
     # Spark
     e1 = models.DataFrameColumnExpression(value="symbol")
     e2 = models.DataFrameColumnExpression(value="F.col('symbol')")

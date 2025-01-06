@@ -1,14 +1,14 @@
 import os
 import shutil
 import uuid
-from pathlib import Path
+
 from py import path as pypath
+from typer.testing import CliRunner
 
 from laktory import app
-from laktory import settings
 from laktory import models
+from laktory import settings
 from laktory._testing import Paths
-from typer.testing import CliRunner
 
 runner = CliRunner()
 settings.cli_raise_external_exceptions = True
@@ -16,7 +16,6 @@ paths = Paths(__file__)
 
 
 def _read_stack(template, backend):
-
     dirpath = pypath.local(
         f"{paths.tmp}/quickstart_{template}_{backend}_{str(uuid.uuid4())}"
     )
@@ -86,7 +85,6 @@ def _read_stack(template, backend):
 
 
 def _preview_stack(template, backend, env):
-
     dirpath = pypath.local(
         f"{paths.tmp}/quickstart_{template}_{backend}_{str(uuid.uuid4())}"
     )
@@ -119,7 +117,6 @@ def _preview_stack(template, backend, env):
 
 
 def _deploy_stack(template, backend, env):
-
     dirpath = pypath.local(
         f"{paths.tmp}/quickstart_{template}_{backend}_{str(uuid.uuid4())}"
     )
@@ -192,7 +189,6 @@ def atest_deploy_quickstart_stacks():
 
 
 def test_quickstart_localpipeline():
-
     dirpath = pypath.local(f"{paths.tmp}/quickstart_local_pipeline_{str(uuid.uuid4())}")
     # stack_filepath = dirpath / "stack.yaml"
 
@@ -200,7 +196,6 @@ def test_quickstart_localpipeline():
     os.mkdir(dirpath)
 
     with dirpath.as_cwd():
-
         # Run Quickstart
         _ = runner.invoke(
             app,
@@ -220,7 +215,7 @@ def test_quickstart_localpipeline():
                 code = f.read()
                 exec(code)
                 print("")
-                print(f"----- Execution completed\n\n")
+                print("----- Execution completed\n\n")
 
     # Cleanup
     shutil.rmtree(dirpath)

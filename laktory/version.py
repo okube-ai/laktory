@@ -1,6 +1,7 @@
 import os
 import platform
 import sys
+
 from laktory._version import VERSION
 
 
@@ -10,11 +11,9 @@ def show_version_info() -> str:
     package_names = {
         "azure-identity",
         "azure-storage-blob",
-        "black",
         "boto3",
         "databricks-sdk",
         "deltalake",
-        "flit",
         "inflect",
         "mkdocs",
         "mkdocs-material",
@@ -40,6 +39,7 @@ def show_version_info() -> str:
         "sqlparse",
         "typer",
         "typing_extensions",
+        "uv",
         "yfinance",
     }
     packages = {}
@@ -53,7 +53,7 @@ def show_version_info() -> str:
     for name in package_names:
         try:
             packages[name] = version(name)
-        except:
+        except:  # noqa: E722
             packages[name] = "NOT FOUND"
     packages = dict(sorted(packages.items()))
 

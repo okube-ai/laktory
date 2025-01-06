@@ -3,8 +3,8 @@ import os
 from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
 from laktory.models.pipeline.pipelinechild import PipelineChild
-from laktory.models.resources.databricks.workspacefile import WorkspaceFile
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.workspacefile import WorkspaceFile
 
 
 class PipelineRequirementsWorkspaceFile(WorkspaceFile, PipelineChild):
@@ -37,7 +37,6 @@ class PipelineRequirementsWorkspaceFile(WorkspaceFile, PipelineChild):
         self.set_paths()
 
     def write_source(self):
-
         pl = self.parent_pipeline
 
         source = self.inject_vars_into_dump({"source": self.source})["source"]

@@ -1,7 +1,7 @@
 from typing import Union
+
 import pyspark.sql.functions as F
 from pyspark.sql.column import Column
-
 
 COLUMN_OR_NAME = Union[Column, str]
 """spark column or column name"""

@@ -1,17 +1,17 @@
 import os
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from typing import Any
 from typing import Literal
 from typing import Union
+from zoneinfo import ZoneInfo
 
-from pydantic import Field
 from pydantic import ConfigDict
+from pydantic import Field
 
+from laktory._logger import get_logger
+from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataproducer import DataProducer
-from laktory._settings import settings
-from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -66,7 +66,7 @@ class DataEvent(BaseModel):
     '''
 
     print(event.event_root)
-    #> /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
+    # > /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
 
     event = models.DataEvent(
         name="stock_price",
@@ -84,7 +84,7 @@ class DataEvent(BaseModel):
     '''
 
     print(event.dirpath)
-    #> /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/2023/08/23/
+    # > /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/2023/08/23/
 
     print(event.get_landing_filepath())
     '''
@@ -92,7 +92,7 @@ class DataEvent(BaseModel):
     '''
 
     print(event.get_storage_filepath())
-    #> /events/yahoo-finance/stock_price/2023/08/23/stock_price_20230823T000000000Z.json
+    # > /events/yahoo-finance/stock_price/2023/08/23/stock_price_20230823T000000000Z.json
     ```
     """
 
@@ -355,8 +355,8 @@ class DataEvent(BaseModel):
         """
         # Set container client
         if container_client is None:
-            from azure.storage.blob import ContainerClient
             from azure.identity import DefaultAzureCredential
+            from azure.storage.blob import ContainerClient
 
             if account_url:
                 # From account URL

@@ -3,15 +3,17 @@ from pathlib import Path
 from typing import Any
 from typing import Literal
 from typing import Union
-from pydantic import model_validator
+
 from pydantic import Field
+from pydantic import model_validator
+
 from laktory import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
-from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
 class NotebookLookup(ResourceLookup):
@@ -63,14 +65,14 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         source="./notebooks/dlt/dlt_laktory_pl.py",
     )
     print(notebook.path)
-    #> /.laktory/dlt_laktory_pl.py
+    # > /.laktory/dlt_laktory_pl.py
 
     notebook = models.resources.databricks.Notebook(
         source="./notebooks/dlt/dlt_laktory_pl.py",
         rootpath="/src/",
     )
     print(notebook.path)
-    #> /src/dlt_laktory_pl.py
+    # > /src/dlt_laktory_pl.py
 
     notebook = models.resources.databricks.Notebook(
         source="./notebooks/dlt/dlt_laktory_pl.py",
@@ -78,7 +80,7 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         dirpath="notebooks/dlt/",
     )
     print(notebook.path)
-    #> /src/notebooks/dlt/dlt_laktory_pl.py
+    # > /src/notebooks/dlt/dlt_laktory_pl.py
     ```
     """
 
@@ -97,7 +99,6 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="after")
     def set_paths(self) -> Any:
-
         # Path set
         if self.path:
             return self

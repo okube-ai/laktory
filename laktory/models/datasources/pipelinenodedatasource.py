@@ -1,11 +1,9 @@
 from typing import Union
-from typing import Any
-from pydantic import Field
 
-from laktory.models.datasources.basedatasource import BaseDataSource
-from laktory.spark import SparkDataFrame
-from laktory.polars import PolarsDataFrame
 from laktory._logger import get_logger
+from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory.polars import PolarsDataFrame
+from laktory.spark import SparkDataFrame
 
 logger = get_logger(__name__)
 
@@ -63,7 +61,6 @@ class PipelineNodeDataSource(BaseDataSource):
 
     @property
     def node(self):
-
         pl = self.parent_pipeline
 
         if pl is None:
@@ -78,7 +75,6 @@ class PipelineNodeDataSource(BaseDataSource):
 
     @property
     def sink_table_full_name(self):
-
         from laktory.models.datasinks.tabledatasink import TableDataSink
 
         node = self.node
@@ -97,13 +93,12 @@ class PipelineNodeDataSource(BaseDataSource):
     # ----------------------------------------------------------------------- #
 
     def _read_spark(self, spark) -> SparkDataFrame:
-
         stream_to_batch = not self.as_stream and self.node.source.as_stream
         is_dlt = False
         if self.is_orchestrator_dlt:
+            from laktory.dlt import is_debug
             from laktory.dlt import read as dlt_read
             from laktory.dlt import read_stream as dlt_read_stream
-            from laktory.dlt import is_debug
 
             is_dlt = not is_debug()
 
@@ -117,7 +112,6 @@ class PipelineNodeDataSource(BaseDataSource):
                 df = dlt_read(self.node.name)
 
         elif stream_to_batch or self.node.output_df is None:
-
             logger.info(f"Reading pipeline node {self._id} from primary sink")
             df = self.node.primary_sink.read(spark=spark, as_stream=self.as_stream)
 
@@ -131,7 +125,6 @@ class PipelineNodeDataSource(BaseDataSource):
         return df
 
     def _read_polars(self) -> PolarsDataFrame:
-
         # Read from node output DataFrame (if available)
         if self.node.output_df is not None:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")

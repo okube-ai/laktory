@@ -1,17 +1,15 @@
-import re
-from typing import Union
-from typing import Callable
 from typing import Any
+from typing import Callable
 from typing import Literal
+from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.transformers.basechainnode import BaseChainNode
-from laktory.models.transformers.basechainnode import ChainNodeColumn
 from laktory.models.transformers.basechainnode import BaseChainNodeFuncArg
 from laktory.models.transformers.basechainnode import BaseChainNodeSQLExpr
+from laktory.models.transformers.basechainnode import ChainNodeColumn
 from laktory.polars import PolarsDataFrame
 from laktory.polars import PolarsExpr
-
 
 logger = get_logger(__name__)
 
@@ -42,12 +40,11 @@ class PolarsChainNodeFuncArg(BaseChainNodeFuncArg):
             v = self.value.read()
 
         elif isinstance(v, str):
-
             # Imports required to evaluate expressions
-            import polars as pl
-            from polars import col
-            from polars import lit
-            from polars import sql_expr
+            import polars as pl  # noqa: F401
+            from polars import col  # noqa: F401
+            from polars import lit  # noqa: F401
+            from polars import sql_expr  # noqa: F401
 
             targets = ["lit(", "col(", "sql_expr(", "pl."]
 
@@ -226,9 +223,8 @@ class PolarsChainNode(BaseChainNode):
         -------
             Output dataframe
         """
-        import polars.functions as F
-        from polars import Expr
         from polars import DataFrame
+
         from laktory.polars.datatypes import DATATYPES_MAP
 
         if udfs is None:

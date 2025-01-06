@@ -1,4 +1,5 @@
 from functools import wraps
+
 import polars as pl
 
 from laktory.polars.expressions.datetime import current_timestamp

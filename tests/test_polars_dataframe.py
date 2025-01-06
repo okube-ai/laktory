@@ -1,10 +1,9 @@
 import datetime
-import os
+
 import polars as pl
 
-import laktory
-from laktory._testing.stockprices import df_slv_polars
 from laktory._testing.stockprices import df_meta_polars
+from laktory._testing.stockprices import df_slv_polars
 
 df = pl.DataFrame(
     [
@@ -35,7 +34,6 @@ df = pl.DataFrame(
 
 
 def test_df_schema_flat():
-
     schema = df.laktory.schema_flat()
     assert schema == [
         "x@x",

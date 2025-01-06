@@ -1,5 +1,6 @@
 import time
 from typing import Union
+
 from pyspark.sql.dataframe import DataFrame
 
 
@@ -62,7 +63,6 @@ def display(
         df.show(n=n, truncate=truncate, vertical=vertical)
 
     else:
-
         # Start the streaming query
         query = (
             df.writeStream.outputMode("append")

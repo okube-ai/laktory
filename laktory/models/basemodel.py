@@ -1,17 +1,18 @@
-import yaml
+import copy
 import json
 import os
 import re
-import inflect
-import copy
 from typing import Any
-from typing import TypeVar
 from typing import TextIO
+from typing import TypeVar
+
+import inflect
+import yaml
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_serializer
-from laktory._settings import settings
+
 from laktory._parsers import _snake_to_camel
 
 Model = TypeVar("Model", bound="BaseModel")
@@ -227,7 +228,6 @@ class BaseModel(_BaseModel):
     # ----------------------------------------------------------------------- #
 
     def _configure_serializer(self, camel=False, singular=False):
-
         self._camel_serialization = camel
         self._singular_serialization = singular
         for k in self.model_fields:
@@ -279,7 +279,6 @@ class BaseModel(_BaseModel):
 
     @staticmethod
     def _get_patterns(vars):
-
         # Build vars patterns
         patterns = {}
 
@@ -289,7 +288,6 @@ class BaseModel(_BaseModel):
 
         # User-defined variables
         for k, v in vars.items():
-
             # Recursive replace (for vars defined with env vars or previous variables)
             if isinstance(v, str) and "${vars." in v:
                 for _k in patterns:

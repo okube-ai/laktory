@@ -1,6 +1,5 @@
 import pyspark.sql.types as T
 
-
 DATATYPES_MAP = {
     "binary": T.BinaryType(),
     "byte": T.ByteType(),

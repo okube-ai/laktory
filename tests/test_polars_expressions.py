@@ -1,8 +1,8 @@
 from uuid import UUID
-import polars as pl
+
 import numpy as np
+import polars as pl
 import pytest
-import laktory
 
 df0 = pl.DataFrame(
     {
@@ -51,7 +51,6 @@ def test_compare(df0=df0):
 
 
 def test_roundp(df0=df0):
-
     df = df0.with_columns(roundp_1=pl.Expr.laktory.roundp(pl.col("pi"), p=0.2))
     df = df.with_columns(roundp_11=pl.col("pi").laktory.roundp(p=0.2))
     df = df.with_columns(roundp_2=pl.Expr.laktory.roundp(pl.col("pi"), p=pl.col("p")))
@@ -62,7 +61,6 @@ def test_roundp(df0=df0):
 
 
 def test_row_number():
-
     df = pl.DataFrame(
         {
             "x": ["a", "a", "b", "b", "b", "c"],
@@ -78,7 +76,6 @@ def test_row_number():
 
 
 def test_sql_expr():
-
     expr0 = (pl.col("data").struct.field("open") >= 2) & (pl.col("x") > 0) | (
         pl.col("symbol") == "AAPL"
     )

@@ -1,10 +1,11 @@
+import os
+from typing import Any
+from typing import Union
+
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
-from typing import Any
-from typing import Union
-import os
 
 
 class Settings(BaseSettings):
@@ -51,7 +52,6 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def update_laktory_root(self) -> Any:
-
         if self.laktory_root != "":
             return self
 

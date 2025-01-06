@@ -118,6 +118,8 @@ specify a checkpoint location.
 ```py
 from laktory import models
 
+df = spark.createDataFrame([("AAPL"), ("GOOGL")], ["symbol"])
+
 sink = models.FileDataSink(
     path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
     format="PARQUET",
@@ -138,6 +140,8 @@ To write a DataFrame to a physical table:
 ```py
 from laktory import models
 
+df = spark.createDataFrame([("AAPL"), ("GOOGL")], ["symbol"])
+
 sink = models.TableDataSink(
     schema_name="finance",
     table_name="brz_stock_prices",
@@ -149,6 +153,8 @@ sink.write(df)
 physical tables. To write a DataFrame as a SQL view:
 ```py
 from laktory import models
+
+df = spark.createDataFrame([("AAPL"), ("GOOGL")], ["symbol"])
 
 sink = models.TableDataSink(
     schema_name="finance",

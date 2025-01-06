@@ -1,5 +1,7 @@
 from typing import Any
+
 from pydantic import model_validator
+
 from laktory.models.basemodel import BaseModel
 
 

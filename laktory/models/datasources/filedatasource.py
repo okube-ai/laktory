@@ -1,17 +1,17 @@
-from typing import Union
-import os.path
 import json
-
-from typing import Literal
+import os.path
 from typing import Any
-from pydantic import model_validator
-from pydantic import Field
-from pydantic import ConfigDict
+from typing import Literal
+from typing import Union
 
-from laktory.models.datasources.basedatasource import BaseDataSource
-from laktory.spark import SparkDataFrame
-from laktory.polars import PolarsLazyFrame
+from pydantic import ConfigDict
+from pydantic import Field
+from pydantic import model_validator
+
 from laktory._logger import get_logger
+from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory.polars import PolarsLazyFrame
+from laktory.spark import SparkDataFrame
 
 logger = get_logger(__name__)
 
@@ -84,7 +84,6 @@ class FileDataSource(BaseDataSource):
 
     @model_validator(mode="after")
     def options(self) -> Any:
-
         if self.dataframe_backend == "SPARK":
             if self.format in [
                 "EXCEL",
@@ -141,7 +140,6 @@ class FileDataSource(BaseDataSource):
     # ----------------------------------------------------------------------- #
 
     def _read_spark(self, spark) -> SparkDataFrame:
-
         _options = {}
         _mode = "stream"
 
@@ -209,7 +207,6 @@ class FileDataSource(BaseDataSource):
         return df
 
     def _read_polars(self) -> PolarsLazyFrame:
-
         import polars as pl
 
         if self.as_stream:

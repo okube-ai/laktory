@@ -2,11 +2,11 @@ import warnings
 from typing import Any
 from typing import Literal
 from typing import Union
+
 from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.exceptions import DataQualityCheckFailedError
-from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
 from laktory.models.dataquality.check import DataQualityCheck
@@ -284,7 +284,6 @@ class DataQualityExpectation(BaseModel):
         return self._check
 
     def _check_df(self, df):
-
         if self._dataframe_backend == "SPARK":
             rows_count = df.count()
         elif self._dataframe_backend == "POLARS":
@@ -340,7 +339,7 @@ class DataQualityExpectation(BaseModel):
             return _check
 
         if self.type == "AGGREGATE":
-            import pyspark.sql.functions as F
+            import pyspark.sql.functions as F  # noqa: F401
 
             if self.expr.type == "SQL":
                 _df = df.select(self.expr.eval()).toPandas()

@@ -1,7 +1,8 @@
-from datetime import datetime
 from datetime import date
-from planck import units
+from datetime import datetime
+
 import numpy as np
+from planck import units
 
 from laktory import unix_timestamp
 from laktory import utc_datetime

@@ -5,7 +5,6 @@ from sqlparse.tokens import Keyword
 
 
 def _parse_token(token):
-
     # Numerical
     try:
         _ = float(token)
@@ -33,7 +32,6 @@ def _parse_token(token):
 
 
 def _parse_compare(condition: str):
-
     # Remove whitespaces
     condition = condition.replace(" ", "")
 
@@ -82,10 +80,10 @@ def sql_expr(sql: str) -> pl.Expr:
 
     exp = pl.Expr.laktory.sql_expr("data.close")
     print(exp)
-    #> col("data").struct.field_by_name(close)()
+    # > col("data").struct.field_by_name(close)()
     exp = pl.Expr.laktory.sql_expr("data.close > 5.0")
     print(exp)
-    #> [(col("data").struct.field_by_name(close)()) > (dyn float: 5.0)]
+    # > [(col("data").struct.field_by_name(close)()) > (dyn float: 5.0)]
     ```
     """
     try:

@@ -1,12 +1,7 @@
-import pytest
-from pydantic import ValidationError
-
 from laktory.models.resources.databricks import Table
-from laktory._testing.stockprices import spark
 
 
 def test_model():
-
     table = Table(
         name="slv_stock_prices",
         columns=[

@@ -1,5 +1,7 @@
 from typing import Union
+
 from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -42,9 +44,9 @@ class Directory(BaseModel, PulumiResource, TerraformResource):
     resource_name_=None options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None) lookup_existing=None variables={} delete_recursive=None path='/queries/views'
     '''
     print(d.resource_key)
-    #> queries-views
+    # > queries-views
     print(d.resource_name)
-    #> directory-queries-views
+    # > directory-queries-views
     ```
     """
 

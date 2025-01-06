@@ -1,11 +1,13 @@
 import re
 from typing import Any
-from typing import Union
 from typing import Literal
+from typing import Union
+
 from pydantic import AliasChoices
+from pydantic import BaseModel as _BaseModel
 from pydantic import Field
 from pydantic import model_validator
-from pydantic import BaseModel as _BaseModel
+
 from laktory.models.basemodel import BaseModel
 
 
@@ -120,13 +122,12 @@ class BaseResource(_BaseModel):
     @model_validator(mode="before")
     @classmethod
     def base_lookup(cls, data: Any) -> Any:
-
         if "lookup_existing" not in data:
             return data
 
         for fname, f in cls.model_fields.items():
             if f.is_required():
-                if f.annotation == str:
+                if f.annotation == str:  # noqa: E721
                     data[fname] = ""
                 elif isinstance(f.annotation, type(Literal[0])):
                     _ann = (
@@ -250,7 +251,6 @@ class BaseResource(_BaseModel):
                 k0 = f"${{resources.{r.resource_name}}}"
 
                 for _r in r.additional_core_resources:
-
                     if not (r.options.is_enabled and _r.options.is_enabled):
                         continue
 

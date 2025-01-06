@@ -1,17 +1,15 @@
 import datetime
-import uuid
-import os
 import shutil
-import pandas as pd
+import uuid
 from pathlib import Path
 
+import pandas as pd
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
+
 from laktory import models
-
-from laktory._testing import spark
 from laktory._testing import Paths
-
+from laktory._testing import spark
 
 # --------------------------------------------------------------------------- #
 # Functions                                                                   #
@@ -26,7 +24,6 @@ price_cols = ["close", "open"]
 
 
 def build_target(write_target=True, path=None, index=None):
-
     if path is None:
         path = testdir_path / "tmp" / "test_datasinks_merge" / str(uuid.uuid4())
 
@@ -53,7 +50,6 @@ def build_target(write_target=True, path=None, index=None):
 
     # Write Target
     if write_target:
-
         (
             df0.withColumn(
                 "__hash_keys", F.lit(F.sha2(F.concat_ws("~", *["symbol", "date"]), 256))
@@ -68,7 +64,6 @@ def build_target(write_target=True, path=None, index=None):
 
 
 def get_basic_source():
-
     dfs = pd.DataFrame(
         [
             # Delete
@@ -217,7 +212,6 @@ def read(path):
 
 
 def test_basic():
-
     path, df = build_target(write_target=False)
 
     # Write target
@@ -273,7 +267,6 @@ def test_basic():
 
 
 def test_out_of_sequence():
-
     path, df0 = build_target(index=1)
 
     # Out-of-sequence source
@@ -319,7 +312,6 @@ def test_out_of_sequence():
 
 
 def test_outdated():
-
     path, df0 = build_target(write_target=True, index=3)
 
     # Out-of-sequence source
@@ -377,7 +369,6 @@ def test_outdated():
 
 
 def test_delete_non_existent():
-
     path, df0 = build_target(index=1)
 
     # Source with rows "pre-deleted"
@@ -416,7 +407,6 @@ def test_delete_non_existent():
 
 
 def test_scd2():
-
     path, df = build_target(write_target=False, index=1)
 
     # Build Source Data
@@ -450,7 +440,6 @@ def test_scd2():
 
 
 def test_null_updates():
-
     path, _ = build_target()
 
     # Build Source Data
@@ -510,7 +499,6 @@ def test_null_updates():
 
 
 def test_stream():
-
     path, _ = build_target()
 
     # Build Source
@@ -554,7 +542,6 @@ def test_stream():
 
 
 def test_stream_scd2():
-
     path, df = build_target(write_target=False, index=1)
 
     # Build Source
