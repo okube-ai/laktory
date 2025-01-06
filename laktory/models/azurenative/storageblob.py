@@ -1,11 +1,6 @@
-from typing import Union
 from typing import Literal
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.resources.databricks.mwspermissionassignment import (
-    MwsPermissionAssignment,
-)
 
 
 class StorageBlob(BaseModel, PulumiResource):

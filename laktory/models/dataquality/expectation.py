@@ -6,7 +6,6 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.exceptions import DataQualityCheckFailedError
-from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
 from laktory.models.dataquality.check import DataQualityCheck
@@ -339,7 +338,7 @@ class DataQualityExpectation(BaseModel):
             return _check
 
         if self.type == "AGGREGATE":
-            import pyspark.sql.functions as F
+            import pyspark.sql.functions as F  # noqa: F401
 
             if self.expr.type == "SQL":
                 _df = df.select(self.expr.eval()).toPandas()

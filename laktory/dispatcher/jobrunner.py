@@ -10,8 +10,6 @@ from laktory._logger import get_logger
 if TYPE_CHECKING:
     from databricks.sdk.service.jobs import Wait
     from databricks.sdk.service.jobs import Run
-    from databricks.sdk.service.jobs import RunLifeCycleState
-    from databricks.sdk.errors import OperationFailed
 
 logger = get_logger(__name__)
 

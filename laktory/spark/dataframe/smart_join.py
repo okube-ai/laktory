@@ -211,7 +211,7 @@ def smart_join(
 
     # Drop watermark column
     if wmo is not None:
-        df = df.drop(F.col(f"other._other_wc"))
+        df = df.drop(F.col("other._other_wc"))
     logger.debug(f"Joined Schema: {df.schema}")
 
     return df

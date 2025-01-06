@@ -1,8 +1,6 @@
 import datetime
-import os
 import polars as pl
 
-import laktory
 from laktory._testing.stockprices import df_slv_polars
 from laktory._testing.stockprices import df_meta_polars
 

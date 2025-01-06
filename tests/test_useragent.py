@@ -1,5 +1,4 @@
 import os
-import laktory
 
 from laktory._useragent import DATABRICKS_USER_AGENT
 from laktory._version import VERSION

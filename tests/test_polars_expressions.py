@@ -2,7 +2,6 @@ from uuid import UUID
 import polars as pl
 import numpy as np
 import pytest
-import laktory
 
 df0 = pl.DataFrame(
     {

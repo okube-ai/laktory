@@ -1,5 +1,3 @@
-import os
-
 from laktory._logger import get_logger
 
 

@@ -2,7 +2,6 @@ from typing import Union
 from typing import Callable
 from typing import Any
 from typing import Literal
-import re
 
 from laktory._logger import get_logger
 from laktory.models.transformers.basechainnode import BaseChainNode
@@ -43,10 +42,10 @@ class SparkChainNodeFuncArg(BaseChainNodeFuncArg):
 
         elif isinstance(v, str):
             # Imports required to evaluate expressions
-            import pyspark.sql.functions as F
-            from pyspark.sql.functions import lit
-            from pyspark.sql.functions import col
-            from pyspark.sql.functions import expr
+            import pyspark.sql.functions as F  # noqa: F401
+            from pyspark.sql.functions import lit  # noqa: F401
+            from pyspark.sql.functions import col  # noqa: F401
+            from pyspark.sql.functions import expr  # noqa: F401
 
             targets = ["lit(", "col(", "expr(", "F."]
 
@@ -259,10 +258,6 @@ class SparkChainNode(BaseChainNode):
         -------
             Output dataframe
         """
-        import pyspark.sql.functions as F
-        from pyspark.sql.dataframe import DataFrame
-        from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
-        from pyspark.sql import Column
         from laktory.spark import DATATYPES_MAP
 
         if udfs is None:

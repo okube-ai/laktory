@@ -1,7 +1,6 @@
 import os
 import shutil
 import uuid
-from pathlib import Path
 from py import path as pypath
 
 from laktory import app
@@ -215,7 +214,7 @@ def test_quickstart_localpipeline():
                 code = f.read()
                 exec(code)
                 print("")
-                print(f"----- Execution completed\n\n")
+                print("----- Execution completed\n\n")
 
     # Cleanup
     shutil.rmtree(dirpath)

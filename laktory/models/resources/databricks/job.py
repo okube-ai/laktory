@@ -5,7 +5,6 @@ from typing import Union
 from pydantic import field_validator, model_validator
 
 from pydantic import Field
-from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.cluster import Cluster

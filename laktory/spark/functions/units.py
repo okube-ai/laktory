@@ -1,14 +1,10 @@
-import pyspark.sql.functions as F
+# import pyspark.sql.functions as F #noqa
 from pyspark.sql.column import Column
 from planck import units
 
 from laktory.spark.functions._common import (
     COLUMN_OR_NAME,
-    INT_OR_COLUMN,
-    FLOAT_OR_COLUMN,
-    STRING_OR_COLUMN,
     _col,
-    _lit,
 )
 
 __all__ = [
@@ -50,9 +46,7 @@ def convert_units(
     import pyspark.sql.functions as F
 
     df = spark.createDataFrame([[1.0]], ["x"])
-    df = df.withColumn(
-        "y", F.laktory.convert_units("x", input_unit="m", output_unit="ft")
-    )
+    df = df.withColumn("y", F.laktory.convert_units("x", input_unit="m", output_unit="ft"))
     print(df.laktory.show_string())
     '''
     +---+-----------------+
@@ -68,3 +62,15 @@ def convert_units(
     The units conversion function use [planck](https://www.okube.ai/planck/) convert as a backend.
     """
     return units.convert(_col(x), input_unit, output_unit)
+
+
+if __name__ == "__main__":
+    import laktory  # noqa: F401
+    import pyspark.sql.functions as F
+    from laktory._testing import spark
+
+    df = spark.createDataFrame([[1.0]], ["x"])
+    df = df.withColumn(
+        "y", F.laktory.convert_units("x", input_unit="m", output_unit="ft")
+    )
+    print(df.laktory.show_string())

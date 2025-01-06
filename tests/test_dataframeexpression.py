@@ -2,7 +2,6 @@ from pyspark.sql import functions as F
 import polars as pl
 
 from laktory import models
-from laktory._testing import spark
 
 
 def test_expression_types():

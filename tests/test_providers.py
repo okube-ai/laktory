@@ -1,5 +1,3 @@
-import os
-
 from laktory.models.resources import DatabricksProvider
 
 

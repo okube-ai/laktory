@@ -113,7 +113,7 @@ def window_filter(
 
 
 if __name__ == "__main__":
-    import laktory
+    import laktory  # noqa: F401
     import polars as pl
 
     df0 = pl.DataFrame(

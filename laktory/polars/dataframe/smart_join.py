@@ -1,4 +1,3 @@
-from collections import defaultdict
 import polars as pl
 
 from laktory._logger import get_logger

@@ -3,7 +3,6 @@ import shutil
 import pytest
 import uuid
 from pathlib import Path
-from pydantic_core._pydantic_core import ValidationError
 from pyspark.sql import functions as F
 from pyspark.sql import Window
 

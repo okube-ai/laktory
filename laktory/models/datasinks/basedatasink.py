@@ -374,7 +374,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             if self.delete_where:
                 merge = merge.whenMatchedDelete(condition=delete_condition)
 
-            logger.info(f"Executing merge...")
+            logger.info("Executing merge...")
             merge.execute()
 
         elif self.scd_type == 2:
@@ -419,7 +419,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             #     _set = {f"target.{self.end_at}": f"source.{self.order_by}"}
             #     merge = merge.whenMatchedUpdate(set=_set, condition=~where)
 
-            logger.info(f"Executing merge...")
+            logger.info("Executing merge...")
             merge.execute()
 
             # Append rows
@@ -429,7 +429,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             writer = (
                 upsert.select(self.write_columns).write.mode("APPEND").format("DELTA")
             )
-            logger.info(f"Appending new rows...")
+            logger.info("Appending new rows...")
             if self.target_path:
                 writer.save(self.target_path)
             else:
@@ -459,12 +459,12 @@ class DataSinkMergeCDCOptions(BaseModel):
         else:
             try:
                 spark.catalog.getTable(self.target_name)
-            except Exception as e:
+            except Exception:
                 self._init_target(source)
 
         if source.isStreaming:
             if self.sink is None:
-                raise ValueError(f"Sink value required to fetch checkpoint location.")
+                raise ValueError("Sink value required to fetch checkpoint location.")
 
             if self.sink and self.sink._checkpoint_location is None:
                 raise ValueError(

@@ -1,10 +1,8 @@
-import os
 from pyspark.sql import SparkSession
 from pyspark.sql import types as T
 from pyspark.sql import functions as F
 from pandas import Timestamp
 
-import laktory
 from laktory._testing.stockprices import spark
 from laktory._testing.stockprices import df_slv
 from laktory._testing.stockprices import df_meta

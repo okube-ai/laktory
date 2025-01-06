@@ -10,7 +10,7 @@ filepath = f"{laktory_root}/pipelines/{pl_name}/requirements.txt"
 import importlib
 import sys
 import os
-import pyspark.sql.functions as F
+import pyspark.sql.functions as F  # noqa: F401
 
 from laktory import dlt
 from laktory import models

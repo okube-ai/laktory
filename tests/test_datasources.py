@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-import polars as pl
 
 from laktory.models.datasources import FileDataSource
 from laktory.models.datasources import MemoryDataSource

@@ -83,7 +83,6 @@ def get_df(df_wrapper) -> SparkDataFrame:
 
     dlt.spark = spark
 
-
     def define_table():
         @dlt.table(name="stock_prices")
         def get_df():
@@ -91,7 +90,6 @@ def get_df(df_wrapper) -> SparkDataFrame:
             return df
 
         return get_df
-
 
     wrapper = define_table()
     df = dlt.get_df(wrapper)
@@ -129,7 +127,6 @@ def read(*args, **kwargs) -> SparkDataFrame:
 
     dlt.spark = spark
 
-
     def define_table():
         @dlt.table(name="slv_stock_prices")
         def get_df():
@@ -137,7 +134,6 @@ def read(*args, **kwargs) -> SparkDataFrame:
             return df
 
         return get_df
-
 
     define_table()
     ```
@@ -168,7 +164,6 @@ def read_stream(*args, fmt="DELTA", **kwargs):
 
     dlt.spark = spark
 
-
     def define_table():
         @dlt.table(name="slv_stock_prices")
         def get_df():
@@ -176,7 +171,6 @@ def read_stream(*args, fmt="DELTA", **kwargs):
             return df
 
         return get_df
-
 
     define_table()
     ```
@@ -209,14 +203,12 @@ def apply_changes(*args, node=None, **kwargs):
 
     dlt.spark = spark
 
-
     def define_table(node, sink):
         dlt.create_streaming_table(name=sink.table_name)
         df = dlt.apply_changes(
             source=node.source.table_name, **sink.dlt_apply_changes_kwargs
         )
         return df
-
 
     node = models.PipelineNode(
         name="slv_stock_prices",

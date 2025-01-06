@@ -20,7 +20,6 @@ from laktory.types import AnyDataFrame
 
 if TYPE_CHECKING:
     from laktory.models.datasources.basedatasource import BaseDataSource
-    from laktory.models.datasources.tabledatasource import TableDataSource
     from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
 
 

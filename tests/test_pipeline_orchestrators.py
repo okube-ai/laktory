@@ -22,7 +22,7 @@ def get_pl(extra=None):
         # Remove views
         nodes = []
         for n in data["nodes"]:
-            if not n["name"] in ["slv_stock_aapl", "slv_stock_msft"]:
+            if n["name"] not in ["slv_stock_aapl", "slv_stock_msft"]:
                 nodes += [n]
             data["nodes"] = nodes
 

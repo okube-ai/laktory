@@ -24,22 +24,25 @@ spark.conf.set("spark.sql.session.timeZone", "UTC")
 def test_docstrings_datetime(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format(example)
-        eval_example.run_print_update(
-            example,
-            # module_globals={
-            # "spark": spark,
-            # "display": lambda x: x,
-            # },
-        )
+        eval_example.run_print_update(example)
     else:
         eval_example.lint(example)
-        eval_example.run_print_check(
-            example,
-            # module_globals={
-            #     "spark": spark,
-            #     "display": lambda x: x,
-            # },
-        )
+        eval_example.run_print_check(example)
+
+
+# --------------------------------------------------------------------------- #
+# Dispatcher                                                                  #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("example", find_examples("./laktory/dispatcher/"), ids=str)
+def test_docstrings_dispatcher(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format(example)
+        eval_example.run_print_update(example)
+    else:
+        eval_example.lint(example)
+        eval_example.run_print_check(example)
 
 
 # --------------------------------------------------------------------------- #
@@ -159,11 +162,11 @@ def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExam
 @pytest.mark.parametrize("example", find_examples("./docs/"), ids=str)
 def test_docstrings_markdowns(example: CodeExample, eval_example: EvalExample):
     """
-    Examples in documentation are not all designed to be run in isolation. We only format them using black. To be
-    investigated if there is a better approach.
+    Examples in documentation are not designed to be run in isolation. We only format
+    them. To be investigated if there is a better approach.
     """
 
     if eval_example.update_examples:
-        eval_example.format_ruff(example)
+        eval_example.format(example)
     else:
-        eval_example.lint_ruff(example)
+        eval_example.lint(example)

@@ -1,5 +1,3 @@
-import os
-
 from laktory import show_version_info
 
 

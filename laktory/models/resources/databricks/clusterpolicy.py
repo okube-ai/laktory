@@ -127,9 +127,7 @@ class ClusterPolicy(BaseModel, PulumiResource, TerraformResource):
                 }
             }
         ],
-        access_controls=[
-            {"permission_level": "CAN_USE", "group_name": "account users"}
-        ],
+        access_controls=[{"permission_level": "CAN_USE", "group_name": "account users"}],
     )
     ```
 

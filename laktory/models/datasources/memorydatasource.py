@@ -2,7 +2,6 @@ from typing import Any
 from pydantic import model_validator
 
 from laktory.models.datasources.basedatasource import BaseDataSource
-from laktory.types import AnyDataFrame
 from laktory.spark import SparkDataFrame
 from laktory.spark import is_spark_dataframe
 from laktory.polars import PolarsDataFrame

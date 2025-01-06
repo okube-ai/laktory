@@ -58,14 +58,14 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
         source="./data/stock_prices/prices.json",
     )
     print(file.path)
-    # > /prices.json
+    #> /prices.json
 
     file = models.resources.databricks.DbfsFile(
         source="./data/stock_prices/prices.json",
         rootpath="/data/",
     )
     print(file.path)
-    # > /data/prices.json
+    #> /data/prices.json
 
     file = models.resources.databricks.DbfsFile(
         source="./data/stock_prices/prices.json",
@@ -73,7 +73,7 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
         dirpath="stock_prices/",
     )
     print(file.path)
-    # > /data/stock_prices/prices.json
+    #> /data/stock_prices/prices.json
     ```
     """
 

@@ -25,7 +25,7 @@ if install_dependencies:
 import importlib
 import sys
 import os
-import pyspark.sql.functions as F
+import pyspark.sql.functionas as F  # noqa: F401
 
 from laktory import models
 from laktory import get_logger

@@ -2,7 +2,6 @@ from abc import abstractmethod
 from typing import Union
 from typing import Any
 
-from laktory._settings import settings
 from laktory._parsers import _snake_to_camel
 from laktory.models.resources.baseresource import BaseResource
 

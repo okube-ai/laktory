@@ -305,7 +305,7 @@ class PipelineNode(BaseModel, PipelineChild):
             if not view_defined:
                 if s.view_definition is None:
                     raise ValueError(
-                        f"View definition must be provided at at the transformer or at the sink."
+                        "View definition must be provided at at the transformer or at the sink."
                     )
 
         # Validate Expectations
@@ -873,7 +873,7 @@ class PipelineNode(BaseModel, PipelineChild):
             self._quarantine_df = None
             return
 
-        logger.info(f"Checking Data Quality Expectations")
+        logger.info("Checking Data Quality Expectations")
 
         def _batch_check(df, node):
             for e in node.expectations:
@@ -943,13 +943,13 @@ class PipelineNode(BaseModel, PipelineChild):
                     qfilter = qfilter & _filter
 
         if qfilter is not None:
-            logger.info(f"Building quarantine DataFrame")
+            logger.info("Building quarantine DataFrame")
             self._quarantine_df = self._stage_df.filter(qfilter)
         else:
             self._quarantine_df = self._stage_df.filter("False")
 
         if kfilter is not None:
-            logger.info(f"Dropping invalid rows")
+            logger.info("Dropping invalid rows")
             self._output_df = self._stage_df.filter(kfilter)
         else:
             self._output_df = self._stage_df

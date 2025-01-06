@@ -2,9 +2,7 @@ import pyspark.sql.functions as F
 from pyspark.sql.column import Column
 from laktory.spark.functions._common import (
     COLUMN_OR_NAME,
-    INT_OR_COLUMN,
     FLOAT_OR_COLUMN,
-    STRING_OR_COLUMN,
     _col,
     _lit,
 )

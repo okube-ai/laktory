@@ -32,13 +32,13 @@ class DataFrameColumnExpression(BaseModel):
         value="MAX(close)",
     )
     print(e1.eval())
-    # > Column<'MAX(close)'>
+    #> Column<'MAX(close)'>
 
     e2 = models.DataFrameColumnExpression(
         value="F.abs('close')",
     )
     print(e2.eval())
-    # > Column<'abs(close)'>
+    #> Column<'abs(close)'>
     ```
     """
 
@@ -94,17 +94,17 @@ class DataFrameColumnExpression(BaseModel):
 
         if dataframe_backend == "SPARK":
             # Imports required to evaluate expressions
-            import pyspark.sql.functions as F
-            import pyspark.sql.types as T
-            from pyspark.sql.functions import col
-            from pyspark.sql.functions import lit
+            import pyspark.sql.functions as F  # noqa: F401
+            import pyspark.sql.types as T  # noqa: F401
+            from pyspark.sql.functions import col  # noqa: F401
+            from pyspark.sql.functions import lit  # noqa: F401
 
         elif dataframe_backend == "POLARS":
             # Imports required to evaluate expressions
-            import polars as pl
-            import polars.functions as F
-            from polars import col
-            from polars import lit
+            import polars as pl  # noqa: F401
+            import polars.functions as F  # noqa: F401
+            from polars import col  # noqa: F401
+            from polars import lit  # noqa: F401
 
         else:
             raise ValueError(

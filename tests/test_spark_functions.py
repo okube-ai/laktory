@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import pytest
 from uuid import UUID
-import laktory
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
