@@ -108,7 +108,9 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
         channel_name="CHANNEL_NAME_PREVIEW",
         enable_photon=True,
         enable_serverless_compute=True,
-        access_controls=[{"group_name": "account users", "permission_level": "CAN_USE"}],
+        access_controls=[
+            {"group_name": "account users", "permission_level": "CAN_USE"}
+        ],
     )
     ```
     """

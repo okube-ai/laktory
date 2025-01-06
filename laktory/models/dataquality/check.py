@@ -31,7 +31,7 @@ class DataQualityCheck(BaseModel):
         status="FAIL",
     )
     print(check)
-    #> variables={} fails_count=2 rows_count=10 status='FAIL'
+    # > variables={} fails_count=2 rows_count=10 status='FAIL'
 
     check = models.DataQualityCheck(
         rows_count=10,
@@ -39,7 +39,7 @@ class DataQualityCheck(BaseModel):
         status="PASS",
     )
     print(check)
-    #> variables={} fails_count=2 rows_count=10 status='PASS'
+    # > variables={} fails_count=2 rows_count=10 status='PASS'
     ```
     """
 

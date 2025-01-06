@@ -50,9 +50,9 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
         ],
     )
     print(volume.full_name)
-    #> dev.sources.landing
+    # > dev.sources.landing
     print(volume.parent_full_name)
-    #> dev.sources
+    # > dev.sources
     ```
 
     References

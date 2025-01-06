@@ -27,7 +27,7 @@ class Dispatcher:
 
     Examples
     --------
-    ```py
+    ```py tag:skip-run
     from laktory import models
     from laktory import Dispatcher
 

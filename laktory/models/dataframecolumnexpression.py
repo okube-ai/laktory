@@ -32,13 +32,13 @@ class DataFrameColumnExpression(BaseModel):
         value="MAX(close)",
     )
     print(e1.eval())
-    #> Column<'MAX(close)'>
+    # > Column<'MAX(close)'>
 
     e2 = models.DataFrameColumnExpression(
         value="F.abs('close')",
     )
     print(e2.eval())
-    #> Column<'abs(close)'>
+    # > Column<'abs(close)'>
     ```
     """
 

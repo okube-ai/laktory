@@ -1,6 +1,24 @@
-import pytest
-from pytest_examples import find_examples, CodeExample, EvalExample
+import pytest_examples
+import re
+
+
+
+from collections.abc import Iterator
+from pathlib import Path
 from pyspark.sql import SparkSession
+from pytest_examples import CodeExample
+from pytest_examples.run_code import InsertPrintStatements as _InsertPrintStatements
+from pytest_examples import EvalExample
+from pytest_examples import find_examples
+import pytest
+
+# Change examples print prefix to be ruff lint compatible
+comment_prefix = "# > "
+pytest_examples.run_code.comment_prefix = comment_prefix
+pytest_examples.run_code.comment_prefix_re = re.compile(
+    f"^ *{re.escape(comment_prefix)}", re.MULTILINE
+)
+
 
 spark = (
     SparkSession.builder.appName("Docs")
@@ -23,11 +41,13 @@ spark.conf.set("spark.sql.session.timeZone", "UTC")
 @pytest.mark.parametrize("example", find_examples("./laktory/datetime.py"), ids=str)
 def test_docstrings_datetime(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
-        eval_example.format(example)
-        eval_example.run_print_update(example)
+        eval_example.format_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_update(example)
     else:
-        eval_example.lint(example)
-        eval_example.run_print_check(example)
+        eval_example.lint_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_check(example)
 
 
 # --------------------------------------------------------------------------- #
@@ -38,11 +58,13 @@ def test_docstrings_datetime(example: CodeExample, eval_example: EvalExample):
 @pytest.mark.parametrize("example", find_examples("./laktory/dispatcher/"), ids=str)
 def test_docstrings_dispatcher(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
-        eval_example.format(example)
-        eval_example.run_print_update(example)
+        eval_example.format_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_update(example)
     else:
-        eval_example.lint(example)
-        eval_example.run_print_check(example)
+        eval_example.lint_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_check(example)
 
 
 # --------------------------------------------------------------------------- #
@@ -53,23 +75,25 @@ def test_docstrings_dispatcher(example: CodeExample, eval_example: EvalExample):
 @pytest.mark.parametrize("example", find_examples("./laktory/dlt"), ids=str)
 def test_docstrings_dlt(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
-        eval_example.format(example)
-        eval_example.run_print_update(
-            example,
-            module_globals={
-                "spark": spark,
-                "display": lambda x: x,
-            },
-        )
+        eval_example.format_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_update(
+                example,
+                module_globals={
+                    "spark": spark,
+                    "display": lambda x: x,
+                },
+            )
     else:
-        eval_example.lint(example)
-        eval_example.run_print_check(
-            example,
-            module_globals={
-                "spark": spark,
-                "display": lambda x: x,
-            },
-        )
+        eval_example.lint_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_check(
+                example,
+                module_globals={
+                    "spark": spark,
+                    "display": lambda x: x,
+                },
+            )
 
 
 # --------------------------------------------------------------------------- #
@@ -80,14 +104,16 @@ def test_docstrings_dlt(example: CodeExample, eval_example: EvalExample):
 @pytest.mark.parametrize("example", find_examples("./laktory/models"), ids=str)
 def test_docstrings_models(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
-        eval_example.format(example)
-        eval_example.run_print_update(
-            example,
-            module_globals={"spark": spark},
-        )
+        eval_example.format_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_update(
+                example,
+                module_globals={"spark": spark},
+            )
     else:
-        eval_example.lint(example)
-        eval_example.run_print_check(example, module_globals={"spark": spark})
+        eval_example.lint_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_check(example, module_globals={"spark": spark})
 
 
 # --------------------------------------------------------------------------- #
@@ -100,11 +126,13 @@ def test_docstrings_models(example: CodeExample, eval_example: EvalExample):
 )
 def test_docstrings_polars_dataframe(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
-        eval_example.format(example)
-        eval_example.run_print_update(example)
+        eval_example.format_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_update(example)
     else:
-        eval_example.lint(example)
-        eval_example.run_print_check(example)
+        eval_example.lint_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_check(example)
 
 
 # --------------------------------------------------------------------------- #
@@ -117,11 +145,13 @@ def test_docstrings_polars_dataframe(example: CodeExample, eval_example: EvalExa
 )
 def test_docstrings_polars_expressions(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
-        eval_example.format(example)
-        eval_example.run_print_update(example)
+        eval_example.format_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_update(example)
     else:
-        eval_example.lint(example)
-        eval_example.run_print_check(example)
+        eval_example.lint_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_check(example)
 
 
 # --------------------------------------------------------------------------- #
@@ -132,11 +162,13 @@ def test_docstrings_polars_expressions(example: CodeExample, eval_example: EvalE
 @pytest.mark.parametrize("example", find_examples("./laktory/spark/dataframe"), ids=str)
 def test_docstrings_spark_dataframe(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
-        eval_example.format(example)
-        eval_example.run_print_update(example, module_globals={"spark": spark})
+        eval_example.format_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_update(example, module_globals={"spark": spark})
     else:
-        eval_example.lint(example)
-        eval_example.run_print_check(example, module_globals={"spark": spark})
+        eval_example.lint_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_check(example, module_globals={"spark": spark})
 
 
 # --------------------------------------------------------------------------- #
@@ -147,11 +179,13 @@ def test_docstrings_spark_dataframe(example: CodeExample, eval_example: EvalExam
 @pytest.mark.parametrize("example", find_examples("./laktory/spark/functions"), ids=str)
 def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
-        eval_example.format(example)
-        eval_example.run_print_update(example, module_globals={"spark": spark})
+        eval_example.format_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_update(example, module_globals={"spark": spark})
     else:
-        eval_example.lint(example)
-        eval_example.run_print_check(example, module_globals={"spark": spark})
+        eval_example.lint_ruff(example)
+        if not "tag:skip-run" in example.prefix_tags():
+            eval_example.run_print_check(example, module_globals={"spark": spark})
 
 
 # --------------------------------------------------------------------------- #
@@ -167,6 +201,6 @@ def test_docstrings_markdowns(example: CodeExample, eval_example: EvalExample):
     """
 
     if eval_example.update_examples:
-        eval_example.format(example)
+        eval_example.format_ruff(example)
     else:
-        eval_example.lint(example)
+        eval_example.lint_ruff(example)

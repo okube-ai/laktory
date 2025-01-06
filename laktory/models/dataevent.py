@@ -66,7 +66,7 @@ class DataEvent(BaseModel):
     '''
 
     print(event.event_root)
-    #> /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
+    # > /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
 
     event = models.DataEvent(
         name="stock_price",
@@ -84,7 +84,7 @@ class DataEvent(BaseModel):
     '''
 
     print(event.dirpath)
-    #> /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/2023/08/23/
+    # > /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/2023/08/23/
 
     print(event.get_landing_filepath())
     '''
@@ -92,7 +92,7 @@ class DataEvent(BaseModel):
     '''
 
     print(event.get_storage_filepath())
-    #> /events/yahoo-finance/stock_price/2023/08/23/stock_price_20230823T000000000Z.json
+    # > /events/yahoo-finance/stock_price/2023/08/23/stock_price_20230823T000000000Z.json
     ```
     """
 
