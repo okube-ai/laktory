@@ -1,11 +1,12 @@
 import os
+
 import pandas as pd
 
+from laktory._testing import Paths
+from laktory._testing import spark
 from laktory.models.datasources import FileDataSource
 from laktory.models.datasources import MemoryDataSource
 from laktory.models.datasources import TableDataSource
-from laktory._testing import Paths
-from laktory._testing import spark
 
 paths = Paths(__file__)
 

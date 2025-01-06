@@ -1,10 +1,11 @@
 import os
+
 import pytest
 
 from laktory import models
 from laktory._settings import settings
-from laktory._testing.stackvalidator import StackValidator
 from laktory._testing import Paths
+from laktory._testing.stackvalidator import StackValidator
 
 paths = Paths(__file__)
 
@@ -527,7 +528,7 @@ def test_stack_env_model():
         "is_dev": False,
         "node_type_id": "Standard_DS4_v2",
     }
-    assert pl.databricks_dlt.development == False
+    assert not pl.databricks_dlt.development
     assert pl.nodes[0].dlt_template is None
 
 
@@ -1382,28 +1383,28 @@ def test_terraform_plan():
 
 
 def test_all_resources():
+    from laktory._testing import Paths
+    from tests.test_alert import alert
     from tests.test_catalog import catalog
     from tests.test_cluster_policy import cluster_policy
-    from tests.test_directory import directory
     from tests.test_dashboard import dashboard
-    from tests.test_job import job, job_for_each
-    from tests.test_pipeline_orchestrators import pl_dlt
+    from tests.test_directory import directory
+    from tests.test_job import job
+    from tests.test_job import job_for_each
     from tests.test_metastore import metastore
     from tests.test_mlflow_experiment import mlexp
     from tests.test_mlflow_model import mlmodel
     from tests.test_mlflow_webhook import mlwebhook
     from tests.test_notebook import nb
+    from tests.test_pipeline_orchestrators import pl_dlt
+    from tests.test_query import query
     from tests.test_repo import repo
     from tests.test_schema import schema
-
-    from tests.test_alert import alert
-    from tests.test_query import query
-    from tests.test_user import user
     from tests.test_user import group
-    from tests.test_workspacefile import workspace_file
+    from tests.test_user import user
     from tests.test_vectorsearchendpoint import vector_search_endpoint
     from tests.test_vectorsearchindex import vector_search_index
-    from laktory._testing import Paths
+    from tests.test_workspacefile import workspace_file
 
     paths = Paths(__file__)
 

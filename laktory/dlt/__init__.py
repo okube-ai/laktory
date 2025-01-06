@@ -3,9 +3,9 @@ from laktory.spark import SparkDataFrame
 
 try:
     from dlt import *
+    from dlt import apply_changes as _apply_changes
     from dlt import read as _read
     from dlt import read_stream as _read_stream
-    from dlt import apply_changes as _apply_changes
 except Exception:
     pass
 

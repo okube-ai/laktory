@@ -1,12 +1,13 @@
+import os
+from datetime import datetime
+
 import pandas as pd
-from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-import os
 import yfinance as yf
+from pyspark.sql import SparkSession
 
 from laktory import models
-from datetime import datetime
 
 # --------------------------------------------------------------------------- #
 # Setup                                                                       #

@@ -1,12 +1,13 @@
 from typing import Any
+
 from pydantic import model_validator
 
+from laktory._logger import get_logger
 from laktory.models.datasources.basedatasource import BaseDataSource
-from laktory.spark import SparkDataFrame
-from laktory.spark import is_spark_dataframe
 from laktory.polars import PolarsDataFrame
 from laktory.polars import is_polars_dataframe
-from laktory._logger import get_logger
+from laktory.spark import SparkDataFrame
+from laktory.spark import is_spark_dataframe
 
 logger = get_logger(__name__)
 

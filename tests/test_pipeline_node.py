@@ -6,10 +6,10 @@ from pathlib import Path
 from pyspark.sql import functions as F
 
 from laktory import models
-from laktory._testing import spark
 from laktory._testing import Paths
 from laktory._testing import df_brz
 from laktory._testing import df_slv
+from laktory._testing import spark
 
 paths = Paths(__file__)
 

@@ -1,8 +1,8 @@
 import os
 
-from laktory.models.resources.databricks import Table
-from laktory.models.resources.databricks import Schema
 from laktory._testing import Paths
+from laktory.models.resources.databricks import Schema
+from laktory.models.resources.databricks import Table
 
 paths = Paths(__file__)
 

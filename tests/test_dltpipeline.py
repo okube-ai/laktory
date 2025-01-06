@@ -1,6 +1,5 @@
 from laktory import models
 
-
 pl = models.resources.databricks.DLTPipeline(
     name="pl-stock-prices",
     catalog="dev1",

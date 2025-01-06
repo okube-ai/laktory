@@ -1,6 +1,5 @@
 from laktory.models.resources.databricks import Catalog
 
-
 catalog = Catalog(
     name="dev",
     grants=[

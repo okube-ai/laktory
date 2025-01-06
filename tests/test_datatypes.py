@@ -1,6 +1,6 @@
 from laktory.constants import SUPPORTED_DATATYPES
-from laktory.spark import DATATYPES_MAP as SPARK_DATATYPES_MAP
 from laktory.polars import DATATYPES_MAP as POLARS_DATATYPES_MAP
+from laktory.spark import DATATYPES_MAP as SPARK_DATATYPES_MAP
 
 
 def test_spark_datatypes():

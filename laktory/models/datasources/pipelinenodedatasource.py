@@ -1,9 +1,9 @@
 from typing import Union
 
-from laktory.models.datasources.basedatasource import BaseDataSource
-from laktory.spark import SparkDataFrame
-from laktory.polars import PolarsDataFrame
 from laktory._logger import get_logger
+from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory.polars import PolarsDataFrame
+from laktory.spark import SparkDataFrame
 
 logger = get_logger(__name__)
 
@@ -96,9 +96,9 @@ class PipelineNodeDataSource(BaseDataSource):
         stream_to_batch = not self.as_stream and self.node.source.as_stream
         is_dlt = False
         if self.is_orchestrator_dlt:
+            from laktory.dlt import is_debug
             from laktory.dlt import read as dlt_read
             from laktory.dlt import read_stream as dlt_read_stream
-            from laktory.dlt import is_debug
 
             is_dlt = not is_debug()
 

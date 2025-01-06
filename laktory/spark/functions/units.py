@@ -1,11 +1,9 @@
 # import pyspark.sql.functions as F #noqa
-from pyspark.sql.column import Column
 from planck import units
+from pyspark.sql.column import Column
 
-from laktory.spark.functions._common import (
-    COLUMN_OR_NAME,
-    _col,
-)
+from laktory.spark.functions._common import COLUMN_OR_NAME
+from laktory.spark.functions._common import _col
 
 __all__ = [
     "convert_units",
@@ -67,8 +65,9 @@ def convert_units(
 
 
 if __name__ == "__main__":
-    import laktory  # noqa: F401
     import pyspark.sql.functions as F
+
+    import laktory  # noqa: F401
     from laktory._testing import spark
 
     df = spark.createDataFrame([[1.0]], ["x"])

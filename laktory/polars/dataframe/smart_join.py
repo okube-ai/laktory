@@ -2,7 +2,6 @@ import polars as pl
 
 from laktory._logger import get_logger
 
-
 logger = get_logger(__name__)
 
 
@@ -129,8 +128,9 @@ def smart_join(
 
 
 if __name__ == "__main__":
-    from laktory._testing.stockprices import spark
     import pandas as pd
+
+    from laktory._testing.stockprices import spark
 
     df_prices = spark.createDataFrame(
         pd.DataFrame(

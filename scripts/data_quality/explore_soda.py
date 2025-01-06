@@ -1,5 +1,5 @@
-from soda.scan import Scan
 import pandas as pd
+from soda.scan import Scan
 
 # --------------------------------------------------------------------------- #
 # Setup                                                                       #

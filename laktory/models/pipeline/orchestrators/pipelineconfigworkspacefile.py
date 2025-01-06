@@ -1,11 +1,11 @@
-import os
 import json
+import os
 
 from laktory._settings import settings
 from laktory.constants import CACHE_ROOT
 from laktory.models.pipeline.pipelinechild import PipelineChild
-from laktory.models.resources.databricks.workspacefile import WorkspaceFile
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.workspacefile import WorkspaceFile
 
 
 class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):

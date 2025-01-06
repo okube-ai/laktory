@@ -1,10 +1,10 @@
 from collections import defaultdict
+
 from pyspark.sql.dataframe import DataFrame
 
 from laktory._logger import get_logger
-from laktory.spark.dataframe.watermark import watermark
 from laktory.spark.dataframe.watermark import Watermark
-
+from laktory.spark.dataframe.watermark import watermark
 
 logger = get_logger(__name__)
 
@@ -218,8 +218,9 @@ def smart_join(
 
 
 if __name__ == "__main__":
-    from laktory._testing.stockprices import spark
     import pandas as pd
+
+    from laktory._testing.stockprices import spark
 
     df_prices = spark.createDataFrame(
         pd.DataFrame(

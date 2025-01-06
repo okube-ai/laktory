@@ -1,17 +1,18 @@
 from typing import Any
 from typing import Literal
 from typing import Union
-from pydantic import model_validator
-from pydantic import Field
 
+from pydantic import Field
+from pydantic import model_validator
+
+from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
-from laktory.spark import SparkDataFrame
-from laktory.spark import is_spark_dataframe
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.polars import PolarsDataFrame
 from laktory.polars import is_polars_dataframe
+from laktory.spark import SparkDataFrame
+from laktory.spark import is_spark_dataframe
 from laktory.types import AnyDataFrame
-from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -208,8 +209,9 @@ class BaseDataSource(BaseModel, PipelineChild):
         return df
 
     def _post_read_polars(self, df: PolarsDataFrame) -> PolarsDataFrame:
-        from laktory.polars.expressions.sql import _parse_token
         import polars as pl
+
+        from laktory.polars.expressions.sql import _parse_token
 
         # Apply filter
         if self.filter:

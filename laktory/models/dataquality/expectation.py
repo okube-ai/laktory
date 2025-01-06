@@ -2,6 +2,7 @@ import warnings
 from typing import Any
 from typing import Literal
 from typing import Union
+
 from pydantic import model_validator
 
 from laktory._logger import get_logger

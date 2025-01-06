@@ -1,11 +1,13 @@
 from __future__ import annotations
-from typing import Union
-from typing import Literal
+
+from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
-from pydantic import model_validator
-from pathlib import Path
+from typing import Literal
+from typing import Union
+
 import networkx as nx
+from pydantic import model_validator
 
 import laktory
 from laktory._logger import get_logger
@@ -18,8 +20,8 @@ from laktory.models.pipeline.orchestrators.databricksdltorchestrator import (
 from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
     DatabricksJobOrchestrator,
 )
-from laktory.models.pipeline.pipelinenode import PipelineNode
 from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.pipeline.pipelinenode import PipelineNode
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 

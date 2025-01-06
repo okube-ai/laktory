@@ -1,16 +1,15 @@
-from typing import Union
-from typing import Callable
 from typing import Any
+from typing import Callable
 from typing import Literal
+from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.transformers.basechainnode import BaseChainNode
-from laktory.models.transformers.basechainnode import ChainNodeColumn
 from laktory.models.transformers.basechainnode import BaseChainNodeFuncArg
 from laktory.models.transformers.basechainnode import BaseChainNodeSQLExpr
+from laktory.models.transformers.basechainnode import ChainNodeColumn
 from laktory.polars import PolarsDataFrame
 from laktory.polars import PolarsExpr
-
 
 logger = get_logger(__name__)
 
@@ -225,6 +224,7 @@ class PolarsChainNode(BaseChainNode):
             Output dataframe
         """
         from polars import DataFrame
+
         from laktory.polars.datatypes import DATATYPES_MAP
 
         if udfs is None:

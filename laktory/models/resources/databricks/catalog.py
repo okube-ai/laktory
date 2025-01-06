@@ -1,13 +1,15 @@
-from typing import Union
 from typing import Literal
+from typing import Union
+
 from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
+from laktory.models.grants.cataloggrant import CatalogGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks.grants import Grants
+from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.resources.databricks.schema import Schema
-from laktory.models.grants.cataloggrant import CatalogGrant
-from laktory.models.resources.databricks.grants import Grants
 
 
 class CatalogLookup(ResourceLookup):

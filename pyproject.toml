@@ -109,18 +109,26 @@ fix = true
 indent-width = 4
 line-length = 88  # default length. standard or many python projects
 target-version = "py39"
-#extend-select = ['Q', 'RUF100', 'C90', 'UP', 'I', 'D', 'T']
-#flake8-quotes = {inline-quotes = 'single', multiline-quotes = 'double'}
-#mccabe = { max-complexity = 14 }
-#isort = { known-first-party = ['pydantic', 'tests'] }
-#extend-exclude = ['pydantic/v1', 'tests/mypy/outputs']
 
 [tool.ruff.format]
 docstring-code-format = true
 
 [tool.ruff.lint]
-extend-ignore = []
+ignore=[
+    "E741",  # ambiguous variable name
+]
+extend-select = [
+    "I",
+]
 pydocstyle.convention = "numpy"
-ignore = [
-    "E402",  # Module level import not at top of file
+isort.force-single-line = true
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = [
+    "E402",  # module level import not at top of file
+    "F401",  # import not used
+    "F403",  # import * (unable to detect undefined names)
+]
+"laktory/resources/quickstart-stacks/workflows/notebooks/*" = [
+    "E402",  # module level import not at top of file
 ]

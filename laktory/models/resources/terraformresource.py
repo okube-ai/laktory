@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from typing import Union
+
 from laktory.models.resources.baseresource import BaseResource
 
 

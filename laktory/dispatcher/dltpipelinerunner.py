@@ -1,15 +1,16 @@
 from __future__ import annotations
-import time
-from typing import Literal
-from typing import TYPE_CHECKING
 
-from laktory.dispatcher.dispatcherrunner import DispatcherRunner
-from laktory.datetime import unix_timestamp
+import time
+from typing import TYPE_CHECKING
+from typing import Literal
+
 from laktory._logger import get_logger
+from laktory.datetime import unix_timestamp
+from laktory.dispatcher.dispatcherrunner import DispatcherRunner
 
 if TYPE_CHECKING:
-    from databricks.sdk.service.pipelines import StartUpdateResponse
     from databricks.sdk.service.pipelines import GetUpdateResponse
+    from databricks.sdk.service.pipelines import StartUpdateResponse
 
 logger = get_logger(__name__)
 
@@ -67,9 +68,9 @@ class DLTPipelineRunner(DispatcherRunner):
         output:
             None
         """
-        from databricks.sdk.service.pipelines import UpdateInfoState
-        from databricks.sdk.service.pipelines import EventLevel
         from databricks.sdk.core import DatabricksError
+        from databricks.sdk.service.pipelines import EventLevel
+        from databricks.sdk.service.pipelines import UpdateInfoState
 
         event_ids = []
 

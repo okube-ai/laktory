@@ -1,9 +1,9 @@
 import os
 
-from laktory import models
 from laktory import Dispatcher
-from laktory._version import VERSION
+from laktory import models
 from laktory._testing import Paths
+from laktory._version import VERSION
 
 paths = Paths(__file__)
 

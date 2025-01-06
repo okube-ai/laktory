@@ -1,9 +1,9 @@
-from typing import Union
 from typing import Literal
+from typing import Union
 
+from laktory._logger import get_logger
 from laktory.models.datasources.basedatasource import BaseDataSource
 from laktory.spark import SparkDataFrame
-from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 

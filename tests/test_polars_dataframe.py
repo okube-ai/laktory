@@ -1,8 +1,9 @@
 import datetime
+
 import polars as pl
 
-from laktory._testing.stockprices import df_slv_polars
 from laktory._testing.stockprices import df_meta_polars
+from laktory._testing.stockprices import df_slv_polars
 
 df = pl.DataFrame(
     [

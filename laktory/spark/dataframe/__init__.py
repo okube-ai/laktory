@@ -1,4 +1,5 @@
 from functools import wraps
+
 from pyspark.sql.dataframe import DataFrame
 
 from laktory.spark.dataframe.display import display
@@ -56,5 +57,5 @@ try:
     from pyspark.sql.connect.dataframe import DataFrame
 
     DataFrame.laktory = property(lambda self: LaktoryDataFrame(self))
-except:
+except:  # noqa: E722
     pass

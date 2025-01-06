@@ -1,6 +1,5 @@
 from laktory.models.resources.databricks import Metastore
 
-
 metastore = Metastore(
     name="metastore-lakehouse",
     cloud="azure",

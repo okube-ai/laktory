@@ -1,10 +1,11 @@
 from typing import Literal
 from typing import Union
+
 from laktory.models.basemodel import BaseModel
-from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 from laktory.models.grants.volumegrant import VolumeGrant
 from laktory.models.resources.databricks.grants import Grants
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
 class Volume(BaseModel, PulumiResource, TerraformResource):

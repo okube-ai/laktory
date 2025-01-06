@@ -1,5 +1,5 @@
-import polars as pl
 import numpy as np
+import polars as pl
 import polars.datatypes as T
 
 from laktory import models

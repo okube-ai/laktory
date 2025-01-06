@@ -1,14 +1,15 @@
 import os
 import subprocess
-from pydantic import BaseModel
 from typing import Union
-from prompt_toolkit.validation import Validator
-from prompt_toolkit.validation import ValidationError
 
-from laktory.models.stacks.stack import Stack
-from laktory.constants import SUPPORTED_BACKENDS
-from laktory.constants import QUICKSTART_TEMPLATES
+from prompt_toolkit.validation import ValidationError
+from prompt_toolkit.validation import Validator
+from pydantic import BaseModel
+
 from laktory._logger import get_logger
+from laktory.constants import QUICKSTART_TEMPLATES
+from laktory.constants import SUPPORTED_BACKENDS
+from laktory.models.stacks.stack import Stack
 
 logger = get_logger(__name__)
 DIRPATH = os.path.dirname(__file__)
@@ -108,7 +109,7 @@ class CLIController(BaseModel):
 class Worker:
     def run(self, cmd, cwd=None, raise_exceptions=True):
         try:
-            completed_process = subprocess.run(
+            subprocess.run(
                 cmd,
                 cwd=cwd,
                 check=True,

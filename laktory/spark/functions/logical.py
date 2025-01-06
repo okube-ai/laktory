@@ -1,10 +1,8 @@
 import pyspark.sql.functions as F
-
 from pyspark.sql.column import Column
-from laktory.spark.functions._common import (
-    COLUMN_OR_NAME,
-    _col,
-)
+
+from laktory.spark.functions._common import COLUMN_OR_NAME
+from laktory.spark.functions._common import _col
 
 __all__ = [
     "compare",

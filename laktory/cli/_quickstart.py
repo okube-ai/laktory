@@ -1,16 +1,17 @@
-import typer
-import shutil
 import os
+import shutil
 from typing import Annotated
-from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit import prompt
 
+import typer
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
+
+from laktory._version import VERSION
 from laktory.cli._common import BackendValidator
 from laktory.cli._common import TemplateValidator
 from laktory.cli.app import app
 from laktory.constants import QUICKSTART_TEMPLATES
 from laktory.constants import SUPPORTED_BACKENDS
-from laktory._version import VERSION
 
 
 @app.command()

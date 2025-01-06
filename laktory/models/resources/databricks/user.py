@@ -1,11 +1,13 @@
 from typing import Union
+
 from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks.groupmember import GroupMember
+from laktory.models.resources.databricks.userrole import UserRole
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-from laktory.models.resources.databricks.userrole import UserRole
-from laktory.models.resources.databricks.groupmember import GroupMember
 
 
 class UserLookup(ResourceLookup):

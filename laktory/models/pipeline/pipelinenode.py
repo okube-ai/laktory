@@ -1,12 +1,13 @@
-import uuid
 import os
 import shutil
+import uuid
+import warnings
+from pathlib import Path
 from typing import Any
 from typing import Callable
 from typing import Literal
 from typing import Union
-from pathlib import Path
-import warnings
+
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -18,8 +19,8 @@ from laktory.models.datasinks import DataSinksUnion
 from laktory.models.datasinks import TableDataSink
 from laktory.models.datasources import BaseDataSource
 from laktory.models.datasources import DataSourcesUnion
-from laktory.models.datasources import TableDataSource
 from laktory.models.datasources import PipelineNodeDataSource
+from laktory.models.datasources import TableDataSource
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.transformers.polarschain import PolarsChain
 from laktory.models.transformers.polarschainnode import PolarsChainNode

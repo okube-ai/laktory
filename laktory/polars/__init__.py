@@ -7,8 +7,8 @@ except ModuleNotFoundError:
 
 if polars_installed:
     from polars import DataFrame as PolarsDataFrame
-    from polars import LazyFrame as PolarsLazyFrame
     from polars import Expr as PolarsExpr
+    from polars import LazyFrame as PolarsLazyFrame
 
     import laktory.polars.dataframe
     import laktory.polars.expressions

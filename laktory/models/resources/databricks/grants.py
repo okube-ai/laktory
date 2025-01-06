@@ -1,5 +1,6 @@
-from pydantic import Field
 from pydantic import AliasChoices
+from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource

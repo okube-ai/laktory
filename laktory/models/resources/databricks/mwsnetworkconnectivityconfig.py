@@ -1,9 +1,9 @@
 from typing import Union
+
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.mwsnccbinding import MwsNccBinding
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-
-from laktory.models.resources.databricks.mwsnccbinding import MwsNccBinding
 
 
 class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule(BaseModel):

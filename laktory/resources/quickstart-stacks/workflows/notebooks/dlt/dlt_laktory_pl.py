@@ -8,13 +8,14 @@ filepath = f"{laktory_root}/pipelines/{pl_name}/requirements.txt"
 
 # COMMAND ----------
 import importlib
-import sys
 import os
+import sys
+
 import pyspark.sql.functions as F  # noqa: F401
 
 from laktory import dlt
-from laktory import models
 from laktory import get_logger
+from laktory import models
 
 dlt.spark = spark
 logger = get_logger(__name__)

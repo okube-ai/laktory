@@ -1,16 +1,18 @@
-import yaml
+import copy
 import json
 import os
 import re
-import inflect
-import copy
 from typing import Any
-from typing import TypeVar
 from typing import TextIO
+from typing import TypeVar
+
+import inflect
+import yaml
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_serializer
+
 from laktory._parsers import _snake_to_camel
 
 Model = TypeVar("Model", bound="BaseModel")

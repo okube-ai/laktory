@@ -1,7 +1,9 @@
-import os
 import io
-import yaml
+import os
 from pathlib import Path
+
+import yaml
+
 from laktory import __version__
 from laktory import models
 from laktory._testing import Paths

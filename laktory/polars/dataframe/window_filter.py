@@ -1,9 +1,9 @@
-from pydantic import BaseModel
 from typing import Union
+
 import polars as pl
+from pydantic import BaseModel
 
 from laktory._logger import get_logger
-
 
 logger = get_logger(__name__)
 
@@ -113,8 +113,9 @@ def window_filter(
 
 
 if __name__ == "__main__":
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     df0 = pl.DataFrame(
         [

@@ -1,17 +1,17 @@
 import os
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from typing import Any
 from typing import Literal
 from typing import Union
+from zoneinfo import ZoneInfo
 
-from pydantic import Field
 from pydantic import ConfigDict
+from pydantic import Field
 
+from laktory._logger import get_logger
+from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataproducer import DataProducer
-from laktory._settings import settings
-from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -355,8 +355,8 @@ class DataEvent(BaseModel):
         """
         # Set container client
         if container_client is None:
-            from azure.storage.blob import ContainerClient
             from azure.identity import DefaultAzureCredential
+            from azure.storage.blob import ContainerClient
 
             if account_url:
                 # From account URL

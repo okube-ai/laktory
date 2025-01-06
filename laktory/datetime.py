@@ -1,10 +1,9 @@
-import numpy as np
-from typing import Union
-
+from datetime import date
 from datetime import datetime
 from datetime import timezone
-from datetime import date
+from typing import Union
 
+import numpy as np
 from planck import units
 
 
@@ -46,7 +45,7 @@ def unix_timestamp(
         dt = datetime.utcnow()
     elif type(dt) in [int, float, np.float64, np.int64]:
         dt = dt
-    elif type(dt) == date:
+    elif type(dt) == date:  # noqa: E721
         dt = datetime.combine(dt, datetime.min.time())
     elif isinstance(dt, str):
         try:

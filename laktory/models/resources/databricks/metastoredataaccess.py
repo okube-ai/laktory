@@ -1,7 +1,8 @@
 from typing import Union
+
 from laktory.models.basemodel import BaseModel
-from laktory.models.resources.databricks.grants import Grants
 from laktory.models.grants.storagecredentialgrant import StorageCredentialGrant
+from laktory.models.resources.databricks.grants import Grants
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 

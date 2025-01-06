@@ -1,13 +1,15 @@
 from __future__ import annotations
-from pydantic import field_validator
-from pydantic import model_validator
-from typing import Any
-from typing import Union
-from typing import Callable
-from typing import Literal
-from typing import TYPE_CHECKING
+
 import abc
 import re
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import Literal
+from typing import Union
+
+from pydantic import field_validator
+from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.constants import SUPPORTED_DATATYPES
@@ -47,7 +49,7 @@ class BaseChainNodeFuncArg(BaseModel, PipelineChild):
             try:
                 v = c(**v)
                 break
-            except:
+            except:  # noqa: E722
                 pass
 
         return v
@@ -57,8 +59,8 @@ class BaseChainNodeFuncArg(BaseModel, PipelineChild):
         raise NotImplementedError()
 
     def signature(self):
-        from laktory.models.datasources import PipelineNodeDataSource
         from laktory.models.datasources import FileDataSource
+        from laktory.models.datasources import PipelineNodeDataSource
         from laktory.models.datasources import TableDataSource
 
         if isinstance(self.value, PipelineNodeDataSource):
@@ -111,10 +113,10 @@ class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
     _data_sources: list[PipelineNodeDataSource] = None
 
     def parsed_expr(self, df_id="df", view=False) -> list[str]:
-        from laktory.models.datasources.tabledatasource import TableDataSource
         from laktory.models.datasources.pipelinenodedatasource import (
             PipelineNodeDataSource,
         )
+        from laktory.models.datasources.tabledatasource import TableDataSource
 
         expr = self.expr
         if view:

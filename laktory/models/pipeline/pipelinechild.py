@@ -1,10 +1,11 @@
 from typing import Any
 from typing import Literal
-from pydantic import model_validator
-from pydantic import BaseModel
 
-from laktory._settings import settings
+from pydantic import BaseModel
+from pydantic import model_validator
+
 from laktory._logger import get_logger
+from laktory._settings import settings
 
 logger = get_logger(__name__)
 

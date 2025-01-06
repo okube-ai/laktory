@@ -1,17 +1,18 @@
-import os
 import io
-from pathlib import Path
+import os
 import shutil
 import uuid
+from pathlib import Path
+
 import networkx as nx
 import pandas as pd
-from pyspark.sql import Window
 import pyspark.sql.functions as F
+from pyspark.sql import Window
 
 from laktory import models
-from laktory._testing import spark
 from laktory._testing import Paths
 from laktory._testing import df_brz
+from laktory._testing import spark
 
 paths = Paths(__file__)
 

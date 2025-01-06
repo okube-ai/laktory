@@ -1,6 +1,5 @@
 from laktory.models.resources.databricks import Job
 
-
 job = Job(
     name="job-stock-prices",
     name_prefix="osoucy]",

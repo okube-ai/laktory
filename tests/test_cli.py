@@ -1,13 +1,14 @@
 import os
 import shutil
 import uuid
+
 from py import path as pypath
+from typer.testing import CliRunner
 
 from laktory import app
-from laktory import settings
 from laktory import models
+from laktory import settings
 from laktory._testing import Paths
-from typer.testing import CliRunner
 
 runner = CliRunner()
 settings.cli_raise_external_exceptions = True

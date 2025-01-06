@@ -1,16 +1,15 @@
-from typing import Union
-from typing import Callable
 from typing import Any
+from typing import Callable
 from typing import Literal
+from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.transformers.basechainnode import BaseChainNode
-from laktory.models.transformers.basechainnode import ChainNodeColumn
 from laktory.models.transformers.basechainnode import BaseChainNodeFuncArg
 from laktory.models.transformers.basechainnode import BaseChainNodeSQLExpr
+from laktory.models.transformers.basechainnode import ChainNodeColumn
 from laktory.spark import SparkColumn
 from laktory.spark import SparkDataFrame
-
 
 logger = get_logger(__name__)
 
@@ -43,9 +42,9 @@ class SparkChainNodeFuncArg(BaseChainNodeFuncArg):
         elif isinstance(v, str):
             # Imports required to evaluate expressions
             import pyspark.sql.functions as F  # noqa: F401
-            from pyspark.sql.functions import lit  # noqa: F401
             from pyspark.sql.functions import col  # noqa: F401
             from pyspark.sql.functions import expr  # noqa: F401
+            from pyspark.sql.functions import lit  # noqa: F401
 
             targets = ["lit(", "col(", "expr(", "F."]
 

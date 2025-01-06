@@ -1,6 +1,6 @@
+from laktory.models.resources.databricks import Schema
 from laktory.models.resources.databricks import Table
 from laktory.models.resources.databricks.table import TableColumn
-from laktory.models.resources.databricks import Schema
 
 schema = Schema(
     name="flights",
@@ -38,7 +38,7 @@ schema = Schema(
 
 def test_model():
     assert schema.tables[0].columns[0].name == "airspeed"
-    assert type(schema.tables[0].columns[0]) == TableColumn
+    assert isinstance(schema.tables[0].columns[0], TableColumn)
     assert schema.name == "flights"
     assert schema.full_name == "laktory_testing.flights"
 

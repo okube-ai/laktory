@@ -1,4 +1,3 @@
-import os
 from ._version import VERSION
 
 __version__ = VERSION
@@ -9,7 +8,6 @@ from ._settings import settings
 # --------------------------------------------------------------------------- #
 # User-agent                                                                  #
 # --------------------------------------------------------------------------- #
-
 from ._useragent import set_databricks_sdk_upstream
 
 set_databricks_sdk_upstream()
@@ -19,24 +17,22 @@ set_databricks_sdk_upstream()
 # Packages                                                                    #
 # --------------------------------------------------------------------------- #
 
-import laktory.types
 import laktory._parsers
 import laktory.models
 import laktory.spark
-
-# --------------------------------------------------------------------------- #
-# Classes                                                                     #
-# --------------------------------------------------------------------------- #
-
-from ._settings import Settings
-from .dispatcher.dispatcher import Dispatcher
+import laktory.types
 
 # --------------------------------------------------------------------------- #
 # Objects                                                                     #
 # --------------------------------------------------------------------------- #
-
 from ._logger import get_logger
+
+# --------------------------------------------------------------------------- #
+# Classes                                                                     #
+# --------------------------------------------------------------------------- #
+from ._settings import Settings
 from .cli.app import app
-from .version import show_version_info
 from .datetime import unix_timestamp
 from .datetime import utc_datetime
+from .dispatcher.dispatcher import Dispatcher
+from .version import show_version_info

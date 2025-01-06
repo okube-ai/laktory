@@ -1,7 +1,8 @@
 from __future__ import annotations
-from typing import Union
-from typing import Literal
+
 from typing import TYPE_CHECKING
+from typing import Literal
+from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel

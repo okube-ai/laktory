@@ -1,19 +1,21 @@
-import os
 import hashlib
-import uuid
+import os
 import shutil
+import uuid
 from pathlib import Path
-from typing import Union
 from typing import Any
 from typing import Literal
+from typing import Union
+
 from pydantic import model_validator
+
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipelinechild import PipelineChild
-from laktory.spark import is_spark_dataframe
-from laktory.spark import SparkDataFrame
-from laktory.polars import is_polars_dataframe
 from laktory.polars import PolarsLazyFrame
+from laktory.polars import is_polars_dataframe
+from laktory.spark import SparkDataFrame
+from laktory.spark import is_spark_dataframe
 from laktory.types import AnyDataFrame
 
 logger = get_logger(__name__)
@@ -273,9 +275,9 @@ class DataSinkMergeCDCOptions(BaseModel):
             writer.saveAsTable(self.target_name)
 
     def _execute(self, source: SparkDataFrame):
+        import pyspark.sql.functions as F
         from delta.tables import DeltaTable
         from pyspark.sql import Window
-        import pyspark.sql.functions as F
 
         spark = source.sparkSession
 

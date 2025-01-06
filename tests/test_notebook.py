@@ -1,4 +1,5 @@
 import os
+
 from laktory import settings
 from laktory.models.resources.databricks import Notebook
 

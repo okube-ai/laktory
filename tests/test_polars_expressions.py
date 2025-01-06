@@ -1,6 +1,7 @@
 from uuid import UUID
-import polars as pl
+
 import numpy as np
+import polars as pl
 import pytest
 
 df0 = pl.DataFrame(

@@ -1,15 +1,16 @@
 import os
 import shutil
-import pytest
 import uuid
 from pathlib import Path
-from pyspark.sql import functions as F
+
+import pytest
 from pyspark.sql import Window
+from pyspark.sql import functions as F
 
 from laktory import models
-from laktory._testing import spark
 from laktory._testing import Paths
 from laktory._testing import df_brz
+from laktory._testing import spark
 from laktory.exceptions import DataQualityCheckFailedError
 from laktory.exceptions import DataQualityExpectationsNotSupported
 
@@ -266,7 +267,7 @@ def test_streaming_multi():
 
 def test_expectations_invalid():
     with pytest.raises(DataQualityExpectationsNotSupported):
-        node = models.PipelineNode(
+        models.PipelineNode(
             name="slv_stock_prices",
             source={
                 "path": "some_path",
@@ -289,7 +290,7 @@ def test_expectations_invalid():
         )
 
     with pytest.raises(DataQualityExpectationsNotSupported):
-        node = models.PipelineNode(
+        models.PipelineNode(
             name="slv_stock_prices",
             source={
                 "path": "some_path",

@@ -1,5 +1,5 @@
-from typing import Union
 from typing import Literal
+from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.transformers.basechain import BaseChain

@@ -10,8 +10,9 @@ install-dev:
 install-with-dbks:
 	uv sync --extra databricks
 
-format:
+format-and-lint:
 	ruff format ./
+	ruff check ./
 
 test:
 	uv run pytest --junitxml=junit/test-results.xml --cov=laktory --cov-report=xml --cov-report=html tests

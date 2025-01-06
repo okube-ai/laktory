@@ -1,4 +1,5 @@
 import json
+
 from laktory.models.resources.databricks import ClusterPolicy
 
 definition = {

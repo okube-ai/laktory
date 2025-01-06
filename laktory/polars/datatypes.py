@@ -1,6 +1,5 @@
 import polars.datatypes as T
 
-
 DATATYPES_MAP = {
     "binary": T.Binary,
     "byte": T.Int8,

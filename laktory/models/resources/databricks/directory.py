@@ -1,5 +1,7 @@
 from typing import Union
+
 from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource

@@ -1,13 +1,15 @@
 from typing import Union
+
 from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
+from laktory.models.grants.metastoregrant import MetastoreGrant
 from laktory.models.resources.baseresource import ResourceLookup
-from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
+from laktory.models.resources.databricks.grants import Grants
 from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
-from laktory.models.grants.metastoregrant import MetastoreGrant
-from laktory.models.resources.databricks.grants import Grants
+from laktory.models.resources.pulumiresource import PulumiResource
+from laktory.models.resources.terraformresource import TerraformResource
 
 
 class MetastoreLookup(ResourceLookup):

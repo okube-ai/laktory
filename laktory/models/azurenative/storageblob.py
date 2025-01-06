@@ -1,4 +1,5 @@
 from typing import Literal
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 

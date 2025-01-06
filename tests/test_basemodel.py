@@ -1,11 +1,12 @@
-from pydantic import ConfigDict
 import os
 
-from laktory.models import BaseModel
-from laktory.models.resources.databricks import Table
-from laktory.models.resources.databricks import Schema
-from laktory.models.resources.databricks import Job
+from pydantic import ConfigDict
+
 from laktory._testing import Paths
+from laktory.models import BaseModel
+from laktory.models.resources.databricks import Job
+from laktory.models.resources.databricks import Schema
+from laktory.models.resources.databricks import Table
 
 paths = Paths(__file__)
 

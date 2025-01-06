@@ -1,11 +1,13 @@
 import re
 from typing import Any
-from typing import Union
 from typing import Literal
+from typing import Union
+
 from pydantic import AliasChoices
+from pydantic import BaseModel as _BaseModel
 from pydantic import Field
 from pydantic import model_validator
-from pydantic import BaseModel as _BaseModel
+
 from laktory.models.basemodel import BaseModel
 
 
@@ -125,7 +127,7 @@ class BaseResource(_BaseModel):
 
         for fname, f in cls.model_fields.items():
             if f.is_required():
-                if f.annotation == str:
+                if f.annotation == str:  # noqa: E721
                     data[fname] = ""
                 elif isinstance(f.annotation, type(Literal[0])):
                     _ann = (

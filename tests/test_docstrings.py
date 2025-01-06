@@ -1,16 +1,11 @@
-import pytest_examples
 import re
 
-
-
-from collections.abc import Iterator
-from pathlib import Path
+import pytest
+import pytest_examples
 from pyspark.sql import SparkSession
 from pytest_examples import CodeExample
-from pytest_examples.run_code import InsertPrintStatements as _InsertPrintStatements
 from pytest_examples import EvalExample
 from pytest_examples import find_examples
-import pytest
 
 # Change examples print prefix to be ruff lint compatible
 comment_prefix = "# > "
@@ -42,11 +37,11 @@ spark.conf.set("spark.sql.session.timeZone", "UTC")
 def test_docstrings_datetime(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_update(example)
     else:
         eval_example.lint_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_check(example)
 
 
@@ -59,11 +54,11 @@ def test_docstrings_datetime(example: CodeExample, eval_example: EvalExample):
 def test_docstrings_dispatcher(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_update(example)
     else:
         eval_example.lint_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_check(example)
 
 
@@ -76,7 +71,7 @@ def test_docstrings_dispatcher(example: CodeExample, eval_example: EvalExample):
 def test_docstrings_dlt(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_update(
                 example,
                 module_globals={
@@ -86,7 +81,7 @@ def test_docstrings_dlt(example: CodeExample, eval_example: EvalExample):
             )
     else:
         eval_example.lint_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_check(
                 example,
                 module_globals={
@@ -105,14 +100,14 @@ def test_docstrings_dlt(example: CodeExample, eval_example: EvalExample):
 def test_docstrings_models(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_update(
                 example,
                 module_globals={"spark": spark},
             )
     else:
         eval_example.lint_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_check(example, module_globals={"spark": spark})
 
 
@@ -127,11 +122,11 @@ def test_docstrings_models(example: CodeExample, eval_example: EvalExample):
 def test_docstrings_polars_dataframe(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_update(example)
     else:
         eval_example.lint_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_check(example)
 
 
@@ -146,11 +141,11 @@ def test_docstrings_polars_dataframe(example: CodeExample, eval_example: EvalExa
 def test_docstrings_polars_expressions(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_update(example)
     else:
         eval_example.lint_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_check(example)
 
 
@@ -163,11 +158,11 @@ def test_docstrings_polars_expressions(example: CodeExample, eval_example: EvalE
 def test_docstrings_spark_dataframe(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_update(example, module_globals={"spark": spark})
     else:
         eval_example.lint_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_check(example, module_globals={"spark": spark})
 
 
@@ -180,11 +175,11 @@ def test_docstrings_spark_dataframe(example: CodeExample, eval_example: EvalExam
 def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExample):
     if eval_example.update_examples:
         eval_example.format_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_update(example, module_globals={"spark": spark})
     else:
         eval_example.lint_ruff(example)
-        if not "tag:skip-run" in example.prefix_tags():
+        if "tag:skip-run" not in example.prefix_tags():
             eval_example.run_print_check(example, module_globals={"spark": spark})
 
 

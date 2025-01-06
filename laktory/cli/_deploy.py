@@ -1,5 +1,6 @@
-import typer
 from typing import Annotated
+
+import typer
 
 from laktory.cli._common import CLIController
 from laktory.cli.app import app
