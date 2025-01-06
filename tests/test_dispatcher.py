@@ -2,6 +2,7 @@ import os
 
 from laktory import Dispatcher
 from laktory import models
+from laktory._testing import MonkeyPatch
 from laktory._testing import Paths
 from laktory._version import VERSION
 
@@ -15,19 +16,24 @@ tstack = stack.model_copy()
 tstack.backend = "terraform"
 
 
-def test_workspace_client():
+def test_workspace_client(monkeypatch):
+    monkeypatch.setenv("DATABRICKS_HOST", "my-host")
+    monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
+
     for _stack in [stack, tstack]:
         dispatcher = Dispatcher(stack=_stack)
         assert f"okube-laktory/{VERSION}" in dispatcher.wc.config.user_agent
 
         kwargs = dispatcher._workspace_arguments
-        if "token" in kwargs:
-            kwargs["token"] = kwargs["token"][:6]
         assert kwargs == {
-            "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-            "token": "dapic5",
+            "host": "my-host",
+            "token": "my-token",
         }
         assert dispatcher.wc is not None
+
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
 
 
 def test_resources():
@@ -47,5 +53,5 @@ def test_resources():
 
 
 if __name__ == "__main__":
-    test_workspace_client()
-    # test_resources()
+    test_workspace_client(MonkeyPatch())
+    test_resources()

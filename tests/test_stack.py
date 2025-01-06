@@ -4,6 +4,7 @@ import pytest
 
 from laktory import models
 from laktory._settings import settings
+from laktory._testing import MonkeyPatch
 from laktory._testing import Paths
 from laktory._testing.stackvalidator import StackValidator
 
@@ -548,20 +549,21 @@ def test_stack_resources_unique_name():
         )
 
 
-def test_pulumi_stack():
+def test_pulumi_stack(monkeypatch):
+    monkeypatch.setenv("DATABRICKS_HOST", "my-host")
+    monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
+
     pstack = stack.to_pulumi(env_name=None)
     assert pstack.organization == "okube"
     data_default = pstack.model_dump()
-    data_default["config"]["databricks:token"] = "***"
-    data_default["resources"]["databricks"]["properties"]["token"] = "***"
     print(data_default)
     assert data_default == {
         "variables": {},
         "name": "unit-testing",
         "runtime": "yaml",
         "config": {
-            "databricks:host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-            "databricks:token": "***",
+            "databricks:host": "my-host",
+            "databricks:token": "my-token",
         },
         "resources": {
             "job-stock-prices-ut-stack": {
@@ -723,8 +725,8 @@ def test_pulumi_stack():
             "databricks": {
                 "type": "pulumi:providers:databricks",
                 "properties": {
-                    "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-                    "token": "***",
+                    "host": "my-host",
+                    "token": "my-token",
                 },
                 "options": {},
             },
@@ -734,8 +736,6 @@ def test_pulumi_stack():
 
     # Prod
     data = stack.to_pulumi(env_name="prod").model_dump()
-    data["config"]["databricks:token"] = "***"
-    data["resources"]["databricks"]["properties"]["token"] = "***"
     print(data)
     assert data == {
         "variables": {
@@ -746,8 +746,8 @@ def test_pulumi_stack():
         "name": "unit-testing",
         "runtime": "yaml",
         "config": {
-            "databricks:host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-            "databricks:token": "***",
+            "databricks:host": "my-host",
+            "databricks:token": "my-token",
         },
         "resources": {
             "job-stock-prices-ut-stack": {
@@ -910,8 +910,8 @@ def test_pulumi_stack():
             "databricks": {
                 "type": "pulumi:providers:databricks",
                 "properties": {
-                    "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-                    "token": "***",
+                    "host": "my-host",
+                    "token": "my-token",
                 },
                 "options": {},
             },
@@ -919,15 +919,21 @@ def test_pulumi_stack():
         "outputs": {},
     }
 
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
+
 
 def test_pulumi_preview():
     pstack = stack.to_pulumi(env_name="dev")
     pstack.preview(stack="okube/dev")
 
 
-def test_terraform_stack():
+def test_terraform_stack(monkeypatch):
+    monkeypatch.setenv("DATABRICKS_HOST", "my-host")
+    monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
+
     data_default = stack.to_terraform().model_dump()
-    data_default["provider"]["databricks"]["token"] = "***"
     print(data_default)
     assert data_default == {
         "terraform": {
@@ -945,8 +951,8 @@ def test_terraform_stack():
         },
         "provider": {
             "databricks": {
-                "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-                "token": "***",
+                "host": "my-host",
+                "token": "my-token",
             }
         },
         "resource": {
@@ -1081,7 +1087,6 @@ def test_terraform_stack():
 
     # Dev
     data = stack.to_terraform(env_name="dev").model_dump()
-    data["provider"]["databricks"]["token"] = "***"
     print(data)
     assert data == {
         "terraform": {
@@ -1091,8 +1096,8 @@ def test_terraform_stack():
         },
         "provider": {
             "databricks": {
-                "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-                "token": "***",
+                "host": "my-host",
+                "token": "my-token",
             }
         },
         "resource": {
@@ -1227,7 +1232,6 @@ def test_terraform_stack():
 
     # Prod
     data = stack.to_terraform(env_name="prod").model_dump()
-    data["provider"]["databricks"]["token"] = "***"
     print(data)
     assert data == {
         "terraform": {
@@ -1237,8 +1241,8 @@ def test_terraform_stack():
         },
         "provider": {
             "databricks": {
-                "host": "https://adb-2211091707396001.1.azuredatabricks.net/",
-                "token": "***",
+                "host": "my-host",
+                "token": "my-token",
             }
         },
         "resource": {
@@ -1372,6 +1376,10 @@ def test_terraform_stack():
         },
     }
 
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
+
 
 def test_terraform_plan():
     tstack = stack.to_terraform(env_name="dev")
@@ -1382,7 +1390,10 @@ def test_terraform_plan():
     tstack.plan()
 
 
-def test_all_resources():
+def test_all_resources(monkeypatch):
+    monkeypatch.setenv("DATABRICKS_HOST", "my-host")
+    monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
+
     from laktory._testing import Paths
     from tests.test_alert import alert
     from tests.test_catalog import catalog
@@ -1451,6 +1462,10 @@ def test_all_resources():
     )
     validator.validate()
 
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
+
 
 def test_stack_settings():
     current_root = settings.laktory_root
@@ -1499,10 +1514,10 @@ if __name__ == "__main__":
     test_stack_model()
     test_stack_env_model()
     test_stack_resources_unique_name()
-    test_pulumi_stack()
+    test_pulumi_stack(MonkeyPatch())
     test_pulumi_preview()
-    test_terraform_stack()
+    test_terraform_stack(MonkeyPatch())
     test_terraform_plan()
-    test_all_resources()
+    test_all_resources(MonkeyPatch())
     test_stack_settings()
     test_get_env()

@@ -7,9 +7,11 @@ import pytest
 
 from laktory import models
 from laktory import settings
+from laktory._logger import get_logger
 from laktory._testing import Paths
 
 paths = Paths(__file__)
+logger = get_logger(__name__)
 
 
 # Event
@@ -141,6 +143,10 @@ def test_event_without_tstamp():
     )
 
 
+@pytest.mark.skipif(
+    not settings.lakehouse_sa_conn_str,
+    reason="Storage account connection string missing.",
+)
 def test_to_azure_storage_container():
     try:
         import azure.storage  # noqa: F401
@@ -153,6 +159,9 @@ def test_to_azure_storage_container():
     event.to_azure_storage_container(container_name="unit-testing", skip_if_exists=True)
 
 
+@pytest.mark.skipif(
+    not settings.aws_secret_access_key, reason="AWS secret access key missing."
+)
 def test_to_aws_s3_bucket():
     try:
         import boto3  # noqa: F401
