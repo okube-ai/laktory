@@ -58,6 +58,7 @@ dev = [
     "mkdocstrings[python]",
     "pandas",
     "plotly",
+    "pre-commit",
     "pytest",
     "pytest-cov",
     "pytest-examples",
