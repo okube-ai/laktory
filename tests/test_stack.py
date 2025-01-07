@@ -10,7 +10,7 @@ from laktory._testing.stackvalidator import StackValidator
 
 paths = Paths(__file__)
 
-with open(os.path.join(paths.data, "stack.yaml"), "r") as fp:
+with open(paths.data / "stack.yaml", "r") as fp:
     stack = models.Stack.model_validate_yaml(fp)
 
 stack.terraform.backend = {
@@ -21,6 +21,79 @@ stack.terraform.backend = {
         "key": "terraform/dev.terraform.tfstate",
     }
 }
+
+
+def get_validator(monkeypatch):
+    monkeypatch.setenv("DATABRICKS_HOST", "my-host")
+    monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
+
+    from laktory._testing import Paths
+    from tests.test_alert import alert
+    from tests.test_catalog import catalog
+    from tests.test_cluster_policy import cluster_policy
+    from tests.test_dashboard import dashboard
+    from tests.test_directory import directory
+    from tests.test_job import job
+    from tests.test_job import job_for_each
+    from tests.test_metastore import metastore
+    from tests.test_mlflow_experiment import mlexp
+    from tests.test_mlflow_model import mlmodel
+    from tests.test_mlflow_webhook import mlwebhook
+    from tests.test_notebook import nb
+    from tests.test_pipeline_orchestrators import pl_dlt
+    from tests.test_query import query
+    from tests.test_repo import repo
+    from tests.test_schema import schema
+    from tests.test_user import group
+    from tests.test_user import user
+    from tests.test_vectorsearchendpoint import vector_search_endpoint
+    from tests.test_vectorsearchindex import vector_search_index
+    from tests.test_workspacefile import workspace_file
+
+    paths = Paths(__file__)
+
+    nb.source = os.path.join(paths.root, nb.source)
+    workspace_file.source = os.path.join(paths.root, workspace_file.source)
+
+    validator = StackValidator(
+        resources={
+            "databricks_alerts": [alert],
+            "databricks_catalogs": [catalog],
+            "databricks_clusterpolicies": [cluster_policy],
+            "databricks_dashboards": [dashboard],
+            "databricks_directories": [directory],
+            "databricks_jobs": [job, job_for_each],
+            "databricks_metastores": [metastore],
+            "databricks_mlflowexperiments": [mlexp],
+            "databricks_mlflowmodels": [mlmodel],
+            "databricks_mlflowwebhooks": [mlwebhook],
+            "databricks_notebooks": [nb],
+            "databricks_queries": [query],
+            "databricks_repos": [repo],
+            "databricks_schemas": [schema],
+            "databricks_groups": [group],
+            "databricks_users": [user],
+            "databricks_vectorsearchendpoints": [vector_search_endpoint],
+            "databricks_vectorsearchindexes": [vector_search_index],
+            "databricks_workspacefiles": [workspace_file],
+            "pipelines": [pl_dlt],  # required by job
+        },
+        providers={
+            "provider-workspace-neptune": {
+                "host": "${vars.DATABRICKS_HOST}",
+                # "azure_client_id": "0",
+                # "azure_client_secret": "0",
+                # "azure_tenant_id": "0",
+            },
+            "databricks1": {
+                "host": "${vars.DATABRICKS_HOST}",
+            },
+            "databricks2": {
+                "host": "${vars.DATABRICKS_HOST}",
+            },
+        },
+    )
+    return validator
 
 
 def test_stack_model():
@@ -929,6 +1002,19 @@ def test_pulumi_preview():
     pstack.preview(stack="okube/dev")
 
 
+@pytest.mark.skipif(
+    not os.getenv("PULUMI_ACCESS_TOKEN"),
+    reason="Storage account connection string missing.",
+)
+def test_pulumi_all_resources(monkeypatch):
+    validator = get_validator(monkeypatch)
+    validator.validate_pulumi()
+
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
+
+
 def test_terraform_stack(monkeypatch):
     monkeypatch.setenv("DATABRICKS_HOST", "my-host")
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
@@ -1390,77 +1476,9 @@ def test_terraform_plan():
     tstack.plan()
 
 
-def test_all_resources(monkeypatch):
-    monkeypatch.setenv("DATABRICKS_HOST", "my-host")
-    monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
-
-    from laktory._testing import Paths
-    from tests.test_alert import alert
-    from tests.test_catalog import catalog
-    from tests.test_cluster_policy import cluster_policy
-    from tests.test_dashboard import dashboard
-    from tests.test_directory import directory
-    from tests.test_job import job
-    from tests.test_job import job_for_each
-    from tests.test_metastore import metastore
-    from tests.test_mlflow_experiment import mlexp
-    from tests.test_mlflow_model import mlmodel
-    from tests.test_mlflow_webhook import mlwebhook
-    from tests.test_notebook import nb
-    from tests.test_pipeline_orchestrators import pl_dlt
-    from tests.test_query import query
-    from tests.test_repo import repo
-    from tests.test_schema import schema
-    from tests.test_user import group
-    from tests.test_user import user
-    from tests.test_vectorsearchendpoint import vector_search_endpoint
-    from tests.test_vectorsearchindex import vector_search_index
-    from tests.test_workspacefile import workspace_file
-
-    paths = Paths(__file__)
-
-    nb.source = os.path.join(paths.root, nb.source)
-    workspace_file.source = os.path.join(paths.root, workspace_file.source)
-
-    validator = StackValidator(
-        resources={
-            "databricks_alerts": [alert],
-            "databricks_catalogs": [catalog],
-            "databricks_clusterpolicies": [cluster_policy],
-            "databricks_dashboards": [dashboard],
-            "databricks_directories": [directory],
-            "databricks_jobs": [job, job_for_each],
-            "databricks_metastores": [metastore],
-            "databricks_mlflowexperiments": [mlexp],
-            "databricks_mlflowmodels": [mlmodel],
-            "databricks_mlflowwebhooks": [mlwebhook],
-            "databricks_notebooks": [nb],
-            "databricks_queries": [query],
-            "databricks_repos": [repo],
-            "databricks_schemas": [schema],
-            "databricks_groups": [group],
-            "databricks_users": [user],
-            "databricks_vectorsearchendpoints": [vector_search_endpoint],
-            "databricks_vectorsearchindexes": [vector_search_index],
-            "databricks_workspacefiles": [workspace_file],
-            "pipelines": [pl_dlt],  # required by job
-        },
-        providers={
-            "provider-workspace-neptune": {
-                "host": "${vars.DATABRICKS_HOST}",
-                # "azure_client_id": "0",
-                # "azure_client_secret": "0",
-                # "azure_tenant_id": "0",
-            },
-            "databricks1": {
-                "host": "${vars.DATABRICKS_HOST}",
-            },
-            "databricks2": {
-                "host": "${vars.DATABRICKS_HOST}",
-            },
-        },
-    )
-    validator.validate()
+def test_terraform_all_resources(monkeypatch):
+    validator = get_validator(monkeypatch)
+    validator.validate_terraform()
 
     # Test executed as script
     if isinstance(monkeypatch, MonkeyPatch):
@@ -1516,8 +1534,9 @@ if __name__ == "__main__":
     test_stack_resources_unique_name()
     test_pulumi_stack(MonkeyPatch())
     test_pulumi_preview()
+    test_pulumi_all_resources(MonkeyPatch())
     test_terraform_stack(MonkeyPatch())
     test_terraform_plan()
-    test_all_resources(MonkeyPatch())
+    test_terraform_all_resources(MonkeyPatch())
     test_stack_settings()
     test_get_env()

@@ -1,5 +1,6 @@
 import os
 import shutil
+from pathlib import Path
 from typing import Any
 from typing import Literal
 from typing import Union
@@ -70,6 +71,16 @@ class FileDataSink(BaseDataSink):
     checkpoint_location: Union[str, None] = None
     format: Literal["CSV", "PARQUET", "DELTA", "JSON", "EXCEL"] = "DELTA"
     path: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def path_to_string(cls, data: Any) -> Any:
+        """Required to apply settings before instantiating resources and setting default values"""
+        path = data.get("path", None)
+        if path and isinstance(path, Path):
+            data["path"] = str(path)
+
+        return data
 
     @model_validator(mode="after")
     def merge_and_format(self) -> Any:

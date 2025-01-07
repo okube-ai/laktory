@@ -24,7 +24,7 @@ testdir_path = Path(__file__).parent
 def get_pl(clean_path=False):
     pl_path = testdir_path / "tmp" / "test_pipeline_spark" / str(uuid.uuid4())
 
-    with open(os.path.join(paths.data, "pl-spark-local.yaml"), "r") as fp:
+    with open(paths.data / "pl-spark-local.yaml", "r") as fp:
         data = fp.read()
         data = data.replace("{data_dir}", str(testdir_path / "data"))
         data = data.replace("{pl_dir}", str(pl_path / "tables"))
@@ -94,7 +94,7 @@ def test_dag():
 
     # Test figure
     fig = pl.dag_figure()
-    fig.write_html(os.path.join(paths.tmp, "dag.html"), auto_open=OPEN_FIGURES)
+    fig.write_html(paths.tmp / "dag.html", auto_open=OPEN_FIGURES)
 
 
 def test_children():

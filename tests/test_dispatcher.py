@@ -1,5 +1,3 @@
-import os
-
 from laktory import Dispatcher
 from laktory import models
 from laktory._testing import MonkeyPatch
@@ -8,7 +6,7 @@ from laktory._version import VERSION
 
 paths = Paths(__file__)
 
-with open(os.path.join(paths.data, "stack.yaml"), "r") as fp:
+with open(paths.data / "stack.yaml", "r") as fp:
     stack = models.Stack.model_validate_yaml(fp)
 
 

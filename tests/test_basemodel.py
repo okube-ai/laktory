@@ -1,5 +1,3 @@
-import os
-
 from pydantic import ConfigDict
 
 from laktory._testing import Paths
@@ -60,7 +58,7 @@ def test_read_yaml():
         symbol: str
         prices: list[Price]
 
-    with open(os.path.join(paths.data, "stockprices0.yaml"), "r") as fp:
+    with open(paths.data / "stockprices0.yaml", "r") as fp:
         stockprices = StockPrices.model_validate_yaml(fp)
 
     assert stockprices.model_dump() == {
@@ -251,7 +249,7 @@ def test_inject_includes():
     class Business(BaseModel):
         model_config = ConfigDict(extra="allow")
 
-    with open(os.path.join(paths.data, "model_businesses.yaml"), "r") as fp:
+    with open(paths.data / "model_businesses.yaml", "r") as fp:
         b = Business.model_validate_yaml(fp)
 
     data = b.model_dump()

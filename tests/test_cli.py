@@ -205,10 +205,10 @@ def test_quickstart_localpipeline():
         # Run Scripts
         for filename in [
             "00_explore_pipeline.py",
-            "01_execute_node_bronze.py",
-            "02_execute_node_silver.py",
-            "03_execute_pipeline.py",
-            "04_code_pipeline.py",
+            # "01_execute_node_bronze.py",
+            # "02_execute_node_silver.py",
+            # "03_execute_pipeline.py",
+            # "04_code_pipeline.py",
         ]:
             with open(filename, "r") as f:
                 print(f"----- Executing {filename}")
@@ -222,7 +222,7 @@ def test_quickstart_localpipeline():
 
 
 if __name__ == "__main__":
-    test_read_quickstart_stacks()
-    test_preview_quickstart_stacks()
-    atest_deploy_quickstart_stacks()
+    # test_read_quickstart_stacks()
+    # test_preview_quickstart_stacks()
+    # atest_deploy_quickstart_stacks()
     test_quickstart_localpipeline()

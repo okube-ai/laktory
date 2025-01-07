@@ -4,6 +4,9 @@ import uuid
 
 from laktory import models
 from laktory._settings import settings
+from laktory._testing import Paths
+
+paths = Paths(__file__)
 
 
 class StackValidator:
@@ -51,23 +54,29 @@ class StackValidator:
     def tstack(self):
         return self.stack.to_terraform("dev")
 
-    def validate(self):
+    def _pre_validate(self):
         c0 = settings.cli_raise_external_exceptions
         settings.cli_raise_external_exceptions = True
         cwd = os.getcwd()
-        dirpath = f"./tmp_deploy_{uuid.uuid4()}"
+        dirpath = paths.tmp / f"tmp_deploy_{uuid.uuid4()}"
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
         os.chdir(dirpath)
-        self.validate_pulumi()
-        self.validate_terraform()
+
+        return cwd, dirpath, c0
+
+    def _post_validate(self, cwd, dirpath, c0):
         os.chdir(cwd)
         shutil.rmtree(dirpath)
         settings.cli_raise_external_exceptions = c0
 
     def validate_pulumi(self):
+        cwd, dirpath, c0 = self._pre_validate()
         self.pstack.preview(stack="okube/dev")
+        self._post_validate(cwd, dirpath, c0)
 
     def validate_terraform(self):
+        cwd, dirpath, c0 = self._pre_validate()
         self.tstack.init()
         self.tstack.plan()
+        self._post_validate(cwd, dirpath, c0)

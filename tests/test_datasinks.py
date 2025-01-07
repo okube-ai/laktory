@@ -1,7 +1,6 @@
 import os
 import shutil
 import uuid
-from pathlib import Path
 
 import pyspark.sql.functions as F
 import pytest
@@ -20,8 +19,8 @@ paths = Paths(__file__)
 
 
 def test_file_data_sink_parquet():
-    dirpath = os.path.join(paths.tmp, "df_slv_sink_parquet/")
-    if os.path.exists(dirpath):
+    dirpath = paths.tmp / "df_slv_sink_parquet/"
+    if dirpath.exists():
         shutil.rmtree(dirpath)
 
     # Write as overwrite
@@ -51,8 +50,8 @@ def test_file_data_sink_parquet():
 
 
 def test_file_data_sink_delta():
-    dirpath = os.path.join(paths.tmp, "df_slv_sink_delta/")
-    if os.path.exists(dirpath):
+    dirpath = paths.tmp / "df_slv_sink_delta/"
+    if dirpath.exists():
         shutil.rmtree(dirpath)
 
     # Write as overwrite
@@ -82,14 +81,14 @@ def test_file_data_sink_delta():
 
 
 def test_file_data_sink_stream():
-    dirpath = os.path.join(paths.tmp, "df_slv_sink_stream/")
-    if os.path.exists(dirpath):
+    dirpath = paths.tmp / "df_slv_sink_stream/"
+    if dirpath.exists():
         shutil.rmtree(dirpath)
 
     # Write
     sink = FileDataSink(
         path=dirpath,
-        checkpoint_location=os.path.join(paths.tmp, "df_slv_sink_stream/checkpoint/"),
+        checkpoint_location=str(paths.tmp / "df_slv_sink_stream/checkpoint/"),
         format="DELTA",
         mode="APPEND",
     )
@@ -118,14 +117,14 @@ def test_file_data_sink_stream():
 
 
 def test_file_data_sink_polars_parquet():
-    filepath = os.path.join(paths.tmp, "df_slv_polars_sink.parquet")
+    filepath = paths.tmp / "df_slv_polars_sink.parquet"
 
-    if os.path.exists(filepath):
+    if filepath.exists():
         os.remove(filepath)
 
     # Write parquet
     sink = FileDataSink(
-        path=filepath,
+        path=str(filepath),
         format="PARQUET",
     )
     sink.write(df_slv_polars)
@@ -149,8 +148,8 @@ def test_file_data_sink_polars_parquet():
 
 
 def test_file_data_sink_polars_delta():
-    dirpath = os.path.join(paths.tmp, "df_slv_polars_sink.delta")
-    if os.path.exists(dirpath):
+    dirpath = paths.tmp / "df_slv_polars_sink.delta"
+    if dirpath.exists():
         shutil.rmtree(dirpath)
 
     # Write as overwrite
@@ -184,6 +183,11 @@ def test_table_data_sink():
         schema_name="default",
         table_name="slv_stock_prices_sink",
         mode="OVERWRITE",
+        write_options={
+            "path": (
+                paths.tmp / "hive" / f"slv_stock_prices_sink_{str(uuid.uuid4())}"
+            ).as_posix(),
+        },
     )
     assert sink._id == "default.slv_stock_prices_sink"
     assert sink._uuid == "65e2c312-188a-f4e2-3d49-d9f15bec2956"
@@ -207,7 +211,7 @@ def test_table_data_sink():
 
 def test_view_data_sink():
     # Create table
-    table_path = Path(paths.tmp) / "hive" / f"slv_{str(uuid.uuid4())}"
+    table_path = paths.tmp / "hive" / f"slv_{str(uuid.uuid4())}"
     (
         df_slv.write.mode("OVERWRITE")
         .option("path", table_path)
@@ -222,6 +226,9 @@ def test_view_data_sink():
         schema_name="default",
         table_name="slv_aapl",
         table_type="VIEW",
+        write_options={
+            "path": (paths.tmp / "hive" / f"slv_aapl_{str(uuid.uuid4())}").as_posix(),
+        },
     )
     sink2 = TableDataSink(
         schema_name="default",

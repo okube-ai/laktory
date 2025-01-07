@@ -1,5 +1,4 @@
 import json
-import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -16,10 +15,8 @@ logger = get_logger(__name__)
 
 # Event
 with open(
-    os.path.join(
-        paths.data,
-        "./events/yahoo-finance/stock_price/2023/09/01/stock_price_AAPL_20230901T000000000Z.json",
-    )
+    paths.data
+    / "events/yahoo-finance/stock_price/2023/09/01/stock_price_AAPL_20230901T000000000Z.json",
 ) as fp:
     event = json.load(fp)
 event = models.DataEvent(**event)
