@@ -2,7 +2,7 @@
 
 ## [0.5.14] - Unreleased
 ### Added
-* `MemoryDataSource` support for reading dict or list of data
+* `MemoryDataSource` support for reading dict or list of data [[#337](https://github.com/okube-ai/laktory/issues/337)]
 ### Fixed
 * n/a
 ### Updated
