@@ -3,7 +3,6 @@ from datetime import datetime
 from datetime import timezone
 from typing import Union
 
-import numpy as np
 from planck import units
 
 
@@ -41,9 +40,21 @@ def unix_timestamp(
     # > 1577840400.0
     ```
     """
+
+    numeric_types = [int, float]
+    np_installed = False
+    np = None
+    try:
+        import numpy as np
+
+        np_installed = True
+        numeric_types += [np.float64, np.int64]
+    except ModuleNotFoundError:
+        pass
+
     if dt is None:
         dt = datetime.utcnow()
-    elif type(dt) in [int, float, np.float64, np.int64]:
+    elif type(dt) in numeric_types:
         dt = dt
     elif type(dt) == date:  # noqa: E721
         dt = datetime.combine(dt, datetime.min.time())
@@ -59,7 +70,7 @@ def unix_timestamp(
                 raise ValueError(
                     f"String '{dt}' is not a valid ISO 8601 datetime format. Install `dateutil` to support other formats."
                 )
-    elif isinstance(dt, np.datetime64):
+    elif np_installed and isinstance(dt, np.datetime64):
         dt = dt.astype(datetime)
         if isinstance(dt, int):
             dt = dt * units["ns"]["s"]
@@ -113,6 +124,16 @@ def utc_datetime(
     # > 2020-01-01 01:00:00
     ```
     """
+
+    np_installed = False
+    np = None
+    try:
+        import numpy as np
+
+        np_installed = True
+    except ModuleNotFoundError:
+        pass
+
     if not unixtime:
         dt = datetime.utcnow()
     elif isinstance(unixtime, datetime):
@@ -121,7 +142,7 @@ def utc_datetime(
         dt = datetime.combine(unixtime, datetime.min.time())
     elif isinstance(unixtime, str):
         dt = datetime.fromisoformat(unixtime)
-    elif np.isnan(unixtime):
+    elif np_installed and np.isnan(unixtime):
         dt = None
     else:
         dt = datetime.fromtimestamp(unixtime, tz=timezone.utc).replace(tzinfo=None)

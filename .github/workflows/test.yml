@@ -49,6 +49,12 @@ jobs:
           version: "0.5.14"
           python-version: ${{ matrix.python-version }}
 
+      - name: Import with core dependencies
+        if: ${{ env.run_tests == 'true' && success()}}
+        run: make install |
+             python -c "import laktory; print(laktory.__version__)"
+             laktory --version
+
       - name: Run tests
         if: ${{ env.run_tests == 'true' && success()}}
         run: make install-dev test
