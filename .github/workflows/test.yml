@@ -59,7 +59,7 @@ jobs:
 #          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
 #          DATABRICKS_WAREHOUSE_ID: ${{ vars.DATABRICKS_WAREHOUSE_ID }}
 #          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-#          LAKEHOUSE_SA_CONN_STR: ${{ secrets.LAKEHOUSE_SA_CONN_STR }}
+          LAKEHOUSE_SA_CONN_STR: ${{ secrets.LAKEHOUSE_SA_CONN_STR }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 #          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
 #          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
