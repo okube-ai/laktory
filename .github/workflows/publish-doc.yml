@@ -21,6 +21,4 @@ jobs:
           version: "0.5.14"
 
       - name: Publish doc
-        run: |
-          uv venv
-          make publishdoc
+        run: make publishdoc
