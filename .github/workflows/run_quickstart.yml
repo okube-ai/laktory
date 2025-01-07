@@ -63,32 +63,32 @@ jobs:
 
       - name: run quickstart
         run: |
-          source .venv/bin/activate
+          source ../.venv/bin/activate
           laktory quickstart -t ${{ inputs.template }} -b terraform
         working-directory: ${{ env.CWD }}
 
       - name: update stack
         run: |
-          source .venv/bin/activate
+          source ../.venv/bin/activate
           python ../.github/scripts/update_quickstart_stack.py ${{ github.ref }}
         working-directory: ${{ env.CWD }}
 
       - name: laktory init
         run: |
-          source .venv/bin/activate
+          source ../.venv/bin/activate
           laktory init
         working-directory: ${{ env.CWD }}
 
       - name: laktory preview
         run: |
-          source .venv/bin/activate
+          source ../.venv/bin/activate
           set -e
           laktory preview
         working-directory: ${{ env.CWD }}
 
       - name: laktory deploy
         run: |
-          source .venv/bin/activate
+          source ../.venv/bin/activate
           laktory deploy -y
         working-directory: ${{ env.CWD }}
 
@@ -97,27 +97,27 @@ jobs:
       - name: laktory run hello
         if: ${{ inputs.run_workflows }}
         run: |
-          source .venv/bin/activate
+          source ../.venv/bin/activate
           laktory run --job job-hello
         working-directory: ${{ env.CWD }}
 
       - name: laktory run job
         if: ${{ inputs.run_workflows }}
         run: |
-          source .venv/bin/activate
+          source ../.venv/bin/activate
           laktory run --job job-pl-stock-sql
         working-directory: ${{ env.CWD }}
 
       - name: laktory run dlt
         if: ${{ inputs.run_workflows }}
         run: |
-          source .venv/bin/activate
+          source ../.venv/bin/activate
           laktory run --dlt pl-stocks-spark-dlt
         working-directory: ${{ env.CWD }}
 
       - name: laktory destroy
         if: ${{ inputs.destroy }}
         run: |
-          source .venv/bin/activate
+          source ../.venv/bin/activate
           laktory destroy -y
         working-directory: ${{ env.CWD }}
