@@ -8,6 +8,7 @@
 * `uv` as the recommended package manager
 * Formatting and linting with ruff (instead of black)
 * Added ruff formatting and linting as a pre-commit
+* Added pytest fixtures to run tests only when required environment variables are available to support PR from users external to Okube.
 
 ## [0.5.12] - 2024-12-30
 ### Fixed
