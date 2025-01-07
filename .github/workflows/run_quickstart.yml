@@ -40,6 +40,12 @@ jobs:
         with:
           python-version: 3.12
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.14"
+          python-version: "3.12"
+
       - name: env vars
         run: |
           import os
