@@ -27,12 +27,6 @@ jobs:
       - name: Build and publish laktory to pypi
         run: make build publish
         env:
-          FLIT_INDEX_URL: ${{ vars.FLIT_INDEX_URL }}
-          FLIT_USERNAME: ${{ vars.FLIT_USERNAME }}
-          FLIT_PASSWORD: ${{ secrets.FLIT_PASSWORD }}
-          TWINE_REPOSITORY_URL: ${{ vars.TWINE_REPOSITORY_URL }}
-          TWINE_USERNAME: ${{ vars.TWINE_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
           UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
 
   tag:
