@@ -1,6 +1,16 @@
 # Release History
 
-## [0.5.13] - Unreleased
+## [0.5.14] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.5.13] - 2025-01-07
 ### Added
 * Support for Python 3.12
 * Support for Python 3.13
