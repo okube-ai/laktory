@@ -56,6 +56,9 @@ jobs:
       - name: Install Laktory
         run: make install-with-dbks
 
+      - name: Activate venv
+        run: uv venv
+
       - name: make dir
         run: |
           mkdir -p ${{ env.CWD }}
