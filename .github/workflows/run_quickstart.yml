@@ -20,14 +20,14 @@ on:
         description: 'Destroy stack after deployment'
         default: true
 env:
+  # UC Only
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  DATABRICKS_ACCOUNT_ID: ${{ secrets.DATABRICKS_ACCOUNT_ID }}
+  # All
   DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
   DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-#  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-#  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-#  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-#  DATABRICKS_ACCOUNT_ID: ${{ secrets.DATABRICKS_ACCOUNT_ID }}
-#  DATABRICKS_HOST_DEV: ${{ secrets.DATABRICKS_HOST_DEV }}
-#  DATABRICKS_TOKEN_DEV: ${{ secrets.DATABRICKS_TOKEN_DEV }}
   CWD: ${{ inputs.cwd }}
 
 jobs:
@@ -105,14 +105,14 @@ jobs:
         if: ${{ inputs.run_workflows }}
         run: |
           source ../.venv/bin/activate
-          laktory run --job job-pl-stock-sql
+          laktory run --job pl-stocks-job
         working-directory: ${{ env.CWD }}
 
       - name: laktory run dlt
         if: ${{ inputs.run_workflows }}
         run: |
           source ../.venv/bin/activate
-          laktory run --dlt pl-stocks-spark-dlt
+          laktory run --dlt pl-stocks-dlt
         working-directory: ${{ env.CWD }}
 
       - name: laktory destroy
