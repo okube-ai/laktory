@@ -1,5 +1,3 @@
-import os
-
 import pandas as pd
 
 from laktory._testing import Paths
@@ -127,7 +125,7 @@ def test_file_data_source():
 
 def test_file_data_source_read():
     source = FileDataSource(
-        path=os.path.join(paths.data, "./events/yahoo-finance/stock_price"),
+        path=paths.data / "events/yahoo-finance/stock_price",
         as_stream=False,
     )
     df = source.read(spark)
@@ -144,7 +142,7 @@ def test_file_data_source_read():
 
 def test_file_data_source_read_jsonl():
     source = FileDataSource(
-        path=os.path.join(paths.data, "./events/yahoo-finance/stock_price"),
+        path=paths.data / "events/yahoo-finance/stock_price",
         format="JSONL",
     )
     df = source.read(spark)
@@ -162,7 +160,7 @@ def test_file_data_source_read_jsonl():
 def test_file_data_source_read_schema():
     # Schema as dict
     source = FileDataSource(
-        path=os.path.join(paths.data, "./events/yahoo-finance/stock_price"),
+        path=paths.data / "events/yahoo-finance/stock_price",
         as_stream=False,
         schema=schema,
     )
@@ -181,7 +179,7 @@ def test_file_data_source_read_schema():
 
     # Schema as list
     source = FileDataSource(
-        path=os.path.join(paths.data, "./events/yahoo-finance/stock_price"),
+        path=paths.data / "events/yahoo-finance/stock_price",
         as_stream=False,
         schema=[f for f in schema["fields"]],
     )
@@ -196,7 +194,7 @@ def test_file_data_source_read_schema():
 
     # Schema as list
     source = FileDataSource(
-        path=os.path.join(paths.data, "./events/yahoo-finance/stock_price"),
+        path=paths.data / "events/yahoo-finance/stock_price",
         as_stream=False,
         schema="data STRUCT<_created_at STRING, _name STRING, _producer_name STRING, close DOUBLE, created_at STRING, high DOUBLE, low DOUBLE, open DOUBLE, symbol STRING>, description STRING, name STRING, producer STRUCT<description STRING, name STRING, party LONG>",
     )
@@ -212,10 +210,8 @@ def test_file_data_source_read_schema():
 
 def test_file_data_source_polars():
     source = FileDataSource(
-        path=os.path.join(
-            paths.data,
-            "./brz_stock_prices/part-00000-877096dd-1964-482e-9873-76361150a331-c000.snappy.parquet",
-        ),
+        path=paths.data
+        / "brz_stock_prices/part-00000-877096dd-1964-482e-9873-76361150a331-c000.snappy.parquet",
         format="PARQUET",
         dataframe_backend="POLARS",
         filter="data.open > 300",

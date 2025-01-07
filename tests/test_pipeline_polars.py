@@ -1,5 +1,4 @@
 import io
-import os
 import shutil
 import uuid
 from pathlib import Path
@@ -19,13 +18,13 @@ testdir_path = Path(__file__).parent
 def get_pl(clean_path=False):
     pl_path = testdir_path / "tmp" / "test_pipeline_polars" / str(uuid.uuid4())
 
-    with open(os.path.join(paths.data, "pl-polars-local.yaml"), "r") as fp:
+    with open(paths.data / "pl-polars-local.yaml", "r") as fp:
         data = fp.read()
         data = data.replace("{data_dir}", str(testdir_path / "data"))
         data = data.replace("{pl_dir}", str(pl_path))
         pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
 
-    if clean_path and os.path.exists(str(pl_path)):
+    if clean_path and pl_path.exists():
         shutil.rmtree(str(pl_path))
 
     return pl, pl_path

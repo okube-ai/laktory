@@ -4,10 +4,13 @@
 ### Added
 * Support for Python 3.12
 * Support for Python 3.13
+* Contribution guidelines
+* Support for external PR
 ### Updated
 * `uv` as the recommended package manager
 * Formatting and linting with ruff (instead of black)
 * Added ruff formatting and linting as a pre-commit
+* Added pytest fixtures to run tests only when required environment variables are available
 
 ## [0.5.12] - 2024-12-30
 ### Fixed

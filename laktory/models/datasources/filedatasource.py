@@ -1,5 +1,6 @@
 import json
 import os.path
+from pathlib import Path
 from typing import Any
 from typing import Literal
 from typing import Union
@@ -81,6 +82,21 @@ class FileDataSource(BaseDataSource):
     read_options: dict[str, Any] = {}
     schema_definition: Union[str, dict, list] = Field(None, validation_alias="schema")
     schema_location: str = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def path_to_string(cls, data: Any) -> Any:
+        """Required to apply settings before instantiating resources and setting default values"""
+
+        if not isinstance(data, dict):
+            return data
+
+        for k in ["path", "schema_location"]:
+            path = data.get(k, None)
+            if path and isinstance(path, Path):
+                data[k] = str(path)
+
+        return data
 
     @model_validator(mode="after")
     def options(self) -> Any:

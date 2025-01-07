@@ -1,4 +1,3 @@
-import os
 import shutil
 import uuid
 from pathlib import Path
@@ -15,7 +14,7 @@ paths = Paths(__file__)
 
 
 def test_execute():
-    sink_path = os.path.join(paths.tmp, "pl_node_sink")
+    sink_path = paths.tmp / "pl_node_sink"
 
     node = models.PipelineNode(
         name="slv_stock_prices",
@@ -57,7 +56,7 @@ def test_execute():
         ],
     )
     df0 = node.execute()
-    df1 = spark.read.format("PARQUET").load(sink_path)
+    df1 = spark.read.format("PARQUET").load(sink_path.as_posix())
 
     assert df1.columns == df0.columns
     assert df1.columns == ["created_at", "symbol", "close"]
@@ -203,6 +202,6 @@ def test_silver():
 
 if __name__ == "__main__":
     test_execute()
-    test_execute_view()
-    test_bronze()
-    test_silver()
+    # test_execute_view()
+    # test_bronze()
+    # test_silver()

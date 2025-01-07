@@ -49,23 +49,22 @@ jobs:
           version: "0.5.14"
           python-version: ${{ matrix.python-version }}
 
+      - name: Install and Import with core dependencies only
+        if: ${{ env.run_tests == 'true' && success()}}
+        run: |
+          make install 
+          source .venv/bin/activate
+          python -c "import laktory; print(laktory.__version__)" 
+          laktory --version
+
       - name: Run tests
         if: ${{ env.run_tests == 'true' && success()}}
         run: make install-dev test
         env:
-          AWS_REGION: ${{ vars.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-          DATABRICKS_WAREHOUSE_ID: ${{ vars.DATABRICKS_WAREHOUSE_ID }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
           LAKEHOUSE_SA_CONN_STR: ${{ secrets.LAKEHOUSE_SA_CONN_STR }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          DATABRICKS_HOST_DEV: ${{ secrets.DATABRICKS_HOST_DEV }}
-          DATABRICKS_TOKEN_DEV: ${{ secrets.DATABRICKS_TOKEN_DEV }}
 
 #      - name: Publish test coverage
 #        uses: codecov/codecov-action@v1

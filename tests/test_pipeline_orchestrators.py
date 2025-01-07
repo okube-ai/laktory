@@ -1,5 +1,4 @@
 import io
-import os
 from pathlib import Path
 
 import yaml
@@ -13,7 +12,7 @@ testdir_path = Path(__file__).parent
 
 
 def get_pl(extra=None):
-    with open(os.path.join(paths.data, "pl-spark-local.yaml"), "r") as fp:
+    with open(paths.data / "pl-spark-local.yaml", "r") as fp:
         data = fp.read()
         data = data.replace("{data_dir}", "data")
         data = data.replace("{pl_dir}", "")

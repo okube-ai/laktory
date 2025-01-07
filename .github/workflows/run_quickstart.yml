@@ -20,14 +20,14 @@ on:
         description: 'Destroy stack after deployment'
         default: true
 env:
-  DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
-  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+  # UC Only
   AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   DATABRICKS_ACCOUNT_ID: ${{ secrets.DATABRICKS_ACCOUNT_ID }}
-  DATABRICKS_HOST_DEV: ${{ secrets.DATABRICKS_HOST_DEV }}
-  DATABRICKS_TOKEN_DEV: ${{ secrets.DATABRICKS_TOKEN_DEV }}
+  # All
+  DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
   CWD: ${{ inputs.cwd }}
 
 jobs:
@@ -38,7 +38,13 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.12
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.14"
+          python-version: "3.12"
 
       - name: env vars
         run: |
@@ -48,52 +54,70 @@ jobs:
         shell: python
 
       - name: Install Laktory
-        run: make install-with-dbks
+        run: | 
+          make install-with-dbks
 
       - name: make dir
         run: |
           mkdir -p ${{ env.CWD }}
 
       - name: run quickstart
-        run: laktory quickstart -t ${{ inputs.template }} -b terraform
+        run: |
+          source ../.venv/bin/activate
+          laktory quickstart -t ${{ inputs.template }} -b terraform
         working-directory: ${{ env.CWD }}
 
       - name: update stack
-        run: python ../.github/scripts/update_quickstart_stack.py ${{ github.ref }}
+        run: |
+          source ../.venv/bin/activate
+          python ../.github/scripts/update_quickstart_stack.py ${{ github.ref }}
         working-directory: ${{ env.CWD }}
 
       - name: laktory init
-        run: laktory init
+        run: |
+          source ../.venv/bin/activate
+          laktory init
         working-directory: ${{ env.CWD }}
 
       - name: laktory preview
         run: |
+          source ../.venv/bin/activate
           set -e
           laktory preview
         working-directory: ${{ env.CWD }}
 
       - name: laktory deploy
-        run: laktory deploy -y
+        run: |
+          source ../.venv/bin/activate
+          laktory deploy -y
         working-directory: ${{ env.CWD }}
 
       # TODO: Convert to serverless in update_quickstart_stack.py to save
       #       compute time?
       - name: laktory run hello
         if: ${{ inputs.run_workflows }}
-        run: laktory run --job job-hello
+        run: |
+          source ../.venv/bin/activate
+          laktory run --job job-hello
         working-directory: ${{ env.CWD }}
 
       - name: laktory run job
         if: ${{ inputs.run_workflows }}
-        run: laktory run --job job-pl-stock-sql
+        run: |
+          source ../.venv/bin/activate
+          laktory run --job pl-stocks-job
         working-directory: ${{ env.CWD }}
 
       - name: laktory run dlt
         if: ${{ inputs.run_workflows }}
-        run: laktory run --dlt pl-stocks-spark-dlt
+        run: |
+          source ../.venv/bin/activate
+          laktory run --dlt pl-stocks-dlt
         working-directory: ${{ env.CWD }}
 
       - name: laktory destroy
         if: ${{ inputs.destroy }}
-        run: laktory destroy -y
+        run: |
+          source ../.venv/bin/activate
+          laktory destroy -y
         working-directory: ${{ env.CWD }}
