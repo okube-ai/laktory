@@ -115,8 +115,9 @@ class PolarsChainNode(BaseChainNode):
     Examples
     --------
     ```py
-    from laktory import models
     import polars as pl
+
+    from laktory import models
 
     df0 = pl.DataFrame({"x": [1, 2, 2, 3]})
     print(df0.glimpse(return_as_string=True))

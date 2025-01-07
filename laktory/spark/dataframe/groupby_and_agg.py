@@ -67,8 +67,9 @@ def groupby_and_agg(
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import pandas as pd
+
+    import laktory  # noqa: F401
 
     df0 = spark.createDataFrame(
         pd.DataFrame(

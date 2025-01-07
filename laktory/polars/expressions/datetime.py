@@ -25,8 +25,9 @@ def current_timestamp() -> pl.Expr:
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     df = pl.DataFrame({"x": [0.45, 0.55]})
     df = df.with_columns(tstamp=pl.expr.laktory.current_timestamp())

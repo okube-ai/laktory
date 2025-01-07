@@ -124,6 +124,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     ```py
     import io
+
     from laktory import models
 
     pipeline_yaml = '''
@@ -186,6 +187,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     ```py
     import io
+
     from laktory import models
 
     pipeline_yaml = '''
@@ -268,6 +270,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     ```py
     import io
+
     from laktory import models
 
     pipeline_yaml = '''

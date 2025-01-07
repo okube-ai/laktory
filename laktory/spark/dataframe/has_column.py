@@ -23,8 +23,9 @@ def has_column(df: DataFrame, col: str) -> bool:
     --------
 
     ```py
-    import laktory  # noqa: F401
     import pyspark.sql.types as T
+
+    import laktory  # noqa: F401
 
     schema = T.StructType(
         [

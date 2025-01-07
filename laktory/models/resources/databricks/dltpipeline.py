@@ -184,6 +184,7 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     Assuming the configuration yaml file
     ```py
     import io
+
     from laktory import models
 
     # Define pipeline

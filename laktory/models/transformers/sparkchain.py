@@ -32,6 +32,7 @@ class SparkChain(BaseChain):
     --------
     ```py
     import pandas as pd
+
     from laktory import models
 
     df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 3]}))

@@ -32,6 +32,7 @@ class PolarsChain(BaseChain):
     --------
     ```py
     import polars as pl
+
     from laktory import models
 
     df0 = pl.DataFrame({"x": [1, 2, 3]})

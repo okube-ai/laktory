@@ -28,8 +28,9 @@ def unix_timestamp(
     Examples
     --------
     ```py
-    from laktory.datetime import unix_timestamp
     from datetime import datetime
+
+    from laktory.datetime import unix_timestamp
 
     ts = unix_timestamp("2020-01-01T01:00:00")
     print(ts)

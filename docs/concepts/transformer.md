@@ -31,6 +31,7 @@ here is how you would do it with `SparkChain`
 
 ```python title="pipeline.yaml"
 import pandas as pd
+
 from laktory import models
 
 df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 2, 3]}))

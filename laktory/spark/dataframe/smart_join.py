@@ -61,6 +61,7 @@ def smart_join(
     --------
     ```py
     import pandas as pd
+
     import laktory  # noqa: F401
 
     df_prices = spark.createDataFrame(

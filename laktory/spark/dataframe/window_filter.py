@@ -43,9 +43,9 @@ def window_filter(
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import pyspark.sql.functions as F
 
+    import laktory  # noqa: F401
     from laktory._testing import spark
 
     df0 = spark.createDataFrame(

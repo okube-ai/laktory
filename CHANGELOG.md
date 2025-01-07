@@ -2,7 +2,7 @@
 
 ## [0.5.14] - Unreleased
 ### Added
-* n/a
+* `MemoryDataSource` support for reading dict or list of data
 ### Fixed
 * n/a
 ### Updated

@@ -43,8 +43,9 @@ def window_filter(
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     df0 = pl.DataFrame(
         [

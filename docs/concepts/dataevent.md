@@ -10,9 +10,9 @@ Suppose you have a scheduled- or trigger-based service that fetch stock prices a
 
 Declare the event, assign it some data and publish it
 ```py
-from laktory import models
 from datetime import datetime
 
+from laktory import models
 
 event = models.DataEvent(
     name="stock_price",

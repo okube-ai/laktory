@@ -38,8 +38,9 @@ def roundp(
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import pyspark.sql.functions as F
+
+    import laktory  # noqa: F401
 
     df = spark.createDataFrame([[0.781], [13.0]], ["x"])
     df = df.withColumn("y", F.laktory.roundp("x", p=5))
