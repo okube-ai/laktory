@@ -756,6 +756,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     --------
     ```py
     import io
+
     from laktory import models
 
     # Define job

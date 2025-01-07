@@ -75,8 +75,9 @@ def sql_expr(sql: str) -> pl.Expr:
         Polar expression
 
     ```py
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     exp = pl.Expr.laktory.sql_expr("data.close")
     print(exp)

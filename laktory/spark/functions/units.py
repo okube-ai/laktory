@@ -40,8 +40,9 @@ def convert_units(
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import pyspark.sql.functions as F
+
+    import laktory  # noqa: F401
 
     df = spark.createDataFrame([[1.0]], ["x"])
     df = df.withColumn(

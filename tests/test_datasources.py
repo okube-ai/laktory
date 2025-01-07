@@ -277,6 +277,32 @@ def test_memory_data_source(df0=df0):
     assert df.count() == 3
 
 
+def test_memory_data_source_from_dict():
+    data0 = [{"x": 1, "y": "a"}, {"x": 2, "y": "b"}, {"x": 3, "y": "c"}]
+    data1 = {"x": [1, 2, 3], "y": ["a", "b", "c"]}
+    df_ref = pd.DataFrame(data0)
+
+    # Spark - data0
+    source = MemoryDataSource(data=data0, dataframe_backend="SPARK")
+    df = source.read(spark)
+    assert df.toPandas().equals(df_ref)
+
+    # Spark - data1
+    source = MemoryDataSource(data=data1, dataframe_backend="SPARK")
+    df = source.read(spark)
+    assert df.toPandas().equals(df_ref)
+
+    # Polars - data0
+    source = MemoryDataSource(data=data0, dataframe_backend="POLARS")
+    df = source.read(spark)
+    assert df.collect().to_pandas().equals(df_ref)
+
+    # Polars - data1
+    source = MemoryDataSource(data=data1, dataframe_backend="POLARS")
+    df = source.read(spark)
+    assert df.collect().to_pandas().equals(df_ref)
+
+
 def test_table_data_source():
     source = TableDataSource(
         catalog_name="dev",
@@ -296,4 +322,5 @@ if __name__ == "__main__":
     test_file_data_source_read_schema()
     test_file_data_source_polars()
     test_memory_data_source()
+    test_memory_data_source_from_dict()
     test_table_data_source()

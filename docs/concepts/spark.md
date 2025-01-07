@@ -11,8 +11,9 @@ To facilitate the transformation of your data Laktory extends spark native funct
 The first extension is the provision of a library of functions that can be used to build columns from other columns or constants.
 
 ```py
-import laktory  # noqa: F401
 import pyspark.sql.functions as F
+
+import laktory  # noqa: F401
 
 df = spark.createDataFrame([{"x": 1}, {"x": 2}, {"x": 3}])
 df = df.withColumn("y", F.laktory.convert_units("x", "ft", "m"))

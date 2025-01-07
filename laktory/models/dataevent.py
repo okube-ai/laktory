@@ -53,8 +53,9 @@ class DataEvent(BaseModel):
     --------
     This is example one
     ```py
-    from laktory import models
     from datetime import datetime
+
+    from laktory import models
 
     event = models.DataEvent(
         name="stock_price",

@@ -23,8 +23,9 @@ def has_column(df: pl.DataFrame, col: str) -> bool:
     --------
 
     ```py
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     df = pl.DataFrame(
         {

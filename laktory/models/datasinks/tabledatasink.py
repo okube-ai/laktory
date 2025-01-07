@@ -40,8 +40,9 @@ class TableDataSink(BaseDataSink):
     Examples
     ---------
     ```python
-    from laktory import models
     import pandas as pd
+
+    from laktory import models
 
     df = spark.createDataFrame(
         pd.DataFrame(

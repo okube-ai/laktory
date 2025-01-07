@@ -29,8 +29,8 @@ class Dispatcher:
     Examples
     --------
     ```py tag:skip-run
-    from laktory import models
     from laktory import Dispatcher
+    from laktory import models
 
     with open("./stack.yaml") as fp:
         stack = models.Stack.model_validate_yaml(fp)

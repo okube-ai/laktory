@@ -16,8 +16,9 @@ def signature(df: pl.DataFrame) -> str:
         Result
 
     ```py
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     df = pl.DataFrame({"x": [1, 2, 3], "label": ["a", "b", "c"]})
     print(df.laktory.signature())

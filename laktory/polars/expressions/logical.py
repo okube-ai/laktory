@@ -47,8 +47,9 @@ def compare(
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     df = pl.DataFrame({"x": [0.45, 0.55]})
     df = df.with_columns(

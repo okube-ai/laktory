@@ -36,8 +36,9 @@ def string_split(
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     df = pl.DataFrame({"x": ["price_close"]})
 
@@ -73,8 +74,9 @@ def uuid() -> pl.Expr:
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     df = pl.DataFrame({"id": [0, 1, 2]})
     df = df.with_columns(uuid=pl.Expr.laktory.uuid())

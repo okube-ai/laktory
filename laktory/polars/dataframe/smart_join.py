@@ -40,8 +40,9 @@ def smart_join(
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     df_prices = pl.DataFrame(
         {

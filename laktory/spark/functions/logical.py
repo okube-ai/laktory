@@ -49,8 +49,9 @@ def compare(
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import pyspark.sql.functions as F
+
+    import laktory  # noqa: F401
 
     df = spark.createDataFrame([[0.45], [0.55]], ["x"])
     df = df.withColumn(

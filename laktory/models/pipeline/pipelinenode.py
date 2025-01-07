@@ -97,6 +97,7 @@ class PipelineNode(BaseModel, PipelineChild):
     to disk as a parquet file.
     ```py
     import io
+
     from laktory import models
 
     node_yaml = '''
@@ -120,6 +121,7 @@ class PipelineNode(BaseModel, PipelineChild):
     to a data table.
     ```py
     import io
+
     from laktory import models
 
     node_yaml = '''

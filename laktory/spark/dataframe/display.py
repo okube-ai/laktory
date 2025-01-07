@@ -43,8 +43,9 @@ def display(
     --------
 
     ```py
-    import laktory  # noqa: F401
     import pandas as pd
+
+    import laktory  # noqa: F401
 
     df = spark.createDataFrame(
         pd.DataFrame(

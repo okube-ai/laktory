@@ -20,8 +20,9 @@ def schema_flat(df: DataFrame) -> list[str]:
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import pyspark.sql.types as T
+
+    import laktory  # noqa: F401
 
     schema = T.StructType(
         [

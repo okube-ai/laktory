@@ -36,8 +36,9 @@ def convert_units(
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     df = pl.DataFrame({"x": [1.0]})
     df = df.with_columns(

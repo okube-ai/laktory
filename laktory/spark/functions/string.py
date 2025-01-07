@@ -40,8 +40,8 @@ def string_split(
     Examples
     --------
     ```py
-    from pyspark.sql import SparkSession
     import pyspark.sql.functions as F
+    from pyspark.sql import SparkSession
 
     spark = SparkSession.builder.getOrCreate()
 
@@ -77,8 +77,9 @@ def uuid() -> Column:
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import pyspark.sql.functions as F
+
+    import laktory  # noqa: F401
 
     df = spark.range(3)
     df = df.withColumn("uuid", F.laktory.uuid())

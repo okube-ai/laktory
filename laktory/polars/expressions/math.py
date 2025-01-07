@@ -34,8 +34,9 @@ def roundp(
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     df = pl.DataFrame([[0.781], [13.0]], ["x"])
     df = df.with_columns(y=pl.Expr.laktory.roundp(pl.col("x"), p=5))

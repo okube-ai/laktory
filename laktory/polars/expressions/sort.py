@@ -41,8 +41,9 @@ def row_number() -> pl.Expr:
     Examples
     --------
     ```py
-    import laktory  # noqa: F401
     import polars as pl
+
+    import laktory  # noqa: F401
 
     df = pl.DataFrame(
         {
