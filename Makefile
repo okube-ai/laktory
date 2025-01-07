@@ -27,5 +27,5 @@ publish:
 	uv publish
 
 publishdoc:
-	uv pip install 'mkdocs<1.6' mkdocstrings[python] mkdocs-material mkdocs-video
+	uv pip install 'mkdocs<1.6' 'mkdocstrings[python]' mkdocs-material mkdocs-video
 	mkdocs gh-deploy --force
