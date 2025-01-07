@@ -56,52 +56,68 @@ jobs:
       - name: Install Laktory
         run: | 
           make install-with-dbks
-          source .venv/bin/activate
 
       - name: make dir
         run: |
           mkdir -p ${{ env.CWD }}
 
       - name: run quickstart
-        run: laktory quickstart -t ${{ inputs.template }} -b terraform
+        run: |
+          source .venv/bin/activate
+          laktory quickstart -t ${{ inputs.template }} -b terraform
         working-directory: ${{ env.CWD }}
 
       - name: update stack
-        run: python ../.github/scripts/update_quickstart_stack.py ${{ github.ref }}
+        run: |
+          source .venv/bin/activate
+          python ../.github/scripts/update_quickstart_stack.py ${{ github.ref }}
         working-directory: ${{ env.CWD }}
 
       - name: laktory init
-        run: laktory init
+        run: |
+          source .venv/bin/activate
+          laktory init
         working-directory: ${{ env.CWD }}
 
       - name: laktory preview
         run: |
+          source .venv/bin/activate
           set -e
           laktory preview
         working-directory: ${{ env.CWD }}
 
       - name: laktory deploy
-        run: laktory deploy -y
+        run: |
+          source .venv/bin/activate
+          laktory deploy -y
         working-directory: ${{ env.CWD }}
 
       # TODO: Convert to serverless in update_quickstart_stack.py to save
       #       compute time?
       - name: laktory run hello
         if: ${{ inputs.run_workflows }}
-        run: laktory run --job job-hello
+        run: |
+          source .venv/bin/activate
+          laktory run --job job-hello
         working-directory: ${{ env.CWD }}
 
       - name: laktory run job
         if: ${{ inputs.run_workflows }}
-        run: laktory run --job job-pl-stock-sql
+        run: |
+          source .venv/bin/activate
+          laktory run --job job-pl-stock-sql
         working-directory: ${{ env.CWD }}
 
       - name: laktory run dlt
         if: ${{ inputs.run_workflows }}
-        run: laktory run --dlt pl-stocks-spark-dlt
+        run: |
+          source .venv/bin/activate
+          laktory run --dlt pl-stocks-spark-dlt
         working-directory: ${{ env.CWD }}
 
       - name: laktory destroy
         if: ${{ inputs.destroy }}
-        run: laktory destroy -y
+        run: |
+          source .venv/bin/activate
+          laktory destroy -y
         working-directory: ${{ env.CWD }}
