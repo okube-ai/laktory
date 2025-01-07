@@ -126,6 +126,12 @@ pipeline.execute(spark=spark)
 
 To get started with a more useful example, jump into the [Quickstart](https://www.laktory.ai/quickstart/).
 
+## Get Involved
+Laktory is growing rapidly, and we’d love for you to be part of our journey! Here’s how 
+you can get involved:
+- **Join the Community**: Connect with fellow Laktory users and contributors on our [Slack](http://okube.slack.com/). Share ideas, ask questions, and collaborate!
+- **Suggest Features or Report Issues**: Have an idea for a new feature or encountering an issue? Let us know on [GitHub Issues](https://github.com/okube-ai/laktory/issues). Your feedback helps shape the future of Laktory!
+- Contribute to Laktory: Check out our [contributing guide](CONTRIBUTING.md)  to learn how you can tackle issues and add value to the project.
 
 ## A Lakehouse DataOps Template
 A comprehensive template on how to deploy a lakehouse as code using Laktory is maintained here:
