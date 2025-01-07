@@ -53,7 +53,15 @@ jobs:
         if: ${{ env.run_tests == 'true' && success()}}
         run: |
           make install 
+
+      - name: Import with core dependencies 2
+        if: ${{ env.run_tests == 'true' && success()}}
+        run: |
           python -c "import laktory; print(laktory.__version__)" 
+
+      - name: Import with core dependencies 3
+        if: ${{ env.run_tests == 'true' && success()}}
+        run: |
           laktory --version
 
       - name: Run tests
