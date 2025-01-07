@@ -54,8 +54,9 @@ jobs:
         shell: python
 
       - name: Install Laktory
-        run: make install-with-dbks |
-             source .venv/bin/activate
+        run: | 
+          make install-with-dbks
+          source .venv/bin/activate
 
       - name: make dir
         run: |

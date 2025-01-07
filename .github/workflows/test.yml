@@ -51,9 +51,10 @@ jobs:
 
       - name: Import with core dependencies
         if: ${{ env.run_tests == 'true' && success()}}
-        run: make install |
-             python -c "import laktory; print(laktory.__version__)"
-             laktory --version
+        run: |
+          make install 
+          python -c "import laktory; print(laktory.__version__)" 
+          laktory --version
 
       - name: Run tests
         if: ${{ env.run_tests == 'true' && success()}}
