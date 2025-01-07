@@ -8,7 +8,6 @@ We recommend [uv](https://github.com/astral-sh/uv) to manage your Python environ
 
     First, ensure you have installed [UV](https://github.com/astral-sh/uv), and make sure you have [created and activated](https://docs.astral.sh/uv/pip/environments/#python-environments) a Python 3.9+ virtual environment.
 
-[//]: # (    If you haven't, you can follow our [_setting up your environment_]&#40;https://github.com/narwhals-dev/narwhals/blob/main/CONTRIBUTING.md#option-1-use-uv-recommended&#41; guide.)
     Then, run:
 
     ```terminal
