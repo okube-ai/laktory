@@ -40,8 +40,8 @@ resources:
     # workspace, even if catalogs may be shared across all workspaces.
     databricks.dev:
       alias: dev
-      host: ${vars.DATABRICKS_HOST_DEV}
-      token: ${vars.DATABRICKS_TOKEN_DEV}
+      host: ${vars.DATABRICKS_HOST}
+      token: ${vars.DATABRICKS_TOKEN}
 
 variables:
   workspace_id_dev: 2211091707396001  # TODO: CUSTOMIZE WITH YOUR WORKSPACE ID
