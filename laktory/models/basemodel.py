@@ -2,6 +2,7 @@ import copy
 import json
 import os
 import re
+from copy import deepcopy
 from typing import Any
 from typing import TextIO
 from typing import TypeVar
@@ -22,6 +23,113 @@ def is_pattern(s):
     return r"\$\{" in s
 
 
+def _resolve_values(o, vars) -> Any:
+    """Inject variables into a mutable object"""
+    if isinstance(o, BaseModel):
+        o.inject_vars(inplace=True, vars=vars)
+    elif isinstance(o, list):
+        for i, _o in enumerate(o):
+            o[i] = _resolve_values(_o, vars)
+    elif isinstance(o, dict):
+        for k, _o in o.items():
+            o[k] = _resolve_values(_o, vars)
+    else:
+        o = _resolve_value(o, vars)
+    return o
+
+
+def _resolve_value(o, vars):
+    """Replace variables in a simple object"""
+
+    # Not a string
+    if not isinstance(o, str):
+        return o
+
+    # Resolve custom patterns
+    for pattern, repl in vars.items():
+        if not is_pattern(pattern):
+            continue
+        # if o == pattern:
+        #     o = repl  # required where d is not a string (bool or resource object)
+        elif isinstance(o, str) and re.findall(pattern, o, flags=re.IGNORECASE):
+            o = re.sub(pattern, repl, o, flags=re.IGNORECASE)
+
+    if not isinstance(o, str):
+        return o
+
+    # Resolve ${vars.<name>} syntax
+    pattern = re.compile(r"\$\{vars\.([a-zA-Z_][a-zA-Z0-9_]*)\}")
+    for match in pattern.finditer(o):
+        # Extract the variable name
+        var_name = match.group(1)
+
+        # Resolve the variable value
+        resolved_value = _resolve_variable(var_name, vars)
+
+        # Update the value with the resolved value
+        if isinstance(resolved_value, str):
+            o = o.replace(match.group(0), resolved_value)
+        else:
+            o = resolved_value
+
+            # Recursively resolve element if variable value is a dict or a list
+            if isinstance(o, (list, dict)):
+                o = _resolve_values(o, vars)
+
+    if not isinstance(o, str):
+        return o
+
+    # Resolve ${{ <expression> }} syntax
+    pattern = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
+    for match in pattern.finditer(o):
+        # Extract the variable name
+        expr = match.group(1)
+
+        # Resolve the variable value
+        resolved_value = _resolve_expression(expr, vars)
+
+        # Update the value with the resolved value
+        if isinstance(resolved_value, str):
+            o = o.replace(match.group(0), resolved_value)
+        else:
+            o = resolved_value
+
+    return o
+
+
+def _resolve_variable(name, vars):
+    """Resolve a variable name from the variables or environment."""
+
+    value = vars.get(name, os.getenv(name))
+
+    # Value not found returning original value
+    if value is None:
+        return f"${{vars.{name}}}"  # Default value if not resolved
+
+    # If the resolved value is itself a string with variables, resolve it
+    if isinstance(value, str) and ("${" in value or "$${" in value):
+        value = _resolve_value(value, vars)
+
+    return value
+
+
+def _resolve_expression(expression, vars):
+    """Evaluate an inline expression."""
+    # Translate vars.env to variables_map['env']
+    expression = re.sub(
+        r"\bvars\.([a-zA-Z_][a-zA-Z0-9_]*)\b", r"variables_map['\1']", expression
+    )
+
+    # Prepare a safe evaluation context
+    local_context = deepcopy(vars)
+
+    try:
+        # Allow Python evaluation of conditionals and operations
+        return eval(expression, {}, {"variables_map": local_context})
+    except Exception as e:
+        raise ValueError(f"Error evaluating expression '{expression}': {e}")
+
+
 class BaseModel(_BaseModel):
     """
     Parent class for all Laktory models offering generic functions and
@@ -33,7 +141,11 @@ class BaseModel(_BaseModel):
         Variable values to be resolved when using `inject_vars` method.
     """
 
-    model_config = ConfigDict(extra="forbid")
+    # model_config = ConfigDict(validate_assignment=True)
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_assignment=True,  # Required when injecting complex variables to resolve target model
+    )
     variables: dict[str, Any] = Field(default={}, exclude=True)
     _camel_serialization: bool = False
     _singular_serialization: bool = False
@@ -277,63 +389,6 @@ class BaseModel(_BaseModel):
 
         return None
 
-    @staticmethod
-    def _get_patterns(vars):
-        # Build vars patterns
-        patterns = {}
-
-        # Environment variables
-        for k, v in os.environ.items():
-            patterns[f"${{vars.{k.lower()}}}"] = v
-
-        # User-defined variables
-        for k, v in vars.items():
-            # Recursive replace (for vars defined with env vars or previous variables)
-            if isinstance(v, str) and "${vars." in v:
-                for _k in patterns:
-                    if _k.lower() in v.lower():
-                        v = v.lower().replace(_k.lower(), patterns[_k])
-
-            _k = k
-            if not is_pattern(_k):
-                _k = f"${{vars.{_k}}}"
-            patterns[_k.lower()] = v
-
-        # Create patterns
-        keys = list(patterns.keys())
-        for k in keys:
-            v = patterns[k]
-            if isinstance(v, str) and not is_pattern(k):
-                pattern = re.escape(k)
-                pattern = rf"{pattern}"
-                patterns[pattern] = patterns.pop(k)
-
-        return patterns
-
-    def _replace(self, o, vars):
-        """Replace Variables in a simple object"""
-        patterns = self._get_patterns(vars)
-        for pattern, repl in patterns.items():
-            if o == pattern:
-                o = repl  # required where d is not a string (bool or resource object)
-            elif isinstance(o, str) and re.findall(pattern, o, flags=re.IGNORECASE):
-                o = re.sub(pattern, repl, o, flags=re.IGNORECASE)
-        return o
-
-    def _inject_vars(self, o, vars) -> Any:
-        """Inject Variables into a mutable object"""
-        if isinstance(o, BaseModel):
-            o.inject_vars(inplace=True, vars=vars)
-        elif isinstance(o, list):
-            for i, _o in enumerate(o):
-                o[i] = self._inject_vars(_o, vars)
-        elif isinstance(o, dict):
-            for k, _o in o.items():
-                o[k] = self._inject_vars(_o, vars)
-        else:
-            o = self._replace(o, vars)
-        return o
-
     def inject_vars(self, inplace: bool = False, vars: dict = None):
         """
         Inject variables values into a model attributes.
@@ -363,11 +418,12 @@ class BaseModel(_BaseModel):
             Model instance.
         """
 
-        # Setting vars
+        # Fetching vars
         if vars is None:
             vars = {}
-        for k, v in self.variables.items():
-            vars[k] = v
+        vars = deepcopy(vars)
+        vars.update(self.variables)
+        vars = deepcopy(vars)
 
         # Create copy
         if not inplace:
@@ -375,11 +431,13 @@ class BaseModel(_BaseModel):
 
         # Inject into field values
         for k in self.model_fields_set:
+            if k == "variables":
+                continue
             o = getattr(self, k)
             if isinstance(o, BaseModel) or isinstance(o, dict) or isinstance(o, list):
-                self._inject_vars(o, vars)
+                _resolve_values(o, vars)
             else:
-                setattr(self, k, self._replace(o, vars))
+                setattr(self, k, _resolve_value(o, vars))
 
         if not inplace:
             return self
@@ -420,16 +478,15 @@ class BaseModel(_BaseModel):
         # Setting vars
         if vars is None:
             vars = {}
-        for k, v in self.variables.items():
-            vars[k] = v
-        _vars = self._get_patterns(vars)
+        vars = deepcopy(vars)
+        vars.update(self.variables)
 
         # Create copy
         if not inplace:
             dump = copy.deepcopy(dump)
 
         # Inject into field values
-        self._inject_vars(dump, vars)
+        _resolve_values(dump, vars)
 
         if not inplace:
             return dump

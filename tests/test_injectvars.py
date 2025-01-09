@@ -1,117 +1,220 @@
 import os
 
-from laktory._testing import Paths
-from laktory.models.resources.databricks import Schema
-from laktory.models.resources.databricks import Table
-
-paths = Paths(__file__)
-
-env = "dev"
-schema_name = "schema"
+# from laktory._testing import MonkeyPatch
+from laktory.models import BaseModel
 
 
-schema = Schema(
-    name="${vars.env}.${vars.schema_name}",
-    catalog_name="${vars.env}",
-    tables=[
-        Table(
-            name="AAPL",
-            columns=[
-                {
-                    "name": "${resources.close.id}",
-                    "type": "double",
-                },
-                {
-                    "name": "${vars.env}",
-                    "type": "string",
-                },
-                {
-                    "name": "${vars.var1}",
-                    "type": "string",
-                },
-                {
-                    "name": "${vars.var1_}",
-                    "type": "double",
-                },
-                {
-                    "name": "${vars.var2}",
-                    "type": "double",
-                },
-                {
-                    "name": "${vars.var3}",
-                    "type": "double",
-                },
-            ],
+class MonkeyPatch:
+    def __init__(self):
+        self.env0 = {}
+
+    def setenv(self, key, value):
+        self.env0[key] = os.getenv(key, None)
+        os.environ[key] = value
+
+    def cleanup(self):
+        for k, v in self.env0.items():
+            if v is None:
+                del os.environ[k]
+            else:
+                os.environ[k] = v
+
+
+class ClusterLibrary(BaseModel):
+    name: str = None
+    version: str = None
+
+
+class Owner(BaseModel):
+    name: str = None
+    id: int = None
+
+
+class Cluster(BaseModel):
+    id: int | str = None
+    name: str = None
+    size: list[int] = None
+    tags: dict[str, str] | str = None
+    owner: Owner | str = None
+    libraries: list[ClusterLibrary] = None
+    job_id: str = None
+
+
+def test_simple_substitution():
+    c = Cluster(
+        name="${vars.my_cluster}",
+        id="${vars.cluster_id}",
+        tags={"bu": "finance"},
+        variables={
+            "my_cluster": "laktory-cluster",
+            "cluster_id": 23,
+        },
+    ).inject_vars()
+    assert c.name == "laktory-cluster"
+    assert c.id == 23
+
+
+def test_regex():
+    c = Cluster(
+        job_id="${resources.this-job.id}",
+        variables={
+            r"\$\{resources\.(.*?)\}": r"${\1}",
+        },
+    ).inject_vars()
+    assert c.job_id == "${this-job.id}"
+
+
+def test_nested():
+    c = Cluster(
+        name="${vars.cluster_name}",
+        variables={"env": "prd", "cluster_name": "laktory-cluster-${vars.env}"},
+    ).inject_vars()
+    assert c.name == "laktory-cluster-prd"
+    assert c.variables["cluster_name"] == "laktory-cluster-${vars.env}"
+
+
+def test_missing():
+    c = Cluster(name="${vars.na}", variables={}).inject_vars()
+    assert c.name == "${vars.na}"
+
+
+def test_envvar(monkeypatch):
+    monkeypatch.setenv("env", "dev")
+
+    # Simple injection
+    c = Cluster(
+        name="cluster-${vars.env}",
+    ).inject_vars()
+    assert c.name == "cluster-dev"
+
+    # Stack overwrite
+    c = Cluster(name="cluster-${vars.env}", variables={"env": "prd"}).inject_vars()
+    assert c.name == "cluster-prd"
+
+    # Nested
+    c = Cluster(
+        name="${vars.region}", variables={"region": "east-${vars.env}"}
+    ).inject_vars()
+    assert c.name == "east-dev"
+
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
+
+
+def test_submodels(monkeypatch):
+    monkeypatch.setenv("env", "stg")
+
+    c = Cluster(
+        name="cluster-${vars.env}",
+        owner=Owner(name="owner-${vars.env}"),
+        variables={
+            "env": "prd",
+        },
+    ).inject_vars()
+    assert c.name == "cluster-prd"
+    assert c.owner.name == "owner-prd"
+
+    # Submodel overwrite
+    c = Cluster(
+        name="cluster-${vars.env}",
+        owner=Owner(
+            name="owner-${vars.env}",
+            variables={
+                "env": "dev",
+            },
         ),
-    ],
-    variables={
-        "env": env,
-        "schema_name": schema_name,
-        r"\$\{resources\.([\w.]+)\}": r"${ \1 }",
-        "var1": "${vars.VAR1}",
-        "var1_": "${vars.VAR1}_",
-        "var2": "${vars.VAR_TWO}",
-        "var3": "${vars.var1_}",
-    },
-)
+        variables={
+            "env": "prd",
+        },
+    ).inject_vars()
+    assert c.name == "cluster-prd"
+    assert c.owner.name == "owner-dev"
+
+    # Submodel overwrite with env var
+    c = Cluster(
+        name="cluster-${vars.env}",
+        owner=Owner(
+            name="owner-${vars.env}",
+            variables={
+                "env": "dev",
+            },
+        ),
+    ).inject_vars()
+    assert c.name == "cluster-stg"
+    assert c.owner.name == "owner-dev"
+
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
 
 
-def test_inject_stack_vars():
-    schema2 = schema.inject_vars(inplace=False)
-    col_names = [c.name for c in schema2.tables[0].columns]
+def test_expression():
+    # String compare
+    c = Cluster(
+        id="${{ 4 if vars.env == 'prod' else 2 }}",
+        variables={
+            "env": "prod",
+        },
+    ).inject_vars()
+    assert c.id == 4
 
-    # Test values
-    assert schema2.name == "dev.schema"
-    assert schema2.catalog_name == "dev"
-    assert col_names == [
-        "${ close.id }",
-        "dev",
-        "${vars.VAR1}",
-        "${vars.VAR1}_",
-        "${vars.VAR_TWO}",
-        "${vars.VAR1}_",
-    ]
+    # Bool compare
+    c = Cluster(
+        id="${{ 4 if vars.is_dev else 2 }}",
+        variables={
+            "is_dev": True,
+        },
+    ).inject_vars()
+    assert c.id == 4
 
-    # Test inplace
-    schema3 = schema.model_copy(deep=True)
-    # schema2 = schema.inject_vars()
-    schema3.inject_vars(inplace=True)
-    assert schema3.model_dump(exclude_unset=True) == schema2.model_dump(
-        exclude_unset=True
+    # Dict keys
+    c = Cluster(
+        id="${{ vars.sizes[vars.env] }}",
+        variables={
+            "env": "prod",
+            "sizes": {"dev": 2, "prod": 4},
+        },
+    ).inject_vars()
+    assert c.id == 4
+
+
+def test_complex():
+    c = Cluster(
+        tags="${vars.tags}",
+        owner="${vars.owner}",
+        variables={
+            "env": "prd",
+            "tags": {"id": "t1", "env": "${vars.env}"},
+            "owner": {"name": "okube", "id": 0},
+        },
+    ).inject_vars()
+    assert c.owner == Owner(name="okube", id=0)
+    assert c.tags == {"id": "t1", "env": "prd"}
+
+
+def test_dump():
+    c = Cluster(
+        name="${vars.my_cluster}",
+        id="${vars.cluster_id}",
+        tags={"bu": "finance"},
+        variables={
+            "my_cluster": "laktory-cluster",
+            "cluster_id": 23,
+        },
     )
-
-    # Test dump
-    d0 = schema.model_dump(exclude_unset=True)
-    d1 = schema.inject_vars_into_dump(d0, inplace=False)
-    schema.inject_vars_into_dump(d0, inplace=True)
-    d2 = schema2.model_dump(exclude_unset=True)
-    assert d0 == d2
-    assert d1 == d2
-
-
-def test_inject_env_vars():
-    env_vars = {
-        "ENV": "PROD",
-        "VAR1": "VAR1",
-        "VAR_TWO": "VAR2",
-    }
-
-    for k, v in env_vars.items():
-        os.environ[k] = v
-
-    schema2 = schema.inject_vars(inplace=False)
-    col_names = [c.name for c in schema2.tables[0].columns]
-
-    # Test values
-    assert schema2.name == "dev.schema"
-    assert schema2.catalog_name == "dev"
-    assert col_names == ["${ close.id }", "dev", "VAR1", "VAR1_", "VAR2", "VAR1_"]
-
-    # Reset
-    for k in env_vars:
-        del os.environ[k]
+    d = c.model_dump()
+    di = c.inject_vars_into_dump(d, inplace=False)
+    assert c.inject_vars(inplace=False).model_dump() == di
 
 
 if __name__ == "__main__":
-    test_inject_stack_vars()
-    test_inject_env_vars()
+    test_simple_substitution()
+    test_regex()
+    test_nested()
+    test_missing()
+    test_envvar(MonkeyPatch())
+    test_submodels(MonkeyPatch())
+    test_expression()
+    test_complex()
+    test_dump()
