@@ -853,11 +853,15 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     @model_validator(mode="after")
     def update_name(self) -> Any:
         if self.name_prefix:
-            self.name = self.name_prefix + self.name
-            self.name_prefix = ""
+            self.setattr("name", self.name_prefix + self.name)
+            self.setattr("name_prefix", "")
+            # self.name = self.name_prefix + self.name
+            # self.name_prefix = ""
         if self.name_suffix:
-            self.name = self.name + self.name_suffix
-            self.name_suffix = ""
+            self.setattr("name", self.name + self.name_suffix)
+            self.setattr("name_suffix", "")
+            # self.name = self.name + self.name_suffix
+            # self.name_suffix = ""
         return self
 
     # ----------------------------------------------------------------------- #

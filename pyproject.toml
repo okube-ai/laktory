@@ -106,6 +106,7 @@ laktory = "laktory.cli.app:app"
 
 [tool.ruff]
 builtins = ["spark", "display", "dbutils"]
+extend-exclude=["scripts/*"]
 fix = true
 indent-width = 4
 line-length = 88  # default length. standard or many python projects

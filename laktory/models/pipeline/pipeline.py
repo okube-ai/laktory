@@ -354,17 +354,17 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     @model_validator(mode="before")
     @classmethod
     def assign_name(cls, data: Any) -> Any:
-        if (
-            "databricks_dlt" in data.keys()
-            and data["databricks_dlt"].get("name", None) is None
-        ):
-            data["databricks_dlt"]["name"] = data.get("name", None)
+        dlt = data.get("databricks_dlt", None)
+        if dlt and isinstance(dlt, DatabricksDLTOrchestrator):
+            dlt.name = dlt.name or data.get("name", None)
+        elif dlt:
+            dlt["name"] = dlt.get("name", None) or data.get("name", None)
 
-        if (
-            "databricks_job" in data.keys()
-            and data["databricks_job"].get("name", None) is None
-        ):
-            data["databricks_job"]["name"] = data.get("name", None)
+        job = data.get("databricks_job", None)
+        if job and isinstance(job, DatabricksJobOrchestrator):
+            job.name = job.name or data.get("name", None)
+        elif job:
+            job["name"] = job.get("name", None) or data.get("name", None)
 
         return data
 

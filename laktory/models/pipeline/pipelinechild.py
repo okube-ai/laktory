@@ -17,7 +17,8 @@ class PipelineChild(BaseModel):
 
     @model_validator(mode="after")
     def update_children_after_init(self) -> Any:
-        self._parent = None
+        if not hasattr(self, "_parent"):
+            self._parent = None
         self.update_children()
         return self
 

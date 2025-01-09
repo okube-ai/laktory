@@ -68,7 +68,8 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
             table.catalog_name = self.catalog_name
             table.schema_name = self.name
         for volume in self.volumes:
-            volume.catalog_name = self.catalog_name
+            if self.catalog_name:
+                volume.catalog_name = self.catalog_name
             volume.schema_name = self.name
 
     # ----------------------------------------------------------------------- #
