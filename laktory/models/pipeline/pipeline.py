@@ -362,17 +362,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     @model_validator(mode="before")
     @classmethod
     def assign_name(cls, data: Any) -> Any:
-        dlt = data.get("databricks_dlt", None)
-        if dlt and isinstance(dlt, DatabricksDLTOrchestrator):
-            dlt.name = dlt.name or data.get("name", None)
-        elif dlt:
-            dlt["name"] = dlt.get("name", None) or data.get("name", None)
-
-        job = data.get("databricks_job", None)
-        if job and isinstance(job, DatabricksJobOrchestrator):
-            job.name = job.name or data.get("name", None)
-        elif job:
-            job["name"] = job.get("name", None) or data.get("name", None)
+        for k in ["databricks_dlt", "databricks_job"]:
+            o = data.get(k, None)
+            if o and isinstance(o, dict):
+                # orchestrator as a dict
+                o["name"] = o.get("name", None) or data.get("name", None)
+            elif o:
+                # orchestrator as a model
+                o.name = o.name or o.get("name", None)
 
         return data
 
@@ -386,6 +383,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 for n in data["nodes"]:
                     if isinstance(n, dict):
                         n["dataframe_backend"] = n.get("dataframe_backend", df_backend)
+                    else:
+                        n.dataframe_backend = n.dataframe_backend or df_backend
         return data
 
     @model_validator(mode="after")

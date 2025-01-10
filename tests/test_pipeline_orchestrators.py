@@ -45,7 +45,6 @@ databricks_job:
       node_type_id: Standard_DS3_v2
 """
 )
-# name: job-pl-stock-prices
 
 # DLT
 pl_dlt = get_pl(

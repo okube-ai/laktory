@@ -142,10 +142,11 @@ class BaseModel(_BaseModel):
         Variable values to be resolved when using `inject_vars` method.
     """
 
-    # model_config = ConfigDict(validate_assignment=True)
     model_config = ConfigDict(
         extra="forbid",
-        validate_assignment=True,  # Required when injecting complex variables to resolve target model
+        # `validate_assignment` is required when injecting complex variables to resolve
+        # target model and more suitable when models are dynamically updated in code.
+        validate_assignment=True,
     )
     variables: dict[str, Any] = Field(default={}, exclude=True)
     _camel_serialization: bool = False
@@ -364,7 +365,8 @@ class BaseModel(_BaseModel):
     def validate_assignment_disabled(self):
         """
         Updating a model attribute inside a model validator when `validate_assignment`
-        is `True` caused an infinite recursion and must be turned off temporarily.
+        is `True` causes an infinite recursion by design and must be turned off
+        temporarily.
         """
         original_state = self.model_config["validate_assignment"]
         self.model_config["validate_assignment"] = False
@@ -441,7 +443,6 @@ class BaseModel(_BaseModel):
             vars = {}
         vars = deepcopy(vars)
         vars.update(self.variables)
-        vars = deepcopy(vars)
 
         # Create copy
         if not inplace:
@@ -452,9 +453,12 @@ class BaseModel(_BaseModel):
             if k == "variables":
                 continue
             o = getattr(self, k)
+
             if isinstance(o, BaseModel) or isinstance(o, dict) or isinstance(o, list):
+                # Mutable objects will be updated in place
                 _resolve_values(o, vars)
             else:
+                # Simple objects must be updated explicitly
                 setattr(self, k, _resolve_value(o, vars))
 
         if not inplace:

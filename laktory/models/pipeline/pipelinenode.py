@@ -183,16 +183,14 @@ class PipelineNode(BaseModel, PipelineChild):
         """Need to push dataframe_backend which is required to differentiate between spark and polars transformer"""
         df_backend = data.get("dataframe_backend", None)
         if df_backend:
-            if "source" in data.keys():
-                if isinstance(data["source"], dict):
-                    data["source"]["dataframe_backend"] = data["source"].get(
-                        "dataframe_backend", df_backend
-                    )
-            if "transformer" in data.keys():
-                if isinstance(data["transformer"], dict):
-                    data["transformer"]["dataframe_backend"] = data["transformer"].get(
-                        "dataframe_backend", df_backend
-                    )
+            for k in ["source", "transformer"]:
+                o = data.get(k, None)
+                if o and isinstance(o, dict):
+                    # source or transformer as a dict
+                    o["dataframe_backend"] = o.get("dataframe_backend", df_backend)
+                elif o:
+                    # source or transformer as a model
+                    o.dataframe_backend = o.dataframe_backend or df_backend
 
         return data
 
