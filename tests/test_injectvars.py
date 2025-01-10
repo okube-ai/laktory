@@ -1,6 +1,4 @@
-from __future__ import (
-    annotations,
-)  # required to support | operator for type hints on python 3.9
+from typing import Union
 
 from laktory._testing import MonkeyPatch
 from laktory.models import BaseModel
@@ -12,11 +10,11 @@ class Owner(BaseModel):
 
 
 class Cluster(BaseModel):
-    id: int | str = None
+    id: Union[int, str] = None
     name: str = None
     size: list[int] = None
-    tags: dict[str, str] | str = None
-    owner: Owner | str = None
+    tags: Union[dict[str, str], str] = None
+    owner: Union[Owner, str] = None
     job_id: str = None
 
 
