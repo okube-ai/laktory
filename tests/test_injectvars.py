@@ -1,28 +1,5 @@
-import os
-
-# from laktory._testing import MonkeyPatch
+from laktory._testing import MonkeyPatch
 from laktory.models import BaseModel
-
-
-class MonkeyPatch:
-    def __init__(self):
-        self.env0 = {}
-
-    def setenv(self, key, value):
-        self.env0[key] = os.getenv(key, None)
-        os.environ[key] = value
-
-    def cleanup(self):
-        for k, v in self.env0.items():
-            if v is None:
-                del os.environ[k]
-            else:
-                os.environ[k] = v
-
-
-class ClusterLibrary(BaseModel):
-    name: str = None
-    version: str = None
 
 
 class Owner(BaseModel):
@@ -36,7 +13,6 @@ class Cluster(BaseModel):
     size: list[int] = None
     tags: dict[str, str] | str = None
     owner: Owner | str = None
-    libraries: list[ClusterLibrary] = None
     job_id: str = None
 
 
@@ -96,6 +72,32 @@ def test_envvar(monkeypatch):
         name="${vars.region}", variables={"region": "east-${vars.env}"}
     ).inject_vars()
     assert c.name == "east-dev"
+
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
+
+
+def test_case_sensitive(monkeypatch):
+    monkeypatch.setenv("HOST", ".local")
+
+    # All lower
+    c = Cluster(name="cluster-${vars.env}", variables={"env": "prd"}).inject_vars()
+    assert c.name == "cluster-prd"
+
+    # Var name upper
+    c = Cluster(name="cluster-${vars.env}", variables={"ENV": "prd"}).inject_vars()
+    assert c.name == "cluster-prd"
+
+    # Reference upper
+    c = Cluster(name="cluster-${vars.ENV}", variables={"env": "prd"}).inject_vars()
+    assert c.name == "cluster-prd"
+
+    # Env Var
+    c = Cluster(
+        name="cluster${vars.host}",
+    ).inject_vars()
+    assert c.name == "cluster.local"
 
     # Test executed as script
     if isinstance(monkeypatch, MonkeyPatch):
@@ -193,6 +195,24 @@ def test_complex():
     assert c.tags == {"id": "t1", "env": "prd"}
 
 
+def test_inplace():
+    # Not in place
+    c = Cluster(
+        name="${vars.my_cluster}",
+        variables={
+            "my_cluster": "laktory-cluster",
+        },
+    )
+    c1 = c.inject_vars(inplace=False)
+    assert c.name == "${vars.my_cluster}"
+    assert c1.name == "laktory-cluster"
+
+    # In place
+    c1 = c.inject_vars(inplace=True)
+    assert c.name == "laktory-cluster"
+    assert c1 is None
+
+
 def test_dump():
     c = Cluster(
         name="${vars.my_cluster}",
@@ -214,7 +234,9 @@ if __name__ == "__main__":
     test_nested()
     test_missing()
     test_envvar(MonkeyPatch())
+    test_case_sensitive(MonkeyPatch())
     test_submodels(MonkeyPatch())
     test_expression()
     test_complex()
+    test_inplace()
     test_dump()

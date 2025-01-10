@@ -50,8 +50,6 @@ def _resolve_value(o, vars):
     for pattern, repl in vars.items():
         if not is_pattern(pattern):
             continue
-        # if o == pattern:
-        #     o = repl  # required where d is not a string (bool or resource object)
         elif isinstance(o, str) and re.findall(pattern, o, flags=re.IGNORECASE):
             o = re.sub(pattern, repl, o, flags=re.IGNORECASE)
 
@@ -101,7 +99,14 @@ def _resolve_value(o, vars):
 def _resolve_variable(name, vars):
     """Resolve a variable name from the variables or environment."""
 
-    value = vars.get(name, os.getenv(name))
+    # Fetch from model variables
+    _vars = {k.lower(): v for k, v in vars.items()}
+    value = _vars.get(name.lower())
+
+    # Fetch from env variables
+    if value is None:
+        _vars = {k.lower(): v for k, v in os.environ.items()}
+        value = _vars.get(name.lower())
 
     # Value not found returning original value
     if value is None:
@@ -411,16 +416,7 @@ class BaseModel(_BaseModel):
 
     def inject_vars(self, inplace: bool = False, vars: dict = None):
         """
-        Inject variables values into a model attributes.
-
-        There are 2 types of variables:
-
-        - User defined variables expressed as `${vars.variable_name}` and
-          defined in `self.variables` (pulled from stack variables) or as
-          environment variables. Stack variables have priority over environment
-          variables.
-        - Resources output properties expressed as
-         `${resources.resource_name.output}`.
+        Inject model variables values into a model attributes.
 
         Parameters
         ----------
@@ -436,6 +432,34 @@ class BaseModel(_BaseModel):
         -------
         :
             Model instance.
+
+        Examples
+        --------
+        ```py
+        from typing import Union
+
+        from laktory import models
+
+
+        class Cluster(models.BaseModel):
+            name: str = None
+            size: Union[int, str] = None
+
+
+        c = Cluster(
+            name="cluster-${vars.my_cluster}",
+            size="${{ 4 if vars.env == 'prod' else 2 }}",
+            variables={
+                "env": "dev",
+            },
+        ).inject_vars()
+        print(c)
+        # > variables={'env': 'dev'} name='cluster-${vars.my_cluster}' size=2
+        ```
+
+        References
+        ----------
+        * [variables](https://www.laktory.ai/concepts/variables/)
         """
 
         # Fetching vars
@@ -468,21 +492,12 @@ class BaseModel(_BaseModel):
         self, dump: dict[str, Any], inplace: bool = False, vars: dict[str, Any] = None
     ):
         """
-        Inject variables values into a model dump.
-
-        There are 2 types of variables:
-
-        - User defined variables expressed as `${vars.variable_name}` and
-          defined in `self.variables` (pulled from stack variables) or as
-          environment variables. Stack variables have priority over environment
-          variables.
-        - Resources output properties expressed as
-         `${resources.resource_name.output}`.
+        Inject model variables values into a model dump.
 
         Parameters
         ----------
         dump:
-            Model dump (or any other general purpose dictionary)
+            Model dump (or any other general purpose mutable object)
         inplace:
             If `True` model is modified in place. Otherwise, a new model
             instance is returned.
@@ -495,6 +510,32 @@ class BaseModel(_BaseModel):
         -------
         :
             Model dump with injected variables.
+
+
+        Examples
+        --------
+        ```py
+        from laktory import models
+
+        m = models.BaseModel(
+            variables={
+                "env": "dev",
+            },
+        )
+        print(
+            m.inject_vars_into_dump(
+                {
+                    "name": "cluster-${vars.my_cluster}",
+                    "size": "${{ 4 if vars.env == 'prod' else 2 }}",
+                }
+            )
+        )
+        # > {'name': 'cluster-${vars.my_cluster}', 'size': 2}
+        ```
+
+        References
+        ----------
+        * [variables](https://www.laktory.ai/concepts/variables/)
         """
 
         # Setting vars
