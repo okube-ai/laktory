@@ -1,107 +1,208 @@
-When declaring models in Laktory, it's not always practical, desirable, or even possible to hardcode certain properties. 
-For instance, in a pipeline declaration, the catalog name might depend on the environment where the pipeline is deployed.
-```yaml
-name: my-job-dev
-tasks:
-  - task_key: pipeline
-    pipeline_task:
-      pipeline_id: 7dee2833-8287-4d50-8985-4a418e14f8c3
 
-...
-```
-In many cases, you’ll want to reuse the same configuration file across different environments, but with varying values
-for the task key and pipeline ID. Laktory introduces model variables to solve this problem.
+# Variables and Expressions
 
-## User-defined variables
-### Declaration
-User-defined variables, or `vars`, are declared in a model using the `${vars.variable_name}` syntax.
+When declaring models in Laktory, it's not always practical, desirable, or even possible to hardcode certain properties. For example, the catalog name in a pipeline declaration might depend on the deployment environment. In many cases, you'll also want to share properties across multiple objects. Laktory introduces **model variables** to solve this problem.
 
-We can re-write the job declaration by replacing the explicit environment expression `dev` by a variable named `env` and expressed as `${vars.env}`
+## Syntax
 
-```yaml
-name: my-job-${vars.env}
-tasks:
-  - task_key: pipeline
-    pipeline_task:
-      pipeline_id: 7dee2833-8287-4d50-8985-4a418e14f8c3
+To use a variable, follow this syntax: `${vars.VARIABLE_NAME}`.
 
-...
+## Declaration
+
+### From Model
+Any object declared with Laktory can receive variables as part of its data model:
+
+```yaml title="cluster.yaml"
+name: cluster-${vars.env}
+size: ${vars.cluster_size}
+variables:
+  env: prd
+  cluster_size: 2
 ```
 
-### Value Definition
-There are several ways to define the value of these variables.
+When resolved:
 
-#### Environment variable
-Laktory will search for a corresponding environment variable named `VARIABLE_NAME`, such as `ENV` in this case.
+- `name` becomes `cluster-prd`.
+- `size` becomes `2`.
 
-#### Model variables
-Once a model is instantiated, variables can be directly assigned to the model:
-```py title="main.py"
-from laktory import models
+### From Environment
+When resolving a variable, Laktory first searches for declared model variables. If not found, it falls back to environment variables.
 
-with open("my-job.yaml", "r") as fp:
-    job = models.Job.model_validate_yaml(fp)
+### From CLI
+Injecting variables via the CLI is **not currently supported**, but this feature will be available in the future.
 
-job.variables = {"env": "dev"}
+## Properties
+
+### Case Sensitivity
+All variables are **case-insensitive**.
+
+### Inheritance
+Models inherit variables from their parent. They can also declare new variables or override parent variables.
+
+```yaml title="stack.yaml"
+jobs:
+  - name: pipeline-${vars.env}
+    tasks:
+      - name: ingest
+        cluster:
+          size: ${vars.cluster_size}
+      - name: process
+        cluster:
+          size: ${vars.cluster_size}
+  - name: export-${vars.env}
+    tasks:
+      - name: export
+        cluster:
+          size: ${vars.cluster_size}
+    variables:
+      cluster_size: 1
+variables:
+  env: prd
+  cluster_size: 2
 ```
 
-#### Stack variables
-If the model is part of a stack, variables can be defined at the stack level:
+In this example:
 
-```py title="main.py"
-from laktory import models
+- `pipeline-prd` tasks use clusters of size `2`.
+- `export-prd` tasks use clusters of size `1` due to the local override of `cluster_size`.
 
-with open("my-job.yaml", "r") as fp:
-    job = models.Job.model_validate_yaml(fp)
+### Nesting
+Variables can reference other variables:
 
-stack = models.Stack(
-    name="my-stack", resources={"jobs": {"my-job": job}}, variables={"env": "dev"}
-)
+```yaml title="stack.yaml"
+jobs:
+  - name: pipeline-${vars.env}
+    tasks:
+      - name: ${task_prefix}-ingest
+      - name: ${task_prefix}-process
+    variables:
+      task_prefix: ${user}-${env}
+providers:
+  databricks:
+    host: ${vars.databricks_host}
+variables:
+  env: prd
+  user: laktory
+  databricks_host: ${vars.DATABRICKS_HOST_DEV}
 ```
 
-## Pipeline Nodes Variables
-When using SQL statements to define transformations for a DataFrame, it’s often necessary to reference the output of 
-other [pipeline nodes](./pipeline.md) or the output of the previous transformer node. Laktory supports this by using {df} to reference 
-the previous node’s DataFrame and {nodes.node_name} to reference the DataFrame from other specific pipeline nodes.
+Results:
 
-Here is an example:
+- Task names: `laktory-prd-ingest` and `laktory-prd-process`.
+- `databricks_host` resolves to the environment variable `DATABRICKS_HOST_DEV`.
+
+## Types
+
+### Simple
+Supports `int`, `float`, `string`, and `boolean`.
+
+### Complex
+Supports complex objects like lists and dictionaries:
+
+```yaml title="stack.yaml"
+jobs:
+  - name: pipeline-${vars.env}
+    tasks:
+      - name: ingest
+        cluster: ${vars.default_cluster}
+      - name: ${task_prefix}-process
+        cluster: ${vars.default_cluster}
+    tags: ${vars.job_tags}
+variables:
+  env: dev
+  job_tags:
+    - laktory
+    - poc
+  default_cluster:
+    name: default-cluster
+    size: 2
+```
+
+Here:
+
+- `job_tags` is a list of tags.
+- `default_cluster` defines reusable cluster configurations.
+
+### Regex
+For advanced substitutions, use regex patterns:
+
+```yaml title="stack.yaml"
+cluster:
+  - name: ${custom_prefix.catalog.schema}
+variables:
+  r"\$\{custom_prefix\.(.*?)\}": r"${\1}"
+```
+
+Resolving the cluster name yields `catalog.schema`.
+
+## Expressions
+
+Use `${{ PYTHON_EXPRESSION }}` for dynamic attribute values:
+
+```yaml title="stack.yaml"
+cluster:
+  - name: pipeline-${vars.env}
+    size: ${{ 4 if vars.env == 'prd' else 2 }}
+variables:
+  env: prd
+```
+
+Here, `size` evaluates to `4`. Any valid inline python expression is supported.
+
+You can also use variables as dictionary keys:
+
+```yaml title="stack.yaml"
+cluster:
+  - name: pipeline-${vars.env}
+    size: ${{ vars.sizes[vars.env] }}
+variables:
+  env: prd
+  sizes:
+    dev: 2
+    prd: 4
+```
+
+## Special Cases
+
+### Pipeline Nodes
+When defining SQL transformations, Laktory allows referencing:
+
+- The previous node’s DataFrame using `{df}`.
+- Specific nodes using `{nodes.node_name}`.
+
+Example:
+
 ```sql
 SELECT 
-    * 
+  * 
 FROM 
-    {df} 
+  {df} 
 UNION 
-    SELECT * FROM {nodes.node_01} 
+  SELECT * FROM {nodes.node_01} 
 UNION 
-    SELECT * FROM {nodes.node_02}"
+  SELECT * FROM {nodes.node_02}
 ```
 
-## Resources variables
-What if the value of a variable needs to be the output of another deployed resource? Laktory supports resource variables 
-to address this need.
+### Resources
+Variables can reference deployed resource outputs:
 
-### Declaration
-Resource variables are declared using the notation `${resources.resource_name.resource_output}`. For instance, our
-earlier job example could dynamically reference a deployed pipeline:
-
-```yaml
+```yaml title="stack.yaml"
 name: my-job-${vars.env}
 tasks:
   - task_key: pipeline
     pipeline_task:
       pipeline_id: ${resources.my-pipeline.id}
-...
 ```
-Here, the static pipeline ID is replaced by a dynamic reference to the pipeline resource `my-pipeline`.
 
-### Value Definition
-Unlike user-defined variables, values for resource variables are populated automatically by Laktory. The available 
-outputs correspond to those generated by the selected Infrastructure-as-Code backend (Pulumi or Terraform). For 
-resource `x` to be available, it must be deployed as part of the current stack.
+Here:
 
-## Variable injection
+- `pipeline_id` dynamically references `my-pipeline`'s ID.
+
+**Note:** Resource variables are automatically populated by Laktory based on the selected IaC backend (Pulumi or Terraform). The resource must be deployed as part of the current stack.
+
+## Variable Injection
+
 ??? "API Documentation"
     [`laktory.models.BaseModel.inject_vars`][laktory.models.BaseModel]<br>
 
-Variable values are typically injected during deployment, just after serialization (`model_dump`). However, injection can 
-also be triggered manually by invoking the `job.inject_vars()` method.
+Variables are injected during deployment, typically after serialization (`model_dump`). However, you can manually trigger injection using `job.inject_vars()`.

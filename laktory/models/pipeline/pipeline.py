@@ -7,6 +7,7 @@ from typing import Literal
 from typing import Union
 
 import networkx as nx
+from pydantic import field_validator
 from pydantic import model_validator
 
 import laktory
@@ -351,20 +352,24 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     udfs: list[PipelineUDF] = []
     root_path: str = None
 
+    @field_validator("root_path", mode="before")
+    @classmethod
+    def root_path_to_string(cls, value: Any) -> Any:
+        if isinstance(value, Path):
+            value = str(value)
+        return value
+
     @model_validator(mode="before")
     @classmethod
     def assign_name(cls, data: Any) -> Any:
-        if (
-            "databricks_dlt" in data.keys()
-            and data["databricks_dlt"].get("name", None) is None
-        ):
-            data["databricks_dlt"]["name"] = data.get("name", None)
-
-        if (
-            "databricks_job" in data.keys()
-            and data["databricks_job"].get("name", None) is None
-        ):
-            data["databricks_job"]["name"] = data.get("name", None)
+        for k in ["databricks_dlt", "databricks_job"]:
+            o = data.get(k, None)
+            if o and isinstance(o, dict):
+                # orchestrator as a dict
+                o["name"] = o.get("name", None) or data.get("name", None)
+            elif o:
+                # orchestrator as a model
+                o.name = o.name or o.get("name", None)
 
         return data
 
@@ -378,6 +383,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 for n in data["nodes"]:
                     if isinstance(n, dict):
                         n["dataframe_backend"] = n.get("dataframe_backend", df_backend)
+                    else:
+                        n.dataframe_backend = n.dataframe_backend or df_backend
         return data
 
     @model_validator(mode="after")

@@ -8,6 +8,7 @@ from typing import Callable
 from typing import Literal
 from typing import Union
 
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -182,18 +183,23 @@ class PipelineNode(BaseModel, PipelineChild):
         """Need to push dataframe_backend which is required to differentiate between spark and polars transformer"""
         df_backend = data.get("dataframe_backend", None)
         if df_backend:
-            if "source" in data.keys():
-                if isinstance(data["source"], dict):
-                    data["source"]["dataframe_backend"] = data["source"].get(
-                        "dataframe_backend", df_backend
-                    )
-            if "transformer" in data.keys():
-                if isinstance(data["transformer"], dict):
-                    data["transformer"]["dataframe_backend"] = data["transformer"].get(
-                        "dataframe_backend", df_backend
-                    )
+            for k in ["source", "transformer"]:
+                o = data.get(k, None)
+                if o and isinstance(o, dict):
+                    # source or transformer as a dict
+                    o["dataframe_backend"] = o.get("dataframe_backend", df_backend)
+                elif o:
+                    # source or transformer as a model
+                    o.dataframe_backend = o.dataframe_backend or df_backend
 
         return data
+
+    @field_validator("root_path", "expectations_checkpoint_location", mode="before")
+    @classmethod
+    def posixpath_to_string(cls, value: Any) -> Any:
+        if isinstance(value, Path):
+            value = str(value)
+        return value
 
     @model_validator(mode="after")
     def default_values(self) -> Any:
@@ -244,7 +250,7 @@ class PipelineNode(BaseModel, PipelineChild):
                     count += 1
             if count != 1:
                 raise ValueError(
-                    f"Node '{self.name}' must have exactly one primary sink."
+                    f"Node '{self.name}' must have exactly one primary sink. Currently have {count}"
                 )
         return self
 

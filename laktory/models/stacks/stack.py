@@ -447,6 +447,8 @@ class Stack(BaseModel):
         """Required to apply settings before instantiating resources and setting default values"""
         settings = data.get("settings", None)
         if settings:
+            if not isinstance(settings, dict):
+                settings = settings.model_dump()
             LaktorySettings(**settings)
 
         return data

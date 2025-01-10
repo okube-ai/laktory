@@ -37,7 +37,7 @@ pl_job = get_pl(
 name: pl-spark-job
 orchestrator: DATABRICKS_JOB
 dependencies:
-    - yfinance            
+    - yfinance
 databricks_job:
   clusters:
     - name: node-cluster
@@ -45,7 +45,6 @@ databricks_job:
       node_type_id: Standard_DS3_v2
 """
 )
-#   name: job-pl-stock-prices
 
 # DLT
 pl_dlt = get_pl(

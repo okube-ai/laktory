@@ -5,6 +5,7 @@ from typing import Any
 from typing import Literal
 from typing import Union
 
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -73,15 +74,12 @@ class FileDataSink(BaseDataSink):
     format: Literal["CSV", "PARQUET", "DELTA", "JSON", "EXCEL"] = "DELTA"
     path: str
 
-    @model_validator(mode="before")
+    @field_validator("path", mode="before")
     @classmethod
-    def path_to_string(cls, data: Any) -> Any:
-        """Required to apply settings before instantiating resources and setting default values"""
-        path = data.get("path", None)
-        if path and isinstance(path, Path):
-            data["path"] = str(path)
-
-        return data
+    def posixpath_to_string(cls, value: Any) -> Any:
+        if isinstance(value, Path):
+            value = str(value)
+        return value
 
     @model_validator(mode="after")
     def merge_and_format(self) -> Any:

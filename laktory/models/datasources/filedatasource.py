@@ -7,6 +7,7 @@ from typing import Union
 
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -83,20 +84,12 @@ class FileDataSource(BaseDataSource):
     schema_definition: Union[str, dict, list] = Field(None, validation_alias="schema")
     schema_location: str = None
 
-    @model_validator(mode="before")
+    @field_validator("path", "schema_location", mode="before")
     @classmethod
-    def path_to_string(cls, data: Any) -> Any:
-        """Required to apply settings before instantiating resources and setting default values"""
-
-        if not isinstance(data, dict):
-            return data
-
-        for k in ["path", "schema_location"]:
-            path = data.get(k, None)
-            if path and isinstance(path, Path):
-                data[k] = str(path)
-
-        return data
+    def posixpath_to_string(cls, value: Any) -> Any:
+        if isinstance(value, Path):
+            value = str(value)
+        return value
 
     @model_validator(mode="after")
     def options(self) -> Any:
