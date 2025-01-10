@@ -522,14 +522,11 @@ class BaseModel(_BaseModel):
                 "env": "dev",
             },
         )
-        print(
-            m.inject_vars_into_dump(
-                {
-                    "name": "cluster-${vars.my_cluster}",
-                    "size": "${{ 4 if vars.env == 'prod' else 2 }}",
-                }
-            )
-        )
+        data = {
+            "name": "cluster-${vars.my_cluster}",
+            "size": "${{ 4 if vars.env == 'prod' else 2 }}",
+        }
+        print(m.inject_vars_into_dump(data))
         # > {'name': 'cluster-${vars.my_cluster}', 'size': 2}
         ```
 

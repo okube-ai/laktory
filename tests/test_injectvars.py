@@ -1,3 +1,7 @@
+from __future__ import (
+    annotations,
+)  # required to support | operator for type hints on python 3.9
+
 from laktory._testing import MonkeyPatch
 from laktory.models import BaseModel
 
