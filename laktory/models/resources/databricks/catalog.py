@@ -2,6 +2,7 @@ from typing import Literal
 from typing import Union
 
 from pydantic import Field
+from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.cataloggrant import CatalogGrant
@@ -111,11 +112,13 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     schemas: list[Schema] = []
     storage_root: str = None
 
-    def model_post_init(self, __context):
-        super().model_post_init(__context)
+    @model_validator(mode="after")
+    def assign_name(self):
         for schema in self.schemas:
             schema.catalog_name = self.name
-            schema.model_post_init(None)
+            schema.assign_name()
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #

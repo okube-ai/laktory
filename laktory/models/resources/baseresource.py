@@ -122,7 +122,8 @@ class BaseResource(_BaseModel):
     @model_validator(mode="before")
     @classmethod
     def base_lookup(cls, data: Any) -> Any:
-        if "lookup_existing" not in data:
+        lookup_existing = data.get("lookup_existing", None)
+        if not lookup_existing:
             return data
 
         for fname, f in cls.model_fields.items():

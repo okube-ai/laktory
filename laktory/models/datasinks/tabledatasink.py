@@ -89,8 +89,9 @@ class TableDataSink(BaseDataSink):
 
     @model_validator(mode="after")
     def set_table_type(self):
-        if self.view_definition is not None:
-            self.table_type = "VIEW"
+        with self.validate_assignment_disabled():
+            if self.view_definition is not None:
+                self.table_type = "VIEW"
         return self
 
     # ----------------------------------------------------------------------- #

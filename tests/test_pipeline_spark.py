@@ -276,8 +276,7 @@ def test_sql_join():
 
     # Update join
     node = pl.nodes_dict["slv_stock_prices"]
-    t4 = node.transformer.nodes[-1]
-    t4.sql_expr = """
+    sql_expr = """
     SELECT
         *
     FROM
@@ -287,6 +286,9 @@ def test_sql_join():
     ON df.symbol = meta.symbol2
     ;
     """
+    node.transformer.nodes[-1] = node.transformer.nodes[-1].copy(
+        update={"func_name": None, "sql_expr": sql_expr}
+    )
     pl.update_children()
 
     # Create Stream Source
@@ -313,9 +315,9 @@ def test_sql_join():
 
 
 if __name__ == "__main__":
-    # test_dag()
-    # test_children()
-    # test_paths()
-    # test_execute()
-    # test_execute_node()
+    test_dag()
+    test_children()
+    test_paths()
+    test_execute()
+    test_execute_node()
     test_sql_join()

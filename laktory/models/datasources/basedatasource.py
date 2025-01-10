@@ -83,21 +83,22 @@ class BaseDataSource(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def options(self) -> Any:
-        # Overwrite Dataframe type if mock dataframe is provided
-        if is_spark_dataframe(self.mock_df):
-            self.dataframe_backend = "SPARK"
-        elif is_polars_dataframe(self.mock_df):
-            self.dataframe_backend = "POLARS"
+        with self.validate_assignment_disabled():
+            # Overwrite Dataframe type if mock dataframe is provided
+            if is_spark_dataframe(self.mock_df):
+                self.dataframe_backend = "SPARK"
+            elif is_polars_dataframe(self.mock_df):
+                self.dataframe_backend = "POLARS"
 
-        if self.df_backend == "SPARK":
-            pass
-        elif self.df_backend == "POLARS":
-            if self.as_stream:
-                raise ValueError("Polars DataFrames don't support streaming read.")
-            if self.watermark:
-                raise ValueError("Polars DataFrames don't support watermarking.")
-            if self.broadcast:
-                raise ValueError("Polars DataFrames don't support broadcasting.")
+            if self.df_backend == "SPARK":
+                pass
+            elif self.df_backend == "POLARS":
+                if self.as_stream:
+                    raise ValueError("Polars DataFrames don't support streaming read.")
+                if self.watermark:
+                    raise ValueError("Polars DataFrames don't support watermarking.")
+                if self.broadcast:
+                    raise ValueError("Polars DataFrames don't support broadcasting.")
 
         return self
 

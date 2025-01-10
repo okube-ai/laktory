@@ -8,6 +8,7 @@ from typing import Callable
 from typing import Literal
 from typing import Union
 
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -195,6 +196,13 @@ class PipelineNode(BaseModel, PipelineChild):
 
         return data
 
+    @field_validator("root_path", "expectations_checkpoint_location", mode="before")
+    @classmethod
+    def posixpath_to_string(cls, value: Any) -> Any:
+        if isinstance(value, Path):
+            value = str(value)
+        return value
+
     @model_validator(mode="after")
     def default_values(self) -> Any:
         # Default values
@@ -244,7 +252,7 @@ class PipelineNode(BaseModel, PipelineChild):
                     count += 1
             if count != 1:
                 raise ValueError(
-                    f"Node '{self.name}' must have exactly one primary sink."
+                    f"Node '{self.name}' must have exactly one primary sink. Currently have {count}"
                 )
         return self
 

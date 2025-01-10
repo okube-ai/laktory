@@ -87,7 +87,8 @@ class MemoryDataSource(BaseDataSource):
             else:
                 raise ValueError("DataFrame must be of type Spark or Polars")
 
-            self.dataframe_backend = dataframe_backend
+            with self.validate_assignment_disabled():
+                self.dataframe_backend = dataframe_backend
 
         return self
 

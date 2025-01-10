@@ -2,6 +2,7 @@ import copy
 import json
 import os
 import re
+from contextlib import contextmanager
 from copy import deepcopy
 from typing import Any
 from typing import TextIO
@@ -359,8 +360,18 @@ class BaseModel(_BaseModel):
     # Validation ByPass                                                       #
     # ----------------------------------------------------------------------- #
 
-    def setattr(self, name, value):
-        object.__setattr__(self, name, value)
+    @contextmanager
+    def validate_assignment_disabled(self):
+        """
+        Updating a model attribute inside a model validator when `validate_assignment`
+        is `True` caused an infinite recursion and must be turned off temporarily.
+        """
+        original_state = self.model_config["validate_assignment"]
+        self.model_config["validate_assignment"] = False
+        try:
+            yield
+        finally:
+            self.model_config["validate_assignment"] = original_state
 
     # ----------------------------------------------------------------------- #
     # Variables Injection                                                     #

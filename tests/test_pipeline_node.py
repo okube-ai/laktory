@@ -97,7 +97,6 @@ def test_execute_view():
         ],
     )
     node2 = node1.model_copy(deep=True)
-    node2.transformer = None
     node2.sinks = [
         models.TableDataSink(
             schema_name="default",
@@ -108,8 +107,10 @@ def test_execute_view():
             schema_name="default",
             table_name="slv_msft",
             view_definition="SELECT * FROM {df} WHERE symbol = 'MSFT'",
+            is_primary=False,
         ),
     ]
+    node2.transformer = None
     node2.update_children()
     df1 = node1.execute(spark=spark).toPandas()
     node2.execute(spark=spark)
@@ -202,6 +203,6 @@ def test_silver():
 
 if __name__ == "__main__":
     test_execute()
-    # test_execute_view()
-    # test_bronze()
-    # test_silver()
+    test_execute_view()
+    test_bronze()
+    test_silver()

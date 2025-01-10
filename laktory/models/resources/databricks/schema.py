@@ -1,5 +1,7 @@
 from typing import Union
 
+from pydantic import model_validator
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.schemagrant import SchemaGrant
 from laktory.models.resources.databricks.grants import Grants
@@ -62,8 +64,8 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     tables: list[Table] = []
     volumes: list[Volume] = []
 
-    def model_post_init(self, __context):
-        super().model_post_init(__context)
+    @model_validator(mode="after")
+    def assign_name(self):
         for table in self.tables:
             table.catalog_name = self.catalog_name
             table.schema_name = self.name
@@ -71,6 +73,8 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
             if self.catalog_name:
                 volume.catalog_name = self.catalog_name
             volume.schema_name = self.name
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #

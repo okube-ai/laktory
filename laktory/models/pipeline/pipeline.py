@@ -7,6 +7,7 @@ from typing import Literal
 from typing import Union
 
 import networkx as nx
+from pydantic import field_validator
 from pydantic import model_validator
 
 import laktory
@@ -350,6 +351,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     orchestrator: Union[Literal["DATABRICKS_DLT", "DATABRICKS_JOB"], None] = None
     udfs: list[PipelineUDF] = []
     root_path: str = None
+
+    @field_validator("root_path", mode="before")
+    @classmethod
+    def root_path_to_string(cls, value: Any) -> Any:
+        if isinstance(value, Path):
+            value = str(value)
+        return value
 
     @model_validator(mode="before")
     @classmethod
