@@ -159,7 +159,7 @@ class ModelMetaclass(_ModelMetaclass):
 
             if field_name in [
                 "variables",
-                "dataframe_backend",
+                "dataframe_backend",  # TODO: Review why this is required
             ]:
                 continue
 
