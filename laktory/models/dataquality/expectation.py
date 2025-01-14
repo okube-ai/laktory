@@ -10,8 +10,8 @@ from laktory.exceptions import DataQualityCheckFailedError
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
 from laktory.models.dataquality.check import DataQualityCheck
-from laktory.types import AnyDataFrame
-from laktory.types import AnyDataFrameColumn
+from laktory.typing import AnyDataFrame
+from laktory.typing import AnyDataFrameColumn
 
 logger = get_logger(__name__)
 

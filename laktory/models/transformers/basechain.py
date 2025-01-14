@@ -8,7 +8,7 @@ from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.transformers.basechainnode import BaseChainNode
-from laktory.types import AnyDataFrame
+from laktory.typing import AnyDataFrame
 
 if TYPE_CHECKING:
     pass

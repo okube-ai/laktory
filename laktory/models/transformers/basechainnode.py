@@ -18,7 +18,7 @@ from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.polars import PolarsDataFrame
 from laktory.polars import PolarsExpr
-from laktory.types import AnyDataFrame
+from laktory.typing import AnyDataFrame
 
 if TYPE_CHECKING:
     from laktory.models.datasources.basedatasource import BaseDataSource

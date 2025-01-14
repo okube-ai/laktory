@@ -1,5 +1,3 @@
-from typing import Union
-
 from laktory._testing import MonkeyPatch
 from laktory.models import BaseModel
 
@@ -10,11 +8,11 @@ class Owner(BaseModel):
 
 
 class Cluster(BaseModel):
-    id: Union[int, str] = None
+    id: int = None
     name: str = None
     size: list[int] = None
-    tags: Union[dict[str, str], str] = None
-    owner: Union[Owner, str] = None
+    tags: dict[str, int] = None
+    owner: Owner = None
     job_id: str = None
 
 

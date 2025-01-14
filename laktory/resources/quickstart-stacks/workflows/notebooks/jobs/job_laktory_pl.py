@@ -1,4 +1,5 @@
 # COMMAND ----------
+
 dbutils.widgets.text("pipeline_name", "pl-stocks-job")
 dbutils.widgets.text("node_name", "")
 dbutils.widgets.text("full_refresh", "False")

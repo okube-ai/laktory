@@ -144,12 +144,10 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     name: str
     num_clusters: int = None
     # odbc_params
-    spot_instance_policy: Union[
-        Literal["COST_OPTIMIZED", "RELIABILITY_OPTIMIZED"], str
-    ] = None
+    spot_instance_policy: Literal["COST_OPTIMIZED", "RELIABILITY_OPTIMIZED"] = None
     # state
     tags: WarehouseTags = None
-    warehouse_type: Union[Literal["CLASSIC", "PRO"], str] = None
+    warehouse_type: Literal["CLASSIC", "PRO"] = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

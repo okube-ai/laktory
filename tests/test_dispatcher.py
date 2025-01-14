@@ -37,8 +37,6 @@ def test_workspace_client(monkeypatch):
 def test_resources():
     dispatcher = Dispatcher(stack=stack)
 
-    print(dispatcher.resources.keys())
-
     assert list(dispatcher.resources.keys()) == [
         "pl-stock-prices-ut-stack",
         "job-stock-prices-ut-stack",

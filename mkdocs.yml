@@ -245,6 +245,7 @@ nav:
 #        - BaseChainNode: api/models/transformers/basechainnode.md
         - PolarsChain: api/models/transformers/polarschain.md
         - SparkChain: api/models/transformers/sparkchain.md
+    - Types: api/types.md
     - CLI: api/cli.md
     - Spark:
       - DataFrame:

@@ -347,8 +347,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     dataframe_backend: Literal["SPARK", "POLARS"] = None
     dependencies: list[str] = []
     name: str
-    nodes: list[Union[PipelineNode]]
-    orchestrator: Union[Literal["DATABRICKS_DLT", "DATABRICKS_JOB"], None] = None
+    nodes: list[PipelineNode]
+    orchestrator: Literal["DATABRICKS_DLT", "DATABRICKS_JOB", None] = None
     udfs: list[PipelineUDF] = []
     root_path: str = None
 

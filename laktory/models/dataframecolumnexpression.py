@@ -7,7 +7,7 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
-from laktory.types import AnyDataFrameColumn
+from laktory.typing import AnyDataFrameColumn
 
 logger = get_logger(__name__)
 

@@ -2,11 +2,15 @@ import copy
 import json
 import os
 import re
+import typing
 from contextlib import contextmanager
 from copy import deepcopy
 from typing import Any
 from typing import TextIO
 from typing import TypeVar
+from typing import Union
+from typing import get_args
+from typing import get_origin
 
 import inflect
 import yaml
@@ -14,8 +18,10 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_serializer
+from pydantic._internal._model_construction import ModelMetaclass as _ModelMetaclass
 
 from laktory._parsers import _snake_to_camel
+from laktory.typing import var
 
 Model = TypeVar("Model", bound="BaseModel")
 
@@ -136,7 +142,51 @@ def _resolve_expression(expression, vars):
         raise ValueError(f"Error evaluating expression '{expression}': {e}")
 
 
-class BaseModel(_BaseModel):
+class ModelMetaclass(_ModelMetaclass):
+    def __new__(
+        mcs,
+        cls_name: str,
+        bases: tuple[type[Any], ...],
+        namespace: dict[str, Any],
+        **kwargs: Any,
+    ) -> type:
+        # Add var as a possible type hint of each model field to support variables injection
+        for field_name in namespace.get("__annotations__", {}):
+            type_hint = namespace["__annotations__"][field_name]
+
+            if field_name.startswith("_"):
+                continue
+
+            if field_name in [
+                "variables",
+                "dataframe_backend",  # TODO: Review why this is required
+            ]:
+                continue
+
+            if type_hint is None:
+                continue
+
+            if type_hint is typing.Any:
+                continue
+
+            origin = get_origin(type_hint)
+            args = get_args(type_hint)
+            new_type_hint = type_hint
+
+            if origin is list:
+                new_type_hint = list[tuple([Union[args[0], var]])]
+
+            elif origin is dict:
+                new_type_hint = dict[Union[args[0], var], Union[args[1], var]]
+
+            new_type_hint = Union[new_type_hint, var]
+
+            namespace["__annotations__"][field_name] = new_type_hint
+
+        return super().__new__(mcs, cls_name, bases, namespace, **kwargs)
+
+
+class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     """
     Parent class for all Laktory models offering generic functions and
     properties. This `BaseModel` class is derived from `pydantic.BaseModel`.
@@ -196,7 +246,7 @@ class BaseModel(_BaseModel):
                     # Automatic singularization
                     k_singular = k
                     ann = str(fields[k].annotation)
-                    if ann.startswith("list[laktory.models"):
+                    if "list[typing.Union[laktory.models" in ann:
                         k_singular = engine.singular_noun(k) or k
 
                 if k_singular != k:

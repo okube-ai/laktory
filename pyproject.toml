@@ -124,6 +124,8 @@ extend-select = [
 ]
 pydocstyle.convention = "numpy"
 isort.force-single-line = true
+isort.required-imports = [
+]
 
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = [
