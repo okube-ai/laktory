@@ -11,7 +11,7 @@ set_databricks_sdk_upstream()
 import laktory._parsers
 import laktory.models
 import laktory.spark
-import laktory.types
+import laktory.typing
 
 from ._logger import get_logger
 from ._settings import Settings

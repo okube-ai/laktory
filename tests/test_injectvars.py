@@ -2,6 +2,9 @@ from typing import Union
 
 from laktory._testing import MonkeyPatch
 from laktory.models import BaseModel
+from laktory.typing import ResolvableInt
+from laktory.typing import ResolvableString
+from laktory.typing import var
 
 
 class Owner(BaseModel):
@@ -10,12 +13,12 @@ class Owner(BaseModel):
 
 
 class Cluster(BaseModel):
-    id: Union[int, str] = None
-    name: str = None
-    size: list[int] = None
-    tags: Union[dict[str, str], str] = None
-    owner: Union[Owner, str] = None
-    job_id: str = None
+    id: ResolvableInt = None
+    name: ResolvableString = None
+    size: list[ResolvableInt] = None
+    tags: Union[dict[ResolvableString, ResolvableInt], var] = None
+    owner: Union[Owner, var] = None
+    job_id: ResolvableString = None
 
 
 def test_simple_substitution():

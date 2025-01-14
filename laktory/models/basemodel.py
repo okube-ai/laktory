@@ -2,11 +2,15 @@ import copy
 import json
 import os
 import re
+import typing
 from contextlib import contextmanager
 from copy import deepcopy
 from typing import Any
 from typing import TextIO
 from typing import TypeVar
+from typing import Union
+from typing import get_args
+from typing import get_origin
 
 import inflect
 import yaml
@@ -14,8 +18,10 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_serializer
+from pydantic._internal._model_construction import ModelMetaclass as _ModelMetaclass
 
 from laktory._parsers import _snake_to_camel
+from laktory.typing import var
 
 Model = TypeVar("Model", bound="BaseModel")
 
@@ -136,7 +142,48 @@ def _resolve_expression(expression, vars):
         raise ValueError(f"Error evaluating expression '{expression}': {e}")
 
 
-class BaseModel(_BaseModel):
+class ModelMetaclass(_ModelMetaclass):
+    def __new__(
+        mcs,
+        cls_name: str,
+        bases: tuple[type[Any], ...],
+        namespace: dict[str, Any],
+        **kwargs: Any,
+    ) -> type:
+        # Add var as possible type of each model field to support variables injection
+        for field_name in namespace.get("__annotations__", {}):
+            t0 = namespace["__annotations__"][field_name]
+
+            if field_name.startswith("_"):
+                continue
+
+            if field_name in ["variables"]:
+                continue
+
+            if t0 is None:
+                continue
+
+            if t0 is typing.Any:
+                continue
+
+            origin = get_origin(t0)
+            args = get_args(t0)
+            t1 = t0
+
+            if origin is list:
+                t1 = list[*[Union[args[0], var]]]
+
+            elif origin is dict:
+                t1 = dict[Union[args[0], var], Union[args[1], var]]
+
+            t1 = Union[t1, var]
+
+            namespace["__annotations__"][field_name] = t1
+
+        return super().__new__(mcs, cls_name, bases, namespace, **kwargs)
+
+
+class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     """
     Parent class for all Laktory models offering generic functions and
     properties. This `BaseModel` class is derived from `pydantic.BaseModel`.
