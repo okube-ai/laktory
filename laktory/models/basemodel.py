@@ -174,7 +174,7 @@ class ModelMetaclass(_ModelMetaclass):
             new_type_hint = type_hint
 
             if origin is list:
-                new_type_hint = list[*[Union[args[0], var]]]
+                new_type_hint = list[tuple([Union[args[0], var]])]
 
             elif origin is dict:
                 new_type_hint = dict[Union[args[0], var], Union[args[1], var]]
