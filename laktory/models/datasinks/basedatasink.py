@@ -16,7 +16,7 @@ from laktory.polars import PolarsLazyFrame
 from laktory.polars import is_polars_dataframe
 from laktory.spark import SparkDataFrame
 from laktory.spark import is_spark_dataframe
-from laktory.types import AnyDataFrame
+from laktory.typing import AnyDataFrame
 
 logger = get_logger(__name__)
 

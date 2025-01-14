@@ -28,7 +28,7 @@ from laktory.models.transformers.polarschainnode import PolarsChainNode
 from laktory.models.transformers.sparkchain import SparkChain
 from laktory.models.transformers.sparkchainnode import SparkChainNode
 from laktory.spark import SparkSession
-from laktory.types import AnyDataFrame
+from laktory.typing import AnyDataFrame
 
 logger = get_logger(__name__)
 
