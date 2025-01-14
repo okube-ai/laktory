@@ -105,7 +105,7 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     comment: Union[str, None] = None
     force_destroy: bool = True
     grants: list[CatalogGrant] = None
-    isolation_mode: Union[Literal["OPEN", "ISOLATED"], str] = "OPEN"
+    isolation_mode: Literal["OPEN", "ISOLATED"] = "OPEN"
     lookup_existing: CatalogLookup = Field(None, exclude=True)
     name: str
     owner: str = None

@@ -1,7 +1,8 @@
 import re
 from typing import Any
 from typing import Literal
-from typing import Union
+from typing import get_args
+from typing import get_origin
 
 from pydantic import AliasChoices
 from pydantic import BaseModel as _BaseModel
@@ -52,7 +53,7 @@ class ResourceOptions(BaseModel):
     """
 
     # laktory
-    is_enabled: Union[bool, str] = True
+    is_enabled: bool = True
 
     # pulumi + terraform
     depends_on: list[str] = []
@@ -122,23 +123,25 @@ class BaseResource(_BaseModel):
     @model_validator(mode="before")
     @classmethod
     def base_lookup(cls, data: Any) -> Any:
+        if data is None:
+            return data
+
         lookup_existing = data.get("lookup_existing", None)
         if not lookup_existing:
             return data
 
         for fname, f in cls.model_fields.items():
             if f.is_required():
-                if f.annotation == str:  # noqa: E721
+                # Since all field type hints include `var`, we need to isolate
+                # intended type hint
+                ann = get_args(f.annotation)[0]
+                origin = get_origin(ann)
+                args = get_args(ann)
+
+                if ann == str:  # noqa: E721
                     data[fname] = ""
-                elif isinstance(f.annotation, type(Literal[0])):
-                    _ann = (
-                        str(f.annotation)
-                        .replace("typing.Literal[", "")
-                        .replace("]", "")
-                        .replace("'", "")
-                    )
-                    options = _ann.split(",")
-                    data[fname] = options[0]
+                elif origin == Literal:
+                    data[fname] = args[0]
                 elif str(f.annotation).startswith("list"):
                     data[fname] = []
 

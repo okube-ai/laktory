@@ -19,9 +19,6 @@ with open(
     / "events/yahoo-finance/stock_price/2023/09/01/stock_price_AAPL_20230901T000000000Z.json",
 ) as fp:
     event = json.load(fp)
-print(event)
-del event["description"]
-del event["producer"]["description"]
 event = models.DataEvent(**event)
 header = event.model_copy(deep=True)
 header.data = None
@@ -134,7 +131,7 @@ def test_model_dump():
 
 
 def test_event_without_tstamp():
-    d = event.model_dump(exclude_unset=True)
+    d = event.model_dump()
     d["tstamp_in_path"] = False
     e = models.DataEvent(**d)
     assert (

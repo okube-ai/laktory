@@ -150,35 +150,38 @@ class ModelMetaclass(_ModelMetaclass):
         namespace: dict[str, Any],
         **kwargs: Any,
     ) -> type:
-        # Add var as possible type of each model field to support variables injection
+        # Add var as a possible type hint of each model field to support variables injection
         for field_name in namespace.get("__annotations__", {}):
-            t0 = namespace["__annotations__"][field_name]
+            type_hint = namespace["__annotations__"][field_name]
 
             if field_name.startswith("_"):
                 continue
 
-            if field_name in ["variables"]:
+            if field_name in [
+                "variables",
+                "dataframe_backend",
+            ]:
                 continue
 
-            if t0 is None:
+            if type_hint is None:
                 continue
 
-            if t0 is typing.Any:
+            if type_hint is typing.Any:
                 continue
 
-            origin = get_origin(t0)
-            args = get_args(t0)
-            t1 = t0
+            origin = get_origin(type_hint)
+            args = get_args(type_hint)
+            new_type_hint = type_hint
 
             if origin is list:
-                t1 = list[*[Union[args[0], var]]]
+                new_type_hint = list[*[Union[args[0], var]]]
 
             elif origin is dict:
-                t1 = dict[Union[args[0], var], Union[args[1], var]]
+                new_type_hint = dict[Union[args[0], var], Union[args[1], var]]
 
-            t1 = Union[t1, var]
+            new_type_hint = Union[new_type_hint, var]
 
-            namespace["__annotations__"][field_name] = t1
+            namespace["__annotations__"][field_name] = new_type_hint
 
         return super().__new__(mcs, cls_name, bases, namespace, **kwargs)
 
@@ -243,7 +246,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                     # Automatic singularization
                     k_singular = k
                     ann = str(fields[k].annotation)
-                    if ann.startswith("list[laktory.models"):
+                    if "list[typing.Union[laktory.models" in ann:
                         k_singular = engine.singular_noun(k) or k
 
                 if k_singular != k:

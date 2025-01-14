@@ -235,7 +235,7 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     clusters: list[PipelineCluster] = []
     configuration: dict[str, str] = {}
     continuous: bool = None
-    development: Union[bool, str] = None
+    development: bool = None
     edition: Literal["CORE", "PRO", "ADVANCED"] = None
     # filters
     libraries: list[PipelineLibrary] = None
