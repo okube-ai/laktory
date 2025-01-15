@@ -1,4 +1,4 @@
-from pydantic import ConfigDict
+from typing import Any
 
 from laktory._testing import Paths
 from laktory.models import BaseModel
@@ -246,48 +246,57 @@ def test_singular():
 
 
 def test_inject_includes():
-    class Business(BaseModel):
-        model_config = ConfigDict(extra="allow")
+    class Addresss(BaseModel):
+        street: str = None
+        city: str = None
+
+    class Stock(BaseModel):
+        symbol: Any = None
+        address: Addresss = None
+        emails: list[str] = None
+        queries: list[str] = None
+        sector: str = None
+        profitable: bool = None
+
+    class Businesses(BaseModel):
+        apple: Stock = None
+        amazon: Stock = None
+        google: Stock = None
+        microsoft: Stock = None
 
     with open(paths.data / "model_businesses.yaml", "r") as fp:
-        b = Business.model_validate_yaml(fp)
+        b = Businesses.model_validate_yaml(fp)
 
-    data = b.model_dump()
+    data = b.model_dump(exclude_unset=True)
     print(data)
     assert data == {
-        "businesses": {
-            "apple": {
-                "symbol": "aapl",
-                "address": {"street": "Sand Hill", "city": "Palo Alto"},
-                "queries": ["SELECT\n--    name,\n    *\nFROM\n    table\n;"],
-            },
-            "amazon": {
-                "symbol": "amzn",
-                "address": {"street": "Sand Hill", "city": "Palo Alto"},
-                "sector": "tech",
-                "profitable": True,
-            },
-            "google": {
-                "symbol": "googl",
-                "emails": [
-                    "mr.ceo@gmail.com",
-                    "john.doe@gmail.com",
-                    "jane.doe@gmail.com",
-                    "sam.doe@gmail.com",
-                ],
-            },
-            "microsoft": {
-                "symbol": "msft",
-                "address": {"street": "Sand Hill", "city": "Palo Alto"},
-                "sector": "tech",
-                "profitable": True,
-                "emails": [
-                    "john.doe@gmail.com",
-                    "jane.doe@gmail.com",
-                    "sam.doe@gmail.com",
-                ],
-            },
-        }
+        "apple": {
+            "symbol": "aapl",
+            "address": {"street": "Sand Hill", "city": "Palo Alto"},
+            "queries": ["SELECT\n--    name,\n    *\nFROM\n    table\n;"],
+        },
+        "amazon": {
+            "symbol": "amzn",
+            "address": {"street": "Sand Hill", "city": "Palo Alto"},
+            "sector": "tech",
+            "profitable": True,
+        },
+        "google": {
+            "symbol": "googl",
+            "emails": [
+                "mr.ceo@gmail.com",
+                "john.doe@gmail.com",
+                "jane.doe@gmail.com",
+                "sam.doe@gmail.com",
+            ],
+        },
+        "microsoft": {
+            "symbol": "msft",
+            "address": {"street": "Sand Hill", "city": "Palo Alto"},
+            "emails": ["john.doe@gmail.com", "jane.doe@gmail.com", "sam.doe@gmail.com"],
+            "sector": "tech",
+            "profitable": True,
+        },
     }
 
 
