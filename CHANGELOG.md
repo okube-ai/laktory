@@ -1,12 +1,14 @@
 # Release History
 
-## [0.5.14] - Unreleased
+## [0.6.0] - Unreleased
 ### Added
 * `MemoryDataSource` support for reading dict or list of data [[#337](https://github.com/okube-ai/laktory/issues/337)]
 ### Updated
 * Laktory variables to support python expressions [[#335](https://github.com/okube-ai/laktory/issues/335)]
 * Laktory variables to support complex types such as dictionaries and lists
 * All Laktory model fields to allow `str` type for receiving a variable or expression  
+### Breaking Change
+* YAML parser
 
 ## [0.5.13] - 2025-01-07
 ### Added

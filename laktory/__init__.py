@@ -20,3 +20,4 @@ from .datetime import unix_timestamp
 from .datetime import utc_datetime
 from .dispatcher.dispatcher import Dispatcher
 from .version import show_version_info
+from .yaml import RecursiveLoader
