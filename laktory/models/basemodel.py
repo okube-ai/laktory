@@ -1,7 +1,5 @@
 import copy
 import json
-import os
-import re
 import typing
 from contextlib import contextmanager
 from copy import deepcopy
@@ -24,6 +22,7 @@ from laktory._parsers import _resolve_value
 from laktory._parsers import _resolve_values
 from laktory._parsers import _snake_to_camel
 from laktory.typing import var
+from laktory.yaml.recursiveloader import RecursiveLoader
 
 Model = TypeVar("Model", bound="BaseModel")
 
@@ -169,84 +168,22 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         businesses:
           apple:
             symbol: aapl
-            address: ${include.addresses.yaml}
-            <<: ${include.common.yaml}
+            address: !use addresses.yaml
+            <<: !update common.yaml
             emails:
               - jane.doe@apple.com
-              -< ${include.emails.yaml}
+              - extend! emails.yaml
           amazon:
             symbol: amzn
-            address: ${include.addresses.yaml}
-            <<: ${include.common.yaml}
+            address: !use addresses.yaml
+            <<: update! common.yaml
             emails:
               - john.doe@amazon.com
-              -< ${include.emails.yaml}
+              - extend! emails.yaml
         ```
         """
 
-        if hasattr(fp, "name"):
-            dirpath = os.path.dirname(fp.name)
-        else:
-            dirpath = "./"
-
-        def inject_includes(lines):
-            _lines = []
-            for line in lines:
-                line = line.replace("\n", "")
-                indent = " " * (len(line) - len(line.lstrip()))
-                if line.strip().startswith("#"):
-                    continue
-
-                if "${include." in line:
-                    pattern = r"\{include\.(.*?)\}"
-                    matches = re.findall(pattern, line)
-                    path = matches[0]
-                    path0 = path
-                    if not os.path.isabs(path):
-                        path = os.path.join(dirpath, path)
-                    path_ext = path.split(".")[-1]
-                    if path_ext not in ["yaml", "yml", "sql"]:
-                        raise ValueError(
-                            f"Include file of format {path_ext} ({path}) is not supported."
-                        )
-
-                    # Merge include
-                    if "<<: ${include." in line or "-< ${include." in line:
-                        with open(path, "r", encoding="utf-8") as _fp:
-                            new_lines = _fp.readlines()
-                            _lines += [
-                                indent + __line for __line in inject_includes(new_lines)
-                            ]
-
-                    # Direct Include
-                    else:
-                        if path.endswith(".sql"):
-                            with open(path, "r", encoding="utf-8") as _fp:
-                                new_lines = _fp.read()
-                            _lines += [
-                                line.replace(
-                                    "${include." + path0 + "}",
-                                    '"' + new_lines.replace("\n", "\\n") + '"',
-                                )
-                            ]
-
-                        elif path.endswith(".yaml") or path.endswith("yml"):
-                            indent = indent + " " * 2
-                            _lines += [line.split("${include")[0]]
-                            with open(path, "r", encoding="utf-8") as _fp:
-                                new_lines = _fp.readlines()
-                            _lines += [
-                                indent + __line for __line in inject_includes(new_lines)
-                            ]
-
-                else:
-                    _lines += [line]
-
-            return _lines
-
-        lines = inject_includes(fp.readlines())
-        data = yaml.safe_load("\n".join(lines))
-
+        data = RecursiveLoader.load(fp)
         return cls.model_validate(data)
 
     def model_dump_yaml(self, *args, **kwargs):
