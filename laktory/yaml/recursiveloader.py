@@ -2,7 +2,10 @@ from pathlib import Path
 
 import yaml
 
+from laktory._parsers import _resolve_value
+
 MERGE_KEY = "__merge_here"
+VARIABLES_KEY = "variables"
 
 
 # Register the constructors
@@ -10,6 +13,7 @@ class RecursiveLoader(yaml.SafeLoader):
     def __init__(self, stream):
         self.dirpath = Path("./")
         stream = self.preprocess_stream(stream)
+        self.variables = {}
         super().__init__(stream)
 
     def preprocess_stream(self, stream):
@@ -32,7 +36,9 @@ class RecursiveLoader(yaml.SafeLoader):
         filepath = Path(loader.construct_scalar(node))
         if not Path(filepath).is_absolute():
             filepath = loader.dirpath / filepath
-        return str(filepath)
+        filepath = _resolve_value(str(filepath), loader.variables)
+
+        return filepath
 
     @staticmethod
     def inject_constructor(loader, node):
@@ -84,6 +90,13 @@ class RecursiveLoader(yaml.SafeLoader):
     @staticmethod
     def custom_mapping_constructor(loader, node):
         """Custom handling for mappings to support !merge."""
+
+        for key_node, value_node in node.value:
+            key = loader.construct_object(key_node)
+            if key == VARIABLES_KEY:
+                # TODO: Reset when moving to next node of same level
+                loader.variables.update(loader.construct_object(value_node))
+
         mapping = {}
         for key_node, value_node in node.value:
             key = loader.construct_object(key_node)
@@ -100,6 +113,7 @@ class RecursiveLoader(yaml.SafeLoader):
     @staticmethod
     def custom_sequence_constructor(loader, node):
         """Custom handling for sequences to support !append."""
+
         seq = []
         for child in node.value:
             if child.tag == "!append":

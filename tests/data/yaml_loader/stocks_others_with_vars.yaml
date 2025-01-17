@@ -1,0 +1,10 @@
+- name: google
+  symbol: GOOGL
+  prices: !inject ${vars.symbol}_prices.yaml
+  <<: !merge common.yaml
+  variables:
+    symbol: googl
+- name: microsoft
+  symbol: MSFT
+  prices: !inject ${vars.symbol}_prices.yaml
+  <<: !merge common.yaml

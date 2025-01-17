@@ -5,28 +5,82 @@ paths = Paths(__file__)
 
 
 def test_read():
-    filepath = paths.data / "yaml_loader" / "main.yaml"
+    filepath = paths.data / "yaml_loader" / "stocks.yaml"
 
     with open(filepath, "r") as fp:
         data = RecursiveLoader.load(fp)
 
+    print(data)
     assert data == {
         "stocks": [
-            {"name": "microsoft", "symbol": "MSFT", "close": 175.0},
             {
                 "name": "apple",
                 "symbol": "AAPL",
-                "close": 140.0,
-                "first_traded": "june 1981",
-                "open": 138,
-                "high": 141,
-                "low": 137,
+                "prices": {"open": 1.0, "close": 2.0},
+                "exchange": "nasdaq",
             },
-            "googl",
-            "!append: /Users/osoucy/Documents/sources/okube/laktory/tests/data/yaml_loader/${vars.others}.yaml",
+            {
+                "name": "amazon",
+                "symbol": "AMZN",
+                "prices": {"open": 2.0, "close": 4.0},
+                "exchange": "nasdaq",
+            },
+            {
+                "name": "google",
+                "symbol": "GOOGL",
+                "prices": {"open": 5.0, "close": 6.0},
+                "exchange": "nasdaq",
+            },
+            {
+                "name": "microsoft",
+                "symbol": "MSFT",
+                "prices": {"open": 7.0, "close": 8.0},
+                "exchange": "nasdaq",
+            },
         ]
+    }
+
+
+def test_read_with_variables():
+    filepath = paths.data / "yaml_loader" / "stocks_with_vars.yaml"
+
+    with open(filepath, "r") as fp:
+        data = RecursiveLoader.load(fp)
+
+    print(data)
+    assert data == {
+        "stocks": [
+            {
+                "name": "apple",
+                "symbol": "AAPL",
+                "prices": {"open": 1.0, "close": 2.0},
+                "exchange": "nasdaq",
+            },
+            {
+                "name": "amazon",
+                "symbol": "AMZN",
+                "prices": {"open": 2.0, "close": 4.0},
+                "exchange": "nasdaq",
+                "variables": {"symbol": "amzn"},
+            },
+            {
+                "name": "google",
+                "symbol": "GOOGL",
+                "prices": {"open": 5.0, "close": 6.0},
+                "exchange": "nasdaq",
+                "variables": {"symbol": "googl"},
+            },
+            {
+                "name": "microsoft",
+                "symbol": "MSFT",
+                "prices": {"open": 1.0, "close": 2.0},
+                "exchange": "nasdaq",
+            },
+        ],
+        "variables": {"symbol": "aapl"},
     }
 
 
 if __name__ == "__main__":
     test_read()
+    test_read_with_variables()

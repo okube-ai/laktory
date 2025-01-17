@@ -1,8 +1,0 @@
-stocks:
-  - !inject msft.yaml
-  - name: apple
-    symbol: AAPL
-    close: 140.0
-    <<: !merge common.yaml
-  - googl
-  - !append ${vars.others}.yaml
