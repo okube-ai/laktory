@@ -1,10 +1,10 @@
 stocks:
   - name: apple
     symbol: AAPL
-    prices: !inject aapl_prices.yaml
-    <<: !merge common.yaml
+    prices: !use aapl_prices.yaml
+    <<: !update common.yaml
   - name: amazon
     symbol: AMZN
-    prices: !inject amzn_prices.yaml
-    <<: !merge common.yaml
-  - !append stocks_others.yaml
+    prices: !use amzn_prices.yaml
+    <<: !update common.yaml
+  - !extend stocks_others.yaml

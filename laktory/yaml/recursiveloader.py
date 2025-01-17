@@ -10,10 +10,13 @@ VARIABLES_KEY = "variables"
 
 # Register the constructors
 class RecursiveLoader(yaml.SafeLoader):
-    def __init__(self, stream):
+    def __init__(self, stream, parent_loader=None):
         self.dirpath = Path("./")
         stream = self.preprocess_stream(stream)
-        self.variables = {}
+
+        self.variables = []
+        if parent_loader:
+            self.variables = parent_loader.variables
         super().__init__(stream)
 
     def preprocess_stream(self, stream):
@@ -24,19 +27,40 @@ class RecursiveLoader(yaml.SafeLoader):
 
         _lines = []
         for line in stream.readlines():
+            if "${include." in line:
+                raise ValueError(
+                    "The `${include.}` syntax has been deprecated in laktory 0.6.0. Please use !use, !update and !extend tags instead."
+                )
             _lines += [line.replace("<<:", MERGE_KEY + ":")]
+
         return "\n".join(_lines)
 
     @classmethod
-    def load(cls, fp):
-        return yaml.load(fp, Loader=cls)
+    def load(cls, stream, parent_loader=None):
+        loader = cls(stream, parent_loader)
+        try:
+            return loader.get_single_data()
+        finally:
+            loader.dispose()
 
     @staticmethod
     def get_path(loader, node):
         filepath = Path(loader.construct_scalar(node))
+
+        # set absolute path
         if not Path(filepath).is_absolute():
             filepath = loader.dirpath / filepath
-        filepath = _resolve_value(str(filepath), loader.variables)
+        filepath = str(filepath)
+
+        # resolve variables
+        if "${vars." in filepath:
+            variables = {}
+            for _vars in loader.variables:
+                variables.update(_vars)
+            filepath = _resolve_value(str(filepath), variables)
+
+            if "${vars." in filepath:
+                raise ValueError(f"Some variables in {filepath} could not be resolved.")
 
         return filepath
 
@@ -45,24 +69,17 @@ class RecursiveLoader(yaml.SafeLoader):
         """Inject content of another YAML file."""
 
         filepath = loader.get_path(loader, node)
-
-        if "${vars." in str(filepath):
-            return f"!inject: {str(filepath)}"
-
         with open(filepath, "r") as f:
-            return yaml.load(f, Loader=RecursiveLoader)
+            return RecursiveLoader.load(f, parent_loader=loader)
 
     @staticmethod
     def merge_constructor(loader, node):
         """Merge content of another YAML file into the current dictionary."""
 
         filepath = loader.get_path(loader, node)
-
-        if "${vars." in filepath:
-            return [f"{MERGE_KEY}: {filepath}"]
-
         with open(filepath, "r") as f:
-            merge_data = yaml.load(f, Loader=RecursiveLoader)
+            merge_data = RecursiveLoader.load(f, parent_loader=loader)
+
         if not isinstance(merge_data, dict):
             raise TypeError(
                 f"Expected a dictionary in {filepath}, but got {type(merge_data).__name__}"
@@ -74,12 +91,8 @@ class RecursiveLoader(yaml.SafeLoader):
         """Append content of another YAML file to the current list."""
 
         filepath = loader.get_path(loader, node)
-
-        if "${vars." in filepath:
-            return [f"!append: {filepath}"]
-
         with open(filepath, "r") as f:
-            append_data = yaml.load(f, Loader=RecursiveLoader)
+            append_data = RecursiveLoader.load(f, parent_loader=loader)
         if not isinstance(append_data, list):
             raise TypeError(
                 f"Expected a list in {filepath}, but got {type(append_data).__name__}"
@@ -91,22 +104,28 @@ class RecursiveLoader(yaml.SafeLoader):
     def custom_mapping_constructor(loader, node):
         """Custom handling for mappings to support !merge."""
 
+        # read variables
+        _vars = {}
         for key_node, value_node in node.value:
             key = loader.construct_object(key_node)
             if key == VARIABLES_KEY:
-                # TODO: Reset when moving to next node of same level
-                loader.variables.update(loader.construct_object(value_node))
+                _vars = loader.construct_object(value_node)
+        loader.variables += [_vars]
 
+        # read include and merge
         mapping = {}
         for key_node, value_node in node.value:
             key = loader.construct_object(key_node)
             value = loader.construct_object(value_node)
-
-            if isinstance(value, dict) and key == MERGE_KEY:
+            if key == MERGE_KEY and isinstance(value, dict):
                 # Merge the dictionary directly into the parent mapping
                 mapping.update(value)
             else:
                 mapping[key] = value
+
+        # remove variables
+        del loader.variables[-1]
+
         return mapping
 
     # Custom sequence constructor to handle appending
@@ -116,7 +135,7 @@ class RecursiveLoader(yaml.SafeLoader):
 
         seq = []
         for child in node.value:
-            if child.tag == "!append":
+            if child.tag == "!extend":
                 append_data = loader.construct_object(child)
                 seq.extend(append_data)  # Flatten the appended list
             else:
@@ -124,9 +143,9 @@ class RecursiveLoader(yaml.SafeLoader):
         return seq
 
 
-RecursiveLoader.add_constructor("!inject", RecursiveLoader.inject_constructor)
-RecursiveLoader.add_constructor("!merge", RecursiveLoader.merge_constructor)
-RecursiveLoader.add_constructor("!append", RecursiveLoader.append_constructor)
+RecursiveLoader.add_constructor("!use", RecursiveLoader.inject_constructor)
+RecursiveLoader.add_constructor("!update", RecursiveLoader.merge_constructor)
+RecursiveLoader.add_constructor("!extend", RecursiveLoader.append_constructor)
 RecursiveLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG,
     RecursiveLoader.custom_sequence_constructor,

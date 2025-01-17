@@ -1,8 +1,8 @@
 - name: google
   symbol: GOOGL
-  prices: !inject googl_prices.yaml
-  <<: !merge common.yaml
+  prices: !use googl_prices.yaml
+  <<: !update common.yaml
 - name: microsoft
   symbol: MSFT
-  prices: !inject msft_prices.yaml
-  <<: !merge common.yaml
+  prices: !use msft_prices.yaml
+  <<: !update common.yaml

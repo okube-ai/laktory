@@ -1,1 +1,2 @@
 exchange: nasdaq
+<<: !update common2.yaml
