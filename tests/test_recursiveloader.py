@@ -97,4 +97,4 @@ def test_read_with_variables():
 
 if __name__ == "__main__":
     test_read()
-    # test_read_with_variables()
+    test_read_with_variables()
