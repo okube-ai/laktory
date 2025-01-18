@@ -9,7 +9,8 @@
 ### Updated
 * Laktory variables to support python expressions [[#335](https://github.com/okube-ai/laktory/issues/335)]
 * Laktory variables to support complex types such as dictionaries and lists
-* All Laktory model fields to allow `str` type for receiving a variable or expression  
+* All Laktory model fields to allow `str` type for receiving a variable or expression
+* Reference to external YAML file path can use variables injection[[#335](https://github.com/okube-ai/laktory/issues/335)]
 ### Breaking Change
 * Removed support for ${include.*} variables in YAML files.
 * Reference to external YAML files is now relative to the calling file instead of being relative to the stack entry point.
