@@ -29,7 +29,7 @@ class RecursiveLoader(yaml.SafeLoader):
         for line in stream.readlines():
             if "${include." in line:
                 raise ValueError(
-                    "The `${include.}` syntax has been deprecated in laktory 0.6.0. Please use !use, !update and !extend tags instead."
+                    "The `${include.}` syntax has been deprecated in laktory 0.6.0. Please use `!use`, `!update` and `!extend` tags instead."
                 )
             _lines += [line.replace("<<:", MERGE_KEY + ":")]
 
