@@ -1,19 +1,20 @@
+# Laktory Documentation
+
 Laktory is built on top of a collection of nested [pydantic](https://docs.pydantic.dev/latest/concepts/models/) models. 
-Each model is a subclass of `pydantic.BaseModel` and offer a few additional methods and properties. 
+Each model is a subclass of `pydantic.BaseModel` and offers a few additional methods and properties. 
 The serializable nature of these models makes it possible to define a lakehouse using a declarative approach.
 
 ## Types
-Models can generally fall under 2 categories:
+Models generally fall into two categories:
 
-- Deployable: Resources defined with the intent of deploying them to cloud or data platform provider. These resources are found under `laktory.models.resources`. 
-- Executable: Resources defined with the intent of executing them on a local workstation or on a remote compute resource. A notable example is the `laktory.models.pipeline` model.
+- **Deployable**: Resources defined with the intent of deploying them to a cloud or data platform provider. These resources are found under `laktory.models.resources`.
+- **Executable**: Resources defined with the intent of executing them on a local workstation or a remote compute resource. A notable example is the `laktory.models.pipeline` model.
 
 ## Declaration
-Because all models are serializable, they can be declared both directly in python code or as external YAML or JSON files.
-The latter is often preferable in the context of a DataOps approach in which the focus should be on the configuration
-of the models rather than around the boiler plate code surrounding them.
+Because all models are serializable, they can be declared either directly in Python code or as external YAML or JSON files.
+The latter is often preferable in a DataOps approach, where the focus is on configuring models rather than writing boilerplate code.
 
-Let's have a look at how a `Catalog`, `Schema` and `Table` models can be declared using both approaches. 
+Below is an example of how `Catalog`, `Schema`, and `Table` models can be declared using both approaches.
 
 
 === "YAML"
@@ -60,16 +61,15 @@ Let's have a look at how a `Catalog`, `Schema` and `Table` models can be declare
     )
     ```
 
-Using any of the above approaches will result in the exact same `catalog` python object.
+Both approaches result in the exact same `catalog` Python object.
 
 
 ### YAML nesting
-Laktory supports nested yaml files, meaning that you can reference another yaml file 
-within a YAML file by using custom tags.
+Laktory supports nested YAML files, allowing you to reference another YAML file within a YAML file using custom tags.
 
 #### Direct injection
-With the `!use` tag, one can inject the content of a YAML file directly where its
-referenced. Using this approach, the example above could be re-written as
+With the `!use` tag, you can inject the content of a YAML file directly where it is referenced. The example above can be
+rewritten as:
 
 ```yaml title="catalog.yaml"
 name: "production"
@@ -91,8 +91,7 @@ schemas: !use schemas.yaml
 ```
 
 #### List Concatenation
-In addition to direction injection of an external YAML file, laktory also supports `!extend` tag to concatenate two
-lists.
+In addition to direct injection, Laktory also supports the `!extend` tag to concatenate two lists. For example:
 
 Using this tag, the model
 ```yaml title="catalog.yaml"
@@ -117,12 +116,11 @@ schemas:
 - name: silver
 - name: gold
 ```
-This is quite convenient when you want to share some components across multiple objects.
+This is convenient for sharing components across multiple objects.
 
 #### Dictionary merge
-Finally, the `!update` tag is handy to merge the content of two dictionaries.
+The `!update` tag allows merging the content of two dictionaries. For instance:
 
-This combination
 ```yaml title="catalog.yaml"
 name: production
 <<: !update catalog_properties.yaml
@@ -133,16 +131,15 @@ isolation_mode: OPEN
 owner: laktory
 ```
 
-would be the equivalent of
+Is equivalent to:
 ```yaml title="catalog.yaml"
 name: production
 isolation_mode: OPEN
 owner: laktory
 ```
 
-# Variables
-Any Laktory model supports the usage of variables to facilitate parametrization or to
-refere a value that might not be available at declaration time.
+## Variables
+Laktory models support variables to facilitate parameterization or to reference values unavailable at declaration time.
 
 ```yaml title="catalog.yaml"
 name: ${vars.env}
@@ -154,9 +151,8 @@ variables:
     env: prod
 ```
 
-For more information please refer to the [variables](variables.md) documentation.
+For more information, refer to the [variables documentation](variables.md).
 
-# Stack
-The `laktory.models.Stack` model acts as a container for declaring a collection of
-cloud deployable resources. It's the main entry for the Laktory [CLI](cli.md). For
-more information, refer to the [documentation](stack.md).
+## Stack
+The `laktory.models.Stack` model acts as a container for declaring a collection of cloud-deployable resources. It serves as the main entry point for the Laktory [CLI](cli.md). For
+more information, refer to the [stack documentation](stack.md).

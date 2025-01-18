@@ -12,6 +12,7 @@ import laktory._parsers
 import laktory.models
 import laktory.spark
 import laktory.typing
+import laktory.yaml
 
 from ._logger import get_logger
 from ._settings import Settings
@@ -20,4 +21,3 @@ from .datetime import unix_timestamp
 from .datetime import utc_datetime
 from .dispatcher.dispatcher import Dispatcher
 from .version import show_version_info
-from .yaml import RecursiveLoader

@@ -1,5 +1,5 @@
-from laktory import RecursiveLoader
 from laktory._testing import Paths
+from laktory.yaml import RecursiveLoader
 
 paths = Paths(__file__)
 

@@ -6,10 +6,10 @@ backend: terraform
 resources:
 
   # Account Groups
-  databricks_groups: ${include.resources/groups.yaml}
+  databricks_groups: !use resources/groups.yaml
 
   # Account Users
-  databricks_users: ${include.resources/users.yaml}
+  databricks_users: !use resources/users.yaml
 
   # Metastore and external locations are essential for a Unity Catalog
   # deployment, but they require cloud-specific configurations and
@@ -18,7 +18,7 @@ resources:
   # https://github.com/okube-ai/lakehouse-as-code/blob/main/unity-catalog/stack.yaml
 
   # Catalogs
-  databricks_catalogs: ${include.resources/catalogs.yaml}
+  databricks_catalogs: !use resources/catalogs.yaml
 
   # Databricks Providers Configuration
   providers:

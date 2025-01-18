@@ -49,7 +49,7 @@ nodes:
   # source and we use Spark df.drop_duplicates to clean the data.
   transformer:
     nodes:
-    - sql_expr: ${include.sql/slv_stock_prices.sql}
+    - sql_expr: !use ../sql/slv_stock_prices.sql
     - func_name: drop_duplicates
       func_kwargs:
         subset: ["created_at", "symbol"]

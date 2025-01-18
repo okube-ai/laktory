@@ -36,7 +36,55 @@ class RecursiveLoader(yaml.SafeLoader):
         return "\n".join(_lines)
 
     @classmethod
-    def load(cls, stream, parent_loader=None):
+    def load(cls, stream, parent_loader: "RecursiveLoader" = None):
+        """
+        Load yaml file with support for reference to external yaml and sql files using
+        `!use`, `!extend` and `!update` tags.
+        Path to external files can be defined using model or environment variables.
+
+        Custom Tags
+        -----------
+        !use {filepath}:
+            Directly inject the content of the file at `filepath`
+        - !extend {filepath}:
+            Extend the current list with the elements found in the file at `filepath`.
+            Similar to python list.extend method.
+        <<: !update {filepath}:
+            Merge the current dictionary with the content of the dictionary defined at
+            `filepath`. Similar to python dict.update method.
+
+        Parameters
+        ----------
+        stream:
+            file object structured as a yaml file
+        parent_loader:
+            Parent loader if file loader from another loader.
+
+        Returns
+        -------
+        :
+            Dict or list
+
+        Examples
+        --------
+        ```yaml
+        businesses:
+          apple:
+            symbol: aapl
+            address: !use addresses.yaml
+            <<: !update common.yaml
+            emails:
+              - jane.doe@apple.com
+              - extend! emails.yaml
+          amazon:
+            symbol: amzn
+            address: !use addresses.yaml
+            <<: update! common.yaml
+            emails:
+              - john.doe@amazon.com
+              - extend! emails.yaml
+        ```
+        """
         loader = cls(stream, parent_loader)
         try:
             return loader.get_single_data()
@@ -69,6 +117,12 @@ class RecursiveLoader(yaml.SafeLoader):
         """Inject content of another YAML file."""
 
         filepath = loader.get_path(loader, node)
+
+        if filepath.endswith(".sql"):
+            with open(filepath, "r", encoding="utf-8") as _fp:
+                data = _fp.read()
+            return '"' + data.replace('"', "'").replace("\n", "\\n") + '"'
+
         with open(filepath, "r") as f:
             return RecursiveLoader.load(f, parent_loader=loader)
 

@@ -13,22 +13,22 @@ pulumi:
 resources:
 
   # DBFS Files: Stock prices data json file
-  databricks_dbfsfiles: ${include.resources/dbfsfiles.yaml}
+  databricks_dbfsfiles: !use resources/dbfsfiles.yaml
 
   # Notebooks for jobs and pipelines
-  databricks_notebooks: ${include.resources/notebooks.yaml}
+  databricks_notebooks: !use resources/notebooks.yaml
 
   # Simple sample job
   databricks_jobs:
-    job-hello: ${include.resources/job-hello.yaml}
+    job-hello: !use resources/job-hello.yaml
 
   # Laktory Sample Pipelines
   #   - Deployed resources depend on selected orchestrator
   #   - pl-stocks-sql: Deployed as a Job with SQL transformations
   #   - pl-stocks-spark-dlt: Deployed as a Delta Live Tables with spark transformations
   pipelines:
-    pl-stocks-job: ${include.resources/pl-stocks-job.yaml}
-    pl-stocks-dlt: ${include.resources/pl-stocks-dlt.yaml}
+    pl-stocks-job: !use resources/pl-stocks-job.yaml
+    pl-stocks-dlt: !use resources/pl-stocks-dlt.yaml
 
 
 # Environment Specific Settings

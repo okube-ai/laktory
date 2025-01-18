@@ -146,21 +146,32 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     @classmethod
     def model_validate_yaml(cls, fp: TextIO) -> Model:
         """
-            Load model from yaml file object. Other yaml files can be referenced
-            using the ${include.other_yaml_filepath} syntax. You can also merge
-            lists with -< ${include.other_yaml_filepath} and dictionaries with
-            <<: ${include.other_yaml_filepath}. Including multi-lines and
-            commented SQL files is also possible.
+        Load model from yaml file object using laktory.yaml.RecursiveLoader. Supports
+        reference to external yaml and sql files using `!use`, `!extend` and `!update` tags.
+        Path to external files can be defined using model or environment variables.
 
-            Parameters
-            ----------
-            fp:
-                file object structured as a yaml file
+        Referenced path should always be relative to the file they are referenced from.
 
-            Returns
-            -------
-            :
-                Model instance
+        Custom Tags
+        -----------
+        !use {filepath}:
+            Directly inject the content of the file at `filepath`
+        - !extend {filepath}:
+            Extend the current list with the elements found in the file at `filepath`.
+            Similar to python list.extend method.
+        <<: !update {filepath}:
+            Merge the current dictionary with the content of the dictionary defined at
+            `filepath`. Similar to python dict.update method.
+
+        Parameters
+        ----------
+        fp:
+            file object structured as a yaml file
+
+        Returns
+        -------
+        :
+            Model instance
 
         Examples
         --------

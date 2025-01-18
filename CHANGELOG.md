@@ -12,6 +12,7 @@
 * All Laktory model fields to allow `str` type for receiving a variable or expression  
 ### Breaking Change
 * Removed support for ${include.*} variables in YAML files.
+* Reference to external YAML files is now relative to the calling file instead of being relative to the stack entry point.
 
 ## [0.5.13] - 2025-01-07
 ### Added
