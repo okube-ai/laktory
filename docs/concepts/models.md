@@ -51,7 +51,7 @@ Below is an example of how `Catalog`, `Schema`, and `Table` models can be declar
     silver = Table(name="bronze")
     gold = Table(name="gold")
     
-    catalog = Catalog
+    catalog = Catalog(
         name="prod",
         comment="Production catalog",
         schemas=[
