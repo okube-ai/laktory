@@ -1,0 +1,10 @@
+- name: google
+  symbol: GOOGL
+  prices: !use ${vars.symbol}_prices.yaml
+  <<: !update common.yaml
+  variables:
+    symbol: googl
+- name: microsoft
+  symbol: MSFT
+  prices: !use ${vars.symbol}_prices.yaml
+  <<: !update common.yaml

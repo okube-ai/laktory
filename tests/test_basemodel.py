@@ -1,5 +1,3 @@
-from pydantic import ConfigDict
-
 from laktory._testing import Paths
 from laktory.models import BaseModel
 from laktory.models.resources.databricks import Job
@@ -44,39 +42,61 @@ schema = Schema(
 
 
 def test_read_yaml():
-    class OHLC(BaseModel):
+    class Prices(BaseModel):
         open: float = None
-        high: float = None
-        low: float = None
         close: float = None
 
-    class Price(BaseModel):
-        timestamp: float
-        ohlc: OHLC
+    class Stock(BaseModel):
+        name: str = None
+        symbol: str = None
+        prices: Prices = None
+        exchange: str = None
+        fees: float = None
+        rate: float = None
 
-    class StockPrices(BaseModel):
-        symbol: str
-        prices: list[Price]
+    class Stocks(BaseModel):
+        stocks: list[Stock] = None
 
-    with open(paths.data / "stockprices0.yaml", "r") as fp:
-        stockprices = StockPrices.model_validate_yaml(fp)
+    with open(paths.data / "yaml_loader" / "stocks_with_vars.yaml", "r") as fp:
+        b = Stocks.model_validate_yaml(fp)
 
-    assert stockprices.model_dump() == {
-        "symbol": "AAPL",
-        "prices": [
+    data = b.model_dump(exclude_unset=True)
+    print(data)
+    assert data == {
+        "stocks": [
             {
-                "timestamp": 1.0,
-                "ohlc": {"open": 0.0, "high": None, "low": None, "close": 1.0},
+                "name": "apple",
+                "symbol": "AAPL",
+                "prices": {"open": 1.0, "close": 2.0},
+                "exchange": "nasdaq",
+                "fees": 0.5,
+                "rate": 0.1,
             },
             {
-                "timestamp": 2.0,
-                "ohlc": {"open": 1.0, "high": None, "low": None, "close": 2.0},
+                "name": "amazon",
+                "symbol": "AMZN",
+                "prices": {"open": 2.0, "close": 4.0},
+                "exchange": "nasdaq",
+                "fees": 0.5,
+                "rate": 0.1,
             },
             {
-                "timestamp": 3.0,
-                "ohlc": {"open": None, "high": None, "low": 3.0, "close": 4.0},
+                "name": "google",
+                "symbol": "GOOGL",
+                "prices": {"open": 5.0, "close": 6.0},
+                "exchange": "nasdaq",
+                "fees": 0.5,
+                "rate": 0.1,
             },
-        ],
+            {
+                "name": "microsoft",
+                "symbol": "MSFT",
+                "prices": {"open": 1.0, "close": 2.0},
+                "exchange": "nasdaq",
+                "fees": 0.5,
+                "rate": 0.1,
+            },
+        ]
     }
 
 
@@ -245,55 +265,8 @@ def test_singular():
     }
 
 
-def test_inject_includes():
-    class Business(BaseModel):
-        model_config = ConfigDict(extra="allow")
-
-    with open(paths.data / "model_businesses.yaml", "r") as fp:
-        b = Business.model_validate_yaml(fp)
-
-    data = b.model_dump()
-    print(data)
-    assert data == {
-        "businesses": {
-            "apple": {
-                "symbol": "aapl",
-                "address": {"street": "Sand Hill", "city": "Palo Alto"},
-                "queries": ["SELECT\n--    name,\n    *\nFROM\n    table\n;"],
-            },
-            "amazon": {
-                "symbol": "amzn",
-                "address": {"street": "Sand Hill", "city": "Palo Alto"},
-                "sector": "tech",
-                "profitable": True,
-            },
-            "google": {
-                "symbol": "googl",
-                "emails": [
-                    "mr.ceo@gmail.com",
-                    "john.doe@gmail.com",
-                    "jane.doe@gmail.com",
-                    "sam.doe@gmail.com",
-                ],
-            },
-            "microsoft": {
-                "symbol": "msft",
-                "address": {"street": "Sand Hill", "city": "Palo Alto"},
-                "sector": "tech",
-                "profitable": True,
-                "emails": [
-                    "john.doe@gmail.com",
-                    "jane.doe@gmail.com",
-                    "sam.doe@gmail.com",
-                ],
-            },
-        }
-    }
-
-
 if __name__ == "__main__":
     test_read_yaml()
     test_dump_yaml()
     test_camelize()
     test_singular()
-    test_inject_includes()

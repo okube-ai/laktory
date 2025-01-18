@@ -14,7 +14,7 @@ catalog-lqs-dev:
       privileges:
         - ALL_PRIVILEGES
   schemas:
-    -< ${include.resources/schemas.yaml}
+    - !extend schemas.yaml
     - name: sources
     # For simplicity, Volumes are outside the scope of this quickstart, but
     # for a complete example, refer to:
@@ -45,7 +45,7 @@ catalog-lqs-prd:
       privileges:
         - ALL_PRIVILEGES
   schemas:
-    -< ${include.resources/schemas.yaml}
+    - !extend ./schemas.yaml
     - name: sources
     # For simplicity, Volumes are outside the scope of this quickstart, but
     # for a complete example, refer to:

@@ -247,6 +247,7 @@ nav:
         - SparkChain: api/models/transformers/sparkchain.md
     - Types: api/types.md
     - CLI: api/cli.md
+    - RecursiveLoader: api/recursiveloader.md
     - Spark:
       - DataFrame:
         - display: api/spark/dataframe/display.md

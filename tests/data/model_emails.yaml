@@ -1,3 +1,0 @@
-- john.doe@gmail.com
-- jane.doe@gmail.com
-<<: ${include.model_other_emails.yaml}

@@ -1,0 +1,8 @@
+- name: google
+  symbol: GOOGL
+  prices: !use googl_prices.yaml
+  <<: !update common.yaml
+- name: microsoft
+  symbol: MSFT
+  prices: !use msft_prices.yaml
+  <<: !update common.yaml

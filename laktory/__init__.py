@@ -12,6 +12,7 @@ import laktory._parsers
 import laktory.models
 import laktory.spark
 import laktory.typing
+import laktory.yaml
 
 from ._logger import get_logger
 from ._settings import Settings

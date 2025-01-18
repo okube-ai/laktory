@@ -1,7 +1,5 @@
 import copy
 import json
-import os
-import re
 import typing
 from contextlib import contextmanager
 from copy import deepcopy
@@ -20,126 +18,13 @@ from pydantic import Field
 from pydantic import model_serializer
 from pydantic._internal._model_construction import ModelMetaclass as _ModelMetaclass
 
+from laktory._parsers import _resolve_value
+from laktory._parsers import _resolve_values
 from laktory._parsers import _snake_to_camel
 from laktory.typing import var
+from laktory.yaml.recursiveloader import RecursiveLoader
 
 Model = TypeVar("Model", bound="BaseModel")
-
-
-def is_pattern(s):
-    return r"\$\{" in s
-
-
-def _resolve_values(o, vars) -> Any:
-    """Inject variables into a mutable object"""
-    if isinstance(o, BaseModel):
-        o.inject_vars(inplace=True, vars=vars)
-    elif isinstance(o, list):
-        for i, _o in enumerate(o):
-            o[i] = _resolve_values(_o, vars)
-    elif isinstance(o, dict):
-        for k, _o in o.items():
-            o[k] = _resolve_values(_o, vars)
-    else:
-        o = _resolve_value(o, vars)
-    return o
-
-
-def _resolve_value(o, vars):
-    """Replace variables in a simple object"""
-
-    # Not a string
-    if not isinstance(o, str):
-        return o
-
-    # Resolve custom patterns
-    for pattern, repl in vars.items():
-        if not is_pattern(pattern):
-            continue
-        elif isinstance(o, str) and re.findall(pattern, o, flags=re.IGNORECASE):
-            o = re.sub(pattern, repl, o, flags=re.IGNORECASE)
-
-    if not isinstance(o, str):
-        return o
-
-    # Resolve ${vars.<name>} syntax
-    pattern = re.compile(r"\$\{vars\.([a-zA-Z_][a-zA-Z0-9_]*)\}")
-    for match in pattern.finditer(o):
-        # Extract the variable name
-        var_name = match.group(1)
-
-        # Resolve the variable value
-        resolved_value = _resolve_variable(var_name, vars)
-
-        # Update the value with the resolved value
-        if isinstance(resolved_value, str):
-            o = o.replace(match.group(0), resolved_value)
-        else:
-            o = resolved_value
-
-            # Recursively resolve element if variable value is a dict or a list
-            if isinstance(o, (list, dict)):
-                o = _resolve_values(o, vars)
-
-    if not isinstance(o, str):
-        return o
-
-    # Resolve ${{ <expression> }} syntax
-    pattern = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
-    for match in pattern.finditer(o):
-        # Extract the variable name
-        expr = match.group(1)
-
-        # Resolve the variable value
-        resolved_value = _resolve_expression(expr, vars)
-
-        # Update the value with the resolved value
-        if isinstance(resolved_value, str):
-            o = o.replace(match.group(0), resolved_value)
-        else:
-            o = resolved_value
-
-    return o
-
-
-def _resolve_variable(name, vars):
-    """Resolve a variable name from the variables or environment."""
-
-    # Fetch from model variables
-    _vars = {k.lower(): v for k, v in vars.items()}
-    value = _vars.get(name.lower())
-
-    # Fetch from env variables
-    if value is None:
-        _vars = {k.lower(): v for k, v in os.environ.items()}
-        value = _vars.get(name.lower())
-
-    # Value not found returning original value
-    if value is None:
-        return f"${{vars.{name}}}"  # Default value if not resolved
-
-    # If the resolved value is itself a string with variables, resolve it
-    if isinstance(value, str) and ("${" in value or "$${" in value):
-        value = _resolve_value(value, vars)
-
-    return value
-
-
-def _resolve_expression(expression, vars):
-    """Evaluate an inline expression."""
-    # Translate vars.env to variables_map['env']
-    expression = re.sub(
-        r"\bvars\.([a-zA-Z_][a-zA-Z0-9_]*)\b", r"variables_map['\1']", expression
-    )
-
-    # Prepare a safe evaluation context
-    local_context = deepcopy(vars)
-
-    try:
-        # Allow Python evaluation of conditionals and operations
-        return eval(expression, {}, {"variables_map": local_context})
-    except Exception as e:
-        raise ValueError(f"Error evaluating expression '{expression}': {e}")
 
 
 class ModelMetaclass(_ModelMetaclass):
@@ -261,21 +146,32 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     @classmethod
     def model_validate_yaml(cls, fp: TextIO) -> Model:
         """
-            Load model from yaml file object. Other yaml files can be referenced
-            using the ${include.other_yaml_filepath} syntax. You can also merge
-            lists with -< ${include.other_yaml_filepath} and dictionaries with
-            <<: ${include.other_yaml_filepath}. Including multi-lines and
-            commented SQL files is also possible.
+        Load model from yaml file object using laktory.yaml.RecursiveLoader. Supports
+        reference to external yaml and sql files using `!use`, `!extend` and `!update` tags.
+        Path to external files can be defined using model or environment variables.
 
-            Parameters
-            ----------
-            fp:
-                file object structured as a yaml file
+        Referenced path should always be relative to the file they are referenced from.
 
-            Returns
-            -------
-            :
-                Model instance
+        Custom Tags
+        -----------
+        !use {filepath}:
+            Directly inject the content of the file at `filepath`
+        - !extend {filepath}:
+            Extend the current list with the elements found in the file at `filepath`.
+            Similar to python list.extend method.
+        <<: !update {filepath}:
+            Merge the current dictionary with the content of the dictionary defined at
+            `filepath`. Similar to python dict.update method.
+
+        Parameters
+        ----------
+        fp:
+            file object structured as a yaml file
+
+        Returns
+        -------
+        :
+            Model instance
 
         Examples
         --------
@@ -283,84 +179,22 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         businesses:
           apple:
             symbol: aapl
-            address: ${include.addresses.yaml}
-            <<: ${include.common.yaml}
+            address: !use addresses.yaml
+            <<: !update common.yaml
             emails:
               - jane.doe@apple.com
-              -< ${include.emails.yaml}
+              - extend! emails.yaml
           amazon:
             symbol: amzn
-            address: ${include.addresses.yaml}
-            <<: ${include.common.yaml}
+            address: !use addresses.yaml
+            <<: update! common.yaml
             emails:
               - john.doe@amazon.com
-              -< ${include.emails.yaml}
+              - extend! emails.yaml
         ```
         """
 
-        if hasattr(fp, "name"):
-            dirpath = os.path.dirname(fp.name)
-        else:
-            dirpath = "./"
-
-        def inject_includes(lines):
-            _lines = []
-            for line in lines:
-                line = line.replace("\n", "")
-                indent = " " * (len(line) - len(line.lstrip()))
-                if line.strip().startswith("#"):
-                    continue
-
-                if "${include." in line:
-                    pattern = r"\{include\.(.*?)\}"
-                    matches = re.findall(pattern, line)
-                    path = matches[0]
-                    path0 = path
-                    if not os.path.isabs(path):
-                        path = os.path.join(dirpath, path)
-                    path_ext = path.split(".")[-1]
-                    if path_ext not in ["yaml", "yml", "sql"]:
-                        raise ValueError(
-                            f"Include file of format {path_ext} ({path}) is not supported."
-                        )
-
-                    # Merge include
-                    if "<<: ${include." in line or "-< ${include." in line:
-                        with open(path, "r", encoding="utf-8") as _fp:
-                            new_lines = _fp.readlines()
-                            _lines += [
-                                indent + __line for __line in inject_includes(new_lines)
-                            ]
-
-                    # Direct Include
-                    else:
-                        if path.endswith(".sql"):
-                            with open(path, "r", encoding="utf-8") as _fp:
-                                new_lines = _fp.read()
-                            _lines += [
-                                line.replace(
-                                    "${include." + path0 + "}",
-                                    '"' + new_lines.replace("\n", "\\n") + '"',
-                                )
-                            ]
-
-                        elif path.endswith(".yaml") or path.endswith("yml"):
-                            indent = indent + " " * 2
-                            _lines += [line.split("${include")[0]]
-                            with open(path, "r", encoding="utf-8") as _fp:
-                                new_lines = _fp.readlines()
-                            _lines += [
-                                indent + __line for __line in inject_includes(new_lines)
-                            ]
-
-                else:
-                    _lines += [line]
-
-            return _lines
-
-        lines = inject_includes(fp.readlines())
-        data = yaml.safe_load("\n".join(lines))
-
+        data = RecursiveLoader.load(fp)
         return cls.model_validate(data)
 
     def model_dump_yaml(self, *args, **kwargs):

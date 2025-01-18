@@ -1,0 +1,14 @@
+stocks:
+  - name: apple
+    symbol: AAPL
+    prices: !use ${vars.symbol}_prices.yaml
+    <<: !update common.yaml
+  - name: amazon
+    symbol: AMZN
+    prices: !use ${vars.symbol}_prices.yaml
+    <<: !update common.yaml
+    variables:
+      symbol: amzn
+  - !extend stocks_others_with_vars.yaml
+variables:
+  symbol: aapl

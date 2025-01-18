@@ -1,12 +1,19 @@
 # Release History
 
-## [0.5.14] - Unreleased
+## [0.6.0] - Unreleased
 ### Added
 * `MemoryDataSource` support for reading dict or list of data [[#337](https://github.com/okube-ai/laktory/issues/337)]
+* Support for `!use` tag in YAML files to directly inject content of other file
+* Support for `!update` tag in YAML files to use another file to update the content of a dictionary
+* Support for `!extend` tag in YAML files to use another file to extend (append) more items to a list
 ### Updated
 * Laktory variables to support python expressions [[#335](https://github.com/okube-ai/laktory/issues/335)]
 * Laktory variables to support complex types such as dictionaries and lists
-* All Laktory model fields to allow `str` type for receiving a variable or expression  
+* All Laktory model fields to allow `str` type for receiving a variable or expression
+* Reference to external YAML file path can use variables injection[[#335](https://github.com/okube-ai/laktory/issues/335)]
+### Breaking Change
+* Removed support for ${include.*} variables in YAML files.
+* Reference to external YAML files is now relative to the calling file instead of being relative to the stack entry point.
 
 ## [0.5.13] - 2025-01-07
 ### Added

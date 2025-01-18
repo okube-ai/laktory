@@ -1,0 +1,10 @@
+stocks:
+  - name: apple
+    symbol: AAPL
+    prices: !use aapl_prices.yaml
+    <<: !update common.yaml
+  - name: amazon
+    symbol: AMZN
+    prices: !use amzn_prices.yaml
+    <<: !update common.yaml
+  - !extend stocks_others.yaml

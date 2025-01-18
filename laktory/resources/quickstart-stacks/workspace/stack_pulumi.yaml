@@ -13,13 +13,13 @@ pulumi:
 resources:
 
   # Workspace Directories
-  databricks_directories: ${include.resources/directories.yaml}
+  databricks_directories: !use resources/directories.yaml
 
   # Secret scopes and secret values
-  databricks_secretscopes: ${include.resources/secretscopes.yaml}
+  databricks_secretscopes: !use resources/secretscopes.yaml
 
   # SQL Warehouses
-  databricks_warehouses: ${include.resources/warehouses.yaml}
+  databricks_warehouses: !use resources/warehouses.yaml
 
 # Environment Specific Settings
 environments:
