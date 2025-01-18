@@ -1,6 +1,16 @@
 # Release History
 
-## [0.6.0] - Unreleased
+## [0.6.1] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.6.0] - 2025-01-18
 ### Added
 * `MemoryDataSource` support for reading dict or list of data [[#337](https://github.com/okube-ai/laktory/issues/337)]
 * Support for `!use` tag in YAML files to directly inject content of other file
