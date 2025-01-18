@@ -223,6 +223,6 @@ def test_quickstart_localpipeline():
 
 if __name__ == "__main__":
     test_read_quickstart_stacks()
-    # test_preview_quickstart_stacks()
+    test_preview_quickstart_stacks()
     # atest_deploy_quickstart_stacks()
-    # test_quickstart_localpipeline()
+    test_quickstart_localpipeline()
