@@ -3,9 +3,10 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
 
-from laktory._testing.stockprices import df_meta
-from laktory._testing.stockprices import df_slv
-from laktory._testing.stockprices import spark
+from laktory._testing import dff
+from laktory._testing import sparkf
+
+spark = sparkf.spark
 
 schema = T.StructType(
     [
@@ -100,7 +101,7 @@ def test_df_has_column():
 
 
 def test_watermark():
-    df = df_slv.withWatermark("created_at", "1 hour")
+    df = dff.slv.withWatermark("created_at", "1 hour")
 
     wm = df.laktory.watermark()
 
@@ -111,10 +112,10 @@ def test_watermark():
 
 
 def test_join():
-    left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(
+    left = dff.slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(
         F.col("symbol") != "GOOGL"
     )
-    other = df_meta.withColumnRenamed("symbol2", "symbol")
+    other = dff.meta.withColumnRenamed("symbol2", "symbol")
 
     df = left.laktory.smart_join(
         other=other,
@@ -167,7 +168,7 @@ def test_join():
 
     # Join expression
     df2 = left.laktory.smart_join(
-        other=df_meta.drop("symbol"),
+        other=dff.meta.drop("symbol"),
         on_expression="left.symbol == other.symbol2",
     )
     assert "symbol" in df2.columns
@@ -176,7 +177,7 @@ def test_join():
 
     # Left/Right expression
     df3 = left.laktory.smart_join(
-        other=df_meta.drop("symbol"),
+        other=dff.meta.drop("symbol"),
         left_on="symbol",
         other_on="symbol2",
     )
@@ -186,7 +187,7 @@ def test_join():
 
     # Not Coalesce
     df4 = left.withColumn("open", F.lit(None)).laktory.smart_join(
-        other=df_meta.drop("symbol").withColumn("open", F.lit(2)),
+        other=dff.meta.drop("symbol").withColumn("open", F.lit(2)),
         left_on="symbol",
         other_on="symbol2",
     )
@@ -204,7 +205,7 @@ def test_join():
 
     # With Coalesce
     df5 = left.withColumn("open", F.lit(None)).laktory.smart_join(
-        other=df_meta.drop("symbol").withColumn("open", F.lit(2)),
+        other=dff.meta.drop("symbol").withColumn("open", F.lit(2)),
         left_on="symbol",
         other_on="symbol2",
         coalesce=True,
@@ -222,10 +223,10 @@ def test_join():
 
 
 def test_join_outer():
-    left = df_slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(
+    left = dff.slv.filter(F.col("created_at") == "2023-09-01T00:00:00Z").filter(
         F.col("symbol") != "GOOGL"
     )
-    other = df_meta.withColumnRenamed("symbol2", "symbol")
+    other = dff.meta.withColumnRenamed("symbol2", "symbol")
 
     df = left.laktory.smart_join(
         other=other,
@@ -283,7 +284,7 @@ def test_join_watermark():
 
 
 def test_aggregation():
-    _df = df_slv.filter(F.col("created_at") < "2023-09-07T00:00:00Z")
+    _df = dff.slv.filter(F.col("created_at") < "2023-09-07T00:00:00Z")
     _df.show()
 
     # Window
@@ -349,7 +350,7 @@ def test_aggregation():
 
 
 def test_window_filter():
-    df = df_slv.laktory.window_filter(
+    df = dff.slv.laktory.window_filter(
         partition_by=["symbol"],
         order_by=[
             {"sql_expression": "created_at", "desc": True},

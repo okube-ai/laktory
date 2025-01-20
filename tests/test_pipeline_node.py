@@ -6,11 +6,11 @@ from pyspark.sql import functions as F
 
 from laktory import models
 from laktory._testing import Paths
-from laktory._testing import df_brz
-from laktory._testing import df_slv
-from laktory._testing import spark
+from laktory._testing import dff
+from laktory._testing import sparkf
 
 paths = Paths(__file__)
+spark = sparkf.spark
 
 
 def test_execute():
@@ -20,7 +20,7 @@ def test_execute():
         name="slv_stock_prices",
         source={
             "table_name": "brz_stock_prices",
-            "mock_df": df_brz,
+            "mock_df": dff.brz,
         },
         transformer={
             "nodes": [
@@ -60,7 +60,7 @@ def test_execute():
 
     assert df1.columns == df0.columns
     assert df1.columns == ["created_at", "symbol", "close"]
-    assert df1.count() == df_brz.count()
+    assert df1.count() == dff.brz.count()
 
     # Cleanup
     shutil.rmtree(sink_path)
@@ -70,7 +70,7 @@ def test_execute_view():
     # Create table
     table_path = Path(paths.tmp) / "hive" / f"slv_{str(uuid.uuid4())}"
     (
-        df_slv.write.mode("OVERWRITE")
+        dff.slv.write.mode("OVERWRITE")
         .option("path", table_path)
         .saveAsTable("default.slv")
     )
@@ -134,7 +134,7 @@ def test_bronze():
         name="slv_stock_prices",
         source={
             "table_name": "brz_stock_prices",
-            "mock_df": df_brz,
+            "mock_df": dff.brz,
         },
         transformer={
             "nodes": [
@@ -165,7 +165,7 @@ def test_bronze():
 
 
 def test_silver():
-    df = df_brz.select(df_brz.columns)
+    df = dff.brz.select(dff.brz.columns)
     df = df.withColumn("_bronze_at", F.current_timestamp())
     df = df.union(df)
 

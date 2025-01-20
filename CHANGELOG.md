@@ -6,7 +6,8 @@
 ### Fixed
 * n/a
 ### Updated
-* Improved import time
+* Reduced import time
+* Optimized tests to load spark only when required
 ### Breaking changes
 * n/a
 
