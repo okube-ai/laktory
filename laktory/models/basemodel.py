@@ -10,8 +10,7 @@ from typing import Union
 from typing import get_args
 from typing import get_origin
 
-import inflect
-import yaml
+import yaml  # TODO: Move into functions?
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
@@ -121,6 +120,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                     dump[k] = ".".join(values)
 
         if singular_serialization:
+            import inflect
+
             engine = inflect.engine()
             keys = list(dump.keys())
             for k in keys:

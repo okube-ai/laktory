@@ -1,8 +1,8 @@
-from laktory import Dispatcher
 from laktory import models
 from laktory._testing import MonkeyPatch
 from laktory._testing import Paths
 from laktory._version import VERSION
+from laktory.dispatcher import Dispatcher
 
 paths = Paths(__file__)
 
