@@ -1,4 +1,5 @@
 import os
+import json
 from typing import Any
 from typing import Union
 
@@ -6,6 +7,7 @@ import yaml
 from pydantic import Field
 
 from laktory._logger import get_logger
+from laktory._parsers import _resolve_values
 from laktory._settings import settings
 from laktory._useragent import set_databricks_sdk_upstream
 from laktory.constants import CACHE_ROOT
@@ -65,11 +67,15 @@ class PulumiStack(BaseModel):
 
         self._configure_serializer(camel=False)
 
-        # Pulumi YAML requires the keyword "resources." to be removed
-        pattern = r"\$\{resources\.(.*?)\}"
-        self.variables[pattern] = r"${\1}"
+        # Injecting variables
         d = self.inject_vars_into_dump(d)
-        del self.variables[pattern]
+
+        # Pulumi YAML requires the keyword "resources." to be removed
+        _vars = {r"\$\{resources\.(.*?)\}": r"${\1}"}
+
+        # Because all variables are mapped to a string, it is more efficient
+        # (>10x) to convert the dict to string before substitution.
+        d = json.loads(_resolve_values(json.dumps(d), vars=_vars))
 
         return d
 
@@ -111,6 +117,7 @@ class PulumiStack(BaseModel):
         # Inject user-agent value for monitoring usage as a Databricks partner
         set_databricks_sdk_upstream()
 
+        logger.info(f"Invoking '{' '.join(cmd)}'")
         worker.run(
             cmd=cmd,
             cwd=CACHE_ROOT,

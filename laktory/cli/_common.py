@@ -48,6 +48,7 @@ class CLIController(BaseModel):
         # Read stack
         if self.stack_filepath is None:
             self.stack_filepath = "./stack.yaml"
+        logger.info(f"Reading stack from '{self.stack_filepath}'")
         with open(self.stack_filepath, "r", encoding="utf-8") as fp:
             self.stack = Stack.model_validate_yaml(fp)
 
