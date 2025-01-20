@@ -11,10 +11,11 @@ from pyspark.sql import Window
 
 from laktory import models
 from laktory._testing import Paths
-from laktory._testing import df_brz
-from laktory._testing import spark
+from laktory._testing import dff
+from laktory._testing import sparkf
 
 paths = Paths(__file__)
+spark = sparkf.spark
 
 OPEN_FIGURES = False
 
@@ -40,7 +41,7 @@ def get_pl(clean_path=False):
 def get_source(pl_path):
     source_path = str(pl_path / "tables/landing_stock_prices")
     w = Window.orderBy("data.created_at", "data.symbol")
-    source = df_brz.withColumn("index", F.row_number().over(w) - 1)
+    source = dff.brz.withColumn("index", F.row_number().over(w) - 1)
 
     return source, source_path
 

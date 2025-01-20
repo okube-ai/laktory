@@ -69,7 +69,9 @@ if __name__ == "__main__":
     import pyspark.sql.functions as F
 
     import laktory  # noqa: F401
-    from laktory._testing import spark
+    from laktory._testing import sparkf
+
+    spark = sparkf.spark
 
     df = spark.createDataFrame([[1.0]], ["x"])
     df = df.withColumn(

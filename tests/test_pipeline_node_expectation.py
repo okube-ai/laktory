@@ -9,12 +9,13 @@ from pyspark.sql import functions as F
 
 from laktory import models
 from laktory._testing import Paths
-from laktory._testing import df_brz
-from laktory._testing import spark
+from laktory._testing import dff
+from laktory._testing import sparkf
 from laktory.exceptions import DataQualityCheckFailedError
 from laktory.exceptions import DataQualityExpectationsNotSupported
 
 paths = Paths(__file__)
+spark = sparkf.spark
 testdir_path = Path(__file__).parent
 
 
@@ -23,7 +24,7 @@ def get_node():
         name="slv_stock_prices",
         source={
             "table_name": "brz_stock_prices",
-            "mock_df": df_brz,
+            "mock_df": dff.brz,
         },
         drop_source_columns=True,
         transformer={
@@ -50,7 +51,7 @@ def get_source(node_path):
     source_path = str(node_path / "brz_stock_prices")
     # w = Window.orderBy("data.created_at", "data.symbol")
     w = Window.orderBy("data.symbol", "data.created_at")
-    source = df_brz.withColumn("index", F.row_number().over(w) - 1)
+    source = dff.brz.withColumn("index", F.row_number().over(w) - 1)
     return source, source_path
 
 

@@ -2,8 +2,7 @@ import datetime
 
 import polars as pl
 
-from laktory._testing.stockprices import df_meta_polars
-from laktory._testing.stockprices import df_slv_polars
+from laktory._testing import dff
 
 df = pl.DataFrame(
     [
@@ -64,10 +63,10 @@ def test_union():
 
 
 def test_join():
-    left = df_slv_polars.filter(
+    left = dff.slv_polars.filter(
         pl.col("created_at") == datetime.datetime(2023, 9, 1)
     ).filter(pl.col("symbol") != "GOOGL")
-    other = df_meta_polars.rename({"symbol2": "symbol"})
+    other = dff.meta_polars.rename({"symbol2": "symbol"})
 
     df = left.laktory.smart_join(
         other=other,
@@ -98,7 +97,7 @@ def test_join():
 
     # Left and Other on
     df2 = left.laktory.smart_join(
-        other=df_meta_polars,
+        other=dff.meta_polars,
         left_on="symbol",
         other_on="symbol2",
     )
@@ -108,7 +107,7 @@ def test_join():
 
     # Not Coalesce
     df4 = left.with_columns(open=pl.lit(None)).laktory.smart_join(
-        other=df_meta_polars.with_columns(open=pl.lit(2)),
+        other=dff.meta_polars.with_columns(open=pl.lit(2)),
         left_on="symbol",
         other_on="symbol2",
     )
@@ -124,7 +123,7 @@ def test_join():
 
     # With Coalesce
     df5 = left.with_columns(open=pl.lit(None)).laktory.smart_join(
-        other=df_meta_polars.with_columns(open=pl.lit(2)),
+        other=dff.meta_polars.with_columns(open=pl.lit(2)),
         left_on="symbol",
         other_on="symbol2",
         coalesce=True,
@@ -141,10 +140,10 @@ def test_join():
 
 
 def test_join_outer():
-    left = df_slv_polars.filter(
+    left = dff.slv_polars.filter(
         pl.col("created_at") == datetime.datetime(2023, 9, 1)
     ).filter(pl.col("symbol") != "GOOGL")
-    other = df_meta_polars.rename({"symbol2": "symbol"})
+    other = dff.meta_polars.rename({"symbol2": "symbol"})
 
     df = left.laktory.smart_join(
         other=other,
@@ -181,7 +180,7 @@ def test_join_outer():
 
 
 def test_aggregation():
-    _df = df_slv_polars.filter(pl.col("created_at") < datetime.datetime(2023, 9, 7))
+    _df = dff.slv_polars.filter(pl.col("created_at") < datetime.datetime(2023, 9, 7))
 
     # Symbol
     df = _df.laktory.groupby_and_agg(
@@ -198,7 +197,7 @@ def test_aggregation():
 
 
 def test_window_filter():
-    df = df_slv_polars.laktory.window_filter(
+    df = dff.slv_polars.laktory.window_filter(
         partition_by=["symbol"],
         order_by=[
             {"sql_expression": "created_at", "desc": True},

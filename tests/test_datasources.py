@@ -1,12 +1,13 @@
 import pandas as pd
 
 from laktory._testing import Paths
-from laktory._testing import spark
+from laktory._testing import sparkf
 from laktory.models.datasources import FileDataSource
 from laktory.models.datasources import MemoryDataSource
 from laktory.models.datasources import TableDataSource
 
 paths = Paths(__file__)
+spark = sparkf.spark
 
 schema = {
     "type": "struct",

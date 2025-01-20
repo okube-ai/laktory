@@ -8,14 +8,16 @@ from pyspark.errors import AnalysisException
 from pyspark.errors import IllegalArgumentException
 
 from laktory._testing import Paths
-from laktory._testing import df_slv
-from laktory._testing import df_slv_polars
-from laktory._testing import df_slv_stream
-from laktory._testing import spark
+from laktory._testing import dff
+
+# from laktory._testing import df_slv_polars
+# from laktory._testing import df_slv_stream
+from laktory._testing import sparkf
 from laktory.models import FileDataSink
 from laktory.models import TableDataSink
 
 paths = Paths(__file__)
+spark = sparkf.spark
 
 
 def test_file_data_sink_parquet():
@@ -29,20 +31,20 @@ def test_file_data_sink_parquet():
         format="PARQUET",
         mode="OVERWRITE",
     )
-    sink.write(df_slv)
+    sink.write(dff.slv)
 
     # Write as append
-    sink.write(df_slv, mode="append")
+    sink.write(dff.slv, mode="append")
 
     # Write and raise error
     with pytest.raises(AnalysisException):
-        sink.write(df_slv, mode="error")
+        sink.write(dff.slv, mode="error")
 
     # Read back
     df = sink.as_source().read(spark=spark)
 
     # Test
-    assert df.count() == 2 * df_slv.count()
+    assert df.count() == 2 * dff.slv.count()
 
     # Cleanup
     sink.purge()
@@ -60,20 +62,20 @@ def test_file_data_sink_delta():
         format="DELTA",
         mode="OVERWRITE",
     )
-    sink.write(df_slv)
+    sink.write(dff.slv)
 
     # Write as append
-    sink.write(df_slv, mode="append")
+    sink.write(dff.slv, mode="append")
 
     # Write and raise error
     with pytest.raises(AnalysisException):
-        sink.write(df_slv, mode="error")
+        sink.write(dff.slv, mode="error")
 
     # Read back
     df = sink.as_source().read(spark=spark)
 
     # Test
-    assert df.count() == 2 * df_slv.count()
+    assert df.count() == 2 * dff.slv.count()
 
     # Cleanup
     sink.purge()
@@ -92,22 +94,22 @@ def test_file_data_sink_stream():
         format="DELTA",
         mode="APPEND",
     )
-    sink.write(df_slv_stream)
+    sink.write(dff.slv_stream)
 
     # Write again
     # Should not add any new row because it's a stream and
     # source has not changed
-    sink.write(df_slv_stream, mode="append")
+    sink.write(dff.slv_stream, mode="append")
 
     # Write and raise error
     with pytest.raises(IllegalArgumentException):
-        sink.write(df_slv_stream, mode="error")
+        sink.write(dff.slv_stream, mode="error")
 
     # Read back
     df = sink.as_source().read(spark=spark)
 
     # Test
-    assert df.count() == df_slv.count()
+    assert df.count() == dff.slv.count()
     assert str(sink._checkpoint_location).endswith("tmp/df_slv_sink_stream/checkpoint")
 
     # Cleanup
@@ -117,7 +119,7 @@ def test_file_data_sink_stream():
 
 
 def test_file_data_sink_polars_parquet():
-    filepath = paths.tmp / "df_slv_polars_sink.parquet"
+    filepath = paths.tmp / "dff.slv_polars_sink.parquet"
 
     if filepath.exists():
         os.remove(filepath)
@@ -127,11 +129,11 @@ def test_file_data_sink_polars_parquet():
         path=str(filepath),
         format="PARQUET",
     )
-    sink.write(df_slv_polars)
+    sink.write(dff.slv_polars)
 
     # Write as append
     with pytest.raises(ValueError):
-        sink.write(df_slv_polars, mode="append")
+        sink.write(dff.slv_polars, mode="append")
 
     # Read back
     source = sink.as_source()
@@ -139,8 +141,8 @@ def test_file_data_sink_polars_parquet():
     df = source.read(filepath).collect()
 
     # Test
-    assert df.height == df_slv.count()
-    assert df.columns == df_slv.columns
+    assert df.height == dff.slv.count()
+    assert df.columns == dff.slv.columns
 
     # Cleanup
     sink.purge()
@@ -158,10 +160,10 @@ def test_file_data_sink_polars_delta():
         format="DELTA",
         mode="OVERWRITE",
     )
-    sink.write(df_slv_polars)
+    sink.write(dff.slv_polars)
 
     # Write as append
-    sink.write(df_slv_polars, mode="append")
+    sink.write(dff.slv_polars, mode="append")
 
     # Read back
     source = sink.as_source()
@@ -169,8 +171,8 @@ def test_file_data_sink_polars_delta():
     df = source.read().collect()
 
     # Test
-    assert df.height == df_slv.count() * 2
-    assert df.columns == df_slv.columns
+    assert df.height == dff.slv.count() * 2
+    assert df.columns == dff.slv.columns
 
     # Cleanup
     sink.purge()
@@ -196,14 +198,14 @@ def test_table_data_sink():
     assert sink.mode == "OVERWRITE"
 
     # Write
-    sink.write(df_slv)
+    sink.write(dff.slv)
 
     # Read back
     df = sink.as_source().read(spark=spark)
 
     # Test
-    assert df.count() == df_slv.count()
-    assert df.columns == df_slv.columns
+    assert df.count() == dff.slv.count()
+    assert df.columns == dff.slv.columns
 
     # Cleanup
     sink.purge(spark=spark)
@@ -213,7 +215,7 @@ def test_view_data_sink():
     # Create table
     table_path = paths.tmp / "hive" / f"slv_{str(uuid.uuid4())}"
     (
-        df_slv.write.mode("OVERWRITE")
+        dff.slv.write.mode("OVERWRITE")
         .option("path", table_path)
         .saveAsTable("default.slv")
     )
@@ -257,7 +259,7 @@ def test_view_data_sink():
     assert sink2.table_type == "VIEW"
 
     # Read Back
-    _df = df_slv.filter(F.col("symbol") == "AAPL")
+    _df = dff.slv.filter(F.col("symbol") == "AAPL")
     assert df1.count() == _df.count()
     assert df1.columns == _df.columns
     assert df2.count() == _df.count()

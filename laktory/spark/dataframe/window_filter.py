@@ -46,7 +46,9 @@ def window_filter(
     import pyspark.sql.functions as F
 
     import laktory  # noqa: F401
-    from laktory._testing import spark
+    from laktory._testing import sparkf
+
+    spark = sparkf.spark
 
     df0 = spark.createDataFrame(
         [
@@ -113,7 +115,9 @@ def window_filter(
 if __name__ == "__main__":
     import pyspark.sql.functions as F
 
-    from laktory._testing import spark
+    from laktory._testing import sparkf
+
+    spark = sparkf.spark
 
     df0 = spark.createDataFrame(
         [

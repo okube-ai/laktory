@@ -9,7 +9,9 @@ import pyspark.sql.types as T
 
 from laktory import models
 from laktory._testing import Paths
-from laktory._testing import spark
+from laktory._testing import sparkf
+
+spark = sparkf.spark
 
 # --------------------------------------------------------------------------- #
 # Functions                                                                   #
