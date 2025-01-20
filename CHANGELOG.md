@@ -1,15 +1,10 @@
 # Release History
 
 ## [0.6.1] - Unreleased
-### Added
-* n/a
-### Fixed
-* n/a
 ### Updated
 * Reduced import time
 * Optimized tests to load spark only when required
-### Breaking changes
-* n/a
+* Optimized performance during stack export in IaC backend native format 
 
 ## [0.6.0] - 2025-01-18
 ### Added

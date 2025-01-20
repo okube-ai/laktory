@@ -36,6 +36,7 @@ dependencies = [
     "pydantic-settings",
     # "python-dateutil",
     "typer",
+    "tzdata; sys_platform == 'win32'"
 ]
 
 [project.optional-dependencies]

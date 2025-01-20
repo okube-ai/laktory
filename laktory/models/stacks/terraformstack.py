@@ -2,11 +2,13 @@ import json
 import os
 from collections import defaultdict
 from typing import Any
+import json
 from typing import Union
 
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory._parsers import _resolve_values
 from laktory._settings import settings
 from laktory._useragent import set_databricks_sdk_upstream
 from laktory.constants import CACHE_ROOT
@@ -89,36 +91,36 @@ class TerraformStack(BaseModel):
         d["resource"] = dict(d["resource"])
         self._configure_serializer(singular=False)
 
+        # Injecting variables
+        d = self.inject_vars_into_dump(d)
+
         # Terraform JSON requires the keyword "resources." to be removed and the
         # resource_name to be replaced with resource_type.resource_name.
-        patterns = []
+        _vars = {}
         for r in list(self.resources.values()) + list(self.providers.values()):
             k0 = r.resource_name
+
             k1 = f"{r.terraform_resource_type}.{r.resource_name}"
             # special treatment for data sources
             if r.lookup_existing:
                 k1 = f"data.{r.terraform_resource_lookup_type}.{r.resource_name}"
 
             if isinstance(r, BaseProvider):
-                # ${resources.resource_name} -> resource_name
                 pattern = r"\$\{resources." + k0 + "}"
-                self.variables[pattern] = k0
-                patterns += [pattern]
+                _vars[pattern] = k0
 
             else:
                 # ${resources.resource_name} -> resource_type.resource_name
                 pattern = r"\$\{resources\." + k0 + r"\}"
-                self.variables[pattern] = k1
-                patterns += [pattern]
+                _vars[pattern] = k1
 
                 # ${resources.resource_name.property} -> ${resource_type.resource_name.property}
                 pattern = r"\$\{resources\." + k0 + r"\.(.*?)\}"
-                self.variables[pattern] = rf"${{{k1}.\1}}"
-                patterns += [pattern]
+                _vars[pattern] = rf"${{{k1}.\1}}"
 
-        d = self.inject_vars_into_dump(d)
-        for p in patterns:
-            del self.variables[p]
+        # Because all variables are mapped to a string, it is more efficient
+        # (>10x) to convert the dict to string before substitution.
+        d = json.loads(_resolve_values(json.dumps(d), vars=_vars))
 
         return d
 
@@ -136,6 +138,7 @@ class TerraformStack(BaseModel):
             Filepath of the configuration file
         """
         filepath = os.path.join(CACHE_ROOT, "stack.tf.json")
+        logger.info(f"Writing terraform config at '{filepath}'")
 
         if not os.path.exists(CACHE_ROOT):
             os.makedirs(CACHE_ROOT)
@@ -170,6 +173,7 @@ class TerraformStack(BaseModel):
         # Inject user-agent value for monitoring usage as a Databricks partner
         set_databricks_sdk_upstream()
 
+        logger.info(f"Invoking '{' '.join(cmd)}'")
         worker.run(
             cmd=cmd,
             cwd=CACHE_ROOT,
