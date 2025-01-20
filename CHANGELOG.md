@@ -6,7 +6,7 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Improved import time
 ### Breaking changes
 * n/a
 

@@ -4,8 +4,8 @@ from datetime import datetime
 import numpy as np
 from planck import units
 
-from laktory import unix_timestamp
-from laktory import utc_datetime
+from laktory.datetime import unix_timestamp
+from laktory.datetime import utc_datetime
 
 
 def test_unix_timestamp():

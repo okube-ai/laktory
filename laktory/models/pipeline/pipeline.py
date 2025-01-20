@@ -6,11 +6,9 @@ from typing import Any
 from typing import Literal
 from typing import Union
 
-import networkx as nx
 from pydantic import field_validator
 from pydantic import model_validator
 
-import laktory
 from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
@@ -27,6 +25,7 @@ from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
 if TYPE_CHECKING:
+    import networkx as nx
     from plotly.graph_objs import Figure
 
 logger = get_logger(__name__)
@@ -438,6 +437,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     @property
     def _dependencies(self):
+        from laktory import __version__
+
         laktory_found = False
 
         dependencies = [d for d in self.dependencies]
@@ -446,7 +447,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 laktory_found = True
 
         if not laktory_found:
-            dependencies += [f"laktory=={laktory.__version__}"]
+            dependencies += [f"laktory=={__version__}"]
 
         return dependencies
 
@@ -508,6 +509,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         :
             Directed Acyclic Graph
         """
+        import networkx as nx
 
         # TODO: Review if this needs to be computed dynamically or if we can
         #       compute it only after initialization. It depends if we believe
@@ -549,6 +551,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     @property
     def sorted_node_names(self):
+        import networkx as nx
+
         return list(nx.topological_sort(self.dag))
 
     @property
@@ -634,6 +638,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         :
             Plotly figure representation of the pipeline.
         """
+        import networkx as nx
         import plotly.graph_objs as go
 
         dag = self.dag

@@ -21,7 +21,3 @@ def main(
     if version:
         print(f"Laktory CLI version {VERSION}")
         raise typer.Exit()
-
-
-if __name__ == "__main__":
-    app()
