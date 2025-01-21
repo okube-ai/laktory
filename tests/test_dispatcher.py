@@ -38,14 +38,14 @@ def test_resources():
     dispatcher = Dispatcher(stack=stack)
 
     assert list(dispatcher.resources.keys()) == [
-        "pl-stock-prices-ut-stack",
+        "${vars.workflow_name}",
         "job-stock-prices-ut-stack",
     ]
     job = dispatcher.resources["job-stock-prices-ut-stack"]
-    dlt = dispatcher.resources["pl-stock-prices-ut-stack"]
+    dlt = dispatcher.resources["${vars.workflow_name}"]
 
     assert job.model_dump() == {"name": "job-stock-prices-ut-stack", "id": None}
-    assert dlt.model_dump() == {"name": "pl-stock-prices-ut-stack", "id": None}
+    assert dlt.model_dump() == {"name": "${vars.workflow_name}", "id": None}
 
 
 if __name__ == "__main__":

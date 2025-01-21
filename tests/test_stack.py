@@ -655,12 +655,355 @@ def test_pulumi_stack(monkeypatch):
     assert pstack.organization == "okube"
     data_default = pstack.model_dump()
     print(data_default)
-    assert data_default == {'variables': {}, 'name': 'unit-testing', 'runtime': 'yaml', 'config': {'databricks:host': 'my-host', 'databricks:token': 'my-token'}, 'resources': {'job-stock-prices-ut-stack': {'type': 'databricks:Job', 'properties': {'name': 'job-stock-prices-ut-stack', 'parameters': [], 'tags': {}, 'tasks': [{'libraries': [{'pypi': {'package': 'laktory==0.0.27'}}, {'pypi': {'package': 'yfinance'}}], 'jobClusterKey': 'main', 'notebookTask': {'notebookPath': '/jobs/ingest_stock_metadata.py'}, 'taskKey': 'ingest-metadata'}, {'pipelineTask': {'pipelineId': '${dlt-custom-name.id}'}, 'taskKey': 'run-pipeline'}], 'jobClusters': [{'jobClusterKey': 'main', 'newCluster': {'dataSecurityMode': 'USER_ISOLATION', 'initScripts': [], 'nodeTypeId': '${vars.node_type_id}', 'sparkConf': {}, 'sparkEnvVars': {'AZURE_TENANT_ID': '{{secrets/azure/tenant-id}}', 'LAKTORY_WORKSPACE_ENV': '${vars.env}'}, 'sparkVersion': '14.0.x-scala2.12', 'sshPublicKeys': []}}]}, 'options': {}}, 'notebook-external': {'type': 'databricks:Notebook', 'options': {}, 'get': {'id': '/Workspace/external'}}, 'permissions-notebook-external': {'type': 'databricks:Permissions', 'properties': {'accessControls': [{'groupName': 'role-analysts', 'permissionLevel': 'CAN_READ'}], 'notebookPath': '${notebook-external.path}'}, 'options': {'dependsOn': ['${notebook-external}']}}, 'warehouse-external': {'type': 'databricks:SqlEndpoint', 'options': {}, 'get': {'id': 'd2fa41bf94858c4b'}}, 'permissions-warehouse-external': {'type': 'databricks:Permissions', 'properties': {'accessControls': [{'groupName': 'role-analysts', 'permissionLevel': 'CAN_USE'}], 'sqlEndpointId': '${warehouse-external.id}'}, 'options': {'dependsOn': ['${warehouse-external}']}}, 'dlt-custom-name': {'type': 'databricks:Pipeline', 'properties': {'channel': 'PREVIEW', 'clusters': [], 'configuration': {'business_unit': 'laktory', 'workflow_name': 'pl-stock-prices-ut-stack', 'pipeline_name': 'pl-stock-prices-ut-stack', 'workspace_laktory_root': '/.laktory/'}, 'libraries': [{'notebook': {'path': '/pipelines/dlt_brz_template.py'}}], 'name': 'pl-stock-prices-ut-stack', 'notifications': []}, 'options': {'provider': '${databricks}', 'dependsOn': []}}, 'permissions-dlt-custom-name': {'type': 'databricks:Permissions', 'properties': {'accessControls': [{'groupName': 'account users', 'permissionLevel': 'CAN_VIEW'}, {'groupName': 'role-engineers', 'permissionLevel': 'CAN_RUN'}], 'pipelineId': '${dlt-custom-name.id}'}, 'options': {'provider': '${databricks}', 'dependsOn': ['${dlt-custom-name}']}}, 'workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json': {'type': 'databricks:WorkspaceFile', 'properties': {'path': '/.laktory/pipelines/pl-stock-prices-ut-stack/config.json', 'source': './tmp-pl-stock-prices-ut-stack-config.json'}, 'options': {'provider': '${databricks}', 'dependsOn': ['${dlt-custom-name}']}}, 'permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json': {'type': 'databricks:Permissions', 'properties': {'accessControls': [{'groupName': 'users', 'permissionLevel': 'CAN_READ'}], 'workspaceFilePath': '/.laktory/pipelines/pl-stock-prices-ut-stack/config.json'}, 'options': {'provider': '${databricks}', 'dependsOn': ['${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json}']}}, 'workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt': {'type': 'databricks:WorkspaceFile', 'properties': {'path': '/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt', 'source': './tmp-pl-stock-prices-ut-stack-requirements.txt'}, 'options': {'provider': '${databricks}', 'dependsOn': ['${dlt-custom-name}']}}, 'permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt': {'type': 'databricks:Permissions', 'properties': {'accessControls': [{'groupName': 'users', 'permissionLevel': 'CAN_READ'}], 'workspaceFilePath': '/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt'}, 'options': {'provider': '${databricks}', 'dependsOn': ['${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt}']}}, 'databricks': {'type': 'pulumi:providers:databricks', 'properties': {'host': 'my-host', 'token': 'my-token'}, 'options': {}}}, 'outputs': {}}
+    assert data_default == {
+        "variables": {},
+        "name": "unit-testing",
+        "runtime": "yaml",
+        "config": {"databricks:host": "my-host", "databricks:token": "my-token"},
+        "resources": {
+            "job-stock-prices-ut-stack": {
+                "type": "databricks:Job",
+                "properties": {
+                    "name": "job-stock-prices-ut-stack",
+                    "parameters": [],
+                    "tags": {},
+                    "tasks": [
+                        {
+                            "libraries": [
+                                {"pypi": {"package": "laktory==0.0.27"}},
+                                {"pypi": {"package": "yfinance"}},
+                            ],
+                            "jobClusterKey": "main",
+                            "notebookTask": {
+                                "notebookPath": "/jobs/ingest_stock_metadata.py"
+                            },
+                            "taskKey": "ingest-metadata",
+                        },
+                        {
+                            "pipelineTask": {"pipelineId": "${dlt-custom-name.id}"},
+                            "taskKey": "run-pipeline",
+                        },
+                    ],
+                    "jobClusters": [
+                        {
+                            "jobClusterKey": "main",
+                            "newCluster": {
+                                "dataSecurityMode": "USER_ISOLATION",
+                                "initScripts": [],
+                                "nodeTypeId": "${vars.node_type_id}",
+                                "sparkConf": {},
+                                "sparkEnvVars": {
+                                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
+                                    "LAKTORY_WORKSPACE_ENV": "${vars.env}",
+                                },
+                                "sparkVersion": "14.0.x-scala2.12",
+                                "sshPublicKeys": [],
+                            },
+                        }
+                    ],
+                },
+                "options": {},
+            },
+            "notebook-external": {
+                "type": "databricks:Notebook",
+                "options": {},
+                "get": {"id": "/Workspace/external"},
+            },
+            "permissions-notebook-external": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "role-analysts", "permissionLevel": "CAN_READ"}
+                    ],
+                    "notebookPath": "${notebook-external.path}",
+                },
+                "options": {"dependsOn": ["${notebook-external}"]},
+            },
+            "warehouse-external": {
+                "type": "databricks:SqlEndpoint",
+                "options": {},
+                "get": {"id": "d2fa41bf94858c4b"},
+            },
+            "permissions-warehouse-external": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "role-analysts", "permissionLevel": "CAN_USE"}
+                    ],
+                    "sqlEndpointId": "${warehouse-external.id}",
+                },
+                "options": {"dependsOn": ["${warehouse-external}"]},
+            },
+            "dlt-custom-name": {
+                "type": "databricks:Pipeline",
+                "properties": {
+                    "channel": "PREVIEW",
+                    "clusters": [],
+                    "configuration": {
+                        "business_unit": "laktory",
+                        "workflow_name": "pl-stock-prices-ut-stack",
+                        "pipeline_name": "pl-stock-prices-ut-stack",
+                        "workspace_laktory_root": "/.laktory/",
+                    },
+                    "libraries": [
+                        {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
+                    ],
+                    "name": "pl-stock-prices-ut-stack",
+                    "notifications": [],
+                },
+                "options": {"provider": "${databricks}", "dependsOn": []},
+            },
+            "permissions-dlt-custom-name": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "account users", "permissionLevel": "CAN_VIEW"},
+                        {"groupName": "role-engineers", "permissionLevel": "CAN_RUN"},
+                    ],
+                    "pipelineId": "${dlt-custom-name.id}",
+                },
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": ["${dlt-custom-name}"],
+                },
+            },
+            "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json": {
+                "type": "databricks:WorkspaceFile",
+                "properties": {
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
+                    "source": "./tmp-pl-stock-prices-ut-stack-config.json",
+                },
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": ["${dlt-custom-name}"],
+                },
+            },
+            "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "users", "permissionLevel": "CAN_READ"}
+                    ],
+                    "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
+                },
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": [
+                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json}"
+                    ],
+                },
+            },
+            "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
+                "type": "databricks:WorkspaceFile",
+                "properties": {
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
+                    "source": "./tmp-pl-stock-prices-ut-stack-requirements.txt",
+                },
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": ["${dlt-custom-name}"],
+                },
+            },
+            "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "users", "permissionLevel": "CAN_READ"}
+                    ],
+                    "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
+                },
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": [
+                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt}"
+                    ],
+                },
+            },
+            "databricks": {
+                "type": "pulumi:providers:databricks",
+                "properties": {"host": "my-host", "token": "my-token"},
+                "options": {},
+            },
+        },
+        "outputs": {},
+    }
 
     # Prod
     data = stack.to_pulumi(env_name="prod").model_dump()
     print(data)
-    assert data == {'variables': {}, 'name': 'unit-testing', 'runtime': 'yaml', 'config': {'databricks:host': 'my-host', 'databricks:token': 'my-token'}, 'resources': {'job-stock-prices-ut-stack': {'type': 'databricks:Job', 'properties': {'name': 'job-stock-prices-ut-stack', 'parameters': [], 'tags': {}, 'tasks': [{'libraries': [{'pypi': {'package': 'laktory==0.0.27'}}, {'pypi': {'package': 'yfinance'}}], 'jobClusterKey': 'main', 'notebookTask': {'notebookPath': '/jobs/ingest_stock_metadata.py'}, 'taskKey': 'ingest-metadata'}, {'pipelineTask': {'pipelineId': '${dlt-custom-name.id}'}, 'taskKey': 'run-pipeline'}], 'jobClusters': [{'jobClusterKey': 'main', 'newCluster': {'dataSecurityMode': 'USER_ISOLATION', 'initScripts': [], 'nodeTypeId': 'Standard_DS4_v2', 'sparkConf': {}, 'sparkEnvVars': {'AZURE_TENANT_ID': '{{secrets/azure/tenant-id}}', 'LAKTORY_WORKSPACE_ENV': 'prod'}, 'sparkVersion': '14.0.x-scala2.12', 'sshPublicKeys': []}}]}, 'options': {}}, 'notebook-external': {'type': 'databricks:Notebook', 'options': {}, 'get': {'id': '/Workspace/external'}}, 'permissions-notebook-external': {'type': 'databricks:Permissions', 'properties': {'accessControls': [{'groupName': 'role-analysts', 'permissionLevel': 'CAN_READ'}], 'notebookPath': '${notebook-external.path}'}, 'options': {'dependsOn': ['${notebook-external}']}}, 'warehouse-external': {'type': 'databricks:SqlEndpoint', 'options': {}, 'get': {'id': 'd2fa41bf94858c4b'}}, 'permissions-warehouse-external': {'type': 'databricks:Permissions', 'properties': {'accessControls': [{'groupName': 'role-analysts', 'permissionLevel': 'CAN_USE'}], 'sqlEndpointId': '${warehouse-external.id}'}, 'options': {'dependsOn': ['${warehouse-external}']}}, 'dlt-custom-name': {'type': 'databricks:Pipeline', 'properties': {'channel': 'PREVIEW', 'clusters': [], 'configuration': {'business_unit': 'laktory', 'workflow_name': 'pl-stock-prices-ut-stack', 'pipeline_name': 'pl-stock-prices-ut-stack', 'workspace_laktory_root': '/.laktory/'}, 'development': False, 'libraries': [{'notebook': {'path': '/pipelines/dlt_brz_template.py'}}], 'name': 'pl-stock-prices-ut-stack', 'notifications': []}, 'options': {'provider': '${databricks}', 'dependsOn': []}}, 'permissions-dlt-custom-name': {'type': 'databricks:Permissions', 'properties': {'accessControls': [{'groupName': 'account users', 'permissionLevel': 'CAN_VIEW'}, {'groupName': 'role-engineers', 'permissionLevel': 'CAN_RUN'}], 'pipelineId': '${dlt-custom-name.id}'}, 'options': {'provider': '${databricks}', 'dependsOn': ['${dlt-custom-name}']}}, 'workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json': {'type': 'databricks:WorkspaceFile', 'properties': {'path': '/.laktory/pipelines/pl-stock-prices-ut-stack/config.json', 'source': './tmp-pl-stock-prices-ut-stack-config.json'}, 'options': {'provider': '${databricks}', 'dependsOn': ['${dlt-custom-name}']}}, 'permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json': {'type': 'databricks:Permissions', 'properties': {'accessControls': [{'groupName': 'users', 'permissionLevel': 'CAN_READ'}], 'workspaceFilePath': '/.laktory/pipelines/pl-stock-prices-ut-stack/config.json'}, 'options': {'provider': '${databricks}', 'dependsOn': ['${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json}']}}, 'workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt': {'type': 'databricks:WorkspaceFile', 'properties': {'path': '/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt', 'source': './tmp-pl-stock-prices-ut-stack-requirements.txt'}, 'options': {'provider': '${databricks}', 'dependsOn': ['${dlt-custom-name}']}}, 'permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt': {'type': 'databricks:Permissions', 'properties': {'accessControls': [{'groupName': 'users', 'permissionLevel': 'CAN_READ'}], 'workspaceFilePath': '/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt'}, 'options': {'provider': '${databricks}', 'dependsOn': ['${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt}']}}, 'databricks': {'type': 'pulumi:providers:databricks', 'properties': {'host': 'my-host', 'token': 'my-token'}, 'options': {}}}, 'outputs': {}}
+    assert data == {
+        "variables": {},
+        "name": "unit-testing",
+        "runtime": "yaml",
+        "config": {"databricks:host": "my-host", "databricks:token": "my-token"},
+        "resources": {
+            "job-stock-prices-ut-stack": {
+                "type": "databricks:Job",
+                "properties": {
+                    "name": "job-stock-prices-ut-stack",
+                    "parameters": [],
+                    "tags": {},
+                    "tasks": [
+                        {
+                            "libraries": [
+                                {"pypi": {"package": "laktory==0.0.27"}},
+                                {"pypi": {"package": "yfinance"}},
+                            ],
+                            "jobClusterKey": "main",
+                            "notebookTask": {
+                                "notebookPath": "/jobs/ingest_stock_metadata.py"
+                            },
+                            "taskKey": "ingest-metadata",
+                        },
+                        {
+                            "pipelineTask": {"pipelineId": "${dlt-custom-name.id}"},
+                            "taskKey": "run-pipeline",
+                        },
+                    ],
+                    "jobClusters": [
+                        {
+                            "jobClusterKey": "main",
+                            "newCluster": {
+                                "dataSecurityMode": "USER_ISOLATION",
+                                "initScripts": [],
+                                "nodeTypeId": "Standard_DS4_v2",
+                                "sparkConf": {},
+                                "sparkEnvVars": {
+                                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
+                                    "LAKTORY_WORKSPACE_ENV": "prod",
+                                },
+                                "sparkVersion": "14.0.x-scala2.12",
+                                "sshPublicKeys": [],
+                            },
+                        }
+                    ],
+                },
+                "options": {},
+            },
+            "notebook-external": {
+                "type": "databricks:Notebook",
+                "options": {},
+                "get": {"id": "/Workspace/external"},
+            },
+            "permissions-notebook-external": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "role-analysts", "permissionLevel": "CAN_READ"}
+                    ],
+                    "notebookPath": "${notebook-external.path}",
+                },
+                "options": {"dependsOn": ["${notebook-external}"]},
+            },
+            "warehouse-external": {
+                "type": "databricks:SqlEndpoint",
+                "options": {},
+                "get": {"id": "d2fa41bf94858c4b"},
+            },
+            "permissions-warehouse-external": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "role-analysts", "permissionLevel": "CAN_USE"}
+                    ],
+                    "sqlEndpointId": "${warehouse-external.id}",
+                },
+                "options": {"dependsOn": ["${warehouse-external}"]},
+            },
+            "dlt-custom-name": {
+                "type": "databricks:Pipeline",
+                "properties": {
+                    "channel": "PREVIEW",
+                    "clusters": [],
+                    "configuration": {
+                        "business_unit": "laktory",
+                        "workflow_name": "pl-stock-prices-ut-stack",
+                        "pipeline_name": "pl-stock-prices-ut-stack",
+                        "workspace_laktory_root": "/.laktory/",
+                    },
+                    "development": False,
+                    "libraries": [
+                        {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
+                    ],
+                    "name": "pl-stock-prices-ut-stack",
+                    "notifications": [],
+                },
+                "options": {"provider": "${databricks}", "dependsOn": []},
+            },
+            "permissions-dlt-custom-name": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "account users", "permissionLevel": "CAN_VIEW"},
+                        {"groupName": "role-engineers", "permissionLevel": "CAN_RUN"},
+                    ],
+                    "pipelineId": "${dlt-custom-name.id}",
+                },
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": ["${dlt-custom-name}"],
+                },
+            },
+            "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json": {
+                "type": "databricks:WorkspaceFile",
+                "properties": {
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
+                    "source": "./tmp-pl-stock-prices-ut-stack-config.json",
+                },
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": ["${dlt-custom-name}"],
+                },
+            },
+            "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "users", "permissionLevel": "CAN_READ"}
+                    ],
+                    "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
+                },
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": [
+                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json}"
+                    ],
+                },
+            },
+            "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
+                "type": "databricks:WorkspaceFile",
+                "properties": {
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
+                    "source": "./tmp-pl-stock-prices-ut-stack-requirements.txt",
+                },
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": ["${dlt-custom-name}"],
+                },
+            },
+            "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"groupName": "users", "permissionLevel": "CAN_READ"}
+                    ],
+                    "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
+                },
+                "options": {
+                    "provider": "${databricks}",
+                    "dependsOn": [
+                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt}"
+                    ],
+                },
+            },
+            "databricks": {
+                "type": "pulumi:providers:databricks",
+                "properties": {"host": "my-host", "token": "my-token"},
+                "options": {},
+            },
+        },
+        "outputs": {},
+    }
 
     # Test executed as script
     if isinstance(monkeypatch, MonkeyPatch):
