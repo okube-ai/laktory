@@ -1,3 +1,4 @@
+import copy
 from typing import Any
 from typing import Literal
 from typing import Union
@@ -485,15 +486,14 @@ class Stack(BaseModel):
         if self._envs is None:
             ENV_FIELDS = ["pulumi", "resources", "terraform", "variables"]
 
-            # Because options is an excluded field for all resources and
-            # sub-resources, we need to manually dump it and add it to
-            # the base dump
-            def dump_with_options(obj: Any) -> Any:
+            # Because some fields are excluded from the dump, they need to be
+            # manually dumped and added back to the base dump
+            def dump_with_excluded(obj: Any) -> Any:
                 # Check data type, call recursively if not a BaseModel
                 if isinstance(obj, list):
-                    return [dump_with_options(v) for v in obj]
+                    return [dump_with_excluded(v) for v in obj]
                 elif isinstance(obj, dict):
-                    return {k: dump_with_options(v) for k, v in obj.items()}
+                    return {k: dump_with_excluded(v) for k, v in obj.items()}
                 elif not isinstance(obj, BaseModel):
                     return obj
 
@@ -503,13 +503,19 @@ class Stack(BaseModel):
 
                 # Loop through all model fields
                 for field_name, field in model.model_fields.items():
-                    # Explicitly dump options if found in the model
+                    # Explicitly dump excluded fields - variables
+                    if field_name == "variables" and model.variables is not None:
+                        data["variables"] = copy.deepcopy(model.variables)
+
+                    # Explicitly dump excluded fields - resource options
                     if field_name == "options" and field.annotation == ResourceOptions:
                         data["options"] = model.options.model_dump(exclude_unset=True)
 
+                    # Explicitly dump excluded fields - resource name
                     if field_name == "resource_name_" and model.resource_name_:
                         data["resource_name_"] = model.resource_name_
 
+                    # Explicitly dump excluded fields - lookup existing
                     if field_name == "lookup_existing" and model.lookup_existing:
                         data["lookup_existing"] = model.lookup_existing.model_dump(
                             exclude_unset=True
@@ -518,7 +524,7 @@ class Stack(BaseModel):
                     # Parse list
                     if isinstance(data.get(field_name, None), list):
                         data[field_name] = [
-                            dump_with_options(v) for v in getattr(model, field_name)
+                            dump_with_excluded(v) for v in getattr(model, field_name)
                         ]
 
                     # Parse dict (might result from a dict or a BaseModel)
@@ -527,15 +533,15 @@ class Stack(BaseModel):
 
                         if isinstance(a, dict):
                             for k in a.keys():
-                                data[field_name][k] = dump_with_options(a[k])
+                                data[field_name][k] = dump_with_excluded(a[k])
                         else:
-                            data[field_name] = dump_with_options(a)
+                            data[field_name] = dump_with_excluded(a)
 
                 return data
 
             envs = {}
             for _env_name, env in self.environments.items():
-                d = dump_with_options(self)
+                d = dump_with_excluded(self)
                 _envs = d.pop("environments")
 
                 for k in ENV_FIELDS:
@@ -623,7 +629,7 @@ class Stack(BaseModel):
         # Resources
         resources = {}
         for r in env.resources._get_all(providers_excluded=True).values():
-            r.variables = env.variables
+            # r.variables = env.variables
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
 

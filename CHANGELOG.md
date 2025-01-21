@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.6.2] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Model variables not carried overs to all environments
 
 ## [0.6.1] - 2025-01-20
 ### Updated

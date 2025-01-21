@@ -227,7 +227,7 @@ class DataQualityExpectation(BaseModel):
     def log_msg(self) -> str:
         msg = f"expr: {self.expr.value} | status: {self.check.status}"
         if self.type == "ROW" and self.check.fails_count:
-            msg += f" | fails count: {self.check.fails_count} / {self.check.rows_count} ({100*self.check.failure_rate:5.2f} %)"
+            msg += f" | fails count: {self.check.fails_count} / {self.check.rows_count} ({100 * self.check.failure_rate:5.2f} %)"
         return msg
 
     # ----------------------------------------------------------------------- #

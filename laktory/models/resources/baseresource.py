@@ -72,7 +72,8 @@ class ResourceOptions(BaseModel):
         return [
             "depends_on",
             "provider",
-            "ignore_changes" "aliases",
+            "ignore_changes",
+            "aliases",
             "delete_before_replace",
             "import_",
             "parent",
