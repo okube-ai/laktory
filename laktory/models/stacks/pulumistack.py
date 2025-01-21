@@ -67,9 +67,6 @@ class PulumiStack(BaseModel):
 
         self._configure_serializer(camel=False)
 
-        # Injecting variables
-        d = self.inject_vars_into_dump(d)
-
         # Pulumi YAML requires the keyword "resources." to be removed
         _vars = {r"\$\{resources\.(.*?)\}": r"${\1}"}
 

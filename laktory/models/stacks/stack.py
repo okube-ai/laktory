@@ -578,12 +578,11 @@ class Stack(BaseModel):
         """
         from laktory.models.stacks.pulumistack import PulumiStack
 
-        env = self.get_env(env_name=env_name)
+        env = self.get_env(env_name=env_name).inject_vars()
 
         # Resources
         resources = {}
         for r in env.resources._get_all().values():
-            r.variables = env.variables
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
 
@@ -593,7 +592,6 @@ class Stack(BaseModel):
             config=env.pulumi.config,
             description=env.description,
             resources=resources,
-            variables=env.variables,
             outputs=env.pulumi.outputs,
         )
 
@@ -617,7 +615,7 @@ class Stack(BaseModel):
         """
         from laktory.models.stacks.terraformstack import TerraformStack
 
-        env = self.get_env(env_name=env_name)
+        env = self.get_env(env_name=env_name).inject_vars()
 
         # Providers
         providers = {}
@@ -629,7 +627,6 @@ class Stack(BaseModel):
         # Resources
         resources = {}
         for r in env.resources._get_all(providers_excluded=True).values():
-            # r.variables = env.variables
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
 
@@ -638,5 +635,4 @@ class Stack(BaseModel):
             terraform={"backend": env.terraform.backend},
             providers=providers,
             resources=resources,
-            variables=env.variables,
         )

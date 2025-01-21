@@ -90,9 +90,6 @@ class TerraformStack(BaseModel):
         d["resource"] = dict(d["resource"])
         self._configure_serializer(singular=False)
 
-        # Injecting variables
-        d = self.inject_vars_into_dump(d)
-
         # Terraform JSON requires the keyword "resources." to be removed and the
         # resource_name to be replaced with resource_type.resource_name.
         _vars = {}
