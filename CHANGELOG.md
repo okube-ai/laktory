@@ -1,6 +1,16 @@
 # Release History
 
-## [0.6.2] - Unreleased
+## [0.6.3] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.6.2] - 2025-01-22
 ### Added
 * Support for Terraform `moved` option (resource rename)
 ### Fixed
