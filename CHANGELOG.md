@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.6.3] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Parsing of SQL files from YAML files
 
 ## [0.6.2] - 2025-01-22
 ### Added

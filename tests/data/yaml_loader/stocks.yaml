@@ -8,3 +8,5 @@ stocks:
     prices: !use amzn_prices.yaml
     <<: !update common.yaml
   - !extend stocks_others.yaml
+query:
+  !use stocks.sql

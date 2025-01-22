@@ -12,3 +12,5 @@ stocks:
   - !extend stocks_others_with_vars.yaml
 variables:
   symbol: aapl
+query:
+  !use stocks.sql

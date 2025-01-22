@@ -121,7 +121,7 @@ class RecursiveLoader(yaml.SafeLoader):
         if filepath.endswith(".sql"):
             with open(filepath, "r", encoding="utf-8") as _fp:
                 data = _fp.read()
-            return '"' + data.replace('"', "'").replace("\n", "\\n") + '"'
+            return data
 
         with open(filepath, "r") as f:
             return RecursiveLoader.load(f, parent_loader=loader)

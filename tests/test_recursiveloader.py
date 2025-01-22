@@ -44,7 +44,8 @@ def test_read():
                 "fees": 0.5,
                 "rate": 0.1,
             },
-        ]
+        ],
+        "query": "SELECT\n    *\nFORM\n    {df}\nWHERE\n-- COMMENT\n    SYMBOL = 'AAPL'\n;\n",
     }
 
 
@@ -92,6 +93,7 @@ def test_read_with_variables():
             },
         ],
         "variables": {"symbol": "aapl"},
+        "query": "SELECT\n    *\nFORM\n    {df}\nWHERE\n-- COMMENT\n    SYMBOL = 'AAPL'\n;\n",
     }
 
 
