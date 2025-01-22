@@ -358,7 +358,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
             self = self.model_copy(deep=True)
 
         # Inject into field values
-        for k in self.model_fields_set:
+        for k in list(self.model_fields_set):
             if k == "variables":
                 continue
             o = getattr(self, k)
@@ -369,6 +369,13 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
             else:
                 # Simple objects must be updated explicitly
                 setattr(self, k, _resolve_value(o, vars))
+
+        # Inject into child resources
+        if hasattr(self, "core_resources"):
+            for r in self.core_resources:
+                if r == self:
+                    continue
+                r.inject_vars(vars=vars, inplace=True)
 
         if not inplace:
             return self

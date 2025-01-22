@@ -12,7 +12,9 @@ resources:
       token: ${vars.DATABRICKS_TOKEN}
   pipelines:
     pl-custom-name:
-      name: pl-stock-prices-ut-stack
+      variables:
+        workflow_name: pl-stock-prices-ut-stack
+      name: ${vars.workflow_name}
       orchestrator: DATABRICKS_DLT
       nodes:
         - name: first_node
@@ -20,6 +22,9 @@ resources:
             path: /tmp/
           dlt_template: null
       databricks_dlt:
+        configuration:
+          business_unit: ${vars.business_unit}
+          workflow_name: ${vars.workflow_name}
         resource_name: dlt-custom-name
         libraries:
           - notebook:
@@ -55,6 +60,7 @@ resources:
           pipeline_task:
             pipeline_id: ${resources.dlt-custom-name.id}
 
+
     job-disabled:
         name: job-disabled
         options:
@@ -85,6 +91,10 @@ resources:
       access_controls:
       - group_name: role-analysts
         permission_level: CAN_READ
+
+variables:
+  business_unit: laktory
+  workflow_name: UNDEFINED
 
 environments:
   dev:

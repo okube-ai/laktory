@@ -2,13 +2,9 @@
 
 ## [0.6.2] - Unreleased
 ### Added
-* n/a
+* Support for Terraform `moved` option (resource rename)
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Model variables not carried overs to all environments
 
 ## [0.6.1] - 2025-01-20
 ### Updated
@@ -23,7 +19,7 @@
 * Support for `!update` tag in YAML files to use another file to update the content of a dictionary
 * Support for `!extend` tag in YAML files to use another file to extend (append) more items to a list
 ### Updated
-* Laktory variables to support python expressions [[#335](https://github.com/okube-ai/laktory/issues/335)]
+* Laktory variables to support python expressions [[#334](https://github.com/okube-ai/laktory/issues/334)]
 * Laktory variables to support complex types such as dictionaries and lists
 * All Laktory model fields to allow `str` type for receiving a variable or expression
 * Reference to external YAML file path can use variables injection[[#335](https://github.com/okube-ai/laktory/issues/335)]

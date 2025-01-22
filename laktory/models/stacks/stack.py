@@ -1,3 +1,4 @@
+import copy
 from typing import Any
 from typing import Literal
 from typing import Union
@@ -423,7 +424,7 @@ class Stack(BaseModel):
 
     print(stack)
     '''
-    variables={'org': 'okube'} backend='pulumi' description=None environments={'dev': EnvironmentSettings(variables={'is_dev': True}, resources=None, terraform=Terraform(variables={}, backend=None)), 'prod': EnvironmentSettings(variables={'is_dev': False}, resources=None, terraform=Terraform(variables={}, backend=None))} name='workspace' organization=None pulumi=Pulumi(variables={}, config={'databricks:host': '${vars.DATABRICKS_HOST}', 'databricks:token': '${vars.DATABRICKS_TOKEN}'}, outputs={}) resources=StackResources(variables={}, databricks_alerts={}, databricks_catalogs={}, databricks_clusterpolicies={}, databricks_clusters={}, databricks_dashboards={}, databricks_dbfsfiles={}, databricks_directories={}, databricks_dltpipelines={'pl-stock-prices': DLTPipeline(resource_name_='pl-stock-prices', options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None), lookup_existing=None, variables={}, access_controls=[], allow_duplicate_names=None, catalog=None, channel='PREVIEW', clusters=[], configuration={}, continuous=None, development='${vars.is_dev}', edition=None, libraries=[PipelineLibrary(variables={}, file=None, notebook=PipelineLibraryNotebook(variables={}, path='/pipelines/dlt_brz_template.py'))], name='pl-stock-prices', name_prefix=None, name_suffix=None, notifications=[], photon=None, serverless=None, storage=None, target=None)}, databricks_externallocations={}, databricks_grants={}, databricks_groups={}, databricks_jobs={'job-stock-prices': Job(resource_name_='job-stock-prices', options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None), lookup_existing=None, variables={}, access_controls=[], clusters=[JobCluster(resource_name_=None, options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None), lookup_existing=None, variables={}, access_controls=None, apply_policy_default_values=None, autoscale=None, autotermination_minutes=None, cluster_id=None, custom_tags=None, data_security_mode='USER_ISOLATION', driver_instance_pool_id=None, driver_node_type_id=None, enable_elastic_disk=None, enable_local_disk_encryption=None, idempotency_token=None, init_scripts=[], instance_pool_id=None, is_pinned=None, libraries=None, name='main', node_type_id='Standard_DS3_v2', no_wait=None, num_workers=None, policy_id=None, runtime_engine=None, single_user_name=None, spark_conf={}, spark_env_vars={}, spark_version='14.0.x-scala2.12', ssh_public_keys=[])], continuous=None, control_run_state=None, description=None, email_notifications=None, format=None, health=None, max_concurrent_runs=None, max_retries=None, min_retry_interval_millis=None, name='job-stock-prices', name_prefix=None, name_suffix=None, notification_settings=None, parameters=[], queue=None, retry_on_timeout=None, run_as=None, schedule=None, tags={}, tasks=[JobTask(variables={}, condition_task=None, depends_ons=None, description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key='main', libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=JobTaskNotebookTask(variables={}, notebook_path='/.laktory/jobs/ingest_stock_prices.py', base_parameters=None, warehouse_id=None, source=None), notification_settings=None, pipeline_task=None, retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='ingest', timeout_seconds=None, for_each_task=None), JobTask(variables={}, condition_task=None, depends_ons=[JobTaskDependsOn(variables={}, task_key='ingest', outcome=None)], description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key=None, libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=None, notification_settings=None, pipeline_task=JobTaskPipelineTask(variables={}, pipeline_id='${resources.dlt-pl-stock-prices.id}', full_refresh=None), retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='pipeline', timeout_seconds=None, for_each_task=None)], timeout_seconds=None, trigger=None, webhook_notifications=None)}, databricks_metastoredataaccesses={}, databricks_metastores={}, databricks_mlflowexperiments={}, databricks_mlflowmodels={}, databricks_mlflowwebhooks={}, databricks_networkconnectivityconfig={}, databricks_notebooks={}, databricks_queries={}, databricks_repos={}, databricks_schemas={}, databricks_secrets={}, databricks_secretscopes={}, databricks_serviceprincipals={}, databricks_tables={}, databricks_users={}, databricks_vectorsearchendpoints={}, databricks_vectorsearchindexes={}, databricks_volumes={}, databricks_warehouses={}, databricks_workspacefiles={}, pipelines={}, providers={}) settings=None terraform=Terraform(variables={}, backend=None)
+    variables={'org': 'okube'} backend='pulumi' description=None environments={'dev': EnvironmentSettings(variables={'is_dev': True}, resources=None, terraform=Terraform(variables={}, backend=None)), 'prod': EnvironmentSettings(variables={'is_dev': False}, resources=None, terraform=Terraform(variables={}, backend=None))} name='workspace' organization=None pulumi=Pulumi(variables={}, config={'databricks:host': '${vars.DATABRICKS_HOST}', 'databricks:token': '${vars.DATABRICKS_TOKEN}'}, outputs={}) resources=StackResources(variables={}, databricks_alerts={}, databricks_catalogs={}, databricks_clusterpolicies={}, databricks_clusters={}, databricks_dashboards={}, databricks_dbfsfiles={}, databricks_directories={}, databricks_dltpipelines={'pl-stock-prices': DLTPipeline(resource_name_='pl-stock-prices', options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None, moved_from=None), lookup_existing=None, variables={}, access_controls=[], allow_duplicate_names=None, catalog=None, channel='PREVIEW', clusters=[], configuration={}, continuous=None, development='${vars.is_dev}', edition=None, libraries=[PipelineLibrary(variables={}, file=None, notebook=PipelineLibraryNotebook(variables={}, path='/pipelines/dlt_brz_template.py'))], name='pl-stock-prices', name_prefix=None, name_suffix=None, notifications=[], photon=None, serverless=None, storage=None, target=None)}, databricks_externallocations={}, databricks_grants={}, databricks_groups={}, databricks_jobs={'job-stock-prices': Job(resource_name_='job-stock-prices', options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None, moved_from=None), lookup_existing=None, variables={}, access_controls=[], clusters=[JobCluster(resource_name_=None, options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None, moved_from=None), lookup_existing=None, variables={}, access_controls=None, apply_policy_default_values=None, autoscale=None, autotermination_minutes=None, cluster_id=None, custom_tags=None, data_security_mode='USER_ISOLATION', driver_instance_pool_id=None, driver_node_type_id=None, enable_elastic_disk=None, enable_local_disk_encryption=None, idempotency_token=None, init_scripts=[], instance_pool_id=None, is_pinned=None, libraries=None, name='main', node_type_id='Standard_DS3_v2', no_wait=None, num_workers=None, policy_id=None, runtime_engine=None, single_user_name=None, spark_conf={}, spark_env_vars={}, spark_version='14.0.x-scala2.12', ssh_public_keys=[])], continuous=None, control_run_state=None, description=None, email_notifications=None, format=None, health=None, max_concurrent_runs=None, max_retries=None, min_retry_interval_millis=None, name='job-stock-prices', name_prefix=None, name_suffix=None, notification_settings=None, parameters=[], queue=None, retry_on_timeout=None, run_as=None, schedule=None, tags={}, tasks=[JobTask(variables={}, condition_task=None, depends_ons=None, description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key='main', libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=JobTaskNotebookTask(variables={}, notebook_path='/.laktory/jobs/ingest_stock_prices.py', base_parameters=None, warehouse_id=None, source=None), notification_settings=None, pipeline_task=None, retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='ingest', timeout_seconds=None, for_each_task=None), JobTask(variables={}, condition_task=None, depends_ons=[JobTaskDependsOn(variables={}, task_key='ingest', outcome=None)], description=None, email_notifications=None, existing_cluster_id=None, health=None, job_cluster_key=None, libraries=None, max_retries=None, min_retry_interval_millis=None, notebook_task=None, notification_settings=None, pipeline_task=JobTaskPipelineTask(variables={}, pipeline_id='${resources.dlt-pl-stock-prices.id}', full_refresh=None), retry_on_timeout=None, run_if=None, run_job_task=None, sql_task=None, task_key='pipeline', timeout_seconds=None, for_each_task=None)], timeout_seconds=None, trigger=None, webhook_notifications=None)}, databricks_metastoredataaccesses={}, databricks_metastores={}, databricks_mlflowexperiments={}, databricks_mlflowmodels={}, databricks_mlflowwebhooks={}, databricks_networkconnectivityconfig={}, databricks_notebooks={}, databricks_queries={}, databricks_repos={}, databricks_schemas={}, databricks_secrets={}, databricks_secretscopes={}, databricks_serviceprincipals={}, databricks_tables={}, databricks_users={}, databricks_vectorsearchendpoints={}, databricks_vectorsearchindexes={}, databricks_volumes={}, databricks_warehouses={}, databricks_workspacefiles={}, pipelines={}, providers={}) settings=None terraform=Terraform(variables={}, backend=None)
     '''
     ```
 
@@ -485,15 +486,14 @@ class Stack(BaseModel):
         if self._envs is None:
             ENV_FIELDS = ["pulumi", "resources", "terraform", "variables"]
 
-            # Because options is an excluded field for all resources and
-            # sub-resources, we need to manually dump it and add it to
-            # the base dump
-            def dump_with_options(obj: Any) -> Any:
+            # Because some fields are excluded from the dump, they need to be
+            # manually dumped and added back to the base dump
+            def dump_with_excluded(obj: Any) -> Any:
                 # Check data type, call recursively if not a BaseModel
                 if isinstance(obj, list):
-                    return [dump_with_options(v) for v in obj]
+                    return [dump_with_excluded(v) for v in obj]
                 elif isinstance(obj, dict):
-                    return {k: dump_with_options(v) for k, v in obj.items()}
+                    return {k: dump_with_excluded(v) for k, v in obj.items()}
                 elif not isinstance(obj, BaseModel):
                     return obj
 
@@ -503,13 +503,19 @@ class Stack(BaseModel):
 
                 # Loop through all model fields
                 for field_name, field in model.model_fields.items():
-                    # Explicitly dump options if found in the model
+                    # Explicitly dump excluded fields - variables
+                    if field_name == "variables" and model.variables is not None:
+                        data["variables"] = copy.deepcopy(model.variables)
+
+                    # Explicitly dump excluded fields - resource options
                     if field_name == "options" and field.annotation == ResourceOptions:
                         data["options"] = model.options.model_dump(exclude_unset=True)
 
+                    # Explicitly dump excluded fields - resource name
                     if field_name == "resource_name_" and model.resource_name_:
                         data["resource_name_"] = model.resource_name_
 
+                    # Explicitly dump excluded fields - lookup existing
                     if field_name == "lookup_existing" and model.lookup_existing:
                         data["lookup_existing"] = model.lookup_existing.model_dump(
                             exclude_unset=True
@@ -518,7 +524,7 @@ class Stack(BaseModel):
                     # Parse list
                     if isinstance(data.get(field_name, None), list):
                         data[field_name] = [
-                            dump_with_options(v) for v in getattr(model, field_name)
+                            dump_with_excluded(v) for v in getattr(model, field_name)
                         ]
 
                     # Parse dict (might result from a dict or a BaseModel)
@@ -527,15 +533,15 @@ class Stack(BaseModel):
 
                         if isinstance(a, dict):
                             for k in a.keys():
-                                data[field_name][k] = dump_with_options(a[k])
+                                data[field_name][k] = dump_with_excluded(a[k])
                         else:
-                            data[field_name] = dump_with_options(a)
+                            data[field_name] = dump_with_excluded(a)
 
                 return data
 
             envs = {}
             for _env_name, env in self.environments.items():
-                d = dump_with_options(self)
+                d = dump_with_excluded(self)
                 _envs = d.pop("environments")
 
                 for k in ENV_FIELDS:
@@ -572,12 +578,11 @@ class Stack(BaseModel):
         """
         from laktory.models.stacks.pulumistack import PulumiStack
 
-        env = self.get_env(env_name=env_name)
+        env = self.get_env(env_name=env_name).inject_vars()
 
         # Resources
         resources = {}
         for r in env.resources._get_all().values():
-            r.variables = env.variables
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
 
@@ -587,7 +592,6 @@ class Stack(BaseModel):
             config=env.pulumi.config,
             description=env.description,
             resources=resources,
-            variables=env.variables,
             outputs=env.pulumi.outputs,
         )
 
@@ -611,7 +615,7 @@ class Stack(BaseModel):
         """
         from laktory.models.stacks.terraformstack import TerraformStack
 
-        env = self.get_env(env_name=env_name)
+        env = self.get_env(env_name=env_name).inject_vars()
 
         # Providers
         providers = {}
@@ -623,7 +627,6 @@ class Stack(BaseModel):
         # Resources
         resources = {}
         for r in env.resources._get_all(providers_excluded=True).values():
-            r.variables = env.variables
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
 
@@ -632,5 +635,4 @@ class Stack(BaseModel):
             terraform={"backend": env.terraform.backend},
             providers=providers,
             resources=resources,
-            variables=env.variables,
         )

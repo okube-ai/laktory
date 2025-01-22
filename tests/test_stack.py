@@ -100,7 +100,7 @@ def test_stack_model():
     data = stack.model_dump()
     print(data)
     assert data == {
-        "variables": {},
+        "variables": {"business_unit": "laktory", "workflow_name": "UNDEFINED"},
         "backend": "pulumi",
         "description": None,
         "environments": {
@@ -437,7 +437,9 @@ def test_stack_model():
                         "channel": "PREVIEW",
                         "clusters": [],
                         "configuration": {
-                            "pipeline_name": "pl-stock-prices-ut-stack",
+                            "business_unit": "${vars.business_unit}",
+                            "workflow_name": "${vars.workflow_name}",
+                            "pipeline_name": "${vars.workflow_name}",
                             "workspace_laktory_root": "/.laktory/",
                         },
                         "continuous": None,
@@ -449,7 +451,7 @@ def test_stack_model():
                                 "notebook": {"path": "/pipelines/dlt_brz_template.py"},
                             }
                         ],
-                        "name": "pl-stock-prices-ut-stack",
+                        "name": "${vars.workflow_name}",
                         "name_prefix": None,
                         "name_suffix": None,
                         "notifications": [],
@@ -468,9 +470,9 @@ def test_stack_model():
                                 }
                             ],
                             "dirpath": "",
-                            "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
+                            "path": "/.laktory/pipelines/${vars.workflow_name}/config.json",
                             "rootpath": "/.laktory/",
-                            "source": "./tmp-pl-stock-prices-ut-stack-config.json",
+                            "source": "./tmp-${vars.workflow_name}-config.json",
                         },
                         "requirements_file": {
                             "dataframe_backend": None,
@@ -483,13 +485,13 @@ def test_stack_model():
                                 }
                             ],
                             "dirpath": "",
-                            "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
+                            "path": "/.laktory/pipelines/${vars.workflow_name}/requirements.txt",
                             "rootpath": "/.laktory/",
-                            "source": "./tmp-pl-stock-prices-ut-stack-requirements.txt",
+                            "source": "./tmp-${vars.workflow_name}-requirements.txt",
                         },
                     },
                     "dependencies": [],
-                    "name": "pl-stock-prices-ut-stack",
+                    "name": "${vars.workflow_name}",
                     "nodes": [
                         {
                             "dataframe_backend": None,
@@ -584,26 +586,49 @@ def test_stack_model():
 
 def test_stack_env_model():
     # dev
-    _stack = stack.get_env("dev")
+    _stack = stack.get_env("dev").inject_vars()
     pl = _stack.resources.pipelines["pl-custom-name"]
+
     assert _stack.variables == {
+        "business_unit": "laktory",
+        "workflow_name": "UNDEFINED",
         "env": "dev",
         "is_dev": True,
         "node_type_id": "Standard_DS3_v2",
     }
     assert pl.databricks_dlt.development is None
     assert pl.nodes[0].dlt_template is None
+    assert (
+        pl.databricks_dlt.config_file.path
+        == "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json"
+    )
+    assert pl.variables == {
+        "workflow_name": "pl-stock-prices-ut-stack",
+        "business_unit": "laktory",
+        "env": "dev",
+        "is_dev": True,
+        "node_type_id": "Standard_DS3_v2",
+    }
 
     # prod
     _stack = stack.get_env("prod")
     pl = _stack.resources.pipelines["pl-custom-name"]
     assert _stack.variables == {
+        "business_unit": "laktory",
+        "workflow_name": "UNDEFINED",
         "env": "prod",
         "is_dev": False,
         "node_type_id": "Standard_DS4_v2",
     }
     assert not pl.databricks_dlt.development
     assert pl.nodes[0].dlt_template is None
+    assert pl.variables == {
+        "workflow_name": "pl-stock-prices-ut-stack",
+        "business_unit": "laktory",
+        "env": "prod",
+        "is_dev": False,
+        "node_type_id": "Standard_DS4_v2",
+    }
 
 
 def test_stack_resources_unique_name():
@@ -634,10 +659,7 @@ def test_pulumi_stack(monkeypatch):
         "variables": {},
         "name": "unit-testing",
         "runtime": "yaml",
-        "config": {
-            "databricks:host": "my-host",
-            "databricks:token": "my-token",
-        },
+        "config": {"databricks:host": "my-host", "databricks:token": "my-token"},
         "resources": {
             "job-stock-prices-ut-stack": {
                 "type": "databricks:Job",
@@ -718,6 +740,8 @@ def test_pulumi_stack(monkeypatch):
                     "channel": "PREVIEW",
                     "clusters": [],
                     "configuration": {
+                        "business_unit": "laktory",
+                        "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
                         "workspace_laktory_root": "/.laktory/",
                     },
@@ -797,10 +821,7 @@ def test_pulumi_stack(monkeypatch):
             },
             "databricks": {
                 "type": "pulumi:providers:databricks",
-                "properties": {
-                    "host": "my-host",
-                    "token": "my-token",
-                },
+                "properties": {"host": "my-host", "token": "my-token"},
                 "options": {},
             },
         },
@@ -811,17 +832,10 @@ def test_pulumi_stack(monkeypatch):
     data = stack.to_pulumi(env_name="prod").model_dump()
     print(data)
     assert data == {
-        "variables": {
-            "env": "prod",
-            "is_dev": False,
-            "node_type_id": "Standard_DS4_v2",
-        },
+        "variables": {},
         "name": "unit-testing",
         "runtime": "yaml",
-        "config": {
-            "databricks:host": "my-host",
-            "databricks:token": "my-token",
-        },
+        "config": {"databricks:host": "my-host", "databricks:token": "my-token"},
         "resources": {
             "job-stock-prices-ut-stack": {
                 "type": "databricks:Job",
@@ -902,6 +916,8 @@ def test_pulumi_stack(monkeypatch):
                     "channel": "PREVIEW",
                     "clusters": [],
                     "configuration": {
+                        "business_unit": "laktory",
+                        "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
                         "workspace_laktory_root": "/.laktory/",
                     },
@@ -982,10 +998,7 @@ def test_pulumi_stack(monkeypatch):
             },
             "databricks": {
                 "type": "pulumi:providers:databricks",
-                "properties": {
-                    "host": "my-host",
-                    "token": "my-token",
-                },
+                "properties": {"host": "my-host", "token": "my-token"},
                 "options": {},
             },
         },
@@ -1035,12 +1048,7 @@ def test_terraform_stack(monkeypatch):
                 }
             },
         },
-        "provider": {
-            "databricks": {
-                "host": "my-host",
-                "token": "my-token",
-            }
-        },
+        "provider": {"databricks": {"host": "my-host", "token": "my-token"}},
         "resource": {
             "databricks_job": {
                 "job-stock-prices-ut-stack": {
@@ -1134,6 +1142,8 @@ def test_terraform_stack(monkeypatch):
                 "dlt-custom-name": {
                     "channel": "PREVIEW",
                     "configuration": {
+                        "business_unit": "laktory",
+                        "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
                         "workspace_laktory_root": "/.laktory/",
                     },
@@ -1180,12 +1190,7 @@ def test_terraform_stack(monkeypatch):
                 "databricks": {"source": "databricks/databricks", "version": ">=1.49"}
             }
         },
-        "provider": {
-            "databricks": {
-                "host": "my-host",
-                "token": "my-token",
-            }
-        },
+        "provider": {"databricks": {"host": "my-host", "token": "my-token"}},
         "resource": {
             "databricks_job": {
                 "job-stock-prices-ut-stack": {
@@ -1279,6 +1284,8 @@ def test_terraform_stack(monkeypatch):
                 "dlt-custom-name": {
                     "channel": "PREVIEW",
                     "configuration": {
+                        "business_unit": "laktory",
+                        "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
                         "workspace_laktory_root": "/.laktory/",
                     },
@@ -1325,12 +1332,7 @@ def test_terraform_stack(monkeypatch):
                 "databricks": {"source": "databricks/databricks", "version": ">=1.49"}
             }
         },
-        "provider": {
-            "databricks": {
-                "host": "my-host",
-                "token": "my-token",
-            }
-        },
+        "provider": {"databricks": {"host": "my-host", "token": "my-token"}},
         "resource": {
             "databricks_job": {
                 "job-stock-prices-ut-stack": {
@@ -1424,6 +1426,8 @@ def test_terraform_stack(monkeypatch):
                 "dlt-custom-name": {
                     "channel": "PREVIEW",
                     "configuration": {
+                        "business_unit": "laktory",
+                        "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
                         "workspace_laktory_root": "/.laktory/",
                     },

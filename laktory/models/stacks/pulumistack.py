@@ -1,5 +1,5 @@
-import os
 import json
+import os
 from typing import Any
 from typing import Union
 
@@ -66,9 +66,6 @@ class PulumiStack(BaseModel):
                 del d["resources"][r.resource_name]["properties"]
 
         self._configure_serializer(camel=False)
-
-        # Injecting variables
-        d = self.inject_vars_into_dump(d)
 
         # Pulumi YAML requires the keyword "resources." to be removed
         _vars = {r"\$\{resources\.(.*?)\}": r"${\1}"}
