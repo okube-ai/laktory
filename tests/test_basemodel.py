@@ -56,12 +56,12 @@ def test_read_yaml():
 
     class Stocks(BaseModel):
         stocks: list[Stock] = None
+        query: str = None
 
     with open(paths.data / "yaml_loader" / "stocks_with_vars.yaml", "r") as fp:
         b = Stocks.model_validate_yaml(fp)
 
     data = b.model_dump(exclude_unset=True)
-    print(data)
     assert data == {
         "stocks": [
             {
@@ -96,7 +96,8 @@ def test_read_yaml():
                 "fees": 0.5,
                 "rate": 0.1,
             },
-        ]
+        ],
+        "query": "SELECT\n    *\nFORM\n    {df}\nWHERE\n-- COMMENT\n    SYMBOL = 'AAPL'\n;\n",
     }
 
 
