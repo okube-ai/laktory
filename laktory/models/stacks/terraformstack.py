@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from collections import defaultdict
 from typing import Any
 from typing import Union
@@ -90,6 +91,25 @@ class TerraformStack(BaseModel):
         d["resource"] = dict(d["resource"])
         self._configure_serializer(singular=False)
 
+        # Special treatment of moved
+        # `moved_from` should generally be used with Terraform, but we also
+        # support aliases (Pulumi) for better user experience
+        i = -1
+        for r in self.resources.values():
+            moved_from = r.options.moved_from
+            aliases = r.options.aliases
+            _from = None
+            if moved_from:
+                _from = moved_from
+            elif aliases:
+                _from = aliases[0]
+            if _from:
+                i += 1
+                d[f"moved_{i:05d}"] = {
+                    "from": f"{r.terraform_resource_type}.{_from}",
+                    "to": f"{r.terraform_resource_type}.{r.resource_name}",
+                }
+
         # Terraform JSON requires the keyword "resources." to be removed and the
         # resource_name to be replaced with resource_type.resource_name.
         _vars = {}
@@ -141,6 +161,9 @@ class TerraformStack(BaseModel):
 
         text = json.dumps(self.model_dump(), indent=4)
 
+        # Terraform stack file is not a strict format. Some keys might be
+        # repeated and require special treatment.
+
         # Special treatment of providers with aliases
         for _, p in self.providers.items():
             if p.alias is not None:
@@ -148,6 +171,9 @@ class TerraformStack(BaseModel):
                     f'"{p.resource_name}":',
                     f'"{p.resource_name_without_alias}":',
                 )
+
+        # Special treatment of moved
+        text = re.sub(r'"moved_\d+": {', '"moved": {', text)
 
         # Output
         with open(filepath, "w") as fp:

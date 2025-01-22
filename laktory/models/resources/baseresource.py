@@ -67,6 +67,9 @@ class ResourceOptions(BaseModel):
     parent: str = None
     replace_on_changes: list[str] = None
 
+    # terraform only
+    moved_from: str = None
+
     @property
     def pulumi_options(self) -> list[str]:
         return [
@@ -86,6 +89,7 @@ class ResourceOptions(BaseModel):
             "depends_on",
             "provider",
             "ignore_changes",
+            "moved_from",
         ]
 
 
