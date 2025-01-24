@@ -250,12 +250,13 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
 
     @model_validator(mode="after")
     def update_name(self) -> Any:
-        if self.name_prefix:
-            self.name = self.name_prefix + self.name
-            self.name_prefix = ""
-        if self.name_suffix:
-            self.name = self.name + self.name_suffix
-            self.name_suffix = ""
+        with self.validate_assignment_disabled():
+            if self.name_prefix:
+                self.name = self.name_prefix + self.name
+                self.name_prefix = ""
+            if self.name_suffix:
+                self.name = self.name + self.name_suffix
+                self.name_suffix = ""
         return self
 
     # ----------------------------------------------------------------------- #
