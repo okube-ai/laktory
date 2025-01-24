@@ -1,6 +1,16 @@
 # Release History
 
-## [0.6.4] - Unreleased
+## [0.6.5] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.6.4] - 2025-01-24
 ### Fixed
 * Infinite recursion loop when `name_prefix` is used on some resources.
 
