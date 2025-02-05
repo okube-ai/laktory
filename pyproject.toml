@@ -28,6 +28,7 @@ classifiers = [
 dynamic = ["version"]
 dependencies = [
     "inflect",
+    "narwhals>=1.24.1",
     "networkx",
     "planck>=0.0.8",
     "prompt_toolkit",
