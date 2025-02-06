@@ -1,5 +1,6 @@
-from narwhals import dtypes
-from narwhals.utils import Version
+import json
+
+import narwhals as nw
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
@@ -15,6 +16,7 @@ class ColumnSchema(BaseModel):
 
     @property
     def nw_dtype(self):
+        dtypes = nw.dtypes
         _type = self.type.lower()
 
         # Integer types
@@ -93,30 +95,35 @@ class ColumnSchema(BaseModel):
 class DataFrameSchema(BaseModel):
     columns: list[ColumnSchema]
 
-    # ----------------------------------------------------------------------- #
-    # Polars                                                                  #
-    # ----------------------------------------------------------------------- #
+    # Narwhals
+    def to_narwhals(self):
+        cols = {}
+        for c in self.columns:
+            cols[c.name] = c.nw_dtype
+        return nw.Schema(cols)
 
+    # Polars
     def to_polars(self):
         import polars as pl
         from narwhals._polars.utils import narwhals_to_native_dtype
 
         cols = {}
         for c in self.columns:
-            cols[c.name] = narwhals_to_native_dtype(c.nw_dtype, Version.MAIN)
+            cols[c.name] = narwhals_to_native_dtype(c.nw_dtype, nw.utils.Version.MAIN)
         return pl.Schema(cols)
 
-    # ----------------------------------------------------------------------- #
-    # Spark                                                                   #
-    # ----------------------------------------------------------------------- #
-
+    # Spark
     def to_spark(self):
         import pyspark.sql.types as T
         from narwhals._spark_like.utils import narwhals_to_native_dtype
 
         columns = []
         for c in self.columns:
-            _type = narwhals_to_native_dtype(c.nw_dtype, Version.MAIN, T)
+            _type = narwhals_to_native_dtype(c.nw_dtype, nw.utils.Version.MAIN, T)
             columns += [T.StructField(c.name, _type, c.nullable)]
 
         return T.StructType(columns)
+
+    # String
+    def to_string(self, indent=None):
+        return json.dumps({c.name: c.type for c in self.columns}, indent=indent)
