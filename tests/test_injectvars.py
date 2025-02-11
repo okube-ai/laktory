@@ -1,13 +1,13 @@
+from laktory import models
 from laktory._testing import MonkeyPatch
-from laktory.models import BaseModel
 
 
-class Owner(BaseModel):
+class Owner(models.BaseModel):
     name: str = None
     id: int = None
 
 
-class Cluster(BaseModel):
+class Cluster(models.BaseModel):
     id: int = None
     name: str = None
     size: list[int] = None
@@ -228,6 +228,49 @@ def test_dump():
     assert c.inject_vars(inplace=False).model_dump() == di
 
 
+def test_stack():
+    cluster = models.resources.databricks.Cluster(
+        name="cl",
+        spark_version="3.12",
+        node_type_id="xs",
+        custom_tags={
+            # "catalog": "${{ vars.catalog if vars.env == 'dev' else vars.client }}",
+            "catalog1": "${vars.catalog1}",
+            "catalog2": "${vars.catalog2}",
+            "catalog3": "${vars.catalog3}",
+        },
+        variables={
+            "catalog1": "prod",
+            "catalog2": "${vars.catalog}",
+            "catalog3": "${{vars.catalog == 'sandbox'}}",
+        },
+    )
+
+    stack = models.Stack(
+        name="test",
+        environments={
+            "prd": {"variables": {"env": "prod"}},
+            "dev": {
+                "variables": {
+                    "env": "dev",
+                    "catalog": "sandbox",
+                }
+            },
+        },
+        resources={"databricks_clusters": {"cl": cluster}},
+    )
+
+    # Dev
+    _stack = stack.get_env("dev").inject_vars()
+    tags = _stack.resources.databricks_clusters["cl"].custom_tags
+    assert tags == {"catalog1": "prod", "catalog2": "sandbox", "catalog3": True}
+
+    # Prod
+    # _stack = stack.get_env("prd").inject_vars()
+    # tags = _stack.resources.databricks_clusters["cl"].custom_tags
+    # assert tags == {'catalog1': 'prod', 'catalog2': 'sandbox', 'catalog3': True}
+
+
 if __name__ == "__main__":
     test_simple_substitution()
     test_regex()
@@ -240,3 +283,4 @@ if __name__ == "__main__":
     test_complex()
     test_inplace()
     test_dump()
+    test_stack()
