@@ -420,6 +420,38 @@ def test_scd2():
         path=str(path),
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
+            order_by="index",
+            scd_type=2,
+        ),
+    )
+    df.show()
+    dfs.show()
+    sink.write(df.drop("from"))
+    sink.write(dfs)
+
+    # Test
+    df1 = read(path).sort("date", "symbol", "__start_at").toPandas()
+    where = (df1["symbol"] == "S2") & (df1["date"] == datetime.date(2024, 11, 3))
+    assert len(df1) == df.count() + dfs.count()
+    assert df1["__end_at"].count() == dfs.count()
+    assert df1.loc[where]["__end_at"].fillna(-1).tolist() == [2, 3, 4, -1]
+
+    # Cleanup
+    shutil.rmtree(path)
+
+
+def test_scd2_with_delete():
+    path, df = build_target(write_target=False, index=1)
+
+    # Build Source Data
+    dfs = get_scd2_source()
+
+    # Merge
+    sink = models.FileDataSink(
+        mode="MERGE",
+        path=str(path),
+        merge_cdc_options=models.DataSinkMergeCDCOptions(
+            primary_keys=["symbol", "date"],
             exclude_columns=["_is_deleted"],
             delete_where="_is_deleted = true",
             order_by="index",
@@ -611,11 +643,12 @@ def test_dlt_kwargs():
 
 
 if __name__ == "__main__":
-    # test_basic()
-    # test_out_of_sequence()
-    # test_outdated()
+    test_basic()
+    test_out_of_sequence()
+    test_outdated()
     test_delete_non_existent()
-    # test_scd2()
-    # test_null_updates()
-    # test_stream()
-    # test_dlt_kwargs()
+    test_scd2()
+    test_scd2_with_delete()
+    test_null_updates()
+    test_stream()
+    test_dlt_kwargs()
