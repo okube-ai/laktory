@@ -202,6 +202,7 @@ def test_stack_model():
                     "tags": {},
                     "tasks": [
                         {
+                            "dbt_task": None,
                             "condition_task": None,
                             "depends_ons": None,
                             "description": None,
@@ -249,6 +250,7 @@ def test_stack_model():
                             "for_each_task": None,
                         },
                         {
+                            "dbt_task": None,
                             "condition_task": None,
                             "depends_ons": None,
                             "description": None,
@@ -302,6 +304,7 @@ def test_stack_model():
                     "tags": {},
                     "tasks": [
                         {
+                            "dbt_task": None,
                             "condition_task": None,
                             "depends_ons": None,
                             "description": None,

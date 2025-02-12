@@ -2,7 +2,7 @@
 
 ## [0.6.5] - Unreleased
 ### Added
-* n/a
+* dbt job task
 ### Fixed
 * SCD Type 2 Sink without delete condition caused exception [[#361](https://github.com/okube-ai/laktory/issues/361)]
 ### Updated
