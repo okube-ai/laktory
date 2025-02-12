@@ -144,6 +144,9 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
 
     @model_validator(mode="after")
     def variables_self_reference(self) -> Any:
+        if self.variables is None:
+            return self
+
         for k, v in self.variables.items():
             if not isinstance(v, str):
                 continue
