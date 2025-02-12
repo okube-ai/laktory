@@ -643,12 +643,12 @@ def test_dlt_kwargs():
 
 
 if __name__ == "__main__":
-    # test_basic()
-    # test_out_of_sequence()
-    # test_outdated()
-    # test_delete_non_existent()
-    # test_scd2()
+    test_basic()
+    test_out_of_sequence()
+    test_outdated()
+    test_delete_non_existent()
+    test_scd2()
     test_scd2_with_delete()
-    # test_null_updates()
-    # test_stream()
-    # test_dlt_kwargs()
+    test_null_updates()
+    test_stream()
+    test_dlt_kwargs()
