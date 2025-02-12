@@ -2,13 +2,11 @@
 
 ## [0.6.5] - Unreleased
 ### Added
-* dbt job task
+* dbt job task [[#363](https://github.com/okube-ai/laktory/issues/363)]
 ### Fixed
 * SCD Type 2 Sink without delete condition caused exception [[#361](https://github.com/okube-ai/laktory/issues/361)]
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* Validation for self referencing variables [[#362](https://github.com/okube-ai/laktory/issues/362)]
 
 ## [0.6.4] - 2025-01-24
 ### Fixed
