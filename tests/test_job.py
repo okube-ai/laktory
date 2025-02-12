@@ -120,6 +120,7 @@ def test_job_model():
         "tags": {},
         "tasks": [
             {
+                "dbt_task": None,
                 "condition_task": None,
                 "depends_ons": None,
                 "description": None,
@@ -147,6 +148,7 @@ def test_job_model():
                 "for_each_task": None,
             },
             {
+                "dbt_task": None,
                 "condition_task": None,
                 "depends_ons": [{"task_key": "ingestion", "outcome": None}],
                 "description": None,
@@ -172,6 +174,7 @@ def test_job_model():
                 "for_each_task": None,
             },
             {
+                "dbt_task": None,
                 "condition_task": None,
                 "depends_ons": None,
                 "description": None,
@@ -235,6 +238,7 @@ def test_job_for_each_task():
         "tags": {},
         "tasks": [
             {
+                "dbt_task": None,
                 "condition_task": None,
                 "depends_ons": None,
                 "description": None,
@@ -257,6 +261,7 @@ def test_job_for_each_task():
                 "for_each_task": {
                     "inputs": '[{"id": 1, "name": "olivier"}, {"id": 2, "name": "kubic"}]',
                     "task": {
+                        "dbt_task": None,
                         "condition_task": None,
                         "depends_ons": None,
                         "description": None,
