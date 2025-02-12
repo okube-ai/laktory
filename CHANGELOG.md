@@ -1,14 +1,10 @@
 # Release History
 
 ## [0.6.5] - Unreleased
-### Added
-* n/a
 ### Fixed
 * SCD Type 2 Sink without delete condition caused exception [[#361](https://github.com/okube-ai/laktory/issues/361)]
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* Validation for self referencing variables.
 
 ## [0.6.4] - 2025-01-24
 ### Fixed
