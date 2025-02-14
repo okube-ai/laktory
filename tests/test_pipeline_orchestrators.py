@@ -3,7 +3,6 @@ from pathlib import Path
 
 import yaml
 
-from laktory import __version__
 from laktory import models
 from laktory._testing import Paths
 
@@ -78,6 +77,12 @@ def test_pipeline_job():
                 "spark_version": "14.0.x-scala2.12",
             }
         ],
+        "environments": [
+            {
+                "environment_key": "laktory",
+                "spec": {"client": "2", "dependencies": ["yfinance", "laktory==0.6.5"]},
+            }
+        ],
         "name": "pl-spark-job",
         "parameters": [
             {"default": "false", "name": "full_refresh"},
@@ -90,7 +95,7 @@ def test_pipeline_job():
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "yfinance"}},
-                    {"pypi": {"package": f"laktory=={__version__}"}},
+                    {"pypi": {"package": "laktory==0.6.5"}},
                 ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
@@ -103,7 +108,7 @@ def test_pipeline_job():
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "yfinance"}},
-                    {"pypi": {"package": f"laktory=={__version__}"}},
+                    {"pypi": {"package": "laktory==0.6.5"}},
                 ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
@@ -116,7 +121,7 @@ def test_pipeline_job():
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "yfinance"}},
-                    {"pypi": {"package": f"laktory=={__version__}"}},
+                    {"pypi": {"package": "laktory==0.6.5"}},
                 ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
@@ -129,7 +134,7 @@ def test_pipeline_job():
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "yfinance"}},
-                    {"pypi": {"package": f"laktory=={__version__}"}},
+                    {"pypi": {"package": "laktory==0.6.5"}},
                 ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",
@@ -145,7 +150,7 @@ def test_pipeline_job():
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "yfinance"}},
-                    {"pypi": {"package": f"laktory=={__version__}"}},
+                    {"pypi": {"package": "laktory==0.6.5"}},
                 ],
                 "notebook_task": {
                     "notebook_path": "/.laktory/jobs/job_laktory_pl.py",

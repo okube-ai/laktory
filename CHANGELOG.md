@@ -3,6 +3,9 @@
 ## [0.6.5] - Unreleased
 ### Added
 * dbt job task [[#363](https://github.com/okube-ai/laktory/issues/363)]
+* `git_source` option for Databricks Job
+* `environments` options for Databricks Job 
+* Optional `node_max_retries` option for pipeline nodes with Databricks Job orchestrator
 ### Fixed
 * SCD Type 2 Sink without delete condition caused exception [[#361](https://github.com/okube-ai/laktory/issues/361)]
 ### Updated
