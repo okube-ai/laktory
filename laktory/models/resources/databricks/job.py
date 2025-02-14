@@ -98,6 +98,84 @@ class JobEmailNotifications(BaseModel):
         }
 
 
+class JobEnvironmentSpec(BaseModel):
+    """
+    Attributes
+    ----------
+    client:
+        client version used by the environment
+    dependencies:
+        List of pip dependencies, as supported by the version of pip in this
+        environment. Each dependency is a pip requirement file line. See [API docs](https://docs.databricks.com/api/workspace/jobs/create#environments-spec-dependencies)
+        for more information.
+    """
+
+    client: str
+    dependencies: list[str] = None
+
+
+class JobEnvironment(BaseModel):
+    """
+    This block describes an Environment that is used to specify libraries used by the
+    tasks running on serverless compute.
+
+    Attributes
+    ----------
+    environment_key:
+        An unique identifier of the Environment. It will be referenced from
+        environment_key attribute of corresponding task.
+    spec:
+
+    """
+
+    environment_key: str
+    spec: JobEnvironmentSpec = None
+
+
+class JobGitSourceGitSnapshot(BaseModel):
+    used_commit: str
+
+
+class JobGitSourceJobSource(BaseModel):
+    import_from_git_branch: str
+    job_config_path: str
+    dirty_state: str = None
+
+
+class JobGitSource(BaseModel):
+    """
+    Git source specifications
+
+    Attributes
+    ----------
+    url:
+        URL of the Git repository to use.
+    branch:
+        Name of the Git branch to use. Conflicts with `tag` and `commit`.
+    commit:
+        Hash of Git commit to use. Conflicts with `branch` and `tag`.
+    git_snapshot:
+        Git snapshot specifications
+    job_source:
+        Job source specifications
+    provider:
+        Case insensitive name of the Git provider. Following values are supported
+        right now (could be a subject for change, consult [Repos API documentation](https://docs.databricks.com/dev-tools/api/latest/repos.html)):
+        `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`,
+        `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`.
+    tag:
+        Name of the Git branch to use. Conflicts with `branch` and `commit`.
+    """
+
+    url: str
+    branch: str = None
+    commit: str = None
+    git_snapshot: JobGitSourceGitSnapshot = None
+    job_source: JobGitSourceJobSource = None
+    provider: str
+    tag: str = None
+
+
 class JobHealthRule(BaseModel):
     """
     Job Health Rule specifications
@@ -485,6 +563,9 @@ class JobTaskForEachTaskTask(BaseModel):
         specifications
     email_notifications:
         Email Notifications specifications
+    environment_key:
+        Identifier of an `environment` that is used to specify libraries. Required for
+        some tasks (`spark_python_task`, `python_wheel_task`, …) running on serverless compute.
     existing_cluster_id:
         Cluster id from one of the clusters available in the workspace
     health:
@@ -525,6 +606,7 @@ class JobTaskForEachTaskTask(BaseModel):
     depends_ons: list[JobTaskDependsOn] = None
     description: str = None
     email_notifications: JobEmailNotifications = None
+    environment_key: str = None
     existing_cluster_id: str = None
     health: JobHealth = None
     job_cluster_key: str = None
@@ -754,7 +836,11 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     email_notifications:
         An optional set of email addresses notified when runs of this job begins, completes or fails. The default
         behavior is to not send any emails. This field is a block and is documented below.
+    environments:
+        List of environments available for the tasks.
     format:
+    git_source:
+        Specifies a Git repository for task source code.
     health:
         Health specifications
     lookup_existing:
@@ -870,7 +956,9 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     control_run_state: bool = None
     description: str = None
     email_notifications: JobEmailNotifications = None
+    environments: list[JobEnvironment] = None
     format: str = None
+    git_source: JobGitSource = None
     health: JobHealth = None
     lookup_existing: JobLookup = Field(None, exclude=True)
     max_concurrent_runs: int = None
