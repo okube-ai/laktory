@@ -3,6 +3,15 @@ import polars as pl
 import pyspark.sql.types as T
 
 from laktory.models import DType
+from laktory.models import dtypes
+
+
+def test_all_types():
+    for name in dtypes.ALL_NAMES:
+        if name in ["array", "list", "struct"]:
+            continue
+
+        _ = DType(name=name)
 
 
 def test_basic_types():
@@ -27,13 +36,11 @@ def test_basic_types():
 
 
 def test_complex_types():
-    t0 = DType(name="array", inner="int")
-    t1 = DType(name="array", inner={"name": "array", "inner": "str"})
-    t2 = DType(name="array", inner=DType(name="array", inner="str"))
+    t0 = DType(name="list", inner="int")
+    t1 = DType(name="list", inner={"name": "list", "inner": "str"})
+    t2 = dtypes.List(inner=DType(name="list", inner="str"))
     t3 = DType(name="struct", fields={"x": "double", "y": "int"})
-    t4 = DType(
-        name="struct", fields={"x": {"name": "array", "inner": "double"}, "y": t3}
-    )
+    t4 = dtypes.Struct(fields={"x": {"name": "list", "inner": "double"}, "y": t3})
 
     # Narwhals
     assert t0.to_nw == nw.List(inner=nw.Int32)
@@ -108,6 +115,14 @@ def test_complex_types():
     )
 
 
+def test_explicit_types():
+    assert DType(name="int32").to_nw == dtypes.Int32().to_nw
+    assert DType(name="double").to_nw == dtypes.Float64().to_nw
+    assert DType(name="str").to_nw == dtypes.String().to_nw
+
+
 if __name__ == "__main__":
+    test_all_types()
     test_basic_types()
     test_complex_types()
+    test_explicit_types()
