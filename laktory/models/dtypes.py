@@ -10,12 +10,6 @@ from laktory.models.basemodel import BaseModel
 
 logger = get_logger(__name__)
 
-__all__ = [
-    "DType",
-    "Struct",
-    "List",
-]
-
 ALL_NAMES = [
     # Complex
     "array",
@@ -71,7 +65,7 @@ ALL_NAMES = [
 
 
 class DType(BaseModel):
-    name: str  # TODO: Add Literal?
+    name: str
     inner: Union[str, "DType"] = None
     fields: dict[str, Union[str, "DType"]] = None
     shape: Union[int, list[int]] = None
