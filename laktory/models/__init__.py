@@ -7,6 +7,7 @@ from .dataproducer import DataProducer
 from .dataquality import *
 from .datasinks import *
 from .datasources import *
+from .dtype import DType
 from .grants import *
 from .pipeline.pipeline import Pipeline
 from .pipeline.pipelinenode import PipelineNode

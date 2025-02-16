@@ -19,7 +19,7 @@ class DType(BaseModel):
         _type = self.name.lower()
 
         # Array
-        if _type in ["array"]:
+        if _type in ["array", "list"]:
             inner = self.inner
             if isinstance(inner, str):
                 inner = DType(name=inner)
@@ -117,3 +117,7 @@ class DType(BaseModel):
         from narwhals._polars.utils import narwhals_to_native_dtype
 
         return narwhals_to_native_dtype(self.to_nw, nw.utils.Version.MAIN)
+
+    @property
+    def to_string(self):
+        return str(self.to_polars)
