@@ -6,11 +6,15 @@ from laktory.models import DType
 from laktory.models import dtypes
 
 
-def test_all_types():
-    for name in dtypes.ALL_NAMES:
-        if name in ["array", "list", "struct"]:
-            continue
+def test_nw_supported():
+    for name in dtypes.NAMES:
+        assert hasattr(nw.dtypes, name)
 
+
+def test_all_types():
+    for name in dtypes.NAMES + list(dtypes.ALIASES.keys()):
+        if name in ["Array", "List", "Struct"]:
+            continue
         _ = DType(name=name)
 
 
@@ -116,13 +120,35 @@ def test_complex_types():
 
 
 def test_explicit_types():
-    assert DType(name="int32").to_nw == dtypes.Int32().to_nw
-    assert DType(name="double").to_nw == dtypes.Float64().to_nw
-    assert DType(name="str").to_nw == dtypes.String().to_nw
+    assert DType(name="int32") == dtypes.Int32().to_generic
+    assert DType(name="double") == dtypes.Float64().to_generic
+    assert DType(name="str") == dtypes.String().to_generic
+
+
+def test_serialization():
+    # List
+    dtype0 = DType(name="list", inner=dtypes.String())
+    dump0 = dtype0.model_dump(exclude_unset=True)
+    dtype1 = DType.model_validate(dump0)
+    dump1 = dtype1.model_dump(exclude_unset=True)
+    assert dump1 == dump0
+
+    # Struct
+    dtype0 = DType(name="Struct", fields={"s": dtypes.String(), "x": dtypes.Float64()})
+    dump0 = dtype0.model_dump(exclude_unset=True)
+    dtype1 = DType.model_validate(dump0)
+    dump1 = dtype1.model_dump(exclude_unset=True)
+    assert dump1 == dump0
+
+    # String
+    dtype0 = dtypes.String()
+    assert dtype0.model_dump(exclude_unset=True) == {"name": "String"}
 
 
 if __name__ == "__main__":
+    test_nw_supported()
     test_all_types()
     test_basic_types()
     test_complex_types()
     test_explicit_types()
+    test_serialization()

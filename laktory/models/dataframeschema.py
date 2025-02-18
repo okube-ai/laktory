@@ -4,16 +4,19 @@ from typing import Union
 
 import narwhals as nw
 from pydantic import field_validator
+from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.dtypes import DType
 
+# from laktory.models.dtypes import DTYPES_TYPE
+
 logger = get_logger(__name__)
 
 
 class ColumnSchema(BaseModel):
-    name: str
+    name: str = None
     dtype: Union[str, DType]
     nullable: bool = True
     is_primary: bool = False
@@ -26,7 +29,31 @@ class ColumnSchema(BaseModel):
 
 
 class DataFrameSchema(BaseModel):
-    columns: list[ColumnSchema]
+    columns: Union[dict[str, Union[str, DType, ColumnSchema]], list[ColumnSchema]]
+
+    @model_validator(mode="before")
+    @classmethod
+    def set_columns(cls, data: Any) -> Any:
+        if "columns" not in data:
+            return data
+
+        columns = data["columns"]
+
+        if isinstance(columns, dict):
+            for k, v in columns.items():
+                if isinstance(v, (str, DType)):
+                    v = {"dtype": v}
+
+                if isinstance(v, ColumnSchema):
+                    v.name = k
+                else:
+                    v["name"] = k
+
+                columns[k] = v
+
+            data["columns"] = list(columns.values())
+
+        return data
 
     # Narwhals
     def to_narwhals(self):

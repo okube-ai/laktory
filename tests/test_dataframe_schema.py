@@ -3,15 +3,30 @@ import polars as pl
 import pyspark.sql.types as T
 
 from laktory.models import DataFrameSchema
+from laktory.models import dtypes
 
 s = DataFrameSchema(
     columns=[
-        {"name": "x", "dtype": "bigint"},
+        {"name": "x", "dtype": "Int64"},
         {"name": "y", "dtype": "FLOAT64"},
-        {"name": "s", "dtype": "str"},
-        {"name": "vals", "dtype": {"name": "list", "inner": "str"}},
+        {"name": "s", "dtype": "string"},
+        {"name": "vals", "dtype": {"name": "list", "inner": "string"}},
     ]
 )
+
+
+def test_validation():
+    assert (
+        DataFrameSchema(
+            columns={
+                "x": "int64",
+                "y": {"dtype": "FLOAT64"},
+                "s": dtypes.DType(name="string"),
+                "vals": {"dtype": {"name": "list", "inner": "string"}},
+            }
+        )
+        == s
+    )
 
 
 def test_narwhals():
@@ -49,6 +64,7 @@ def test_to_string():
 
 
 if __name__ == "__main__":
+    test_validation()
     test_narwhals()
     test_spark()
     test_polars()
