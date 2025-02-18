@@ -120,26 +120,24 @@ class DType(BaseModel):
 
         return fields
 
-    @property
     def to_generic(self):
         return DType(**self.model_dump(exclude_unset=True))
 
-    @property
-    def to_nw(self):
+    def to_narwhals(self):
         nw_dtypes = nw.dtypes
         _type = self.name
 
         # Complex types
         if _type in "Array":
-            return nw_dtypes.Array(inner=self.inner.to_nw, shape=self.shape)
+            return nw_dtypes.Array(inner=self.inner.to_narwhals(), shape=self.shape)
 
         if _type == "List":
-            return nw_dtypes.List(inner=self.inner.to_nw)
+            return nw_dtypes.List(inner=self.inner.to_narwhals())
 
         if _type == "Struct":
             fields = []
             for name, _dtype in self.fields.items():
-                fields += [nw.Field(name=name, dtype=_dtype.to_nw)]
+                fields += [nw.Field(name=name, dtype=_dtype.to_narwhals())]
             return nw_dtypes.Struct(fields)
 
         if hasattr(nw_dtypes, _type):
@@ -148,14 +146,12 @@ class DType(BaseModel):
         # Not Found
         raise ValueError(f"Data type with name '{self.name}' is not supported")
 
-    @property
     def to_spark(self):
         import pyspark.sql.types as T
         from narwhals._spark_like.utils import narwhals_to_native_dtype
 
-        return narwhals_to_native_dtype(self.to_nw, nw.utils.Version.MAIN, T)
+        return narwhals_to_native_dtype(self.to_narwhals(), nw.utils.Version.MAIN, T)
 
-    @property
     def to_polars(self):
         import polars as pl
         from narwhals._polars.utils import narwhals_to_native_dtype
@@ -164,12 +160,13 @@ class DType(BaseModel):
         pl_version = parse_version(pl)
 
         return narwhals_to_native_dtype(
-            dtype=self.to_nw, version=nw.utils.Version.MAIN, backend_version=pl_version
+            dtype=self.to_narwhals(),
+            version=nw.utils.Version.MAIN,
+            backend_version=pl_version,
         )
 
-    @property
     def to_string(self):
-        return str(self.to_polars)
+        return str(self.to_polars())
 
 
 class SpecificDType(DType):

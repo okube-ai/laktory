@@ -59,7 +59,7 @@ class DataFrameSchema(BaseModel):
     def to_narwhals(self):
         cols = {}
         for c in self.columns:
-            cols[c.name] = c.dtype.to_nw
+            cols[c.name] = c.dtype.to_narwhals()
         return nw.Schema(cols)
 
     # Polars
@@ -68,7 +68,7 @@ class DataFrameSchema(BaseModel):
 
         cols = {}
         for c in self.columns:
-            cols[c.name] = c.dtype.to_polars
+            cols[c.name] = c.dtype.to_polars()
         return pl.Schema(cols)
 
     # Spark
@@ -77,7 +77,7 @@ class DataFrameSchema(BaseModel):
 
         columns = []
         for c in self.columns:
-            _type = c.dtype.to_spark
+            _type = c.dtype.to_spark()
             columns += [T.StructField(c.name, _type, c.nullable)]
 
         return T.StructType(columns)
@@ -85,5 +85,5 @@ class DataFrameSchema(BaseModel):
     # String
     def to_string(self, indent=None):
         return json.dumps(
-            {c.name: c.dtype.to_string for c in self.columns}, indent=indent
+            {c.name: c.dtype.to_string() for c in self.columns}, indent=indent
         )
