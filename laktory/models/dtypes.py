@@ -2,8 +2,6 @@ from typing import Any
 from typing import Union
 
 import narwhals as nw
-
-# from narwhals.dtypes import DType as NWDTYpe
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
