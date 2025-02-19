@@ -1,6 +1,16 @@
 # Release History
 
-## [0.6.5] - Unreleased
+## [0.6.6] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.6.5] - 2025-02-19
 ### Added
 * dbt job task [[#363](https://github.com/okube-ai/laktory/issues/363)]
 * `git_source` option for Databricks Job
