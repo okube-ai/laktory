@@ -38,7 +38,7 @@ class DataFramesFactory:
 
     @property
     def slv_stream(self):
-        if self._brz is None:
+        if self._slv_stream is None:
             self._slv_stream = (
                 self.spark.readStream.format("delta")
                 .option("startingOffsets", "earliest")

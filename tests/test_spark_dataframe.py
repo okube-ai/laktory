@@ -404,6 +404,29 @@ def test_window_filter():
     ]
 
 
+def test_is_aggregate():
+    # Static
+    dfa = dff.slv
+    assert not dfa.laktory.is_aggregate()
+
+    # Static with group by
+    dfa = dff.slv.groupby("symbol").agg(F.max("open"))
+    assert dfa.laktory.is_aggregate()
+
+    # Streaming
+    dfa = dff.slv_stream
+    assert not dfa.laktory.is_aggregate()
+
+    # Streaming with group by
+    dfa = dff.slv_stream.groupby("symbol").agg(F.max("open"))
+    assert dfa.laktory.is_aggregate()
+
+    # Streaming with window aggregation
+    w = F.window("created_at", windowDuration="1 hour")
+    dfa = dff.slv_stream.groupby(w, "symbol").agg(F.max("open"))
+    assert dfa.laktory.is_aggregate()
+
+
 if __name__ == "__main__":
     test_df_schema_flat()
     test_df_has_column()
@@ -413,3 +436,4 @@ if __name__ == "__main__":
     test_join_watermark()
     test_aggregation()
     test_window_filter()
+    test_is_aggregate()

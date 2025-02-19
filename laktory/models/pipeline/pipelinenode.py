@@ -713,6 +713,11 @@ class PipelineNode(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     def purge(self, spark=None):
+        # TODO: Now that sink switch to overwrite when sink does not exists or when
+        # a full refresh is requested, the purge method should not delete the data
+        # by default, but only the checkpoints. Also consider truncating the table
+        # instead of dropping it.
+
         logger.info(f"Purging pipeline node {self.name}")
         if self.has_sinks:
             for s in self.sinks:
