@@ -119,7 +119,6 @@ class FileDataSink(BaseDataSink):
 
         # Full Refresh
         if full_refresh or not self.exists(spark=df.sparkSession):
-            print("SETTING MODE!", df.isStreaming, mode)
             if df.isStreaming:
                 if df.laktory.is_aggregate():
                     logger.info(
