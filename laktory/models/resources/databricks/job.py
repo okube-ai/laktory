@@ -1115,10 +1115,11 @@ class Job(BaseModel, PulumiResource, TerraformResource):
             d[k] = _clusters
 
         # Rename dbt task schema
-        for task in d["tasks"]:
-            if "dbt_task" in task:
-                if "schema_" in task["dbt_task"]:
-                    task["dbt_task"]["schema"] = task["dbt_task"]["schema_"]
-                    del task["dbt_task"]["schema_"]
+        if "tasks" in d:
+            for task in d["tasks"]:
+                if "dbt_task" in task:
+                    if "schema_" in task["dbt_task"]:
+                        task["dbt_task"]["schema"] = task["dbt_task"]["schema_"]
+                        del task["dbt_task"]["schema_"]
 
         return d
