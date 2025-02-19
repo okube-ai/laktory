@@ -5,6 +5,7 @@ from pyspark.sql.dataframe import DataFrame
 from laktory.spark.dataframe.display import display
 from laktory.spark.dataframe.groupby_and_agg import groupby_and_agg
 from laktory.spark.dataframe.has_column import has_column
+from laktory.spark.dataframe.is_aggregate import is_aggregate
 from laktory.spark.dataframe.schema_flat import schema_flat
 from laktory.spark.dataframe.show_string import show_string
 from laktory.spark.dataframe.smart_join import smart_join
@@ -27,6 +28,10 @@ class LaktoryDataFrame:
     @wraps(has_column)
     def has_column(self, *args, **kwargs):
         return has_column(self._df, *args, **kwargs)
+
+    @wraps(is_aggregate)
+    def is_aggregate(self, *args, **kwargs):
+        return is_aggregate(self._df, *args, **kwargs)
 
     @wraps(schema_flat)
     def schema_flat(self, *args, **kwargs):
