@@ -78,6 +78,15 @@ def test_pipeline_job():
                 "spark_version": "14.0.x-scala2.12",
             }
         ],
+        "environments": [
+            {
+                "environment_key": "laktory",
+                "spec": {
+                    "client": "2",
+                    "dependencies": ["yfinance", f"laktory=={__version__}"],
+                },
+            }
+        ],
         "name": "pl-spark-job",
         "parameters": [
             {"default": "false", "name": "full_refresh"},

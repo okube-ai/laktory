@@ -1,13 +1,15 @@
+import pytest
+
+from laktory import models
 from laktory._testing import MonkeyPatch
-from laktory.models import BaseModel
 
 
-class Owner(BaseModel):
+class Owner(models.BaseModel):
     name: str = None
     id: int = None
 
 
-class Cluster(BaseModel):
+class Cluster(models.BaseModel):
     id: int = None
     name: str = None
     size: list[int] = None
@@ -181,6 +183,36 @@ def test_expression():
     assert c.id == 4
 
 
+def test_self_referencing():
+    with pytest.raises(ValueError):
+        Cluster(
+            name="${vars.env}",
+            owner=Owner(
+                name="${vars.env}",
+                variables={
+                    "env": "${vars.env}+a",
+                },
+            ),
+            variables={
+                "env": "prd",
+            },
+        )
+
+    with pytest.raises(ValueError):
+        Cluster(
+            name="${vars.env}",
+            owner=Owner(
+                name="${vars.env}",
+                variables={
+                    "env": "${{ vars.env + '_local' }}",
+                },
+            ),
+            variables={
+                "env": "prd",
+            },
+        ).inject_vars()
+
+
 def test_complex():
     c = Cluster(
         tags="${vars.tags}",
@@ -228,6 +260,50 @@ def test_dump():
     assert c.inject_vars(inplace=False).model_dump() == di
 
 
+def test_stack():
+    cluster = models.resources.databricks.Cluster(
+        name="cl",
+        spark_version="3.12",
+        node_type_id="xs",
+        custom_tags={
+            "catalog": "${vars.catalog}",
+            "catalog_local": "${vars.catalog_local}",
+        },
+        variables={
+            "catalog_local": "${{vars.catalog + '_local'}}",
+        },
+    )
+
+    stack = models.Stack(
+        name="test",
+        environments={
+            "prd": {
+                "variables": {
+                    "env": "prod",
+                    "catalog": "prod",
+                }
+            },
+            "dev": {
+                "variables": {
+                    "env": "dev",
+                    "catalog": "sandbox",
+                }
+            },
+        },
+        resources={"databricks_clusters": {"cl": cluster}},
+    )
+
+    # Dev
+    _stack = stack.get_env("dev").inject_vars()
+    tags = _stack.resources.databricks_clusters["cl"].custom_tags
+    assert tags == {"catalog": "sandbox", "catalog_local": "sandbox_local"}
+
+    # Prod
+    _stack = stack.get_env("prd").inject_vars()
+    tags = _stack.resources.databricks_clusters["cl"].custom_tags
+    assert tags == {"catalog": "prod", "catalog_local": "prod_local"}
+
+
 if __name__ == "__main__":
     test_simple_substitution()
     test_regex()
@@ -237,6 +313,8 @@ if __name__ == "__main__":
     test_case_sensitive(MonkeyPatch())
     test_submodels(MonkeyPatch())
     test_expression()
+    test_self_referencing()
     test_complex()
     test_inplace()
     test_dump()
+    test_stack()

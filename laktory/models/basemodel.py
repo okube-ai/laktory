@@ -1,5 +1,6 @@
 import copy
 import json
+import re
 import typing
 from contextlib import contextmanager
 from copy import deepcopy
@@ -15,6 +16,7 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_serializer
+from pydantic import model_validator
 from pydantic._internal._model_construction import ModelMetaclass as _ModelMetaclass
 
 from laktory._parsers import _resolve_value
@@ -139,6 +141,34 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                     dump[k_singular] = dump.pop(k)
 
         return dump
+
+    @model_validator(mode="after")
+    def variables_self_reference(self) -> Any:
+        if self.variables is None:
+            return self
+
+        for k, v in self.variables.items():
+            if not isinstance(v, str):
+                continue
+
+            self_reference = False
+            if "${vars." + k + "}" in v:
+                self_reference = True
+
+            if v.startswith("${{"):
+                # Regular expression to match 'vars.env'
+                pattern = rf"\bvars\.{k}\b"
+
+                # Check for match
+                if re.search(pattern, v):
+                    self_reference = True
+
+            if self_reference:
+                raise ValueError(
+                    f"Variable `{k}={v}` cannot reference itself or a parent definition of the same name."
+                )
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Class Methods                                                           #

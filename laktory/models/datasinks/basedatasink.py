@@ -380,17 +380,27 @@ class DataSinkMergeCDCOptions(BaseModel):
             merge.execute()
 
         elif self.scd_type == 2:
-            delete_condition = F.coalesce(F.expr(self.delete_where), F.lit(False))
-            not_delete_condition = ~delete_condition
+            if self.delete_where:
+                delete_condition = F.coalesce(F.expr(self.delete_where), F.lit(False))
+                not_delete_condition = ~delete_condition
 
             # Only select rows that have been updated
             if self.target_path:
                 target = spark.read.format("delta").load(self.target_path)
             else:
                 target = spark.read.table(self.target_name)
-            upsert_or_delete = source.withColumn("__to_delete", delete_condition).join(
-                other=target.withColumn("__to_delete", F.lit(False)),
-                on=[self.hash_cols, self.hash_keys, "__to_delete"],
+
+            _source = source
+            _target = target
+            _on = [self.hash_cols, self.hash_keys]
+            if self.delete_where:
+                _source = source.withColumn("__to_delete", delete_condition)
+                _target = target.withColumn("__to_delete", F.lit(False))
+                _on += ["__to_delete"]
+
+            upsert_or_delete = _source.join(
+                other=_target,
+                on=_on,
                 how="leftanti",
             )
 

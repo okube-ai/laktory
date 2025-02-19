@@ -11,6 +11,8 @@ from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.cluster import ClusterLibrary
 from laktory.models.resources.databricks.cluster import ClusterLibraryPypi
 from laktory.models.resources.databricks.job import Job
+from laktory.models.resources.databricks.job import JobEnvironment
+from laktory.models.resources.databricks.job import JobEnvironmentSpec
 from laktory.models.resources.databricks.job import JobParameter
 from laktory.models.resources.databricks.job import JobTask
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -34,6 +36,8 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
     config_file:
         Pipeline configuration (json) file deployed to the workspace and used
         by the job to read and execute the pipeline.
+    node_max_retries:
+        An optional maximum number of times to retry an unsuccessful run for each node.
     requirements_file:
         Pipeline requirements (json) file deployed to the workspace and used
         by the job to install the required python dependencies.
@@ -41,6 +45,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
     notebook_path: Union[str, None] = None
     config_file: PipelineConfigWorkspaceFile = PipelineConfigWorkspaceFile()
+    node_max_retries: int = None
     requirements_file: PipelineRequirementsWorkspaceFile = (
         PipelineRequirementsWorkspaceFile()
     )
@@ -60,6 +65,28 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             )
 
         pl = self.parent_pipeline
+
+        # Environment
+        # Currently not used, but we will be when environments are supported by notebooks (or migrate to wheel/scripts)
+        env_found = False
+        envs = self.environments
+        if envs is None:
+            envs = []
+        for env in envs:
+            if env.environment_key == "laktory":
+                env_found = True
+                break
+        if not env_found:
+            envs += [
+                JobEnvironment(
+                    environment_key="laktory",
+                    spec=JobEnvironmentSpec(
+                        client="2",
+                        dependencies=pl._dependencies,
+                    ),
+                )
+            ]
+            self.environments = envs
 
         self.parameters = [
             JobParameter(name="full_refresh", default="false"),
@@ -85,28 +112,31 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             for edge in pl.dag.in_edges(node.name):
                 depends_on += [{"task_key": "node-" + edge[0]}]
 
-            libraries = []
+            task = JobTask(
+                task_key="node-" + node.name,
+                notebook_task={
+                    "base_parameters": {"node_name": node.name},
+                    "notebook_path": notebook_path,
+                },
+                depends_ons=depends_on,
+            )
             if cluster_found:
                 libraries = [
                     ClusterLibrary(pypi=ClusterLibraryPypi(package=d))
                     for d in pl._dependencies
                 ]
+                task.job_cluster_key = "node-cluster"
+                task.libraries = libraries
+            else:
+                pass
+                # TODO: Notebook tasks don't currently support environments. To Enable when they do
 
-            self.tasks += [
-                JobTask(
-                    task_key="node-" + node.name,
-                    notebook_task={
-                        "base_parameters": {"node_name": node.name},
-                        "notebook_path": notebook_path,
-                    },
-                    libraries=libraries,
-                    depends_ons=depends_on,
-                )
-            ]
-            self.sort_tasks(self.tasks)
+            if self.node_max_retries:
+                task.max_retries = self.node_max_retries
 
-            if cluster_found:
-                self.tasks[-1].job_cluster_key = "node-cluster"
+            self.tasks += [task]
+
+        self.sort_tasks(self.tasks)
 
         # Config file
         self.config_file.update_from_parent()
@@ -135,6 +165,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         return super().pulumi_excludes + [
             "notebook_path",
             "config_file",
+            "node_max_retries",
             "requirements_file",
         ]
 
