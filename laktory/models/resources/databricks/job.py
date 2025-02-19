@@ -3,6 +3,7 @@ from typing import Any
 from typing import Literal
 from typing import Union
 
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -407,11 +408,15 @@ class JobTaskDbtTask(BaseModel):
         contains the dbt project.
     """
 
+    model_config = ConfigDict(populate_by_name=True)
+
     commands: list[str]
     catalog: str = None
     profiles_directory: str = None
     project_directory: str = None
-    schema: str = None
+    schema_: str = Field(
+        None, alias="schema"
+    )  # required not to overwrite BaseModel attribute
     source: str = None
     warehouse_id: str = None
 
@@ -1064,6 +1069,13 @@ class Job(BaseModel, PulumiResource, TerraformResource):
                     ]
                 d[k] = _clusters
 
+        # Rename dbt task schema
+        for task in d["tasks"]:
+            if "dbt_task" in task:
+                if "schema_" in task["dbt_task"]:
+                    task["dbt_task"]["schema"] = task["dbt_task"]["schema_"]
+                    del task["dbt_task"]["schema_"]
+
         return d
 
     # ----------------------------------------------------------------------- #
@@ -1101,5 +1113,13 @@ class Job(BaseModel, PulumiResource, TerraformResource):
                     }
                 ]
             d[k] = _clusters
+
+        # Rename dbt task schema
+        if "tasks" in d:
+            for task in d["tasks"]:
+                if "dbt_task" in task:
+                    if "schema_" in task["dbt_task"]:
+                        task["dbt_task"]["schema"] = task["dbt_task"]["schema_"]
+                        del task["dbt_task"]["schema_"]
 
         return d

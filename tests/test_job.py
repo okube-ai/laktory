@@ -360,7 +360,31 @@ def test_job_pulumi():
     }
 
 
+def test_job_task_dbt():
+    job = Job(
+        name="job-stock-prices",
+        tasks=[
+            {
+                "dbt_task": {
+                    "commands": ["dbt build", "dbt run"],
+                    "schema_": "finance",
+                },
+            },
+        ],
+    )
+    assert job.pulumi_properties == {
+        "name": "job-stock-prices",
+        "parameters": [],
+        "tags": {},
+        "tasks": [
+            {"dbt_task": {"commands": ["dbt build", "dbt run"], "schema": "finance"}}
+        ],
+        "job_clusters": [],
+    }
+
+
 if __name__ == "__main__":
     test_job_model()
     test_job_for_each_task()
     test_job_pulumi()
+    test_job_task_dbt()
