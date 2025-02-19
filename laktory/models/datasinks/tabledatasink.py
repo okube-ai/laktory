@@ -153,7 +153,7 @@ class TableDataSink(BaseDataSink):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _write_spark(self, df: SparkDataFrame, mode=None) -> None:
+    def _write_spark(self, df: SparkDataFrame, mode=None, full_refresh=False) -> None:
         if df.isStreaming and self._checkpoint_location is None:
             raise ValueError("Checkpoint must be provided for streaming table sink.")
 
@@ -161,7 +161,7 @@ class TableDataSink(BaseDataSink):
             mode = self.mode
 
         if self.warehouse == "DATABRICKS":
-            return self._write_spark_databricks(df, mode=mode)
+            return self._write_spark_databricks(df, mode=mode, full_refresh=full_refresh)
         else:
             raise NotImplementedError(
                 f"Warehouse '{self.warehouse}' is not yet supported."
@@ -173,13 +173,20 @@ class TableDataSink(BaseDataSink):
         if self.parent_pipeline_node:
             self.parent_pipeline_node._output_df = df
 
-    def _write_spark_databricks(self, df: SparkDataFrame, mode) -> None:
+    def _write_spark_databricks(self, df: SparkDataFrame, mode, full_refresh=False) -> None:
         if self.format in ["EXCEL"]:
             raise ValueError(f"'{self.format}' format is not supported with Spark")
 
         if mode.lower() == "merge":
             self.merge_cdc_options.execute(source=df)
             return
+
+        # Full Refresh
+        if full_refresh or not self.exists(spark=df.sparkSession):
+            if df.isStreaming:
+                mode = "COMPLETE"
+            else:
+                mode = "OVERWRITE"
 
         # Default Options
         _options = {"mergeSchema": "true", "overwriteSchema": "false"}

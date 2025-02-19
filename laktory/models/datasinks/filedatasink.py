@@ -103,7 +103,7 @@ class FileDataSink(BaseDataSink):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _write_spark(self, df: SparkDataFrame, mode=None) -> None:
+    def _write_spark(self, df: SparkDataFrame, mode=None, full_refresh=False) -> None:
         if self.format in ["EXCEL"]:
             raise ValueError(f"'{self.format}' format is not supported with Spark")
 
@@ -114,6 +114,13 @@ class FileDataSink(BaseDataSink):
         if mode.lower() == "merge":
             self.merge_cdc_options.execute(source=df)
             return
+
+        # Full Refresh
+        if full_refresh or not self.exists(spark=df.sparkSession):
+            if df.isStreaming:
+                mode = "COMPLETE"
+            else:
+                mode = "OVERWRITE"
 
         # Default Options
         _options = {"mergeSchema": "true", "overwriteSchema": "false"}
@@ -151,7 +158,7 @@ class FileDataSink(BaseDataSink):
                 .save(self.path)
             )
 
-    def _write_polars(self, df: PolarsDataFrame, mode=None) -> None:
+    def _write_polars(self, df: PolarsDataFrame, mode=None, full_refresh=False) -> None:
         isStreaming = False
 
         if isStreaming:
@@ -166,6 +173,10 @@ class FileDataSink(BaseDataSink):
                     "'mode' configuration with Polars only supported by 'DELTA' format"
                 )
         else:
+
+            if full_refresh or not self.exists():
+                mode = "OVERWRITE"
+
             if not mode:
                 raise ValueError(
                     "'mode' configuration required with Polars 'DELTA' format"

@@ -609,6 +609,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         self,
         df: AnyDataFrame = None,
         mode: str = None,
+        full_refresh: bool = False,
         spark=None,
         view_definition: str = None,
     ) -> None:
@@ -621,6 +622,9 @@ class BaseDataSink(BaseModel, PipelineChild):
             Input dataframe.
         mode:
             Write mode overwrite of the sink default mode.
+        full_refresh
+            If `True`, tables are fully refreshed (re-built). Otherwise, only
+            increments are processed.
         spark:
             Spark Session for creating a view
         view_definition:
@@ -654,15 +658,15 @@ class BaseDataSink(BaseModel, PipelineChild):
             mode = self.mode
 
         if is_spark_dataframe(df):
-            self._write_spark(df=df, mode=mode)
+            self._write_spark(df=df, mode=mode, full_refresh=full_refresh)
         elif is_polars_dataframe(df=df):
-            self._write_polars(df, mode=mode)
+            self._write_polars(df, mode=mode, full_refresh=full_refresh)
         else:
             raise ValueError(f"DataFrame type '{type(df)}' not supported")
 
         logger.info("Write completed.")
 
-    def _write_spark(self, df: SparkDataFrame, mode: str = mode) -> None:
+    def _write_spark(self, df: SparkDataFrame, mode: str = mode, full_refresh: bool = False) -> None:
         raise NotImplementedError("Not implemented for Spark dataframe")
 
     def _write_spark_view(self, view_definition: str, spark) -> None:
@@ -670,12 +674,20 @@ class BaseDataSink(BaseModel, PipelineChild):
             f"View creation with spark is not implemented for type '{type(self)}'"
         )
 
-    def _write_polars(self, df: PolarsLazyFrame, mode=mode) -> None:
+    def _write_polars(self, df: PolarsLazyFrame, mode=mode, full_refresh: bool = False) -> None:
         raise NotImplementedError("Not implemented for Polars dataframe")
 
     # ----------------------------------------------------------------------- #
     # Purge                                                                   #
     # ----------------------------------------------------------------------- #
+
+    def exists(self, spark=None):
+        df = self.read(spark=spark, as_stream=False)
+        try:
+            df.limit(1).collect()
+            return True
+        except:
+            return False
 
     def _purge_checkpoint(self, spark=None):
         if self._checkpoint_location:

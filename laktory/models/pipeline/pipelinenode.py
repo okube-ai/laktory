@@ -854,10 +854,10 @@ class PipelineNode(BaseModel, PipelineChild):
                     s.write(view_definition=self._view_definition, spark=spark)
                     self._output_df = s.as_source().read(spark=spark)
                 else:
-                    s.write(self._output_df)
+                    s.write(self._output_df, full_refresh=full_refresh)
             if self._quarantine_df is not None:
                 for s in self.quarantine_sinks:
-                    s.write(self._quarantine_df)
+                    s.write(self._quarantine_df, full_refresh=full_refresh)
 
         return self._output_df
 
