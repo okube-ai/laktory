@@ -380,17 +380,27 @@ class DataSinkMergeCDCOptions(BaseModel):
             merge.execute()
 
         elif self.scd_type == 2:
-            delete_condition = F.coalesce(F.expr(self.delete_where), F.lit(False))
-            not_delete_condition = ~delete_condition
+            if self.delete_where:
+                delete_condition = F.coalesce(F.expr(self.delete_where), F.lit(False))
+                not_delete_condition = ~delete_condition
 
             # Only select rows that have been updated
             if self.target_path:
                 target = spark.read.format("delta").load(self.target_path)
             else:
                 target = spark.read.table(self.target_name)
-            upsert_or_delete = source.withColumn("__to_delete", delete_condition).join(
-                other=target.withColumn("__to_delete", F.lit(False)),
-                on=[self.hash_cols, self.hash_keys, "__to_delete"],
+
+            _source = source
+            _target = target
+            _on = [self.hash_cols, self.hash_keys]
+            if self.delete_where:
+                _source = source.withColumn("__to_delete", delete_condition)
+                _target = target.withColumn("__to_delete", F.lit(False))
+                _on += ["__to_delete"]
+
+            upsert_or_delete = _source.join(
+                other=_target,
+                on=_on,
                 how="leftanti",
             )
 
@@ -609,6 +619,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         self,
         df: AnyDataFrame = None,
         mode: str = None,
+        full_refresh: bool = False,
         spark=None,
         view_definition: str = None,
     ) -> None:
@@ -621,6 +632,9 @@ class BaseDataSink(BaseModel, PipelineChild):
             Input dataframe.
         mode:
             Write mode overwrite of the sink default mode.
+        full_refresh
+            If `True`, tables are fully refreshed (re-built). Otherwise, only
+            increments are processed.
         spark:
             Spark Session for creating a view
         view_definition:
@@ -654,15 +668,19 @@ class BaseDataSink(BaseModel, PipelineChild):
             mode = self.mode
 
         if is_spark_dataframe(df):
-            self._write_spark(df=df, mode=mode)
+            self.dataframe_backend = "SPARK"
+            self._write_spark(df=df, mode=mode, full_refresh=full_refresh)
         elif is_polars_dataframe(df=df):
-            self._write_polars(df, mode=mode)
+            self.dataframe_backend = "POLARS"
+            self._write_polars(df, mode=mode, full_refresh=full_refresh)
         else:
             raise ValueError(f"DataFrame type '{type(df)}' not supported")
 
         logger.info("Write completed.")
 
-    def _write_spark(self, df: SparkDataFrame, mode: str = mode) -> None:
+    def _write_spark(
+        self, df: SparkDataFrame, mode: str = mode, full_refresh: bool = False
+    ) -> None:
         raise NotImplementedError("Not implemented for Spark dataframe")
 
     def _write_spark_view(self, view_definition: str, spark) -> None:
@@ -670,12 +688,22 @@ class BaseDataSink(BaseModel, PipelineChild):
             f"View creation with spark is not implemented for type '{type(self)}'"
         )
 
-    def _write_polars(self, df: PolarsLazyFrame, mode=mode) -> None:
+    def _write_polars(
+        self, df: PolarsLazyFrame, mode=mode, full_refresh: bool = False
+    ) -> None:
         raise NotImplementedError("Not implemented for Polars dataframe")
 
     # ----------------------------------------------------------------------- #
     # Purge                                                                   #
     # ----------------------------------------------------------------------- #
+
+    def exists(self, spark=None):
+        try:
+            df = self.read(spark=spark, as_stream=False)
+            df.limit(1).collect()
+            return True
+        except Exception:
+            return False
 
     def _purge_checkpoint(self, spark=None):
         if self._checkpoint_location:
@@ -725,6 +753,10 @@ class BaseDataSink(BaseModel, PipelineChild):
         """
         Delete sink data and checkpoints
         """
+        # TODO: Now that sink switch to overwrite when sink does not exists or when
+        # a full refresh is requested, the purge method should not delete the data
+        # by default, but only the checkpoints. Also consider truncating the table
+        # instead of dropping it.
         raise NotImplementedError()
 
     # ----------------------------------------------------------------------- #

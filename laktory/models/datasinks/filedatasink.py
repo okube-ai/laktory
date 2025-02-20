@@ -103,7 +103,9 @@ class FileDataSink(BaseDataSink):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _write_spark(self, df: SparkDataFrame, mode=None) -> None:
+    def _write_spark(self, df: SparkDataFrame, mode=None, full_refresh=False) -> None:
+        print("WRITING SPARK!!!!!!!!")
+
         if self.format in ["EXCEL"]:
             raise ValueError(f"'{self.format}' format is not supported with Spark")
 
@@ -114,6 +116,20 @@ class FileDataSink(BaseDataSink):
         if mode.lower() == "merge":
             self.merge_cdc_options.execute(source=df)
             return
+
+        # Full Refresh
+        if full_refresh or not self.exists(spark=df.sparkSession):
+            if df.isStreaming:
+                if df.laktory.is_aggregate():
+                    logger.info(
+                        "Full refresh or initial load. Switching to COMPLETE mode."
+                    )
+                    mode = "COMPLETE"
+            else:
+                logger.info(
+                    "Full refresh or initial load. Switching to OVERWRITE mode."
+                )
+                mode = "OVERWRITE"
 
         # Default Options
         _options = {"mergeSchema": "true", "overwriteSchema": "false"}
@@ -151,14 +167,8 @@ class FileDataSink(BaseDataSink):
                 .save(self.path)
             )
 
-    def _write_polars(self, df: PolarsDataFrame, mode=None) -> None:
+    def _write_polars(self, df: PolarsDataFrame, mode=None, full_refresh=False) -> None:
         isStreaming = False
-
-        if isStreaming:
-            logger.info(f"Writing df as stream {self.format} to {self.path}")
-
-        else:
-            logger.info(f"Writing df as static {self.format} to {self.path}")
 
         if self.format != "DELTA":
             if mode:
@@ -166,10 +176,23 @@ class FileDataSink(BaseDataSink):
                     "'mode' configuration with Polars only supported by 'DELTA' format"
                 )
         else:
+            if full_refresh or not self.exists():
+                mode = "OVERWRITE"
+
             if not mode:
                 raise ValueError(
                     "'mode' configuration required with Polars 'DELTA' format"
                 )
+
+        if isStreaming:
+            logger.info(
+                f"Writing df as stream {self.format} to {self.path} with mode {mode}"
+            )
+
+        else:
+            logger.info(
+                f"Writing df as static {self.format} to {self.path} with mode {mode}"
+            )
 
         if isinstance(df, PolarsLazyFrame):
             df = df.collect()
@@ -193,6 +216,11 @@ class FileDataSink(BaseDataSink):
         """
         Delete sink data and checkpoints
         """
+        # TODO: Now that sink switch to overwrite when sink does not exists or when
+        # a full refresh is requested, the purge method should not delete the data
+        # by default, but only the checkpoints. Also consider truncating the table
+        # instead of dropping it.
+
         # Remove Data
         if os.path.exists(self.path):
             is_dir = os.path.isdir(self.path)
@@ -235,6 +263,8 @@ class FileDataSink(BaseDataSink):
         if as_stream:
             source.as_stream = as_stream
 
+        if self.dataframe_backend:
+            source.dataframe_backend = self.dataframe_backend
         source.parent = self.parent
 
         return source

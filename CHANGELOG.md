@@ -1,6 +1,6 @@
 # Release History
 
-## [0.6.5] - Unreleased
+## [0.6.6] - Unreleased
 ### Added
 * n/a
 ### Fixed
@@ -9,6 +9,18 @@
 * n/a
 ### Breaking changes
 * n/a
+
+## [0.6.5] - 2025-02-19
+### Added
+* dbt job task [[#363](https://github.com/okube-ai/laktory/issues/363)]
+* `git_source` option for Databricks Job
+* `environments` options for Databricks Job 
+* Optional `node_max_retries` option for pipeline nodes with Databricks Job orchestrator
+### Fixed
+* SCD Type 2 Sink without delete condition caused exception [[#361](https://github.com/okube-ai/laktory/issues/361)]
+### Updated
+* Validation for self referencing variables [[#362](https://github.com/okube-ai/laktory/issues/362)]
+* Data sinks write mode auto selection full refresh
 
 ## [0.6.4] - 2025-01-24
 ### Fixed

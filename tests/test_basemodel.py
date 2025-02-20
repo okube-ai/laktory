@@ -214,6 +214,7 @@ def test_singular():
         "description": None,
         "email_notifications": None,
         "format": None,
+        "git_source": None,
         "health": None,
         "max_concurrent_runs": None,
         "max_retries": None,
@@ -261,6 +262,7 @@ def test_singular():
                 "ssh_public_keys": [],
             }
         ],
+        "environment": None,
         "parameter": [],
         "task": [],
     }

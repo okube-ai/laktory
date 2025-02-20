@@ -9,9 +9,6 @@ from pyspark.errors import IllegalArgumentException
 
 from laktory._testing import Paths
 from laktory._testing import dff
-
-# from laktory._testing import df_slv_polars
-# from laktory._testing import df_slv_stream
 from laktory._testing import sparkf
 from laktory.models import FileDataSink
 from laktory.models import TableDataSink
@@ -111,6 +108,52 @@ def test_file_data_sink_stream():
     # Test
     assert df.count() == dff.slv.count()
     assert str(sink._checkpoint_location).endswith("tmp/df_slv_sink_stream/checkpoint")
+
+    # Cleanup
+    sink.purge()
+    assert not os.path.exists(sink.path)
+    assert not os.path.exists(sink._checkpoint_location)
+
+
+def test_file_data_sink_stream_aggregate():
+    dirpath = paths.tmp / "df_slv_sink_stream_aggregate/"
+    if dirpath.exists():
+        shutil.rmtree(dirpath)
+
+    w = F.window("created_at", "5 days")
+    slv_stream = (
+        dff.slv_stream.withWatermark("created_at", "5 minutes")
+        .groupby(w, "symbol")
+        .agg(F.max("open").alias("high"))
+    )
+    count = dff.slv.groupby(w, "symbol").agg(F.max("symbol")).count()
+
+    # Write
+    sink = FileDataSink(
+        path=dirpath,
+        checkpoint_location=str(dirpath / "checkpoint/"),
+        format="DELTA",
+        mode="APPEND",
+    )
+    sink.write(slv_stream)
+
+    # Write again
+    # Should not add any new row because it's a stream and
+    # source has not changed
+    sink.write(slv_stream)
+
+    # Write and raise error
+    with pytest.raises(IllegalArgumentException):
+        sink.write(slv_stream, mode="error")
+
+    # Read back
+    df = sink.as_source().read(spark=spark)
+
+    # Test
+    assert df.count() == count
+    assert str(sink._checkpoint_location).endswith(
+        "tmp/df_slv_sink_stream_aggregate/checkpoint"
+    )
 
     # Cleanup
     sink.purge()
@@ -278,6 +321,7 @@ if __name__ == "__main__":
     test_file_data_sink_parquet()
     test_file_data_sink_delta()
     test_file_data_sink_stream()
+    test_file_data_sink_stream_aggregate()
     test_file_data_sink_polars_parquet()
     test_file_data_sink_polars_delta()
     test_table_data_sink()

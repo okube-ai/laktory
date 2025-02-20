@@ -103,7 +103,9 @@ def test_job_model():
             "on_starts": ["info@okube.ai"],
             "on_successes": ["info@okube.ai"],
         },
+        "environments": None,
         "format": None,
+        "git_source": None,
         "health": None,
         "max_concurrent_runs": None,
         "max_retries": None,
@@ -120,10 +122,12 @@ def test_job_model():
         "tags": {},
         "tasks": [
             {
+                "dbt_task": None,
                 "condition_task": None,
                 "depends_ons": None,
                 "description": None,
                 "email_notifications": None,
+                "environment_key": None,
                 "existing_cluster_id": None,
                 "health": None,
                 "job_cluster_key": "main",
@@ -147,10 +151,12 @@ def test_job_model():
                 "for_each_task": None,
             },
             {
+                "dbt_task": None,
                 "condition_task": None,
                 "depends_ons": [{"task_key": "ingestion", "outcome": None}],
                 "description": None,
                 "email_notifications": None,
+                "environment_key": None,
                 "existing_cluster_id": None,
                 "health": None,
                 "job_cluster_key": None,
@@ -172,10 +178,12 @@ def test_job_model():
                 "for_each_task": None,
             },
             {
+                "dbt_task": None,
                 "condition_task": None,
                 "depends_ons": None,
                 "description": None,
                 "email_notifications": None,
+                "environment_key": None,
                 "existing_cluster_id": None,
                 "health": None,
                 "job_cluster_key": None,
@@ -218,7 +226,9 @@ def test_job_for_each_task():
         "control_run_state": None,
         "description": None,
         "email_notifications": None,
+        "environments": None,
         "format": None,
+        "git_source": None,
         "health": None,
         "max_concurrent_runs": None,
         "max_retries": None,
@@ -235,10 +245,12 @@ def test_job_for_each_task():
         "tags": {},
         "tasks": [
             {
+                "dbt_task": None,
                 "condition_task": None,
                 "depends_ons": None,
                 "description": None,
                 "email_notifications": None,
+                "environment_key": None,
                 "existing_cluster_id": None,
                 "health": None,
                 "job_cluster_key": None,
@@ -257,10 +269,12 @@ def test_job_for_each_task():
                 "for_each_task": {
                     "inputs": '[{"id": 1, "name": "olivier"}, {"id": 2, "name": "kubic"}]',
                     "task": {
+                        "dbt_task": None,
                         "condition_task": None,
                         "depends_ons": None,
                         "description": None,
                         "email_notifications": None,
+                        "environment_key": None,
                         "existing_cluster_id": None,
                         "health": None,
                         "job_cluster_key": None,
@@ -346,7 +360,31 @@ def test_job_pulumi():
     }
 
 
+def test_job_task_dbt():
+    job = Job(
+        name="job-stock-prices",
+        tasks=[
+            {
+                "dbt_task": {
+                    "commands": ["dbt build", "dbt run"],
+                    "schema_": "finance",
+                },
+            },
+        ],
+    )
+    assert job.pulumi_properties == {
+        "name": "job-stock-prices",
+        "parameters": [],
+        "tags": {},
+        "tasks": [
+            {"dbt_task": {"commands": ["dbt build", "dbt run"], "schema": "finance"}}
+        ],
+        "job_clusters": [],
+    }
+
+
 if __name__ == "__main__":
     test_job_model()
     test_job_for_each_task()
     test_job_pulumi()
+    test_job_task_dbt()
