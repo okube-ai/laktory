@@ -1,10 +1,13 @@
+import math
+
 import narwhals as nw
+import numpy as np
 import polars as pl
 
 from laktory.sqlparser import SQLParser
 
 e = pl
-e = nw
+# e = nw
 
 
 def test_binary_operators():
@@ -23,6 +26,7 @@ def test_binary_operators():
 
     exprs = [
         ("x + y", e.col("x") + e.col("y")),
+        ("x + 4", e.col("x") + e.lit(4)),
         ("x - y", e.col("x") - e.col("y")),
         ("x * y", e.col("x") * e.col("y")),
         ("x / y", e.col("x") / e.col("y")),
@@ -59,9 +63,10 @@ def test_math_functions():
 
     df = pl.DataFrame(
         {
-            "x": [1, -2, 6, 4],
-            "y": [4, 5, 3, 4],
-        }
+            "x": [1, -2, 6, 4, 2.21235, 2.7],
+            "y": [4, 5, 3, 4, 5.1251, 7.2],
+        },
+        strict=False,
     )
     if e == nw:
         df = nw.from_native(df)
@@ -69,8 +74,16 @@ def test_math_functions():
     exprs = [
         ("abs(x)", e.col("x").abs()),
         ("cbrt(x)", e.col("x") ** (1.0 / 3.0)),
-        # ("max(x)", e.col("x").max()),
-        # ("min(x)", e.col("x").min()),
+        ("ceil(x)", (-1) * ((-1) * e.col("x")) // 1),
+        ("exp(x)", math.e ** e.col("x")),
+        ("floor(x)", e.col("x") // 1),
+        ("ln(x)", e.col("x").map_batches(np.log)),
+        ("log(x)", e.col("x").map_batches(np.log10)),
+        ("PI()", e.lit(math.pi)),
+        ("POW(x, y)", e.col("x") ** e.col("y")),
+        ("POW(x, 3)", e.col("x") ** 3),
+        ("ROUND(x)", e.col("x").round()),
+        ("ROUND(x, 3)", e.col("x").round(3)),
         # ("sum(x)", e.col("x").sum()),
         # ("avg(x)", e.col("x").mean()),
         # ("count(x)", e.col("x").count()),
@@ -87,8 +100,8 @@ def test_math_functions():
         # Fill NaN
         cols = []
         for c in _df.columns:
-            _c = nw.col(c)
-            cols += [nw.when(_c.is_nan()).then(nw.lit(-666)).otherwise(_c).alias(c)]
+            _c = e.col(c)
+            cols += [e.when(_c.is_nan()).then(e.lit(-666)).otherwise(_c).alias(c)]
         _df = _df.with_columns(cols)
 
         # Test
@@ -104,7 +117,7 @@ def test_string_functions():
 
     df = pl.DataFrame(
         {
-            "x": [1, 2, 6, 4],
+            "x": [1, 2, 6, 4, 2.2, 2.7],
             "y": [4, 5, 3, 4],
             "s": ["ab", "BA", "cc", "dD"],
             "b1": [True, False, True, False],
@@ -152,3 +165,22 @@ def test_string_functions():
 if __name__ == "__main__":
     # test_binary_operators()
     df = test_math_functions()
+    #
+
+    # df = df.with_columns(z=nw.col("x") - nw.col("x").cast(nw.Int32()))
+    # df = df.with_columns(z=)
+    #
+    # print(df)
+
+    # import polars as pl
+    # import sqlglot
+    # from sqlglot import expressions
+    # import sqlglot
+    #
+    # sql = "ROUND(x, 3)"
+    # parsed_expr = sqlglot.parse_one(sql)
+    #
+    # print(parsed_expr)  # Check how SQLGlot interprets it
+    # print(parsed_expr.this)  # Check how SQLGlot interprets it
+    # print(parsed_expr.expression)  # Check extracted arguments
+    # print(parsed_expr.expressions)  # Check extracted arguments

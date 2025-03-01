@@ -1,9 +1,11 @@
-import narwhals as nw
+import math
+
+import polars as pl
 import sqlglot
 from sqlglot import expressions
 
-engine = nw
-# engine = pl
+# engine = nw
+engine = pl
 
 
 class SQLParser:
@@ -16,6 +18,8 @@ class SQLParser:
         return self.visit_expr(parsed_expr)
 
     def visit_expr(self, expr):
+        # print(f"Visiting expression {expr} of type {type(expr)}")
+
         # if isinstance(expr, expressions.All):
         #     return self.visit_all(expr.left, expr.compare_op, expr.right)
         #
@@ -175,6 +179,12 @@ class SQLParser:
         )
 
     def visit_literal(self, literal):
+        if literal.is_int:
+            return engine.lit(int(literal.name))
+
+        if literal.is_number:
+            return engine.lit(float(literal.name))
+
         return engine.lit(literal.this)
 
     def visit_binary_op(self, expr):
@@ -196,6 +206,7 @@ class SQLParser:
             expressions.NEQ: left.__ne__,
             expressions.Or: left.__or__,
             expressions.Sub: left.__sub__,
+            expressions.Pow: left.__pow__,
         }
 
         if expr_type not in op_map:
@@ -205,14 +216,35 @@ class SQLParser:
 
     def visit_function(self, expr):
         expr_type = type(expr)
-        args = [expr.this] + expr.expressions
-        args = [self.visit_expr(arg) for arg in args]
 
-        function_map = {
-            # expressions.Abs: engine.abs,
+        def _log(s):
+            import numpy as np
+
+            return np.log(s.to_numpy())
+
+        def _log10(s):
+            import numpy as np
+
+            return np.log10(s.to_numpy())
+
+        # Unary functions
+        func_types = {
             # Math
             expressions.Abs: lambda x: x.abs,
+            # TODO: Implement in Narwhals
             expressions.Cbrt: lambda x: x ** (1.0 / 3.0),
+            # TODO: Implement in Narwhals
+            expressions.Ceil: lambda x: (-1) * ((-1) * x) // 1,
+            # TODO: Implement in Narwhals
+            expressions.Exp: lambda x: math.e**x,
+            # TODO: Implement in Narwhals
+            expressions.Floor: lambda x: x // 1,
+            # TODO: Implement in Narwhals
+            expressions.Ln: lambda x: x.map_batches(_log),
+            # TODO: Implement in Narwhals
+            expressions.Log: lambda x: x.map_batches(_log10),
+            # TODO: Log10? Log1p? Log2?
+            expressions.Round: lambda x: x.round,
             expressions.Min: lambda x: x.min,
             expressions.Max: lambda x: x.max,
             expressions.Sum: lambda x: x.sum,
@@ -223,14 +255,46 @@ class SQLParser:
             expressions.Upper: lambda x: x.str.to_uppercase,
         }
 
-        if expr_type in function_map:
-            f = function_map[expr_type]
+        if expr_type in func_types:
+            args = [expr.this] + expr.expressions
+
+            decimals = expr.args.get("decimals", None)
+            if decimals is not None:
+                args += [decimals]
+
+            print("args", args)
+
+            args = [self.visit_expr(arg) for arg in args]
+
+            # Convert literals to values
+            for i in range(len(args)):
+                if args[i].meta.is_literal():
+                    args[i] = engine.select(args[i]).item()
+
+            f = func_types[expr_type]
             f = f(args[0])
+
             if hasattr(f, "__call__"):
                 f = f(*args[1:])
             return f
 
-        raise ValueError(f"Unsupported function {expr_type}")
+        expr_name = expr.this
+        if isinstance(expr_name, str):
+            expr_name = expr_name.lower()
+        func_names = {"pi": engine.lit(math.pi)}
+
+        # Nullary functions
+        if expr_name in func_names:
+            # args = [expr.this] + expr.expressions
+            # args = [self.visit_expr(arg) for arg in args]
+            f = func_names[expr_name]
+            return f
+            # f = f(args[0])
+            # if hasattr(f, "__call__"):
+            #     f = f(*args[1:])
+            # return f
+
+        raise ValueError(f"Unsupported function {expr_name} of type {expr_type}")
 
     def visit_function2(self, expr):
         pass
@@ -254,50 +318,6 @@ class SQLParser:
         #     return self.visit_binary(lambda e, d: e.or_(d))
         # elif function_name == "BitXor":
         #     return self.visit_binary(lambda e, d: e.xor(d))
-        #
-        # # --- Math functions ---
-        # elif function_name == "Cbrt":
-        #     return self.visit_unary(lambda e: e.cbrt())
-        # elif function_name == "Ceil":
-        #     return self.visit_unary(lambda e: e.ceil())
-        # elif function_name == "Div":
-        #     return self.visit_binary(lambda e, d: e.floor_div(d).cast("Int64"))
-        # elif function_name == "Exp":
-        #     return self.visit_unary(lambda e: e.exp())
-        # elif function_name == "Floor":
-        #     return self.visit_unary(lambda e: e.floor())
-        # elif function_name == "Ln":
-        #     import math
-        #     return self.visit_unary(lambda e: e.log(math.e))
-        # elif function_name == "Log":
-        #     return self.visit_binary(lambda e, d: e.log(d))
-        # elif function_name == "Log10":
-        #     return self.visit_unary(lambda e: e.log(10.0))
-        # elif function_name == "Log1p":
-        #     return self.visit_unary(lambda e: e.log1p())
-        # elif function_name == "Log2":
-        #     return self.visit_unary(lambda e: e.log(2.0))
-        # elif function_name == "Pi":
-        #     return self.visit_nullary(lambda: Expr.pi())
-        # elif function_name == "Mod":
-        #     return self.visit_binary(lambda e1, e2: e1 % e2)
-        # elif function_name == "Pow":
-        #     return self.visit_binary(lambda e, d: e.pow(d))
-        # elif function_name == "Round":
-        #     args = extract_args(function)  # Assume this returns a list of argument expressions.
-        #     if len(args) == 1:
-        #         return self.visit_unary(lambda e: e.round(0))
-        #     elif len(args) == 2:
-        #         # Try to extract the decimal count from args[1]
-        #         def round_fn(e, decimals):
-        #             if isinstance(decimals, Expr.Literal) and isinstance(decimals.value, int) and decimals.value >= 0:
-        #                 return e.round(decimals.value)
-        #             else:
-        #                 raise Exception(f"ROUND does not currently support negative decimals value: {args[1]}")
-        #
-        #         return self.try_visit_binary(round_fn)
-        #     else:
-        #         raise Exception(f"ROUND expects 1-2 arguments (found {len(args)})")
         #
         # # --- Conditional functions ---
         # elif function_name == "If":
