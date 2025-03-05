@@ -6,8 +6,8 @@ import polars as pl
 
 from laktory.sqlparser import SQLParser
 
-e = pl
-# e = nw
+# e = pl
+e = nw
 
 
 def test_binary_operators():
@@ -56,6 +56,40 @@ def test_binary_operators():
         assert _df["r0"].to_list() == _df["r1"].to_list()
 
         # print(_df)
+
+
+def test_struct():
+    parser = SQLParser()
+
+    df = pl.DataFrame(
+        {
+            "x": [
+                {"a": 0, "b": 1},
+                {"a": 2, "b": 3},
+            ]
+        }
+    )
+    if e == nw:
+        df = nw.from_native(df)
+
+    exprs = [
+        ("x", e.col("x")),
+        ("x.b", e.col("x").struct.field("b")),
+    ]
+
+    for sql_expr, nw_expr in exprs:
+        expr = parser.parse(sql_expr)
+
+        if isinstance(expr, nw.Expr):
+            _df = nw.from_native(df)
+        else:
+            _df = df
+
+        # Evaluate Expression
+        _df = df.with_columns(r0=expr, r1=nw_expr)
+
+        # Test
+        assert _df["r0"].to_list() == _df["r1"].to_list()
 
 
 def test_math_functions():
@@ -164,7 +198,8 @@ def test_string_functions():
 
 if __name__ == "__main__":
     # test_binary_operators()
-    df = test_math_functions()
+    test_struct()
+    # df = test_math_functions()
     #
 
     # df = df.with_columns(z=nw.col("x") - nw.col("x").cast(nw.Int32()))

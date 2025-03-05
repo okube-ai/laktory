@@ -1,11 +1,11 @@
 import math
 
-import polars as pl
+import narwhals as nw
 import sqlglot
 from sqlglot import expressions
 
-# engine = nw
-engine = pl
+engine = nw
+# engine = pl
 
 
 class SQLParser:
@@ -36,7 +36,14 @@ class SQLParser:
         #
 
         if isinstance(expr, expressions.Column):
-            return engine.col(expr.this.name)
+            if len(expr.parts) == 1:
+                return engine.col(expr.this.name)
+            elif len(expr.parts) == 2:
+                return engine.col(expr.parts[0].this).struct.field(expr.parts[1].this)
+            else:
+                raise Exception(
+                    f"Column expression {expr} with more than 2 parts is not supported"
+                )
 
         if isinstance(expr, expressions.Binary):
             return self.visit_binary_op(expr)
