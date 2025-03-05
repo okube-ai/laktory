@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* Fixed use of `lookup_existing` for resources so options are passed down to IaC tool
 ### Updated
 * n/a
 ### Breaking changes
