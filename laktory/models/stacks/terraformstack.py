@@ -14,6 +14,7 @@ from laktory._useragent import set_databricks_sdk_upstream
 from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.providers.baseprovider import BaseProvider
+from laktory.models.resources.baseresource import ResourceOptions
 
 logger = get_logger(__name__)
 
@@ -83,8 +84,9 @@ class TerraformStack(BaseModel):
                 d["data"][r.terraform_resource_lookup_type][r.resource_name] = (
                     r.lookup_existing.model_dump()
                 )
-                for k in r.terraform_options():
-                    d["data"][r.terraform_resource_lookup_type][r.resource_name][k] = _d[k]
+                for k in r.options.terraform_options:
+                    if k in _d:
+                        d["data"][r.terraform_resource_lookup_type][r.resource_name][k] = _d[k]
             else:
                 d["resource"][r.terraform_resource_type][r.resource_name] = _d
         d["data"] = dict(d["data"])
