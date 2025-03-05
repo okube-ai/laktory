@@ -83,7 +83,7 @@ class TerraformStack(BaseModel):
                 d["data"][r.terraform_resource_lookup_type][r.resource_name] = (
                     r.lookup_existing.model_dump()
                 )
-                for k in r.terraform_options:
+                for k in r.terraform_options():
                     d["data"][r.terraform_resource_lookup_type][r.resource_name][k] = _d[k]
             else:
                 d["resource"][r.terraform_resource_type][r.resource_name] = _d
