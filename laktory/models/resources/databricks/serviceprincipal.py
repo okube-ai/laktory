@@ -109,6 +109,12 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
                 )
             ]
 
+        # Workspace Permission Assignments
+        if self.workspace_permission_assignments:
+            for a in self.workspace_permission_assignments:
+                if a.principal_id is None:
+                    a.principal_id = f"${{resources.{self.resource_name}.id}}"
+                resources += [a]
         return resources
 
     # ----------------------------------------------------------------------- #
@@ -121,8 +127,7 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["groups", "roles", "group_ids"]
-
+        return ["groups", "roles", "group_ids", "workspace_permission_assignments"]
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
