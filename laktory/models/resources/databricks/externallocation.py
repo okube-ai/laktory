@@ -1,5 +1,7 @@
+from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.externallocationgrant import ExternalLocationGrant
+from laktory.models.resources.databricks.grants import Grants
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -86,6 +88,33 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def resource_key(self) -> str:
+        """External location full name"""
+        return self.name
+
+    @property
+    def additional_core_resources(self) -> list[PulumiResource]:
+        """
+        - external location grants
+        """
+        resources = []
+
+        # Schema grants
+        if self.grants:
+            resources += [
+                Grants(
+                    resource_name=f"grants-{self.resource_name}",
+                    external_location=self.name,
+                    grants=[
+                        {"principal": g.principal, "privileges": g.privileges}
+                        for g in self.grants
+                    ],
+                )
+            ]
+
+        return resources
+
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #
@@ -93,7 +122,10 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_resource_type(self) -> str:
         return "databricks:ExternalLocation"
-
+    
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return ["grants"]
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
@@ -101,3 +133,7 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_external_location"
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes
