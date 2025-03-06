@@ -1,4 +1,5 @@
 from laktory.models.basemodel import BaseModel
+from laktory.models.grants.externallocationgrant import ExternalLocationGrant
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -44,6 +45,8 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
         Destroy external location regardless of its dependents.
     force_update:
         Update external location regardless of its dependents.
+    grants:
+        List of grants operating on the external location.        
     metastore_id:
         Metastore ID
     name:
@@ -71,6 +74,7 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     encryption_details: ExternalLocationEncryptionDetails = None
     force_destroy: bool = None
     force_update: bool = None
+    grants: list[ExternalLocationGrant] = None
     metastore_id: str = None
     name: str = None
     owner: str = None
