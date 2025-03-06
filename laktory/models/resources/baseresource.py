@@ -155,6 +155,15 @@ class BaseResource(_BaseModel):
 
         return data
 
+    @model_validator(mode="before")
+    @classmethod
+    def grants_validator(cls, data: Any) -> Any:
+        grants = data.get("grants", None)
+        individual_grants = data.get("individual_grants", None)
+        if grants and individual_grants:
+            raise ValueError("Both `grants` and `individual_grants` cannot be set at the same time.")
+        return data
+    
     @classmethod
     def lookup_defaults(cls) -> dict:
         return {}

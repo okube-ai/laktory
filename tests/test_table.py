@@ -67,6 +67,7 @@ def test_model():
         "comment": None,
         "data_source_format": "DELTA",
         "grants": None,
+        "individual_grants": None,
         "name": "slv_stock_prices",
         "properties": None,
         "schema_name": "markets",

@@ -1,7 +1,7 @@
 from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.externallocationgrant import ExternalLocationGrant
-from laktory.models.resources.databricks.grants import Grants
+from laktory.models.resources.databricks.grants import Grants, GrantsIndividual
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -49,6 +49,9 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
         Update external location regardless of its dependents.
     grants:
         List of grants operating on the external location.        
+    individual_grants:
+        List of grants operating on the external location. Different from `grants` in that
+        it does not remove grants for other principals not specified in the list.             
     metastore_id:
         Metastore ID
     name:
@@ -77,6 +80,7 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     force_destroy: bool = None
     force_update: bool = None
     grants: list[ExternalLocationGrant] = None
+    individual_grants: list[ExternalLocationGrant] = None
     metastore_id: str = None
     name: str = None
     owner: str = None
@@ -94,18 +98,87 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
         """
         resources = []
 
-        # Schema grants
+        # External Location Grants
         if self.grants:
-            resources += [
-                Grants(
+            resources += Grants(
+                resource_name=f"grants-{self.resource_name}",
+                external_location=f"${{resources.{self.resource_name}.name}}",
+                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
+            ).core_resources
+
+        if self.individual_grants:
+            for idx, g in enumerate(self.individual_grants):
+                resources += GrantsIndividual(
+                        resource_name=f"grant-{self.resource_name}-{idx}",
+                        external_location=f"${{resources.{self.resource_name}.name}}",
+                        principal=g.principal,
+                        privileges=g.privileges,
+                    ).core_resources  
+
+        return resources
+
+    @property
+    def resource_key(self) -> str:
+        """External location full name"""
+        return self.name
+
+    @property
+    def additional_core_resources(self) -> list[PulumiResource]:
+        """
+        - external location grants
+        """
+        resources = []
+
+        # Schema grants
+        if self.grants or self.grant:
+            if self.grants:
+                resources += Grants(
                     resource_name=f"grants-{self.resource_name}",
                     external_location=f"${{resources.{self.resource_name}.name}}",
                     grants=[
                         {"principal": g.principal, "privileges": g.privileges}
                         for g in self.grants
                     ],
-                )
-            ]
+                ).core_resources
+            else:
+                # if grant is provided, use it instead of grants (for principal specific grants)
+                resources += Grants(
+                    resource_name=f"grants-{self.resource_name}",
+                    external_location=self.name,
+                    principal=self.grant.principal,
+                    privileges=self.grant.privileges,
+                ).core_resources
+
+        return resources
+
+    @property
+    def resource_key(self) -> str:
+        """External location full name"""
+        return self.name
+
+    @property
+    def additional_core_resources(self) -> list[PulumiResource]:
+        """
+        - external location grants
+        """
+        resources = []
+
+        # External location grants
+        if self.grants:
+            resources += Grants(
+                resource_name=f"grants-{self.resource_name}",
+                external_location=f"${{resources.{self.resource_name}.name}}",
+                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
+            ).core_resources
+
+        if self.individual_grants:
+            for idx, g in enumerate(self.individual_grants):
+                resources += GrantsIndividual(
+                    resource_name=f"grant-{self.resource_name}-{idx}",
+                    external_location=f"${{resources.{self.resource_name}.name}}",
+                    principal=g.principal,
+                    privileges=g.privileges,
+                ).core_resources
 
         return resources
 
@@ -119,7 +192,7 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grants"]
+        return [ "grants", "individual_grants"]
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
