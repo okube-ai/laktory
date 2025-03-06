@@ -5,6 +5,7 @@ from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.groupmember import GroupMember
+from laktory.models.resources.databricks.mwspermissionassignment import MwsPermissionAssignment
 from laktory.models.resources.databricks.serviceprincipalrole import (
     ServicePrincipalRole,
 )
@@ -73,6 +74,8 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     lookup_existing: ServicePrincipalLookup = Field(None, exclude=True)
     group_ids: list[str] = []
     roles: list[str] = []
+    workspace_access: bool = None
+    workspace_permission_assignments: list[MwsPermissionAssignment] = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
