@@ -118,17 +118,24 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # Schema grants
-        if self.grants:
-            resources += [
-                Grants(
+        if self.grants or self.grant:
+            if self.grants:
+                resources += Grants(
                     resource_name=f"grants-{self.resource_name}",
                     schema=f"${{resources.{self.resource_name}.id}}",
                     grants=[
                         {"principal": g.principal, "privileges": g.privileges}
                         for g in self.grants
                     ],
-                )
-            ]
+                ).core_resources
+            else:
+                # if grant is provided, use it instead of grants (for principal specific grants)
+                resources += Grants(
+                    resource_name=f"grants-{self.resource_name}",
+                    metastore=f"${{resources.{self.resource_name}.id}}",
+                    principal=self.grant.principal,
+                    privileges=self.grant.privileges,
+                ).core_resources
 
         if self.volumes:
             for v in self.volumes:
@@ -150,7 +157,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["tables", "volumes", "grants"]
+        return ["tables", "volumes", "grant", "grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

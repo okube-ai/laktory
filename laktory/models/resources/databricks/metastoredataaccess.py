@@ -174,17 +174,25 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
         """
         resources = []
 
-        # Catalog grants
-        if self.grants:
-            grant = Grants(
-                resource_name=f"grants-{self.resource_name}",
-                storage_credential=f"${{resources.{self.resource_name}.name}}",
-                grants=[
-                    {"principal": g.principal, "privileges": g.privileges}
-                    for g in self.grants
-                ],
-            )
-            resources += [grant]
+        # Metastore data access grants
+        if self.grants or self.grant:
+            if self.grants:
+                resources += Grants(
+                    resource_name=f"grants-{self.resource_name}",
+                    metastore=f"${{resources.{self.resource_name}.id}}",
+                    grants=[
+                        {"principal": g.principal, "privileges": g.privileges}
+                        for g in self.grants
+                    ],
+                ).core_resources
+            else:
+                # if grant is provided, use it instead of grants (for principal specific grants)
+                resources += Grants(
+                    resource_name=f"grants-{self.resource_name}",
+                    metastore=f"${{resources.{self.resource_name}.id}}",
+                    principal=self.grant.principal,
+                    privileges=self.grant.privileges,
+                ).core_resources
 
         return resources
 
@@ -198,7 +206,7 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grants"]
+        return ["grant", "grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
