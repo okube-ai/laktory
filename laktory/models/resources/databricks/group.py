@@ -31,10 +31,30 @@ class Group(BaseModel, PulumiResource, TerraformResource):
 
     Attributes
     ----------
+    acl_principal_id:
+        Identifier for use in databricks_access_control_rule_set, e.g. `groups/Some Group`.
     allow_cluster_create:
-        When `True`, the group is allowed to have cluster create permissions
+        This is a field to allow the group to have cluster create privileges. More
+        fine grained permissions could be assigned with databricks.Permissions and
+        cluster_id argument. Everyone without `allow_cluster_create` argument set, but
+        with permission to use Cluster Policy would be able to create clusters, but
+        within boundaries of that specific policy.
+    allow_instance_pool_create:
+        This is a field to allow the group to have instance pool create privileges. More
+        fine grained permissions could be assigned with databricks.Permissions and
+        instance_pool_id argument.
+    databricks_sql_access:
+        This is a field to allow the group to have access to Databricks SQL feature in
+        User Interface and through databricks_sql_endpoint.
     display_name:
         Display name for the group.
+    external_id:
+        ID of the group in an external identity provider.
+    force:
+        Ignore `cannot create group: Group with name X already exists.` errors and
+        implicitly import the specific group into IaC state, enforcing entitlements
+        defined in the instance of resource. This functionality is experimental and is
+        designed to simplify corner cases, like Azure Active Directory synchronisation.
     lookup_existing:
         Specifications for looking up existing resource. Other attributes will
         be ignored.
@@ -50,9 +70,15 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
+    acl_principal_id: str = None
     allow_cluster_create: bool = False
-    display_name: str
+    allow_instance_pool_create: bool = None
+    databricks_sql_access: bool = None
+    display_name: str = None
+    external_id: str = None
+    force: bool = None
     lookup_existing: GroupLookup = Field(None, exclude=True)
+    url: str = None
     workspace_access: bool = None
     workspace_permission_assignments: list[MwsPermissionAssignment] = None
 
