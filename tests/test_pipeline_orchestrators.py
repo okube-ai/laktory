@@ -178,9 +178,10 @@ def test_pipeline_dlt():
     data = sink_source.model_dump()
     print(data)
     assert data == {
+        "dataframe_backend": None,
         "as_stream": True,
         "broadcast": False,
-        "dataframe_backend": None,
+        "drop_duplicates": None,
         "drops": None,
         "filter": None,
         "limit": None,
@@ -194,6 +195,7 @@ def test_pipeline_dlt():
         "schema_definition": None,
         "schema_location": None,
     }
+
     assert sink_source.df_backend == "SPARK"
 
     data = pl_dlt.databricks_dlt.model_dump()
