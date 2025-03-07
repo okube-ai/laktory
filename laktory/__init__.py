@@ -10,6 +10,7 @@ set_databricks_sdk_upstream()
 
 import laktory._parsers
 import laktory.models
+import laktory.narwhals
 import laktory.spark
 import laktory.typing
 import laktory.yaml

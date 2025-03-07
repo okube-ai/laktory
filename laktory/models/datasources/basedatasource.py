@@ -2,23 +2,20 @@ from typing import Any
 from typing import Literal
 from typing import Union
 
-from pydantic import Field
+import narwhals as nw
+from narwhals import LazyFrame
 from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipelinechild import PipelineChild
-from laktory.polars import PolarsDataFrame
-from laktory.polars import is_polars_dataframe
-from laktory.spark import SparkDataFrame
-from laktory.spark import is_spark_dataframe
-from laktory.typing import AnyDataFrame
 
 logger = get_logger(__name__)
 
 
 class DataFrameSample(BaseModel):
-    fraction: float
+    n: int = None
+    fraction: float = None
     seed: Union[int, None] = None
 
 
@@ -70,35 +67,27 @@ class BaseDataSource(BaseModel, PipelineChild):
     """
 
     as_stream: bool = False
-    broadcast: Union[bool, None] = False
+    # broadcast: Union[bool, None] = False
     dataframe_backend: Literal["SPARK", "POLARS"] = None
     drops: Union[list, None] = None
     filter: Union[str, None] = None
-    limit: Union[int, None] = None
-    mock_df: Any = Field(default=None, exclude=True)
     renames: Union[dict[str, str], None] = None
     sample: Union[DataFrameSample, None] = None
     selects: Union[list[str], dict[str, str], None] = None
-    watermark: Union[Watermark, None] = None
+    # watermark: Union[Watermark, None] = None
 
     @model_validator(mode="after")
     def options(self) -> Any:
         with self.validate_assignment_disabled():
-            # Overwrite Dataframe type if mock dataframe is provided
-            if is_spark_dataframe(self.mock_df):
-                self.dataframe_backend = "SPARK"
-            elif is_polars_dataframe(self.mock_df):
-                self.dataframe_backend = "POLARS"
-
             if self.df_backend == "SPARK":
                 pass
             elif self.df_backend == "POLARS":
                 if self.as_stream:
                     raise ValueError("Polars DataFrames don't support streaming read.")
-                if self.watermark:
-                    raise ValueError("Polars DataFrames don't support watermarking.")
-                if self.broadcast:
-                    raise ValueError("Polars DataFrames don't support broadcasting.")
+                # if self.watermark:
+                #     raise ValueError("Polars DataFrames don't support watermarking.")
+                # if self.broadcast:
+                #     raise ValueError("Polars DataFrames don't support broadcasting.")
 
         return self
 
@@ -110,22 +99,11 @@ class BaseDataSource(BaseModel, PipelineChild):
     def _id(self):
         return str(self.df)
 
-    @property
-    def is_orchestrator_dlt(self) -> bool:
-        """If `True`, data source is used in the context of a DLT pipeline"""
-
-        pl = self.parent_pipeline
-
-        if pl is None:
-            return False
-
-        return pl.is_orchestrator_dlt
-
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def read(self, spark=None) -> AnyDataFrame:
+    def read(self, spark=None) -> nw.LazyFrame:
         """
         Read data with options specified in attributes.
 
@@ -139,123 +117,66 @@ class BaseDataSource(BaseModel, PipelineChild):
         : DataFrame
             Resulting dataframe
         """
-        if self.mock_df is not None:
-            df = self.mock_df
-        elif self.df_backend == "SPARK":
+        if self.df_backend == "SPARK":
             df = self._read_spark(spark=spark)
         elif self.df_backend == "POLARS":
             df = self._read_polars()
         else:
             raise ValueError(f"DataFrame type '{self.df_backend}' is not supported.")
 
-        if is_spark_dataframe(df):
-            df = self._post_read_spark(df)
-        elif is_polars_dataframe(df):
-            df = self._post_read_polars(df)
+        # Convert to Narwhals
+        df = nw.from_native(df)
+
+        # Post read
+        df = self._post_read(df)
 
         logger.info("Read completed.")
 
         return df
 
-    def _read_spark(self, spark) -> SparkDataFrame:
+    def _read_spark(self, spark) -> LazyFrame:
         raise NotImplementedError()
 
-    def _read_polars(self) -> PolarsDataFrame:
+    def _read_polars(self) -> LazyFrame:
         raise NotImplementedError()
 
-    def _post_read_spark(self, df: SparkDataFrame) -> SparkDataFrame:
-        import pyspark.sql.functions as F
-
+    def _post_read(self, df):
         # Apply filter
         if self.filter:
-            df = df.filter(self.filter)
-
-        # Apply drops
-        if self.drops:
-            df = df.drop(*self.drops)
+            df = df.filter(nw.sql_expr(self.filter))
 
         # Columns
         cols = []
         if self.selects:
             if isinstance(self.selects, list):
-                cols += [F.col(c) for c in self.selects]
+                cols += [nw.sql_expr(c) for c in self.selects]
             elif isinstance(self.selects, dict):
-                cols += [F.col(k).alias(v) for k, v in self.selects.items()]
+                cols += [nw.sql_expr(k).alias(v) for k, v in self.selects.items()]
             df = df.select(cols)
-
-        # Renames
-        if self.renames:
-            for old_name, new_name in self.renames.items():
-                df = df.withColumnRenamed(old_name, new_name)
-
-        # Apply Watermark
-        if self.watermark:
-            df = df.withWatermark(
-                self.watermark.column,
-                self.watermark.threshold,
-            )
-
-        # Broadcast
-        if self.broadcast:
-            df = F.broadcast(df)
-
-        # Sample
-        if self.sample:
-            df = df.sample(fraction=self.sample.fraction, seed=self.sample.seed)
-
-        # Limit
-        if self.limit:
-            df = df.limit(self.limit)
-
-        return df
-
-    def _post_read_polars(self, df: PolarsDataFrame) -> PolarsDataFrame:
-        import polars as pl
-
-        from laktory.polars.expressions.sql import _parse_token
-
-        # Apply filter
-        if self.filter:
-            df = df.filter(pl.Expr.laktory.sql_expr(self.filter))
-
-        # Columns
-        cols = []
-        if self.selects:
-            if isinstance(self.selects, list):
-                cols += [_parse_token(c) for c in self.selects]
-            elif isinstance(self.selects, dict):
-                cols += [_parse_token(k).alias(v) for k, v in self.selects.items()]
-            df = df.select(cols)
-
-        # Apply drops
-        if self.drops:
-            df = df.drop(*self.drops)
 
         # Renames
         if self.renames:
             df = df.rename(self.renames)
 
-        # Apply Watermark
-        if self.watermark:
-            raise NotImplementedError(
-                "Watermarking not supported with POLARS dataframe"
-            )
+        # Apply drops
+        if self.drops:
+            df = df.drop(*self.drops, strict=False)
 
-        # Broadcast
-        if self.broadcast:
-            raise NotImplementedError(
-                "Broadcasting not supported with POLARS dataframe"
-            )
+        # # Apply Watermark
+        # if self.watermark:
+        #     df = df.withWatermark(
+        #         self.watermark.column,
+        #         self.watermark.threshold,
+        #     )
+        #
+        # # Broadcast
+        # if self.broadcast:
+        #     df = F.broadcast(df)
 
         # Sample
         if self.sample:
-            raise NotImplementedError(
-                "Broadcasting not supported with POLARS lazyframe"
+            df = df.sample(
+                n=self.sample.n, fraction=self.sample.fraction, seed=self.sample.seed
             )
-            # df = df.sample(fraction=self.sample.fraction, seed=self.sample.seed)
-
-        # Limit
-        if self.limit:
-            df = df.limit(self.limit)
 
         return df

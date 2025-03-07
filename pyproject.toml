@@ -28,6 +28,7 @@ classifiers = [
 dynamic = ["version"]
 dependencies = [
     "inflect",
+    "narwhals>=1.24.1",
     "networkx",
     "planck>=0.0.8",
     "prompt_toolkit",
@@ -35,6 +36,7 @@ dependencies = [
     "pydantic>=2",
     "pydantic-settings",
     # "python-dateutil",
+    "sqlglot[rs]",
     "typer",
     "tzdata; sys_platform == 'win32'"
 ]
