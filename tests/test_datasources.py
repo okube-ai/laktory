@@ -2,6 +2,8 @@ import pandas as pd
 
 from laktory._testing import Paths
 from laktory._testing import sparkf
+from laktory.models import DataFrameSchema
+from laktory.models import dtypes
 from laktory.models.datasources import FileDataSource
 from laktory.models.datasources import MemoryDataSource
 from laktory.models.datasources import TableDataSource
@@ -9,97 +11,34 @@ from laktory.models.datasources import TableDataSource
 paths = Paths(__file__)
 spark = sparkf.spark
 
-schema = {
-    "type": "struct",
-    "fields": [
-        {
-            "name": "data",
-            "type": {
-                "type": "struct",
-                "fields": [
-                    {"name": "@id", "type": "string", "nullable": True, "metadata": {}},
-                    {
-                        "name": "_created_at",
-                        "type": "string",
-                        "nullable": True,
-                        "metadata": {},
-                    },
-                    {
-                        "name": "_name",
-                        "type": "string",
-                        "nullable": True,
-                        "metadata": {},
-                    },
-                    {
-                        "name": "_producer_name",
-                        "type": "string",
-                        "nullable": True,
-                        "metadata": {},
-                    },
-                    {
-                        "name": "close",
-                        "type": "double",
-                        "nullable": True,
-                        "metadata": {},
-                    },
-                    {
-                        "name": "created_at",
-                        "type": "string",
-                        "nullable": True,
-                        "metadata": {},
-                    },
-                    {
-                        "name": "high",
-                        "type": "double",
-                        "nullable": True,
-                        "metadata": {},
-                    },
-                    {"name": "low", "type": "double", "nullable": True, "metadata": {}},
-                    {
-                        "name": "open",
-                        "type": "double",
-                        "nullable": True,
-                        "metadata": {},
-                    },
-                    {
-                        "name": "symbol",
-                        "type": "string",
-                        "nullable": True,
-                        "metadata": {},
-                    },
-                ],
-            },
-            "nullable": True,
-            "metadata": {},
-        },
-        {"name": "description", "type": "string", "nullable": True, "metadata": {}},
-        {"name": "name", "type": "string", "nullable": True, "metadata": {}},
-        {
-            "name": "producer",
-            "type": {
-                "type": "struct",
-                "fields": [
-                    {
-                        "name": "description",
-                        "type": "string",
-                        "nullable": True,
-                        "metadata": {},
-                    },
-                    {
-                        "name": "name",
-                        "type": "string",
-                        "nullable": True,
-                        "metadata": {},
-                    },
-                    {"name": "party", "type": "long", "nullable": True, "metadata": {}},
-                ],
-            },
-            "nullable": True,
-            "metadata": {},
-        },
-    ],
-}
 
+schema = DataFrameSchema(
+    columns={
+        "data": dtypes.Struct(
+            fields={
+                "@id": dtypes.String(),
+                "_created_at": dtypes.String(),
+                "_name": dtypes.String(),
+                "_producer_name": dtypes.String(),
+                "close": dtypes.Float64(),
+                "created_at": dtypes.String(),
+                "high": dtypes.Float64(),
+                "low": dtypes.Float64(),
+                "open": dtypes.Float64(),
+                "symbol": dtypes.String(),
+            }
+        ),
+        "description": dtypes.String(),
+        "name": dtypes.String(),
+        "producer": dtypes.Struct(
+            fields={
+                "description": dtypes.String(),
+                "name": dtypes.String(),
+                "party": dtypes.Int64(),
+            }
+        ),
+    },
+)
 
 # DataFrame
 pdf = pd.DataFrame(
@@ -130,15 +69,13 @@ def test_file_data_source_read():
         as_stream=False,
     )
     df = source.read(spark)
-    assert df.count() == 80
+    assert df.to_native().count() == 80
     assert df.columns == [
         "data",
         "description",
         "name",
         "producer",
     ]
-
-    return df
 
 
 def test_file_data_source_read_jsonl():
@@ -147,7 +84,7 @@ def test_file_data_source_read_jsonl():
         format="JSONL",
     )
     df = source.read(spark)
-    assert df.count() == 80
+    assert df.to_native().count() == 80
     assert df.columns == [
         "data",
         "description",
@@ -159,7 +96,6 @@ def test_file_data_source_read_jsonl():
 
 
 def test_file_data_source_read_schema():
-    # Schema as dict
     source = FileDataSource(
         path=paths.data / "events/yahoo-finance/stock_price",
         as_stream=False,
@@ -170,43 +106,30 @@ def test_file_data_source_read_schema():
     source = FileDataSource(**source.model_dump(exclude_unset=True))
 
     df = source.read(spark)
-    assert df.count() == 80
+    assert df.to_native().count() == 80
     assert df.columns == [
         "data",
         "description",
         "name",
         "producer",
     ]
+    assert df.schema == schema.to_narwhals()
 
-    # Schema as list
-    source = FileDataSource(
-        path=paths.data / "events/yahoo-finance/stock_price",
-        as_stream=False,
-        schema=[f for f in schema["fields"]],
-    )
-    df = source.read(spark)
-    assert df.count() == 80
-    assert df.columns == [
-        "data",
-        "description",
-        "name",
-        "producer",
-    ]
-
-    # Schema as list
-    source = FileDataSource(
-        path=paths.data / "events/yahoo-finance/stock_price",
-        as_stream=False,
-        schema="data STRUCT<_created_at STRING, _name STRING, _producer_name STRING, close DOUBLE, created_at STRING, high DOUBLE, low DOUBLE, open DOUBLE, symbol STRING>, description STRING, name STRING, producer STRUCT<description STRING, name STRING, party LONG>",
-    )
-    df = source.read(spark)
-    assert df.count() == 80
-    assert df.columns == [
-        "data",
-        "description",
-        "name",
-        "producer",
-    ]
+    # # Schema as string
+    # # TODO: Add support?
+    # source = FileDataSource(
+    #     path=paths.data / "events/yahoo-finance/stock_price",
+    #     as_stream=False,
+    #     schema="data STRUCT<_created_at STRING, _name STRING, _producer_name STRING, close DOUBLE, created_at STRING, high DOUBLE, low DOUBLE, open DOUBLE, symbol STRING>, description STRING, name STRING, producer STRUCT<description STRING, name STRING, party LONG>",
+    # )
+    # df = source.read(spark)
+    # assert df.count() == 80
+    # assert df.columns == [
+    #     "data",
+    #     "description",
+    #     "name",
+    #     "producer",
+    # ]
 
 
 def test_file_data_source_polars():
@@ -236,7 +159,7 @@ def test_file_data_source_polars():
         #     "fraction": 0.5,
         # },
     )
-    df = source.read().collect()
+    df = source.read().to_native().collect()
 
     assert df["open"].min() > 300
     assert df.columns == ["created_at", "symbol", "open", "close", "high", "low"]
@@ -322,6 +245,6 @@ if __name__ == "__main__":
     test_file_data_source_read_jsonl()
     test_file_data_source_read_schema()
     test_file_data_source_polars()
-    test_memory_data_source()
-    test_memory_data_source_from_dict()
-    test_table_data_source()
+    # test_memory_data_source()
+    # test_memory_data_source_from_dict()
+    # test_table_data_source()

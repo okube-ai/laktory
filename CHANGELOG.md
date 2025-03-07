@@ -1,6 +1,6 @@
 # Release History
 
-## [0.6.6] - Unreleased
+## [0.7.0] - Unreleased
 ### Added
 * n/a
 ### Fixed
@@ -8,7 +8,7 @@
 ### Updated
 * n/a
 ### Breaking changes
-* n/a
+* Refactored to use Narwhals as main DataFrame backend
 
 ## [0.6.5] - 2025-02-19
 ### Added

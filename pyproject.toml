@@ -36,6 +36,7 @@ dependencies = [
     "pydantic>=2",
     "pydantic-settings",
     # "python-dateutil",
+    "sqlglot[rs]",
     "typer",
     "tzdata; sys_platform == 'win32'"
 ]

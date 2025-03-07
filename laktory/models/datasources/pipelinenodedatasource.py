@@ -95,7 +95,11 @@ class PipelineNodeDataSource(BaseDataSource):
     def _read_spark(self, spark) -> SparkDataFrame:
         stream_to_batch = not self.as_stream and self.node.source.as_stream
         is_dlt = False
-        if self.is_orchestrator_dlt:
+
+        pl = self.parent_pipeline
+        is_orchestrator_dlt = pl is not None and pl.is_orchestrator_dlt
+
+        if is_orchestrator_dlt:
             from laktory.dlt import is_debug
             from laktory.dlt import read as dlt_read
             from laktory.dlt import read_stream as dlt_read_stream
