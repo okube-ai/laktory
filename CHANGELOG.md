@@ -2,9 +2,10 @@
 
 ## [0.6.6] - Unreleased
 ### Added
-* n/a
+* `drop_duplicates` option for data sources
 ### Fixed
-* Fixed use of `lookup_existing` for resources so options are passed down to IaC tool
+* Usage of `lookup_existing` preventing propagation of resource `options` [[#372](https://github.com/okube-ai/laktory/issues/372)]
+* Typo in unity catalog quick start documentation 
 ### Updated
 * n/a
 ### Breaking changes

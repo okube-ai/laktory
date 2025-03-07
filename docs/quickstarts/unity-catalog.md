@@ -4,7 +4,7 @@ than the previous ones, as it targets both the Databricks account (for user mana
 ### Create Stack
 To create the Unity Catalog stack, run:
 ```commandline
-laktory quickstart -t unit-catalog
+laktory quickstart -t unity-catalog
 ```
 
 
