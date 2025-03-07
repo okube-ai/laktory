@@ -141,81 +141,58 @@ def test_math_functions():
         # Test
         assert _df["r0"].fill_null(-1).to_list() == _df["r1"].fill_null(-1).to_list()
 
-        # print(_df)
 
-    return df
-
-
-def test_string_functions():
-    parser = SQLParser()
-
-    df = pl.DataFrame(
-        {
-            "x": [1, 2, 6, 4, 2.2, 2.7],
-            "y": [4, 5, 3, 4],
-            "s": ["ab", "BA", "cc", "dD"],
-            "b1": [True, False, True, False],
-            "b2": [True, True, False, False],
-        }
-    )
-
-    if e == nw:
-        df = nw.from_native(df)
-
-    exprs = [
-        ("max(x)", e.col("x").max()),
-        ("min(x)", e.col("x").min()),
-        ("sum(x)", e.col("x").sum()),
-        ("avg(x)", e.col("x").mean()),
-        ("count(x)", e.col("x").count()),
-        ("lower(s)", e.col("s").str.to_lowercase()),
-        ("upper(s)", e.col("s").str.to_uppercase()),
-        # ("x || ' ' || y", e.concat_str(e.col("x"), " ", e.col("y"))),
-        # # ("COALESCE(x, 0)", e.coalesce(e.col("x"), e.lit(0))),  # Not currently available from Narwhals
-        # ("CASE WHEN x > 10 THEN 'high' ELSE 'low' END", e.when(e.col("x") > 10).then(e.lit("high")).otherwise(e.lit("low"))),
-        # ("EXTRACT(YEAR FROM x)", e.col("x").dt.year()),
-        # ("CAST(x AS INTEGER)", e.col("x").cast(e.Int32)),
-        # # ("COALESCE(CAST(x AS FLOAT) / y, 0)", (e.coalesce(e.col("x").cast("float") / e.col("y"), e.lit(0))),
-        # # ("UPPER(x || ' ' || COALESCE(y, 'unknown'))", e.concat(e.col("x"), " ", e.col("y").coalesce("unknown")).upper()),
-        # ("CASE WHEN CAST(x AS INTEGER) + y > 100 THEN 'high' ELSE 'low' END", e.when((e.col("x").cast(e.Int32) + e.col("y")) > 100).then(e.lit("high")).otherwise(e.lit("low"))),
-        # ("EXTRACT(YEAR FROM CAST(date_col AS TIMESTAMP)) + z", e.col("date_col").cast(e.Datetime).dt.year() + e.col("z")),
-    ]
-
-    for sql_expr, nw_expr in exprs:
-        expr = parser.parse(sql_expr)
-
-        # Evaluate Expression
-        _df = df.with_columns(r0=expr, r1=nw_expr)
-        # print(sql_expr, expr)
-        print(_df)
-
-        # Test
-
-        assert _df["r0"].to_list() == _df["r1"].to_list()
-
-        # print(_df)
+# def test_string_functions():
+#     parser = SQLParser()
+#
+#     df = pl.DataFrame(
+#         {
+#             "x": [1, 2, 6, 4, 2.2, 2.7],
+#             "y": [4, 5, 3, 4],
+#             "s": ["ab", "BA", "cc", "dD"],
+#             "b1": [True, False, True, False],
+#             "b2": [True, True, False, False],
+#         }
+#     )
+#
+#     if e == nw:
+#         df = nw.from_native(df)
+#
+#     exprs = [
+#         ("max(x)", e.col("x").max()),
+#         ("min(x)", e.col("x").min()),
+#         ("sum(x)", e.col("x").sum()),
+#         ("avg(x)", e.col("x").mean()),
+#         ("count(x)", e.col("x").count()),
+#         ("lower(s)", e.col("s").str.to_lowercase()),
+#         ("upper(s)", e.col("s").str.to_uppercase()),
+#         # ("x || ' ' || y", e.concat_str(e.col("x"), " ", e.col("y"))),
+#         # # ("COALESCE(x, 0)", e.coalesce(e.col("x"), e.lit(0))),  # Not currently available from Narwhals
+#         # ("CASE WHEN x > 10 THEN 'high' ELSE 'low' END", e.when(e.col("x") > 10).then(e.lit("high")).otherwise(e.lit("low"))),
+#         # ("EXTRACT(YEAR FROM x)", e.col("x").dt.year()),
+#         # ("CAST(x AS INTEGER)", e.col("x").cast(e.Int32)),
+#         # # ("COALESCE(CAST(x AS FLOAT) / y, 0)", (e.coalesce(e.col("x").cast("float") / e.col("y"), e.lit(0))),
+#         # # ("UPPER(x || ' ' || COALESCE(y, 'unknown'))", e.concat(e.col("x"), " ", e.col("y").coalesce("unknown")).upper()),
+#         # ("CASE WHEN CAST(x AS INTEGER) + y > 100 THEN 'high' ELSE 'low' END", e.when((e.col("x").cast(e.Int32) + e.col("y")) > 100).then(e.lit("high")).otherwise(e.lit("low"))),
+#         # ("EXTRACT(YEAR FROM CAST(date_col AS TIMESTAMP)) + z", e.col("date_col").cast(e.Datetime).dt.year() + e.col("z")),
+#     ]
+#
+#     for sql_expr, nw_expr in exprs:
+#         expr = parser.parse(sql_expr)
+#
+#         # Evaluate Expression
+#         _df = df.with_columns(r0=expr, r1=nw_expr)
+#         # print(sql_expr, expr)
+#         print(_df)
+#
+#         # Test
+#
+#         assert _df["r0"].to_list() == _df["r1"].to_list()
+#
+#         # print(_df)
 
 
 if __name__ == "__main__":
-    # test_binary_operators()
+    test_binary_operators()
     test_struct()
-    # df = test_math_functions()
-    #
-
-    # df = df.with_columns(z=nw.col("x") - nw.col("x").cast(nw.Int32()))
-    # df = df.with_columns(z=)
-    #
-    # print(df)
-
-    # import polars as pl
-    # import sqlglot
-    # from sqlglot import expressions
-    # import sqlglot
-    #
-    # sql = "ROUND(x, 3)"
-    # parsed_expr = sqlglot.parse_one(sql)
-    #
-    # print(parsed_expr)  # Check how SQLGlot interprets it
-    # print(parsed_expr.this)  # Check how SQLGlot interprets it
-    # print(parsed_expr.expression)  # Check extracted arguments
-    # print(parsed_expr.expressions)  # Check extracted arguments
+    test_math_functions()
