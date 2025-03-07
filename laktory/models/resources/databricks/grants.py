@@ -64,8 +64,9 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    grants: list[Grant]
-    grants_type_full: bool = True
+    grants: list[Grant] = None
+    principal: str = None
+    privileges: list[str] = None
     catalog: str = None
     external_location: str = None
     metastore: str = None
@@ -88,12 +89,11 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_resource_type(self) -> str:
-        return "databricks:Grants" if self.grants_type_full else "databricks:Grant"
+        return "databricks:Grants" if self.grants else "databricks:Grant"
     
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
-            "grants_type_full"
         ]
     
     # ----------------------------------------------------------------------- #
