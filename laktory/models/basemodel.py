@@ -392,10 +392,12 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
             if k == "variables":
                 continue
             o = getattr(self, k)
-
             if isinstance(o, BaseModel) or isinstance(o, dict) or isinstance(o, list):
                 # Mutable objects will be updated in place
                 _resolve_values(o, vars)
+            elif isinstance(o, _BaseModel):
+                # pydantic.BaseModel objects must be updated explicitly, using model_dump
+                setattr(self, k, _resolve_values(o.model_dump(), vars))
             else:
                 # Simple objects must be updated explicitly
                 setattr(self, k, _resolve_value(o, vars))
