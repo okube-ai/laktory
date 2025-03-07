@@ -102,7 +102,7 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def terraform_resource_type(self) -> str:
-        return "databricks_grants" if self.grants_type_full else "databricks_grant"
+        return "databricks_grants" if self.grants else "databricks_grant"
     
     @property
     def terraform_renames(self) -> dict[str, str]:
