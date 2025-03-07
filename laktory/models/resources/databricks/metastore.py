@@ -103,6 +103,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     global_metastore_id: str = None
     grants: list[MetastoreGrant] = None
     grants_provider: str = None
+    grants_type_full: bool = True
     lookup_existing: MetastoreLookup = Field(None, exclude=True)
     metastore_id: str = None
     name: str = None
@@ -156,6 +157,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
                     {"principal": g.principal, "privileges": g.privileges}
                     for g in self.grants
                 ],
+                grants_type_full=self.grants_type_full,
                 options=options,
             ).core_resources
 
