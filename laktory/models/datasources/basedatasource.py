@@ -72,6 +72,7 @@ class BaseDataSource(BaseModel, PipelineChild):
     as_stream: bool = False
     broadcast: Union[bool, None] = False
     dataframe_backend: Literal["SPARK", "POLARS"] = None
+    drop_duplicates: Union[bool, list[str]] = None
     drops: Union[list, None] = None
     filter: Union[str, None] = None
     limit: Union[int, None] = None
@@ -199,6 +200,13 @@ class BaseDataSource(BaseModel, PipelineChild):
         if self.broadcast:
             df = F.broadcast(df)
 
+        # Drop Duplicates
+        if self.drop_duplicates:
+            subset = None
+            if isinstance(self.drop_duplicates, list):
+                subset = self.drop_duplicates
+            df = df.dropDuplicates(subset)
+
         # Sample
         if self.sample:
             df = df.sample(fraction=self.sample.fraction, seed=self.sample.seed)
@@ -246,6 +254,14 @@ class BaseDataSource(BaseModel, PipelineChild):
             raise NotImplementedError(
                 "Broadcasting not supported with POLARS dataframe"
             )
+
+        # Drop Duplicates
+        if self.drop_duplicates:
+            subset = None
+            if isinstance(self.drop_duplicates, list):
+                subset = self.drop_duplicates
+
+            df = df.unique(subset=subset)
 
         # Sample
         if self.sample:

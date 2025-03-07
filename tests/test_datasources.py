@@ -278,6 +278,19 @@ def test_memory_data_source(df0=df0):
     assert df.count() == 3
 
 
+def test_drop_duplicates(df0=df0):
+    df1 = df0.union(df0)
+    assert df1.count() == df0.count() * 2
+
+    # Drop All
+    df = MemoryDataSource(df=df1, drop_duplicates=True).read(spark)
+    assert df.count() == df0.count()
+
+    # Drop columns a and n
+    df = MemoryDataSource(df=df1, drop_duplicates=["a", "n"]).read(spark)
+    assert df.count() == 2
+
+
 def test_memory_data_source_from_dict():
     data0 = [{"x": 1, "y": "a"}, {"x": 2, "y": "b"}, {"x": 3, "y": "c"}]
     data1 = {"x": [1, 2, 3], "y": ["a", "b", "c"]}
@@ -323,5 +336,6 @@ if __name__ == "__main__":
     test_file_data_source_read_schema()
     test_file_data_source_polars()
     test_memory_data_source()
+    test_drop_duplicates()
     test_memory_data_source_from_dict()
     test_table_data_source()
