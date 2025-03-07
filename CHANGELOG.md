@@ -6,10 +6,10 @@
 ### Fixed
 * Usage of `lookup_existing` preventing propagation of resource `options` [[#372](https://github.com/okube-ai/laktory/issues/372)]
 * Typo in unity catalog quick start documentation 
+* Missing documentation for `data_accesses` `metastore` attribute 
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* Databricks `group` resource properties
+* Databricks `user` resource properties
 
 ## [0.6.5] - 2025-02-19
 ### Added
