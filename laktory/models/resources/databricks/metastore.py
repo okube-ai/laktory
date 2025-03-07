@@ -105,7 +105,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     grants_provider: str = None
     lookup_existing: MetastoreLookup = Field(None, exclude=True)
     metastore_id: str = None
-    name: str
+    name: str = None
     owner: str = None
     region: str = None
     storage_root: str = None
@@ -120,8 +120,14 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def resource_key(self) -> str:
-        """name"""
-        return self.name
+        """
+        Resource key used to build default resource name. Equivalent to
+        name properties if available. Otherwise, empty string.
+        """
+        key = self.name
+        if key is None and self.lookup_existing:
+            key = self.lookup_existing.metastore_id
+        return key
     
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
