@@ -129,7 +129,7 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
                 # if grant is provided, use it instead of grants (for principal specific grants)
                 resources += Grants(
                     resource_name=f"grants-{self.resource_name}",
-                    metastore=f"${{resources.{self.resource_name}.id}}",
+                    volume=f"${{resources.{self.resource_name}.name}}",
                     principal=self.grant.principal,
                     privileges=self.grant.privileges,
                 ).core_resources
