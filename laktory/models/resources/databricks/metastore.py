@@ -35,6 +35,8 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         todo
     created_by:
         todo
+    data_accesses:
+        List of data accesses (storage credentials)
     default_data_access_config_id:
         todo
     delta_sharing_organization_name:

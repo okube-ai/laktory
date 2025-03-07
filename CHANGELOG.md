@@ -1,15 +1,24 @@
 # Release History
-
 ## [0.7.0] - Unreleased
 ### Added
-* `drop_duplicates` option for data sources
+* n/a
 ### Fixed
-* Usage of `lookup_existing` preventing propagation of resource `options` [[#372](https://github.com/okube-ai/laktory/issues/372)]
-* Typo in unity catalog quick start documentation 
+* n/a
 ### Updated
 * n/a
 ### Breaking changes
 * Refactored to use Narwhals as main DataFrame backend
+* 
+## [0.6.6] - Unreleased
+### Added
+* `drop_duplicates` option for data sources
+### Fixed
+* Usage of `lookup_existing` preventing propagation of resource `options` [[#372](https://github.com/okube-ai/laktory/issues/372)]
+* Typo in unity catalog quick start documentation
+* Missing documentation for `data_accesses` `metastore` attribute 
+### Updated
+* Databricks `group` resource properties
+* Databricks `user` resource properties
 
 ## [0.6.5] - 2025-02-19
 ### Added
