@@ -10,8 +10,6 @@
 ### Updated
 * Databricks `group` resource properties
 * Databricks `user` resource properties
-### Breaking changes
-* n/a
 
 ## [0.6.5] - 2025-02-19
 ### Added
