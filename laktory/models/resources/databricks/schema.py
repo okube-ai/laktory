@@ -63,6 +63,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     catalog_name: Union[str, None] = None
     comment: Union[str, None] = None
     force_destroy: bool = True
+    grant: SchemaGrant = None
     grants: list[SchemaGrant] = None
     name: str
     storage_root: str = None

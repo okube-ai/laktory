@@ -68,6 +68,7 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
     schema_name: str = None
     volume_type: Literal["MANAGED", "EXTERNAL"] = "MANAGED"
     storage_location: str = None
+    grant: VolumeGrant = None
     grants: list[VolumeGrant] = None
 
     # ----------------------------------------------------------------------- #

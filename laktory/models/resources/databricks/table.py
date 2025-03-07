@@ -118,6 +118,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     columns: Union[list[TableColumn], None] = None
     comment: Union[str, None] = None
     data_source_format: str = "DELTA"
+    grant: TableGrant = None
     grants: list[TableGrant] = None
     lookup_existing: TableLookup = Field(None, exclude=True)
     name: str

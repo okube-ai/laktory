@@ -196,9 +196,9 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
             "workspace_assignments",
+            "grant",
             "grants",
             "grants_provider",
-            "grants_type_full",
             "data_accesses",
         ]
 

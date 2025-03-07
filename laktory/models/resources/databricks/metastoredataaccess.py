@@ -154,6 +154,7 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
     force_destroy: bool = None
     force_update: bool = None
     gcp_service_account_key: MetastoreDataAccessGcpServiceAccountKey = None
+    grant: StorageCredentialGrant = None
     grants: list[StorageCredentialGrant] = None
     is_default: bool = None
     metastore_id: str = None
