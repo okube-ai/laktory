@@ -105,7 +105,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     grants_provider: str = None
     lookup_existing: MetastoreLookup = Field(None, exclude=True)
     metastore_id: str = None
-    name: str = None
+    name: str
     owner: str = None
     region: str = None
     storage_root: str = None
@@ -118,6 +118,11 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def resource_key(self) -> str:
+        """name"""
+        return self.name
+    
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
         """
