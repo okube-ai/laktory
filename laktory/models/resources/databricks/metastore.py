@@ -199,7 +199,6 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
             "grant",
             "grants",
             "grants_provider",
-            "grants_type_full",
             "data_accesses",
         ]
 
