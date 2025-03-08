@@ -5,6 +5,7 @@ from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.groupmember import GroupMember
+from laktory.models.resources.databricks.mwspermissionassignment import MwsPermissionAssignment
 from laktory.models.resources.databricks.userrole import UserRole
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -116,6 +117,7 @@ class User(BaseModel, PulumiResource, TerraformResource):
     roles: list[str] = []
     user_name: str
     workspace_access: bool = None
+    workspace_permission_assignments: list[MwsPermissionAssignment] = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -149,8 +151,14 @@ class User(BaseModel, PulumiResource, TerraformResource):
                 )
             ]
 
+        # Workspace Permission Assignments
+        if self.workspace_permission_assignments:
+            for a in self.workspace_permission_assignments:
+                if a.principal_id is None:
+                    a.principal_id = f"${{resources.{self.resource_name}.id}}"
+                resources += [a]
         return resources
-
+    
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
     # ----------------------------------------------------------------------- #

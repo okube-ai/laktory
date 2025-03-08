@@ -93,7 +93,7 @@ class ResourceOptions(BaseModel):
         ]
 
 
-class ResourceLookup(_BaseModel):
+class ResourceLookup(BaseModel):
     # model_config = ConfigDict(populate_by_name=True)
     def pulumi_dump(self, *args, **kwargs):
         kwargs["by_alias"] = kwargs.get("by_alias", True)

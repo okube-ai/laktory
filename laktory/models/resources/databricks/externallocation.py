@@ -87,12 +87,6 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def resource_key(self) -> str:
-        """External location full name"""
-        return self.name
-
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
         """
@@ -105,7 +99,7 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
             resources += [
                 Grants(
                     resource_name=f"grants-{self.resource_name}",
-                    external_location=self.name,
+                    external_location=f"${{resources.{self.resource_name}.name}}",
                     grants=[
                         {"principal": g.principal, "privileges": g.privileges}
                         for g in self.grants

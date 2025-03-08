@@ -47,7 +47,9 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
         be ignored.
     roles:
         List of roles assigned to the user e.g. ("account_admin")
-
+    workspace_access
+        When `True`, the group is allowed to have workspace access
+        
     Examples
     --------
     ```py
