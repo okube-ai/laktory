@@ -169,7 +169,7 @@ class User(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["groups", "roles", "group_ids"]
+        return ["groups", "roles", "group_ids", "workspace_permission_assignments"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
