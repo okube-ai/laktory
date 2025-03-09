@@ -121,7 +121,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
             resources += [
                 Grants(
                     resource_name=f"grants-{self.resource_name}",
-                    schema=f"${{resources.{self.resource_name}.name}}",
+                    schema=f"${{resources.{self.resource_name}.id}}",
                     grants=[
                         {"principal": g.principal, "privileges": g.privileges}
                         for g in self.grants
