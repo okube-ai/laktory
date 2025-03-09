@@ -199,7 +199,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
             resources += [
                 Grants(
                     resource_name=f"grants-{self.resource_name}",
-                    table=f"${{resources.{self.resource_name}.name}}",
+                    table=f"${{resources.{self.resource_name}.id}}",
                     grants=[
                         {"principal": g.principal, "privileges": g.privileges}
                         for g in self.grants
