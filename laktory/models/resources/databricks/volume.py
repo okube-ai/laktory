@@ -118,7 +118,7 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
             resources += [
                 Grants(
                     resource_name=f"grants-{self.resource_name}",
-                    volume=self.full_name,
+                    volume=f"${{resources.{self.resource_name}.id}}",
                     grants=[
                         {"principal": g.principal, "privileges": g.privileges}
                         for g in self.grants

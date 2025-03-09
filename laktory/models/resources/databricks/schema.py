@@ -32,6 +32,10 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
         will automatically allow access from the current workspace.
     name:
         Name of the catalog
+    storage_root:
+        Managed location of the catalog. Location in cloud storage where data
+        for managed tables will be stored. If not specified, the location will
+        default to the metastore root location.       
     tables:
         List of tables stored in the schema
     volumes:
@@ -61,6 +65,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     force_destroy: bool = True
     grants: list[SchemaGrant] = None
     name: str
+    storage_root: str = None
     tables: list[Table] = []
     volumes: list[Volume] = []
 
@@ -116,7 +121,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
             resources += [
                 Grants(
                     resource_name=f"grants-{self.resource_name}",
-                    schema=self.full_name,
+                    schema=f"${{resources.{self.resource_name}.id}}",
                     grants=[
                         {"principal": g.principal, "privileges": g.privileges}
                         for g in self.grants

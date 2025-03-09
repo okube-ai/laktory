@@ -119,6 +119,17 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def resource_key(self) -> str:
+        """
+        Resource key used to build default resource name. Equivalent to
+        name properties if available. Otherwise, empty string.
+        """
+        key = self.name
+        if key is None and self.lookup_existing:
+            key = self.lookup_existing.metastore_id
+        return key
+    
+    @property
     def additional_core_resources(self) -> list[PulumiResource]:
         """
         - workspace assignments

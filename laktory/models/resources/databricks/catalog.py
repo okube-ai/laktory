@@ -145,7 +145,7 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
         if self.grants:
             grant = Grants(
                 resource_name=f"grants-{self.resource_name}",
-                catalog=self.full_name,
+                catalog=f"${{resources.{self.resource_name}.name}}",
                 grants=[
                     {"principal": g.principal, "privileges": g.privileges}
                     for g in self.grants
