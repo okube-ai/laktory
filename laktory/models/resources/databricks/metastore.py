@@ -149,26 +149,20 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
             options = {"provider": self.grants_provider}
             if depends_on:
                 options["depends_on"] = depends_on
-
             if self.grants:
-                resources += Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    metastore=f"${{resources.{self.resource_name}.id}}",
-                    grants=[
-                        {"principal": g.principal, "privileges": g.privileges}
-                        for g in self.grants
-                    ],
-                    options=options,
-                ).core_resources
+                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
+            elif self.grant:
+                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
             else:
-                # if grant is provided, use it instead of grants (for principal specific grants)
-                resources += Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    metastore=f"${{resources.{self.resource_name}.id}}",
-                    principal=self.grant.principal,
-                    privileges=self.grant.privileges,
-                    options=options,
-                ).core_resources
+                grant_config = {}
+
+            resources += Grants(
+                resource_name=f"grants-{self.resource_name}",
+                metastore=f"${{resources.{self.resource_name}.id}}",
+                options=options,
+                **grant_config
+            ).core_resources
+
             depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
 
         if self.data_accesses:

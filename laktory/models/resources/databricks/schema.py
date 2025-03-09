@@ -120,22 +120,17 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
         # Schema grants
         if self.grants or self.grant:
             if self.grants:
-                resources += Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    schema=f"${{resources.{self.resource_name}.id}}",
-                    grants=[
-                        {"principal": g.principal, "privileges": g.privileges}
-                        for g in self.grants
-                    ],
-                ).core_resources
+                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
+            elif self.grant:
+                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
             else:
-                # if grant is provided, use it instead of grants (for principal specific grants)
-                resources += Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    schema=f"${{resources.{self.resource_name}.name}}",
-                    principal=self.grant.principal,
-                    privileges=self.grant.privileges,
-                ).core_resources
+                grant_config = {}
+
+            resources += Grants(
+                resource_name=f"grants-{self.resource_name}",
+                schema=f"${{resources.{self.resource_name}.id}}",
+                **grant_config
+            ).core_resources
 
         if self.volumes:
             for v in self.volumes:

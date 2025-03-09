@@ -177,22 +177,17 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
         # Metastore data access grants
         if self.grants or self.grant:
             if self.grants:
-                resources += Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    storage_credential=f"${{resources.{self.resource_name}.name}}",
-                    grants=[
-                        {"principal": g.principal, "privileges": g.privileges}
-                        for g in self.grants
-                    ],
-                ).core_resources
+                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
+            elif self.grant:
+                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
             else:
-                # if grant is provided, use it instead of grants (for principal specific grants)
-                resources += Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    storage_credential=f"${{resources.{self.resource_name}.name}}",
-                    principal=self.grant.principal,
-                    privileges=self.grant.privileges,
-                ).core_resources
+                grant_config = {}
+
+            resources += Grants(
+                resource_name=f"grants-{self.resource_name}",
+                storage_credential=f"${{resources.{self.resource_name}.name}}",
+                **grant_config
+            ).core_resources            
 
         return resources
 

@@ -207,13 +207,13 @@ class Table(BaseModel, PulumiResource, TerraformResource):
                     ],
                 ).core_resources
             else:
-                # if grant is provided, use it instead of grants (for principal specific grants)
-                resources += Grants(
-                    resource_name=f"grants-{self.resource_name}",
+                grant_config = {}
+
+            resources += Grants(
+                resource_name=f"grants-{self.resource_name}",
                     table=f"${{resources.{self.resource_name}.name}}",
-                    principal=self.grant.principal,
-                    privileges=self.grant.privileges,
-                ).core_resources
+                **grant_config
+            ).core_resources
         return resources
 
     # ----------------------------------------------------------------------- #
