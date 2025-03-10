@@ -1,14 +1,16 @@
 # Release History
 ## [0.7.0] - Unreleased
 ### Added
-* n/a
+* `HiveMetastoreDataSource`
 ### Fixed
 * n/a
 ### Updated
 * n/a
 ### Breaking changes
-* Refactored to use Narwhals as main DataFrame backend
-* 
+* Refactored data sources to Narwhals for all DataFrame operations
+* Changed DataFrame backend type to Enum
+* Renamed `TableDataSource` to `UnityCatalogDataSource`
+* Renamed `MemoryDataSource` to `DataFrameDataSource`
 ## [0.6.6] - Unreleased
 ### Added
 * `drop_duplicates` option for data sources
