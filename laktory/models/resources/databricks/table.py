@@ -118,6 +118,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     columns: Union[list[TableColumn], None] = None
     comment: Union[str, None] = None
     data_source_format: str = "DELTA"
+    grant: TableGrant = None
     grants: list[TableGrant] = None
     lookup_existing: TableLookup = Field(None, exclude=True)
     name: str
@@ -195,17 +196,19 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # Schema grants
-        if self.grants:
-            resources += [
-                Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    table=f"${{resources.{self.resource_name}.id}}",
-                    grants=[
-                        {"principal": g.principal, "privileges": g.privileges}
-                        for g in self.grants
-                    ],
-                )
-            ]
+        if self.grants or self.grant:
+            if self.grants:
+                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
+            elif self.grant:
+                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
+            else:
+                grant_config = {}
+
+            resources += Grants(
+                resource_name=f"{'grants' if self.grants else 'grant'}-{self.resource_name}",
+                table=f"${{resources.{self.resource_name}.id}}",
+                **grant_config
+            ).core_resources
         return resources
 
     # ----------------------------------------------------------------------- #
@@ -219,6 +222,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
+            "grant",
             "grants",
         ]
 

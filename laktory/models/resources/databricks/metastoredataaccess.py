@@ -154,6 +154,7 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
     force_destroy: bool = None
     force_update: bool = None
     gcp_service_account_key: MetastoreDataAccessGcpServiceAccountKey = None
+    grant: StorageCredentialGrant = None
     grants: list[StorageCredentialGrant] = None
     is_default: bool = None
     metastore_id: str = None
@@ -173,17 +174,20 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
         """
         resources = []
 
-        # Catalog grants
-        if self.grants:
-            grant = Grants(
-                resource_name=f"grants-{self.resource_name}",
+        # Metastore data access grants
+        if self.grants or self.grant:
+            if self.grants:
+                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
+            elif self.grant:
+                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
+            else:
+                grant_config = {}
+
+            resources += Grants(
+                resource_name=f"{'grants' if self.grants else 'grant'}-{self.resource_name}",
                 storage_credential=f"${{resources.{self.resource_name}.name}}",
-                grants=[
-                    {"principal": g.principal, "privileges": g.privileges}
-                    for g in self.grants
-                ],
-            )
-            resources += [grant]
+                **grant_config
+            ).core_resources            
 
         return resources
 
@@ -197,7 +201,7 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grants"]
+        return ["grant", "grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

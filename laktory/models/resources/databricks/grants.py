@@ -1,3 +1,4 @@
+from typing import Union
 from pydantic import AliasChoices
 from pydantic import Field
 
@@ -63,7 +64,9 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    grants: list[Grant]
+    grants: list[Grant] = None
+    principal: str = None
+    privileges: list[str] = None
     catalog: str = None
     external_location: str = None
     metastore: str = None
@@ -86,16 +89,25 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_resource_type(self) -> str:
-        return "databricks:Grants"
-
+        return "databricks:Grants" if self.grants else "databricks:Grant"
+    
+    @property
+    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return [
+        ]
+    
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_resource_type(self) -> str:
-        return "databricks_grants"
-
+        return "databricks_grants" if self.grants else "databricks_grant"
+    
     @property
     def terraform_renames(self) -> dict[str, str]:
         return self.pulumi_renames
+
+    @property
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+        return self.pulumi_excludes

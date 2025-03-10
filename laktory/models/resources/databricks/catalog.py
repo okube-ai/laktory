@@ -104,6 +104,7 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
 
     comment: Union[str, None] = None
     force_destroy: bool = True
+    grant: CatalogGrant = None
     grants: list[CatalogGrant] = None
     isolation_mode: Literal["OPEN", "ISOLATED"] = "OPEN"
     lookup_existing: CatalogLookup = Field(None, exclude=True)
@@ -140,18 +141,22 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
         - schemas resources
         """
         resources = []
-
+       
         # Catalog grants
-        if self.grants:
-            grant = Grants(
-                resource_name=f"grants-{self.resource_name}",
+        
+        if self.grants or self.grant:
+            if self.grants:
+                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
+            elif self.grant:
+                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
+            else:
+                grant_config = {}
+
+            resources += Grants(
+                resource_name=f"{'grants' if self.grants else 'grant'}-{self.resource_name}",
                 catalog=f"${{resources.{self.resource_name}.name}}",
-                grants=[
-                    {"principal": g.principal, "privileges": g.privileges}
-                    for g in self.grants
-                ],
-            )
-            resources += [grant]
+                **grant_config
+            ).core_resources
 
         # Catalog schemas
         if self.schemas:
@@ -170,7 +175,7 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["schemas", "is_unity", "grants"]
+        return ["schemas", "is_unity", "grant", "grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

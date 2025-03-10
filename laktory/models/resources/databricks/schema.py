@@ -63,6 +63,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     catalog_name: Union[str, None] = None
     comment: Union[str, None] = None
     force_destroy: bool = True
+    grant: SchemaGrant = None
     grants: list[SchemaGrant] = None
     name: str
     storage_root: str = None
@@ -117,17 +118,19 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # Schema grants
-        if self.grants:
-            resources += [
-                Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    schema=f"${{resources.{self.resource_name}.id}}",
-                    grants=[
-                        {"principal": g.principal, "privileges": g.privileges}
-                        for g in self.grants
-                    ],
-                )
-            ]
+        if self.grants or self.grant:
+            if self.grants:
+                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
+            elif self.grant:
+                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
+            else:
+                grant_config = {}
+
+            resources += Grants(
+                resource_name=f"{'grants' if self.grants else 'grant'}-{self.resource_name}",
+                schema=f"${{resources.{self.resource_name}.id}}",
+                **grant_config
+            ).core_resources
 
         if self.volumes:
             for v in self.volumes:
@@ -149,7 +152,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["tables", "volumes", "grants"]
+        return ["tables", "volumes", "grant", "grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

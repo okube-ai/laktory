@@ -76,6 +76,7 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     encryption_details: ExternalLocationEncryptionDetails = None
     force_destroy: bool = None
     force_update: bool = None
+    grant: ExternalLocationGrant = None
     grants: list[ExternalLocationGrant] = None
     metastore_id: str = None
     name: str = None
@@ -94,18 +95,20 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
         """
         resources = []
 
-        # Schema grants
-        if self.grants:
-            resources += [
-                Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    external_location=f"${{resources.{self.resource_name}.name}}",
-                    grants=[
-                        {"principal": g.principal, "privileges": g.privileges}
-                        for g in self.grants
-                    ],
-                )
-            ]
+        # External Location Grants
+        if self.grants or self.grant:
+            if self.grants:
+                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
+            elif self.grant:
+                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
+            else:
+                grant_config = {}
+
+            resources += Grants(
+                resource_name=f"{'grants' if self.grants else 'grant'}-{self.resource_name}",
+                external_location=f"${{resources.{self.resource_name}.name}}",
+                **grant_config
+            ).core_resources
 
         return resources
 
@@ -119,7 +122,7 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grants"]
+        return ["grant", "grants"]
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #

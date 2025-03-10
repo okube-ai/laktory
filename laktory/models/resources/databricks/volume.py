@@ -68,6 +68,7 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
     schema_name: str = None
     volume_type: Literal["MANAGED", "EXTERNAL"] = "MANAGED"
     storage_location: str = None
+    grant: VolumeGrant = None
     grants: list[VolumeGrant] = None
 
     # ----------------------------------------------------------------------- #
@@ -114,17 +115,19 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # Volume grants
-        if self.grants:
-            resources += [
-                Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    volume=f"${{resources.{self.resource_name}.id}}",
-                    grants=[
-                        {"principal": g.principal, "privileges": g.privileges}
-                        for g in self.grants
-                    ],
-                )
-            ]
+        if self.grants or self.grant:
+            if self.grants:
+                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
+            elif self.grant:
+                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
+            else:
+                grant_config = {}
+
+            resources += Grants(
+                resource_name=f"{'grants' if self.grants else 'grant'}-{self.resource_name}",
+                volume=f"${{resources.{self.resource_name}.id}}",
+                **grant_config
+            ).core_resources
 
         return resources
 
@@ -138,7 +141,7 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grants"]
+        return ["grant", "grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
