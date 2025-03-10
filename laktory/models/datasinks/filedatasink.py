@@ -120,11 +120,13 @@ class FileDataSink(BaseDataSink):
         # Full Refresh
         if full_refresh or not self.exists(spark=df.sparkSession):
             if df.isStreaming:
-                if df.laktory.is_aggregate():
-                    logger.info(
-                        "Full refresh or initial load. Switching to COMPLETE mode."
-                    )
-                    mode = "COMPLETE"
+                pass
+                # .is_aggregate() method seems unreliable. Disabling for now.
+                # if df.laktory.is_aggregate():
+                #     logger.info(
+                #         "Full refresh or initial load. Switching to COMPLETE mode."
+                #     )
+                #     mode = "COMPLETE"
             else:
                 logger.info(
                     "Full refresh or initial load. Switching to OVERWRITE mode."

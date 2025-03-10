@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.6.6] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Disabled data sinks write mode auto selection full refresh for streaming dataframes (buggy)
 
 ## [0.6.5] - 2025-02-19
 ### Added
