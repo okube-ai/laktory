@@ -1,8 +1,23 @@
 # Release History
 
-## [0.6.6] - Unreleased
+## [0.6.7] - Unreleased
 ### Fixed
 * Disabled data sinks write mode auto selection full refresh for streaming dataframes (buggy)
+
+## [0.6.6] - 2025-03-10
+### Added
+* Data sources `drop_duplicates` option
+* `Schema` `storage_root` attribute
+* `User` and `ServicePrincipal` `workspace_permission_assignments` attribute
+### Fixed
+* Usage of `lookup_existing` preventing propagation of resource `options` [[#372](https://github.com/okube-ai/laktory/issues/372)]
+* Typo in unity catalog quick start documentation 
+* Missing documentation for `data_accesses` `metastore` attribute 
+* Variable resolution in `lookup_existing` attribute
+* `Metastore` look up issues
+### Updated
+* Databricks `group` resource properties
+* Databricks `user` resource properties
 
 ## [0.6.5] - 2025-02-19
 ### Added

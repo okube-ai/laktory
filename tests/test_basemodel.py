@@ -116,6 +116,7 @@ def test_camelize():
         "comment": None,
         "grants": None,
         "name": "my_schema",
+        "storageRoot": None,
         "tables": [
             {
                 "columns": [

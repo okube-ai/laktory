@@ -522,6 +522,7 @@ def test_stack_model():
                                 "dataframe_backend": None,
                                 "as_stream": False,
                                 "broadcast": False,
+                                "drop_duplicates": None,
                                 "drops": None,
                                 "filter": None,
                                 "limit": None,

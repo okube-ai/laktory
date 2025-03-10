@@ -35,6 +35,8 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         todo
     created_by:
         todo
+    data_accesses:
+        List of data accesses (storage credentials)
     default_data_access_config_id:
         todo
     delta_sharing_organization_name:
@@ -116,6 +118,17 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
 
+    @property
+    def resource_key(self) -> str:
+        """
+        Resource key used to build default resource name. Equivalent to
+        name properties if available. Otherwise, empty string.
+        """
+        key = self.name
+        if key is None and self.lookup_existing:
+            key = self.lookup_existing.metastore_id
+        return key
+    
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
         """

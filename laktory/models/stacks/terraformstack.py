@@ -78,12 +78,17 @@ class TerraformStack(BaseModel):
         d["resource"] = defaultdict(lambda: {})
         d["data"] = defaultdict(lambda: {})
         for r in self.resources.values():
+            _d = r.terraform_properties
             if r.lookup_existing:
                 d["data"][r.terraform_resource_lookup_type][r.resource_name] = (
                     r.lookup_existing.model_dump()
                 )
+                for k in r.options.terraform_options:
+                    if k in _d:
+                        d["data"][r.terraform_resource_lookup_type][r.resource_name][
+                            k
+                        ] = _d[k]
             else:
-                _d = r.terraform_properties
                 d["resource"][r.terraform_resource_type][r.resource_name] = _d
         d["data"] = dict(d["data"])
         if len(d["data"]) == 0:
