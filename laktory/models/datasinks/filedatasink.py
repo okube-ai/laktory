@@ -104,8 +104,6 @@ class FileDataSink(BaseDataSink):
     # ----------------------------------------------------------------------- #
 
     def _write_spark(self, df: SparkDataFrame, mode=None, full_refresh=False) -> None:
-        print("WRITING SPARK!!!!!!!!")
-
         if self.format in ["EXCEL"]:
             raise ValueError(f"'{self.format}' format is not supported with Spark")
 
