@@ -133,7 +133,7 @@ def test_file_data_sink_stream_aggregate():
         path=dirpath,
         checkpoint_location=str(dirpath / "checkpoint/"),
         format="DELTA",
-        mode="APPEND",
+        mode="COMPLETE",
     )
     sink.write(slv_stream)
 
