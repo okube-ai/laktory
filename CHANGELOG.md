@@ -1,6 +1,16 @@
 # Release History
 
-## [0.6.6] - Unreleased
+## [0.6.7] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.6.6] - 2025-03-10
 ### Added
 * Data sources `drop_duplicates` option
 * `Schema` `storage_root` attribute
