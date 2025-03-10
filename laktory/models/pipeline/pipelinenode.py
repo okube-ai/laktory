@@ -169,7 +169,7 @@ class PipelineNode(BaseModel, PipelineChild):
     primary_keys: list[str] = None
     sinks: list[DataSinksUnion] = None
     root_path: str = None
-    source: DataSourcesUnion
+    source: DataSourcesUnion  # TODO: add discriminator?
     timestamp_key: str = None
     _view_definition: str = None
     _stage_df: Any = None

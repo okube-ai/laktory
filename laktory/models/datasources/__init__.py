@@ -1,21 +1,22 @@
 from typing import Union
 
 from .basedatasource import BaseDataSource
+from .dataframedatasource import DataFrameDataSource
 from .filedatasource import FileDataSource
-from .memorydatasource import MemoryDataSource
 from .pipelinenodedatasource import PipelineNodeDataSource
 from .tabledatasource import TableDataSource
+from .unitycatalogdatasource import UnityCatalogDataSource
 
 classes = [
+    DataFrameDataSource,
     FileDataSource,
-    MemoryDataSource,
     PipelineNodeDataSource,
-    TableDataSource,
+    UnityCatalogDataSource,
 ]
 
 DataSourcesUnion = Union[
+    DataFrameDataSource,
     FileDataSource,
-    MemoryDataSource,
     PipelineNodeDataSource,
-    TableDataSource,
+    UnityCatalogDataSource,
 ]

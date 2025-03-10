@@ -1,4 +1,4 @@
-from typing import Union
+from pydantic import Field
 
 from laktory._logger import get_logger
 from laktory.models.datasources.basedatasource import BaseDataSource
@@ -47,9 +47,8 @@ class PipelineNodeDataSource(BaseDataSource):
     ```
     """
 
-    node_name: Union[str, None]
-    # include_failed_expectations: bool = True  # TODO: Implement
-    # include_passed_expectations: bool = True  # TODO: Implement
+    node_name: str
+    type: str = Field("PIPELINE_NODE", frozen=True)
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
