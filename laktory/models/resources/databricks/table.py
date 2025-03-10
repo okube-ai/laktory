@@ -198,14 +198,9 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         # Schema grants
         if self.grants or self.grant:
             if self.grants:
-                resources += Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    table=f"${{resources.{self.resource_name}.id}}",
-                    grants=[
-                        {"principal": g.principal, "privileges": g.privileges}
-                        for g in self.grants
-                    ],
-                ).core_resources
+                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
+            elif self.grant:
+                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
             else:
                 grant_config = {}
 

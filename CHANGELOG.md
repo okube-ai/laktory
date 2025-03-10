@@ -2,7 +2,7 @@
 
 ## [0.6.7] - Unreleased
 ### Added
-* n/a
+* Allow for grants or grant attribute to be specified, depending if one wants to manage all of the resource's permissions or just for the one principal on that object  
 ### Fixed
 * n/a
 ### Updated
