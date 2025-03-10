@@ -1,22 +1,23 @@
 from typing import Any
 from typing import Union
 
+import narwhals as nw
+from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory.enums import DataFrameBackends
 from laktory.models.datasources.basedatasource import BaseDataSource
-from laktory.polars import PolarsLazyFrame
-from laktory.polars import is_polars_dataframe
-from laktory.spark import SparkDataFrame
-from laktory.spark import is_spark_dataframe
 
 logger = get_logger(__name__)
 
+AnyFrame = Union[nw.DataFrame, nw.LazyFrame]
 
-class MemoryDataSource(BaseDataSource):
+
+class DataFrameDataSource(BaseDataSource):
     """
-    Data source using in-memory DataFrame, generally used in the context of a
-    data pipeline.
+    Data source using in-memory DataFrame.
+    Generally used in the context of a data pipeline.
 
     Attributes
     ----------
@@ -39,9 +40,9 @@ class MemoryDataSource(BaseDataSource):
     }
 
     # Spark from dict
-    source = models.MemoryDataSource(
+    source = models.DataFrameDataSource(
         data=data,
-        dataframe_backend="SPARK",
+        dataframe_backend="PYSPARK",
     )
     df = source.read(spark=spark)
     print(df.laktory.show_string())
@@ -70,6 +71,7 @@ class MemoryDataSource(BaseDataSource):
 
     data: Union[dict[str, list[Any]], list[dict[str, Any]]] = None
     df: Any = None
+    type: str = Field("DATAFRAME", frozen=True)
 
     @model_validator(mode="after")
     def validate_input(self) -> Any:
@@ -80,15 +82,13 @@ class MemoryDataSource(BaseDataSource):
             raise ValueError("Only `data` or `df` can be provided.")
 
         if self.df is not None:
-            if is_spark_dataframe(self.df):
-                dataframe_backend = "SPARK"
-            elif is_polars_dataframe(self.df):
-                dataframe_backend = "POLARS"
-            else:
-                raise ValueError("DataFrame must be of type Spark or Polars")
+            if not isinstance(self.df, (nw.DataFrame, nw.LazyFrame)):
+                self.df = nw.from_native(self.df)
 
             with self.validate_assignment_disabled():
-                self.dataframe_backend = dataframe_backend
+                self.dataframe_backend = DataFrameBackends.from_nw_implementation(
+                    self.df.implementation
+                )
 
         return self
 
@@ -105,24 +105,20 @@ class MemoryDataSource(BaseDataSource):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _read_spark(self, spark) -> SparkDataFrame:
-        logger.info(f"Reading {self._id} from memory")
-
+    def _read_spark(self, spark=None) -> nw.LazyFrame:
         if self.df is not None:
-            return self.df
+            return nw.from_native(self.df)
 
         data = self.data
         if isinstance(data, dict):
             data = [dict(zip(data.keys(), values)) for values in zip(*data.values())]
 
-        return spark.createDataFrame(data)
+        return nw.from_native(spark.createDataFrame(data))
 
-    def _read_polars(self) -> PolarsLazyFrame:
-        logger.info(f"Reading {self._id} from memory")
+    def _read_polars(self) -> AnyFrame:
+        if self.df is not None:
+            return nw.from_native(self.df)
 
         import polars as pl
 
-        if self.df is not None:
-            return self.df
-
-        return pl.LazyFrame(self.data)
+        return nw.from_native(pl.LazyFrame(self.data))

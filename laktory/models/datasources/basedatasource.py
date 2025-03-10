@@ -1,16 +1,18 @@
 from typing import Any
-from typing import Literal
 from typing import Union
 
 import narwhals as nw
-from narwhals import LazyFrame
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipelinechild import PipelineChild
 
 logger = get_logger(__name__)
+
+
+AnyFrame = Union[nw.LazyFrame, nw.DataFrame]
 
 
 class DataFrameSample(BaseModel):
@@ -43,7 +45,7 @@ class Watermark(BaseModel):
 
 class BaseDataSource(BaseModel, PipelineChild):
     """
-    Base class for building data source
+    Base class for data sources.
 
     Attributes
     ----------
@@ -68,21 +70,22 @@ class BaseDataSource(BaseModel, PipelineChild):
 
     as_stream: bool = False
     # broadcast: Union[bool, None] = False
-    dataframe_backend: Literal["SPARK", "POLARS"] = None
+    dataframe_backend: DataFrameBackends = None
     drop_duplicates: Union[bool, list[str]] = None
-    drops: Union[list, None] = None
-    filter: Union[str, None] = None
-    renames: Union[dict[str, str], None] = None
-    sample: Union[DataFrameSample, None] = None
-    selects: Union[list[str], dict[str, str], None] = None
+    drops: list = None
+    filter: str = None
+    renames: dict[str, str] = None
+    sample: DataFrameSample = None
+    selects: Union[list[str], dict[str, str]] = None
     # watermark: Union[Watermark, None] = None
+    type: str
 
     @model_validator(mode="after")
     def options(self) -> Any:
         with self.validate_assignment_disabled():
-            if self.df_backend == "SPARK":
+            if self.df_backend == DataFrameBackends.PYSPARK:
                 pass
-            elif self.df_backend == "POLARS":
+            elif self.df_backend == DataFrameBackends.POLARS:
                 if self.as_stream:
                     raise ValueError("Polars DataFrames don't support streaming read.")
                 # if self.watermark:
@@ -104,7 +107,7 @@ class BaseDataSource(BaseModel, PipelineChild):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def read(self, spark=None) -> nw.LazyFrame:
+    def read(self, spark=None) -> AnyFrame:
         """
         Read data with options specified in attributes.
 
@@ -118,15 +121,12 @@ class BaseDataSource(BaseModel, PipelineChild):
         : DataFrame
             Resulting dataframe
         """
-        if self.df_backend == "SPARK":
-            df = self._read_spark(spark=spark)
-        elif self.df_backend == "POLARS":
-            df = self._read_polars()
-        else:
-            raise ValueError(f"DataFrame type '{self.df_backend}' is not supported.")
+        logger.info(f"Reading {self._id} from `{self.type}` with {self.df_backend}")
+        df = self._read(spark=spark)
 
         # Convert to Narwhals
-        df = nw.from_native(df)
+        if not isinstance(df, (nw.LazyFrame, nw.DataFrame)):
+            df = nw.from_native(df)
 
         # Post read
         df = self._post_read(df)
@@ -135,13 +135,26 @@ class BaseDataSource(BaseModel, PipelineChild):
 
         return df
 
-    def _read_spark(self, spark) -> LazyFrame:
-        raise NotImplementedError()
+    def _read(self, spark=None) -> AnyFrame:
+        if self.df_backend == DataFrameBackends.PYSPARK:
+            return self._read_spark(spark=spark)
 
-    def _read_polars(self) -> LazyFrame:
-        raise NotImplementedError()
+        if self.df_backend == DataFrameBackends.POLARS:
+            return self._read_polars()
 
-    def _post_read(self, df):
+        raise ValueError(f"`{self.df_backend}` not supported for `{type(self)}`")
+
+    def _read_spark(self, spark=None) -> nw.LazyFrame:
+        raise NotImplementedError(
+            f"`{self.df_backend}` not supported for `{type(self)}`"
+        )
+
+    def _read_polars(self) -> nw.LazyFrame:
+        raise NotImplementedError(
+            f"`{self.df_backend}` not supported for `{type(self)}`"
+        )
+
+    def _post_read(self, df: AnyFrame) -> AnyFrame:
         # Apply filter
         if self.filter:
             df = df.filter(nw.sql_expr(self.filter))

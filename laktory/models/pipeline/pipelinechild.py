@@ -1,11 +1,11 @@
 from typing import Any
-from typing import Literal
 
 from pydantic import BaseModel
 from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory._settings import settings
+from laktory.enums import DataFrameBackends
 
 logger = get_logger(__name__)
 
@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 class PipelineChild(BaseModel):
     """ """
 
-    dataframe_backend: Literal["SPARK", "POLARS"] = None
+    dataframe_backend: DataFrameBackends = None
 
     @model_validator(mode="after")
     def update_children_after_init(self) -> Any:
@@ -41,7 +41,7 @@ class PipelineChild(BaseModel):
         self.update_children()
 
     @property
-    def df_backend(self) -> str:
+    def df_backend(self) -> DataFrameBackends:
         # Direct value
         backend = self.dataframe_backend
         if backend is not None:
@@ -53,7 +53,7 @@ class PipelineChild(BaseModel):
             return parent.df_backend
 
         # Value from settings
-        return settings.dataframe_backend
+        return DataFrameBackends(settings.dataframe_backend.upper())
 
     def update_children(self):
         for c_name in self.child_attribute_names:

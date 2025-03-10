@@ -1,13 +1,14 @@
 from pathlib import Path
 from typing import Any
 
-from narwhals import LazyFrame
+import narwhals as nw
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory.enums import DataFrameBackends
 from laktory.models.dataframeschema import DataFrameSchema
 from laktory.models.datasources.basedatasource import BaseDataSource
 
@@ -16,8 +17,8 @@ logger = get_logger(__name__)
 
 class FileDataSource(BaseDataSource):
     """
-    Data source using disk files, such as data events (json/csv) and
-    dataframe parquets. It is generally used in the context of a data pipeline.
+    Data source using disk files, such data events (json/csv) or full dataframes.
+    Generally used in the context of a data pipeline.
 
     Attributes
     ----------
@@ -66,6 +67,7 @@ class FileDataSource(BaseDataSource):
     read_options: dict[str, Any] = {}
     schema_definition: DataFrameSchema = Field(None, validation_alias="schema")
     schema_location: str = None
+    type: str = Field("FILE", frozen=True)
 
     @field_validator("path", "schema_location", mode="before")
     @classmethod
@@ -76,7 +78,7 @@ class FileDataSource(BaseDataSource):
 
     @model_validator(mode="after")
     def options(self) -> Any:
-        if self.dataframe_backend == "SPARK":
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
             from laktory.readers.sparkreader import SUPPORTED_FORMATS
 
             if self.format not in SUPPORTED_FORMATS:
@@ -106,24 +108,28 @@ class FileDataSource(BaseDataSource):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _read_spark(self, spark) -> LazyFrame:
+    def _read_spark(self, spark=None) -> nw.LazyFrame:
         from laktory.readers.sparkreader import read
 
-        return read(
-            spark,
-            format=self.format,
-            path=self.path,
-            as_stream=self.as_stream,
-            schema=self.schema_definition,
-            schema_location=self.schema_location,
+        return nw.from_native(
+            read(
+                spark,
+                format=self.format,
+                path=self.path,
+                as_stream=self.as_stream,
+                schema=self.schema_definition,
+                schema_location=self.schema_location,
+            )
         )
 
-    def _read_polars(self):
+    def _read_polars(self) -> nw.LazyFrame:
         from laktory.readers.polarsreader import read
 
-        return read(
-            format=self.format,
-            path=self.path,
-            as_stream=self.as_stream,
-            schema=self.schema_definition,
+        return nw.from_native(
+            read(
+                format=self.format,
+                path=self.path,
+                as_stream=self.as_stream,
+                schema=self.schema_definition,
+            )
         )
