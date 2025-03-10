@@ -11,13 +11,28 @@
 * Changed DataFrame backend type to Enum
 * Renamed `TableDataSource` to `UnityCatalogDataSource`
 * Renamed `MemoryDataSource` to `DataFrameDataSource`
-## [0.6.6] - Unreleased
+
+## [0.6.7] - Unreleased
 ### Added
-* `drop_duplicates` option for data sources
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.6.6] - 2025-03-10
+### Added
+* Data sources `drop_duplicates` option
+* `Schema` `storage_root` attribute
+* `User` and `ServicePrincipal` `workspace_permission_assignments` attribute
 ### Fixed
 * Usage of `lookup_existing` preventing propagation of resource `options` [[#372](https://github.com/okube-ai/laktory/issues/372)]
 * Typo in unity catalog quick start documentation
 * Missing documentation for `data_accesses` `metastore` attribute 
+* Variable resolution in `lookup_existing` attribute
+* `Metastore` look up issues
 ### Updated
 * Databricks `group` resource properties
 * Databricks `user` resource properties
