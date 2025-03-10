@@ -157,7 +157,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
                 grant_config = {}
 
             resources += Grants(
-                resource_name=f"grants-{self.resource_name}",
+                resource_name=f"{'grants' if self.grants else 'grant'}-{self.resource_name}",
                 metastore=f"${{resources.{self.resource_name}.id}}",
                 options=options,
                 **grant_config
