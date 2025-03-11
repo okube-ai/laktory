@@ -2,13 +2,7 @@
 
 ## [0.6.8] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Liquid cluster option for data sinks
 
 ## [0.6.7] - 2025-03-10
 ### Fixed
