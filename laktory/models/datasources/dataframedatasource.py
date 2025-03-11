@@ -96,10 +96,29 @@ class DataFrameDataSource(BaseDataSource):
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
 
-    #
-    # @property
-    # def _id(self):
-    #     return str(self.path)
+    @property
+    def _id(self):
+        n = 4
+
+        # Build Schema-like
+        if self.df is not None:
+            d = self.df.schema
+        elif isinstance(self.data, dict):
+            d = {k: str(type(v)) for k, v in self.data.items()}
+        elif isinstance(self.data, list):
+            d = {k: str(type(v)) for k, v in self.data[0].items()}
+        else:
+            d = {}
+
+        # Build id
+        _id = "DataFrame[" + ", ".join([f"{k}: {v}" for k, v in d.items()][:n]) + "]"
+        if len(d) >= n:
+            _id = _id.replace("]", "...]")
+
+        if isinstance(self, nw.LazyFrame):
+            _id = _id.replace("DataFrame", "LazyFrame")
+
+        return _id
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
@@ -113,7 +132,9 @@ class DataFrameDataSource(BaseDataSource):
         if isinstance(data, dict):
             data = [dict(zip(data.keys(), values)) for values in zip(*data.values())]
 
-        return nw.from_native(spark.createDataFrame(data))
+        df = spark.createDataFrame(data)
+
+        return nw.from_native(df)
 
     def _read_polars(self) -> AnyFrame:
         if self.df is not None:
@@ -121,4 +142,6 @@ class DataFrameDataSource(BaseDataSource):
 
         import polars as pl
 
-        return nw.from_native(pl.LazyFrame(self.data))
+        df = pl.LazyFrame(self.data)
+
+        return nw.from_native(df)

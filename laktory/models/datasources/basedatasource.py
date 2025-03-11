@@ -101,7 +101,7 @@ class BaseDataSource(BaseModel, PipelineChild):
 
     @property
     def _id(self):
-        return str(self.df)
+        raise NotImplementedError()
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
@@ -121,7 +121,9 @@ class BaseDataSource(BaseModel, PipelineChild):
         : DataFrame
             Resulting dataframe
         """
-        logger.info(f"Reading {self._id} from `{self.type}` with {self.df_backend}")
+        logger.info(
+            f"Reading `{self.__class__.__name__}` {self._id} with {self.df_backend}"
+        )
         df = self._read(spark=spark)
 
         # Convert to Narwhals
