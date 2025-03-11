@@ -217,12 +217,15 @@ class TableDataSink(BaseDataSink):
             logger.info(
                 f"Writing {self._id} {self.format}  as stream with mode {mode} and options {_options}"
             )
-            query = (
+            writer = (
                 df.writeStream.outputMode(mode)
                 .format(self.format.lower())
                 .trigger(availableNow=True)  # TODO: Add option for trigger?
                 .options(**_options)
-            ).toTable(self.full_name)
+            )
+            if self.cluster_by:
+                writer = writer.clusterBy(*self.cluster_by)
+            query = writer.toTable(self.full_name)
 
             query.awaitTermination()
 
@@ -230,12 +233,10 @@ class TableDataSink(BaseDataSink):
             logger.info(
                 f"Writing {self._id} {self.format}  as static with mode {mode} and options {_options}"
             )
-            (
-                df.write.format(self.format.lower())
-                .mode(mode)
-                .options(**_options)
-                .saveAsTable(self.full_name)
-            )
+            writer = df.write.format(self.format.lower()).mode(mode).options(**_options)
+            if self.cluster_by:
+                writer = writer.clusterBy(*self.cluster_by)
+            writer.saveAsTable(self.full_name)
 
     # ----------------------------------------------------------------------- #
     # Purge                                                                   #
