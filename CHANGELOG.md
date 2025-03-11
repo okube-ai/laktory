@@ -12,7 +12,7 @@
 * Renamed `TableDataSource` to `UnityCatalogDataSource`
 * Renamed `MemoryDataSource` to `DataFrameDataSource`
 
-## [0.6.7] - Unreleased
+## [0.6.8] - Unreleased
 ### Added
 * n/a
 ### Fixed
@@ -21,6 +21,10 @@
 * n/a
 ### Breaking changes
 * n/a
+
+## [0.6.7] - 2025-03-10
+### Fixed
+* Disabled data sinks write mode auto selection full refresh for streaming dataframes (buggy)
 
 ## [0.6.6] - 2025-03-10
 ### Added
