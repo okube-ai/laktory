@@ -49,6 +49,7 @@ def get_validator(monkeypatch):
     from tests.test_vectorsearchendpoint import vector_search_endpoint
     from tests.test_vectorsearchindex import vector_search_index
     from tests.test_workspacefile import workspace_file
+    from tests.test_workspacebinding import workspace_binding
 
     paths = Paths(__file__)
 
@@ -76,6 +77,7 @@ def get_validator(monkeypatch):
             "databricks_vectorsearchendpoints": [vector_search_endpoint],
             "databricks_vectorsearchindexes": [vector_search_index],
             "databricks_workspacefiles": [workspace_file],
+            "databricks_workspacebindings": [workspace_binding],
             "pipelines": [pl_dlt],  # required by job
         },
         providers={
@@ -421,6 +423,7 @@ def test_stack_model():
                     "warehouse_type": None,
                 },
             },
+            "databricks_workspacebindings": {},
             "databricks_workspacefiles": {},
             "pipelines": {
                 "pl-custom-name": {

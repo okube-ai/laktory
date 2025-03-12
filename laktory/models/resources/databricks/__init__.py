@@ -37,4 +37,5 @@ from .vectorsearchendpoint import VectorSearchEndpoint
 from .vectorsearchindex import VectorSearchIndex
 from .volume import Volume
 from .warehouse import Warehouse
+from .workspacebinding import WorkspaceBinding
 from .workspacefile import WorkspaceFile
