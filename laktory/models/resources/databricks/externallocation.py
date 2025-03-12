@@ -1,4 +1,5 @@
 from typing import Union
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.externallocationgrant import ExternalLocationGrant
 from laktory.models.resources.databricks.grants import Grants
@@ -48,7 +49,7 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     force_update:
         Update external location regardless of its dependents.
     grants:
-        List of grants operating on the external location.        
+        List of grants operating on the external location.
     metastore_id:
         Metastore ID
     name:
@@ -116,10 +117,11 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_resource_type(self) -> str:
         return "databricks:ExternalLocation"
-    
+
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["grants"]
+
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #

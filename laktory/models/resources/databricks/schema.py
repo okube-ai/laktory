@@ -35,7 +35,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     storage_root:
         Managed location of the catalog. Location in cloud storage where data
         for managed tables will be stored. If not specified, the location will
-        default to the metastore root location.       
+        default to the metastore root location.
     tables:
         List of tables stored in the schema
     volumes:

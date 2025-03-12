@@ -128,7 +128,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         if key is None and self.lookup_existing:
             key = self.lookup_existing.metastore_id
         return key
-    
+
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
         """

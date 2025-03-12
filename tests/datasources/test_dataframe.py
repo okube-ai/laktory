@@ -51,24 +51,15 @@ def test_read_from_dict(backend, data):
 
 @pytest.mark.parametrize("df0", [dfs, dfp])
 def test_drop_duplicates(df0):
-    df1 = df0.union(df0)
+    df1 = nw.concat([nw.from_native(df0), nw.from_native(df0)])
 
     source = DataFrameDataSource(df=df1, drop_duplicates=True)
     df = source.read(spark=spark)
-
     assert_dfs_equal(df, df0)
 
-
-# df1 = df0.union(df0)
-#     assert df1.count() == df0.count() * 2
-#
-#     # Drop All
-#     df = DataFrameDataSource(df=df1, drop_duplicates=True).read(spark)
-#     assert df.to_native().count() == df0.count()
-#
-#     # Drop columns a and n
-#     df = DataFrameDataSource(df=df1, drop_duplicates=["a", "n"]).read(spark)
-#     assert df.to_native().count() == 2
+    source = DataFrameDataSource(df=df1, drop_duplicates=["a", "n"])
+    df = source.read(spark=spark)
+    assert_dfs_equal(df, df1.unique(["a", "n"]))
 
 
 def test_drops():
