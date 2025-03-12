@@ -182,6 +182,8 @@ class StackResources(BaseModel):
         Databricks Volumes
     databricks_warehouses:
         Databricks Warehouses
+    databricks_workspacebindings:
+        Databricks Workspace Bindings
     databricks_workspacefiles:
         Databricks WorkspacFiles
     pipelines:
@@ -221,8 +223,8 @@ class StackResources(BaseModel):
     databricks_vectorsearchindexes: dict[str, VectorSearchIndex] = {}
     databricks_volumes: dict[str, Volume] = {}
     databricks_warehouses: dict[str, Warehouse] = {}
-    databricks_workspacefiles: dict[str, WorkspaceFile] = {}
     databricks_workspacebindings: dict[str, WorkspaceBinding] = {}
+    databricks_workspacefiles: dict[str, WorkspaceFile] = {}
     pipelines: dict[str, Pipeline] = {}
     providers: dict[
         str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]

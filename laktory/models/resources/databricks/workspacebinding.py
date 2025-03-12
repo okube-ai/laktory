@@ -12,24 +12,24 @@ class WorkspaceBinding(BaseModel, PulumiResource, TerraformResource):
 
     Attributes
     ----------
-    securable_name:
-        Name of securable. 
-    workspace_id:
-        The ID of the workspace to bind the resource to. Changes forces new resource.
-    securable_type:
-        Type of securable. Can be `catalog`, `external_location`, `storage_credential` or `credential`. Default to `catalog`
     binding_type:
         (Optional) Binding mode. Default to `BINDING_TYPE_READ_WRITE`. Possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`
+    securable_name:
+        Name of securable. 
+    securable_type:
+        Type of securable. Can be `catalog`, `external_location`, `storage_credential` or `credential`. Default to `catalog`
+    workspace_id:
+        The ID of the workspace to bind the resource to. Changes forces new resource.
     Examples
     --------
     ```py
     ```
     """
 
+    binding_type: Literal["BINDING_TYPE_READ_ONLY", "BINDING_TYPE_READ_WRITE"] = None
     securable_name: str = None
+    securable_type: Literal["catalog", "external_location", "storage_credential", "credential"] = None
     workspace_id: Union[int, str]
-    securable_type: Literal["catalog", "external_location", "storage_credential", "credential"] = "catalog"
-    binding_type: Literal["BINDING_TYPE_READ_ONLY", "BINDING_TYPE_READ_WRITE"] = "BINDING_TYPE_READ_WRITE"
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
