@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -27,7 +27,7 @@ class WorkspaceBinding(BaseModel, PulumiResource, TerraformResource):
     """
 
     securable_name: str = None
-    workspace_id: str
+    workspace_id: Union[int, str]
     securable_type: Literal["catalog", "external_location", "storage_credential", "credential"] = "catalog"
     binding_type: Literal["BINDING_TYPE_READ_ONLY", "BINDING_TYPE_READ_WRITE"] = "BINDING_TYPE_READ_WRITE"
 
