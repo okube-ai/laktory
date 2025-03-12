@@ -12,7 +12,7 @@
 * Renamed `TableDataSource` to `UnityCatalogDataSource`
 * Renamed `MemoryDataSource` to `DataFrameDataSource`
 
-## [0.6.8] - Unreleased
+## [0.6.9] - Unreleased
 ### Added
 * n/a
 ### Fixed
@@ -21,6 +21,10 @@
 * n/a
 ### Breaking changes
 * n/a
+
+## [0.6.8] - 2025-03-11
+### Added
+* Liquid cluster option for data sinks
 
 ## [0.6.7] - 2025-03-10
 ### Fixed

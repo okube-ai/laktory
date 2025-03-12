@@ -269,6 +269,8 @@ class DataSinkMergeCDCOptions(BaseModel):
         df = spark.createDataFrame(data=[], schema=schema)
 
         writer = df.write.format("delta").mode("OVERWRITE")
+        if self.sink.cluster_by:
+            writer = writer.clusterBy(*self.sink.cluster_by)
         if self.target_path:
             writer.save(self.target_path)
         else:
@@ -505,6 +507,8 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     Attributes
     ----------
+    cluster_by:
+        Columns selected for liquid clustering
     is_primary:
         A primary sink will be used to read data for downstream nodes when
         moving from stream to batch. Don't apply for quarantine sinks.
@@ -526,6 +530,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         Other options passed to `spark.write.options`
     """
 
+    cluster_by: list[str] = None
     is_quarantine: bool = False
     is_primary: bool = True
     checkpoint_location: str = None

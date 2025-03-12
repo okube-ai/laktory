@@ -58,6 +58,7 @@ def test_file_data_sink_delta():
         path=dirpath,
         format="DELTA",
         mode="OVERWRITE",
+        # cluster_by=["x"],
     )
     sink.write(dff.slv)
 
