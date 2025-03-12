@@ -147,25 +147,25 @@ class FileDataSink(BaseDataSink):
             logger.info(
                 f"Writing df as stream {self.format} to {self.path} with mode {mode} and options {_options}"
             )
-            query = (
+            writer = (
                 df.writeStream.format(self.format.lower())
                 .outputMode(mode)
                 .trigger(availableNow=True)  # TODO: Add option for trigger?
                 .options(**_options)
-                .start(self.path)
             )
+            if self.cluster_by:
+                writer = writer.clusterBy(*self.cluster_by)
+            query = writer.start(self.path)
             query.awaitTermination()
 
         else:
             logger.info(
                 f"Writing df as static {self.format} to {self.path} with mode {mode} and options {_options}"
             )
-            (
-                df.write.mode(mode)
-                .format(self.format.lower())
-                .options(**_options)
-                .save(self.path)
-            )
+            writer = df.write.mode(mode).format(self.format.lower()).options(**_options)
+            if self.cluster_by:
+                writer = writer.clusterBy(*self.cluster_by)
+            writer.save(self.path)
 
     def _write_polars(self, df: PolarsDataFrame, mode=None, full_refresh=False) -> None:
         isStreaming = False
