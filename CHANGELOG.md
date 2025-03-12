@@ -2,7 +2,7 @@
 
 ## [0.6.9] - Unreleased
 ### Added
-* n/a
+* Workspace binding for securable objects
 ### Fixed
 * n/a
 ### Updated
