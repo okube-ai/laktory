@@ -222,7 +222,7 @@ class StackResources(BaseModel):
     databricks_volumes: dict[str, Volume] = {}
     databricks_warehouses: dict[str, Warehouse] = {}
     databricks_workspacefiles: dict[str, WorkspaceFile] = {}
-    databricks_workspacebinding: dict[str, WorkspaceBinding] = {}
+    databricks_workspacebindings: dict[str, WorkspaceBinding] = {}
     pipelines: dict[str, Pipeline] = {}
     providers: dict[
         str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]
