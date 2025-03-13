@@ -115,7 +115,7 @@ def test_camelize():
     assert dump == {
         "comment": None,
         "grants": None,
-        "individual_grants": None,
+        "individualGrants": None,
         "name": "my_schema",
         "storageRoot": None,
         "tables": [
@@ -140,7 +140,7 @@ def test_camelize():
                 ],
                 "comment": None,
                 "grants": None,
-                "individual_grants": None,
+                "individualGrants": None,
                 "name": "AAPL",
                 "properties": None,
                 "catalogName": "my_catalog",
@@ -173,7 +173,7 @@ def test_camelize():
                 ],
                 "comment": None,
                 "grants": None,
-                "individual_grants": None,
+                "individualGrants": None,
                 "name": "GOOGL",
                 "properties": None,
                 "catalogName": "my_catalog",
