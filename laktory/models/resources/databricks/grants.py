@@ -149,7 +149,8 @@ class GrantsIndividual(Grant, PulumiResource, TerraformResource):
 
     grants = models.resources.databricks.GrantsIndividual(
         catalog="dev",
-        grants=[{"principal": "metastore-admins", "privileges": ["CREATE_SCHEMA"]}],
+        principal="metastore-admins",
+        privileges=["CREATE_SCHEMA"],
     )
     ```
     """
