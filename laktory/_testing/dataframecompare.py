@@ -1,7 +1,7 @@
 import narwhals as nw
 
 
-def assert_dfs_equal(result, expected, sort=True):
+def assert_dfs_equal(result, expected, sort=True) -> None:
     # Convert to Narwhals
     result = nw.from_native(result)
     expected = nw.from_native(expected)

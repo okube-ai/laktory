@@ -75,7 +75,7 @@ class BaseDataSource(BaseModel, PipelineChild):
     drops: list = None
     filter: str = None
     renames: dict[str, str] = None
-    sample: DataFrameSample = None
+    # sample: DataFrameSample = None
     selects: Union[list[str], dict[str, str]] = None
     # watermark: Union[Watermark, None] = None
     type: str
@@ -198,9 +198,10 @@ class BaseDataSource(BaseModel, PipelineChild):
             df = df.unique(subset=subset)
 
         # Sample
-        if self.sample:
-            df = df.sample(
-                n=self.sample.n, fraction=self.sample.fraction, seed=self.sample.seed
-            )
+        # TODO: Enable when Narwhals support sampling on LazyFrame
+        # if self.sample:
+        #     df = df.sample(
+        #         n=self.sample.n, fraction=self.sample.fraction, seed=self.sample.seed
+        #     )
 
         return df

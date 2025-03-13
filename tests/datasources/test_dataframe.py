@@ -62,140 +62,22 @@ def test_drop_duplicates(df0):
     assert_dfs_equal(df, df1.unique(["a", "n"]))
 
 
-def test_drops():
-    pass
+@pytest.mark.parametrize("df0", [dfs, dfp])
+def test_drops(df0):
+    source = DataFrameDataSource(df=df0, drops=["a", "x"])
+    df = source.read(spark=spark)
+    assert df.columns == ["b", "c", "n"]
 
 
-def test_filter():
-    pass
+@pytest.mark.parametrize("df0", [dfs, dfp])
+def test_filter(df0):
+    source = DataFrameDataSource(df=df0, filter="b != 0")
+    df = source.read(spark=spark)
+    assert_dfs_equal(df, nw.from_native(df0).filter(nw.col("b") != 0))
 
 
-def test_renames():
-    pass
-
-
-def test_sample():
-    pass
-
-
-def test_selects():
-    pass
-
-
-#
-# def test_memory_data_source(df0=df0):
-#     source = DataFrameDataSource(
-#         df=df0,
-#         filter="b != 0",
-#         selects=["a", "b", "c"],
-#         renames={"a": "aa", "b": "bb", "c": "cc"},
-#         # broadcast=True,
-#     )
-#
-#     # Test reader
-#     df = source.read(spark)
-#     assert df.columns == ["aa", "bb", "cc"]
-#     assert df.to_native().count() == 2
-#     # assert df.toPandas()["chain"].tolist() == ["chain", "chain"]
-#
-#     # Select with rename
-#     source = DataFrameDataSource(
-#         df=df0,
-#         selects={"x": "x1", "n": "n1"},
-#     )
-#     df = source.read(spark)
-#     assert df.columns == ["x1", "n1"]
-#     assert df.to_native().count() == 3
-#
-#     # Drop
-#     source = DataFrameDataSource(
-#         df=df0,
-#         drops=["b", "c", "n"],
-#     )
-#     df = source.read(spark)
-#     assert df.columns == ["x", "a"]
-#     assert df.to_native().count() == 3
-#
-#
-# def test_drop_duplicates(df0=df0):
-#     df1 = df0.union(df0)
-#     assert df1.count() == df0.count() * 2
-#
-#     # Drop All
-#     df = DataFrameDataSource(df=df1, drop_duplicates=True).read(spark)
-#     assert df.to_native().count() == df0.count()
-#
-#     # Drop columns a and n
-#     df = DataFrameDataSource(df=df1, drop_duplicates=["a", "n"]).read(spark)
-#     assert df.to_native().count() == 2
-#
-#
-# def test_memory_data_source_from_dict():
-#     data0 = [{"x": 1, "y": "a"}, {"x": 2, "y": "b"}, {"x": 3, "y": "c"}]
-#     data1 = {"x": [1, 2, 3], "y": ["a", "b", "c"]}
-#     df_ref = pd.DataFrame(data0)
-#
-#     # Spark - data0
-#     source = DataFrameDataSource(data=data0, dataframe_backend="PYSPARK")
-#     df = source.read(spark)
-#     assert df.to_native().toPandas().equals(df_ref)
-#
-#     # Spark - data1
-#     source = DataFrameDataSource(data=data1, dataframe_backend="PYSPARK")
-#     df = source.read(spark)
-#     assert df.to_native().toPandas().equals(df_ref)
-#
-#     # Polars - data0
-#     source = DataFrameDataSource(data=data0, dataframe_backend="POLARS")
-#     df = source.read(spark)
-#     assert df.collect().to_pandas().equals(df_ref)
-#
-#     # Polars - data1
-#     source = DataFrameDataSource(data=data1, dataframe_backend="POLARS")
-#     df = source.read(spark)
-#     assert df.collect().to_pandas().equals(df_ref)
-#
-#
-# def test_uc_data_source():
-#     source = UnityCatalogDataSource(
-#         catalog_name="dev",
-#         schema_name="finance",
-#         table_name="slv_stock_prices",
-#     )
-#
-#     # Test meta
-#     assert source.full_name == "dev.finance.slv_stock_prices"
-#     assert source._id == "dev.finance.slv_stock_prices"
-#
-#     # TODO: Test read
-#
-#
-# def test_source_selection():
-#     class Model(BaseModel):
-#         sources: list[
-#             Union[FileDataSource, DataFrameDataSource, UnityCatalogDataSource]
-#         ]
-#
-#     model = Model(
-#         sources=[
-#             {
-#                 "path": "/some/path",
-#             },
-#             {
-#                 "df": df0,
-#             },
-#             {
-#                 "catalog_name": "dev",
-#                 "schema_name": "finance",
-#                 "table_name": "slv_stock_prices",
-#             },
-#         ]
-#     )
-#
-#     source_types = [type(s) for s in model.sources]
-#
-#     assert source_types == [
-#         FileDataSource,
-#         DataFrameDataSource,
-#         UnityCatalogDataSource,
-#     ]
+@pytest.mark.parametrize("df0", [dfs, dfp])
+def test_renames(df0):
+    source = DataFrameDataSource(df=df0, renames={"a": "aa", "x": "col"})
+    df = source.read(spark=spark)
+    assert df.columns == ["aa", "b", "c", "n", "col"]
