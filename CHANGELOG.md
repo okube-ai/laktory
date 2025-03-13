@@ -3,6 +3,7 @@
 ## [0.6.9] - Unreleased
 ### Added
 * Workspace binding for securable objects
+* Metastore workspace assignment through stack
 ### Fixed
 * n/a
 ### Updated

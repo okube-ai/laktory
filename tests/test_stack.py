@@ -346,6 +346,7 @@ def test_stack_model():
                     "webhook_notifications": None,
                 },
             },
+            "databricks_metastoreassignments": {},
             "databricks_metastoredataaccesses": {},
             "databricks_metastores": {},
             "databricks_mlflowexperiments": {},

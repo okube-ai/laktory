@@ -24,6 +24,7 @@ from laktory.models.resources.databricks.grants import Grants
 from laktory.models.resources.databricks.group import Group
 from laktory.models.resources.databricks.job import Job
 from laktory.models.resources.databricks.metastore import Metastore
+from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
 from laktory.models.resources.databricks.mlflowexperiment import MLflowExperiment
 from laktory.models.resources.databricks.mlflowmodel import MLflowModel
@@ -148,6 +149,10 @@ class StackResources(BaseModel):
         Databricks Grants
     databricks_jobs:
         Databricks Jobs
+    databricks_metastoreassignments:
+        Databricks Metastore Assignments
+    databricks_metastoredataaccesses:
+        Databricks Metastore Data Accesses       
     databricks_metastores:
         Databricks Metastores
     databricks_mlflowexperiments:
@@ -204,6 +209,7 @@ class StackResources(BaseModel):
     databricks_grants: dict[str, Grants] = {}
     databricks_groups: dict[str, Group] = {}
     databricks_jobs: dict[str, Job] = {}
+    databricks_metastoreassignments: dict[str, MetastoreAssignment] = {}
     databricks_metastoredataaccesses: dict[str, MetastoreDataAccess] = {}
     databricks_metastores: dict[str, Metastore] = {}
     databricks_mlflowexperiments: dict[str, MLflowExperiment] = {}
