@@ -5,7 +5,6 @@ from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.metastoregrant import MetastoreGrant
 from laktory.models.resources.baseresource import ResourceLookup
-from laktory.models.resources.databricks.grants import Grants
 from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -56,8 +55,14 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         Destroy metastore regardless of its contents.
     global_metastore_id:
         todo
+    grant:
+        Grant(s) operating on the Metastore and authoritative for a specific principal.
+        Other principals within the grants are preserved. Mutually exclusive with
+        `grants`.
     grants:
-        List of grants operating on the metastore
+        Grants operating on the Metastore and authoritative for all principals.
+        Replaces any existing grants defined inside or outside of Laktory. Mutually
+        exclusive with `grant`.
     grants_provider:
         Provider used for deploying grants
     lookup_existing:
@@ -101,6 +106,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     delta_sharing_scope: str = None
     force_destroy: bool = None
     global_metastore_id: str = None
+    grant: Union[MetastoreGrant, list[MetastoreGrant]] = None
     grants: list[MetastoreGrant] = None
     grants_provider: str = None
     lookup_existing: MetastoreLookup = Field(None, exclude=True)
@@ -144,22 +150,14 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
                 depends_on += [f"${{resources.{a.resource_name}}}"]
                 resources += [a]
 
-        if self.grants:
-            options = {"provider": self.grants_provider}
-            if depends_on:
-                options["depends_on"] = depends_on
+        options = {"provider": self.grants_provider}
+        if depends_on:
+            options["depends_on"] = depends_on
 
-            resources += Grants(
-                resource_name=f"grants-{self.resource_name}",
-                metastore=f"${{resources.{self.resource_name}.id}}",
-                grants=[
-                    {"principal": g.principal, "privileges": g.privileges}
-                    for g in self.grants
-                ],
-                options=options,
-            ).core_resources
-
-            depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
+        _resources = self.get_grants_additional_resources(options)
+        for r in _resources:
+            depends_on += [f"${{resources.{r.resource_name}}}"]
+        resources += _resources
 
         if self.data_accesses:
             for data_access in self.data_accesses:
@@ -186,6 +184,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
             "workspace_assignments",
+            "grant",
             "grants",
             "grants_provider",
             "data_accesses",

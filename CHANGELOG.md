@@ -12,7 +12,7 @@
 * Renamed `TableDataSource` to `UnityCatalogDataSource`
 * Renamed `MemoryDataSource` to `DataFrameDataSource`
 
-## [0.6.9] - Unreleased
+## [0.6.10] - Unreleased
 ### Added
 * n/a
 ### Fixed
@@ -21,6 +21,14 @@
 * n/a
 ### Breaking changes
 * n/a
+
+## [0.6.9] - 2025-03-14
+### Added
+* `WorkspaceBinding` Databricks resource
+* `Grant` Databricks resource
+### Updated
+* `MetastoreAssignment` can be declared from the stack root.
+* Resources with `Grants` definition can also define `Grant` to target a specific principal 
 
 ## [0.6.8] - 2025-03-11
 ### Added

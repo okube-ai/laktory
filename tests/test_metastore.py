@@ -61,6 +61,7 @@ def test_metastore():
                 "force_destroy": True,
                 "force_update": None,
                 "gcp_service_account_key": None,
+                "grant": None,
                 "grants": [
                     {
                         "principal": "role-metastore-admins",
@@ -81,6 +82,7 @@ def test_metastore():
         "delta_sharing_scope": None,
         "force_destroy": True,
         "global_metastore_id": None,
+        "grant": None,
         "grants": [
             {
                 "principal": "role-metastore-admins",
@@ -93,6 +95,7 @@ def test_metastore():
                 ],
             }
         ],
+        "grants_provider": "${resources.provider-workspace-neptune}",
         "metastore_id": None,
         "name": "metastore-lakehouse",
         "owner": None,
@@ -101,7 +104,6 @@ def test_metastore():
         "storage_root_credential_id": None,
         "updated_at": None,
         "updated_by": None,
-        "grants_provider": "${resources.provider-workspace-neptune}",
         "workspace_assignments": [
             {"default_catalog_name": None, "metastore_id": None, "workspace_id": 0}
         ],

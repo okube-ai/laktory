@@ -2,7 +2,6 @@ from typing import Union
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.storagecredentialgrant import StorageCredentialGrant
-from laktory.models.resources.databricks.grants import Grants
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -121,8 +120,14 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
         Force resource deletion even if not empty
     force_update:
         Force resource update even if not empty
+    grant:
+        Grant(s) operating on the Metastore Data Access and authoritative for a specific principal.
+        Other principals within the grants are preserved. Mutually exclusive with
+        `grants`.
     grants:
-        List of grants operating on the data access
+        Grants operating on the Metastore Data Access and authoritative for all principals.
+        Replaces any existing grants defined inside or outside of Laktory. Mutually
+        exclusive with `grant`.
     gcp_service_account_key:
         GCP service account key specifications
     is_default:
@@ -154,6 +159,7 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
     force_destroy: bool = None
     force_update: bool = None
     gcp_service_account_key: MetastoreDataAccessGcpServiceAccountKey = None
+    grant: Union[StorageCredentialGrant, list[StorageCredentialGrant]] = None
     grants: list[StorageCredentialGrant] = None
     is_default: bool = None
     metastore_id: str = None
@@ -173,17 +179,8 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
         """
         resources = []
 
-        # Catalog grants
-        if self.grants:
-            grant = Grants(
-                resource_name=f"grants-{self.resource_name}",
-                storage_credential=f"${{resources.{self.resource_name}.name}}",
-                grants=[
-                    {"principal": g.principal, "privileges": g.privileges}
-                    for g in self.grants
-                ],
-            )
-            resources += [grant]
+        # Metastore data access grants
+        resources += self.get_grants_additional_resources()
 
         return resources
 
@@ -197,7 +194,7 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grants"]
+        return ["grant", "grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

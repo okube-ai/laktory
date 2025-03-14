@@ -48,6 +48,7 @@ def get_validator(monkeypatch):
     from tests.test_user import user
     from tests.test_vectorsearchendpoint import vector_search_endpoint
     from tests.test_vectorsearchindex import vector_search_index
+    from tests.test_workspacebinding import workspace_binding
     from tests.test_workspacefile import workspace_file
 
     paths = Paths(__file__)
@@ -76,6 +77,7 @@ def get_validator(monkeypatch):
             "databricks_vectorsearchendpoints": [vector_search_endpoint],
             "databricks_vectorsearchindexes": [vector_search_index],
             "databricks_workspacefiles": [workspace_file],
+            "databricks_workspacebindings": [workspace_binding],
             "pipelines": [pl_dlt],  # required by job
         },
         providers={
@@ -146,6 +148,7 @@ def test_stack_model():
             "databricks_directories": {},
             "databricks_dltpipelines": {},
             "databricks_externallocations": {},
+            "databricks_grant": {},
             "databricks_grants": {},
             "databricks_groups": {},
             "databricks_jobs": {
@@ -344,6 +347,7 @@ def test_stack_model():
                     "webhook_notifications": None,
                 },
             },
+            "databricks_metastoreassignments": {},
             "databricks_metastoredataaccesses": {},
             "databricks_metastores": {},
             "databricks_mlflowexperiments": {},
@@ -421,6 +425,7 @@ def test_stack_model():
                     "warehouse_type": None,
                 },
             },
+            "databricks_workspacebindings": {},
             "databricks_workspacefiles": {},
             "pipelines": {
                 "pl-custom-name": {
