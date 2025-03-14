@@ -204,7 +204,7 @@ class StorageCredential(BaseModel, PulumiResource, TerraformResource):
 
         # Storage Credential grants
         resources += self.get_grants_additional_resources(
-            # object={"storage_credential" : f"${{resources.{self.resource_name}.id}}"}
+            object={"storage_credential" : f"${{resources.{self.resource_name}.id}}"}
         )
         return resources
 
