@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* `Grant` and `Grants` object specified correctly depending on resource type 
 ### Updated
 * n/a
 ### Breaking changes
