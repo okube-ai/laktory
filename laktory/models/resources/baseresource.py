@@ -214,8 +214,9 @@ class BaseResource(_BaseModel):
             if not isinstance(grant, list):
                 grant = [grant]
             for g in grant:
+                sanitized_principal = re.sub(r'[_-]+', '-', re.sub(r'[^a-zA-Z0-9_-]', '-', re.sub(r'[ ()]', '_', g.principal))).strip('-')
                 resources += Grant(
-                    resource_name=f"grant-{self.resource_name}-{g.principal}",
+                    resource_name=f"grant-{self.resource_name}-{sanitized_principal}",
                     principal=g.principal,
                     privileges=g.privileges,
                     options=options,
