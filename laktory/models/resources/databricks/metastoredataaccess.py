@@ -1,13 +1,9 @@
-from typing import Union
 
-from laktory.models.basemodel import BaseModel
-from laktory.models.grants.storagecredentialgrant import StorageCredentialGrant
 from laktory.models.resources.databricks.storagecredential import StorageCredential
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class MetastoreDataAccess(StorageCredential, PulumiResource, TerraformResource):
+class MetastoreDataAccess(StorageCredential):
     """
     Databricks Metastore Data Access
 

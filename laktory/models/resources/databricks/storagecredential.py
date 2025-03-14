@@ -6,7 +6,7 @@ from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
 
-class StorageCredentialAwsIamRole(BaseModel):
+class AwsIamRole(BaseModel):
     """
     Databricks Storage Credential AWS IAM Role
 
@@ -25,7 +25,7 @@ class StorageCredentialAwsIamRole(BaseModel):
     unity_catalog_iam_arn: str = None
 
 
-class StorageCredentialAzureManagedIdentity(BaseModel):
+class AzureManagedIdentity(BaseModel):
     """
     Databricks Storage Credential Azure Managed Identity
 
@@ -44,7 +44,7 @@ class StorageCredentialAzureManagedIdentity(BaseModel):
     managed_identity_id: str = None
 
 
-class StorageCredentialAzureServicePrincipal(BaseModel):
+class AzureServicePrincipal(BaseModel):
     """
     Databricks Storage Credential Azure Service Principals
 
@@ -62,7 +62,7 @@ class StorageCredentialAzureServicePrincipal(BaseModel):
     client_secret: str = None
     directory_id: str = None
 
-class StorageCredentialCloudflareApiToken(BaseModel):
+class CloudflareApiToken(BaseModel):
     """
     Databricks Storage Credential Cloudflare API Token
 
@@ -80,7 +80,7 @@ class StorageCredentialCloudflareApiToken(BaseModel):
     access_key_id: str = None
     secret_access_key: str = None
 
-class StorageCredentialDatabricksGcpServiceAccount(BaseModel):
+class DatabricksGcpServiceAccount(BaseModel):
     """
     Databricks Storage Credential GCP Service Account Key
 
@@ -98,7 +98,7 @@ class StorageCredentialDatabricksGcpServiceAccount(BaseModel):
     email: str = None
 
 
-class StorageCredentialGcpServiceAccountKey(BaseModel):
+class GcpServiceAccountKey(BaseModel):
     """
     Databricks Storage Credential GCP Service Account Key
 
@@ -171,17 +171,17 @@ class StorageCredential(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    aws_iam_role: StorageCredentialAwsIamRole = None
-    azure_managed_identity: StorageCredentialAzureManagedIdentity = None
-    azure_service_principal: StorageCredentialAzureServicePrincipal = None
-    cloudflare_api_token: StorageCredentialCloudflareApiToken = None
+    aws_iam_role: AwsIamRole = None
+    azure_managed_identity: AzureManagedIdentity = None
+    azure_service_principal: AzureServicePrincipal = None
+    cloudflare_api_token: CloudflareApiToken = None
     comment: str = None
-    databricks_gcp_service_account: StorageCredentialDatabricksGcpServiceAccount = (
+    databricks_gcp_service_account: DatabricksGcpServiceAccount = (
         None
     )
     force_destroy: bool = None
     force_update: bool = None
-    gcp_service_account_key: StorageCredentialGcpServiceAccountKey = None
+    gcp_service_account_key: GcpServiceAccountKey = None
     grant: Union[StorageCredentialGrant, list[StorageCredentialGrant]] = None
     grants: list[StorageCredentialGrant] = None
     isolation_mode: Literal["ISOLATION_MODE_ISOLATED", "ISOLATION_MODE_OPEN"] = None

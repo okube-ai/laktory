@@ -2,20 +2,20 @@
 
 ---
 
-::: laktory.models.resources.databricks.storagecredential.StorageCredentialAwsIamRole
+::: laktory.models.resources.databricks.storagecredential.AwsIamRole
 
 ---
 
-::: laktory.models.resources.databricks.storagecredential.StorageCredentialAzureManagedIdentity
+::: laktory.models.resources.databricks.storagecredential.AzureManagedIdentity
 
 ---
 
-::: laktory.models.resources.databricks.storagecredential.StorageCredentialAzureServicePrincipal
+::: laktory.models.resources.databricks.storagecredential.AzureServicePrincipal
 
 ---
 
-::: laktory.models.resources.databricks.storagecredential.StorageCredentialDatabricksGcpServiceAccount
+::: laktory.models.resources.databricks.storagecredential.DatabricksGcpServiceAccount
 
 ---
 
-::: laktory.models.resources.databricks.storagecredential.StorageCredentialGcpServiceAccountKey
+::: laktory.models.resources.databricks.storagecredential.GcpServiceAccountKey
