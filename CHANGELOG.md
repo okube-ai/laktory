@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.6.10] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* `Grant` and `Grants` object specified correctly depending on resource type 
 
 ## [0.6.9] - 2025-03-14
 ### Added
