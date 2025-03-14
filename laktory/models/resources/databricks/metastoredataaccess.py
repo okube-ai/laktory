@@ -180,8 +180,9 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # Metastore data access grants
-        resources += self.get_grants_additional_resources()
-
+        resources += self.get_grants_additional_resources(
+            object={"storage_credential" : f"${{resources.{self.resource_name}.id}}"}
+        )
         return resources
 
     # ----------------------------------------------------------------------- #

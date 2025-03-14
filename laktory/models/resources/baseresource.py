@@ -188,7 +188,9 @@ class BaseResource(_BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def get_grants_additional_resources(self, options=None):
+    def get_grants_additional_resources(self, 
+                                        object,
+                                        options=None):
         from laktory.models.resources.databricks.grant import Grant
         from laktory.models.resources.databricks.grants import Grants
 
@@ -199,12 +201,12 @@ class BaseResource(_BaseModel):
         if self.grants:
             resources += Grants(
                 resource_name=f"grants-{self.resource_name}",
-                schema=f"${{resources.{self.resource_name}.id}}",
                 grants=[
                     {"principal": g.principal, "privileges": g.privileges}
                     for g in self.grants
                 ],
                 options=options,
+                **object
             ).core_resources
 
         if self.grant:
@@ -214,10 +216,10 @@ class BaseResource(_BaseModel):
             for g in grant:
                 resources += Grant(
                     resource_name=f"grant-{self.resource_name}-{g.principal}",
-                    schema=f"${{resources.{self.resource_name}.id}}",
                     principal=g.principal,
                     privileges=g.privileges,
                     options=options,
+                    **object
                 ).core_resources
 
         return resources
