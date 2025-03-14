@@ -1,4 +1,6 @@
-from typing import Literal, Union
+from typing import Literal
+from typing import Union
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -15,11 +17,12 @@ class WorkspaceBinding(BaseModel, PulumiResource, TerraformResource):
     binding_type:
         (Optional) Binding mode. Default to `BINDING_TYPE_READ_WRITE`. Possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`
     securable_name:
-        Name of securable. 
+        Name of securable.
     securable_type:
         Type of securable. Can be `catalog`, `external_location`, `storage_credential` or `credential`. Default to `catalog`
     workspace_id:
         The ID of the workspace to bind the resource to. Changes forces new resource.
+
     Examples
     --------
     ```py
@@ -28,7 +31,9 @@ class WorkspaceBinding(BaseModel, PulumiResource, TerraformResource):
 
     binding_type: Literal["BINDING_TYPE_READ_ONLY", "BINDING_TYPE_READ_WRITE"] = None
     securable_name: str = None
-    securable_type: Literal["catalog", "external_location", "storage_credential", "credential"] = None
+    securable_type: Literal[
+        "catalog", "external_location", "storage_credential", "credential"
+    ] = None
     workspace_id: Union[int, str]
 
     # ----------------------------------------------------------------------- #

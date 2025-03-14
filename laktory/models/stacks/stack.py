@@ -20,6 +20,7 @@ from laktory.models.resources.databricks.dbfsfile import DbfsFile
 from laktory.models.resources.databricks.directory import Directory
 from laktory.models.resources.databricks.dltpipeline import DLTPipeline
 from laktory.models.resources.databricks.externallocation import ExternalLocation
+from laktory.models.resources.databricks.grant import Grant
 from laktory.models.resources.databricks.grants import Grants
 from laktory.models.resources.databricks.group import Group
 from laktory.models.resources.databricks.job import Job
@@ -145,6 +146,8 @@ class StackResources(BaseModel):
         Databricks External Locations
     databricks_groups:
         Databricks Groups
+    databricks_grant:
+        Databricks Grant
     databricks_grants:
         Databricks Grants
     databricks_jobs:
@@ -152,7 +155,7 @@ class StackResources(BaseModel):
     databricks_metastoreassignments:
         Databricks Metastore Assignments
     databricks_metastoredataaccesses:
-        Databricks Metastore Data Accesses       
+        Databricks Metastore Data Accesses
     databricks_metastores:
         Databricks Metastores
     databricks_mlflowexperiments:
@@ -206,6 +209,7 @@ class StackResources(BaseModel):
     databricks_directories: dict[str, Directory] = {}
     databricks_dltpipelines: dict[str, DLTPipeline] = {}
     databricks_externallocations: dict[str, ExternalLocation] = {}
+    databricks_grant: dict[str, Grant] = {}
     databricks_grants: dict[str, Grants] = {}
     databricks_groups: dict[str, Group] = {}
     databricks_jobs: dict[str, Job] = {}

@@ -205,6 +205,7 @@ nav:
           - api/models/resources/databricks/directory.md
           - DLT Pipeline: api/models/resources/databricks/dltpipeline.md
           - ExternalLocation: api/models/resources/databricks/externallocation.md
+          - api/models/resources/databricks/grant.md
           - api/models/resources/databricks/grants.md
           - api/models/resources/databricks/group.md
           - api/models/resources/databricks/job.md
@@ -232,6 +233,7 @@ nav:
           - api/models/resources/databricks/volume.md
           - api/models/resources/databricks/warehouse.md
           - WorkspaceFile: api/models/resources/databricks/workspacefile.md
+          - WorkspaceBinding: api/models/resources/databricks/workspacebinding.md
         - Providers:
           - AzureProvider: api/models/resources/providers/azure.md
           - AzurePulumiProvider: api/resources/models/providers/azurepulumi.md

@@ -4,7 +4,6 @@ from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.schemagrant import SchemaGrant
-from laktory.models.resources.databricks.grants import Grants, GrantsIndividual
 from laktory.models.resources.databricks.table import Table
 from laktory.models.resources.databricks.volume import Volume
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -24,11 +23,14 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
         Text description of the catalog
     force_destroy:
         If `True` catalog can be deleted, even when not empty
+    grant:
+        Grant(s) operating on the Schema and authoritative for a specific principal.
+        Other principals within the grants are preserved. Mutually exclusive with
+        `grants`.
     grants:
-        List of grants operating on the schema
-    individual_grants:
-        List of grants operating on the schema. Different from `grants` in that
-        it does not remove grants for other principals not specified in the list.             
+        Grants operating on the Schema and authoritative for all principals.
+        Replaces any existing grants defined inside or outside of Laktory. Mutually
+        exclusive with `grant`.
     isolation_mode:
         Whether the catalog is accessible from all workspaces or a specific set
         of workspaces. Can be ISOLATED or OPEN. Setting the catalog to ISOLATED
@@ -38,7 +40,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     storage_root:
         Managed location of the catalog. Location in cloud storage where data
         for managed tables will be stored. If not specified, the location will
-        default to the metastore root location.       
+        default to the metastore root location.
     tables:
         List of tables stored in the schema
     volumes:
@@ -66,8 +68,8 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     catalog_name: Union[str, None] = None
     comment: Union[str, None] = None
     force_destroy: bool = True
+    grant: Union[SchemaGrant, list[SchemaGrant]] = None
     grants: list[SchemaGrant] = None
-    individual_grants: list[SchemaGrant] = None
     name: str
     storage_root: str = None
     tables: list[Table] = []
@@ -121,21 +123,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # Schema grants
-        if self.grants:
-            resources += Grants(
-                resource_name=f"grants-{self.resource_name}",
-                schema=f"${{resources.{self.resource_name}.id}}",
-                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
-            ).core_resources
-
-        if self.individual_grants:
-            for idx, g in enumerate(self.individual_grants):
-                resources += GrantsIndividual(
-                    resource_name=f"grant-{self.resource_name}-{idx}",
-                    schema=f"${{resources.{self.resource_name}.id}}",
-                    principal=g.principal,
-                    privileges=g.privileges,
-                ).core_resources
+        resources += self.get_grants_additional_resources()
 
         if self.volumes:
             for v in self.volumes:
@@ -157,7 +145,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["tables", "volumes", "grants", "individual_grants"]
+        return ["tables", "volumes", "grant", "grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

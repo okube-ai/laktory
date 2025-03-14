@@ -3,7 +3,6 @@ from typing import Union
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.volumegrant import VolumeGrant
-from laktory.models.resources.databricks.grants import Grants, GrantsIndividual
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -23,11 +22,14 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
         Name of the volume
     catalog_name:
         Name of the catalog storing the volume
+    grant:
+        Grant(s) operating on the Volume and authoritative for a specific principal.
+        Other principals within the grants are preserved. Mutually exclusive with
+        `grants`.
     grants:
-        List of grants operating on the volume
-    individual_grants:
-        List of grants operating on the catalog. Different from `grants` in that
-        it does not remove grants for other principals not specified in the list.         
+        Grants operating on the Volume and authoritative for all principals.
+        Replaces any existing grants defined inside or outside of Laktory. Mutually
+        exclusive with `grant`.
     schema_name:
         Name of the schema storing the volume
     storage_location:
@@ -68,8 +70,8 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
 
     name: str
     catalog_name: str = None
+    grant: Union[VolumeGrant, list[VolumeGrant]] = None
     grants: list[VolumeGrant] = None
-    individual_grants: list[VolumeGrant] = None
     schema_name: str = None
     storage_location: str = None
     volume_type: Literal["MANAGED", "EXTERNAL"] = "MANAGED"
@@ -118,21 +120,7 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # Volume grants
-        if self.grants:
-            resources += Grants(
-                resource_name=f"grants-{self.resource_name}",
-                volume=f"${{resources.{self.resource_name}.id}}",
-                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
-            ).core_resources
-
-        if self.individual_grants:
-            for idx, g in enumerate(self.individual_grants):
-                resources += GrantsIndividual(
-                    resource_name=f"grant-{self.resource_name}-{idx}",
-                    volume=f"${{resources.{self.resource_name}.id}}",
-                    principal=g.principal,
-                    privileges=g.privileges,
-                ).core_resources
+        resources += self.get_grants_additional_resources()
 
         return resources
 
@@ -146,7 +134,7 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grants", "individual_grants"]
+        return ["grant", "grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

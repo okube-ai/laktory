@@ -4,7 +4,7 @@ workspace_binding = WorkspaceBinding(
     securable_name="credential",
     workspace_id="11111111",
     securable_type="catalog",
-    binding_type="BINDING_TYPE_READ_WRITE"
+    binding_type="BINDING_TYPE_READ_WRITE",
 )
 
 
@@ -15,11 +15,7 @@ def test_workspace_binding():
     assert workspace_binding.securable_type == "catalog"
     assert workspace_binding.binding_type == "BINDING_TYPE_READ_WRITE"
     assert workspace_binding.resource_key == "credential-11111111"
-    assert (
-        workspace_binding.resource_name
-        == "workspace-binding-credential-11111111"
-    )
-
+    assert workspace_binding.resource_name == "workspace-binding-credential-11111111"
 
 
 if __name__ == "__main__":

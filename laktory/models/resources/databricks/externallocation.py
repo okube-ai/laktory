@@ -1,7 +1,7 @@
 from typing import Union
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.externallocationgrant import ExternalLocationGrant
-from laktory.models.resources.databricks.grants import Grants, GrantsIndividual
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -47,11 +47,14 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
         Destroy external location regardless of its dependents.
     force_update:
         Update external location regardless of its dependents.
+    grant:
+        Grant(s) operating on the External Location and authoritative for a specific principal.
+        Other principals within the grants are preserved. Mutually exclusive with
+        `grants`.
     grants:
-        List of grants operating on the external location.        
-    individual_grants:
-        List of grants operating on the external location. Different from `grants` in that
-        it does not remove grants for other principals not specified in the list.             
+        Grants operating on the External Location and authoritative for all principals.
+        Replaces any existing grants defined inside or outside of Laktory. Mutually
+        exclusive with `grant`.
     metastore_id:
         Metastore ID
     name:
@@ -79,8 +82,8 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     encryption_details: ExternalLocationEncryptionDetails = None
     force_destroy: bool = None
     force_update: bool = None
+    grant: Union[ExternalLocationGrant, list[ExternalLocationGrant]] = None
     grants: list[ExternalLocationGrant] = None
-    individual_grants: list[ExternalLocationGrant] = None
     metastore_id: str = None
     name: str = None
     owner: str = None
@@ -99,21 +102,7 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # External Location Grants
-        if self.grants:
-            resources += Grants(
-                resource_name=f"grants-{self.resource_name}",
-                external_location=f"${{resources.{self.resource_name}.name}}",
-                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
-            ).core_resources
-
-        if self.individual_grants:
-            for idx, g in enumerate(self.individual_grants):
-                resources += GrantsIndividual(
-                        resource_name=f"grant-{self.resource_name}-{idx}",
-                        external_location=f"${{resources.{self.resource_name}.name}}",
-                        principal=g.principal,
-                        privileges=g.privileges,
-                    ).core_resources  
+        resources += self.get_grants_additional_resources()
 
         return resources
 
@@ -124,10 +113,11 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_resource_type(self) -> str:
         return "databricks:ExternalLocation"
-    
+
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return [ "grants", "individual_grants"]
+        return ["grant", "grants"]
+
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #

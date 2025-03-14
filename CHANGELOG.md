@@ -2,15 +2,11 @@
 
 ## [0.6.9] - Unreleased
 ### Added
-* Workspace binding for securable objects
-* Metastore workspace assignment through stack
-* Grant individual permissions to specific principals without removing others' permissions on same object
-### Fixed
-* n/a
+* `WorkspaceBinding` Databricks resource
+* `Grant` Databricks resource
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* `MetastoreAssignment` can be declared from the stack root.
+* Resources with `Grants` definition can also define `Grant` to target a specific principal 
 
 ## [0.6.8] - 2025-03-11
 ### Added

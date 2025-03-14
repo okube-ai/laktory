@@ -48,8 +48,8 @@ def get_validator(monkeypatch):
     from tests.test_user import user
     from tests.test_vectorsearchendpoint import vector_search_endpoint
     from tests.test_vectorsearchindex import vector_search_index
-    from tests.test_workspacefile import workspace_file
     from tests.test_workspacebinding import workspace_binding
+    from tests.test_workspacefile import workspace_file
 
     paths = Paths(__file__)
 
@@ -148,6 +148,7 @@ def test_stack_model():
             "databricks_directories": {},
             "databricks_dltpipelines": {},
             "databricks_externallocations": {},
+            "databricks_grant": {},
             "databricks_grants": {},
             "databricks_groups": {},
             "databricks_jobs": {
