@@ -1,6 +1,16 @@
 # Release History
 
-## [0.6.10] - Unreleased
+## [0.6.11] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.6.10] - 2025-03-14
 ### Added
 * New `StorageCredential` and can be declared from the stack root. 
 ### Fixed
