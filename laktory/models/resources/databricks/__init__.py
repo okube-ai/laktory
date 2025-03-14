@@ -8,7 +8,7 @@ from .dbfsfile import DbfsFile
 from .directory import Directory
 from .dltpipeline import DLTPipeline
 from .externallocation import ExternalLocation
-from .grants import Grants
+from .grants import Grants, GrantsIndividual
 from .group import Group
 from .job import Job
 from .metastore import Metastore

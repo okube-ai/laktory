@@ -4,6 +4,7 @@
 ### Added
 * Workspace binding for securable objects
 * Metastore workspace assignment through stack
+* Grant individual permissions to specific principals without removing others' permissions on same object
 ### Fixed
 * n/a
 ### Updated

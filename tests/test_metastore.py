@@ -68,6 +68,7 @@ def test_metastore():
                     }
                 ],
                 "is_default": False,
+                "individual_grants": None,
                 "metastore_id": None,
                 "name": "lakehouse-dev",
                 "owner": None,
@@ -93,6 +94,7 @@ def test_metastore():
                 ],
             }
         ],
+        "individual_grants": None,
         "metastore_id": None,
         "name": "metastore-lakehouse",
         "owner": None,

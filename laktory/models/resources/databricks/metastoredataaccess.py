@@ -2,7 +2,7 @@ from typing import Union
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.storagecredentialgrant import StorageCredentialGrant
-from laktory.models.resources.databricks.grants import Grants
+from laktory.models.resources.databricks.grants import Grants, GrantsIndividual
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -127,6 +127,9 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
         GCP service account key specifications
     is_default:
         Whether to set this credential as the default for the metastore.
+    individual_grants:
+        List of grants operating on the data access. Different from `grants` in that
+        it does not remove grants for other principals not specified in the list.             
     metastore_id:
         Metastore id
     name:
@@ -155,6 +158,7 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
     force_update: bool = None
     gcp_service_account_key: MetastoreDataAccessGcpServiceAccountKey = None
     grants: list[StorageCredentialGrant] = None
+    individual_grants: list[StorageCredentialGrant] = None
     is_default: bool = None
     metastore_id: str = None
     name: str = None
@@ -173,17 +177,22 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
         """
         resources = []
 
-        # Catalog grants
+        # Metastore data access grants
         if self.grants:
-            grant = Grants(
+            resources += Grants(
                 resource_name=f"grants-{self.resource_name}",
                 storage_credential=f"${{resources.{self.resource_name}.name}}",
-                grants=[
-                    {"principal": g.principal, "privileges": g.privileges}
-                    for g in self.grants
-                ],
-            )
-            resources += [grant]
+                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
+            ).core_resources
+
+        if self.individual_grants:
+            for idx, g in enumerate(self.individual_grants):
+                resources += GrantsIndividual(
+                    resource_name=f"grant-{self.resource_name}-{idx}",
+                    storage_credential=f"${{resources.{self.resource_name}.name}}",
+                    principal=g.principal,
+                    privileges=g.privileges,
+                ).core_resources          
 
         return resources
 
@@ -197,7 +206,7 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grants"]
+        return ["grants", "individual_grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
