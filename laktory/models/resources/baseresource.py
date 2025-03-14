@@ -155,6 +155,16 @@ class BaseResource(_BaseModel):
 
         return data
 
+    @model_validator(mode="after")
+    def grants_validator(self) -> Any:
+        grant = getattr(self, "grant", None)
+        grants = getattr(self, "grants", None)
+        if grants and grant:
+            raise ValueError(
+                "`grants` and `grant` are mutually exclusive. Only set one of them."
+            )
+        return self
+
     @classmethod
     def lookup_defaults(cls) -> dict:
         return {}
@@ -173,6 +183,44 @@ class BaseResource(_BaseModel):
             )
 
         return name
+
+    # ----------------------------------------------------------------------- #
+    # Methods                                                                 #
+    # ----------------------------------------------------------------------- #
+
+    def get_grants_additional_resources(self, options=None):
+        from laktory.models.resources.databricks.grant import Grant
+        from laktory.models.resources.databricks.grants import Grants
+
+        resources = []
+        if options is None:
+            options = {}
+
+        if self.grants:
+            resources += Grants(
+                resource_name=f"grants-{self.resource_name}",
+                schema=f"${{resources.{self.resource_name}.id}}",
+                grants=[
+                    {"principal": g.principal, "privileges": g.privileges}
+                    for g in self.grants
+                ],
+                options=options,
+            ).core_resources
+
+        if self.grant:
+            grant = self.grant
+            if not isinstance(grant, list):
+                grant = [grant]
+            for g in grant:
+                resources += Grant(
+                    resource_name=f"grant-{self.resource_name}-{g.principal}",
+                    schema=f"${{resources.{self.resource_name}.id}}",
+                    principal=g.principal,
+                    privileges=g.privileges,
+                    options=options,
+                ).core_resources
+
+        return resources
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

@@ -20,10 +20,12 @@ from laktory.models.resources.databricks.dbfsfile import DbfsFile
 from laktory.models.resources.databricks.directory import Directory
 from laktory.models.resources.databricks.dltpipeline import DLTPipeline
 from laktory.models.resources.databricks.externallocation import ExternalLocation
+from laktory.models.resources.databricks.grant import Grant
 from laktory.models.resources.databricks.grants import Grants
 from laktory.models.resources.databricks.group import Group
 from laktory.models.resources.databricks.job import Job
 from laktory.models.resources.databricks.metastore import Metastore
+from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
 from laktory.models.resources.databricks.mlflowexperiment import MLflowExperiment
 from laktory.models.resources.databricks.mlflowmodel import MLflowModel
@@ -46,6 +48,7 @@ from laktory.models.resources.databricks.vectorsearchendpoint import (
 from laktory.models.resources.databricks.vectorsearchindex import VectorSearchIndex
 from laktory.models.resources.databricks.volume import Volume
 from laktory.models.resources.databricks.warehouse import Warehouse
+from laktory.models.resources.databricks.workspacebinding import WorkspaceBinding
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
 from laktory.models.resources.providers.awsprovider import AWSProvider
 from laktory.models.resources.providers.azureprovider import AzureProvider
@@ -143,10 +146,16 @@ class StackResources(BaseModel):
         Databricks External Locations
     databricks_groups:
         Databricks Groups
+    databricks_grant:
+        Databricks Grant
     databricks_grants:
         Databricks Grants
     databricks_jobs:
         Databricks Jobs
+    databricks_metastoreassignments:
+        Databricks Metastore Assignments
+    databricks_metastoredataaccesses:
+        Databricks Metastore Data Accesses
     databricks_metastores:
         Databricks Metastores
     databricks_mlflowexperiments:
@@ -181,6 +190,8 @@ class StackResources(BaseModel):
         Databricks Volumes
     databricks_warehouses:
         Databricks Warehouses
+    databricks_workspacebindings:
+        Databricks Workspace Bindings
     databricks_workspacefiles:
         Databricks WorkspacFiles
     pipelines:
@@ -198,9 +209,11 @@ class StackResources(BaseModel):
     databricks_directories: dict[str, Directory] = {}
     databricks_dltpipelines: dict[str, DLTPipeline] = {}
     databricks_externallocations: dict[str, ExternalLocation] = {}
+    databricks_grant: dict[str, Grant] = {}
     databricks_grants: dict[str, Grants] = {}
     databricks_groups: dict[str, Group] = {}
     databricks_jobs: dict[str, Job] = {}
+    databricks_metastoreassignments: dict[str, MetastoreAssignment] = {}
     databricks_metastoredataaccesses: dict[str, MetastoreDataAccess] = {}
     databricks_metastores: dict[str, Metastore] = {}
     databricks_mlflowexperiments: dict[str, MLflowExperiment] = {}
@@ -220,6 +233,7 @@ class StackResources(BaseModel):
     databricks_vectorsearchindexes: dict[str, VectorSearchIndex] = {}
     databricks_volumes: dict[str, Volume] = {}
     databricks_warehouses: dict[str, Warehouse] = {}
+    databricks_workspacebindings: dict[str, WorkspaceBinding] = {}
     databricks_workspacefiles: dict[str, WorkspaceFile] = {}
     pipelines: dict[str, Pipeline] = {}
     providers: dict[

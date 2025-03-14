@@ -5,7 +5,9 @@ from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.groupmember import GroupMember
-from laktory.models.resources.databricks.mwspermissionassignment import MwsPermissionAssignment
+from laktory.models.resources.databricks.mwspermissionassignment import (
+    MwsPermissionAssignment,
+)
 from laktory.models.resources.databricks.serviceprincipalrole import (
     ServicePrincipalRole,
 )
@@ -49,7 +51,7 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
         List of roles assigned to the user e.g. ("account_admin")
     workspace_access
         When `True`, the group is allowed to have workspace access
-        
+
     Examples
     --------
     ```py
@@ -130,6 +132,7 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["groups", "roles", "group_ids", "workspace_permission_assignments"]
+
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #

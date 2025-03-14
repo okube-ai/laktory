@@ -8,6 +8,7 @@ from .dbfsfile import DbfsFile
 from .directory import Directory
 from .dltpipeline import DLTPipeline
 from .externallocation import ExternalLocation
+from .grant import Grant
 from .grants import Grants
 from .group import Group
 from .job import Job
@@ -37,4 +38,5 @@ from .vectorsearchendpoint import VectorSearchEndpoint
 from .vectorsearchindex import VectorSearchIndex
 from .volume import Volume
 from .warehouse import Warehouse
+from .workspacebinding import WorkspaceBinding
 from .workspacefile import WorkspaceFile
