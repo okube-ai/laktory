@@ -377,6 +377,7 @@ def test_stack_model():
             "databricks_secrets": {},
             "databricks_secretscopes": {},
             "databricks_serviceprincipals": {},
+            "databricks_storagecredentials": {},
             "databricks_tables": {},
             "databricks_users": {},
             "databricks_vectorsearchendpoints": {},
