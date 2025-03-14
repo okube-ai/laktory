@@ -5,7 +5,6 @@ from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.metastoregrant import MetastoreGrant
 from laktory.models.resources.baseresource import ResourceLookup
-from laktory.models.resources.databricks.grants import Grants, GrantsIndividual
 from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -56,13 +55,16 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         Destroy metastore regardless of its contents.
     global_metastore_id:
         todo
+    grant:
+        Grant(s) operating on the Metastore and authoritative for a specific principal.
+        Other principals within the grants are preserved. Mutually exclusive with
+        `grants`.
     grants:
-        List of grants operating on the metastore
+        Grants operating on the Metastore and authoritative for all principals.
+        Replaces any existing grants defined inside or outside of Laktory. Mutually
+        exclusive with `grant`.
     grants_provider:
         Provider used for deploying grants
-    individual_grants:
-        List of grants operating on the catalog. Different from `grants` in that
-        it does not remove grants for other principals not specified in the list.         
     lookup_existing:
         Specifications for looking up existing resource. Other attributes will
         be ignored.
@@ -104,9 +106,9 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     delta_sharing_scope: str = None
     force_destroy: bool = None
     global_metastore_id: str = None
+    grant: Union[MetastoreGrant, list[MetastoreGrant]] = None
     grants: list[MetastoreGrant] = None
     grants_provider: str = None
-    individual_grants: list[MetastoreGrant] = None
     lookup_existing: MetastoreLookup = Field(None, exclude=True)
     metastore_id: str = None
     name: str = None
@@ -117,7 +119,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     updated_at: int = None
     updated_by: str = None
     workspace_assignments: list[MetastoreAssignment] = None
-   
+
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
@@ -132,7 +134,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         if key is None and self.lookup_existing:
             key = self.lookup_existing.metastore_id
         return key
-    
+
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
         """
@@ -152,24 +154,10 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         if depends_on:
             options["depends_on"] = depends_on
 
-        if self.grants:
-            resources += Grants(
-                resource_name=f"grants-{self.resource_name}",
-                metastore=f"${{resources.{self.resource_name}.id}}",
-                options=options,
-                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
-            ).core_resources
-
-            depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
-        if self.individual_grants:
-            for idx, g in enumerate(self.individual_grants):
-                resources += GrantsIndividual(
-                    resource_name=f"grant-{self.resource_name}-{idx}",
-                    metastore=f"${{resources.{self.resource_name}.id}}",
-                    principal=g.principal,
-                    privileges=g.privileges,
-                    options=options,
-                ).core_resources
+        _resources = self.get_grants_additional_resources(options)
+        for r in _resources:
+            depends_on += [f"${{resources.{r.resource_name}}}"]
+        resources += _resources
 
         if self.data_accesses:
             for data_access in self.data_accesses:
@@ -196,8 +184,8 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
             "workspace_assignments",
+            "grant",
             "grants",
-            "individual_grants",
             "grants_provider",
             "data_accesses",
         ]

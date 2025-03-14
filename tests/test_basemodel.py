@@ -114,10 +114,9 @@ def test_camelize():
     print(dump)
     assert dump == {
         "comment": None,
+        "grant": None,
         "grants": None,
-        "individualGrants": None,
         "name": "my_schema",
-        "storageRoot": None,
         "tables": [
             {
                 "columns": [
@@ -139,8 +138,8 @@ def test_camelize():
                     },
                 ],
                 "comment": None,
+                "grant": None,
                 "grants": None,
-                "individualGrants": None,
                 "name": "AAPL",
                 "properties": None,
                 "catalogName": "my_catalog",
@@ -172,8 +171,8 @@ def test_camelize():
                     },
                 ],
                 "comment": None,
+                "grant": None,
                 "grants": None,
-                "individualGrants": None,
                 "name": "GOOGL",
                 "properties": None,
                 "catalogName": "my_catalog",
@@ -189,6 +188,7 @@ def test_camelize():
         "volumes": [],
         "catalogName": "my_catalog",
         "forceDestroy": True,
+        "storageRoot": None,
     }
 
 

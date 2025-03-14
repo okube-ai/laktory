@@ -7,7 +7,6 @@ from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.cataloggrant import CatalogGrant
 from laktory.models.resources.baseresource import ResourceLookup
-from laktory.models.resources.databricks.grants import Grants, GrantsIndividual
 from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -35,11 +34,14 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
         Text description of the catalog
     force_destroy:
         If `True` catalog can be deleted, even when not empty
+    grant:
+        Grant(s) operating on the Catalog and authoritative for a specific principal.
+        Other principals within the grants are preserved. Mutually exclusive with
+        `grants`.
     grants:
-        List of grants operating on the catalog
-    individual_grants:
-        List of grants operating on the catalog. Different from `grants` in that
-        it does not remove grants for other principals not specified in the list.      
+        Grants operating on the Catalog and authoritative for all principals.
+        Replaces any existing grants defined inside or outside of Laktory. Mutually
+        exclusive with `grant`.
     isolation_mode:
         Whether the catalog is accessible from all workspaces or a specific set
         of workspaces. Can be ISOLATED or OPEN. Setting the catalog to ISOLATED
@@ -107,9 +109,8 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
 
     comment: Union[str, None] = None
     force_destroy: bool = True
-    grant: CatalogGrant = None
+    grant: Union[CatalogGrant, list[CatalogGrant]] = None
     grants: list[CatalogGrant] = None
-    individual_grants: list[CatalogGrant] = None
     isolation_mode: Literal["OPEN", "ISOLATED"] = "OPEN"
     lookup_existing: CatalogLookup = Field(None, exclude=True)
     name: str
@@ -145,24 +146,9 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
         - schemas resources
         """
         resources = []
-       
-        # Catalog grants
-        
-        if self.grants:
-            resources += Grants(
-                resource_name=f"grants-{self.resource_name}",
-                catalog=f"${{resources.{self.resource_name}.id}}",
-                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
-            ).core_resources
 
-        if self.individual_grants:
-            for idx, g in enumerate(self.individual_grants):
-                resources += GrantsIndividual(
-                    resource_name=f"grant-{self.resource_name}-{idx}",
-                    catalog=f"${{resources.{self.resource_name}.id}}",
-                    principal=g.principal,
-                    privileges=g.privileges,
-                ).core_resources
+        # Catalog grants
+        resources += self.get_grants_additional_resources()
 
         # Catalog schemas
         if self.schemas:
@@ -181,7 +167,7 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["schemas", "is_unity", "grants", "individual_grants"]
+        return ["schemas", "is_unity", "grants", "grant"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
