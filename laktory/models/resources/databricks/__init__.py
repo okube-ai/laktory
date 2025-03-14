@@ -31,6 +31,7 @@ from .secretacl import SecretAcl
 from .secretscope import SecretScope
 from .serviceprincipal import ServicePrincipal
 from .serviceprincipalrole import ServicePrincipalRole
+from .storagecredential import StorageCredential
 from .table import Table
 from .user import User
 from .userrole import UserRole
