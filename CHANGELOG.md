@@ -1,6 +1,16 @@
 # Release History
 
-## [0.6.9] - Unreleased
+## [0.6.10] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.6.9] - 2025-03-14
 ### Added
 * `WorkspaceBinding` Databricks resource
 * `Grant` Databricks resource
