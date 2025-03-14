@@ -40,6 +40,7 @@ from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.databricks.secret import Secret
 from laktory.models.resources.databricks.secretscope import SecretScope
 from laktory.models.resources.databricks.serviceprincipal import ServicePrincipal
+from laktory.models.resources.databricks.storagecredential import StorageCredential
 from laktory.models.resources.databricks.table import Table
 from laktory.models.resources.databricks.user import User
 from laktory.models.resources.databricks.vectorsearchendpoint import (
@@ -227,6 +228,7 @@ class StackResources(BaseModel):
     databricks_secrets: dict[str, Secret] = {}
     databricks_secretscopes: dict[str, SecretScope] = {}
     databricks_serviceprincipals: dict[str, ServicePrincipal] = {}
+    databricks_storagecredentials: dict[str, StorageCredential] = {}
     databricks_tables: dict[str, Table] = {}
     databricks_users: dict[str, User] = {}
     databricks_vectorsearchendpoints: dict[str, VectorSearchEndpoint] = {}

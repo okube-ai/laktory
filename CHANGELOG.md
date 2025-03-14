@@ -1,6 +1,8 @@
 # Release History
 
 ## [0.6.10] - Unreleased
+### Added
+* New `StorageCredential` and can be declared from the stack root. 
 ### Fixed
 * `Grant` and `Grants` object specified correctly depending on resource type 
 

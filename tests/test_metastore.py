@@ -56,6 +56,7 @@ def test_metastore():
                     "managed_identity_id": None,
                 },
                 "azure_service_principal": None,
+                "cloudflare_api_token": None,
                 "comment": None,
                 "databricks_gcp_service_account": None,
                 "force_destroy": True,
@@ -69,6 +70,7 @@ def test_metastore():
                     }
                 ],
                 "is_default": False,
+                "isolation_mode": None,
                 "metastore_id": None,
                 "name": "lakehouse-dev",
                 "owner": None,
