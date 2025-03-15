@@ -4,6 +4,7 @@
 ### Added
 * Ability to specify members in `Group` resource
 * Unit test for `Group`
+* Looking up users using `user_name`
 
 ## [0.6.10] - 2025-03-14
 ### Added
