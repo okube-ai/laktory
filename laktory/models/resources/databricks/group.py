@@ -21,7 +21,7 @@ class GroupLookup(ResourceLookup):
         Display name of the group. Only support when using Terraform backend
     """
 
-    id: str = None
+    id: Union[int, str] = None
     display_name: str = None
 
 
@@ -74,7 +74,7 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     allow_cluster_create: bool = False
     allow_instance_pool_create: bool = None
     databricks_sql_access: bool = None
-    display_name: str = None
+    display_name: str
     external_id: str = None
     force: bool = None
     lookup_existing: GroupLookup = Field(None, exclude=True)
