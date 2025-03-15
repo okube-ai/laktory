@@ -18,10 +18,14 @@ class UserLookup(ResourceLookup):
     Attributes
     ----------
     user_id:
-         ID of the user
+        ID of the user
+    user_name:
+        User name of the user. The user must exist before 
+        this resource can be planned.
     """
 
-    user_id: str = Field(serialization_alias="id")
+    user_id: str = Field(serialization_alias="id", default=None)
+    user_name: str = None
 
 
 class User(BaseModel, PulumiResource, TerraformResource):
