@@ -2,12 +2,10 @@ import narwhals as nw
 import polars as pl
 import pytest
 
-from laktory._testing import Paths
 from laktory._testing import assert_dfs_equal
 from laktory._testing import sparkf
 from laktory.models.datasources import DataFrameDataSource
 
-paths = Paths(__file__)
 spark = sparkf.spark
 
 # DataFrame
