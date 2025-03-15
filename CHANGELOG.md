@@ -2,13 +2,10 @@
 
 ## [0.6.11] - Unreleased
 ### Added
-* n/a
+* Looking up users using `user_name`
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Looking up users using `user_id` when entered as integer
+* Looking up groups using `id` when entered as integer
 
 ## [0.6.10] - 2025-03-14
 ### Added
