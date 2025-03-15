@@ -22,7 +22,7 @@ class GroupLookup(ResourceLookup):
         Display name of the group. Only support when using Terraform backend
     """
 
-    id: str = None
+    id: Union[int, str] = None
     display_name: str = None
 
 
