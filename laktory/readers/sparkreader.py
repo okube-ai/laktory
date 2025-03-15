@@ -22,7 +22,7 @@ SUPPORTED_FORMATS = [
 
 def read(
     spark,
-    format: str,
+    fmt: str,
     path: str,
     *args,
     as_stream: bool = False,
@@ -34,16 +34,16 @@ def read(
     _mode = "static"
 
     # JSON
-    _format = format
-    if format in ["NDJSON", "JSONL"]:
+    _format = fmt.upper()
+    if fmt.upper() in ["NDJSON", "JSONL"]:
         _format = "JSON"
         _options["multiline"] = False
-    elif format == "JSON":
+    elif fmt.upper() == "JSON":
         _format = "JSON"
         _options["multiline"] = True
 
     # CSV
-    if format == "CSV":
+    if fmt.upper() == "CSV":
         _options["header"] = True
 
     if as_stream:

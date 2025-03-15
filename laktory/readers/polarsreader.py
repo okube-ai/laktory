@@ -19,7 +19,7 @@ SUPPORTED_FORMATS = [
 
 
 def read(
-    format: str,
+    fmt: str,
     path: str,
     *args,
     as_stream: bool = False,
@@ -31,36 +31,42 @@ def read(
     if as_stream:
         raise ValueError("Streaming not yet supported with Polars")
 
-    if format == "AVRO":
+    if fmt.upper() == "AVRO":
         return pl.read_avro(path, *args, **kwargs).lazy()
 
-    elif format == "CSV":
+    elif fmt.upper() == "CSV":
         return pl.scan_csv(path, *args, **kwargs)
 
-    elif format == "DELTA":
+    elif fmt.upper() == "DELTA":
         return pl.scan_delta(path, *args, **kwargs)
 
-    elif format == "EXCEL":
+    elif fmt.upper() == "EXCEL":
         return pl.read_excel(path, *args, **kwargs).lazy()
 
-    elif format == "IPC":
+    elif fmt.upper() == "IPC":
         return pl.scan_ipc(path, *args, **kwargs)
 
-    elif format == "ICEBERG":
+    elif fmt.upper() == "ICEBERG":
         return pl.scan_iceberg(path, *args, **kwargs)
 
-    elif format == "JSON":
+    elif fmt.upper() == "JSON":
         if schema:
             kwargs["schema"] = schema.to_polars()
         return pl.read_json(path, *args, **kwargs).lazy()
 
-    elif format in ["NDJSON", "JSONL"]:
+    elif fmt.upper() in ["NDJSON", "JSONL"]:
         if schema:
             kwargs["schema"] = schema.to_polars()
         return pl.scan_ndjson(path, *args, **kwargs)
 
-    elif format == "PARQUET":
+    elif fmt.upper() == "PARQUET":
         return pl.scan_parquet(path, *args, **kwargs)
 
-    elif format == "PYARROW":
-        return pl.scan_pyarrow_dataset(*args, **kwargs)
+    elif fmt.upper() == "PYARROW":
+        import pyarrow.dataset as ds
+
+        dset = ds.dataset(path, format="parquet")
+        return pl.scan_pyarrow_dataset(dset, *args, **kwargs)
+
+    else:
+        raise ValueError(f"Format {fmt} is not supported.")

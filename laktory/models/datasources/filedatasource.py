@@ -78,6 +78,9 @@ class FileDataSource(BaseDataSource):
 
     @model_validator(mode="after")
     def options(self) -> Any:
+        with self.validate_assignment_disabled():
+            self.format = self.format.upper()
+
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
             from laktory.readers.sparkreader import SUPPORTED_FORMATS
 
@@ -86,7 +89,7 @@ class FileDataSource(BaseDataSource):
                     f"'{self.format}' format is not supported with Spark. Use one of {SUPPORTED_FORMATS}"
                 )
 
-        elif self.df_backend == "POLARS":
+        elif self.df_backend == DataFrameBackends.POLARS:
             from laktory.readers.polarsreader import SUPPORTED_FORMATS
 
             if self.format not in SUPPORTED_FORMATS:
@@ -111,25 +114,25 @@ class FileDataSource(BaseDataSource):
     def _read_spark(self, spark=None) -> nw.LazyFrame:
         from laktory.readers.sparkreader import read
 
-        return nw.from_native(
-            read(
-                spark,
-                format=self.format,
-                path=self.path,
-                as_stream=self.as_stream,
-                schema=self.schema_definition,
-                schema_location=self.schema_location,
-            )
+        df_spark = read(
+            spark,
+            fmt=self.format,
+            path=self.path,
+            as_stream=self.as_stream,
+            schema=self.schema_definition,
+            schema_location=self.schema_location,
         )
+
+        return nw.from_native(df_spark)
 
     def _read_polars(self) -> nw.LazyFrame:
         from laktory.readers.polarsreader import read
 
-        return nw.from_native(
-            read(
-                format=self.format,
-                path=self.path,
-                as_stream=self.as_stream,
-                schema=self.schema_definition,
-            )
+        df_pl = read(
+            fmt=self.format,
+            path=self.path,
+            as_stream=self.as_stream,
+            schema=self.schema_definition,
         )
+
+        return nw.from_native(df_pl)
