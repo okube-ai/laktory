@@ -2,13 +2,7 @@
 
 ## [0.6.11] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Ability to specify members in `Group` resource
 
 ## [0.6.10] - 2025-03-14
 ### Added
