@@ -2,10 +2,7 @@
 
 ## [0.6.11] - Unreleased
 ### Added
-* Looking up users using `user_name`
-### Fixed
-* Looking up users using `user_id` when entered as integer
-* Looking up groups using `id` when entered as integer
+* Looking up users using `user_name` for Terraform backend
 
 ## [0.6.10] - 2025-03-14
 ### Added
