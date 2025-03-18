@@ -3,10 +3,9 @@
 ## [0.7.0] - Unreleased
 ### Added
 * Ability to specify members in `Group` resource
-* Unit test for `Group`
-* Looking up users using `user_name` for Terraform backend
+* Lookup users by `user_name` for Terraform backend
 ### Breaking changes
-* Removed hash key for data sink merge
+* Updated Data Sink merge to directly use primary keys instead of a hash key
 
 ## [0.6.10] - 2025-03-14
 ### Added
