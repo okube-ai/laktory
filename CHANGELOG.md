@@ -3,6 +3,7 @@
 ## [0.6.11] - Unreleased
 ### Added
 * Ability to specify members in `Group` resource
+* Unit test for `Group`
 
 ## [0.6.10] - 2025-03-14
 ### Added

@@ -11,6 +11,7 @@ from .externallocation import ExternalLocation
 from .grant import Grant
 from .grants import Grants
 from .group import Group
+from .groupmember import GroupMember
 from .job import Job
 from .metastore import Metastore
 from .metastoreassignment import MetastoreAssignment
