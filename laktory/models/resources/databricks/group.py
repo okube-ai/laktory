@@ -4,6 +4,7 @@ from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks.groupmember import GroupMember
 from laktory.models.resources.databricks.mwspermissionassignment import (
     MwsPermissionAssignment,
 )
@@ -58,6 +59,8 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     lookup_existing:
         Specifications for looking up existing resource. Other attributes will
         be ignored.
+    member_ids:
+        A list of all member ids of the group. Can be users, groups or service principals
     workspace_access
         When `True`, the group is allowed to have workspace access
 
@@ -78,6 +81,7 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     external_id: str = None
     force: bool = None
     lookup_existing: GroupLookup = Field(None, exclude=True)
+    member_ids: list[str] = []
     url: str = None
     workspace_access: bool = None
     workspace_permission_assignments: list[MwsPermissionAssignment] = None
@@ -101,7 +105,7 @@ class Group(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["workspace_permission_assignments"]
+        return ["member_ids", "workspace_permission_assignments"]
 
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
@@ -109,6 +113,16 @@ class Group(BaseModel, PulumiResource, TerraformResource):
         - workspace permission assignments
         """
         resources = []
+
+        # Group Members
+        for member_id in self.member_ids:
+            resources += [
+                GroupMember(
+                    group_id=f"${{resources.{self.resource_name}.id}}",
+                    member_id=member_id,
+                )
+            ]
+
         if self.workspace_permission_assignments:
             for a in self.workspace_permission_assignments:
                 if a.principal_id is None:
