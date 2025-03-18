@@ -93,10 +93,10 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     @property
     def resource_key(self) -> str:
         """display name or id"""
+        lookup_display_name = self.lookup_existing.display_name if self.lookup_existing else None
+        lookup_id = self.lookup_existing.id if self.lookup_existing else None
         return next(
-            (attr for attr in (self.display_name, self.external_id, 
-                               self.lookup_existing.display_name,
-                               self.lookup_existing.id) if attr is not None),
+            (attr for attr in (self.display_name, self.external_id, lookup_display_name, lookup_id) if attr is not None),
             ""
         )
 
