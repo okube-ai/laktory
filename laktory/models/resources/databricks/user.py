@@ -22,7 +22,7 @@ class UserLookup(ResourceLookup):
     user_name:
         User name of the user. The user must exist before 
         this resource can be planned. 
-        Terraform only.
+        Argument only supported by Terraform IaC backend.
     """
 
     user_id: Union[int, str] = Field(serialization_alias="id", default=None)

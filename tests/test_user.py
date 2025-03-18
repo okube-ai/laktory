@@ -1,4 +1,4 @@
-from pydantic import ValidationError
+import pytest
 from laktory.models.resources.databricks import Group
 from laktory.models.resources.databricks import User
 from laktory.models.resources.databricks.user import UserLookup
@@ -21,21 +21,14 @@ def test_user_group():
     assert group.display_name == "role-engineers"
 
 def test_both_user_id_and_user_name():
-    try:
-        UserLookup(user_id=123, user_name="test_user")
-    except ValidationError:
-        pass
-    else:
-        assert False, "ValidationError not raised"
+    with pytest.raises(ValueError):
+        UserLookup(user_id=123, user_name="test_user")    
 
 def test_neither_user_id_and_user_name():
-    try:
+    with pytest.raises(ValueError):
         UserLookup()
-    except ValidationError:
-        pass
-    else:
-        assert False, "ValidationError not raised"        
 
 if __name__ == "__main__":
     test_user_group()
     test_both_user_id_and_user_name()
+    test_neither_user_id_and_user_name()
