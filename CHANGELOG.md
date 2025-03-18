@@ -1,6 +1,16 @@
 # Release History
 
-## [0.7.0] - Unreleased
+## [0.7.1] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.7.0] - 2025-03-18
 ### Added
 * Ability to specify members in `Group` resource
 * Lookup users by `user_name` for Terraform backend
