@@ -77,7 +77,7 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     allow_cluster_create: bool = False
     allow_instance_pool_create: bool = None
     databricks_sql_access: bool = None
-    display_name: str
+    display_name: str = None
     external_id: str = None
     force: bool = None
     lookup_existing: GroupLookup = Field(None, exclude=True)
@@ -92,8 +92,13 @@ class Group(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def resource_key(self) -> str:
-        """display name"""
-        return self.display_name
+        """display name or id"""
+        return next(
+            (attr for attr in (self.display_name, self.external_id, 
+                               self.lookup_existing.display_name,
+                               self.lookup_existing.id) if attr is not None),
+            ""
+        )
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
