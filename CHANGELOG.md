@@ -1,14 +1,8 @@
 # Release History
 
-## [0.6.11] - Unreleased
-### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
+## [0.7.0] - Unreleased
 ### Breaking changes
-* n/a
+* Removed hash key for data sink merge
 
 ## [0.6.10] - 2025-03-14
 ### Added
