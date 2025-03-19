@@ -76,13 +76,6 @@ class FileDataSource(BaseDataSource):
     type: Literal["FILE"] = Field("FILE", frozen=True)
     _reader: Any = None
 
-    # CSV-specific
-    has_header: bool = True
-    infer_schema: bool = False
-    schema_definition: DataFrameSchema = Field(None, validation_alias="schema")
-    # schema_overrides: DataFrameSchema = Field(None, validation_alias="schema")
-    schema_location: str = None
-
     # @field_validator("path", "schema_location", mode="before")
     @field_validator("path", mode="before")
     @classmethod
