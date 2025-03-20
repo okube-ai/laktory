@@ -226,7 +226,7 @@ class StorageCredential(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def terraform_resource_type(self) -> str:
-        return "databricks_metastore_data_access"
+        return "databricks_storage_credential"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
