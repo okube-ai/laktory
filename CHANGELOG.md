@@ -1,5 +1,5 @@
 # Release History
-## [0.7.0] - Unreleased
+## [0.8.0] - Unreleased
 ### Added
 * `HiveMetastoreDataSource`
 ### Fixed
