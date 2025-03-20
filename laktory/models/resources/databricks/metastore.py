@@ -154,7 +154,10 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         if depends_on:
             options["depends_on"] = depends_on
 
-        _resources = self.get_grants_additional_resources(options)
+        _resources = self.get_grants_additional_resources(
+            object={"metastore" : f"${{resources.{self.resource_name}.id}}"},
+            options=options
+            )
         for r in _resources:
             depends_on += [f"${{resources.{r.resource_name}}}"]
         resources += _resources

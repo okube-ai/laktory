@@ -12,7 +12,7 @@
 * Renamed `TableDataSource` to `UnityCatalogDataSource`
 * Renamed `MemoryDataSource` to `DataFrameDataSource`
 
-## [0.6.10] - Unreleased
+## [0.7.2] - Unreleased
 ### Added
 * n/a
 ### Fixed
@@ -21,6 +21,23 @@
 * n/a
 ### Breaking changes
 * n/a
+
+## [0.7.1] - 2025-03-20
+### Fixed
+* Terraform resource type for Databricks Storage Credential
+
+## [0.7.0] - 2025-03-18
+### Added
+* Ability to specify members in `Group` resource
+* Lookup users by `user_name` for Terraform backend
+### Breaking changes
+* Updated Data Sink merge to directly use primary keys instead of a hash key
+
+## [0.6.10] - 2025-03-14
+### Added
+* New `StorageCredential` and can be declared from the stack root. 
+### Fixed
+* `Grant` and `Grants` object specified correctly depending on resource type 
 
 ## [0.6.9] - 2025-03-14
 ### Added
