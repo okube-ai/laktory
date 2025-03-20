@@ -1,6 +1,16 @@
 # Release History
 
-## [0.7.1] - Unreleased
+## [0.7.2] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.7.1] - 2025-03-20
 ### Fixed
 * Terraform resource type for Databricks Storage Credential
 
