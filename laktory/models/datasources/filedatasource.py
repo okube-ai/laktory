@@ -196,10 +196,8 @@ class FileDataSource(BaseDataSource):
 
         return False
 
-    def _read_spark(self) -> nw.LazyFrame:
-        from laktory import get_spark_session
-
-        spark = get_spark_session()
+    @property
+    def _spark_kwargs(self):
         fmt = self.format.lower()
 
         # Build kwargs
@@ -233,6 +231,15 @@ class FileDataSource(BaseDataSource):
         for k, v in self.read_options:
             kwargs[k] = v
 
+        return kwargs, fmt
+
+    def _read_spark(self) -> nw.LazyFrame:
+        from laktory import get_spark_session
+
+        spark = get_spark_session()
+
+        kwargs, fmt = self._spark_kwargs
+
         # Create reader
         if self.as_stream:
             mode = "stream"
@@ -254,9 +261,8 @@ class FileDataSource(BaseDataSource):
 
         return nw.from_native(df)
 
-    def _read_polars(self) -> nw.LazyFrame:
-        import polars as pl
-
+    @property
+    def _polars_kwargs(self):
         fmt = self.format
 
         kwargs = {}
@@ -275,6 +281,13 @@ class FileDataSource(BaseDataSource):
 
         for k, v in self.read_options:
             kwargs[k] = v
+
+        return kwargs, fmt
+
+    def _read_polars(self) -> nw.LazyFrame:
+        import polars as pl
+
+        kwargs, fmt = self._polars_kwargs
 
         if fmt == "AVRO":
             df = pl.read_avro(self.path, **kwargs).lazy()
