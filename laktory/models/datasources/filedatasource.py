@@ -1,5 +1,9 @@
+from __future__ import annotations
+
+import os
 from pathlib import Path
 from typing import Any
+from typing import Literal
 
 import narwhals as nw
 from pydantic import ConfigDict
@@ -14,6 +18,35 @@ from laktory.models.datasources.basedatasource import BaseDataSource
 
 logger = get_logger(__name__)
 
+SUPPORTED_FORMATS = {
+    DataFrameBackends.PYSPARK: [
+        "AVRO",
+        "BINARYFILE",
+        "CSV",
+        "DELTA",
+        "JSON",
+        "JSONL",
+        "NDJSON",  # SAME AS JSONL
+        "ORC",
+        "PARQUET",
+        "TEXT",
+        "XML",
+    ],
+    DataFrameBackends.POLARS: [
+        "AVRO",
+        "CSV",
+        "DELTA",
+        "EXCEL",
+        "IPC",
+        # "ICEBERG", # TODO
+        "JSON",
+        "JSONL",
+        "NDJSON",  # SAME AS JSONL
+        "PARQUET",
+        "PYARROW",
+    ],
+}
+
 
 class FileDataSource(BaseDataSource):
     """
@@ -24,8 +57,12 @@ class FileDataSource(BaseDataSource):
     ----------
     format:
         Format of the data files
+    infer_schema:
+        When `True`, the schema is inferred from the data. When `False`, the schema is
+        not inferred and will be string if not specified in schema_definition. Only
+        applicable to some format like CSV and JSON.
     read_options:
-        Other options passed to `spark.read.options`
+        Other options passed to dataframe backend reader.
     schema_definition:
         Target schema specified as a list of columns, as a dict or a json
         serialization. Only used when reading data from non-strongly typed
@@ -58,16 +95,26 @@ class FileDataSource(BaseDataSource):
     )
     # df = source.read(spark)
     ```
+
+    References
+    ----------
+
+    * [autoloader schema inference](https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema)
+
     """
 
     model_config = ConfigDict(populate_by_name=True)
-
-    format: str = "JSONL"
+    format: str
     path: str
     read_options: dict[str, Any] = {}
+    type: Literal["FILE"] = Field("FILE", frozen=True)
+
+    # backend-, format- and stream-specific options
+    has_header: bool = True
+    infer_schema: bool = False
     schema_definition: DataFrameSchema = Field(None, validation_alias="schema")
+    # schema_overrides: DataFrameSchema = Field(None, validation_alias="schema")
     schema_location: str = None
-    type: str = Field("FILE", frozen=True)
 
     @field_validator("path", "schema_location", mode="before")
     @classmethod
@@ -77,27 +124,26 @@ class FileDataSource(BaseDataSource):
         return value
 
     @model_validator(mode="after")
-    def options(self) -> Any:
-        with self.validate_assignment_disabled():
-            self.format = self.format.upper()
-
-        if self.dataframe_backend == DataFrameBackends.PYSPARK:
-            from laktory.readers.sparkreader import SUPPORTED_FORMATS
-
-            if self.format not in SUPPORTED_FORMATS:
-                raise ValueError(
-                    f"'{self.format}' format is not supported with Spark. Use one of {SUPPORTED_FORMATS}"
-                )
-
-        elif self.df_backend == DataFrameBackends.POLARS:
-            from laktory.readers.polarsreader import SUPPORTED_FORMATS
-
-            if self.format not in SUPPORTED_FORMATS:
-                raise ValueError(
-                    f"'{self.format}' format is not supported with Polars. Use one of {SUPPORTED_FORMATS}"
-                )
-
+    def validate_format(self) -> Any:
+        if self.format not in SUPPORTED_FORMATS[self.df_backend]:
+            raise ValueError(
+                f"'{self.format}' format is not supported with {self.df_backend}. Use one of {SUPPORTED_FORMATS[self.df_backend]}"
+            )
         return self
+
+    @model_validator(mode="after")
+    def validate_options(self) -> Any:
+        for k in [
+            "has_header",
+            "infer_schema",
+            "schema_definition",
+            "schema_location",
+        ]:  # "schema_overrides",
+            if k in self.model_fields_set:
+                if not self._is_applicable(k):
+                    raise ValueError(
+                        f"Attribute `{k}` is not supported for the provider source format / backend / stream"
+                    )
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -111,28 +157,159 @@ class FileDataSource(BaseDataSource):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _read_spark(self, spark=None) -> nw.LazyFrame:
-        from laktory.readers.sparkreader import read
+    def _is_applicable(self, key):
+        if key == "has_header":
+            if self.format == "CSV":
+                return True
+            return False
 
-        df_spark = read(
-            spark,
-            fmt=self.format,
-            path=self.path,
-            as_stream=self.as_stream,
-            schema=self.schema_definition,
-            schema_location=self.schema_location,
-        )
+        if key == "infer_schema":
+            if self.format in ["CSV", "XML"]:
+                return True
+            if self.as_stream:
+                # https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema
+                if self.format in ["CSV", "JSON", "XML", "PARQUET", "AVRO"]:
+                    return True
 
-        return nw.from_native(df_spark)
+            return False
+
+        if key == "schema_definition":
+            if self.df_backend == DataFrameBackends.PYSPARK:
+                if self.format in [
+                    "CSV",
+                    "JSON",
+                    "JSONL",
+                    "NDJSON",
+                    "AVRO",
+                    "ORC",
+                    "PARQUET",
+                    "DELTA",
+                ]:
+                    return True
+            if self.df_backend == DataFrameBackends.POLARS:
+                if self.format in ["CSV", "JSON", "JSONL", "NDJSON", "PARQUET"]:
+                    return True
+            return False
+
+        if key == "schema_location":
+            return self.as_stream
+
+        return False
+
+    def _read_spark(self) -> nw.LazyFrame:
+        from laktory import get_spark_session
+
+        spark = get_spark_session()
+        fmt = self.format.lower()
+
+        # Build kwargs
+        kwargs = {}
+
+        if fmt in ["jsonl", "ndjson"]:
+            kwargs["multiline"] = True
+            fmt = "json"
+
+        if self._is_applicable("has_header"):
+            kwargs["header"] = self.has_header
+
+        if self._is_applicable("infer_schema"):
+            if self.as_stream:
+                kwargs["cloudFiles.inferColumnTypes"] = self.infer_schema
+            else:
+                kwargs["inferSchema"] = self.infer_schema
+
+        if self.as_stream:
+            if fmt != "delta":
+                kwargs["cloudFiles.format"] = fmt
+                fmt = "cloudFiles"
+
+            kwargs["recursiveFileLookup"] = True
+
+            schema_location = self.schema_location
+            if schema_location is None:
+                schema_location = os.path.dirname(self.path)
+            kwargs["cloudFiles.schemaLocation"] = schema_location
+
+        for k, v in self.read_options:
+            kwargs[k] = v
+
+        # Create reader
+        if self.as_stream:
+            mode = "stream"
+            reader = spark.readStream
+        else:
+            mode = "static"
+            reader = spark.read
+
+        # Set Schema
+        if self.schema_definition:
+            reader = reader.schema(self.schema_definition.to_spark())
+
+        # Apply options
+        reader = reader.format(fmt).options(**kwargs)
+
+        # Load
+        logger.info(f"Reading {self.path} as {mode} and options {kwargs}")
+        df = reader.load(self.path)
+
+        return nw.from_native(df)
 
     def _read_polars(self) -> nw.LazyFrame:
-        from laktory.readers.polarsreader import read
+        import polars as pl
 
-        df_pl = read(
-            fmt=self.format,
-            path=self.path,
-            as_stream=self.as_stream,
-            schema=self.schema_definition,
-        )
+        fmt = self.format
 
-        return nw.from_native(df_pl)
+        kwargs = {}
+
+        if self._is_applicable("has_header") and self.has_header is not None:
+            kwargs["has_header"] = self.has_header
+
+        if self._is_applicable("infer_schema") and self.infer_schema is not None:
+            kwargs["infer_schema"] = self.infer_schema
+
+        if (
+            self._is_applicable("schema_definition")
+            and self.schema_definition is not None
+        ):
+            kwargs["schema"] = self.schema_definition.to_polars()
+
+        for k, v in self.read_options:
+            kwargs[k] = v
+
+        if fmt == "AVRO":
+            df = pl.read_avro(self.path, **kwargs).lazy()
+
+        elif fmt == "CSV":
+            df = pl.scan_csv(self.path, **kwargs)
+
+        elif fmt == "DELTA":
+            df = pl.scan_delta(self.path, **kwargs)
+
+        elif fmt == "EXCEL":
+            df = pl.read_excel(self.path, **kwargs).lazy()
+
+        elif fmt == "IPC":
+            df = pl.scan_ipc(self.path, **kwargs)
+
+        elif fmt == "ICEBERG":
+            df = pl.scan_iceberg(self.path, **kwargs)
+
+        elif fmt == "JSON":
+            df = pl.read_json(self.path, **kwargs).lazy()
+
+        elif fmt in ["NDJSON", "JSONL"]:
+            df = pl.scan_ndjson(self.path, **kwargs)
+
+        elif fmt == "PARQUET":
+            df = pl.scan_parquet(self.path, **kwargs)
+
+        elif fmt == "PYARROW":
+            import pyarrow.dataset as ds
+
+            dset = ds.dataset(self.path, format="parquet")
+            return pl.scan_pyarrow_dataset(dset, **kwargs)
+
+        else:
+            raise ValueError(f"Format {fmt} is not supported.")
+
+        return nw.from_native(df)

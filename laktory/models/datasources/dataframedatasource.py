@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from typing import Any
-from typing import Union
+from typing import Literal
 
 import narwhals as nw
 from pydantic import Field
@@ -11,7 +13,7 @@ from laktory.models.datasources.basedatasource import BaseDataSource
 
 logger = get_logger(__name__)
 
-AnyFrame = Union[nw.DataFrame, nw.LazyFrame]
+AnyFrame = nw.DataFrame | nw.LazyFrame
 
 
 class DataFrameDataSource(BaseDataSource):
@@ -69,9 +71,9 @@ class DataFrameDataSource(BaseDataSource):
     ```
     """
 
-    data: Union[dict[str, list[Any]], list[dict[str, Any]]] = None
+    data: dict[str, list[Any]] | list[dict[str, Any]] = None
     df: Any = None
-    type: str = Field("DATAFRAME", frozen=True)
+    type: Literal["DATAFRAME"] = Field("DATAFRAME", frozen=True)
 
     @model_validator(mode="after")
     def validate_input(self) -> Any:
@@ -124,7 +126,11 @@ class DataFrameDataSource(BaseDataSource):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _read_spark(self, spark=None) -> nw.LazyFrame:
+    def _read_spark(self) -> nw.LazyFrame:
+        from laktory import get_spark_session
+
+        spark = get_spark_session()
+
         if self.df is not None:
             return nw.from_native(self.df)
 

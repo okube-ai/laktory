@@ -3,14 +3,27 @@ import pytest
 
 # from laktory._testing import Paths
 from laktory._testing import assert_dfs_equal
-from laktory._testing import sparkf
+from laktory.enums import DataFrameBackends
 from laktory.models.datasources import FileDataSource
-from laktory.readers.polarsreader import SUPPORTED_FORMATS as PL_SUPPORTED_FORMATS
+from laktory.models.datasources.filedatasource import SUPPORTED_FORMATS
 
 # paths = Paths(__file__, "../")
-spark = sparkf.spark
 
-pl_read_tests = [("POLARS", fmt) for fmt in PL_SUPPORTED_FORMATS]
+pl_read_tests = [("POLARS", fmt) for fmt in SUPPORTED_FORMATS[DataFrameBackends.POLARS]]
+# pl_read_tests = []
+spark_read_tests = [
+    ("PYSPARK", fmt) for fmt in SUPPORTED_FORMATS[DataFrameBackends.PYSPARK]
+]
+#
+# pl_read_tests = []
+# pl_read_tests = [
+#     ("POLARS", "CSV"),
+#     ("POLARS", "PARQUET"),
+# ]
+# spark_read_tests = [
+#     ("PYSPARK", "CSV"),
+#     ("PYSPARK", "PARQUET"),
+# ]
 
 
 @pytest.fixture
@@ -26,7 +39,7 @@ def df0():
 @pytest.mark.parametrize(
     ["backend", "fmt"],
     # ["backend", "path"],
-    pl_read_tests,
+    pl_read_tests + spark_read_tests,
     # [
     #     # ("PYSPARK", paths.data / "events/yahoo-finance/stock_price"),  # JSON
     #     # ("POLARS", paths.data / "events/yahoo-finance/stock_price"),  # JSON
@@ -39,10 +52,13 @@ def df0():
 def test_read(backend, fmt, df0, tmp_path):
     filepath = tmp_path / f"df.{fmt}"
 
+    kwargs = {}
+
     if fmt == "AVRO":
         df0.write_avro(filepath)
     elif fmt == "CSV":
         df0.write_csv(filepath)
+        kwargs["infer_schema"] = True
     elif fmt == "EXCEL":
         pytest.skip("Missing library. Skipping Test.")
     elif fmt == "DELTA":
@@ -66,10 +82,10 @@ def test_read(backend, fmt, df0, tmp_path):
     else:
         raise NotImplementedError()
 
+    print(f"CALLING with backend {backend} for")
+
     source = FileDataSource(
-        path=filepath,
-        format=fmt,
-        dataframe_backend=backend,
+        format=fmt, path=filepath, dataframe_backend=backend, **kwargs
     )
-    df = source.read(spark=spark)
+    df = source.read()
     assert_dfs_equal(df, df0)
