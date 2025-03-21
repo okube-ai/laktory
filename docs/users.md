@@ -1,9 +1,8 @@
-Join the community of Laktory users who trust the solution to develop and deploy
-their lakehouses.
-
+A growing number of businesses rely on Laktory to build, deploy, and scale 
+their lakehouses with confidence.
 ---
 
-<img src="/images/energir.jpg" alt="energir" width="150"/>
+<img src="/images/energir.jpg" alt="energir" style="height:125px;"/>
 
 "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc pretium, sem non fringilla
 malesuada, turpis erat sagittis felis, eget tincidunt ante magna eu enim."
@@ -12,7 +11,7 @@ Roberto Bacos, Energir, Manager Business Intelligence & Analytics
 
 ---
 
-<img src="/images/ieso.png" alt="ieso" width="250"/>
+<img src="/images/ieso.png" alt="ieso" style="height:125px;"/>
 
 "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc pretium, sem non fringilla
 malesuada, turpis erat sagittis felis, eget tincidunt ante magna eu enim."
@@ -21,7 +20,16 @@ Goce Jankuloski, IESO, Lead Data Scientist
 
 ---
 
-<img src="/images/nimblestax.png" alt="mimblestax" width="150"/>
+<img src="/images/ezbi.png" alt="ieso" style="height:125px;"/>
+
+"The team at Laktory has far exceeded our expectations during the implementation 
+process. Laktory is a simply great tool backed by an outstanding team."
+
+Nico Cellini, ezbi, Founder 
+
+---
+
+<img src="/images/nimblestax.png" alt="mimblestax" style="height:125px;"/>
 
 "We have used Laktory on a couple of projects so far and in my opinion it was a step
 change when it comes to enhancing developer experience on Databricks. Managing 
@@ -36,7 +44,7 @@ Bijil Subhash, Nimblestax, Founder
 
 ---
 
-<img src="/images/taiga.png" alt="taiga" width="150"/>
+<img src="/images/taiga.png" alt="taiga" style="height:125px;"/>
 
 "Laktory has proven instrumental in expediting the establishment of our data science platform, without compromising on security or performance."
 
