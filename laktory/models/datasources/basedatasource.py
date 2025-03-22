@@ -88,7 +88,9 @@ class BaseDataSource(BaseModel, PipelineChild):
                 pass
             elif self.df_backend == DataFrameBackends.POLARS:
                 if self.as_stream:
-                    raise ValueError("Polars DataFrame don't support streaming read.")
+                    raise ValueError(
+                        "Streaming read is not supported with Polars Backend."
+                    )
                 # if self.watermark:
                 #     raise ValueError("Polars DataFrames don't support watermarking.")
                 # if self.broadcast:

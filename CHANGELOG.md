@@ -11,6 +11,8 @@
 * Changed DataFrame backend type to Enum
 * Renamed `TableDataSource` to `UnityCatalogDataSource`
 * Renamed `MemoryDataSource` to `DataFrameDataSource`
+* `InferColumnTypes` with is no longer enabled by default when reading data stream
+* `spark session` needs to be registered at the module level instead of being passed to function calls
 
 ## [0.6.10] - Unreleased
 ### Added

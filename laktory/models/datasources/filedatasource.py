@@ -166,6 +166,7 @@ class FileDataSource(BaseDataSource):
         if key == "infer_schema":
             if self.format in ["CSV", "XML"]:
                 return True
+
             if self.as_stream:
                 # https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema
                 if self.format in ["CSV", "JSON", "XML", "PARQUET", "AVRO"]:
@@ -186,15 +187,21 @@ class FileDataSource(BaseDataSource):
                     "DELTA",
                 ]:
                     return True
+
             if self.df_backend == DataFrameBackends.POLARS:
                 if self.format in ["CSV", "JSON", "JSONL", "NDJSON", "PARQUET"]:
                     return True
+
             return False
 
         if key == "schema_location":
-            return self.as_stream
+            return self.is_cloud_files
 
         return False
+
+    @property
+    def is_cloud_files(self):
+        return self.as_stream and self.format not in ["DELTA"]
 
     @property
     def _spark_kwargs(self):
@@ -204,8 +211,10 @@ class FileDataSource(BaseDataSource):
         kwargs = {}
 
         if fmt in ["jsonl", "ndjson"]:
-            kwargs["multiline"] = True
+            kwargs["multiline"] = False
             fmt = "json"
+        elif fmt in ["json"]:
+            kwargs["multiline"] = True
 
         if self._is_applicable("has_header"):
             kwargs["header"] = self.has_header
@@ -217,16 +226,20 @@ class FileDataSource(BaseDataSource):
                 kwargs["inferSchema"] = self.infer_schema
 
         if self.as_stream:
-            if fmt != "delta":
+            # Cloud Files Formats
+            if self.is_cloud_files:
                 kwargs["cloudFiles.format"] = fmt
+                kwargs["recursiveFileLookup"] = True
                 fmt = "cloudFiles"
 
-            kwargs["recursiveFileLookup"] = True
+                schema_location = self.schema_location
+                if schema_location is None:
+                    schema_location = os.path.dirname(self.path)
+                kwargs["cloudFiles.schemaLocation"] = schema_location
 
-            schema_location = self.schema_location
-            if schema_location is None:
-                schema_location = os.path.dirname(self.path)
-            kwargs["cloudFiles.schemaLocation"] = schema_location
+            # Native Streaming Formats
+            else:
+                pass
 
         for k, v in self.read_options:
             kwargs[k] = v
@@ -263,7 +276,7 @@ class FileDataSource(BaseDataSource):
 
     @property
     def _polars_kwargs(self):
-        fmt = self.format
+        fmt = self.format.lower()
 
         kwargs = {}
 
@@ -289,34 +302,34 @@ class FileDataSource(BaseDataSource):
 
         kwargs, fmt = self._polars_kwargs
 
-        if fmt == "AVRO":
+        if fmt == "avro":
             df = pl.read_avro(self.path, **kwargs).lazy()
 
-        elif fmt == "CSV":
+        elif fmt == "csv":
             df = pl.scan_csv(self.path, **kwargs)
 
-        elif fmt == "DELTA":
+        elif fmt == "delta":
             df = pl.scan_delta(self.path, **kwargs)
 
-        elif fmt == "EXCEL":
+        elif fmt == "excel":
             df = pl.read_excel(self.path, **kwargs).lazy()
 
-        elif fmt == "IPC":
+        elif fmt == "ipc":
             df = pl.scan_ipc(self.path, **kwargs)
 
-        elif fmt == "ICEBERG":
+        elif fmt == "iceberg":
             df = pl.scan_iceberg(self.path, **kwargs)
 
-        elif fmt == "JSON":
+        elif fmt == "json":
             df = pl.read_json(self.path, **kwargs).lazy()
 
-        elif fmt in ["NDJSON", "JSONL"]:
+        elif fmt in ["ndjson", "jsonl"]:
             df = pl.scan_ndjson(self.path, **kwargs)
 
-        elif fmt == "PARQUET":
+        elif fmt == "parquet":
             df = pl.scan_parquet(self.path, **kwargs)
 
-        elif fmt == "PYARROW":
+        elif fmt == "pyarrow":
             import pyarrow.dataset as ds
 
             dset = ds.dataset(self.path, format="parquet")

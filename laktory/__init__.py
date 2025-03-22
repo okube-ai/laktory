@@ -30,8 +30,15 @@ def register_spark_session(spark=None):
 
         spark = (
             SparkSession.builder.appName("laktory")
-            .config("spark.jars.packages", "org.apache.spark:spark-avro_2.12:3.5.5")
-            # .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.2.0")
+            # TODO: Check if we can install on a need-basis
+            .config(
+                "spark.jars.packages",
+                "org.apache.spark:spark-avro_2.12:3.5.5,io.delta:delta-spark_2.12:3.3.0",
+            )  # com.databricks:spark-xml_2.12:0.17.0
+            .config(
+                "spark.sql.catalog.spark_catalog",
+                "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+            )
             .getOrCreate()
         )
     _laktory._spark = spark
