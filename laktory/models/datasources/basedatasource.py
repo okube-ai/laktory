@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from typing import Any
-from typing import Union
 
 import narwhals as nw
 from pydantic import model_validator
@@ -12,13 +13,13 @@ from laktory.models.pipeline.pipelinechild import PipelineChild
 logger = get_logger(__name__)
 
 
-AnyFrame = Union[nw.LazyFrame, nw.DataFrame]
+AnyFrame = nw.LazyFrame | nw.DataFrame
 
 
 class DataFrameSample(BaseModel):
     n: int = None
     fraction: float = None
-    seed: Union[int, None] = None
+    seed: int | None = None
 
 
 class Watermark(BaseModel):
@@ -69,15 +70,15 @@ class BaseDataSource(BaseModel, PipelineChild):
     """
 
     as_stream: bool = False
-    # broadcast: Union[bool, None] = False
+    # broadcast: bool | None = False
     dataframe_backend: DataFrameBackends = None
-    drop_duplicates: Union[bool, list[str]] = None
+    drop_duplicates: bool | list[str] = None
     drops: list = None
     filter: str = None
     renames: dict[str, str] = None
-    sample: DataFrameSample = None
-    selects: Union[list[str], dict[str, str]] = None
-    # watermark: Union[Watermark, None] = None
+    # sample: DataFrameSample = None
+    selects: list[str] | dict[str, str] = None
+    # watermark: Watermark | None = None
     type: str
 
     @model_validator(mode="after")
@@ -87,7 +88,9 @@ class BaseDataSource(BaseModel, PipelineChild):
                 pass
             elif self.df_backend == DataFrameBackends.POLARS:
                 if self.as_stream:
-                    raise ValueError("Polars DataFrames don't support streaming read.")
+                    raise ValueError(
+                        "Streaming read is not supported with Polars Backend."
+                    )
                 # if self.watermark:
                 #     raise ValueError("Polars DataFrames don't support watermarking.")
                 # if self.broadcast:
@@ -101,13 +104,13 @@ class BaseDataSource(BaseModel, PipelineChild):
 
     @property
     def _id(self):
-        return str(self.df)
+        raise NotImplementedError()
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def read(self, spark=None) -> AnyFrame:
+    def read(self) -> AnyFrame:
         """
         Read data with options specified in attributes.
 
@@ -121,8 +124,10 @@ class BaseDataSource(BaseModel, PipelineChild):
         : DataFrame
             Resulting dataframe
         """
-        logger.info(f"Reading {self._id} from `{self.type}` with {self.df_backend}")
-        df = self._read(spark=spark)
+        logger.info(
+            f"Reading `{self.__class__.__name__}` {self._id} with {self.df_backend}"
+        )
+        df = self._read()
 
         # Convert to Narwhals
         if not isinstance(df, (nw.LazyFrame, nw.DataFrame)):
@@ -135,16 +140,16 @@ class BaseDataSource(BaseModel, PipelineChild):
 
         return df
 
-    def _read(self, spark=None) -> AnyFrame:
+    def _read(self) -> AnyFrame:
         if self.df_backend == DataFrameBackends.PYSPARK:
-            return self._read_spark(spark=spark)
+            return self._read_spark()
 
         if self.df_backend == DataFrameBackends.POLARS:
             return self._read_polars()
 
         raise ValueError(f"`{self.df_backend}` not supported for `{type(self)}`")
 
-    def _read_spark(self, spark=None) -> nw.LazyFrame:
+    def _read_spark(self) -> nw.LazyFrame:
         raise NotImplementedError(
             f"`{self.df_backend}` not supported for `{type(self)}`"
         )
@@ -196,9 +201,10 @@ class BaseDataSource(BaseModel, PipelineChild):
             df = df.unique(subset=subset)
 
         # Sample
-        if self.sample:
-            df = df.sample(
-                n=self.sample.n, fraction=self.sample.fraction, seed=self.sample.seed
-            )
+        # TODO: Enable when Narwhals support sampling on LazyFrame
+        # if self.sample:
+        #     df = df.sample(
+        #         n=self.sample.n, fraction=self.sample.fraction, seed=self.sample.seed
+        #     )
 
         return df

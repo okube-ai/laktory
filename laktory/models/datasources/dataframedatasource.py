@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from typing import Any
-from typing import Union
+from typing import Literal
 
 import narwhals as nw
 from pydantic import Field
@@ -11,7 +13,7 @@ from laktory.models.datasources.basedatasource import BaseDataSource
 
 logger = get_logger(__name__)
 
-AnyFrame = Union[nw.DataFrame, nw.LazyFrame]
+AnyFrame = nw.DataFrame | nw.LazyFrame
 
 
 class DataFrameDataSource(BaseDataSource):
@@ -69,9 +71,9 @@ class DataFrameDataSource(BaseDataSource):
     ```
     """
 
-    data: Union[dict[str, list[Any]], list[dict[str, Any]]] = None
+    data: dict[str, list[Any]] | list[dict[str, Any]] = None
     df: Any = None
-    type: str = Field("DATAFRAME", frozen=True)
+    type: Literal["DATAFRAME"] = Field("DATAFRAME", frozen=True)
 
     @model_validator(mode="after")
     def validate_input(self) -> Any:
@@ -96,16 +98,39 @@ class DataFrameDataSource(BaseDataSource):
     # Properties                                                              #
     # ----------------------------------------------------------------------- #
 
-    #
-    # @property
-    # def _id(self):
-    #     return str(self.path)
+    @property
+    def _id(self):
+        n = 4
+
+        # Build Schema-like
+        if self.df is not None:
+            d = self.df.schema
+        elif isinstance(self.data, dict):
+            d = {k: str(type(v)) for k, v in self.data.items()}
+        elif isinstance(self.data, list):
+            d = {k: str(type(v)) for k, v in self.data[0].items()}
+        else:
+            d = {}
+
+        # Build id
+        _id = "DataFrame[" + ", ".join([f"{k}: {v}" for k, v in d.items()][:n]) + "]"
+        if len(d) >= n:
+            _id = _id.replace("]", "...]")
+
+        if isinstance(self, nw.LazyFrame):
+            _id = _id.replace("DataFrame", "LazyFrame")
+
+        return _id
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _read_spark(self, spark=None) -> nw.LazyFrame:
+    def _read_spark(self) -> nw.LazyFrame:
+        from laktory import get_spark_session
+
+        spark = get_spark_session()
+
         if self.df is not None:
             return nw.from_native(self.df)
 
@@ -113,7 +138,9 @@ class DataFrameDataSource(BaseDataSource):
         if isinstance(data, dict):
             data = [dict(zip(data.keys(), values)) for values in zip(*data.values())]
 
-        return nw.from_native(spark.createDataFrame(data))
+        df = spark.createDataFrame(data)
+
+        return nw.from_native(df)
 
     def _read_polars(self) -> AnyFrame:
         if self.df is not None:
@@ -121,4 +148,6 @@ class DataFrameDataSource(BaseDataSource):
 
         import polars as pl
 
-        return nw.from_native(pl.LazyFrame(self.data))
+        df = pl.LazyFrame(self.data)
+
+        return nw.from_native(df)

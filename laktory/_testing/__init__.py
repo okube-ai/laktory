@@ -1,3 +1,4 @@
+from .dataframecompare import assert_dfs_equal
 from .dataframesfactory import DataFramesFactory
 from .monkeypatch import MonkeyPatch
 from .paths import Paths
