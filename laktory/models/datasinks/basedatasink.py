@@ -155,10 +155,6 @@ class DataSinkMergeCDCOptions(BaseModel):
         return self.index + "_first"
 
     @property
-    def hash_keys(self):
-        return "__hash_keys"
-
-    @property
     def hash_cols(self):
         return "__hash_cols"
 
@@ -178,7 +174,7 @@ class DataSinkMergeCDCOptions(BaseModel):
 
     @property
     def extra_columns(self):
-        cols = [self.hash_keys]
+        cols = []
         if self.scd_type == 2:
             cols += [self.start_at, self.end_at, self.hash_cols]
         return cols
@@ -260,7 +256,6 @@ class DataSinkMergeCDCOptions(BaseModel):
         spark = source.sparkSession
         logger.info(f"Merge target not found. Creating empty table at {self.target_id}")
         schema = source.select(self.primary_keys + self.update_columns).schema
-        schema.add(T.StructField(self.hash_keys, T.StringType(), True))
         if self.scd_type == 2:
             schema.add(T.StructField(self.hash_cols, T.StringType(), True))
             schema.add(T.StructField(self.start_at, self.index_type, True))
@@ -291,9 +286,6 @@ class DataSinkMergeCDCOptions(BaseModel):
             logger.info(f"with delete on {self.delete_where}")
 
         # Add internal columns
-        source = source.withColumn(
-            self.hash_keys, F.lit(F.sha2(F.concat_ws("~", *self.primary_keys), 256))
-        )
         if self.scd_type == 2:
             source = (
                 source.withColumn(self.start_at, F.col(self.index))
@@ -338,9 +330,10 @@ class DataSinkMergeCDCOptions(BaseModel):
                 not_delete_condition = ~delete_condition
 
             # Define merge
+            conditions = [f"source.{c} = target.{c}" for c in self.primary_keys]
             merge = table_target.alias("target").merge(
                 source.alias("source"),
-                condition=f"source.{self.hash_keys} = target.{self.hash_keys}",
+                condition=" AND ".join(conditions),
             )
 
             # Update
@@ -394,7 +387,7 @@ class DataSinkMergeCDCOptions(BaseModel):
 
             _source = source
             _target = target
-            _on = [self.hash_cols, self.hash_keys]
+            _on = [self.hash_cols] + self.primary_keys
             if self.delete_where:
                 _source = source.withColumn("__to_delete", delete_condition)
                 _target = target.withColumn("__to_delete", F.lit(False))
@@ -407,8 +400,10 @@ class DataSinkMergeCDCOptions(BaseModel):
             )
 
             # Merge
-            condition = F.expr(f"source.{self.hash_keys} = target.{self.hash_keys}")
-            condition = condition & F.expr(f"target.{self.end_at} IS NULL")
+            conditions = []
+            condition = F.expr(f"target.{self.end_at} IS NULL")
+            for c in self.primary_keys:
+                condition = condition & F.expr(f"source.{c} = target.{c}")
             merge = table_target.alias("target").merge(
                 upsert_or_delete.filter(F.col(self.end_at).isNull()).alias("source"),
                 condition=condition,

@@ -11,6 +11,7 @@ from .externallocation import ExternalLocation
 from .grant import Grant
 from .grants import Grants
 from .group import Group
+from .groupmember import GroupMember
 from .job import Job
 from .metastore import Metastore
 from .metastoreassignment import MetastoreAssignment
@@ -31,6 +32,7 @@ from .secretacl import SecretAcl
 from .secretscope import SecretScope
 from .serviceprincipal import ServicePrincipal
 from .serviceprincipalrole import ServicePrincipalRole
+from .storagecredential import StorageCredential
 from .table import Table
 from .user import User
 from .userrole import UserRole

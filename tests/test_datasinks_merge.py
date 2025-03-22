@@ -53,9 +53,7 @@ def build_target(write_target=True, path=None, index=None):
     # Write Target
     if write_target:
         (
-            df0.withColumn(
-                "__hash_keys", F.lit(F.sha2(F.concat_ws("~", *["symbol", "date"]), 256))
-            )
+            df0
             .drop("_is_deleted")  # would be dropped by the merge function
             .write.format("DELTA")
             .mode("OVERWRITE")
@@ -239,7 +237,6 @@ def test_basic():
         "close",
         "open",
         "from",
-        "__hash_keys",
     ]
 
     # Build Source
@@ -258,7 +255,6 @@ def test_basic():
         "close",
         "open",
         "from",
-        "__hash_keys",
     ]
     assert len(df1) == 9 + 6 - 3  # 9 initial + 6 new - 3 deletes
     assert "S3" not in df1["symbol"].unique().tolist()  # deleted symbol
@@ -299,7 +295,6 @@ def test_out_of_sequence():
     # Test
     df1 = read(path).sort("date", "symbol").toPandas()
     row = df1.iloc[-1].to_dict()
-    del row["__hash_keys"]
     assert row == {
         "date": datetime.date(2024, 12, 1),
         "symbol": "S2",
@@ -344,7 +339,6 @@ def test_outdated():
     # Test - Updated Row
     df1 = read(path).sort("date", "symbol").toPandas()
     row = df1.iloc[-2].to_dict()
-    del row["__hash_keys"]
     assert row == {
         "date": datetime.date(2024, 11, 3),
         "symbol": "S1",
@@ -356,7 +350,6 @@ def test_outdated():
 
     # Test - Non-updated Row
     row = df1.iloc[-3].to_dict()
-    del row["__hash_keys"]
     assert row == {
         "date": datetime.date(2024, 11, 3),
         "symbol": "S0",
@@ -500,7 +493,6 @@ def test_null_updates():
     # Test
     df1 = read(path).sort("date", "symbol").toPandas()
     row = df1.iloc[-1].fillna(-1).to_dict()
-    del row["__hash_keys"]
     assert row == {
         "date": datetime.date(2024, 11, 3),
         "symbol": "S2",
@@ -519,7 +511,6 @@ def test_null_updates():
     # Test
     df1 = read(path).sort("date", "symbol").toPandas()
     row = df1.iloc[-1].to_dict()
-    del row["__hash_keys"]
     assert row == {
         "date": datetime.date(2024, 11, 3),
         "symbol": "S2",
@@ -564,7 +555,6 @@ def test_stream():
         "close",
         "open",
         "from",
-        "__hash_keys",
     ]
     assert len(df1) == 9 + 6 - 3  # 9 initial + 6 new - 3 deletes
     assert "S3" not in df1["symbol"].unique().tolist()  # deleted symbol
