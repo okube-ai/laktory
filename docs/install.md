@@ -61,8 +61,7 @@ Available options are `spark` and `polars`.
   ```
   For running spark locally, you also need to follow instructions provided [here](https://www.machinelearningplus.com/pyspark/install-pyspark-on-mac/). 
   If you use homebrew to install java, your `JAVA_HOME` and `SPARK_HOME` environment variables should look something like:
-    * `JAVA_HOME=/opt/homebrew/opt/java`
-    * `SPARK_HOME=/opt/homebrew/Cellar/apache-spark/3.5.0/libexec`
+    * `JAVA_HOME=/opt/homebrew/opt/openjdk@17/`
 
 * Polars
   ```cmd
