@@ -2,16 +2,15 @@ from narwhals import LazyFrame
 from pydantic import Field
 
 from laktory._logger import get_logger
-from laktory.models.basemodel import BaseModel
 from laktory.models.datasources.tabledatasource import TableDataSource
 
 logger = get_logger(__name__)
 
 
-class Connection(BaseModel):
-    workspace_url: str
-    bearer_token: str = "auto"
-    require_https: bool = True
+# class Connection(BaseModel):
+#     workspace_url: str
+#     bearer_token: str = "auto"
+#     require_https: bool = True
 
 
 class UnityCatalogDataSource(TableDataSource):
@@ -45,9 +44,6 @@ class UnityCatalogDataSource(TableDataSource):
     ```
     """
 
-    catalog_name: str = None
-    table_name: str = None
-    schema_name: str = None
     # connection: Connection = None
     type: str = Field("UNITY_CATALOG", frozen=True)
 
@@ -59,17 +55,9 @@ class UnityCatalogDataSource(TableDataSource):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _read_spark(self, spark=None) -> LazyFrame:
-        if self.as_stream:
-            logger.info(f"Reading {self._id} as stream")
-            df = spark.readStream.table(self.full_name)
-        else:
-            logger.info(f"Reading {self._id} as static")
-            df = spark.read.table(self.full_name)
-
-        return df
-
     def _read_polars(self) -> LazyFrame:
         # TODO
         # https://docs.pola.rs/api/python/stable/reference/catalog/api/polars.Catalog.scan_table.html#polars.Catalog.scan_table
-        raise NotImplementedError()
+        raise NotImplementedError(
+            "Unity Catalog data source is not yet implemented for Polars"
+        )

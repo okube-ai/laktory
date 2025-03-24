@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic import Field
 
 from laktory._logger import get_logger
@@ -40,8 +38,6 @@ class HiveMetastoreDataSource(TableDataSource):
     ```
     """
 
-    table_name: Union[str, None] = None
-    schema_name: Union[str, None] = None
     # connection: Connection = None
     type: str = Field("HIVE_METASTORE", frozen=True)
 
