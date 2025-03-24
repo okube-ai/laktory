@@ -1,4 +1,4 @@
-from typing import Union
+from __future__ import annotations
 
 from .basedatasource import BaseDataSource
 from .dataframedatasource import DataFrameDataSource
@@ -9,15 +9,17 @@ from .tabledatasource import TableDataSource
 from .unitycatalogdatasource import UnityCatalogDataSource
 
 classes = [
-    DataFrameDataSource,
     FileDataSource,
-    PipelineNodeDataSource,
     UnityCatalogDataSource,
+    HiveMetastoreDataSource,
+    DataFrameDataSource,
+    PipelineNodeDataSource,
 ]
 
-DataSourcesUnion = Union[
-    DataFrameDataSource,
-    FileDataSource,
-    PipelineNodeDataSource,
-    UnityCatalogDataSource,
-]
+DataSourcesUnion = (
+    FileDataSource
+    | UnityCatalogDataSource
+    | HiveMetastoreDataSource
+    | DataFrameDataSource
+    | PipelineNodeDataSource
+)
