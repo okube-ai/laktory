@@ -12,7 +12,6 @@ group = Group(
 )
 
 
-
 def test_group_members():
     assert group.display_name == "role-engineers"
     assert group.member_ids == [

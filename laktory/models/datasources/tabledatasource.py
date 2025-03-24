@@ -1,4 +1,7 @@
-from typing import Union
+from typing import Any
+
+import narwhals as nw
+from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.datasources.basedatasource import BaseDataSource
@@ -7,9 +10,29 @@ logger = get_logger(__name__)
 
 
 class TableDataSource(BaseDataSource):
-    catalog_name: Union[str, None] = None
-    table_name: Union[str, None] = None
-    schema_name: Union[str, None] = None
+    """
+    table_name: table name or fully qualified name (catalog.schema.table)
+    """
+
+    catalog_name: str | None = None
+    table_name: str = None
+    schema_name: str | None = None
+
+    @model_validator(mode="after")
+    def table_full_name(self) -> Any:
+        name = self.table_name
+        if name is None:
+            return
+        names = name.split(".")
+
+        with self.validate_assignment_disabled():
+            self.table_name = names[-1]
+            if len(names) > 1:
+                self.schema_name = names[-2]
+            if len(names) > 2:
+                self.catalog_name = names[-3]
+
+        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -41,3 +64,17 @@ class TableDataSource(BaseDataSource):
     @property
     def _id(self) -> str:
         return self.full_name
+
+    def _read_spark(self, spark=None) -> nw.LazyFrame:
+        from laktory import get_spark_session
+
+        spark = get_spark_session()
+
+        if self.as_stream:
+            logger.info(f"Reading {self._id} as stream")
+            df = spark.readStream.table(self.full_name)
+        else:
+            logger.info(f"Reading {self._id} as static")
+            df = spark.read.table(self.full_name)
+
+        return nw.from_native(df)
