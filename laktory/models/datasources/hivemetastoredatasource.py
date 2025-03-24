@@ -1,6 +1,3 @@
-from typing import Union
-
-import narwhals as nw
 from pydantic import Field
 
 from laktory._logger import get_logger
@@ -21,7 +18,8 @@ class HiveMetastoreDataSource(TableDataSource):
     schema_name:
         Name of the schema of the source table
     table_name:
-        Name of the source table
+        Name (or full name) of the source table. If full name ({catalog}.{schema}.{table})
+        is provided, `schema_name` and `catalog_name` will be overwritten.
 
     Examples
     ---------
@@ -40,8 +38,6 @@ class HiveMetastoreDataSource(TableDataSource):
     ```
     """
 
-    table_name: Union[str, None] = None
-    schema_name: Union[str, None] = None
     # connection: Connection = None
     type: str = Field("HIVE_METASTORE", frozen=True)
 
@@ -52,13 +48,3 @@ class HiveMetastoreDataSource(TableDataSource):
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
-
-    def _read_spark(self, spark=None) -> nw.LazyFrame:
-        if self.as_stream:
-            logger.info(f"Reading {self._id} as stream")
-            df = spark.readStream.table(self.full_name)
-        else:
-            logger.info(f"Reading {self._id} as static")
-            df = spark.read.table(self.full_name)
-
-        return nw.from_native(df)

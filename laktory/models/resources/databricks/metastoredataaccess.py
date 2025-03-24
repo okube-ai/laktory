@@ -1,4 +1,3 @@
-
 from laktory.models.resources.databricks.storagecredential import StorageCredential
 from laktory.models.resources.pulumiresource import PulumiResource
 
@@ -67,7 +66,7 @@ class MetastoreDataAccess(StorageCredential):
 
         # Metastore data access grants
         resources += self.get_grants_additional_resources(
-            object={"storage_credential" : f"${{resources.{self.resource_name}.name}}"}
+            object={"storage_credential": f"${{resources.{self.resource_name}.name}}"}
         )
         return resources
 
@@ -86,4 +85,3 @@ class MetastoreDataAccess(StorageCredential):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_metastore_data_access"
-
