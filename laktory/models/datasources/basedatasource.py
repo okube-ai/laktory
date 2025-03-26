@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import narwhals as nw
+from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -48,7 +49,7 @@ class BaseDataSource(BaseModel, PipelineChild):
     """
     Base class for data sources.
 
-    Attributes
+    Parameters
     ----------
     as_stream:
         If `True`source is read as a streaming DataFrame.
@@ -69,7 +70,9 @@ class BaseDataSource(BaseModel, PipelineChild):
         Spark structured streaming watermark specifications
     """
 
-    as_stream: bool = False
+    as_stream: bool = Field(
+        False, description="If `True`source is read as a streaming DataFrame."
+    )
     # broadcast: bool | None = False
     dataframe_backend: DataFrameBackends = None
     drop_duplicates: bool | list[str] = None

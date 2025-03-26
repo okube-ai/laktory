@@ -1,6 +1,8 @@
 from typing import Any
+from typing import Literal
 
 import narwhals as nw
+from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -10,13 +12,12 @@ logger = get_logger(__name__)
 
 
 class TableDataSource(BaseDataSource):
-    """
-    table_name: table name or fully qualified name (catalog.schema.table)
-    """
-
-    catalog_name: str | None = None
-    table_name: str = None
+    catalog_name: str | None = Field()
+    table_name: str = Field(
+        ..., description="Table or fully qualified name ({catalog}.{schema}.{table})"
+    )
     schema_name: str | None = None
+    type: Literal["TABLE"] = Field("TABLE", frozen=True)
 
     @model_validator(mode="after")
     def table_full_name(self) -> Any:

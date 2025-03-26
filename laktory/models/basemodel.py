@@ -77,7 +77,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     Parent class for all Laktory models offering generic functions and
     properties. This `BaseModel` class is derived from `pydantic.BaseModel`.
 
-    Attributes
+    Parameters
     ----------
     variables:
         Variable values to be resolved when using `inject_vars` method.

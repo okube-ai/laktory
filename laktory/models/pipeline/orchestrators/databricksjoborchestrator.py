@@ -29,7 +29,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
     [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/jobs/job_laktory_pl.py)
     to the stack.
 
-    Attributes
+    Parameters
     ----------
     notebook_path:
         Path for the notebook. If `None`, default path for laktory job notebooks is used.

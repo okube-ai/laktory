@@ -40,7 +40,7 @@ class PipelineNode(BaseModel, PipelineChild):
     output to a data sink. Some basic transformations are also natively
     supported.
 
-    Attributes
+    Parameters
     ----------
     add_layer_columns:
         If `True` and `layer` not `None` layer-specific columns like timestamps

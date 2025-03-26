@@ -25,7 +25,7 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
     [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py)
     to the stack.
 
-    Attributes
+    Parameters
     ----------
     config_file:
         Pipeline configuration (json) file deployed to the workspace and used

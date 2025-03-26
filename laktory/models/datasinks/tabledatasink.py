@@ -19,7 +19,7 @@ class TableDataSink(BaseDataSink):
     Table data sink on a metastore such as Hive, Unity Catalog or on a
     data warehouse such as Snowflake, BigQuery, etc.
 
-    Attributes
+    Parameters
     ----------
     checkpoint_location:
         Path to which the checkpoint file for streaming dataframe should

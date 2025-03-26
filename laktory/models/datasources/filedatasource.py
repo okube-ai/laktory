@@ -53,7 +53,7 @@ class FileDataSource(BaseDataSource):
     Data source using disk files, such data events (json/csv) or full dataframes.
     Generally used in the context of a data pipeline.
 
-    Attributes
+    Parameters
     ----------
     format:
         Format of the data files

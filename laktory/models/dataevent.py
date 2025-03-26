@@ -30,7 +30,7 @@ class DataEvent(BaseModel):
     event and its content. It is generally used to write data to a storage
     location.
 
-    Attributes
+    Parameters
     ----------
     data:
         Event data stored as a (key, value) object

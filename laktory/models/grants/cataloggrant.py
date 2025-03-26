@@ -7,7 +7,7 @@ class CatalogGrant(BaseModel):
     """
     Privileges granted to a principal and operating on a catalog.
 
-    Attributes
+    Parameters
     ----------
     principal
         User, group or service principal name

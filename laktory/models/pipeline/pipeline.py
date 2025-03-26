@@ -40,7 +40,7 @@ class PipelineUDF(BaseModel):
     """
     Pipeline User Define Function
 
-    Attributes
+    Parameters
     ----------
     module_name:
         Name of the module from which the function needs to be imported.
@@ -74,7 +74,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     be deployed and scheduled using one of the supported orchestrators, such as
     a Databricks Delta Live Tables or job.
 
-    Attributes
+    Parameters
     ----------
     databricks_job:
         Defines the Databricks Job specifications when DATABRICKS_JOB is

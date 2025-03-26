@@ -7,7 +7,7 @@ class ShareGrant(BaseModel):
     """
     Privileges granted to a principal and operating on a share
 
-    Attributes
+    Parameters
     ----------
     principal
         User, group or service principal name

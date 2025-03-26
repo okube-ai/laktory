@@ -8,7 +8,7 @@ class DataProducer(BaseModel):
     """
     Specifications on the producer of data.
 
-    Attributes
+    Parameters
     ----------
     name:
         Name of the data producer

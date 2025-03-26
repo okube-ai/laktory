@@ -7,7 +7,7 @@ class SecretAcl(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks secret ACL
 
-    Attributes
+    Parameters
     ----------
     permission:
         Scope associated with the secret

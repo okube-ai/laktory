@@ -17,7 +17,7 @@ class DataFrameColumnExpression(BaseModel):
     DataFrame Column Expression supporting SQL statements or string
     representation of DataFrame API expression.
 
-    Attributes
+    Parameters
     ----------
     value:
         String representation
