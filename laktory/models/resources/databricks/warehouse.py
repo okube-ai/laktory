@@ -1,7 +1,7 @@
-from typing import Literal
+from typing import Any, Literal
 from typing import Union
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
@@ -52,10 +52,23 @@ class WarehouseLookup(ResourceLookup):
     ----------
     id:
         The ID of the SQL warehouse.
+    name:
+        Name of the SQL warehouse. Name of the SQL warehouse to search (case-sensitive).
+        Argument only supported by Terraform IaC backend.
     """
 
     id: str = Field(serialization_alias="id")
+    name: str = None
 
+    @model_validator(mode="after")
+    def at_least_one(self) -> Any:
+        if self.id is None and self.name is None:
+            raise ValueError("At least `id` or `name` must be set.")
+
+        if not (self.id is None or self.name is None):
+            raise ValueError("Only one of `id` or `name` must be set.")
+
+        return self
 
 class Warehouse(BaseModel, PulumiResource, TerraformResource):
     """
