@@ -2,13 +2,7 @@
 
 ## [0.7.2] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Lookup warehouses by `name` for Terraform backend
 
 ## [0.7.1] - 2025-03-20
 ### Fixed
