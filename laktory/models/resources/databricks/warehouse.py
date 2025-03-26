@@ -57,7 +57,7 @@ class WarehouseLookup(ResourceLookup):
         Argument only supported by Terraform IaC backend.
     """
 
-    id: str = Field(serialization_alias="id")
+    id: str = Field(serialization_alias="id", default=None)
     name: str = None
 
     @model_validator(mode="after")
