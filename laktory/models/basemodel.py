@@ -89,7 +89,11 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         # target model and more suitable when models are dynamically updated in code.
         validate_assignment=True,
     )
-    variables: dict[str, Any] = Field(default={}, exclude=True)
+    variables: dict[str, Any] = Field(
+        default={},
+        exclude=True,
+        description="Dict of variables to be injected in the model at runtime",
+    )
     _camel_serialization: bool = False
     _singular_serialization: bool = False
 

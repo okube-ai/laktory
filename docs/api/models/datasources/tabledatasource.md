@@ -1,1 +1,1 @@
-::: laktory.models.datasources.TableDataSource
+::: laktory.models.TableDataSource

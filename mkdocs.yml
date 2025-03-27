@@ -171,9 +171,9 @@ nav:
         - FileDataSink: api/models/datasinks/filedatasink.md
         - TableDataSink: api/models/datasinks/tabledatasink.md
       - DataSources:
-        - BaseDataSource: api/models/datasources/basedatasource.md
+#        - BaseDataSource: api/models/datasources/basedatasource.md
         - FileDataSource: api/models/datasources/filedatasource.md
-        - MemoryDataSource: api/models/datasources/memorydatasource.md
+        - DataFrameDataSource: api/models/datasources/dataframedatasource.md
         - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
         - TableDataSource: api/models/datasources/tabledatasource.md
       - DataQuality:

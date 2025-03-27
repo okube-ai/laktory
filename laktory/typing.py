@@ -16,6 +16,8 @@ AnyDataFrameColumn = Union[SparkColumn, PolarsExpr]
 
 
 class VariableType(str):
+    """Laktory variable or expression (string)"""
+
     @classmethod
     def __get_pydantic_core_schema__(
         cls, source: type, handler: callable
