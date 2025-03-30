@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import json
 import re
@@ -22,7 +24,7 @@ from pydantic._internal._model_construction import ModelMetaclass as _ModelMetac
 from laktory._parsers import _resolve_value
 from laktory._parsers import _resolve_values
 from laktory._parsers import _snake_to_camel
-from laktory.typing import var
+from laktory.typing import VariableType
 from laktory.yaml.recursiveloader import RecursiveLoader
 
 Model = TypeVar("Model", bound="BaseModel")
@@ -60,12 +62,12 @@ class ModelMetaclass(_ModelMetaclass):
             new_type_hint = type_hint
 
             if origin is list:
-                new_type_hint = list[tuple([Union[args[0], var]])]
+                new_type_hint = list[tuple([args[0] | VariableType])]
 
             elif origin is dict:
-                new_type_hint = dict[Union[args[0], var], Union[args[1], var]]
+                new_type_hint = dict[args[0] | VariableType, args[1] | VariableType]
 
-            new_type_hint = Union[new_type_hint, var]
+            new_type_hint = Union[new_type_hint, VariableType]
 
             namespace["__annotations__"][field_name] = new_type_hint
 

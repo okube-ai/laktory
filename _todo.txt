@@ -1,0 +1,3 @@
+- Review models API doc to sort parent class attributes
+- Review why Literal don't show expected values (it seems to show type instead)
+- Find why `VariableType` does not receive a hyperlink

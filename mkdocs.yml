@@ -164,8 +164,11 @@ nav:
       - BaseModel: api/models/basemodel.md
 #      - DataEventHeader: api/models/dataeventheader.md
       - DataEvent: api/models/dataevent.md
+      - DataFrameColumn: api/models/dataframecolumn.md
+      - DataFrameSchema: api/models/dataframeschema.md
       - DataFrameColumnExpression: api/models/dataframecolumnexpression.md
       - DataProducer: api/models/dataproducer.md
+      - DataTypes: api/models/datatypes.md
       - DataSinks:
         - BaseDataSink: api/models/datasinks/basedatasink.md
         - FileDataSink: api/models/datasinks/filedatasink.md

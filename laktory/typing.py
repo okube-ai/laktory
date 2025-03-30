@@ -25,9 +25,6 @@ class VariableType(str):
         return core_schema.str_schema()
 
 
-var = VariableType
-"""Laktory variable or expression (string)"""
-
 # ResolvableBool: TypeAlias = Union[bool, var]
 # """Boolean or laktory variable that can be resolved as a boolean"""
 #

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from narwhals import LazyFrame
 from pydantic import Field
 
@@ -45,7 +47,7 @@ class UnityCatalogDataSource(TableDataSource):
     """
 
     # connection: Connection = None
-    type: str = Field("UNITY_CATALOG", frozen=True)
+    type: Literal["UNITY_CATALOG"] = Field("UNITY_CATALOG", frozen=True)
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

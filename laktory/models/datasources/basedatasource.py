@@ -52,7 +52,8 @@ class BaseDataSource(BaseModel, PipelineChild):
     """
 
     as_stream: bool = Field(
-        False, description="If `True`source is read as a streaming DataFrame."
+        False,
+        description="If `True`source is read as a streaming DataFrame. Currently only supported by Spark DataFrame backend.",
     )
     # broadcast: bool = Field(
     #         False, description="If `True` DataFrame is broadcasted."

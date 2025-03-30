@@ -1,3 +1,7 @@
+::: laktory.enums.DataFrameBackends
+
+---
+
 ::: laktory.typing.AnyDataFrame
 
 ---
@@ -6,4 +10,9 @@
 
 ---
 
-::: laktory.typing.var
+::: laktory.typing.VariableType
+
+---
+
+[//]: # (::: laktory.typing.var)
+

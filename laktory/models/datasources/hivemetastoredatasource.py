@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import Field
 
 from laktory._logger import get_logger
@@ -39,7 +41,7 @@ class HiveMetastoreDataSource(TableDataSource):
     """
 
     # connection: Connection = None
-    type: str = Field("HIVE_METASTORE", frozen=True)
+    type: Literal["HIVE_METASTORE"] = Field("HIVE_METASTORE", frozen=True)
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

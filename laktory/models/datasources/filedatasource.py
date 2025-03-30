@@ -47,6 +47,11 @@ SUPPORTED_FORMATS = {
     ],
 }
 
+# ALL_SUPPORTED_FORMATS = []
+
+# ALL_SUPPORTED_FORMATS = list(set([]))
+ALL_SUPPORTED_FORMATS = tuple(sorted(set().union(*SUPPORTED_FORMATS.values())))
+
 
 class FileDataSource(BaseDataSource):
     """
@@ -61,21 +66,24 @@ class FileDataSource(BaseDataSource):
     source = models.FileDataSource(
         path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
         format="JSON",
-        as_stream=False,
+        dataframe_backend="POLARS",
     )
-    # df = source.read(spark)
+    # df = source.read()
 
     # With Explicit Schema
     source = models.FileDataSource(
         path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
         format="JSON",
-        as_stream=False,
-        schema=[
-            {"name": "description", "type": "string", "nullable": True},
-            {"name": "close", "type": "double", "nullable": False},
-        ],
+        dataframe_backend="PYSPARK",
+        schema={
+            "columns": {
+                "symbol": "String",
+                "open": "Float64",
+                "close": "Float64",
+            }
+        },
     )
-    # df = source.read(spark)
+    # df = source.read()
     ```
 
     References
@@ -86,7 +94,9 @@ class FileDataSource(BaseDataSource):
     """
 
     model_config = ConfigDict(populate_by_name=True)
-    format: str = Field(..., description="Format of the data files.")
+    format: Literal.__getitem__(ALL_SUPPORTED_FORMATS) = Field(
+        ..., description="Format of the data files."
+    )
     has_header: bool = Field(
         True,
         description="Indicate if the first row of the dataset is a header or not. Only applicable to 'CSV' format.",
@@ -100,7 +110,7 @@ class FileDataSource(BaseDataSource):
         description="File path on a local disk, remote storage or Databricks volume.",
     )
     read_options: dict[str, Any] = Field(
-        {}, description="Other options passed to dataframe backend reader."
+        {}, description="Other options passed directly to dataframe backend reader."
     )
     schema_definition: DataFrameSchema = Field(
         None,

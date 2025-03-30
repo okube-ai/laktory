@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Literal
 
 import narwhals as nw
 from pydantic import Field
@@ -17,7 +16,6 @@ class TableDataSource(BaseDataSource):
         ..., description="Table or fully qualified name ({catalog}.{schema}.{table})"
     )
     schema_name: str | None = None
-    type: Literal["TABLE"] = Field("TABLE", frozen=True)
 
     @model_validator(mode="after")
     def table_full_name(self) -> Any:

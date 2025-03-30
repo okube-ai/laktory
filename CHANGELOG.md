@@ -13,6 +13,8 @@
 * Renamed `MemoryDataSource` to `DataFrameDataSource`
 * `InferColumnTypes` with is no longer enabled by default when reading data stream
 * `spark session` needs to be registered at the module level instead of being passed to function calls
+* Deprecated `DataProducer` class
+* Deprecated `DataEvent` class
 
 ## [0.7.2] - Unreleased
 ### Added
