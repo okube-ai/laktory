@@ -1,5 +1,6 @@
 from typing import Union
 
+import narwhals as nw
 from pydantic_core import CoreSchema
 from pydantic_core import core_schema
 
@@ -7,6 +8,8 @@ from laktory.polars import PolarsExpr
 from laktory.polars import PolarsLazyFrame
 from laktory.spark import SparkColumn
 from laktory.spark import SparkDataFrame
+
+AnyFrame = nw.LazyFrame | nw.DataFrame
 
 AnyDataFrame = Union[SparkDataFrame, PolarsLazyFrame]
 """DataFrame type from any of the supported backend"""

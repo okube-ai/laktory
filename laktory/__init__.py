@@ -17,6 +17,7 @@ import laktory.yaml
 
 from ._logger import get_logger
 from ._settings import Settings
+from .sqlparser import SQLParser
 from .version import show_version_info
 
 

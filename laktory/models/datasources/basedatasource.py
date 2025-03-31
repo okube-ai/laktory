@@ -11,11 +11,9 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
-
-
-AnyFrame = nw.LazyFrame | nw.DataFrame
 
 
 class DataFrameSample(BaseModel):
@@ -117,14 +115,9 @@ class BaseDataSource(BaseModel, PipelineChild):
         """
         Read data with options specified in attributes.
 
-        Parameters
-        ----------
-        spark:
-            Spark context
-
         Returns
         -------
-        : DataFrame
+        :
             Resulting dataframe
         """
         logger.info(

@@ -14,5 +14,9 @@
 
 ---
 
+::: laktory.typing.AnyFrame
+
+---
+
 [//]: # (::: laktory.typing.var)
 

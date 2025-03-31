@@ -18,23 +18,13 @@ logger = get_logger(__name__)
 class UnityCatalogDataSource(TableDataSource):
     """
     Data source using a Unity Catalog data table.
-    Generally used in the context of a data pipeline.
-
-    Attributes
-    ----------
-    catalog_name:
-        Name of the catalog of the source table
-    schema_name:
-        Name of the schema of the source table
-    table_name:
-        Name of the source table
 
     Examples
     ---------
     ```python
     from laktory import models
 
-    source = models.TableDataSource(
+    source = models.UnityCatalogDataSource(
         catalog_name="dev",
         schema_name="finance",
         table_name="brz_stock_prices",
@@ -42,12 +32,14 @@ class UnityCatalogDataSource(TableDataSource):
         filter="symbol='AAPL'",
         as_stream=True,
     )
-    # df = source.read(spark)
+    # df = source.read()
     ```
     """
 
     # connection: Connection = None
-    type: Literal["UNITY_CATALOG"] = Field("UNITY_CATALOG", frozen=True)
+    type: Literal["UNITY_CATALOG"] = Field(
+        "UNITY_CATALOG", frozen=True, description="Source Type"
+    )
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

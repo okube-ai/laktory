@@ -56,7 +56,6 @@ ALL_SUPPORTED_FORMATS = tuple(sorted(set().union(*SUPPORTED_FORMATS.values())))
 class FileDataSource(BaseDataSource):
     """
     Data source using disk files, such data events (json/csv) or full dataframes.
-    Generally used in the context of a data pipeline.
 
     Examples
     ---------
@@ -121,7 +120,7 @@ class FileDataSource(BaseDataSource):
         None,
         description="Path for schema inference when reading data as a stream. If `None`, parent directory of `path` is used.",
     )
-    type: Literal["FILE"] = Field("FILE", frozen=True)
+    type: Literal["FILE"] = Field("FILE", frozen=True, description="Source Type")
     # schema_overrides: DataFrameSchema = Field(None, validation_alias="schema")
 
     @field_validator("path", "schema_location", mode="before")

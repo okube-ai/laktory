@@ -174,11 +174,11 @@ nav:
         - FileDataSink: api/models/datasinks/filedatasink.md
         - TableDataSink: api/models/datasinks/tabledatasink.md
       - DataSources:
-#        - BaseDataSource: api/models/datasources/basedatasource.md
-        - FileDataSource: api/models/datasources/filedatasource.md
         - DataFrameDataSource: api/models/datasources/dataframedatasource.md
-        - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
-        - TableDataSource: api/models/datasources/tabledatasource.md
+        - FileDataSource: api/models/datasources/filedatasource.md
+#        - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
+        - HiveMetastoreDataSource: api/models/datasources/hivemetastoredatasource.md
+        - UnityCatalogDataSource: api/models/datasources/unitycatalogdatasource.md
       - DataQuality:
         - DataQualityCheck: api/models/dataquality/check.md
         - DataQualityExpectation: api/models/dataquality/expectation.md
@@ -253,6 +253,7 @@ nav:
     - Types: api/types.md
     - CLI: api/cli.md
     - RecursiveLoader: api/recursiveloader.md
+    - SQLParser: api/sqlparser.md
     - Spark:
       - DataFrame:
         - display: api/spark/dataframe/display.md

@@ -9,10 +9,27 @@ engine = nw
 
 
 class SQLParser:
+    """
+    SQL Parser translating SQL string expression to a Narwhals Expression.
+    """
+
     def __init__(self):
         self.context = {}
 
-    def parse(self, sql):
+    def parse(self, sql: str) -> nw.Expr:
+        """
+        Parse SQL expression.
+
+        Parameters
+        ----------
+        sql:
+            SQL Expression
+
+        Returns
+        -------
+        :
+            Narwhals expression
+        """
         parsed_expr = sqlglot.parse_one(sql)
         # visitor = SQLExprVisitor(self.context)
         return self.visit_expr(parsed_expr)
