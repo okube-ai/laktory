@@ -28,7 +28,7 @@ class DataSinkMergeCDCOptions(BaseModel):
     They are also used to build the target using `apply_changes` method when
     using Databricks DLT.
 
-    Attributes
+    Parameters
     ----------
     delete_where:
         Specifies when a CDC event should be treated as a DELETE rather than
@@ -500,7 +500,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     """
     Base class for building data sink
 
-    Attributes
+    Parameters
     ----------
     cluster_by:
         Columns selected for liquid clustering

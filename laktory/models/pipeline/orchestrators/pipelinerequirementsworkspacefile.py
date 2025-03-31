@@ -12,7 +12,7 @@ class PipelineRequirementsWorkspaceFile(WorkspaceFile, PipelineChild):
     Workspace File storing pipeline python requirements. Default values for
     path and access controls. Forced value for source.
 
-    Attributes
+    Parameters
     ----------
     access_controls:
         List of file access controls

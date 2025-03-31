@@ -1,19 +1,19 @@
 from __future__ import annotations
 
 from typing import Any
+from typing import Literal
 
 import narwhals as nw
+from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
-
-
-AnyFrame = nw.LazyFrame | nw.DataFrame
 
 
 class DataFrameSample(BaseModel):
@@ -47,39 +47,40 @@ class Watermark(BaseModel):
 class BaseDataSource(BaseModel, PipelineChild):
     """
     Base class for data sources.
-
-    Attributes
-    ----------
-    as_stream:
-        If `True`source is read as a streaming DataFrame.
-    broadcast:
-        If `True` DataFrame is broadcasted
-    dataframe_backend:
-        Type of dataframe
-    drops:
-        List of columns to drop
-    filter:
-        SQL expression used to select specific rows from the source table
-    renames:
-        Mapping between the source table column names and new column names
-    selects:
-        Columns to select from the source table. Can be specified as a list
-        or as a dictionary to rename the source columns
-    watermark
-        Spark structured streaming watermark specifications
     """
 
-    as_stream: bool = False
-    # broadcast: bool | None = False
-    dataframe_backend: DataFrameBackends = None
-    drop_duplicates: bool | list[str] = None
-    drops: list = None
-    filter: str = None
-    renames: dict[str, str] = None
+    as_stream: bool = Field(
+        False,
+        description="If `True`source is read as a streaming DataFrame. Currently only supported by Spark DataFrame backend.",
+    )
+    # broadcast: bool = Field(
+    #         False, description="If `True` DataFrame is broadcasted."
+    #     )
+    drop_duplicates: bool | list[str] = Field(
+        None,
+        description="Remove duplicated rows from source using all columns if `True` or only the provided column names.",
+    )
+    drops: list = Field(
+        None,
+        description="List of columns to drop",
+    )
+    filter: str = Field(
+        None,
+        description="SQL expression used to select specific rows from the source table",
+    )
+    renames: dict[str, str] = Field(
+        None,
+        description="Mapping between the source column names and desired column names",
+    )
     # sample: DataFrameSample = None
-    selects: list[str] | dict[str, str] = None
-    # watermark: Watermark | None = None
-    type: str
+    selects: list[str] | dict[str, str] = Field(
+        None,
+        description="Columns to select from the source. Can be specified as a list or as a dictionary to rename the source columns",
+    )
+    # watermark: Watermark | None = Field(None, description="Spark structured streaming watermark specifications")
+    type: Literal["DATAFRAME", "FILE", "UNITY_CATALOG", "HIVE_METASTORE"] = Field(
+        ..., description="Name of the data source type"
+    )
 
     @model_validator(mode="after")
     def options(self) -> Any:
@@ -114,14 +115,9 @@ class BaseDataSource(BaseModel, PipelineChild):
         """
         Read data with options specified in attributes.
 
-        Parameters
-        ----------
-        spark:
-            Spark context
-
         Returns
         -------
-        : DataFrame
+        :
             Resulting dataframe
         """
         logger.info(

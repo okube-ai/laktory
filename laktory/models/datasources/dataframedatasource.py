@@ -19,20 +19,11 @@ AnyFrame = nw.DataFrame | nw.LazyFrame
 class DataFrameDataSource(BaseDataSource):
     """
     Data source using in-memory DataFrame.
-    Generally used in the context of a data pipeline.
-
-    Attributes
-    ----------
-    data:
-        Serialized data to build input DataFrame
-    df:
-        Input DataFrame
 
     Examples
     ---------
     ```python
     import polars as pl
-
     from laktory import models
 
     data = {
@@ -41,13 +32,13 @@ class DataFrameDataSource(BaseDataSource):
         "tstamp": ["2023-09-01", "2023-09-01"],
     }
 
-    # Spark from dict
+    # From data using PySpark
     source = models.DataFrameDataSource(
         data=data,
         dataframe_backend="PYSPARK",
     )
-    df = source.read(spark=spark)
-    print(df.laktory.show_string())
+    df = source.read()
+    print(df.to_native().show())
     '''
     +-----+------+----------+
     |price|symbol|    tstamp|
@@ -57,8 +48,8 @@ class DataFrameDataSource(BaseDataSource):
     +-----+------+----------+
     '''
 
-    # Polars from df
-    source = models.MemoryDataSource(
+    # From df using Polars
+    source = models.DataFrameDataSource(
         df=pl.DataFrame(data),
     )
     df = source.read()
@@ -71,9 +62,15 @@ class DataFrameDataSource(BaseDataSource):
     ```
     """
 
-    data: dict[str, list[Any]] | list[dict[str, Any]] = None
-    df: Any = None
-    type: Literal["DATAFRAME"] = Field("DATAFRAME", frozen=True)
+    data: dict[str, list[Any]] | list[dict[str, Any]] = Field(
+        None, description="Serialized data used to build source"
+    )
+    df: Any = Field(None, description="DataFrame object acting as source")
+    type: Literal["DATAFRAME"] = Field(
+        "DATAFRAME",
+        frozen=True,
+        description="Source Type",
+    )
 
     @model_validator(mode="after")
     def validate_input(self) -> Any:

@@ -22,7 +22,7 @@ class FileDataSink(BaseDataSink):
     """
     Disk file(s) data sink such as csv, parquet or Delta Table.
 
-    Attributes
+    Parameters
     ----------
     checkpoint_location:
         Path to which the checkpoint file for streaming dataframe should

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import json
 import re
@@ -22,7 +24,7 @@ from pydantic._internal._model_construction import ModelMetaclass as _ModelMetac
 from laktory._parsers import _resolve_value
 from laktory._parsers import _resolve_values
 from laktory._parsers import _snake_to_camel
-from laktory.typing import var
+from laktory.typing import VariableType
 from laktory.yaml.recursiveloader import RecursiveLoader
 
 Model = TypeVar("Model", bound="BaseModel")
@@ -60,12 +62,12 @@ class ModelMetaclass(_ModelMetaclass):
             new_type_hint = type_hint
 
             if origin is list:
-                new_type_hint = list[tuple([Union[args[0], var]])]
+                new_type_hint = list[tuple([args[0] | VariableType])]
 
             elif origin is dict:
-                new_type_hint = dict[Union[args[0], var], Union[args[1], var]]
+                new_type_hint = dict[args[0] | VariableType, args[1] | VariableType]
 
-            new_type_hint = Union[new_type_hint, var]
+            new_type_hint = Union[new_type_hint, VariableType]
 
             namespace["__annotations__"][field_name] = new_type_hint
 
@@ -77,7 +79,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     Parent class for all Laktory models offering generic functions and
     properties. This `BaseModel` class is derived from `pydantic.BaseModel`.
 
-    Attributes
+    Parameters
     ----------
     variables:
         Variable values to be resolved when using `inject_vars` method.
@@ -89,7 +91,11 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         # target model and more suitable when models are dynamically updated in code.
         validate_assignment=True,
     )
-    variables: dict[str, Any] = Field(default={}, exclude=True)
+    variables: dict[str, Any] = Field(
+        default={},
+        exclude=True,
+        description="Dict of variables to be injected in the model at runtime",
+    )
     _camel_serialization: bool = False
     _singular_serialization: bool = False
 
@@ -185,12 +191,14 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
 
         Custom Tags
         -----------
-        !use {filepath}:
+        - `!use {filepath}`:
             Directly inject the content of the file at `filepath`
-        - !extend {filepath}:
+
+        - `- !extend {filepath}`:
             Extend the current list with the elements found in the file at `filepath`.
             Similar to python list.extend method.
-        <<: !update {filepath}:
+
+        - `<<: !update {filepath}`:
             Merge the current dictionary with the content of the dictionary defined at
             `filepath`. Similar to python dict.update method.
 

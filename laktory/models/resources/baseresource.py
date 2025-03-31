@@ -16,7 +16,7 @@ class ResourceOptions(BaseModel):
     """
     Resource options for deployment.
 
-    Attributes
+    Parameters
     ----------
     is_enabled:
         If `False`, resource is not passed to the IaC backend and is not
@@ -107,7 +107,7 @@ class BaseResource(_BaseModel):
     core resources. This `BaseResource` class is derived from
     `pydantic.BaseModel`.
 
-    Attributes
+    Parameters
     ----------
     resource_name:
         Name of the resource in the context of infrastructure as code. If None,

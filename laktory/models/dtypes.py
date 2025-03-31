@@ -61,11 +61,44 @@ ALIASES = {
 }
 
 
+__all__ = ["DType"] + NAMES
+
+
 class DType(BaseModel):
-    name: str
-    inner: Union[str, "DType"] = None
-    fields: dict[str, Union[str, "DType"]] = None
-    shape: Union[int, list[int]] = None
+    """
+    Generic data type class.
+
+    Examples
+    --------
+    ```
+    from laktory import models
+
+    # Int32
+    dtype = models.DType(name="Int32")
+    print(dtype)
+
+    # List of string
+    dtype = models.DType(name="list", inner="str")
+    print(dtype)
+
+    # Structure
+    dtype = models.DType(
+        name="struct", fields={"x": {"name": "list", "inner": "double"}, "y": dtype}
+    )
+    print(dtype)
+    ```
+    """
+
+    name: str = Field(..., description="Data type name.")
+    inner: Union[str, "DType"] = Field(
+        None, description="Data type for sub-elements for `Array` or `List` types."
+    )
+    fields: dict[str, Union[str, "DType"]] = Field(
+        None, description="Definition of fields for `Struct` type."
+    )
+    shape: Union[int, list[int]] = Field(
+        None, description="Definition of shape for `Array` type."
+    )
 
     @field_validator("name", mode="before")
     @classmethod
@@ -124,6 +157,7 @@ class DType(BaseModel):
         return DType(**self.model_dump(exclude_unset=True))
 
     def to_narwhals(self):
+        """Get equivalent Narwhals data type"""
         nw_dtypes = nw.dtypes
         _type = self.name
 
@@ -147,12 +181,14 @@ class DType(BaseModel):
         raise ValueError(f"Data type with name '{self.name}' is not supported")
 
     def to_spark(self):
+        """Get equivalent Spark data type"""
         import pyspark.sql.types as T
         from narwhals._spark_like.utils import narwhals_to_native_dtype
 
         return narwhals_to_native_dtype(self.to_narwhals(), nw.utils.Version.MAIN, T)
 
     def to_polars(self):
+        """Get equivalent Polars data type"""
         import polars as pl
         from narwhals._polars.utils import narwhals_to_native_dtype
         from narwhals.utils import parse_version

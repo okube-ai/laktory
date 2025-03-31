@@ -47,29 +47,15 @@ SUPPORTED_FORMATS = {
     ],
 }
 
+# ALL_SUPPORTED_FORMATS = []
+
+# ALL_SUPPORTED_FORMATS = list(set([]))
+ALL_SUPPORTED_FORMATS = tuple(sorted(set().union(*SUPPORTED_FORMATS.values())))
+
 
 class FileDataSource(BaseDataSource):
     """
     Data source using disk files, such data events (json/csv) or full dataframes.
-    Generally used in the context of a data pipeline.
-
-    Attributes
-    ----------
-    format:
-        Format of the data files
-    infer_schema:
-        When `True`, the schema is inferred from the data. When `False`, the schema is
-        not inferred and will be string if not specified in schema_definition. Only
-        applicable to some format like CSV and JSON.
-    read_options:
-        Other options passed to dataframe backend reader.
-    schema_definition:
-        Target schema specified as a list of columns, as a dict or a json
-        serialization. Only used when reading data from non-strongly typed
-        files such as JSON or csv files.
-    schema_location:
-        Path for schema inference when reading data as a stream. If `None`,
-        parent directory of `path` is used.
 
     Examples
     ---------
@@ -79,21 +65,24 @@ class FileDataSource(BaseDataSource):
     source = models.FileDataSource(
         path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
         format="JSON",
-        as_stream=False,
+        dataframe_backend="POLARS",
     )
-    # df = source.read(spark)
+    # df = source.read()
 
     # With Explicit Schema
     source = models.FileDataSource(
         path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
         format="JSON",
-        as_stream=False,
-        schema=[
-            {"name": "description", "type": "string", "nullable": True},
-            {"name": "close", "type": "double", "nullable": False},
-        ],
+        dataframe_backend="PYSPARK",
+        schema={
+            "columns": {
+                "symbol": "String",
+                "open": "Float64",
+                "close": "Float64",
+            }
+        },
     )
-    # df = source.read(spark)
+    # df = source.read()
     ```
 
     References
@@ -104,17 +93,35 @@ class FileDataSource(BaseDataSource):
     """
 
     model_config = ConfigDict(populate_by_name=True)
-    format: str
-    path: str
-    read_options: dict[str, Any] = {}
-    type: Literal["FILE"] = Field("FILE", frozen=True)
-
-    # backend-, format- and stream-specific options
-    has_header: bool = True
-    infer_schema: bool = False
-    schema_definition: DataFrameSchema = Field(None, validation_alias="schema")
+    format: Literal.__getitem__(ALL_SUPPORTED_FORMATS) = Field(
+        ..., description="Format of the data files."
+    )
+    has_header: bool = Field(
+        True,
+        description="Indicate if the first row of the dataset is a header or not. Only applicable to 'CSV' format.",
+    )
+    infer_schema: bool = Field(
+        False,
+        description="When `True`, the schema is inferred from the data. When `False`, the schema is not inferred and will be string if not specified in schema_definition. Only applicable to some format like CSV and JSON.",
+    )
+    path: str = Field(
+        ...,
+        description="File path on a local disk, remote storage or Databricks volume.",
+    )
+    read_options: dict[str, Any] = Field(
+        {}, description="Other options passed directly to dataframe backend reader."
+    )
+    schema_definition: DataFrameSchema = Field(
+        None,
+        validation_alias="schema",
+        description="Target schema specified as a list of columns, as a dict or a json serialization. Only used when reading data from non-strongly typed files such as JSON or csv files.",
+    )
+    schema_location: str = Field(
+        None,
+        description="Path for schema inference when reading data as a stream. If `None`, parent directory of `path` is used.",
+    )
+    type: Literal["FILE"] = Field("FILE", frozen=True, description="Source Type")
     # schema_overrides: DataFrameSchema = Field(None, validation_alias="schema")
-    schema_location: str = None
 
     @field_validator("path", "schema_location", mode="before")
     @classmethod

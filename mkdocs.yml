@@ -77,7 +77,6 @@ theme:
 #        name: "Switch to dark mode"
 
 plugins:
-#  - markdown-exec
   - mkdocstrings:
       handlers:
         python:
@@ -90,29 +89,28 @@ plugins:
             docstring_options:
               ignore_init_summary: true
             docstring_section_style: spacy
-            docstring_style: numpy
+            docstring_style: "numpy"
             filters: ["!^_"]
             group_by_category: true
             heading_level: 2
-            inherited_members: false  # this only apply to methods and properties, not to pydantic fields
-            members_order: source
+            inherited_members: true  # this only apply to methods and properties, not to pydantic fields
+            members_order: alphabetical  # source
             merge_init_into_class: true
-            separate_signature: true
-            show_category_heading: true
+            separate_signature: false
+            show_category_heading: false   # functions vs property vs etc
             show_if_no_docstring: false
             show_root_full_path: true
             show_root_heading: true
-            show_signature_annotations: false  # redundant as annotations available in parameters section
+#            show_signature_annotations: true  # redundant as annotations available in parameters section
             show_source: true
-            show_symbol_type_heading: true  # sponsors only
-            show_symbol_type_toc: true  # sponsors only
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
             signature_crossrefs: true
             summary: true
+            extensions:
+              - griffe_fieldz:
+                  include_inherited: True
   - mkdocs-video
-
-#  - sear
-#  - snippets
-
 
 
 nav:
@@ -166,18 +164,21 @@ nav:
       - BaseModel: api/models/basemodel.md
 #      - DataEventHeader: api/models/dataeventheader.md
       - DataEvent: api/models/dataevent.md
+      - DataFrameColumn: api/models/dataframecolumn.md
+      - DataFrameSchema: api/models/dataframeschema.md
       - DataFrameColumnExpression: api/models/dataframecolumnexpression.md
       - DataProducer: api/models/dataproducer.md
+      - DataTypes: api/models/datatypes.md
       - DataSinks:
         - BaseDataSink: api/models/datasinks/basedatasink.md
         - FileDataSink: api/models/datasinks/filedatasink.md
         - TableDataSink: api/models/datasinks/tabledatasink.md
       - DataSources:
-        - BaseDataSource: api/models/datasources/basedatasource.md
+        - DataFrameDataSource: api/models/datasources/dataframedatasource.md
         - FileDataSource: api/models/datasources/filedatasource.md
-        - MemoryDataSource: api/models/datasources/memorydatasource.md
-        - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
-        - TableDataSource: api/models/datasources/tabledatasource.md
+#        - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
+        - HiveMetastoreDataSource: api/models/datasources/hivemetastoredatasource.md
+        - UnityCatalogDataSource: api/models/datasources/unitycatalogdatasource.md
       - DataQuality:
         - DataQualityCheck: api/models/dataquality/check.md
         - DataQualityExpectation: api/models/dataquality/expectation.md
@@ -203,7 +204,9 @@ nav:
           - Dashboard: api/models/resources/databricks/dashboard.md
           - DbfsFile: api/models/resources/databricks/dbfsfile.md
           - api/models/resources/databricks/directory.md
-          - DLT Pipeline: api/models/resources/databricks/dltpipeline.md
+          - DLT Pipeline:
+            - api/models/resources/databricks/dltpipeline.md
+            - api/models/resources/databricks/dltpipeline_cluster.md
           - ExternalLocation: api/models/resources/databricks/externallocation.md
           - api/models/resources/databricks/grant.md
           - api/models/resources/databricks/grants.md
@@ -250,6 +253,7 @@ nav:
     - Types: api/types.md
     - CLI: api/cli.md
     - RecursiveLoader: api/recursiveloader.md
+    - SQLParser: api/sqlparser.md
     - Spark:
       - DataFrame:
         - display: api/spark/dataframe/display.md

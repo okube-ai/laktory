@@ -3,33 +3,18 @@ from typing import Any
 from typing import Union
 
 import narwhals as nw
-from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
+from laktory.models.dataframecolumn import DataFrameColumn
 from laktory.models.dtypes import DType
-
-# from laktory.models.dtypes import DTYPES_TYPE
 
 logger = get_logger(__name__)
 
 
-class ColumnSchema(BaseModel):
-    name: str = None
-    dtype: Union[str, DType]
-    nullable: bool = True
-    is_primary: bool = False
-
-    @field_validator("dtype")
-    def set_dtype(cls, v: Any) -> Any:
-        if isinstance(v, str):
-            v = DType(name=v)
-        return v
-
-
 class DataFrameSchema(BaseModel):
-    columns: Union[dict[str, Union[str, DType, ColumnSchema]], list[ColumnSchema]]
+    columns: Union[dict[str, Union[str, DType, DataFrameColumn]], list[DataFrameColumn]]
 
     @model_validator(mode="before")
     @classmethod
@@ -44,7 +29,7 @@ class DataFrameSchema(BaseModel):
                 if isinstance(v, (str, DType)):
                     v = {"dtype": v}
 
-                if isinstance(v, ColumnSchema):
+                if isinstance(v, DataFrameColumn):
                     v.name = k
                 else:
                     v["name"] = k

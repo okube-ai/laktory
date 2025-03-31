@@ -56,6 +56,7 @@ spark = [
 dev = [
     "databricks-sdk",
     "flit",
+    "griffe_fieldz",
     "mkdocs",
     "mkdocs-material",
     "mkdocs-video",

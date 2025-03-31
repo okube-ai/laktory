@@ -17,7 +17,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 class ServicePrincipalLookup(ResourceLookup):
     """
-    Attributes
+    Parameters
     ----------
     application_id:
         ID of the service principal. The service principal must exist before this resource can be retrieved.

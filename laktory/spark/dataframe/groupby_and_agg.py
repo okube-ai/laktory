@@ -17,7 +17,7 @@ class TimeWindow(BaseModel):
     """
     Specifications for Time Window Aggregation
 
-    Attributes
+    Parameters
     ----------
     time_column:
         Timestamp column used for grouping rows

@@ -1,6 +1,7 @@
 from typing import Any
 
 from pydantic import BaseModel
+from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -11,9 +12,13 @@ logger = get_logger(__name__)
 
 
 class PipelineChild(BaseModel):
-    """ """
+    """
+    Pipeline Child Class
+    """
 
-    dataframe_backend: DataFrameBackends = None
+    dataframe_backend: DataFrameBackends = Field(
+        None, description="Type of DataFrame backend"
+    )
 
     @model_validator(mode="after")
     def update_children_after_init(self) -> Any:

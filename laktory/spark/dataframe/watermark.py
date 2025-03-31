@@ -12,7 +12,7 @@ class Watermark(BaseModel):
     Definition of a spark structured streaming watermark for joining data
     streams.
 
-    Attributes
+    Parameters
     ----------
     column:
         Event time column name

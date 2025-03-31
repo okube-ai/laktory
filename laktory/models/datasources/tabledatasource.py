@@ -1,6 +1,7 @@
 from typing import Any
 
 import narwhals as nw
+from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -10,13 +11,18 @@ logger = get_logger(__name__)
 
 
 class TableDataSource(BaseDataSource):
-    """
-    table_name: table name or fully qualified name (catalog.schema.table)
-    """
-
-    catalog_name: str | None = None
-    table_name: str = None
-    schema_name: str | None = None
+    catalog_name: str | None = Field(
+        ...,
+        description="Source table catalog name",
+    )
+    table_name: str = Field(
+        ...,
+        description="Source table name. Also supports fully qualified name (`{catalog}.{schema}.{table}`). In this case, `catalog_name` and `schema_name` arguments are ignored.",
+    )
+    schema_name: str | None = Field(
+        None,
+        description="Source table schema name",
+    )
 
     @model_validator(mode="after")
     def table_full_name(self) -> Any:
