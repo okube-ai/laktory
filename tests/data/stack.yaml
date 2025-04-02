@@ -96,9 +96,9 @@ resources:
       pipeline_id: "pipeline_123"
       access_controls:
         - user_name: user1
-          permission_level: READ
+          permission_level: CAN_MANAGE
         - user_name: user2
-          permission_level: WRITE
+          permission_level: CAN_RUN
 
 variables:
   business_unit: laktory

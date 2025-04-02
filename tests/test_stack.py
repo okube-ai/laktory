@@ -378,13 +378,13 @@ def test_stack_model():
                     "access_controls": [
                         {
                             "group_name": None,
-                            "permission_level": "READ",
+                            "permission_level": "CAN_MANAGE",
                             "service_principal_name": None,
                             "user_name": "user1"
                         },
                         {
                             "group_name": None,
-                            "permission_level": "WRITE",
+                            "permission_level": "CAN_RUN",
                             "service_principal_name": None,
                             "user_name": "user2"
                         }
@@ -797,11 +797,11 @@ def test_pulumi_stack(monkeypatch):
                 "properties": {
                     "accessControls": [
                         {
-                            "permissionLevel": "READ",
+                            "permissionLevel": "CAN_MANAGE",
                             "userName": "user1",
                         },
                         {
-                            "permissionLevel": "WRITE",
+                            "permissionLevel": "CAN_RUN",
                             "userName": "user2",
                         },
                     ],
@@ -1076,11 +1076,11 @@ def test_pulumi_stack(monkeypatch):
                 "properties": {
                     "accessControls": [
                         {
-                            "permissionLevel": "READ",
+                            "permissionLevel": "CAN_MANAGE",
                             "userName": "user1",
                         },
                         {
-                            "permissionLevel": "WRITE",
+                            "permissionLevel": "CAN_RUN",
                             "userName": "user2",
                         },
                     ],
@@ -1230,21 +1230,17 @@ def test_terraform_stack(monkeypatch):
                     "provider": "databricks",
                 },
                 "permissions_test": {
-                    "options": {},
-                    "properties": {
-                        "accessControls": [
-                            {
-                                "permissionLevel": "READ",
-                                "userName": "user1",
-                            },
-                            {
-                                "permissionLevel": "WRITE",
-                                "userName": "user2",
-                            },
-                        ],
-                        "pipelineId": "pipeline_123",
-                    },
-                    "type": "databricks:Permissions",
+                    "access_control": [
+                        {
+                            "permission_level": "CAN_MANAGE",
+                            "user_name": "user1",
+                        },
+                        {
+                            "permission_level": "CAN_RUN",
+                            "user_name": "user2",
+                        },
+                    ],
+                    "pipeline_id": "pipeline_123",
                 },                
             },
             "databricks_pipeline": {
@@ -1388,6 +1384,19 @@ def test_terraform_stack(monkeypatch):
                     ],
                     "provider": "databricks",
                 },
+                "permissions_test": {
+                    "access_control": [
+                        {
+                            "permission_level": "CAN_MANAGE",
+                            "user_name": "user1",
+                        },
+                        {
+                            "permission_level": "CAN_RUN",
+                            "user_name": "user2",
+                        },
+                    ],
+                    "pipeline_id": "pipeline_123",
+                },                  
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
@@ -1530,6 +1539,19 @@ def test_terraform_stack(monkeypatch):
                     ],
                     "provider": "databricks",
                 },
+                "permissions_test": {
+                    "access_control": [
+                        {
+                            "permission_level": "CAN_MANAGE",
+                            "user_name": "user1",
+                        },
+                        {
+                            "permission_level": "CAN_RUN",
+                            "user_name": "user2",
+                        },
+                    ],
+                    "pipeline_id": "pipeline_123",
+                },                  
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {

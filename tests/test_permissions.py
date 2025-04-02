@@ -2,8 +2,8 @@ from laktory.models.resources.databricks import Permissions
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 
 access_controls = [
-    AccessControl(user_name="user1", permission_level="READ"),
-    AccessControl(user_name="user2", permission_level="WRITE"),
+    AccessControl(user_name="user1", permission_level="CAN_MANAGE"),
+    AccessControl(user_name="user2", permission_level="CAN_RUN"),
 ]
 permissions = Permissions(
     access_controls=access_controls,
