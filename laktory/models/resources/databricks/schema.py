@@ -124,7 +124,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
 
         # Schema grants
         resources += self.get_grants_additional_resources(
-            object={"schema" : f"${{resources.{self.resource_name}.id}}"}
+            object={"schema": f"${{resources.{self.resource_name}.id}}"}
         )
 
         if self.volumes:

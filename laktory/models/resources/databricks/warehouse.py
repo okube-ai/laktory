@@ -1,7 +1,9 @@
-from typing import Any, Literal
+from typing import Any
+from typing import Literal
 from typing import Union
 
-from pydantic import Field, model_validator
+from pydantic import Field
+from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
@@ -69,6 +71,7 @@ class WarehouseLookup(ResourceLookup):
             raise ValueError("Only one of `id` or `name` must be set.")
 
         return self
+
 
 class Warehouse(BaseModel, PulumiResource, TerraformResource):
     """
