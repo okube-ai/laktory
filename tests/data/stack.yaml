@@ -91,6 +91,14 @@ resources:
       access_controls:
       - group_name: role-analysts
         permission_level: CAN_READ
+  databricks_permissions:
+    permissions_test:
+      pipeline_id: "pipeline_123"
+      access_controls:
+        - user_name: user1
+          permission_level: READ
+        - user_name: user2
+          permission_level: WRITE
 
 variables:
   business_unit: laktory

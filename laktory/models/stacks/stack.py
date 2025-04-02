@@ -34,6 +34,7 @@ from laktory.models.resources.databricks.mwsnetworkconnectivityconfig import (
     MwsNetworkConnectivityConfig,
 )
 from laktory.models.resources.databricks.notebook import Notebook
+from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.query import Query
 from laktory.models.resources.databricks.repo import Repo
 from laktory.models.resources.databricks.schema import Schema
@@ -169,6 +170,8 @@ class StackResources(BaseModel):
         Databricks Network Connectivity Config
     databricks_notebooks:
         Databricks Notebooks
+    databricks_permissions:
+        Databricks Permissions        
     databricks_queries:
         Databricks Queries
     databricks_repo:
@@ -222,6 +225,7 @@ class StackResources(BaseModel):
     databricks_mlflowwebhooks: dict[str, MLflowWebhook] = {}
     databricks_networkconnectivityconfig: dict[str, MwsNetworkConnectivityConfig] = {}
     databricks_notebooks: dict[str, Notebook] = {}
+    databricks_permissions: dict[str, Permissions] = {}
     databricks_queries: dict[str, Query] = {}
     databricks_repos: dict[str, Repo] = {}
     databricks_schemas: dict[str, Schema] = {}
