@@ -1,6 +1,8 @@
-from typing import Any, Union
+from typing import Any
+from typing import Union
 
-from pydantic import Field, model_validator
+from pydantic import Field
+from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
@@ -20,8 +22,8 @@ class UserLookup(ResourceLookup):
     user_id:
         ID of the user
     user_name:
-        User name of the user. The user must exist before 
-        this resource can be planned. 
+        User name of the user. The user must exist before
+        this resource can be planned.
         Argument only supported by Terraform IaC backend.
     """
 
@@ -37,6 +39,7 @@ class UserLookup(ResourceLookup):
             raise ValueError("Only one of `user_id` or `user_name` must be set.")
 
         return self
+
 
 class User(BaseModel, PulumiResource, TerraformResource):
     """

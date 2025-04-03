@@ -1193,7 +1193,7 @@ def test_terraform_stack(monkeypatch):
                 "notebook-external": {"path": "/Workspace/external", "format": "SOURCE"}
             },
             "databricks_sql_warehouse": {
-                "warehouse-external": {"id": "d2fa41bf94858c4b"}
+                "warehouse-external": {"id": "d2fa41bf94858c4b", "name": None}
             },
         },
     }
@@ -1335,7 +1335,7 @@ def test_terraform_stack(monkeypatch):
                 "notebook-external": {"path": "/Workspace/external", "format": "SOURCE"}
             },
             "databricks_sql_warehouse": {
-                "warehouse-external": {"id": "d2fa41bf94858c4b"}
+                "warehouse-external": {"id": "d2fa41bf94858c4b", "name": None}
             },
         },
     }
@@ -1478,7 +1478,7 @@ def test_terraform_stack(monkeypatch):
                 "notebook-external": {"path": "/Workspace/external", "format": "SOURCE"}
             },
             "databricks_sql_warehouse": {
-                "warehouse-external": {"id": "d2fa41bf94858c4b"}
+                "warehouse-external": {"id": "d2fa41bf94858c4b", "name": None}
             },
         },
     }

@@ -149,7 +149,7 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
 
         # Catalog grants
         resources += self.get_grants_additional_resources(
-            object={"catalog" : f"${{resources.{self.resource_name}.id}}"}
+            object={"catalog": f"${{resources.{self.resource_name}.id}}"}
         )
         # Catalog schemas
         if self.schemas:

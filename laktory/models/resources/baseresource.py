@@ -188,9 +188,7 @@ class BaseResource(_BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def get_grants_additional_resources(self, 
-                                        object,
-                                        options=None):
+    def get_grants_additional_resources(self, object, options=None):
         from laktory.models.resources.databricks.grant import Grant
         from laktory.models.resources.databricks.grants import Grants
 
@@ -206,7 +204,7 @@ class BaseResource(_BaseModel):
                     for g in self.grants
                 ],
                 options=options,
-                **object
+                **object,
             ).core_resources
 
         if self.grant:
@@ -214,13 +212,17 @@ class BaseResource(_BaseModel):
             if not isinstance(grant, list):
                 grant = [grant]
             for g in grant:
-                sanitized_principal = re.sub(r'[_-]+', '-', re.sub(r'[^a-zA-Z0-9_-]', '-', re.sub(r'[ ()]', '_', g.principal))).strip('-')
+                sanitized_principal = re.sub(
+                    r"[_-]+",
+                    "-",
+                    re.sub(r"[^a-zA-Z0-9_-]", "-", re.sub(r"[ ()]", "_", g.principal)),
+                ).strip("-")
                 resources += Grant(
                     resource_name=f"grant-{self.resource_name}-{sanitized_principal}",
                     principal=g.principal,
                     privileges=g.privileges,
                     options=options,
-                    **object
+                    **object,
                 ).core_resources
 
         return resources
