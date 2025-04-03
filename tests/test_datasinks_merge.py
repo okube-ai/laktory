@@ -53,8 +53,7 @@ def build_target(write_target=True, path=None, index=None):
     # Write Target
     if write_target:
         (
-            df0
-            .drop("_is_deleted")  # would be dropped by the merge function
+            df0.drop("_is_deleted")  # would be dropped by the merge function
             .write.format("DELTA")
             .mode("OVERWRITE")
             .save(str(path))

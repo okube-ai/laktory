@@ -2,6 +2,7 @@ from typing import Any
 from typing import Literal
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -13,6 +14,7 @@ logger = get_logger(__name__)
 class PipelineChild(BaseModel):
     """ """
 
+    model_config = ConfigDict(validate_assignment=False)
     dataframe_backend: Literal["SPARK", "POLARS"] = None
 
     @model_validator(mode="after")

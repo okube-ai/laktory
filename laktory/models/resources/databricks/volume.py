@@ -121,7 +121,7 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
 
         # Volume grants
         resources += self.get_grants_additional_resources(
-            object={"volume" : f"${{resources.{self.resource_name}.id}}"}
+            object={"volume": f"${{resources.{self.resource_name}.id}}"}
         )
         return resources
 

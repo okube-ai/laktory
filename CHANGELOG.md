@@ -2,6 +2,7 @@
 
 ## [0.7.2] - Unreleased
 ### Added
+* Lookup warehouses by `name` for Terraform backend
 * `Permissions` and can be declared from the stack root. 
 
 ## [0.7.1] - 2025-03-20

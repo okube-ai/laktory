@@ -5,16 +5,14 @@ access_controls = [
     AccessControl(user_name="user1", permission_level="CAN_MANAGE"),
     AccessControl(user_name="user2", permission_level="CAN_RUN"),
 ]
-permissions = Permissions(
-    access_controls=access_controls,
-    pipeline_id="pipeline_123"
-)
+permissions = Permissions(access_controls=access_controls, pipeline_id="pipeline_123")
+
 
 def test_permissions_initialization():
     assert permissions.access_controls == access_controls
     assert permissions.pipeline_id == "pipeline_123"
-    assert permissions.job_id == None
-    assert permissions.cluster_id == None
+    assert permissions.job_id is None
+    assert permissions.cluster_id is None
 
 
 def test_permissions_pulumi_resource_type():

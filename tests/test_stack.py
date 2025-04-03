@@ -380,14 +380,14 @@ def test_stack_model():
                             "group_name": None,
                             "permission_level": "CAN_MANAGE",
                             "service_principal_name": None,
-                            "user_name": "user1"
+                            "user_name": "user1",
                         },
                         {
                             "group_name": None,
                             "permission_level": "CAN_RUN",
                             "service_principal_name": None,
-                            "user_name": "user2"
-                        }
+                            "user_name": "user2",
+                        },
                     ],
                     "pipeline_id": "pipeline_123",
                     "job_id": None,
@@ -409,7 +409,7 @@ def test_stack_model():
                     "sql_endpoint_id": None,
                     "sql_query_id": None,
                     "workspace_file_id": None,
-                    "workspace_file_path": None
+                    "workspace_file_path": None,
                 },
             },
             "databricks_queries": {},
@@ -808,7 +808,7 @@ def test_pulumi_stack(monkeypatch):
                     "pipelineId": "pipeline_123",
                 },
                 "type": "databricks:Permissions",
-            },            
+            },
             "dlt-custom-name": {
                 "type": "databricks:Pipeline",
                 "properties": {
@@ -1087,7 +1087,7 @@ def test_pulumi_stack(monkeypatch):
                     "pipelineId": "pipeline_123",
                 },
                 "type": "databricks:Permissions",
-            },            
+            },
             "databricks": {
                 "type": "pulumi:providers:databricks",
                 "properties": {"host": "my-host", "token": "my-token"},
@@ -1241,7 +1241,7 @@ def test_terraform_stack(monkeypatch):
                         },
                     ],
                     "pipeline_id": "pipeline_123",
-                },                
+                },
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
@@ -1281,7 +1281,7 @@ def test_terraform_stack(monkeypatch):
                 "notebook-external": {"path": "/Workspace/external", "format": "SOURCE"}
             },
             "databricks_sql_warehouse": {
-                "warehouse-external": {"id": "d2fa41bf94858c4b"}
+                "warehouse-external": {"id": "d2fa41bf94858c4b", "name": None}
             },
         },
     }
@@ -1396,7 +1396,7 @@ def test_terraform_stack(monkeypatch):
                         },
                     ],
                     "pipeline_id": "pipeline_123",
-                },                  
+                },
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
@@ -1436,7 +1436,7 @@ def test_terraform_stack(monkeypatch):
                 "notebook-external": {"path": "/Workspace/external", "format": "SOURCE"}
             },
             "databricks_sql_warehouse": {
-                "warehouse-external": {"id": "d2fa41bf94858c4b"}
+                "warehouse-external": {"id": "d2fa41bf94858c4b", "name": None}
             },
         },
     }
@@ -1551,7 +1551,7 @@ def test_terraform_stack(monkeypatch):
                         },
                     ],
                     "pipeline_id": "pipeline_123",
-                },                  
+                },
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
@@ -1592,7 +1592,7 @@ def test_terraform_stack(monkeypatch):
                 "notebook-external": {"path": "/Workspace/external", "format": "SOURCE"}
             },
             "databricks_sql_warehouse": {
-                "warehouse-external": {"id": "d2fa41bf94858c4b"}
+                "warehouse-external": {"id": "d2fa41bf94858c4b", "name": None}
             },
         },
     }

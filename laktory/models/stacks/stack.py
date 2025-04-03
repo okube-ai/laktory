@@ -171,7 +171,7 @@ class StackResources(BaseModel):
     databricks_notebooks:
         Databricks Notebooks
     databricks_permissions:
-        Databricks Permissions        
+        Databricks Permissions
     databricks_queries:
         Databricks Queries
     databricks_repo:

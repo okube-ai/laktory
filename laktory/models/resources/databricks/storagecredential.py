@@ -1,4 +1,5 @@
-from typing import Literal, Union
+from typing import Literal
+from typing import Union
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.storagecredentialgrant import StorageCredentialGrant
@@ -62,6 +63,7 @@ class AzureServicePrincipal(BaseModel):
     client_secret: str = None
     directory_id: str = None
 
+
 class CloudflareApiToken(BaseModel):
     """
     Databricks Storage Credential Cloudflare API Token
@@ -79,6 +81,7 @@ class CloudflareApiToken(BaseModel):
     account_id: str = None
     access_key_id: str = None
     secret_access_key: str = None
+
 
 class DatabricksGcpServiceAccount(BaseModel):
     """
@@ -130,7 +133,7 @@ class StorageCredential(BaseModel, PulumiResource, TerraformResource):
     azure_service_principal:
         Azure Service Principal specifications
     cloudflare_api_token:
-        Optional configuration block for using a Cloudflare API Token as credential details. 
+        Optional configuration block for using a Cloudflare API Token as credential details.
         This requires account admin access.
     comment:
         Comment
@@ -151,8 +154,8 @@ class StorageCredential(BaseModel, PulumiResource, TerraformResource):
     gcp_service_account_key:
         GCP service account key specifications
     isolation_mode:
-        (Optional) Whether the storage credential is accessible from all workspaces or a specific set of workspaces. 
-        Can be `ISOLATION_MODE_ISOLATED` or `ISOLATION_MODE_OPEN`. Setting the credential to `ISOLATION_MODE_ISOLATED` 
+        (Optional) Whether the storage credential is accessible from all workspaces or a specific set of workspaces.
+        Can be `ISOLATION_MODE_ISOLATED` or `ISOLATION_MODE_OPEN`. Setting the credential to `ISOLATION_MODE_ISOLATED`
         will automatically allow access from the current workspace.
     metastore_id:
         Metastore id
@@ -176,9 +179,7 @@ class StorageCredential(BaseModel, PulumiResource, TerraformResource):
     azure_service_principal: AzureServicePrincipal = None
     cloudflare_api_token: CloudflareApiToken = None
     comment: str = None
-    databricks_gcp_service_account: DatabricksGcpServiceAccount = (
-        None
-    )
+    databricks_gcp_service_account: DatabricksGcpServiceAccount = None
     force_destroy: bool = None
     force_update: bool = None
     gcp_service_account_key: GcpServiceAccountKey = None
@@ -204,7 +205,7 @@ class StorageCredential(BaseModel, PulumiResource, TerraformResource):
 
         # Storage Credential grants
         resources += self.get_grants_additional_resources(
-            object={"storage_credential" : f"${{resources.{self.resource_name}.id}}"}
+            object={"storage_credential": f"${{resources.{self.resource_name}.id}}"}
         )
         return resources
 
