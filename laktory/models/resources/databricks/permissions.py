@@ -6,6 +6,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 class Permissions(BaseModel, PulumiResource, TerraformResource):
     access_controls: list[AccessControl]
+    authorization: str = None
     pipeline_id: str = None
     job_id: str = None
     cluster_id: str = None

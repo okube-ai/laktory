@@ -4,6 +4,7 @@
 ### Added
 * Lookup warehouses by `name` for Terraform backend
 * Databricks `Permissions` declaration from the stack root. 
+* Databricks `Permissions` support for `authorization`. [[#405](https://github.com/okube-ai/laktory/issues/405)]
 
 ## [0.7.1] - 2025-03-20
 ### Fixed
