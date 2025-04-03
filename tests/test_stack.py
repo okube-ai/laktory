@@ -389,6 +389,7 @@ def test_stack_model():
                             "user_name": "user2",
                         },
                     ],
+                    "authorization": None,
                     "pipeline_id": "pipeline_123",
                     "job_id": None,
                     "cluster_id": None,
@@ -410,7 +411,7 @@ def test_stack_model():
                     "sql_query_id": None,
                     "workspace_file_id": None,
                     "workspace_file_path": None,
-                },
+                }
             },
             "databricks_queries": {},
             "databricks_repos": {},
