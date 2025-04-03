@@ -29,4 +29,3 @@ if __name__ == "__main__":
     test_permissions_initialization()
     test_permissions_pulumi_resource_type()
     test_permissions_terraform_resource_type()
-    print("All tests passed!")
