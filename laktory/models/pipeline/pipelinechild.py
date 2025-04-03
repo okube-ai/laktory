@@ -1,6 +1,7 @@
 from typing import Any
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
 
@@ -16,6 +17,7 @@ class PipelineChild(BaseModel):
     Pipeline Child Class
     """
 
+    model_config = ConfigDict(validate_assignment=False)
     dataframe_backend: DataFrameBackends = Field(
         None, description="Type of DataFrame backend"
     )

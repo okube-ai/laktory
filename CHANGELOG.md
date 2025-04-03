@@ -16,7 +16,7 @@
 * Deprecated `DataProducer` class
 * Deprecated `DataEvent` class
 
-## [0.7.2] - Unreleased
+## [0.7.3] - Unreleased
 ### Added
 * n/a
 ### Fixed
@@ -25,6 +25,12 @@
 * n/a
 ### Breaking changes
 * n/a
+
+## [0.7.2] - 2025-04-03
+### Added
+* Lookup warehouses by `name` for Terraform backend
+* Databricks `Permissions` declaration from the stack root. 
+* Databricks `Permissions` support for `authorization`. [[#405](https://github.com/okube-ai/laktory/issues/405)]
 
 ## [0.7.1] - 2025-03-20
 ### Fixed

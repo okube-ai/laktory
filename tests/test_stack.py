@@ -40,6 +40,7 @@ def get_validator(monkeypatch):
     from tests.test_mlflow_model import mlmodel
     from tests.test_mlflow_webhook import mlwebhook
     from tests.test_notebook import nb
+    from tests.test_permissions import permissions
     from tests.test_pipeline_orchestrators import pl_dlt
     from tests.test_query import query
     from tests.test_repo import repo
@@ -69,6 +70,7 @@ def get_validator(monkeypatch):
             "databricks_mlflowmodels": [mlmodel],
             "databricks_mlflowwebhooks": [mlwebhook],
             "databricks_notebooks": [nb],
+            "databricks_permissions": [permissions],
             "databricks_queries": [query],
             "databricks_repos": [repo],
             "databricks_schemas": [schema],
@@ -369,6 +371,46 @@ def test_stack_model():
                     "path": "/.laktory",
                     "rootpath": "/.laktory/",
                     "source": "",
+                }
+            },
+            "databricks_permissions": {
+                "permissions_test": {
+                    "access_controls": [
+                        {
+                            "group_name": None,
+                            "permission_level": "CAN_MANAGE",
+                            "service_principal_name": None,
+                            "user_name": "user1",
+                        },
+                        {
+                            "group_name": None,
+                            "permission_level": "CAN_RUN",
+                            "service_principal_name": None,
+                            "user_name": "user2",
+                        },
+                    ],
+                    "authorization": None,
+                    "pipeline_id": "pipeline_123",
+                    "job_id": None,
+                    "cluster_id": None,
+                    "cluster_policy_id": None,
+                    "dashboard_id": None,
+                    "directory_id": None,
+                    "directory_path": None,
+                    "experiment_id": None,
+                    "notebook_id": None,
+                    "notebook_path": None,
+                    "object_type": None,
+                    "registered_model_id": None,
+                    "repo_id": None,
+                    "repo_path": None,
+                    "serving_endpoint_id": None,
+                    "sql_alert_id": None,
+                    "sql_dashboard_id": None,
+                    "sql_endpoint_id": None,
+                    "sql_query_id": None,
+                    "workspace_file_id": None,
+                    "workspace_file_path": None,
                 }
             },
             "databricks_queries": {},
@@ -751,6 +793,23 @@ def test_pulumi_stack(monkeypatch):
                 },
                 "options": {"dependsOn": ["${warehouse-external}"]},
             },
+            "permissions_test": {
+                "options": {},
+                "properties": {
+                    "accessControls": [
+                        {
+                            "permissionLevel": "CAN_MANAGE",
+                            "userName": "user1",
+                        },
+                        {
+                            "permissionLevel": "CAN_RUN",
+                            "userName": "user2",
+                        },
+                    ],
+                    "pipelineId": "pipeline_123",
+                },
+                "type": "databricks:Permissions",
+            },
             "dlt-custom-name": {
                 "type": "databricks:Pipeline",
                 "properties": {
@@ -1013,6 +1072,23 @@ def test_pulumi_stack(monkeypatch):
                     ],
                 },
             },
+            "permissions_test": {
+                "options": {},
+                "properties": {
+                    "accessControls": [
+                        {
+                            "permissionLevel": "CAN_MANAGE",
+                            "userName": "user1",
+                        },
+                        {
+                            "permissionLevel": "CAN_RUN",
+                            "userName": "user2",
+                        },
+                    ],
+                    "pipelineId": "pipeline_123",
+                },
+                "type": "databricks:Permissions",
+            },
             "databricks": {
                 "type": "pulumi:providers:databricks",
                 "properties": {"host": "my-host", "token": "my-token"},
@@ -1154,6 +1230,19 @@ def test_terraform_stack(monkeypatch):
                     ],
                     "provider": "databricks",
                 },
+                "permissions_test": {
+                    "access_control": [
+                        {
+                            "permission_level": "CAN_MANAGE",
+                            "user_name": "user1",
+                        },
+                        {
+                            "permission_level": "CAN_RUN",
+                            "user_name": "user2",
+                        },
+                    ],
+                    "pipeline_id": "pipeline_123",
+                },
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
@@ -1193,7 +1282,7 @@ def test_terraform_stack(monkeypatch):
                 "notebook-external": {"path": "/Workspace/external", "format": "SOURCE"}
             },
             "databricks_sql_warehouse": {
-                "warehouse-external": {"id": "d2fa41bf94858c4b"}
+                "warehouse-external": {"id": "d2fa41bf94858c4b", "name": None}
             },
         },
     }
@@ -1296,6 +1385,19 @@ def test_terraform_stack(monkeypatch):
                     ],
                     "provider": "databricks",
                 },
+                "permissions_test": {
+                    "access_control": [
+                        {
+                            "permission_level": "CAN_MANAGE",
+                            "user_name": "user1",
+                        },
+                        {
+                            "permission_level": "CAN_RUN",
+                            "user_name": "user2",
+                        },
+                    ],
+                    "pipeline_id": "pipeline_123",
+                },
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
@@ -1335,7 +1437,7 @@ def test_terraform_stack(monkeypatch):
                 "notebook-external": {"path": "/Workspace/external", "format": "SOURCE"}
             },
             "databricks_sql_warehouse": {
-                "warehouse-external": {"id": "d2fa41bf94858c4b"}
+                "warehouse-external": {"id": "d2fa41bf94858c4b", "name": None}
             },
         },
     }
@@ -1438,6 +1540,19 @@ def test_terraform_stack(monkeypatch):
                     ],
                     "provider": "databricks",
                 },
+                "permissions_test": {
+                    "access_control": [
+                        {
+                            "permission_level": "CAN_MANAGE",
+                            "user_name": "user1",
+                        },
+                        {
+                            "permission_level": "CAN_RUN",
+                            "user_name": "user2",
+                        },
+                    ],
+                    "pipeline_id": "pipeline_123",
+                },
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
@@ -1478,7 +1593,7 @@ def test_terraform_stack(monkeypatch):
                 "notebook-external": {"path": "/Workspace/external", "format": "SOURCE"}
             },
             "databricks_sql_warehouse": {
-                "warehouse-external": {"id": "d2fa41bf94858c4b"}
+                "warehouse-external": {"id": "d2fa41bf94858c4b", "name": None}
             },
         },
     }
