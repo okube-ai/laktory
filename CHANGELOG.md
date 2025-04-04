@@ -6,7 +6,7 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Typing on the `BaseModel.model_validate_yaml` and the `BaseModel.model_validate_json_file` functions to have the typing on the arguments to provide correct intellisense for return typing of `Model`. [[#411](https://github.com/okube-ai/laktory/issues/411)]
 ### Breaking changes
 * n/a
 
