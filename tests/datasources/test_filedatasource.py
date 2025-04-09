@@ -190,7 +190,41 @@ def test_csv_options(backend, df0, tmp_path):
     )
 
 
-def test_non_application_options():
+def test_reader_methods(df0, tmp_path):
+    csv = tmp_path / "df.csv"
+    df0.write_csv(csv)
+
+    source = FileDataSource(
+        path=csv,
+        format="CSV",
+        dataframe_backend="PYSPARK",
+        reader_methods=[{"name": "schema", "args": ["x STRING, z FLOAT"]}],
+    )
+    df = source.read()
+    assert df.columns == ["x", "z"]
+
+
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_reader_kwargs(backend, df0, tmp_path):
+    csv = tmp_path / "df.csv"
+    df0.write_csv(csv)
+
+    if backend == "PYSPARK":
+        kwargs = {
+            "header": False,
+        }
+    elif backend == "POLARS":
+        kwargs = {"has_header": False, "new_columns": ["_c0", "_c1"]}
+
+    source = FileDataSource(
+        path=csv, format="CSV", dataframe_backend=backend, reader_kwargs=kwargs
+    )
+
+    df = source.read()
+    assert df.columns == ["_c0", "_c1"]
+
+
+def test_non_applicable_options():
     # has_header
     FileDataSource(path="tmp", format="CSV", has_header=True)
     with pytest.raises(ValidationError):

@@ -44,6 +44,18 @@ class Watermark(BaseModel):
     threshold: str
 
 
+class ReaderMethod(BaseModel):
+    """
+    Reader Method
+
+    Calling DataFrame backend reader method. Implementation specific to a given backend.
+    """
+
+    name: str = Field(..., description="Method name")
+    args: list[str] = Field([], description="Method arguments")
+    kwargs: dict[str, Any] = Field({}, description="Method keyword arguments")
+
+
 class BaseDataSource(BaseModel, PipelineChild):
     """
     Base class for data sources.
@@ -80,6 +92,9 @@ class BaseDataSource(BaseModel, PipelineChild):
     # watermark: Watermark | None = Field(None, description="Spark structured streaming watermark specifications")
     type: Literal["DATAFRAME", "FILE", "UNITY_CATALOG", "HIVE_METASTORE"] = Field(
         ..., description="Name of the data source type"
+    )
+    reader_methods: list[ReaderMethod] = Field(
+        [], description="DataFrame backend reader methods."
     )
 
     @model_validator(mode="after")

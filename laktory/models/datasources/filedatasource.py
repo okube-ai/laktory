@@ -47,9 +47,6 @@ SUPPORTED_FORMATS = {
     ],
 }
 
-# ALL_SUPPORTED_FORMATS = []
-
-# ALL_SUPPORTED_FORMATS = list(set([]))
 ALL_SUPPORTED_FORMATS = tuple(sorted(set().union(*SUPPORTED_FORMATS.values())))
 
 
@@ -108,8 +105,10 @@ class FileDataSource(BaseDataSource):
         ...,
         description="File path on a local disk, remote storage or Databricks volume.",
     )
-    read_options: dict[str, Any] = Field(
-        {}, description="Other options passed directly to dataframe backend reader."
+    reader_kwargs: dict[str, Any] = Field(
+        {},
+        description="Keyword arguments passed directly to dataframe backend reader. "
+        "Passed to `.options()` method when using PySpark.",
     )
     schema_definition: DataFrameSchema = Field(
         None,
@@ -248,7 +247,7 @@ class FileDataSource(BaseDataSource):
             else:
                 pass
 
-        for k, v in self.read_options:
+        for k, v in self.reader_kwargs.items():
             kwargs[k] = v
 
         return kwargs, fmt
@@ -272,8 +271,14 @@ class FileDataSource(BaseDataSource):
         if self.schema_definition:
             reader = reader.schema(self.schema_definition.to_spark())
 
+        reader = reader.format(fmt)
+
+        # Apply methods
+        for m in self.reader_methods:
+            reader = getattr(reader, m.name)(*m.args, **m.kwargs)
+
         # Apply options
-        reader = reader.format(fmt).options(**kwargs)
+        reader = reader.options(**kwargs)
 
         # Load
         logger.info(f"Reading {self.path} as {mode} and options {kwargs}")
@@ -299,7 +304,7 @@ class FileDataSource(BaseDataSource):
         ):
             kwargs["schema"] = self.schema_definition.to_polars()
 
-        for k, v in self.read_options:
+        for k, v in self.reader_kwargs.items():
             kwargs[k] = v
 
         return kwargs, fmt

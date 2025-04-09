@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 class TableDataSource(BaseDataSource):
     catalog_name: str | None = Field(
-        ...,
+        None,
         description="Source table catalog name",
     )
     table_name: str = Field(
