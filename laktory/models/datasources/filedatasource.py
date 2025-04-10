@@ -15,6 +15,7 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.dataframeschema import DataFrameSchema
 from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory.models.datasources.basedatasource import ReaderMethod
 
 logger = get_logger(__name__)
 
@@ -209,8 +210,7 @@ class FileDataSource(BaseDataSource):
     def is_cloud_files(self):
         return self.as_stream and self.format not in ["DELTA"]
 
-    @property
-    def _spark_kwargs(self):
+    def _get_spark_kwargs(self):
         fmt = self.format.lower()
 
         # Build kwargs
@@ -252,12 +252,30 @@ class FileDataSource(BaseDataSource):
 
         return kwargs, fmt
 
+    def _get_spark_reader_methods(self):
+        methods = []
+
+        options, fmt = self._get_spark_kwargs()
+
+        if self.schema_definition:
+            methods += [
+                ReaderMethod(name="schema", args=[self.schema_definition.to_spark()])
+            ]
+
+        methods += [ReaderMethod(name="format", args=[fmt])]
+
+        if options:
+            methods += [ReaderMethod(name="options", kwargs=options)]
+
+        for m in self.reader_methods:
+            methods += [m]
+
+        return methods
+
     def _read_spark(self) -> nw.LazyFrame:
         from laktory import get_spark_session
 
         spark = get_spark_session()
-
-        kwargs, fmt = self._spark_kwargs
 
         # Create reader
         if self.as_stream:
@@ -267,27 +285,22 @@ class FileDataSource(BaseDataSource):
             mode = "static"
             reader = spark.read
 
-        # Set Schema
-        if self.schema_definition:
-            reader = reader.schema(self.schema_definition.to_spark())
-
-        reader = reader.format(fmt)
+        # Build methods
+        methods = self._get_spark_reader_methods()
 
         # Apply methods
-        for m in self.reader_methods:
+        for m in methods:
             reader = getattr(reader, m.name)(*m.args, **m.kwargs)
 
-        # Apply options
-        reader = reader.options(**kwargs)
-
         # Load
-        logger.info(f"Reading {self.path} as {mode} and options {kwargs}")
+        logger.info(
+            f"Reading {self.path} as {mode} read.{'.'.join([m.as_string for m in methods])}"
+        )
         df = reader.load(self.path)
 
         return nw.from_native(df)
 
-    @property
-    def _polars_kwargs(self):
+    def _get_polars_kwargs(self):
         fmt = self.format.lower()
 
         kwargs = {}
@@ -312,7 +325,9 @@ class FileDataSource(BaseDataSource):
     def _read_polars(self) -> nw.LazyFrame:
         import polars as pl
 
-        kwargs, fmt = self._polars_kwargs
+        kwargs, fmt = self._get_polars_kwargs()
+
+        logger.info(f"Reading {self.path} with format '{fmt}' and {kwargs}")
 
         if fmt == "avro":
             df = pl.read_avro(self.path, **kwargs).lazy()

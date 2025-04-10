@@ -9,6 +9,7 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.datasinks.basedatasink import POLARS_DELTA_MODES
 from laktory.models.datasinks.basedatasink import BaseDataSink
+from laktory.models.datasinks.basedatasink import WriterMethod
 
 SUPPORTED_FORMATS = {
     DataFrameBackends.PYSPARK: [
@@ -88,6 +89,53 @@ class FileDataSink(BaseDataSink):
                     f"Mode '{mode}' is not supported for Polars DataFrame. Set to `None`"
                 )
 
+    def _get_spark_kwargs(self, mode, is_streaming):
+        fmt = self.format.lower()
+
+        # Build kwargs
+        kwargs = {}
+
+        kwargs["mergeSchema"] = True
+        kwargs["overwriteSchema"] = False
+        if mode in ["OVERWRITE", "COMPLETE"]:
+            kwargs["mergeSchema"] = False
+            kwargs["overwriteSchema"] = True
+        if is_streaming:
+            kwargs["checkpointLocation"] = self._checkpoint_location
+
+        if fmt in ["jsonl", "ndjson"]:
+            fmt = "json"
+            kwargs["multiline"] = False
+        elif fmt in ["json"]:
+            kwargs["multiline"] = True
+
+        # User Options
+        for k, v in self.writer_kwargs.items():
+            kwargs[k] = v
+
+        return kwargs, fmt
+
+    def _get_spark_writer_methods(self, mode, is_streaming):
+        methods = []
+
+        options, fmt = self._get_spark_kwargs(mode=mode, is_streaming=is_streaming)
+
+        methods += [WriterMethod(name="format", args=[fmt])]
+
+        if is_streaming:
+            methods += [WriterMethod(name="outputMode", args=[mode])]
+            methods += [WriterMethod(name="trigger", kwargs={"availableNow": True})]
+        else:
+            methods += [WriterMethod(name="mode", args=[mode])]
+
+        if options:
+            methods += [WriterMethod(name="options", kwargs=options)]
+
+        for m in self.writer_methods:
+            methods += [m]
+
+        return methods
+
     def _write_spark(self, df, mode, full_refresh=False) -> None:
         df = df.to_native()
 
@@ -111,39 +159,16 @@ class FileDataSink(BaseDataSink):
         #         )
         #         mode = "OVERWRITE"
 
-        # Default Options
-        _options = {"mergeSchema": "true", "overwriteSchema": "false"}
-        if mode in ["OVERWRITE", "COMPLETE"]:
-            _options["mergeSchema"] = "false"
-            _options["overwriteSchema"] = "true"
-        if df.isStreaming:
-            _options["checkpointLocation"] = self._checkpoint_location
-
         # Format
-        fmt = self.format.lower()
-        if fmt in ["jsonl", "ndjson"]:
-            fmt = "json"
-            _options["multiline"] = False
-        elif fmt in ["json"]:
-            _options["multiline"] = True
-
-        # User Options
-        for k, v in self.writer_kwargs.items():
-            _options[k] = v
+        methods = self._get_spark_writer_methods(mode=mode, is_streaming=df.isStreaming)
 
         if df.isStreaming:
             logger.info(
-                f"Writing df as stream {self.format} to {self.path} with mode {mode} and options {_options}"
-            )
-            writer = (
-                df.writeStream.format(fmt)
-                .outputMode(mode)
-                .trigger(availableNow=True)  # TODO: Add option for trigger?
-                .options(**_options)
+                f"Writing df to {self.path} with writeStream.{'.'.join([m.as_string for m in methods])}"
             )
 
-            # Apply methods
-            for m in self.writer_methods:
+            writer = df.writeStream
+            for m in methods:
                 writer = getattr(writer, m.name)(*m.args, **m.kwargs)
 
             query = writer.start(self.path)
@@ -151,22 +176,18 @@ class FileDataSink(BaseDataSink):
 
         else:
             logger.info(
-                f"Writing df as static {self.format} to {self.path} with mode {mode} and options {_options}"
+                f"Writing df to {self.path} with write.{'.'.join([m.as_string for m in methods])}"
             )
-            writer = df.write.mode(mode).format(fmt).options(**_options)
-
-            # Apply methods
-            for m in self.writer_methods:
+            writer = df.write
+            for m in methods:
                 writer = getattr(writer, m.name)(*m.args, **m.kwargs)
 
             writer.save(self.path)
 
-    def _write_polars(self, df, mode, full_refresh=False) -> None:
-        from polars import LazyFrame
+    def _get_polars_kwargs(self, mode):
+        fmt = self.format.lower()
 
-        df = df.to_native()
-
-        isStreaming = False
+        kwargs = {}
 
         if self.format != "DELTA":
             if mode:
@@ -182,17 +203,29 @@ class FileDataSink(BaseDataSink):
                     "'mode' configuration required with Polars 'DELTA' format"
                 )
 
-        if isStreaming:
-            logger.info(
-                f"Writing df as stream {self.format} to {self.path} with mode {mode}"
-            )
+        if mode:
+            kwargs["mode"] = mode
 
-        else:
-            logger.info(
-                f"Writing df as static {self.format} to {self.path} with mode {mode}"
-            )
+        for k, v in self.writer_kwargs.items():
+            kwargs[k] = v
 
-        if isinstance(df, LazyFrame):
+        return kwargs, fmt
+
+    def _write_polars(self, df, mode, full_refresh=False) -> None:
+        import polars as pl
+
+        kwargs, fmt = self._get_polars_kwargs(mode=mode)
+
+        df = df.to_native()
+
+        is_streaming = False
+
+        _mode = "static" if is_streaming else "streaming"
+        logger.info(
+            f"Writing {_mode} df to {self.path} with format '{self.format}' and {kwargs}"
+        )
+
+        if isinstance(df, pl.LazyFrame):
             df = df.collect()
 
         if self.format.lower() == "avro":
