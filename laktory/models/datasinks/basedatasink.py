@@ -6,10 +6,12 @@ from typing import Literal
 
 import narwhals as nw
 from pydantic import Field
+from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
+from laktory.models.datasinks.mergecdcoptions import DataSinkMergeCDCOptions
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
 
@@ -17,9 +19,17 @@ logger = get_logger(__name__)
 
 
 SUPPORTED_BACKENDS = [DataFrameBackends.POLARS, DataFrameBackends.PYSPARK]
-SPARK_MODES = ["OVERWRITE", "APPEND", "IGNORE", "ERROR", "ERRORIFEXISTS"]
-SPARK_STREAMING_MODES = ["APPEND", "COMPLETE", "UPDATE"]
-POLARS_DELTA_MODES = ["ERROR", "APPEND", "OVERWRITE", "MERGE"]
+LAKTORY_MODES = ["MERGE"]
+SPARK_MODES = [
+    "OVERWRITE",
+    "APPEND",
+    "IGNORE",
+    "ERROR",
+    "ERRORIFEXISTS",
+] + LAKTORY_MODES
+SPARK_STREAMING_MODES = ["APPEND", "COMPLETE", "UPDATE"] + LAKTORY_MODES
+POLARS_DELTA_MODES = ["ERROR", "APPEND", "OVERWRITE"] + LAKTORY_MODES
+SUPPORTED_MODES = list(set(SPARK_MODES + SPARK_STREAMING_MODES + POLARS_DELTA_MODES))
 
 
 class WriterMethod(BaseModel):
@@ -52,24 +62,55 @@ class BaseDataSink(BaseModel, PipelineChild):
     type: Literal["FILE", "HIVE_METASTORE", "UNITY_CATALOG"] = Field(
         ..., description="Name of the data sink type"
     )
-    mode: Literal[
-        "OVERWRITE", "APPEND", "IGNORE", "ERROR", "COMPLETE", "UPDATE", "MERGE", None
-    ] = Field(
+    merge_cdc_options: DataSinkMergeCDCOptions = Field(
+        None,
+        description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
+    )  # TODO: Review parameter name
+    mode: Literal.__getitem__(SUPPORTED_MODES) = Field(
         None,
         description="""
         Write mode.
-        - overwrite: Overwrite existing data
-        - append: Append contents of the dataframe to existing data
-        - error: Throw and exception if data already exists
-        - ignore: Silently ignore this operation if data already exists
-        - complete: Overwrite for streaming dataframes
-        - merge: Append, update and optionally delete records. Requires
-        cdc specification.
+        
+        Spark
+        -----
+        - OVERWRITE: Overwrite existing data.
+        - APPEND: Append contents of this DataFrame to existing data.
+        - ERROR: Throw an exception if data already exists.
+        - IGNORE: Silently ignore this operation if data already exists.
+
+        Spark Streaming
+        ---------------
+        - APPEND: Only the new rows in the streaming DataFrame/Dataset will be written to the sink.
+        - COMPLETE: All the rows in the streaming DataFrame/Dataset will be written to the sink every time there are some updates.
+        - UPDATE: Only the rows that were updated in the streaming DataFrame/Dataset will be written to the sink every time there are some updates.
+
+        Polars Delta
+        ------------
+        - OVERWRITE: Overwrite existing data.
+        - APPEND: Append contents of this DataFrame to existing data.
+        - ERROR: Throw an exception if data already exists.
+        - IGNORE: Silently ignore this operation if data already exists.
+
+        Laktory
+        -------
+        - MERGE: Append, update and optionally delete records. Only supported for DELTA format. Requires cdc specification.
         """,
     )
     writer_methods: list[WriterMethod] = Field(
         [], description="DataFrame backend writer methods."
     )
+
+    @model_validator(mode="after")
+    def merge_has_options(self) -> Any:
+        if self.mode == "MERGE":
+            if self.merge_cdc_options is None:
+                raise ValueError(
+                    "If 'MERGE' `mode` is selected, `merge_cdc_options` must be specified."
+                )
+            else:
+                self.merge_cdc_options._parent = self
+
+        return self
 
     # -------------------------------------------------------------------------------- #
     # Properties                                                                       #
@@ -97,6 +138,37 @@ class BaseDataSink(BaseModel, PipelineChild):
                 if s == self:
                     return node._root_path / "checkpoints" / f"sink-{self._uuid}"
         return None
+
+    # ----------------------------------------------------------------------- #
+    # CDC                                                                     #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def is_cdc(self) -> bool:
+        return self.merge_cdc_options is not None
+
+    @property
+    def dlt_apply_changes_kwargs(self) -> dict[str, str]:
+        """Keyword arguments for dlt.apply_changes function"""
+
+        # if not isinstance(self, TableDataSink):
+        #     raise ValueError("DLT only supports `TableDataSink` class")
+
+        cdc = self.merge_cdc_options
+        return {
+            "apply_as_deletes": cdc.delete_where,
+            # "apply_as_truncates": ,  # NOT SUPPORTED
+            "column_list": cdc.include_columns,
+            "except_column_list": cdc.exclude_columns,
+            "ignore_null_updates": cdc.ignore_null_updates,
+            "keys": cdc.primary_keys,
+            "sequence_by": cdc.order_by,
+            # "source": self.source.table_name,  # TO SET EXTERNALLY
+            "stored_as_scd_type": cdc.scd_type,
+            "target": self.table_name,
+            # "track_history_column_list": cdc.track_history_columns,  # NOT SUPPORTED
+            # "track_history_except_column_list": cdc.track_history_except_columns,  # NOT SUPPORTED
+        }
 
     # -------------------------------------------------------------------------------- #
     # Writers                                                                          #
@@ -168,6 +240,11 @@ class BaseDataSink(BaseModel, PipelineChild):
 
         self._validate_mode(mode, df)
         self._validate_format()
+
+        if mode.lower() == "merge":
+            self.merge_cdc_options.execute(source=df)
+            logger.info("Write completed.")
+            return
 
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
             self._write_spark(df=df, mode=mode, full_refresh=full_refresh)

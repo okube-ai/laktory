@@ -76,6 +76,8 @@ class FileDataSink(BaseDataSink):
             raise ValueError(
                 f"'{self.format}' format is not supported with {self.dataframe_backend}. Use one of {SUPPORTED_FORMATS[self.df_backend]}"
             )
+        if self.mode == "MERGE" and self.format != "DELTA":
+            raise ValueError("Only 'DELTA' format is supported with 'MERGE' mode.")
 
     def _validate_mode_polars(self, mode, df):
         if self.format == "DELTA":
@@ -138,10 +140,6 @@ class FileDataSink(BaseDataSink):
 
     def _write_spark(self, df, mode, full_refresh=False) -> None:
         df = df.to_native()
-
-        # if mode.lower() == "merge":
-        #     self.merge_cdc_options.execute(source=df)
-        #     return
 
         # Full Refresh
         # if full_refresh or not self.exists(spark=df.sparkSession):

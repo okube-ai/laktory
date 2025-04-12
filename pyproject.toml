@@ -49,6 +49,7 @@ polars = [
     "sqlparse",
 ]
 spark = [
+    "delta-spark",
     "pyarrow",
     "pyspark[connect]",
     "setuptools; python_version >= '3.12'"

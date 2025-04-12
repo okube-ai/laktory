@@ -1,9 +1,8 @@
 from typing import Union
 
 from .basedatasink import BaseDataSink
-
-# from .basedatasink import DataSinkMergeCDCOptions
 from .filedatasink import FileDataSink
+from .mergecdcoptions import DataSinkMergeCDCOptions
 from .tabledatasink import TableDataSink
 
 classes = [
