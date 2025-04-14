@@ -21,6 +21,31 @@ class DataSinkMergeCDCOptions(BaseModel):
     They are also used to build the target using `apply_changes` method when
     using Databricks DLT.
 
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    df = spark.createDataFrame(
+        [
+            {"id": 1, "value": 3.0},
+            {"id": 2, "value": 2.3},
+            {"id": 3, "value": 7.7},
+        ]
+    )
+
+    sink = models.FileDataSink(
+        path="./my_table/",
+        format="DELTA",
+        mode="MERGE",
+        merge_cdc_options={
+            "scd_type": 1,
+            "primary_keys": ["id"],
+        },
+    )
+    # sink.write(df)
+    ```
+
     References
     ----------
     - [How to Implement SCD 2 using Delta Table](https://iterationinsights.com/article/how-to-implement-slowly-changing-dimensions-scd-type-2-using-delta-table/)

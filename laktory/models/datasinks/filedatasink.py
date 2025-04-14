@@ -45,6 +45,42 @@ logger = get_logger(__name__)
 
 
 class FileDataSink(BaseDataSink):
+    """
+    Data sink writing to disk file(s) as csv, parquet or Delta Table.
+
+    Examples
+    ---------
+    Write polars DataFrame as CSV
+    ```python
+    import polars as pl
+    from laktory import models
+
+    df = pl.DataFrame({"x": [0, 1]})
+
+    sink = models.FileDataSink(
+        path="./dataframe.csv",
+        format="CSV",
+        writer_kwargs={"has_header": "False"},
+    )
+    sink.write(df)
+    ```
+
+    Write Spark Streaming DataFrame as Delta
+    ```python
+    from laktory import models
+
+    df = spark.readStream(...)
+
+    sink = models.FileDataSink(
+        path="./delta_table/",
+        format="DELTA",
+        mode="APPEND",
+        checkpoint_path="./delta_table/checkpoint/",
+    )
+    sink.write(df)
+    ```
+    """
+
     format: Literal.__getitem__(ALL_SUPPORTED_FORMATS) = Field(
         ..., description="Format of the data files."
     )

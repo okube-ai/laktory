@@ -11,22 +11,22 @@ logger = get_logger(__name__)
 
 class UnityCatalogDataSink(TableDataSink):
     """
-    Data sink using a Unity Catalog data table.
+    Data sink writing to a Unity Catalog data table
 
     Examples
     ---------
     ```python
     from laktory import models
 
-    source = models.UnityCatalogDataSource(
+    df = spark.createDataFrame([{"x": 1}, {"x": 2}, {"x": 3}])
+
+    sink = models.UnityCatalogDataSink(
         catalog_name="dev",
-        schema_name="finance",
-        table_name="brz_stock_prices",
-        selects=["symbol", "open", "close"],
-        filter="symbol='AAPL'",
-        as_stream=True,
+        schema_name="my_schema",
+        table_name="my_stable",
+        mode="OVERWRITE",
     )
-    # df = source.read()
+    sink.write(df)
     ```
     """
 

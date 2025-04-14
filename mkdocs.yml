@@ -164,21 +164,22 @@ nav:
       - BaseModel: api/models/basemodel.md
 #      - DataEventHeader: api/models/dataeventheader.md
       - DataEvent: api/models/dataevent.md
+      - DataFrameBackendMethod: api/models/dataframebackendmethod.md
       - DataFrameColumn: api/models/dataframecolumn.md
       - DataFrameSchema: api/models/dataframeschema.md
       - DataFrameColumnExpression: api/models/dataframecolumnexpression.md
       - DataProducer: api/models/dataproducer.md
       - DataTypes: api/models/datatypes.md
       - DataSinks:
-        - BaseDataSink: api/models/datasinks/basedatasink.md
-        - FileDataSink: api/models/datasinks/filedatasink.md
-        - TableDataSink: api/models/datasinks/tabledatasink.md
+        - FileDataSink: api/models/datasinks/file.md
+        - HiveMetastoreDataSink: api/models/datasinks/hivemetastore.md
+        - UnityCatalogDataSink: api/models/datasinks/unitycatalog.md
       - DataSources:
-        - DataFrameDataSource: api/models/datasources/dataframedatasource.md
-        - FileDataSource: api/models/datasources/filedatasource.md
+        - DataFrameDataSource: api/models/datasources/dataframe.md
+        - FileDataSource: api/models/datasources/file.md
 #        - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
-        - HiveMetastoreDataSource: api/models/datasources/hivemetastoredatasource.md
-        - UnityCatalogDataSource: api/models/datasources/unitycatalogdatasource.md
+        - HiveMetastoreDataSource: api/models/datasources/hivemetastore.md
+        - UnityCatalogDataSource: api/models/datasources/unitycatalog.md
       - DataQuality:
         - DataQualityCheck: api/models/dataquality/check.md
         - DataQualityExpectation: api/models/dataquality/expectation.md

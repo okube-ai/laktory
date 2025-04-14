@@ -10,18 +10,20 @@ logger = get_logger(__name__)
 
 class HiveMetastoreDataSink(TableDataSink):
     """
-    Data source using a Hive Metastore data table.
+    Data sink writing to a Hive Metastore data table.
 
     Examples
     ---------
     ```python
     from laktory import models
 
+    df = spark.createDataFrame([{"x": 1}, {"x": 2}, {"x": 3}])
+
     sink = models.HiveMetastoreDataSink(
-        schema_name="finance",
-        table_name="brz_stock_prices",
+        schema_name="my_schema",
+        table_name="my_table",
     )
-    # sink.write(df)
+    sink.write(df)
     ```
     """
 

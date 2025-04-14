@@ -7,59 +7,10 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.models.datasinks.basedatasink import BaseDataSink
 
-# from laktory.models.datasinks.basedatasink import WriterMethod
-# from laktory.models.datasources.tabledatasource import TableDataSource
-# from laktory.models.transformers.basechainnode import BaseChainNodeSQLExpr
-# from laktory.spark import SparkDataFrame
-
 logger = get_logger(__name__)
 
 
 class TableDataSink(BaseDataSink):
-    """
-    Table data sink on a metastore such as Hive, Unity Catalog or on a
-    data warehouse such as Snowflake, BigQuery, etc.
-
-    Examples
-    ---------
-    ```python
-    import pandas as pd
-
-    from laktory import models
-
-    df = spark.createDataFrame(
-        pd.DataFrame(
-            {
-                "symbol": ["AAPL", "GOOGL"],
-                "price": [200.0, 205.0],
-                "tstamp": ["2023-09-01", "2023-09-01"],
-            }
-        )
-    )
-
-    sink = models.TableDataSink(
-        catalog_name="/Volumes/sources/landing/events/yahoo-finance/stock_price",
-        schema_name="finance",
-        table_name="slv_stock_prices",
-        mode="OVERWRITE",
-    )
-    # sink.write(df)
-
-    # Sink with Change Data Capture processing
-    sink = models.TableDataSink(
-        catalog_name="/Volumes/sources/landing/events/yahoo-finance/stock_price",
-        schema_name="finance",
-        table_name="slv_stock_prices",
-        mode="MERGE",
-        merge_cdc_options={
-            "scd_type": 1,
-            "primary_keys": ["symbol", "tstamp"],
-        },
-    )
-    # sink.write(df)
-    ```
-    """
-
     catalog_name: str | None = Field(
         None,
         description="Sink table catalog name",
