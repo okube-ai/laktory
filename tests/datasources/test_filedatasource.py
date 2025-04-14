@@ -118,7 +118,7 @@ def test_read_stream(df0, format, tmp_path):
     )
 
     if format == "CSV":
-        assert source._spark_kwargs == (
+        assert source._get_spark_kwargs() == (
             {
                 "header": True,
                 "cloudFiles.inferColumnTypes": False,
@@ -129,7 +129,7 @@ def test_read_stream(df0, format, tmp_path):
             "cloudFiles",
         )
     elif format == "JSON":
-        assert source._spark_kwargs == (
+        assert source._get_spark_kwargs() == (
             {
                 "cloudFiles.inferColumnTypes": False,
                 "cloudFiles.format": format.lower(),
@@ -140,7 +140,7 @@ def test_read_stream(df0, format, tmp_path):
             "cloudFiles",
         )
     elif format == "DELTA":
-        assert source._spark_kwargs == ({}, "delta")
+        assert source._get_spark_kwargs() == ({}, "delta")
 
     if format in ["CSV", "JSON"]:
         pytest.skip("Requires Databricks Autoloader. Skipping Test.")
@@ -157,8 +157,11 @@ def test_csv_options(backend, df0, tmp_path):
 
     # Default
     source = FileDataSource(path=csv, format="CSV", dataframe_backend=backend)
-    assert source._polars_kwargs == ({"has_header": True, "infer_schema": False}, "csv")
-    assert source._spark_kwargs == ({"header": True, "inferSchema": False}, "csv")
+    assert source._get_polars_kwargs() == (
+        {"has_header": True, "infer_schema": False},
+        "csv",
+    )
+    assert source._get_spark_kwargs() == ({"header": True, "inferSchema": False}, "csv")
     df = source.read()
     assert_dfs_equal(df, df0.cast({"x": pl.String, "y": pl.String}))
 
@@ -166,11 +169,14 @@ def test_csv_options(backend, df0, tmp_path):
     source = FileDataSource(
         path=csv, format="CSV", dataframe_backend=backend, has_header=False
     )
-    assert source._polars_kwargs == (
+    assert source._get_polars_kwargs() == (
         {"has_header": False, "infer_schema": False},
         "csv",
     )
-    assert source._spark_kwargs == ({"header": False, "inferSchema": False}, "csv")
+    assert source._get_spark_kwargs() == (
+        {"header": False, "inferSchema": False},
+        "csv",
+    )
     df = source.read().collect(backend="polars")
     if backend == "PYSPARK":
         assert df.columns == ["_c0", "_c1"]
@@ -190,7 +196,41 @@ def test_csv_options(backend, df0, tmp_path):
     )
 
 
-def test_non_application_options():
+def test_reader_methods(df0, tmp_path):
+    csv = tmp_path / "df.csv"
+    df0.write_csv(csv)
+
+    source = FileDataSource(
+        path=csv,
+        format="CSV",
+        dataframe_backend="PYSPARK",
+        reader_methods=[{"name": "schema", "args": ["x STRING, z FLOAT"]}],
+    )
+    df = source.read()
+    assert df.columns == ["x", "z"]
+
+
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_reader_kwargs(backend, df0, tmp_path):
+    csv = tmp_path / "df.csv"
+    df0.write_csv(csv)
+
+    if backend == "PYSPARK":
+        kwargs = {
+            "header": False,
+        }
+    elif backend == "POLARS":
+        kwargs = {"has_header": False, "new_columns": ["_c0", "_c1"]}
+
+    source = FileDataSource(
+        path=csv, format="CSV", dataframe_backend=backend, reader_kwargs=kwargs
+    )
+
+    df = source.read()
+    assert df.columns == ["_c0", "_c1"]
+
+
+def test_non_applicable_options():
     # has_header
     FileDataSource(path="tmp", format="CSV", has_header=True)
     with pytest.raises(ValidationError):

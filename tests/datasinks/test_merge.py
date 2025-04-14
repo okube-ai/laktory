@@ -1,34 +1,28 @@
 import datetime
-import shutil
-import uuid
-from pathlib import Path
 
+import narwhals as nw
 import pandas as pd
+import polars as pl
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
+import pytest
 
+import laktory
 from laktory import models
-from laktory._testing import Paths
-from laktory._testing import sparkf
+from laktory.enums import DataFrameBackends
+from laktory.models.datasinks.mergecdcoptions import SUPPORTED_BACKENDS
 
-spark = sparkf.spark
+spark = laktory.get_spark_session()
 
 # --------------------------------------------------------------------------- #
 # Functions                                                                   #
 # --------------------------------------------------------------------------- #
 
 
-paths = Paths(__file__)
-
-testdir_path = Path(__file__).parent
-
 price_cols = ["close", "open"]
 
 
-def build_target(write_target=True, path=None, index=None):
-    if path is None:
-        path = testdir_path / "tmp" / "test_datasinks_merge" / str(uuid.uuid4())
-
+def build_target(path, backend, write_target=True, index=None) -> nw.LazyFrame:
     # Build Target
     df0 = pd.DataFrame(
         [
@@ -43,12 +37,20 @@ def build_target(write_target=True, path=None, index=None):
             {"date": "2024-11-03", "symbol": "S2", "close": 0.00, "open": 0.93},
         ]
     )
-    df0 = spark.createDataFrame(df0)
-    df0 = df0.withColumn("date", F.col("date").cast("date"))
-    df0 = df0.withColumn("_is_deleted", F.lit(False))
-    df0 = df0.withColumn("from", F.lit("target"))
-    if index:
-        df0 = df0.withColumn("index", F.lit(index))
+    if backend == "PYSPARK":
+        df0 = spark.createDataFrame(df0)
+        df0 = df0.withColumn("date", F.col("date").cast("date"))
+        df0 = df0.withColumn("_is_deleted", F.lit(False))
+        df0 = df0.withColumn("from", F.lit("target"))
+        if index:
+            df0 = df0.withColumn("index", F.lit(index))
+    elif backend == "POLARS":
+        df0 = pl.from_pandas(df0)
+        # df0 = df0.with_columns({
+        #     "date": pl.col("date").cast(pl.Date()),
+        #     "_is_deleted": pl.lit(False),
+        #     "from": pl.lit("target"),
+        # })
 
     # Write Target
     if write_target:
@@ -59,7 +61,7 @@ def build_target(write_target=True, path=None, index=None):
             .save(str(path))
         )
 
-    return path, df0
+    return nw.from_native(df0)
 
 
 def get_basic_source():
@@ -210,13 +212,15 @@ def read(path):
 # --------------------------------------------------------------------------- #
 
 
-def test_basic():
-    path, df = build_target(write_target=False)
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_basic(tmp_path, backend):
+    df = build_target(path=tmp_path, write_target=False, backend=backend)
 
     # Write target
     sink = models.FileDataSink(
+        format="DELTA",
         mode="MERGE",
-        path=str(path),
+        path=str(tmp_path),
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
             delete_where="source._is_deleted = true",
@@ -224,10 +228,16 @@ def test_basic():
         ),
     )
     assert sink.is_cdc
+
+    if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
+        with pytest.raises(NotImplementedError):
+            sink.write(df)
+        return
+
     sink.write(df)
 
     # Test target
-    df0 = read(path).toPandas()
+    df0 = read(tmp_path).toPandas()
     assert len(df0) == 9  # 3 stocks * 3 timestamps
     assert df0["from"].unique().tolist() == ["target"]
     assert df0.columns.tolist() == [
@@ -245,7 +255,7 @@ def test_basic():
     sink.write(dfs)
 
     # Read updated target
-    df1 = read(path).sort("date", "symbol").toPandas()
+    df1 = read(tmp_path).sort("date", "symbol").toPandas()
 
     # Test Merge
     assert df1.columns.tolist() == [
@@ -259,12 +269,13 @@ def test_basic():
     assert "S3" not in df1["symbol"].unique().tolist()  # deleted symbol
     assert (df1["from"] == "source").sum() == 7  # 6 new + 1 updates
 
-    # Cleanup
-    shutil.rmtree(path)
 
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_out_of_sequence(tmp_path, backend):
+    if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
 
-def test_out_of_sequence():
-    path, df0 = build_target(index=1)
+    build_target(tmp_path, backend=backend, index=1)
 
     # Out-of-sequence source
     dfs = spark.createDataFrame(
@@ -283,7 +294,8 @@ def test_out_of_sequence():
     # Merge
     sink = models.FileDataSink(
         mode="MERGE",
-        path=str(path),
+        format="DELTA",
+        path=str(tmp_path),
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
             order_by="index",
@@ -292,8 +304,9 @@ def test_out_of_sequence():
     sink.write(dfs)
 
     # Test
-    df1 = read(path).sort("date", "symbol").toPandas()
+    df1 = read(tmp_path).sort("date", "symbol").toPandas()
     row = df1.iloc[-1].to_dict()
+    assert len(df1) == 10
     assert row == {
         "date": datetime.date(2024, 12, 1),
         "symbol": "S2",
@@ -303,12 +316,13 @@ def test_out_of_sequence():
         "index": 2,
     }
 
-    # Cleanup
-    shutil.rmtree(path)
 
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_outdated(tmp_path, backend):
+    if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
 
-def test_outdated():
-    path, df0 = build_target(write_target=True, index=3)
+    build_target(tmp_path, backend=backend, index=3)
 
     # Out-of-sequence source
     dfs = spark.createDataFrame(
@@ -327,7 +341,8 @@ def test_outdated():
     # Merge
     sink = models.FileDataSink(
         mode="MERGE",
-        path=str(path),
+        format="DELTA",
+        path=str(tmp_path),
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
             order_by="index",
@@ -336,7 +351,8 @@ def test_outdated():
     sink.write(dfs)
 
     # Test - Updated Row
-    df1 = read(path).sort("date", "symbol").toPandas()
+    df1 = read(tmp_path).sort("date", "symbol").toPandas()
+
     row = df1.iloc[-2].to_dict()
     assert row == {
         "date": datetime.date(2024, 11, 3),
@@ -358,12 +374,13 @@ def test_outdated():
         "index": 3,
     }
 
-    # Cleanup
-    shutil.rmtree(path)
 
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_delete_non_existent(tmp_path, backend):
+    if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
 
-def test_delete_non_existent():
-    path, df0 = build_target(index=1)
+    df0 = build_target(path=tmp_path, backend=backend, index=1)
 
     # Source with rows "pre-deleted"
     dfs = spark.createDataFrame(
@@ -383,7 +400,8 @@ def test_delete_non_existent():
     # Merge
     sink = models.FileDataSink(
         mode="MERGE",
-        path=str(path),
+        format="DELTA",
+        path=str(tmp_path),
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
             delete_where="_is_deleted = true",
@@ -393,15 +411,16 @@ def test_delete_non_existent():
     sink.write(dfs)
 
     # Test
-    df1 = read(path).sort("date", "symbol").toPandas()
-    assert len(df1) == df0.count()
-
-    # Cleanup
-    shutil.rmtree(path)
+    df1 = read(tmp_path).sort("date", "symbol").toPandas()
+    assert len(df1) == df0.collect().shape[0]
 
 
-def test_scd2():
-    path, df = build_target(write_target=False, index=1)
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_scd2(tmp_path, backend):
+    if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
+
+    df = build_target(path=tmp_path, backend=backend, write_target=False, index=1)
 
     # Build Source Data
     dfs = get_scd2_source()
@@ -409,31 +428,31 @@ def test_scd2():
     # Merge
     sink = models.FileDataSink(
         mode="MERGE",
-        path=str(path),
+        format="DELTA",
+        path=str(tmp_path),
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
             order_by="index",
             scd_type=2,
         ),
     )
-    df.show()
-    dfs.show()
     sink.write(df.drop("from"))
     sink.write(dfs)
 
     # Test
-    df1 = read(path).sort("date", "symbol", "__start_at").toPandas()
+    df1 = read(tmp_path).sort("date", "symbol", "__start_at").toPandas()
     where = (df1["symbol"] == "S2") & (df1["date"] == datetime.date(2024, 11, 3))
-    assert len(df1) == df.count() + dfs.count()
+    assert len(df1) == df.collect().shape[0] + dfs.count()
     assert df1["__end_at"].count() == dfs.count()
     assert df1.loc[where]["__end_at"].fillna(-1).tolist() == [2, 3, 4, -1]
 
-    # Cleanup
-    shutil.rmtree(path)
 
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_scd2_with_delete(tmp_path, backend):
+    if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
 
-def test_scd2_with_delete():
-    path, df = build_target(write_target=False, index=1)
+    df = build_target(path=tmp_path, backend=backend, write_target=False, index=1)
 
     # Build Source Data
     dfs = get_scd2_source()
@@ -441,7 +460,8 @@ def test_scd2_with_delete():
     # Merge
     sink = models.FileDataSink(
         mode="MERGE",
-        path=str(path),
+        path=str(tmp_path),
+        format="DELTA",
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
             exclude_columns=["_is_deleted"],
@@ -455,18 +475,21 @@ def test_scd2_with_delete():
     sink.write(dfs)
 
     # Test
-    df1 = read(path).sort("date", "symbol", "start_at").toPandas()
+    df1 = read(tmp_path).sort("date", "symbol", "start_at").toPandas()
     where = (df1["symbol"] == "S2") & (df1["date"] == datetime.date(2024, 11, 3))
-    assert len(df1) == df.count() + 3  # 3 updates | 1 delete does not add new row
+    assert (
+        len(df1) == df.collect().shape[0] + 3
+    )  # 3 updates | 1 delete does not add new row
     assert df1["__end_at"].count() == 4  # 3 updates + 1 delete
     assert df1.loc[where]["__end_at"].fillna(-1).tolist() == [2, 3, 4, -1]
 
-    # Cleanup
-    shutil.rmtree(path)
 
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_null_updates(tmp_path, backend):
+    if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
 
-def test_null_updates():
-    path, _ = build_target()
+    build_target(path=tmp_path, backend=backend)
 
     # Build Source Data
     dfs = pd.DataFrame(
@@ -482,7 +505,8 @@ def test_null_updates():
     # Update target without ignoring null updates
     sink = models.FileDataSink(
         mode="MERGE",
-        path=str(path),
+        path=str(tmp_path),
+        format="DELTA",
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
         ),
@@ -490,7 +514,7 @@ def test_null_updates():
     sink.write(dfs)
 
     # Test
-    df1 = read(path).sort("date", "symbol").toPandas()
+    df1 = read(tmp_path).sort("date", "symbol").toPandas()
     row = df1.iloc[-1].fillna(-1).to_dict()
     assert row == {
         "date": datetime.date(2024, 11, 3),
@@ -501,14 +525,14 @@ def test_null_updates():
     }
 
     # Reset target
-    _ = build_target(path=path)
+    _ = build_target(path=tmp_path, backend=backend)
 
     # Ignore null updates
     sink.merge_cdc_options.ignore_null_updates = True
     sink.write(dfs)
 
     # Test
-    df1 = read(path).sort("date", "symbol").toPandas()
+    df1 = read(tmp_path).sort("date", "symbol").toPandas()
     row = df1.iloc[-1].to_dict()
     assert row == {
         "date": datetime.date(2024, 11, 3),
@@ -518,26 +542,31 @@ def test_null_updates():
         "from": "source",
     }
 
-    # Cleanup
-    shutil.rmtree(path)
 
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_stream(tmp_path, backend):
+    if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
 
-def test_stream():
-    path, _ = build_target()
+    build_target(
+        path=tmp_path,
+        backend=backend,
+    )
 
     # Build Source
     dfs = get_basic_source()
 
     # Convert source to stream
-    source_path = str(testdir_path / "tmp" / "test_datasinks_merge" / str(uuid.uuid4()))
+    source_path = str(tmp_path / "source")
     dfs.write.format("DELTA").mode("overwrite").save(source_path)
     dfs = spark.readStream.format("DELTA").load(source_path)
 
     # Create sink and write
     sink = models.FileDataSink(
         mode="MERGE",
-        checkpoint_location=str(path),
-        path=str(path),
+        checkpoint_path=str(tmp_path),
+        format="DELTA",
+        path=str(tmp_path),
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
             delete_where="source._is_deleted = true",
@@ -547,7 +576,7 @@ def test_stream():
     sink.write(dfs)
 
     # Read updated target
-    df1 = read(path).sort("date", "symbol").toPandas()
+    df1 = read(tmp_path).sort("date", "symbol").toPandas()
     assert df1.columns.tolist() == [
         "date",
         "symbol",
@@ -559,27 +588,28 @@ def test_stream():
     assert "S3" not in df1["symbol"].unique().tolist()  # deleted symbol
     assert (df1["from"] == "source").sum() == 7  # 6 new + 1 updates
 
-    # Cleanup
-    shutil.rmtree(path)
-    shutil.rmtree(source_path)
 
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_stream_scd2(tmp_path, backend):
+    if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
 
-def test_stream_scd2():
-    path, df = build_target(write_target=False, index=1)
+    df = build_target(path=tmp_path, backend=backend, write_target=False, index=1)
 
     # Build Source
     dfs = get_scd2_source()
 
     # Convert source to stream
-    source_path = str(testdir_path / "tmp" / "test_datasinks_merge" / str(uuid.uuid4()))
+    source_path = str(tmp_path / "source")
     dfs.write.format("DELTA").mode("overwrite").save(source_path)
     dfs = spark.readStream.format("DELTA").load(source_path)
 
     # Create sink and write
     sink = models.FileDataSink(
         mode="MERGE",
-        checkpoint_location=str(path),
-        path=str(path),
+        format="DELTA",
+        checkpoint_path=str(tmp_path),
+        path=str(tmp_path),
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
             exclude_columns=["_is_deleted"],
@@ -593,21 +623,24 @@ def test_stream_scd2():
     sink.write(dfs)
 
     # Tests
-    df1 = read(path).sort("date", "symbol", "start_at").toPandas()
+    df1 = read(tmp_path).sort("date", "symbol", "start_at").toPandas()
     where = (df1["symbol"] == "S2") & (df1["date"] == datetime.date(2024, 11, 3))
-    assert len(df1) == df.count() + 3  # 3 updates | 1 delete does not add new row
+    assert (
+        len(df1) == df.collect().shape[0] + 3
+    )  # 3 updates | 1 delete does not add new row
     assert df1["__end_at"].count() == 4  # 3 updates + 1 delete
     assert df1.loc[where]["__end_at"].fillna(-1).tolist() == [2, 3, 4, -1]
 
-    # Cleanup
-    shutil.rmtree(path)
-    shutil.rmtree(source_path)
 
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_dlt_kwargs(tmp_path, backend):
+    if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
 
-def test_dlt_kwargs():
-    sink = models.TableDataSink(
+    sink = models.HiveMetastoreDataSink(
         mode="MERGE",
-        checkpoint_location="root/table/checkpoint",
+        format="DELTA",
+        # checkpoint_location="root/table/checkpoint",
         table_name="my_table",
         merge_cdc_options=models.DataSinkMergeCDCOptions(
             primary_keys=["symbol", "date"],
@@ -629,15 +662,3 @@ def test_dlt_kwargs():
         "stored_as_scd_type": 2,
         "target": "my_table",
     }
-
-
-if __name__ == "__main__":
-    test_basic()
-    test_out_of_sequence()
-    test_outdated()
-    test_delete_non_existent()
-    test_scd2()
-    test_scd2_with_delete()
-    test_null_updates()
-    test_stream()
-    test_dlt_kwargs()
