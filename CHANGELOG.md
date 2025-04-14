@@ -1,7 +1,8 @@
 # Release History
 ## [0.8.0] - Unreleased
 ### Added
-* `HiveMetastoreDataSource`
+* Data sources `reader_methods`
+* Data sinks `writer_methods`
 ### Fixed
 * n/a
 ### Updated
@@ -9,12 +10,16 @@
 ### Breaking changes
 * Refactored data sources to Narwhals for all DataFrame operations
 * Changed DataFrame backend type to Enum
-* Renamed `TableDataSource` to `UnityCatalogDataSource`
+* Split `TableDataSource` into `UnityCatalogDataSource` and `HiveMetastoreDataSource` 
+* Split `TableDataSink` into `UnityCatalogDataSink` and `HiveMetastoreDataSink` 
 * Renamed `MemoryDataSource` to `DataFrameDataSource`
 * `InferColumnTypes` with is no longer enabled by default when reading data stream
 * `spark session` needs to be registered at the module level instead of being passed to function calls
 * Deprecated `DataProducer` class
 * Deprecated `DataEvent` class
+* Deprecated data sinks `cluster_by` (now supported with `writer_methods`)
+* Renamed data sinks `checkpoint_location` to `checkpoint_path`
+* Renamed data sinks `reader_options` to `reader_kwargs`
 
 ## [0.7.3] - Unreleased
 ### Added
