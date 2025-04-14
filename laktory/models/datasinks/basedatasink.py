@@ -11,6 +11,7 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
+from laktory.models.dataframebackendmethod import DataFrameBackendMethod
 from laktory.models.datasinks.mergecdcoptions import DataSinkMergeCDCOptions
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
@@ -30,26 +31,6 @@ SPARK_MODES = [
 SPARK_STREAMING_MODES = ["APPEND", "COMPLETE", "UPDATE"] + LAKTORY_MODES
 POLARS_DELTA_MODES = ["ERROR", "APPEND", "OVERWRITE"] + LAKTORY_MODES
 SUPPORTED_MODES = list(set(SPARK_MODES + SPARK_STREAMING_MODES + POLARS_DELTA_MODES))
-
-
-class WriterMethod(BaseModel):
-    """
-    Writer Method
-
-    Calling DataFrame backend writer method. Implementation specific to a given backend.
-    """
-
-    name: str = Field(..., description="Method name")
-    args: list[Any] = Field([], description="Method arguments")
-    kwargs: dict[str, Any] = Field({}, description="Method keyword arguments")
-
-    @property
-    def as_string(self) -> str:
-        s = f"{self.name}("
-        s += ",".join([str(v) for v in self.args])
-        s += ",".join([f"{k}={v}" for k, v in self.kwargs.items()])
-        s += ")"
-        return s
 
 
 class BaseDataSink(BaseModel, PipelineChild):
@@ -101,7 +82,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         description="Keyword arguments passed directly to dataframe backend writer."
         "Passed to `.options()` method when using PySpark.",
     )
-    writer_methods: list[WriterMethod] = Field(
+    writer_methods: list[DataFrameBackendMethod] = Field(
         [], description="DataFrame backend writer methods."
     )
 
@@ -298,16 +279,18 @@ class BaseDataSink(BaseModel, PipelineChild):
 
         options, fmt = self._get_spark_kwargs(mode=mode, is_streaming=is_streaming)
 
-        methods += [WriterMethod(name="format", args=[fmt])]
+        methods += [DataFrameBackendMethod(name="format", args=[fmt])]
 
         if is_streaming:
-            methods += [WriterMethod(name="outputMode", args=[mode])]
-            methods += [WriterMethod(name="trigger", kwargs={"availableNow": True})]
+            methods += [DataFrameBackendMethod(name="outputMode", args=[mode])]
+            methods += [
+                DataFrameBackendMethod(name="trigger", kwargs={"availableNow": True})
+            ]
         else:
-            methods += [WriterMethod(name="mode", args=[mode])]
+            methods += [DataFrameBackendMethod(name="mode", args=[mode])]
 
         if options:
-            methods += [WriterMethod(name="options", kwargs=options)]
+            methods += [DataFrameBackendMethod(name="options", kwargs=options)]
 
         for m in self.writer_methods:
             methods += [m]
