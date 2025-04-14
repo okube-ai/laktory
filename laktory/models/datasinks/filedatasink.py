@@ -9,7 +9,6 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.datasinks.basedatasink import POLARS_DELTA_MODES
 from laktory.models.datasinks.basedatasink import BaseDataSink
-from laktory.models.datasinks.basedatasink import WriterMethod
 
 SUPPORTED_FORMATS = {
     DataFrameBackends.PYSPARK: [
@@ -54,11 +53,6 @@ class FileDataSink(BaseDataSink):
         description="File path on a local disk, remote storage or Databricks volume.",
     )
     type: Literal["FILE"] = Field("FILE", frozen=True, description="Source Type")
-    writer_kwargs: dict[str, Any] = Field(
-        {},
-        description="Keyword arguments passed directly to dataframe backend writer."
-        "Passed to `.options()` method when using PySpark.",
-    )
 
     @field_validator("path", mode="before")
     @classmethod
@@ -90,53 +84,6 @@ class FileDataSink(BaseDataSink):
                 raise ValueError(
                     f"Mode '{mode}' is not supported for Polars DataFrame. Set to `None`"
                 )
-
-    def _get_spark_kwargs(self, mode, is_streaming):
-        fmt = self.format.lower()
-
-        # Build kwargs
-        kwargs = {}
-
-        kwargs["mergeSchema"] = True
-        kwargs["overwriteSchema"] = False
-        if mode in ["OVERWRITE", "COMPLETE"]:
-            kwargs["mergeSchema"] = False
-            kwargs["overwriteSchema"] = True
-        if is_streaming:
-            kwargs["checkpointLocation"] = self._checkpoint_location
-
-        if fmt in ["jsonl", "ndjson"]:
-            fmt = "json"
-            kwargs["multiline"] = False
-        elif fmt in ["json"]:
-            kwargs["multiline"] = True
-
-        # User Options
-        for k, v in self.writer_kwargs.items():
-            kwargs[k] = v
-
-        return kwargs, fmt
-
-    def _get_spark_writer_methods(self, mode, is_streaming):
-        methods = []
-
-        options, fmt = self._get_spark_kwargs(mode=mode, is_streaming=is_streaming)
-
-        methods += [WriterMethod(name="format", args=[fmt])]
-
-        if is_streaming:
-            methods += [WriterMethod(name="outputMode", args=[mode])]
-            methods += [WriterMethod(name="trigger", kwargs={"availableNow": True})]
-        else:
-            methods += [WriterMethod(name="mode", args=[mode])]
-
-        if options:
-            methods += [WriterMethod(name="options", kwargs=options)]
-
-        for m in self.writer_methods:
-            methods += [m]
-
-        return methods
 
     def _write_spark(self, df, mode, full_refresh=False) -> None:
         df = df.to_native()
@@ -182,33 +129,6 @@ class FileDataSink(BaseDataSink):
 
             writer.save(self.path)
 
-    def _get_polars_kwargs(self, mode):
-        fmt = self.format.lower()
-
-        kwargs = {}
-
-        if self.format != "DELTA":
-            if mode:
-                raise ValueError(
-                    "'mode' configuration with Polars only supported by 'DELTA' format"
-                )
-        else:
-            # if full_refresh or not self.exists():
-            #     mode = "OVERWRITE"
-
-            if not mode:
-                raise ValueError(
-                    "'mode' configuration required with Polars 'DELTA' format"
-                )
-
-        if mode:
-            kwargs["mode"] = mode
-
-        for k, v in self.writer_kwargs.items():
-            kwargs[k] = v
-
-        return kwargs, fmt
-
     def _write_polars(self, df, mode, full_refresh=False) -> None:
         import polars as pl
 
@@ -249,3 +169,65 @@ class FileDataSink(BaseDataSink):
             for k, v in self.writer_kwargs.items():
                 kwargs[k] = v
             ds.write_dataset(data=df.to_arrow(), base_dir=self.path, **kwargs)
+
+    #
+    # # ----------------------------------------------------------------------- #
+    # # Purge                                                                   #
+    # # ----------------------------------------------------------------------- #
+    #
+    # def purge(self, spark=None):
+    #     """
+    #     Delete sink data and checkpoints
+    #     """
+    #     # TODO: Now that sink switch to overwrite when sink does not exists or when
+    #     # a full refresh is requested, the purge method should not delete the data
+    #     # by default, but only the checkpoints. Also consider truncating the table
+    #     # instead of dropping it.
+    #
+    #     # Remove Data
+    #     if os.path.exists(self.path):
+    #         is_dir = os.path.isdir(self.path)
+    #         if is_dir:
+    #             logger.info(f"Deleting data dir {self.path}")
+    #             shutil.rmtree(self.path)
+    #         else:
+    #             logger.info(f"Deleting data file {self.path}")
+    #             os.remove(self.path)
+    #
+    #     # TODO: Add support for Databricks dbfs / workspace / Volume?
+    #
+    #     # Remove Checkpoint
+    #     self._purge_checkpoint(spark=spark)
+    #
+    # # ----------------------------------------------------------------------- #
+    # # Source                                                                  #
+    # # ----------------------------------------------------------------------- #
+    #
+    # def as_source(self, as_stream: bool = None) -> FileDataSource:
+    #     """
+    #     Generate a file data source with the same path as the sink.
+    #
+    #     Parameters
+    #     ----------
+    #     as_stream:
+    #         If `True`, sink will be read as stream.
+    #
+    #     Returns
+    #     -------
+    #     :
+    #         File Data Source
+    #     """
+    #
+    #     source = FileDataSource(
+    #         path=self.path,
+    #         format=self.format,
+    #     )
+    #
+    #     if as_stream:
+    #         source.as_stream = as_stream
+    #
+    #     if self.dataframe_backend:
+    #         source.dataframe_backend = self.dataframe_backend
+    #     source.parent = self.parent
+    #
+    #     return source

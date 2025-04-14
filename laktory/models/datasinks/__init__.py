@@ -1,17 +1,17 @@
-from typing import Union
+from __future__ import annotations
 
 from .basedatasink import BaseDataSink
 from .filedatasink import FileDataSink
+from .hivemetastoredatasink import HiveMetastoreDataSink
 from .mergecdcoptions import DataSinkMergeCDCOptions
 from .tabledatasink import TableDataSink
+from .unitycatalogdatasink import UnityCatalogDataSink
 
 classes = [
     FileDataSink,
-    TableDataSink,
+    UnityCatalogDataSink,
+    HiveMetastoreDataSink,
 ]
 
 
-DataSinksUnion = Union[
-    FileDataSink,
-    TableDataSink,
-]
+DataSinksUnion = FileDataSink | UnityCatalogDataSink | HiveMetastoreDataSink

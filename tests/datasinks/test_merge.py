@@ -637,7 +637,7 @@ def test_dlt_kwargs(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
 
-    sink = models.TableDataSink(
+    sink = models.HiveMetastoreDataSink(
         mode="MERGE",
         format="DELTA",
         # checkpoint_location="root/table/checkpoint",

@@ -66,7 +66,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
     )  # TODO: Review parameter name
-    mode: Literal.__getitem__(SUPPORTED_MODES) = Field(
+    mode: Literal.__getitem__(SUPPORTED_MODES) | None = Field(
         None,
         description="""
         Write mode.
@@ -95,6 +95,11 @@ class BaseDataSink(BaseModel, PipelineChild):
         -------
         - MERGE: Append, update and optionally delete records. Only supported for DELTA format. Requires cdc specification.
         """,
+    )
+    writer_kwargs: dict[str, Any] = Field(
+        {},
+        description="Keyword arguments passed directly to dataframe backend writer."
+        "Passed to `.options()` method when using PySpark.",
     )
     writer_methods: list[WriterMethod] = Field(
         [], description="DataFrame backend writer methods."
@@ -139,9 +144,9 @@ class BaseDataSink(BaseModel, PipelineChild):
                     return node._root_path / "checkpoints" / f"sink-{self._uuid}"
         return None
 
-    # ----------------------------------------------------------------------- #
-    # CDC                                                                     #
-    # ----------------------------------------------------------------------- #
+    # -------------------------------------------------------------------------------- #
+    # CDC                                                                              #
+    # -------------------------------------------------------------------------------- #
 
     @property
     def is_cdc(self) -> bool:
@@ -183,24 +188,6 @@ class BaseDataSink(BaseModel, PipelineChild):
         elif self.df_backend == DataFrameBackends.PYSPARK:
             self._validate_mode_spark(mode, df)
 
-    def _validate_mode_spark(self, mode, df):
-        if df.to_native().isStreaming:
-            if mode not in SPARK_STREAMING_MODES:
-                raise ValueError(
-                    f"Mode '{mode}' is not supported for Spark Streaming DataFrame. Choose from {SPARK_STREAMING_MODES}"
-                )
-        else:
-            if mode not in SPARK_MODES:
-                raise ValueError(
-                    f"Mode '{mode}' is not supported for Spark DataFrame. Choose from {SPARK_MODES}"
-                )
-
-    def _validate_mode_polars(self, mode, df):
-        if mode is not None:
-            raise ValueError(
-                f"Mode '{mode}' is not supported for Polars DataFrame. Set to `None`"
-            )
-
     def write(
         self, df: AnyFrame = None, mode: str = None, full_refresh: bool = False
     ) -> None:
@@ -241,7 +228,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         self._validate_mode(mode, df)
         self._validate_format()
 
-        if mode.lower() == "merge":
+        if mode and mode.lower() == "merge":
             self.merge_cdc_options.execute(source=df)
             logger.info("Write completed.")
             return
@@ -264,12 +251,203 @@ class BaseDataSink(BaseModel, PipelineChild):
     #     )
     #
 
+    # -------------------------------------------------------------------------------- #
+    # Writers - Spark                                                                  #
+    # -------------------------------------------------------------------------------- #
+
+    def _validate_mode_spark(self, mode, df):
+        if df.to_native().isStreaming:
+            if mode not in SPARK_STREAMING_MODES:
+                raise ValueError(
+                    f"Mode '{mode}' is not supported for Spark Streaming DataFrame. Choose from {SPARK_STREAMING_MODES}"
+                )
+        else:
+            if mode not in SPARK_MODES:
+                raise ValueError(
+                    f"Mode '{mode}' is not supported for Spark DataFrame. Choose from {SPARK_MODES}"
+                )
+
+    def _get_spark_kwargs(self, mode, is_streaming):
+        fmt = self.format.lower()
+
+        # Build kwargs
+        kwargs = {}
+
+        kwargs["mergeSchema"] = True
+        kwargs["overwriteSchema"] = False
+        if mode in ["OVERWRITE", "COMPLETE"]:
+            kwargs["mergeSchema"] = False
+            kwargs["overwriteSchema"] = True
+        if is_streaming:
+            kwargs["checkpointLocation"] = self._checkpoint_path
+
+        if fmt in ["jsonl", "ndjson"]:
+            fmt = "json"
+            kwargs["multiline"] = False
+        elif fmt in ["json"]:
+            kwargs["multiline"] = True
+
+        # User Options
+        for k, v in self.writer_kwargs.items():
+            kwargs[k] = v
+
+        return kwargs, fmt
+
+    def _get_spark_writer_methods(self, mode, is_streaming):
+        methods = []
+
+        options, fmt = self._get_spark_kwargs(mode=mode, is_streaming=is_streaming)
+
+        methods += [WriterMethod(name="format", args=[fmt])]
+
+        if is_streaming:
+            methods += [WriterMethod(name="outputMode", args=[mode])]
+            methods += [WriterMethod(name="trigger", kwargs={"availableNow": True})]
+        else:
+            methods += [WriterMethod(name="mode", args=[mode])]
+
+        if options:
+            methods += [WriterMethod(name="options", kwargs=options)]
+
+        for m in self.writer_methods:
+            methods += [m]
+
+        return methods
+
     def _write_spark(self, df, mode, full_refresh) -> None:
         raise NotImplementedError(
             f"`{self.df_backend}` not supported for `{type(self)}`"
         )
 
+    # -------------------------------------------------------------------------------- #
+    # Writers - Polars                                                                 #
+    # -------------------------------------------------------------------------------- #
+
+    def _validate_mode_polars(self, mode, df):
+        if mode is not None:
+            raise ValueError(
+                f"Mode '{mode}' is not supported for Polars DataFrame. Set to `None`"
+            )
+
+    def _get_polars_kwargs(self, mode):
+        fmt = self.format.lower()
+
+        kwargs = {}
+
+        if self.format != "DELTA":
+            if mode:
+                raise ValueError(
+                    "'mode' configuration with Polars only supported by 'DELTA' format"
+                )
+        else:
+            # if full_refresh or not self.exists():
+            #     mode = "OVERWRITE"
+
+            if not mode:
+                raise ValueError(
+                    "'mode' configuration required with Polars 'DELTA' format"
+                )
+
+        if mode:
+            kwargs["mode"] = mode
+
+        for k, v in self.writer_kwargs.items():
+            kwargs[k] = v
+
+        return kwargs, fmt
+
     def _write_polars(self, df, mode, full_refresh) -> None:
         raise NotImplementedError(
             f"`{self.df_backend}` not supported for `{type(self)}`"
         )
+
+    #
+    # # ----------------------------------------------------------------------- #
+    # # Purge                                                                   #
+    # # ----------------------------------------------------------------------- #
+    #
+    # def exists(self, spark=None):
+    #     try:
+    #         df = self.read(spark=spark, as_stream=False)
+    #         df.limit(1).collect()
+    #         return True
+    #     except Exception:
+    #         return False
+    #
+    # def _purge_checkpoint(self, spark=None):
+    #     if self._checkpoint_location:
+    #         if os.path.exists(self._checkpoint_location):
+    #             logger.info(
+    #                 f"Deleting checkpoint at {self._checkpoint_location}",
+    #             )
+    #             shutil.rmtree(self._checkpoint_location)
+    #
+    #         if spark is None:
+    #             return
+    #
+    #         try:
+    #             from pyspark.dbutils import DBUtils
+    #         except ModuleNotFoundError:
+    #             return
+    #
+    #         dbutils = DBUtils(spark)
+    #
+    #         _path = self._checkpoint_location.as_posix()
+    #         try:
+    #             dbutils.fs.ls(
+    #                 _path
+    #             )  # TODO: Figure out why this does not work with databricks connect
+    #             logger.info(
+    #                 f"Deleting checkpoint at dbfs {_path}",
+    #             )
+    #             dbutils.fs.rm(_path, True)
+    #
+    #         except Exception as e:
+    #             if "java.io.FileNotFoundException" in str(e):
+    #                 pass
+    #             elif "databricks.sdk.errors.platform.ResourceDoesNotExist" in str(
+    #                 type(e)
+    #             ):
+    #                 pass
+    #             elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
+    #                 type(e)
+    #             ):
+    #                 # TODO: Figure out why this is happening. It seems that the databricks SDK
+    #                 #       modify the path before sending to REST API.
+    #                 logger.warn(f"dbutils could not delete checkpoint {_path}: {e}")
+    #             else:
+    #                 raise e
+    #
+    # def purge(self):
+    #     """
+    #     Delete sink data and checkpoints
+    #     """
+    #     # TODO: Now that sink switch to overwrite when sink does not exists or when
+    #     # a full refresh is requested, the purge method should not delete the data
+    #     # by default, but only the checkpoints. Also consider truncating the table
+    #     # instead of dropping it.
+    #     raise NotImplementedError()
+    #
+    #
+    # # ----------------------------------------------------------------------- #
+    # # Data Sources                                                            #
+    # # ----------------------------------------------------------------------- #
+    #
+    # def as_source(self, as_stream=None):
+    #     raise NotImplementedError()
+    #
+    # def read(self, spark=None, as_stream=None):
+    #     """
+    #     Read dataframe from sink.
+    #
+    #     Parameters
+    #     ----------
+    #     spark:
+    #         Spark Session
+    #     as_stream:
+    #         If `True`, dataframe read as stream.
+    #
+    #     Returns
+    #     -------
+    #     """
+    #     return self.as_source(as_stream=as_stream).read(spark=spark)

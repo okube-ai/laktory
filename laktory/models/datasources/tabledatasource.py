@@ -15,13 +15,13 @@ class TableDataSource(BaseDataSource):
         None,
         description="Source table catalog name",
     )
-    table_name: str = Field(
-        ...,
-        description="Source table name. Also supports fully qualified name (`{catalog}.{schema}.{table}`). In this case, `catalog_name` and `schema_name` arguments are ignored.",
-    )
     schema_name: str | None = Field(
         None,
         description="Source table schema name",
+    )
+    table_name: str = Field(
+        ...,
+        description="Source table name. Also supports fully qualified name (`{catalog}.{schema}.{table}`). In this case, `catalog_name` and `schema_name` arguments are ignored.",
     )
 
     @model_validator(mode="after")

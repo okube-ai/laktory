@@ -134,7 +134,6 @@ class DataSinkMergeCDCOptions(BaseModel):
 
     @property
     def target_path(self):
-        print("PARENT!", self._parent)
         if self._parent and "FileDataSink" in str(type(self._parent)):
             return self._parent.path
         return None
