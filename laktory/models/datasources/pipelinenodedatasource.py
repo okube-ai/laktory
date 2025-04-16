@@ -112,8 +112,13 @@ class PipelineNodeDataSource(BaseDataSource):
                 df = dlt_read(self.node.name)
 
         elif stream_to_batch or self.node.output_df is None:
-            logger.info(f"Reading pipeline node {self._id} from primary sink")
-            df = self.node.primary_sink.read(spark=spark, as_stream=self.as_stream)
+            if self.node.has_sinks:
+                logger.info(f"Reading pipeline node {self._id} from primary sink")
+                df = self.node.primary_sink.read(spark=spark, as_stream=self.as_stream)
+            else:
+                logger.info("Executing parent pipeline node")
+                self.node.execute(spark=spark)
+                df = self.node.output_df
 
         elif self.node.output_df is not None:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")

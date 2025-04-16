@@ -2,13 +2,9 @@
 
 ## [0.7.3] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
+* Support for sinkless Pipeline nodes in Databricks Job Orchestrator
 ### Updated
-* Typing on the `BaseModel.model_validate_yaml` and the `BaseModel.model_validate_json_file` functions to have the typing on the arguments to provide correct intellisense for return typing of `Model`. [[#411](https://github.com/okube-ai/laktory/issues/411)]
-### Breaking changes
-* n/a
+* `BaseModel.model_validate_yaml` and `BaseModel.model_validate_json_file` now return correct type for intellisense. [[#411](https://github.com/okube-ai/laktory/issues/411)]
 
 ## [0.7.2] - 2025-04-03
 ### Added

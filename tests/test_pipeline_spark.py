@@ -63,13 +63,14 @@ def test_dag():
 
     # Test Dag
     assert nx.is_directed_acyclic_graph(dag)
-    assert len(dag.nodes) == 7
-    assert len(dag.edges) == 6
+    assert len(dag.nodes) == 8
+    assert len(dag.edges) == 7
     assert list(nx.topological_sort(dag)) == [
         "brz_stock_prices",
         "brz_stock_meta",
         "slv_stock_meta",
         "slv_stock_prices",
+        "slv_stock_prices_tmp",
         "slv_stock_aapl",
         "slv_stock_msft",
         "gld_stock_prices",
@@ -81,6 +82,7 @@ def test_dag():
         "brz_stock_meta",
         "slv_stock_meta",
         "slv_stock_prices",
+        "slv_stock_prices_tmp",
         "slv_stock_aapl",
         "slv_stock_msft",
         "gld_stock_prices",
