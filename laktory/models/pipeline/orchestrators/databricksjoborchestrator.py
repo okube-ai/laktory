@@ -102,15 +102,26 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         self.tasks = []
 
+        def _get_depends_on(node, pl):
+            depends_on = []
+            for edge in pl.dag.in_edges(node.name):
+                _node = pl.nodes_dict[edge[0]]
+                if _node.has_sinks:
+                    depends_on += [{"task_key": "node-" + edge[0]}]
+                else:
+                    depends_on += _get_depends_on(_node, pl)
+            return depends_on
+
         # Sorting Node Names to prevent job update trigger with Pulumi
         node_names = [node.name for node in pl.nodes]
         node_names.sort()
         for node_name in node_names:
             node = pl.nodes_dict[node_name]
 
-            depends_on = []
-            for edge in pl.dag.in_edges(node.name):
-                depends_on += [{"task_key": "node-" + edge[0]}]
+            if not node.has_sinks:
+                continue
+
+            depends_on = _get_depends_on(node, pl=pl)
 
             task = JobTask(
                 task_key="node-" + node.name,
