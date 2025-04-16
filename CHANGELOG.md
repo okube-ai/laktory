@@ -1,6 +1,16 @@
 # Release History
 
-## [0.7.3] - Unreleased
+## [0.7.4] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.7.3] - 2025-04-16
 ### Added
 * Support for sinkless Pipeline nodes in Databricks Job Orchestrator
 ### Updated
