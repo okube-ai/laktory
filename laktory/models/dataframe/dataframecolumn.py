@@ -15,7 +15,7 @@ class DataFrameColumn(BaseModel):
     name: str = Field(None, description="Column name")
     dtype: Union[str, DType] = Field(..., description="Column data type")
     nullable: bool = Field(True, description="Column is nullable")
-    is_primary: bool = Field(False, description="Column is a premiary key")
+    is_primary: bool = Field(False, description="Column is a primary key")
 
     @field_validator("dtype")
     def set_dtype(cls, v: Any) -> Any:
