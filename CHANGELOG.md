@@ -21,15 +21,21 @@
 * Renamed data sinks `checkpoint_location` to `checkpoint_path`
 * Renamed data sinks `reader_options` to `reader_kwargs`
 
-## [0.7.3] - Unreleased
+## [0.7.4] - Unreleased
 ### Added
 * n/a
 ### Fixed
 * n/a
 ### Updated
-* Typing on the `BaseModel.model_validate_yaml` and the `BaseModel.model_validate_json_file` functions to have the typing on the arguments to provide correct intellisense for return typing of `Model`. [[#411](https://github.com/okube-ai/laktory/issues/411)]
+* n/a
 ### Breaking changes
 * n/a
+
+## [0.7.3] - 2025-04-16
+### Added
+* Support for sinkless Pipeline nodes in Databricks Job Orchestrator
+### Updated
+* `BaseModel.model_validate_yaml` and `BaseModel.model_validate_json_file` now return correct type for intellisense. [[#411](https://github.com/okube-ai/laktory/issues/411)]
 
 ## [0.7.2] - 2025-04-03
 ### Added
