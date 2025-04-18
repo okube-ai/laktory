@@ -306,7 +306,6 @@ def test_sql_join():
     columns = df.columns
     columns.sort()
     assert columns == [
-
         "_bronze_at",
         "_silver_at",
         "close",
