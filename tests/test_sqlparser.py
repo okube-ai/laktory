@@ -190,9 +190,3 @@ def test_math_functions():
 #         assert _df["r0"].to_list() == _df["r1"].to_list()
 #
 #         # print(_df)
-
-
-if __name__ == "__main__":
-    test_binary_operators()
-    test_struct()
-    test_math_functions()
