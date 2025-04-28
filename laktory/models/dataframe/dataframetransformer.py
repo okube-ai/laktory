@@ -2,10 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from docutils.nodes import description
+from pydantic import Field
+
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframetransformernode import DataFrameTransformerNode
 from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.typing import AnyFrame
 
 if TYPE_CHECKING:
     pass
@@ -19,12 +23,9 @@ logger = get_logger(__name__)
 
 
 class DataFrameTransformer(BaseModel, PipelineChild):
-    nodes: list[DataFrameTransformerNode]
-    # _columns: list[list[str]] = []
-    #
-    # @property
-    # def columns(self):
-    #     return self._columns
+    nodes: list[DataFrameTransformerNode] = Field(
+        ..., description="List of transformation nodes"
+    )
     #
     # @property
     # def upstream_node_names(self) -> list[str]:
@@ -42,35 +43,33 @@ class DataFrameTransformer(BaseModel, PipelineChild):
     #         sources += node.data_sources
     #     return sources
     #
-    # # ----------------------------------------------------------------------- #
-    # # Children                                                                #
-    # # ----------------------------------------------------------------------- #
-    #
-    # @property
-    # def child_attribute_names(self):
-    #     return ["nodes"]
-    #
-    # # ----------------------------------------------------------------------- #
-    # # Execution                                                               #
-    # # ----------------------------------------------------------------------- #
-    #
-    # def execute(self, df, udfs=None) -> AnyDataFrame:
-    #     logger.info(f"Executing {self.df_backend} chain")
-    #
-    #     for inode, node in enumerate(self.nodes):
-    #         self._columns += [df.columns]
-    #
-    #         tnode = type(node)
-    #         logger.info(
-    #             f"Executing {self.df_backend} chain node {inode} ({tnode.__name__})."
-    #         )
-    #         df = node.execute(df, udfs=udfs)
-    #
-    #     return df
-    #
-    # def get_view_definition(self):
-    #     logger.info("Creating view definition")
-    #     return self.nodes[0].get_view_definition()
+    # ----------------------------------------------------------------------- #
+    # Children                                                                #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def child_attribute_names(self):
+        return ["nodes"]
+
+    # ----------------------------------------------------------------------- #
+    # Execution                                                               #
+    # ----------------------------------------------------------------------- #
+
+    def execute(self, df, udfs=None, **named_dfs) -> AnyFrame:
+        logger.info(f"Executing DataFrame Transformer")
+
+        for inode, node in enumerate(self.nodes):
+            tnode = type(node)
+            logger.info(
+                f"Executing DataFrame transformer node {inode} ({tnode.__name__})."
+            )
+            df = node.execute(df, udfs=udfs, **named_dfs)
+
+        return df
+
+    def get_view_definition(self):
+        logger.info("Creating view definition")
+        return self.nodes[0].get_view_definition()
 
 
 # BaseModel.model_rebuild()
