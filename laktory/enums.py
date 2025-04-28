@@ -1,5 +1,6 @@
 from enum import Enum
 from enum import auto
+from typing import Any
 
 import narwhals as nw
 
@@ -69,3 +70,26 @@ class DataFrameBackends(Enum):
             raise ValueError(f"Implementation {implementation} is not supported.")
 
         return mapping.get(implementation)
+
+    @classmethod
+    def from_df(
+        cls, df: Any
+    ) -> "DataFrameBackends":  # pragma: no cover
+        """
+        Instantiate DataFrameBackends object from a DataFrame.
+
+        Parameters
+        ----------
+        df:
+            DataFrame
+
+        Returns
+        -------
+        output:
+            DataFrameBackend
+        """
+
+        if not isinstance(df, (nw.DataFrame, nw.LazyFrame)):
+            df = nw.from_native(df)
+
+        return cls.from_nw_implementation(df.implementation)
