@@ -1,4 +1,5 @@
 from typing import Any
+from typing import Literal
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -20,6 +21,10 @@ class PipelineChild(BaseModel):
     model_config = ConfigDict(validate_assignment=False)
     dataframe_backend: DataFrameBackends = Field(
         None, description="Type of DataFrame backend"
+    )
+    dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(
+        None,
+        description="DataFrame API to use in DataFrame Transformer nodes. Either 'NATIVE' (backend-specific) or 'NARWHALS' (backend-agnostic)."
     )
 
     @model_validator(mode="after")
@@ -61,6 +66,22 @@ class PipelineChild(BaseModel):
 
         # Value from settings
         return DataFrameBackends(settings.dataframe_backend.upper())
+
+    @property
+    def _dataframe_api(self) -> str:
+
+        # Direct value
+        dataframe_api = self.dataframe_api
+        if dataframe_api is not None:
+            return dataframe_api
+
+        # Value from parent
+        parent = self._parent
+        if parent is not None:
+            return parent._dataframe_api
+
+        # Value from settings
+        return settings.dataframe_api.upper()
 
     def update_children(self):
         for c_name in self.child_attribute_names:
