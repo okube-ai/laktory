@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from docutils.nodes import description
 from pydantic import Field
 
 from laktory._logger import get_logger
@@ -56,7 +55,7 @@ class DataFrameTransformer(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     def execute(self, df, udfs=None, **named_dfs) -> AnyFrame:
-        logger.info(f"Executing DataFrame Transformer")
+        logger.info("Executing DataFrame Transformer")
 
         for inode, node in enumerate(self.nodes):
             tnode = type(node)

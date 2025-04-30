@@ -1,7 +1,7 @@
 import os
 from typing import Any
-from typing import Union
 from typing import Literal
+from typing import Union
 
 from pydantic import ConfigDict
 from pydantic import Field
@@ -35,7 +35,9 @@ class Settings(BaseSettings):
 
     # Dataframe
     dataframe_backend: str = Field("PYSPARK", alias="LAKTORY_DATAFRAME_BACKEND")
-    dataframe_api: Literal["NARWHALS", "NATIVE"] = Field("NARWHALS", alias="LAKTORY_DATAFRAME_API")
+    dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(
+        "NARWHALS", alias="LAKTORY_DATAFRAME_API"
+    )
 
     # Paths
     laktory_root: str = Field("", alias="LAKTORY_ROOT")

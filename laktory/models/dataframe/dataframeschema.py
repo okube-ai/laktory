@@ -3,9 +3,8 @@ from typing import Any
 from typing import Union
 
 import narwhals as nw
-from docutils.nodes import description
-from pydantic import model_validator
 from pydantic import Field
+from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
@@ -16,9 +15,9 @@ logger = get_logger(__name__)
 
 
 class DataFrameSchema(BaseModel):
-    columns: Union[dict[str, Union[str, DType, DataFrameColumn]], list[DataFrameColumn]] = Field(
-        ..., description="List of columns"
-    )
+    columns: Union[
+        dict[str, Union[str, DType, DataFrameColumn]], list[DataFrameColumn]
+    ] = Field(..., description="List of columns")
 
     @model_validator(mode="before")
     @classmethod

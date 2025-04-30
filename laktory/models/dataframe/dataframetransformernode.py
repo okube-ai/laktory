@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 # import abc
-# import re
-from typing import TYPE_CHECKING
+import re
 from typing import Any
 
 # from typing import Callable
@@ -10,27 +9,15 @@ from typing import Any
 from typing import Union
 
 import narwhals as nw
+from pydantic import Field
+from pydantic import model_validator
 
-# from pydantic import field_validator
-# from pydantic import model_validator
 from laktory._logger import get_logger
-
-# from laktory.constants import SUPPORTED_DATATYPES
+from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
-
-# from laktory.polars import PolarsDataFrame
-# from laktory.polars import PolarsExpr
-# from laktory.typing import AnyDataFrame
 from laktory.models.datasources import DataSourcesUnion
-
-# from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
-
-if TYPE_CHECKING:
-    pass
-    # from laktory.models.datasources import DataSourcesUnion
-
 
 logger = get_logger(__name__)
 
@@ -42,35 +29,12 @@ logger = get_logger(__name__)
 
 class TransformerFuncArg(BaseModel, PipelineChild):
     """
-    Base function argument
-
-    Attributes
-    ----------
-    value:
-        Value of the argument
+    DataFrame function argument expressed as a string or a serialized DataSource.
     """
 
-    value: DataSourcesUnion | Any
-    #
-    # @field_validator("value")
-    # def value_to_data_source(cls, v: Any) -> Any:
-    #     """
-    #     Data source can't be set as an expected value type as it would create
-    #     a circular dependency. Instead, we check at validation if the value
-    #     could be instantiated as a DataSource object.
-    #     """
-    #     from laktory.models.datasources import classes
-    #
-    #     for c in classes:
-    #         try:
-    #             v = c(**v)
-    #             break
-    #         except:  # noqa: E722
-    #             pass
-    #
-    #     return v
+    value: DataSourcesUnion | Any = Field(..., description="Function argument")
 
-    def eval(self):
+    def eval(self, backend: DataFrameBackends):
         from laktory.models.datasources.basedatasource import BaseDataSource
 
         v = self.value
@@ -80,13 +44,41 @@ class TransformerFuncArg(BaseModel, PipelineChild):
 
         elif isinstance(v, str):
             # Imports required to evaluate expressions
-            import narwhals as nw  # noqa: F401
-            from narwhals import col  # noqa: F401
-            from narwhals import lit  # noqa: F401
-            # from polars import sql_expr  # noqa: F401
+            if self._dataframe_api == "NARWHALS":
+                import narwhals as nw  # noqa: F401
+                from narwhals import col  # noqa: F401
+                from narwhals import lit  # noqa: F401
 
-            targets = ["lit(", "col(", "nw."]
-            # TODO: add spport for sql_expr(
+                from laktory.narwhals.expr import sql_expr  # noqa: F401
+
+                targets = ["lit(", "col(", "nw.", "sql_expr"]
+
+                # TODO: Review if we want to ducktype narwhals
+                v = v.replace("nw.sql_expr", "sql_expr")
+
+            else:
+                from laktory.enums import DataFrameBackends
+
+                if backend == DataFrameBackends.PYSPARK:
+                    # Imports required to evaluate expressions
+                    import pyspark.sql.functions as F  # noqa: F401
+                    from pyspark.sql.functions import col  # noqa: F401
+                    from pyspark.sql.functions import expr  # noqa: F401
+                    from pyspark.sql.functions import lit  # noqa: F401
+
+                    targets = ["lit(", "col(", "expr(", "F."]
+
+                elif backend == DataFrameBackends.POLARS:
+                    # Imports required to evaluate expressions
+                    import polars as pl  # noqa: F401
+                    from polars import col  # noqa: F401
+                    from polars import lit  # noqa: F401
+                    from polars import sql_expr  # noqa: F401
+
+                    targets = ["lit(", "col(", "sql_expr(", "pl."]
+
+                else:
+                    raise NotImplementedError()
 
             for f in targets:
                 if f in v:
@@ -109,179 +101,153 @@ class TransformerFuncArg(BaseModel, PipelineChild):
             return f"file {self.value.path}"
         elif isinstance(self.value, TableDataSource):
             return f"table {self.value.full_name}"
-        # else:
-        #     print("value type", type(self.value))
-        #     # print("GOT DATAFRAME111111111")
         return str(self.value)
 
 
-# class BaseChainNodeFuncArg(BaseModel, PipelineChild):
-#     value: Union[Any]
-#
-#     @field_validator("value")
-#     def value_to_data_source(cls, v: Any) -> Any:
-#         """
-#         Data source can't be set as an expected value type as it would create
-#         a circular dependency. Instead, we check at validation if the value
-#         could be instantiated as a DataSource object.
-#         """
-#         from laktory.models.datasources import classes
-#
-#         for c in classes:
-#             try:
-#                 v = c(**v)
-#                 break
-#             except:  # noqa: E722
-#                 pass
-#
-#         return v
-#
-#     @abc.abstractmethod
-#     def eval(self):
-#         raise NotImplementedError()
-#
-#     def signature(self):
-#         from laktory.models.datasources import FileDataSource
-#         from laktory.models.datasources import PipelineNodeDataSource
-#         from laktory.models.datasources import TableDataSource
-#
-#         if isinstance(self.value, PipelineNodeDataSource):
-#             return f"node.{self.value.node_name}"
-#         elif isinstance(self.value, FileDataSource):
-#             return f"file {self.value.path}"
-#         elif isinstance(self.value, TableDataSource):
-#             return f"table {self.value.full_name}"
-#         return str(self.value)
-#
-#
-# class ChainNodeColumn(BaseModel, PipelineChild):
-#     expr: Union[str, DataFrameColumnExpression]
-#     name: str
-#     type: Union[str, None] = "string"
-#     unit: Union[str, None] = None
-#
-#     @model_validator(mode="after")
-#     def parse_expr(self) -> Any:
-#         if isinstance(self.expr, str):
-#             self.expr = DataFrameColumnExpression(value=self.expr)
-#         return self
-#
-#     @field_validator("type")
-#     def check_type(cls, v: str) -> str:
-#         if v is None or "<" in v:
-#             return v
-#         else:
-#             if v not in SUPPORTED_DATATYPES:
-#                 raise ValueError(
-#                     f"Type {v} is not supported. Select one of {SUPPORTED_DATATYPES}"
-#                 )
-#         return v
-#
-#     def eval(self, udfs=None, dataframe_backend=None):
-#         return self.expr.eval(udfs=udfs, dataframe_backend=dataframe_backend)
-#
-#
-# class BaseChainNodeSQLExpr(BaseModel, PipelineChild):
-#     """
-#     Chain node SQL expression
-#
-#     Attributes
-#     ----------
-#     expr:
-#         SQL expression
-#     """
-#
-#     expr: str
-#     _data_sources: list[PipelineNodeDataSource] = None
-#
-#     def parsed_expr(self, df_id="df", view=False) -> list[str]:
-#         from laktory.models.datasources.pipelinenodedatasource import (
-#             PipelineNodeDataSource,
-#         )
-#         from laktory.models.datasources.tabledatasource import TableDataSource
-#
-#         expr = self.expr
-#         if view:
-#             pl_node = self.parent_pipeline_node
-#
-#             if pl_node and pl_node.source:
-#                 source = pl_node.source
-#                 if isinstance(source, TableDataSource):
-#                     full_name = source.full_name
-#                 elif isinstance(source, PipelineNodeDataSource):
-#                     full_name = source.sink_table_full_name
-#                 else:
-#                     raise ValueError(
-#                         "VIEW sink only supports Table or Pipeline Node with Table sink data sources"
-#                     )
-#                 expr = expr.replace("{df}", full_name)
-#
-#             pl = self.parent_pipeline
-#             if pl:
-#                 from laktory.models.datasinks.tabledatasink import TableDataSink
-#
-#                 pattern = r"\{nodes\.(.*?)\}"
-#                 matches = re.findall(pattern, expr)
-#                 for m in matches:
-#                     if m not in pl.nodes_dict:
-#                         raise ValueError(
-#                             f"Node '{m}' is not available from pipeline '{pl.name}'"
-#                         )
-#                     sink = pl.nodes_dict[m].primary_sink
-#                     if not isinstance(sink, TableDataSink):
-#                         raise ValueError(
-#                             f"Node '{m}' used in view creation does not have a Table sink"
-#                         )
-#                     expr = expr.replace("{nodes." + m + "}", sink.full_name)
-#
-#             return expr
-#
-#         expr = expr.replace("{df}", df_id)
-#         pattern = r"\{nodes\.(.*?)\}"
-#         matches = re.findall(pattern, expr)
-#         for m in matches:
-#             expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
-#
-#         return expr.split(";")
-#
-#     @property
-#     def upstream_node_names(self) -> list[str]:
-#         if self.expr is None:
-#             return []
-#
-#         names = []
-#
-#         pattern = r"\{nodes\.(.*?)\}"
-#         matches = re.findall(pattern, self.expr)
-#         for m in matches:
-#             names += [m]
-#
-#         return names
-#
-#     @property
-#     def data_sources(self) -> list[PipelineNodeDataSource]:
-#         if self._data_sources is None:
-#             if self.expr is None:
-#                 return []
-#
-#             from laktory.models.datasources.pipelinenodedatasource import (
-#                 PipelineNodeDataSource,
-#             )
-#
-#             sources = []
-#
-#             pattern = r"\{nodes\.(.*?)\}"
-#             matches = re.findall(pattern, self.expr)
-#             for m in matches:
-#                 sources += [PipelineNodeDataSource(node_name=m)]
-#
-#             self._data_sources = sources
-#
-#         return self._data_sources
-#
-#     def eval(self, df):
-#         raise NotImplementedError()
-#
+class TransformerSQLExpr(BaseModel, PipelineChild):
+    """
+    Chain node SQL expression
+    """
+
+    expr: str = Field(..., description="SQL Expression")
+    # _data_sources: list[PipelineNodeDataSource] = None
+
+    def parsed_expr(self, view=False) -> list[str]:
+        raise NotImplementedError()
+        # from laktory.models.datasources.pipelinenodedatasource import (
+        #     PipelineNodeDataSource,
+        # )
+        # from laktory.models.datasources.tabledatasource import TableDataSource
+
+        expr = self.expr
+        # TODO: REVIEW VIEW SUPPORT
+        # if view:
+        #     pl_node = self.parent_pipeline_node
+        #
+        #     if pl_node and pl_node.source:
+        #         source = pl_node.source
+        #         if isinstance(source, TableDataSource):
+        #             full_name = source.full_name
+        #         elif isinstance(source, PipelineNodeDataSource):
+        #             full_name = source.sink_table_full_name
+        #         else:
+        #             raise ValueError(
+        #                 "VIEW sink only supports Table or Pipeline Node with Table sink data sources"
+        #             )
+        #         expr = expr.replace("{df}", full_name)
+        #
+        #     pl = self.parent_pipeline
+        #     if pl:
+        #         from laktory.models.datasinks.tabledatasink import TableDataSink
+        #
+        #         pattern = r"\{nodes\.(.*?)\}"
+        #         matches = re.findall(pattern, expr)
+        #         for m in matches:
+        #             if m not in pl.nodes_dict:
+        #                 raise ValueError(
+        #                     f"Node '{m}' is not available from pipeline '{pl.name}'"
+        #                 )
+        #             sink = pl.nodes_dict[m].primary_sink
+        #             if not isinstance(sink, TableDataSink):
+        #                 raise ValueError(
+        #                     f"Node '{m}' used in view creation does not have a Table sink"
+        #                 )
+        #             expr = expr.replace("{nodes." + m + "}", sink.full_name)
+        #
+        #     return expr
+
+        expr = expr.replace("{df}", "df")
+        pattern = r"\{nodes\.(.*?)\}"
+        matches = re.findall(pattern, expr)
+        for m in matches:
+            expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
+
+        return expr.split(";")
+
+    # @property
+    # def upstream_node_names(self) -> list[str]:
+    #     if self.expr is None:
+    #         return []
+    #
+    #     names = []
+    #
+    #     pattern = r"\{nodes\.(.*?)\}"
+    #     matches = re.findall(pattern, self.expr)
+    #     for m in matches:
+    #         names += [m]
+    #
+    #     return names
+
+    # @property
+    # def data_sources(self) -> list[PipelineNodeDataSource]:
+    #     if self._data_sources is None:
+    #         if self.expr is None:
+    #             return []
+    #
+    #         from laktory.models.datasources.pipelinenodedatasource import (
+    #             PipelineNodeDataSource,
+    #         )
+    #
+    #         sources = []
+    #
+    #         pattern = r"\{nodes\.(.*?)\}"
+    #         matches = re.findall(pattern, self.expr)
+    #         for m in matches:
+    #             sources += [PipelineNodeDataSource(node_name=m)]
+    #
+    #         self._data_sources = sources
+    #
+    #     return self._data_sources
+
+    def eval(self, backend: DataFrameBackends, dfs: dict[str, AnyFrame]):
+        dfs = {k: v.to_native() for k, v in dfs.items()}
+        df0 = list(dfs.values())[0]
+
+        if backend == DataFrameBackends.POLARS:
+            import polars as pl
+
+            #
+            # kwargs = {"df": df}
+            # for source in self.data_sources:
+            #     kwargs[f"nodes__{source.node.name}"] = source.read()
+            # return pl.SQLContext(frames=dfs).execute(";".join(self.parsed_expr()))
+            return pl.SQLContext(frames=dfs).execute(self.expr)
+
+        elif backend == DataFrameBackends.PYSPARK:
+            _spark = df0.sparkSession
+
+            # # Get pipeline node if executed from pipeline
+            # pipeline_node = self.parent_pipeline_node
+            #
+            # # Set df id (to avoid temp view with conflicting names)
+            # df_id = "df"
+            # if pipeline_node:
+            #     df_id = f"df_{pipeline_node.name}"
+
+            # df.createOrReplaceTempView(df_id)
+            # for source in self.data_sources:
+            #     _df = source.read(spark=_spark)
+            #     _df.createOrReplaceTempView(f"nodes__{source.node.name}")
+
+            # Create views
+            for k, _df in dfs.items():
+                _df.createOrReplaceTempView(k)
+
+            # Run query
+            _df = None
+            for expr in self.expr.split(";"):
+                # for expr in self.parsed_expr():
+                if expr.replace("\n", " ").strip() == "":
+                    continue
+                # _df = _spark.laktory.sql(expr)
+                _df = _spark.sql(expr)
+            if _df is None:
+                raise ValueError(f"SQL Expression '{self.expr}' is invalid")
+            return _df
+
+        else:
+            raise NotImplementedError(f"Backend '{backend}' is not supported.")
+
 
 # --------------------------------------------------------------------------- #
 # Main Class                                                                  #
@@ -289,60 +255,109 @@ class TransformerFuncArg(BaseModel, PipelineChild):
 
 
 class DataFrameTransformerNode(BaseModel, PipelineChild):
-    # dataframe_backend: Literal["SPARK", "POLARS", None] = None
-    func_args: list[Any] = []
-    func_kwargs: dict[str, Any] = {}
+    """
+    DataFrame transformer node that output a dataframe upon execution. Each
+    node is executed sequentially in the provided order.
+
+    Attributes
+    ----------
+    func_args:
+        List of arguments to be passed to the DataFrame function. If the
+        function expects a column, it's string representation can be
+        provided with support for `col`, `lit`, `sql_expr` and `nw.`.
+    func_kwargs:
+        List of keyword arguments to be passed to the DataFrame function. If
+        the function expects a column, its string representation can be
+        provided with support for `col`, `lit`, `expr` and `F.`.
+    func_name:
+        Name of the DataFrame function to build the output. Mutually
+        exclusive to `sql_expr`.
+    sql_expr:
+        SQL Expression using `{df}` to reference upstream dataframe and
+        defining how to build the output dataframe. Mutually exclusive to
+        `func_name` and `with_column`. Other pipeline nodes can also be
+        referenced using {nodes.node_name}.
+
+    Examples
+    --------
+    ```py
+    import polars as pl
+
+    from laktory import models
+
+    df0 = pl.DataFrame({"x": [1.2, 2.1, 2.0, 3.7]})
+
+    node = models.DataFrameTransformerNode(
+        func_name=with_columns, func_kwargs={"xr": "nw.col('x').round()"}
+    )
+    df = node.execute(df0)
+
+    node = models.SparkChainNode(
+        with_column={
+            "name": "xy",
+            "type": "double",
+            "expr": "F.coalesce('x')",
+        },
+    )
+    df = node.execute(df)
+
+    print(df.toPandas().to_string())
+    '''
+       x      cosx   xy
+    0  1  0.540302  1.0
+    1  2 -0.416147  2.0
+    2  2 -0.416147  2.0
+    3  3 -0.989992  3.0
+    '''
+
+    node = models.SparkChainNode(
+        func_name="drop_duplicates",
+        func_args=[["x"]],
+    )
+    df = node.execute(df)
+
+    print(df.toPandas().to_string())
+    '''
+       x      cosx   xy
+    0  1  0.540302  1.0
+    1  2 -0.416147  2.0
+    2  3 -0.989992  3.0
+    '''
+    ```
+    """
+
+    func_args: list[Any] = Field([], description="")
+    func_kwargs: dict[str, TransformerFuncArg | Any] = {}
     func_name: str = None
-    # sql_expr: Union[str, None] = None
-    # with_column: Union[ChainNodeColumn, None] = None
-    # with_columns: Union[list[ChainNodeColumn], None] = []
-    _parsed_func_args: list = None
-    _parsed_func_kwargs: dict = None
-    # _parsed_sql_expr: BaseChainNodeSQLExpr = None
-    #
-    # @model_validator(mode="after")
-    # def selected_flow(self) -> Any:
-    #     if len(self._with_columns) > 0:
-    #         if self.func_name:
-    #             raise ValueError(
-    #                 "`func_name` should not be set when using `with_column`"
-    #             )
-    #         if self.sql_expr:
-    #             raise ValueError(
-    #                 "`sql_expr` should not be set when using `with_column`"
-    #             )
-    #     else:
-    #         if self.func_name and self.sql_expr:
-    #             raise ValueError(
-    #                 "Only one of `func_name` and `sql_expr` should be set."
-    #             )
-    #         if not (self.func_name or self.sql_expr):
-    #             raise ValueError(
-    #                 "Either `func_name`, `sql_expr` or `with_column` should be set when using"
-    #             )
-    #
-    #     return self
-    #
+    sql_expr: TransformerSQLExpr | str | None = None
 
-    # -------------------------------------------------------------------------------- #
-    # Func Args                                                                        #
-    # -------------------------------------------------------------------------------- #
+    @model_validator(mode="after")
+    def parse_func_args(self) -> Any:
+        for k, v in self.func_kwargs.items():
+            if not isinstance(v, TransformerFuncArg):
+                self.func_kwargs[k] = TransformerFuncArg(value=v)
 
-    @property
-    def parsed_func_args(self):
-        if not self._parsed_func_args:
-            self._parsed_func_args = [
-                TransformerFuncArg(value=a) for a in self.func_args
-            ]
-        return self._parsed_func_args
+        for i, v in enumerate(self.func_args):
+            if not isinstance(v, TransformerFuncArg):
+                self.func_args[i] = TransformerFuncArg(value=v)
 
-    @property
-    def parsed_func_kwargs(self):
-        if not self._parsed_func_kwargs:
-            self._parsed_func_kwargs = {
-                k: TransformerFuncArg(value=v) for k, v in self.func_kwargs.items()
-            }
-        return self._parsed_func_kwargs
+        if self.sql_expr and not isinstance(self.sql_expr, TransformerSQLExpr):
+            self.sql_expr = TransformerSQLExpr(expr=self.sql_expr)
+
+        self.update_children()
+
+        return self
+
+    @model_validator(mode="after")
+    def selected_flow(self) -> Any:
+        if self.func_name and self.sql_expr:
+            raise ValueError("Only one of `func_name` and `sql_expr` should be set.")
+        if not (self.func_name or self.sql_expr):
+            raise ValueError(
+                "Either `func_name`, `sql_expr` or `with_column` should be set when using"
+            )
+
+        return self
 
     # # ----------------------------------------------------------------------- #
     # # Id                                                                      #
@@ -354,18 +369,19 @@ class DataFrameTransformerNode(BaseModel, PipelineChild):
     #         return "-".join([c.name for c in self.with_columns])
     #     return "df"
     #
-    # # ----------------------------------------------------------------------- #
-    # # Children                                                                #
-    # # ----------------------------------------------------------------------- #
-    #
-    # @property
-    # def child_attribute_names(self):
-    #     return [
-    #         "data_sources",
-    #         "_parsed_func_args",
-    #         "_parsed_func_kwargs",
-    #         "_parsed_sql_expr",
-    #     ]
+    # ----------------------------------------------------------------------- #
+    # Children                                                                #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def child_attribute_names(self):
+        return [
+            "data_sources",
+            "func_args",
+            "func_kwargs",
+            "sql_expr",
+        ]
+
     #
     # # ----------------------------------------------------------------------- #
     # # Columns Creation                                                        #
@@ -382,28 +398,28 @@ class DataFrameTransformerNode(BaseModel, PipelineChild):
     # def is_column(self):
     #     return len(self._with_columns) > 0
     #
-    # # ----------------------------------------------------------------------- #
-    # # Data Sources                                                            #
-    # # ----------------------------------------------------------------------- #
-    #
-    # @property
-    # def data_sources(self) -> list[BaseDataSource]:
-    #     """Get all sources feeding the Chain Node"""
-    #
-    #     from laktory.models.datasources.basedatasource import BaseDataSource
-    #
-    #     sources = []
-    #     for a in self.parsed_func_args:
-    #         if isinstance(a.value, BaseDataSource):
-    #             sources += [a.value]
-    #     for a in self.parsed_func_kwargs.values():
-    #         if isinstance(a.value, BaseDataSource):
-    #             sources += [a.value]
-    #
-    #     if self.sql_expr:
-    #         sources += self.parsed_sql_expr.data_sources
-    #
-    #     return sources
+    # ----------------------------------------------------------------------- #
+    # Data Sources                                                            #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def data_sources(self) -> list[DataSourcesUnion]:
+        """Get all sources feeding the Chain Node"""
+
+
+        sources = []
+        # for a in self.parsed_func_args:
+        #     if isinstance(a.value, BaseDataSource):
+        #         sources += [a.value]
+        # for a in self.parsed_func_kwargs.values():
+        #     if isinstance(a.value, BaseDataSource):
+        #         sources += [a.value]
+
+        # if self.sql_expr:
+        #     sources += self.parsed_sql_expr.data_sources
+
+        return sources
+
     #
     # # ----------------------------------------------------------------------- #
     # # Upstream Nodes                                                          #
@@ -438,6 +454,7 @@ class DataFrameTransformerNode(BaseModel, PipelineChild):
         self,
         df: AnyFrame,
         # udfs: list[Callable[[...], Union[PolarsExpr, PolarsDataFrame]]] = None,
+        **named_dfs: dict[str, AnyFrame],
     ) -> Union[AnyFrame]:
         """
         Execute polars chain node
@@ -453,7 +470,9 @@ class DataFrameTransformerNode(BaseModel, PipelineChild):
         -------
             Output dataframe
         """
-        # from polars import DataFrame
+
+        # Get Backend
+        backend = DataFrameBackends.from_df(df)
         #
         # from laktory.polars.datatypes import DATATYPES_MAP
         #
@@ -461,26 +480,20 @@ class DataFrameTransformerNode(BaseModel, PipelineChild):
         #     udfs = []
         # udfs = {f.__name__: f for f in udfs}
         #
-        # # Build Columns
-        # if self._with_columns:
-        #     for column in self._with_columns:
-        #         logger.info(
-        #             f"Building column {column.name} as {column.expr or column.sql_expr}"
-        #         )
-        #         _col = column.eval(udfs=udfs, dataframe_backend="POLARS")
-        #         if column.type:
-        #             _col = _col.cast(DATATYPES_MAP[column.type])
-        #         df = df.with_columns(**{column.name: _col})
-        #     return df
-        #
-        # # From SQL expression
-        # if self.sql_expr:
-        #     logger.info(f"DataFrame {self.id} as \n{self.sql_expr.strip()}")
-        #     return self.parsed_sql_expr.eval(df)
+
+        # From SQL expression
+        if self.sql_expr:
+            logger.info(f"DataFrame as \n{self.sql_expr.expr.strip()}")
+            dfs = {"df": df}
+            for k, v in named_dfs.items():
+                dfs[k] = v
+            return self.sql_expr.eval(backend=backend, dfs=dfs)
 
         # Convert to Narwhals
         if not isinstance(df, AnyFrame):
             df = nw.from_native(df)
+        if self._dataframe_api == "NATIVE":
+            df = df.to_native()
 
         # Get Function
         func_name = self.func_name
@@ -505,8 +518,8 @@ class DataFrameTransformerNode(BaseModel, PipelineChild):
         if f is None:
             raise ValueError(f"Function {func_name} is not available")
 
-        _args = self.parsed_func_args
-        _kwargs = self.parsed_func_kwargs
+        _args = self.func_args
+        _kwargs = self.func_kwargs
 
         # Build log
         func_log = f"df.{func_name}("
@@ -516,30 +529,20 @@ class DataFrameTransformerNode(BaseModel, PipelineChild):
         logger.info(f"Applying {func_log}")
 
         # Build args
-        # args = [df]
         args = []
         for i, _arg in enumerate(_args):
-            args += [_arg.eval()]
+            args += [_arg.eval(backend=backend)]
 
         # Build kwargs
         kwargs = {}
         for k, _arg in _kwargs.items():
-            kwargs[k] = _arg.eval()
+            kwargs[k] = _arg.eval(backend=backend)
 
         # Call function
         df = f(*args, **kwargs)
 
         return df
 
-    # @abc.abstractmethod
-    # def execute(
-    #     self,
-    #     df: AnyDataFrame,
-    #     udfs: list[Callable[[...], Union[PolarsExpr, PolarsDataFrame]]] = None,
-    #     return_col: bool = False,
-    # ) -> Union[AnyDataFrame]:
-    #     raise NotImplementedError()
-    #
     # def get_view_definition(self):
     #     return self._parsed_sql_expr.parsed_expr(view=True)
 

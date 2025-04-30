@@ -72,9 +72,7 @@ class DataFrameBackends(Enum):
         return mapping.get(implementation)
 
     @classmethod
-    def from_df(
-        cls, df: Any
-    ) -> "DataFrameBackends":  # pragma: no cover
+    def from_df(cls, df: Any) -> "DataFrameBackends":  # pragma: no cover
         """
         Instantiate DataFrameBackends object from a DataFrame.
 
