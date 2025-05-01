@@ -6,7 +6,8 @@ from pydantic import Field
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
-from laktory.models.dataframe.dataframetransformernode import DataFrameTransformerNode
+from laktory.models.dataframe.dataframemethod import DataFrameMethod
+from laktory.models.dataframe.dataframesqlexpr import DataFrameSQLExpr
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
 
@@ -22,7 +23,7 @@ logger = get_logger(__name__)
 
 
 class DataFrameTransformer(BaseModel, PipelineChild):
-    nodes: list[DataFrameTransformerNode] = Field(
+    nodes: list[DataFrameMethod | DataFrameSQLExpr] = Field(
         ..., description="List of transformation nodes"
     )
     #
