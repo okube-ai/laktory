@@ -87,6 +87,7 @@ class LaktorySettings(BaseModel):
     """
 
     dataframe_backend: str = None
+    dataframe_api: Literal["NARWHALS", "NATIVE"] = None
     workspace_laktory_root: str = "/.laktory/"
     laktory_root: str = "/laktory/"
 
@@ -100,6 +101,9 @@ class LaktorySettings(BaseModel):
 
         if self.laktory_root:
             settings.laktory_root = self.laktory_root
+
+        if self.dataframe_api:
+            settings.dataframe_api = self.dataframe_api
 
         return self
 

@@ -11,6 +11,7 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.narwhals.expr import sql_expr
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
@@ -158,15 +159,15 @@ class BaseDataSource(BaseModel, PipelineChild):
     def _post_read(self, df: AnyFrame) -> AnyFrame:
         # Apply filter
         if self.filter:
-            df = df.filter(nw.sql_expr(self.filter))
+            df = df.filter(sql_expr(self.filter))
 
         # Columns
         cols = []
         if self.selects:
             if isinstance(self.selects, list):
-                cols += [nw.sql_expr(c) for c in self.selects]
+                cols += [sql_expr(c) for c in self.selects]
             elif isinstance(self.selects, dict):
-                cols += [nw.sql_expr(k).alias(v) for k, v in self.selects.items()]
+                cols += [sql_expr(k).alias(v) for k, v in self.selects.items()]
             df = df.select(cols)
 
         # Renames

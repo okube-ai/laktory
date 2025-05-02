@@ -11,7 +11,7 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
-from laktory.models.dataframebackendmethod import DataFrameBackendMethod
+from laktory.models.dataframe.dataframebackendmethod import DataFrameBackendMethod
 from laktory.models.datasinks.mergecdcoptions import DataSinkMergeCDCOptions
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame

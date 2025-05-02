@@ -13,8 +13,8 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
-from laktory.models.dataframebackendmethod import DataFrameBackendMethod
-from laktory.models.dataframeschema import DataFrameSchema
+from laktory.models.dataframe.dataframebackendmethod import DataFrameBackendMethod
+from laktory.models.dataframe.dataframeschema import DataFrameSchema
 from laktory.models.datasources.basedatasource import BaseDataSource
 
 logger = get_logger(__name__)
