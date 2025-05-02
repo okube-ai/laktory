@@ -161,14 +161,18 @@ nav:
   - Lakehouse As Code: lakehouseascode.md
   - API Reference:
     - Models:
-      - BaseModel: api/models/basemodel.md
+#      - BaseModel: api/models/basemodel.md
 #      - DataEventHeader: api/models/dataeventheader.md
-      - DataEvent: api/models/dataevent.md
+#      - DataEvent: api/models/dataevent.md
+      - DataFrame:
+        - DataFrameColumn: api/models/dataframe/dataframecolumn.md
+        - DataFrameMethod: api/models/dataframe/dataframemethod.md
+        - DataFrameSQLExpression: api/models/dataframe/dataframesqlexpr.md
+        - DataFrameSchema: api/models/dataframe/dataframeschema.md
+        - DataFrameTransformer: api/models/dataframe/dataframetransformer.md
       - DataFrameBackendMethod: api/models/dataframebackendmethod.md
-      - DataFrameColumn: api/models/dataframecolumn.md
-      - DataFrameSchema: api/models/dataframeschema.md
-      - DataFrameColumnExpression: api/models/dataframecolumnexpression.md
-      - DataProducer: api/models/dataproducer.md
+#      - DataFrameColumnExpression: api/models/dataframecolumnexpression.md
+#      - DataProducer: api/models/dataproducer.md
       - DataTypes: api/models/datatypes.md
       - DataSinks:
         - FileDataSink: api/models/datasinks/file.md
@@ -180,18 +184,18 @@ nav:
 #        - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
         - HiveMetastoreDataSource: api/models/datasources/hivemetastore.md
         - UnityCatalogDataSource: api/models/datasources/unitycatalog.md
-      - DataQuality:
-        - DataQualityCheck: api/models/dataquality/check.md
-        - DataQualityExpectation: api/models/dataquality/expectation.md
-      - Pipeline:
-        - Pipeline: api/models/pipeline/pipeline.md
-        - PipelineNode: api/models/pipeline/pipelinenode.md
-        - PipelineChild: api/models/pipeline/pipelinechild.md
-        - Orchestrators:
-            - Databricks Job: api/models/pipeline/orchestrators/databricksjoborchestrator.md
-            - Databricks DLT: api/models/pipeline/orchestrators/databricksdltorchestrator.md
-            - Pipeline Config Workspace File: api/models/pipeline/orchestrators/pipelineconfigworkspacefile.md
-            - Pipeline Requirements Workspace File: api/models/pipeline/orchestrators/pipelinerequirementsworkspacefile.md
+#      - DataQuality:
+#        - DataQualityCheck: api/models/dataquality/check.md
+#        - DataQualityExpectation: api/models/dataquality/expectation.md
+#      - Pipeline:
+#        - Pipeline: api/models/pipeline/pipeline.md
+#        - PipelineNode: api/models/pipeline/pipelinenode.md
+#        - PipelineChild: api/models/pipeline/pipelinechild.md
+#        - Orchestrators:
+#            - Databricks Job: api/models/pipeline/orchestrators/databricksjoborchestrator.md
+#            - Databricks DLT: api/models/pipeline/orchestrators/databricksdltorchestrator.md
+#            - Pipeline Config Workspace File: api/models/pipeline/orchestrators/pipelineconfigworkspacefile.md
+#            - Pipeline Requirements Workspace File: api/models/pipeline/orchestrators/pipelinerequirementsworkspacefile.md
       - Resources:
         - BaseResource: api/models/resources/baseresource.md
         - PulumiResource: api/models/resources/pulumiresource.md
@@ -247,49 +251,49 @@ nav:
           - Stack: api/models/stacks/stack.md
           - PulumiStack: api/models/stacks/pulumistack.md
           - TerraformStack: api/models/stacks/terraformstack.md
-      - Transformers:
-#        - BaseChainNode: api/models/transformers/basechainnode.md
-        - PolarsChain: api/models/transformers/polarschain.md
-        - SparkChain: api/models/transformers/sparkchain.md
+#      - Transformers:
+##        - BaseChainNode: api/models/transformers/basechainnode.md
+#        - PolarsChain: api/models/transformers/polarschain.md
+#        - SparkChain: api/models/transformers/sparkchain.md
     - Types: api/types.md
     - CLI: api/cli.md
     - RecursiveLoader: api/recursiveloader.md
     - SQLParser: api/sqlparser.md
-    - Spark:
-      - DataFrame:
-        - display: api/spark/dataframe/display.md
-        - groupby_and_agg: api/spark/dataframe/groupby_and_agg.md
-        - has_column: api/spark/dataframe/has_column.md
-        - schema_flat: api/spark/dataframe/schema_flat.md
-        - smart_join: api/spark/dataframe/smart_join.md
-        - show_string: api/spark/dataframe/show_string.md
-        - window_filter: api/spark/dataframe/window_filter.md
-      - Functions:
-        - constants: api/spark/functions/_constants.md
-        - compare: api/spark/functions/compare.md
-        - convert_units: api/spark/functions/convert_units.md
-        - roundp: api/spark/functions/roundp.md
-        - string_split: api/spark/functions/string_split.md
-        - sub: api/spark/functions/sub.md
-        - uuid: api/spark/functions/uuid.md
-    - Polars:
-      - DataFrame:
-        - groupby_and_agg: api/polars/dataframe/groupby_and_agg.md
-        - has_column: api/polars/dataframe/has_column.md
-        - schema_flat: api/polars/dataframe/schema_flat.md
-        - signature: api/polars/dataframe/signature.md
-        - smart_join: api/polars/dataframe/smart_join.md
-        - union: api/polars/dataframe/union.md
-        - window_filter: api/polars/dataframe/window_filter.md
-      - Expressions:
-        - compare: api/polars/expressions/compare.md
-        - convert_units: api/polars/expressions/convert_units.md
-        - current_timestamp: api/polars/expressions/current_timestamp.md
-        - roundp: api/polars/expressions/roundp.md
-        - row_number: api/polars/expressions/row_number.md
-        - scaled_power: api/polars/expressions/scaled_power.md
-        - string_split: api/polars/expressions/string_split.md
-        - uuid: api/polars/expressions/uuid.md
+#    - Spark:
+#      - DataFrame:
+#        - display: api/spark/dataframe/display.md
+#        - groupby_and_agg: api/spark/dataframe/groupby_and_agg.md
+#        - has_column: api/spark/dataframe/has_column.md
+#        - schema_flat: api/spark/dataframe/schema_flat.md
+#        - smart_join: api/spark/dataframe/smart_join.md
+#        - show_string: api/spark/dataframe/show_string.md
+#        - window_filter: api/spark/dataframe/window_filter.md
+#      - Functions:
+#        - constants: api/spark/functions/_constants.md
+#        - compare: api/spark/functions/compare.md
+#        - convert_units: api/spark/functions/convert_units.md
+#        - roundp: api/spark/functions/roundp.md
+#        - string_split: api/spark/functions/string_split.md
+#        - sub: api/spark/functions/sub.md
+#        - uuid: api/spark/functions/uuid.md
+#    - Polars:
+#      - DataFrame:
+#        - groupby_and_agg: api/polars/dataframe/groupby_and_agg.md
+#        - has_column: api/polars/dataframe/has_column.md
+#        - schema_flat: api/polars/dataframe/schema_flat.md
+#        - signature: api/polars/dataframe/signature.md
+#        - smart_join: api/polars/dataframe/smart_join.md
+#        - union: api/polars/dataframe/union.md
+#        - window_filter: api/polars/dataframe/window_filter.md
+#      - Expressions:
+#        - compare: api/polars/expressions/compare.md
+#        - convert_units: api/polars/expressions/convert_units.md
+#        - current_timestamp: api/polars/expressions/current_timestamp.md
+#        - roundp: api/polars/expressions/roundp.md
+#        - row_number: api/polars/expressions/row_number.md
+#        - scaled_power: api/polars/expressions/scaled_power.md
+#        - string_split: api/polars/expressions/string_split.md
+#        - uuid: api/polars/expressions/uuid.md
     - DLT:
       - apply_changes: api/dlt/apply_changes.md
       - get_df: api/dlt/get_df.md

@@ -142,7 +142,7 @@ class DataFrameSQLExpr(BaseModel, PipelineChild):
         **named_dfs: dict[str, AnyFrame],
     ) -> Union[AnyFrame]:
         """
-        Execute polars chain node
+        Execute SQL expression on provided DataFrame `df`.
 
         Parameters
         ----------
@@ -150,6 +150,8 @@ class DataFrameSQLExpr(BaseModel, PipelineChild):
             Input dataframe
         udfs:
             User-defined functions
+        named_dfs:
+            Other DataFrame(s) to be passed to the method.
 
         Returns
         -------

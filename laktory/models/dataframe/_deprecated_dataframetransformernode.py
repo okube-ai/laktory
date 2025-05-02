@@ -406,7 +406,6 @@ class DataFrameTransformerNode(BaseModel, PipelineChild):
     def data_sources(self) -> list[DataSourcesUnion]:
         """Get all sources feeding the Chain Node"""
 
-
         sources = []
         # for a in self.parsed_func_args:
         #     if isinstance(a.value, BaseDataSource):

@@ -88,6 +88,22 @@ class DataFrameTransformer(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     def execute(self, df, udfs=None, **named_dfs) -> AnyFrame:
+        """
+        Execute transformation nodes on provided DataFrame `df`
+
+        Parameters
+        ----------
+        df:
+            Input dataframe
+        udfs:
+            User-defined functions
+        named_dfs:
+            Other DataFrame(s) to be passed to the method.
+
+        Returns
+        -------
+            Output dataframe
+        """
         logger.info("Executing DataFrame Transformer")
 
         for inode, node in enumerate(self.nodes):
@@ -103,9 +119,10 @@ class DataFrameTransformer(BaseModel, PipelineChild):
 
         return df
 
-    def get_view_definition(self):
-        logger.info("Creating view definition")
-        return self.nodes[0].get_view_definition()
+    #
+    # def get_view_definition(self):
+    #     logger.info("Creating view definition")
+    #     return self.nodes[0].get_view_definition()
 
 
 # BaseModel.model_rebuild()

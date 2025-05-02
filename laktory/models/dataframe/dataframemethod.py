@@ -28,7 +28,7 @@ logger = get_logger(__name__)
 
 class DataFrameMethodArg(BaseModel, PipelineChild):
     """
-    DataFrame function argument expressed as a string or a serialized DataSource.
+    DataFrame method argument expressed as a string or a serialized DataSource.
     """
 
     value: DataSourcesUnion | Any = Field(..., description="Function argument")
@@ -143,12 +143,18 @@ class DataFrameMethod(BaseModel, PipelineChild):
     ```
     """
 
-    args: list[Any] = Field([], description="")
-    kwargs: dict[str, DataFrameMethodArg | Any] = {}
-    name: str = None
+    args: list[DataFrameMethodArg | Any] = Field(
+        [],
+        description="Arguments passed to method. A `DataSource` model can be passed instead of a DataFrame.",
+    )
+    kwargs: dict[str, DataFrameMethodArg | Any] = Field(
+        {},
+        description="Keyword arguments passed to method. A `DataSource` model can be passed instead of a DataFrame.",
+    )
+    name: str = Field(..., description="Method name.")
 
     @model_validator(mode="after")
-    def parse_args(self) -> Any:
+    def set_args(self) -> Any:
         for k, v in self.kwargs.items():
             if not isinstance(v, DataFrameMethodArg):
                 self.kwargs[k] = DataFrameMethodArg(value=v)
@@ -248,7 +254,7 @@ class DataFrameMethod(BaseModel, PipelineChild):
         **named_dfs: dict[str, AnyFrame],
     ) -> Union[AnyFrame]:
         """
-        Execute polars chain node
+        Execute method on provided DataFrame `df`.
 
         Parameters
         ----------
@@ -256,6 +262,8 @@ class DataFrameMethod(BaseModel, PipelineChild):
             Input dataframe
         udfs:
             User-defined functions
+        named_dfs:
+            Other DataFrame(s) to be passed to the method.
 
         Returns
         -------
@@ -264,8 +272,6 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
         # Get Backend
         backend = DataFrameBackends.from_df(df)
-        #
-        # from laktory.polars.datatypes import DATATYPES_MAP
         #
         # if udfs is None:
         #     udfs = []
