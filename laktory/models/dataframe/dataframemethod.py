@@ -110,73 +110,36 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
 
 class DataFrameMethod(BaseModel, PipelineChild):
     """
-    DataFrame transformer node that output a dataframe upon execution. Each
-    node is executed sequentially in the provided order.
-
-    Attributes
-    ----------
-    func_args:
-        List of arguments to be passed to the DataFrame function. If the
-        function expects a column, it's string representation can be
-        provided with support for `col`, `lit`, `sql_expr` and `nw.`.
-    func_kwargs:
-        List of keyword arguments to be passed to the DataFrame function. If
-        the function expects a column, its string representation can be
-        provided with support for `col`, `lit`, `expr` and `F.`.
-    func_name:
-        Name of the DataFrame function to build the output. Mutually
-        exclusive to `sql_expr`.
-    sql_expr:
-        SQL Expression using `{df}` to reference upstream dataframe and
-        defining how to build the output dataframe. Mutually exclusive to
-        `func_name` and `with_column`. Other pipeline nodes can also be
-        referenced using {nodes.node_name}.
+    A transformation defined as a DataFrame API method and arguments. Both native
+    and Narwhals API are supported.
 
     Examples
     --------
     ```py
     import polars as pl
-
     from laktory import models
 
-    df0 = pl.DataFrame({"x": [1.2, 2.1, 2.0, 3.7]})
+    df0 = pl.DataFrame(
+        {
+            "x": [1.1, 2.2, 3.3],
+        }
+    )
 
-    node = models.DataFrameTransformerNode(
-        func_name=with_columns, func_kwargs={"xr": "nw.col('x').round()"}
+    node = models.DataFrameMethod(
+        name="with_columns",
+        kwargs={"xr": "nw.col('x').round()"},
+        dataframe_api="NARWHALS"
     )
     df = node.execute(df0)
 
-    node = models.SparkChainNode(
-        with_column={
-            "name": "xy",
-            "type": "double",
-            "expr": "F.coalesce('x')",
-        },
+    node = models.DataFrameMethod(
+        name="select",
+        args=["pl.sqrt('x')"},
+        dataframe_api="NATIVE"
     )
-    df = node.execute(df)
+    df = node.execute(df0)
 
-    print(df.toPandas().to_string())
-    '''
-       x      cosx   xy
-    0  1  0.540302  1.0
-    1  2 -0.416147  2.0
-    2  2 -0.416147  2.0
-    3  3 -0.989992  3.0
-    '''
-
-    node = models.SparkChainNode(
-        func_name="drop_duplicates",
-        func_args=[["x"]],
-    )
-    df = node.execute(df)
-
-    print(df.toPandas().to_string())
-    '''
-       x      cosx   xy
-    0  1  0.540302  1.0
-    1  2 -0.416147  2.0
-    2  3 -0.989992  3.0
-    '''
+    print(df)
     ```
     """
 

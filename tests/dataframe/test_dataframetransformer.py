@@ -5,8 +5,9 @@ import pytest
 
 import laktory
 from laktory.enums import DataFrameBackends
+from laktory.models import DataFrameMethod
+from laktory.models import DataFrameSQLExpr
 from laktory.models import DataFrameTransformer
-from laktory.models import DataFrameTransformerNode
 
 
 def get_backend(v):
@@ -39,16 +40,15 @@ def df0(request):
 
 
 def test_transformer(df0):
-    node0 = DataFrameTransformerNode(
-        func_name="select",
-        func_args=["id", "x1"],
-    )
-
-    node1 = DataFrameTransformerNode(
-        func_name="with_columns",
-        func_kwargs={
+    node0 = DataFrameMethod(
+        name="with_columns",
+        kwargs={
             "y1": "x1",
         },
+    )
+
+    node1 = DataFrameSQLExpr(
+        sql_expr="select id, x1, y1 from df",
     )
 
     transformer = DataFrameTransformer(nodes=[node0, node1])

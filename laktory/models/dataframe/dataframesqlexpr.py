@@ -25,7 +25,24 @@ logger = get_logger(__name__)
 
 class DataFrameSQLExpr(BaseModel, PipelineChild):
     """
-    Chain node SQL expression
+    A transformation defined as a SQL statement.
+
+    Examples
+    --------
+    ```py
+    from laktory import models
+
+    df0 = pl.DataFrame(
+        {
+            "x": [1.1, 2.2, 3.3],
+        }
+    )
+
+    node = models.DataFrameSQLExpr(sql_expr="SELECT x, 2*x AS y")
+    df = node.execute(df0)
+
+    print(df)
+    ```
     """
 
     sql_expr: str = Field(..., description="SQL Expression")

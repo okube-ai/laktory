@@ -23,8 +23,40 @@ logger = get_logger(__name__)
 
 
 class DataFrameTransformer(BaseModel, PipelineChild):
+    """
+    A chain of transformations to be applied to a DataFrame. Transformations can be
+    SQL- or DataFrame API-based.
+
+    Examples
+    --------
+    ```py
+    import polars as pl
+    from laktory import models
+
+    df0 = pl.DataFrame(
+        {
+            "id": ["a", "b", "c"],
+            "x1": [1, 2, 3],
+        }
+    )
+
+    node0 = DataFrameMethod(
+        name="with_columns",
+        kwargs={
+            "y1": "x1",
+        },
+    )
+    node1 = DataFrameSQLExpr(sql_expr="select id, x1, y1 from df")
+    transformer = DataFrameTransformer(nodes=[node0, node1])
+
+    df = transformer.execute(df0)
+
+    print(df)
+    ```
+    """
+
     nodes: list[DataFrameMethod | DataFrameSQLExpr] = Field(
-        ..., description="List of transformation nodes"
+        ..., description="List of transformations"
     )
     #
     # @property
@@ -63,7 +95,11 @@ class DataFrameTransformer(BaseModel, PipelineChild):
             logger.info(
                 f"Executing DataFrame transformer node {inode} ({tnode.__name__})."
             )
-            df = node.execute(df, udfs=udfs, **named_dfs)
+
+            if isinstance(node, DataFrameMethod):
+                df = node.execute(df, udfs=udfs, **named_dfs)
+            else:
+                df = node.execute(df, **named_dfs)
 
         return df
 

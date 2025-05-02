@@ -15,6 +15,18 @@ logger = get_logger(__name__)
 
 
 class DataFrameSchema(BaseModel):
+    """
+    DataFrame schema. Typically used to explicitly express a schema when reading files.
+
+    Examples
+    --------
+    ```python
+    from laktory import models
+
+    schema = models.DataFrameSchema(columns={"a": "string", "x": "double"})
+    ```
+    """
+
     columns: Union[
         dict[str, Union[str, DType, DataFrameColumn]], list[DataFrameColumn]
     ] = Field(..., description="List of columns")

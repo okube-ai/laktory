@@ -14,8 +14,6 @@ class DataFrameBackendMethod(BaseModel):
     """
     DataFrame Backend Method
 
-    DataFrame backend method.
-
     Examples
     --------
     ```py
