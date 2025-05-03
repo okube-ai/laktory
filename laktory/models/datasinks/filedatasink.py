@@ -9,6 +9,7 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.datasinks.basedatasink import POLARS_DELTA_MODES
 from laktory.models.datasinks.basedatasink import BaseDataSink
+from laktory.models.datasources.filedatasource import FileDataSource
 
 SUPPORTED_FORMATS = {
     DataFrameBackends.PYSPARK: [
@@ -234,36 +235,35 @@ class FileDataSink(BaseDataSink):
     #
     #     # Remove Checkpoint
     #     self._purge_checkpoint(spark=spark)
-    #
-    # # ----------------------------------------------------------------------- #
-    # # Source                                                                  #
-    # # ----------------------------------------------------------------------- #
-    #
-    # def as_source(self, as_stream: bool = None) -> FileDataSource:
-    #     """
-    #     Generate a file data source with the same path as the sink.
-    #
-    #     Parameters
-    #     ----------
-    #     as_stream:
-    #         If `True`, sink will be read as stream.
-    #
-    #     Returns
-    #     -------
-    #     :
-    #         File Data Source
-    #     """
-    #
-    #     source = FileDataSource(
-    #         path=self.path,
-    #         format=self.format,
-    #     )
-    #
-    #     if as_stream:
-    #         source.as_stream = as_stream
-    #
-    #     if self.dataframe_backend:
-    #         source.dataframe_backend = self.dataframe_backend
-    #     source.parent = self.parent
-    #
-    #     return source
+
+    # ----------------------------------------------------------------------- #
+    # Source                                                                  #
+    # ----------------------------------------------------------------------- #
+
+    def as_source(self, as_stream: bool = None) -> FileDataSource:
+        """
+        Generate a file data source with the same path as the sink.
+
+        Parameters
+        ----------
+        as_stream:
+            If `True`, sink will be read as stream.
+
+        Returns
+        -------
+        :
+            File Data Source
+        """
+
+        source = FileDataSource(
+            path=self.path, format=self.format, dataframe_backend=self.df_backend
+        )
+
+        if as_stream:
+            source.as_stream = as_stream
+
+        # if self.dataframe_backend:
+        #     source.dataframe_backend = self.df_backend
+        source.parent = self.parent
+
+        return source

@@ -186,7 +186,16 @@ class BaseDataSink(BaseModel, PipelineChild):
             Write mode overwrite of the sink default mode.
         """
 
-        # TODO: Add support for view definition
+        if getattr(self, "view_definition", None):
+            if self.df_backend == DataFrameBackends.PYSPARK:
+                self._write_spark_view()
+            elif self.df_backend == DataFrameBackends.POLARS:
+                self._write_polars_view()
+            else:
+                raise ValueError(
+                    f"DataFrame backend '{self.dataframe_backend}' is not supported"
+                )
+            return
 
         if mode is None:
             mode = self.mode
@@ -225,12 +234,15 @@ class BaseDataSink(BaseModel, PipelineChild):
 
         logger.info("Write completed.")
 
-    #
-    # def _write_spark_view(self, view_definition: str, spark) -> None:
-    #     raise NotImplementedError(
-    #         f"View creation with spark is not implemented for type '{type(self)}'"
-    #     )
-    #
+    def _write_spark_view(self) -> None:
+        raise NotImplementedError(
+            f"View creation with spark is not implemented for type '{type(self)}'"
+        )
+
+    def _write_polars_view(self) -> None:
+        raise NotImplementedError(
+            f"View creation with polars is not implemented for type '{type(self)}'"
+        )
 
     # -------------------------------------------------------------------------------- #
     # Writers - Spark                                                                  #
@@ -344,11 +356,10 @@ class BaseDataSink(BaseModel, PipelineChild):
             f"`{self.df_backend}` not supported for `{type(self)}`"
         )
 
-    #
-    # # ----------------------------------------------------------------------- #
-    # # Purge                                                                   #
-    # # ----------------------------------------------------------------------- #
-    #
+    # ----------------------------------------------------------------------- #
+    # Purge                                                                   #
+    # ----------------------------------------------------------------------- #
+
     # def exists(self, spark=None):
     #     try:
     #         df = self.read(spark=spark, as_stream=False)
@@ -411,26 +422,24 @@ class BaseDataSink(BaseModel, PipelineChild):
     #     # instead of dropping it.
     #     raise NotImplementedError()
     #
-    #
-    # # ----------------------------------------------------------------------- #
-    # # Data Sources                                                            #
-    # # ----------------------------------------------------------------------- #
-    #
-    # def as_source(self, as_stream=None):
-    #     raise NotImplementedError()
-    #
-    # def read(self, spark=None, as_stream=None):
-    #     """
-    #     Read dataframe from sink.
-    #
-    #     Parameters
-    #     ----------
-    #     spark:
-    #         Spark Session
-    #     as_stream:
-    #         If `True`, dataframe read as stream.
-    #
-    #     Returns
-    #     -------
-    #     """
-    #     return self.as_source(as_stream=as_stream).read(spark=spark)
+
+    # ----------------------------------------------------------------------- #
+    # Data Sources                                                            #
+    # ----------------------------------------------------------------------- #
+
+    def as_source(self, as_stream=None):
+        raise NotImplementedError()
+
+    def read(self, as_stream=None):
+        """
+        Read dataframe from sink.
+
+        Parameters
+        ----------
+        as_stream:
+            If `True`, dataframe read as stream.
+
+        Returns
+        -------
+        """
+        return self.as_source(as_stream=as_stream).read()

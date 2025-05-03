@@ -71,40 +71,21 @@ def test_write(backend, fmt, df0, tmp_path):
 
     # Read back DataFrame
     if backend == "PYSPARK":
-        if fmt.lower() in ["jsonl", "ndjson"]:
-            fmt = "JSON"
-        df = (
-            spark.read.format(fmt)
-            .options(
-                header=True,
-                inferSchema=True,
-            )
-            .load(filepath.as_posix())
-        )
-    elif backend == "POLARS":
-        if fmt.lower() == "avro":
-            df = pl.read_avro(filepath)
-        elif fmt.lower() == "csv":
-            df = pl.read_csv(filepath)
-        elif fmt.lower() == "delta":
-            df = pl.read_delta(filepath.as_posix())
-        elif fmt.lower() == "excel":
-            df = pl.read_excel(filepath)
-        elif fmt.lower() == "ipc":
-            df = pl.read_ipc(filepath)
-        elif fmt.lower() == "json":
-            df = pl.read_json(filepath)
-        elif fmt.lower() in ["jsonl", "ndjson"]:
-            df = pl.read_ndjson(filepath)
-        elif fmt.lower() == "parquet":
-            df = pl.read_parquet(filepath)
-        elif fmt.lower() == "pyarrow":
-            import pyarrow.dataset as ds
+        source = sink.as_source()
+        if fmt.lower() in ["csv"]:
+            source.has_header = True
+            source.infer_schema = True
 
-            dset = ds.dataset(filepath.as_posix(), format="parquet")
-            df = pl.scan_pyarrow_dataset(dset)
-        else:
-            raise ValueError(f"Format {fmt} is not configured")
+        df = source.read()
+
+    elif backend == "POLARS":
+        source = sink.as_source()
+        if fmt.lower() in ["csv"]:
+            source.has_header = True
+            source.infer_schema = True
+
+        df = source.read()
+
     else:
         raise ValueError(f"Backend {backend} is not configured")
 

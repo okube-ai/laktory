@@ -3,7 +3,6 @@ import pytest
 
 from laktory import get_spark_session
 from laktory._testing import assert_dfs_equal
-from laktory.enums import DataFrameBackends
 from laktory.models import HiveMetastoreDataSink
 
 
@@ -21,27 +20,57 @@ def df0():
     )
 
 
-@pytest.mark.xfail(reason="Requires Databricks Spark Session (for now)")
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_write(df0, tmp_path, backend):
-    if DataFrameBackends(backend) not in ["PYSPARK"]:
+    if backend not in ["PYSPARK"]:
         pytest.skip(f"Backend '{backend}' not implemented.")
 
     # Config
     schema = "default"
     table = "df"
-    full_name = f"{schema}.{table}"
 
     sink = HiveMetastoreDataSink(
         schema_name=schema,
         table_name=table,
         mode="OVERWRITE",
+        format="parquet",  # TODO: Review why delta format can't be read
+        writer_kwargs={"path": (tmp_path).as_posix()},
     )
     sink.write(df0)
 
     # Read back data
-    if backend == "PYSPARK":
-        df = df0.sparkSession.read.table(full_name)
+    df = sink.read()
+
+    # Test
+    assert_dfs_equal(df, df0)
+
+
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_create_view(df0, tmp_path, backend):
+    if backend not in ["PYSPARK"]:
+        pytest.skip(f"Backend '{backend}' not implemented.")
+
+    # Create table
+    schema = "default"
+    table = "df"
+    view = "df_view"
+    (
+        df0.write.format("parquet")
+        .mode("OVERWRITE")
+        .options(mergeSchema=False, overwriteSchema=True, path=tmp_path.as_posix())
+        .saveAsTable(f"{schema}.{table}")
+    )
+
+    # Create View
+    sink = HiveMetastoreDataSink(
+        schema_name=schema,
+        table_name=view,
+        view_definition=f"SELECT * FROM {schema}.{table}",
+    )
+    sink.write()
+
+    # Read back data
+    df = sink.read()
 
     # Test
     assert_dfs_equal(df, df0)
