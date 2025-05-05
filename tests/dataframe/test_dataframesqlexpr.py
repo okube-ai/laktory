@@ -1,20 +1,9 @@
-# import importlib
-# import os
-# import sys
-#
-# import numpy as np
-import narwhals as nw
-import pandas as pd
-
-# from pyspark.sql import SparkSession
-# from pyspark.sql import functions as F
-# from pyspark.sql import types as T
 import polars as pl
 import pytest
 
-import laktory
 from laktory._testing import assert_dfs_equal
-from laktory.enums import DataFrameBackends
+from laktory._testing import get_df0
+from laktory._testing import get_df1
 from laktory.models import DataFrameSQLExpr
 
 # from laktory import models
@@ -22,46 +11,10 @@ from laktory.models import DataFrameSQLExpr
 # from laktory.exceptions import MissingColumnsError
 
 
-def get_backend(v):
-    if isinstance(v, str):
-        return DataFrameBackends(v)
-    return DataFrameBackends.from_nw_implementation(nw.from_native(v).implementation)
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_sql_expr(backend):
+    df0 = get_df0(backend)
 
-
-def to_backend(df, backend):
-    backend = get_backend(backend)
-
-    if backend == DataFrameBackends.POLARS:
-        df = pl.from_pandas(df)
-    elif backend == DataFrameBackends.PYSPARK:
-        spark = laktory.get_spark_session()
-        df = spark.createDataFrame(df)
-    return nw.from_native(df)
-
-
-@pytest.fixture(params=["POLARS", "PYSPARK"])
-def df0(request):
-    df = pd.DataFrame(
-        {
-            "id": ["a", "b", "c"],
-            "x1": [1, 2, 3],
-        }
-    )
-
-    return to_backend(df, request.param)
-
-
-@pytest.fixture
-def source():
-    return pd.DataFrame(
-        {
-            "id": ["b", "c", "d"],
-            "x2": [4, 9, 16],
-        }
-    )
-
-
-def test_sql_expr(df0, source):
     node = DataFrameSQLExpr(sql_expr="SELECT id, 3*x1 AS x3 FROM df")
 
     df = node.execute(df0)
@@ -70,8 +23,10 @@ def test_sql_expr(df0, source):
     )
 
 
-def test_sql_expr_multi(df0, source):
-    source = to_backend(source, df0)
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_sql_expr_multi(backend):
+    df0 = get_df0(backend)
+    source = get_df1(backend)
 
     node = DataFrameSQLExpr(
         sql_expr="SELECT * FROM df LEFT JOIN source on df.id = source.id"
@@ -146,18 +101,3 @@ def test_sql_expr_multi(df0, source):
 #     assert pdf["rp"].tolist() == [2.0, 0.2, 0.1]
 #     assert pdf["x3"].tolist() == (pdf["x"] * 3).tolist()
 #     assert pdf["y"].tolist() == (pdf["x"] * 5).tolist()
-
-if __name__ == "__main__":
-    import polars as pl
-
-    from laktory import models
-
-    df0 = pl.DataFrame({"x": [1.2, 2.1, 2.0, 3.7]})
-
-    node = models.DataFrameTransformerNode(
-        func_name="with_columns",
-        func_kwargs={"xr": "nw.col('x').round().cast(nw.String())"},
-    )
-    df = node.execute(df0)
-
-    print(df)

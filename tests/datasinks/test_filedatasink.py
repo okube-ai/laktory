@@ -1,8 +1,8 @@
-import polars as pl
+import narwhals as nw
 import pytest
 
-import laktory
 from laktory._testing import assert_dfs_equal
+from laktory._testing import get_df0
 from laktory.enums import DataFrameBackends
 from laktory.models.datasinks import FileDataSink
 from laktory.models.datasources.filedatasource import SUPPORTED_FORMATS
@@ -15,21 +15,13 @@ spark_write_tests = [
 ]
 
 
-@pytest.fixture
-def df0():
-    return pl.DataFrame(
-        {
-            "x": ["a", "b", "c"],
-            "y": [3, 4, 5],
-        }
-    )
-
-
 @pytest.mark.parametrize(
     ["backend", "fmt"],
     pl_write_tests + spark_write_tests,
 )
-def test_write(backend, fmt, df0, tmp_path):
+def test_write(backend, fmt, tmp_path):
+    df0 = get_df0(backend)
+
     kwargs = {}
 
     # Filepath
@@ -41,14 +33,12 @@ def test_write(backend, fmt, df0, tmp_path):
     elif fmt == "XML":
         pytest.skip("Missing library. Skipping Test.")
     elif fmt == "TEXT":
-        df0 = df0.select(pl.col("x").alias("value"))
+        df0 = nw.from_native(df0).select(nw.col("id").alias("value")).to_native()
     elif fmt == "EXCEL":
         pytest.skip("Missing library. Skipping Test.")
 
     # Backend-specific configuration
     if backend == "PYSPARK":
-        spark = laktory.get_spark_session()
-        df0 = spark.createDataFrame(df0.to_pandas())
         if fmt.lower() == "csv":
             kwargs["header"] = True
     elif backend == "POLARS":

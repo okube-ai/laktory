@@ -3,8 +3,6 @@
 # import sys
 #
 # import numpy as np
-import narwhals as nw
-import pandas as pd
 
 # from pyspark.sql import SparkSession
 # from pyspark.sql import functions as F
@@ -12,8 +10,9 @@ import pandas as pd
 import polars as pl
 import pytest
 
-import laktory
 from laktory._testing import assert_dfs_equal
+from laktory._testing import get_df0
+from laktory._testing import get_df1
 from laktory.enums import DataFrameBackends
 from laktory.models import DataFrameMethod
 
@@ -22,46 +21,10 @@ from laktory.models import DataFrameMethod
 # from laktory.exceptions import MissingColumnsError
 
 
-def get_backend(v):
-    if isinstance(v, str):
-        return DataFrameBackends(v)
-    return DataFrameBackends.from_nw_implementation(nw.from_native(v).implementation)
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_arg_string(backend):
+    df0 = get_df0(backend)
 
-
-def to_backend(df, backend):
-    backend = get_backend(backend)
-
-    if backend == DataFrameBackends.POLARS:
-        df = pl.from_pandas(df)
-    elif backend == DataFrameBackends.PYSPARK:
-        spark = laktory.get_spark_session()
-        df = spark.createDataFrame(df)
-    return nw.from_native(df)
-
-
-@pytest.fixture(params=["POLARS", "PYSPARK"])
-def df0(request):
-    df = pd.DataFrame(
-        {
-            "id": ["a", "b", "c"],
-            "x1": [1, 2, 3],
-        }
-    )
-
-    return to_backend(df, request.param)
-
-
-@pytest.fixture
-def source():
-    return pd.DataFrame(
-        {
-            "id": ["b", "c", "d"],
-            "x2": [4, 9, 16],
-        }
-    )
-
-
-def test_arg_string(df0):
     node = DataFrameMethod(
         name="select",
         args=["id"],
@@ -70,7 +33,10 @@ def test_arg_string(df0):
     assert df.columns == ["id"]
 
 
-def test_kwarg_string(df0):
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_kwarg_string(backend):
+    df0 = get_df0(backend)
+
     node = DataFrameMethod(
         name="with_columns",
         kwargs={
@@ -81,8 +47,10 @@ def test_kwarg_string(df0):
     assert df.columns == ["id", "x1", "y1"]
 
 
-def test_arg_source(df0, source):
-    source = to_backend(source, df0)
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_arg_source(backend):
+    df0 = get_df0(backend)
+    source = get_df1(backend)
 
     node = DataFrameMethod(
         name="join",
@@ -96,7 +64,10 @@ def test_arg_source(df0, source):
     assert_dfs_equal(df.select("x2"), pl.DataFrame({"x2": [None, 4, 9]}))
 
 
-def test_arg_nw_expr(df0):
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_arg_nw_expr(backend):
+    df0 = get_df0(backend)
+
     node = DataFrameMethod(
         name="with_columns",
         kwargs={"y1": "nw.col('x1').clip(lower_bound=0, upper_bound=2)"},
@@ -105,8 +76,10 @@ def test_arg_nw_expr(df0):
     assert_dfs_equal(df.select("y1"), pl.DataFrame({"y1": [1, 2, 2]}))
 
 
-def test_arg_native_expr(df0):
-    backend = get_backend(df0)
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_arg_native_expr(backend):
+    df0 = get_df0(backend)
+    backend = DataFrameBackends(backend)
 
     if backend == DataFrameBackends.POLARS:
         kwargs = {
@@ -124,7 +97,10 @@ def test_arg_native_expr(df0):
     assert_dfs_equal(df.select("y1"), pl.DataFrame({"y1": [1, 2, 2]}))
 
 
-def test_arg_sql_expr(df0):
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_arg_sql_expr(backend):
+    df0 = get_df0(backend)
+
     node = DataFrameMethod(
         name="with_columns",
         kwargs={

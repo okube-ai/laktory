@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 import laktory
 from laktory._testing import assert_dfs_equal
+from laktory._testing import get_df0
 from laktory.enums import DataFrameBackends
 from laktory.models import DataFrameSchema
 from laktory.models.datasources import FileDataSource
@@ -18,21 +19,13 @@ spark_read_tests = [
 ]
 
 
-@pytest.fixture
-def df0():
-    return pl.DataFrame(
-        {
-            "x": ["a", "b", "c"],
-            "y": [3, 4, 5],
-        }
-    )
-
-
 @pytest.mark.parametrize(
     ["backend", "fmt"],
     pl_read_tests + spark_read_tests,
 )
-def test_read(backend, fmt, df0, tmp_path):
+def test_read(backend, fmt, tmp_path):
+    df0 = get_df0("POLARS").to_native()
+
     filepath = tmp_path / f"df.{fmt}"
 
     kwargs = {}
@@ -93,65 +86,79 @@ def test_read(backend, fmt, df0, tmp_path):
     assert_dfs_equal(df, df0)
 
 
-@pytest.mark.parametrize("format", ["CSV", "JSON", "DELTA"])
-def test_read_stream(df0, format, tmp_path):
+@pytest.mark.parametrize(
+    ["backend", "fmt"],
+    [
+        ("POLARS", "CSV"),
+        ("POLARS", "JSON"),
+        ("POLARS", "DELTA"),
+        ("PYSPARK", "CSV"),
+        ("PYSPARK", "JSON"),
+        ("PYSPARK", "DELTA"),
+    ],
+)
+def test_read_stream(backend, fmt, tmp_path):
+    df0 = get_df0("POLARS").to_native()
+
     with pytest.raises(ValidationError):
         FileDataSource(
-            path="./", format=format, dataframe_backend="POLARS", as_stream=True
+            path="./", format=fmt, dataframe_backend="POLARS", as_stream=True
         )
 
-    filepath = tmp_path / f"df.{format}"
-    if format == "CSV":
+    filepath = tmp_path / f"df.{fmt}"
+    if fmt == "CSV":
         df0.write_csv(filepath)
-    elif format == "JSON":
+    elif fmt == "JSON":
         df0.write_json(filepath)
-    elif format == "DELTA":
+    elif fmt == "DELTA":
         df0.write_delta(tmp_path)
     else:
-        raise ValueError(f"Format {format} not supported")
+        raise ValueError(f"Format {fmt} not supported")
 
     source = FileDataSource(
         path=tmp_path,
-        format=format,
+        format=fmt,
         dataframe_backend="PYSPARK",
         as_stream=True,
     )
 
-    if format == "CSV":
+    if fmt == "CSV":
         assert source._get_spark_kwargs() == (
             {
                 "header": True,
                 "cloudFiles.inferColumnTypes": False,
-                "cloudFiles.format": format.lower(),
+                "cloudFiles.format": fmt.lower(),
                 "recursiveFileLookup": True,
                 "cloudFiles.schemaLocation": tmp_path.parent.as_posix(),
             },
             "cloudFiles",
         )
-    elif format == "JSON":
+    elif fmt == "JSON":
         assert source._get_spark_kwargs() == (
             {
                 "cloudFiles.inferColumnTypes": False,
-                "cloudFiles.format": format.lower(),
+                "cloudFiles.format": fmt.lower(),
                 "recursiveFileLookup": True,
                 "cloudFiles.schemaLocation": tmp_path.parent.as_posix(),
                 "multiline": True,
             },
             "cloudFiles",
         )
-    elif format == "DELTA":
+    elif fmt == "DELTA":
         assert source._get_spark_kwargs() == ({}, "delta")
 
-    if format in ["CSV", "JSON"]:
+    if fmt in ["CSV", "JSON"]:
         pytest.skip("Requires Databricks Autoloader. Skipping Test.")
 
     df = source.read()
-    assert df.schema == nw.Schema({"x": nw.String(), "y": nw.Int64()})
+    assert df.schema == nw.Schema({"id": nw.String(), "x1": nw.Int64()})
     assert df.to_native().isStreaming
 
 
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
-def test_csv_options(backend, df0, tmp_path):
+def test_csv_options(backend, tmp_path):
+    df0 = get_df0("POLARS").to_native()
+
     csv = tmp_path / "df.csv"
     df0.write_csv(csv)
 
@@ -163,7 +170,7 @@ def test_csv_options(backend, df0, tmp_path):
     )
     assert source._get_spark_kwargs() == ({"header": True, "inferSchema": False}, "csv")
     df = source.read()
-    assert_dfs_equal(df, df0.cast({"x": pl.String, "y": pl.String}))
+    assert_dfs_equal(df, df0.cast({"id": pl.String, "x1": pl.String}))
 
     # No Header
     source = FileDataSource(
@@ -192,11 +199,13 @@ def test_csv_options(backend, df0, tmp_path):
     )
     df = source.read().collect(backend="polars")
     assert_dfs_equal(
-        df, df0.cast({"x": pl.String, "y": pl.String}).rename({"x": "xx", "y": "yy"})
+        df,
+        df0.cast({"id": pl.String, "x1": pl.String}).rename({"id": "xx", "x1": "yy"}),
     )
 
 
-def test_reader_methods(df0, tmp_path):
+def test_reader_methods(tmp_path):
+    df0 = get_df0("POLARS").to_native()
     csv = tmp_path / "df.csv"
     df0.write_csv(csv)
 
@@ -211,7 +220,8 @@ def test_reader_methods(df0, tmp_path):
 
 
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
-def test_reader_kwargs(backend, df0, tmp_path):
+def test_reader_kwargs(backend, tmp_path):
+    df0 = get_df0("POLARS").to_native()
     csv = tmp_path / "df.csv"
     df0.write_csv(csv)
 

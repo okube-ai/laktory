@@ -1,27 +1,14 @@
-import pandas as pd
 import pytest
 
-from laktory import get_spark_session
 from laktory._testing import assert_dfs_equal
+from laktory._testing import get_df0
 from laktory.models import HiveMetastoreDataSink
 
 
-@pytest.fixture
-def df0():
-    spark = get_spark_session()
-
-    return spark.createDataFrame(
-        pd.DataFrame(
-            {
-                "x": ["a", "b", "c"],
-                "y": [3, 4, 5],
-            }
-        )
-    )
-
-
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
-def test_write(df0, tmp_path, backend):
+def test_write(backend, tmp_path):
+    df0 = get_df0(backend)
+
     if backend not in ["PYSPARK"]:
         pytest.skip(f"Backend '{backend}' not implemented.")
 
@@ -46,7 +33,9 @@ def test_write(df0, tmp_path, backend):
 
 
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
-def test_create_view(df0, tmp_path, backend):
+def test_create_view(backend, tmp_path):
+    df0 = get_df0(backend).to_native()
+
     if backend not in ["PYSPARK"]:
         pytest.skip(f"Backend '{backend}' not implemented.")
 
