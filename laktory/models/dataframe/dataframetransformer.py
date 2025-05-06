@@ -58,6 +58,7 @@ class DataFrameTransformer(BaseModel, PipelineChild):
     nodes: list[DataFrameMethod | DataFrameSQLExpr] = Field(
         ..., description="List of transformations"
     )
+
     #
     # @property
     # def upstream_node_names(self) -> list[str]:
@@ -67,14 +68,16 @@ class DataFrameTransformer(BaseModel, PipelineChild):
     #         names += node.upstream_node_names
     #     return names
     #
-    # @property
-    # def data_sources(self):
-    #     """Get all sources feeding the Transformer"""
-    #     sources = []
-    #     for node in self.nodes:
-    #         sources += node.data_sources
-    #     return sources
-    #
+    @property
+    def data_sources(self):
+        """Get all sources feeding the Transformer"""
+
+        sources = []
+        for node in self.nodes:
+            sources += node.data_sources
+
+        return sources
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #

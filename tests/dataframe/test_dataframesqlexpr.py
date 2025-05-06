@@ -5,6 +5,7 @@ from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
 from laktory._testing import get_df1
 from laktory.models import DataFrameSQLExpr
+from laktory.models import PipelineNodeDataSource
 
 # from laktory import models
 # from laktory.exceptions import MissingColumnError
@@ -35,24 +36,20 @@ def test_sql_expr_multi(backend):
     assert_dfs_equal(df.select("x2"), pl.DataFrame({"x2": [None, 4, 9]}))
 
 
-# def test_sql_with_nodes():
-#     sc = models.SparkChain(
-#         nodes=[
-#             {
-#                 "sql_expr": "SELECT * FROM {df}",
-#             },
-#             {
-#                 "sql_expr": "SELECT * FROM {df} UNION SELECT * FROM {nodes.node_01} UNION SELECT * FROM {nodes.node_02}",
-#             },
-#         ]
-#     )
-#
-#     assert sc.nodes[0].parsed_sql_expr.data_sources == []
-#     assert sc.nodes[1].parsed_sql_expr.data_sources == [
-#         models.PipelineNodeDataSource(node_name="node_01"),
-#         models.PipelineNodeDataSource(node_name="node_02"),
-#     ]
-#
+def test_sql_with_nodes():
+    e1 = DataFrameSQLExpr(sql_expr="SELECT * FROM {df}")
+
+    e2 = DataFrameSQLExpr(
+        sql_expr="SELECT * FROM {df} UNION SELECT * FROM {nodes.node_01} UNION SELECT * FROM {nodes.node_02}"
+    )
+
+    assert e1.data_sources == []
+    assert e2.data_sources == [
+        PipelineNodeDataSource(node_name="node_01"),
+        PipelineNodeDataSource(node_name="node_02"),
+    ]
+
+
 #
 # def test_udfs(df0=df0):
 #     df = df0.select(df0.columns)

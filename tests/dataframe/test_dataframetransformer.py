@@ -26,3 +26,4 @@ def test_transformer(backend):
     df = transformer.execute(df0)
 
     assert df.columns == ["id", "x1", "y1"]
+    assert transformer.data_sources == []

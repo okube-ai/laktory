@@ -14,6 +14,7 @@ from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
 from laktory._testing import get_df1
 from laktory.enums import DataFrameBackends
+from laktory.models import DataFrameDataSource
 from laktory.models import DataFrameMethod
 
 # from laktory import models
@@ -50,7 +51,7 @@ def test_kwarg_string(backend):
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_arg_source(backend):
     df0 = get_df0(backend)
-    source = get_df1(backend)
+    source = DataFrameDataSource(df=get_df1(backend))
 
     node = DataFrameMethod(
         name="join",
@@ -62,6 +63,7 @@ def test_arg_source(backend):
     )
     df = node.execute(df0)
     assert_dfs_equal(df.select("x2"), pl.DataFrame({"x2": [None, 4, 9]}))
+    assert node.data_sources == [source]
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])

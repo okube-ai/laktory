@@ -2,6 +2,7 @@ from __future__ import annotations
 
 # import abc
 import re
+from typing import TYPE_CHECKING
 
 # from typing import Callable
 # from typing import Literal
@@ -16,6 +17,9 @@ from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
+
+if TYPE_CHECKING:
+    from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
 
 
 # --------------------------------------------------------------------------- #
@@ -46,7 +50,7 @@ class DataFrameSQLExpr(BaseModel, PipelineChild):
     """
 
     sql_expr: str = Field(..., description="SQL Expression")
-    # _data_sources: list[PipelineNodeDataSource] = None
+    _data_sources: list[PipelineNodeDataSource] = None
 
     def parsed_expr(self, view=False) -> list[str]:
         raise NotImplementedError()
@@ -114,26 +118,24 @@ class DataFrameSQLExpr(BaseModel, PipelineChild):
     #
     #     return names
 
-    # @property
-    # def data_sources(self) -> list[PipelineNodeDataSource]:
-    #     if self._data_sources is None:
-    #         if self.sql_expr is None:
-    #             return []
-    #
-    #         from laktory.models.datasources.pipelinenodedatasource import (
-    #             PipelineNodeDataSource,
-    #         )
-    #
-    #         sources = []
-    #
-    #         pattern = r"\{nodes\.(.*?)\}"
-    #         matches = re.findall(pattern, self.sql_expr)
-    #         for m in matches:
-    #             sources += [PipelineNodeDataSource(node_name=m)]
-    #
-    #         self._data_sources = sources
-    #
-    #     return self._data_sources
+    @property
+    def data_sources(self):
+        """Get all sources required by SQL Expression"""
+        if self._data_sources is None:
+            from laktory.models.datasources.pipelinenodedatasource import (
+                PipelineNodeDataSource,
+            )
+
+            sources = []
+
+            pattern = r"\{nodes\.(.*?)\}"
+            matches = re.findall(pattern, self.sql_expr)
+            for m in matches:
+                sources += [PipelineNodeDataSource(node_name=m)]
+
+            self._data_sources = sources
+
+        return self._data_sources
 
     def execute(
         self,
