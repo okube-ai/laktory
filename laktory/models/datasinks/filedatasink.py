@@ -175,7 +175,7 @@ class FileDataSink(BaseDataSink):
 
         is_streaming = False
 
-        _mode = "static" if is_streaming else "streaming"
+        _mode = "streaming" if is_streaming else "static"
         logger.info(
             f"Writing {_mode} df to {self.path} with format '{self.format}' and {kwargs}"
         )

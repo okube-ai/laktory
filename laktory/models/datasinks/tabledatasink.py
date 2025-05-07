@@ -6,8 +6,8 @@ from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
-from laktory.models.dataframe.dataframesqlexpr import DataFrameSQLExpr
 from laktory.models.datasinks.basedatasink import BaseDataSink
+from laktory.models.datasinks.viewdefinition import ViewDefinition
 from laktory.models.datasources.tabledatasource import TableDataSource
 
 logger = get_logger(__name__)
@@ -33,7 +33,7 @@ class TableDataSink(BaseDataSink):
         "TABLE",
         description="Type of table. 'TABLE' and 'VIEW' are currently supported.",
     )
-    view_definition: DataFrameSQLExpr | str = Field(
+    view_definition: ViewDefinition | str = Field(
         None, description="View definition of 'VIEW' `table_type` is selected."
     )
     # _parsed_view_definition: BaseChainNodeSQLExpr = None
@@ -64,10 +64,10 @@ class TableDataSink(BaseDataSink):
 
     @field_validator("view_definition")
     def set_view_definition(
-        cls, value: DataFrameSQLExpr | str | None
-    ) -> DataFrameSQLExpr | None:
-        if value and not isinstance(value, DataFrameSQLExpr):
-            value = DataFrameSQLExpr(sql_expr=value)
+        cls, value: ViewDefinition | str | None
+    ) -> ViewDefinition | None:
+        if value and not isinstance(value, ViewDefinition):
+            value = ViewDefinition(sql_expr=value)
         return value
 
     # ----------------------------------------------------------------------- #
@@ -108,7 +108,7 @@ class TableDataSink(BaseDataSink):
     @property
     def child_attribute_names(self):
         return [
-            # "_parsed_view_definition",
+            "view_definition",
         ]
 
     # ----------------------------------------------------------------------- #
@@ -167,7 +167,7 @@ class TableDataSink(BaseDataSink):
         logger.info(f"Creating view {self.full_name} AS {self.view_definition}")
 
         df = spark.sql(
-            f"CREATE OR REPLACE VIEW {self.full_name} AS {self.view_definition.sql_expr}"
+            f"CREATE OR REPLACE VIEW {self.full_name} AS {self.view_definition.parsed()}"
         )
         if self.parent_pipeline_node:
             self.parent_pipeline_node._output_df = df

@@ -1,13 +1,11 @@
 import os
 import shutil
-import uuid
 import warnings
 from pathlib import Path
 from typing import Any
 from typing import Callable
-from typing import Literal
-from typing import Union
 
+from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
 
@@ -15,6 +13,7 @@ from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
+from laktory.models.dataframe.dataframetransformer import DataFrameTransformer
 from laktory.models.dataquality.expectation import DataQualityExpectation
 from laktory.models.datasinks import DataSinksUnion
 from laktory.models.datasinks import TableDataSink
@@ -23,11 +22,6 @@ from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import PipelineNodeDataSource
 from laktory.models.datasources import TableDataSource
 from laktory.models.pipeline.pipelinechild import PipelineChild
-from laktory.models.transformers.polarschain import PolarsChain
-from laktory.models.transformers.polarschainnode import PolarsChainNode
-from laktory.models.transformers.sparkchain import SparkChain
-from laktory.models.transformers.sparkchainnode import SparkChainNode
-from laktory.spark import SparkSession
 from laktory.typing import AnyDataFrame
 
 logger = get_logger(__name__)
@@ -39,58 +33,6 @@ class PipelineNode(BaseModel, PipelineChild):
     applying a transformer (chain of dataframe transformations). Optional
     output to a data sink. Some basic transformations are also natively
     supported.
-
-    Parameters
-    ----------
-    add_layer_columns:
-        If `True` and `layer` not `None` layer-specific columns like timestamps
-        are added to the resulting DataFrame.
-    dlt_template:
-        Specify which template (notebook) to use if pipeline is run with
-        Databricks Delta Live Tables. If `None` default laktory template
-        notebook is used.
-    drop_duplicates:
-        If `True`:
-            - drop duplicated rows using `primary_key` if defined or all
-              columns if not defined.
-        If list of strings:
-            - drop duplicated rows using `drop_duplicates` as the subset.
-    drop_source_columns:
-        If `True`, drop columns from the source after read and only keep
-        columns resulting from executing the SparkChain.
-    expectations:
-        List of expectations for the DataFrame. Can be used as warnings, drop
-        invalid records or fail a pipeline.
-    layer:
-        Layer in the medallion architecture
-    name:
-        Name given to the node. Required to reference a node in a data source.
-    primary_keys:
-        A list of column names that uniquely identify each row in the
-        DataFrame. These columns are used to:
-            - Document the uniqueness constraints of the node's output data.
-            - Define the default subset for dropping duplicate rows if no
-              explicit subset is provided in `drop_duplicates`.
-            - Define the default primary keys for sinks CDC merge operations
-            - Referenced in expectations and unit tests.
-        While optional, specifying `primary_keys` helps enforce data integrity
-        and ensures that downstream operations, such as deduplication, are
-        consistent and reliable.
-    root_path:
-        Location of the pipeline node root used to store logs, metrics and
-        checkpoints.
-    source:
-        Definition of the data source
-    sinks:
-        Definition of the data sink(s). Set `is_quarantine` to True to store
-        node quarantine DataFrame.
-    transformer:
-        Spark or Polars chain defining the data transformations applied to the
-        data source.
-    timestamp_key:
-        Name of the column storing a timestamp associated with each row. It is
-        used as the default column by the builder when creating watermarks.
-
 
     Examples
     --------
@@ -155,80 +97,70 @@ class PipelineNode(BaseModel, PipelineChild):
     ```
     """
 
-    add_layer_columns: bool = True
-    dlt_template: Union[str, None] = "DEFAULT"
-    dataframe_backend: Literal["SPARK", "POLARS"] = None
-    description: str = None
-    drop_duplicates: Union[bool, list[str], None] = None  # TODO: Migrate to transformer
-    drop_source_columns: Union[bool, None] = None  # TODO: Migrate to transformer
-    transformer: Union[SparkChain, PolarsChain, None] = None
-    expectations: list[DataQualityExpectation] = []
-    expectations_checkpoint_location: str = None
-    layer: Literal["BRONZE", "SILVER", "GOLD"] = None
-    name: Union[str, None] = None
-    primary_keys: list[str] = None
-    sinks: list[DataSinksUnion] = None
-    root_path: str = None
-    source: DataSourcesUnion  # TODO: add discriminator?
-    timestamp_key: str = None
-    _view_definition: str = None
+    dlt_template: str = Field(
+        "DEFAULT",
+        description="Specify which template (notebook) to use when Delta Live Tables is selected as the orchestrator.",
+    )
+    expectations: list[DataQualityExpectation] = Field(
+        [],
+        description="List of data expectations. Can trigger warnings, drop invalid records or fail a pipeline.",
+    )
+    name: str = Field(..., description="Name given to the node.")
+    primary_keys: list[str] = Field(
+        None,
+        description="""
+    A list of column names that uniquely identify each row in the
+    DataFrame. These columns are used to:
+        - Document the uniqueness constraints of the node's output data.
+        - Define the default primary keys for sinks CDC merge operations
+        - Referenced in expectations and unit tests.
+    While optional, specifying `primary_keys` helps enforce data integrity
+    and ensures that downstream operations, such as deduplication, are
+    consistent and reliable.
+    """,
+    )
+    source: DataSourcesUnion | None = Field(
+        None, description="Definition of the data source(s)"
+    )
+    sinks: list[DataSinksUnion] = Field(
+        None,
+        description="Definition of the data sink(s). Set `is_quarantine` to True to store node quarantine DataFrame.",
+    )
+    transformer: DataFrameTransformer = Field(
+        None,
+        description="Data transformations applied between the source and the sink(s).",
+    )
+    root_path: str = Field(
+        None,
+        description="Location of the pipeline node root used to store logs, metrics and checkpoints.",
+    )
     _stage_df: Any = None
     _output_df: Any = None
     _quarantine_df: Any = None
-    _source_columns: list[str] = []
 
-    @model_validator(mode="before")
-    @classmethod
-    def push_df_backend(cls, data: Any) -> Any:
-        """Need to push dataframe_backend which is required to differentiate between spark and polars transformer"""
-        df_backend = data.get("dataframe_backend", None)
-        if df_backend:
-            for k in ["source", "transformer"]:
-                o = data.get(k, None)
-                if o and isinstance(o, dict):
-                    # source or transformer as a dict
-                    o["dataframe_backend"] = o.get("dataframe_backend", df_backend)
-                elif o:
-                    # source or transformer as a model
-                    o.dataframe_backend = o.dataframe_backend or df_backend
+    # @model_validator(mode="before")
+    # @classmethod
+    # def push_df_backend(cls, data: Any) -> Any:
+    #     """Need to push dataframe_backend which is required to differentiate between spark and polars transformer"""
+    #     df_backend = data.get("dataframe_backend", None)
+    #     if df_backend:
+    #         for k in ["source", "transformer"]:
+    #             o = data.get(k, None)
+    #             if o and isinstance(o, dict):
+    #                 # source or transformer as a dict
+    #                 o["dataframe_backend"] = o.get("dataframe_backend", df_backend)
+    #             elif o:
+    #                 # source or transformer as a model
+    #                 o.dataframe_backend = o.dataframe_backend or df_backend
+    #
+    #     return data
 
-        return data
-
-    @field_validator("root_path", "expectations_checkpoint_location", mode="before")
+    @field_validator("root_path", mode="before")
     @classmethod
     def posixpath_to_string(cls, value: Any) -> Any:
         if isinstance(value, Path):
             value = str(value)
         return value
-
-    @model_validator(mode="after")
-    def default_values(self) -> Any:
-        # Default values
-        if self.layer == "BRONZE":
-            if self.drop_source_columns is None:
-                self.drop_source_columns = False
-            if self.drop_duplicates is not None:
-                self.drop_duplicates = False
-
-        if self.layer == "SILVER":
-            if self.drop_source_columns is None:
-                self.drop_source_columns = True
-            if self.drop_duplicates is not None and self.primary_keys:
-                self.drop_duplicates = True
-
-        #
-        # if self.layer == "GOLD":
-        #     if self.drop_source_columns is None:
-        #         self.drop_source_columns = False
-        #     if self.drop_duplicates is not None:
-        #         self.drop_duplicates = False
-        #
-
-        # Generate node id
-        if self.name is None:
-            self.name = str(uuid.uuid4())
-
-        return self
 
     @model_validator(mode="after")
     def push_primary_keys(self) -> Any:
@@ -239,19 +171,6 @@ class PipelineNode(BaseModel, PipelineChild):
                     if s.merge_cdc_options.primary_keys is None:
                         s.merge_cdc_options.primary_keys = self.primary_keys
 
-        return self
-
-    @model_validator(mode="after")
-    def validate_sinks(self):
-        if self.has_output_sinks:
-            count = 0
-            for s in self.output_sinks:
-                if s.is_primary:
-                    count += 1
-            if count != 1:
-                raise ValueError(
-                    f"Node '{self.name}' must have exactly one primary sink. Currently have {count}"
-                )
         return self
 
     @model_validator(mode="after")
@@ -453,17 +372,12 @@ class PipelineNode(BaseModel, PipelineChild):
         return self.sinks_count > 0
 
     @property
-    def primary_sink(self) -> Union[DataSinksUnion, None]:
+    def primary_sink(self) -> DataSinksUnion | None:
         """Primary output sink used as a source for downstream nodes."""
         if not self.has_output_sinks:
             return None
 
-        s = None
-        for s in self.output_sinks:
-            if s.is_primary:
-                break
-
-        return s
+        return self.output_sinks[0]
 
     # ----------------------------------------------------------------------- #
     # Expectations                                                            #
@@ -508,164 +422,6 @@ class PipelineNode(BaseModel, PipelineChild):
         return [e.check for e in self.expectations]
 
     # ----------------------------------------------------------------------- #
-    # Transformations                                                         #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def layer_spark_chain(self):
-        nodes = []
-
-        if self.layer == "BRONZE":
-            if self.add_layer_columns:
-                nodes += [
-                    SparkChainNode(
-                        with_column={
-                            "name": "_bronze_at",
-                            "type": "timestamp",
-                            "expr": "F.current_timestamp()",
-                        },
-                    ),
-                ]
-
-        elif self.layer == "SILVER":
-            if self.timestamp_key:
-                nodes += [
-                    SparkChainNode(
-                        with_column={
-                            "name": "_tstamp",
-                            "type": "timestamp",
-                            "sql_expr": self.timestamp_key,
-                        },
-                    )
-                ]
-
-            if self.add_layer_columns:
-                nodes += [
-                    SparkChainNode(
-                        with_column={
-                            "name": "_silver_at",
-                            "type": "timestamp",
-                            "expr": "F.current_timestamp()",
-                        },
-                    )
-                ]
-
-        elif self.layer == "GOLD":
-            if self.add_layer_columns:
-                nodes += [
-                    SparkChainNode(
-                        with_column={
-                            "name": "_gold_at",
-                            "type": "timestamp",
-                            "expr": "F.current_timestamp()",
-                        },
-                    )
-                ]
-
-        if self.drop_duplicates:
-            subset = None
-            if isinstance(self.drop_duplicates, list):
-                subset = self.drop_duplicates
-            elif self.primary_keys:
-                subset = self.primary_keys
-
-            nodes += [SparkChainNode(func_name="dropDuplicates", func_args=[subset])]
-
-        if self.drop_source_columns and self.transformer:
-            nodes += [
-                SparkChainNode(
-                    func_name="drop",
-                    func_args=[
-                        c
-                        for c in self._source_columns
-                        if c not in ["_bronze_at", "_silver_at", "_gold_at"]
-                    ],
-                )
-            ]
-
-        if len(nodes) == 0:
-            return None
-
-        return SparkChain(nodes=nodes)
-
-    @property
-    def layer_polars_chain(self):
-        nodes = []
-
-        if self.layer == "BRONZE":
-            if self.add_layer_columns:
-                nodes += [
-                    PolarsChainNode(
-                        with_column={
-                            "name": "_bronze_at",
-                            "type": "timestamp",
-                            "expr": "pl.expr.laktory.current_timestamp()",
-                        },
-                    ),
-                ]
-
-        elif self.layer == "SILVER":
-            if self.timestamp_key:
-                nodes += [
-                    PolarsChainNode(
-                        with_column={
-                            "name": "_tstamp",
-                            "type": "timestamp",
-                            "sql_expr": self.timestamp_key,
-                        },
-                    )
-                ]
-
-            if self.add_layer_columns:
-                nodes += [
-                    PolarsChainNode(
-                        with_column={
-                            "name": "_silver_at",
-                            "type": "timestamp",
-                            "expr": "pl.expr.laktory.current_timestamp()",
-                        },
-                    )
-                ]
-
-        elif self.layer == "GOLD":
-            if self.add_layer_columns:
-                nodes += [
-                    PolarsChainNode(
-                        with_column={
-                            "name": "_gold_at",
-                            "type": "timestamp",
-                            "expr": "pl.expr.laktory.current_timestamp()",
-                        },
-                    )
-                ]
-
-        if self.drop_duplicates:
-            subset = None
-            if isinstance(self.drop_duplicates, list):
-                subset = self.drop_duplicates
-            elif self.primary_keys:
-                subset = self.primary_keys
-
-            nodes += [PolarsChainNode(func_name="unique", func_args=[subset])]
-
-        if self.drop_source_columns and self.transformer:
-            nodes += [
-                PolarsChainNode(
-                    func_name="drop",
-                    func_args=[
-                        c
-                        for c in self._source_columns
-                        if c not in ["_bronze_at", "_silver_at", "_gold_at"]
-                    ],
-                )
-            ]
-
-        if len(nodes) == 0:
-            return None
-
-        return PolarsChain(nodes=nodes)
-
-    # ----------------------------------------------------------------------- #
     # Upstream Nodes                                                          #
     # ----------------------------------------------------------------------- #
 
@@ -704,7 +460,7 @@ class PipelineNode(BaseModel, PipelineChild):
         if self.sinks:
             for s in self.sinks:
                 if getattr(s, "view_definition", None):
-                    sources += s.parsed_view_definition.data_sources
+                    sources += s.view_definition.data_sources
 
         return sources
 
@@ -768,7 +524,6 @@ class PipelineNode(BaseModel, PipelineChild):
     def execute(
         self,
         apply_transformer: bool = True,
-        spark: SparkSession = None,
         udfs: list[Callable] = None,
         write_sinks: bool = True,
         full_refresh: bool = False,
@@ -785,8 +540,6 @@ class PipelineNode(BaseModel, PipelineChild):
         ----------
         apply_transformer:
             Flag to apply transformer in the execution
-        spark: SparkSession
-            Spark session
         udfs:
             User-defined functions
         write_sinks:
@@ -810,56 +563,32 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Refresh
         if full_refresh:
-            self.purge(spark)
+            self.purge()
 
         # Read Source
-        self._stage_df = self.source.read(spark)
+        self._stage_df = self.source.read()
 
         # Save source
         self._source_columns = self._stage_df.columns
 
         # Apply transformer
-        if apply_transformer:
-            if self.is_view and self.transformer:
-                self._view_definition = self.transformer.get_view_definition()
-
-            if "spark" in str(type(self._stage_df)).lower():
-                dftype = "spark"
-            elif "polars" in str(type(self._stage_df)).lower():
-                dftype = "polars"
-            else:
-                raise ValueError("DataFrame backend not supported")
-
-            # Set Transformer
-            transformer = self.transformer
-            if transformer is None:
-                if dftype == "spark":
-                    transformer = SparkChain(nodes=[])
-                elif dftype == "polars":
-                    transformer = PolarsChain(nodes=[])
-            else:
-                transformer = transformer.model_copy()
-
-            # Add layer-specific chain nodes
-            if dftype == "spark" and self.layer_spark_chain:
-                transformer.nodes += self.layer_spark_chain.nodes
-            elif dftype == "polars" and self.layer_polars_chain:
-                transformer.nodes += self.layer_polars_chain.nodes
-
-            if transformer.nodes:
-                self._stage_df = transformer.execute(self._stage_df, udfs=udfs)
+        if apply_transformer and self.transformer:
+            self._stage_df = self.transformer.execute(self._stage_df, udfs=udfs)
 
         # Check expectations
-        self.check_expectations()
+        # self.check_expectations()
+        self._output_df = self._stage_df
+        self._quarantine_df = None
 
         # Output and Quarantine to Sinks
         if write_sinks:
             for s in self.output_sinks:
                 if self.is_view:
-                    s.write(view_definition=self._view_definition, spark=spark)
-                    self._output_df = s.as_source().read(spark=spark)
+                    s.write()
+                    self._output_df = s.as_source().read()
                 else:
                     s.write(self._output_df, full_refresh=full_refresh)
+
             if self._quarantine_df is not None:
                 for s in self.quarantine_sinks:
                     s.write(self._quarantine_df, full_refresh=full_refresh)

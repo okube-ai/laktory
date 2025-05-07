@@ -40,6 +40,10 @@ class BaseDataSink(BaseModel, PipelineChild):
         None,
         description="Path to which the checkpoint file for which a streaming dataframe should be written.",
     )
+    is_quarantine: bool = Field(
+        False,
+        description="Sink used to store quarantined results from a pipeline node expectations.",
+    )
     type: Literal["FILE", "HIVE_METASTORE", "UNITY_CATALOG"] = Field(
         ..., description="Name of the data sink type"
     )

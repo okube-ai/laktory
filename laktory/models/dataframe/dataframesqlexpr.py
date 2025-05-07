@@ -52,7 +52,7 @@ class DataFrameSQLExpr(BaseModel, PipelineChild):
     sql_expr: str = Field(..., description="SQL Expression")
     _data_sources: list[PipelineNodeDataSource] = None
 
-    def parsed_expr(self, view=False) -> list[str]:
+    def parsed_expr(self) -> list[str]:
         raise NotImplementedError()
         # from laktory.models.datasources.pipelinenodedatasource import (
         #     PipelineNodeDataSource,
@@ -60,41 +60,6 @@ class DataFrameSQLExpr(BaseModel, PipelineChild):
         # from laktory.models.datasources.tabledatasource import TableDataSource
 
         expr = self.sql_expr
-        # TODO: REVIEW VIEW SUPPORT
-        # if view:
-        #     pl_node = self.parent_pipeline_node
-        #
-        #     if pl_node and pl_node.source:
-        #         source = pl_node.source
-        #         if isinstance(source, TableDataSource):
-        #             full_name = source.full_name
-        #         elif isinstance(source, PipelineNodeDataSource):
-        #             full_name = source.sink_table_full_name
-        #         else:
-        #             raise ValueError(
-        #                 "VIEW sink only supports Table or Pipeline Node with Table sink data sources"
-        #             )
-        #         expr = expr.replace("{df}", full_name)
-        #
-        #     pl = self.parent_pipeline
-        #     if pl:
-        #         from laktory.models.datasinks.tabledatasink import TableDataSink
-        #
-        #         pattern = r"\{nodes\.(.*?)\}"
-        #         matches = re.findall(pattern, expr)
-        #         for m in matches:
-        #             if m not in pl.nodes_dict:
-        #                 raise ValueError(
-        #                     f"Node '{m}' is not available from pipeline '{pl.name}'"
-        #                 )
-        #             sink = pl.nodes_dict[m].primary_sink
-        #             if not isinstance(sink, TableDataSink):
-        #                 raise ValueError(
-        #                     f"Node '{m}' used in view creation does not have a Table sink"
-        #                 )
-        #             expr = expr.replace("{nodes." + m + "}", sink.full_name)
-        #
-        #     return expr
 
         expr = expr.replace("{df}", "df")
         pattern = r"\{nodes\.(.*?)\}"

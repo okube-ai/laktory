@@ -1,8 +1,10 @@
 import warnings
+from pathlib import Path
 from typing import Any
 from typing import Literal
 from typing import Union
 
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -110,8 +112,16 @@ class DataQualityExpectation(BaseModel):
     name: str
     expr: Union[str, DataFrameColumnExpression] = None
     tolerance: ExpectationTolerance = ExpectationTolerance(abs=0)
+    checkpoint_path: str = None
     _dataframe_backend: Literal["SPARK", "POLARS"] = None
     _check: DataQualityCheck = None
+
+    @field_validator("checkpoint_path", mode="before")
+    @classmethod
+    def posixpath_to_string(cls, value: Any) -> Any:
+        if isinstance(value, Path):
+            value = str(value)
+        return value
 
     @model_validator(mode="after")
     def parse_expr(self) -> Any:
