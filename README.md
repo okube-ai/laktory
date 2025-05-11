@@ -13,7 +13,7 @@ lakehouses.
 
 Laktory is your all-in-one solution for defining both data transformations and 
 Databricks resources. Imagine if Terraform, Databricks Asset Bundles, and dbt
-combined forces—that’s essentially Laktory.
+combined forces—that's essentially Laktory.
 
 This open-source framework simplifies the creation, deployment, and execution 
 of data pipelines while adhering to essential DevOps practices like version 
@@ -25,7 +25,7 @@ statements with DataFrame operations.
 <img src="docs/images/laktory_diagram.png" alt="what is laktory" width="800"/>
 
 Since Laktory pipelines are built on top of Spark and Polars, they can run in
-any environment that supports python—from your local machine to a Kubernetes 
+any environment that supports Python—from your local machine to a Kubernetes 
 cluster. They can also be deployed and orchestrated as Databricks Jobs or
 [Delta Live Tables](https://www.databricks.com/product/delta-live-tables),
 offering a simple, fully managed, and low-maintenance solution.
@@ -127,15 +127,15 @@ pipeline.execute(spark=spark)
 To get started with a more useful example, jump into the [Quickstart](https://www.laktory.ai/quickstart/).
 
 ## Get Involved
-Laktory is growing rapidly, and we’d love for you to be part of our journey! Here’s how 
+Laktory is growing rapidly, and we'd love for you to be part of our journey! Here's how 
 you can get involved:
 - **Join the Community**: Connect with fellow Laktory users and contributors on our [Slack](http://okube.slack.com/). Share ideas, ask questions, and collaborate!
 - **Suggest Features or Report Issues**: Have an idea for a new feature or encountering an issue? Let us know on [GitHub Issues](https://github.com/okube-ai/laktory/issues). Your feedback helps shape the future of Laktory!
-- Contribute to Laktory: Check out our [contributing guide](CONTRIBUTING.md)  to learn how you can tackle issues and add value to the project.
+- **Contribute to Laktory**: Check out our [contributing guide](CONTRIBUTING.md) to learn how you can tackle issues and add value to the project.
 
 ## A Lakehouse DataOps Template
 A comprehensive template on how to deploy a lakehouse as code using Laktory is maintained here:
-https://github.com/okube-ai/lakehouse-as-code.
+https://github.com/okube-ai/lakehouse-as-code
 
 In this template, 4 pulumi projects are used to:
 - `{cloud_provider}_infra`: Deploy the required resources on your cloud provider
@@ -146,5 +146,5 @@ In this template, 4 pulumi projects are used to:
 ## Okube Company
 <img src="docs/images/okube.png" alt="okube logo" width="85"/>
 
-[Okube](https://www.okube.ai) is dedicated to building open source frameworks, known as the *kubes*, empowering businesses to build, deploy and operate highly scalable data platforms and AI models. 
+[Okube](https://www.okube.ai) is dedicated to building open source frameworks, known as the *kubes*, empowering businesses to build, deploy and operate highly scalable data platforms and AI models.
 
