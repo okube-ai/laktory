@@ -1,8 +1,8 @@
 import pytest
 
 from laktory._testing import get_df0
+from laktory.models import DataFrameExpr
 from laktory.models import DataFrameMethod
-from laktory.models import DataFrameSQLExpr
 from laktory.models import DataFrameTransformer
 
 
@@ -17,8 +17,8 @@ def test_transformer(backend):
         },
     )
 
-    node1 = DataFrameSQLExpr(
-        sql_expr="select id, x1, y1 from df",
+    node1 = DataFrameExpr(
+        expr="select id, x1, y1 from df",
     )
 
     transformer = DataFrameTransformer(nodes=[node0, node1])

@@ -3,11 +3,11 @@ from __future__ import annotations
 # import abc
 import re
 from typing import TYPE_CHECKING
+from typing import Literal
 
 # from typing import Callable
 # from typing import Literal
-from typing import Union
-
+import narwhals as nw
 from pydantic import Field
 
 from laktory._logger import get_logger
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 # --------------------------------------------------------------------------- #
 
 
-class DataFrameSQLExpr(BaseModel, PipelineChild):
+class DataFrameExpr(BaseModel, PipelineChild):
     """
     A transformation defined as a SQL statement.
 
@@ -38,7 +38,7 @@ class DataFrameSQLExpr(BaseModel, PipelineChild):
 
     df0 = pl.DataFrame(
         {
-            "x": [1.1, 2.2, 3.3],
+            "x": [1, 2, 3],
         }
     )
 
@@ -49,25 +49,13 @@ class DataFrameSQLExpr(BaseModel, PipelineChild):
     ```
     """
 
-    sql_expr: str = Field(..., description="SQL Expression")
+    expr: str = Field(..., description="SQL Expression")
+    type: Literal["SQL"] = Field(
+        "SQL",
+        description="Expression type. Only SQL is currently supported, but `DF` could"
+        "be added in the future.",
+    )
     _data_sources: list[PipelineNodeDataSource] = None
-
-    def parsed_expr(self) -> list[str]:
-        raise NotImplementedError()
-        # from laktory.models.datasources.pipelinenodedatasource import (
-        #     PipelineNodeDataSource,
-        # )
-        # from laktory.models.datasources.tabledatasource import TableDataSource
-
-        expr = self.sql_expr
-
-        expr = expr.replace("{df}", "df")
-        pattern = r"\{nodes\.(.*?)\}"
-        matches = re.findall(pattern, expr)
-        for m in matches:
-            expr = expr.replace("{nodes." + m + "}", f"nodes__{m}")
-
-        return expr.split(";")
 
     # @property
     # def upstream_node_names(self) -> list[str]:
@@ -94,7 +82,7 @@ class DataFrameSQLExpr(BaseModel, PipelineChild):
             sources = []
 
             pattern = r"\{nodes\.(.*?)\}"
-            matches = re.findall(pattern, self.sql_expr)
+            matches = re.findall(pattern, self.expr)
             for m in matches:
                 sources += [PipelineNodeDataSource(node_name=m)]
 
@@ -102,47 +90,101 @@ class DataFrameSQLExpr(BaseModel, PipelineChild):
 
         return self._data_sources
 
-    def execute(
+    def to_sql(self, references=None):
+        if references is None:
+            references = {}
+
+        # Validate all data source references available
+        pl = self.parent_pipeline
+        for s in self.data_sources:
+            if s.name not in references:
+                msg = (
+                    f"Data Source '{s.name}' is not available from provided references."
+                )
+                if pl:
+                    msg = msg.replace(
+                        "references.", f"references by pipeline {pl.name}"
+                    )
+                    raise ValueError(msg)
+
+        expr = self.expr
+        for k, v in references.items():
+            expr = expr.replace(k, v)
+
+        return expr
+        #
+        # from laktory.models.datasources.tabledatasource import TableDataSource
+        #
+        # expr = self.sql_expr
+        #
+        # pl_node = self.parent_pipeline_node
+        #
+        # if pl_node and pl_node.source:
+        #     source = pl_node.source
+        #     if isinstance(source, TableDataSource):
+        #         full_name = source.full_name
+        #     elif isinstance(source, PipelineNodeDataSource):
+        #         full_name = source.sink_table_full_name
+        #     else:
+        #         raise ValueError(
+        #             "VIEW sink only supports Table or Pipeline Node with Table sink data sources"
+        #         )
+        #     expr = expr.replace("{df}", full_name)
+        #
+        # pl = self.parent_pipeline
+        # if pl:
+        #     from laktory.models.datasinks.tabledatasink import TableDataSink
+        #
+        #     pattern = r"\{nodes\.(.*?)\}"
+        #     matches = re.findall(pattern, expr)
+        #     for m in matches:
+        #         if m not in pl.nodes_dict:
+        #             raise ValueError(
+        #                 f"Node '{m}' is not available from pipeline '{pl.name}'"
+        #             )
+        #         sink = pl.nodes_dict[m].primary_sink
+        #         if not isinstance(sink, TableDataSink):
+        #             raise ValueError(
+        #                 f"Node '{m}' used in view creation does not have a Table sink"
+        #             )
+        #         expr = expr.replace("{nodes." + m + "}", sink.full_name)
+        #
+        # return expr
+
+    def to_df(
         self,
-        df: AnyFrame,
+        dfs: dict[str, AnyFrame],
         # udfs: list[Callable[[...], Union[PolarsExpr, PolarsDataFrame]]] = None,
-        **named_dfs: dict[str, AnyFrame],
-    ) -> Union[AnyFrame]:
+    ) -> AnyFrame:
         """
-        Execute SQL expression on provided DataFrame `df`.
+        Execute expression on provided DataFrame `dfs`.
 
         Parameters
         ----------
-        df:
-            Input dataframe
+        dfs:
+            Input dataframes
         udfs:
             User-defined functions
-        named_dfs:
-            Other DataFrame(s) to be passed to the method.
 
         Returns
         -------
             Output dataframe
         """
 
+        # From SQL expression
+        logger.info(f"DataFrame as \n{self.expr.strip()}")
+
+        # Convert to Native
+        dfs = {k: nw.from_native(v).to_native() for k, v in dfs.items()}
+        df0 = list(dfs.values())[0]
+
         # Get Backend
-        backend = DataFrameBackends.from_df(df)
-        #
-        # from laktory.polars.datatypes import DATATYPES_MAP
+        backend = DataFrameBackends.from_df(df0)
         #
         # if udfs is None:
         #     udfs = []
         # udfs = {f.__name__: f for f in udfs}
         #
-
-        # From SQL expression
-        logger.info(f"DataFrame as \n{self.sql_expr.strip()}")
-        dfs = {"df": df}
-        for k, v in named_dfs.items():
-            dfs[k] = v
-
-        dfs = {k: v.to_native() for k, v in dfs.items()}
-        df0 = list(dfs.values())[0]
 
         if backend == DataFrameBackends.POLARS:
             import polars as pl
@@ -152,7 +194,8 @@ class DataFrameSQLExpr(BaseModel, PipelineChild):
             # for source in self.data_sources:
             #     kwargs[f"nodes__{source.node.name}"] = source.read()
             # return pl.SQLContext(frames=dfs).execute(";".join(self.parsed_expr()))
-            return pl.SQLContext(frames=dfs).execute(self.sql_expr)
+            df = pl.SQLContext(frames=dfs).execute(self.expr)
+            return nw.from_native(df)
 
         elif backend == DataFrameBackends.PYSPARK:
             _spark = df0.sparkSession
@@ -176,14 +219,14 @@ class DataFrameSQLExpr(BaseModel, PipelineChild):
 
             # Run query
             _df = None
-            for expr in self.sql_expr.split(";"):
+            for expr in self.expr.split(";"):
                 # for expr in self.parsed_expr():
                 if expr.replace("\n", " ").strip() == "":
                     continue
                 # _df = _spark.laktory.sql(expr)
                 _df = _spark.sql(expr)
             if _df is None:
-                raise ValueError(f"SQL Expression '{self.sql_expr}' is invalid")
+                raise ValueError(f"SQL Expression '{self.expr}' is invalid")
             return _df
 
         else:

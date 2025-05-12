@@ -11,7 +11,7 @@ def test_df_expr(backend):
     df0 = get_df0(backend)
 
     e = DataFrameColumnExpr(
-        value="col('x1')+lit(1)",
+        expr="col('x1')+lit(1)",
         dataframe_backend=backend,
         dataframe_api="NATIVE",
     )
@@ -20,9 +20,9 @@ def test_df_expr(backend):
     dft = df0.with_columns(y=nw.col("x1") + nw.lit(1))
 
     if backend == "POLARS":
-        df = nw.from_native(df0.to_native().with_columns(y=e.df_expr))
+        df = nw.from_native(df0.to_native().with_columns(y=e.to_expr()))
     elif backend == "PYSPARK":
-        df = nw.from_native(df0.to_native().withColumn("y", e.df_expr))
+        df = nw.from_native(df0.to_native().withColumn("y", e.to_expr()))
     else:
         raise ValueError()
     assert_dfs_equal(df, dft)
@@ -33,13 +33,13 @@ def test_df_expr_narwhals(backend):
     df0 = get_df0(backend)
 
     e = DataFrameColumnExpr(
-        value="col('x1')+lit(1)",
+        expr="col('x1')+lit(1)",
         dataframe_api="NARWHALS",
     )
     assert e.type == "DF"
 
     dft = df0.with_columns(y=nw.col("x1") + nw.lit(1))
-    df = df0.with_columns(y=e.df_expr)
+    df = df0.with_columns(y=e.to_expr())
     assert_dfs_equal(df, dft)
 
 
@@ -48,7 +48,7 @@ def test_sql_expr(backend):
     df0 = get_df0(backend)
 
     e = DataFrameColumnExpr(
-        value="x1 + 1",
+        expr="x1 + 1",
         dataframe_backend=backend,
         dataframe_api="NATIVE",
     )
@@ -57,9 +57,9 @@ def test_sql_expr(backend):
     dft = df0.with_columns(y=nw.col("x1") + nw.lit(1))
 
     if backend == "POLARS":
-        df = nw.from_native(df0.to_native().with_columns(y=e.df_expr))
+        df = nw.from_native(df0.to_native().with_columns(y=e.to_expr()))
     elif backend == "PYSPARK":
-        df = nw.from_native(df0.to_native().withColumn("y", e.df_expr))
+        df = nw.from_native(df0.to_native().withColumn("y", e.to_expr()))
     else:
         raise ValueError()
     assert_dfs_equal(df, dft)
@@ -70,13 +70,13 @@ def test_sql_expr_narwhals(backend):
     df0 = get_df0(backend)
 
     e = DataFrameColumnExpr(
-        value="x1 + 1",
+        expr="x1 + 1",
         dataframe_api="NARWHALS",
     )
     assert e.type == "SQL"
 
     dft = df0.with_columns(y=nw.col("x1") + nw.lit(1))
-    df = df0.with_columns(y=e.df_expr)
+    df = df0.with_columns(y=e.to_expr())
     assert_dfs_equal(df, dft)
 
 

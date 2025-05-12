@@ -4,7 +4,7 @@ import pytest
 from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
 from laktory._testing import get_df1
-from laktory.models import DataFrameSQLExpr
+from laktory.models import DataFrameExpr
 from laktory.models import PipelineNodeDataSource
 
 # from laktory import models
@@ -16,9 +16,9 @@ from laktory.models import PipelineNodeDataSource
 def test_sql_expr(backend):
     df0 = get_df0(backend)
 
-    node = DataFrameSQLExpr(sql_expr="SELECT id, 3*x1 AS x3 FROM df")
+    node = DataFrameExpr(expr="SELECT id, 3*x1 AS x3 FROM df")
 
-    df = node.execute(df0)
+    df = node.to_df({"df": df0})
     assert_dfs_equal(
         df.select("id", "x3"), pl.DataFrame({"id": ["a", "b", "c"], "x3": [3, 6, 9]})
     )
@@ -29,18 +29,16 @@ def test_sql_expr_multi(backend):
     df0 = get_df0(backend)
     source = get_df1(backend)
 
-    node = DataFrameSQLExpr(
-        sql_expr="SELECT * FROM df LEFT JOIN source on df.id = source.id"
-    )
-    df = node.execute(df0, source=source)
+    node = DataFrameExpr(expr="SELECT * FROM df LEFT JOIN source on df.id = source.id")
+    df = node.to_df({"df": df0, "source": source})
     assert_dfs_equal(df.select("x2"), pl.DataFrame({"x2": [None, 4, 9]}))
 
 
 def test_sql_with_nodes():
-    e1 = DataFrameSQLExpr(sql_expr="SELECT * FROM {df}")
+    e1 = DataFrameExpr(expr="SELECT * FROM {df}")
 
-    e2 = DataFrameSQLExpr(
-        sql_expr="SELECT * FROM {df} UNION SELECT * FROM {nodes.node_01} UNION SELECT * FROM {nodes.node_02}"
+    e2 = DataFrameExpr(
+        expr="SELECT * FROM {df} UNION SELECT * FROM {nodes.node_01} UNION SELECT * FROM {nodes.node_02}"
     )
 
     assert e1.data_sources == []

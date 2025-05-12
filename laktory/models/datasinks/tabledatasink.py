@@ -6,8 +6,8 @@ from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory.models.dataframe.dataframeexpr import DataFrameExpr
 from laktory.models.datasinks.basedatasink import BaseDataSink
-from laktory.models.datasinks.viewdefinition import ViewDefinition
 from laktory.models.datasources.tabledatasource import TableDataSource
 
 logger = get_logger(__name__)
@@ -33,7 +33,7 @@ class TableDataSink(BaseDataSink):
         "TABLE",
         description="Type of table. 'TABLE' and 'VIEW' are currently supported.",
     )
-    view_definition: ViewDefinition | str = Field(
+    view_definition: DataFrameExpr | str = Field(
         None, description="View definition of 'VIEW' `table_type` is selected."
     )
     # _parsed_view_definition: BaseChainNodeSQLExpr = None
@@ -64,10 +64,10 @@ class TableDataSink(BaseDataSink):
 
     @field_validator("view_definition")
     def set_view_definition(
-        cls, value: ViewDefinition | str | None
-    ) -> ViewDefinition | None:
-        if value and not isinstance(value, ViewDefinition):
-            value = ViewDefinition(sql_expr=value)
+        cls, value: DataFrameExpr | str | None
+    ) -> DataFrameExpr | None:
+        if value and not isinstance(value, DataFrameExpr):
+            value = DataFrameExpr(expr=value)
         return value
 
     # ----------------------------------------------------------------------- #
@@ -114,6 +114,40 @@ class TableDataSink(BaseDataSink):
     # ----------------------------------------------------------------------- #
     # Writers                                                                 #
     # ----------------------------------------------------------------------- #
+
+    def _get_pipeline_table_names(self):
+        from laktory.models.datasources.pipelinenodedatasource import (
+            PipelineNodeDataSource,
+        )
+        from laktory.models.datasources.tabledatasource import TableDataSource
+
+        tables = {}
+
+        pl_node = self.parent_pipeline_node
+
+        if pl_node and pl_node.source:
+            source = pl_node.source
+            if isinstance(source, TableDataSource):
+                full_name = source.full_name
+            elif isinstance(source, PipelineNodeDataSource):
+                full_name = source.sink_table_full_name
+            else:
+                raise ValueError(
+                    "VIEW sink only supports Table or Pipeline Node with Table sink data sources"
+                )
+            tables["{df}"] = full_name
+
+        pl = self.parent_pipeline
+        if pl:
+            for node in pl.nodes:
+                if node == pl_node:
+                    continue
+
+                for s in node.sinks:
+                    if isinstance(s, TableDataSink):
+                        tables["{nodes." + node.name + "}"] = s.full_name
+
+        return tables
 
     def _write_spark(self, df, mode, full_refresh=False) -> None:
         df = df.to_native()
@@ -164,11 +198,10 @@ class TableDataSink(BaseDataSink):
 
         spark = get_spark_session()
 
-        logger.info(f"Creating view {self.full_name} AS {self.view_definition}")
+        logger.info(f"Creating view {self.full_name} AS {self.view_definition.expr}")
 
-        df = spark.sql(
-            f"CREATE OR REPLACE VIEW {self.full_name} AS {self.view_definition.parsed()}"
-        )
+        _view = self.view_definition.to_sql(self._get_pipeline_table_names())
+        df = spark.sql(f"CREATE OR REPLACE VIEW {self.full_name} AS {_view}")
         if self.parent_pipeline_node:
             self.parent_pipeline_node._output_df = df
 

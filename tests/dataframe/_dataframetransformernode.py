@@ -66,7 +66,7 @@ def test_arg_string(df0):
         func_name="select",
         func_args=["id"],
     )
-    df = node.execute(df0)
+    df = node.to_df(df0)
     assert df.columns == ["id"]
 
 
@@ -77,7 +77,7 @@ def test_kwarg_string(df0):
             "y1": "x1",
         },
     )
-    df = node.execute(df0)
+    df = node.to_df(df0)
     assert df.columns == ["id", "x1", "y1"]
 
 
@@ -92,7 +92,7 @@ def test_arg_source(df0, source):
             "how": "left",
         },
     )
-    df = node.execute(df0)
+    df = node.to_df(df0)
     assert_dfs_equal(df.select("x2"), pl.DataFrame({"x2": [None, 4, 9]}))
 
 
@@ -101,7 +101,7 @@ def test_arg_nw_expr(df0):
         func_name="with_columns",
         func_kwargs={"y1": "nw.col('x1').clip(lower_bound=0, upper_bound=2)"},
     )
-    df = node.execute(df0)
+    df = node.to_df(df0)
     assert_dfs_equal(df.select("y1"), pl.DataFrame({"y1": [1, 2, 2]}))
 
 
@@ -120,7 +120,7 @@ def test_arg_native_expr(df0):
         }
 
     node = DataFrameTransformerNode(dataframe_api="NATIVE", **kwargs)
-    df = node.execute(df0)
+    df = node.to_df(df0)
     assert_dfs_equal(df.select("y1"), pl.DataFrame({"y1": [1, 2, 2]}))
 
 
@@ -133,7 +133,7 @@ def test_arg_sql_expr(df0):
         },
     )
 
-    df = node.execute(df0)
+    df = node.to_df(df0)
     assert_dfs_equal(
         df.select("y1", "y2"), pl.DataFrame({"y1": [5, 10, 15], "y2": [5, 10, 15]})
     )
@@ -142,7 +142,7 @@ def test_arg_sql_expr(df0):
 def test_sql_expr(df0, source):
     node = DataFrameTransformerNode(sql_expr="SELECT id, 3*x1 AS x3 FROM df")
 
-    df = node.execute(df0)
+    df = node.to_df(df0)
     assert_dfs_equal(
         df.select("id", "x3"), pl.DataFrame({"id": ["a", "b", "c"], "x3": [3, 6, 9]})
     )
@@ -154,7 +154,7 @@ def test_sql_expr_multi(df0, source):
     node = DataFrameTransformerNode(
         sql_expr="SELECT * FROM df LEFT JOIN source on df.id = source.id"
     )
-    df = node.execute(df0, source=source)
+    df = node.to_df(df0, source=source)
     assert_dfs_equal(df.select("x2"), pl.DataFrame({"x2": [None, 4, 9]}))
 
 
@@ -288,6 +288,6 @@ if __name__ == "__main__":
         func_name="with_columns",
         func_kwargs={"xr": "nw.col('x').round().cast(nw.String())"},
     )
-    df = node.execute(df0)
+    df = node.to_df(df0)
 
     print(df)

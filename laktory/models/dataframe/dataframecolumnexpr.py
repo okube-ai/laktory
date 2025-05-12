@@ -13,7 +13,6 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipelinechild import PipelineChild
-from laktory.narwhals.expr import sql_expr
 
 if TYPE_CHECKING:
     import polars as pl
@@ -37,24 +36,37 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
     ```py
     from laktory import models
 
-    df0 = pl.DataFrame(
+    df = pl.DataFrame(
         {
-            "x": [1.1, 2.2, 3.3],
+            "x": [1, 2, 3],
         }
     )
 
-    node = models.DataFrameSQLExpr(sql_expr="SELECT x, 2*x AS y")
-    df = node.execute(df0)
+    expr1 = models.DataFrameColumnExpr(
+        value="col('x')+lit(1)",
+        dataframe_backend="POLARS",
+        dataframe_api="NATIVE",
+    )
+
+    expr2 = models.DataFrameColumnExpr(
+        value="x**2 + 1",
+        type="SQL",
+        dataframe_backend="POLARS",
+        dataframe_api="NATIVE",
+    )
+
+
+    df = df.with_columns(y1=expr1.df_expr, y2=expr2.df_expr)
 
     print(df)
     ```
     """
 
-    value: str = Field(..., description="Expression string representation")
+    expr: str = Field(..., description="Expression string representation")
     type: Literal["SQL", "DF"] = Field(
         None,
         description="Expression type: DF or SQL. If `None` is specified, type is "
-        "guessed.",
+        "guessed from provided expression.",
     )
 
     @model_validator(mode="after")
@@ -62,7 +74,7 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
         if self.type:
             return self
 
-        expr_clean = self.value.strip().replace("\n", " ")
+        expr_clean = self.expr.strip().replace("\n", " ")
 
         type = "SQL"
         if re.findall(r"\w+\.\w+\(", expr_clean):
@@ -87,19 +99,17 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
     # Expressions                                                             #
     # ----------------------------------------------------------------------- #
 
-    @property
-    def sql_expr(self) -> str:
+    def to_sql_expr(self) -> str:
         """Column expression expressed as a SQL Statement"""
         # -> pure SQL
 
         if self.type == "SQL":
-            return self.value
+            return self.expr
         else:
             # TODO: Use SQLFrame?
             raise ValueError("DataFrame expression can't be converted to SQL")
 
-    @property
-    def df_expr(self) -> nw.Expr | "pl.Expr" | "F.Column":
+    def to_expr(self) -> nw.Expr | "pl.Expr" | "F.Column":
         """Column expression expressed as DataFrame API object"""
 
         # # Adding udfs to global variables
@@ -108,10 +118,12 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
         # for k, v in udfs.items():
         #     globals()[k] = v
 
-        _value = self.value.replace("\n", " ")
+        _value = self.expr.replace("\n", " ")
 
         if self._dataframe_api == "NARWHALS":
             if self.type == "SQL":
+                from laktory.narwhals.expr import sql_expr
+
                 expr = sql_expr(_value)
             else:
                 # Imports required to evaluate expressions
@@ -139,7 +151,7 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
                 if self.type == "SQL":
                     import polars as pl
 
-                    expr = pl.Expr.laktory.sql_expr(_value)
+                    expr = pl.sql_expr(_value)
                 else:
                     # Imports required to evaluate expressions
                     import polars as pl  # noqa: F401
@@ -147,7 +159,7 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
                     from polars import col  # noqa: F401
                     from polars import lit  # noqa: F401
 
-                    expr = eval(self.value)
+                    expr = eval(self.expr)
 
             else:
                 raise ValueError(

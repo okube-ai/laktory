@@ -216,7 +216,7 @@ class PipelineNode(BaseModel, PipelineChild):
                     f"{m}VIEW sink only support transformers with a single SQL node"
                 )
 
-            if self.transformer.nodes[0].sql_expr is None:
+            if self.transformer.nodes[0].expr is None:
                 raise ValueError(
                     f"{m}VIEW sink only support transformers with a single SQL node"
                 )
@@ -250,6 +250,7 @@ class PipelineNode(BaseModel, PipelineChild):
     def child_attribute_names(self):
         return [
             "data_sources",
+            "expectations",
             "transformer",
             "sinks",
         ]
@@ -388,7 +389,7 @@ class PipelineNode(BaseModel, PipelineChild):
         expectations = {}
         for e in self.expectations:
             if e.is_dlt_compatible and e.action == "WARN":
-                expectations[e.name] = e.expr.value
+                expectations[e.name] = e.expr.expr
         return expectations
 
     @property
@@ -396,7 +397,7 @@ class PipelineNode(BaseModel, PipelineChild):
         expectations = {}
         for e in self.expectations:
             if e.is_dlt_compatible and e.action in ["DROP", "QUARANTINE"]:
-                expectations[e.name] = e.expr.value
+                expectations[e.name] = e.expr.expr
         return expectations
 
     @property
@@ -404,7 +405,7 @@ class PipelineNode(BaseModel, PipelineChild):
         expectations = {}
         for e in self.expectations:
             if e.is_dlt_compatible and e.action == "FAIL":
-                expectations[e.name] = e.expr.value
+                expectations[e.name] = e.expr.expr
         return expectations
 
     @property

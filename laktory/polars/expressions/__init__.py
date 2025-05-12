@@ -8,7 +8,6 @@ from laktory.polars.expressions.math import roundp
 
 # from laktory.polars.expressions.sort import coalesce
 from laktory.polars.expressions.sort import row_number
-from laktory.polars.expressions.sql import sql_expr
 from laktory.polars.expressions.string import string_split
 from laktory.polars.expressions.string import uuid
 from laktory.polars.expressions.units import convert_units
@@ -61,10 +60,6 @@ class LaktoryExpression:
     @wraps(row_number)
     def row_number(*args, **kwargs):
         return row_number(*_parse_args(args), **kwargs)
-
-    @wraps(sql_expr)
-    def sql_expr(*args, **kwargs):
-        return sql_expr(*_parse_args(args), **kwargs)
 
     @wraps(string_split)
     def string_split(*args, **kwargs):
