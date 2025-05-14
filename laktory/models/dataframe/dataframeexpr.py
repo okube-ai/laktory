@@ -227,7 +227,7 @@ class DataFrameExpr(BaseModel, PipelineChild):
                 _df = _spark.sql(expr)
             if _df is None:
                 raise ValueError(f"SQL Expression '{self.expr}' is invalid")
-            return _df
+            return nw.from_native(_df)
 
         else:
             raise NotImplementedError(f"Backend '{backend}' is not supported.")

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 from typing import Callable
 
+import narwhals as nw
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -175,7 +176,7 @@ class PipelineNode(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def validate_expectations(self):
-        if self.source.as_stream:
+        if self.source and self.source.as_stream:
             # Expectations type
             for e in self.expectations:
                 if not e.is_streaming_compatible:
@@ -569,17 +570,14 @@ class PipelineNode(BaseModel, PipelineChild):
         # Read Source
         self._stage_df = self.source.read()
 
-        # Save source
-        self._source_columns = self._stage_df.columns
-
         # Apply transformer
         if apply_transformer and self.transformer:
             self._stage_df = self.transformer.execute(self._stage_df, udfs=udfs)
 
         # Check expectations
-        # self.check_expectations()
         self._output_df = self._stage_df
         self._quarantine_df = None
+        self.check_expectations()
 
         # Output and Quarantine to Sinks
         if write_sinks:
@@ -609,12 +607,10 @@ class PipelineNode(BaseModel, PipelineChild):
         """
 
         # Data Quality Checks
-        is_streaming = getattr(self._stage_df, "isStreaming", False)
+        is_streaming = getattr(nw.to_native(self._stage_df), "isStreaming", False)
         qfilter = None  # Quarantine filter
         kfilter = None  # Keep filter
         if not self.expectations:
-            self._output_df = self._stage_df
-            self._quarantine_df = None
             return
 
         logger.info("Checking Data Quality Expectations")
@@ -690,7 +686,7 @@ class PipelineNode(BaseModel, PipelineChild):
             logger.info("Building quarantine DataFrame")
             self._quarantine_df = self._stage_df.filter(qfilter)
         else:
-            self._quarantine_df = self._stage_df.filter("False")
+            self._quarantine_df = self._stage_df  # .filter("False")
 
         if kfilter is not None:
             logger.info("Dropping invalid rows")
