@@ -202,18 +202,18 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
     @property
     def data_sources(self) -> list[DataSourcesUnion]:
-        """Get all sources feeding the Chain Node"""
+        """Get all sources feeding the DataFrame Method"""
+
+        from laktory.models.datasources import BaseDataSource
 
         sources = []
-        # for a in self.parsed_func_args:
-        #     if isinstance(a.value, BaseDataSource):
-        #         sources += [a.value]
-        # for a in self.parsed_func_kwargs.values():
-        #     if isinstance(a.value, BaseDataSource):
-        #         sources += [a.value]
+        for a in self.args:
+            if isinstance(a.value, BaseDataSource):
+                sources += [a.value]
 
-        # if self.sql_expr:
-        #     sources += self.parsed_sql_expr.data_sources
+        for a in self.kwargs.values():
+            if isinstance(a.value, BaseDataSource):
+                sources += [a.value]
 
         return sources
 
@@ -251,7 +251,7 @@ class DataFrameMethod(BaseModel, PipelineChild):
         self,
         df: AnyFrame,
         # udfs: list[Callable[[...], Union[PolarsExpr, PolarsDataFrame]]] = None,
-        **named_dfs: dict[str, AnyFrame],
+        # **named_dfs: dict[str, AnyFrame],
     ) -> Union[AnyFrame]:
         """
         Execute method on provided DataFrame `df`.

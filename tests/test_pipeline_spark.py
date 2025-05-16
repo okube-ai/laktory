@@ -138,7 +138,7 @@ def test_paths():
     for node in pl.nodes:
         assert node._root_path == pl_path / node.name
         assert (
-            node._expectations_checkpoint_location
+            node._expectations_checkpoint_path
             == pl_path / node.name / "checkpoints" / "expectations"
         )
         for i, s in enumerate(node.all_sinks):

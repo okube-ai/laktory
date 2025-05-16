@@ -1,26 +1,11 @@
-import pandas as pd
-import pytest
-
-from laktory import get_spark_session
 from laktory._testing import assert_dfs_equal
+from laktory._testing import get_df0
 from laktory.models import HiveMetastoreDataSource
 
 
-@pytest.fixture
-def df0():
-    spark = get_spark_session()
+def test_read(tmp_path):
+    df0 = get_df0("PYSPARK").to_native()
 
-    return spark.createDataFrame(
-        pd.DataFrame(
-            {
-                "x": ["a", "b", "c"],
-                "y": [3, 4, 5],
-            }
-        )
-    )
-
-
-def test_read(df0, tmp_path):
     # Config
     schema = "default"
     table = "df"

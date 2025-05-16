@@ -1,8 +1,8 @@
-import polars as pl
+import narwhals as nw
 import pytest
 
-import laktory
 from laktory._testing import assert_dfs_equal
+from laktory._testing import get_df0
 from laktory.enums import DataFrameBackends
 from laktory.models.datasinks import FileDataSink
 from laktory.models.datasources.filedatasource import SUPPORTED_FORMATS
@@ -15,21 +15,13 @@ spark_write_tests = [
 ]
 
 
-@pytest.fixture
-def df0():
-    return pl.DataFrame(
-        {
-            "x": ["a", "b", "c"],
-            "y": [3, 4, 5],
-        }
-    )
-
-
 @pytest.mark.parametrize(
     ["backend", "fmt"],
     pl_write_tests + spark_write_tests,
 )
-def test_write(backend, fmt, df0, tmp_path):
+def test_write(backend, fmt, tmp_path):
+    df0 = get_df0(backend)
+
     kwargs = {}
 
     # Filepath
@@ -41,14 +33,12 @@ def test_write(backend, fmt, df0, tmp_path):
     elif fmt == "XML":
         pytest.skip("Missing library. Skipping Test.")
     elif fmt == "TEXT":
-        df0 = df0.select(pl.col("x").alias("value"))
+        df0 = nw.from_native(df0).select(nw.col("id").alias("value")).to_native()
     elif fmt == "EXCEL":
         pytest.skip("Missing library. Skipping Test.")
 
     # Backend-specific configuration
     if backend == "PYSPARK":
-        spark = laktory.get_spark_session()
-        df0 = spark.createDataFrame(df0.to_pandas())
         if fmt.lower() == "csv":
             kwargs["header"] = True
     elif backend == "POLARS":
@@ -71,40 +61,21 @@ def test_write(backend, fmt, df0, tmp_path):
 
     # Read back DataFrame
     if backend == "PYSPARK":
-        if fmt.lower() in ["jsonl", "ndjson"]:
-            fmt = "JSON"
-        df = (
-            spark.read.format(fmt)
-            .options(
-                header=True,
-                inferSchema=True,
-            )
-            .load(filepath.as_posix())
-        )
-    elif backend == "POLARS":
-        if fmt.lower() == "avro":
-            df = pl.read_avro(filepath)
-        elif fmt.lower() == "csv":
-            df = pl.read_csv(filepath)
-        elif fmt.lower() == "delta":
-            df = pl.read_delta(filepath.as_posix())
-        elif fmt.lower() == "excel":
-            df = pl.read_excel(filepath)
-        elif fmt.lower() == "ipc":
-            df = pl.read_ipc(filepath)
-        elif fmt.lower() == "json":
-            df = pl.read_json(filepath)
-        elif fmt.lower() in ["jsonl", "ndjson"]:
-            df = pl.read_ndjson(filepath)
-        elif fmt.lower() == "parquet":
-            df = pl.read_parquet(filepath)
-        elif fmt.lower() == "pyarrow":
-            import pyarrow.dataset as ds
+        source = sink.as_source()
+        if fmt.lower() in ["csv"]:
+            source.has_header = True
+            source.infer_schema = True
 
-            dset = ds.dataset(filepath.as_posix(), format="parquet")
-            df = pl.scan_pyarrow_dataset(dset)
-        else:
-            raise ValueError(f"Format {fmt} is not configured")
+        df = source.read()
+
+    elif backend == "POLARS":
+        source = sink.as_source()
+        if fmt.lower() in ["csv"]:
+            source.has_header = True
+            source.infer_schema = True
+
+        df = source.read()
+
     else:
         raise ValueError(f"Backend {backend} is not configured")
 

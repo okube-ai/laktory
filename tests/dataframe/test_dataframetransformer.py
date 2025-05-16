@@ -1,45 +1,15 @@
-import narwhals as nw
-import pandas as pd
-import polars as pl
 import pytest
 
-import laktory
-from laktory.enums import DataFrameBackends
+from laktory._testing import get_df0
+from laktory.models import DataFrameExpr
 from laktory.models import DataFrameMethod
-from laktory.models import DataFrameSQLExpr
 from laktory.models import DataFrameTransformer
 
 
-def get_backend(v):
-    if isinstance(v, str):
-        return DataFrameBackends(v)
-    return DataFrameBackends.from_nw_implementation(nw.from_native(v).implementation)
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_transformer(backend):
+    df0 = get_df0(backend)
 
-
-def to_backend(df, backend):
-    backend = get_backend(backend)
-
-    if backend == DataFrameBackends.POLARS:
-        df = pl.from_pandas(df)
-    elif backend == DataFrameBackends.PYSPARK:
-        spark = laktory.get_spark_session()
-        df = spark.createDataFrame(df)
-    return nw.from_native(df)
-
-
-@pytest.fixture(params=["POLARS", "PYSPARK"])
-def df0(request):
-    df = pd.DataFrame(
-        {
-            "id": ["a", "b", "c"],
-            "x1": [1, 2, 3],
-        }
-    )
-
-    return to_backend(df, request.param)
-
-
-def test_transformer(df0):
     node0 = DataFrameMethod(
         name="with_columns",
         kwargs={
@@ -47,8 +17,8 @@ def test_transformer(df0):
         },
     )
 
-    node1 = DataFrameSQLExpr(
-        sql_expr="select id, x1, y1 from df",
+    node1 = DataFrameExpr(
+        expr="select id, x1, y1 from df",
     )
 
     transformer = DataFrameTransformer(nodes=[node0, node1])
@@ -56,3 +26,4 @@ def test_transformer(df0):
     df = transformer.execute(df0)
 
     assert df.columns == ["id", "x1", "y1"]
+    assert transformer.data_sources == []

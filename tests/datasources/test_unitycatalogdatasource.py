@@ -1,27 +1,14 @@
-import pandas as pd
 import pytest
 
-from laktory import get_spark_session
 from laktory._testing import assert_dfs_equal
+from laktory._testing import get_df0
 from laktory.models import UnityCatalogDataSource
-
-
-@pytest.fixture
-def df0():
-    spark = get_spark_session()
-
-    return spark.createDataFrame(
-        pd.DataFrame(
-            {
-                "x": ["a", "b", "c"],
-                "y": [3, 4, 5],
-            }
-        )
-    )
 
 
 @pytest.mark.xfail(reason="Requires Databricks Spark Session (for now)")
 def test_read_polars(df0, tmp_path):
+    df0 = get_df0("POLARS").to_native()
+
     # Config
     catalog = "sandbox"
     schema = "default"
@@ -46,7 +33,9 @@ def test_read_polars(df0, tmp_path):
 
 
 @pytest.mark.xfail(reason="Requires Databricks Spark Session (for now)")
-def test_read(df0, tmp_path):
+def test_read(tmp_path):
+    df0 = get_df0("PYSPARKS").to_native()
+
     # Config
     catalog = "sandbox"
     schema = "default"

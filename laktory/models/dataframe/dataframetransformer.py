@@ -6,8 +6,8 @@ from pydantic import Field
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
+from laktory.models.dataframe.dataframeexpr import DataFrameExpr
 from laktory.models.dataframe.dataframemethod import DataFrameMethod
-from laktory.models.dataframe.dataframesqlexpr import DataFrameSQLExpr
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
 
@@ -55,9 +55,10 @@ class DataFrameTransformer(BaseModel, PipelineChild):
     ```
     """
 
-    nodes: list[DataFrameMethod | DataFrameSQLExpr] = Field(
+    nodes: list[DataFrameMethod | DataFrameExpr] = Field(
         ..., description="List of transformations"
     )
+
     #
     # @property
     # def upstream_node_names(self) -> list[str]:
@@ -67,14 +68,16 @@ class DataFrameTransformer(BaseModel, PipelineChild):
     #         names += node.upstream_node_names
     #     return names
     #
-    # @property
-    # def data_sources(self):
-    #     """Get all sources feeding the Transformer"""
-    #     sources = []
-    #     for node in self.nodes:
-    #         sources += node.data_sources
-    #     return sources
-    #
+    @property
+    def data_sources(self):
+        """Get all sources feeding the Transformer"""
+
+        sources = []
+        for node in self.nodes:
+            sources += node.data_sources
+
+        return sources
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #
@@ -113,9 +116,11 @@ class DataFrameTransformer(BaseModel, PipelineChild):
             )
 
             if isinstance(node, DataFrameMethod):
-                df = node.execute(df, udfs=udfs, **named_dfs)
+                # TODO: Add udfs
+                df = node.execute(df)
             else:
-                df = node.execute(df, **named_dfs)
+                dfs = {"df": df} | named_dfs
+                df = node.to_df(dfs)
 
         return df
 

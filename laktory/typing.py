@@ -1,4 +1,6 @@
-from typing import Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import narwhals as nw
 from pydantic_core import CoreSchema
@@ -9,12 +11,19 @@ from laktory.polars import PolarsLazyFrame
 from laktory.spark import SparkColumn
 from laktory.spark import SparkDataFrame
 
+if TYPE_CHECKING:
+    pass
+
 AnyFrame = nw.LazyFrame | nw.DataFrame
 
-AnyDataFrame = Union[SparkDataFrame, PolarsLazyFrame]
+# AnyExpression = nw.Expr | "pl.Expr" | "F.Column"
+
+# TODO: Delete
+AnyDataFrame = SparkDataFrame | PolarsLazyFrame
 """DataFrame type from any of the supported backend"""
 
-AnyDataFrameColumn = Union[SparkColumn, PolarsExpr]
+# TODO: Delete
+AnyDataFrameColumn = SparkColumn | PolarsExpr
 """DataFrame column from any of the supported backend"""
 
 

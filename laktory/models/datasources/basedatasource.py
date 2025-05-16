@@ -112,7 +112,7 @@ class BaseDataSource(BaseModel, PipelineChild):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def read(self) -> AnyFrame:
+    def read(self, **kwargs) -> AnyFrame:
         """
         Read data with options specified in attributes.
 
@@ -124,7 +124,7 @@ class BaseDataSource(BaseModel, PipelineChild):
         logger.info(
             f"Reading `{self.__class__.__name__}` {self._id} with {self.df_backend}"
         )
-        df = self._read()
+        df = self._read(**kwargs)
 
         # Convert to Narwhals
         if not isinstance(df, (nw.LazyFrame, nw.DataFrame)):
@@ -137,21 +137,21 @@ class BaseDataSource(BaseModel, PipelineChild):
 
         return df
 
-    def _read(self) -> AnyFrame:
+    def _read(self, **kwargs) -> AnyFrame:
         if self.df_backend == DataFrameBackends.PYSPARK:
             return self._read_spark()
 
         if self.df_backend == DataFrameBackends.POLARS:
-            return self._read_polars()
+            return self._read_polars(**kwargs)
 
         raise ValueError(f"`{self.df_backend}` not supported for `{type(self)}`")
 
-    def _read_spark(self) -> nw.LazyFrame:
+    def _read_spark(self, **kwargs) -> nw.LazyFrame:
         raise NotImplementedError(
             f"`{self.df_backend}` not supported for `{type(self)}`"
         )
 
-    def _read_polars(self) -> nw.LazyFrame:
+    def _read_polars(self, **kwargs) -> nw.LazyFrame:
         raise NotImplementedError(
             f"`{self.df_backend}` not supported for `{type(self)}`"
         )

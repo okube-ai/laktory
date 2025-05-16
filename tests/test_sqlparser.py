@@ -19,6 +19,12 @@ def test_binary_operators():
             "y": [4, 5, 3, 4],
             "b1": [True, False, True, False],
             "b2": [True, True, False, False],
+            "s": [
+                {"i": 0, "v": "a"},
+                {"i": 1, "v": "b"},
+                {"i": 2, "v": "c"},
+                {"i": 3, "v": "d"},
+            ],
         }
     )
     if e == nw:
@@ -39,6 +45,7 @@ def test_binary_operators():
         ("x % y", e.col("x") % e.col("y")),
         ("b1 AND b2", e.col("b1") & e.col("b2")),
         ("b1 OR b2", e.col("b1") | e.col("b2")),
+        ("s.v", e.col("s").struct.field("v")),
     ]
 
     for sql_expr, nw_expr in exprs:

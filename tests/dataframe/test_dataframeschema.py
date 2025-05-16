@@ -61,11 +61,3 @@ def test_to_string():
         s.to_string()
         == '{"x": "Int64", "y": "Float64", "s": "String", "vals": "List(String)"}'
     )
-
-
-if __name__ == "__main__":
-    test_validation()
-    test_narwhals()
-    test_spark()
-    test_polars()
-    test_to_string()

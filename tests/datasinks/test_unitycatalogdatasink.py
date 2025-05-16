@@ -1,28 +1,16 @@
-import pandas as pd
 import pytest
 
-from laktory import get_spark_session
 from laktory._testing import assert_dfs_equal
+from laktory._testing import get_df0
 from laktory.enums import DataFrameBackends
 from laktory.models import UnityCatalogDataSink
 
 
-@pytest.fixture
-def df0():
-    spark = get_spark_session()
-
-    return spark.createDataFrame(
-        pd.DataFrame(
-            {
-                "x": ["a", "b", "c"],
-                "y": [3, 4, 5],
-            }
-        )
-    )
-
-
 @pytest.mark.xfail(reason="Requires Databricks Spark Session (for now)")
-def test_read_polars(df0, tmp_path, backend):
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_read_polars(backend, tmp_path):
+    df0 = get_df0(backend)
+
     if DataFrameBackends(backend) not in ["PYSPARK"]:
         pytest.skip(f"Backend '{backend}' not implemented.")
 

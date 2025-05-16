@@ -4,6 +4,8 @@ import numpy as np
 import polars as pl
 import pytest
 
+import laktory  # noqa: F401
+
 df0 = pl.DataFrame(
     {
         "x": [1, 2, 3],
@@ -75,15 +77,6 @@ def test_row_number():
     assert df["y3"].to_list() == [2, 1, 3, 2, 1, 1]
 
 
-def test_sql_expr():
-    expr0 = (pl.col("data").struct.field("open") >= 2) & (pl.col("x") > 0) | (
-        pl.col("symbol") == "AAPL"
-    )
-    expr1 = pl.Expr.laktory.sql_expr("data.open >= 2 AND x > 0 OR symbol == 'AAPL'")
-
-    assert str(expr1) == str(expr0)
-
-
 def test_string_split(df0=df0):
     df = df0.with_columns(split_1=pl.Expr.laktory.string_split(pl.col("word"), "_", 0))
     df = df.with_columns(split_2=pl.Expr.laktory.string_split(pl.col("word"), "_", 1))
@@ -111,14 +104,3 @@ def test_units(df0=df0):
         9.842519685039372,
     ]
     assert df["kelvin"].to_list() == [274.15, 275.15, 276.15]
-
-
-if __name__ == "__main__":
-    atest_coalesce()
-    test_compare()
-    test_roundp()
-    test_row_number()
-    test_sql_expr()
-    test_string_split()
-    test_uuid()
-    test_units()
