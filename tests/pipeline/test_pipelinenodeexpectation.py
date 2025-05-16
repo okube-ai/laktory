@@ -1,21 +1,13 @@
-from pathlib import Path
-
 import pyspark.sql.functions as F
 import pytest
 from pyspark.sql import Window
 
 from laktory import models
-from laktory._testing import Paths
 from laktory._testing import get_df0
-from laktory._testing import sparkf
 from laktory.enums import STREAMING_BACKENDS
 from laktory.enums import DataFrameBackends
 from laktory.exceptions import DataQualityCheckFailedError
 from laktory.exceptions import DataQualityExpectationsNotSupported
-
-paths = Paths(__file__)
-spark = sparkf.spark
-testdir_path = Path(__file__).parent
 
 
 @pytest.fixture

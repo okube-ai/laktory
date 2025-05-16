@@ -286,13 +286,11 @@ class SQLParser:
             if decimals is not None:
                 args += [decimals]
 
-            print("args", args)
-
             args = [self.visit_expr(arg) for arg in args]
 
             # Convert literals to values
             for i in range(len(args)):
-                if args[i].meta.is_literal():
+                if hasattr(args[i], "meta") and args[i].meta.is_literal():
                     args[i] = engine.select(args[i]).item()
 
             f = func_types[expr_type]
