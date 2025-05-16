@@ -12,6 +12,8 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory._settings import settings
+from laktory.enums import STREAMING_BACKENDS
+from laktory.enums import DataFrameBackends
 from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframetransformer import DataFrameTransformer
@@ -106,6 +108,10 @@ class PipelineNode(BaseModel, PipelineChild):
         [],
         description="List of data expectations. Can trigger warnings, drop invalid records or fail a pipeline.",
     )
+    expectations_checkpoint_path: str = Field(
+        None,
+        description="Path to which the checkpoint file for which expectations on a streaming dataframe should be written.",
+    )
     name: str = Field(..., description="Name given to the node.")
     primary_keys: list[str] = Field(
         None,
@@ -120,7 +126,7 @@ class PipelineNode(BaseModel, PipelineChild):
     consistent and reliable.
     """,
     )
-    source: DataSourcesUnion | None = Field(
+    source: DataSourcesUnion = Field(
         None, description="Definition of the data source(s)"
     )
     sinks: list[DataSinksUnion] = Field(
@@ -156,7 +162,7 @@ class PipelineNode(BaseModel, PipelineChild):
     #
     #     return data
 
-    @field_validator("root_path", mode="before")
+    @field_validator("root_path", "expectations_checkpoint_path", mode="before")
     @classmethod
     def posixpath_to_string(cls, value: Any) -> Any:
         if isinstance(value, Path):
@@ -182,7 +188,7 @@ class PipelineNode(BaseModel, PipelineChild):
                 if not e.is_streaming_compatible:
                     raise DataQualityExpectationsNotSupported(e, self)
 
-            if self.expectations and self._expectations_checkpoint_location is None:
+            if self.expectations and self._expectations_checkpoint_path is None:
                 warnings.warn(
                     f"Node '{self.name}' requires `expectations_checkpoint_location` specified unless Delta Live Tables is selected as an orchestrator and expectations are compatbile with DLT."
                 )
@@ -207,35 +213,13 @@ class PipelineNode(BaseModel, PipelineChild):
             if self.source.as_stream:
                 raise ValueError("VIEW sink does not support stream read.")
 
-        # Validate Transformer
-        view_defined = False
-        if self.transformer:
-            m = f"node '{self.name}': "
-
-            if len(self.transformer.nodes) > 1:
-                raise ValueError(
-                    f"{m}VIEW sink only support transformers with a single SQL node"
-                )
-
-            if self.transformer.nodes[0].expr is None:
-                raise ValueError(
-                    f"{m}VIEW sink only support transformers with a single SQL node"
-                )
-
-            view_defined = True
-
         # Validate Sinks
+        m = f"node '{self.name}': "
         for s in self.sinks:
             if s.table_type != "VIEW":
                 raise ValueError(
                     f"{m}If one pipeline node sink is a VIEW, all of them must be a view."
                 )
-
-            if not view_defined:
-                if s.view_definition is None:
-                    raise ValueError(
-                        "View definition must be provided at at the transformer or at the sink."
-                    )
 
         # Validate Expectations
         if self.expectations:
@@ -250,6 +234,7 @@ class PipelineNode(BaseModel, PipelineChild):
     @property
     def child_attribute_names(self):
         return [
+            "source",
             "data_sources",
             "expectations",
             "transformer",
@@ -410,9 +395,9 @@ class PipelineNode(BaseModel, PipelineChild):
         return expectations
 
     @property
-    def _expectations_checkpoint_location(self) -> Path:
-        if self.expectations_checkpoint_location:
-            return Path(self.expectations_checkpoint_location)
+    def _expectations_checkpoint_path(self) -> Path | None:
+        if self.expectations_checkpoint_path:
+            return Path(self.expectations_checkpoint_path)
 
         if self._root_path:
             return Path(self._root_path) / "checkpoints/expectations"
@@ -480,12 +465,12 @@ class PipelineNode(BaseModel, PipelineChild):
         if self.has_sinks:
             for s in self.sinks:
                 s.purge(spark=spark)
-        if self._expectations_checkpoint_location:
-            if os.path.exists(self._expectations_checkpoint_location):
+        if self._expectations_checkpoint_path:
+            if os.path.exists(self._expectations_checkpoint_path):
                 logger.info(
-                    f"Deleting expectations checkpoint at {self._expectations_checkpoint_location}",
+                    f"Deleting expectations checkpoint at {self._expectations_checkpoint_path}",
                 )
-                shutil.rmtree(self._expectations_checkpoint_location)
+                shutil.rmtree(self._expectations_checkpoint_path)
 
             if spark is None:
                 return
@@ -497,7 +482,7 @@ class PipelineNode(BaseModel, PipelineChild):
 
             dbutils = DBUtils(spark)
 
-            _path = self._expectations_checkpoint_location.as_posix()
+            _path = self._expectations_checkpoint_path.as_posix()
             try:
                 dbutils.fs.ls(
                     _path
@@ -639,17 +624,28 @@ class PipelineNode(BaseModel, PipelineChild):
             pass
 
         elif is_streaming:
-            if self._expectations_checkpoint_location is None:
+            backend = DataFrameBackends.from_df(self._stage_df)
+            if backend not in STREAMING_BACKENDS:
+                raise TypeError(
+                    f"DataFrame backend {backend} is not supported for streaming operations"
+                )
+
+            if self._expectations_checkpoint_path is None:
                 raise ValueError(
                     f"Expectations Checkpoint not specified for node '{self.name}'"
                 )
+
+            # TODO: Refactor for backend other than spark
             query = (
-                self._stage_df.writeStream.foreachBatch(
-                    lambda batch_df, batch_id: _stream_check(batch_df, batch_id, self)
+                self._stage_df.to_native()
+                .writeStream.foreachBatch(
+                    lambda batch_df, batch_id: _stream_check(
+                        nw.from_native(batch_df), batch_id, self
+                    )
                 )
                 .trigger(availableNow=True)
                 .options(
-                    checkpointLocation=self._expectations_checkpoint_location,
+                    checkpointLocation=self._expectations_checkpoint_path,
                 )
                 .start()
             )

@@ -154,6 +154,7 @@ class FileDataSource(BaseDataSource):
                     raise ValueError(
                         f"Attribute `{k}` is not supported for the provider source format / backend / stream"
                     )
+        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

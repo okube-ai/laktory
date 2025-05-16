@@ -1,12 +1,17 @@
 from pathlib import Path
 
+import pyspark.sql.functions as F
 import pytest
+from pyspark.sql import Window
 
 from laktory import models
 from laktory._testing import Paths
 from laktory._testing import get_df0
 from laktory._testing import sparkf
+from laktory.enums import STREAMING_BACKENDS
+from laktory.enums import DataFrameBackends
 from laktory.exceptions import DataQualityCheckFailedError
+from laktory.exceptions import DataQualityExpectationsNotSupported
 
 paths = Paths(__file__)
 spark = sparkf.spark
@@ -17,12 +22,6 @@ testdir_path = Path(__file__).parent
 def node():
     node = models.PipelineNode(
         name="node0",
-        transformer={
-            "nodes": [
-                {"name": "with_columns", "kwargs": {"y1": "x1"}},
-                {"expr": "select id, x1, y1 from df"},
-            ]
-        },
         expectations=[
             models.DataQualityExpectation(
                 name="max price",
@@ -34,9 +33,23 @@ def node():
     return node
 
 
+def get_source_df(backend):
+    df0 = get_df0(backend, lazy=True)
+    source0 = df0.to_native()
+
+    source = source0.withColumn("_batch_id", F.lit(0))
+    for i in range(4):
+        source = source.union(source0.withColumn("_batch_id", F.lit(i + 1)))
+
+    w = Window.orderBy("_batch_id", "id")
+    source = source.withColumn("_idx", F.row_number().over(w) - 1)
+
+    return source
+
+
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_warn(backend, node):
-    df0 = get_df0(backend)
+    df0 = get_df0(backend, lazy=True)
 
     node.source = models.DataFrameDataSource(df=df0)
     node.expectations = [
@@ -55,48 +68,9 @@ def test_warn(backend, node):
     assert len(o) == 3
 
 
-#
-#
-#
-# def get_node():
-#     return models.PipelineNode(
-#         name="slv_stock_prices",
-#         source={
-#             "table_name": "brz_stock_prices",
-#             "mock_df": dff.brz,
-#         },
-#         drop_source_columns=True,
-#         transformer={
-#             "nodes": [
-#                 {
-#                     "with_columns": [
-#                         {
-#                             "name": "symbol",
-#                             "expr": "data.symbol",
-#                         },
-#                         {
-#                             "name": "close",
-#                             "expr": "data.close",
-#                             "type": "double",
-#                         },
-#                     ]
-#                 },
-#             ],
-#         },
-#     )
-
-#
-# def get_source(node_path):
-#     source_path = str(node_path / "brz_stock_prices")
-#     # w = Window.orderBy("data.created_at", "data.symbol")
-#     w = Window.orderBy("data.symbol", "data.created_at")
-#     source = dff.brz.withColumn("index", F.row_number().over(w) - 1)
-#     return source, source_path
-
-
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_drop(backend, node):
-    df0 = get_df0(backend)
+    df0 = get_df0(backend, lazy=True)
     node.source = models.DataFrameDataSource(df=df0)
     node.expectations = [
         models.DataQualityExpectation(
@@ -116,7 +90,7 @@ def test_drop(backend, node):
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_quarantine(backend, node):
-    df0 = get_df0(backend)
+    df0 = get_df0(backend, lazy=True)
     node.source = models.DataFrameDataSource(df=df0)
     node.expectations = [
         models.DataQualityExpectation(
@@ -139,7 +113,7 @@ def test_quarantine(backend, node):
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_fail(backend, node):
-    df0 = get_df0(backend)
+    df0 = get_df0(backend, lazy=True)
     node.source = models.DataFrameDataSource(df=df0)
     node.expectations = [
         models.DataQualityExpectation(
@@ -157,7 +131,7 @@ def test_fail(backend, node):
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_aggregate(backend, node):
-    df0 = get_df0(backend)
+    df0 = get_df0(backend, lazy=True)
     node.source = models.DataFrameDataSource(df=df0)
     node.expectations = [
         models.DataQualityExpectation(
@@ -176,17 +150,8 @@ def test_aggregate(backend, node):
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_multi(backend, node):
-    df0 = get_df0(backend)
-    # df0 = df0.with_columns(y1=nw.col("x1") - 1)
+    df0 = get_df0(backend, lazy=True)
     node.source = models.DataFrameDataSource(df=df0)
-    node.expectations = [
-        models.DataQualityExpectation(
-            name="max price",
-            expr="x1 < 3",
-            action="FAIL",
-            type="QUARANTINE",
-        )
-    ]
     node.expectations = [
         models.DataQualityExpectation(
             name="x1_1",
@@ -194,7 +159,7 @@ def test_multi(backend, node):
             action="QUARANTINE",
         ),
         models.DataQualityExpectation(
-            name="x1_2 amazon",
+            name="x1_2",
             expr="x1 >= 2",
             action="DROP",
         ),
@@ -214,103 +179,142 @@ def test_multi(backend, node):
     assert q["x1"].min() >= 3
 
 
-# def test_streaming_multi():
-#     node_path = (
-#         testdir_path / "tmp" / "test_pipeline_node_expectations" / str(uuid.uuid4())
-#     )
-#     checkpoint_path = node_path / "_checkpoint_expectations"
-#
-#     # Cleanup
-#     if os.path.exists(str(node_path)):
-#         shutil.rmtree(str(node_path))
-#
-#     # Create Stream Source
-#     source, source_path = get_source(node_path)
-#
-#     # Insert a single row
-#     source.filter("index=0").write.format("delta").mode("OVERWRITE").save(source_path)
-#
-#     # Get Node
-#     node = get_node()
-#     node.source = models.FileDataSource(
-#         path=source_path,
-#         format="DELTA",
-#         as_stream=True,
-#     )
-#     node.expectations = [
-#         models.DataQualityExpectation(
-#             name="max price",
-#             expr="close < 300",
-#             action="WARN",
-#         ),
-#         models.DataQualityExpectation(
-#             name="max price",
-#             expr="close < 330",
-#             action="QUARANTINE",
-#         ),
-#         models.DataQualityExpectation(
-#             name="not amazon",
-#             expr="symbol != 'AMZN'",
-#             action="DROP",
-#         ),
-#     ]
-#     node.expectations_checkpoint_location = checkpoint_path
-#
-#     # Execute
-#     node.execute(spark=spark)
-#
-#     # Test
-#     assert node.checks[0].status == "PASS"
-#     assert node.checks[0].rows_count == 1
-#     assert node.checks[0].fails_count == 0
-#     assert node.checks[1].status == "PASS"
-#     assert node.checks[1].rows_count == 1
-#     assert node.checks[1].fails_count == 0
-#     assert node.checks[2].status == "PASS"
-#     assert node.checks[2].rows_count == 1
-#     assert node.checks[2].fails_count == 0
-#
-#     # Update source
-#     source.filter("index>0 AND index<40").write.format("delta").mode("append").save(
-#         source_path
-#     )
-#     node.execute(spark=spark)
-#     print(node.checks)
-#     assert node.checks[0].status == "PASS"
-#     assert node.checks[0].rows_count == 39
-#     assert node.checks[0].fails_count == 0
-#     assert node.checks[1].status == "PASS"
-#     assert node.checks[1].rows_count == 39
-#     assert node.checks[1].fails_count == 0
-#     assert node.checks[2].status == "FAIL"
-#     assert node.checks[2].rows_count == 39
-#     assert node.checks[2].fails_count == 20
-#
-#     source.filter("index>=40").write.format("delta").mode("append").save(source_path)
-#     node.execute(spark=spark)
-#     print(node.checks)
-#     assert node.checks[0].status == "FAIL"
-#     assert node.checks[0].rows_count == 40
-#     assert node.checks[0].fails_count == 20
-#     assert node.checks[1].status == "FAIL"
-#     assert node.checks[1].rows_count == 40
-#     assert node.checks[1].fails_count == 8
-#     assert node.checks[2].status == "PASS"
-#     assert node.checks[2].rows_count == 40
-#     assert node.checks[2].fails_count == 0
-#
-#     # Raise Exception
-#     source.filter("index>=40").write.format("delta").mode("append").save(source_path)
-#     node.expectations[0].action = "FAIL"
-#     # node.execute(spark=spark)
-#     # # TODO: Find how to capture exception
-#     # # with pytest.raises(Exception):
-#     # #     node.execute(spark=spark)
-#
-#
-# def test_expectations_invalid():
-#     with pytest.raises(DataQualityExpectationsNotSupported):
-#         models.PipelineNode(
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_streaming_multi(backend, node, tmp_path):
+    if DataFrameBackends(backend) not in STREAMING_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
+
+    # Set paths
+    source_path = str(tmp_path / "source")
+    node_path = tmp_path / "node"
+    checkpoint_path = node_path / "_checkpoint_expectations"
+
+    source = get_source_df(backend)
+
+    # Initialize source
+    source.filter(F.col("_idx") == 0).write.format("DELTA").mode("overwrite").save(
+        source_path
+    )
+    # dfs = spark.readStream.format("DELTA").load(source_path)
+
+    source.show()
+
+    # Set node source
+    node.source = models.FileDataSource(
+        path=source_path,
+        format="DELTA",
+        as_stream=True,
+    )
+    node.expectations_checkpoint_path = checkpoint_path
+    node.expectations = [
+        models.DataQualityExpectation(
+            name="id_b",
+            expr="id != 'b'",
+            action="WARN",
+        ),
+        models.DataQualityExpectation(
+            name="batch2",
+            expr="_batch_id != 2",
+            action="QUARANTINE",
+        ),
+        models.DataQualityExpectation(
+            name="drop3",
+            expr="x1 != 3",
+            action="DROP",
+        ),
+    ]
+
+    # Execute
+    node.execute()
+
+    # Test
+    assert node.checks[0].status == "PASS"
+    assert node.checks[0].rows_count == 1
+    assert node.checks[0].fails_count == 0
+    assert node.checks[1].status == "PASS"
+    assert node.checks[1].rows_count == 1
+    assert node.checks[1].fails_count == 0
+    assert node.checks[2].status == "PASS"
+    assert node.checks[2].rows_count == 1
+    assert node.checks[2].fails_count == 0
+
+    # Update source
+    source.filter("_batch_id<2 AND _idx!=0").write.format("delta").mode("append").save(
+        source_path
+    )
+    node.execute()
+    assert node.checks[0].status == "FAIL"
+    assert node.checks[0].rows_count == 5
+    assert node.checks[0].fails_count == 2
+    assert node.checks[1].status == "PASS"
+    assert node.checks[1].rows_count == 5
+    assert node.checks[1].fails_count == 0
+    assert node.checks[2].status == "FAIL"
+    assert node.checks[2].rows_count == 5
+    assert node.checks[2].fails_count == 2
+
+    source.filter("_batch_id>=2").write.format("delta").mode("append").save(source_path)
+    node.execute()
+    assert node.checks[0].status == "FAIL"
+    assert node.checks[0].rows_count == 9
+    assert node.checks[0].fails_count == 3
+    assert node.checks[1].status == "FAIL"
+    assert node.checks[1].rows_count == 9
+    assert node.checks[1].fails_count == 3
+    assert node.checks[2].status == "FAIL"
+    assert node.checks[2].rows_count == 9
+    assert node.checks[2].fails_count == 3
+
+
+def test_aggregate_on_stream():
+    with pytest.raises(DataQualityExpectationsNotSupported):
+        models.PipelineNode(
+            name="slv_stock_prices",
+            source={
+                "path": "some_path",
+                "format": "DELTA",
+                "as_stream": True,
+            },
+            expectations=[
+                {
+                    "name": "max price pass",
+                    "expr": "close < 300",
+                    "action": "WARN",
+                },
+                {
+                    "name": "max price drop",
+                    "expr": "count(*) > 20",
+                    "type": "AGGREGATE",
+                },
+            ],
+            expectations_checkpoint_path="some_path",
+        )
+
+
+def test_non_zero_tol():
+    with pytest.raises(DataQualityExpectationsNotSupported):
+        models.PipelineNode(
+            name="slv_stock_prices",
+            source={
+                "path": "some_path",
+                "format": "DELTA",
+                "as_stream": True,
+            },
+            expectations=[
+                {
+                    "name": "max price pass",
+                    "expr": "close < 300",
+                    "action": "WARN",
+                    "tolerance": {"abs": 20},
+                },
+            ],
+            expectations_checkpoint_path="some_path",
+        )
+
+
+# def test_non_zero_tol():
+#     with pytest.warns(UserWarning):
+#         node = models.PipelineNode(
 #             name="slv_stock_prices",
 #             source={
 #                 "path": "some_path",
@@ -320,49 +324,7 @@ def test_multi(backend, node):
 #             expectations=[
 #                 {
 #                     "name": "max price pass",
-#                     "expr": "close < 300",
-#                     "action": "WARN",
-#                 },
-#                 {
-#                     "name": "max price drop",
-#                     "expr": "count(*) > 20",
-#                     "type": "AGGREGATE",
+#                     "expr": "F.('close') < 300",
 #                 },
 #             ],
-#             expectations_checkpoint_location="some_path",
 #         )
-#
-#     with pytest.raises(DataQualityExpectationsNotSupported):
-#         models.PipelineNode(
-#             name="slv_stock_prices",
-#             source={
-#                 "path": "some_path",
-#                 "format": "DELTA",
-#                 "as_stream": True,
-#             },
-#             expectations=[
-#                 {
-#                     "name": "max price pass",
-#                     "expr": "close < 300",
-#                     "action": "WARN",
-#                     "tolerance": {"abs": 20},
-#                 },
-#             ],
-#             expectations_checkpoint_location="some_path",
-#         )
-#
-#     # with pytest.warns(UserWarning):
-#     #     node = models.PipelineNode(
-#     #         name="slv_stock_prices",
-#     #         source={
-#     #             "path": "some_path",
-#     #             "format": "DELTA",
-#     #             "as_stream": True,
-#     #         },
-#     #         expectations=[
-#     #             {
-#     #                 "name": "max price pass",
-#     #                 "expr": "F.('close') < 300",
-#     #             },
-#     #         ],
-#     #     )

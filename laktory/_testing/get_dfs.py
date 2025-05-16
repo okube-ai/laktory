@@ -12,20 +12,20 @@ def get_backend(v):
     return DataFrameBackends.from_nw_implementation(nw.from_native(v).implementation)
 
 
-def to_backend(df, backend):
+def to_backend(df, backend, lazy=False):
     backend = get_backend(backend)
-
-    print("getting backend", backend)
 
     if backend == DataFrameBackends.POLARS:
         df = pl.from_pandas(df)
+        if lazy:
+            df = df.lazy()
     elif backend == DataFrameBackends.PYSPARK:
         spark = get_spark_session()
         df = spark.createDataFrame(df)
     return nw.from_native(df)
 
 
-def get_df0(backend):
+def get_df0(backend, lazy=False):
     df = pd.DataFrame(
         {
             "id": ["a", "b", "c"],
@@ -33,10 +33,10 @@ def get_df0(backend):
         }
     )
 
-    return to_backend(df, backend)
+    return to_backend(df, backend, lazy=lazy)
 
 
-def get_df1(backend):
+def get_df1(backend, lazy=False):
     df = pd.DataFrame(
         {
             "id": ["b", "c", "d"],
@@ -44,4 +44,4 @@ def get_df1(backend):
         }
     )
 
-    return to_backend(df, backend)
+    return to_backend(df, backend, lazy=lazy)

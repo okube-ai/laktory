@@ -91,3 +91,6 @@ class DataFrameBackends(Enum):
             df = nw.from_native(df)
 
         return cls.from_nw_implementation(df.implementation)
+
+
+STREAMING_BACKENDS = [DataFrameBackends.PYSPARK]
