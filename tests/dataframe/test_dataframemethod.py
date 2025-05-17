@@ -27,8 +27,8 @@ def test_arg_string(backend):
     df0 = get_df0(backend)
 
     node = DataFrameMethod(
-        name="select",
-        args=["id"],
+        func_name="select",
+        func_args=["id"],
     )
     df = node.execute(df0)
     assert df.columns == ["id"]
@@ -39,13 +39,13 @@ def test_kwarg_string(backend):
     df0 = get_df0(backend)
 
     node = DataFrameMethod(
-        name="with_columns",
-        kwargs={
+        func_name="with_columns",
+        func_kwargs={
             "y1": "x1",
         },
     )
     df = node.execute(df0)
-    assert df.columns == ["id", "x1", "y1"]
+    assert df.columns == ["_idx", "id", "x1", "y1"]
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
@@ -54,9 +54,9 @@ def test_arg_source(backend):
     source = DataFrameDataSource(df=get_df1(backend))
 
     node = DataFrameMethod(
-        name="join",
-        args=[source],
-        kwargs={
+        func_name="join",
+        func_args=[source],
+        func_kwargs={
             "on": "id",
             "how": "left",
         },
@@ -71,8 +71,8 @@ def test_arg_nw_expr(backend):
     df0 = get_df0(backend)
 
     node = DataFrameMethod(
-        name="with_columns",
-        kwargs={"y1": "nw.col('x1').clip(lower_bound=0, upper_bound=2)"},
+        func_name="with_columns",
+        func_kwargs={"y1": "nw.col('x1').clip(lower_bound=0, upper_bound=2)"},
     )
     df = node.execute(df0)
     assert_dfs_equal(df.select("y1"), pl.DataFrame({"y1": [1, 2, 2]}))
@@ -85,13 +85,13 @@ def test_arg_native_expr(backend):
 
     if backend == DataFrameBackends.POLARS:
         kwargs = {
-            "name": "with_columns",
-            "kwargs": {"y1": "pl.col('x1').clip(lower_bound=0, upper_bound=2)"},
+            "func_name": "with_columns",
+            "func_kwargs": {"y1": "pl.col('x1').clip(lower_bound=0, upper_bound=2)"},
         }
     elif backend == DataFrameBackends.PYSPARK:
         kwargs = {
-            "name": "withColumn",
-            "args": ["y1", "F.greatest(F.least('x1', F.lit(2)), F.lit(0))"],
+            "func_name": "withColumn",
+            "func_args": ["y1", "F.greatest(F.least('x1', F.lit(2)), F.lit(0))"],
         }
 
     node = DataFrameMethod(dataframe_api="NATIVE", **kwargs)
@@ -104,8 +104,8 @@ def test_arg_sql_expr(backend):
     df0 = get_df0(backend)
 
     node = DataFrameMethod(
-        name="with_columns",
-        kwargs={
+        func_name="with_columns",
+        func_kwargs={
             "y1": "sql_expr('5 * x1')",
             "y2": "nw.sql_expr('5 * x1')",
         },
