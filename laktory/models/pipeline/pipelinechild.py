@@ -57,6 +57,11 @@ class PipelineChild(BaseModel):
         # Direct value
         backend = self.dataframe_backend
         if backend is not None:
+            if not isinstance(backend, DataFrameBackends):
+                try:
+                    backend = DataFrameBackends(backend)
+                except ValueError:
+                    pass
             return backend
 
         # Value from parent
