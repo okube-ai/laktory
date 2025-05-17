@@ -56,8 +56,8 @@ def test_execute(backend, tmp_path):
         },
         transformer={
             "nodes": [
-                {"name": "with_columns", "kwargs": {"y1": "x1"}},
-                {"expr": "select id, x1, y1 from df"},
+                {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
+                {"expr": "select id, x1, y1 from {df}"},
             ]
         },
         sinks=[
@@ -89,7 +89,7 @@ def test_execute_stream(backend, tmp_path):
         source={"path": source_path, "format": "DELTA", "as_stream": "True"},
         transformer={
             "nodes": [
-                {"name": "with_columns", "kwargs": {"y1": "x1"}},
+                {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
                 {"expr": "select id, x1, y1 from df"},
             ]
         },
