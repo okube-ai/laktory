@@ -59,15 +59,14 @@ class DataFrameTransformer(BaseModel, PipelineChild):
         ..., description="List of transformations"
     )
 
-    #
-    # @property
-    # def upstream_node_names(self) -> list[str]:
-    #     """Pipeline node names required to apply transformer"""
-    #     names = []
-    #     for node in self.nodes:
-    #         names += node.upstream_node_names
-    #     return names
-    #
+    @property
+    def upstream_node_names(self) -> list[str]:
+        """Pipeline node names required to apply transformer"""
+        names = []
+        for node in self.nodes:
+            names += node.upstream_node_names
+        return names
+
     @property
     def data_sources(self):
         """Get all sources feeding the Transformer"""
