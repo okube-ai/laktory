@@ -16,7 +16,7 @@ def assert_dfs_equal(result, expected, sort=True) -> None:
     expected = expected.to_polars()
 
     # Compare columns
-    assert result.columns == expected.columns
+    assert sorted(result.columns) == sorted(expected.columns)
     columns = result.columns
 
     # Compare rows

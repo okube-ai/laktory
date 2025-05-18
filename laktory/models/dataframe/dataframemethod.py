@@ -247,7 +247,6 @@ class DataFrameMethod(BaseModel, PipelineChild):
         self,
         df: AnyFrame,
         # udfs: list[Callable[[...], Union[PolarsExpr, PolarsDataFrame]]] = None,
-        # **named_dfs: dict[str, AnyFrame],
     ) -> Union[AnyFrame]:
         """
         Execute method on provided DataFrame `df`.

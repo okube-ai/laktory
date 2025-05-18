@@ -23,7 +23,16 @@ if TYPE_CHECKING:
 
 
 # --------------------------------------------------------------------------- #
-# Helper Classes                                                              #
+# Helper Functions                                                            #
+# --------------------------------------------------------------------------- #
+
+
+def to_safe_name(name):
+    return name.replace("{", "__").replace("}", "__").replace("nodes.", "nodes_")
+
+
+# --------------------------------------------------------------------------- #
+# Main Class                                                                  #
 # --------------------------------------------------------------------------- #
 
 
@@ -195,13 +204,14 @@ class DataFrameExpr(BaseModel, PipelineChild):
             #     kwargs[f"nodes__{source.node.name}"] = source.read()
             # return pl.SQLContext(frames=dfs).execute(";".join(self.parsed_expr()))
 
-            # Because Polars don't support {} in frame names, we
-            # use double underscores (__) instead
+            # Because Polars don't support {} in frame names, we use
+            # double underscores (__) instead
             _dfs = {}
             for k, v in dfs.items():
-                _dfs[f"__{k}__"] = v
+                _k = "{" + k + "}"
+                _dfs[to_safe_name(_k)] = v
 
-            expr = self.expr.replace("{", "__").replace("}", "__")
+            expr = to_safe_name(self.expr)
 
             df = pl.SQLContext(frames=_dfs).execute(expr)
             return nw.from_native(df)
@@ -223,11 +233,13 @@ class DataFrameExpr(BaseModel, PipelineChild):
             #     _df.createOrReplaceTempView(f"nodes__{source.node.name}")
 
             # Create views
-            # Because PySpark does not support views with {}, we replaced them with
-            # double underscores (__)
+            # TODO: Using parametrized queries would be ideal, but it is not compatible
+            #       with older versions of spark or Delta Live Tables.
+            # Because PySpark does not support view names with {}, we replaced them
+            # with double underscores (__)
             for k, _df in dfs.items():
-                _k = f"__{k}__"
-                _df.createOrReplaceTempView(_k)
+                _k = "{" + k + "}"
+                _df.createOrReplaceTempView(to_safe_name(_k))
 
             # Run query
             _df = None
@@ -235,9 +247,7 @@ class DataFrameExpr(BaseModel, PipelineChild):
                 # for expr in self.parsed_expr():
                 if expr.replace("\n", " ").strip() == "":
                     continue
-                # _df = _spark.laktory.sql(expr)
-                _expr = expr.replace("{", "__").replace("}", "__")
-                _df = _spark.sql(_expr)
+                _df = _spark.sql(to_safe_name(expr))
             if _df is None:
                 raise ValueError(f"SQL Expression '{self.expr}' is invalid")
             return nw.from_native(_df)

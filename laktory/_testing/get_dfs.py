@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import narwhals as nw
 import pandas as pd
 import polars as pl
@@ -58,7 +61,7 @@ class StreamingSource:
         self.ibatch = 0
         self.irow = -1
 
-    def get_batch_df(self, nbatch=1):
+    def get_dfs(self, nbatch=1):
         dfs = []
         for _ibatch in range(nbatch):
             df = get_df0(self.backend, lazy=True)
@@ -66,28 +69,43 @@ class StreamingSource:
             df = df.with_columns(_idx=nw.col("_idx") + self.ibatch * 3)
             dfs += [df]
             self.ibatch += 1
-
-        if nbatch == 1:
-            return dfs[0]
-
-        df = dfs[0].to_native()
-        for _df in dfs[1:]:
-            if self.backend == "POLARS":
-                df = df.concat(_df.to_native())
-            elif self.backend == "PYSPARK":
-                df = df.union(_df.to_native())
-
-        return nw.from_native(df)
+        return dfs
 
     def write_to_delta(self, filepath, nbatch=1):
         is_init = self.ibatch == 0
 
-        df = self.get_batch_df(nbatch)
-
-        if self.backend == "PYSPARK":
-            if is_init:
-                df.to_native().write.format("DELTA").mode("overwrite").save(filepath)
+        for df in self.get_dfs(nbatch):
+            if self.backend == "PYSPARK":
+                if is_init:
+                    df.to_native().write.format("DELTA").mode("overwrite").save(
+                        filepath
+                    )
+                else:
+                    df.to_native().write.format("DELTA").mode("append").save(filepath)
             else:
-                df.to_native().write.format("DELTA").mode("append").save(filepath)
-        else:
-            raise NotImplementedError()
+                raise NotImplementedError()
+
+    def write_to_json(self, dirpath, nbatch=1):
+        dirpath = Path(dirpath)
+
+        for df in self.get_dfs(nbatch):
+            _df = df.collect().to_pandas()
+
+            ibatch = _df["_batch_id"].max()
+
+            if not dirpath.is_dir():
+                os.mkdir(dirpath)
+
+            filepath = Path(dirpath) / f"{ibatch:03d}.json"
+            filepath = str(filepath.absolute())
+
+            _df.to_json(filepath, orient="records")
+            _df.to_json("/Users/osoucy/Documents/tmp.json", orient="records")
+
+        return df
+
+
+if __name__ == "__main__":
+    ss = StreamingSource(backend="POLARS")
+
+    ss.write_to_json("./")

@@ -11,6 +11,7 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory._settings import settings
+from laktory.models import PipelineNodeDataSource
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
 from laktory.models.pipeline.orchestrators.databricksdltorchestrator import (
@@ -343,7 +344,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     databricks_job: Union[DatabricksJobOrchestrator, None] = None
     databricks_dlt: Union[DatabricksDLTOrchestrator, None] = None
-    dataframe_backend: Literal["SPARK", "POLARS"] = None
     dependencies: list[str] = []
     name: str
     nodes: list[PipelineNode]
@@ -372,19 +372,19 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
         return data
 
-    @model_validator(mode="before")
-    @classmethod
-    def push_df_backend(cls, data: Any) -> Any:
-        """Need to push dataframe_backend which is required to differentiate between spark and polars transformer"""
-        df_backend = data.get("dataframe_backend", None)
-        if df_backend:
-            if "nodes" in data.keys():
-                for n in data["nodes"]:
-                    if isinstance(n, dict):
-                        n["dataframe_backend"] = n.get("dataframe_backend", df_backend)
-                    else:
-                        n.dataframe_backend = n.dataframe_backend or df_backend
-        return data
+    # @model_validator(mode="before")
+    # @classmethod
+    # def push_df_backend(cls, data: Any) -> Any:
+    #     """Need to push dataframe_backend which is required to differentiate between spark and polars transformer"""
+    #     df_backend = data.get("dataframe_backend", None)
+    #     if df_backend:
+    #         if "nodes" in data.keys():
+    #             for n in data["nodes"]:
+    #                 if isinstance(n, dict):
+    #                     n["dataframe_backend"] = n.get("dataframe_backend", df_backend)
+    #                 else:
+    #                     n.dataframe_backend = n.dataframe_backend or df_backend
+    #     return data
 
     @model_validator(mode="after")
     def validate_orchestrator(self):
@@ -598,9 +598,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 spark=spark,
             )
 
-    def execute(
-        self, spark=None, udfs=None, write_sinks=True, full_refresh: bool = False
-    ) -> None:
+    def execute(self, udfs=None, write_sinks=True, full_refresh: bool = False) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
         executing each node. The selected orchestrator might impact how
@@ -608,8 +606,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
         Parameters
         ----------
-        spark:
-            Spark Session
         udfs:
             List of user-defined functions used in transformation chains.
         write_sinks:
@@ -621,11 +617,21 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         logger.info("Executing Pipeline")
 
         for inode, node in enumerate(self.sorted_nodes):
+            dfs = {}
+            if node.transformer:
+                for s in node.transformer.data_sources:
+                    if s == node.source:
+                        continue
+                    if isinstance(s, PipelineNodeDataSource):
+                        dfs[f"nodes.{s.node.name}"] = s.read()
+                    else:
+                        raise TypeError(s)
+
             node.execute(
-                spark=spark,
                 udfs=udfs,
                 write_sinks=write_sinks,
                 full_refresh=full_refresh,
+                named_dfs=dfs,
             )
 
     def dag_figure(self) -> Figure:

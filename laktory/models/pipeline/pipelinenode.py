@@ -514,6 +514,7 @@ class PipelineNode(BaseModel, PipelineChild):
         udfs: list[Callable] = None,
         write_sinks: bool = True,
         full_refresh: bool = False,
+        named_dfs: dict[str, AnyDataFrame] = None,
     ) -> AnyDataFrame:
         """
         Execute pipeline node by:
@@ -534,6 +535,8 @@ class PipelineNode(BaseModel, PipelineChild):
         full_refresh:
             If `True` dataframe will be completely re-processed by deleting
             existing data and checkpoint before processing.
+        named_dfs:
+            Named DataFrame passed to transformer nodes
 
         Returns
         -------
@@ -553,11 +556,17 @@ class PipelineNode(BaseModel, PipelineChild):
             self.purge()
 
         # Read Source
-        self._stage_df = self.source.read()
+        self._stage_df = None
+        if self.source:
+            self._stage_df = self.source.read()
 
         # Apply transformer
+        if named_dfs is None:
+            named_dfs = {}
         if apply_transformer and self.transformer:
-            self._stage_df = self.transformer.execute(self._stage_df, udfs=udfs)
+            self._stage_df = self.transformer.execute(
+                self._stage_df, udfs=udfs, named_dfs=named_dfs
+            )
 
         # Check expectations
         self._output_df = self._stage_df
