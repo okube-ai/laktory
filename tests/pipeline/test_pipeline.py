@@ -288,7 +288,7 @@ def test_single_node(backend, tmp_path):
 @pytest.mark.parametrize("backend", ["PYSPARK"])
 def test_full(backend, tmp_path):
     pl = get_pl(tmp_path)
-    pl.dataframe_backend = "PYSPARK"
+    pl.dataframe_backend = backend
 
     # Set Source
     ss = StreamingSource(backend)
