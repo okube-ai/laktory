@@ -2,37 +2,21 @@ import io
 from pathlib import Path
 
 import networkx as nx
+import polars
 import pytest
 
+from laktory import get_spark_session
 from laktory import models
 from laktory._testing import StreamingSource
 from laktory._testing import assert_dfs_equal
-
-# from laktory._testing import Paths
 
 data_dirpath = Path(__file__).parent.parent / "data"
 
 OPEN_FIGURES = False
 
-#
-# def get_pl(clean_path=False):
-#     pl_path = testdir_path / "tmp" / "test_pipeline_spark" / str(uuid.uuid4())
-#
-#     with open(paths.data / "pl-spark-local.yaml", "r") as fp:
-#         data = fp.read()
-#         data = data.replace("{data_dir}", str(testdir_path / "data"))
-#         data = data.replace("{pl_dir}", str(pl_path / "tables"))
-#         pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
-#         pl.root_path = pl_path
-#
-#     if clean_path and os.path.exists(str(pl_path)):
-#         shutil.rmtree(str(pl_path))
-#
-#     return pl, pl_path
-
 
 def get_pl(tmp_path):
-    with open(data_dirpath / "pl-new.yaml") as fp:
+    with open(data_dirpath / "pl.yaml") as fp:
         data = fp.read()
         data = data.replace("{tmp_path}", str(tmp_path))
         pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
@@ -69,27 +53,6 @@ def get_slv(tmp_path, backend) -> models.PipelineNode:
     )
 
 
-#
-#
-# def get_source(pl_path):
-#     source_path = str(pl_path / "tables/landing_stock_prices")
-#     w = Window.orderBy("data.created_at", "data.symbol")
-#     source = dff.brz.withColumn("index", F.row_number().over(w) - 1)
-#
-#     return source, source_path
-#
-#
-# gld_target = pd.DataFrame(
-#     {
-#         "symbol": ["AAPL", "GOOGL", "MSFT"],
-#         "max_price": [190.0, 138.0, 330.0],
-#         "min_price": [170.0, 129.0, 312.0],
-#         "mean_price": [177.0, 134.0, 320.0],
-#     }
-# )
-#
-
-
 def test_dag(tmp_path):
     pl = get_pl(tmp_path)
 
@@ -97,35 +60,30 @@ def test_dag(tmp_path):
 
     # Test Dag
     assert nx.is_directed_acyclic_graph(dag)
-    assert len(dag.nodes) == 2
-    assert len(dag.edges) == 1
+    assert len(dag.nodes) == 6
+    assert len(dag.edges) == 6
     assert list(nx.topological_sort(dag)) == [
         "brz",
         "slv",
+        "gld",
+        "gld_a",
+        "gld_b",
+        "gld_ab",
     ]
 
-    # # Test nodes assignment
-    # assert [n.name for n in pl.sorted_nodes] == [
-    #     "brz_stock_prices",
-    #     "brz_stock_meta",
-    #     "slv_stock_meta",
-    #     "slv_stock_prices",
-    #     "slv_stock_prices_tmp",
-    #     "slv_stock_aapl",
-    #     "slv_stock_msft",
-    #     "gld_stock_prices",
-    # ]
-    # assert (
-    #     pl.nodes_dict["slv_stock_prices"]
-    #     .transformer.nodes[-1]
-    #     .parsed_func_kwargs["other"]
-    #     .value.node
-    #     == pl.nodes_dict["slv_stock_meta"]
-    # )
-    #
-    # # Test figure
-    # fig = pl.dag_figure()
-    # fig.write_html(paths.tmp / "dag.html", auto_open=OPEN_FIGURES)
+    # Test nodes assignment
+    assert [n.name for n in pl.sorted_nodes] == [
+        "brz",
+        "slv",
+        "gld",
+        "gld_a",
+        "gld_b",
+        "gld_ab",
+    ]
+
+    # Test figure
+    fig = pl.dag_figure()
+    fig.write_html(tmp_path / "dag.html", auto_open=OPEN_FIGURES)
 
 
 def test_children(tmp_path):
@@ -134,7 +92,8 @@ def test_children(tmp_path):
     for pn in pl.nodes:
         assert pn.parent == pl
         assert pn.parent_pipeline == pl
-        assert pn.source.parent == pn
+        if pn.source:
+            assert pn.source.parent == pn
         for s in pn.all_sinks:
             assert s.parent == pn
 
@@ -265,35 +224,83 @@ def test_read_write_transform_expr_node(backend, tmp_path):
     assert df.columns == ["x1"]
 
 
-#
-# def test_execute_node():
-#     # Get Pipeline
-#     pl, pl_path = get_pl(clean_path=True)
-#
-#     # Create Stream Source
-#     source, source_path = get_source(pl_path)
-#
-#     # Insert 20 rows and execute each node individually
-#     source.filter("index<40").write.format("delta").mode("OVERWRITE").save(source_path)
-#     for inode, node in enumerate(pl.sorted_nodes):
-#         node.execute(spark=spark)
-#         node._output_df = None
-#
-#     # Insert remaining rows and execute each node individually
-#     source.filter("index>=40").write.format("delta").mode("APPEND").save(source_path)
-#     for inode, node in enumerate(pl.sorted_nodes):
-#         node.execute(spark=spark)
-#         node._output_df = None
-#
-#     # Tests
-#     assert pl.nodes_dict["brz_stock_prices"].primary_sink.read(spark).count() == 80
-#     assert pl.nodes_dict["slv_stock_prices"].primary_sink.read(spark).count() == 52
-#     assert (
-#         pl.nodes_dict["slv_stock_prices"].quarantine_sinks[0].read(spark).count() == 8
-#     )
-#     assert pl.nodes_dict["gld_stock_prices"].primary_sink.read(spark).count() == 3
-#     df_gld = pl.nodes_dict["gld_stock_prices"].primary_sink.read(spark).toPandas()
-#     assert df_gld.round(0).equals(gld_target)
-#
-#     # Cleanup
-#     shutil.rmtree(pl_path)
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_read_write_view(backend, tmp_path):
+    if backend not in ["PYSPARK"]:
+        pytest.skip(f"Backend '{backend}' not implemented.")
+
+    # Build Pipeline
+    brz = get_brz(tmp_path, backend)
+    brz.sinks = [
+        models.HiveMetastoreDataSink(
+            schema_name="default",
+            table_name="brz",
+            format="PARQUET",
+            mode="OVERWRITE",
+            writer_kwargs={"path": f"{tmp_path}/gld_sink/"},
+        )
+    ]
+    slv = get_slv(tmp_path, backend)
+    slv.source = None
+    slv.sinks = [
+        models.HiveMetastoreDataSink(
+            schema_name="default",
+            table_name="slv",
+            table_type="VIEW",
+            view_definition="SELECT * from {nodes.brz}",
+        )
+    ]
+    pl = models.Pipeline(name="pl", nodes=[brz, slv], dataframe_backend=backend)
+
+    # Write source data
+    ss = StreamingSource(backend)
+    df0 = ss.write_to_json(tmp_path / "brz_source")
+
+    # Execute
+    pl.execute()
+    df = pl.nodes_dict["slv"].primary_sink.read()
+
+    # Test
+    assert_dfs_equal(df, df0)
+
+
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_single_node(backend, tmp_path):
+    # Build Pipeline
+    brz = get_brz(tmp_path, backend)
+    slv = get_slv(tmp_path, backend)
+    pl = models.Pipeline(name="pl", nodes=[brz, slv], dataframe_backend=backend)
+
+    # Write source data
+    ss = StreamingSource(backend)
+    df0 = ss.write_to_json(tmp_path / "brz_source")
+
+    # Execute individually
+    for inode, node in enumerate(pl.sorted_nodes):
+        node.execute()
+        node._output_df = None
+
+    df = pl.nodes_dict["slv"].primary_sink.read()
+
+    assert_dfs_equal(df, df0)
+
+
+@pytest.mark.parametrize("backend", ["PYSPARK"])
+def test_full(backend, tmp_path):
+    pl = get_pl(tmp_path)
+    pl.dataframe_backend = "PYSPARK"
+
+    # Set Source
+    ss = StreamingSource(backend)
+
+    # Execute
+    ss.write_to_json(tmp_path / "brz_source")
+    pl.execute()
+
+    # Execute Again
+    ss.write_to_json(tmp_path / "brz_source")
+    pl.execute()
+
+    # Test
+    df = get_spark_session().read.table("default.gld_ab")
+    assert_dfs_equal(df, polars.DataFrame({"id": ["a", "b"], "max_x1": [1, 2]}))

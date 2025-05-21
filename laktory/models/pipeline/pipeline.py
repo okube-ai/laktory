@@ -11,7 +11,6 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory._settings import settings
-from laktory.models import PipelineNodeDataSource
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
 from laktory.models.pipeline.orchestrators.databricksdltorchestrator import (
@@ -24,6 +23,7 @@ from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.pipeline.pipelinenode import PipelineNode
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
+from laktory.typing import AnyFrame
 
 if TYPE_CHECKING:
     import networkx as nx
@@ -598,7 +598,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 spark=spark,
             )
 
-    def execute(self, udfs=None, write_sinks=True, full_refresh: bool = False) -> None:
+    def execute(
+        self,
+        udfs=None,
+        write_sinks=True,
+        full_refresh: bool = False,
+        named_dfs: dict[str, AnyFrame] = None,
+    ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
         executing each node. The selected orchestrator might impact how
@@ -613,25 +619,20 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         full_refresh:
             If `True` all nodes will be completely re-processed by deleting
             existing data and checkpoints before processing.
+        named_dfs:
+            Named DataFrames to be passed to pipeline nodes transformer.
         """
         logger.info("Executing Pipeline")
 
         for inode, node in enumerate(self.sorted_nodes):
-            dfs = {}
-            if node.transformer:
-                for s in node.transformer.data_sources:
-                    if s == node.source:
-                        continue
-                    if isinstance(s, PipelineNodeDataSource):
-                        dfs[f"nodes.{s.node.name}"] = s.read()
-                    else:
-                        raise TypeError(s)
+            if named_dfs is None:
+                named_dfs = {}
 
             node.execute(
                 udfs=udfs,
                 write_sinks=write_sinks,
                 full_refresh=full_refresh,
-                named_dfs=dfs,
+                named_dfs=named_dfs,
             )
 
     def dag_figure(self) -> Figure:

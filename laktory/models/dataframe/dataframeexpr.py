@@ -68,6 +68,7 @@ class DataFrameExpr(BaseModel, PipelineChild):
 
     @property
     def upstream_node_names(self) -> list[str]:
+        """Get all upstream nodes"""
         if self.expr is None:
             return []
 
@@ -100,21 +101,31 @@ class DataFrameExpr(BaseModel, PipelineChild):
         return self._data_sources
 
     def to_sql(self, references=None):
+        from laktory.models.datasources.pipelinenodedatasource import (
+            PipelineNodeDataSource,
+        )
+        from laktory.models.datasources.tabledatasource import TableDataSource
+
         if references is None:
             references = {}
 
-        # Validate all data source references available
-        pl = self.parent_pipeline
+        # Resolve Data Sources (references to other nodes)
         for s in self.data_sources:
-            if s.name not in references:
-                msg = (
-                    f"Data Source '{s.name}' is not available from provided references."
+            references["{nodes." + s.node.name + "}"] = s.sink_table_full_name
+
+        # Add node data source
+        pl_node = self.parent_pipeline_node
+        if pl_node and pl_node.source:
+            s = pl_node.source
+            if isinstance(s, TableDataSource):
+                full_name = s.full_name
+            elif isinstance(s, PipelineNodeDataSource):
+                full_name = s.sink_table_full_name
+            else:
+                raise ValueError(
+                    "VIEW sink only supports Table or Pipeline Node with Table sink data sources"
                 )
-                if pl:
-                    msg = msg.replace(
-                        "references.", f"references by pipeline {pl.name}"
-                    )
-                    raise ValueError(msg)
+            references["{df}"] = full_name
 
         expr = self.expr
         for k, v in references.items():
@@ -183,6 +194,10 @@ class DataFrameExpr(BaseModel, PipelineChild):
         # From SQL expression
         logger.info(f"DataFrame as \n{self.expr.strip()}")
 
+        # Read Data Sources
+        for s in self.data_sources:
+            dfs[f"nodes.{s.node.name}"] = s.read()
+
         # Convert to Native
         dfs = {k: nw.from_native(v).to_native() for k, v in dfs.items()}
         df0 = list(dfs.values())[0]
@@ -244,7 +259,6 @@ class DataFrameExpr(BaseModel, PipelineChild):
             # Run query
             _df = None
             for expr in self.expr.split(";"):
-                # for expr in self.parsed_expr():
                 if expr.replace("\n", " ").strip() == "":
                     continue
                 _df = _spark.sql(to_safe_name(expr))

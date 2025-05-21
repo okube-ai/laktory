@@ -427,6 +427,10 @@ class PipelineNode(BaseModel, PipelineChild):
         if self.transformer:
             names += self.transformer.upstream_node_names
 
+        if self.sinks:
+            for s in self.sinks:
+                names += s.upstream_node_names
+
         return names
 
     # ----------------------------------------------------------------------- #
@@ -446,8 +450,7 @@ class PipelineNode(BaseModel, PipelineChild):
 
         if self.sinks:
             for s in self.sinks:
-                if getattr(s, "view_definition", None):
-                    sources += s.view_definition.data_sources
+                sources += s.data_sources
 
         return sources
 
@@ -601,9 +604,12 @@ class PipelineNode(BaseModel, PipelineChild):
         """
 
         # Data Quality Checks
-        is_streaming = getattr(nw.to_native(self._stage_df), "isStreaming", False)
         qfilter = None  # Quarantine filter
         kfilter = None  # Keep filter
+        if self._stage_df is None:
+            # Node without source or transformer
+            return
+        is_streaming = getattr(nw.to_native(self._stage_df), "isStreaming", False)
         if not self.expectations:
             return
 

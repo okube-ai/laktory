@@ -19,8 +19,8 @@ def test_parents():
         },
         transformer={
             "nodes": [
-                {"name": "with_columns", "kwargs": {"y1": "x1"}},
-                {"expr": "select id, x1, y1 from df"},
+                {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
+                {"expr": "select id, x1, y1 from {df}"},
             ]
         },
         sinks=[
@@ -90,7 +90,7 @@ def test_execute_stream(backend, tmp_path):
         transformer={
             "nodes": [
                 {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
-                {"expr": "select id, x1, y1 from df"},
+                {"expr": "select id, x1, y1 from {df}"},
             ]
         },
         sinks=[

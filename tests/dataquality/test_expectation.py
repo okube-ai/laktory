@@ -125,7 +125,7 @@ def test_expectations_empty(backend):
     dqe = models.DataQualityExpectation(
         name="x1 less than 0", action="WARN", expr="nw.col('x1') < 0"
     )
-    check = dqe.run_check(df0.filter("x1 < 0"))
+    check = dqe.run_check(df0.filter(nw.col("x1") < 0))
     assert check.rows_count == 0
     assert check.fails_count == 0
     assert check.failure_rate == 0

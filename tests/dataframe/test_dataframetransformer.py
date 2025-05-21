@@ -18,7 +18,7 @@ def test_transformer(backend):
     )
 
     node1 = DataFrameExpr(
-        expr="select id, x1, y1 from df",
+        expr="select id, x1, y1 from {df}",
     )
 
     transformer = DataFrameTransformer(nodes=[node0, node1])
