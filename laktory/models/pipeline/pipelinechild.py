@@ -45,7 +45,7 @@ class PipelineChild(BaseChild):
         return DataFrameBackends(settings.dataframe_backend.upper())
 
     @property
-    def _dataframe_api(self) -> str:
+    def df_api(self) -> str:
         # Direct value
         dataframe_api = self.dataframe_api
         if dataframe_api is not None:
@@ -54,7 +54,7 @@ class PipelineChild(BaseChild):
         # Value from parent
         parent = self._parent
         if parent is not None:
-            return parent._dataframe_api
+            return parent.df_api
 
         # Value from settings
         return settings.dataframe_api.upper()

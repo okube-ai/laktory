@@ -120,7 +120,7 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
 
         _value = self.expr.replace("\n", " ")
 
-        if self._dataframe_api == "NARWHALS":
+        if self.df_api == "NARWHALS":
             if self.type == "SQL":
                 from laktory.narwhals.expr import sql_expr
 

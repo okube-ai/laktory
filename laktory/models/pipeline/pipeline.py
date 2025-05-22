@@ -352,7 +352,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         if o and isinstance(o, dict):
             # orchestrator as a dict
             o["name"] = o.get("name", None) or data.get("name", None)
-        elif o:
+        elif isinstance(o, (DatabricksDLTOrchestrator, DatabricksJobOrchestrator)):
             # orchestrator as a model
             o.name = o.name or o.get("name", None)
 
