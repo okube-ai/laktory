@@ -44,7 +44,7 @@ class TransformerFuncArg(BaseModel, PipelineChild):
 
         elif isinstance(v, str):
             # Imports required to evaluate expressions
-            if self._dataframe_api == "NARWHALS":
+            if self.df_api == "NARWHALS":
                 import narwhals as nw  # noqa: F401
                 from narwhals import col  # noqa: F401
                 from narwhals import lit  # noqa: F401
@@ -491,7 +491,7 @@ class DataFrameTransformerNode(BaseModel, PipelineChild):
         # Convert to Narwhals
         if not isinstance(df, AnyFrame):
             df = nw.from_native(df)
-        if self._dataframe_api == "NATIVE":
+        if self.df_api == "NATIVE":
             df = df.to_native()
 
         # Get Function
