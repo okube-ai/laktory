@@ -145,23 +145,6 @@ class PipelineNode(BaseModel, PipelineChild):
     _output_df: Any = None
     _quarantine_df: Any = None
 
-    # @model_validator(mode="before")
-    # @classmethod
-    # def push_df_backend(cls, data: Any) -> Any:
-    #     """Need to push dataframe_backend which is required to differentiate between spark and polars transformer"""
-    #     df_backend = data.get("dataframe_backend", None)
-    #     if df_backend:
-    #         for k in ["source", "transformer"]:
-    #             o = data.get(k, None)
-    #             if o and isinstance(o, dict):
-    #                 # source or transformer as a dict
-    #                 o["dataframe_backend"] = o.get("dataframe_backend", df_backend)
-    #             elif o:
-    #                 # source or transformer as a model
-    #                 o.dataframe_backend = o.dataframe_backend or df_backend
-    #
-    #     return data
-
     @field_validator("root_path", "expectations_checkpoint_path", mode="before")
     @classmethod
     def posixpath_to_string(cls, value: Any) -> Any:

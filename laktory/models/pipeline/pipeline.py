@@ -358,20 +358,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
         return data
 
-    # @model_validator(mode="before")
-    # @classmethod
-    # def push_df_backend(cls, data: Any) -> Any:
-    #     """Need to push dataframe_backend which is required to differentiate between spark and polars transformer"""
-    #     df_backend = data.get("dataframe_backend", None)
-    #     if df_backend:
-    #         if "nodes" in data.keys():
-    #             for n in data["nodes"]:
-    #                 if isinstance(n, dict):
-    #                     n["dataframe_backend"] = n.get("dataframe_backend", df_backend)
-    #                 else:
-    #                     n.dataframe_backend = n.dataframe_backend or df_backend
-    #     return data
-
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #
