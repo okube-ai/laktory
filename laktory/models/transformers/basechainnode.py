@@ -256,7 +256,7 @@ class BaseChainNode(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def child_attribute_names(self):
+    def children_names(self):
         return [
             "data_sources",
             "_parsed_func_args",

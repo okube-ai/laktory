@@ -1,8 +1,7 @@
-import pyspark.sql.functions as F
 import pytest
-from pyspark.sql import Window
 
 from laktory import models
+from laktory._testing import StreamingSource
 from laktory._testing import get_df0
 from laktory.enums import STREAMING_BACKENDS
 from laktory.enums import DataFrameBackends
@@ -23,20 +22,6 @@ def node():
         ],
     )
     return node
-
-
-def get_source_df(backend):
-    df0 = get_df0(backend, lazy=True)
-    source0 = df0.to_native()
-
-    source = source0.withColumn("_batch_id", F.lit(0))
-    for i in range(4):
-        source = source.union(source0.withColumn("_batch_id", F.lit(i + 1)))
-
-    w = Window.orderBy("_batch_id", "id")
-    source = source.withColumn("_idx", F.row_number().over(w) - 1)
-
-    return source
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
@@ -176,20 +161,12 @@ def test_streaming_multi(backend, node, tmp_path):
     if DataFrameBackends(backend) not in STREAMING_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
 
+    ss = StreamingSource(backend=backend)
+
     # Set paths
     source_path = str(tmp_path / "source")
     node_path = tmp_path / "node"
     checkpoint_path = node_path / "_checkpoint_expectations"
-
-    source = get_source_df(backend)
-
-    # Initialize source
-    source.filter(F.col("_idx") == 0).write.format("DELTA").mode("overwrite").save(
-        source_path
-    )
-    # dfs = spark.readStream.format("DELTA").load(source_path)
-
-    source.show()
 
     # Set node source
     node.source = models.FileDataSource(
@@ -216,43 +193,44 @@ def test_streaming_multi(backend, node, tmp_path):
         ),
     ]
 
-    # Execute
+    # Push and execute
+    ss.write_to_delta(source_path)
     node.execute()
 
     # Test
-    assert node.checks[0].status == "PASS"
-    assert node.checks[0].rows_count == 1
-    assert node.checks[0].fails_count == 0
-    assert node.checks[1].status == "PASS"
-    assert node.checks[1].rows_count == 1
-    assert node.checks[1].fails_count == 0
-    assert node.checks[2].status == "PASS"
-    assert node.checks[2].rows_count == 1
-    assert node.checks[2].fails_count == 0
-
-    # Update source
-    source.filter("_batch_id<2 AND _idx!=0").write.format("delta").mode("append").save(
-        source_path
-    )
-    node.execute()
     assert node.checks[0].status == "FAIL"
-    assert node.checks[0].rows_count == 5
-    assert node.checks[0].fails_count == 2
+    assert node.checks[0].rows_count == 3
+    assert node.checks[0].fails_count == 1
     assert node.checks[1].status == "PASS"
-    assert node.checks[1].rows_count == 5
+    assert node.checks[1].rows_count == 3
     assert node.checks[1].fails_count == 0
     assert node.checks[2].status == "FAIL"
-    assert node.checks[2].rows_count == 5
+    assert node.checks[2].rows_count == 3
+    assert node.checks[2].fails_count == 1
+
+    # Push and execute
+    ss.write_to_delta(source_path, nbatch=2)
+    node.execute()
+
+    assert node.checks[0].status == "FAIL"
+    assert node.checks[0].rows_count == 6
+    assert node.checks[0].fails_count == 2
+    assert node.checks[1].status == "FAIL"
+    assert node.checks[1].rows_count == 6
+    assert node.checks[1].fails_count == 3
+    assert node.checks[2].status == "FAIL"
+    assert node.checks[2].rows_count == 6
     assert node.checks[2].fails_count == 2
 
-    source.filter("_batch_id>=2").write.format("delta").mode("append").save(source_path)
+    ss.write_to_delta(source_path, nbatch=3)
     node.execute()
+
     assert node.checks[0].status == "FAIL"
     assert node.checks[0].rows_count == 9
     assert node.checks[0].fails_count == 3
-    assert node.checks[1].status == "FAIL"
+    assert node.checks[1].status == "PASS"
     assert node.checks[1].rows_count == 9
-    assert node.checks[1].fails_count == 3
+    assert node.checks[1].fails_count == 0
     assert node.checks[2].status == "FAIL"
     assert node.checks[2].rows_count == 9
     assert node.checks[2].fails_count == 3

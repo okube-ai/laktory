@@ -16,7 +16,7 @@ from laktory.models import PipelineNodeDataSource
 def test_sql_expr(backend):
     df0 = get_df0(backend)
 
-    node = DataFrameExpr(expr="SELECT id, 3*x1 AS x3 FROM df")
+    node = DataFrameExpr(expr="SELECT id, 3*x1 AS x3 FROM {df}")
 
     df = node.to_df({"df": df0})
     assert_dfs_equal(
@@ -29,7 +29,9 @@ def test_sql_expr_multi(backend):
     df0 = get_df0(backend)
     source = get_df1(backend)
 
-    node = DataFrameExpr(expr="SELECT * FROM df LEFT JOIN source on df.id = source.id")
+    node = DataFrameExpr(
+        expr="SELECT * FROM {df} LEFT JOIN {source} on {df}.id = {source}.id"
+    )
     df = node.to_df({"df": df0, "source": source})
     assert_dfs_equal(df.select("x2"), pl.DataFrame({"x2": [None, 4, 9]}))
 

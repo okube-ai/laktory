@@ -11,14 +11,14 @@ def test_transformer(backend):
     df0 = get_df0(backend)
 
     node0 = DataFrameMethod(
-        name="with_columns",
-        kwargs={
+        func_name="with_columns",
+        func_kwargs={
             "y1": "x1",
         },
     )
 
     node1 = DataFrameExpr(
-        expr="select id, x1, y1 from df",
+        expr="select id, x1, y1 from {df}",
     )
 
     transformer = DataFrameTransformer(nodes=[node0, node1])

@@ -126,7 +126,7 @@ class PipelineNode(BaseModel, PipelineChild):
     consistent and reliable.
     """,
     )
-    source: DataSourcesUnion = Field(
+    source: DataSourcesUnion | None = Field(
         None, description="Definition of the data source(s)"
     )
     sinks: list[DataSinksUnion] = Field(
@@ -144,23 +144,6 @@ class PipelineNode(BaseModel, PipelineChild):
     _stage_df: Any = None
     _output_df: Any = None
     _quarantine_df: Any = None
-
-    # @model_validator(mode="before")
-    # @classmethod
-    # def push_df_backend(cls, data: Any) -> Any:
-    #     """Need to push dataframe_backend which is required to differentiate between spark and polars transformer"""
-    #     df_backend = data.get("dataframe_backend", None)
-    #     if df_backend:
-    #         for k in ["source", "transformer"]:
-    #             o = data.get(k, None)
-    #             if o and isinstance(o, dict):
-    #                 # source or transformer as a dict
-    #                 o["dataframe_backend"] = o.get("dataframe_backend", df_backend)
-    #             elif o:
-    #                 # source or transformer as a model
-    #                 o.dataframe_backend = o.dataframe_backend or df_backend
-    #
-    #     return data
 
     @field_validator("root_path", "expectations_checkpoint_path", mode="before")
     @classmethod
@@ -232,7 +215,7 @@ class PipelineNode(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def child_attribute_names(self):
+    def children_names(self):
         return [
             "source",
             "data_sources",
@@ -427,6 +410,10 @@ class PipelineNode(BaseModel, PipelineChild):
         if self.transformer:
             names += self.transformer.upstream_node_names
 
+        if self.sinks:
+            for s in self.sinks:
+                names += s.upstream_node_names
+
         return names
 
     # ----------------------------------------------------------------------- #
@@ -446,8 +433,7 @@ class PipelineNode(BaseModel, PipelineChild):
 
         if self.sinks:
             for s in self.sinks:
-                if getattr(s, "view_definition", None):
-                    sources += s.view_definition.data_sources
+                sources += s.data_sources
 
         return sources
 
@@ -514,6 +500,7 @@ class PipelineNode(BaseModel, PipelineChild):
         udfs: list[Callable] = None,
         write_sinks: bool = True,
         full_refresh: bool = False,
+        named_dfs: dict[str, AnyDataFrame] = None,
     ) -> AnyDataFrame:
         """
         Execute pipeline node by:
@@ -534,6 +521,8 @@ class PipelineNode(BaseModel, PipelineChild):
         full_refresh:
             If `True` dataframe will be completely re-processed by deleting
             existing data and checkpoint before processing.
+        named_dfs:
+            Named DataFrame passed to transformer nodes
 
         Returns
         -------
@@ -553,11 +542,17 @@ class PipelineNode(BaseModel, PipelineChild):
             self.purge()
 
         # Read Source
-        self._stage_df = self.source.read()
+        self._stage_df = None
+        if self.source:
+            self._stage_df = self.source.read()
 
         # Apply transformer
+        if named_dfs is None:
+            named_dfs = {}
         if apply_transformer and self.transformer:
-            self._stage_df = self.transformer.execute(self._stage_df, udfs=udfs)
+            self._stage_df = self.transformer.execute(
+                self._stage_df, udfs=udfs, named_dfs=named_dfs
+            )
 
         # Check expectations
         self._output_df = self._stage_df
@@ -592,9 +587,12 @@ class PipelineNode(BaseModel, PipelineChild):
         """
 
         # Data Quality Checks
-        is_streaming = getattr(nw.to_native(self._stage_df), "isStreaming", False)
         qfilter = None  # Quarantine filter
         kfilter = None  # Keep filter
+        if self._stage_df is None:
+            # Node without source or transformer
+            return
+        is_streaming = getattr(nw.to_native(self._stage_df), "isStreaming", False)
         if not self.expectations:
             return
 

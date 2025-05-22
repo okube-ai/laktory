@@ -151,7 +151,9 @@ def test_read_stream(backend, fmt, tmp_path):
         pytest.skip("Requires Databricks Autoloader. Skipping Test.")
 
     df = source.read()
-    assert df.schema == nw.Schema({"id": nw.String(), "x1": nw.Int64()})
+    assert df.schema == nw.Schema(
+        {"_idx": nw.Int64(), "id": nw.String(), "x1": nw.Int64()}
+    )
     assert df.to_native().isStreaming
 
 
@@ -170,7 +172,9 @@ def test_csv_options(backend, tmp_path):
     )
     assert source._get_spark_kwargs() == ({"header": True, "inferSchema": False}, "csv")
     df = source.read()
-    assert_dfs_equal(df, df0.cast({"id": pl.String, "x1": pl.String}))
+    assert_dfs_equal(
+        df, df0.cast({"_idx": pl.String, "id": pl.String, "x1": pl.String})
+    )
 
     # No Header
     source = FileDataSource(
@@ -186,21 +190,23 @@ def test_csv_options(backend, tmp_path):
     )
     df = source.read().collect(backend="polars")
     if backend == "PYSPARK":
-        assert df.columns == ["_c0", "_c1"]
+        assert df.columns == ["_c0", "_c1", "_c2"]
         assert df.shape[0] == 4
     elif backend == "POLARS":
-        assert df.columns == ["column_1", "column_2"]
+        assert df.columns == ["column_1", "column_2", "column_3"]
         assert df.shape[0] == 4
 
     # With Schema
-    schema = DataFrameSchema(columns={"xx": "string", "yy": "string"})
+    schema = DataFrameSchema(columns={"idx": "string", "xx": "string", "yy": "string"})
     source = FileDataSource(
         path=csv, format="CSV", dataframe_backend=backend, schema=schema
     )
     df = source.read().collect(backend="polars")
     assert_dfs_equal(
         df,
-        df0.cast({"id": pl.String, "x1": pl.String}).rename({"id": "xx", "x1": "yy"}),
+        df0.cast({"_idx": pl.String, "id": pl.String, "x1": pl.String}).rename(
+            {"_idx": "idx", "id": "xx", "x1": "yy"}
+        ),
     )
 
 
@@ -222,6 +228,7 @@ def test_reader_methods(tmp_path):
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_reader_kwargs(backend, tmp_path):
     df0 = get_df0("POLARS").to_native()
+    print(df0)
     csv = tmp_path / "df.csv"
     df0.write_csv(csv)
 
@@ -230,14 +237,14 @@ def test_reader_kwargs(backend, tmp_path):
             "header": False,
         }
     elif backend == "POLARS":
-        kwargs = {"has_header": False, "new_columns": ["_c0", "_c1"]}
+        kwargs = {"has_header": False, "new_columns": ["_c0", "_c1", "_c2"]}
 
     source = FileDataSource(
         path=csv, format="CSV", dataframe_backend=backend, reader_kwargs=kwargs
     )
 
     df = source.read()
-    assert df.columns == ["_c0", "_c1"]
+    assert df.columns == ["_c0", "_c1", "_c2"]
 
 
 def test_non_applicable_options():

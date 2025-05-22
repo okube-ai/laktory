@@ -29,13 +29,14 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
     def update_from_parent(self):
         pl = self.parent_pipeline
-        pl_name = pl.name
-        self.source = os.path.join(CACHE_ROOT, f"tmp-{pl_name}-config.json")
-        if "{pl_name}" in self.path:
-            self.path = (
-                f"{settings.workspace_laktory_root}pipelines/{pl_name}/config.json"
-            )
-        self.set_paths()
+        if pl:
+            pl_name = pl.name
+            self.source = os.path.join(CACHE_ROOT, f"tmp-{pl_name}-config.json")
+            if "{pl_name}" in self.path:
+                self.path = (
+                    f"{settings.workspace_laktory_root}pipelines/{pl_name}/config.json"
+                )
+            self.set_paths()
 
     def write_source(self):
         pl = self.parent_pipeline

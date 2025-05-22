@@ -60,6 +60,10 @@ class TableDataSink(BaseDataSink):
         with self.validate_assignment_disabled():
             if self.view_definition is not None:
                 self.table_type = "VIEW"
+        if self.table_type == "VIEW" and self.view_definition is None:
+            raise ValueError(
+                'View definition must be provided for "VIEW" `table_type`.'
+            )
         return self
 
     @field_validator("view_definition")
@@ -101,12 +105,26 @@ class TableDataSink(BaseDataSink):
     def _id(self) -> str:
         return self.full_name
 
+    @property
+    def upstream_node_names(self) -> list[str]:
+        """Pipeline node names required to write sink"""
+        if self.view_definition:
+            return self.view_definition.upstream_node_names
+        return []
+
+    @property
+    def data_sources(self):
+        """Get all sources feeding the sink"""
+        if self.view_definition:
+            return self.view_definition.data_sources
+        return []
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #
 
     @property
-    def child_attribute_names(self):
+    def children_names(self):
         return [
             "view_definition",
         ]
@@ -114,40 +132,6 @@ class TableDataSink(BaseDataSink):
     # ----------------------------------------------------------------------- #
     # Writers                                                                 #
     # ----------------------------------------------------------------------- #
-
-    def _get_pipeline_table_names(self):
-        from laktory.models.datasources.pipelinenodedatasource import (
-            PipelineNodeDataSource,
-        )
-        from laktory.models.datasources.tabledatasource import TableDataSource
-
-        tables = {}
-
-        pl_node = self.parent_pipeline_node
-
-        if pl_node and pl_node.source:
-            source = pl_node.source
-            if isinstance(source, TableDataSource):
-                full_name = source.full_name
-            elif isinstance(source, PipelineNodeDataSource):
-                full_name = source.sink_table_full_name
-            else:
-                raise ValueError(
-                    "VIEW sink only supports Table or Pipeline Node with Table sink data sources"
-                )
-            tables["{df}"] = full_name
-
-        pl = self.parent_pipeline
-        if pl:
-            for node in pl.nodes:
-                if node == pl_node:
-                    continue
-
-                for s in node.sinks:
-                    if isinstance(s, TableDataSink):
-                        tables["{nodes." + node.name + "}"] = s.full_name
-
-        return tables
 
     def _write_spark(self, df, mode, full_refresh=False) -> None:
         df = df.to_native()
@@ -200,7 +184,7 @@ class TableDataSink(BaseDataSink):
 
         logger.info(f"Creating view {self.full_name} AS {self.view_definition.expr}")
 
-        _view = self.view_definition.to_sql(self._get_pipeline_table_names())
+        _view = self.view_definition.to_sql()
         df = spark.sql(f"CREATE OR REPLACE VIEW {self.full_name} AS {_view}")
         if self.parent_pipeline_node:
             self.parent_pipeline_node._output_df = df

@@ -59,15 +59,14 @@ class DataFrameTransformer(BaseModel, PipelineChild):
         ..., description="List of transformations"
     )
 
-    #
-    # @property
-    # def upstream_node_names(self) -> list[str]:
-    #     """Pipeline node names required to apply transformer"""
-    #     names = []
-    #     for node in self.nodes:
-    #         names += node.upstream_node_names
-    #     return names
-    #
+    @property
+    def upstream_node_names(self) -> list[str]:
+        """Pipeline node names required to apply transformer"""
+        names = []
+        for node in self.nodes:
+            names += node.upstream_node_names
+        return names
+
     @property
     def data_sources(self):
         """Get all sources feeding the Transformer"""
@@ -83,14 +82,14 @@ class DataFrameTransformer(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def child_attribute_names(self):
+    def children_names(self):
         return ["nodes"]
 
     # ----------------------------------------------------------------------- #
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
 
-    def execute(self, df, udfs=None, **named_dfs) -> AnyFrame:
+    def execute(self, df, udfs=None, named_dfs=None) -> AnyFrame:
         """
         Execute transformation nodes on provided DataFrame `df`
 
@@ -109,6 +108,9 @@ class DataFrameTransformer(BaseModel, PipelineChild):
         """
         logger.info("Executing DataFrame Transformer")
 
+        if named_dfs is None:
+            named_dfs = {}
+
         for inode, node in enumerate(self.nodes):
             tnode = type(node)
             logger.info(
@@ -118,16 +120,16 @@ class DataFrameTransformer(BaseModel, PipelineChild):
             if isinstance(node, DataFrameMethod):
                 # TODO: Add udfs
                 df = node.execute(df)
-            else:
-                dfs = {"df": df} | named_dfs
+            elif isinstance(node, DataFrameExpr):
+                dfs = {}
+                if df is not None:
+                    dfs["df"] = df
+                dfs = dfs | named_dfs
                 df = node.to_df(dfs)
+            else:
+                raise NotImplementedError()
 
         return df
-
-    #
-    # def get_view_definition(self):
-    #     logger.info("Creating view definition")
-    #     return self.nodes[0].get_view_definition()
 
 
 # BaseModel.model_rebuild()

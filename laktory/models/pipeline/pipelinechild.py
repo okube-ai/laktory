@@ -1,24 +1,21 @@
-from typing import Any
 from typing import Literal
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.enums import DataFrameBackends
+from laktory.models.basechild import BaseChild
 
 logger = get_logger(__name__)
 
 
-class PipelineChild(BaseModel):
+class PipelineChild(BaseChild):
     """
     Pipeline Child Class
     """
 
-    model_config = ConfigDict(validate_assignment=False)
+    # model_config = ConfigDict(validate_assignment=True)
     dataframe_backend: DataFrameBackends = Field(
         None, description="Type of DataFrame backend"
     )
@@ -27,36 +24,16 @@ class PipelineChild(BaseModel):
         description="DataFrame API to use in DataFrame Transformer nodes. Either 'NATIVE' (backend-specific) or 'NARWHALS' (backend-agnostic).",
     )
 
-    @model_validator(mode="after")
-    def update_children_after_init(self) -> Any:
-        if not hasattr(self, "_parent"):
-            self._parent = None
-        self.update_children()
-        return self
-
-    def model_copy(self, *args, **kwargs):
-        model = super().model_copy(*args, **kwargs)
-        model.update_children()
-        return model
-
-    @property
-    def child_attribute_names(self):
-        return []
-
-    @property
-    def parent(self):
-        return self._parent
-
-    @parent.setter
-    def parent(self, value):
-        self._parent = value
-        self.update_children()
-
     @property
     def df_backend(self) -> DataFrameBackends:
         # Direct value
         backend = self.dataframe_backend
         if backend is not None:
+            if not isinstance(backend, DataFrameBackends):
+                try:
+                    backend = DataFrameBackends(backend)
+                except ValueError:
+                    pass
             return backend
 
         # Value from parent
@@ -81,22 +58,6 @@ class PipelineChild(BaseModel):
 
         # Value from settings
         return settings.dataframe_api.upper()
-
-    def update_children(self):
-        def _set_parent(o, parent=self):
-            if isinstance(o, PipelineChild):
-                o._parent = parent
-
-        for c_name in self.child_attribute_names:
-            o = getattr(self, c_name)
-            if isinstance(o, list):
-                for _o in o:
-                    _set_parent(_o)
-            elif isinstance(o, dict):
-                for _o in o.values():
-                    _set_parent(_o)
-            else:
-                _set_parent(o)
 
     @property
     def parent_pipeline(self):

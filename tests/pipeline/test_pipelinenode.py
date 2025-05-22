@@ -2,8 +2,11 @@ import pytest
 
 from laktory import get_spark_session
 from laktory import models
+from laktory._testing import StreamingSource
 from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
+from laktory.enums import STREAMING_BACKENDS
+from laktory.enums import DataFrameBackends
 
 
 def test_parents():
@@ -16,8 +19,8 @@ def test_parents():
         },
         transformer={
             "nodes": [
-                {"name": "with_columns", "kwargs": {"y1": "x1"}},
-                {"expr": "select id, x1, y1 from df"},
+                {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
+                {"expr": "select id, x1, y1 from {df}"},
             ]
         },
         sinks=[
@@ -53,8 +56,8 @@ def test_execute(backend, tmp_path):
         },
         transformer={
             "nodes": [
-                {"name": "with_columns", "kwargs": {"y1": "x1"}},
-                {"expr": "select id, x1, y1 from df"},
+                {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
+                {"expr": "select id, x1, y1 from {df}"},
             ]
         },
         sinks=[
@@ -68,6 +71,42 @@ def test_execute(backend, tmp_path):
     node.execute()
     df1 = node.primary_sink.read()
 
+    assert df1.columns == ["id", "x1", "y1"]
+    assert df1.collect().shape == (3, 3)
+
+
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_execute_stream(backend, tmp_path):
+    if DataFrameBackends(backend) not in STREAMING_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
+
+    ss = StreamingSource(backend)
+    source_path = str(tmp_path / "source")
+    sink_path = str(tmp_path / "sink")
+
+    node = models.PipelineNode(
+        name="node0",
+        source={"path": source_path, "format": "DELTA", "as_stream": "True"},
+        transformer={
+            "nodes": [
+                {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
+                {"expr": "select id, x1, y1 from {df}"},
+            ]
+        },
+        sinks=[
+            {
+                "path": sink_path,
+                "format": "DELTA",
+                "mode": "APPEND",
+            }
+        ],
+    )
+
+    ss.write_to_delta(source_path)
+    df = node.execute()
+    df1 = node.primary_sink.read()
+
+    assert df.to_native().isStreaming
     assert df1.columns == ["id", "x1", "y1"]
     assert df1.collect().shape == (3, 3)
 

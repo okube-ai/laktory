@@ -126,15 +126,15 @@ class DataFrameMethod(BaseModel, PipelineChild):
     )
 
     node = models.DataFrameMethod(
-        name="with_columns",
-        kwargs={"xr": "nw.col('x').round()"},
+        func_name="with_columns",
+        func_kwargs={"xr": "nw.col('x').round()"},
         dataframe_api="NARWHALS"
     )
     df = node.execute(df0)
 
     node = models.DataFrameMethod(
-        name="select",
-        args=["pl.sqrt('x')"},
+        func_name="select",
+        func_args=["pl.sqrt('x')"},
         dataframe_api="NATIVE"
     )
     df = node.execute(df0)
@@ -143,27 +143,33 @@ class DataFrameMethod(BaseModel, PipelineChild):
     ```
     """
 
-    args: list[DataFrameMethodArg | Any] = Field(
+    func_args: list[DataFrameMethodArg | Any] = Field(
         [],
         description="Arguments passed to method. A `DataSource` model can be passed instead of a DataFrame.",
     )
-    kwargs: dict[str, DataFrameMethodArg | Any] = Field(
+    func_kwargs: dict[str, DataFrameMethodArg | Any] = Field(
         {},
         description="Keyword arguments passed to method. A `DataSource` model can be passed instead of a DataFrame.",
     )
-    name: str = Field(..., description="Method name.")
+    func_name: str = Field(..., description="Method name.")
 
     @model_validator(mode="after")
     def set_args(self) -> Any:
-        for k, v in self.kwargs.items():
+        for k, v in self.func_kwargs.items():
             if not isinstance(v, DataFrameMethodArg):
-                self.kwargs[k] = DataFrameMethodArg(value=v)
+                self.func_kwargs[k] = DataFrameMethodArg(value=v)
+                # Because we don't set func_kwargs directly,
+                # assign_parent_to_children() is not triggered and we need to set
+                # parent explicitly
+                self.func_kwargs[k].parent = self
 
-        for i, v in enumerate(self.args):
+        for i, v in enumerate(self.func_args):
             if not isinstance(v, DataFrameMethodArg):
-                self.args[i] = DataFrameMethodArg(value=v)
-
-        self.update_children()
+                self.func_args[i] = DataFrameMethodArg(value=v)
+                # Because we don't set func_kwargs directly,
+                # assign_parent_to_children() is not triggered and we need to set
+                # parent explicitly
+                self.func_args[i].parent = self
 
         return self
 
@@ -172,11 +178,11 @@ class DataFrameMethod(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def child_attribute_names(self):
+    def children_names(self):
         return [
             # "data_sources",
-            "args",
-            "kwargs",
+            "func_args",
+            "func_kwargs",
             # "sql_expr",
         ]
 
@@ -207,42 +213,38 @@ class DataFrameMethod(BaseModel, PipelineChild):
         from laktory.models.datasources import BaseDataSource
 
         sources = []
-        for a in self.args:
+        for a in self.func_args:
             if isinstance(a.value, BaseDataSource):
                 sources += [a.value]
 
-        for a in self.kwargs.values():
+        for a in self.func_kwargs.values():
             if isinstance(a.value, BaseDataSource):
                 sources += [a.value]
 
         return sources
 
-    #
-    # # ----------------------------------------------------------------------- #
-    # # Upstream Nodes                                                          #
-    # # ----------------------------------------------------------------------- #
-    #
-    # @property
-    # def upstream_node_names(self) -> list[str]:
-    #     """Pipeline node names required to apply transformer node."""
-    #
-    #     from laktory.models.datasources.pipelinenodedatasource import (
-    #         PipelineNodeDataSource,
-    #     )
-    #
-    #     names = []
-    #     for a in self.parsed_func_args:
-    #         if isinstance(a.value, PipelineNodeDataSource):
-    #             names += [a.value.node_name]
-    #     for a in self.parsed_func_kwargs.values():
-    #         if isinstance(a.value, PipelineNodeDataSource):
-    #             names += [a.value.node_name]
-    #
-    #     if self.sql_expr:
-    #         names += self.parsed_sql_expr.upstream_node_names
-    #
-    #     return names
-    #
+    # ----------------------------------------------------------------------- #
+    # Upstream Nodes                                                          #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def upstream_node_names(self) -> list[str]:
+        """Pipeline node names required to apply transformer node."""
+
+        from laktory.models.datasources.pipelinenodedatasource import (
+            PipelineNodeDataSource,
+        )
+
+        names = []
+        for a in self.func_args:
+            if isinstance(a.value, PipelineNodeDataSource):
+                names += [a.value.node_name]
+        for a in self.func_kwargs.values():
+            if isinstance(a.value, PipelineNodeDataSource):
+                names += [a.value.node_name]
+
+        return names
+
     # ----------------------------------------------------------------------- #
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
@@ -251,7 +253,6 @@ class DataFrameMethod(BaseModel, PipelineChild):
         self,
         df: AnyFrame,
         # udfs: list[Callable[[...], Union[PolarsExpr, PolarsDataFrame]]] = None,
-        # **named_dfs: dict[str, AnyFrame],
     ) -> Union[AnyFrame]:
         """
         Execute method on provided DataFrame `df`.
@@ -285,8 +286,8 @@ class DataFrameMethod(BaseModel, PipelineChild):
             df = df.to_native()
 
         # Get Function
-        func_name = self.name
-        if self.name is None:
+        func_name = self.func_name
+        if self.func_name is None:
             raise ValueError(
                 "`func_name` must be specified if `sql_expr` is not specified"
             )
@@ -307,8 +308,8 @@ class DataFrameMethod(BaseModel, PipelineChild):
         if f is None:
             raise ValueError(f"Function {func_name} is not available")
 
-        _args = self.args
-        _kwargs = self.kwargs
+        _args = self.func_args
+        _kwargs = self.func_kwargs
 
         # Build log
         func_log = f"df.{func_name}("

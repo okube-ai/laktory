@@ -129,6 +129,16 @@ class BaseDataSink(BaseModel, PipelineChild):
                     return node._root_path / "checkpoints" / f"sink-{self._uuid}"
         return None
 
+    @property
+    def upstream_node_names(self) -> list[str]:
+        """Pipeline node names required to write sink"""
+        return []
+
+    @property
+    def data_sources(self):
+        """Get all sources feeding the sink"""
+        return []
+
     # -------------------------------------------------------------------------------- #
     # CDC                                                                              #
     # -------------------------------------------------------------------------------- #
