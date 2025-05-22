@@ -3,9 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
-from typing import Literal
-from typing import Union
 
+from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
 
@@ -74,47 +73,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     A pipeline may be run manually by using python or the CLI, but it may also
     be deployed and scheduled using one of the supported orchestrators, such as
     a Databricks Delta Live Tables or job.
-
-    Parameters
-    ----------
-    databricks_job:
-        Defines the Databricks Job specifications when DATABRICKS_JOB is
-        selected as the orchestrator. Requires to add the supporting
-        [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/jobs/job_laktory_pl.py)
-        to the stack.
-    databricks_dlt:
-        Defines the Databricks DLT specifications when DATABRICKS_DLT is
-        selected as the orchestrator. Requires to add the supporting
-        [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py)
-        to the stack.
-    dependencies:
-        List of dependencies required to run the pipeline. If Laktory is not
-        provided, it's current version is added to the list.
-    name:
-        Name of the pipeline
-    nodes:
-        List of pipeline nodes. Each node defines a data source, a series
-        of transformations and optionally a sink.
-    orchestrator:
-        Orchestrator used for scheduling and executing the pipeline. The
-        selected option defines which resources are to be deployed.
-        Supported options are:
-
-        - `DATABRICKS_DLT`: When orchestrated through Databricks DLT, each
-          pipeline node creates a DLT table (or view, if no sink is defined).
-          Behind the scenes, `PipelineNodeDataSource` leverages native `dlt`
-          `read` and `read_stream` functions to defined the interdependencies
-          between the tables as in a standard DLT pipeline.
-        - `DATABRICKS_JOB`: When deployed through a Databricks Job, a task
-          is created for each pipeline node and all the required dependencies
-          are set automatically. If a given task (or pipeline node) uses a
-          `PipelineNodeDataSource` as the source, the data will be read from
-          the upstream node sink.
-    udfs:
-        List of user defined functions provided to the transformer.
-    root_path:
-        Location of the pipeline node root used to store logs, metrics and
-        checkpoints.
 
     Examples
     --------
@@ -342,14 +300,43 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     """
 
-    databricks_job: Union[DatabricksJobOrchestrator, None] = None
-    databricks_dlt: Union[DatabricksDLTOrchestrator, None] = None
-    dependencies: list[str] = []
-    name: str
-    nodes: list[PipelineNode]
-    orchestrator: Literal["DATABRICKS_DLT", "DATABRICKS_JOB", None] = None
-    udfs: list[PipelineUDF] = []
-    root_path: str = None
+    dependencies: list[str] = Field(
+        [],
+        description="List of dependencies required to run the pipeline. If Laktory is not provided, it's current version is added to the list.",
+    )
+    name: str = Field(..., description="Name of the pipeline")
+    nodes: list[PipelineNode] = Field(
+        [],
+        description="List of pipeline nodes. Each node defines a data source, a series of transformations and optionally a sink.",
+    )
+    orchestrator: DatabricksJobOrchestrator | DatabricksDLTOrchestrator = Field(
+        None,
+        description="""
+        Orchestrator used for scheduling and executing the pipeline. The
+        selected option defines which resources are to be deployed.
+        Supported options are instances of classes:
+
+        - `DatabricksJobOrchestrator`: When orchestrated through Databricks DLT, each
+          pipeline node creates a DLT table (or view, if no sink is defined).
+          Behind the scenes, `PipelineNodeDataSource` leverages native `dlt`
+          `read` and `read_stream` functions to defined the interdependencies
+          between the tables as in a standard DLT pipeline.
+        - `DatabricksDLTOrchestrator`: When deployed through a Databricks Job, a task
+          is created for each pipeline node and all the required dependencies
+          are set automatically. If a given task (or pipeline node) uses a
+          `PipelineNodeDataSource` as the source, the data will be read from
+          the upstream node sink.
+        """,
+        # discriminator="type",  # discriminator can't be used because BaseModel adds
+        # str to Literal type to support variables
+    )
+    udfs: list[PipelineUDF] = Field(
+        [], description="List of user defined functions provided to the transformer."
+    )
+    root_path: str = Field(
+        None,
+        description="Location of the pipeline node root used to store logs, metrics and checkpoints.",
+    )
 
     @field_validator("root_path", mode="before")
     @classmethod
@@ -361,14 +348,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     @model_validator(mode="before")
     @classmethod
     def assign_name(cls, data: Any) -> Any:
-        for k in ["databricks_dlt", "databricks_job"]:
-            o = data.get(k, None)
-            if o and isinstance(o, dict):
-                # orchestrator as a dict
-                o["name"] = o.get("name", None) or data.get("name", None)
-            elif o:
-                # orchestrator as a model
-                o.name = o.name or o.get("name", None)
+        o = data.get("orchestrator", None)
+        if o and isinstance(o, dict):
+            # orchestrator as a dict
+            o["name"] = o.get("name", None) or data.get("name", None)
+        elif o:
+            # orchestrator as a model
+            o.name = o.name or o.get("name", None)
 
         return data
 
@@ -386,31 +372,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     #                     n.dataframe_backend = n.dataframe_backend or df_backend
     #     return data
 
-    @model_validator(mode="after")
-    def validate_orchestrator(self):
-        if self.orchestrator == "DATABRICKS_JOB":
-            if self.databricks_job is None:
-                raise ValueError(
-                    "databricks_job must be defined if DATABRICKS_JOB orchestrator is selected."
-                )
-            self.databricks_job.update_from_parent()
-
-        if self.orchestrator == "DATABRICKS_DLT":
-            if self.databricks_dlt is None:
-                raise ValueError(
-                    "databricks_job must be defined if DATABRICKS_DLT orchestrator is selected."
-                )
-            self.databricks_dlt.update_from_parent()
-
-        return self
-
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #
 
     @property
-    def child_attribute_names(self):
-        return ["nodes", "databricks_dlt", "databricks_job"]
+    def children_names(self):
+        return ["nodes", "orchestrator"]
 
     # ----------------------------------------------------------------------- #
     # ID                                                                      #
@@ -458,7 +426,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     @property
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline orchestrator is DLT"""
-        return self.orchestrator == "DATABRICKS_DLT"
+        return isinstance(self.orchestrator, DatabricksDLTOrchestrator)
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
@@ -729,11 +697,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
         resources = []
 
-        if self.databricks_job:
-            resources += [self.databricks_job]
-
-        if self.databricks_dlt:
-            resources += [self.databricks_dlt]
+        if self.orchestrator:
+            resources += [self.orchestrator]
 
         return resources
 

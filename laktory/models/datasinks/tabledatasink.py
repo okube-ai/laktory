@@ -124,7 +124,7 @@ class TableDataSink(BaseDataSink):
     # ----------------------------------------------------------------------- #
 
     @property
-    def child_attribute_names(self):
+    def children_names(self):
         return [
             "view_definition",
         ]

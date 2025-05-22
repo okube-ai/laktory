@@ -126,7 +126,7 @@ class PipelineNode(BaseModel, PipelineChild):
     consistent and reliable.
     """,
     )
-    source: DataSourcesUnion = Field(
+    source: DataSourcesUnion | None = Field(
         None, description="Definition of the data source(s)"
     )
     sinks: list[DataSinksUnion] = Field(
@@ -232,7 +232,7 @@ class PipelineNode(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def child_attribute_names(self):
+    def children_names(self):
         return [
             "source",
             "data_sources",

@@ -51,7 +51,7 @@ class BaseChain(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def child_attribute_names(self):
+    def children_names(self):
         return ["nodes"]
 
     # ----------------------------------------------------------------------- #

@@ -334,8 +334,6 @@ class DataQualityExpectation(BaseModel, PipelineChild):
             return _check
 
         if self.type == "AGGREGATE":
-            print("EXPRESSION!", self.expr.expr)
-
             _df = df.select(self.expr.to_expr()).to_pandas()
             #
             # import pyspark.sql.functions as F  # noqa: F401

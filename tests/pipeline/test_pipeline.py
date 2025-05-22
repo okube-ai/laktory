@@ -9,6 +9,7 @@ from laktory import get_spark_session
 from laktory import models
 from laktory._testing import StreamingSource
 from laktory._testing import assert_dfs_equal
+from laktory.constants import CACHE_ROOT
 
 data_dirpath = Path(__file__).parent.parent / "data"
 
@@ -109,6 +110,43 @@ def test_children(tmp_path):
             assert s.parent == pn
             assert s.parent_pipeline_node == pn
             assert s.parent_pipeline == pl
+
+
+def test_update_from_parent():
+    o = models.DatabricksJobOrchestrator(
+        name="pl-job",
+        clusters=[
+            {
+                "name": "node-cluster",
+                "node_type_id": "Standard_DS3_v2",
+                "spark_version": "14.0.x-scala2.12",
+            }
+        ],
+    )
+
+    # Assign As Dict
+    pl = get_pl("")
+    pl.orchestrator = o.model_dump(exclude_unset=True)
+
+    # Test
+    assert pl.orchestrator.parent == pl
+    assert pl.orchestrator.parent_pipeline == pl
+    assert len(pl.orchestrator.parameters) == 3
+    assert (
+        pl.orchestrator.config_file.source == f"{CACHE_ROOT}tmp-{pl.name}-config.json"
+    )
+
+    # Assign As Model
+    pl = get_pl("")
+    pl.orchestrator = o
+
+    # Test
+    assert pl.orchestrator.parent == pl
+    assert pl.orchestrator.parent_pipeline == pl
+    assert len(pl.orchestrator.parameters) == 3
+    assert (
+        pl.orchestrator.config_file.source == f"{CACHE_ROOT}tmp-{pl.name}-config.json"
+    )
 
 
 def test_paths(tmp_path):

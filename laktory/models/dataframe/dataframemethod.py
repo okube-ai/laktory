@@ -158,12 +158,18 @@ class DataFrameMethod(BaseModel, PipelineChild):
         for k, v in self.func_kwargs.items():
             if not isinstance(v, DataFrameMethodArg):
                 self.func_kwargs[k] = DataFrameMethodArg(value=v)
+                # Because we don't set func_kwargs directly,
+                # assign_parent_to_children() is not triggered and we need to set
+                # parent explicitly
+                self.func_kwargs[k].parent = self
 
         for i, v in enumerate(self.func_args):
             if not isinstance(v, DataFrameMethodArg):
                 self.func_args[i] = DataFrameMethodArg(value=v)
-
-        self.update_children()
+                # Because we don't set func_kwargs directly,
+                # assign_parent_to_children() is not triggered and we need to set
+                # parent explicitly
+                self.func_args[i].parent = self
 
         return self
 
@@ -172,7 +178,7 @@ class DataFrameMethod(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def child_attribute_names(self):
+    def children_names(self):
         return [
             # "data_sources",
             "func_args",

@@ -131,6 +131,10 @@ class BaseResource(_BaseModel):
         if data is None:
             return data
 
+        if not isinstance(data, dict):
+            # TODO: Add support if data is a Base Resource instance
+            return data
+
         lookup_existing = data.get("lookup_existing", None)
         if not lookup_existing:
             return data
