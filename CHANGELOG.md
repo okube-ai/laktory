@@ -1,43 +1,52 @@
 # Release History
 ## [0.8.0] - Unreleased
 ### Added
-* Data sources `reader_methods`
-* Data sinks `writer_methods`
-* `DataFrameColumn` class to help define a serializable dataframe schema
-* `DataFrameSchema` class to define a serializable dataframe schema
-* `DataFrameExpr` class to express a DataFrame as SQL query
-* `DataFrameMethod` class to express a DataFrame as a call to a DataFrame API method
-* `DataFrameTransformer` class to express a DataFrame as series of transformations
-* Serializable Data Types to help define dataframe schema
-* NATIVE vs NARHWALS API
+* Narwhals as the core engine for DataFrame manipulations
+* `reader_methods` option for data sources
+* `writer_methods` support for data sinks  
+* `DataFrameColumn`: defines a serializable column in a dataframe schema  
+* `DataFrameSchema`: defines a complete serializable dataframe schema  
+* `DataFrameExpr`: represents a DataFrame as a SQL expression  
+* `DataFrameMethod`: represents a DataFrame as a method call with support for both Narwhals and Native API  
+* `DataFrameTransformer`: represents a DataFrame as a series of chained transformations  
+* `DTypes`: defines a serializable column data type
+* `UnityCatalogDataSource`: reads DataFrame from Unity Catalog 
+* `HiveMetastoreDataSource`: reads DataFrame from Hive Metastore 
 ### Fixed
 * n/a
 ### Updated
-* Polars reader to support avro format
-* Polars reader to support ipc format
-* Polars reader to support iceberg format
-* Polars reader to support pyarrow format
-* Sink/Source table name to support 2 or 3-levels namespace
+* Polars reader to support new formats:  
+  * `avro` 
+  * `ipc`  
+  * `iceberg`  
+  * `pyarrow`  
+* Support for 2- and 3-level namespace in source/sink `table_name` in addition to explicit `catalog_name` and `schema_name` definition
 ### Breaking changes
-* Refactored data sources to Narwhals for all DataFrame operations
-* Changed DataFrame backend type to Enum
-* Split `TableDataSource` into `UnityCatalogDataSource` and `HiveMetastoreDataSource` 
-* Split `TableDataSink` into `UnityCatalogDataSink` and `HiveMetastoreDataSink` 
-* Renamed `MemoryDataSource` to `DataFrameDataSource`
-* `InferColumnTypes` with is no longer enabled by default when reading data stream
-* `spark session` needs to be registered at the module level instead of being passed to function calls
-* Deprecated `DataProducer` class
-* Deprecated `DataEvent` class
-* Deprecated data sinks `cluster_by` (now supported with `writer_methods`)
-* Renamed data sinks `checkpoint_location` to `checkpoint_path`
-* Renamed data sinks `reader_options` to `reader_kwargs`
-* Renamed `DataFrameColumnExpression` to `DataFrameColumnExpr`
-* Replaced `PolarsChain` and `SparkChain` with `DataFrameTransformer`
-* Replaced `PolarsChainNode` and `SparkChainNode` with `DataFrameMethod` and  `DataFrameExpr` classes
-* Pipeline orchestrator declaration
-* View can only be defined in a sink (not in a transformer)
-* Removed "Layers" concept in pipeline node
-* Removed custom functions in pipeline node (with_columns, drop_duplicates, etc.)
+* Data sources:
+  * Output a Narwhals DataFrame (as opposed to Spark/Polars DataFrame)
+  * No longer infer column types by default when reading streams
+  * Renamed `reader_options` to `reader_kwargs`
+  * Renamed `MemoryDataSource` to `DataFrameDataSource`
+  * `TableDataSource` acts as a parent abstract class for `UnityCatalogDataSource` and `HiveMetastoreDataSource`
+* Data sinks:
+  * Accept a Narwhals DataFrame (as opposed to Spark/Polars DataFrame)
+  * Renamed `checkpoint_location` to `checkpoint_path`
+  * Renamed `writer_options` to `writer_kwargs`
+  * Deprecated `cluster_by` option (now supported with `writer_methods`)
+* `DataFrameTransformer` (previously Spark/PolarsChain):
+  * Accept and return Narwhals DataFrame
+  * Can no longer be used for VIEW creation
+  * Replaced `PolarsChainNode` and `SparkChainNode` with `DataFrameMethod` and  `DataFrameExpr` classes
+* PipelineNode:
+  * Removed "Layers" concept in pipeline node
+  * Removed custom functions such as `with_columns`, `drop_duplicates`, etc.
+* Pipeline:
+  * Orchestrator declaration refactored
+* Renamed `DataFrameColumnExpression` to `DataFrameColumnExpr` 
+* `SparkSession` must now be registered at the module level (not passed to function calls)
+* Deprecated classes:
+  * `DataProducer`
+  * `DataEvent`
 
 ## [0.7.4] - Unreleased
 ### Added
