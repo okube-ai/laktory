@@ -3,10 +3,21 @@
 ### Added
 * Data sources `reader_methods`
 * Data sinks `writer_methods`
+* `DataFrameColumn` class to help define a serializable dataframe schema
+* `DataFrameSchema` class to define a serializable dataframe schema
+* `DataFrameExpr` class to express a DataFrame as SQL query
+* `DataFrameMethod` class to express a DataFrame as a call to a DataFrame API method
+* `DataFrameTransformer` class to express a DataFrame as series of transformations
+* Serializable Data Types to help define dataframe schema
+* NATIVE vs NARHWALS API
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Polars reader to support avro format
+* Polars reader to support ipc format
+* Polars reader to support iceberg format
+* Polars reader to support pyarrow format
+* Sink/Source table name to support 2 or 3-levels namespace
 ### Breaking changes
 * Refactored data sources to Narwhals for all DataFrame operations
 * Changed DataFrame backend type to Enum
@@ -20,6 +31,13 @@
 * Deprecated data sinks `cluster_by` (now supported with `writer_methods`)
 * Renamed data sinks `checkpoint_location` to `checkpoint_path`
 * Renamed data sinks `reader_options` to `reader_kwargs`
+* Renamed `DataFrameColumnExpression` to `DataFrameColumnExpr`
+* Replaced `PolarsChain` and `SparkChain` with `DataFrameTransformer`
+* Replaced `PolarsChainNode` and `SparkChainNode` with `DataFrameMethod` and  `DataFrameExpr` classes
+* Pipeline orchestrator declaration
+* View can only be defined in a sink (not in a transformer)
+* Removed "Layers" concept in pipeline node
+* Removed custom functions in pipeline node (with_columns, drop_duplicates, etc.)
 
 ## [0.7.4] - Unreleased
 ### Added
