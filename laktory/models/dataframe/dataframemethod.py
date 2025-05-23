@@ -261,10 +261,6 @@ class DataFrameMethod(BaseModel, PipelineChild):
         ----------
         df:
             Input dataframe
-        udfs:
-            User-defined functions
-        named_dfs:
-            Other DataFrame(s) to be passed to the method.
 
         Returns
         -------

@@ -1,4 +1,3 @@
-from .dataframebackendmethod import DataFrameBackendMethod
 from .dataframecolumn import DataFrameColumn
 from .dataframecolumnexpr import DataFrameColumnExpr
 from .dataframeexpr import DataFrameExpr

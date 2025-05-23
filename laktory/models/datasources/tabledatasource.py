@@ -5,8 +5,8 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
-from laktory.models.dataframe.dataframebackendmethod import DataFrameBackendMethod
 from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory.models.readerwritermethod import ReaderWriterMethod
 
 logger = get_logger(__name__)
 
@@ -24,7 +24,7 @@ class TableDataSource(BaseDataSource):
         ...,
         description="Source table name. Also supports fully qualified name (`{catalog}.{schema}.{table}`). In this case, `catalog_name` and `schema_name` arguments are ignored.",
     )
-    reader_methods: list[DataFrameBackendMethod] = Field(
+    reader_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend reader methods."
     )
 

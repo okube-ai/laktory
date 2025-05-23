@@ -18,6 +18,8 @@ import laktory.yaml
 from ._logger import get_logger
 from ._settings import Settings
 from .sqlparser import SQLParser
+from .udf.registry import UDFRegistry
+from .udf.registry import register_udf
 from .version import show_version_info
 
 

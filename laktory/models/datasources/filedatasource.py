@@ -13,9 +13,9 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
-from laktory.models.dataframe.dataframebackendmethod import DataFrameBackendMethod
 from laktory.models.dataframe.dataframeschema import DataFrameSchema
 from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory.models.readerwritermethod import ReaderWriterMethod
 
 logger = get_logger(__name__)
 
@@ -121,7 +121,7 @@ class FileDataSource(BaseDataSource):
         description="Path for schema inference when reading data as a stream. If `None`, parent directory of `path` is used.",
     )
     type: Literal["FILE"] = Field("FILE", frozen=True, description="Source Type")
-    reader_methods: list[DataFrameBackendMethod] = Field(
+    reader_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend reader methods."
     )
     # schema_overrides: DataFrameSchema = Field(None, validation_alias="schema")
@@ -263,15 +263,15 @@ class FileDataSource(BaseDataSource):
 
         if self.schema_definition:
             methods += [
-                DataFrameBackendMethod(
+                ReaderWriterMethod(
                     name="schema", args=[self.schema_definition.to_spark()]
                 )
             ]
 
-        methods += [DataFrameBackendMethod(name="format", args=[fmt])]
+        methods += [ReaderWriterMethod(name="format", args=[fmt])]
 
         if options:
-            methods += [DataFrameBackendMethod(name="options", kwargs=options)]
+            methods += [ReaderWriterMethod(name="options", kwargs=options)]
 
         for m in self.reader_methods:
             methods += [m]
