@@ -12,6 +12,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory._registries.funcsregistry import FuncsRegistry
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
@@ -249,11 +250,7 @@ class DataFrameMethod(BaseModel, PipelineChild):
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
 
-    def execute(
-        self,
-        df: AnyFrame,
-        # udfs: list[Callable[[...], Union[PolarsExpr, PolarsDataFrame]]] = None,
-    ) -> Union[AnyFrame]:
+    def execute(self, df: AnyFrame) -> Union[AnyFrame]:
         """
         Execute method on provided DataFrame `df`.
 
@@ -261,10 +258,6 @@ class DataFrameMethod(BaseModel, PipelineChild):
         ----------
         df:
             Input dataframe
-        udfs:
-            User-defined functions
-        named_dfs:
-            Other DataFrame(s) to be passed to the method.
 
         Returns
         -------
@@ -273,11 +266,6 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
         # Get Backend
         backend = DataFrameBackends.from_df(df)
-        #
-        # if udfs is None:
-        #     udfs = []
-        # udfs = {f.__name__: f for f in udfs}
-        #
 
         # Convert to Narwhals
         if not isinstance(df, AnyFrame):
@@ -286,33 +274,37 @@ class DataFrameMethod(BaseModel, PipelineChild):
             df = df.to_native()
 
         # Get Function
+        namespace = None
         func_name = self.func_name
-        if self.func_name is None:
-            raise ValueError(
-                "`func_name` must be specified if `sql_expr` is not specified"
-            )
+        func_full_name = func_name
+        if "." in func_name:
+            namespace, func_name = func_name.split(".")
+        df_as_input = False
 
         # Get from UDFs
-        # f = udfs.get(func_name, None)
-        f = None
+        registry = FuncsRegistry()
+        try:
+            f = registry.get(func_name, namespace=namespace)
+            df_as_input = True
+        except KeyError:
+            f = None
 
         # Get from built-in narwhals and narwhals extension (including Laktory) functions
         if f is None:
             # Get function from namespace extension
-            if "." in func_name:
-                vals = func_name.split(".")
-                f = getattr(getattr(df, vals[0]), vals[1], None)
+            if namespace:
+                f = getattr(getattr(df, namespace), func_name, None)
             else:
                 f = getattr(df, func_name, None)
 
         if f is None:
-            raise ValueError(f"Function {func_name} is not available")
+            raise ValueError(f"Function {func_full_name} is not available")
 
         _args = self.func_args
         _kwargs = self.func_kwargs
 
         # Build log
-        func_log = f"df.{func_name}("
+        func_log = f"df.{func_full_name}("
         func_log += ",".join([a.signature() for a in _args])
         func_log += ",".join([f"{k}={a.signature()}" for k, a in _kwargs.items()])
         func_log += ")"
@@ -320,6 +312,8 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
         # Build args
         args = []
+        if df_as_input:
+            args += [df]
         for i, _arg in enumerate(_args):
             args += [_arg.eval(backend=backend)]
 

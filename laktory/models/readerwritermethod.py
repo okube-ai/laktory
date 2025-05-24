@@ -10,7 +10,7 @@ from laktory.models.basemodel import BaseModel
 logger = get_logger(__name__)
 
 
-class DataFrameBackendMethod(BaseModel):
+class ReaderWriterMethod(BaseModel):
     """
     DataFrame Backend Method
 

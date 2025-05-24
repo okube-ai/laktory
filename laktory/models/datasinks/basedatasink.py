@@ -11,9 +11,9 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
-from laktory.models.dataframe.dataframebackendmethod import DataFrameBackendMethod
 from laktory.models.datasinks.mergecdcoptions import DataSinkMergeCDCOptions
 from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.readerwritermethod import ReaderWriterMethod
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
@@ -86,7 +86,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         description="Keyword arguments passed directly to dataframe backend writer."
         "Passed to `.options()` method when using PySpark.",
     )
-    writer_methods: list[DataFrameBackendMethod] = Field(
+    writer_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend writer methods."
     )
 
@@ -305,18 +305,18 @@ class BaseDataSink(BaseModel, PipelineChild):
 
         options, fmt = self._get_spark_kwargs(mode=mode, is_streaming=is_streaming)
 
-        methods += [DataFrameBackendMethod(name="format", args=[fmt])]
+        methods += [ReaderWriterMethod(name="format", args=[fmt])]
 
         if is_streaming:
-            methods += [DataFrameBackendMethod(name="outputMode", args=[mode])]
+            methods += [ReaderWriterMethod(name="outputMode", args=[mode])]
             methods += [
-                DataFrameBackendMethod(name="trigger", kwargs={"availableNow": True})
+                ReaderWriterMethod(name="trigger", kwargs={"availableNow": True})
             ]
         else:
-            methods += [DataFrameBackendMethod(name="mode", args=[mode])]
+            methods += [ReaderWriterMethod(name="mode", args=[mode])]
 
         if options:
-            methods += [DataFrameBackendMethod(name="options", kwargs=options)]
+            methods += [ReaderWriterMethod(name="options", kwargs=options)]
 
         for m in self.writer_methods:
             methods += [m]

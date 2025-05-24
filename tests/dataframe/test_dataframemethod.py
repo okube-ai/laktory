@@ -1,25 +1,13 @@
-# import importlib
-# import os
-# import sys
-#
-# import numpy as np
-
-# from pyspark.sql import SparkSession
-# from pyspark.sql import functions as F
-# from pyspark.sql import types as T
 import polars as pl
 import pytest
 
 from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
 from laktory._testing import get_df1
+from laktory.custom import func
 from laktory.enums import DataFrameBackends
 from laktory.models import DataFrameDataSource
 from laktory.models import DataFrameMethod
-
-# from laktory import models
-# from laktory.exceptions import MissingColumnError
-# from laktory.exceptions import MissingColumnsError
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
@@ -117,68 +105,27 @@ def test_arg_sql_expr(backend):
     )
 
 
-#
-# def atest_exceptions():
-#     # TODO: Re-enable when coalesce is ready
-#     return
-#
-#     df = df0.select(df0.columns)
-#
-#     # Input missing - missing not allowed
-#     sc = models.SparkChain(
-#         nodes=[
-#             {
-#                 "column": {"name": "cos_x", "type": "double"},
-#                 "func_name": "cos",
-#                 "func_args": ["col('y')"],
-#                 "allow_missing_column_args": False,
-#             },
-#         ]
-#     )
-#     with pytest.raises(MissingColumnError):
-#         df = sc.execute(df)
-#
-#     # Input missing - missing allowed
-#     sc = models.SparkChain(
-#         nodes=[
-#             {
-#                 "column": {"name": "xy", "type": "double"},
-#                 "func_name": "coalesce",
-#                 "func_args": ["col('x')", "col('y')"],
-#                 "allow_missing_column_args": True,
-#             },
-#         ]
-#     )
-#     df = sc.execute(df)
-#     assert "xy" in df.columns
-#
-#     # All inputs missing
-#     sc = models.SparkChain(
-#         nodes=[
-#             {
-#                 "column": {"name": "xy", "type": "double"},
-#                 "func_name": "coalesce",
-#                 "func_args": ["col('z')", "col('y')"],
-#                 "allow_missing_column_args": True,
-#             },
-#         ]
-#     )
-#     with pytest.raises(MissingColumnsError):
-#         df = sc.execute(df)
-#
-#
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_udf(backend):
+    df0 = get_df0(backend)
 
-if __name__ == "__main__":
-    import polars as pl
+    @func()
+    def my_func(df, cols):  # noqa: F811
+        return df.select(cols)
 
-    from laktory import models
+    @func(namespace="here")
+    def my_func(df):  # noqa: F811
+        return df.select("x1")
 
-    df0 = pl.DataFrame({"x": [1.2, 2.1, 2.0, 3.7]})
-
-    node = models.DataFrameMethod(
-        name="with_columns",
-        kwargs={"xr": "nw.col('x').round().cast(nw.String())"},
+    node = DataFrameMethod(
+        func_name="my_func",
+        func_args=[["id", "x1"]],
     )
     df = node.execute(df0)
+    assert df.columns == ["id", "x1"]
 
-    print(df)
+    node = DataFrameMethod(
+        func_name="here.my_func",
+    )
+    df = node.execute(df0)
+    assert df.columns == ["x1"]

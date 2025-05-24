@@ -36,23 +36,24 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 
 
-class PipelineUDF(BaseModel):
-    """
-    Pipeline User Define Function
-
-    Parameters
-    ----------
-    module_name:
-        Name of the module from which the function needs to be imported.
-    function_name:
-        Name of the function.
-    module_path:
-        Workspace filepath of the module, if not in the same directory as the pipeline notebook
-    """
-
-    module_name: str
-    function_name: str
-    module_path: str = None
+# class PipelineUDF(BaseModel):
+#     # TODO: Revisit to allow for automatic registration of UDF
+#     """
+#     Pipeline User Define Function
+#
+#     Parameters
+#     ----------
+#     module_name:
+#         Name of the module from which the function needs to be imported.
+#     function_name:
+#         Name of the function.
+#     module_path:
+#         Workspace filepath of the module, if not in the same directory as the pipeline notebook
+#     """
+#
+#     module_name: str
+#     function_name: str
+#     module_path: str = None
 
 
 # --------------------------------------------------------------------------- #
@@ -330,9 +331,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         # discriminator="type",  # discriminator can't be used because BaseModel adds
         # str to Literal type to support variables
     )
-    udfs: list[PipelineUDF] = Field(
-        [], description="List of user defined functions provided to the transformer."
-    )
     root_path: str = Field(
         None,
         description="Location of the pipeline node root used to store logs, metrics and checkpoints.",
@@ -554,7 +552,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     def execute(
         self,
-        udfs=None,
         write_sinks=True,
         full_refresh: bool = False,
         named_dfs: dict[str, AnyFrame] = None,
@@ -566,8 +563,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
         Parameters
         ----------
-        udfs:
-            List of user-defined functions used in transformation chains.
         write_sinks:
             If `False` writing of node sinks will be skipped
         full_refresh:
@@ -583,7 +578,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 named_dfs = {}
 
             node.execute(
-                udfs=udfs,
                 write_sinks=write_sinks,
                 full_refresh=full_refresh,
                 named_dfs=named_dfs,

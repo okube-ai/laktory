@@ -171,11 +171,7 @@ class DataFrameExpr(BaseModel, PipelineChild):
         #
         # return expr
 
-    def to_df(
-        self,
-        dfs: dict[str, AnyFrame],
-        # udfs: list[Callable[[...], Union[PolarsExpr, PolarsDataFrame]]] = None,
-    ) -> AnyFrame:
+    def to_df(self, dfs: dict[str, AnyFrame]) -> AnyFrame:
         """
         Execute expression on provided DataFrame `dfs`.
 
@@ -183,8 +179,6 @@ class DataFrameExpr(BaseModel, PipelineChild):
         ----------
         dfs:
             Input dataframes
-        udfs:
-            User-defined functions
 
         Returns
         -------
@@ -204,11 +198,6 @@ class DataFrameExpr(BaseModel, PipelineChild):
 
         # Get Backend
         backend = DataFrameBackends.from_df(df0)
-        #
-        # if udfs is None:
-        #     udfs = []
-        # udfs = {f.__name__: f for f in udfs}
-        #
 
         if backend == DataFrameBackends.POLARS:
             import polars as pl
@@ -233,19 +222,6 @@ class DataFrameExpr(BaseModel, PipelineChild):
 
         elif backend == DataFrameBackends.PYSPARK:
             _spark = df0.sparkSession
-
-            # # Get pipeline node if executed from pipeline
-            # pipeline_node = self.parent_pipeline_node
-            #
-            # # Set df id (to avoid temp view with conflicting names)
-            # df_id = "df"
-            # if pipeline_node:
-            #     df_id = f"df_{pipeline_node.name}"
-
-            # df.createOrReplaceTempView(df_id)
-            # for source in self.data_sources:
-            #     _df = source.read(spark=_spark)
-            #     _df.createOrReplaceTempView(f"nodes__{source.node.name}")
 
             # Create views
             # TODO: Using parametrized queries would be ideal, but it is not compatible

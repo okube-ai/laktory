@@ -3,7 +3,6 @@ import shutil
 import warnings
 from pathlib import Path
 from typing import Any
-from typing import Callable
 
 import narwhals as nw
 from pydantic import Field
@@ -497,7 +496,6 @@ class PipelineNode(BaseModel, PipelineChild):
     def execute(
         self,
         apply_transformer: bool = True,
-        udfs: list[Callable] = None,
         write_sinks: bool = True,
         full_refresh: bool = False,
         named_dfs: dict[str, AnyDataFrame] = None,
@@ -514,8 +512,6 @@ class PipelineNode(BaseModel, PipelineChild):
         ----------
         apply_transformer:
             Flag to apply transformer in the execution
-        udfs:
-            User-defined functions
         write_sinks:
             Flag to include writing sink in the execution
         full_refresh:
@@ -551,7 +547,7 @@ class PipelineNode(BaseModel, PipelineChild):
             named_dfs = {}
         if apply_transformer and self.transformer:
             self._stage_df = self.transformer.execute(
-                self._stage_df, udfs=udfs, named_dfs=named_dfs
+                self._stage_df, named_dfs=named_dfs
             )
 
         # Check expectations
