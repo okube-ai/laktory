@@ -51,7 +51,7 @@ polars = [
 spark = [
     "delta-spark",
     "pyarrow",
-    "pyspark[connect]",
+    "pyspark[connect]<4.0",
     "setuptools; python_version >= '3.12'"
 ]
 dev = [
