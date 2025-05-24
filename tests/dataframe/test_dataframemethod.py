@@ -117,6 +117,21 @@ def test_arg_sql_expr(backend):
     )
 
 
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_udf(backend):
+    df0 = get_df0(backend)
+
+    def select2(df, *cols):
+        return df.select(cols)
+
+    node = DataFrameMethod(
+        func_name="select",
+        func_args=["id"],
+    )
+    df = node.execute(df0)
+    assert df.columns == ["id"]
+
+
 #
 # def atest_exceptions():
 #     # TODO: Re-enable when coalesce is ready
@@ -167,18 +182,3 @@ def test_arg_sql_expr(backend):
 #         df = sc.execute(df)
 #
 #
-
-if __name__ == "__main__":
-    import polars as pl
-
-    from laktory import models
-
-    df0 = pl.DataFrame({"x": [1.2, 2.1, 2.0, 3.7]})
-
-    node = models.DataFrameMethod(
-        name="with_columns",
-        kwargs={"xr": "nw.col('x').round().cast(nw.String())"},
-    )
-    df = node.execute(df0)
-
-    print(df)
