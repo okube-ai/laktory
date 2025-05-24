@@ -202,7 +202,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
 
         # Table grants
         resources += self.get_grants_additional_resources(
-            object={"table" : f"${{resources.{self.resource_name}.id}}"}
+            object={"table": f"${{resources.{self.resource_name}.id}}"}
         )
         return resources
 

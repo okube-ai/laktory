@@ -84,7 +84,7 @@ def sql_expr(sql: str) -> pl.Expr:
     # > col("data").struct.field_by_name(close)()
     exp = pl.Expr.laktory.sql_expr("data.close > 5.0")
     print(exp)
-    # > [(col("data").struct.field_by_name(close)()) > (dyn float: 5.0)]
+    # > [(col("data").struct.field_by_name(close)()) > (dyn float: 5)]
     ```
     """
     try:

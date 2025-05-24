@@ -1,6 +1,6 @@
 # Release History
 
-## [0.7.2] - Unreleased
+## [0.7.4] - Unreleased
 ### Added
 * n/a
 ### Fixed
@@ -9,6 +9,18 @@
 * n/a
 ### Breaking changes
 * n/a
+
+## [0.7.3] - 2025-04-16
+### Added
+* Support for sinkless Pipeline nodes in Databricks Job Orchestrator
+### Updated
+* `BaseModel.model_validate_yaml` and `BaseModel.model_validate_json_file` now return correct type for intellisense. [[#411](https://github.com/okube-ai/laktory/issues/411)]
+
+## [0.7.2] - 2025-04-03
+### Added
+* Lookup warehouses by `name` for Terraform backend
+* Databricks `Permissions` declaration from the stack root. 
+* Databricks `Permissions` support for `authorization`. [[#405](https://github.com/okube-ai/laktory/issues/405)]
 
 ## [0.7.1] - 2025-03-20
 ### Fixed

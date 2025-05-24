@@ -57,6 +57,10 @@ nodes:
           renames:
             symbol2: symbol
 
+- name: slv_stock_prices_tmp
+  source:
+    node_name: slv_stock_prices
+
 - name: slv_stock_aapl
   source:
     node_name: slv_stock_prices
@@ -79,7 +83,7 @@ nodes:
 
 - name: gld_stock_prices
   source:
-    node_name: slv_stock_prices
+    node_name: slv_stock_prices_tmp
   sinks:
   - format: DELTA
     mode: OVERWRITE
