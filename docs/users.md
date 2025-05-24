@@ -4,19 +4,15 @@ their lakehouses with confidence.
 
 <img src="/images/energir.jpg" alt="energir" style="height:125px;"/>
 
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc pretium, sem non fringilla
-malesuada, turpis erat sagittis felis, eget tincidunt ante magna eu enim."
+"Using Laktory to build, deploy and version our Databricks workspace artifacts has been
+a game changer. Deploying workflows was always a pain point for our team as we 
+maintained lengthy json code and used in-house scripting for deployment. Using YAML to
+determine node dependencies, we no longer have to deal with complex json workflow code.
+With Laktory, we can focus on our pipelines’ transformation logic and leave all the
+boilerplate tasks up to the framework. This in turn streamlines our pipeline 
+development and increases our sprint velocity."
 
-Roberto Bacos, Energir, Manager Business Intelligence & Analytics 
-
----
-
-<img src="/images/ieso.png" alt="ieso" style="height:125px;"/>
-
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc pretium, sem non fringilla
-malesuada, turpis erat sagittis felis, eget tincidunt ante magna eu enim."
-
-Goce Jankuloski, IESO, Lead Data Scientist
+Andy Paul, Energir, Data Architect
 
 ---
 
@@ -46,7 +42,8 @@ Bijil Subhash, Nimblestax, Founder
 
 <img src="/images/taiga.png" alt="taiga" style="height:125px;"/>
 
-"Laktory has proven instrumental in expediting the establishment of our data science platform, without compromising on security or performance."
+"Laktory has proven instrumental in expediting the establishment of our data science 
+platform, without compromising on security or performance."
 
 Gabriel Bernatchez, CTO, Taiga
 

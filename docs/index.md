@@ -67,14 +67,12 @@ quality expectations at both row and aggregate levels, ensuring that only
 trusted data reaches production analytics. Invalid records can trigger pipline
 failure, be dropped, or automatically quarantined for later review.
 
-
 ## Who is using it?
 A growing number of [businesses](users.md) rely on Laktory to build, deploy, and scale 
 their lakehouses with confidence.
 
 <img src="/images/energir.jpg" alt="energir" style="height:75px; margin-right:24px;"/> 
-<img src="/images/ieso.png" alt="ieso" style="height:75px; margin-right:24px;"/> 
-<img src="/images/ezbi.png" alt="ieso" style="height:75px; margin-right:36px;"/> 
+<img src="/images/ezbi.png" alt="ezbi" style="height:75px; margin-right:36px;"/> 
 <img src="/images/nimblestax.png" alt="mimblestax" style="height:75px; margin-right:24px;"/> 
 <img src="/images/taiga.png" alt="taiga" style="height:75px; margin-right:24px;"/> 
 
