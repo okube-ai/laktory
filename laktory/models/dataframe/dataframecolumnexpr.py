@@ -112,12 +112,6 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
     def to_expr(self) -> nw.Expr | "pl.Expr" | "F.Column":
         """Column expression expressed as DataFrame API object"""
 
-        # # Adding udfs to global variables
-        # if udfs is None:
-        #     udfs = {}
-        # for k, v in udfs.items():
-        #     globals()[k] = v
-
         _value = self.expr.replace("\n", " ")
 
         if self.df_api == "NARWHALS":
@@ -165,9 +159,5 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
                 raise ValueError(
                     f"`dataframe_backend` '{self.df_backend}' is not supported."
                 )
-        #
-        # # Cleaning up global variables
-        # for k, v in udfs.items():
-        #     del globals()[k]
 
         return expr

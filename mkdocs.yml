@@ -140,8 +140,6 @@ nav:
       - Data Transformer: concepts/transformer.md
       - Change Data Capture: concepts/cdc.md
       - Data Quality: concepts/dataquality.md
-      - Data Event: concepts/dataevent.md
-      - DataFrames: concepts/dataframes.md
       - Spark Extension: concepts/spark.md
     - DataOps:
       - DataOps: concepts/dataops.md
@@ -163,8 +161,6 @@ nav:
   - API Reference:
     - Models:
 #      - BaseModel: api/models/basemodel.md
-#      - DataEventHeader: api/models/dataeventheader.md
-#      - DataEvent: api/models/dataevent.md
       - DataFrame:
         - DataFrameColumn: api/models/dataframe/dataframecolumn.md
         - DataFrameMethod: api/models/dataframe/dataframemethod.md
@@ -172,8 +168,6 @@ nav:
         - DataFrameSchema: api/models/dataframe/dataframeschema.md
         - DataFrameTransformer: api/models/dataframe/dataframetransformer.md
       - DataFrameBackendMethod: api/models/dataframebackendmethod.md
-#      - DataFrameColumnExpression: api/models/dataframecolumnexpression.md
-#      - DataProducer: api/models/dataproducer.md
       - DataTypes: api/models/datatypes.md
       - DataSinks:
         - FileDataSink: api/models/datasinks/file.md
@@ -257,6 +251,7 @@ nav:
 #        - PolarsChain: api/models/transformers/polarschain.md
 #        - SparkChain: api/models/transformers/sparkchain.md
     - Types: api/types.md
+    - Custom: api/custom.md
     - CLI: api/cli.md
     - RecursiveLoader: api/recursiveloader.md
     - SQLParser: api/sqlparser.md

@@ -10,5 +10,6 @@ from .pipeline.orchestrators.databricksdltorchestrator import DatabricksDLTOrche
 from .pipeline.orchestrators.databricksjoborchestrator import DatabricksJobOrchestrator
 from .pipeline.pipeline import Pipeline
 from .pipeline.pipelinenode import PipelineNode
+from .readerwritermethod import ReaderWriterMethod
 from .resources import *
 from .stacks import *

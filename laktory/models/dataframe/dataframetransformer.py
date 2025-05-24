@@ -89,7 +89,7 @@ class DataFrameTransformer(BaseModel, PipelineChild):
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
 
-    def execute(self, df, udfs=None, named_dfs=None) -> AnyFrame:
+    def execute(self, df, named_dfs=None) -> AnyFrame:
         """
         Execute transformation nodes on provided DataFrame `df`
 
@@ -97,8 +97,6 @@ class DataFrameTransformer(BaseModel, PipelineChild):
         ----------
         df:
             Input dataframe
-        udfs:
-            User-defined functions
         named_dfs:
             Other DataFrame(s) to be passed to the method.
 
@@ -118,7 +116,6 @@ class DataFrameTransformer(BaseModel, PipelineChild):
             )
 
             if isinstance(node, DataFrameMethod):
-                # TODO: Add udfs
                 df = node.execute(df)
             elif isinstance(node, DataFrameExpr):
                 dfs = {}
