@@ -6,8 +6,12 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import model_validator
 
+from laktory.models.basemodel import ModelMetaclass
 
-class BaseChild(BaseModel):
+
+# BaseChild must share the same metaclass as BaseModel for intellisense to work
+# properly.
+class BaseChild(BaseModel, metaclass=ModelMetaclass):
     model_config = ConfigDict(
         extra="forbid",
         validate_assignment=True,
