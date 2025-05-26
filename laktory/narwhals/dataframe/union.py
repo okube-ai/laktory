@@ -1,7 +1,9 @@
-import polars as pl
+import narwhals as nw
+
+from laktory.typing import AnyFrame
 
 
-def union(df: pl.DataFrame, other: pl.DataFrame) -> pl.DataFrame:
+def union(df: AnyFrame, others: AnyFrame | list[AnyFrame]) -> AnyFrame:
     """
     Return a new DataFrame containing the union of rows in this and another
     DataFrame.
@@ -17,6 +19,7 @@ def union(df: pl.DataFrame, other: pl.DataFrame) -> pl.DataFrame:
     --------
     ```py
     import polars as pl
+    import narwhals as nw
 
     import laktory  # noqa: F401
 
@@ -27,6 +30,7 @@ def union(df: pl.DataFrame, other: pl.DataFrame) -> pl.DataFrame:
             "tstamp": ["2023-09-01", "2023-09-02"],
         }
     )
+    df0 = nw.from_native()
 
     df = df0.laktory.union(df0)
     print(df.glimpse(return_as_string=True))
@@ -39,4 +43,6 @@ def union(df: pl.DataFrame, other: pl.DataFrame) -> pl.DataFrame:
     '''
     ```
     """
-    return pl.concat([df, other])
+    if not isinstance(others, (list, tuple, set)):
+        others = [others]
+    return nw.concat([df] + others)

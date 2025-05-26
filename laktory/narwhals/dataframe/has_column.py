@@ -1,9 +1,9 @@
 import re
 
-import polars as pl
+from laktory.typing import AnyFrame
 
 
-def has_column(df: pl.DataFrame, col: str) -> bool:
+def has_column(df: AnyFrame, col: str) -> bool:
     """
     Check if column `col` exists in `df`
 
@@ -24,6 +24,7 @@ def has_column(df: pl.DataFrame, col: str) -> bool:
 
     ```py
     import polars as pl
+    import narwhals as nw
 
     import laktory  # noqa: F401
 
@@ -42,6 +43,7 @@ def has_column(df: pl.DataFrame, col: str) -> bool:
             ],
         }
     )
+    df = nw.from_native(df)
 
     print(df.laktory.has_column("symbol"))
     # > False
