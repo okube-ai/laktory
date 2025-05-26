@@ -4,6 +4,7 @@ from typing import Any
 from typing import Literal
 
 import narwhals as nw
+from narwhals import Expr
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -14,7 +15,6 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframecolumnexpr import DataFrameColumnExpr
 from laktory.models.dataquality.check import DataQualityCheck
 from laktory.models.pipeline.pipelinechild import PipelineChild
-from laktory.typing import AnyDataFrameColumn
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
@@ -153,17 +153,17 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def pass_filter(self) -> AnyDataFrameColumn | None:
+    def pass_filter(self) -> Expr | None:
         """Expression representing all rows meeting the expectation."""
         return self.expr.to_expr()
 
     @property
-    def fail_filter(self) -> AnyDataFrameColumn | None:
+    def fail_filter(self) -> Expr | None:
         """Expression representing all rows not meeting the expectation."""
         return ~self.expr.to_expr()
 
     @property
-    def keep_filter(self) -> AnyDataFrameColumn | None:
+    def keep_filter(self) -> Expr | None:
         """
         Expression representing all rows to keep, considering both the
         expectation and the selected action.
@@ -179,7 +179,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
         return self.pass_filter
 
     @property
-    def quarantine_filter(self) -> AnyDataFrameColumn | None:
+    def quarantine_filter(self) -> Expr | None:
         """
         Expression representing all rows to quarantine, considering both the
         expectation and the selected action.

@@ -2,8 +2,7 @@ from pydantic import Field
 
 from laktory._logger import get_logger
 from laktory.models.datasources.basedatasource import BaseDataSource
-from laktory.polars import PolarsDataFrame
-from laktory.spark import SparkDataFrame
+from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
 
@@ -91,7 +90,7 @@ class PipelineNodeDataSource(BaseDataSource):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _read_spark(self) -> SparkDataFrame:
+    def _read_spark(self) -> AnyFrame:
         stream_to_batch = not self.as_stream and self.node.source.as_stream
         is_dlt = False
 
@@ -132,7 +131,7 @@ class PipelineNodeDataSource(BaseDataSource):
 
         return df
 
-    def _read_polars(self) -> PolarsDataFrame:
+    def _read_polars(self) -> AnyFrame:
         # Read from node output DataFrame (if available)
         if self.node.output_df is not None:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
