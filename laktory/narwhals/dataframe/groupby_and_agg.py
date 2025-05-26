@@ -1,11 +1,8 @@
-from typing import Any
-
-import polars as pl
+import narwhals as nw
 
 from laktory._logger import get_logger
-
-# from laktory.models.transformers.basechainnode import ChainNodeColumn
-
+from laktory.models.dataframe.dataframecolumnexpr import DataFrameColumnExpr
+from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
 
@@ -13,8 +10,8 @@ logger = get_logger(__name__)
 def groupby_and_agg(
     df,
     groupby_columns: list[str] = None,
-    agg_expressions: list[Any] = None,
-) -> pl.DataFrame:
+    agg_expressions: list[DataFrameColumnExpr | str | nw.Expr] = None,
+) -> AnyFrame:
     """
     Apply a groupby and create aggregation columns.
 
@@ -31,6 +28,7 @@ def groupby_and_agg(
     --------
     ```py
     import polars as pl
+    import narwhals as nw
 
     import laktory  # noqa: F401
 
@@ -41,14 +39,12 @@ def groupby_and_agg(
             "tstamp": ["2023-09-01", "2023-09-02"],
         }
     )
+    df0 = nw.from_native(df0)
 
     df = df0.laktory.groupby_and_agg(
         groupby_columns=["symbol"],
         agg_expressions=[
-            {
-                "name": "mean_price",
-                "expr": "pl.col('price').mean()",
-            },
+            "nw.col('price').mean().alias('mean_price')",
         ],
     )
 
@@ -61,7 +57,7 @@ def groupby_and_agg(
     '''
     ```
     """
-    from laktory.models.transformers.basechainnode import ChainNodeColumn
+    from laktory.models.dataframe.dataframecolumnexpr import DataFrameColumnExpr
 
     # Parse inputs
     if agg_expressions is None:
@@ -80,10 +76,12 @@ def groupby_and_agg(
     # Agg arguments
     aggs = []
     for expr in agg_expressions:
-        if not isinstance(expr, ChainNodeColumn):
-            expr = ChainNodeColumn(**expr)
+        if isinstance(expr, str):
+            expr = DataFrameColumnExpr(expr=expr).to_expr()
 
-        expr.type = None
-        aggs += [expr.eval(dataframe_backend="POLARS").alias(expr.name)]
+        elif isinstance(expr, dict):
+            expr = DataFrameColumnExpr(**expr).to_expr()
+
+        aggs += [expr]
 
     return df.group_by(groupby).agg(*aggs)
