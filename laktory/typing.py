@@ -6,25 +6,10 @@ import narwhals as nw
 from pydantic_core import CoreSchema
 from pydantic_core import core_schema
 
-# from laktory.polars import PolarsExpr
-# from laktory.polars import PolarsLazyFrame
-# from laktory.spark import SparkColumn
-# from laktory.spark import SparkDataFrame
-
 if TYPE_CHECKING:
     pass
 
 AnyFrame = nw.LazyFrame | nw.DataFrame
-
-# AnyExpression = nw.Expr | "pl.Expr" | "F.Column"
-
-# # TODO: Delete
-# AnyDataFrame = SparkDataFrame | PolarsLazyFrame
-# """DataFrame type from any of the supported backend"""
-#
-# # TODO: Delete
-# AnyDataFrameColumn = SparkColumn | PolarsExpr
-# """DataFrame column from any of the supported backend"""
 
 
 class VariableType(str):
