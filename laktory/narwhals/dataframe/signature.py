@@ -1,14 +1,6 @@
-import polars as pl
-
-
-def signature(df: pl.DataFrame) -> str:
+def signature(self) -> str:
     """
     Returns DataFrame signature.
-
-    Parameters
-    ----------
-    df:
-        Input DataFrame
 
     Returns
     -------
@@ -27,6 +19,6 @@ def signature(df: pl.DataFrame) -> str:
 
     """
 
-    s = ", ".join([f"{k}: {v}" for k, v in df.schema.items()])
+    s = ", ".join([f"{k}: {v}" for k, v in self._df.schema.items()])
     s = f"DataFrame[{s}]"
     return s

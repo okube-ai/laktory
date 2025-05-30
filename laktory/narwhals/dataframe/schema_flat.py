@@ -1,16 +1,9 @@
 import narwhals as nw
 
-from laktory.typing import AnyFrame
 
-
-def schema_flat(df: AnyFrame) -> list[str]:
+def schema_flat(self) -> list[str]:
     """
     Returns a flattened list of columns
-
-    Parameters
-    ----------
-    df:
-        Input DataFrame
 
     Returns
     -------
@@ -76,4 +69,4 @@ def schema_flat(df: AnyFrame) -> list[str]:
 
         return field_names
 
-    return get_fields(df.schema)
+    return get_fields(self._df.schema)

@@ -8,7 +8,7 @@ logger = get_logger(__name__)
 
 
 def groupby_and_agg(
-    df,
+    self,
     groupby_columns: list[str] = None,
     agg_expressions: list[DataFrameColumnExpr | str | nw.Expr] = None,
 ) -> AnyFrame:
@@ -17,8 +17,6 @@ def groupby_and_agg(
 
     Parameters
     ----------
-    df:
-        DataFrame
     groupby_columns:
         List of column names to group by
     agg_expressions:
@@ -84,4 +82,4 @@ def groupby_and_agg(
 
         aggs += [expr]
 
-    return df.group_by(groupby).agg(*aggs)
+    return self._df.group_by(groupby).agg(*aggs)

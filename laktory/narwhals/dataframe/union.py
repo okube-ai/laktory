@@ -3,17 +3,15 @@ import narwhals as nw
 from laktory.typing import AnyFrame
 
 
-def union(df: AnyFrame, others: AnyFrame | list[AnyFrame]) -> AnyFrame:
+def union(self, others: AnyFrame | list[AnyFrame]) -> AnyFrame:
     """
     Return a new DataFrame containing the union of rows in this and another
     DataFrame.
 
     Parameters
     ----------
-    df:
-        Input DataFrame
-    other:
-        Other DataFrame
+    others:
+        Other DataFrame(s)
 
     Examples
     --------
@@ -45,4 +43,4 @@ def union(df: AnyFrame, others: AnyFrame | list[AnyFrame]) -> AnyFrame:
     """
     if not isinstance(others, (list, tuple, set)):
         others = [others]
-    return nw.concat([df] + others)
+    return nw.concat([self._df] + others)

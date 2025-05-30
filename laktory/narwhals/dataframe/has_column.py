@@ -1,16 +1,12 @@
 import re
 
-from laktory.typing import AnyFrame
 
-
-def has_column(df: AnyFrame, col: str) -> bool:
+def has_column(self, col: str) -> bool:
     """
     Check if column `col` exists in `df`
 
     Parameters
     ----------
-    df:
-        Input DataFrame
     col
         Column name
 
@@ -55,4 +51,4 @@ def has_column(df: AnyFrame, col: str) -> bool:
     """
     _col = re.sub(r"\[(\d+)\]", r"[*]", col)
     _col = re.sub(r"`", "", _col)
-    return _col in df.laktory.schema_flat()
+    return _col in self._df.laktory.schema_flat()

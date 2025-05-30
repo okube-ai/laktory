@@ -14,7 +14,7 @@ class OrderBy(BaseModel):
 
 
 def window_filter(
-    df,
+    self,
     partition_by: Union[list[str], None],
     order_by: Union[list[OrderBy], None] = None,
     drop_row_index: bool = True,
@@ -26,8 +26,6 @@ def window_filter(
 
     Parameters
     ----------
-    df:
-        DataFrame
     partition_by
         Defines the columns used for grouping into Windows
     order_by:
@@ -103,7 +101,7 @@ def window_filter(
     e = e.over(*partition_by)
 
     # Set rows index
-    df = df.with_columns(**{row_index_name: e})
+    df = self._df.with_columns(**{row_index_name: e})
 
     # Filter
     df = df.filter(pl.col(row_index_name) <= rows_to_keep)
@@ -111,32 +109,3 @@ def window_filter(
         df = df.drop(row_index_name)
 
     return df
-
-
-if __name__ == "__main__":
-    import polars as pl
-
-    import laktory  # noqa: F401
-
-    df0 = pl.DataFrame(
-        [
-            ["2023-01-01T00:00:00Z", "APPL", 200.0],
-            ["2023-01-02T00:00:00Z", "APPL", 202.0],
-            ["2023-01-03T00:00:00Z", "APPL", 201.5],
-            ["2023-01-01T00:00:00Z", "GOOL", 200.0],
-            ["2023-01-02T00:00:00Z", "GOOL", 202.0],
-            ["2023-01-03T00:00:00Z", "GOOL", 201.5],
-        ],
-        ["created_at", "symbol", "price"],
-    ).with_columns(pl.col("created_at").cast(pl.Datetime))
-
-    df = df0.laktory.window_filter(
-        partition_by=["symbol"],
-        order_by=[
-            {"sql_expression": "created_at", "desc": True},
-        ],
-        drop_row_index=False,
-        rows_to_keep=1,
-    )
-
-    print(df.glimpse(return_as_string=True))
