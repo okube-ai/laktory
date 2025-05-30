@@ -6,6 +6,7 @@ from laktory.narwhals.dataframe.schema_flat import schema_flat
 from laktory.narwhals.dataframe.signature import signature
 from laktory.narwhals.dataframe.stream_join import stream_join
 from laktory.narwhals.dataframe.union import union
+from laktory.narwhals.dataframe.window_filter import window_filter
 from laktory.narwhals.dataframe.with_row_index import with_row_index
 from laktory.narwhals.namespace import register_dataframe_namespace
 from laktory.narwhals.namespace import register_lazyframe_namespace
@@ -46,6 +47,6 @@ class LaktoryDataFrame:  # noqa: F811
     def with_row_index(self, *args, **kwargs):
         return with_row_index(self, *args, **kwargs)
 
-    # @wraps(window_filter)
-    # def window_filter(self, *args, **kwargs):
-    #     return window_filter(self, *args, **kwargs)
+    @wraps(window_filter)
+    def window_filter(self, *args, **kwargs):
+        return window_filter(self, *args, **kwargs)

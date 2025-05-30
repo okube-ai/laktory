@@ -84,8 +84,8 @@ def test_schema_flat(df0):
 
 def test_union(df0):
     df = df0.laktory.union(df0)
-    assert df.shape[0] == df.shape[0] * 2
-    assert df.schema == df.schema
+    assert df.shape[0] == df0.shape[0] * 2
+    assert df.schema == df0.schema
 
 
 def test_signature(df0):
@@ -127,56 +127,21 @@ def test_row_index(is_lazy):
     assert df.sort("x", "y")["i2"].to_list() == [0, 1, 2] * 3
 
 
-#
-# def test_window_filter():
-#     df = dff.slv_polars.laktory.window_filter(
-#         partition_by=["symbol"],
-#         order_by=[
-#             {"sql_expression": "created_at", "desc": True},
-#         ],
-#         drop_row_index=False,
-#         rows_to_keep=2,
-#     ).select("created_at", "symbol", "_row_index")
-#
-#     data = df.to_dict(as_series=False)
-#     print(data)
-#     assert data == {
-#         "created_at": [
-#             datetime.datetime(2023, 9, 28, 0, 0),
-#             datetime.datetime(2023, 9, 29, 0, 0),
-#             datetime.datetime(2023, 9, 28, 0, 0),
-#             datetime.datetime(2023, 9, 29, 0, 0),
-#             datetime.datetime(2023, 9, 28, 0, 0),
-#             datetime.datetime(2023, 9, 29, 0, 0),
-#             datetime.datetime(2023, 9, 28, 0, 0),
-#             datetime.datetime(2023, 9, 29, 0, 0),
-#         ],
-#         "symbol": ["AAPL", "AAPL", "AMZN", "AMZN", "GOOGL", "GOOGL", "MSFT", "MSFT"],
-#         "_row_index": [2, 1, 2, 1, 2, 1, 2, 1],
-#     }
-#
+def test_window_filter():
+    df0 = nw.from_native(
+        pl.DataFrame(
+            {
+                "x": ["a", "a", "a", "b", "b", "b", "c", "c", "c"],
+                "y": [1, 2, 3, 3, 2, 1, 1, 2, 3],
+            }
+        )
+    )
 
-#
-# if __name__ == "__main__":
-#     import pandas as pd
-#     import narwhals as nw
-#
-#     df_native = pd.DataFrame({
-#         "a": ["x", "k", None, "d"],
-#         "b": ["1", "2", None, "3"],
-#         "c": [1, 2, None, 3],
-#     })
-#     df = nw.from_native(df_native)
-#
-#     df = df.with_columns(d=nw.lit(1))
-#
-#     df = df.with_columns(
-#         nw.col("a").cum_count().alias("c0"),
-#         nw.col("a").cum_count(reverse=True).alias("c1"),
-#         nw.col("b").cum_count().alias("c2"),
-#         nw.col("c").cum_count().alias("c3"),
-#         nw.col("d").cum_count().alias("c4"),
-#         # nw.lit(1).cum_count().alias("c3"),
-#     )
-#
-#     print(df)
+    df = df0.laktory.window_filter(
+        partition_by=["x"],
+        order_by="y",
+        drop_row_index=False,
+        rows_to_keep=2,
+    )
+
+    assert df.sort("x", "y")["_row_index"] == [0, 1] * 3

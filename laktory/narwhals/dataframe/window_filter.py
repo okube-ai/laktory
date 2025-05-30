@@ -1,26 +1,21 @@
-from typing import Union
+from __future__ import annotations
 
-import polars as pl
-from pydantic import BaseModel
+import narwhals as nw
 
 from laktory._logger import get_logger
+from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
 
 
-class OrderBy(BaseModel):
-    sql_expression: str
-    desc: bool = False
-
-
 def window_filter(
     self,
-    partition_by: Union[list[str], None],
-    order_by: Union[list[OrderBy], None] = None,
+    partition_by: str | list[str] | None,
+    order_by: str | list[str] | None = None,
     drop_row_index: bool = True,
     row_index_name: str = "_row_index",
     rows_to_keep: int = 1,
-) -> pl.DataFrame:
+) -> AnyFrame:
     """
     Apply spark window-based filtering
 
@@ -42,31 +37,32 @@ def window_filter(
     --------
     ```py
     import polars as pl
+    import narwhals as nw
 
     import laktory  # noqa: F401
 
-    df0 = pl.DataFrame(
-        [
-            ["2023-01-01T00:00:00Z", "APPL", 200.0],
-            ["2023-01-02T00:00:00Z", "APPL", 202.0],
-            ["2023-01-03T00:00:00Z", "APPL", 201.5],
-            ["2023-01-01T00:00:00Z", "GOOL", 200.0],
-            ["2023-01-02T00:00:00Z", "GOOL", 202.0],
-            ["2023-01-03T00:00:00Z", "GOOL", 201.5],
-        ],
-        ["created_at", "symbol", "price"],
-    ).with_columns(pl.col("created_at").cast(pl.Datetime))
+    df0 = nw.from_native(
+        pl.DataFrame(
+            [
+                ["2023-01-01T00:00:00Z", "APPL", 200.0],
+                ["2023-01-02T00:00:00Z", "APPL", 202.0],
+                ["2023-01-03T00:00:00Z", "APPL", 201.5],
+                ["2023-01-01T00:00:00Z", "GOOL", 200.0],
+                ["2023-01-02T00:00:00Z", "GOOL", 202.0],
+                ["2023-01-03T00:00:00Z", "GOOL", 201.5],
+            ],
+            ["created_at", "symbol", "price"],
+        ).with_columns(pl.col("created_at").cast(pl.Datetime))
+    )
 
     df = df0.laktory.window_filter(
-        partition_by=["symbol"],
-        order_by=[
-            {"sql_expression": "created_at", "desc": True},
-        ],
+        partition_by="symbol",
+        order_by=["created_at"],
         drop_row_index=False,
         rows_to_keep=1,
     )
 
-    print(df.glimpse(return_as_string=True))
+    print(df.to_native().glimpse(return_as_string=True))
     '''
     Rows: 2
     Columns: 4
@@ -76,35 +72,17 @@ def window_filter(
     $ _row_index          <u32> 1, 1
     '''
     ```
-
-    References
-    ----------
-
-    * [polars window](https://docs.pola.rs/user-guide/expressions/window/)
     """
+    if rows_to_keep < 1:
+        raise ValueError("`rows_to_keep` must be >= 1")
 
-    # Row Number
-    e = pl.Expr.laktory.row_number()
-
-    # Order by
-    if order_by:
-        bys = []
-        descs = []
-        for o in order_by:
-            if not isinstance(o, OrderBy):
-                o = OrderBy(**o)
-            bys += [o.sql_expression]
-            descs += [o.desc]
-        e = e.sort_by(by=bys, descending=descs)
-
-    # Partition By
-    e = e.over(*partition_by)
-
-    # Set rows index
-    df = self._df.with_columns(**{row_index_name: e})
+    # Row Index
+    df = self._df.laktory.with_row_index(
+        name=row_index_name, partition_by=partition_by, order_by=order_by
+    )
 
     # Filter
-    df = df.filter(pl.col(row_index_name) <= rows_to_keep)
+    df = df.filter(nw.col(row_index_name) <= rows_to_keep - 1)
     if drop_row_index:
         df = df.drop(row_index_name)
 
