@@ -5,37 +5,40 @@ import pytest
 import laktory  # noqa: F401
 from laktory._testing import StreamingSource
 
-df = pl.DataFrame(
-    [
-        (
-            1,
-            ["a", "b"],
-            {"id": 3, "email": "@gmail.com"},
-            [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
-            [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
-        ),
-        (
-            2,
-            ["b", "c"],
-            {"id": 2, "email": "@gmail.com"},
-            [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
-            [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
-        ),
-        (
-            3,
-            ["c", "d"],
-            {"id": 1, "email": "@gmail.com"},
-            [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
-            [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
-        ),
-    ],
-    schema=["x@x", "y", "z", "u", "u2"],
-)
-df = nw.from_native(df)
+
+@pytest.fixture()
+def df():
+    return nw.from_native(
+        pl.DataFrame(
+            [
+                (
+                    1,
+                    ["a", "b"],
+                    {"id": 3, "email": "@gmail.com"},
+                    [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
+                    [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
+                ),
+                (
+                    2,
+                    ["b", "c"],
+                    {"id": 2, "email": "@gmail.com"},
+                    [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
+                    [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
+                ),
+                (
+                    3,
+                    ["c", "d"],
+                    {"id": 1, "email": "@gmail.com"},
+                    [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
+                    [{"a": 1, "b": 2}, {"a": 1, "b": 2}],
+                ),
+            ],
+            schema=["x@x", "y", "z", "u", "u2"],
+        )
+    )
 
 
-# @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
-@pytest.mark.parametrize("backend", ["POLARS"])
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_groupby_and_agg(backend):
     ss = StreamingSource()
     df0 = nw.concat(ss.get_dfs(3)).collect()
@@ -56,8 +59,14 @@ def test_groupby_and_agg(backend):
     assert df["m2"].to_list() == [1.0, 4.0, 7.0]
 
 
-def test_df_schema_flat():
-    schema = df.laktory.schema_flat()
+def test_has_column(df):
+    assert df.laktory.has_column("x@x")
+    assert df.laktory.has_column("`x@x`")
+    assert df.laktory.has_column("u[0].a")
+
+
+def test_schema_flat(df):
+    schema = laktory.schema_flat()
     assert schema == [
         "x@x",
         "y",
@@ -73,16 +82,18 @@ def test_df_schema_flat():
     ]
 
 
-def test_df_has_column():
-    assert df.laktory.has_column("x@x")
-    assert df.laktory.has_column("`x@x`")
-    assert df.laktory.has_column("u[0].a")
-
-
-def test_union():
+def test_union(df):
     df2 = df.laktory.union(df)
     assert df2.shape[0] == df.shape[0] * 2
     assert df2.schema == df.schema
+
+
+def test_signature(df):
+    sig = df.select("x@x", "y", "z").laktory.signature()
+    assert (
+        sig
+        == "DataFrame[x@x: Int64, y: List(String), z: Struct({'id': Int64, 'email': String})]"
+    )
 
 
 #

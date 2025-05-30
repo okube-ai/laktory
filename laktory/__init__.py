@@ -12,7 +12,6 @@ import laktory._parsers
 import laktory.custom
 import laktory.models
 import laktory.narwhals
-import laktory.spark
 import laktory.typing
 import laktory.yaml
 
