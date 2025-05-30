@@ -7,7 +7,7 @@ from laktory._testing import StreamingSource
 
 
 @pytest.fixture()
-def df():
+def df0():
     return nw.from_native(
         pl.DataFrame(
             [
@@ -59,14 +59,14 @@ def test_groupby_and_agg(backend):
     assert df["m2"].to_list() == [1.0, 4.0, 7.0]
 
 
-def test_has_column(df):
-    assert df.laktory.has_column("x@x")
-    assert df.laktory.has_column("`x@x`")
-    assert df.laktory.has_column("u[0].a")
+def test_has_column(df0):
+    assert df0.laktory.has_column("x@x")
+    assert df0.laktory.has_column("`x@x`")
+    assert df0.laktory.has_column("u[0].a")
 
 
-def test_schema_flat(df):
-    schema = laktory.schema_flat()
+def test_schema_flat(df0):
+    schema = df0.laktory.schema_flat()
     assert schema == [
         "x@x",
         "y",
@@ -82,18 +82,49 @@ def test_schema_flat(df):
     ]
 
 
-def test_union(df):
-    df2 = df.laktory.union(df)
-    assert df2.shape[0] == df.shape[0] * 2
-    assert df2.schema == df.schema
+def test_union(df0):
+    df = df0.laktory.union(df0)
+    assert df.shape[0] == df.shape[0] * 2
+    assert df.schema == df.schema
 
 
-def test_signature(df):
-    sig = df.select("x@x", "y", "z").laktory.signature()
+def test_signature(df0):
+    sig = df0.select("x@x", "y", "z").laktory.signature()
     assert (
         sig
         == "DataFrame[x@x: Int64, y: List(String), z: Struct({'id': Int64, 'email': String})]"
     )
+
+
+@pytest.mark.parametrize("is_lazy", [True, False])
+def test_row_index(is_lazy):
+    df0 = pl.DataFrame(
+        {
+            "x": ["a", "a", "a", "b", "b", "b", "c", "c", "c"],
+            "y": [1, 2, 3, 3, 2, 1, 1, 2, 3],
+        }
+    )
+
+    if is_lazy:
+        df0 = df0.lazy()
+
+    df = nw.from_native(df0)
+
+    if is_lazy:
+        with pytest.raises(ValueError):
+            df = df.laktory.with_row_index(name="i0")
+    else:
+        df = df.laktory.with_row_index(name="i0")
+    df = df.laktory.with_row_index(name="i1", order_by="y")
+    df = df.laktory.with_row_index(name="i2", partition_by="x", order_by="y")
+
+    if is_lazy:
+        df = df.collect()
+
+    if not is_lazy:
+        assert df.sort("i0")["i0"].to_list() == list(range(9))
+    assert df.sort("y")["i1"].to_list() == list(range(9))
+    assert df.sort("x", "y")["i2"].to_list() == [0, 1, 2] * 3
 
 
 #
@@ -124,3 +155,28 @@ def test_signature(df):
 #         "_row_index": [2, 1, 2, 1, 2, 1, 2, 1],
 #     }
 #
+
+#
+# if __name__ == "__main__":
+#     import pandas as pd
+#     import narwhals as nw
+#
+#     df_native = pd.DataFrame({
+#         "a": ["x", "k", None, "d"],
+#         "b": ["1", "2", None, "3"],
+#         "c": [1, 2, None, 3],
+#     })
+#     df = nw.from_native(df_native)
+#
+#     df = df.with_columns(d=nw.lit(1))
+#
+#     df = df.with_columns(
+#         nw.col("a").cum_count().alias("c0"),
+#         nw.col("a").cum_count(reverse=True).alias("c1"),
+#         nw.col("b").cum_count().alias("c2"),
+#         nw.col("c").cum_count().alias("c3"),
+#         nw.col("d").cum_count().alias("c4"),
+#         # nw.lit(1).cum_count().alias("c3"),
+#     )
+#
+#     print(df)

@@ -4,7 +4,8 @@ from laktory._logger import get_logger
 from laktory.enums import STREAMING_BACKENDS
 from laktory.enums import DataFrameBackends
 from laktory.models.dataframe.dataframecolumnexpr import DataFrameColumnExpr
-from laktory.spark.dataframe.watermark import Watermark
+
+# from laktory.spark.dataframe.watermark import Watermark
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
@@ -16,9 +17,9 @@ def stream_join(
     how: str = "left",
     on: str | DataFrameColumnExpr | list[str | DataFrameColumnExpr] = None,
     left_on: str | DataFrameColumnExpr | list[str | DataFrameColumnExpr] = None,
-    left_watermark: Watermark = None,
+    # left_watermark: Watermark = None,
     other_on: str | DataFrameColumnExpr | list[str | DataFrameColumnExpr] = None,
-    other_watermark: Watermark = None,
+    # other_watermark: Watermark = None,
     time_constraint_interval_lower: str = "60 seconds",
     time_constraint_interval_upper: str = None,
     # coalesce: bool = False,
