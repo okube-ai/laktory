@@ -1,6 +1,7 @@
 import math
 
 import narwhals as nw
+import polars as pl  # noqa: F401
 import sqlglot
 from sqlglot import expressions
 
@@ -284,6 +285,7 @@ class SQLParser:
 
             decimals = expr.args.get("decimals", None)
             if decimals is not None:
+                # TODO: Fix for round(x, 3)
                 args += [decimals]
 
             args = [self.visit_expr(arg) for arg in args]
