@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pyspark.sql.dataframe import DataFrame
-
 from laktory._logger import get_logger
 from laktory.enums import STREAMING_BACKENDS
 from laktory.enums import DataFrameBackends
@@ -25,7 +23,7 @@ def stream_join(
     time_constraint_interval_lower: str = "60 seconds",
     time_constraint_interval_upper: str = None,
     # coalesce: bool = False,
-) -> DataFrame:
+) -> AnyFrame:
     """
     Perform static-stream and stream-stream by applying watermarks and setting
     time constraints.
