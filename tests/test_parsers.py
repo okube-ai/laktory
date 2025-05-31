@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import laktory
 
 # from laktory._parsers import remove_empty

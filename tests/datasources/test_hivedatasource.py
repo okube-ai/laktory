@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
 from laktory.models import HiveMetastoreDataSource

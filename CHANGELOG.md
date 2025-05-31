@@ -12,6 +12,9 @@
 * `DTypes`: defines a serializable column data type
 * `UnityCatalogDataSource`: reads DataFrame from Unity Catalog 
 * `HiveMetastoreDataSource`: reads DataFrame from Hive Metastore 
+* `laktory` namespace: Narwhals extension with custom DataFrame methods and expressions
+* `register_anyframe_namespace`: defines a custom narwhals DataFrame method for transformations
+* `register_expr_namespace`: defines a custom narwhals Expression for transformations
 ### Fixed
 * n/a
 ### Updated
@@ -37,6 +40,9 @@
   * Accept and return Narwhals DataFrame
   * Can no longer be used for VIEW creation
   * Replaced `PolarsChainNode` and `SparkChainNode` with `DataFrameMethod` and  `DataFrameExpr` classes
+* DataFrame Extensions
+  * Deprecated `polars` extension 
+  * Deprecated `spark` extension 
 * PipelineNode:
   * Removed "Layers" concept in pipeline node
   * Removed custom functions such as `with_columns`, `drop_duplicates`, etc.

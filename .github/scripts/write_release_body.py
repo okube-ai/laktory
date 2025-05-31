@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 script_root = os.path.dirname(__file__)

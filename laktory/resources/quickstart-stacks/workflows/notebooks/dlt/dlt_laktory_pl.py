@@ -1,5 +1,6 @@
 # COMMAND ----------
 # Install dependencies
+from __future__ import annotations
 
 laktory_root = "/Workspace" + spark.conf.get("workspace_laktory_root", "/.laktory/")
 pl_name = spark.conf.get("pipeline_name", "dlt-stock-prices")

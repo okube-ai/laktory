@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import shutil
 import warnings
@@ -24,7 +26,7 @@ from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import PipelineNodeDataSource
 from laktory.models.datasources import TableDataSource
 from laktory.models.pipeline.pipelinechild import PipelineChild
-from laktory.typing import AnyDataFrame
+from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
 
@@ -274,14 +276,14 @@ class PipelineNode(BaseModel, PipelineChild):
         return is_view
 
     @property
-    def stage_df(self) -> AnyDataFrame:
+    def stage_df(self) -> AnyFrame:
         """
         Dataframe resulting from reading source and applying transformer, before data quality checks are applied.
         """
         return self._stage_df
 
     @property
-    def output_df(self) -> AnyDataFrame:
+    def output_df(self) -> AnyFrame:
         """
         Dataframe resulting from reading source, applying transformer and dropping rows not meeting data quality
         expectations.
@@ -289,7 +291,7 @@ class PipelineNode(BaseModel, PipelineChild):
         return self._output_df
 
     @property
-    def quarantine_df(self) -> AnyDataFrame:
+    def quarantine_df(self) -> AnyFrame:
         """
         DataFrame storing `stage_df` rows not meeting data quality expectations.
         """
@@ -498,8 +500,8 @@ class PipelineNode(BaseModel, PipelineChild):
         apply_transformer: bool = True,
         write_sinks: bool = True,
         full_refresh: bool = False,
-        named_dfs: dict[str, AnyDataFrame] = None,
-    ) -> AnyDataFrame:
+        named_dfs: dict[str, AnyFrame] = None,
+    ) -> AnyFrame:
         """
         Execute pipeline node by:
 

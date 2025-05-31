@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from laktory import show_version_info
 
 

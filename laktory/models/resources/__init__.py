@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import laktory.models.resources.databricks
 import laktory.models.resources.providers
 from laktory.models.resources.baseresource import BaseResource

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .basechild import BaseChild
 from .basemodel import BaseModel
 from .dataframe import *

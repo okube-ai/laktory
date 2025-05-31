@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from laktory._testing import Paths
 from laktory.yaml import RecursiveLoader
 
@@ -95,8 +97,3 @@ def test_read_with_variables():
         "variables": {"symbol": "aapl"},
         "query": "SELECT\n    *\nFORM\n    {df}\nWHERE\n-- COMMENT\n    SYMBOL = 'AAPL'\n;\n",
     }
-
-
-if __name__ == "__main__":
-    test_read()
-    test_read_with_variables()

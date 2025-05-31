@@ -116,7 +116,7 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
 
         if self.df_api == "NARWHALS":
             if self.type == "SQL":
-                from laktory.narwhals.expr import sql_expr
+                from laktory.narwhals.functions import sql_expr
 
                 expr = sql_expr(_value)
             else:

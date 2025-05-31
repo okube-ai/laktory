@@ -11,7 +11,7 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipelinechild import PipelineChild
-from laktory.narwhals.expr import sql_expr
+from laktory.narwhals.functions.sql_expr import sql_expr
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
