@@ -1,7 +1,6 @@
 import math
 
 import narwhals as nw
-import polars as pl  # noqa: F401
 import sqlglot
 from sqlglot import expressions
 
