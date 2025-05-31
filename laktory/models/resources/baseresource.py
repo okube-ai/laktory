@@ -10,6 +10,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import ModelMetaclass
 
 
 class ResourceOptions(BaseModel):
@@ -101,7 +102,7 @@ class ResourceLookup(BaseModel):
         return self.model_dump(*args, **kwargs)
 
 
-class BaseResource(_BaseModel):
+class BaseResource(_BaseModel, metaclass=ModelMetaclass):
     """
     Parent class for all Laktory models deployable as one or multiple cloud
     core resources. This `BaseResource` class is derived from
