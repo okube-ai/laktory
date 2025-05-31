@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pyspark.sql.dataframe import DataFrame
 
 from laktory._logger import get_logger

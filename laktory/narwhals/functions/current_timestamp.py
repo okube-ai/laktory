@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import narwhals as nw
 
 from laktory.datetime import utc_datetime

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from laktory import models
 
 pl = models.resources.databricks.DLTPipeline(

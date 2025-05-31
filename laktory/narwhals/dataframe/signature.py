@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 def signature(self) -> str:
     """
     Returns DataFrame signature.

@@ -131,6 +131,7 @@ extend-select = [
 pydocstyle.convention = "numpy"
 isort.force-single-line = true
 isort.required-imports = [
+    "from __future__ import annotations"
 ]
 
 [tool.ruff.lint.per-file-ignores]

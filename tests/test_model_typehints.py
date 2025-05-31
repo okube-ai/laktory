@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from laktory.models import BaseModel
 from laktory.typing import VariableType
 

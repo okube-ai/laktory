@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from laktory.models.resources.databricks import VectorSearchIndex
 
 vector_search_index = VectorSearchIndex(

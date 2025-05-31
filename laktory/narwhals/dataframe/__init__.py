@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import wraps
 
 from laktory.narwhals.dataframe.groupby_and_agg import groupby_and_agg
