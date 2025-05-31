@@ -8,13 +8,11 @@ from laktory.narwhals.dataframe.stream_join import stream_join
 from laktory.narwhals.dataframe.union import union
 from laktory.narwhals.dataframe.window_filter import window_filter
 from laktory.narwhals.dataframe.with_row_index import with_row_index
-from laktory.narwhals.namespace import register_dataframe_namespace
-from laktory.narwhals.namespace import register_lazyframe_namespace
+from laktory.narwhals.namespace import register_anyframe_namespace
 from laktory.typing import AnyFrame
 
 
-@register_dataframe_namespace("laktory")
-@register_lazyframe_namespace("laktory")
+@register_anyframe_namespace("laktory")
 class LaktoryDataFrame:  # noqa: F811
     def __init__(self, df: AnyFrame):
         self._df = df

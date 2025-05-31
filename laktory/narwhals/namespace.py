@@ -22,6 +22,15 @@ def register_expr_namespace(name: str):
     return wrapper
 
 
+def register_anyframe_namespace(name: str):
+    def wrapper(ns_cls: type):
+        setattr(nw.DataFrame, name, NameSpace(name, ns_cls))
+        setattr(nw.LazyFrame, name, NameSpace(name, ns_cls))
+        return ns_cls
+
+    return wrapper
+
+
 def register_dataframe_namespace(name: str):
     def wrapper(ns_cls: type):
         setattr(nw.DataFrame, name, NameSpace(name, ns_cls))
