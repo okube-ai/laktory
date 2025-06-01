@@ -43,7 +43,7 @@ dependencies = [
 
 [project.optional-dependencies]
 polars = [
-    "deltalake",
+    "deltalake<1.0",
     "polars>=1.0",
     "sqlparse",
 ]
