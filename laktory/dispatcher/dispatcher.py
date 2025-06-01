@@ -149,7 +149,7 @@ class Dispatcher:
         return kwargs
 
     @property
-    def wc(self) -> WorkspaceClient:
+    def wc(self) -> "WorkspaceClient":
         """Databricks Workspace Client"""
         from databricks.sdk import WorkspaceClient
 
