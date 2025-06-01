@@ -62,7 +62,7 @@ class DataFrameExpr(BaseModel, PipelineChild):
         description="Expression type. Only SQL is currently supported, but `DF` could"
         "be added in the future.",
     )
-    _data_sources: list[PipelineNodeDataSource] = None
+    _data_sources: list["PipelineNodeDataSource"] = None
 
     @property
     def upstream_node_names(self) -> list[str]:
