@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 # import abc
 from typing import Any
 
@@ -37,6 +35,7 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
     def eval(self, backend: DataFrameBackends):
         from laktory.models.datasources.basedatasource import BaseDataSource
 
+        # TODO: Add supported for evaluating list or dict of strings.
         v = self.value
 
         if isinstance(v, BaseDataSource):
@@ -49,7 +48,7 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
                 from narwhals import col  # noqa: F401
                 from narwhals import lit  # noqa: F401
 
-                from laktory.narwhals.expr import sql_expr  # noqa: F401
+                from laktory.narwhals.functions import sql_expr  # noqa: F401
 
                 targets = ["lit(", "col(", "nw.", "sql_expr"]
 
@@ -264,8 +263,9 @@ class DataFrameMethod(BaseModel, PipelineChild):
             Output dataframe
         """
 
-        # Get Backend
+        # Get and set Backend (required to evaluate arguments)
         backend = DataFrameBackends.from_df(df)
+        self.dataframe_backend = backend
 
         # Convert to Narwhals
         if not isinstance(df, AnyFrame):

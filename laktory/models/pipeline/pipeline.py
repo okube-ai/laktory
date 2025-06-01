@@ -1,9 +1,8 @@
-from __future__ import annotations
-
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
 
+import networkx as nx
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -25,7 +24,6 @@ from laktory.models.resources.terraformresource import TerraformResource
 from laktory.typing import AnyFrame
 
 if TYPE_CHECKING:
-    import networkx as nx
     from plotly.graph_objs import Figure
 
 logger = get_logger(__name__)
@@ -583,7 +581,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 named_dfs=named_dfs,
             )
 
-    def dag_figure(self) -> Figure:
+    def dag_figure(self) -> "Figure":
         """
         [UNDER DEVELOPMENT] Generate a figure representation of the pipeline
         DAG.

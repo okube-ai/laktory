@@ -4,7 +4,8 @@ import pytest
 from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
 from laktory._testing import get_df1
-from laktory.custom import func
+from laktory.api import register_anyframe_namespace
+from laktory.api import register_expr_namespace
 from laktory.enums import DataFrameBackends
 from laktory.models import DataFrameDataSource
 from laktory.models import DataFrameMethod
@@ -109,23 +110,49 @@ def test_arg_sql_expr(backend):
 def test_udf(backend):
     df0 = get_df0(backend)
 
-    @func()
-    def my_func(df, cols):  # noqa: F811
-        return df.select(cols)
+    @register_expr_namespace("c0")
+    class C0:
+        def __init__(self, _expr):
+            self._expr = _expr
 
-    @func(namespace="here")
-    def my_func(df):  # noqa: F811
-        return df.select("x1")
+        def mult2(self):
+            return (self._expr * 2).alias("m2")
 
+    @register_anyframe_namespace("c1")
+    class C1:
+        def __init__(self, _df):
+            self._df = _df
+
+        def f1(self, cols):
+            return self._df.select(cols)
+
+    @register_anyframe_namespace("c2")
+    class C2:
+        def __init__(self, _df):
+            self._df = _df
+
+        def f2(self):
+            return self._df.select("x1")
+
+    # Select with arguments
     node = DataFrameMethod(
-        func_name="my_func",
+        func_name="c1.f1",
         func_args=[["id", "x1"]],
     )
     df = node.execute(df0)
     assert df.columns == ["id", "x1"]
 
+    # Select without arguments
     node = DataFrameMethod(
-        func_name="here.my_func",
+        func_name="c2.f2",
     )
     df = node.execute(df0)
     assert df.columns == ["x1"]
+
+    # Select with custom expression
+    node = DataFrameMethod(
+        func_name="c1.f1",
+        func_args=["nw.col('x1').c0.mult2()"],
+    )
+    df = node.execute(df0)
+    assert df.columns == ["m2"]

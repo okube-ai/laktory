@@ -1,4 +1,4 @@
-from __future__ import annotations
+#
 
 import copy
 import json
@@ -29,6 +29,27 @@ from laktory.typing import VariableType
 from laktory.yaml.recursiveloader import RecursiveLoader
 
 Model = TypeVar("Model", bound="BaseModel")
+
+
+def annotation_contains_list_of_basemodel(annotation, mymodel_cls) -> bool:
+    origin = get_origin(annotation)
+    args = get_args(annotation)
+
+    # Base case: direct subclass
+    if isinstance(annotation, type) and issubclass(annotation, mymodel_cls):
+        return True
+
+    # Handle ForwardRefs or strings (optional: depending on your context)
+    if isinstance(annotation, str):
+        return False  # or implement custom string resolution if needed
+
+    # Handle generic containers like list, Union, dict, etc.
+    if origin is not None:
+        for arg in args:
+            if annotation_contains_list_of_basemodel(arg, mymodel_cls):
+                return True
+
+    return False
 
 
 class ModelMetaclass(_ModelMetaclass):
@@ -140,8 +161,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                 else:
                     # Automatic singularization
                     k_singular = k
-                    ann = str(fields[k].annotation)
-                    if "list[typing.Union[laktory.models" in ann:
+                    ann = fields[k].annotation
+                    if annotation_contains_list_of_basemodel(ann, BaseModel):
                         k_singular = engine.singular_noun(k) or k
 
                 if k_singular != k:

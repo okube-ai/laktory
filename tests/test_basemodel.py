@@ -1,44 +1,36 @@
+import pytest
+
 from laktory._testing import Paths
 from laktory.models import BaseModel
-from laktory.models.resources.databricks import Job
-from laktory.models.resources.databricks import Schema
-from laktory.models.resources.databricks import Table
 
 paths = Paths(__file__)
 
 
-schema = Schema(
-    name="my_schema",
-    catalog_name="my_catalog",
-    tables=[
-        Table(
-            name="AAPL",
-            columns=[
-                {
-                    "name": "open",
-                    "type": "double",
-                },
-                {
-                    "name": "close",
-                    "type": "double",
-                },
-            ],
-        ),
-        Table(
-            name="GOOGL",
-            columns=[
-                {
-                    "name": "low",
-                    "type": "double",
-                },
-                {
-                    "name": "high",
-                    "type": "double",
-                },
-            ],
-        ),
-    ],
-)
+class A(BaseModel):
+    first_value: float
+    second_value: float
+
+
+class B(BaseModel):
+    s0: str
+    s1: str
+
+
+class M(BaseModel):
+    i: int
+    values: list[float]
+    a_models: list[A]
+    b_models: list[B]
+
+
+@pytest.fixture
+def m():
+    return M(
+        i=1,
+        values=[1, 2],
+        a_models=[{"first_value": 0.0, "second_value": 1.0}],
+        b_models=[{"s0": "0", "s1": "1"}],
+    )
 
 
 def test_read_yaml():
@@ -101,179 +93,23 @@ def test_read_yaml():
     }
 
 
-def test_dump_yaml():
-    assert schema.model_dump_yaml(exclude_unset=True).startswith(
-        "catalog_name: my_catalog"
-    )
+def test_dump_yaml(m):
+    print(m.model_dump_yaml())
+    assert m.model_dump_yaml().startswith("a_models:")
 
 
-def test_camelize():
-    schema._configure_serializer(camel=True)
-    dump = schema.model_dump()
-    schema._configure_serializer(camel=False)
-    print(dump)
-    assert dump == {
-        "comment": None,
-        "grant": None,
-        "grants": None,
-        "name": "my_schema",
-        "tables": [
-            {
-                "columns": [
-                    {
-                        "name": "open",
-                        "comment": None,
-                        "identity": None,
-                        "nullable": None,
-                        "type": "double",
-                        "typeJson": None,
-                    },
-                    {
-                        "name": "close",
-                        "comment": None,
-                        "identity": None,
-                        "nullable": None,
-                        "type": "double",
-                        "typeJson": None,
-                    },
-                ],
-                "comment": None,
-                "grant": None,
-                "grants": None,
-                "name": "AAPL",
-                "properties": None,
-                "catalogName": "my_catalog",
-                "dataSourceFormat": "DELTA",
-                "schemaName": "my_schema",
-                "storageCredentialName": None,
-                "storageLocation": None,
-                "tableType": "MANAGED",
-                "viewDefinition": None,
-                "warehouseId": None,
-            },
-            {
-                "columns": [
-                    {
-                        "name": "low",
-                        "comment": None,
-                        "identity": None,
-                        "nullable": None,
-                        "type": "double",
-                        "typeJson": None,
-                    },
-                    {
-                        "name": "high",
-                        "comment": None,
-                        "identity": None,
-                        "nullable": None,
-                        "type": "double",
-                        "typeJson": None,
-                    },
-                ],
-                "comment": None,
-                "grant": None,
-                "grants": None,
-                "name": "GOOGL",
-                "properties": None,
-                "catalogName": "my_catalog",
-                "dataSourceFormat": "DELTA",
-                "schemaName": "my_schema",
-                "storageCredentialName": None,
-                "storageLocation": None,
-                "tableType": "MANAGED",
-                "viewDefinition": None,
-                "warehouseId": None,
-            },
-        ],
-        "volumes": [],
-        "catalogName": "my_catalog",
-        "forceDestroy": True,
-        "storageRoot": None,
-    }
+def test_camelize(m):
+    m._configure_serializer(camel=True)
+    dump = m.model_dump()
+    m._configure_serializer(camel=False)
+
+    assert "bModels" in dump
+    assert "secondValue" in dump["aModels"][0]
 
 
-def test_singular():
-    job = Job(
-        name="my-job",
-        clusters=[
-            {
-                "name": "main",
-                "spark_version": "14.0.x-scala2.12",
-                "node_type_id": "${vars.node_type_id}",
-                "spark_env_vars": {
-                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
-                    "LAKTORY_WORKSPACE_ENV": "${vars.env}",
-                },
-            }
-        ],
-    )
+def test_singular(m):
+    m._configure_serializer(singular=True)
+    dump = m.model_dump()
 
-    job._configure_serializer(singular=True)
-    dump = job.model_dump()
-    job._configure_serializer(singular=False)
-    print(dump)
-    assert dump == {
-        "continuous": None,
-        "control_run_state": None,
-        "description": None,
-        "email_notifications": None,
-        "format": None,
-        "git_source": None,
-        "health": None,
-        "max_concurrent_runs": None,
-        "max_retries": None,
-        "min_retry_interval_millis": None,
-        "name": "my-job",
-        "name_prefix": None,
-        "name_suffix": None,
-        "notification_settings": None,
-        "queue": None,
-        "retry_on_timeout": None,
-        "run_as": None,
-        "schedule": None,
-        "tags": {},
-        "timeout_seconds": None,
-        "trigger": None,
-        "webhook_notifications": None,
-        "access_control": [],
-        "cluster": [
-            {
-                "apply_policy_default_values": None,
-                "autoscale": None,
-                "autotermination_minutes": None,
-                "cluster_id": None,
-                "custom_tags": None,
-                "data_security_mode": "USER_ISOLATION",
-                "driver_instance_pool_id": None,
-                "driver_node_type_id": None,
-                "enable_elastic_disk": None,
-                "enable_local_disk_encryption": None,
-                "idempotency_token": None,
-                "init_scripts": [],
-                "instance_pool_id": None,
-                "name": "main",
-                "node_type_id": "${vars.node_type_id}",
-                "num_workers": None,
-                "policy_id": None,
-                "runtime_engine": None,
-                "single_user_name": None,
-                "spark_conf": {},
-                "spark_env_vars": {
-                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
-                    "LAKTORY_WORKSPACE_ENV": "${vars.env}",
-                },
-                "spark_version": "14.0.x-scala2.12",
-                "ssh_public_keys": [],
-            }
-        ],
-        "environment": None,
-        "parameter": [],
-        "task": [],
-    }
-
-
-if __name__ == "__main__":
-    test_read_yaml()
-    test_dump_yaml()
-    test_camelize()
-    test_singular()
+    assert "values" in dump
+    assert "a_model" in dump

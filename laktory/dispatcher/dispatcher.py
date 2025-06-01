@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from laktory._useragent import DATABRICKS_USER_AGENT
@@ -151,7 +149,7 @@ class Dispatcher:
         return kwargs
 
     @property
-    def wc(self) -> WorkspaceClient:
+    def wc(self) -> "WorkspaceClient":
         """Databricks Workspace Client"""
         from databricks.sdk import WorkspaceClient
 

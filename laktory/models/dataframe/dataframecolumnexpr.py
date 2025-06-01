@@ -1,9 +1,8 @@
-from __future__ import annotations
-
 import re
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Literal
+from typing import Union
 
 import narwhals as nw
 from pydantic import Field
@@ -109,14 +108,14 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
             # TODO: Use SQLFrame?
             raise ValueError("DataFrame expression can't be converted to SQL")
 
-    def to_expr(self) -> nw.Expr | "pl.Expr" | "F.Column":
+    def to_expr(self) -> Union[nw.Expr, "pl.Expr", "F.Column"]:
         """Column expression expressed as DataFrame API object"""
 
         _value = self.expr.replace("\n", " ")
 
         if self.df_api == "NARWHALS":
             if self.type == "SQL":
-                from laktory.narwhals.expr import sql_expr
+                from laktory.narwhals.functions import sql_expr
 
                 expr = sql_expr(_value)
             else:
