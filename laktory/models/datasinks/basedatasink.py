@@ -3,7 +3,6 @@ import uuid
 from pathlib import Path
 from typing import Any
 from typing import Literal
-from typing import Union
 
 import narwhals as nw
 from pydantic import Field
@@ -31,7 +30,7 @@ SPARK_MODES = [
 ] + LAKTORY_MODES
 SPARK_STREAMING_MODES = ["APPEND", "COMPLETE", "UPDATE"] + LAKTORY_MODES
 POLARS_DELTA_MODES = ["ERROR", "APPEND", "OVERWRITE"] + LAKTORY_MODES
-SUPPORTED_MODES = list(set(SPARK_MODES + SPARK_STREAMING_MODES + POLARS_DELTA_MODES))
+SUPPORTED_MODES = tuple(set(SPARK_MODES + SPARK_STREAMING_MODES + POLARS_DELTA_MODES))
 
 
 class BaseDataSink(BaseModel, PipelineChild):
@@ -52,10 +51,9 @@ class BaseDataSink(BaseModel, PipelineChild):
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
     )  # TODO: Review parameter name
-    mode: Union[Literal.__getitem__(SUPPORTED_MODES), None] = (
-        Field(  # pydantic with python 3.10 does not support | for complex type hints
-            None,
-            description="""
+    mode: Literal.__getitem__(SUPPORTED_MODES) | None = Field(
+        None,
+        description="""
         Write mode.
         
         Spark
@@ -82,7 +80,6 @@ class BaseDataSink(BaseModel, PipelineChild):
         -------
         - MERGE: Append, update and optionally delete records. Only supported for DELTA format. Requires cdc specification.
         """,
-        )
     )
     writer_kwargs: dict[str, Any] = Field(
         {},
