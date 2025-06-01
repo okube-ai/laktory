@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from .dataframecolumn import DataFrameColumn
 from .dataframecolumnexpr import DataFrameColumnExpr
 from .dataframeexpr import DataFrameExpr

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import narwhals as nw
 
 from laktory._logger import get_logger

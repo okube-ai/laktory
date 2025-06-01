@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from laktory.models.resources.databricks import Schema
 from laktory.models.resources.databricks import Table
 from laktory.models.resources.databricks.table import TableColumn

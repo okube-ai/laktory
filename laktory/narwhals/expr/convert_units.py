@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import narwhals as nw
 from planck import units
 

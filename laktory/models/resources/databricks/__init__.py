@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from .accesscontrol import AccessControl
 from .alert import Alert
 from .catalog import Catalog

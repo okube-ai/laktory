@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-
 class SparkFactory:
     def __init__(self):
         self._spark = None

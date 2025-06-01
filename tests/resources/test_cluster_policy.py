@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 
 from laktory.models.resources.databricks import ClusterPolicy

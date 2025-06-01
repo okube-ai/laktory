@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from laktory._logger import get_logger
 from laktory.spark import SparkDataFrame
 

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from .dataframecompare import assert_dfs_equal
 from .dataframesfactory import DataFramesFactory
 from .get_dfs import StreamingSource

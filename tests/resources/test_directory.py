@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from laktory.models.resources.databricks import Directory
 
 directory = Directory(path=".laktory/pipelines/")

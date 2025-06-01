@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from .basedatasource import BaseDataSource
 from .dataframedatasource import DataFrameDataSource
 from .filedatasource import FileDataSource

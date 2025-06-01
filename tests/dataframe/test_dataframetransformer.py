@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import pytest
 
 from laktory._testing import get_df0

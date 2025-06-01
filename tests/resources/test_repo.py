@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from laktory.models.resources.databricks import Repo
 
 repo = Repo(

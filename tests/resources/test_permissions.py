@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from laktory.models.resources.databricks import Permissions
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 
