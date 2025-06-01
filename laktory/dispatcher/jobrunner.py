@@ -17,8 +17,8 @@ class JobRunner(DispatcherRunner):
     Job runner.
     """
 
-    _run_start: Wait = None
-    _run: Run = None
+    _run_start: "Wait" = None
+    _run: "Run" = None
 
     def get_id(self) -> str:
         """Get deployed job id"""
