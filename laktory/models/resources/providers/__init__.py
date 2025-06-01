@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from .awsprovider import AWSProvider
 from .azureprovider import AzureProvider
 from .azurepulumiprovider import AzurePulumiProvider

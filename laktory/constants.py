@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 QUICKSTART_TEMPLATES = [
     "unity-catalog",
     "workspace",

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import narwhals as nw
 import numpy as np
 import polars as pl

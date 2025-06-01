@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from laktory.constants import SUPPORTED_BACKENDS
 
 

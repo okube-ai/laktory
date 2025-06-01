@@ -25,6 +25,7 @@
   * `pyarrow`  
 * Support for 2- and 3-level namespace in source/sink `table_name` in addition to explicit `catalog_name` and `schema_name` definition
 ### Breaking changes
+* Dropped support python 3.9
 * Data sources:
   * Output a Narwhals DataFrame (as opposed to Spark/Polars DataFrame)
   * No longer infer column types by default when reading streams

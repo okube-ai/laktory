@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "laktory"
 # version = dynamic
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     {name = "Olivier Soucy", email = "olivier.soucy@okube.ai"},
 ]
@@ -19,7 +19,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -116,7 +115,7 @@ extend-exclude=["scripts/*"]
 fix = true
 indent-width = 4
 line-length = 88  # default length. standard or many python projects
-target-version = "py39"
+target-version = "py312"
 
 [tool.ruff.format]
 docstring-code-format = true
@@ -131,7 +130,6 @@ extend-select = [
 pydocstyle.convention = "numpy"
 isort.force-single-line = true
 isort.required-imports = [
-    "from __future__ import annotations"
 ]
 
 [tool.ruff.lint.per-file-ignores]

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from laktory import models
 from laktory._testing import MonkeyPatch
 from laktory._testing import Paths

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from laktory.models.grants.cataloggrant import CatalogGrant
 from laktory.models.grants.connectiongrant import ConnectionGrant
 from laktory.models.grants.externallocationgrant import ExternalLocationGrant

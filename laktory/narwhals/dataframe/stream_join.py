@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from laktory._logger import get_logger
 from laktory.enums import STREAMING_BACKENDS
 from laktory.enums import DataFrameBackends

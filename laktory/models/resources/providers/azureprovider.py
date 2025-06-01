@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from laktory.models.resources.providers.baseprovider import BaseProvider
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource

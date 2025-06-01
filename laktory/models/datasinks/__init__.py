@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from .basedatasink import BaseDataSink
 from .filedatasink import FileDataSink
 from .hivemetastoredatasink import HiveMetastoreDataSink

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import laktory.cli._deploy
 import laktory.cli._destroy
 import laktory.cli._init

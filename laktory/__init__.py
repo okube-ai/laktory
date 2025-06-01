@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from ._version import VERSION
 
 __version__ = VERSION

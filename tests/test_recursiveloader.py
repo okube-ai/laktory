@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from laktory._testing import Paths
 from laktory.yaml import RecursiveLoader
 

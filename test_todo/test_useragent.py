@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import os
 
 from laktory._useragent import DATABRICKS_USER_AGENT
