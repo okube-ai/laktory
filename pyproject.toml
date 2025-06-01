@@ -26,7 +26,6 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "eval_type_backport; python_version < '3.10'",
     "inflect",
     "narwhals>=1.24.1",
     "networkx",
