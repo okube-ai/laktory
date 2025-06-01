@@ -18,8 +18,8 @@ class DLTPipelineRunner(DispatcherRunner):
     DLT Pipeline runner.
     """
 
-    _update_start: StartUpdateResponse = None
-    _update: GetUpdateResponse = None
+    _update_start: "StartUpdateResponse" = None
+    _update: "GetUpdateResponse" = None
 
     def get_id(self) -> str:
         """Get deployed pipeline id"""
