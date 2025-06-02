@@ -1,5 +1,4 @@
 from laktory import models
-from laktory._testing import MonkeyPatch
 from laktory._testing import Paths
 from laktory._version import VERSION
 from laktory.dispatcher import Dispatcher
@@ -29,10 +28,6 @@ def test_workspace_client(monkeypatch):
         }
         assert dispatcher.wc is not None
 
-    # Test executed as script
-    if isinstance(monkeypatch, MonkeyPatch):
-        monkeypatch.cleanup()
-
 
 def test_resources():
     dispatcher = Dispatcher(stack=stack)
@@ -46,8 +41,3 @@ def test_resources():
 
     assert job.model_dump() == {"name": "job-stock-prices-ut-stack", "id": None}
     assert dlt.model_dump() == {"name": "${vars.workflow_name}", "id": None}
-
-
-if __name__ == "__main__":
-    test_workspace_client(MonkeyPatch())
-    test_resources()

@@ -10,7 +10,6 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
-from laktory._registries.funcsregistry import FuncsRegistry
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
@@ -281,15 +280,8 @@ class DataFrameMethod(BaseModel, PipelineChild):
             namespace, func_name = func_name.split(".")
         df_as_input = False
 
-        # Get from UDFs
-        registry = FuncsRegistry()
-        try:
-            f = registry.get(func_name, namespace=namespace)
-            df_as_input = True
-        except KeyError:
-            f = None
-
         # Get from built-in narwhals and narwhals extension (including Laktory) functions
+        f = None
         if f is None:
             # Get function from namespace extension
             if namespace:

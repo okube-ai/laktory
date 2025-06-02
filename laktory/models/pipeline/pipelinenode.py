@@ -99,7 +99,7 @@ class PipelineNode(BaseModel, PipelineChild):
     ```
     """
 
-    dlt_template: str = Field(
+    dlt_template: str | None = Field(
         "DEFAULT",
         description="Specify which template (notebook) to use when Delta Live Tables is selected as the orchestrator.",
     )
