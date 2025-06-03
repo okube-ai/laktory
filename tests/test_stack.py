@@ -979,11 +979,19 @@ def test_preview(backend, tmp_path, monkeypatch):
     if backend == "PULUMI" and not os.getenv("PULUMI_ACCESS_TOKEN"):
         pytest.skip("Skipping Pulumi backend. Access token missing.")
 
-    monkeypatch.setenv("DATABRICKS_HOST", "my-host")
-    monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
-    # monkeypatch.setenv("LAKTORY_CLI_RAISE_EXTERNAL_EXCEPTIONS", "true")
+    monkeypatch.chdir(tmp_path)
+
+    # Set required env vars
+    host = os.getenv("DATABRICKS_HOST", "my-host")
+    token = os.getenv("DATABRICKS_TOKEN", "my-token")
+    monkeypatch.setenv("DATABRICKS_HOST", host)
+    monkeypatch.setenv("DATABRICKS_TOKEN", token)
     c0 = settings.cli_raise_external_exceptions
     settings.cli_raise_external_exceptions = True
+
+    # Missing Databricks Host / Token
+    # if host == "my-host" or token == "my-token":
+    #     pytest.skip("Evn variables missing.")
 
     from tests.resources.test_alert import alert
     from tests.resources.test_catalog import catalog
