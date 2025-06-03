@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 # import abc
 from typing import Any
 
@@ -12,7 +10,6 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
-from laktory._registries.funcsregistry import FuncsRegistry
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.datasources import DataSourcesUnion
@@ -37,6 +34,7 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
     def eval(self, backend: DataFrameBackends):
         from laktory.models.datasources.basedatasource import BaseDataSource
 
+        # TODO: Add supported for evaluating list or dict of strings.
         v = self.value
 
         if isinstance(v, BaseDataSource):
@@ -49,7 +47,7 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
                 from narwhals import col  # noqa: F401
                 from narwhals import lit  # noqa: F401
 
-                from laktory.narwhals.expr import sql_expr  # noqa: F401
+                from laktory.narwhals.functions import sql_expr  # noqa: F401
 
                 targets = ["lit(", "col(", "nw.", "sql_expr"]
 
@@ -264,8 +262,9 @@ class DataFrameMethod(BaseModel, PipelineChild):
             Output dataframe
         """
 
-        # Get Backend
+        # Get and set Backend (required to evaluate arguments)
         backend = DataFrameBackends.from_df(df)
+        self.dataframe_backend = backend
 
         # Convert to Narwhals
         if not isinstance(df, AnyFrame):
@@ -281,15 +280,8 @@ class DataFrameMethod(BaseModel, PipelineChild):
             namespace, func_name = func_name.split(".")
         df_as_input = False
 
-        # Get from UDFs
-        registry = FuncsRegistry()
-        try:
-            f = registry.get(func_name, namespace=namespace)
-            df_as_input = True
-        except KeyError:
-            f = None
-
         # Get from built-in narwhals and narwhals extension (including Laktory) functions
+        f = None
         if f is None:
             # Get function from namespace extension
             if namespace:
@@ -324,6 +316,10 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
         # Call function
         df = f(*args, **kwargs)
+
+        # Convert to narwhals when custom function don't return a Narwhals DataFrame
+        if not isinstance(df, AnyFrame):
+            df = nw.from_native(df)
 
         return df
 

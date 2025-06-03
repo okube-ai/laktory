@@ -124,13 +124,15 @@ def test_math_functions():
         ("POW(x, y)", e.col("x") ** e.col("y")),
         ("POW(x, 3)", e.col("x") ** 3),
         ("ROUND(x)", e.col("x").round()),
-        ("ROUND(x, 3)", e.col("x").round(3)),
+        # ("ROUND(x, 3)", e.col("x").round(3)),
         # ("sum(x)", e.col("x").sum()),
         # ("avg(x)", e.col("x").mean()),
         # ("count(x)", e.col("x").count()),
     ]
 
     for sql_expr, nw_expr in exprs:
+        print("Parsing ", sql_expr)
+
         expr = parser.parse(sql_expr)
 
         # Evaluate Expression

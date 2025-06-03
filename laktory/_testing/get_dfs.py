@@ -100,7 +100,6 @@ class StreamingSource:
             filepath = str(filepath.absolute())
 
             _df.to_json(filepath, orient="records")
-            _df.to_json("/Users/osoucy/Documents/tmp.json", orient="records")
 
         return df
 

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -31,7 +29,7 @@ class DispatcherRunner(BaseModel):
     dispatcher: Any = Field(default=None, exclude=True)
 
     @property
-    def wc(self) -> WorkspaceClient:
+    def wc(self) -> "WorkspaceClient":
         """Databricks Workspace Client"""
         return self.dispatcher.wc
 

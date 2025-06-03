@@ -25,7 +25,3 @@ def test_notebook():
     assert nb1.path == "/.laktory/notebooks/hello_world.py"
     assert nb2.path == "/scr/notebooks/hello_world.py"
     assert nb3.path == "/src/hello_world.py"
-
-
-if __name__ == "__main__":
-    test_notebook()
