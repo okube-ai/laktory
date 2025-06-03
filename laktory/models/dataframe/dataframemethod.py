@@ -317,6 +317,10 @@ class DataFrameMethod(BaseModel, PipelineChild):
         # Call function
         df = f(*args, **kwargs)
 
+        # Convert to narwhals when custom function don't return a Narwhals DataFrame
+        if not isinstance(df, AnyFrame):
+            df = nw.from_native(df)
+
         return df
 
     # def get_view_definition(self):
