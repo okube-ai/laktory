@@ -1,10 +1,11 @@
-import os
 from pathlib import Path
 
 import pytest
 
 from laktory import models
 from laktory._settings import settings
+from laktory._testing import skip_pulumi_preview
+from laktory._testing import skip_terraform_plan
 
 root = Path(__file__).parent
 
@@ -22,6 +23,101 @@ def stack():
             "key": "terraform/dev.terraform.tfstate",
         }
     }
+
+    return stack
+
+
+@pytest.fixture
+def full_stack():
+    from tests.resources.test_alert import alert
+    from tests.resources.test_catalog import catalog
+    from tests.resources.test_cluster_policy import cluster_policy
+    from tests.resources.test_dashboard import dashboard
+    from tests.resources.test_directory import directory
+    from tests.resources.test_job import job
+    from tests.resources.test_job import job_for_each
+    from tests.resources.test_metastore import metastore
+    from tests.resources.test_mlflow_experiment import mlexp
+    from tests.resources.test_mlflow_model import mlmodel
+    from tests.resources.test_mlflow_webhook import mlwebhook
+    from tests.resources.test_notebook import nb
+    from tests.resources.test_permissions import permissions
+    from tests.resources.test_pipeline_orchestrators import get_pl_dlt
+    from tests.resources.test_query import query
+    from tests.resources.test_repo import repo
+    from tests.resources.test_schema import schema
+    from tests.resources.test_user import group
+    from tests.resources.test_user import user
+    from tests.resources.test_vectorsearchendpoint import vector_search_endpoint
+    from tests.resources.test_vectorsearchindex import vector_search_index
+    from tests.resources.test_workspacebinding import workspace_binding
+    from tests.resources.test_workspacefile import workspace_file
+
+    # Update paths because preview is executed in tmp_path
+    nb.source = str(root / "resources" / nb.source)
+    workspace_file.source = str(root / "resources" / workspace_file.source)
+
+    _resources = {
+        "databricks_alerts": [alert],
+        "databricks_catalogs": [catalog],
+        "databricks_clusterpolicies": [cluster_policy],
+        "databricks_dashboards": [dashboard],
+        "databricks_directories": [directory],
+        "databricks_jobs": [job, job_for_each],
+        "databricks_metastores": [metastore],
+        "databricks_mlflowexperiments": [mlexp],
+        "databricks_mlflowmodels": [mlmodel],
+        "databricks_mlflowwebhooks": [mlwebhook],
+        "databricks_notebooks": [nb],
+        "databricks_permissions": [permissions],
+        "databricks_queries": [query],
+        "databricks_repos": [repo],
+        "databricks_schemas": [schema],
+        "databricks_groups": [group],
+        "databricks_users": [user],
+        "databricks_vectorsearchendpoints": [vector_search_endpoint],
+        "databricks_vectorsearchindexes": [vector_search_index],
+        "databricks_workspacefiles": [workspace_file],
+        "databricks_workspacebindings": [workspace_binding],
+        "pipelines": [get_pl_dlt()],  # required by job
+    }
+
+    resources = {}
+    for k, v in _resources.items():
+        resources[k] = {r.resource_name: r for r in v}
+
+    resources["providers"] = {
+        "provider-workspace-neptune": {
+            "host": "${vars.DATABRICKS_HOST}",
+            # "azure_client_id": "0",
+            # "azure_client_secret": "0",
+            # "azure_tenant_id": "0",
+        },
+        "databricks": {
+            "host": "${vars.DATABRICKS_HOST}",
+            "token": "${vars.DATABRICKS_TOKEN}",
+        },
+        "databricks1": {
+            "host": "${vars.DATABRICKS_HOST}",
+        },
+        "databricks2": {
+            "host": "${vars.DATABRICKS_HOST}",
+        },
+    }
+
+    stack = models.Stack(
+        organization="okube",
+        name="unit-testing",
+        backend="pulumi",
+        pulumi={
+            "config": {
+                "databricks:host": "${vars.DATABRICKS_HOST}",
+                "databricks:token": "${vars.DATABRICKS_TOKEN}",
+            }
+        },
+        resources=resources,
+        environments={"dev": {}},
+    )
 
     return stack
 
@@ -485,12 +581,8 @@ def test_pulumi_stack(monkeypatch, stack):
     }
 
 
-def test_pulumi_preview(stack):
-    pstack = stack.to_pulumi(env_name="dev")
-    pstack.preview(stack="okube/dev")
-
-
 def test_terraform_stack(monkeypatch, stack):
+    # To prevent from exposing sensitive data, we overwrite some env vars
     monkeypatch.setenv("DATABRICKS_HOST", "my-host")
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
 
@@ -965,136 +1057,37 @@ def test_terraform_stack(monkeypatch, stack):
     }
 
 
-def test_terraform_plan(stack):
-    tstack = stack.to_terraform(env_name="dev")
-    tstack.terraform.backend = (
-        None  # TODO: Add credentials to git actions to use azure backend
-    )
-    tstack.init(flags=["-migrate-state", "-upgrade"])
-    tstack.plan()
+@pytest.mark.parametrize("is_full", [True, False])
+def test_terraform_plan(monkeypatch, stack, full_stack, is_full):
+    if is_full:
+        stack = full_stack
 
-
-@pytest.mark.parametrize("backend", ["PULUMI", "TERRAFORM"])
-def test_preview(backend, tmp_path, monkeypatch):
-    if backend == "PULUMI" and not os.getenv("PULUMI_ACCESS_TOKEN"):
-        pytest.skip("Skipping Pulumi backend. Access token missing.")
-
-    monkeypatch.chdir(tmp_path)
-
-    # Set required env vars
-    host = os.getenv("DATABRICKS_HOST", "my-host")
-    token = os.getenv("DATABRICKS_TOKEN", "my-token")
-    monkeypatch.setenv("DATABRICKS_HOST", host)
-    monkeypatch.setenv("DATABRICKS_TOKEN", token)
     c0 = settings.cli_raise_external_exceptions
     settings.cli_raise_external_exceptions = True
 
-    # Missing Databricks Host / Token
-    # if host == "my-host" or token == "my-token":
-    #     pytest.skip("Evn variables missing.")
+    # Pulumi requires valid Databricks Host and Token and Pulumi Token to run a preview.
+    skip_terraform_plan()
 
-    from tests.resources.test_alert import alert
-    from tests.resources.test_catalog import catalog
-    from tests.resources.test_cluster_policy import cluster_policy
-    from tests.resources.test_dashboard import dashboard
-    from tests.resources.test_directory import directory
-    from tests.resources.test_job import job
-    from tests.resources.test_job import job_for_each
-    from tests.resources.test_metastore import metastore
-    from tests.resources.test_mlflow_experiment import mlexp
-    from tests.resources.test_mlflow_model import mlmodel
-    from tests.resources.test_mlflow_webhook import mlwebhook
-    from tests.resources.test_notebook import nb
-    from tests.resources.test_permissions import permissions
-    from tests.resources.test_pipeline_orchestrators import get_pl_dlt
-    from tests.resources.test_query import query
-    from tests.resources.test_repo import repo
-    from tests.resources.test_schema import schema
-    from tests.resources.test_user import group
-    from tests.resources.test_user import user
-    from tests.resources.test_vectorsearchendpoint import vector_search_endpoint
-    from tests.resources.test_vectorsearchindex import vector_search_index
-    from tests.resources.test_workspacebinding import workspace_binding
-    from tests.resources.test_workspacefile import workspace_file
+    tstack = stack.to_terraform(env_name="dev")
+    tstack.init(flags=["-reconfigure"])
+    tstack.plan()
 
-    # Update paths because preview is executed in tmp_path
-    nb.source = str(root / "resources" / nb.source)
-    workspace_file.source = str(root / "resources" / workspace_file.source)
+    settings.cli_raise_external_exceptions = c0
 
-    _resources = {
-        "databricks_alerts": [alert],
-        "databricks_catalogs": [catalog],
-        "databricks_clusterpolicies": [cluster_policy],
-        "databricks_dashboards": [dashboard],
-        "databricks_directories": [directory],
-        "databricks_jobs": [job, job_for_each],
-        "databricks_metastores": [metastore],
-        "databricks_mlflowexperiments": [mlexp],
-        "databricks_mlflowmodels": [mlmodel],
-        "databricks_mlflowwebhooks": [mlwebhook],
-        "databricks_notebooks": [nb],
-        "databricks_permissions": [permissions],
-        "databricks_queries": [query],
-        "databricks_repos": [repo],
-        "databricks_schemas": [schema],
-        "databricks_groups": [group],
-        "databricks_users": [user],
-        "databricks_vectorsearchendpoints": [vector_search_endpoint],
-        "databricks_vectorsearchindexes": [vector_search_index],
-        "databricks_workspacefiles": [workspace_file],
-        "databricks_workspacebindings": [workspace_binding],
-        "pipelines": [get_pl_dlt()],  # required by job
-    }
 
-    resources = {}
-    for k, v in _resources.items():
-        resources[k] = {r.resource_name: r for r in v}
+@pytest.mark.parametrize("is_full", [True, False])
+def test_pulumi_preview(monkeypatch, stack, full_stack, is_full):
+    if is_full:
+        stack = full_stack
 
-    resources["providers"] = {
-        "provider-workspace-neptune": {
-            "host": "${vars.DATABRICKS_HOST}",
-            # "azure_client_id": "0",
-            # "azure_client_secret": "0",
-            # "azure_tenant_id": "0",
-        },
-        "databricks": {
-            "host": "${vars.DATABRICKS_HOST}",
-            "token": "${vars.DATABRICKS_TOKEN}",
-        },
-        "databricks1": {
-            "host": "${vars.DATABRICKS_HOST}",
-        },
-        "databricks2": {
-            "host": "${vars.DATABRICKS_HOST}",
-        },
-    }
+    c0 = settings.cli_raise_external_exceptions
+    settings.cli_raise_external_exceptions = True
 
-    stack = models.Stack(
-        organization="okube",
-        name="unit-testing",
-        backend="pulumi",
-        pulumi={
-            "config": {
-                "databricks:host": "${vars.DATABRICKS_HOST}",
-                "databricks:token": "${vars.DATABRICKS_TOKEN}",
-            }
-        },
-        resources=resources,
-        environments={"dev": {}},
-    )
+    # Pulumi requires valid Databricks Host and Token and Pulumi Token to run a preview.
+    skip_pulumi_preview()
 
-    os.chdir(tmp_path)
-
-    if backend == "TERRAFORM":
-        _stack = stack.to_terraform("dev")
-        # print(_stack.model_dump_json(exclude_unset=True, indent=4))
-        _stack.init()
-        _stack.plan()
-    elif backend == "PULUMI":
-        _stack = stack.to_pulumi("dev")
-        _stack.preview(stack="okube/dev")
-    else:
-        raise ValueError(backend)
+    _stack = stack.to_pulumi("dev")
+    _stack.preview(stack="okube/dev")
 
     settings.cli_raise_external_exceptions = c0
 

@@ -1,10 +1,10 @@
-import os
-
 import pytest
 from typer.testing import CliRunner
 
 from laktory import models
 from laktory import settings
+from laktory._testing import skip_pulumi_preview
+from laktory._testing import skip_terraform_plan
 from laktory.cli import app
 
 runner = CliRunner()
@@ -74,56 +74,93 @@ def test_read(monkeypatch, template, backend, env, tmp_path):
 
 
 @pytest.mark.parametrize(
-    ["template", "backend", "env"],
+    ["template", "env"],
     [
-        ("workflows", "terraform", "dev"),
-        ("workflows", "pulumi", "dev"),
-        ("workspace", "terraform", "dev"),
-        ("workspace", "pulumi", "dev"),
-        ("unity-catalog", "terraform", None),
-        ("unity-catalog", "pulumi", "global"),
+        ("workflows", "dev"),
+        ("workspace", "dev"),
+        ("unity-catalog", None),
     ],
 )
-def test_preview(monkeypatch, template, backend, env, tmp_path):
+def test_terraform_plan(monkeypatch, template, env, tmp_path):
+    # Set context
+    c0 = settings.cli_raise_external_exceptions
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("LAKTORY_CLI_RAISE_EXTERNAL_EXCEPTIONS", "true")
+    settings.cli_raise_external_exceptions = True
 
     stack_filepath = tmp_path / "stack.yaml"
 
-    # Set required env vars
-    host = os.getenv("DATABRICKS_HOST", "my-host")
-    token = os.getenv("DATABRICKS_TOKEN", "my-token")
-    monkeypatch.setenv("DATABRICKS_HOST", host)
-    monkeypatch.setenv("DATABRICKS_TOKEN", token)
-    monkeypatch.setenv("DATABRICKS_HOST_DEV", host)
-    monkeypatch.setenv("DATABRICKS_TOKEN_DEV", token)
-    c0 = settings.cli_raise_external_exceptions
-    settings.cli_raise_external_exceptions = True
-
-    # Missing Databricks Host / Token
-    if host == "my-host" or token == "my-token":
-        if template == "workflows" and backend == "terraform":
-            pytest.skip("Evn variables missing.")
+    # Pulumi requires valid Databricks Host and Token and Pulumi Token to run a preview.
+    extras = None
+    if template == "unity-catalog":
+        extras = [
+            "AZURE_CLIENT_ID",
+            "AZURE_CLIENT_SECRET",
+            "AZURE_TENANT_ID",
+            "DATABRICKS_ACCOUNT_ID",
+        ]
+    skip_terraform_plan(extras=extras)
 
     # Generate stack
     _ = runner.invoke(
         app,
-        ["quickstart", "--template", template, "--backend", backend],
+        ["quickstart", "--template", template, "--backend", "terraform"],
     )
 
-    if backend == "terraform":
-        # Ideally, we would run `laktory init`, but the runner does not seem to handle running multiple commands
-        with open(stack_filepath, "r") as fp:
-            pstack = models.Stack.model_validate_yaml(fp).to_terraform(env_name=env)
-            pstack.init(flags=["-migrate-state", "-upgrade"])
-
+    # Read stack
     with open(stack_filepath, "r") as fp:
-        if backend == "terraform":
-            stack = models.Stack.model_validate_yaml(fp).to_terraform(env_name=env)
-            stack.plan()
-        else:
-            stack = models.Stack.model_validate_yaml(fp).to_pulumi(env_name=env)
-            stack.preview(f"okube/{env}")
+        stack = models.Stack.model_validate_yaml(fp).to_terraform(env_name=env)
 
+    # Preview
+    stack.init(flags=["-reconfigure"])
+    stack.plan()
+
+    # Reset context
+    settings.cli_raise_external_exceptions = c0
+
+
+@pytest.mark.parametrize(
+    ["template", "env"],
+    [
+        ("workflows", "dev"),
+        ("workspace", "dev"),
+        ("unity-catalog", "global"),
+    ],
+)
+def test_pulumi_preview(monkeypatch, template, env, tmp_path):
+    # Set context
+    c0 = settings.cli_raise_external_exceptions
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("LAKTORY_CLI_RAISE_EXTERNAL_EXCEPTIONS", "true")
+    settings.cli_raise_external_exceptions = True
+
+    stack_filepath = tmp_path / "stack.yaml"
+
+    # Pulumi requires valid Databricks Host and Token and Pulumi Token to run a preview.
+    extras = None
+    if template == "unity-catalog":
+        extras = [
+            "AZURE_CLIENT_ID",
+            "AZURE_CLIENT_SECRET",
+            "AZURE_TENANT_ID",
+            "DATABRICKS_ACCOUNT_ID",
+        ]
+    skip_pulumi_preview(extras=extras)
+
+    # Generate stack
+    _ = runner.invoke(
+        app,
+        ["quickstart", "--template", template, "--backend", "pulumi"],
+    )
+
+    # Read stack
+    with open(stack_filepath, "r") as fp:
+        stack = models.Stack.model_validate_yaml(fp).to_pulumi(env_name=env)
+
+    # Preview
+    stack.preview(stack="okube/dev")
+
+    # Reset context
     settings.cli_raise_external_exceptions = c0
 
 
