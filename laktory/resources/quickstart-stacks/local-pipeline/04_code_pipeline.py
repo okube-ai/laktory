@@ -1,3 +1,4 @@
+import laktory as lk
 from laktory import models
 
 # --------------------------------------------------------------------------- #
@@ -16,6 +17,7 @@ node_brz = models.PipelineNode(
     name="brz_stock_prices",
     source=models.FileDataSource(
         path="./data/stock_prices.json",
+        format="JSONL",
     ),
     sinks=[
         models.FileDataSink(
@@ -41,10 +43,10 @@ node_slv = models.PipelineNode(
             format="PARQUET",
         )
     ],
-    transformer=models.PolarsChain(
+    transformer=models.DataFrameTransformer(
         nodes=[
-            models.PolarsChainNode(
-                sql_expr="""
+            models.DataFrameExpr(
+                expr="""
                     SELECT
                       CAST(data.created_at AS TIMESTAMP) AS created_at,
                       data.symbol AS name,
@@ -58,11 +60,11 @@ node_slv = models.PipelineNode(
                       {df}                
                 """
             ),
-            models.PolarsChainNode(
+            models.DataFrameMethod(
                 func_name="unique",
                 func_kwargs={
                     "subset": ["symbol", "created_at"],
-                    "keep": "first",
+                    "keep": "any",
                 },
             ),
         ]
@@ -75,15 +77,22 @@ node_slv = models.PipelineNode(
 # --------------------------------------------------------------------------- #
 
 
-def process_stocks(df):
-    import polars as pl
+@lk.api.register_anyframe_namespace("custom")
+class CustomNamespace:
+    def __init__(self, _df):
+        self._df = _df
 
-    df = df.with_columns(
-        open_rounder=pl.col("open").round(2),
-        close_rounded=pl.col("close").round(2),
-    )
+    def process_stocks(self):
+        import polars as pl
 
-    return df
+        df = self._df.to_native()  # convert from Narwhals to Polars
+
+        df = df.with_columns(
+            open_rounder=pl.col("open").round(2),
+            close_rounded=pl.col("close").round(2),
+        )
+
+        return df
 
 
 node_gld = models.PipelineNode(
@@ -91,10 +100,10 @@ node_gld = models.PipelineNode(
     source=models.PipelineNodeDataSource(
         node_name="slv_stock_prices",
     ),
-    transformer=models.PolarsChain(
+    transformer=models.DataFrameTransformer(
         nodes=[
-            models.PolarsChainNode(
-                func_name="process_stocks",
+            models.DataFrameMethod(
+                func_name="custom.process_stocks",
             ),
         ]
     ),
@@ -116,4 +125,4 @@ pipeline = models.Pipeline(
 )
 
 # Run
-pipeline.execute(udfs=[process_stocks])
+pipeline.execute()

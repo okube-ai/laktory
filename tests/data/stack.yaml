@@ -15,13 +15,8 @@ resources:
       variables:
         workflow_name: pl-stock-prices-ut-stack
       name: ${vars.workflow_name}
-      orchestrator: DATABRICKS_DLT
-      nodes:
-        - name: first_node
-          source:
-            path: /tmp/
-          dlt_template: null
-      databricks_dlt:
+      orchestrator:
+        type: DATABRICKS_DLT
         configuration:
           business_unit: ${vars.business_unit}
           workflow_name: ${vars.workflow_name}
@@ -36,6 +31,12 @@ resources:
             permission_level: CAN_RUN
         options:
           provider: ${resources.databricks}
+      nodes:
+        - name: first_node
+          source:
+            path: /tmp/
+            format: JSON
+          dlt_template: null
   databricks_jobs:
     job-stock-prices-ut-stack:
       name: job-stock-prices-ut-stack
@@ -114,10 +115,9 @@ environments:
     resources:
       pipelines:
         pl-custom-name:
-          databricks_dlt:
+          orchestrator:
             development: False
     variables:
       env: prod
       is_dev: false
       node_type_id: Standard_DS4_v2
-

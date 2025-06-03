@@ -60,10 +60,20 @@ jobs:
         if: ${{ env.run_tests == 'true' && success()}}
         run: make install-dev test
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          LAKEHOUSE_SA_CONN_STR: ${{ secrets.LAKEHOUSE_SA_CONN_STR }}
+
+          # Terraform and Pulumi Preview
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+          # Pulumi Preview
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+          # Unity Catalog Quickstart Preview
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          DATABRICKS_ACCOUNT_ID: ${{ secrets.DATABRICKS_ACCOUNT_ID }}
+
 
 #      - name: Publish test coverage
 #        uses: codecov/codecov-action@v1

@@ -13,9 +13,7 @@ job = Job(
     tasks=[
         {
             "depends_ons": [{"task_key": "ingestion"}],
-            "pipeline_task": {
-                "pipeline_id": "${resources.dlt-pipeline-pl-spark-dlt.id}"
-            },
+            "pipeline_task": {"pipeline_id": "${resources.dlt-pipeline-pl-dlt.id}"},
             "task_key": "pipeline",
         },
         {
@@ -166,7 +164,7 @@ def test_job_model():
                 "notebook_task": None,
                 "notification_settings": None,
                 "pipeline_task": {
-                    "pipeline_id": "${resources.dlt-pipeline-pl-spark-dlt.id}",
+                    "pipeline_id": "${resources.dlt-pipeline-pl-dlt.id}",
                     "full_refresh": None,
                 },
                 "retry_on_timeout": None,
@@ -332,9 +330,7 @@ def test_job_pulumi():
             },
             {
                 "depends_ons": [{"task_key": "ingestion"}],
-                "pipeline_task": {
-                    "pipeline_id": "${resources.dlt-pipeline-pl-spark-dlt.id}"
-                },
+                "pipeline_task": {"pipeline_id": "${resources.dlt-pipeline-pl-dlt.id}"},
                 "task_key": "pipeline",
             },
             {
