@@ -106,13 +106,17 @@ class PulumiStack(BaseModel):
         worker = Worker()
 
         cmd = ["pulumi", command]
-        cmd += ["-s", stack]
-
-        if flags is not None:
+        if stack:
+            cmd += ["-s", stack]
+        if flags:
             cmd += flags
 
         # Inject user-agent value for monitoring usage as a Databricks partner
         set_databricks_sdk_upstream()
+
+        logger.info(
+            f"RAISING EXPCETIONS {settings.cli_raise_external_exceptions}",
+        )
 
         logger.info(f"Invoking '{' '.join(cmd)}'")
         worker.run(

@@ -71,7 +71,7 @@ class LaktorySettings(BaseModel):
     """
     Laktory Settings
 
-    Attributes
+    Parameters
     ----------
     dataframe_backend:
         DataFrame backend
@@ -87,6 +87,7 @@ class LaktorySettings(BaseModel):
     """
 
     dataframe_backend: str = None
+    dataframe_api: Literal["NARWHALS", "NATIVE"] = None
     workspace_laktory_root: str = "/.laktory/"
     laktory_root: str = "/laktory/"
 
@@ -100,6 +101,9 @@ class LaktorySettings(BaseModel):
 
         if self.laktory_root:
             settings.laktory_root = self.laktory_root
+
+        if self.dataframe_api:
+            settings.dataframe_api = self.dataframe_api
 
         return self
 
@@ -126,7 +130,7 @@ class StackResources(BaseModel):
     """
     Resources definition for a given stack or stack environment.
 
-    Attributes
+    Parameters
     ----------
     databricks_alerts:
         Databricks Alerts
@@ -283,7 +287,7 @@ class EnvironmentStack(BaseModel):
     """
     Environment-specific stack definition.
 
-    Attributes
+    Parameters
     ----------
     backend:
         IaC backend used for deployment.
@@ -323,7 +327,7 @@ class EnvironmentSettings(BaseModel):
     """
     Settings overwrite for a specific environments
 
-    Attributes
+    Parameters
     ----------
     resources:
         Dictionary of resources to be deployed. Each key should be a resource
@@ -345,7 +349,7 @@ class Stack(BaseModel):
     The Stack defines a collection of deployable resources, the deployment
     configuration, some variables and the environment-specific settings.
 
-    Attributes
+    Parameters
     ----------
     backend:
         IaC backend used for deployment.

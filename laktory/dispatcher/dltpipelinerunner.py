@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import time
 from typing import TYPE_CHECKING
 from typing import Literal
@@ -20,8 +18,8 @@ class DLTPipelineRunner(DispatcherRunner):
     DLT Pipeline runner.
     """
 
-    _update_start: StartUpdateResponse = None
-    _update: GetUpdateResponse = None
+    _update_start: "StartUpdateResponse" = None
+    _update: "GetUpdateResponse" = None
 
     def get_id(self) -> str:
         """Get deployed pipeline id"""

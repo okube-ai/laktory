@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 class TableLookup(ResourceLookup):
     """
-    Attributes
+    Parameters
     ----------
     name:
         Full name of the databricks_table: `catalog`.`schema`.`table`
@@ -28,7 +28,7 @@ class TableColumn(BaseModel):
     """
     A table column.
 
-    Attributes
+    Parameters
     ----------
     name:
         User-visible name of column
@@ -59,7 +59,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     A table resides in the third layer of Unity Catalog’s three-level
     namespace. It contains rows of data.
 
-    Attributes
+    Parameters
     ----------
     catalog_name:
         Name of the catalog storing the table

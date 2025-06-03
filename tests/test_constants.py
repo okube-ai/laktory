@@ -1,10 +1,6 @@
-from laktory.constants import SUPPORTED_DATATYPES
+from laktory.constants import SUPPORTED_BACKENDS
 
 
 def test_constants():
-    assert "double" in SUPPORTED_DATATYPES
-    assert "str" not in SUPPORTED_DATATYPES
-
-
-if __name__ == "__main__":
-    test_constants()
+    assert "pulumi" in SUPPORTED_BACKENDS
+    assert "tofu" not in SUPPORTED_BACKENDS

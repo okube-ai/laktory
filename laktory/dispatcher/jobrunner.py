@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import time
 from typing import TYPE_CHECKING
 from typing import Literal
@@ -19,8 +17,8 @@ class JobRunner(DispatcherRunner):
     Job runner.
     """
 
-    _run_start: Wait = None
-    _run: Run = None
+    _run_start: "Wait" = None
+    _run: "Run" = None
 
     def get_id(self) -> str:
         """Get deployed job id"""

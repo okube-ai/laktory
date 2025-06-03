@@ -234,6 +234,7 @@ To use the `DATABRICKS_DLT` orchestrator, you must also add the supporting
 to your stack. 
 
 Here is a simplified version:
+
 ```py title="dlt_laktory_pl"
 from laktory import dlt
 from laktory import models
@@ -251,7 +252,7 @@ def define_table(node, sink):
     def get_df():
 
         # Execute node
-        node.execute(spark=spark)
+        node.execute()
         if sink.is_quarantine:
             df = node.quarantine_df
         else:

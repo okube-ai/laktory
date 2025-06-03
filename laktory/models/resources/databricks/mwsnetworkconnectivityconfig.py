@@ -8,7 +8,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule(BaseModel):
     """
-    Attributes
+    Parameters
     ----------
     cidr_blocks:
         todo
@@ -21,7 +21,7 @@ class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRu
     BaseModel
 ):
     """
-    Attributes
+    Parameters
     ----------
     subnets:
         todo
@@ -38,7 +38,7 @@ class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRu
 
 class MwsNetworkConnectivityConfigEgressConfigDefaultRules(BaseModel):
     """
-    Attributes
+    Parameters
     ----------
     aws_stable_ip_rule:
         todo
@@ -55,7 +55,7 @@ class MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRul
     BaseModel
 ):
     """
-    Attributes
+    Parameters
     ----------
     connection_state:
         todo
@@ -93,7 +93,7 @@ class MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRul
 
 class MwsNetworkConnectivityConfigEgressConfigTargetRules(BaseModel):
     """
-    Attributes
+    Parameters
     ----------
     azure_private_endpoint_rules:
         todo
@@ -108,7 +108,7 @@ class MwsNetworkConnectivityConfigEgressConfig(BaseModel):
     """
     Databricks Metastore Data Access AWS IAM Role
 
-    Attributes
+    Parameters
     ----------
     default_rules:
         todo
@@ -124,7 +124,7 @@ class MwsNetworkConnectivityConfig(BaseModel, PulumiResource, TerraformResource)
     """
     Databricks Mws Network Connectivity Config
 
-    Attributes
+    Parameters
     ----------
     account_id:
         todo

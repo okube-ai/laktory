@@ -1,7 +1,5 @@
-from typing import Union
-
 from laktory.models import BaseModel
-from laktory.typing import var
+from laktory.typing import VariableType
 
 
 class Price(BaseModel):
@@ -30,7 +28,7 @@ def test_bool():
 
     # annotation
     ann = m.model_fields["active"].annotation
-    assert ann == Union[bool, var]
+    assert ann == bool | VariableType
 
 
 def test_int():
@@ -44,7 +42,7 @@ def test_int():
 
     # annotation
     ann = m.model_fields["id"].annotation
-    assert ann == Union[int, var]
+    assert ann == int | VariableType
 
 
 def test_string():
@@ -58,7 +56,7 @@ def test_string():
 
     # annotation
     ann = m.model_fields["symbol"].annotation
-    assert ann == Union[str, var]
+    assert ann == str | VariableType
 
 
 def test_model():
@@ -73,7 +71,7 @@ def test_model():
 
     # annotation
     ann = m.model_fields["price"].annotation
-    assert ann == Union[Price, var]
+    assert ann == Price | VariableType
 
 
 def test_list():
@@ -91,7 +89,7 @@ def test_list():
 
     # annotation
     ann = m.model_fields["ids"].annotation
-    assert ann == Union[list[Union[int, var]], var]
+    assert ann == list[int | VariableType] | VariableType
 
 
 def test_dict():
@@ -114,12 +112,4 @@ def test_dict():
 
     # annotation
     ann = m.model_fields["prices_dict"].annotation
-    assert ann == Union[dict[Union[int, var], Union[Price, var]], var]
-
-
-if __name__ == "__main__":
-    test_bool()
-    test_int()
-    test_string()
-    test_list()
-    test_dict()
+    assert ann == dict[int | VariableType, Price | VariableType] | VariableType

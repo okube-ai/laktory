@@ -7,7 +7,7 @@ class VolumeGrant(BaseModel):
     """
     Privileges granted to a principal and operating on a volume
 
-    Attributes
+    Parameters
     ----------
     principal
         User, group or service principal name

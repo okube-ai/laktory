@@ -7,7 +7,7 @@ class FunctionGrant(BaseModel):
     """
     Privileges granted to a principal and operating on a function
 
-    Attributes
+    Parameters
     ----------
     principal
         User, group or service principal name

@@ -16,7 +16,7 @@ class ResourceOptions(BaseModel):
     """
     Resource options for deployment.
 
-    Attributes
+    Parameters
     ----------
     is_enabled:
         If `False`, resource is not passed to the IaC backend and is not
@@ -107,7 +107,7 @@ class BaseResource(_BaseModel):
     core resources. This `BaseResource` class is derived from
     `pydantic.BaseModel`.
 
-    Attributes
+    Parameters
     ----------
     resource_name:
         Name of the resource in the context of infrastructure as code. If None,
@@ -129,6 +129,10 @@ class BaseResource(_BaseModel):
     @classmethod
     def base_lookup(cls, data: Any) -> Any:
         if data is None:
+            return data
+
+        if not isinstance(data, dict):
+            # TODO: Add support if data is a Base Resource instance
             return data
 
         lookup_existing = data.get("lookup_existing", None)

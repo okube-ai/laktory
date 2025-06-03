@@ -16,7 +16,7 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Lakeview Dashboard
 
-    Attributes
+    Parameters
     ----------
     access_controls:
         Dashboard access controls

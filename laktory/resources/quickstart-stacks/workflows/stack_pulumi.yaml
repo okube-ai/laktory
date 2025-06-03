@@ -24,8 +24,8 @@ resources:
 
   # Laktory Sample Pipelines
   #   - Deployed resources depend on selected orchestrator
-  #   - pl-stocks-sql: Deployed as a Job with SQL transformations
-  #   - pl-stocks-spark-dlt: Deployed as a Delta Live Tables with spark transformations
+  #   - pl-stocks-job: Deployed as a Job with SQL transformations
+  #   - pl-stocks-dlt: Deployed as a Delta Live Tables with spark transformations
   pipelines:
     pl-stocks-job: !use resources/pl-stocks-job.yaml
     pl-stocks-dlt: !use resources/pl-stocks-dlt.yaml

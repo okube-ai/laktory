@@ -14,7 +14,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 class GroupLookup(ResourceLookup):
     """
-    Attributes
+    Parameters
     ----------
     id:
         Id of the group. Only supported when using Pulumi backend.
@@ -30,7 +30,7 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks group
 
-    Attributes
+    Parameters
     ----------
     acl_principal_id:
         Identifier for use in databricks_access_control_rule_set, e.g. `groups/Some Group`.

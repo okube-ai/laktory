@@ -12,7 +12,7 @@ class GrantsGrant(BaseModel):
     """
     Grants grant
 
-    Attributes
+    Parameters
     ----------
     principal:
         User, group or service principal name
@@ -31,7 +31,7 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
     Authoritative for all principals. Sets the grants of a securable and replaces any
     existing grants defined inside or outside of Laktory.
 
-    Attributes
+    Parameters
     ----------
     catalog:
         Name of the catalog to assign the grants to

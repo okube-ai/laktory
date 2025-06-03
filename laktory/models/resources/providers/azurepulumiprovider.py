@@ -6,7 +6,7 @@ class AzurePulumiProvider(BaseProvider, PulumiResource):
     """
     Azure Pulumi (Native) Provider
 
-    Attributes
+    Parameters
     ----------
     auxiliary_tenant_ids:
         #TODO

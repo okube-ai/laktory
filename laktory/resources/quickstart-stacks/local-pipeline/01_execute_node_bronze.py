@@ -19,7 +19,7 @@ node = pipeline.nodes_dict["brz_stock_prices"]
 
 # Read source
 source_df = node.source.read()
-print(source_df)
+print(source_df.to_native().collect())
 
 # This node simply reads raw data from json files and output and consolidate
 # them into a DataFrame which is written as a parquet file. As such, it

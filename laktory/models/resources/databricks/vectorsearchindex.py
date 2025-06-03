@@ -11,7 +11,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 class VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn(BaseModel):
     """
-    Attributes
+    Parameters
     ----------
     embedding_model_endpoint_name:
         The name of the embedding model endpoint
@@ -26,7 +26,7 @@ class VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn(BaseModel):
 
 class VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn(BaseModel):
     """
-    Attributes
+    Parameters
     ----------
     embedding_dimension:
         Dimension of the embedding vector.
@@ -41,7 +41,7 @@ class VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn(BaseModel):
 
 class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
     """
-    Attributes
+    Parameters
     ----------
     embedding_source_columns:
         Array of objects representing columns that contain the embedding source
@@ -84,7 +84,7 @@ class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
 
 class VectorSearchIndexDirectAccessIndexSpec(BaseModel):
     """
-    Attributes
+    Parameters
     ----------
     embedding_source_columns:
         Array of objects representing columns that contain the embedding source
@@ -116,7 +116,7 @@ class VectorSearchIndex(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Warehouse
 
-    Attributes
+    Parameters
     ----------
     access_controls:
         Vector search endpoint access controls
