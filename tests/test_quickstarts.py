@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from typer.testing import CliRunner
 
@@ -93,6 +95,8 @@ def test_terraform_plan(monkeypatch, template, env, tmp_path):
     # Pulumi requires valid Databricks Host and Token and Pulumi Token to run a preview.
     extras = None
     if template == "unity-catalog":
+        monkeypatch.setenv("DATABRICKS_HOST_DEV", os.getenv("DATABRICKS_HOST"))
+        monkeypatch.setenv("DATABRICKS_TOKEN_DEV", os.getenv("DATABRICKS_TOKEN"))
         extras = [
             "AZURE_CLIENT_ID",
             "AZURE_CLIENT_SECRET",

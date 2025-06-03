@@ -18,8 +18,6 @@ def skip_test(required, extras=None):
     for k in required:
         if not os.getenv(k):
             missing += [k]
-        else:
-            print(k, list(os.getenv(k)))
     if missing:
         pytest.skip(f"{missing} not available.")
 
