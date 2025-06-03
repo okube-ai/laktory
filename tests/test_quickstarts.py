@@ -158,8 +158,7 @@ def test_pulumi_preview(monkeypatch, template, env, tmp_path):
         stack = models.Stack.model_validate_yaml(fp).to_pulumi(env_name=env)
 
     # Preview
-    # stack.preview(stack=f"okube/{env}")
-    stack.preview(stack="okube/dev")
+    stack.preview(stack=f"okube/{env}")
 
     # Reset context
     settings.cli_raise_external_exceptions = c0
