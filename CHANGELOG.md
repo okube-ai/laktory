@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.7.4] - Unreleased
-### Added
-* n/a
-### Fixed
-* n/a
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* `merge_cdc_options` to allow matching null primary keys
 
 ## [0.7.3] - 2025-04-16
 ### Added

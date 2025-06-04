@@ -49,6 +49,14 @@ class DataSinkMergeCDCOptions(BaseModel):
     include_columns:
         A subset of columns to include in the target table. Use
         `include_columns` to specify the complete list of columns to include.
+    match_null_primary_keys:
+        By default, in SQL semantics, `NULL` is not equal to any value,
+        including  another `NULL`. As a result, in a merge condition, rows
+        where the primary key is `NULL` will not match with rows in the target
+        table.
+
+        Set this option to `True` to treat `NULL` primary keys as equal, allowing
+        them to match during merge operations.
     order_by:
         The column name specifying the logical order of CDC events in the
         source data. Used to handle change events that arrive out of order.
@@ -75,6 +83,7 @@ class DataSinkMergeCDCOptions(BaseModel):
     exclude_columns: list[str] = None
     ignore_null_updates: bool = False
     include_columns: list[str] = None
+    match_null_primary_keys: bool = False
     order_by: str = None
     primary_keys: list[str] = None
     scd_type: Literal[1, 2] = 1
@@ -331,6 +340,11 @@ class DataSinkMergeCDCOptions(BaseModel):
 
             # Define merge
             conditions = [f"source.{c} = target.{c}" for c in self.primary_keys]
+            if self.match_null_primary_keys:
+                conditions = [
+                    f"(source.{c} = target.{c}) OR (source.{c} IS NULL AND target.{c} IS NULL)"
+                    for c in self.primary_keys
+                ]
             merge = table_target.alias("target").merge(
                 source.alias("source"),
                 condition=" AND ".join(conditions),
@@ -404,6 +418,8 @@ class DataSinkMergeCDCOptions(BaseModel):
             condition = F.expr(f"target.{self.end_at} IS NULL")
             for c in self.primary_keys:
                 condition = condition & F.expr(f"source.{c} = target.{c}")
+                if self.match_null_primary_keys:
+                    condition = condition & F.expr(f"(source.{c} = target.{c}) OR (source.{c} IS NULL AND target.{c} IS NULL)")
             merge = table_target.alias("target").merge(
                 upsert_or_delete.filter(F.col(self.end_at).isNull()).alias("source"),
                 condition=condition,
