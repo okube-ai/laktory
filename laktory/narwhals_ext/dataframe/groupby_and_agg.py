@@ -25,33 +25,37 @@ def groupby_and_agg(
     Examples
     --------
     ```py
-    import polars as pl
     import narwhals as nw
+    import polars as pl
 
-    import laktory  # noqa: F401
+    import laktory as lk  # noqa: F401
 
-    df0 = pl.DataFrame(
-        {
-            "symbol": ["AAPL", "AAPL"],
-            "price": [200.0, 205.0],
-            "tstamp": ["2023-09-01", "2023-09-02"],
-        }
+    df0 = nw.from_native(
+        pl.DataFrame(
+            {
+                "x": [0, 0, 1, 1],
+                "y": [1, 2, 3, 4],
+            }
+        )
     )
-    df0 = nw.from_native(df0)
 
     df = df0.laktory.groupby_and_agg(
-        groupby_columns=["symbol"],
+        groupby_columns=["x"],
         agg_expressions=[
-            "nw.col('price').mean().alias('mean_price')",
+            "nw.col('y').mean().alias('mean_price')",
         ],
     )
 
-    print(df.glimpse(return_as_string=True))
+    print(df)
     '''
-    Rows: 1
-    Columns: 2
-    $ symbol     <str> 'AAPL'
-    $ mean_price <f64> 202.5
+    ┌──────────────────┐
+    |Narwhals DataFrame|
+    |------------------|
+    || x | mean_price ||
+    ||---|------------||
+    || 1 | 3.5        ||
+    || 0 | 1.5        ||
+    └──────────────────┘
     '''
     ```
     """

@@ -16,29 +16,30 @@ def schema_flat(self) -> list[str]:
     import narwhals as nw
     import polars as pl
 
-    import laktory  # noqa: F401
+    import laktory as lk  # noqa: F401
 
-    df = pl.DataFrame(
-        {
-            "indexx": [1, 2, 3],
-            "stock": [
-                {"symbol": "AAPL", "name": "Apple"},
-                {"symbol": "MSFT", "name": "Microsoft"},
-                {"symbol": "GOOGL", "name": "Google"},
-            ],
-            "prices": [
-                [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
-                [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
-                [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
-            ],
-        }
+    df = nw.from_native(
+        pl.DataFrame(
+            {
+                "index": [1, 2, 3],
+                "stock": [
+                    {"symbol": "AAPL", "name": "Apple"},
+                    {"symbol": "MSFT", "name": "Microsoft"},
+                    {"symbol": "GOOGL", "name": "Google"},
+                ],
+                "prices": [
+                    [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
+                    [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
+                    [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
+                ],
+            }
+        )
     )
-    df = nw.from_native(df)
 
     print(df.laktory.schema_flat())
     '''
     [
-        'indexx',
+        'index',
         'stock',
         'stock.symbol',
         'stock.name',

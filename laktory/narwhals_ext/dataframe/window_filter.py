@@ -34,10 +34,10 @@ def window_filter(
     Examples
     --------
     ```py
-    import polars as pl
     import narwhals as nw
+    import polars as pl
 
-    import laktory  # noqa: F401
+    import laktory as lk  # noqa: F401
 
     df0 = nw.from_native(
         pl.DataFrame(
@@ -60,14 +60,16 @@ def window_filter(
         rows_to_keep=1,
     )
 
-    print(df.to_native().glimpse(return_as_string=True))
+    print(df)
     '''
-    Rows: 2
-    Columns: 4
-    $ created_at <datetime[μs]> 2023-01-03 00:00:00, 2023-01-03 00:00:00
-    $ symbol              <str> 'APPL', 'GOOL'
-    $ price               <f64> 201.5, 201.5
-    $ _row_index          <u32> 1, 1
+    ┌─────────────────────────────────────────────────────┐
+    |                 Narwhals DataFrame                  |
+    |-----------------------------------------------------|
+    || created_at          | symbol | price | _row_index ||
+    ||---------------------|--------|-------|------------||
+    || 2023-01-01 00:00:00 | APPL   | 200.0 | 0          ||
+    || 2023-01-01 00:00:00 | GOOL   | 200.0 | 0          ||
+    └─────────────────────────────────────────────────────┘
     '''
     ```
     """

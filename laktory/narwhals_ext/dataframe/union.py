@@ -16,28 +16,32 @@ def union(self, others: AnyFrame | list[AnyFrame]) -> AnyFrame:
     Examples
     --------
     ```py
-    import polars as pl
     import narwhals as nw
+    import polars as pl
 
-    import laktory  # noqa: F401
+    import laktory as lk  # noqa: F401
 
-    df0 = pl.DataFrame(
-        {
-            "symbol": ["AAPL", "AAPL"],
-            "price": [200.0, 205.0],
-            "tstamp": ["2023-09-01", "2023-09-02"],
-        }
+    df0 = nw.from_native(
+        pl.DataFrame(
+            {
+                "x": [0, 1],
+            }
+        )
     )
-    df0 = nw.from_native()
 
     df = df0.laktory.union(df0)
-    print(df.glimpse(return_as_string=True))
+    print(df)
     '''
-    Rows: 4
-    Columns: 3
-    $ symbol <str> 'AAPL', 'AAPL', 'AAPL', 'AAPL'
-    $ price  <f64> 200.0, 205.0, 200.0, 205.0
-    $ tstamp <str> '2023-09-01', '2023-09-02', '2023-09-01', '2023-09-02'
+    ┌──────────────────┐
+    |Narwhals DataFrame|
+    |------------------|
+    |      | x |       |
+    |      |---|       |
+    |      | 0 |       |
+    |      | 1 |       |
+    |      | 0 |       |
+    |      | 1 |       |
+    └──────────────────┘
     '''
     ```
     """

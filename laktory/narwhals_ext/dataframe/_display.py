@@ -43,20 +43,20 @@ def display(
     --------
 
     ```py
-    import pandas as pd
-
-    import laktory  # noqa: F401
-
-    df = spark.createDataFrame(
-        pd.DataFrame(
-            {
-                "symbol": ["AAPL", "GOOGL"],
-                "price": [200.0, 205.0],
-                "tstamp": ["2023-09-01", "2023-09-01"],
-            }
-        )
-    )
-    df.laktory.display(n=5, refresh_interval=2)
+    # import pandas as pd
+    #
+    # import laktory as lk  # noqa: F401
+    #
+    # df = spark.createDataFrame(
+    #     pd.DataFrame(
+    #         {
+    #             "symbol": ["AAPL", "GOOGL"],
+    #             "price": [200.0, 205.0],
+    #             "tstamp": ["2023-09-01", "2023-09-01"],
+    #         }
+    #     )
+    # )
+    # df.laktory.display(n=5, refresh_interval=2)
     ```
     """
 

@@ -19,33 +19,41 @@ def with_row_index(
     order_by:
         Column(s) to order window functions by. For lazy dataframes, this argument is required.
     partition_by:
-        Names of columns to compute row index over.
+        Names of column(s) to compute row index over.
 
     Examples
     --------
     ```py
-    import polars as pl
     import narwhals as nw
+    import polars as pl
 
-    import laktory  # noqa: F401
+    import laktory as lk  # noqa: F401
 
-    df0 = pl.DataFrame(
-        {
-            "symbol": ["AAPL", "AAPL"],
-            "price": [200.0, 205.0],
-            "tstamp": ["2023-09-01", "2023-09-02"],
-        }
+    df0 = nw.from_native(
+        pl.DataFrame(
+            {
+                "x": [0, 0, 0, 1, 1, 1],
+                "y": [3, 2, 1, 1, 2, 3],
+                "z": [0, 1, 3, 9, 16, 25],
+            }
+        )
     )
-    df0 = nw.from_native()
 
-    df = df0.laktory.union(df0)
-    print(df.glimpse(return_as_string=True))
+    df = df0.laktory.with_row_index(name="idx", order_by=["y"], partition_by="x")
+    print(df)
     '''
-    Rows: 4
-    Columns: 3
-    $ symbol <str> 'AAPL', 'AAPL', 'AAPL', 'AAPL'
-    $ price  <f64> 200.0, 205.0, 200.0, 205.0
-    $ tstamp <str> '2023-09-01', '2023-09-02', '2023-09-01', '2023-09-02'
+    ┌────────────────────┐
+    | Narwhals DataFrame |
+    |--------------------|
+    || x | y | z  | idx ||
+    ||---|---|----|-----||
+    || 0 | 3 | 0  | 2   ||
+    || 0 | 2 | 1  | 1   ||
+    || 0 | 1 | 3  | 0   ||
+    || 1 | 1 | 9  | 0   ||
+    || 1 | 2 | 16 | 1   ||
+    || 1 | 3 | 25 | 2   ||
+    └────────────────────┘
     '''
     ```
     """

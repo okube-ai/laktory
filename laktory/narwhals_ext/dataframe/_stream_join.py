@@ -53,38 +53,38 @@ def stream_join(
     Examples
     --------
     ```py
-    import pandas as pd
-
-    import laktory  # noqa: F401
-
-    df_prices = spark.createDataFrame(
-        pd.DataFrame(
-            {
-                "symbol": ["AAPL", "GOOGL"],
-                "price": [200.0, 205.0],
-            }
-        )
-    )
-
-    df_meta = spark.createDataFrame(
-        pd.DataFrame(
-            {
-                "symbol": ["AAPL", "GOOGL"],
-                "name": ["Apple", "Google"],
-            }
-        )
-    )
-
-    df = df_prices.laktory.smart_join(
-        other=df_meta,
-        on=["symbol"],
-    )
-
-    print(df.toPandas().to_string())
-    '''
-       price    name symbol
-    0  200.0   Apple   AAPL
-    1  205.0  Google  GOOGL
+    # import pandas as pd
+    #
+    # import laktory as lk  # noqa: F401
+    #
+    # df_prices = spark.createDataFrame(
+    #     pd.DataFrame(
+    #         {
+    #             "symbol": ["AAPL", "GOOGL"],
+    #             "price": [200.0, 205.0],
+    #         }
+    #     )
+    # )
+    #
+    # df_meta = spark.createDataFrame(
+    #     pd.DataFrame(
+    #         {
+    #             "symbol": ["AAPL", "GOOGL"],
+    #             "name": ["Apple", "Google"],
+    #         }
+    #     )
+    # )
+    #
+    # df = df_prices.laktory.smart_join(
+    #     other=df_meta,
+    #     on=["symbol"],
+    # )
+    #
+    # print(df.toPandas().to_string())
+    # '''
+    #    price    name symbol
+    # 0  200.0   Apple   AAPL
+    # 1  205.0  Google  GOOGL
     '''
     ```
 

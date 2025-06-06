@@ -19,27 +19,28 @@ def has_column(self, col: str) -> bool:
     --------
 
     ```py
-    import polars as pl
     import narwhals as nw
+    import polars as pl
 
-    import laktory  # noqa: F401
+    import laktory as lk  # noqa: F401
 
-    df = pl.DataFrame(
-        {
-            "indexx": [1, 2, 3],
-            "stock": [
-                {"symbol": "AAPL", "name": "Apple"},
-                {"symbol": "MSFT", "name": "Microsoft"},
-                {"symbol": "GOOGL", "name": "Google"},
-            ],
-            "prices": [
-                [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
-                [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
-                [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
-            ],
-        }
+    df = nw.from_native(
+        pl.DataFrame(
+            {
+                "indexx": [1, 2, 3],
+                "stock": [
+                    {"symbol": "AAPL", "name": "Apple"},
+                    {"symbol": "MSFT", "name": "Microsoft"},
+                    {"symbol": "GOOGL", "name": "Google"},
+                ],
+                "prices": [
+                    [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
+                    [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
+                    [{"open": 1, "close": 2}, {"open": 1, "close": 2}],
+                ],
+            }
+        )
     )
-    df = nw.from_native(df)
 
     print(df.laktory.has_column("symbol"))
     # > False

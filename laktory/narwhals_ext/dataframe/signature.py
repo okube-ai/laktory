@@ -10,9 +10,9 @@ def signature(self) -> str:
     ```py
     import polars as pl
 
-    import laktory  # noqa: F401
+    import laktory as lk  # noqa: F401
 
-    df = pl.DataFrame({"x": [1, 2, 3], "label": ["a", "b", "c"]})
+    df = nw.from_native(pl.DataFrame({"x": [1, 2, 3], "label": ["a", "b", "c"]}))
     print(df.laktory.signature())
     # > DataFrame[x: Int64, label: String]
     ```
