@@ -2,8 +2,8 @@ from functools import wraps
 
 import narwhals as nw
 
-from laktory.narwhals.functions.current_timestamp import current_timestamp
-from laktory.narwhals.functions.sql_expr import sql_expr
+from laktory.narwhals_ext.functions.current_timestamp import current_timestamp
+from laktory.narwhals_ext.functions.sql_expr import sql_expr
 
 
 class LaktoryFuncs:  # noqa: F811

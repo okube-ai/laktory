@@ -60,6 +60,9 @@ def display(
     ```
     """
 
+    # TODO: Re-implement for Narwhals
+    raise NotImplementedError()
+
     if not df.isStreaming:
         df.show(n=n, truncate=truncate, vertical=vertical)
 
