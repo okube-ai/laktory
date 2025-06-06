@@ -49,7 +49,7 @@ dataframe_backend: PYSPARK
 nodes:
   - name: brz_stock_prices
     source:
-      path: "./events/stock_prices"
+      path: "./events/stock_prices/"
       format: JSON
     sinks:
     - schema_name: finance

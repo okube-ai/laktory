@@ -61,9 +61,8 @@ logger = get_logger(__name__)
 
 class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     """
-    Pipeline model to manage a full-fledged data pipeline including reading
-    from data sources, applying data transformations through Spark and
-    outputting to data sinks.
+    Pipeline model to manage a data pipeline including reading from data sources,
+    applying data transformations and outputting to data sinks.
 
     A pipeline is composed of collections of `nodes`, each one defining its
     own source, transformations and optional sink. A node may be the source of
@@ -73,220 +72,125 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     be deployed and scheduled using one of the supported orchestrators, such as
     a Databricks Delta Live Tables or job.
 
+    The DataFrame backend used to run the pipeline can be configured at the pipeline
+    level or at the nodes level.
+
     Examples
     --------
     This first example shows how to configure a simple pipeline with 2 nodes.
-    Upon execution, raw data will be read from a CSV file and two DataFrames
+    Upon execution, raw data will be read from a JSON files and two DataFrames
     (bronze and silver) will be created and saved as parquet files. Notice how
-    the first node is used as a data source for the second node.
+    the first node is used as a data source for the second node. Polars is used
+    as the DataFrame backend.
 
     ```py
     import io
 
-    from laktory import models
+    import laktory as lk
 
     pipeline_yaml = '''
         name: pl-stock-prices
-        dataframe_backend: PYSPARK
+        dataframe_backend: POLARS
+
         nodes:
         - name: brz_stock_prices
           source:
-            format: CSV
-            path: ./raw/brz_stock_prices.csv
+            path: ./data/stock_prices.json
+            format: JSONL
           sinks:
-          - format: PARQUET
-            mode: OVERWRITE
-            path: ./dataframes/brz_stock_prices
+          - path: ./data/brz_stock_prices.parquet
+            format: PARQUET
 
         - name: slv_stock_prices
           source:
             node_name: brz_stock_prices
+            as_stream: false
           sinks:
-          - format: PARQUET
-            mode: OVERWRITE
-            path: ./dataframes/slv_stock_prices
+          - path: ./data/slv_stock_prices.parquet
+            format: PARQUET
           transformer:
             nodes:
-              - expr: |
-                    SELECT
-                      data.created_at AS created_at,
-                      data.symbol AS symbol,
-                      data.open AS open,
-                      data.close AS close,
-                      data.high AS high,
-                      data.low AS low,
-                      data.volume AS volume
-                    FROM
-                      {df}
-              - func_name: drop_duplicates
-                func_kwargs:
-                  subset:
-                    - symbol
-                    - timestamp
-                dataframe_api: NATIVE
+            - expr: |
+                SELECT
+                  CAST(data.created_at AS TIMESTAMP) AS created_at,
+                  data.symbol AS name,
+                  data.symbol AS symbol,
+                  data.open AS open,
+                  data.close AS close,
+                  data.high AS high,
+                  data.low AS low,
+                  data.volume AS volume
+                FROM
+                  {df}
+            - func_name: unique
+              func_kwargs:
+                subset:
+                  - symbol
+                  - created_at
+                keep:
+                  any
     '''
 
-    pl = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
+    pl = lk.models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
 
     # Execute pipeline
     # pl.execute()
     ```
 
-    The next example defines a 3 nodes pipeline (1 bronze and 2 silvers)
-    orchestrated with a Databricks Job. Notice how nodes are used as data
-    sources not only for other nodes, but also for the `other` keyword argument
-    of the smart join function (slv_stock_prices). Because we are using the
-    DATABRICKS_JOB orchestrator, the job configuration must be declared.
-    The tasks will be automatically created by the Pipeline model. Each
-    task will execute a single node using the notebook referenced in
-    `databricks_job.notebook_path` the content of this notebook should be
-    similar to laktory.resources.notebooks.job_laktory.pl
+    The next example also defines a 2 nodes pipeline, but uses PySpark as the DataFrame
+    backend. It defines the configuration required to deploy it as a Databricks job. In
+    this case, the sinks are writing to unity catalog tables.
 
     ```py
     import io
 
-    from laktory import models
+    import laktory as lk
 
     pipeline_yaml = '''
-        name: pl-stock-prices
+        name: pl-stocks-job
+        dataframe_backend: PYSPARK
         orchestrator:
-            type: DATABRICKS_JOB
-            name: job-pl-stock-prices
-            notebook_path: /Workspace/.laktory/jobs/job_laktory_pl.py
-            clusters:
-            - name: node-cluster
-              spark_version: 16.3.x-scala2.12
-              node_type_id: Standard_DS3_v2
-        dependencies:
-            - laktory==0.8.0
-            - yfinance
+          type: DATABRICKS_JOB
+
         nodes:
+
         - name: brz_stock_prices
           source:
-            path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
-            format: JSON
+            path: dbfs:/laktory/data/stock_prices/
+            as_stream: false
+            format: JSONL
           sinks:
-            - path: /Volumes/dev/tables/dev_stock_prices/
-              mode: OVERWRITE
-
-        - name: slv_stock_prices
-          layer: SILVER
-          source:
-            node_name: brz_stock_prices
-          sinks:
-          -   path: /Volumes/dev/tables/slv_stock_prices/
-              mode: OVERWRITE
-          transformer:
-            nodes:
-              - expr: |
-                    SELECT
-                      data.created_at AS created_at,
-                      data.symbol AS symbol,
-                      data.open AS open,
-                      data.close AS close,
-                      data.high AS high,
-                      data.low AS low,
-                      data.volume AS volume
-                    FROM
-                      {df}
-              - func_name: drop_duplicates
-                func_kwargs:
-                  subset:
-                    - symbol
-                    - timestamp
-                dataframe_api: NATIVE
-            - func_name: join
-              func_kwargs:
-                'on':
-                  - symbol
-                other:
-                  node_name: slv_stock_meta
-
-        - name: slv_stock_meta
-          layer: SILVER
-          source:
-            path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_meta/
-          sinks:
-          - path: /Volumes/dev/tables/slv_stock_meta/
+          - table_name: brz_stock_prices_job
             mode: OVERWRITE
 
-    '''
-    pl = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
-    ```
-
-    Finally, we re-implement the previous pipeline, but with a few key
-    differences:
-
-    - Orchestrator is `DATABRICKS_DLT` instead of a `DATABRICKS_JOB`
-    - Sinks are Unity Catalog tables instead of storage locations
-    - Data is read as a stream in most nodes
-    - `slv_stock_meta` is simply a DLT view since it does not have an associated
-      sink.
-
-    We also need to provide some basic configuration for the DLT pipeline.
-
-    ```py
-    import io
-
-    from laktory import models
-
-    pipeline_yaml = '''
-        name: pl-stock-prices
-        orchestrator:
-            type: DATABRICKS_DLT
-            catalog: dev
-            target: sandbox
-            access_controls:
-            - group_name: users
-              permission_level: CAN_VIEW
-
-        nodes:
-        - name: brz_stock_prices
-          source:
-            path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
-            format: JSON
-            as_stream: true
-          sinks:
-          - table_name: brz_stock_prices
-
         - name: slv_stock_prices
+          expectations:
+          - name: positive_price
+            expr: open > 0
+            action: DROP
           source:
             node_name: brz_stock_prices
-            as_stream: true
+            as_stream: false
           sinks:
-          - table_name: slv_stock_prices
+          - table_name: slv_stock_prices_job
+            mode: OVERWRITE
+
           transformer:
             nodes:
-              - expr: |
-                    SELECT
-                      data.created_at AS created_at,
-                      data.symbol AS symbol,
-                      data.open AS open,
-                      data.close AS close,
-                      data.high AS high,
-                      data.low AS low,
-                      data.volume AS volume
-                    FROM
-                      {df}
-              - func_name: drop_duplicates
-                func_kwargs:
-                  subset:
-                    - symbol
-                    - timestamp
-                dataframe_api: NATIVE
-            - func_name: join
+            - expr: |
+                SELECT
+                    cast(data.created_at AS TIMESTAMP) AS created_at,
+                    data.symbol AS symbol,
+                    data.open AS open,
+                    data.close AS close
+                FROM
+                    {df}
+            - func_name: drop_duplicates
               func_kwargs:
-                'on':
-                  - symbol
-                other:
-                  node_name: slv_stock_meta
-
-        - name: slv_stock_meta
-          source:
-            path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_meta/
-
+                subset: ["created_at", "symbol"]
+              dataframe_api: NATIVE
     '''
-    pl = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
+    pl = lk.models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
     ```
     """
 

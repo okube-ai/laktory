@@ -33,33 +33,30 @@ class PipelineNode(BaseModel, PipelineChild):
     """
     Pipeline base component generating a DataFrame by reading a data source and
     applying a transformer (chain of dataframe transformations). Optional
-    output to a data sink. Some basic transformations are also natively
-    supported.
+    output to a data sink.
 
     Examples
     --------
     A node reading stock prices data from a CSV file and writing a DataFrame
-    to disk as a parquet file.
+    as a parquet file.
     ```py
     import io
 
-    from laktory import models
+    import laktory as lk
 
     node_yaml = '''
         name: brz_stock_prices
-        layer: BRONZE
         source:
-            format: CSV
-            path: ./raw/brz_stock_prices.csv
+          path: "./events/stock_prices/"
+          format: JSON
         sinks:
-        -   format: PARQUET
-            mode: OVERWRITE
-            path: ./dataframes/brz_stock_prices
+        - path: ./tables/brz_stock_prices/
+          format: PARQUET
     '''
 
-    node = models.PipelineNode.model_validate_yaml(io.StringIO(node_yaml))
+    node = lk.models.PipelineNode.model_validate_yaml(io.StringIO(node_yaml))
 
-    # node.execute(spark)
+    # node.execute()
     ```
 
     A node reading stock prices from an upstream node and writing a DataFrame
@@ -67,35 +64,38 @@ class PipelineNode(BaseModel, PipelineChild):
     ```py
     import io
 
-    from laktory import models
+    import laktory as lk
 
     node_yaml = '''
         name: slv_stock_prices
-        layer: SILVER
         source:
           node_name: brz_stock_prices
         sinks:
-        - catalog_name: hive_metastore
-          schema_name: default
+        - schema_name: finance
           table_name: slv_stock_prices
         transformer:
           nodes:
-          - with_column:
-              name: created_at
-              type: timestamp
-              expr: data.created_at
-          - with_column:
-              name: symbol
-              expr: data.symbol
-          - with_column:
-              name: close
-              type: double
-              expr: data.close
+          - expr: |
+                SELECT
+                  data.created_at AS created_at,
+                  data.symbol AS symbol,
+                  data.open AS open,
+                  data.close AS close,
+                  data.high AS high,
+                  data.low AS low,
+                  data.volume AS volume
+                FROM
+                  {df}
+          - func_name: drop_duplicates
+            func_kwargs:
+              subset:
+                - symbol
+                - timestamp
     '''
 
-    node = models.PipelineNode.model_validate_yaml(io.StringIO(node_yaml))
+    node = lk.models.PipelineNode.model_validate_yaml(io.StringIO(node_yaml))
 
-    # node.execute(spark)
+    # node.execute()
     ```
     """
 
