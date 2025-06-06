@@ -60,9 +60,10 @@ pytest_examples.run_code.black_format = black_format
 # )
 # spark.conf.set("spark.sql.session.timeZone", "UTC")
 
-# os.environ["POLARS_FMT_TABLE_HIDE_COLUMN_DATA_TYPES"] = "1"
-# os.environ["POLARS_FMT_TABLE_HIDE_DATAFRAME_SHAPE_INFORMATION"] = "1"
-# os.environ["POLARS_FMT_TABLE_FORMATTING"] = "MARKDOWN"
+# Simplify polars dataframe print output
+os.environ["POLARS_FMT_TABLE_HIDE_COLUMN_DATA_TYPES"] = "1"
+os.environ["POLARS_FMT_TABLE_HIDE_DATAFRAME_SHAPE_INFORMATION"] = "1"
+os.environ["POLARS_FMT_TABLE_FORMATTING"] = "MARKDOWN"
 
 
 # --------------------------------------------------------------------------- #

@@ -22,42 +22,56 @@ class DataFrameDataSource(BaseDataSource):
     ---------
     From data with PySpark backend.
     ```python
-    import polars as pl
-
-    from laktory import models
+    import laktory as lk
 
     data = {
-        "x": ["AAPL", "GOOGL"],
-        "y": [200.0, 205.0],
-        "z": ["2023-09-01", "2023-09-01"],
+        "x": [0, 1],
+        "y": ["a", "b"],
     }
 
     # From data using PySpark
-    source = models.DataFrameDataSource(
+    source = lk.models.DataFrameDataSource(
         data=data,
         dataframe_backend="PYSPARK",
     )
     df = source.read()
-    print(df.collect())
+    print(df.collect(backend="pandas"))
     '''
-    ┌────────────────────────────────────────────────────────┐
-    |                   Narwhals LazyFrame                   |
-    |--------------------------------------------------------|
-    |DataFrame[price: double, symbol: string, tstamp: string]|
-    └────────────────────────────────────────────────────────┘
+    ┌──────────────────┐
+    |Narwhals DataFrame|
+    |------------------|
+    |        x  y      |
+    |     0  0  a      |
+    |     1  1  b      |
+    └──────────────────┘
     '''
     ```
+
     From Polars DataFrame
-    ```
-    source = models.DataFrameDataSource(
+    ```python
+    import polars as pl
+
+    import laktory as lk
+
+    data = {
+        "x": [0, 1],
+        "y": ["a", "b"],
+    }
+
+    source = lk.models.DataFrameDataSource(
         df=pl.DataFrame(data),
     )
     df = source.read()
     print(df)
     '''
-      symbol  price      tstamp
-    0   AAPL  200.0  2023-09-01
-    1  GOOGL  205.0  2023-09-01
+    ┌──────────────────┐
+    |Narwhals DataFrame|
+    |------------------|
+    |    | x | y |     |
+    |    |---|---|     |
+    |    | 0 | a |     |
+    |    | 1 | b |     |
+    └──────────────────┘
     '''
     ```
     """
