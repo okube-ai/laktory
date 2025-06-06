@@ -28,12 +28,15 @@ if TYPE_CHECKING:
 class DataFrameColumnExpr(BaseModel, PipelineChild):
     """
     DataFrame Column Expression defined with a string representation of DataFrame
-    API expression or a SQL statement.
+    API expression (native or Narwhals) or a SQL statement.
 
     Examples
     --------
+    Define serializable expressions in native DataFrame API.
     ```py
-    from laktory import models
+    import polars as pl
+
+    import laktory as lk
 
     df = pl.DataFrame(
         {
@@ -41,23 +44,79 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
         }
     )
 
-    expr1 = models.DataFrameColumnExpr(
-        value="col('x')+lit(1)",
+    expr1 = lk.models.DataFrameColumnExpr(
+        expr="pl.col('x')+pl.lit(1)",
         dataframe_backend="POLARS",
         dataframe_api="NATIVE",
     )
 
-    expr2 = models.DataFrameColumnExpr(
-        value="x**2 + 1",
+    expr2 = lk.models.DataFrameColumnExpr(
+        expr="2*x + 1",
         type="SQL",
         dataframe_backend="POLARS",
         dataframe_api="NATIVE",
     )
 
-
-    df = df.with_columns(y1=expr1.df_expr, y2=expr2.df_expr)
+    df = df.with_columns(
+        y1=expr1.to_expr(),
+        y2=expr2.to_expr(),
+    )
 
     print(df)
+    '''
+    | x | y1 | y2 |
+    |---|----|----|
+    | 1 | 2  | 3  |
+    | 2 | 3  | 5  |
+    | 3 | 4  | 7  |
+    '''
+    ```
+
+    Define serializable expressions in Narwhals DataFrame API.
+    ```py
+    import narwhals as nw
+    import polars as pl
+
+    import laktory as lk
+
+    df = nw.from_native(
+        pl.DataFrame(
+            {
+                "x": [1, 2, 3],
+            }
+        )
+    )
+
+    expr1 = lk.models.DataFrameColumnExpr(
+        expr="nw.col('x')+nw.lit(1)",
+        dataframe_backend="POLARS",
+        dataframe_api="NARWHALS",
+    )
+
+    expr2 = lk.models.DataFrameColumnExpr(
+        expr="2*x + 1",
+        type="SQL",
+        dataframe_backend="POLARS",
+        dataframe_api="NARWHALS",
+    )
+
+    df = df.with_columns(
+        y1=expr1.to_expr(),
+        y2=expr2.to_expr(),
+    )
+
+    print(df)
+    '''
+    ┌──────────────────┐
+    |Narwhals DataFrame|
+    |------------------|
+    | | x | y1 | y2 |  |
+    | |---|----|----|  |
+    | | 1 | 2  | 3  |  |
+    | | 2 | 3  | 5  |  |
+    | | 3 | 4  | 7  |  |
+    └──────────────────┘
+    '''
     ```
     """
 
@@ -115,7 +174,7 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
 
         if self.df_api == "NARWHALS":
             if self.type == "SQL":
-                from laktory.narwhals.functions import sql_expr
+                from laktory.narwhals_ext.functions import sql_expr
 
                 expr = sql_expr(_value)
             else:

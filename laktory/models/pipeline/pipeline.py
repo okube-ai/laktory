@@ -87,9 +87,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     pipeline_yaml = '''
         name: pl-stock-prices
+        dataframe_backend: PYSPARK
         nodes:
         - name: brz_stock_prices
-          layer: BRONZE
           source:
             format: CSV
             path: ./raw/brz_stock_prices.csv
@@ -99,7 +99,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             path: ./dataframes/brz_stock_prices
 
         - name: slv_stock_prices
-          layer: SILVER
           source:
             node_name: brz_stock_prices
           sinks:
@@ -108,23 +107,23 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             path: ./dataframes/slv_stock_prices
           transformer:
             nodes:
-            - with_column:
-                name: created_at
-                type: timestamp
-                expr: data.created_at
-            - with_column:
-                name: symbol
-                expr: data.symbol
-            - with_column:
-                name: close
-                type: double
-                expr: data.close
-            - func_name: drop
-              func_args:
-              - value: data
-              - value: producer
-              - value: name
-              - value: description
+              - expr: |
+                    SELECT
+                      data.created_at AS created_at,
+                      data.symbol AS symbol,
+                      data.open AS open,
+                      data.close AS close,
+                      data.high AS high,
+                      data.low AS low,
+                      data.volume AS volume
+                    FROM
+                      {df}
+              - func_name: drop_duplicates
+                func_kwargs:
+                  subset:
+                    - symbol
+                    - timestamp
+                dataframe_api: NATIVE
     '''
 
     pl = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
@@ -150,24 +149,24 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     pipeline_yaml = '''
         name: pl-stock-prices
-        orchestrator: DATABRICKS_JOB
-        databricks_job:
-          name: job-pl-stock-prices
-          notebook_path: /Workspace/.laktory/jobs/job_laktory_pl.py
-          clusters:
+        orchestrator:
+            type: DATABRICKS_JOB
+            name: job-pl-stock-prices
+            notebook_path: /Workspace/.laktory/jobs/job_laktory_pl.py
+            clusters:
             - name: node-cluster
-              spark_version: 14.0.x-scala2.12
+              spark_version: 16.3.x-scala2.12
               node_type_id: Standard_DS3_v2
         dependencies:
-            - laktory==0.3.0
+            - laktory==0.8.0
             - yfinance
         nodes:
         - name: brz_stock_prices
-          layer: BRONZE
           source:
             path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
+            format: JSON
           sinks:
-          -   path: /Volumes/dev/sources/landing/tables/dev_stock_prices/
+            - path: /Volumes/dev/tables/dev_stock_prices/
               mode: OVERWRITE
 
         - name: slv_stock_prices
@@ -175,28 +174,28 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
           source:
             node_name: brz_stock_prices
           sinks:
-          -   path: /Volumes/dev/sources/landing/tables/slv_stock_prices/
+          -   path: /Volumes/dev/tables/slv_stock_prices/
               mode: OVERWRITE
           transformer:
             nodes:
-            - with_column:
-                name: created_at
-                type: timestamp
-                expr: data.created_at
-            - with_column:
-                name: symbol
-                expr: data.symbol
-            - with_column:
-                name: close
-                type: double
-                expr: data.close
-            - func_name: drop
-              func_args:
-              - value: data
-              - value: producer
-              - value: name
-              - value: description
-            - func_name: laktory.smart_join
+              - expr: |
+                    SELECT
+                      data.created_at AS created_at,
+                      data.symbol AS symbol,
+                      data.open AS open,
+                      data.close AS close,
+                      data.high AS high,
+                      data.low AS low,
+                      data.volume AS volume
+                    FROM
+                      {df}
+              - func_name: drop_duplicates
+                func_kwargs:
+                  subset:
+                    - symbol
+                    - timestamp
+                dataframe_api: NATIVE
+            - func_name: join
               func_kwargs:
                 'on':
                   - symbol
@@ -208,7 +207,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
           source:
             path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_meta/
           sinks:
-          - path: /Volumes/dev/sources/landing/tables/slv_stock_meta/
+          - path: /Volumes/dev/tables/slv_stock_meta/
             mode: OVERWRITE
 
     '''
@@ -233,8 +232,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     pipeline_yaml = '''
         name: pl-stock-prices
-        orchestrator: DATABRICKS_DLT
-        databricks_dlt:
+        orchestrator:
+            type: DATABRICKS_DLT
             catalog: dev
             target: sandbox
             access_controls:
@@ -243,15 +242,14 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
         nodes:
         - name: brz_stock_prices
-          layer: BRONZE
           source:
             path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_price/
+            format: JSON
             as_stream: true
           sinks:
           - table_name: brz_stock_prices
 
         - name: slv_stock_prices
-          layer: SILVER
           source:
             node_name: brz_stock_prices
             as_stream: true
@@ -259,24 +257,24 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
           - table_name: slv_stock_prices
           transformer:
             nodes:
-            - with_column:
-                name: created_at
-                type: timestamp
-                expr: data.created_at
-            - with_column:
-                name: symbol
-                expr: data.symbol
-            - with_column:
-                name: close
-                type: double
-                expr: data.close
-            - func_name: drop
-              func_args:
-              - value: data
-              - value: producer
-              - value: name
-              - value: description
-            - func_name: laktory.smart_join
+              - expr: |
+                    SELECT
+                      data.created_at AS created_at,
+                      data.symbol AS symbol,
+                      data.open AS open,
+                      data.close AS close,
+                      data.high AS high,
+                      data.low AS low,
+                      data.volume AS volume
+                    FROM
+                      {df}
+              - func_name: drop_duplicates
+                func_kwargs:
+                  subset:
+                    - symbol
+                    - timestamp
+                dataframe_api: NATIVE
+            - func_name: join
               func_kwargs:
                 'on':
                   - symbol
@@ -284,19 +282,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                   node_name: slv_stock_meta
 
         - name: slv_stock_meta
-          layer: SILVER
           source:
             path: /Volumes/dev/sources/landing/events/yahoo-finance/stock_meta/
 
     '''
     pl = models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
     ```
-
-    References
-    ----------
-    * [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
-    * [Databricks DLT](https://www.databricks.com/product/delta-live-tables)
-
     """
 
     dependencies: list[str] = Field(

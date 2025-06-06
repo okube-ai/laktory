@@ -1,0 +1,1 @@
+::: laktory.narwhals.dataframe.schema_flat

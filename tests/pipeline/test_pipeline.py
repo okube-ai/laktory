@@ -119,7 +119,7 @@ def test_update_from_parent():
             {
                 "name": "node-cluster",
                 "node_type_id": "Standard_DS3_v2",
-                "spark_version": "14.0.x-scala2.12",
+                "spark_version": "16.3.x-scala2.12",
             }
         ],
     )

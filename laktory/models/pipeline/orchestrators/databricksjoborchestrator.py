@@ -30,6 +30,12 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
     Selecting this orchestrator requires to add the supporting
     [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/jobs/job_laktory_pl.py)
     to the stack.
+
+
+    References
+    ----------
+    * [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
+
     """
 
     type: Literal["DATABRICKS_JOB"] = Field(

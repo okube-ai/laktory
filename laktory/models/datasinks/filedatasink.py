@@ -54,23 +54,22 @@ class FileDataSink(BaseDataSink):
     Write polars DataFrame as CSV
     ```python
     import polars as pl
-    from laktory import models
+
+    import laktory as lk
 
     df = pl.DataFrame({"x": [0, 1]})
 
-    sink = models.FileDataSink(
-        path="./dataframe.csv",
-        format="CSV",
-        writer_kwargs={"has_header": "False"},
+    sink = lk.models.FileDataSink(
+        path="./dataframe.csv", format="CSV", writer_kwargs={"separator": ";"}
     )
     sink.write(df)
     ```
 
     Write Spark Streaming DataFrame as Delta
-    ```python
+    ```python tag:skip-run
     from laktory import models
 
-    df = spark.readStream(...)
+    df = spark.readStream(...)  # skip
 
     sink = models.FileDataSink(
         path="./delta_table/",

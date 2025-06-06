@@ -41,7 +41,9 @@ class DataFrameExpr(BaseModel, PipelineChild):
     Examples
     --------
     ```py
-    from laktory import models
+    import polars as pl
+
+    import laktory as lk
 
     df0 = pl.DataFrame(
         {
@@ -49,10 +51,21 @@ class DataFrameExpr(BaseModel, PipelineChild):
         }
     )
 
-    node = models.DataFrameSQLExpr(sql_expr="SELECT x, 2*x AS y")
-    df = node.execute(df0)
+    expr = lk.models.DataFrameExpr(expr="SELECT x, 2*x AS y FROM {df}")
+    df = expr.to_df(dfs={"df": df0}).collect()
 
     print(df)
+    '''
+    ┌──────────────────┐
+    |Narwhals DataFrame|
+    |------------------|
+    |    | x | y |     |
+    |    |---|---|     |
+    |    | 1 | 2 |     |
+    |    | 2 | 4 |     |
+    |    | 3 | 6 |     |
+    └──────────────────┘
+    '''
     ```
     """
 

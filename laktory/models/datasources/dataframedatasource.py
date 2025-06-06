@@ -20,14 +20,16 @@ class DataFrameDataSource(BaseDataSource):
 
     Examples
     ---------
+    From data with PySpark backend.
     ```python
     import polars as pl
+
     from laktory import models
 
     data = {
-        "symbol": ["AAPL", "GOOGL"],
-        "price": [200.0, 205.0],
-        "tstamp": ["2023-09-01", "2023-09-01"],
+        "x": ["AAPL", "GOOGL"],
+        "y": [200.0, 205.0],
+        "z": ["2023-09-01", "2023-09-01"],
     }
 
     # From data using PySpark
@@ -36,22 +38,22 @@ class DataFrameDataSource(BaseDataSource):
         dataframe_backend="PYSPARK",
     )
     df = source.read()
-    print(df.to_native().show())
+    print(df.collect())
     '''
-    +-----+------+----------+
-    |price|symbol|    tstamp|
-    +-----+------+----------+
-    |200.0|  AAPL|2023-09-01|
-    |205.0| GOOGL|2023-09-01|
-    +-----+------+----------+
+    ┌────────────────────────────────────────────────────────┐
+    |                   Narwhals LazyFrame                   |
+    |--------------------------------------------------------|
+    |DataFrame[price: double, symbol: string, tstamp: string]|
+    └────────────────────────────────────────────────────────┘
     '''
-
-    # From df using Polars
+    ```
+    From Polars DataFrame
+    ```
     source = models.DataFrameDataSource(
         df=pl.DataFrame(data),
     )
     df = source.read()
-    print(df.to_pandas())
+    print(df)
     '''
       symbol  price      tstamp
     0   AAPL  200.0  2023-09-01
