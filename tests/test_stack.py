@@ -238,7 +238,7 @@ def test_pulumi_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "${vars.env}",
                                 },
-                                "sparkVersion": "14.0.x-scala2.12",
+                                "sparkVersion": "16.3.x-scala2.12",
                                 "sshPublicKeys": [],
                             },
                         }
@@ -430,7 +430,7 @@ def test_pulumi_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "prod",
                                 },
-                                "sparkVersion": "14.0.x-scala2.12",
+                                "sparkVersion": "16.3.x-scala2.12",
                                 "sshPublicKeys": [],
                             },
                         }
@@ -639,7 +639,7 @@ def test_terraform_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "${vars.env}",
                                 },
-                                "spark_version": "14.0.x-scala2.12",
+                                "spark_version": "16.3.x-scala2.12",
                                 "ssh_public_keys": [],
                             },
                         }
@@ -793,7 +793,7 @@ def test_terraform_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "dev",
                                 },
-                                "spark_version": "14.0.x-scala2.12",
+                                "spark_version": "16.3.x-scala2.12",
                                 "ssh_public_keys": [],
                             },
                         }
@@ -947,7 +947,7 @@ def test_terraform_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "prod",
                                 },
-                                "spark_version": "14.0.x-scala2.12",
+                                "spark_version": "16.3.x-scala2.12",
                                 "ssh_public_keys": [],
                             },
                         }
