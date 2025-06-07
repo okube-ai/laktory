@@ -25,20 +25,24 @@ def convert_units(
     Examples
     --------
     ```py
+    import narwhals as nw
     import polars as pl
 
-    import laktory  # noqa: F401
+    import laktory as lk  # noqa: F401
 
-    df = nw.from_native(pl.DataFrame({"x": [1.0]}))
+    df = nw.from_native(pl.DataFrame({"x": [1]}))
     df = df.with_columns(
-        y=pl.col("x").laktory.convert_units(input_unit="m", output_unit="ft")
+        y=nw.col("x").laktory.convert_units(input_unit="m", output_unit="ft")
     )
-    print(df.to_native().glimpse(return_as_string=True))
+    print(df)
     '''
-    Rows: 1
-    Columns: 2
-    $ x <f64> 1.0
-    $ y <f64> 3.280839895013124
+    ┌──────────────────┐
+    |Narwhals DataFrame|
+    |------------------|
+    | | x | y       |  |
+    | |---|---------|  |
+    | | 1 | 3.28084 |  |
+    └──────────────────┘
     '''
     ```
 

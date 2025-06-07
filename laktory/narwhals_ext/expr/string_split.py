@@ -23,21 +23,21 @@ def string_split(
 
     Examples
     --------
-    ```py
-    import polars as pl
-
-    import laktory  # noqa: F401
-
-    df = nw.from_native(pl.DataFrame({"x": ["price_close"]}))
-
-    df = df.with_columns(y=nw.col("x").laktory.string_split(pattern="_", key=1))
-    print(df.to_native().glimpse(return_as_string=True))
-    '''
-    Rows: 1
-    Columns: 2
-    $ x <str> 'price_close'
-    $ y <str> 'close'
-    '''
+    # ```py
+    # import polars as pl
+    #
+    # import laktory as lk  # noqa: F401
+    #
+    # df = nw.from_native(pl.DataFrame({"x": ["price_close"]}))
+    #
+    # df = df.with_columns(y=nw.col("x").laktory.string_split(pattern="_", key=1))
+    # print(df.to_native().glimpse(return_as_string=True))
+    # '''
+    # Rows: 1
+    # Columns: 2
+    # $ x <str> 'price_close'
+    # $ y <str> 'close'
+    # '''
     ```
     """
     raise NotImplementedError()

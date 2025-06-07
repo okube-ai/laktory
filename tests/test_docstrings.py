@@ -72,35 +72,37 @@ os.environ["POLARS_FMT_TABLE_FORMATTING"] = "MARKDOWN"
 
 root = Path(__file__).parent.parent / "laktory"
 files = [root / fname for fname in os.listdir(root) if fname.endswith(".py")]
-#
-# @pytest.mark.parametrize("example", find_examples(*files), ids=str)
-# def test_docstrings_root(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(example)
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(example)
-#
-#
-# # --------------------------------------------------------------------------- #
-# # Dispatcher                                                                  #
-# # --------------------------------------------------------------------------- #
-#
-#
-# @pytest.mark.parametrize("example", find_examples("./laktory/dispatcher/"), ids=str)
-# def test_docstrings_dispatcher(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(example)
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(example)
-#
+
+
+@pytest.mark.parametrize("example", find_examples(*files), ids=str)
+def test_docstrings_root(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_update(example)
+    else:
+        eval_example.lint_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_check(example)
+
+
+# --------------------------------------------------------------------------- #
+# Dispatcher                                                                  #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("example", find_examples("./laktory/dispatcher/"), ids=str)
+def test_docstrings_dispatcher(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_update(example)
+    else:
+        eval_example.lint_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_check(example)
+
+
 #
 # # --------------------------------------------------------------------------- #
 # # DLT                                                                         #
@@ -154,78 +156,40 @@ def test_docstrings_models(example: CodeExample, eval_example: EvalExample):
             )
 
 
-#
-# # --------------------------------------------------------------------------- #
-# # Polars DataFrame                                                            #
-# # --------------------------------------------------------------------------- #
-#
-#
-# @pytest.mark.parametrize(
-#     "example", find_examples("./laktory/polars/dataframe"), ids=str
-# )
-# def test_docstrings_polars_dataframe(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(example)
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(example)
-#
-#
-# # --------------------------------------------------------------------------- #
-# # Polars Expressions                                                          #
-# # --------------------------------------------------------------------------- #
-#
-#
-# @pytest.mark.parametrize(
-#     "example", find_examples("./laktory/polars/expressions"), ids=str
-# )
-# def test_docstrings_polars_expressions(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(example)
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(example)
-#
-#
-# # --------------------------------------------------------------------------- #
-# # Spark DataFrame                                                             #
-# # --------------------------------------------------------------------------- #
-#
-#
-# @pytest.mark.parametrize("example", find_examples("./laktory/spark/dataframe"), ids=str)
-# def test_docstrings_spark_dataframe(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(example, module_globals={"spark": spark})
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(example, module_globals={"spark": spark})
-#
-#
-# # --------------------------------------------------------------------------- #
-# # Spark Functions                                                             #
-# # --------------------------------------------------------------------------- #
-#
-#
-# @pytest.mark.parametrize("example", find_examples("./laktory/spark/functions"), ids=str)
-# def test_docstrings_spark_functions(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(example, module_globals={"spark": spark})
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(example, module_globals={"spark": spark})
-#
+# --------------------------------------------------------------------------- #
+# Narwhals Extension                                                          #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("example", find_examples("./laktory/narwhals_ext"), ids=str)
+def test_docstrings_narwhals_ext(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_update(example)
+    else:
+        eval_example.lint_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_check(example)
+
+
+# --------------------------------------------------------------------------- #
+# yaml                                                                        #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("example", find_examples("./laktory/yaml"), ids=str)
+def test_docstrings_yaml(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_update(example)
+    else:
+        eval_example.lint_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_check(example)
+
+
 #
 # # --------------------------------------------------------------------------- #
 # # Markdowns                                                                   #

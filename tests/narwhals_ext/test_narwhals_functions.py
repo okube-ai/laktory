@@ -4,7 +4,7 @@ import narwhals as nw
 import polars as pl
 import pytest
 
-import laktory  # noqa: F401
+import laktory as lk  # noqa: F401
 from laktory._testing import assert_dfs_equal
 from laktory.datetime import utc_datetime
 

@@ -8,6 +8,7 @@ def signature(self) -> str:
         Result
 
     ```py
+    import narwhals as nw
     import polars as pl
 
     import laktory as lk  # noqa: F401

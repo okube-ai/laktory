@@ -52,7 +52,7 @@ def stream_join(
 
     Examples
     --------
-    ```py
+    # ```py
     # import pandas as pd
     #
     # import laktory as lk  # noqa: F401
@@ -85,8 +85,8 @@ def stream_join(
     #    price    name symbol
     # 0  200.0   Apple   AAPL
     # 1  205.0  Google  GOOGL
-    '''
-    ```
+    # '''
+    # ```
 
     References
     ----------

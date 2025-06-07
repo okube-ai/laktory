@@ -21,28 +21,36 @@ def roundp(
     Examples
     --------
     ```py
-    import polars as pl
     import narwhals as nw
+    import polars as pl
 
-    import laktory  # noqa: F401
+    import laktory as lk  # noqa: F401
 
-    df = nw.from_native(pl.DataFrame([[0.781], [13.0]], ["x"]))
-    df = df.with_columns(y=nw.Expr.laktory.roundp(pl.col("x"), p=5))
-    print(df.to_native().glimpse(return_as_string=True))
+    df = nw.from_native(pl.DataFrame({"x": [0.781, 13.0]}))
+    df = df.with_columns(y=nw.col("x").laktory.roundp(p=5))
+    print(df)
     '''
-    Rows: 2
-    Columns: 2
-    $ x <f64> 0.781, 13.0
-    $ y <f64> 0.0, 15.0
+    ┌──────────────────┐
+    |Narwhals DataFrame|
+    |------------------|
+    | | x     | y    | |
+    | |-------|------| |
+    | | 0.781 | 0.0  | |
+    | | 13.0  | 15.0 | |
+    └──────────────────┘
     '''
 
-    df = df.with_columns(y=nw.Expr.laktory.roundp(pl.col("x"), p=0.25))
-    print(df.to_native().glimpse(return_as_string=True))
+    df = df.with_columns(y=nw.col("x").laktory.roundp(p=0.25))
+    print(df)
     '''
-    Rows: 2
-    Columns: 2
-    $ x <f64> 0.781, 13.0
-    $ y <f64> 0.75, 13.0
+    ┌──────────────────┐
+    |Narwhals DataFrame|
+    |------------------|
+    | | x     | y    | |
+    | |-------|------| |
+    | | 0.781 | 0.75 | |
+    | | 13.0  | 13.0 | |
+    └──────────────────┘
     '''
     ```
     """

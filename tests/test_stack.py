@@ -197,6 +197,7 @@ def test_pulumi_stack(monkeypatch, stack):
     assert pstack.organization == "okube"
 
     data_default = pstack.model_dump()
+
     assert data_default == {
         "variables": {},
         "name": "unit-testing",

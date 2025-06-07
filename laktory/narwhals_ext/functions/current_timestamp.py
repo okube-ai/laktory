@@ -15,13 +15,15 @@ def current_timestamp() -> nw.Expr:
     Examples
     --------
     ```py
-    import polars as pl
     import narwhals as nw
+    import polars as pl
 
-    import laktory  # noqa: F401
+    import laktory as lk  # noqa: F401
 
-    df = nw.from_native(pl.DataFrame({"x": [0.45, 0.55]}))
-    df = df.with_columns(tstamp=nw.expr.laktory.current_timestamp())
+    df = nw.from_native(pl.DataFrame({"x": [0, 1]}))
+    df = df.with_columns(tstamp=nw.laktory.current_timestamp())
+
+    # print(df)
     ```
     """
     return nw.lit(utc_datetime())
