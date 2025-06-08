@@ -33,9 +33,9 @@ def black_format(source: str, *args, **kwargs) -> str:
     lines = []
     for i, line in enumerate(source.splitlines()):
         if line.strip().startswith("┌─"):
-            continue
+            line = ""
         if line.strip().startswith("└─"):
-            continue
+            line = ""
         lines += [line]
     return default_black_format("\n".join(lines), *args, **kwargs)
 
