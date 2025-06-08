@@ -202,7 +202,7 @@ def register_lazyframe_namespace(name: str):
 
     df = df.custom.with_x2()
 
-    print(df.collect())
+    print(df.collect().sort("x"))
     '''
     ┌──────────────────┐
     |Narwhals DataFrame|
