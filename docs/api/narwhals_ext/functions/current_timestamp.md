@@ -1,0 +1,1 @@
+::: laktory.narwhals_ext.functions.current_timestamp

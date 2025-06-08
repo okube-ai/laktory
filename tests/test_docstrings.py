@@ -103,35 +103,34 @@ def test_docstrings_dispatcher(example: CodeExample, eval_example: EvalExample):
             eval_example.run_print_check(example)
 
 
-#
-# # --------------------------------------------------------------------------- #
-# # DLT                                                                         #
-# # --------------------------------------------------------------------------- #
-#
-#
-# @pytest.mark.parametrize("example", find_examples("./laktory/dlt"), ids=str)
-# def test_docstrings_dlt(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(
-#                 example,
-#                 module_globals={
-#                     "spark": get_spark_session(),
-#                     "display": lambda x: x,
-#                 },
-#             )
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(
-#                 example,
-#                 module_globals={
-#                     "spark": get_spark_session(),
-#                     "display": lambda x: x,
-#                 },
-#             )
-#
+# --------------------------------------------------------------------------- #
+# DLT                                                                         #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("example", find_examples("./laktory/dlt"), ids=str)
+def test_docstrings_dlt(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_update(
+                example,
+                module_globals={
+                    "spark": get_spark_session(),
+                    "display": lambda x: x,
+                },
+            )
+    else:
+        eval_example.lint_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_check(
+                example,
+                module_globals={
+                    "spark": get_spark_session(),
+                    "display": lambda x: x,
+                },
+            )
+
 
 # --------------------------------------------------------------------------- #
 # Models                                                                      #

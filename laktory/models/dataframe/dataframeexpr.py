@@ -36,7 +36,7 @@ def to_safe_name(name):
 
 class DataFrameExpr(BaseModel, PipelineChild):
     """
-    A transformation defined as a SQL statement.
+    A DataFrame expressed as a SQL statement.
 
     Examples
     --------

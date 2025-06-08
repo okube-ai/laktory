@@ -163,25 +163,27 @@ nav:
 #      - BaseModel: api/models/basemodel.md
       - DataFrame:
         - DataFrameColumn: api/models/dataframe/dataframecolumn.md
+        - DataFrameColumnExpr: api/models/dataframe/dataframecolumnexpr.md
+        - DataFrameExpr: api/models/dataframe/dataframeexpr.md
         - DataFrameMethod: api/models/dataframe/dataframemethod.md
-        - DataFrameSQLExpression: api/models/dataframe/dataframesqlexpr.md
         - DataFrameSchema: api/models/dataframe/dataframeschema.md
         - DataFrameTransformer: api/models/dataframe/dataframetransformer.md
-      - DataFrameBackendMethod: api/models/dataframebackendmethod.md
       - DataTypes: api/models/datatypes.md
       - DataSinks:
+        - MergeCDCOptions: api/models/datasinks/mergecdcoptions.md
         - FileDataSink: api/models/datasinks/file.md
         - HiveMetastoreDataSink: api/models/datasinks/hivemetastore.md
         - UnityCatalogDataSink: api/models/datasinks/unitycatalog.md
       - DataSources:
+        - ReaderWriterMethod: api/models/datasources/readerwritermethod.md
         - DataFrameDataSource: api/models/datasources/dataframe.md
         - FileDataSource: api/models/datasources/file.md
         - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
         - HiveMetastoreDataSource: api/models/datasources/hivemetastore.md
         - UnityCatalogDataSource: api/models/datasources/unitycatalog.md
-#      - DataQuality:
-#        - DataQualityCheck: api/models/dataquality/check.md
-#        - DataQualityExpectation: api/models/dataquality/expectation.md
+      - DataQuality:
+        - DataQualityCheck: api/models/dataquality/check.md
+        - DataQualityExpectation: api/models/dataquality/expectation.md
       - Pipeline:
         - Pipeline: api/models/pipeline/pipeline.md
         - PipelineNode: api/models/pipeline/pipelinenode.md
@@ -250,29 +252,29 @@ nav:
     - CLI: api/cli.md
     - RecursiveLoader: api/recursiveloader.md
     - SQLParser: api/sqlparser.md
-    - Narwhals:
+    - Narwhals Extension:
       - DataFrame:
-        - groupby_and_agg: api/narwhals/dataframe/groupby_and_agg.md
-        - has_column: api/narwhals/dataframe/has_column.md
-        - schema_flat: api/narwhals/dataframe/schema_flat.md
-        - signature: api/narwhals/dataframe/signature.md
-        - union: api/narwhals/dataframe/union.md
-        - window_filter: api/narwhals/dataframe/window_filter.md
-        - with_row_index: api/narwhals/dataframe/with_row_index.md
+        - groupby_and_agg: api/narwhals_ext/dataframe/groupby_and_agg.md
+        - has_column: api/narwhals_ext/dataframe/has_column.md
+        - schema_flat: api/narwhals_ext/dataframe/schema_flat.md
+        - signature: api/narwhals_ext/dataframe/signature.md
+        - union: api/narwhals_ext/dataframe/union.md
+        - window_filter: api/narwhals_ext/dataframe/window_filter.md
+        - with_row_index: api/narwhals_ext/dataframe/with_row_index.md
       - Expr:
-        - current_timestamp: api/narwhals/expr/current_timestamp.md
-        - roundp: api/narwhals/expr/roundp.md
-        - sql_expr: api/narwhals/expr/sql_expr.md
+        - convert_units: api/narwhals_ext/expr/convert_units.md
+        - roundp: api/narwhals_ext/expr/roundp.md
+        - string_split: api/narwhals_ext/expr/string_split.md
       - Functions:
-        - current_timestamp: api/narwhals/functions/current_timestamp.md
-        - sql_expr: api/narwhals/functions/sql_expr.md
-    - DLT:
-      - apply_changes: api/dlt/apply_changes.md
-      - get_df: api/dlt/get_df.md
-      - is_debug: api/dlt/is_debug.md
-      - is_mocked: api/dlt/is_mocked.md
-      - read: api/dlt/read.md
-      - read_stream: api/dlt/read_stream.md
+        - current_timestamp: api/narwhals_ext/functions/current_timestamp.md
+        - sql_expr: api/narwhals_ext/functions/sql_expr.md
+#    - DLT:
+#      - apply_changes: api/dlt/apply_changes.md
+#      - get_df: api/dlt/get_df.md
+#      - is_debug: api/dlt/is_debug.md
+#      - is_mocked: api/dlt/is_mocked.md
+#      - read: api/dlt/read.md
+#      - read_stream: api/dlt/read_stream.md
     - Dispatcher:
         - Dispatcher: api/dispatcher/dispatcher.md
         - DispatcherRunner: api/dispatcher/dispatcherrunner.md

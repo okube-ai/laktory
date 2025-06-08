@@ -109,8 +109,8 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
 
 class DataFrameMethod(BaseModel, PipelineChild):
     """
-    A transformation defined as a DataFrame API method and arguments. Both native
-    and Narwhals API are supported.
+    Definition of a DataFrame method to be applied. Both native and Narwhals API are
+    supported.
 
     Examples
     --------
