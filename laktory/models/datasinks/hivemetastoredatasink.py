@@ -22,7 +22,7 @@ class HiveMetastoreDataSink(TableDataSink):
     sink = lk.models.HiveMetastoreDataSink(
         schema_name="default",
         table_name="my_table",
-        mode="OVERWRITE",
+        mode="APPEND",
     )
     sink.write(df)
     ```
