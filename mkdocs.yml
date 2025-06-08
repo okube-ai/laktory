@@ -281,5 +281,9 @@ nav:
         - JobRunner: api/dispatcher/jobrunner.md
         - PipelineRunner: api/dispatcher/pipelinerunner.md
     - Datetime: api/datetime.md
+    - Extending the API:
+        - register_expr_namespace: api/api/register_expr_namespace.md
+        - register_dataframe_namespace: api/api/register_dataframe_namespace.md
+        - register_lazyframe_namespace: api/api/register_lazyframe_namespace.md
 
   - Changelog: changelog.md
