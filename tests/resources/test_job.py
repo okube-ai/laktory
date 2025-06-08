@@ -6,7 +6,7 @@ job = Job(
     clusters=[
         {
             "name": "main",
-            "spark_version": "14.0.x-scala2.12",
+            "spark_version": "16.3.x-scala2.12",
             "node_type_id": "Standard_DS3_v2",
         },
     ],
@@ -87,7 +87,7 @@ def test_job_model():
                 "single_user_name": None,
                 "spark_conf": {},
                 "spark_env_vars": {},
-                "spark_version": "14.0.x-scala2.12",
+                "spark_version": "16.3.x-scala2.12",
                 "ssh_public_keys": [],
             }
         ],
@@ -347,7 +347,7 @@ def test_job_pulumi():
                     "node_type_id": "Standard_DS3_v2",
                     "spark_conf": {},
                     "spark_env_vars": {},
-                    "spark_version": "14.0.x-scala2.12",
+                    "spark_version": "16.3.x-scala2.12",
                     "ssh_public_keys": [],
                 },
             }

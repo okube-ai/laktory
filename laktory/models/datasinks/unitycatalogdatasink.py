@@ -15,7 +15,7 @@ class UnityCatalogDataSink(TableDataSink):
 
     Examples
     ---------
-    ```python
+    ```python tag:skip-run
     from laktory import models
 
     df = spark.createDataFrame([{"x": 1}, {"x": 2}, {"x": 3}])

@@ -907,7 +907,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     name: job-stock-prices
     clusters:
       - name: main
-        spark_version: 14.0.x-scala2.12
+        spark_version: 16.3.x-scala2.12
         node_type_id: Standard_DS3_v2
 
     tasks:

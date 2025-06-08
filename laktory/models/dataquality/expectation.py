@@ -64,7 +64,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     )
     print(dqe)
     '''
-    variables={} action='WARN' type='ROW' name='price higher than 10' expr=DataFrameColumnExpression(variables={}, value='close > 127', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=None, rel=0.05)
+    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='ROW' name='price higher than 10' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='close > 127', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=None, rel=0.05) checkpoint_path=None
     '''
 
     dqe = models.DataQualityExpectation(
@@ -74,7 +74,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     )
     print(dqe)
     '''
-    variables={} action='WARN' type='AGGREGATE' name='rows count' expr=DataFrameColumnExpression(variables={}, value='COUNT(*) > 50', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=0, rel=None)
+    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='AGGREGATE' name='rows count' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='COUNT(*) > 50', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=0, rel=None) checkpoint_path=None
     '''
     ```
 

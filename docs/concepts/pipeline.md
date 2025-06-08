@@ -18,14 +18,14 @@ from a designated source, applies specified transformations, and optionally writ
 <img src="/../../images/source_logo.png" alt="node source" width="100"/>
 <img src="/../../images/sink_logo.png" alt="node sink" width="100"/>
 
-Laktory supports a variety of [sources and sinks](./sources.md), including data files and warehouse tables. By linking 
+Laktory supports a variety of [sources and sinks](./sources.md), including data files and data tables. By linking 
 a node as the source for a downstream node, you establish dependencies, creating a directed acyclic graph (DAG).
 
 ## Transformer
 <img src="/../../images/transformer_logo.png" alt="node transformer" width="100"/>
 
 The transformations are defined through a [transformer](./transformers.md) which is a chain of SQL statements and/or 
-Spark/Polars DataFrame API function calls. This flexible and highly modular framework supports scalable batch and
+DataFrame API function calls. This flexible and highly modular framework supports scalable batch and
 streaming operations.
 
 ## Expectations
@@ -34,17 +34,23 @@ streaming operations.
 Data quality is achieved through the use of [expectations](./dataquality.md) and corresponding actions, which can drop,
 quarantine, or even halt pipelines if invalid data is detected before it reaches the output.
 
-## Serialization
-The entire pipeline definition is serializable, ensuring portability for deployment on remote compute environments. 
+## Declaration
+Because a pipeline definition is entirely serializable, it can be declared as Python code or as a YAML file. The latter
+provides the required portability for deployment on remote compute environments. 
 This makes Laktory ideal for a [DataOps](./dataops.md) approach using infrastructure-as-code principles.
 
 Here is an example of a pipeline declaration:
+
+=== "YAML"
+    
 ```yaml
 name: stock_prices
+dataframe_backend: PYSPARK
 nodes:
   - name: brz_stock_prices
     source:
-      path: "./events/stock_prices"
+      path: "./events/stock_prices/"
+      format: JSON
     sinks:
     - schema_name: finance
       table_name: brz_stock_prices
@@ -64,7 +70,7 @@ nodes:
       action: QUARANTINE
     transformer:
       nodes:
-      - sql_expr: |
+      - expr: |
             SELECT
               data.created_at AS created_at,
               data.symbol AS symbol,
@@ -83,19 +89,63 @@ nodes:
   ...
 ```
 
-[//]: # ()
-[//]: # (## Layers)
+=== "Python"
+    ```py
+    from laktory import models
 
-[//]: # ()
-[//]: # (Pipeline nodes allow you to select a target medallion architecture layer &#40;`BRONZE`, `SILVER`, `GOLD`&#41;. Basic )
+    brz = models.PipelineNode(
+)
 
-[//]: # (transformations are preset based on the selected layer. For example, `SILVER` nodes automatically drop unnecessary )
+name: stock_prices
+dataframe_backend: PYSPARK
+nodes:
+  - name: brz_stock_prices
+    source:
+      path: "./events/stock_prices"
+      format: JSON
+    sinks:
+    - schema_name: finance
+      table_name: brz_stock_prices
 
-[//]: # (columns and duplicates by default.)
+  - name: slv_stock_prices
+    source:
+      node_name: brz_stock_prices
+    sinks:
+    - schema_name: finance
+      table_name: slv_stock_prices
+    - schema_name: finance
+      table_name: slv_stock_prices_quarantine
+      is_quarantine: True
+    expectations:
+    - name: positive price
+      expr: close > 0
+      action: QUARANTINE
+    transformer:
+      nodes:
+      - expr: |
+            SELECT
+              data.created_at AS created_at,
+              data.symbol AS symbol,
+              data.open AS open,
+              data.close AS close,
+              data.high AS high,
+              data.low AS low,
+              data.volume AS volume
+            FROM
+              {df}
+      - func_name: drop_duplicates
+        func_kwargs:
+          subset:
+            - symbol
+            - timestamp
+  ...
+    
+
+    ```
 
 ## Execution
 ### Local
-You can execute the pipeline in a local or remote Spark session using the `pipeline.execute(spark)` command. If Polars 
+You can execute the pipeline in a local or remote Spark session using the `pipeline.execute()` command. If Polars 
 is the DataFrame engine, the pipeline can run in a simple Python environment without external dependencies. In all
 cases, each node processes sequentially: reading data from the source, applying transformations, and writing to the
 sink.
@@ -105,8 +155,8 @@ from laktory import models
 
 with open("pipeline_node.yaml") as fp:
     node = models.PipelineNode.model_validate(fp)
-
-node.execute(spark)
+        
+node.execute()
 node.output_df.laktory.display()
 ```
 
@@ -147,6 +197,17 @@ laktory.models.datasinks.filedatasink - INFO - Writing df as static DELTA to fin
 only showing top 10 rows
 ```
 </div>
+
+### Spark
+If you select `PYSPARK` as the DataFrame backend, Laktory will instantiate 
+a default Spark Session, but you can register your own instead:
+```py title="set_spark.py"
+from laktory import register_spark_session
+from databricks.connect import DatabricksSession
+
+spark = DatabricksSession.builder.getOrCreate()
+register_spark_session(spark)
+```
 
 ### Orchestrators
 While local execution is ideal for small datasets or prototyping, orchestrators unlock more advanced features such as 

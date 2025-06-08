@@ -15,13 +15,14 @@ class HiveMetastoreDataSink(TableDataSink):
     Examples
     ---------
     ```python
-    from laktory import models
+    import laktory as lk
 
     df = spark.createDataFrame([{"x": 1}, {"x": 2}, {"x": 3}])
 
-    sink = models.HiveMetastoreDataSink(
-        schema_name="my_schema",
+    sink = lk.models.HiveMetastoreDataSink(
+        schema_name="default",
         table_name="my_table",
+        mode="APPEND",
     )
     sink.write(df)
     ```

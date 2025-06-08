@@ -29,6 +29,29 @@ class SQLParser:
         -------
         :
             Narwhals expression
+
+        Examples
+        --------
+        ```py
+        import laktory as lk
+
+        parser = lk.SQLParser()
+
+        print(parser.parse("2*x + y"))
+        '''
+        Narwhals Expr
+        metadata: ExprMetadata(
+          expansion_kind: ExpansionKind.SINGLE,
+          last_node: ExprKind.NARY,
+          has_windows: False,
+          n_orderable_ops: 0,
+          is_elementwise: False,
+          preserves_length: True,
+          is_scalar_like: False,
+          is_literal: False,
+        )
+        '''
+        ```
         """
         parsed_expr = sqlglot.parse_one(sql)
         # visitor = SQLExprVisitor(self.context)

@@ -13,7 +13,7 @@ The first extension is the provision of a library of functions that can be used 
 ```py
 import pyspark.sql.functions as F
 
-import laktory  # noqa: F401
+import laktory as lk  # noqa: F401
 
 df = spark.createDataFrame([{"x": 1}, {"x": 2}, {"x": 3}])
 df = df.withColumn("y", F.laktory.convert_units("x", "ft", "m"))
@@ -24,7 +24,7 @@ other custom functions are also available from the `pyspark.sql.functions.laktor
 ## Dataframe methods
 In this case the methods are designed to be applied directly on a spark dataframe.
 ```py
-import laktory  # noqa: F401
+import laktory as lk  # noqa: F401
 
 df = spark.createDataFrame([{"x": 1}, {"x": 2}, {"x": 3}])
 df.laktory.has_column("x")

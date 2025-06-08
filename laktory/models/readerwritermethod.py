@@ -15,9 +15,9 @@ class ReaderWriterMethod(BaseModel):
     Examples
     --------
     ```py
-    from laktory import models
+    import laktory as lk
 
-    m = models.DataFrameBackendMethod(name="format", args=["CSV"])
+    m = lk.models.ReaderWriterMethod(name="format", args=["CSV"])
     ```
     """
 

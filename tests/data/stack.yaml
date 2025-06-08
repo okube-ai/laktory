@@ -42,7 +42,7 @@ resources:
       name: job-stock-prices-ut-stack
       clusters:
         - name: main
-          spark_version: 14.0.x-scala2.12
+          spark_version: 16.3.x-scala2.12
           node_type_id: ${vars.node_type_id}
           spark_env_vars:
             AZURE_TENANT_ID: "{{secrets/azure/tenant-id}}"

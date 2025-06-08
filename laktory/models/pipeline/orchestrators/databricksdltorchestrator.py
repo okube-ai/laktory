@@ -26,6 +26,12 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
     Selecting this orchestrator requires to add the supporting
     [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py)
     to the stack.
+
+
+    References
+    ----------
+    * [Databricks DLT](https://www.databricks.com/product/delta-live-tables)
+
     """
 
     type: Literal["DATABRICKS_DLT"] = Field(

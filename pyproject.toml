@@ -46,7 +46,7 @@ polars = [
     "polars>=1.0",
     "sqlparse",
 ]
-spark = [
+pyspark = [
     "delta-spark",
     "pyarrow",
     "pyspark[connect]<4.0",
@@ -81,15 +81,6 @@ pulumi = [
 databricks = [
 #    "databricks-connect",  # causing conflicts with local spark installation
     "databricks-sdk",
-]
-
-# Cloud Storage
-azure = [
-    "azure-identity",
-    "azure-storage-blob",
-]
-aws = [
-    "boto3",
 ]
 
 [project.urls]

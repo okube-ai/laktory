@@ -30,14 +30,27 @@ class PipelineNodeDataSource(BaseDataSource):
 
     brz = models.PipelineNode(
         name="brz_stock_prices",
-        source={"path": "/Volumes/sources/landing/events/yahoo-finance/stock_price"},
-        sinks=[{"path": "/Volumes/sources/landing/tables/brz_stock_prices"}],
+        source={
+            "path": "/Volumes/sources/landing/events/yahoo-finance/stock_price",
+            "format": "JSON",
+        },
+        sinks=[
+            {
+                "path": "/Volumes/sources/landing/tables/brz_stock_prices",
+                "format": "PARQUET",
+            }
+        ],
     )
 
     slv = models.PipelineNode(
         name="slv_stock_prices",
         source={"node_name": "brz_stock_prices"},
-        sinks=[{"path": "/Volumes/sources/landing/tables/slv_stock_prices"}],
+        sinks=[
+            {
+                "path": "/Volumes/sources/landing/tables/slv_stock_prices",
+                "format": "PARQUET",
+            }
+        ],
     )
 
     pl = models.Pipeline(name="pl-stock-prices", nodes=[brz, slv])

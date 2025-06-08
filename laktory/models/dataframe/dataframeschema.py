@@ -29,7 +29,7 @@ class DataFrameSchema(BaseModel):
 
     columns: Union[
         dict[str, Union[str, DType, DataFrameColumn]], list[DataFrameColumn]
-    ] = Field(..., description="List of columns")
+    ] = Field(..., description="Dict or list of columns")
 
     @model_validator(mode="before")
     @classmethod

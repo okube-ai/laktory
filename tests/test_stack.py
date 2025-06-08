@@ -40,7 +40,7 @@ def full_stack():
     from tests.resources.test_mlflow_experiment import mlexp
     from tests.resources.test_mlflow_model import mlmodel
     from tests.resources.test_mlflow_webhook import mlwebhook
-    from tests.resources.test_notebook import nb
+    from tests.resources.test_notebook import get_notebook
     from tests.resources.test_permissions import permissions
     from tests.resources.test_pipeline_orchestrators import get_pl_dlt
     from tests.resources.test_query import query
@@ -51,9 +51,11 @@ def full_stack():
     from tests.resources.test_vectorsearchendpoint import vector_search_endpoint
     from tests.resources.test_vectorsearchindex import vector_search_index
     from tests.resources.test_workspacebinding import workspace_binding
-    from tests.resources.test_workspacefile import workspace_file
+    from tests.resources.test_workspacefile import get_workspace_file
 
     # Update paths because preview is executed in tmp_path
+    nb = get_notebook()
+    workspace_file = get_workspace_file()
     nb.source = str(root / "resources" / nb.source)
     workspace_file.source = str(root / "resources" / workspace_file.source)
 
@@ -197,6 +199,7 @@ def test_pulumi_stack(monkeypatch, stack):
     assert pstack.organization == "okube"
 
     data_default = pstack.model_dump()
+
     assert data_default == {
         "variables": {},
         "name": "unit-testing",
@@ -238,7 +241,7 @@ def test_pulumi_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "${vars.env}",
                                 },
-                                "sparkVersion": "14.0.x-scala2.12",
+                                "sparkVersion": "16.3.x-scala2.12",
                                 "sshPublicKeys": [],
                             },
                         }
@@ -430,7 +433,7 @@ def test_pulumi_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "prod",
                                 },
-                                "sparkVersion": "14.0.x-scala2.12",
+                                "sparkVersion": "16.3.x-scala2.12",
                                 "sshPublicKeys": [],
                             },
                         }
@@ -639,7 +642,7 @@ def test_terraform_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "${vars.env}",
                                 },
-                                "spark_version": "14.0.x-scala2.12",
+                                "spark_version": "16.3.x-scala2.12",
                                 "ssh_public_keys": [],
                             },
                         }
@@ -793,7 +796,7 @@ def test_terraform_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "dev",
                                 },
-                                "spark_version": "14.0.x-scala2.12",
+                                "spark_version": "16.3.x-scala2.12",
                                 "ssh_public_keys": [],
                             },
                         }
@@ -947,7 +950,7 @@ def test_terraform_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "prod",
                                 },
-                                "spark_version": "14.0.x-scala2.12",
+                                "spark_version": "16.3.x-scala2.12",
                                 "ssh_public_keys": [],
                             },
                         }

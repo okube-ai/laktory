@@ -6,18 +6,20 @@ lakehouses.
 ## What is it?
 Laktory is your all-in-one solution for defining both data transformations and 
 Databricks resources. Imagine if Terraform, Databricks Asset Bundles, and dbt
-combined forces—that’s essentially Laktory.
+combined forces and added support for DataFrame API—that’s essentially Laktory.
 
-This open-source framework simplifies the creation, deployment, and execution 
-of data pipelines while adhering to essential DevOps practices like version 
-control, code reviews, and CI/CD integration. With Apache Spark and Polars
-driving its data transformation, Laktory ensures reliable and scalable data
-processing. Its modular, flexible approach allows you to seamlessly combine SQL
-statements with DataFrame operations.
+This open-source framework streamlines the creation, deployment, and execution
+of data pipelines while adhering to essential DevOps practices such as version
+control, code reviews, and CI/CD integration. Powered by Narwhals, Laktory
+enables seamless transitions between Apache Spark, Polars, and other frameworks
+to perform data transformations reliably and at scale. Its modular and flexible
+design allows you to effortlessly combine SQL statements with DataFrame
+operations, reducing complexity and enhancing productivity.
 
+#TODO UPDATE DIAGRAM TO INCLUDE NARWHALS
 <img src="images/laktory_diagram.png" alt="what is laktory" width="800"/>
 
-Since Laktory pipelines are built on top of Spark and Polars, they can run in
+Since Laktory pipelines are built on top of Narwhals, they can run in
 any environment that supports python—from your local machine to a Kubernetes 
 cluster. They can also be deployed and orchestrated as Databricks Jobs or
 [Delta Live Tables](https://www.databricks.com/product/delta-live-tables),
@@ -56,10 +58,10 @@ value—while minimizing boilerplate code.
 
 ### Scalability
 Scale the right job to the right level. Run on a powerful Spark cluster when 
-dealing with large datasets, or experiment locally on your machine with smaller
-ones. Switching between environments is effortless with a simple configuration
-change, ensuring that Laktory adapts to both small and large-scale needs
-without complexity.
+dealing with large datasets, or experiment locally with Polars on your machine
+with smaller ones. Switching between environments is effortless with a simple
+configuration change, ensuring that Laktory adapts to both small and 
+large-scale needs without complexity.
 
 ### Quality
 Elevate data quality to a first-class citizen. Laktory integrates robust data 
@@ -79,50 +81,122 @@ their lakehouses with confidence.
 Curious about their experience? Read their [testimonials](users.md).
 
 ## How does it work?
-Using YAML configuration files, define a [stack](concepts/stack.md) of
+Using YAML configuration files or python code, define a [stack](concepts/stack.md) of
 resources, such as a data [pipelines](concepts/pipeline.md) with SQL-based and
-Spark-based transformations. 
+Spark-based transformations.
+
 ### Declare
-```yaml title="pipeline_node.yaml"
-name: slv_stock_prices
-source:
-  path: /Volumes/dev/sources/landing/tables/brz_stock_prices/
-sinks:
-- schema_name: finance
-  table_name: slv_stock_prices
-transformer:
-  nodes:
-  - sql_expr: |
-        SELECT
-          data.created_at AS created_at,
-          data.symbol AS symbol,
-          data.open AS open,
-          data.close AS close,
-          data.high AS high,
-          data.low AS low,
-          data.volume AS volume
-        FROM
-          {df}
-  - func_name: drop_duplicates
-    func_kwargs:
-      subset:
-        - symbol
-        - timestamp
-...
-```
+
+=== "YAML"
+    
+    ```yaml title="pipeline_node.yaml"
+    name: slv_stock_prices
+    dataframe_backend: PYSPARK
+    source:
+      path: /Volumes/dev/sources/landing/tables/brz_stock_prices/
+      format: JSON
+    sinks:
+    - schema_name: finance
+      table_name: slv_stock_prices
+    transformer:
+      nodes:
+      - expr: |
+            SELECT
+              data.created_at AS created_at,
+              data.symbol AS symbol,
+              data.open AS open,
+              data.close AS close,
+              data.high AS high,
+              data.low AS low,
+              data.volume AS volume
+            FROM
+              {df}
+      - func_name: drop_duplicates
+        func_kwargs:
+          subset:
+            - symbol
+            - timestamp
+    ...
+    ```
+
+=== "Python"
+
+    ```py title="pipeline_node.py"
+    from laktory import models
+    
+    node = models.PipelineNode(
+        name="slv_stock_prices",
+        dataframe_backend="PYSPARK",
+        source=models.FileDataSource(
+            path="/Volumes/dev/sources/landing/tables/brz_stock_prices/",
+            format="JSON",
+        ),
+        sinks=[
+            models.UnityCatalogDataSink(
+                schema_name="finance",
+                table_name="slv_stock_prices"
+            )
+        ],
+        transformer=models.DataFrameTransformer(
+            nodes=[
+                {"expr": """
+                    SELECT
+                      data.created_at AS created_at,
+                      data.symbol AS symbol,
+                      data.open AS open,
+                      data.close AS close,
+                      data.high AS high,
+                      data.low AS low,
+                      data.volume AS volume
+                    FROM
+                      {df}
+                """},
+                {
+                    "func_name": "drop_duplicates",
+                    "func_kwargs": {
+                        "subset": ["symbol", "created_at"]
+                    }
+                }
+            ]
+        )
+    )
+    ```
+
 ### Debug
 Execute your pipline from your IDE using python and a local or remote Spark
 session.
-```py
-from laktory import models
 
-with open("pipeline_node.yaml") as fp:
-    node = models.PipelineNode.model_validate(fp)
+=== "YAML"
+    
+    ```py
+    from laktory import models
+    from laktory import register_spark_session
+    from databricks.connect import DatabricksSession
+    
+    with open("pipeline_node.yaml") as fp:
+        node = models.PipelineNode.model_validate(fp)
+    
+    spark = DatabricksSession.builder.getOrCreate()
+    register_spark_session(spark)
 
-node.execute(spark)
-node.output_df.laktory.display()
-```
+    node.execute()
+    node.output_df.laktory.display()
+    ```
 
+=== "Python"
+
+    ```py
+    from laktory import register_spark_session
+    from databricks.connect import DatabricksSession
+
+    spark = DatabricksSession.builder.getOrCreate()
+    register_spark_session(spark)
+
+    node.execute()
+    node.output_df.laktory.display()
+    ```
+
+#TODO: Update OUTPUT
 <div class="code-output">
 ```commandline title="output"
 laktory.models.pipelinenode - INFO - Executing pipeline node slv_stock_prices (None)

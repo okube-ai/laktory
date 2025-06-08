@@ -29,7 +29,8 @@ class DataFrameTransformer(BaseModel, PipelineChild):
     --------
     ```py
     import polars as pl
-    from laktory import models
+
+    import laktory as lk
 
     df0 = pl.DataFrame(
         {
@@ -38,18 +39,29 @@ class DataFrameTransformer(BaseModel, PipelineChild):
         }
     )
 
-    node0 = DataFrameMethod(
-        name="with_columns",
-        kwargs={
+    node0 = lk.models.DataFrameMethod(
+        func_name="with_columns",
+        func_kwargs={
             "y1": "x1",
         },
     )
-    node1 = DataFrameSQLExpr(sql_expr="select id, x1, y1 from df")
-    transformer = DataFrameTransformer(nodes=[node0, node1])
+    node1 = lk.models.DataFrameExpr(expr="select id, x1, y1 from {df}")
+    transformer = lk.models.DataFrameTransformer(nodes=[node0, node1])
 
-    df = transformer.execute(df0)
+    df = transformer.execute(df0).collect()
 
     print(df)
+    '''
+    ┌──────────────────┐
+    |Narwhals DataFrame|
+    |------------------|
+    | | id | x1 | y1 | |
+    | |----|----|----| |
+    | | a  | 1  | 1  | |
+    | | b  | 2  | 2  | |
+    | | c  | 3  | 3  | |
+    └──────────────────┘
+    '''
     ```
     """
 

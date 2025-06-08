@@ -10,7 +10,6 @@ from laktory._parsers import merge_dicts
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipeline import Pipeline
-from laktory.models.resources.baseresource import ResourceOptions
 from laktory.models.resources.databricks.alert import Alert
 from laktory.models.resources.databricks.catalog import Catalog
 from laktory.models.resources.databricks.cluster import Cluster
@@ -406,7 +405,7 @@ class Stack(BaseModel):
                     "clusters": [
                         {
                             "name": "main",
-                            "spark_version": "14.0.x-scala2.12",
+                            "spark_version": "16.3.x-scala2.12",
                             "node_type_id": "Standard_DS3_v2",
                         }
                     ],
@@ -527,7 +526,9 @@ class Stack(BaseModel):
                         data["variables"] = copy.deepcopy(model.variables)
 
                     # Explicitly dump excluded fields - resource options
-                    if field_name == "options" and field.annotation == ResourceOptions:
+                    if field_name == "options" and "ResourceOptions" in str(
+                        field.annotation
+                    ):
                         data["options"] = model.options.model_dump(exclude_unset=True)
 
                     # Explicitly dump excluded fields - resource name

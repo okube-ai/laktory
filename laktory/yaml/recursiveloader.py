@@ -46,9 +46,11 @@ class RecursiveLoader(yaml.SafeLoader):
         -----------
         !use {filepath}:
             Directly inject the content of the file at `filepath`
+
         - !extend {filepath}:
             Extend the current list with the elements found in the file at `filepath`.
             Similar to python list.extend method.
+
         <<: !update {filepath}:
             Merge the current dictionary with the content of the dictionary defined at
             `filepath`. Similar to python dict.update method.

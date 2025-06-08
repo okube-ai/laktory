@@ -47,7 +47,7 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
                 from narwhals import col  # noqa: F401
                 from narwhals import lit  # noqa: F401
 
-                from laktory.narwhals.functions import sql_expr  # noqa: F401
+                from laktory.narwhals_ext.functions import sql_expr  # noqa: F401
 
                 targets = ["lit(", "col(", "nw.", "sql_expr"]
 
@@ -109,14 +109,15 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
 
 class DataFrameMethod(BaseModel, PipelineChild):
     """
-    A transformation defined as a DataFrame API method and arguments. Both native
-    and Narwhals API are supported.
+    Definition of a DataFrame method to be applied. Both native and Narwhals API are
+    supported.
 
     Examples
     --------
     ```py
     import polars as pl
-    from laktory import models
+
+    import laktory as lk
 
     df0 = pl.DataFrame(
         {
@@ -124,21 +125,26 @@ class DataFrameMethod(BaseModel, PipelineChild):
         }
     )
 
-    node = models.DataFrameMethod(
+    m1 = lk.models.DataFrameMethod(
         func_name="with_columns",
         func_kwargs={"xr": "nw.col('x').round()"},
-        dataframe_api="NARWHALS"
+        dataframe_api="NARWHALS",
     )
-    df = node.execute(df0)
+    df = m1.execute(df0)
 
-    node = models.DataFrameMethod(
-        func_name="select",
-        func_args=["pl.sqrt('x')"},
-        dataframe_api="NATIVE"
+    m2 = lk.models.DataFrameMethod(
+        func_name="select", func_args=["pl.col('x').sqrt()"], dataframe_api="NATIVE"
     )
-    df = node.execute(df0)
+    df = m2.execute(df0)
 
-    print(df)
+    print(df.to_native())
+    '''
+    | x        |
+    |----------|
+    | 1.048809 |
+    | 1.48324  |
+    | 1.81659  |
+    '''
     ```
     """
 

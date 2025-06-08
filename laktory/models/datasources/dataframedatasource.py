@@ -20,42 +20,58 @@ class DataFrameDataSource(BaseDataSource):
 
     Examples
     ---------
+    From data with PySpark backend.
     ```python
-    import polars as pl
-    from laktory import models
+    import laktory as lk
 
     data = {
-        "symbol": ["AAPL", "GOOGL"],
-        "price": [200.0, 205.0],
-        "tstamp": ["2023-09-01", "2023-09-01"],
+        "x": [0, 1],
+        "y": ["a", "b"],
     }
 
     # From data using PySpark
-    source = models.DataFrameDataSource(
+    source = lk.models.DataFrameDataSource(
         data=data,
         dataframe_backend="PYSPARK",
     )
     df = source.read()
-    print(df.to_native().show())
+    print(df.collect(backend="pandas"))
     '''
-    +-----+------+----------+
-    |price|symbol|    tstamp|
-    +-----+------+----------+
-    |200.0|  AAPL|2023-09-01|
-    |205.0| GOOGL|2023-09-01|
-    +-----+------+----------+
+    ┌──────────────────┐
+    |Narwhals DataFrame|
+    |------------------|
+    |        x  y      |
+    |     0  0  a      |
+    |     1  1  b      |
+    └──────────────────┘
     '''
+    ```
 
-    # From df using Polars
-    source = models.DataFrameDataSource(
+    From Polars DataFrame
+    ```python
+    import polars as pl
+
+    import laktory as lk
+
+    data = {
+        "x": [0, 1],
+        "y": ["a", "b"],
+    }
+
+    source = lk.models.DataFrameDataSource(
         df=pl.DataFrame(data),
     )
     df = source.read()
-    print(df.to_pandas())
+    print(df)
     '''
-      symbol  price      tstamp
-    0   AAPL  200.0  2023-09-01
-    1  GOOGL  205.0  2023-09-01
+    ┌──────────────────┐
+    |Narwhals DataFrame|
+    |------------------|
+    |    | x | y |     |
+    |    |---|---|     |
+    |    | 0 | a |     |
+    |    | 1 | b |     |
+    └──────────────────┘
     '''
     ```
     """
