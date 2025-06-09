@@ -9,7 +9,7 @@
 An open-source DataOps and dataframe-centric ETL framework for building 
 lakehouses.
 
-<img src="docs/images/logo_sg.png" alt="laktory logo" width="85"/>
+<img src="docs/images/logos/laktory_logo_sg.png" alt="laktory logo" width="85"/>
 
 Laktory is your all-in-one solution for defining both data transformations and 
 Databricks resources. Imagine if Terraform, Databricks Asset Bundles, and dbt
@@ -22,7 +22,7 @@ driving its data transformation, Laktory ensures reliable and scalable data
 processing. Its modular, flexible approach allows you to seamlessly combine SQL
 statements with DataFrame operations.
 
-<img src="docs/images/laktory_diagram.png" alt="what is laktory" width="800"/>
+<img src="docs/images/diagrams/laktory_diagram.png" alt="what is laktory" width="800"/>
 
 Since Laktory pipelines are built on top of Spark and Polars, they can run in
 any environment that supports Python—from your local machine to a Kubernetes 
@@ -41,7 +41,7 @@ to combine Databricks Asset Bundles and dbt to build data pipelines. Laktory
 consolidates these functions, simplifying the entire process and reducing
 the overall cost.
 
-<img src="docs/images/why_simplicity.png" alt="dataops" width="500"/>
+<img src="docs/images/diagrams/why_simplicity.png" alt="dataops" width="500"/>
 
 
 ## Help
@@ -144,7 +144,7 @@ In this template, 4 pulumi projects are used to:
 - `workflows`: The data workflows to build your lakehouse
 
 ## Okube Company
-<img src="docs/images/okube.png" alt="okube logo" width="85"/>
+<img src="docs/images/logos/okube_logo.png" alt="okube logo" width="85"/>
 
 [Okube](https://www.okube.ai) is dedicated to building open source frameworks, known as the *kubes*, empowering businesses to build, deploy and operate highly scalable data platforms and AI models.
 

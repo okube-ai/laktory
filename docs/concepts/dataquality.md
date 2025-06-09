@@ -8,14 +8,14 @@ during execution. Whether by failing a pipeline before corrupted data is
 written, or by quarantining invalid records, Laktory guarantees that only clean,
 reliable data enters your analytics.
 
-<img src="/../../images/expectations_diagram.png" alt="node transformer" width="500"/>
+<img src="/../../images/diagrams/expectations_diagram.png" alt="node transformer" width="500"/>
 
 ### Expectations
 
 ??? "API Documentation"
 [`laktory.models.DataQualityExpectation`][laktory.models.DataQualityExpectation]<br>
 
-<img src="/../../images/expectations_logo.png" alt="node transformer" width="100"/>
+<img src="/../../images/diagrams/expectations_logo.png" alt="node transformer" width="100"/>
 
 Data quality expectations can be assigned directly to pipeline nodes, as shown
 in the example below:

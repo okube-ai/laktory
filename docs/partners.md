@@ -4,7 +4,7 @@ thorough and integrated frameworks and solutions to you.
 ---
 
 [//]: # (## Databricks)
-<img src="/images/okube_databricks.png" alt="okube-databricks" width="600"/>
+<img src="/images/logos/okube_databricks_logo .png" alt="okube-databricks" width="600"/>
 
 Okube is a Technology Partner to [Databricks](http://www.databricks.com), the world's
 first data intelligence platform powered by generative AI. 
@@ -21,7 +21,7 @@ scheduling.
 ---
 
 [//]: # (## Intelli5)
-<img src="/images/intelli5.png" alt="okube-intelli5"/>
+<img src="/images/logos/intelli5.png" alt="okube-intelli5"/>
 
 Okube is proud to partner with [Intelli5](https://www.intelli5.com/), a Montreal-based
 provider of strategic consulting services and advanced technology solutions.
