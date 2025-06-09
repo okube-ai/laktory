@@ -14,20 +14,21 @@ quarantined data if [expectations](dataquality.md) are set and not met.
 ??? "API Documentation"
     [`laktory.models.FileDataSource`][laktory.models.FileDataSource]<br>
 
-File data source supports reading multiple files stored on a storage container
-
+File data source supports reading files stored on disk.
 ```py
-from laktory import models
+import laktory as lk
 
-source = models.FileDataSource(
-    path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
+source = lk.models.FileDataSource(
+    path="/Volumes/sources/landing/events/yahoo-finance/stock_prices/",
     format="JSON",
     as_stream=False,
+    dataframe_backend="PYSPARK"
 )
-df = source.read(spark=spark)
+df = source.read()
 ```
+Reading the same dataset, but as a spark streaming source, is as easy as changing 
+`as_stream` to `True`.
 
-Reading the same dataset, but as a spark streaming source, is as easy as changing `as_stream` to `True`.
 ```py
 from laktory import models
 
@@ -35,28 +36,41 @@ source = models.FileDataSource(
     path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
     format="JSON",
     as_stream=True,
+    dataframe_backend="PYSPARK"
 )
-df_stream = source.read(spark=spark)
+df_stream = source.read()
+```
+
+You can also select a different DataFrame backend for reading your files
+```py
+import laktory as lk
+
+source = lk.models.FileDataSource(
+    path="/Volumes/sources/landing/events/yahoo-finance/stock_prices.parquet",
+    format="PARQUET",
+    dataframe_backend="POLARS"
+)
+df = source.read()
 ```
 
 #### Table Data Source
 ??? "API Documentation"
-    [`laktory.models.TableDataSource`][laktory.models.TableDataSource]<br>
+    [`laktory.models.HiveMetastoreDataSource`][laktory.models.HiveMetastoreDataSource]<br>
+    [`laktory.models.UnityCatalogDataSource`][laktory.models.UnityCatalogDataSource]<br>
 
-When your data is already loaded into a lakehouse data table, you can use the 
-`TableDataSource` model instead
+When your data is already loaded into data table, you can use the 
+`UnityCatalogDataSource` or `HiveMetastoreDataSource` models instead
 
 ```py
-from laktory import models
+import laktory as lk
 
-source = models.TableDataSource(
+source = lk.models.UnityCatalogDataSource(
     table_name="brz_stock_prices",
     selects=["symbol", "open", "close"],
     filter="symbol='AAPL'",
-    warehouse="DATABRICKS",
     as_stream=True,
 )
-df = source.read(spark=spark)
+df = source.read()
 ```
 In this case
 
@@ -75,9 +89,9 @@ To establish a relationship between two nodes in a data pipeline, the
 directed acyclic graph (DAG), using a `PipelineNodeDataSource` creates an edge
 between two vertices. It also defines the execution order of the nodes.
 ```py
-from laktory import models
+import laktory as lk
 
-source = models.PipelineNodeDataSource(
+source = lk.models.PipelineNodeDataSource(
     node_name="brz_stock_prices",
     as_stream=True,
 )
@@ -116,12 +130,17 @@ using a variety of storage format. For streaming dataframes, you also need to
 specify a checkpoint location.
 
 ```py
-from laktory import models
+import narwhals as nw
+import polars as pl
 
-df = spark.createDataFrame([("AAPL"), ("GOOGL")], ["symbol"])
+import laktory as lk
 
-sink = models.FileDataSink(
-    path="/Volumes/sources/landing/events/yahoo-finance/stock_price",
+df = nw.from_native(
+    pl.DataFrame({"symbol": ["AAPL", "GOOGL"]})
+)
+
+sink = lk.models.FileDataSink(
+    path="/Volumes/sources/landing/events/yahoo-finance/stock_price.parquet",
     format="PARQUET",
     mode="OVERWRITE",
 )
@@ -130,36 +149,46 @@ sink.write(df)
 
 #### Table Data Sink
 ??? "API Documentation"
-    [`laktory.models.TableDataSink`][laktory.models.TableDataSink]<br>
+    [`laktory.models.UnityCatalogDataSink`][laktory.models.UnityCatalogDataSink]<br>
+    [`laktory.models.HiveMetastoreDataSink`][laktory.models.HiveMetastoreDataSink]<br>
 
-The TableDataSink class provides a convenient way to write a DataFrame to a 
-lakehouse or data warehouse table. It simplifies the process of persisting data
+The `UnityCatlaogDataSink` and `HiveMetastoreDataSink` classes provide a convenient way
+to write a DataFrame to a data table. It simplifies the process of persisting data
 in a structured format, supporting both physical tables and SQL views.
 
 To write a DataFrame to a physical table:
 ```py
-from laktory import models
+import narwhals as nw
 
-df = spark.createDataFrame([("AAPL"), ("GOOGL")], ["symbol"])
+import laktory as lk
 
-sink = models.TableDataSink(
+df = nw.from_native(
+    spark.createDataFrame([("AAPL"), ("GOOGL")], ["symbol"])
+)
+
+sink = lk.models.UnityCatalogDataSink(
     schema_name="finance",
     table_name="brz_stock_prices",
 )
 sink.write(df)
 ``` 
 
-`TableDataSink` also supports creating non-materialized SQL views instead of 
+`UnityCatlaogDataSink` also supports creating non-materialized SQL views instead of 
 physical tables. To write a DataFrame as a SQL view:
 ```py
-from laktory import models
+import narwhas as nw
 
-df = spark.createDataFrame([("AAPL"), ("GOOGL")], ["symbol"])
+import laktory as lk
 
-sink = models.TableDataSink(
+df = nw.from_native(
+    spark.createDataFrame([("AAPL"), ("GOOGL")], ["symbol"])
+)
+
+sink = lk.models.TableDataSink(
     schema_name="finance",
     table_name="brz_stock_prices",
     table_type="VIEW",
+    view_definition="SELECT * from {df}"
 )
 sink.write(df)
 ``` 

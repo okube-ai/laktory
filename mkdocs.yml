@@ -140,7 +140,9 @@ nav:
       - Data Transformer: concepts/transformer.md
       - Change Data Capture: concepts/cdc.md
       - Data Quality: concepts/dataquality.md
-      - Spark Extension: concepts/spark.md
+    - Narwhal API Extension:
+      - Laktory Extension: concepts/extension_laktory.md
+      - Custom Extension: concepts/extension_custom.md
     - DataOps:
       - DataOps: concepts/dataops.md
       - Infrastructure-as-Code: concepts/iac.md
@@ -160,7 +162,6 @@ nav:
   - Lakehouse As Code: lakehouseascode.md
   - API Reference:
     - Models:
-#      - BaseModel: api/models/basemodel.md
       - DataFrame:
         - DataFrameColumn: api/models/dataframe/dataframecolumn.md
         - DataFrameColumnExpr: api/models/dataframe/dataframecolumnexpr.md
@@ -187,7 +188,6 @@ nav:
       - Pipeline:
         - Pipeline: api/models/pipeline/pipeline.md
         - PipelineNode: api/models/pipeline/pipelinenode.md
-#        - PipelineChild: api/models/pipeline/pipelinechild.md
         - Orchestrators:
             - Databricks Job: api/models/pipeline/orchestrators/databricksjoborchestrator.md
             - Databricks DLT: api/models/pipeline/orchestrators/databricksdltorchestrator.md
