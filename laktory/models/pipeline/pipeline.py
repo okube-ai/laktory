@@ -95,7 +95,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         nodes:
         - name: brz_stock_prices
           source:
-            path: ./data/stock_prices.json
+            path: ./data/stock_prices/
             format: JSONL
           sinks:
           - path: ./data/brz_stock_prices.parquet

@@ -1,7 +1,12 @@
 ??? "API Documentation"
     [`laktory.models.Pipeline`][laktory.models.Pipeline]<br>
 
-The Pipeline model is the cornerstone of Laktory, facilitating the process of reading, transforming, and writing data.
+The Pipeline model is the cornerstone of Laktory, orchestrating the process of reading, transforming, and writing data. 
+It is built around the concept of the DataFrame—a two-dimensional, tabular data structure with labeled rows and 
+columns—commonly used in data analysis for efficient data manipulation. While Pandas, Spark, and Polars are popular 
+DataFrame backends, Laktory primarily operates on [Narwhals DataFrames](https://narwhals-dev.github.io/narwhals/basics/dataframe/).
+This abstraction allows seamless integration with multiple engines (e.g., Spark, Polars) and enables selecting the most
+suitable backend for each operation.
 
 <img src="/../../images/pl_diagram.png" alt="data pipeline" width="400"/>
 
@@ -43,36 +48,32 @@ Here is an example of a pipeline declaration:
 
 === "YAML"
     
-```yaml
-name: stock_prices
-dataframe_backend: PYSPARK
-nodes:
-  - name: brz_stock_prices
-    source:
-      path: "./events/stock_prices/"
-      format: JSON
-    sinks:
-    - schema_name: finance
-      table_name: brz_stock_prices
+    ```yaml
+    name: pl-stock-prices
+    dataframe_backend: POLARS
 
-  - name: slv_stock_prices
-    source:
-      node_name: brz_stock_prices
-    sinks:
-    - schema_name: finance
-      table_name: slv_stock_prices
-    - schema_name: finance
-      table_name: slv_stock_prices_quarantine
-      is_quarantine: True
-    expectations:
-    - name: positive price
-      expr: close > 0
-      action: QUARANTINE
-    transformer:
-      nodes:
-      - expr: |
+    nodes:
+    - name: brz_stock_prices
+      source:
+        path: ./data/stock_prices/
+        format: JSONL
+      sinks:
+      - path: ./data/brz_stock_prices.parquet
+        format: PARQUET
+
+    - name: slv_stock_prices
+      source:
+        node_name: brz_stock_prices
+        as_stream: false
+      sinks:
+      - path: ./data/slv_stock_prices.parquet
+        format: PARQUET
+      transformer:
+        nodes:
+        - expr: |
             SELECT
-              data.created_at AS created_at,
+              CAST(data.created_at AS TIMESTAMP) AS created_at,
+              data.symbol AS name,
               data.symbol AS symbol,
               data.open AS open,
               data.close AS close,
@@ -81,66 +82,76 @@ nodes:
               data.volume AS volume
             FROM
               {df}
-      - func_name: drop_duplicates
-        func_kwargs:
-          subset:
-            - symbol
-            - timestamp
-  ...
-```
+        - func_name: unique
+          func_kwargs:
+            subset:
+              - symbol
+              - created_at
+            keep:
+              any
+    ```
 
 === "Python"
     ```py
-    from laktory import models
-
-    brz = models.PipelineNode(
-)
-
-name: stock_prices
-dataframe_backend: PYSPARK
-nodes:
-  - name: brz_stock_prices
-    source:
-      path: "./events/stock_prices"
-      format: JSON
-    sinks:
-    - schema_name: finance
-      table_name: brz_stock_prices
-
-  - name: slv_stock_prices
-    source:
-      node_name: brz_stock_prices
-    sinks:
-    - schema_name: finance
-      table_name: slv_stock_prices
-    - schema_name: finance
-      table_name: slv_stock_prices_quarantine
-      is_quarantine: True
-    expectations:
-    - name: positive price
-      expr: close > 0
-      action: QUARANTINE
-    transformer:
-      nodes:
-      - expr: |
-            SELECT
-              data.created_at AS created_at,
-              data.symbol AS symbol,
-              data.open AS open,
-              data.close AS close,
-              data.high AS high,
-              data.low AS low,
-              data.volume AS volume
-            FROM
-              {df}
-      - func_name: drop_duplicates
-        func_kwargs:
-          subset:
-            - symbol
-            - timestamp
-  ...
+    import laktory as lk
     
-
+    brz = lk.models.PipelineNode(
+        name="brz_stock_prices",
+        source=lk.models.FileDataSource(
+            path="./data/stock_prices/",
+            format="JSONL",
+        ),
+        sinks=[
+            lk.models.FileDataSink(
+                path="./data/brz_stock_prices.parquet",
+                format="PARQUET",
+            )
+        ],
+    )
+    
+    
+    slv = lk.models.PipelineNode(
+        name="slv_stock_prices",
+        source=lk.models.PipelineNodeDataSource(node_name="brz_stock_prices"),
+        sinks=[
+            lk.models.FileDataSink(
+                path="./data/slv_stock_prices.parquet",
+                format="PARQUET",
+            )
+        ],
+        transformer={
+            "nodes": [
+                lk.models.DataFrameExpr(
+                    expr="""
+                     SELECT
+                          CAST(data.created_at AS TIMESTAMP) AS created_at,
+                          data.symbol AS name,
+                          data.symbol AS symbol,
+                          data.open AS open,
+                          data.close AS close,
+                          data.high AS high,
+                          data.low AS low,
+                          data.volume AS volume
+                        FROM
+                          {df}
+                    """
+                ),
+                lk.models.DataFrameMethod(
+                    func_name="unique",
+                    func_kwargs={
+                        "subset": ["symbol", "created_at"],
+                        "keep": "any"
+                    }
+                )
+            ]
+        }
+    )
+    
+    pl = lk.models.Pipeline(
+        name="pl-stock-prices",
+        dataframe_backend="POLARS",
+        nodes=[brz, slv],
+    )
     ```
 
 ## Execution
@@ -153,22 +164,25 @@ sink.
 ```py
 from laktory import models
 
-with open("pipeline_node.yaml") as fp:
-    node = models.PipelineNode.model_validate(fp)
+with open("pipeline.yaml") as fp:
+    pl = models.Pipeline.model_validate(fp)
         
-node.execute()
-node.output_df.laktory.display()
+pl.execute()
+print(pl.nodes_dict["slv_stock_prices"].output_df.to_native().collect())
 ```
 
 <div class="code-output">
 ```commandline title="output"
-laktory.models.pipelinenode - INFO - Executing pipeline node slv_stock_prices (None)
-laktory.models.datasources.filedatasource - INFO - Reading /Volumes/dev/sources/landing/tables/brz_stock_prices/ as static
-laktory.models.transformers.basechain - INFO - Executing SPARK chain
-laktory.models.transformers.basechain - INFO - Executing SPARK chain node 0 (SparkChainNode).
-laktory.models.transformers.sparkchainnode - INFO - DataFrame df as 
+[laktory] Executing pipeline node slv_stock_prices
+[laktory] Reading `PipelineNodeDataSource` brz_stock_prices with DataFrameBackends.POLARS
+[laktory] Reading pipeline node brz_stock_prices from output DataFrame
+[laktory] Read completed.
+[laktory] Executing DataFrame Transformer
+[laktory] Executing DataFrame transformer node 0 (DataFrameExpr).
+[laktory] DataFrame as 
 SELECT
-  data.created_at AS created_at,
+  CAST(data.created_at AS TIMESTAMP) AS created_at,
+  data.symbol AS name,
   data.symbol AS symbol,
   data.open AS open,
   data.close AS close,
@@ -177,33 +191,48 @@ SELECT
   data.volume AS volume
 FROM
   {df}
-laktory.models.transformers.basechain - INFO - Executing SPARK chain node 1 (SparkChainNode).
-laktory.models.transformers.sparkchainnode - INFO - DataFrame df as drop_duplicates(subset=['symbol', 'created_at'])
-laktory.models.datasinks.filedatasink - INFO - Writing df as static DELTA to finance.slv_stock_prices with mode OVERWRITE and options {'mergeSchema': 'false', 'overwriteSchema': 'true'}
-+-------------------------+------+------------------+------------------+------------------+------------------+---------+
-|created_at               |symbol|open              |close             |high              |low               |volume   |
-+-------------------------+------+------------------+------------------+------------------+------------------+---------+
-|2023-07-06T11:30:00-04:00|MSFT  |338.7200012207031 |341.6199951171875 |341.6600036621094 |338.4200134277344 |2850613.0|
-|2023-02-15T13:30:00-05:00|AAPL  |154.3800048828125 |155.2321014404297 |155.32550048828125|154.14999389648438|6005631.0|
-|2023-02-15T10:30:00-05:00|MSFT  |268.0098876953125 |267.9599914550781 |268.6300048828125 |266.5299987792969 |5300365.0|
-|2023-10-18T13:30:00-04:00|MSFT  |332.7200012207031 |331.54998779296875|332.7200012207031 |330.739990234375  |2036767.0|
-|2023-10-19T12:30:00-04:00|AAPL  |176.69000244140625|177.47999572753906|177.83999633789062|175.4600067138672 |7575857.0|
-|2023-05-16T11:30:00-04:00|AMZN  |113.59500122070312|114.4832992553711 |114.48999786376953|113.2750015258789 |8034165.0|
-|2023-07-06T10:30:00-04:00|MSFT  |340.5799865722656 |338.70001220703125|341.1199951171875 |338.0899963378906 |3748565.0|
-|2023-03-30T10:30:00-04:00|GOOGL |100.59500122070312|100.4749984741211 |100.875           |100.24019622802734|3869214.0|
-|2023-01-17T15:30:00-05:00|GOOGL |91.55500030517578 |91.30999755859375 |91.61000061035156 |91.23999786376953 |3977790.0|
-|2023-03-22T12:30:00-04:00|AMZN  |99.94010162353516 |100.193603515625  |100.21659851074219|99.83219909667969 |3250304.0|
-+-------------------------+------+------------------+------------------+------------------+------------------+---------+
-only showing top 10 rows
+[laktory] Executing DataFrame transformer node 1 (DataFrameMethod).
+[laktory] Applying df.unique(subset=['symbol', 'created_at'],keep=any)
+[laktory] Writing static df to ./data/slv_stock_prices.parquet with format 'PARQUET' and {}
+[laktory] Write completed.
+┌────────────────┬───────┬────────┬────────────┬────────────┬────────────┬────────────┬────────────┐
+│ created_at     ┆ name  ┆ symbol ┆ open       ┆ close      ┆ high       ┆ low        ┆ volume     │
+│ ---            ┆ ---   ┆ ---    ┆ ---        ┆ ---        ┆ ---        ┆ ---        ┆ ---        │
+│ datetime[μs]   ┆ str   ┆ str    ┆ f64        ┆ f64        ┆ f64        ┆ f64        ┆ f64        │
+╞════════════════╪═══════╪════════╪════════════╪════════════╪════════════╪════════════╪════════════╡
+│ 2023-04-04     ┆ AMZN  ┆ AMZN   ┆ 103.175003 ┆ 103.129997 ┆ 103.419998 ┆ 103.072502 ┆ 3.998703e6 │
+│ 13:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-04-06     ┆ MSFT  ┆ MSFT   ┆ 288.859985 ┆ 290.360107 ┆ 291.070007 ┆ 288.700012 ┆ 4.355298e6 │
+│ 13:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-03-02     ┆ AMZN  ┆ AMZN   ┆ 90.589996  ┆ 90.860001  ┆ 91.004997  ┆ 90.529999  ┆ 4.143251e6 │
+│ 12:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-10-03     ┆ AMZN  ┆ AMZN   ┆ 125.150002 ┆ 125.580002 ┆ 125.699997 ┆ 124.800003 ┆ 5.416032e6 │
+│ 11:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2024-03-05     ┆ AAPL  ┆ AAPL   ┆ 170.785004 ┆ 170.470001 ┆ 170.828705 ┆ 170.149994 ┆ 4.315788e6 │
+│ 12:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ …              ┆ …     ┆ …      ┆ …          ┆ …          ┆ …          ┆ …          ┆ …          │
+│ 2023-11-30     ┆ AAPL  ┆ AAPL   ┆ 188.335007 ┆ 188.789993 ┆ 188.830002 ┆ 188.289993 ┆ 2.75059e6  │
+│ 13:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-03-22     ┆ MSFT  ┆ MSFT   ┆ 275.850006 ┆ 277.049988 ┆ 277.149994 ┆ 275.764008 ┆ 1.790997e6 │
+│ 12:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-01-12     ┆ GOOGL ┆ GOOGL  ┆ 91.480003  ┆ 91.510002  ┆ 91.870003  ┆ 89.75      ┆ 7.320764e6 │
+│ 09:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-07-20     ┆ GOOGL ┆ GOOGL  ┆ 120.459999 ┆ 120.059998 ┆ 120.470001 ┆ 119.764999 ┆ 2.94552e6  │
+│ 12:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-08-22     ┆ AAPL  ┆ AAPL   ┆ 176.922897 ┆ 177.214996 ┆ 177.429993 ┆ 176.310104 ┆ 6.823573e6 │
+│ 10:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+└────────────────┴───────┴────────┴────────────┴────────────┴────────────┴────────────┴────────────┘
 ```
 </div>
 
 ### Spark
 If you select `PYSPARK` as the DataFrame backend, Laktory will instantiate 
-a default Spark Session, but you can register your own instead:
+a default Spark Session, but you can register your own instead. This works using a 
+local, a Databricks notebook or Databricks connect Spark Session:
 ```py title="set_spark.py"
-from laktory import register_spark_session
 from databricks.connect import DatabricksSession
+
+from laktory import register_spark_session
 
 spark = DatabricksSession.builder.getOrCreate()
 register_spark_session(spark)
@@ -217,8 +246,8 @@ configured directly within the pipeline.
 ```yaml title="pipeline.yaml"
 - name: stock_prices
   nodes: ...
-  orchestrator: DATABRICKS_DLT
-  databricks_dlt:
+  orchestrator: 
+    type: DATABRICKS_DLT
     catalog: dev
     target: finance
     
@@ -249,27 +278,29 @@ To use the `DATABRICKS_JOB` orchestrator, you must also add the supporting
 [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/jobs/job_laktory_pl.py) 
 to your stack. 
 
+TODO: Review is still working with notebook!
 Here is a simplified version:
 ```py title="job_laktory_pl"
 dbutils.widgets.text("pipeline_name", "pl-stock-prices")
 dbutils.widgets.text("node_name", "")
 
-from laktory import models  # noqa: E402
-from laktory import settings  # noqa: E402
+import laktory as lk  # noqa: E402
+
+lk.register_spark_session(spark)
 
 # Read Pipeline
 pl_name = dbutils.widgets.get("pipeline_name")
 node_name = dbutils.widgets.get("node_name")
-filepath = f"/Workspace{settings.workspace_laktory_root}pipelines/{pl_name}.json"
+filepath = f"/Workspace{lk.settings.workspace_laktory_root}pipelines/{pl_name}.json"
 with open(filepath, "r") as fp:
-    pl = models.Pipeline.model_validate_json(fp.read())
+    pl = lk.models.Pipeline.model_validate_json(fp.read())
 
 
 # Execution
 if node_name:
-    pl.nodes_dict[node_name].execute(spark=spark)
+    pl.nodes_dict[node_name].execute()
 else:
-    pl.execute(spark=spark)
+    pl.execute()
 ```
 
 The notebook reads the pipeline configuration using the pipeline name provided
@@ -295,17 +326,16 @@ To use the `DATABRICKS_DLT` orchestrator, you must also add the supporting
 to your stack. 
 
 Here is a simplified version:
-
+TODO: REWVIEW NOTEBOOK!!!
 ```py title="dlt_laktory_pl"
-from laktory import dlt
-from laktory import models
+import laktory as lk
 
 with open("pipeline.yaml") as fp:
-    pl = models.Pipeline.model_validate_yaml(fp.read())
+    pl = lk.models.Pipeline.model_validate_yaml(fp.read())
 
 
 def define_table(node, sink):
-    @dlt.table_or_view(
+    @lk.dlt.table_or_view(
         name=sink.name,
         comment=node.description,
         as_view=sink is None,
@@ -330,11 +360,11 @@ def define_table(node, sink):
 for node in pl.nodes:
     for sink in node.sinks:
         wrapper = define_table(node, sink)
-        df = dlt.get_df(wrapper)
+        df = lk.dlt.get_df(wrapper)
         display(df)
 ```
 
-Notice how `dlt` module is imported from laktory as it provides additional
+Notice how `dlt` module is internal to laktory. It provides additional
 debugging and inspection capabilities. Notably, you can run the notebook in a
 user cluster and will be able to inspect the resulting dataframe.
 

@@ -169,43 +169,51 @@ session.
 === "YAML"
     
     ```py
+    from databricks.connect import DatabricksSession
+
     from laktory import models
     from laktory import register_spark_session
-    from databricks.connect import DatabricksSession
-    
+
     with open("pipeline_node.yaml") as fp:
         node = models.PipelineNode.model_validate(fp)
-    
+
     spark = DatabricksSession.builder.getOrCreate()
     register_spark_session(spark)
 
     node.execute()
     node.output_df.laktory.display()
+    print(node.output_df.to_native().show())
     ```
 
 === "Python"
 
     ```py
-    from laktory import register_spark_session
     from databricks.connect import DatabricksSession
+
+    from laktory import register_spark_session
 
     spark = DatabricksSession.builder.getOrCreate()
     register_spark_session(spark)
 
+    node = ...
+
     node.execute()
     node.output_df.laktory.display()
+    print(node.output_df.to_native().show())
     ```
 
-#TODO: Update OUTPUT
 <div class="code-output">
 ```commandline title="output"
-laktory.models.pipelinenode - INFO - Executing pipeline node slv_stock_prices (None)
-laktory.models.datasources.filedatasource - INFO - Reading /Volumes/dev/sources/landing/tables/brz_stock_prices/ as static
-laktory.models.transformers.basechain - INFO - Executing SPARK chain
-laktory.models.transformers.basechain - INFO - Executing SPARK chain node 0 (SparkChainNode).
-laktory.models.transformers.sparkchainnode - INFO - DataFrame df as 
+[laktory] Executing pipeline node slv_stock_prices
+[laktory] Reading `PipelineNodeDataSource` brz_stock_prices with DataFrameBackends.PYSPARK
+[laktory] Reading pipeline node brz_stock_prices from output DataFrame
+[laktory] Read completed.
+[laktory] Executing DataFrame Transformer
+[laktory] Executing DataFrame transformer node 0 (DataFrameExpr).
+[laktory] DataFrame as 
 SELECT
-  data.created_at AS created_at,
+  CAST(data.created_at AS TIMESTAMP) AS created_at,
+  data.symbol AS name,
   data.symbol AS symbol,
   data.open AS open,
   data.close AS close,
@@ -214,24 +222,37 @@ SELECT
   data.volume AS volume
 FROM
   {df}
-laktory.models.transformers.basechain - INFO - Executing SPARK chain node 1 (SparkChainNode).
-laktory.models.transformers.sparkchainnode - INFO - DataFrame df as drop_duplicates(subset=['symbol', 'created_at'])
-laktory.models.datasinks.filedatasink - INFO - Writing df as static DELTA to finance.slv_stock_prices with mode OVERWRITE and options {'mergeSchema': 'false', 'overwriteSchema': 'true'}
-+-------------------------+------+------------------+------------------+------------------+------------------+---------+
-|created_at               |symbol|open              |close             |high              |low               |volume   |
-+-------------------------+------+------------------+------------------+------------------+------------------+---------+
-|2023-07-06T11:30:00-04:00|MSFT  |338.7200012207031 |341.6199951171875 |341.6600036621094 |338.4200134277344 |2850613.0|
-|2023-02-15T13:30:00-05:00|AAPL  |154.3800048828125 |155.2321014404297 |155.32550048828125|154.14999389648438|6005631.0|
-|2023-02-15T10:30:00-05:00|MSFT  |268.0098876953125 |267.9599914550781 |268.6300048828125 |266.5299987792969 |5300365.0|
-|2023-10-18T13:30:00-04:00|MSFT  |332.7200012207031 |331.54998779296875|332.7200012207031 |330.739990234375  |2036767.0|
-|2023-10-19T12:30:00-04:00|AAPL  |176.69000244140625|177.47999572753906|177.83999633789062|175.4600067138672 |7575857.0|
-|2023-05-16T11:30:00-04:00|AMZN  |113.59500122070312|114.4832992553711 |114.48999786376953|113.2750015258789 |8034165.0|
-|2023-07-06T10:30:00-04:00|MSFT  |340.5799865722656 |338.70001220703125|341.1199951171875 |338.0899963378906 |3748565.0|
-|2023-03-30T10:30:00-04:00|GOOGL |100.59500122070312|100.4749984741211 |100.875           |100.24019622802734|3869214.0|
-|2023-01-17T15:30:00-05:00|GOOGL |91.55500030517578 |91.30999755859375 |91.61000061035156 |91.23999786376953 |3977790.0|
-|2023-03-22T12:30:00-04:00|AMZN  |99.94010162353516 |100.193603515625  |100.21659851074219|99.83219909667969 |3250304.0|
-+-------------------------+------+------------------+------------------+------------------+------------------+---------+
-only showing top 10 rows
+[laktory] Executing DataFrame transformer node 1 (DataFrameMethod).
+[laktory] Applying df.unique(subset=['symbol', 'created_at'],keep=any)
+[laktory] Writing static df to ./data/slv_stock_prices.parquet with format 'PARQUET' and {}
+[laktory] Write completed.
+┌────────────────┬───────┬────────┬────────────┬────────────┬────────────┬────────────┬────────────┐
+│ created_at     ┆ name  ┆ symbol ┆ open       ┆ close      ┆ high       ┆ low        ┆ volume     │
+│ ---            ┆ ---   ┆ ---    ┆ ---        ┆ ---        ┆ ---        ┆ ---        ┆ ---        │
+│ datetime[μs]   ┆ str   ┆ str    ┆ f64        ┆ f64        ┆ f64        ┆ f64        ┆ f64        │
+╞════════════════╪═══════╪════════╪════════════╪════════════╪════════════╪════════════╪════════════╡
+│ 2023-04-04     ┆ AMZN  ┆ AMZN   ┆ 103.175003 ┆ 103.129997 ┆ 103.419998 ┆ 103.072502 ┆ 3.998703e6 │
+│ 13:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-04-06     ┆ MSFT  ┆ MSFT   ┆ 288.859985 ┆ 290.360107 ┆ 291.070007 ┆ 288.700012 ┆ 4.355298e6 │
+│ 13:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-03-02     ┆ AMZN  ┆ AMZN   ┆ 90.589996  ┆ 90.860001  ┆ 91.004997  ┆ 90.529999  ┆ 4.143251e6 │
+│ 12:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-10-03     ┆ AMZN  ┆ AMZN   ┆ 125.150002 ┆ 125.580002 ┆ 125.699997 ┆ 124.800003 ┆ 5.416032e6 │
+│ 11:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2024-03-05     ┆ AAPL  ┆ AAPL   ┆ 170.785004 ┆ 170.470001 ┆ 170.828705 ┆ 170.149994 ┆ 4.315788e6 │
+│ 12:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ …              ┆ …     ┆ …      ┆ …          ┆ …          ┆ …          ┆ …          ┆ …          │
+│ 2023-11-30     ┆ AAPL  ┆ AAPL   ┆ 188.335007 ┆ 188.789993 ┆ 188.830002 ┆ 188.289993 ┆ 2.75059e6  │
+│ 13:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-03-22     ┆ MSFT  ┆ MSFT   ┆ 275.850006 ┆ 277.049988 ┆ 277.149994 ┆ 275.764008 ┆ 1.790997e6 │
+│ 12:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-01-12     ┆ GOOGL ┆ GOOGL  ┆ 91.480003  ┆ 91.510002  ┆ 91.870003  ┆ 89.75      ┆ 7.320764e6 │
+│ 09:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-07-20     ┆ GOOGL ┆ GOOGL  ┆ 120.459999 ┆ 120.059998 ┆ 120.470001 ┆ 119.764999 ┆ 2.94552e6  │
+│ 12:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+│ 2023-08-22     ┆ AAPL  ┆ AAPL   ┆ 176.922897 ┆ 177.214996 ┆ 177.429993 ┆ 176.310104 ┆ 6.823573e6 │
+│ 10:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
+└────────────────┴───────┴────────┴────────────┴────────────┴────────────┴────────────┴────────────┘
 ```
 </div>
 
