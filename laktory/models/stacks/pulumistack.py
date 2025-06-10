@@ -106,9 +106,9 @@ class PulumiStack(BaseModel):
         worker = Worker()
 
         cmd = ["pulumi", command]
-        cmd += ["-s", stack]
-
-        if flags is not None:
+        if stack:
+            cmd += ["-s", stack]
+        if flags:
             cmd += flags
 
         # Inject user-agent value for monitoring usage as a Databricks partner

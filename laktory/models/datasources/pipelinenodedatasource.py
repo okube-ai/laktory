@@ -1,9 +1,8 @@
-from typing import Union
+from pydantic import Field
 
 from laktory._logger import get_logger
 from laktory.models.datasources.basedatasource import BaseDataSource
-from laktory.polars import PolarsDataFrame
-from laktory.spark import SparkDataFrame
+from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
 
@@ -31,14 +30,27 @@ class PipelineNodeDataSource(BaseDataSource):
 
     brz = models.PipelineNode(
         name="brz_stock_prices",
-        source={"path": "/Volumes/sources/landing/events/yahoo-finance/stock_price"},
-        sinks=[{"path": "/Volumes/sources/landing/tables/brz_stock_prices"}],
+        source={
+            "path": "/Volumes/sources/landing/events/yahoo-finance/stock_price",
+            "format": "JSON",
+        },
+        sinks=[
+            {
+                "path": "/Volumes/sources/landing/tables/brz_stock_prices",
+                "format": "PARQUET",
+            }
+        ],
     )
 
     slv = models.PipelineNode(
         name="slv_stock_prices",
         source={"node_name": "brz_stock_prices"},
-        sinks=[{"path": "/Volumes/sources/landing/tables/slv_stock_prices"}],
+        sinks=[
+            {
+                "path": "/Volumes/sources/landing/tables/slv_stock_prices",
+                "format": "PARQUET",
+            }
+        ],
     )
 
     pl = models.Pipeline(name="pl-stock-prices", nodes=[brz, slv])
@@ -47,9 +59,8 @@ class PipelineNodeDataSource(BaseDataSource):
     ```
     """
 
-    node_name: Union[str, None]
-    # include_failed_expectations: bool = True  # TODO: Implement
-    # include_passed_expectations: bool = True  # TODO: Implement
+    node_name: str
+    type: str = Field("PIPELINE_NODE", frozen=True)
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -92,10 +103,14 @@ class PipelineNodeDataSource(BaseDataSource):
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def _read_spark(self, spark) -> SparkDataFrame:
+    def _read_spark(self) -> AnyFrame:
         stream_to_batch = not self.as_stream and self.node.source.as_stream
         is_dlt = False
-        if self.is_orchestrator_dlt:
+
+        pl = self.parent_pipeline
+        is_orchestrator_dlt = pl is not None and pl.is_orchestrator_dlt
+
+        if is_orchestrator_dlt:
             from laktory.dlt import is_debug
             from laktory.dlt import read as dlt_read
             from laktory.dlt import read_stream as dlt_read_stream
@@ -114,10 +129,10 @@ class PipelineNodeDataSource(BaseDataSource):
         elif stream_to_batch or self.node.output_df is None:
             if self.node.has_sinks:
                 logger.info(f"Reading pipeline node {self._id} from primary sink")
-                df = self.node.primary_sink.read(spark=spark, as_stream=self.as_stream)
+                df = self.node.primary_sink.read(as_stream=self.as_stream)
             else:
                 logger.info("Executing parent pipeline node")
-                self.node.execute(spark=spark)
+                self.node.to_df()
                 df = self.node.output_df
 
         elif self.node.output_df is not None:
@@ -129,7 +144,7 @@ class PipelineNodeDataSource(BaseDataSource):
 
         return df
 
-    def _read_polars(self) -> PolarsDataFrame:
+    def _read_polars(self) -> AnyFrame:
         # Read from node output DataFrame (if available)
         if self.node.output_df is not None:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")

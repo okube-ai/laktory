@@ -10,13 +10,14 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import ModelMetaclass
 
 
 class ResourceOptions(BaseModel):
     """
     Resource options for deployment.
 
-    Attributes
+    Parameters
     ----------
     is_enabled:
         If `False`, resource is not passed to the IaC backend and is not
@@ -101,13 +102,13 @@ class ResourceLookup(BaseModel):
         return self.model_dump(*args, **kwargs)
 
 
-class BaseResource(_BaseModel):
+class BaseResource(_BaseModel, metaclass=ModelMetaclass):
     """
     Parent class for all Laktory models deployable as one or multiple cloud
     core resources. This `BaseResource` class is derived from
     `pydantic.BaseModel`.
 
-    Attributes
+    Parameters
     ----------
     resource_name:
         Name of the resource in the context of infrastructure as code. If None,
@@ -129,6 +130,10 @@ class BaseResource(_BaseModel):
     @classmethod
     def base_lookup(cls, data: Any) -> Any:
         if data is None:
+            return data
+
+        if not isinstance(data, dict):
+            # TODO: Add support if data is a Base Resource instance
             return data
 
         lookup_existing = data.get("lookup_existing", None)

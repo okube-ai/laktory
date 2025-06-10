@@ -12,7 +12,7 @@ class ViewGrant(BaseModel):
     """
     Privileges granted to a principal and operating on a view
 
-    Attributes
+    Parameters
     ----------
     principal
         User, group or service principal name

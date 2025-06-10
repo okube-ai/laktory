@@ -9,6 +9,7 @@ nodes:
 - name: brz_stock_prices
   source:
     path: ./data/stock_prices.json
+    format: JSONL
   sinks:
   - path: ./data/brz_stock_prices.parquet
     format: PARQUET
@@ -22,7 +23,7 @@ nodes:
     format: PARQUET
   transformer:
     nodes:
-    - sql_expr: |
+    - expr: |
         SELECT
           CAST(data.created_at AS TIMESTAMP) AS created_at,
           data.symbol AS name,
@@ -40,16 +41,16 @@ nodes:
           - symbol
           - created_at
         keep:
-          first
+          any
 
 # --------------------------------------------------------------------------- #
 # Metadata                                                                    #
 # --------------------------------------------------------------------------- #
 
 - name: brz_stock_metadata
-  layer: BRONZE
   source:
     path: ./data/stock_metadata.json
+    format: JSONL
   sinks:
   -   path: ./data/brz_stock_metadata.parquet
       format: PARQUET
@@ -59,16 +60,11 @@ nodes:
     node_name: brz_stock_metadata
   transformer:
     nodes:
-    - with_columns:
-      - name: symbol
-        type: string
-        expr: data.symbol
-      - name: currency
-        type: string
-        expr: data.currency
-      - name: first_traded
-        type: timestamp
-        expr: data.firstTradeDate
+    - func_name: with_columns
+      func_kwargs:
+        symbol: nw.col("data").struct.field("symbol").cast(nw.dtypes.String())
+        currency: nw.col("data").struct.field("currency").cast(nw.dtypes.String())
+        first_traded: nw.col("data").struct.field("firstTradeDate").cast(nw.dtypes.Datetime())
     - func_name: drop
       func_args:
         - data
@@ -86,7 +82,7 @@ nodes:
       format: PARQUET
   transformer:
     nodes:
-    - func_name: laktory.smart_join
+    - func_name: join
       func_kwargs:
         other:
           node_name: slv_stock_metadata
@@ -96,9 +92,9 @@ nodes:
             - first_traded
         "on":
           - symbol
-    - with_column:
-        name: day_id
-        expr: pl.col("created_at").dt.truncate("1d")
+    - func_name: with_columns
+      func_kwargs:
+        day_id: nw.col("created_at").dt.truncate("1d")
 
 - name: gld_stocks_prices_by_1d
   source:
@@ -115,13 +111,8 @@ nodes:
           - symbol
           - day_id
         agg_expressions:
-          - name: count
-            expr: pl.col('symbol').count()
-          - name: low
-            expr: pl.col('low').min()
-          - name: high
-            expr: pl.col('high').max()
-          - name: open
-            expr: pl.col('open').first()
-          - name: close
-            expr: pl.col('close').last()
+          - expr: nw.col('symbol').count().alias("count")
+          - expr: nw.col('low').min().alias("low")
+          - expr: nw.col('high').max().alias("high")
+          - expr: nw.col('open').min().alias("open")
+          - expr: nw.col('close').max().alias("close")

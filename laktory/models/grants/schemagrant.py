@@ -7,7 +7,7 @@ class SchemaGrant(BaseModel):
     """
     Privileges granted to a principal and operating on a schema
 
-    Attributes
+    Parameters
     ----------
     principal
         User, group or service principal name

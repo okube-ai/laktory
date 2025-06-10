@@ -1,4 +1,6 @@
-from typing import Union
+from typing import Literal
+
+from pydantic import Field
 
 from laktory._settings import settings
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
@@ -29,25 +31,31 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
     [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/jobs/job_laktory_pl.py)
     to the stack.
 
-    Attributes
+
+    References
     ----------
-    notebook_path:
-        Path for the notebook. If `None`, default path for laktory job notebooks is used.
-    config_file:
-        Pipeline configuration (json) file deployed to the workspace and used
-        by the job to read and execute the pipeline.
-    node_max_retries:
-        An optional maximum number of times to retry an unsuccessful run for each node.
-    requirements_file:
-        Pipeline requirements (json) file deployed to the workspace and used
-        by the job to install the required python dependencies.
+    * [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
+
     """
 
-    notebook_path: Union[str, None] = None
-    config_file: PipelineConfigWorkspaceFile = PipelineConfigWorkspaceFile()
-    node_max_retries: int = None
-    requirements_file: PipelineRequirementsWorkspaceFile = (
-        PipelineRequirementsWorkspaceFile()
+    type: Literal["DATABRICKS_JOB"] = Field(
+        "DATABRICKS_JOB", description="Type of orchestrator"
+    )
+    notebook_path: str = Field(
+        None,
+        description="Path for the notebook. If `None`, default path for laktory job notebooks is used.",
+    )
+    config_file: PipelineConfigWorkspaceFile = Field(
+        PipelineConfigWorkspaceFile(),
+        description="Pipeline configuration (json) file deployed to the workspace and used by the job to read and execute the pipeline.",
+    )
+    node_max_retries: int = Field(
+        None,
+        description="An optional maximum number of times to retry an unsuccessful run for each node.",
+    )
+    requirements_file: PipelineRequirementsWorkspaceFile = Field(
+        PipelineRequirementsWorkspaceFile(),
+        description="Pipeline requirements (json) file deployed to the workspace and used by the job to install the required python dependencies.",
     )
 
     # ----------------------------------------------------------------------- #
@@ -160,7 +168,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def child_attribute_names(self):
+    def children_names(self):
         return ["config_file", "requirements_file"]
 
     # ----------------------------------------------------------------------- #
@@ -172,12 +180,13 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         return "job"
 
     @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def pulumi_excludes(self) -> list[str] | dict[str, bool]:
         return super().pulumi_excludes + [
             "notebook_path",
             "config_file",
             "node_max_retries",
             "requirements_file",
+            "type",
         ]
 
     @property

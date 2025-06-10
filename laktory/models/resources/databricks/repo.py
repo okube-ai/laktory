@@ -11,7 +11,7 @@ class RepoSparseCheckout(BaseModel):
     """
     Repo Sparse Checkout specifications
 
-    Attributes
+    Parameters
     ----------
 
     patterns:
@@ -29,7 +29,7 @@ class Repo(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Repo
 
-    Attributes
+    Parameters
     ----------
 
     access_controls:

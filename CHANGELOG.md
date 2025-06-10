@@ -1,4 +1,59 @@
 # Release History
+## [0.8.0] - Unreleased
+### Added
+* Narwhals as the core engine for DataFrame manipulations
+* `reader_methods` option for data sources
+* `writer_methods` support for data sinks  
+* `DataFrameColumn`: defines a serializable column in a dataframe schema  
+* `DataFrameSchema`: defines a complete serializable dataframe schema  
+* `DataFrameExpr`: represents a DataFrame as a SQL expression  
+* `DataFrameMethod`: represents a DataFrame as a method call with support for both Narwhals and Native API  
+* `DataFrameTransformer`: represents a DataFrame as a series of chained transformations  
+* `DTypes`: defines a serializable column data type
+* `UnityCatalogDataSource`: reads DataFrame from Unity Catalog 
+* `HiveMetastoreDataSource`: reads DataFrame from Hive Metastore 
+* `laktory` namespace: Narwhals extension with custom DataFrame methods and expressions
+* `register_anyframe_namespace`: defines a custom narwhals DataFrame method for transformations
+* `register_expr_namespace`: defines a custom narwhals Expression for transformations
+### Fixed
+* n/a
+### Updated
+* Polars reader to support new formats:  
+  * `avro` 
+  * `ipc`  
+  * `iceberg`  
+  * `pyarrow`  
+* Support for 2- and 3-level namespace in source/sink `table_name` in addition to explicit `catalog_name` and `schema_name` definition
+### Breaking changes
+* Dropped support python 3.9
+* Data sources:
+  * Output a Narwhals DataFrame (as opposed to Spark/Polars DataFrame)
+  * No longer infer column types by default when reading streams
+  * Renamed `reader_options` to `reader_kwargs`
+  * Renamed `MemoryDataSource` to `DataFrameDataSource`
+  * `TableDataSource` acts as a parent abstract class for `UnityCatalogDataSource` and `HiveMetastoreDataSource`
+* Data sinks:
+  * Accept a Narwhals DataFrame (as opposed to Spark/Polars DataFrame)
+  * Renamed `checkpoint_location` to `checkpoint_path`
+  * Renamed `writer_options` to `writer_kwargs`
+  * Deprecated `cluster_by` option (now supported with `writer_methods`)
+* `DataFrameTransformer` (previously Spark/PolarsChain):
+  * Accept and return Narwhals DataFrame
+  * Can no longer be used for VIEW creation
+  * Replaced `PolarsChainNode` and `SparkChainNode` with `DataFrameMethod` and  `DataFrameExpr` classes
+* DataFrame Extensions
+  * Deprecated `polars` extension 
+  * Deprecated `spark` extension 
+* PipelineNode:
+  * Removed "Layers" concept in pipeline node
+  * Removed custom functions such as `with_columns`, `drop_duplicates`, etc.
+* Pipeline:
+  * Orchestrator declaration refactored
+* Renamed `DataFrameColumnExpression` to `DataFrameColumnExpr` 
+* `SparkSession` must now be registered at the module level (not passed to function calls)
+* Deprecated classes:
+  * `DataProducer`
+  * `DataEvent`
 
 ## [0.7.4] - Unreleased
 ### Added
@@ -62,7 +117,7 @@
 * `User` and `ServicePrincipal` `workspace_permission_assignments` attribute
 ### Fixed
 * Usage of `lookup_existing` preventing propagation of resource `options` [[#372](https://github.com/okube-ai/laktory/issues/372)]
-* Typo in unity catalog quick start documentation 
+* Typo in unity catalog quick start documentation
 * Missing documentation for `data_accesses` `metastore` attribute 
 * Variable resolution in `lookup_existing` attribute
 * `Metastore` look up issues

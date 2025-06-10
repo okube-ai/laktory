@@ -1,4 +1,6 @@
-from typing import Union
+from typing import Literal
+
+from pydantic import Field
 
 from laktory._settings import settings
 from laktory.models.datasinks.tabledatasink import TableDataSink
@@ -25,19 +27,23 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
     [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py)
     to the stack.
 
-    Attributes
+
+    References
     ----------
-    config_file:
-        Pipeline configuration (json) file deployed to the workspace and used
-        by the job to read and execute the pipeline.
-    requirements_file:
-        Pipeline requirements (json) file deployed to the workspace and used
-        by the job to install the required python dependencies.
+    * [Databricks DLT](https://www.databricks.com/product/delta-live-tables)
+
     """
 
-    config_file: PipelineConfigWorkspaceFile = PipelineConfigWorkspaceFile()
-    requirements_file: PipelineRequirementsWorkspaceFile = (
-        PipelineRequirementsWorkspaceFile()
+    type: Literal["DATABRICKS_DLT"] = Field(
+        "DATABRICKS_DLT", description="Type of orchestrator"
+    )
+    config_file: PipelineConfigWorkspaceFile = Field(
+        PipelineConfigWorkspaceFile(),
+        description="Pipeline configuration (json) file deployed to the workspace and used by the job to read and execute the pipeline.",
+    )
+    requirements_file: PipelineRequirementsWorkspaceFile = Field(
+        PipelineRequirementsWorkspaceFile(),
+        description="Pipeline requirements (json) file deployed to the workspace and used by the job to install the required python dependencies.",
     )
 
     # ----------------------------------------------------------------------- #
@@ -74,8 +80,8 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def child_attribute_names(self):
-        return ["config_file", "requirements_file"]
+    def children_names(self):
+        return ["config_file", "requirements_file", "type"]
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -86,10 +92,11 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
         return "dlt-pipeline"
 
     @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def pulumi_excludes(self) -> list[str] | dict[str, bool]:
         excludes = super().pulumi_excludes
         excludes["config_file"] = True
         excludes["requirements_file"] = True
+        excludes["type"] = True
         return excludes
 
     @property
