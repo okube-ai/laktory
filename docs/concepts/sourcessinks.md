@@ -1,5 +1,5 @@
 ## Data Sources
-<img src="/../../images/source_logo.png" alt="node source" width="100"/>
+<img src="/../../images/diagrams/source_logo.png" alt="node source" width="100"/>
 
 The `DataSource` models facilitate loading data into a dataframe. It provides 
 reusable mechanisms for reading data of various nature given different
@@ -111,7 +111,7 @@ This type of data source adapts to its execution context.
     [`laktory.models.FileDataSink`][laktory.models.FileDataSink]<br>
     [`laktory.models.TableDataSink`][laktory.models.TableDataSink]<br>
 
-<img src="/../../images/sink_logo.png" alt="node sink" width="100"/>
+<img src="/../../images/diagrams/sink_logo.png" alt="node sink" width="100"/>
 
 Analogously to `DataSource`, `DataSink` models facilitate writing a dataframe
 into a target location. It provides re-usable mechanisms for writing data 

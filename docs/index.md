@@ -1,4 +1,4 @@
-<img src="images/logo_sg.png" alt="laktory logo" width="85"/>
+<img src="images/logos/laktory_logo_sg.png" alt="laktory logo" width="85"/>
 
 An open-source DataOps and dataframe-centric ETL framework for building 
 lakehouses.
@@ -16,8 +16,7 @@ to perform data transformations reliably and at scale. Its modular and flexible
 design allows you to effortlessly combine SQL statements with DataFrame
 operations, reducing complexity and enhancing productivity.
 
-#TODO UPDATE DIAGRAM TO INCLUDE NARWHALS
-<img src="images/laktory_diagram.png" alt="what is laktory" width="800"/>
+<img src="images/diagrams/laktory_diagram.png" alt="what is laktory" width="800"/>
 
 Since Laktory pipelines are built on top of Narwhals, they can run in
 any environment that supports python—from your local machine to a Kubernetes 
@@ -44,7 +43,7 @@ configuration, and Unity Catalog, while your data engineers and analysts try
 to combine Databricks Asset Bundles and dbt to build data pipelines. Laktory
 consolidates these functions, simplifying the entire process and reducing
 the overall cost.
-<img src="images/why_simplicity.png" alt="dataops" width="500"/>
+<img src="images/diagrams/why_simplicity.png" alt="dataops" width="500"/>
 
 ### Speed
 Adopting a [DataOps](concepts/dataops.md) approach and writing data pipelines as code enables faster,
@@ -54,7 +53,7 @@ allowing for rapid iteration. With Laktory taking care of read, write and DAG
 generation, you can concentrate on what matters most—business logic and creating
 value—while minimizing boilerplate code.
 
-<img src="images/dataops_diagram.png" alt="dataops" width="400"/>
+<img src="images/diagrams/dataops_diagram.png" alt="dataops" width="400"/>
 
 ### Scalability
 Scale the right job to the right level. Run on a powerful Spark cluster when 
@@ -73,10 +72,10 @@ failure, be dropped, or automatically quarantined for later review.
 A growing number of [businesses](users.md) rely on Laktory to build, deploy, and scale 
 their lakehouses with confidence.
 
-<img src="/images/energir.jpg" alt="energir" style="height:75px; margin-right:24px;"/> 
-<img src="/images/ezbi.png" alt="ezbi" style="height:75px; margin-right:36px;"/> 
-<img src="/images/nimblestax.png" alt="mimblestax" style="height:75px; margin-right:24px;"/> 
-<img src="/images/taiga.png" alt="taiga" style="height:75px; margin-right:24px;"/> 
+<img src="/images/logos/energir.jpg" alt="energir" style="height:75px; margin-right:24px;"/> 
+<img src="/images/logos/ezbi.png" alt="ezbi" style="height:75px; margin-right:36px;"/> 
+<img src="/images/logos/nimblestax.png" alt="mimblestax" style="height:75px; margin-right:24px;"/> 
+<img src="/images/logos/taiga.png" alt="taiga" style="height:75px; margin-right:24px;"/> 
 
 Curious about their experience? Read their [testimonials](users.md).
 
@@ -266,7 +265,7 @@ laktory deploy --env dev
 ```commandline title="command line"
 laktory run --env dev --job slv_stock_prices
 ```
-![job](../../images/job_stock_prices.png)
+![job](../../images/screenshots/job_stock_prices.png)
 
 
 ## Watch it
@@ -281,12 +280,12 @@ On the other hand, if you have minimal DevOps or programming experience, you wil
 It also provides you with the tools for building a UI within your organization for a fully self-served experience.
 
 ## Okube
-<img src="images/okube.png" alt="okube logo" width="85"/>
+<img src="images/logos/okube_logo.png" alt="okube logo" width="85"/>
 
 Laktory is one of the *kubes* developed by [Okube](https://www.okube.ai), a company dedicated to building open source frameworks, empowering businesses to build, deploy and operate highly scalable data platforms and AI models.
 
 ## Partners
 Okube and Laktory are official Databricks Technology Partners
-<img src="/images/okube_databricks.png" alt="okube-databricks" width="600"/>
+<img src="/images/logos/okube_databricks_logo.png" alt="okube-databricks" width="600"/>
 
 Learn more in our [Partners](partners.md) sections.

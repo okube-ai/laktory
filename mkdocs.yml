@@ -43,8 +43,8 @@ theme:
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-  logo: images/logo_sw_ltw.png
-  favicon: images/logo_sg.png
+  logo: images/logos/laktory_logo_sw_ltw.png
+  favicon: images/logos/laktory_logo_sg.png
 
   features:
     - content.action.view
@@ -133,7 +133,6 @@ nav:
       - Models: concepts/models.md
       - Stack: concepts/stack.md
       - Variables: concepts/variables.md
-#    - Design Principles: concepts/design.md
     - ETL:
       - Data Pipeline: concepts/pipeline.md
       - Data Sources and Sinks: concepts/sourcessinks.md
