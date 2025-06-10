@@ -22,6 +22,8 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
         Name of the volume
     catalog_name:
         Name of the catalog storing the volume
+    comment:
+        Text description of the volume
     grant:
         Grant(s) operating on the Volume and authoritative for a specific principal.
         Other principals within the grants are preserved. Mutually exclusive with
@@ -47,6 +49,7 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
     volume = models.resources.databricks.Volume(
         name="landing",
         catalog_name="dev",
+        comment="Landing zone for raw data",
         schema_name="sources",
         volume_type="EXTERNAL",
         storage_location="abfss://landing@lakehouse-storage.dfs.core.windows.net/",
@@ -70,6 +73,7 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
 
     name: str
     catalog_name: str = None
+    comment: str = None
     grant: Union[VolumeGrant, list[VolumeGrant]] = None
     grants: list[VolumeGrant] = None
     schema_name: str = None
