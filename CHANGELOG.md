@@ -15,6 +15,7 @@
 * `laktory` namespace: Narwhals extension with custom DataFrame methods and expressions
 * `register_anyframe_namespace`: defines a custom narwhals DataFrame method for transformations
 * `register_expr_namespace`: defines a custom narwhals Expression for transformations
+* Added `comment` field for `Volume` resources
 ### Fixed
 * n/a
 ### Updated
