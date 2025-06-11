@@ -296,7 +296,9 @@ class DataFrameMethod(BaseModel, PipelineChild):
                 f = getattr(df, func_name, None)
 
         if f is None:
-            raise ValueError(f"Function {func_full_name} is not available")
+            raise ValueError(
+                f"Function {func_full_name} is not available on dataframe of type {type(df)}"
+            )
 
         _args = self.func_args
         _kwargs = self.func_kwargs
@@ -305,7 +307,7 @@ class DataFrameMethod(BaseModel, PipelineChild):
         func_log = f"df.{func_full_name}("
         func_log += ",".join([a.signature() for a in _args])
         func_log += ",".join([f"{k}={a.signature()}" for k, a in _kwargs.items()])
-        func_log += ")"
+        func_log += f") with df type {type(df)}"
         logger.info(f"Applying {func_log}")
 
         # Build args
