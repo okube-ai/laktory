@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from laktory import get_spark_session
 from laktory._logger import get_logger
 
 try:
@@ -57,6 +58,7 @@ def is_debug() -> bool:
     :
         Debug flag
     """
+    spark = get_spark_session()
     try:
         import dlt
     except Exception:
@@ -83,8 +85,6 @@ def get_df(df_wrapper) -> "DataFrame":
     --------
     ```py
     from laktory import dlt
-
-    dlt.spark = spark
 
 
     def define_table():
@@ -130,8 +130,6 @@ def read(*args, **kwargs) -> "DataFrame":
     ```py
     from laktory import dlt
 
-    dlt.spark = spark
-
 
     def define_table():
         @dlt.table(name="slv_stock_prices")
@@ -145,6 +143,7 @@ def read(*args, **kwargs) -> "DataFrame":
     define_table()
     ```
     """
+    spark = get_spark_session()
     if is_debug():
         return spark.read.table(args[0])
     else:
@@ -169,8 +168,6 @@ def read_stream(*args, fmt="DELTA", **kwargs):
     ```py
     from laktory import dlt
 
-    dlt.spark = spark
-
 
     def define_table():
         @dlt.table(name="slv_stock_prices")
@@ -184,7 +181,7 @@ def read_stream(*args, fmt="DELTA", **kwargs):
     define_table()
     ```
     """
-
+    spark = get_spark_session()
     if is_debug():
         return spark.readStream.format(fmt).table(args[0])
     else:
@@ -209,8 +206,6 @@ def apply_changes(*args, node=None, **kwargs):
     ```py
     from laktory import dlt
     from laktory import models
-
-    dlt.spark = spark
 
 
     def define_table(node, sink):
