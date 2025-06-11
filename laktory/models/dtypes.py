@@ -185,19 +185,19 @@ class DType(BaseModel):
         import pyspark.sql.types as T
         from narwhals._spark_like.utils import narwhals_to_native_dtype
 
-        return narwhals_to_native_dtype(self.to_narwhals(), nw.utils.Version.MAIN, T)
+        return narwhals_to_native_dtype(self.to_narwhals(), nw._utils.Version.MAIN, T)
 
     def to_polars(self):
         """Get equivalent Polars data type"""
         import polars as pl
         from narwhals._polars.utils import narwhals_to_native_dtype
-        from narwhals.utils import parse_version
+        from narwhals._utils import parse_version
 
         pl_version = parse_version(pl)
 
         return narwhals_to_native_dtype(
             dtype=self.to_narwhals(),
-            version=nw.utils.Version.MAIN,
+            version=nw._utils.Version.MAIN,
             backend_version=pl_version,
         )
 

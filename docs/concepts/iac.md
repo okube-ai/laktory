@@ -3,14 +3,14 @@ Infrastructure as Code (IaC) backends to provide a robust and proven experience.
 
 ## Backends
 
-### Terraform <img src="../../images/terraform.png" alt="terraform" width="16"/>
+### Terraform <img src="../../images/logos/terraform.png" alt="terraform" width="16"/>
 [Terraform](https://www.terraform.io/) is one of the most popular IaC tools available. It allows users to define and 
 provision infrastructure resources using a declarative configuration language, automating the creation and management 
 of both cloud and on-premises infrastructure. While Laktory currently supports many Terraform features, additional 
 capabilities may be added in the future.
 
 
-### Pulumi <img src="../../images/pulumi.png" alt="pulumi" width="16"/> 
+### Pulumi <img src="../../images/logos/pulumi.png" alt="pulumi" width="16"/> 
 
 [Pulumi](https://www.pulumi.com/) is gaining momentum as a flexible IaC tool, supporting multiple programming languages 
 such as Python, Node.js, Go, and Java. In the context of Laktory, Pulumi offers a strong alternative by enabling the use

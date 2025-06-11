@@ -3,7 +3,7 @@ reading, transforming and writing data. While both can be used for local and rem
 generally better suited for smaller workloads while Spark is ideal for very large datasets. A hands-on comparison of 
 both libraries (and Pandas) is available [here](https://www.linkedin.com/pulse/dataframes-battle-royale-pandas-vs-polars-spark-olivier-soucy-3dmve/).
 
-<img src="../../images/spark.png" alt="pulumi" width="192"/> 
+<img src="../../images/logos/spark.png" alt="pulumi" width="192"/> 
 
 Apache Spark excels in distributed data processing, making it ideal for massive
 datasets spread across a cluster of machines. Its lazy execution model allows
@@ -15,7 +15,7 @@ requires more setup, overhead and resources compared to Pandas and Polars.
 It's the ideal option for a running Laktory pipelines on a cloud-based
 spark-enabled cluster.
 
-<img src="../../images/polars.png" alt="pulumi" width="192"/>
+<img src="../../images/logos/polars.png" alt="pulumi" width="192"/>
 
 Polars is built for speed and efficiency, utilizing Rust's performance 
 capabilities and supporting multi-threaded execution. With its lazy execution

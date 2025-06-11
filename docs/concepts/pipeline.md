@@ -8,7 +8,7 @@ DataFrame backends, Laktory primarily operates on [Narwhals DataFrames](https://
 This abstraction allows seamless integration with multiple engines (e.g., Spark, Polars) and enables selecting the most
 suitable backend for each operation.
 
-<img src="/../../images/pl_diagram.png" alt="data pipeline" width="400"/>
+<img src="/../../images/diagrams/pl_diagram.png" alt="data pipeline" width="400"/>
 
 
 ## Pipeline Node
@@ -17,24 +17,25 @@ suitable backend for each operation.
 
 A pipeline is composed of a sequence of nodes, each designed to generate a Spark or Polars DataFrame. Each node reads
 from a designated source, applies specified transformations, and optionally writes the result to one or more sinks.
-<img src="/../../images/pl_node_diagram.png" alt="data pipeline node" width="300"/>
+
+<img src="/../../images/diagrams/pl_node_diagram.png" alt="data pipeline node" width="300"/>
 
 ## Sources and Sinks
-<img src="/../../images/source_logo.png" alt="node source" width="100"/>
-<img src="/../../images/sink_logo.png" alt="node sink" width="100"/>
+<img src="/../../images/diagrams/source_logo.png" alt="node source" width="100"/>
+<img src="/../../images/diagrams/sink_logo.png" alt="node sink" width="100"/>
 
 Laktory supports a variety of [sources and sinks](./sources.md), including data files and data tables. By linking 
 a node as the source for a downstream node, you establish dependencies, creating a directed acyclic graph (DAG).
 
 ## Transformer
-<img src="/../../images/transformer_logo.png" alt="node transformer" width="100"/>
+<img src="/../../images/diagrams/transformer_logo.png" alt="node transformer" width="100"/>
 
 The transformations are defined through a [transformer](./transformers.md) which is a chain of SQL statements and/or 
 DataFrame API function calls. This flexible and highly modular framework supports scalable batch and
 streaming operations.
 
 ## Expectations
-<img src="/../../images/expectations_logo.png" alt="node transformer" width="100"/>
+<img src="/../../images/diagrams/expectations_logo.png" alt="node transformer" width="100"/>
 
 Data quality is achieved through the use of [expectations](./dataquality.md) and corresponding actions, which can drop,
 quarantine, or even halt pipelines if invalid data is detected before it reaches the output.
@@ -272,7 +273,7 @@ is a powerful orchestration mechanism. In this case, Laktory will create a
 task for each node, enabling parallel execution of nodes. Each reading and 
 writing operation is entirely handled by Laktory source and sink. 
 
-![job](../../images/job_stock_prices.png)
+![job](../../images/screenshots/job_stock_prices.png)
 
 To use the `DATABRICKS_JOB` orchestrator, you must also add the supporting
 [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/jobs/job_laktory_pl.py) 
@@ -315,7 +316,7 @@ Both can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{
 offers features like automatic schema change management, continuous execution, and 
 autoscaling. 
 
-![dlt](../../images/dlt_stock_prices.png)
+![dlt](../../images/screenshots/dlt_stock_prices.png)
 
 Each pipeline node runs inside a dlt.table() or dlt.view() function. In the context of DLT, node execution does not 
 trigger a sink write, as this operation is managed by DLT. When a source is a pipeline node, `dlt.read()` and
@@ -368,7 +369,7 @@ Notice how `dlt` module is internal to laktory. It provides additional
 debugging and inspection capabilities. Notably, you can run the notebook in a
 user cluster and will be able to inspect the resulting dataframe.
 
-![dlt](../../images/dlt_debug.png)
+![dlt](../../images/screenshots/dlt_debug.png)
 
 Selecting the `DATABRICKS_DLT` orchestrator will deploy a pipeline json 
 configuration file and a `requirements.txt` file for installing dependencies.

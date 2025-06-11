@@ -1,12 +1,12 @@
 ??? "API Documentation"
     [`laktory.models.DataFrameTransformer`][laktory.models.DataFrameTransformer]<br>
 
-<img src="/../../images/transformer_logo.png" alt="node transformer" width="100"/>
+<img src="/../../images/diagrams/transformer_logo.png" alt="node transformer" width="100"/>
 
 The `DataFrameTransformer` class is the core model for transforming dataframes in Laktory. It serializes chained 
 DataFrame operations and is generally used between a data source and a data sink.
 
-<img src="/../../images/transformer_diagram.png" alt="node transformer" width="600"/>
+<img src="/../../images/diagrams/transformer_diagram.png" alt="node transformer" width="600"/>
 
 A Transformer is composed of a series of nodes, each representing a transformation applied to a dataframe as an 
 expression or as a method. The output of one node is passed as input to the next, enabling complex transformations.
