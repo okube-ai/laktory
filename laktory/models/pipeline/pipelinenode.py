@@ -103,6 +103,10 @@ class PipelineNode(BaseModel, PipelineChild):
         "DEFAULT",
         description="Specify which template (notebook) to use when Delta Live Tables is selected as the orchestrator.",
     )
+    comment: str = Field(
+        None,
+        description="Comment for the associated table or view",
+    )
     expectations: list[DataQualityExpectation] = Field(
         [],
         description="List of data expectations. Can trigger warnings, drop invalid records or fail a pipeline.",
