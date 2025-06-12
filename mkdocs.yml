@@ -191,7 +191,6 @@ nav:
             - Databricks Job: api/models/pipeline/orchestrators/databricksjoborchestrator.md
             - Databricks DLT: api/models/pipeline/orchestrators/databricksdltorchestrator.md
             - Pipeline Config Workspace File: api/models/pipeline/orchestrators/pipelineconfigworkspacefile.md
-            - Pipeline Requirements Workspace File: api/models/pipeline/orchestrators/pipelinerequirementsworkspacefile.md
       - Resources:
         - BaseResource: api/models/resources/baseresource.md
         - PulumiResource: api/models/resources/pulumiresource.md
