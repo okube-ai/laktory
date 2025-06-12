@@ -1,18 +1,11 @@
+import json
 from typing import Literal
 
 from pydantic import Field
 
-from laktory._settings import settings
 from laktory.models.datasinks.tabledatasink import TableDataSink
-from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
-    PipelineConfigWorkspaceFile,
-)
-from laktory.models.pipeline.orchestrators.pipelinerequirementsworkspacefile import (
-    PipelineRequirementsWorkspaceFile,
-)
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.dltpipeline import DLTPipeline
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
@@ -37,14 +30,14 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
     type: Literal["DATABRICKS_DLT"] = Field(
         "DATABRICKS_DLT", description="Type of orchestrator"
     )
-    config_file: PipelineConfigWorkspaceFile = Field(
-        PipelineConfigWorkspaceFile(),
-        description="Pipeline configuration (json) file deployed to the workspace and used by the job to read and execute the pipeline.",
-    )
-    requirements_file: PipelineRequirementsWorkspaceFile = Field(
-        PipelineRequirementsWorkspaceFile(),
-        description="Pipeline requirements (json) file deployed to the workspace and used by the job to install the required python dependencies.",
-    )
+    # config_file: PipelineConfigWorkspaceFile = Field(
+    #     PipelineConfigWorkspaceFile(),
+    #     description="Pipeline configuration (json) file deployed to the workspace and used by the job to read and execute the pipeline.",
+    # )
+    # requirements_file: PipelineRequirementsWorkspaceFile = Field(
+    #     PipelineRequirementsWorkspaceFile(),
+    #     description="Pipeline requirements (json) file deployed to the workspace and used by the job to install the required python dependencies.",
+    # )
 
     # ----------------------------------------------------------------------- #
     # Update DLT                                                              #
@@ -62,18 +55,23 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
         for n in pl.nodes:
             for s in n.all_sinks:
                 if isinstance(s, TableDataSink):
-                    s.catalog_name = self.catalog
-                    s.schema_name = self.target
+                    s.catalog_name = s.catalog_name or self.catalog
+                    s.schema_name = s.schema_name or self.target
 
         # Configuration
-        self.configuration["pipeline_name"] = pl.name
-        self.configuration["workspace_laktory_root"] = settings.workspace_laktory_root
+        _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
+        _config = self.inject_vars_into_dump(
+            {"config": pl.model_dump(exclude_unset=True)}
+        )["config"]
+        self.configuration["pipeline_name"] = pl.name  # only for reference
+        self.configuration["requirements"] = json.dumps(_requirements)
+        self.configuration["config"] = json.dumps(_config)
 
-        # Config file
-        self.config_file.update_from_parent()
-
-        # Requirements file
-        self.requirements_file.update_from_parent()
+        # # Config file
+        # self.config_file.update_from_parent()
+        #
+        # # Requirements file
+        # self.requirements_file.update_from_parent()
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
@@ -81,7 +79,7 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
 
     @property
     def children_names(self):
-        return ["config_file", "requirements_file", "type"]
+        return ["type"]
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -94,24 +92,5 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
     @property
     def pulumi_excludes(self) -> list[str] | dict[str, bool]:
         excludes = super().pulumi_excludes
-        excludes["config_file"] = True
-        excludes["requirements_file"] = True
         excludes["type"] = True
         return excludes
-
-    @property
-    def additional_core_resources(self) -> list[PulumiResource]:
-        """
-        - configuration workspace file
-        - configuration workspace file permissions
-        - requirements workspace file
-        - requirements workspace file permissions
-        """
-
-        resources = super().additional_core_resources
-        resources += [self.config_file]
-        resources[-1].write_source()
-        resources += [self.requirements_file]
-        resources[-1].write_source()
-
-        return resources

@@ -174,102 +174,143 @@ def test_pipeline_dlt(tmp_path):
     }
 
     data = pl_dlt.orchestrator.model_dump()
-    assert data == {
-        "access_controls": [
-            {
-                "group_name": "account users",
-                "permission_level": "CAN_VIEW",
-                "service_principal_name": None,
-                "user_name": None,
-            }
-        ],
-        "allow_duplicate_names": None,
-        "catalog": "dev",
-        "channel": "PREVIEW",
-        "clusters": [],
-        "config_file": {
+    assert (
+        data
+        == {
             "access_controls": [
                 {
-                    "group_name": "users",
-                    "permission_level": "CAN_READ",
+                    "group_name": "account users",
+                    "permission_level": "CAN_VIEW",
                     "service_principal_name": None,
                     "user_name": None,
                 }
             ],
+            "allow_duplicate_names": None,
+            "catalog": "dev",
+            "channel": "PREVIEW",
+            "clusters": [],
+            "configuration": {
+                "config": '{"name": "pl-dlt", "nodes": [{"name": "brz", '
+                '"source": {"format": "JSON", "path": '
+                '"/brz_source/"}, "sinks": [{"mode": "APPEND", '
+                '"format": "PARQUET", "path": "/brz_sink/"}]}, '
+                '{"name": "slv", "source": {"node_name": "brz"}, '
+                '"sinks": [{"mode": "APPEND", "format": "DELTA", '
+                '"path": "/slv_sink/"}], "transformer": {"nodes": '
+                '[{"func_kwargs": {"y1": {"value": "x1"}}, '
+                '"func_name": "with_columns"}, {"expr": "SELECT '
+                'id, x1, y1 from {df}"}]}}, {"name": "gld", '
+                '"sinks": [{"mode": "OVERWRITE", "writer_kwargs": '
+                '{"path": "/gld_sink/"}, "catalog_name": "dev", '
+                '"format": "PARQUET", "schema_name": "default", '
+                '"table_name": "gld"}], "transformer": {"nodes": '
+                '[{"expr": "SELECT id, MAX(x1) AS max_x1 from '
+                '{nodes.slv} GROUP BY id"}]}}], "orchestrator": '
+                '{"access_controls": [{"group_name": "account '
+                'users", "permission_level": "CAN_VIEW"}], '
+                '"catalog": "dev", "name": "pl-dlt", "target": '
+                '"sandbox"}, "root_path": ""}',
+                "pipeline_name": "pl-dlt",
+                "requirements": '["laktory==0.8.0"]',
+            },
+            "continuous": None,
             "dataframe_api": None,
             "dataframe_backend": None,
-            "dirpath": "",
-            "path": "/.laktory/pipelines/pl-dlt/config.json",
-            "rootpath": "/.laktory/",
-            "source": "./tmp-pl-dlt-config.json",
-        },
-        "configuration": {
-            "pipeline_name": "pl-dlt",
-            "workspace_laktory_root": "/.laktory/",
-        },
-        "continuous": None,
-        "dataframe_api": None,
-        "dataframe_backend": None,
-        "development": None,
-        "edition": None,
-        "libraries": None,
-        "name": "pl-dlt",
-        "name_prefix": None,
-        "name_suffix": None,
-        "notifications": [],
-        "photon": None,
-        "requirements_file": {
+            "development": None,
+            "edition": None,
+            "libraries": None,
+            "name": "pl-dlt",
+            "name_prefix": None,
+            "name_suffix": None,
+            "notifications": [],
+            "photon": None,
+            "serverless": None,
+            "storage": None,
+            "target": "sandbox",
+            "type": "DATABRICKS_DLT",
+        }
+        != {
             "access_controls": [
                 {
-                    "group_name": "users",
-                    "permission_level": "CAN_READ",
+                    "group_name": "account users",
+                    "permission_level": "CAN_VIEW",
                     "service_principal_name": None,
                     "user_name": None,
                 }
             ],
+            "allow_duplicate_names": None,
+            "catalog": "dev",
+            "channel": "PREVIEW",
+            "clusters": [],
+            "config_file": {
+                "access_controls": [
+                    {
+                        "group_name": "users",
+                        "permission_level": "CAN_READ",
+                        "service_principal_name": None,
+                        "user_name": None,
+                    }
+                ],
+                "dataframe_api": None,
+                "dataframe_backend": None,
+                "dirpath": "",
+                "path": "/.laktory/pipelines/pl-dlt/config.json",
+                "rootpath": "/.laktory/",
+                "source": "./tmp-pl-dlt-config.json",
+            },
+            "configuration": {
+                "pipeline_name": "pl-dlt",
+                "workspace_laktory_root": "/.laktory/",
+            },
+            "continuous": None,
             "dataframe_api": None,
             "dataframe_backend": None,
-            "dirpath": "",
-            "path": "/.laktory/pipelines/pl-dlt/requirements.txt",
-            "rootpath": "/.laktory/",
-            "source": "./tmp-pl-dlt-requirements.txt",
-        },
-        "serverless": None,
-        "storage": None,
-        "target": "sandbox",
-        "type": "DATABRICKS_DLT",
-    }
+            "development": None,
+            "edition": None,
+            "libraries": None,
+            "name": "pl-dlt",
+            "name_prefix": None,
+            "name_suffix": None,
+            "notifications": [],
+            "photon": None,
+            "requirements_file": {
+                "access_controls": [
+                    {
+                        "group_name": "users",
+                        "permission_level": "CAN_READ",
+                        "service_principal_name": None,
+                        "user_name": None,
+                    }
+                ],
+                "dataframe_api": None,
+                "dataframe_backend": None,
+                "dirpath": "",
+                "path": "/.laktory/pipelines/pl-dlt/requirements.txt",
+                "rootpath": "/.laktory/",
+                "source": "./tmp-pl-dlt-requirements.txt",
+            },
+            "serverless": None,
+            "storage": None,
+            "target": "sandbox",
+            "type": "DATABRICKS_DLT",
+        }
+    )
 
     # Test resources
     resources = pl_dlt.core_resources
-    assert len(resources) == 6
+    assert len(resources) == 2
 
     dlt = resources[0]
     dltp = resources[1]
-    wsf = resources[2]
-    wsfp = resources[3]
 
-    assert isinstance(wsf, models.resources.databricks.WorkspaceFile)
-    assert isinstance(wsfp, models.resources.databricks.Permissions)
     assert isinstance(dlt, models.resources.databricks.DLTPipeline)
     assert isinstance(dltp, models.resources.databricks.Permissions)
 
     assert dlt.resource_name == "dlt-pipeline-pl-dlt"
     assert dltp.resource_name == "permissions-dlt-pipeline-pl-dlt"
-    assert wsf.resource_name == "workspace-file-laktory-pipelines-pl-dlt-config-json"
-    assert (
-        wsfp.resource_name
-        == "permissions-workspace-file-laktory-pipelines-pl-dlt-config-json"
-    )
 
     assert dlt.options.provider == "${resources.databricks2}"
     assert dltp.options.provider == "${resources.databricks2}"
-    assert wsf.options.provider == "${resources.databricks2}"
-    assert wsfp.options.provider == "${resources.databricks2}"
 
     assert dlt.options.depends_on == []
     assert dltp.options.depends_on == ["${resources.dlt-pipeline-pl-dlt}"]
-    assert wsf.options.depends_on == ["${resources.dlt-pipeline-pl-dlt}"]
-    assert wsfp.options.depends_on == [
-        "${resources.workspace-file-laktory-pipelines-pl-dlt-config-json}"
-    ]

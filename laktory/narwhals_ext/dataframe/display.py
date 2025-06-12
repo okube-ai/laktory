@@ -74,6 +74,7 @@ def display(
                 df.writeStream.outputMode("append")
                 .format("memory")  # Store the results in-memory table
                 .queryName("_laktory_tmp_view")
+                .trigger(availableNow=True)
                 .start()
             )
             t0 = time.time()
