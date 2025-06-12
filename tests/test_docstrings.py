@@ -9,6 +9,8 @@ from pytest_examples import EvalExample
 from pytest_examples import find_examples
 from pytest_examples.lint import black_format as default_black_format
 
+import laktory as lk
+
 # Change examples print prefix to be ruff lint compatible
 comment_prefix = "# > "
 pytest_examples.run_code.comment_prefix = comment_prefix
@@ -54,122 +56,121 @@ os.environ["POLARS_FMT_TABLE_FORMATTING"] = "MARKDOWN"
 root = Path(__file__).parent.parent / "laktory"
 files = [root / fname for fname in os.listdir(root) if fname.endswith(".py")]
 
-#
-# @pytest.mark.parametrize("example", find_examples(*files), ids=str)
-# def test_docstrings_root(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(example)
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(example)
-#
-#
-# # --------------------------------------------------------------------------- #
-# # Dispatcher                                                                  #
-# # --------------------------------------------------------------------------- #
-#
-#
-# @pytest.mark.parametrize("example", find_examples("./laktory/dispatcher/"), ids=str)
-# def test_docstrings_dispatcher(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(example)
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(example)
-#
-#
-# # --------------------------------------------------------------------------- #
-# # DLT                                                                         #
-# # --------------------------------------------------------------------------- #
-#
-#
-# @pytest.mark.parametrize("example", find_examples("./laktory/dlt"), ids=str)
-# def test_docstrings_dlt(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(
-#                 example,
-#                 module_globals={
-#                     "spark": get_spark_session(),
-#                     "display": lambda x: x,
-#                 },
-#             )
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(
-#                 example,
-#                 module_globals={
-#                     "spark": get_spark_session(),
-#                     "display": lambda x: x,
-#                 },
-#             )
-#
-#
-# # --------------------------------------------------------------------------- #
-# # Models                                                                      #
-# # --------------------------------------------------------------------------- #
-#
-#
-# @pytest.mark.parametrize("example", find_examples("./laktory/models"), ids=str)
-# def test_docstrings_models(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         pass
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(
-#                 example,
-#                 module_globals={"spark": get_spark_session()},
-#             )
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(
-#                 example, module_globals={"spark": get_spark_session()}
-#             )
-#
-#
-# # --------------------------------------------------------------------------- #
-# # Narwhals Extension                                                          #
-# # --------------------------------------------------------------------------- #
-#
-#
-# @pytest.mark.parametrize("example", find_examples("./laktory/narwhals_ext"), ids=str)
-# def test_docstrings_narwhals_ext(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(example)
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(example)
-#
-#
-# # --------------------------------------------------------------------------- #
-# # yaml                                                                        #
-# # --------------------------------------------------------------------------- #
-#
-#
-# @pytest.mark.parametrize("example", find_examples("./laktory/yaml"), ids=str)
-# def test_docstrings_yaml(example: CodeExample, eval_example: EvalExample):
-#     if eval_example.update_examples:
-#         eval_example.format_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_update(example)
-#     else:
-#         eval_example.lint_ruff(example)
-#         if "tag:skip-run" not in example.prefix_tags():
-#             eval_example.run_print_check(example)
-#
-#
+
+@pytest.mark.parametrize("example", find_examples(*files), ids=str)
+def test_docstrings_root(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_update(example)
+    else:
+        eval_example.lint_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_check(example)
+
+
+# --------------------------------------------------------------------------- #
+# Dispatcher                                                                  #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("example", find_examples("./laktory/dispatcher/"), ids=str)
+def test_docstrings_dispatcher(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_update(example)
+    else:
+        eval_example.lint_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_check(example)
+
+
+# --------------------------------------------------------------------------- #
+# DLT                                                                         #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("example", find_examples("./laktory/dlt"), ids=str)
+def test_docstrings_dlt(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_update(
+                example,
+                module_globals={
+                    "spark": lk.get_spark_session(),
+                    "display": lambda x: x,
+                },
+            )
+    else:
+        eval_example.lint_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_check(
+                example,
+                module_globals={
+                    "spark": lk.get_spark_session(),
+                    "display": lambda x: x,
+                },
+            )
+
+
+# --------------------------------------------------------------------------- #
+# Models                                                                      #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("example", find_examples("./laktory/models"), ids=str)
+def test_docstrings_models(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        pass
+        eval_example.format_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_update(
+                example,
+                module_globals={"spark": lk.get_spark_session()},
+            )
+    else:
+        eval_example.lint_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_check(
+                example, module_globals={"spark": lk.get_spark_session()}
+            )
+
+
+# --------------------------------------------------------------------------- #
+# Narwhals Extension                                                          #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("example", find_examples("./laktory/narwhals_ext"), ids=str)
+def test_docstrings_narwhals_ext(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_update(example)
+    else:
+        eval_example.lint_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_check(example)
+
+
+# --------------------------------------------------------------------------- #
+# yaml                                                                        #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("example", find_examples("./laktory/yaml"), ids=str)
+def test_docstrings_yaml(example: CodeExample, eval_example: EvalExample):
+    if eval_example.update_examples:
+        eval_example.format_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_update(example)
+    else:
+        eval_example.lint_ruff(example)
+        if "tag:skip-run" not in example.prefix_tags():
+            eval_example.run_print_check(example)
+
 
 # --------------------------------------------------------------------------- #
 # Markdowns                                                                   #

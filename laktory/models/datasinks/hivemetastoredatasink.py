@@ -24,7 +24,7 @@ class HiveMetastoreDataSink(TableDataSink):
         table_name="my_table",
         mode="APPEND",
     )
-    sink.write(df)
+    # sink.write(df)
     ```
     """
 
