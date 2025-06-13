@@ -621,6 +621,20 @@ class PipelineNode(BaseModel, PipelineChild):
             )
 
         else:
+            skip = False
+
+            if self.is_dlt_execute:
+                names = []
+                for e in self.expectations:
+                    if not e.is_dlt_compatible:
+                        names += [e.name]
+                if names:
+                    raise TypeError(
+                        f"Expectations {names} are not natively supported by DLT and can't be computed on a streaming DataFrame with DLT executor."
+                    )
+
+                skip = True
+
             backend = DataFrameBackends.from_df(self._stage_df)
             if backend not in STREAMING_BACKENDS:
                 raise TypeError(
@@ -633,20 +647,21 @@ class PipelineNode(BaseModel, PipelineChild):
                 )
 
             # TODO: Refactor for backend other than spark
-            query = (
-                self._stage_df.to_native()
-                .writeStream.foreachBatch(
-                    lambda batch_df, batch_id: _stream_check(
-                        nw.from_native(batch_df), batch_id, self
+            if not skip:
+                query = (
+                    self._stage_df.to_native()
+                    .writeStream.foreachBatch(
+                        lambda batch_df, batch_id: _stream_check(
+                            nw.from_native(batch_df), batch_id, self
+                        )
                     )
+                    .trigger(availableNow=True)
+                    .options(
+                        checkpointLocation=self._expectations_checkpoint_path,
+                    )
+                    .start()
                 )
-                .trigger(availableNow=True)
-                .options(
-                    checkpointLocation=self._expectations_checkpoint_path,
-                )
-                .start()
-            )
-            query.awaitTermination()
+                query.awaitTermination()
 
         # Build Filters
         for e in self.expectations:
