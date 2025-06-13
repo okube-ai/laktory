@@ -106,6 +106,14 @@ class TableDataSink(BaseDataSink):
         return self.full_name
 
     @property
+    def dlt_name(self) -> str:
+        name = self.table_name
+        if self.parent_pipeline.orchestrator.target != self.schema_name:
+            name = self.full_name
+
+        return name
+
+    @property
     def upstream_node_names(self) -> list[str]:
         """Pipeline node names required to write sink"""
         if self.view_definition:
