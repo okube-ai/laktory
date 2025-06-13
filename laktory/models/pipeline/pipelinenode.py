@@ -240,12 +240,14 @@ class PipelineNode(BaseModel, PipelineChild):
         return False
 
     @property
-    def is_dlt_run(self) -> bool:
-        if not self.is_orchestrator_dlt:
-            return False
-        from laktory.dlt import is_debug
+    def dlt_name(self) -> str:
+        name = self.name
+        if self.sink:
+            name = self.sink.table_name
+            if self.parent_pipeline.orchestrator.target != self.sink.schema_name:
+                name = self.sink.full_name
 
-        return not is_debug()
+        return name
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
