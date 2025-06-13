@@ -249,6 +249,14 @@ class PipelineNode(BaseModel, PipelineChild):
 
         return name
 
+    @property
+    def is_dlt_execute(self) -> bool:
+        if not self.is_orchestrator_dlt:
+            return False
+        from laktory import is_dlt_execute
+
+        return is_dlt_execute()
+
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
     # ----------------------------------------------------------------------- #
@@ -598,14 +606,10 @@ class PipelineNode(BaseModel, PipelineChild):
         if not self.expectations:
             return
 
-        logger.info("Checking Data Quality Expectations")
-
         def _batch_check(df, node):
             for e in node.expectations:
-                is_dlt_managed = node.is_dlt_run and e.is_dlt_compatible
-
-                # Run Check
-                if not is_dlt_managed:
+                # Run Check: this only warn or raise exceptions.
+                if not e.is_dlt_managed:
                     e.run_check(
                         df,
                         raise_or_warn=True,
@@ -618,12 +622,15 @@ class PipelineNode(BaseModel, PipelineChild):
                 node,
             )
 
-        # Warn or Fail
-        if is_streaming and self.is_dlt_run:
-            # TODO: Enable when DLT supports foreachBatch (in case some expectations are not supported by DLT)
-            pass
+        logger.info("Checking Data Quality Expectations")
 
-        elif is_streaming:
+        if not is_streaming:
+            _batch_check(
+                self._stage_df,
+                self,
+            )
+
+        else:
             backend = DataFrameBackends.from_df(self._stage_df)
             if backend not in STREAMING_BACKENDS:
                 raise TypeError(
@@ -651,18 +658,10 @@ class PipelineNode(BaseModel, PipelineChild):
             )
             query.awaitTermination()
 
-        else:
-            _batch_check(
-                self._stage_df,
-                self,
-            )
-
         # Build Filters
         for e in self.expectations:
-            is_dlt_managed = self.is_dlt_run and e.is_dlt_compatible
-
             # Update Keep Filter
-            if not is_dlt_managed:
+            if not e.is_dlt_managed:
                 _filter = e.keep_filter
                 if _filter is not None:
                     if kfilter is None:

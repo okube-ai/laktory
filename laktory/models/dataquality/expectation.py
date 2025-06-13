@@ -199,8 +199,27 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def is_dlt_compatible(self):
+    def is_dlt_compatible(self) -> bool:
+        """Expectation is supported by DLT"""
         return self.expr.type == "SQL" and self.type == "ROW"
+
+    @property
+    def is_dlt_managed(self) -> bool:
+        """Expectation is DLT-compatible and pipeline node is executed by DLT"""
+
+        if not self.is_dlt_compatible:
+            return False
+
+        pl = self.parent_pipeline
+        if pl is None:
+            return False
+
+        if not pl.is_orchestrator_dlt:
+            return False
+
+        from laktory import is_dlt_execute
+
+        return is_dlt_execute()
 
     @property
     def is_streaming_compatible(self):

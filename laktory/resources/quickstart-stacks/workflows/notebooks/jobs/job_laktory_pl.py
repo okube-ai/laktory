@@ -28,7 +28,7 @@ import importlib
 import os
 import sys
 
-import pyspark.sql.functionas as F  # noqa: F401
+import pyspark.sql.functions as F  # noqa: F401
 
 from laktory import get_logger
 from laktory import models
