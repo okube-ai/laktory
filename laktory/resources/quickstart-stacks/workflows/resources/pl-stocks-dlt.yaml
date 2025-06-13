@@ -52,9 +52,9 @@ nodes:
   # use DataFrame backend API by setting `dataframe_api` to "NATIVE".
   transformer:
     nodes:
-    - func_name: withColumns
+    - func_name: select
       func_kwargs:
-        created_at: nw.col("data").struct.field("created_at").cast(nw.dtypes.Datetime())
+        created_at: nw.col("data").struct.field("created_at").cast(nw.dtypes.Datetime(time_zone="UTC"))
         symbol: nw.col("data").struct.field("symbol").cast(nw.dtypes.String())
         open: nw.col("data").struct.field("open").cast(nw.dtypes.Float64())
         close: nw.col("data").struct.field("close").cast(nw.dtypes.Float64())

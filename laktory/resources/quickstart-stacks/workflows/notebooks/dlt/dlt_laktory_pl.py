@@ -7,17 +7,19 @@ reqs = " ".join(json.loads(reqs))
 # MAGIC %restart_python
 
 # COMMAND ----------
-import dlt
-import pyspark.sql.functions as F  # noqa: F401
+import dlt  # noqa: E402
+import pyspark.sql.functions as F  # noqa: F401, E402
 
-import laktory as lk
+import laktory as lk  # noqa: E402
 
 # --------------------------------------------------------------------------- #
 # Read Pipeline                                                               #
 # --------------------------------------------------------------------------- #
 
-config = spark.conf.get("config")
-pl = lk.models.Pipeline.model_validate_json(config)
+config_filepath = spark.conf.get("config_filepath")
+print(f"Reading pipeline at {config_filepath}")
+with open(config_filepath, "r") as fp:
+    pl = lk.models.Pipeline.model_validate_json(fp.read())
 
 # --------------------------------------------------------------------------- #
 # Tables and Views Definition                                                 #
@@ -34,19 +36,12 @@ def define_table(node, sink):
         dlt_drop_expectations = node.dlt_drop_expectations
         dlt_fail_expectations = node.dlt_fail_expectations
 
-    # Get Name
-    name = node.name
-    if sink is not None:
-        name = sink.table_name
-        if node.parent_pipeline.orchestrator.target != sink.schema_name:
-            name = sink.full_name
-
     table_or_view = dlt.table
     if sink is None:
         table_or_view = dlt.view
 
     @table_or_view(
-        name=name,
+        name=sink.dlt_name,
         comment=node.comment,
     )
     @dlt.expect_all(dlt_warning_expectations)
