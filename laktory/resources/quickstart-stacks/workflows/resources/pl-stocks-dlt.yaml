@@ -30,6 +30,7 @@ nodes:
     path: dbfs:/laktory/data/stock_prices/
     as_stream: true
     format: JSONL
+    infer_schema: true
   sinks:
   - table_name: brz_stock_prices
 
