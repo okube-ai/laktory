@@ -62,7 +62,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     )
     print(dqe)
     '''
-    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='ROW' name='price higher than 10' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='close > 127', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=None, rel=0.05) checkpoint_path=None
+    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='ROW' name='price higher than 10' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='close > 127', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=None, rel=0.05)
     '''
 
     dqe = models.DataQualityExpectation(
@@ -72,7 +72,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     )
     print(dqe)
     '''
-    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='AGGREGATE' name='rows count' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='COUNT(*) > 50', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=0, rel=None) checkpoint_path=None
+    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='AGGREGATE' name='rows count' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='COUNT(*) > 50', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=0, rel=None)
     '''
     ```
 
@@ -110,18 +110,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
         ExpectationTolerance(abs=0),
         description="Tolerance for non-matching rows before resulting in failure. Only available for 'ROW' type expectation.",
     )
-    # checkpoint_path: str = Field(
-    #     None,
-    #     description="Path to which the checkpoint file for which expectations on a streaming dataframe should be written.",
-    # )
     _check: DataQualityCheck = None
-
-    # @field_validator("checkpoint_path", mode="before")
-    # @classmethod
-    # def posixpath_to_string(cls, value: Any) -> Any:
-    #     if isinstance(value, Path):
-    #         value = str(value)
-    #     return value
 
     @model_validator(mode="after")
     def parse_expr(self) -> Any:
