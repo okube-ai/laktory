@@ -1,12 +1,10 @@
 import warnings
-from pathlib import Path
 from typing import Any
 from typing import Literal
 
 import narwhals as nw
 from narwhals import Expr
 from pydantic import Field
-from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -112,18 +110,18 @@ class DataQualityExpectation(BaseModel, PipelineChild):
         ExpectationTolerance(abs=0),
         description="Tolerance for non-matching rows before resulting in failure. Only available for 'ROW' type expectation.",
     )
-    checkpoint_path: str = Field(
-        None,
-        description="Path to which the checkpoint file for which expectations on a streaming dataframe should be written.",
-    )
+    # checkpoint_path: str = Field(
+    #     None,
+    #     description="Path to which the checkpoint file for which expectations on a streaming dataframe should be written.",
+    # )
     _check: DataQualityCheck = None
 
-    @field_validator("checkpoint_path", mode="before")
-    @classmethod
-    def posixpath_to_string(cls, value: Any) -> Any:
-        if isinstance(value, Path):
-            value = str(value)
-        return value
+    # @field_validator("checkpoint_path", mode="before")
+    # @classmethod
+    # def posixpath_to_string(cls, value: Any) -> Any:
+    #     if isinstance(value, Path):
+    #         value = str(value)
+    #     return value
 
     @model_validator(mode="after")
     def parse_expr(self) -> Any:

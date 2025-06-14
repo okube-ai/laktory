@@ -35,6 +35,10 @@ def test_read_polars(backend, tmp_path):
     # Test
     assert_dfs_equal(df, df0)
 
+    # Test purge
+    sink.purge()
+    assert not sink.exists()
+
 
 def test_full_name():
     sink = UnityCatalogDataSink(

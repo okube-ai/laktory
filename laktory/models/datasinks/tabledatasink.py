@@ -1,3 +1,6 @@
+import os
+import shutil
+from pathlib import Path
 from typing import Any
 from typing import Literal
 
@@ -6,6 +9,7 @@ from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory.enums import DataFrameBackends
 from laktory.models.dataframe.dataframeexpr import DataFrameExpr
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.models.datasources.tabledatasource import TableDataSource
@@ -145,20 +149,14 @@ class TableDataSink(BaseDataSink):
         df = df.to_native()
 
         # Full Refresh
-        # if full_refresh or not self.exists(spark=df.sparkSession):
-        #     if df.isStreaming:
-        #         pass
-        #         # .is_aggregate() method seems unreliable. Disabling for now.
-        #         # if df.laktory.is_aggregate():
-        #         #     logger.info(
-        #         #         "Full refresh or initial load. Switching to COMPLETE mode."
-        #         #     )
-        #         #     mode = "COMPLETE"
-        #     else:
-        #         logger.info(
-        #             "Full refresh or initial load. Switching to OVERWRITE mode."
-        #         )
-        #         mode = "OVERWRITE"
+        if full_refresh or not self.exists():
+            if df.isStreaming:
+                pass
+            else:
+                logger.info(
+                    "Full refresh or initial load. Switching to OVERWRITE mode."
+                )
+                mode = "OVERWRITE"
 
         # Format
         methods = self._get_spark_writer_methods(mode=mode, is_streaming=df.isStreaming)
@@ -197,42 +195,43 @@ class TableDataSink(BaseDataSink):
         if self.parent_pipeline_node:
             self.parent_pipeline_node._output_df = df
 
-    # # ----------------------------------------------------------------------- #
-    # # Purge                                                                   #
-    # # ----------------------------------------------------------------------- #
-    #
-    # def purge(self, spark=None):
-    #     """
-    #     Delete sink data and checkpoints
-    #     """
-    #     # TODO: Now that sink switch to overwrite when sink does not exists or when
-    #     # a full refresh is requested, the purge method should not delete the data
-    #     # by default, but only the checkpoints. Also consider truncating the table
-    #     # instead of dropping it.
-    #
-    #     # Remove Data
-    #     if self.warehouse == "DATABRICKS":
-    #         logger.info(
-    #             f"Dropping {self.table_type} {self.full_name}",
-    #         )
-    #         spark.sql(f"DROP {self.table_type} IF EXISTS {self.full_name}")
-    #
-    #         path = self.write_options.get("path", None)
-    #         if path and os.path.exists(path):
-    #             is_dir = os.path.isdir(path)
-    #             if is_dir:
-    #                 logger.info(f"Deleting data dir {path}")
-    #                 shutil.rmtree(path)
-    #             else:
-    #                 logger.info(f"Deleting data file {path}")
-    #                 os.remove(path)
-    #     else:
-    #         raise NotImplementedError(
-    #             f"Warehouse '{self.warehouse}' is not yet supported."
-    #         )
-    #
-    #     # Remove Checkpoint
-    #     self._purge_checkpoint(spark=spark)
+    # ----------------------------------------------------------------------- #
+    # Purge                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    def purge(self):
+        """
+        Delete sink data and checkpoints
+        """
+
+        if self.df_backend == DataFrameBackends.PYSPARK:
+            from laktory import get_spark_session
+
+            spark = get_spark_session()
+
+            # Remove Data
+            logger.info(
+                f"Dropping {self.table_type} {self.full_name}",
+            )
+            spark.sql(f"DROP {self.table_type} IF EXISTS {self.full_name}")
+
+            path = self.writer_kwargs.get("path", None)
+            if path:
+                path = Path(path)
+                if path.exists():
+                    is_dir = path.is_dir()
+                    if is_dir:
+                        logger.info(f"Deleting data dir {path}")
+                        shutil.rmtree(path)
+                    else:
+                        logger.info(f"Deleting data file {path}")
+                        os.remove(path)
+
+            # Remove Checkpoint
+            self._purge_checkpoint()
+
+        else:
+            raise TypeError(f"DataFrame backend {self.df_backend} is not supported.")
 
     # ----------------------------------------------------------------------- #
     # Source                                                                  #

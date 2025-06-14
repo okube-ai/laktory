@@ -1,3 +1,5 @@
+import os
+import shutil
 from pathlib import Path
 from typing import Any
 from typing import Literal
@@ -206,34 +208,28 @@ class FileDataSink(BaseDataSink):
                 kwargs[k] = v
             ds.write_dataset(data=df.to_arrow(), base_dir=self.path, **kwargs)
 
-    #
-    # # ----------------------------------------------------------------------- #
-    # # Purge                                                                   #
-    # # ----------------------------------------------------------------------- #
-    #
-    # def purge(self, spark=None):
-    #     """
-    #     Delete sink data and checkpoints
-    #     """
-    #     # TODO: Now that sink switch to overwrite when sink does not exists or when
-    #     # a full refresh is requested, the purge method should not delete the data
-    #     # by default, but only the checkpoints. Also consider truncating the table
-    #     # instead of dropping it.
-    #
-    #     # Remove Data
-    #     if os.path.exists(self.path):
-    #         is_dir = os.path.isdir(self.path)
-    #         if is_dir:
-    #             logger.info(f"Deleting data dir {self.path}")
-    #             shutil.rmtree(self.path)
-    #         else:
-    #             logger.info(f"Deleting data file {self.path}")
-    #             os.remove(self.path)
-    #
-    #     # TODO: Add support for Databricks dbfs / workspace / Volume?
-    #
-    #     # Remove Checkpoint
-    #     self._purge_checkpoint(spark=spark)
+    # ----------------------------------------------------------------------- #
+    # Purge                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    def purge(self):
+        """
+        Delete sink data and checkpoints
+        """
+        # Remove Data
+        if os.path.exists(self.path):
+            is_dir = os.path.isdir(self.path)
+            if is_dir:
+                logger.info(f"Deleting data dir {self.path}")
+                shutil.rmtree(self.path)
+            else:
+                logger.info(f"Deleting data file {self.path}")
+                os.remove(self.path)
+
+        # TODO: Add support for Databricks dbfs / workspace / Volume?
+
+        # Remove Checkpoint
+        self._purge_checkpoint()
 
     # ----------------------------------------------------------------------- #
     # Source                                                                  #

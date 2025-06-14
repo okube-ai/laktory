@@ -444,16 +444,11 @@ class PipelineNode(BaseModel, PipelineChild):
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
 
-    def purge(self, spark=None):
-        # TODO: Now that sink switch to overwrite when sink does not exists or when
-        # a full refresh is requested, the purge method should not delete the data
-        # by default, but only the checkpoints. Also consider truncating the table
-        # instead of dropping it.
-
+    def purge(self):
         logger.info(f"Purging pipeline node {self.name}")
         if self.has_sinks:
             for s in self.sinks:
-                s.purge(spark=spark)
+                s.purge()
         if self._expectations_checkpoint_path:
             if os.path.exists(self._expectations_checkpoint_path):
                 logger.info(
@@ -461,11 +456,15 @@ class PipelineNode(BaseModel, PipelineChild):
                 )
                 shutil.rmtree(self._expectations_checkpoint_path)
 
-            if spark is None:
+            if self.df_backend != DataFrameBackends.PYSPARK:
                 return
 
             try:
                 from pyspark.dbutils import DBUtils
+
+                from laktory import get_spark_session
+
+                spark = get_spark_session()
             except ModuleNotFoundError:
                 return
 
