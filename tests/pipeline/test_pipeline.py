@@ -9,7 +9,6 @@ from laktory import get_spark_session
 from laktory import models
 from laktory._testing import StreamingSource
 from laktory._testing import assert_dfs_equal
-from laktory.constants import CACHE_ROOT
 
 data_dirpath = Path(__file__).parent.parent / "data"
 
@@ -131,9 +130,9 @@ def test_update_from_parent():
     # Test
     assert pl.orchestrator.parent == pl
     assert pl.orchestrator.parent_pipeline == pl
-    assert len(pl.orchestrator.parameters) == 3
-    assert (
-        pl.orchestrator.config_file.source == f"{CACHE_ROOT}tmp-{pl.name}-config.json"
+    assert len(pl.orchestrator.parameters) == 5
+    assert pl.orchestrator.config_file.content_base64.startswith(
+        "ewogICAgIm5hbWUiOiAicGwtbG9j"
     )
 
     # Assign As Model
@@ -143,9 +142,9 @@ def test_update_from_parent():
     # Test
     assert pl.orchestrator.parent == pl
     assert pl.orchestrator.parent_pipeline == pl
-    assert len(pl.orchestrator.parameters) == 3
-    assert (
-        pl.orchestrator.config_file.source == f"{CACHE_ROOT}tmp-{pl.name}-config.json"
+    assert len(pl.orchestrator.parameters) == 5
+    assert pl.orchestrator.config_file.content_base64.startswith(
+        "ewogICAgIm5hbWUiOiAicGwtbG9j"
     )
 
 

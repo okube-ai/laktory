@@ -54,6 +54,7 @@ class DataFrameBackends(Enum):
         """
         mapping = {
             nw.Implementation.PYSPARK: DataFrameBackends.PYSPARK,
+            nw.Implementation.PYSPARK_CONNECT: DataFrameBackends.PYSPARK,
             nw.Implementation.POLARS: DataFrameBackends.POLARS,
             # get_modin(): Implementation.MODIN,
             # get_cudf(): Implementation.CUDF,

@@ -1,12 +1,10 @@
 import warnings
-from pathlib import Path
 from typing import Any
 from typing import Literal
 
 import narwhals as nw
 from narwhals import Expr
 from pydantic import Field
-from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -64,7 +62,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     )
     print(dqe)
     '''
-    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='ROW' name='price higher than 10' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='close > 127', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=None, rel=0.05) checkpoint_path=None
+    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='ROW' name='price higher than 10' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='close > 127', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=None, rel=0.05)
     '''
 
     dqe = models.DataQualityExpectation(
@@ -74,7 +72,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     )
     print(dqe)
     '''
-    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='AGGREGATE' name='rows count' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='COUNT(*) > 50', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=0, rel=None) checkpoint_path=None
+    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='AGGREGATE' name='rows count' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='COUNT(*) > 50', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=0, rel=None)
     '''
     ```
 
@@ -112,18 +110,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
         ExpectationTolerance(abs=0),
         description="Tolerance for non-matching rows before resulting in failure. Only available for 'ROW' type expectation.",
     )
-    checkpoint_path: str = Field(
-        None,
-        description="Path to which the checkpoint file for which expectations on a streaming dataframe should be written.",
-    )
     _check: DataQualityCheck = None
-
-    @field_validator("checkpoint_path", mode="before")
-    @classmethod
-    def posixpath_to_string(cls, value: Any) -> Any:
-        if isinstance(value, Path):
-            value = str(value)
-        return value
 
     @model_validator(mode="after")
     def parse_expr(self) -> Any:
@@ -199,8 +186,27 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def is_dlt_compatible(self):
+    def is_dlt_compatible(self) -> bool:
+        """Expectation is supported by DLT"""
         return self.expr.type == "SQL" and self.type == "ROW"
+
+    @property
+    def is_dlt_managed(self) -> bool:
+        """Expectation is DLT-compatible and pipeline node is executed by DLT"""
+
+        if not self.is_dlt_compatible:
+            return False
+
+        pl = self.parent_pipeline
+        if pl is None:
+            return False
+
+        if not pl.is_orchestrator_dlt:
+            return False
+
+        from laktory import is_dlt_execute
+
+        return is_dlt_execute()
 
     @property
     def is_streaming_compatible(self):

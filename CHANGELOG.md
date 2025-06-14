@@ -24,6 +24,8 @@
   * `iceberg`  
   * `pyarrow`  
 * Support for 2- and 3-level namespace in source/sink `table_name` in addition to explicit `catalog_name` and `schema_name` definition
+* Pipeline Databricks Job and DLT orchestrators no longer deploy a requirements.txt file (passed as parameters)
+* Pipeline Databricks Job and DLT orchestrators no longer generate a temporary local config file
 ### Breaking changes
 * Dropped support python 3.9
 * Data sources:

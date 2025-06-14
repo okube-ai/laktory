@@ -8,13 +8,14 @@ name: pl-stocks-job
 # Configure Orchestrator
 orchestrator:
   type: DATABRICKS_JOB
-  clusters:
-    - name: node-cluster
-      autoscale:
-        min_workers: 1
-        max_workers: 2
-      spark_version: 15.2.x-scala2.12
-      node_type_id: Standard_DS3_v2  # TODO: Change to your desired cloud-specific node type
+# Uncomment to use job cluster instead of serverless
+#  clusters:
+#    - name: node-cluster
+#      autoscale:
+#        min_workers: 1
+#        max_workers: 2
+#      spark_version: 15.2.x-scala2.12
+#      node_type_id: Standard_DS3_v2  # TODO: Change to your desired cloud-specific node type
 
 # Define nodes (each node is a table or a view)
 nodes:

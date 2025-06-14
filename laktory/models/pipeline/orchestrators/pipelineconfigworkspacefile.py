@@ -1,8 +1,7 @@
+import base64
 import json
-import os
 
 from laktory._settings import settings
-from laktory.constants import CACHE_ROOT
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
@@ -17,39 +16,31 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
     ----------
     access_controls:
         List of file access controls
-    path:
-         Workspace filepath for the file. Overwrite `rootpath` and `dirpath`.
-         Default value `{settings.workspace_laktory_root}pipelines/{pl_name}/config.json`
     """
 
-    source: str = "{pl_name}"
     access_controls: list[AccessControl] = [
         AccessControl(permission_level="CAN_READ", group_name="users")
     ]
 
     def update_from_parent(self):
         pl = self.parent_pipeline
-        if pl:
-            pl_name = pl.name
-            self.source = os.path.join(CACHE_ROOT, f"tmp-{pl_name}-config.json")
-            if "{pl_name}" in self.path:
-                self.path = (
-                    f"{settings.workspace_laktory_root}pipelines/{pl_name}/config.json"
-                )
-            self.set_paths()
+        if not pl:
+            return
 
-    def write_source(self):
-        pl = self.parent_pipeline
+        # Set path
+        if self.path is None:
+            self.path = (
+                f"{settings.workspace_laktory_root}pipelines/{pl.name}/config.json"
+            )
 
-        pl.root_path = pl._root_path.as_posix()
-        pl = pl.inject_vars(inplace=False)
+        _config = self.inject_vars_into_dump(
+            {"config": pl.model_dump(exclude_unset=True)}
+        )["config"]
 
-        d = pl.model_dump(exclude_unset=True)
-        s = json.dumps(d, indent=4)
+        _config_str = json.dumps(_config, indent=4)
+        b64_str = base64.b64encode(_config_str.encode("utf-8")).decode("utf-8")
 
-        source = self.inject_vars_into_dump({"source": self.source})["source"]
-        with open(source, "w", newline="\n") as fp:
-            fp.write(s)
+        self.content_base64 = b64_str
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

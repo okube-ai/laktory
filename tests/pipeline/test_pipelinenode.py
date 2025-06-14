@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from laktory import get_spark_session
@@ -74,6 +76,15 @@ def test_execute(backend, tmp_path):
     assert df1.columns == ["id", "x1", "y1"]
     assert df1.collect().shape == (3, 3)
 
+    # Test Full Refresh
+    node.execute(full_refresh=True)
+
+    # Test purge
+    node.purge()
+    for s in node.sinks:
+        path = Path(s.path)
+        assert not path.exists()
+
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_execute_stream(backend, tmp_path):
@@ -109,6 +120,18 @@ def test_execute_stream(backend, tmp_path):
     assert df.to_native().isStreaming
     assert df1.columns == ["id", "x1", "y1"]
     assert df1.collect().shape == (3, 3)
+
+    # Test Full Refresh
+    node.execute(full_refresh=True)
+
+    # Test purge
+    node.purge()
+    if node.expectations_checkpoint_path:
+        path = Path(node.expectations_checkpoint_path)
+        assert not path.exists()
+    for s in node.sinks:
+        path = Path(s.path)
+        assert not path.exists()
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])

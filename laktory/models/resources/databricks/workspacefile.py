@@ -66,7 +66,8 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     dirpath: str = None
     path: str = None
     rootpath: str = None
-    source: str
+    source: str = None
+    content_base64: str = None
 
     @classmethod
     def lookup_defaults(cls) -> dict:
@@ -75,12 +76,16 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     @property
     def filename(self) -> str:
         """File filename"""
-        return os.path.basename(self.source)
+        if self.source:
+            return os.path.basename(self.source)
 
     @model_validator(mode="after")
     def set_paths(self) -> Any:
         # Path set
         if self.path:
+            return self
+
+        if not self.source:
             return self
 
         # root

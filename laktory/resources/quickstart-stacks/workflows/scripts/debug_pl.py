@@ -1,10 +1,8 @@
-import importlib
-import sys
-
 from databricks.connect import DatabricksSession
 
-from laktory import models
-from laktory import settings
+import laktory as lk
+
+# TODO: import any custom modules that register Narwhals namespace(s)
 
 # --------------------------------------------------------------------------- #
 # Setup                                                                       #
@@ -13,13 +11,14 @@ from laktory import settings
 stack_filepath = "../stack.yaml"
 
 # Laktory root on DBFS, required to read checkpoints
-settings.laktory_root = "/laktory/"
+lk.settings.laktory_root = "/laktory/"
 
-spark = DatabricksSession.builder.clusterId("TODO: Fill cluster ID").getOrCreate()
+# Get Remote Spark Session
+# TODO: use your own profile
+# https://docs.databricks.com/aws/en/dev-tools/databricks-connect/cluster-config
+spark = DatabricksSession.builder.profile("default").getOrCreate()
 
-udf_dirpath = "../workspacefiles/pipelines/"
-
-node_name = None
+node_name = "brz_stock_prices"
 
 # --------------------------------------------------------------------------- #
 # Get Pipeline                                                                #
@@ -27,33 +26,18 @@ node_name = None
 
 
 with open(stack_filepath, "r") as fp:
-    stack = models.Stack.model_validate_yaml(fp)
+    stack = lk.models.Stack.model_validate_yaml(fp)
 
 pl = stack.get_env("dev").resources.pipelines["pl-stocks-job"]
-
-print(pl)
-
-
-# --------------------------------------------------------------------------- #
-# Read UDFs                                                                   #
-# --------------------------------------------------------------------------- #
-
-# Import User Defined Functions
-udfs = []
-sys.path.append(udf_dirpath)
-for udf in pl.udfs:
-    module = importlib.import_module(udf.module_name)
-    udfs += [getattr(module, udf.function_name)]
-
 
 # --------------------------------------------------------------------------- #
 # Execute Pipeline                                                            #
 # --------------------------------------------------------------------------- #
 
 if node_name:
-    pl.nodes_dict[node_name].execute(spark=spark, write_sinks=False, udfs=udfs)
+    pl.nodes_dict[node_name].execute(write_sinks=False)
 else:
-    pl.execute(spark=spark, write_sinks=False, udfs=udfs)
+    pl.execute(write_sinks=False)
 
 # --------------------------------------------------------------------------- #
 # Display Results                                                             #

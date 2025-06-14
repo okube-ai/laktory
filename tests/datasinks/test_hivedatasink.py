@@ -31,6 +31,10 @@ def test_write(backend, tmp_path):
     # Test
     assert_dfs_equal(df, df0)
 
+    # Test purge
+    sink.purge()
+    assert not sink.exists()
+
 
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_create_view(backend, tmp_path):

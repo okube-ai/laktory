@@ -102,9 +102,3 @@ class StreamingSource:
             _df.to_json(filepath, orient="records")
 
         return df
-
-
-if __name__ == "__main__":
-    ss = StreamingSource(backend="POLARS")
-
-    ss.write_to_json("./")

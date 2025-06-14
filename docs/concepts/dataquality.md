@@ -114,24 +114,37 @@ are supported.
 | Batch     | yes   | yes         |
 | Streaming | yes   | no          |
 
-### Orchestrator Limitations
+### Limitations
 
-Certain orchestrators impose restrictions on how expectations can be applied to
-pipeline operations. Below is a summary of known limitations for supported
-orchestrators:
+Specific configurations might limit the ability of check data quality expectations.
 
-- Databricks Delta Live Tables (DLT)
+#### Serverless Compute
 
-  - `WARN` expectations appear as `ALLOW` in the DLT Data Quality Tab.
-  - `QUARANTINE` expectations appear as `DROP` in the DLT Data Quality Tab,
-    though quarantine sinks remain fully supported.
-  - `AGGREGATE` expectations do not appear in the DLT Data Quality Tab but can
-    be accessed via logs.
-  - Expectations defined with DataFrame expressions (instead of SQL) are not
-    displayed in the DLT Data Quality Tab.
-  - `WARN` and `FAIL` actions on streaming tables are supported only for SQL
-    expressions. Static tables support both SQL and DataFrame expressions.
+Databricks serverless compute does not support forEachBatch operation and as such
+does not allow to check expectations on a streaming DataFrame.
 
-- Databricks Jobs
-  - Expectations on streaming DataFrames using Serverless Compute are not
-    supported
+
+#### Databricks Delta Live Tables (DLT) Orchestrator
+
+- `WARN` expectations appear as `ALLOW` in the DLT Data Quality Tab.
+- `QUARANTINE` expectations appear as `DROP` in the DLT Data Quality Tab,
+  though quarantine sinks remain fully supported.
+- `AGGREGATE` expectations do not appear in the DLT Data Quality Tab but can
+  be accessed via logs.
+- Expectations defined with DataFrame expressions (instead of SQL) are not
+  displayed in the DLT Data Quality Tab.
+- `WARN` and `FAIL` actions on streaming tables are supported only for SQL
+  expressions. Static tables support both SQL and DataFrame expressions.
+
+#### Databricks Jobs Orchestrator
+
+- Expectations on streaming DataFrames using Serverless Compute are not supported
+
+#### Spark Connect
+
+Pipeline executed using Spark Connect (from an IDE) and having expectations set on a 
+streaming DataFrame must:
+
+- Use Spark >= 3.5
+- Have the same python version locally as on the remote cluster
+- Have Laktory installed on the remote cluster

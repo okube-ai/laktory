@@ -1,5 +1,6 @@
 from functools import wraps
 
+from laktory.narwhals_ext.dataframe.display import display
 from laktory.narwhals_ext.dataframe.groupby_and_agg import groupby_and_agg
 from laktory.narwhals_ext.dataframe.has_column import has_column
 from laktory.narwhals_ext.dataframe.schema_flat import schema_flat
@@ -17,6 +18,10 @@ from laktory.typing import AnyFrame
 class LaktoryDataFrame:  # noqa: F811
     def __init__(self, df: AnyFrame):
         self._df = df
+
+    @wraps(display)
+    def display(self, *args, **kwargs):
+        return display(self, *args, **kwargs)
 
     @wraps(groupby_and_agg)
     def groupby_and_agg(self, *args, **kwargs):

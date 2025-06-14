@@ -304,16 +304,15 @@ else:
     pl.execute()
 ```
 
-The notebook reads the pipeline configuration using the pipeline name provided
-by the job and execute a node, also provided by the job.
+The notebook reads the pipeline configuration using the pipeline name provided by the job and execute a node, also
+provided by the job.
 
 Selecting the `DATABRICKS_JOB` orchestrator will deploy a pipeline json 
-configuration file and a `requirements.txt` file for installing dependencies.
-Both can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{pipeline_name}/`.
+configuration file which can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{pipeline_name}/`.
 
 #### Delta Live Tables (DLT)
 [Databricks Delta Live Tables](https://www.databricks.com/product/delta-live-tables)
-offers features like automatic schema change management, continuous execution, and 
+offers features like automatic schema change management, continuous execution, advanced monitoring and 
 autoscaling. 
 
 ![dlt](../../images/screenshots/dlt_stock_prices.png)
@@ -365,15 +364,8 @@ for node in pl.nodes:
         display(df)
 ```
 
-Notice how `dlt` module is internal to laktory. It provides additional
-debugging and inspection capabilities. Notably, you can run the notebook in a
-user cluster and will be able to inspect the resulting dataframe.
-
-![dlt](../../images/screenshots/dlt_debug.png)
-
 Selecting the `DATABRICKS_DLT` orchestrator will deploy a pipeline json 
-configuration file and a `requirements.txt` file for installing dependencies.
-Both can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{pipeline_name}/`.
+configuration file which can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{pipeline_name}/`.
 
 #### Apache Airflow
 Support for Apache Airflow as an orchestrator is on the roadmap.

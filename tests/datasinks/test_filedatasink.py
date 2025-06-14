@@ -81,3 +81,6 @@ def test_write(backend, fmt, tmp_path):
 
     # Test
     assert_dfs_equal(df, df0)
+
+    # Test purge
+    sink.purge()

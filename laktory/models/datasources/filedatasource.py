@@ -178,7 +178,15 @@ class FileDataSource(BaseDataSource):
 
             if self.as_stream:
                 # https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema
-                if self.format in ["CSV", "JSON", "XML", "PARQUET", "AVRO"]:
+                if self.format in [
+                    "AVRO",
+                    "CSV",
+                    "JSON",
+                    "JSONL",
+                    "NDJSON",
+                    "PARQUET",
+                    "XML",
+                ]:
                     return True
 
             return False
@@ -186,14 +194,14 @@ class FileDataSource(BaseDataSource):
         if key == "schema_definition":
             if self.df_backend == DataFrameBackends.PYSPARK:
                 if self.format in [
+                    "AVRO",
                     "CSV",
+                    "DELTA",
                     "JSON",
                     "JSONL",
                     "NDJSON",
-                    "AVRO",
                     "ORC",
                     "PARQUET",
-                    "DELTA",
                 ]:
                     return True
 

@@ -111,20 +111,20 @@ class PipelineNodeDataSource(BaseDataSource):
         is_orchestrator_dlt = pl is not None and pl.is_orchestrator_dlt
 
         if is_orchestrator_dlt:
-            from laktory.dlt import is_debug
-            from laktory.dlt import read as dlt_read
-            from laktory.dlt import read_stream as dlt_read_stream
+            from laktory import is_dlt_execute
 
-            is_dlt = not is_debug()
+            is_dlt = is_dlt_execute()
 
         # Reading from DLT
         if is_dlt:
+            import dlt
+
             if self.as_stream:
                 logger.info(f"Reading pipeline node {self._id} with DLT as stream")
-                df = dlt_read_stream(self.node.name)
+                df = dlt.read_stream(self.node.primary_sink.dlt_name)
             else:
                 logger.info(f"Reading pipeline node {self._id} with DLT as static")
-                df = dlt_read(self.node.name)
+                df = dlt.read(self.node.primary_sink.dlt_name)
 
         elif stream_to_batch or self.node.output_df is None:
             if self.node.has_sinks:
