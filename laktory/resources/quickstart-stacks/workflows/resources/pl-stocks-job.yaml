@@ -17,6 +17,9 @@ orchestrator:
 #      spark_version: 15.2.x-scala2.12
 #      node_type_id: Standard_DS3_v2  # TODO: Change to your desired cloud-specific node type
 
+dependencies:
+  - laktory==<laktory_version>
+
 # Define nodes (each node is a table or a view)
 nodes:
 
