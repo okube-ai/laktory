@@ -94,6 +94,11 @@ def test_pipeline_job():
             {"default": "false", "name": "full_refresh"},
             {"default": "pl-job", "name": "pipeline_name"},
             {"default": "false", "name": "install_dependencies"},
+            {"default": '["yfinance", "laktory==__version__"]', "name": "requirements"},
+            {
+                "default": "/Workspace/.laktory/pipelines/pl-job/config.json",
+                "name": "config_filepath",
+            },
         ],
         "tasks": [
             {
@@ -141,7 +146,7 @@ def test_pipeline_job():
 
     # Test resources
     resources = job.core_resources
-    assert len(resources) == 5
+    assert len(resources) == 3
 
 
 def test_pipeline_dlt(tmp_path):
@@ -196,16 +201,18 @@ def test_pipeline_dlt(tmp_path):
                     "user_name": None,
                 }
             ],
+            "content_base64": "ewogICAgIm5hbWUiOiAicGwtZGx0IiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJuYW1lIjogImJyeiIsCiAgICAgICAgICAgICJzb3VyY2UiOiB7CiAgICAgICAgICAgICAgICAiZm9ybWF0IjogIkpTT04iLAogICAgICAgICAgICAgICAgInBhdGgiOiAiL2Jyel9zb3VyY2UvIgogICAgICAgICAgICB9LAogICAgICAgICAgICAic2lua3MiOiBbCiAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgIm1vZGUiOiAiQVBQRU5EIiwKICAgICAgICAgICAgICAgICAgICAiZm9ybWF0IjogIlBBUlFVRVQiLAogICAgICAgICAgICAgICAgICAgICJwYXRoIjogIi9icnpfc2luay8iCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIF0KICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICAgIm5hbWUiOiAic2x2IiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJub2RlX25hbWUiOiAiYnJ6IgogICAgICAgICAgICB9LAogICAgICAgICAgICAic2lua3MiOiBbCiAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgIm1vZGUiOiAiQVBQRU5EIiwKICAgICAgICAgICAgICAgICAgICAiZm9ybWF0IjogIkRFTFRBIiwKICAgICAgICAgICAgICAgICAgICAicGF0aCI6ICIvc2x2X3NpbmsvIgogICAgICAgICAgICAgICAgfQogICAgICAgICAgICBdLAogICAgICAgICAgICAidHJhbnNmb3JtZXIiOiB7CiAgICAgICAgICAgICAgICAibm9kZXMiOiBbCiAgICAgICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICAgICAiZnVuY19rd2FyZ3MiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAieTEiOiB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgInZhbHVlIjogIngxIgogICAgICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICAgICAiZnVuY19uYW1lIjogIndpdGhfY29sdW1ucyIKICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICAgICAgICAgImV4cHIiOiAiU0VMRUNUIGlkLCB4MSwgeTEgZnJvbSB7ZGZ9IgogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIF0KICAgICAgICAgICAgfQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgICAibmFtZSI6ICJnbGQiLAogICAgICAgICAgICAic2lua3MiOiBbCiAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgIm1vZGUiOiAiT1ZFUldSSVRFIiwKICAgICAgICAgICAgICAgICAgICAid3JpdGVyX2t3YXJncyI6IHsKICAgICAgICAgICAgICAgICAgICAgICAgInBhdGgiOiAiL2dsZF9zaW5rLyIKICAgICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgICAgICJjYXRhbG9nX25hbWUiOiAiZGV2IiwKICAgICAgICAgICAgICAgICAgICAiZm9ybWF0IjogIlBBUlFVRVQiLAogICAgICAgICAgICAgICAgICAgICJzY2hlbWFfbmFtZSI6ICJkZWZhdWx0IiwKICAgICAgICAgICAgICAgICAgICAidGFibGVfbmFtZSI6ICJnbGQiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIF0sCiAgICAgICAgICAgICJ0cmFuc2Zvcm1lciI6IHsKICAgICAgICAgICAgICAgICJub2RlcyI6IFsKICAgICAgICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAgICAgICAgICJleHByIjogIlNFTEVDVCBpZCwgTUFYKHgxKSBBUyBtYXhfeDEgZnJvbSB7bm9kZXMuc2x2fSBHUk9VUCBCWSBpZCIKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBdCiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICBdLAogICAgIm9yY2hlc3RyYXRvciI6IHsKICAgICAgICAiYWNjZXNzX2NvbnRyb2xzIjogWwogICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAiZ3JvdXBfbmFtZSI6ICJhY2NvdW50IHVzZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9WSUVXIgogICAgICAgICAgICB9CiAgICAgICAgXSwKICAgICAgICAiY2F0YWxvZyI6ICJkZXYiLAogICAgICAgICJuYW1lIjogInBsLWRsdCIsCiAgICAgICAgInRhcmdldCI6ICJzYW5kYm94IgogICAgfSwKICAgICJyb290X3BhdGgiOiAiIgp9",
             "dataframe_api": None,
             "dataframe_backend": None,
-            "dirpath": "",
+            "dirpath": None,
             "path": "/.laktory/pipelines/pl-dlt/config.json",
-            "rootpath": "/.laktory/",
-            "source": "./tmp-pl-dlt-config.json",
+            "rootpath": None,
+            "source": None,
         },
         "configuration": {
+            "config_filepath": "/Workspace/.laktory/pipelines/pl-dlt/config.json",
             "pipeline_name": "pl-dlt",
-            "workspace_laktory_root": "/.laktory/",
+            "requirements": '["laktory==0.8.0"]',
         },
         "continuous": None,
         "dataframe_api": None,
@@ -218,22 +225,6 @@ def test_pipeline_dlt(tmp_path):
         "name_suffix": None,
         "notifications": [],
         "photon": None,
-        "requirements_file": {
-            "access_controls": [
-                {
-                    "group_name": "users",
-                    "permission_level": "CAN_READ",
-                    "service_principal_name": None,
-                    "user_name": None,
-                }
-            ],
-            "dataframe_api": None,
-            "dataframe_backend": None,
-            "dirpath": "",
-            "path": "/.laktory/pipelines/pl-dlt/requirements.txt",
-            "rootpath": "/.laktory/",
-            "source": "./tmp-pl-dlt-requirements.txt",
-        },
         "serverless": None,
         "storage": None,
         "target": "sandbox",
@@ -242,34 +233,19 @@ def test_pipeline_dlt(tmp_path):
 
     # Test resources
     resources = pl_dlt.core_resources
-    assert len(resources) == 6
+    assert len(resources) == 4
 
     dlt = resources[0]
     dltp = resources[1]
-    wsf = resources[2]
-    wsfp = resources[3]
 
-    assert isinstance(wsf, models.resources.databricks.WorkspaceFile)
-    assert isinstance(wsfp, models.resources.databricks.Permissions)
     assert isinstance(dlt, models.resources.databricks.DLTPipeline)
     assert isinstance(dltp, models.resources.databricks.Permissions)
 
     assert dlt.resource_name == "dlt-pipeline-pl-dlt"
     assert dltp.resource_name == "permissions-dlt-pipeline-pl-dlt"
-    assert wsf.resource_name == "workspace-file-laktory-pipelines-pl-dlt-config-json"
-    assert (
-        wsfp.resource_name
-        == "permissions-workspace-file-laktory-pipelines-pl-dlt-config-json"
-    )
 
     assert dlt.options.provider == "${resources.databricks2}"
     assert dltp.options.provider == "${resources.databricks2}"
-    assert wsf.options.provider == "${resources.databricks2}"
-    assert wsfp.options.provider == "${resources.databricks2}"
 
     assert dlt.options.depends_on == []
     assert dltp.options.depends_on == ["${resources.dlt-pipeline-pl-dlt}"]
-    assert wsf.options.depends_on == ["${resources.dlt-pipeline-pl-dlt}"]
-    assert wsfp.options.depends_on == [
-        "${resources.workspace-file-laktory-pipelines-pl-dlt-config-json}"
-    ]

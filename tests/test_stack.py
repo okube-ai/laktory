@@ -142,10 +142,6 @@ def test_stack_env_model(stack):
     }
     assert pl.orchestrator.development is None
     assert pl.nodes[0].dlt_template is None
-    assert (
-        pl.orchestrator.config_file.path
-        == "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json"
-    )
     assert pl.variables == {
         "workflow_name": "pl-stock-prices-ut-stack",
         "business_unit": "laktory",
@@ -199,7 +195,7 @@ def test_pulumi_stack(monkeypatch, stack):
     assert pstack.organization == "okube"
 
     data_default = pstack.model_dump()
-
+    print(data_default)
     assert data_default == {
         "variables": {},
         "name": "unit-testing",
@@ -264,6 +260,17 @@ def test_pulumi_stack(monkeypatch, stack):
                 },
                 "options": {"dependsOn": ["${notebook-external}"]},
             },
+            "permissions_test": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"permissionLevel": "CAN_MANAGE", "userName": "user1"},
+                        {"permissionLevel": "CAN_RUN", "userName": "user2"},
+                    ],
+                    "pipelineId": "pipeline_123",
+                },
+                "options": {},
+            },
             "warehouse-external": {
                 "type": "databricks:SqlEndpoint",
                 "options": {},
@@ -279,23 +286,6 @@ def test_pulumi_stack(monkeypatch, stack):
                 },
                 "options": {"dependsOn": ["${warehouse-external}"]},
             },
-            "permissions_test": {
-                "options": {},
-                "properties": {
-                    "accessControls": [
-                        {
-                            "permissionLevel": "CAN_MANAGE",
-                            "userName": "user1",
-                        },
-                        {
-                            "permissionLevel": "CAN_RUN",
-                            "userName": "user2",
-                        },
-                    ],
-                    "pipelineId": "pipeline_123",
-                },
-                "type": "databricks:Permissions",
-            },
             "dlt-custom-name": {
                 "type": "databricks:Pipeline",
                 "properties": {
@@ -305,7 +295,8 @@ def test_pulumi_stack(monkeypatch, stack):
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
-                        "workspace_laktory_root": "/.laktory/",
+                        "requirements": '["laktory==0.8.0"]',
+                        "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
                     },
                     "libraries": [
                         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
@@ -333,7 +324,7 @@ def test_pulumi_stack(monkeypatch, stack):
                 "type": "databricks:WorkspaceFile",
                 "properties": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
-                    "source": "./tmp-pl-stock-prices-ut-stack-config.json",
+                    "contentBase64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT0wLjguMFwiXSIsCiAgICAgICAgICAgICJjb25maWdfZmlsZXBhdGgiOiAiL1dvcmtzcGFjZS8ubGFrdG9yeS9waXBlbGluZXMvcGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrL2NvbmZpZy5qc29uIgogICAgICAgIH0sCiAgICAgICAgImxpYnJhcmllcyI6IFsKICAgICAgICAgICAgewogICAgICAgICAgICAgICAgIm5vdGVib29rIjogewogICAgICAgICAgICAgICAgICAgICJwYXRoIjogIi9waXBlbGluZXMvZGx0X2Jyel90ZW1wbGF0ZS5weSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAidHlwZSI6ICJEQVRBQlJJQ0tTX0RMVCIKICAgIH0KfQ==",
                 },
                 "options": {
                     "provider": "${databricks}",
@@ -355,32 +346,6 @@ def test_pulumi_stack(monkeypatch, stack):
                     ],
                 },
             },
-            "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
-                "type": "databricks:WorkspaceFile",
-                "properties": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
-                    "source": "./tmp-pl-stock-prices-ut-stack-requirements.txt",
-                },
-                "options": {
-                    "provider": "${databricks}",
-                    "dependsOn": ["${dlt-custom-name}"],
-                },
-            },
-            "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
-                "type": "databricks:Permissions",
-                "properties": {
-                    "accessControls": [
-                        {"groupName": "users", "permissionLevel": "CAN_READ"}
-                    ],
-                    "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
-                },
-                "options": {
-                    "provider": "${databricks}",
-                    "dependsOn": [
-                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt}"
-                    ],
-                },
-            },
             "databricks": {
                 "type": "pulumi:providers:databricks",
                 "properties": {"host": "my-host", "token": "my-token"},
@@ -392,6 +357,7 @@ def test_pulumi_stack(monkeypatch, stack):
 
     # Prod
     data = stack.to_pulumi(env_name="prod").model_dump()
+    print(data)
     assert data == {
         "variables": {},
         "name": "unit-testing",
@@ -456,6 +422,17 @@ def test_pulumi_stack(monkeypatch, stack):
                 },
                 "options": {"dependsOn": ["${notebook-external}"]},
             },
+            "permissions_test": {
+                "type": "databricks:Permissions",
+                "properties": {
+                    "accessControls": [
+                        {"permissionLevel": "CAN_MANAGE", "userName": "user1"},
+                        {"permissionLevel": "CAN_RUN", "userName": "user2"},
+                    ],
+                    "pipelineId": "pipeline_123",
+                },
+                "options": {},
+            },
             "warehouse-external": {
                 "type": "databricks:SqlEndpoint",
                 "options": {},
@@ -480,7 +457,8 @@ def test_pulumi_stack(monkeypatch, stack):
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
-                        "workspace_laktory_root": "/.laktory/",
+                        "requirements": '["laktory==0.8.0"]',
+                        "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
                     },
                     "development": False,
                     "libraries": [
@@ -509,7 +487,7 @@ def test_pulumi_stack(monkeypatch, stack):
                 "type": "databricks:WorkspaceFile",
                 "properties": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
-                    "source": "./tmp-pl-stock-prices-ut-stack-config.json",
+                    "contentBase64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT0wLjguMFwiXSIsCiAgICAgICAgICAgICJjb25maWdfZmlsZXBhdGgiOiAiL1dvcmtzcGFjZS8ubGFrdG9yeS9waXBlbGluZXMvcGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrL2NvbmZpZy5qc29uIgogICAgICAgIH0sCiAgICAgICAgImRldmVsb3BtZW50IjogZmFsc2UsCiAgICAgICAgImxpYnJhcmllcyI6IFsKICAgICAgICAgICAgewogICAgICAgICAgICAgICAgIm5vdGVib29rIjogewogICAgICAgICAgICAgICAgICAgICJwYXRoIjogIi9waXBlbGluZXMvZGx0X2Jyel90ZW1wbGF0ZS5weSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAidHlwZSI6ICJEQVRBQlJJQ0tTX0RMVCIKICAgIH0KfQ==",
                 },
                 "options": {
                     "provider": "${databricks}",
@@ -531,49 +509,6 @@ def test_pulumi_stack(monkeypatch, stack):
                     ],
                 },
             },
-            "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
-                "type": "databricks:WorkspaceFile",
-                "properties": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
-                    "source": "./tmp-pl-stock-prices-ut-stack-requirements.txt",
-                },
-                "options": {
-                    "provider": "${databricks}",
-                    "dependsOn": ["${dlt-custom-name}"],
-                },
-            },
-            "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
-                "type": "databricks:Permissions",
-                "properties": {
-                    "accessControls": [
-                        {"groupName": "users", "permissionLevel": "CAN_READ"}
-                    ],
-                    "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
-                },
-                "options": {
-                    "provider": "${databricks}",
-                    "dependsOn": [
-                        "${workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt}"
-                    ],
-                },
-            },
-            "permissions_test": {
-                "options": {},
-                "properties": {
-                    "accessControls": [
-                        {
-                            "permissionLevel": "CAN_MANAGE",
-                            "userName": "user1",
-                        },
-                        {
-                            "permissionLevel": "CAN_RUN",
-                            "userName": "user2",
-                        },
-                    ],
-                    "pipelineId": "pipeline_123",
-                },
-                "type": "databricks:Permissions",
-            },
             "databricks": {
                 "type": "pulumi:providers:databricks",
                 "properties": {"host": "my-host", "token": "my-token"},
@@ -590,6 +525,7 @@ def test_terraform_stack(monkeypatch, stack):
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
 
     data_default = stack.to_terraform().model_dump()
+    print(data_default)
     assert data_default == {
         "terraform": {
             "required_providers": {
@@ -657,6 +593,13 @@ def test_terraform_stack(monkeypatch, stack):
                     ],
                     "depends_on": ["data.databricks_notebook.notebook-external"],
                 },
+                "permissions_test": {
+                    "pipeline_id": "pipeline_123",
+                    "access_control": [
+                        {"permission_level": "CAN_MANAGE", "user_name": "user1"},
+                        {"permission_level": "CAN_RUN", "user_name": "user2"},
+                    ],
+                },
                 "permissions-warehouse-external": {
                     "sql_endpoint_id": "${data.databricks_sql_warehouse.warehouse-external.id}",
                     "access_control": [
@@ -683,29 +626,6 @@ def test_terraform_stack(monkeypatch, stack):
                     ],
                     "provider": "databricks",
                 },
-                "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
-                    "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
-                    "access_control": [
-                        {"group_name": "users", "permission_level": "CAN_READ"}
-                    ],
-                    "depends_on": [
-                        "databricks_workspace_file.workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt"
-                    ],
-                    "provider": "databricks",
-                },
-                "permissions_test": {
-                    "access_control": [
-                        {
-                            "permission_level": "CAN_MANAGE",
-                            "user_name": "user1",
-                        },
-                        {
-                            "permission_level": "CAN_RUN",
-                            "user_name": "user2",
-                        },
-                    ],
-                    "pipeline_id": "pipeline_123",
-                },
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
@@ -714,7 +634,8 @@ def test_terraform_stack(monkeypatch, stack):
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
-                        "workspace_laktory_root": "/.laktory/",
+                        "requirements": '["laktory==0.8.0"]',
+                        "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
                     },
                     "name": "pl-stock-prices-ut-stack",
                     "cluster": [],
@@ -728,16 +649,10 @@ def test_terraform_stack(monkeypatch, stack):
             "databricks_workspace_file": {
                 "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
-                    "source": "./tmp-pl-stock-prices-ut-stack-config.json",
+                    "content_base64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT0wLjguMFwiXSIsCiAgICAgICAgICAgICJjb25maWdfZmlsZXBhdGgiOiAiL1dvcmtzcGFjZS8ubGFrdG9yeS9waXBlbGluZXMvcGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrL2NvbmZpZy5qc29uIgogICAgICAgIH0sCiAgICAgICAgImxpYnJhcmllcyI6IFsKICAgICAgICAgICAgewogICAgICAgICAgICAgICAgIm5vdGVib29rIjogewogICAgICAgICAgICAgICAgICAgICJwYXRoIjogIi9waXBlbGluZXMvZGx0X2Jyel90ZW1wbGF0ZS5weSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAidHlwZSI6ICJEQVRBQlJJQ0tTX0RMVCIKICAgIH0KfQ==",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
-                },
-                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
-                    "source": "./tmp-pl-stock-prices-ut-stack-requirements.txt",
-                    "depends_on": ["databricks_pipeline.dlt-custom-name"],
-                    "provider": "databricks",
-                },
+                }
             },
         },
         "data": {
@@ -752,6 +667,7 @@ def test_terraform_stack(monkeypatch, stack):
 
     # Dev
     data = stack.to_terraform(env_name="dev").model_dump()
+    print(data)
     assert data == {
         "terraform": {
             "required_providers": {
@@ -811,6 +727,13 @@ def test_terraform_stack(monkeypatch, stack):
                     ],
                     "depends_on": ["data.databricks_notebook.notebook-external"],
                 },
+                "permissions_test": {
+                    "pipeline_id": "pipeline_123",
+                    "access_control": [
+                        {"permission_level": "CAN_MANAGE", "user_name": "user1"},
+                        {"permission_level": "CAN_RUN", "user_name": "user2"},
+                    ],
+                },
                 "permissions-warehouse-external": {
                     "sql_endpoint_id": "${data.databricks_sql_warehouse.warehouse-external.id}",
                     "access_control": [
@@ -837,29 +760,6 @@ def test_terraform_stack(monkeypatch, stack):
                     ],
                     "provider": "databricks",
                 },
-                "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
-                    "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
-                    "access_control": [
-                        {"group_name": "users", "permission_level": "CAN_READ"}
-                    ],
-                    "depends_on": [
-                        "databricks_workspace_file.workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt"
-                    ],
-                    "provider": "databricks",
-                },
-                "permissions_test": {
-                    "access_control": [
-                        {
-                            "permission_level": "CAN_MANAGE",
-                            "user_name": "user1",
-                        },
-                        {
-                            "permission_level": "CAN_RUN",
-                            "user_name": "user2",
-                        },
-                    ],
-                    "pipeline_id": "pipeline_123",
-                },
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
@@ -868,7 +768,8 @@ def test_terraform_stack(monkeypatch, stack):
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
-                        "workspace_laktory_root": "/.laktory/",
+                        "requirements": '["laktory==0.8.0"]',
+                        "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
                     },
                     "name": "pl-stock-prices-ut-stack",
                     "cluster": [],
@@ -882,16 +783,10 @@ def test_terraform_stack(monkeypatch, stack):
             "databricks_workspace_file": {
                 "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
-                    "source": "./tmp-pl-stock-prices-ut-stack-config.json",
+                    "content_base64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT0wLjguMFwiXSIsCiAgICAgICAgICAgICJjb25maWdfZmlsZXBhdGgiOiAiL1dvcmtzcGFjZS8ubGFrdG9yeS9waXBlbGluZXMvcGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrL2NvbmZpZy5qc29uIgogICAgICAgIH0sCiAgICAgICAgImxpYnJhcmllcyI6IFsKICAgICAgICAgICAgewogICAgICAgICAgICAgICAgIm5vdGVib29rIjogewogICAgICAgICAgICAgICAgICAgICJwYXRoIjogIi9waXBlbGluZXMvZGx0X2Jyel90ZW1wbGF0ZS5weSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAidHlwZSI6ICJEQVRBQlJJQ0tTX0RMVCIKICAgIH0KfQ==",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
-                },
-                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
-                    "source": "./tmp-pl-stock-prices-ut-stack-requirements.txt",
-                    "depends_on": ["databricks_pipeline.dlt-custom-name"],
-                    "provider": "databricks",
-                },
+                }
             },
         },
         "data": {
@@ -906,6 +801,7 @@ def test_terraform_stack(monkeypatch, stack):
 
     # Prod
     data = stack.to_terraform(env_name="prod").model_dump()
+    print(data)
     assert data == {
         "terraform": {
             "required_providers": {
@@ -965,6 +861,13 @@ def test_terraform_stack(monkeypatch, stack):
                     ],
                     "depends_on": ["data.databricks_notebook.notebook-external"],
                 },
+                "permissions_test": {
+                    "pipeline_id": "pipeline_123",
+                    "access_control": [
+                        {"permission_level": "CAN_MANAGE", "user_name": "user1"},
+                        {"permission_level": "CAN_RUN", "user_name": "user2"},
+                    ],
+                },
                 "permissions-warehouse-external": {
                     "sql_endpoint_id": "${data.databricks_sql_warehouse.warehouse-external.id}",
                     "access_control": [
@@ -991,29 +894,6 @@ def test_terraform_stack(monkeypatch, stack):
                     ],
                     "provider": "databricks",
                 },
-                "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
-                    "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
-                    "access_control": [
-                        {"group_name": "users", "permission_level": "CAN_READ"}
-                    ],
-                    "depends_on": [
-                        "databricks_workspace_file.workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt"
-                    ],
-                    "provider": "databricks",
-                },
-                "permissions_test": {
-                    "access_control": [
-                        {
-                            "permission_level": "CAN_MANAGE",
-                            "user_name": "user1",
-                        },
-                        {
-                            "permission_level": "CAN_RUN",
-                            "user_name": "user2",
-                        },
-                    ],
-                    "pipeline_id": "pipeline_123",
-                },
             },
             "databricks_pipeline": {
                 "dlt-custom-name": {
@@ -1022,7 +902,8 @@ def test_terraform_stack(monkeypatch, stack):
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
-                        "workspace_laktory_root": "/.laktory/",
+                        "requirements": '["laktory==0.8.0"]',
+                        "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
                     },
                     "development": False,
                     "name": "pl-stock-prices-ut-stack",
@@ -1037,16 +918,10 @@ def test_terraform_stack(monkeypatch, stack):
             "databricks_workspace_file": {
                 "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
-                    "source": "./tmp-pl-stock-prices-ut-stack-config.json",
+                    "content_base64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT0wLjguMFwiXSIsCiAgICAgICAgICAgICJjb25maWdfZmlsZXBhdGgiOiAiL1dvcmtzcGFjZS8ubGFrdG9yeS9waXBlbGluZXMvcGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrL2NvbmZpZy5qc29uIgogICAgICAgIH0sCiAgICAgICAgImRldmVsb3BtZW50IjogZmFsc2UsCiAgICAgICAgImxpYnJhcmllcyI6IFsKICAgICAgICAgICAgewogICAgICAgICAgICAgICAgIm5vdGVib29rIjogewogICAgICAgICAgICAgICAgICAgICJwYXRoIjogIi9waXBlbGluZXMvZGx0X2Jyel90ZW1wbGF0ZS5weSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAidHlwZSI6ICJEQVRBQlJJQ0tTX0RMVCIKICAgIH0KfQ==",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
-                },
-                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-requirements-txt": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/requirements.txt",
-                    "source": "./tmp-pl-stock-prices-ut-stack-requirements.txt",
-                    "depends_on": ["databricks_pipeline.dlt-custom-name"],
-                    "provider": "databricks",
-                },
+                }
             },
         },
         "data": {

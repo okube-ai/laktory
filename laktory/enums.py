@@ -5,7 +5,7 @@ from typing import Any
 import narwhals as nw
 
 
-class DataFrameBackends(Enum):
+class DataFrameBackends(str, Enum):
     def _generate_next_value_(name, start, count, last_values):
         return name
 
@@ -54,6 +54,7 @@ class DataFrameBackends(Enum):
         """
         mapping = {
             nw.Implementation.PYSPARK: DataFrameBackends.PYSPARK,
+            nw.Implementation.PYSPARK_CONNECT: DataFrameBackends.PYSPARK,
             nw.Implementation.POLARS: DataFrameBackends.POLARS,
             # get_modin(): Implementation.MODIN,
             # get_cudf(): Implementation.CUDF,

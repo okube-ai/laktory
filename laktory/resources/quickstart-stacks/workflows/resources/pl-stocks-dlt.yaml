@@ -30,6 +30,7 @@ nodes:
     path: dbfs:/laktory/data/stock_prices/
     as_stream: true
     format: JSONL
+    infer_schema: true
   sinks:
   - table_name: brz_stock_prices
 
@@ -52,12 +53,12 @@ nodes:
   # use DataFrame backend API by setting `dataframe_api` to "NATIVE".
   transformer:
     nodes:
-    - func_name: withColumns
+    - func_name: select
       func_kwargs:
-        created_at: nw.col("data").field("created_at).cast(nw.dtypes.Timestamp())
+        created_at: nw.col("data").struct.field("created_at").cast(nw.dtypes.Datetime(time_zone="UTC"))
         symbol: nw.col("data").struct.field("symbol").cast(nw.dtypes.String())
-        open: nw.col("data").struct.field("open).cast(nw.dtypes.Float64())
-        close: nw.col("data").struct.field("close).cast(nw.dtypes.Float64())
+        open: nw.col("data").struct.field("open").cast(nw.dtypes.Float64())
+        close: nw.col("data").struct.field("close").cast(nw.dtypes.Float64())
     - func_name: drop_duplicates
       func_kwargs:
         subset: ["created_at", "symbol"]

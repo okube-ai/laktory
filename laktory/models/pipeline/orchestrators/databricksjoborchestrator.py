@@ -1,3 +1,4 @@
+import json
 from typing import Literal
 
 from pydantic import Field
@@ -5,9 +6,6 @@ from pydantic import Field
 from laktory._settings import settings
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
-)
-from laktory.models.pipeline.orchestrators.pipelinerequirementsworkspacefile import (
-    PipelineRequirementsWorkspaceFile,
 )
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.cluster import ClusterLibrary
@@ -53,10 +51,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         None,
         description="An optional maximum number of times to retry an unsuccessful run for each node.",
     )
-    requirements_file: PipelineRequirementsWorkspaceFile = Field(
-        PipelineRequirementsWorkspaceFile(),
-        description="Pipeline requirements (json) file deployed to the workspace and used by the job to install the required python dependencies.",
-    )
 
     # ----------------------------------------------------------------------- #
     # Update Job                                                              #
@@ -95,14 +89,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                 )
             ]
             self.environments = envs
-
-        self.parameters = [
-            JobParameter(name="full_refresh", default="false"),
-            JobParameter(name="pipeline_name", default=pl.name),
-            JobParameter(
-                name="install_dependencies", default=str(not cluster_found).lower()
-            ),
-        ]
 
         notebook_path = self.notebook_path
         if notebook_path is None:
@@ -157,11 +143,24 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         self.sort_tasks(self.tasks)
 
-        # Config file
+        # Update Configuration File
         self.config_file.update_from_parent()
 
-        # Requirements file
-        self.requirements_file.update_from_parent()
+        # Update job parameters
+        _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
+        _path = (
+            "/Workspace"
+            + self.inject_vars_into_dump({"path": self.config_file.path})["path"]
+        )
+        self.parameters = [
+            JobParameter(name="full_refresh", default="false"),
+            JobParameter(name="pipeline_name", default=pl.name),
+            JobParameter(
+                name="install_dependencies", default=str(not cluster_found).lower()
+            ),
+            JobParameter(name="requirements", default=json.dumps(_requirements)),
+            JobParameter(name="config_filepath", default=_path),
+        ]
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
@@ -169,7 +168,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
     @property
     def children_names(self):
-        return ["config_file", "requirements_file"]
+        return ["config_file"]
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -185,7 +184,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             "notebook_path",
             "config_file",
             "node_max_retries",
-            "requirements_file",
             "type",
         ]
 
@@ -194,14 +192,9 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         """
         - configuration workspace file
         - configuration workspace file permissions
-        - requirements workspace file
-        - requirements workspace file permissions
         """
 
         resources = super().additional_core_resources
         resources += [self.config_file]
-        resources[-1].write_source()
-        resources += [self.requirements_file]
-        resources[-1].write_source()
 
         return resources

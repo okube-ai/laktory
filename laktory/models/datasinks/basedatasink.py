@@ -1,4 +1,6 @@
 import hashlib
+import os
+import shutil
 import uuid
 from pathlib import Path
 from typing import Any
@@ -374,68 +376,74 @@ class BaseDataSink(BaseModel, PipelineChild):
     # Purge                                                                   #
     # ----------------------------------------------------------------------- #
 
-    # def exists(self, spark=None):
-    #     try:
-    #         df = self.read(spark=spark, as_stream=False)
-    #         df.limit(1).collect()
-    #         return True
-    #     except Exception:
-    #         return False
-    #
-    # def _purge_checkpoint(self, spark=None):
-    #     if self._checkpoint_location:
-    #         if os.path.exists(self._checkpoint_location):
-    #             logger.info(
-    #                 f"Deleting checkpoint at {self._checkpoint_location}",
-    #             )
-    #             shutil.rmtree(self._checkpoint_location)
-    #
-    #         if spark is None:
-    #             return
-    #
-    #         try:
-    #             from pyspark.dbutils import DBUtils
-    #         except ModuleNotFoundError:
-    #             return
-    #
-    #         dbutils = DBUtils(spark)
-    #
-    #         _path = self._checkpoint_location.as_posix()
-    #         try:
-    #             dbutils.fs.ls(
-    #                 _path
-    #             )  # TODO: Figure out why this does not work with databricks connect
-    #             logger.info(
-    #                 f"Deleting checkpoint at dbfs {_path}",
-    #             )
-    #             dbutils.fs.rm(_path, True)
-    #
-    #         except Exception as e:
-    #             if "java.io.FileNotFoundException" in str(e):
-    #                 pass
-    #             elif "databricks.sdk.errors.platform.ResourceDoesNotExist" in str(
-    #                 type(e)
-    #             ):
-    #                 pass
-    #             elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
-    #                 type(e)
-    #             ):
-    #                 # TODO: Figure out why this is happening. It seems that the databricks SDK
-    #                 #       modify the path before sending to REST API.
-    #                 logger.warn(f"dbutils could not delete checkpoint {_path}: {e}")
-    #             else:
-    #                 raise e
-    #
-    # def purge(self):
-    #     """
-    #     Delete sink data and checkpoints
-    #     """
-    #     # TODO: Now that sink switch to overwrite when sink does not exists or when
-    #     # a full refresh is requested, the purge method should not delete the data
-    #     # by default, but only the checkpoints. Also consider truncating the table
-    #     # instead of dropping it.
-    #     raise NotImplementedError()
-    #
+    def exists(self):
+        if self.df_backend == DataFrameBackends.PYSPARK:
+            from laktory import get_spark_session
+
+            try:
+                spark = get_spark_session()
+                df = self.read(spark=spark, as_stream=False)
+                df.limit(1).collect()
+                return True
+            except Exception:
+                return False
+
+        else:
+            raise NotImplementedError()
+
+    def _purge_checkpoint(self, spark=None):
+        if self._checkpoint_path:
+            if os.path.exists(self._checkpoint_path):
+                logger.info(
+                    f"Deleting checkpoint at {self._checkpoint_path}",
+                )
+                shutil.rmtree(self._checkpoint_path)
+
+            if self.df_backend != DataFrameBackends.PYSPARK:
+                return
+
+            try:
+                from pyspark.dbutils import DBUtils
+
+                from laktory import get_spark_session
+
+                spark = get_spark_session()
+            except ModuleNotFoundError:
+                return
+
+            dbutils = DBUtils(spark)
+
+            _path = self._checkpoint_path.as_posix()
+            try:
+                dbutils.fs.ls(
+                    _path
+                )  # TODO: Figure out why this does not work with databricks connect
+                logger.info(
+                    f"Deleting checkpoint at dbfs {_path}",
+                )
+                dbutils.fs.rm(_path, True)
+
+            except Exception as e:
+                if "java.io.FileNotFoundException" in str(e):
+                    pass
+                elif "databricks.sdk.errors.platform.ResourceDoesNotExist" in str(
+                    type(e)
+                ):
+                    pass
+                elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
+                    type(e)
+                ):
+                    # TODO: Figure out why this is happening. It seems that the databricks SDK
+                    #       modify the path before sending to REST API.
+                    logger.warn(f"dbutils could not delete checkpoint {_path}: {e}")
+                else:
+                    raise e
+
+    def purge(self):
+        """
+        Delete sink data and checkpoints
+        """
+        raise NotImplementedError()
 
     # ----------------------------------------------------------------------- #
     # Data Sources                                                            #

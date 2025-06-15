@@ -10,6 +10,7 @@ set_databricks_sdk_upstream()
 
 import laktory._parsers
 import laktory.api
+import laktory.enums
 import laktory.models
 import laktory.narwhals_ext
 import laktory.typing
@@ -52,3 +53,16 @@ def get_spark_session():
     if not hasattr(_laktory, "_spark"):
         register_spark_session()
     return _laktory._spark
+
+
+def is_dlt_execute() -> bool:
+    from pyspark.errors import AnalysisException
+
+    spark = get_spark_session()
+    try:
+        v = spark.conf.get("pipelines.dbrVersion", None)
+    except AnalysisException:
+        # Default value is not supported on serverless
+        v = None
+
+    return v is not None

@@ -103,6 +103,10 @@ class PipelineNode(BaseModel, PipelineChild):
         "DEFAULT",
         description="Specify which template (notebook) to use when Delta Live Tables is selected as the orchestrator.",
     )
+    comment: str = Field(
+        None,
+        description="Comment for the associated table or view",
+    )
     expectations: list[DataQualityExpectation] = Field(
         [],
         description="List of data expectations. Can trigger warnings, drop invalid records or fail a pipeline.",
@@ -236,12 +240,12 @@ class PipelineNode(BaseModel, PipelineChild):
         return False
 
     @property
-    def is_dlt_run(self) -> bool:
+    def is_dlt_execute(self) -> bool:
         if not self.is_orchestrator_dlt:
             return False
-        from laktory.dlt import is_debug
+        from laktory import is_dlt_execute
 
-        return not is_debug()
+        return is_dlt_execute()
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
@@ -440,16 +444,11 @@ class PipelineNode(BaseModel, PipelineChild):
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
 
-    def purge(self, spark=None):
-        # TODO: Now that sink switch to overwrite when sink does not exists or when
-        # a full refresh is requested, the purge method should not delete the data
-        # by default, but only the checkpoints. Also consider truncating the table
-        # instead of dropping it.
-
+    def purge(self):
         logger.info(f"Purging pipeline node {self.name}")
         if self.has_sinks:
             for s in self.sinks:
-                s.purge(spark=spark)
+                s.purge()
         if self._expectations_checkpoint_path:
             if os.path.exists(self._expectations_checkpoint_path):
                 logger.info(
@@ -457,11 +456,15 @@ class PipelineNode(BaseModel, PipelineChild):
                 )
                 shutil.rmtree(self._expectations_checkpoint_path)
 
-            if spark is None:
+            if self.df_backend != DataFrameBackends.PYSPARK:
                 return
 
             try:
                 from pyspark.dbutils import DBUtils
+
+                from laktory import get_spark_session
+
+                spark = get_spark_session()
             except ModuleNotFoundError:
                 return
 
@@ -592,14 +595,10 @@ class PipelineNode(BaseModel, PipelineChild):
         if not self.expectations:
             return
 
-        logger.info("Checking Data Quality Expectations")
-
         def _batch_check(df, node):
             for e in node.expectations:
-                is_dlt_managed = node.is_dlt_run and e.is_dlt_compatible
-
-                # Run Check
-                if not is_dlt_managed:
+                # Run Check: this only warn or raise exceptions.
+                if not e.is_dlt_managed:
                     e.run_check(
                         df,
                         raise_or_warn=True,
@@ -612,12 +611,29 @@ class PipelineNode(BaseModel, PipelineChild):
                 node,
             )
 
-        # Warn or Fail
-        if is_streaming and self.is_dlt_run:
-            # TODO: Enable when DLT supports foreachBatch (in case some expectations are not supported by DLT)
-            pass
+        logger.info("Checking Data Quality Expectations")
 
-        elif is_streaming:
+        if not is_streaming:
+            _batch_check(
+                self._stage_df,
+                self,
+            )
+
+        else:
+            skip = False
+
+            if self.is_dlt_execute:
+                names = []
+                for e in self.expectations:
+                    if not e.is_dlt_compatible:
+                        names += [e.name]
+                if names:
+                    raise TypeError(
+                        f"Expectations {names} are not natively supported by DLT and can't be computed on a streaming DataFrame with DLT executor."
+                    )
+
+                skip = True
+
             backend = DataFrameBackends.from_df(self._stage_df)
             if backend not in STREAMING_BACKENDS:
                 raise TypeError(
@@ -630,33 +646,26 @@ class PipelineNode(BaseModel, PipelineChild):
                 )
 
             # TODO: Refactor for backend other than spark
-            query = (
-                self._stage_df.to_native()
-                .writeStream.foreachBatch(
-                    lambda batch_df, batch_id: _stream_check(
-                        nw.from_native(batch_df), batch_id, self
+            if not skip:
+                query = (
+                    self._stage_df.to_native()
+                    .writeStream.foreachBatch(
+                        lambda batch_df, batch_id: _stream_check(
+                            nw.from_native(batch_df), batch_id, self
+                        )
                     )
+                    .trigger(availableNow=True)
+                    .options(
+                        checkpointLocation=self._expectations_checkpoint_path,
+                    )
+                    .start()
                 )
-                .trigger(availableNow=True)
-                .options(
-                    checkpointLocation=self._expectations_checkpoint_path,
-                )
-                .start()
-            )
-            query.awaitTermination()
-
-        else:
-            _batch_check(
-                self._stage_df,
-                self,
-            )
+                query.awaitTermination()
 
         # Build Filters
         for e in self.expectations:
-            is_dlt_managed = self.is_dlt_run and e.is_dlt_compatible
-
             # Update Keep Filter
-            if not is_dlt_managed:
+            if not e.is_dlt_managed:
                 _filter = e.keep_filter
                 if _filter is not None:
                     if kfilter is None:
