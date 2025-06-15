@@ -4,6 +4,7 @@ import laktory.cli._init
 import laktory.cli._preview
 import laktory.cli._quickstart
 import laktory.cli._run
+import laktory.cli._validate
 import laktory.cli._version
 from laktory.cli._deploy import deploy
 from laktory.cli._destroy import destroy

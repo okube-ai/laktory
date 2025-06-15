@@ -61,6 +61,8 @@ class CLIController(BaseModel):
                 )
                 self.env = env_names[0]
 
+        logger.info("Stack validation completed.")
+
     @property
     def backend(self) -> str:
         return self.stack.backend
