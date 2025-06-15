@@ -10,6 +10,7 @@ set_databricks_sdk_upstream()
 
 import laktory._parsers
 import laktory.api
+import laktory.enums
 import laktory.models
 import laktory.narwhals_ext
 import laktory.typing
