@@ -143,14 +143,11 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         self.sort_tasks(self.tasks)
 
-        # Update Configuration File
-        self.config_file.update_from_parent()
-
         # Update job parameters
         _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
         _path = (
             "/Workspace"
-            + self.inject_vars_into_dump({"path": self.config_file.path})["path"]
+            + self.inject_vars_into_dump({"path": self.config_file.path_})["path"]
         )
         self.parameters = [
             JobParameter(name="full_refresh", default="false"),

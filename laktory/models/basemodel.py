@@ -22,6 +22,7 @@ from pydantic import model_serializer
 from pydantic import model_validator
 from pydantic._internal._model_construction import ModelMetaclass as _ModelMetaclass
 
+from laktory._logger import get_logger
 from laktory._parsers import _resolve_value
 from laktory._parsers import _resolve_values
 from laktory._parsers import _snake_to_camel
@@ -29,6 +30,8 @@ from laktory.typing import VariableType
 from laktory.yaml.recursiveloader import RecursiveLoader
 
 Model = TypeVar("Model", bound="BaseModel")
+
+logger = get_logger(__name__)
 
 
 def annotation_contains_list_of_basemodel(annotation, mymodel_cls) -> bool:
@@ -120,12 +123,26 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     )
     _camel_serialization: bool = False
     _singular_serialization: bool = False
+    # _iinit: int = 0
+
+    # @model_validator(mode="after")
+    # def log(self) -> Any:
+    #     logger.info(f"Initialization completed for {type(self)} {self._iinit}")
+    #     self._iinit += 1
+    #     return self
 
     @model_serializer(mode="wrap")
     def custom_serializer(self, handler) -> dict[str, Any]:
+        # self._pre_serialization()
+        #
+        # # Propagate serialization options to newly assigned models
+        # self._configure_serializer(camel=self._camel_serialization, singular=self._singular_serialization)
+
         dump = handler(self)
         if dump is None:
             return dump
+
+        # dump = self._post_serialization(dump)
 
         camel_serialization = self._camel_serialization
         singular_serialization = self._singular_serialization
@@ -169,6 +186,15 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                     dump[k_singular] = dump.pop(k)
 
         return dump
+
+    #
+    # def _pre_serialization(self):
+    #     """"""
+    #     pass
+    #
+    # def _post_serialization(self, dump):
+    #     """"""
+    #     return dump
 
     @model_validator(mode="after")
     def variables_self_reference(self) -> Any:
