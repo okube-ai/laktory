@@ -58,14 +58,11 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
                     s.catalog_name = s.catalog_name or self.catalog
                     s.schema_name = s.schema_name or self.target
 
-        # Update Configuration File
-        self.config_file.update_from_parent()
-
         # Update pipeline config
         _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
         _path = (
             "/Workspace"
-            + self.inject_vars_into_dump({"path": self.config_file.path})["path"]
+            + self.inject_vars_into_dump({"path": self.config_file.path_})["path"]
         )
         self.configuration["pipeline_name"] = pl.name  # only for reference
         self.configuration["requirements"] = json.dumps(_requirements)

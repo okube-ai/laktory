@@ -35,38 +35,48 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
     @property
     def content_base64_(self):
-        if self.content_base64:
-            return self.content_base64
-
         pl = self.parent_pipeline
         if not pl:
             return None
 
+        # Orchestrator (which includes WorkspaceFile) needs to be excluded to avoid
+        # infinite re-cursive loop
         _config = self.inject_vars_into_dump(
             {"config": pl.model_dump(exclude_unset=True, exclude="orchestrator")}
         )["config"]
+
+        orchestrator = pl.orchestrator.model_dump(
+            exclude_unset=True, exclude="config_file"
+        )
+        _config["orchestrator"] = orchestrator
+
         _config_str = json.dumps(_config, indent=4)
         return base64.b64encode(_config_str.encode("utf-8")).decode("utf-8")
 
     def update_from_parent(self):
+        """
+        Path is required to be set here (after instantiation). Other resource key is not
+        defined and resources are not created properly.
+        """
         pl = self.parent_pipeline
         if not pl:
             return
 
         # Set path
-        if self.path is None:
-            self.path = (
-                f"{settings.workspace_laktory_root}pipelines/{pl.name}/config.json"
-            )
+        self.path = self.path_
 
-        _config = self.inject_vars_into_dump(
-            {"config": pl.model_dump(exclude_unset=True)}
-        )["config"]
+        # Mock content
+        self.content_base64 = base64.b64encode("<place_holder>".encode("utf-8")).decode(
+            "utf-8"
+        )
 
-        _config_str = json.dumps(_config, indent=4)
-        b64_str = base64.b64encode(_config_str.encode("utf-8")).decode("utf-8")
-
-        self.content_base64 = b64_str
+    def _post_serialization(self, dump):
+        """
+        Content is required to be set here (at serialization). Otherwise, it leas to
+        infinite lops.
+        """
+        dump["content_base64"] = self.content_base64_
+        return dump
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
