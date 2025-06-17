@@ -27,7 +27,7 @@
 * Pipeline Databricks Job and DLT orchestrators no longer deploy a requirements.txt file (passed as parameters)
 * Pipeline Databricks Job and DLT orchestrators no longer generate a temporary local config file
 ### Breaking changes
-* Dropped support python 3.9
+* Dropped support for python 3.9
 * Data sources:
   * Output a Narwhals DataFrame (as opposed to Spark/Polars DataFrame)
   * No longer infer column types by default when reading streams

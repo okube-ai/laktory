@@ -17,14 +17,14 @@ def main(branch_name: str, stack_root: str):
             with open(filepath, "r") as fp:
                 data = fp.read()
 
-            pattern = r"pip install ['\"]?laktory([=<>!~]*[^\s'\"]*)?['\"]?"
+            pattern = r"['\"]?laktory==([=<>!~]*[^\s'\"]*)?['\"]?"
 
             matches = re.findall(pattern, data)
             if matches:
                 print(f"Updating {filepath}")
                 data = re.sub(
                     pattern,
-                    f"pip install git+https://github.com/okube-ai/laktory.git@{branch_name}",
+                    f"git+https://github.com/okube-ai/laktory.git@{branch_name}",
                     data,
                 )
 
