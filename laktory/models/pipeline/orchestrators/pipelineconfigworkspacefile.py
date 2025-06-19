@@ -39,16 +39,22 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         if not pl:
             return None
 
+        # Overwrite serialization options
+        ss0 = self._singular_serialization
+        cs0 = self._camel_serialization
+        pl._configure_serializer(singular=False, camel=False)
+
         # Orchestrator (which includes WorkspaceFile) needs to be excluded to avoid
         # infinite re-cursive loop
         _config = self.inject_vars_into_dump(
             {"config": pl.model_dump(exclude_unset=True, exclude="orchestrator")}
         )["config"]
-
-        orchestrator = pl.orchestrator.model_dump(
+        _config["orchestrator"] = pl.orchestrator.model_dump(
             exclude_unset=True, exclude="config_file"
         )
-        _config["orchestrator"] = orchestrator
+
+        # Reset serialization options
+        pl._configure_serializer(singular=ss0, camel=cs0)
 
         _config_str = json.dumps(_config, indent=4)
         return base64.b64encode(_config_str.encode("utf-8")).decode("utf-8")

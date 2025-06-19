@@ -2,6 +2,7 @@ from typing import Any
 from typing import Literal
 from typing import Union
 
+from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import model_validator
 
@@ -11,6 +12,102 @@ from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
+
+
+class PipelineTriggerCron(BaseModel):
+    quartz_cron_schedule: str = Field(None, description="")
+    timezone_id: str = Field(None, description="")
+
+
+class PipelineTrigger(BaseModel):
+    cron: PipelineTriggerCron = Field(None, description="")
+    # manual:
+
+
+class PipelineRunAs(BaseModel):
+    service_principal_name: str = Field(None, description="")
+    user_name: str = Field(None, description="")
+
+
+class PipelineRestartWindow(BaseModel):
+    """Pipeline Restart Window specifications"""
+
+    start_hour: int = Field(..., description="")
+    days_of_weeks: list[str] = Field(None, description="")
+    time_zone_id: str = Field(None, description="")
+
+
+class PipelineLatestUpdate(BaseModel):
+    """Pipeline Latest Update specifications"""
+
+    creation_time: str = Field(None, description="")
+    state: str = Field(None, description="")
+    update_id: str = Field(None, description="")
+
+
+class PipelineGatewayDefinition(BaseModel):
+    """
+    Pipeline Gateway Definition specifications
+    """
+
+    connection_id: str = Field(
+        None,
+        description="Immutable. The Unity Catalog connection this gateway pipeline uses to communicate with the source.",
+    )
+    connection_name: str = Field(..., description="")
+    gateway_storage_catalog: str = Field(
+        ...,
+        description="Required, Immutable. The name of the catalog for the gateway pipeline's storage location.",
+    )
+    gateway_storage_name: str = Field(
+        None,
+        description="Required. The Unity Catalog-compatible naming for the gateway storage location. This is the destination to use for the data that is extracted by the gateway. Delta Live Tables system will automatically create the storage location under the catalog and schema.",
+    )
+    gateway_storage_schema: str = Field(
+        ...,
+        description="Required, Immutable. The name of the schema for the gateway pipelines's storage location.",
+    )
+
+
+class PipelineDeployment(BaseModel):
+    """
+    Pipeline Deployment specifications
+    """
+
+    kind: str = Field(
+        ..., description="The deployment method that manages the pipeline."
+    )
+    metadata_file_path: str = Field(
+        ...,
+        description="The path to the file containing metadata about the deployment.",
+    )
+
+
+class PipelineEventLog(BaseModel):
+    """
+    Pipeline Event Log specifications
+    """
+
+    name: str = Field(
+        ..., description="The table name the event log is published to in UC."
+    )
+    catalog: str = Field(
+        ..., description="The UC catalog the event log is published under."
+    )
+    schema_: str = Field(
+        ...,
+        description="The UC schema the event log is published under.",
+        validation_alias=AliasChoices("schema", "schema_"),
+    )
+
+
+class PipelineFilters(BaseModel):
+    """
+    Pipeline Filters specifications
+    """
+
+    excludes: str = Field(..., description="Paths to exclude.")
+    includes: str = Field(..., description="Paths to include.")
 
 
 class PipelineLibraryFile(BaseModel):
@@ -136,49 +233,6 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Delta Live Tables (DLT) Pipeline
 
-    Parameters
-    ----------
-    access_controls:
-        Pipeline access controls
-    allow_duplicate_names:
-        If `False`, deployment will fail if name conflicts with that of another pipeline.
-    catalog:
-        Name of the unity catalog storing the pipeline tables
-    channel:
-        Name of the release channel for Spark version used by DLT pipeline.
-    clusters:
-        Clusters to run the pipeline. If none is specified, pipelines will automatically select a default cluster
-        configuration for the pipeline.
-    configuration:
-         List of values to apply to the entire pipeline. Elements must be formatted as key:value pairs
-    continuous:
-        If `True`, the pipeline is run continuously.
-    development:
-        If `True` the pipeline is run in development mode
-    edition:
-        Name of the product edition
-    libraries:
-        Specifies pipeline code (notebooks) and required artifacts.
-    name:
-        Pipeline name
-    name_prefix:
-        Prefix added to the DLT pipeline name
-    name_suffix:
-        Suffix added to the DLT pipeline name
-    notifications:
-        Notifications specifications
-    photon:
-        If `True`, Photon engine enabled.
-    serverless:
-        If `True`, serverless is enabled
-    storage:
-        A location on DBFS or cloud storage where output data and metadata required for pipeline execution are stored.
-        By default, tables are stored in a subdirectory of this location. Change of this parameter forces recreation
-        of the pipeline. (Conflicts with `catalog`).
-    target:
-        The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data.
-        Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
-
     Examples
     --------
     Assuming the configuration yaml file
@@ -228,25 +282,99 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     * [Pulumi Databricks Pipeline](https://www.pulumi.com/registry/packages/databricks/api-docs/pipeline/)
     """
 
-    access_controls: list[AccessControl] = []
-    allow_duplicate_names: bool = None
-    catalog: Union[str, None] = None
-    channel: Literal["CURRENT", "PREVIEW"] = "PREVIEW"
-    clusters: list[PipelineCluster] = []
-    configuration: dict[str, str] = {}
-    continuous: bool = None
-    development: bool = None
-    edition: Literal["CORE", "PRO", "ADVANCED"] = None
-    # filters
-    libraries: list[PipelineLibrary] = None
-    name: str
-    name_prefix: str = None
-    name_suffix: str = None
-    notifications: list[PipelineNotifications] = []
-    photon: bool = None
-    serverless: bool = None
-    storage: str = None
-    target: str = None
+    access_controls: list[AccessControl] = Field(
+        [], description="Pipeline access controls"
+    )
+    allow_duplicate_names: bool = Field(
+        None,
+        description="If `False`, deployment will fail if name conflicts with that of another pipeline.",
+    )
+    budget_policy_id: str = Field(
+        None,
+        description="optional string specifying ID of the budget policy for this DLT pipeline.",
+    )
+    catalog: Union[str, None] = Field(
+        None, description="Name of the unity catalog storing the pipeline tables"
+    )
+    cause: str = Field(None, description="")
+    channel: Literal["CURRENT", "PREVIEW"] = Field(
+        "PREVIEW",
+        description="Name of the release channel for Spark version used by DLT pipeline.",
+    )
+    cluster_id: str = Field(None, description="")
+    clusters: list[PipelineCluster] = Field(
+        [],
+        description="Clusters to run the pipeline. If none is specified, pipelines will automatically select a default cluster configuration for the pipeline.",
+    )
+    creator_user_name: str = Field(None, description="")
+    configuration: dict[str, str] = Field(
+        {},
+        description="List of values to apply to the entire pipeline. Elements must be formatted as key:value pairs",
+    )
+    continuous: bool = Field(
+        None, description="If `True`, the pipeline is run continuously."
+    )
+    deployment: PipelineDeployment = Field(
+        None, description="Deployment type of this pipeline."
+    )
+    development: bool = Field(
+        None, description="If `True` the pipeline is run in development mode"
+    )
+    edition: Literal["CORE", "PRO", "ADVANCED"] = Field(
+        None, description="Name of the product edition"
+    )
+    event_log: PipelineEventLog = Field(
+        None,
+        description="An optional block specifying a table where DLT Event Log will be stored.",
+    )
+    expected_last_modified: int = Field(None, description="")
+    filters: PipelineFilters = Field(
+        None,
+        description="Filters on which Pipeline packages to include in the deployed graph.",
+    )
+    gateway_definition: PipelineGatewayDefinition = Field(
+        None, description="The definition of a gateway pipeline to support CDC."
+    )
+    health: str = Field(None, description="")
+    # ingestion_definition: = Field(None, description="")  #TODO
+    last_modified: int = Field(None, description="")
+    latest_updates: list[PipelineLatestUpdate] = Field(None, description="")
+    libraries: list[PipelineLibrary] = Field(
+        None, description="Specifies pipeline code (notebooks) and required artifacts."
+    )
+    name: str = Field(..., description="Pipeline name")
+    name_prefix: str = Field(None, description="Prefix added to the DLT pipeline name")
+    name_suffix: str = Field(None, description="Suffix added to the DLT pipeline name")
+    notifications: list[PipelineNotifications] = Field(
+        [], description="Notifications specifications"
+    )
+    photon: bool = Field(None, description="If `True`, Photon engine enabled.")
+    restart_window: PipelineRestartWindow = Field(None, description="")
+    root_path: str = Field(
+        None,
+        description="An optional string specifying the root path for this pipeline. This is used as the root directory when editing the pipeline in the Databricks user interface and it is added to sys.path when executing Python sources during pipeline execution.",
+    )
+    run_as: PipelineRunAs = Field(None, description="")
+    run_as_user_name: str = Field(None, description="")
+    schema_: str = Field(
+        None,
+        description="The default schema (database) where tables are read from or published to. The presence of this attribute implies that the pipeline is in direct publishing mode.",
+        validation_alias=AliasChoices("schema", "schema_"),
+    )
+    serverless: bool = Field(None, description="If `True`, serverless is enabled")
+    state: str = Field(None, description="")
+    storage: str = Field(
+        None,
+        description="A location on DBFS or cloud storage where output data and metadata required for pipeline execution are stored. By default, tables are stored in a subdirectory of this location. Change of this parameter forces recreation of the pipeline. (Conflicts with `catalog`).",
+    )
+    target: str = Field(
+        None,
+        description=" The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data. Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.",
+    )
+    trigger: PipelineTrigger = Field(None, description="")
+    url: str = Field(
+        None, description="URL of the DLT pipeline on the given workspace."
+    )
 
     @model_validator(mode="after")
     def update_name(self) -> Any:
