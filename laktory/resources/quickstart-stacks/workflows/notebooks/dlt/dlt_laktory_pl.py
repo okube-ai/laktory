@@ -37,7 +37,7 @@ def define_table(node, sink):
         dlt_fail_expectations = node.dlt_fail_expectations
 
     table_or_view = dlt.table
-    if sink is None:
+    if isinstance(sink, lk.models.DLTViewDataSink):
         table_or_view = dlt.view
 
     @table_or_view(
@@ -58,8 +58,6 @@ def define_table(node, sink):
         # Return
         return df.to_native()
 
-    return get_df
-
 
 # --------------------------------------------------------------------------- #
 # CDC tables                                                                  #
@@ -68,15 +66,11 @@ def define_table(node, sink):
 
 def define_cdc_table(node, sink):
     dlt.create_streaming_table(
-        name=sink.table_name,
+        name=sink.dlt_name,
         comment=node.comment,
     )
 
-    df = dlt.apply_changes(
-        source=node.source.table_name, **sink.dlt_apply_changes_kwargs
-    )
-
-    return df.to_native()
+    dlt.apply_changes(source=node.source.table_name, **sink.dlt_apply_changes_kwargs)
 
 
 # --------------------------------------------------------------------------- #
@@ -88,13 +82,8 @@ for node in pl.nodes:
     if node.dlt_template != "DEFAULT":
         continue
 
-    if node.sinks is None or node.sinks == []:
-        define_table(node, None)
-
-    else:
-        for sink in node.sinks:
-            if sink.is_cdc:
-                define_cdc_table(node, sink)
-
-            else:
-                define_table(node, sink)
+    for sink in node.sinks:
+        if sink.is_cdc:
+            define_cdc_table(node, sink)
+        else:
+            define_table(node, sink)

@@ -56,7 +56,7 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
             for s in n.all_sinks:
                 if isinstance(s, TableDataSink):
                     s.catalog_name = s.catalog_name or self.catalog
-                    s.schema_name = s.schema_name or self.target
+                    s.schema_name = s.schema_name or self.schema_ or self.target
 
         # Update pipeline config
         _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]

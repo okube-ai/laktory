@@ -249,6 +249,31 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
         return data
 
+    @model_validator(mode="after")
+    def validate_sinks(self) -> Any:
+        from laktory.models.datasinks.dltviewdatasink import DLTViewDataSink
+        from laktory.models.datasinks.hivemetastoredatasink import HiveMetastoreDataSink
+        from laktory.models.datasinks.unitycatalogdatasink import UnityCatalogDataSink
+
+        o = self.orchestrator
+
+        for n in self.nodes:
+            if isinstance(o, (DatabricksDLTOrchestrator, DatabricksJobOrchestrator)):
+                if not n.has_sinks:
+                    raise ValueError(f"{o} does not support a node without a sink.")
+
+            if isinstance(o, DatabricksDLTOrchestrator):
+                for i, s in enumerate(n.sinks):
+                    if not isinstance(
+                        s,
+                        (DLTViewDataSink, HiveMetastoreDataSink, UnityCatalogDataSink),
+                    ):
+                        raise ValueError(
+                            f"Node '{n.name}' sinks[{i}] ({type(s)}) is not supported with DLT orchestrator"
+                        )
+
+        return self
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #

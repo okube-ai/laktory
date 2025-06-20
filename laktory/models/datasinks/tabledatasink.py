@@ -111,11 +111,11 @@ class TableDataSink(BaseDataSink):
 
     @property
     def dlt_name(self) -> str:
-        name = self.table_name
-        if self.parent_pipeline.orchestrator.target != self.schema_name:
-            name = self.full_name
+        # name = self.table_name
+        # if self.parent_pipeline.orchestrator.target != self.schema_name:
+        #     name = self.full_name
 
-        return name
+        return self.full_name
 
     @property
     def upstream_node_names(self) -> list[str]:
