@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
-class JobRunner(DispatcherRunner):
+class DatabricksJobRunner(DispatcherRunner):
     """
     Job runner.
     """

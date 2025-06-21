@@ -1,7 +1,7 @@
 name: pl-dlt
 
 orchestrator:
-  type: DATABRICKS_DLT
+  type: DATABRICKS_PIPELINE
   catalog: dev
   schema: sandbox
   access_controls:

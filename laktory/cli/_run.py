@@ -9,8 +9,12 @@ from laktory.dispatcher.dispatcher import Dispatcher
 
 @app.command()
 def run(
-    job: Annotated[str, typer.Option("--job", "-j", help="Job name")] = None,
-    dlt: Annotated[str, typer.Option("--dlt", "-dlt", help="Job name")] = None,
+    databricks_job: Annotated[
+        str, typer.Option("--dbks-job", "-dbksj", help="Job name")
+    ] = None,
+    databricks_pipeline: Annotated[
+        str, typer.Option("--dbks-pipeline", "-dbksp", help="Job name")
+    ] = None,
     timeout: Annotated[
         float,
         typer.Option(
@@ -46,9 +50,9 @@ def run(
 
     Parameters
     ----------
-    job:
+    databricks_job:
         Name of the job to run (mutually exclusive with dlt)
-    dlt:
+    databricks_pipeline:
         Name of the DLT pipeline to run (mutually exclusive with job)
     timeout:
         Maximum allowed time (in seconds) for run.
@@ -71,9 +75,9 @@ def run(
     """
 
     # Set Resource Name
-    if job and dlt:
+    if databricks_job and databricks_pipeline:
         raise ValueError("Only one of `job` or `dlt` should be set.")
-    if not (job or dlt):
+    if not (databricks_job or databricks_pipeline):
         raise ValueError("One of `job` or `dlt` should be set.")
 
     # Set Dispatcher
@@ -84,17 +88,17 @@ def run(
     dispatcher = Dispatcher(stack=controller.stack)
     dispatcher.get_resource_ids()
 
-    if job:
-        dispatcher.run_job(
-            job_name=job,
+    if databricks_job:
+        dispatcher.run_databricks_job(
+            job_name=databricks_job,
             timeout=timeout,
             raise_exception=raise_exception,
             current_run_action=current_run_action,
         )
 
-    if dlt:
-        dispatcher.run_dlt(
-            dlt_name=dlt,
+    if databricks_pipeline:
+        dispatcher.run_databricks_dlt(
+            dlt_name=databricks_pipeline,
             timeout=timeout,
             raise_exception=raise_exception,
             current_run_action=current_run_action,

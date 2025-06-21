@@ -6,8 +6,10 @@ from .datasinks import *
 from .datasources import *
 from .dtypes import *
 from .grants import *
-from .pipeline.orchestrators.databricksdltorchestrator import DatabricksDLTOrchestrator
 from .pipeline.orchestrators.databricksjoborchestrator import DatabricksJobOrchestrator
+from .pipeline.orchestrators.databrickspipelineorchestrator import (
+    DatabricksPipelineOrchestrator,
+)
 from .pipeline.pipeline import Pipeline
 from .pipeline.pipelinenode import PipelineNode
 from .readerwritermethod import ReaderWriterMethod

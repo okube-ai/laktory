@@ -8,7 +8,7 @@ name: pl-stocks-dlt
 
 # Configure Orchestrator
 orchestrator:
-  type: DATABRICKS_DLT
+  type: DATABRICKS_PIPELINE
   development: ${vars.is_dev}
   target: default
   clusters:

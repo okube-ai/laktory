@@ -17,7 +17,6 @@ from laktory.models.resources.databricks.clusterpolicy import ClusterPolicy
 from laktory.models.resources.databricks.dashboard import Dashboard
 from laktory.models.resources.databricks.dbfsfile import DbfsFile
 from laktory.models.resources.databricks.directory import Directory
-from laktory.models.resources.databricks.dltpipeline import DLTPipeline
 from laktory.models.resources.databricks.externallocation import ExternalLocation
 from laktory.models.resources.databricks.grant import Grant
 from laktory.models.resources.databricks.grants import Grants
@@ -34,6 +33,7 @@ from laktory.models.resources.databricks.mwsnetworkconnectivityconfig import (
 )
 from laktory.models.resources.databricks.notebook import Notebook
 from laktory.models.resources.databricks.permissions import Permissions
+from laktory.models.resources.databricks.pipeline import Pipeline as DatabricksPipeline
 from laktory.models.resources.databricks.query import Query
 from laktory.models.resources.databricks.repo import Repo
 from laktory.models.resources.databricks.schema import Schema
@@ -145,8 +145,8 @@ class StackResources(BaseModel):
         Databricks Dashboards
     databricks_directories:
         Databricks Directories
-    databricks_dltpipelines:
-        Databricks DLT Pipelines
+    databricks_pipelines:
+        Databricks Lakeflow Declartive Pipelines
     databricks_externallocations:
         Databricks External Locations
     databricks_groups:
@@ -214,7 +214,7 @@ class StackResources(BaseModel):
     databricks_dashboards: dict[str, Dashboard] = {}
     databricks_dbfsfiles: dict[str, DbfsFile] = {}
     databricks_directories: dict[str, Directory] = {}
-    databricks_dltpipelines: dict[str, DLTPipeline] = {}
+    databricks_pipelines: dict[str, DatabricksPipeline] = {}
     databricks_externallocations: dict[str, ExternalLocation] = {}
     databricks_grant: dict[str, Grant] = {}
     databricks_grants: dict[str, Grants] = {}
@@ -390,7 +390,7 @@ class Stack(BaseModel):
             },
         },
         resources={
-            "databricks_dltpipelines": {
+            "databricks_pipelines": {
                 "pl-stock-prices": {
                     "name": "pl-stock-prices",
                     "development": "${vars.is_dev}",

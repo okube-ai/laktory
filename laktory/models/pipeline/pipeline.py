@@ -11,11 +11,11 @@ from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
-from laktory.models.pipeline.orchestrators.databricksdltorchestrator import (
-    DatabricksDLTOrchestrator,
-)
 from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
     DatabricksJobOrchestrator,
+)
+from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
+    DatabricksPipelineOrchestrator,
 )
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.pipeline.pipelinenode import PipelineNode
@@ -203,7 +203,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         [],
         description="List of pipeline nodes. Each node defines a data source, a series of transformations and optionally a sink.",
     )
-    orchestrator: DatabricksJobOrchestrator | DatabricksDLTOrchestrator = Field(
+    orchestrator: DatabricksJobOrchestrator | DatabricksPipelineOrchestrator = Field(
         None,
         description="""
         Orchestrator used for scheduling and executing the pipeline. The
@@ -243,7 +243,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         if o and isinstance(o, dict):
             # orchestrator as a dict
             o["name"] = o.get("name", None) or data.get("name", None)
-        elif isinstance(o, (DatabricksDLTOrchestrator, DatabricksJobOrchestrator)):
+        elif isinstance(o, (DatabricksPipelineOrchestrator, DatabricksJobOrchestrator)):
             # orchestrator as a model
             o.name = o.name or o.get("name", None)
 
@@ -258,13 +258,15 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         o = self.orchestrator
 
         for n in self.nodes:
-            if isinstance(o, (DatabricksDLTOrchestrator, DatabricksJobOrchestrator)):
+            if isinstance(
+                o, (DatabricksPipelineOrchestrator, DatabricksJobOrchestrator)
+            ):
                 if not n.has_sinks:
                     raise ValueError(
                         f"Node '{n.name}' must have a sink with orchestrator of type {type(o)}."
                     )
 
-            if isinstance(o, DatabricksDLTOrchestrator):
+            if isinstance(o, DatabricksPipelineOrchestrator):
                 for i, s in enumerate(n.sinks):
                     if not isinstance(
                         s,
@@ -330,7 +332,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     @property
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline orchestrator is DLT"""
-        return isinstance(self.orchestrator, DatabricksDLTOrchestrator)
+        return isinstance(self.orchestrator, DatabricksPipelineOrchestrator)
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #

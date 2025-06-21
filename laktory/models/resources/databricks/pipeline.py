@@ -229,7 +229,7 @@ class PipelineCluster(Cluster):
         return self
 
 
-class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
+class Pipeline(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Delta Live Tables (DLT) Pipeline
 
@@ -270,7 +270,7 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
         permission_level: CAN_RUN
 
     '''
-    pipeline = models.resources.databricks.DLTPipeline.model_validate_yaml(
+    pipeline = models.resources.databricks.Pipeline.model_validate_yaml(
         io.StringIO(pipeline_yaml)
     )
     ```

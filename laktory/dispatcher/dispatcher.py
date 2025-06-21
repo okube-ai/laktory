@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING
 
 from laktory._useragent import DATABRICKS_USER_AGENT
 from laktory._useragent import VERSION
-from laktory.dispatcher.dltpipelinerunner import DLTPipelineRunner
-from laktory.dispatcher.jobrunner import JobRunner
+from laktory.dispatcher.databricksjobrunner import DatabricksJobRunner
+from laktory.dispatcher.databrickspipelinerunner import DatabricksPipelineRunner
 from laktory.models.stacks.stack import Stack
 
 if TYPE_CHECKING:
@@ -57,36 +57,40 @@ class Dispatcher:
     def init_resources(self):
         """Set resource for each of the resources defined in the stack"""
 
-        from laktory.models.pipeline.orchestrators.databricksdltorchestrator import (
-            DatabricksDLTOrchestrator,
-        )
         from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
             DatabricksJobOrchestrator,
+        )
+        from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
+            DatabricksPipelineOrchestrator,
         )
 
         for k, pl in self.stack.resources.pipelines.items():
             if not pl.options.is_enabled:
                 continue
 
-            if isinstance(pl.orchestrator, DatabricksDLTOrchestrator):
-                self.resources[pl.orchestrator.name] = DLTPipelineRunner(
+            if isinstance(pl.orchestrator, DatabricksPipelineOrchestrator):
+                self.resources[pl.orchestrator.name] = DatabricksPipelineRunner(
                     dispatcher=self, name=pl.orchestrator.name
                 )
 
             if isinstance(pl.orchestrator, DatabricksJobOrchestrator):
-                self.resources[pl.orchestrator.name] = JobRunner(
+                self.resources[pl.orchestrator.name] = DatabricksJobRunner(
                     dispatcher=self, name=pl.orchestrator.name
                 )
 
-        for k, pl in self.stack.resources.databricks_dltpipelines.items():
+        for k, pl in self.stack.resources.databricks_pipelines.items():
             if not pl.options.is_enabled:
                 continue
-            self.resources[pl.name] = DLTPipelineRunner(dispatcher=self, name=pl.name)
+            self.resources[pl.name] = DatabricksPipelineRunner(
+                dispatcher=self, name=pl.name
+            )
 
         for k, job in self.stack.resources.databricks_jobs.items():
             if not job.options.is_enabled:
                 continue
-            self.resources[job.name] = JobRunner(dispatcher=self, name=job.name)
+            self.resources[job.name] = DatabricksJobRunner(
+                dispatcher=self, name=job.name
+            )
 
     # ----------------------------------------------------------------------- #
     # Environment                                                             #
@@ -187,7 +191,7 @@ class Dispatcher:
     # Run                                                                     #
     # ----------------------------------------------------------------------- #
 
-    def run_job(self, job_name: str, *args, **kwargs):
+    def run_databricks_job(self, job_name: str, *args, **kwargs):
         """
         Run job with name `job_name`
 
@@ -203,9 +207,9 @@ class Dispatcher:
         job = self.resources[job_name]
         job.run(*args, **kwargs)
 
-    def run_dlt(self, dlt_name: str, *args, **kwargs):
+    def run_databricks_dlt(self, dlt_name: str, *args, **kwargs):
         """
-        Run DLT pipeline with name `dlt_name`
+        Run Databricks pipeline with name `dlt_name`
 
         Parameters
         ----------

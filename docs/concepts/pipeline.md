@@ -248,7 +248,7 @@ configured directly within the pipeline.
 - name: stock_prices
   nodes: ...
   orchestrator: 
-    type: DATABRICKS_DLT
+    type: DATABRICKS_PIPELINE
     catalog: dev
     target: finance
     
@@ -321,7 +321,7 @@ Each pipeline node runs inside a dlt.table() or dlt.view() function. In the cont
 trigger a sink write, as this operation is managed by DLT. When a source is a pipeline node, `dlt.read()` and
 `dlt.read_stream()` functions are called to ensure compatibility with the DLT framework.
 
-To use the `DATABRICKS_DLT` orchestrator, you must also add the supporting
+To use the `DATABRICKS_PIPELINE` orchestrator, you must also add the supporting
 [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py) 
 to your stack. 
 
@@ -364,7 +364,7 @@ for node in pl.nodes:
         display(df)
 ```
 
-Selecting the `DATABRICKS_DLT` orchestrator will deploy a pipeline json 
+Selecting the `DATABRICKS_PIPELINE` orchestrator will deploy a pipeline json 
 configuration file which can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{pipeline_name}/`.
 
 #### Apache Airflow

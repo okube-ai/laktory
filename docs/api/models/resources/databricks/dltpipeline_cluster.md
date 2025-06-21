@@ -1,3 +1,3 @@
-::: laktory.models.resources.databricks.dltpipeline.PipelineCluster
+::: laktory.models.resources.databricks.pipeline.PipelineCluster
 
 
