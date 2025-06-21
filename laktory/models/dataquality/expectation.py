@@ -8,6 +8,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory.enums import DataFrameBackends
 from laktory.exceptions import DataQualityCheckFailedError
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframecolumnexpr import DataFrameColumnExpr
@@ -294,7 +295,14 @@ class DataQualityExpectation(BaseModel, PipelineChild):
 
     def _check_df(self, df):
         if isinstance(df, nw.LazyFrame):
-            df = df.collect()
+            if (
+                DataFrameBackends.from_nw_implementation(df.implementation)
+                == DataFrameBackends.PYSPARK
+            ):
+                # Using the pandas backend to avoid pyarrow version compatibility issues
+                df = df.collect(backend="pandas")
+            else:
+                df = df.collect()
         rows_count = df.shape[0]
 
         if rows_count == 0:
