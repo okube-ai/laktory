@@ -127,6 +127,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         if dump is None:
             return dump
 
+        dump = self._post_serialization(dump)
+
         camel_serialization = self._camel_serialization
         singular_serialization = self._singular_serialization
 
@@ -168,6 +170,15 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                 if k_singular != k:
                     dump[k_singular] = dump.pop(k)
 
+        return dump
+
+    #
+    # def _pre_serialization(self):
+    #     """"""
+    #     pass
+
+    def _post_serialization(self, dump):
+        """"""
         return dump
 
     @model_validator(mode="after")

@@ -21,6 +21,9 @@ orchestrator:
   - notebook:
       path: /.laktory/dlt/dlt_laktory_pl.py
 
+dependencies:
+  - laktory==<laktory_version>
+
 # Define nodes (each node is a table or a view)
 nodes:
 

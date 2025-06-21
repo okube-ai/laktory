@@ -1,0 +1,66 @@
+name: pl-dlt
+
+orchestrator:
+  type: DATABRICKS_DLT
+  catalog: dev
+  schema: sandbox
+  access_controls:
+    - group_name: account users
+      permission_level: CAN_VIEW
+  options:
+    provider: "${resources.databricks2}"
+
+options:
+  provider: "${resources.databricks1}"
+
+nodes:
+- name: gld_ab
+  transformer:
+    nodes:
+      - expr: SELECT * from {nodes.gld_a} UNION SELECT * from {nodes.gld_b}
+  sinks:
+  - catalog_name: prd
+    schema_name: sandbox2
+    table_name: gld_ab
+
+- name: brz
+  source:
+    format: JSON
+    path: {tmp_path}/brz_source/
+  sinks:
+  - table_name: brz
+
+- name: slv
+  source:
+    node_name: brz
+  transformer:
+    nodes:
+    - func_name: with_columns
+      func_kwargs:
+        y1: x1
+    - expr: SELECT id, x1, y1 from {df}
+  sinks:
+  - table_name: slv
+
+- name: gld
+  transformer:
+    nodes:
+    - expr: SELECT id, MAX(x1) AS max_x1 from {nodes.slv} GROUP BY id
+  sinks:
+  - dlt_view_name: gld
+
+- name: gld_a
+  transformer:
+    nodes:
+      - expr: SELECT * from {nodes.gld} WHERE id = 'a'
+  sinks:
+  - schema_name: sandbox2
+    table_name: gld_a
+
+- name: gld_b
+  transformer:
+    nodes:
+      - expr: SELECT * from {nodes.gld} WHERE id = 'b'
+  sinks:
+  - schema_name: sandbox2
+    table_name: gld_b

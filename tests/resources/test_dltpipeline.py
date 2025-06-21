@@ -3,31 +3,52 @@ from laktory import models
 pl = models.resources.databricks.DLTPipeline(
     name="pl-stock-prices",
     catalog="dev1",
-    target="markets1",
+    schema="markets1",
 )
 
 
 def test_pipeline():
-    print(pl.model_dump())
-    assert pl.model_dump() == {
+    data = pl.model_dump(exclude_unset=False)
+    print(data)
+    assert data == {
         "access_controls": [],
         "allow_duplicate_names": None,
+        "budget_policy_id": None,
         "catalog": "dev1",
+        "cause": None,
         "channel": "PREVIEW",
+        "cluster_id": None,
         "clusters": [],
+        "creator_user_name": None,
         "configuration": {},
         "continuous": None,
+        "deployment": None,
         "development": None,
         "edition": None,
+        "event_log": None,
+        "expected_last_modified": None,
+        "filters": None,
+        "gateway_definition": None,
+        "health": None,
+        "last_modified": None,
+        "latest_updates": None,
         "libraries": None,
         "name": "pl-stock-prices",
         "name_prefix": None,
         "name_suffix": None,
         "notifications": [],
         "photon": None,
+        "restart_window": None,
+        "root_path": None,
+        "run_as": None,
+        "run_as_user_name": None,
+        "schema_": "markets1",
         "serverless": None,
+        "state": None,
         "storage": None,
-        "target": "markets1",
+        "target": None,
+        "trigger": None,
+        "url": None,
     }
 
 
@@ -39,7 +60,7 @@ def test_pipeline_pulumi():
         "delete_before_replace": True,
         "is_enabled": True,
     }
-    print(pl.pulumi_properties)
+
     assert pl.pulumi_properties == {
         "catalog": "dev1",
         "channel": "PREVIEW",
@@ -47,7 +68,7 @@ def test_pipeline_pulumi():
         "configuration": {},
         "name": "pl-stock-prices",
         "notifications": [],
-        "target": "markets1",
+        "schema": "markets1",
     }
 
     # Resources

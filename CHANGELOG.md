@@ -8,7 +8,9 @@
 * `DataFrameSchema`: defines a complete serializable dataframe schema  
 * `DataFrameExpr`: represents a DataFrame as a SQL expression  
 * `DataFrameMethod`: represents a DataFrame as a method call with support for both Narwhals and Native API  
-* `DataFrameTransformer`: represents a DataFrame as a series of chained transformations  
+* `DataFrameTransformer`: represents a DataFrame as a series of chained transformations
+* `DLTPipeline`: configuration options
+* `DLTViewDataSink`: View inside a DLT pipeline
 * `DTypes`: defines a serializable column data type
 * `UnityCatalogDataSource`: reads DataFrame from Unity Catalog 
 * `HiveMetastoreDataSource`: reads DataFrame from Hive Metastore 
@@ -27,7 +29,7 @@
 * Pipeline Databricks Job and DLT orchestrators no longer deploy a requirements.txt file (passed as parameters)
 * Pipeline Databricks Job and DLT orchestrators no longer generate a temporary local config file
 ### Breaking changes
-* Dropped support python 3.9
+* Dropped support for python 3.9
 * Data sources:
   * Output a Narwhals DataFrame (as opposed to Spark/Polars DataFrame)
   * No longer infer column types by default when reading streams

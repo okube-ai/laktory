@@ -116,8 +116,10 @@ def quickstart(
             shutil.copy2(source_filepath, target_filepath)
 
             # Update laktory version
-            if target_filepath.endswith("requirements.txt") or target_filepath.endswith(
-                ".py"
+            if (
+                target_filepath.endswith("requirements.txt")
+                or target_filepath.endswith(".py")
+                or target_filepath.endswith(".yaml")
             ):
                 with open(target_filepath, "r") as fp:
                     data = fp.read()

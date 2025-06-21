@@ -37,6 +37,8 @@ resources:
             path: /tmp/
             format: JSON
           dlt_template: null
+          sinks:
+            - dlt_view_name: first_node
   databricks_jobs:
     job-stock-prices-ut-stack:
       name: job-stock-prices-ut-stack

@@ -118,12 +118,6 @@ are supported.
 
 Specific configurations might limit the ability of check data quality expectations.
 
-#### Serverless Compute
-
-Databricks serverless compute does not support forEachBatch operation and as such
-does not allow to check expectations on a streaming DataFrame.
-
-
 #### Databricks Delta Live Tables (DLT) Orchestrator
 
 - `WARN` expectations appear as `ALLOW` in the DLT Data Quality Tab.
@@ -135,10 +129,6 @@ does not allow to check expectations on a streaming DataFrame.
   displayed in the DLT Data Quality Tab.
 - `WARN` and `FAIL` actions on streaming tables are supported only for SQL
   expressions. Static tables support both SQL and DataFrame expressions.
-
-#### Databricks Jobs Orchestrator
-
-- Expectations on streaming DataFrames using Serverless Compute are not supported
 
 #### Spark Connect
 

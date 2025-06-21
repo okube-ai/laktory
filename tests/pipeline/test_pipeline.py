@@ -131,7 +131,7 @@ def test_update_from_parent():
     assert pl.orchestrator.parent == pl
     assert pl.orchestrator.parent_pipeline == pl
     assert len(pl.orchestrator.parameters) == 5
-    assert pl.orchestrator.config_file.content_base64.startswith(
+    assert pl.orchestrator.config_file.content_base64_.startswith(
         "ewogICAgIm5hbWUiOiAicGwtbG9j"
     )
 
@@ -143,7 +143,7 @@ def test_update_from_parent():
     assert pl.orchestrator.parent == pl
     assert pl.orchestrator.parent_pipeline == pl
     assert len(pl.orchestrator.parameters) == 5
-    assert pl.orchestrator.config_file.content_base64.startswith(
+    assert pl.orchestrator.config_file.content_base64_.startswith(
         "ewogICAgIm5hbWUiOiAicGwtbG9j"
     )
 
