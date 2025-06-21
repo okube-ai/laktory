@@ -191,11 +191,9 @@ def test_pulumi_stack(monkeypatch, stack):
     monkeypatch.setenv("DATABRICKS_HOST", "my-host")
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
 
-    # print("GETTING PSTACK")
     pstack = stack.to_pulumi(env_name=None)
     assert pstack.organization == "okube"
 
-    # print("GETTING PSTACK DUMP")
     data_default = pstack.model_dump()
 
     print(data_default)

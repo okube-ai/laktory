@@ -61,33 +61,4 @@ class DLTViewDataSink(BaseDataSink):
     # ----------------------------------------------------------------------- #
 
     def as_source(self, as_stream=None) -> None:
-        """
-        Generate a table data source with the same properties as the sink.
-
-        Parameters
-        ----------
-        as_stream:
-            If `True`, sink will be read as stream.
-
-        Returns
-        -------
-        :
-            Table Data Source
-        """
-        return None
-        # source = TableDataSource(
-        #     catalog_name=self.catalog_name,
-        #     table_name=self.table_name,
-        #     schema_name=self.schema_name,
-        #     type=self.type,
-        #     dataframe_backend=self.df_backend,
-        # )
-        #
-        # if as_stream:
-        #     source.as_stream = as_stream
-        #
-        # if self.dataframe_backend:
-        #     source.dataframe_backend = self.dataframe_backend
-        # source.parent = self.parent
-        #
-        # return source
+        raise NotImplementedError()

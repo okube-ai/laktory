@@ -66,28 +66,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         pl = self.parent_pipeline
 
-        # # Environment
-        # # Currently not used, but we will be when environments are supported by notebooks (or migrate to wheel/scripts)
-        # env_found = False
-        # envs = self.environments
-        # if envs is None:
-        #     envs = []
-        # for env in envs:
-        #     if env.environment_key == "laktory":
-        #         env_found = True
-        #         break
-        # if not env_found:
-        #     envs += [
-        #         JobEnvironment(
-        #             environment_key="laktory",
-        #             spec=JobEnvironmentSpec(
-        #                 client="2",
-        #                 dependencies=pl._dependencies,
-        #             ),
-        #         )
-        #     ]
-        #     self.environments = envs
-
         notebook_path = self.notebook_path
         if notebook_path is None:
             notebook_path = f"{settings.workspace_laktory_root}jobs/job_laktory_pl.py"
