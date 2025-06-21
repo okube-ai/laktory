@@ -16,7 +16,7 @@ def test_current_timestamp():
     df = df0.with_columns(tstamp=nw.laktory.current_timestamp())
 
     assert "tstamp" in df.columns
-    assert df.schema["tstamp"] == nw.Datetime()
+    assert df.schema["tstamp"] == nw.Datetime(time_zone="UTC")
     assert df.to_pandas()["tstamp"].max() - t0 < timedelta(seconds=1.0)
 
 
