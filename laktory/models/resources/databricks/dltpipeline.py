@@ -421,11 +421,15 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def pulumi_renames(self) -> dict[str, str]:
+        return {"schema_": "schema"}
+
+    @property
     def pulumi_resource_type(self) -> str:
         return "databricks:Pipeline"
 
     @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def pulumi_excludes(self) -> list[str] | dict[str, bool]:
         return {
             "access_controls": True,
             "clusters": {"__all__": {"access_controls"}},
@@ -454,7 +458,11 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
         return "databricks_pipeline"
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_renames(self) -> dict[str, str]:
+        return self.pulumi_renames
+
+    @property
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return self.pulumi_excludes
 
     @property
