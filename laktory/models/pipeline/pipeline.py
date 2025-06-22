@@ -210,16 +210,16 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         selected option defines which resources are to be deployed.
         Supported options are instances of classes:
 
-        - `DatabricksJobOrchestrator`: When orchestrated through Databricks DLT, each
-          pipeline node creates a DLT table (or view, if no sink is defined).
-          Behind the scenes, `PipelineNodeDataSource` leverages native `dlt`
-          `read` and `read_stream` functions to defined the interdependencies
-          between the tables as in a standard DLT pipeline.
-        - `DatabricksDLTOrchestrator`: When deployed through a Databricks Job, a task
+        - `DatabricksJobOrchestrator`: When deployed through a Databricks Job, a task
           is created for each pipeline node and all the required dependencies
           are set automatically. If a given task (or pipeline node) uses a
           `PipelineNodeDataSource` as the source, the data will be read from
           the upstream node sink.
+        - `DatabricksPipelineOrchestrator`: When orchestrated through Databricks DLT, each
+          pipeline node creates a DLT table (or view, if no sink is defined).
+          Behind the scenes, `PipelineNodeDataSource` leverages native `dlt`
+          `read` and `read_stream` functions to defined the interdependencies
+          between the tables as in a standard DLT pipeline.
         """,
         # discriminator="type",  # discriminator can't be used because BaseModel adds
         # str to Literal type to support variables
@@ -251,8 +251,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     @model_validator(mode="after")
     def validate_sinks(self) -> Any:
-        from laktory.models.datasinks.dltviewdatasink import DLTViewDataSink
         from laktory.models.datasinks.hivemetastoredatasink import HiveMetastoreDataSink
+        from laktory.models.datasinks.pipelineviewdatasink import PipelineViewDataSink
         from laktory.models.datasinks.unitycatalogdatasink import UnityCatalogDataSink
 
         o = self.orchestrator
@@ -270,7 +270,11 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 for i, s in enumerate(n.sinks):
                     if not isinstance(
                         s,
-                        (DLTViewDataSink, HiveMetastoreDataSink, UnityCatalogDataSink),
+                        (
+                            PipelineViewDataSink,
+                            HiveMetastoreDataSink,
+                            UnityCatalogDataSink,
+                        ),
                     ):
                         raise ValueError(
                             f"Node '{n.name}' sinks[{i}] ({type(s)}) is not supported with DLT orchestrator"

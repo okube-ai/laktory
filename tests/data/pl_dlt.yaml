@@ -47,7 +47,7 @@ nodes:
     nodes:
     - expr: SELECT id, MAX(x1) AS max_x1 from {nodes.slv} GROUP BY id
   sinks:
-  - dlt_view_name: gld
+  - pipeline_view_name: gld
 
 - name: gld_a
   transformer:

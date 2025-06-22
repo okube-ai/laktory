@@ -8,9 +8,29 @@ from laktory.models.datasinks.basedatasink import BaseDataSink
 logger = get_logger(__name__)
 
 
-class DLTViewDataSink(BaseDataSink):
-    dlt_view_name: str | None = Field(..., description="DLT View name")
-    type: Literal["DLT_VIEW"] = Field("DLT_VIEW", frozen=True, description="Sink Type")
+class PipelineViewDataSink(BaseDataSink):
+    """
+    Data sink writing to a Declarative Pipeline (formerly Delta Live Tables) view. This
+    view is virtual and does not materialize data.
+
+    Examples
+    ---------
+    ```python tag:skip-run
+    from laktory import models
+
+    df = spark.createDataFrame([{"x": 1}, {"x": 2}, {"x": 3}])
+
+    sink = models.PipelineViewDataSink(
+        pipeline_view_name="my_view",
+    )
+    sink.write(df)
+    ```
+    """
+
+    pipeline_view_name: str | None = Field(..., description="Pipeline View name")
+    type: Literal["PIPELINE_VIEW"] = Field(
+        "PIPELINE_VIEW", frozen=True, description="Sink Type"
+    )
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -18,11 +38,11 @@ class DLTViewDataSink(BaseDataSink):
 
     @property
     def _id(self) -> str:
-        return self.dlt_view_name
+        return self.pipeline_view_name
 
     @property
     def dlt_name(self) -> str:
-        return self.dlt_view_name
+        return self.pipeline_view_name
 
     @property
     def upstream_node_names(self) -> list[str]:
@@ -44,7 +64,7 @@ class DLTViewDataSink(BaseDataSink):
 
     def write(self, *args, **kwargs):
         # DLT View is created outside of Laktory. Only logging view name.
-        logger.info(f"Creating DLT view {self.dlt_view_name}")
+        logger.info(f"Creating DLT view {self.pipeline_view_name}")
 
     # ----------------------------------------------------------------------- #
     # Purge                                                                   #

@@ -1,8 +1,8 @@
-from laktory.models import DLTViewDataSink
+from laktory.models import PipelineViewDataSink
 
 
 def test_view():
-    sink = DLTViewDataSink(
-        dlt_view_name="t",
+    sink = PipelineViewDataSink(
+        pipeline_view_name="t",
     )
     assert sink.dlt_name == "t"
