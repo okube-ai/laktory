@@ -27,7 +27,7 @@ Watch a hands-on demo on how to use Laktory to build a scalable data pipeline. I
 
 - Declare a data pipeline backed by Polars dataframes and run it locally
 - Change backend to Spark dataframe and run it on a Databricks cluster
-- Deploy as a databricks job and as a Delta Live Tables using Laktory CLI
+- Deploy as a databricks job and as a Lakeflow Declarative Pipeline using Laktory CLI
 
 ![type:video](https://www.youtube.com/embed/010w2iWrN0w)
 

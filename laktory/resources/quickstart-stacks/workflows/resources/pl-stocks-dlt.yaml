@@ -1,5 +1,5 @@
 #
-# This is an example of a pipeline that uses Delta Live Tables as the
+# This is an example of a pipeline that uses Databricks Declarative Pipeline as the
 # orchestrator. It runs in stream mode (as_stream = `True`), meaning that
 # new files are incrementally pushed downstream as new rows instead of
 # re-computing entirely the downstream tables.
@@ -8,7 +8,7 @@ name: pl-stocks-dlt
 
 # Configure Orchestrator
 orchestrator:
-  type: DATABRICKS_DLT
+  type: DATABRICKS_PIPELINE
   development: ${vars.is_dev}
   target: default
   clusters:

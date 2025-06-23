@@ -189,7 +189,7 @@ nav:
         - PipelineNode: api/models/pipeline/pipelinenode.md
         - Orchestrators:
             - Databricks Job: api/models/pipeline/orchestrators/databricksjoborchestrator.md
-            - Databricks DLT: api/models/pipeline/orchestrators/databricksdltorchestrator.md
+            - Databricks Pipeline: api/models/pipeline/orchestrators/databrickspieplineorchestrator.md
             - Pipeline Config Workspace File: api/models/pipeline/orchestrators/pipelineconfigworkspacefile.md
       - Resources:
         - BaseResource: api/models/resources/baseresource.md
@@ -204,9 +204,9 @@ nav:
           - Dashboard: api/models/resources/databricks/dashboard.md
           - DbfsFile: api/models/resources/databricks/dbfsfile.md
           - api/models/resources/databricks/directory.md
-          - DLT Pipeline:
-            - api/models/resources/databricks/dltpipeline.md
-            - api/models/resources/databricks/dltpipeline_cluster.md
+          - Declarative Pipeline:
+            - api/models/resources/databricks/pipeline.md
+            - api/models/resources/databricks/pipeline_cluster.md
           - ExternalLocation: api/models/resources/databricks/externallocation.md
           - api/models/resources/databricks/grant.md
           - api/models/resources/databricks/grants.md
@@ -267,13 +267,6 @@ nav:
       - Functions:
         - current_timestamp: api/narwhals_ext/functions/current_timestamp.md
         - sql_expr: api/narwhals_ext/functions/sql_expr.md
-#    - DLT:
-#      - apply_changes: api/dlt/apply_changes.md
-#      - get_df: api/dlt/get_df.md
-#      - is_debug: api/dlt/is_debug.md
-#      - is_mocked: api/dlt/is_mocked.md
-#      - read: api/dlt/read.md
-#      - read_stream: api/dlt/read_stream.md
     - Dispatcher:
         - Dispatcher: api/dispatcher/dispatcher.md
         - DispatcherRunner: api/dispatcher/dispatcherrunner.md

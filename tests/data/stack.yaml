@@ -16,7 +16,7 @@ resources:
         workflow_name: pl-stock-prices-ut-stack
       name: ${vars.workflow_name}
       orchestrator:
-        type: DATABRICKS_DLT
+        type: DATABRICKS_PIPELINE
         configuration:
           business_unit: ${vars.business_unit}
           workflow_name: ${vars.workflow_name}
@@ -38,7 +38,7 @@ resources:
             format: JSON
           dlt_template: null
           sinks:
-            - dlt_view_name: first_node
+            - pipeline_view_name: first_node
   databricks_jobs:
     job-stock-prices-ut-stack:
       name: job-stock-prices-ut-stack

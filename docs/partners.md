@@ -10,7 +10,7 @@ Okube is a Technology Partner to [Databricks](http://www.databricks.com), the wo
 first data intelligence platform powered by generative AI. 
 
 Unleash the full potential of Laktory pipelines by orchestrating them on Databricks 
-Delta Live Tables or Jobs.
+Lakeflow Declarative Pipeline or Jobs.
 
 <img src="/images/technology_partner_badge.png" alt="technology-partner-badge" width="125"/>
 

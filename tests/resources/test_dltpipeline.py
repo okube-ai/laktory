@@ -1,6 +1,6 @@
 from laktory import models
 
-pl = models.resources.databricks.DLTPipeline(
+pl = models.resources.databricks.Pipeline(
     name="pl-stock-prices",
     catalog="dev1",
     schema="markets1",

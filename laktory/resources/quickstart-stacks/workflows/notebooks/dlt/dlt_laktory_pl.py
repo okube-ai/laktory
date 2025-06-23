@@ -37,7 +37,7 @@ def define_table(node, sink):
         dlt_fail_expectations = node.dlt_fail_expectations
 
     table_or_view = dlt.table
-    if isinstance(sink, lk.models.DLTViewDataSink):
+    if isinstance(sink, lk.models.PipelineViewDataSink):
         table_or_view = dlt.view
 
     @table_or_view(

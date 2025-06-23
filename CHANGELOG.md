@@ -9,8 +9,8 @@
 * `DataFrameExpr`: represents a DataFrame as a SQL expression  
 * `DataFrameMethod`: represents a DataFrame as a method call with support for both Narwhals and Native API  
 * `DataFrameTransformer`: represents a DataFrame as a series of chained transformations
-* `DLTPipeline`: configuration options
-* `DLTViewDataSink`: View inside a DLT pipeline
+* `DatabricksPipeline`: configuration options
+* `PipelineViewDataSink`: View inside a Declarative Pipeline
 * `DTypes`: defines a serializable column data type
 * `UnityCatalogDataSource`: reads DataFrame from Unity Catalog 
 * `HiveMetastoreDataSource`: reads DataFrame from Hive Metastore 
@@ -26,8 +26,8 @@
   * `iceberg`  
   * `pyarrow`  
 * Support for 2- and 3-level namespace in source/sink `table_name` in addition to explicit `catalog_name` and `schema_name` definition
-* Pipeline Databricks Job and DLT orchestrators no longer deploy a requirements.txt file (passed as parameters)
-* Pipeline Databricks Job and DLT orchestrators no longer generate a temporary local config file
+* Pipeline Databricks Job and Pipeline orchestrators no longer deploy a requirements.txt file (passed as parameters)
+* Pipeline Databricks Job and Pipeline orchestrators no longer generate a temporary local config file
 ### Breaking changes
 * Dropped support for python 3.9
 * Data sources:
@@ -210,7 +210,7 @@
 * Added laktory package as a task cluster dependency when Databricks Job is used as a pipeline orchestrator
 ### Breaking changes
 * Renamed `dataframe_type` to `dataframe_backend`
-* Renamed pipeline orchestrator from `"DLT"` to `"DATABRICKS_DLT"`
+* Renamed pipeline orchestrator from `"DLT"` to `"DATABRICKS_PIPELINE"`
 * Renamed pipeline databricks job and dlt resource names. May cause a re-deployment.
 * Moved pipeline `notebook_path` under `databricks_job` attribute.
 

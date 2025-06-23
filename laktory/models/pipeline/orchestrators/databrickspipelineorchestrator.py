@@ -8,13 +8,13 @@ from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
 )
 from laktory.models.pipeline.pipelinechild import PipelineChild
-from laktory.models.resources.databricks.dltpipeline import DLTPipeline
+from laktory.models.resources.databricks.pipeline import Pipeline
 from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
+class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
     """
-    Databricks DLT used as an orchestrator to execute a Laktory pipeline.
+    Databricks Pipeline used as an orchestrator to execute a Laktory pipeline.
 
     DLT orchestrator does not support pipeline nodes with views (as opposed to
     materialized tables). Also, it does not support writing to multiple
@@ -31,8 +31,8 @@ class DatabricksDLTOrchestrator(DLTPipeline, PipelineChild):
 
     """
 
-    type: Literal["DATABRICKS_DLT"] = Field(
-        "DATABRICKS_DLT", description="Type of orchestrator"
+    type: Literal["DATABRICKS_PIPELINE"] = Field(
+        "DATABRICKS_PIPELINE", description="Type of orchestrator"
     )
     config_file: PipelineConfigWorkspaceFile = Field(
         PipelineConfigWorkspaceFile(),

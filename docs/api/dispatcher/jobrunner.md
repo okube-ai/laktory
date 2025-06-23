@@ -1,1 +1,1 @@
-::: laktory.dispatcher.JobRunner
+::: laktory.dispatcher.DatabricksJobRunner

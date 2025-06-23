@@ -1,7 +1,7 @@
 name: pl-dlt
 
 orchestrator:
-  type: DATABRICKS_DLT
+  type: DATABRICKS_PIPELINE
   catalog: dev
   schema: sandbox
   access_controls:
@@ -47,7 +47,7 @@ nodes:
     nodes:
     - expr: SELECT id, MAX(x1) AS max_x1 from {nodes.slv} GROUP BY id
   sinks:
-  - dlt_view_name: gld
+  - pipeline_view_name: gld
 
 - name: gld_a
   transformer:

@@ -11,11 +11,11 @@ from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
-from laktory.models.pipeline.orchestrators.databricksdltorchestrator import (
-    DatabricksDLTOrchestrator,
-)
 from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
     DatabricksJobOrchestrator,
+)
+from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
+    DatabricksPipelineOrchestrator,
 )
 from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.pipeline.pipelinenode import PipelineNode
@@ -70,7 +70,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     A pipeline may be run manually by using python or the CLI, but it may also
     be deployed and scheduled using one of the supported orchestrators, such as
-    a Databricks Delta Live Tables or job.
+    a Databricks job or Lakeflow Declarative Pipeline.
 
     The DataFrame backend used to run the pipeline can be configured at the pipeline
     level or at the nodes level.
@@ -203,23 +203,23 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         [],
         description="List of pipeline nodes. Each node defines a data source, a series of transformations and optionally a sink.",
     )
-    orchestrator: DatabricksJobOrchestrator | DatabricksDLTOrchestrator = Field(
+    orchestrator: DatabricksJobOrchestrator | DatabricksPipelineOrchestrator = Field(
         None,
         description="""
         Orchestrator used for scheduling and executing the pipeline. The
         selected option defines which resources are to be deployed.
         Supported options are instances of classes:
 
-        - `DatabricksJobOrchestrator`: When orchestrated through Databricks DLT, each
-          pipeline node creates a DLT table (or view, if no sink is defined).
-          Behind the scenes, `PipelineNodeDataSource` leverages native `dlt`
-          `read` and `read_stream` functions to defined the interdependencies
-          between the tables as in a standard DLT pipeline.
-        - `DatabricksDLTOrchestrator`: When deployed through a Databricks Job, a task
+        - `DatabricksJobOrchestrator`: When deployed through a Databricks Job, a task
           is created for each pipeline node and all the required dependencies
           are set automatically. If a given task (or pipeline node) uses a
           `PipelineNodeDataSource` as the source, the data will be read from
           the upstream node sink.
+        - `DatabricksPipelineOrchestrator`: When orchestrated through Databricks DLT, each
+          pipeline node creates a DLT table (or view, if no sink is defined).
+          Behind the scenes, `PipelineNodeDataSource` leverages native `dlt`
+          `read` and `read_stream` functions to defined the interdependencies
+          between the tables as in a standard DLT pipeline.
         """,
         # discriminator="type",  # discriminator can't be used because BaseModel adds
         # str to Literal type to support variables
@@ -243,7 +243,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         if o and isinstance(o, dict):
             # orchestrator as a dict
             o["name"] = o.get("name", None) or data.get("name", None)
-        elif isinstance(o, (DatabricksDLTOrchestrator, DatabricksJobOrchestrator)):
+        elif isinstance(o, (DatabricksPipelineOrchestrator, DatabricksJobOrchestrator)):
             # orchestrator as a model
             o.name = o.name or o.get("name", None)
 
@@ -251,24 +251,30 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     @model_validator(mode="after")
     def validate_sinks(self) -> Any:
-        from laktory.models.datasinks.dltviewdatasink import DLTViewDataSink
         from laktory.models.datasinks.hivemetastoredatasink import HiveMetastoreDataSink
+        from laktory.models.datasinks.pipelineviewdatasink import PipelineViewDataSink
         from laktory.models.datasinks.unitycatalogdatasink import UnityCatalogDataSink
 
         o = self.orchestrator
 
         for n in self.nodes:
-            if isinstance(o, (DatabricksDLTOrchestrator, DatabricksJobOrchestrator)):
+            if isinstance(
+                o, (DatabricksPipelineOrchestrator, DatabricksJobOrchestrator)
+            ):
                 if not n.has_sinks:
                     raise ValueError(
                         f"Node '{n.name}' must have a sink with orchestrator of type {type(o)}."
                     )
 
-            if isinstance(o, DatabricksDLTOrchestrator):
+            if isinstance(o, DatabricksPipelineOrchestrator):
                 for i, s in enumerate(n.sinks):
                     if not isinstance(
                         s,
-                        (DLTViewDataSink, HiveMetastoreDataSink, UnityCatalogDataSink),
+                        (
+                            PipelineViewDataSink,
+                            HiveMetastoreDataSink,
+                            UnityCatalogDataSink,
+                        ),
                     ):
                         raise ValueError(
                             f"Node '{n.name}' sinks[{i}] ({type(s)}) is not supported with DLT orchestrator"
@@ -330,7 +336,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     @property
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline orchestrator is DLT"""
-        return isinstance(self.orchestrator, DatabricksDLTOrchestrator)
+        return isinstance(self.orchestrator, DatabricksPipelineOrchestrator)
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #

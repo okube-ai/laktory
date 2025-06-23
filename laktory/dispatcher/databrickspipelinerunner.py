@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
-class DLTPipelineRunner(DispatcherRunner):
+class DatabricksPipelineRunner(DispatcherRunner):
     """
     DLT Pipeline runner.
     """
