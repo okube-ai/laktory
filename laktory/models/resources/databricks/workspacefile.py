@@ -17,7 +17,7 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Workspace File
 
-    Parameters
+    Attributes
     ----------
     access_controls:
         List of file access controls

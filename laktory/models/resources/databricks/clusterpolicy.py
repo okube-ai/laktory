@@ -31,7 +31,7 @@ class ClusterPolicyLibrary(BaseModel):
     """
     Cluster Policy Library
 
-    Parameters
+    Attributes
     ----------
     cran:
         Cran library specifications
@@ -60,7 +60,7 @@ class ClusterPolicyLibrary(BaseModel):
 
 # class ClusterLookup(ResourceLookup):
 #     """
-#     Parameters
+#     Attributes
 #     ----------
 #     cluster_id:
 #         The id of the cluster
@@ -73,7 +73,7 @@ class ClusterPolicy(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks cluster policy
 
-    Parameters
+    Attributes
     ----------
 
     access_controls:

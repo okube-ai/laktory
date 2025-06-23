@@ -10,6 +10,7 @@ from laktory._parsers import merge_dicts
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipeline import Pipeline
+from laktory.models.resources.baseresource import ResourceOptions
 from laktory.models.resources.databricks.alert import Alert
 from laktory.models.resources.databricks.catalog import Catalog
 from laktory.models.resources.databricks.cluster import Cluster
@@ -70,7 +71,7 @@ class LaktorySettings(BaseModel):
     """
     Laktory Settings
 
-    Parameters
+    Attributes
     ----------
     dataframe_backend:
         DataFrame backend
@@ -86,7 +87,6 @@ class LaktorySettings(BaseModel):
     """
 
     dataframe_backend: str = None
-    dataframe_api: Literal["NARWHALS", "NATIVE"] = None
     workspace_laktory_root: str = "/.laktory/"
     laktory_root: str = "/laktory/"
 
@@ -100,9 +100,6 @@ class LaktorySettings(BaseModel):
 
         if self.laktory_root:
             settings.laktory_root = self.laktory_root
-
-        if self.dataframe_api:
-            settings.dataframe_api = self.dataframe_api
 
         return self
 
@@ -129,7 +126,7 @@ class StackResources(BaseModel):
     """
     Resources definition for a given stack or stack environment.
 
-    Parameters
+    Attributes
     ----------
     databricks_alerts:
         Databricks Alerts
@@ -286,7 +283,7 @@ class EnvironmentStack(BaseModel):
     """
     Environment-specific stack definition.
 
-    Parameters
+    Attributes
     ----------
     backend:
         IaC backend used for deployment.
@@ -326,7 +323,7 @@ class EnvironmentSettings(BaseModel):
     """
     Settings overwrite for a specific environments
 
-    Parameters
+    Attributes
     ----------
     resources:
         Dictionary of resources to be deployed. Each key should be a resource
@@ -348,7 +345,7 @@ class Stack(BaseModel):
     The Stack defines a collection of deployable resources, the deployment
     configuration, some variables and the environment-specific settings.
 
-    Parameters
+    Attributes
     ----------
     backend:
         IaC backend used for deployment.
@@ -405,7 +402,7 @@ class Stack(BaseModel):
                     "clusters": [
                         {
                             "name": "main",
-                            "spark_version": "16.3.x-scala2.12",
+                            "spark_version": "14.0.x-scala2.12",
                             "node_type_id": "Standard_DS3_v2",
                         }
                     ],
@@ -526,9 +523,7 @@ class Stack(BaseModel):
                         data["variables"] = copy.deepcopy(model.variables)
 
                     # Explicitly dump excluded fields - resource options
-                    if field_name == "options" and "ResourceOptions" in str(
-                        field.annotation
-                    ):
+                    if field_name == "options" and field.annotation == ResourceOptions:
                         data["options"] = model.options.model_dump(exclude_unset=True)
 
                     # Explicitly dump excluded fields - resource name

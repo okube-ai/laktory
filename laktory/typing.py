@@ -1,24 +1,30 @@
-from typing import TYPE_CHECKING
+from typing import Union
 
-import narwhals as nw
 from pydantic_core import CoreSchema
 from pydantic_core import core_schema
 
-if TYPE_CHECKING:
-    pass
+from laktory.polars import PolarsExpr
+from laktory.polars import PolarsLazyFrame
+from laktory.spark import SparkColumn
+from laktory.spark import SparkDataFrame
 
-AnyFrame = nw.LazyFrame | nw.DataFrame
+AnyDataFrame = Union[SparkDataFrame, PolarsLazyFrame]
+"""DataFrame type from any of the supported backend"""
+
+AnyDataFrameColumn = Union[SparkColumn, PolarsExpr]
+"""DataFrame column from any of the supported backend"""
 
 
 class VariableType(str):
-    """Laktory variable or expression (string)"""
-
     @classmethod
     def __get_pydantic_core_schema__(
         cls, source: type, handler: callable
     ) -> CoreSchema:
         return core_schema.str_schema()
 
+
+var = VariableType
+"""Laktory variable or expression (string)"""
 
 # ResolvableBool: TypeAlias = Union[bool, var]
 # """Boolean or laktory variable that can be resolved as a boolean"""

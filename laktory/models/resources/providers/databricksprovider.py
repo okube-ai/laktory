@@ -9,7 +9,7 @@ class DatabricksProvider(BaseProvider, PulumiResource, TerraformResource):
     """
     Databricks Provider
 
-    Parameters
+    Attributes
     ----------
     account_id:
         Account Id that could be found in the bottom left corner of Accounts

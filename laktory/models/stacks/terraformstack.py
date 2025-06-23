@@ -33,12 +33,6 @@ class TerraformConfig(BaseModel):
     required_providers: dict[str, TerraformRequiredProvider] = None
     backend: Union[dict[str, Any], None] = None
 
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "required_providers": "required_providers",
-        }
-
 
 class TerraformStack(BaseModel):
     """

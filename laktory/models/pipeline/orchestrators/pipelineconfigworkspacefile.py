@@ -13,7 +13,7 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
     Workspace File storing pipeline configuration. Default values for path and
     access controls. Forced value for source.
 
-    Parameters
+    Attributes
     ----------
     access_controls:
         List of file access controls
@@ -29,14 +29,13 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
     def update_from_parent(self):
         pl = self.parent_pipeline
-        if pl:
-            pl_name = pl.name
-            self.source = os.path.join(CACHE_ROOT, f"tmp-{pl_name}-config.json")
-            if "{pl_name}" in self.path:
-                self.path = (
-                    f"{settings.workspace_laktory_root}pipelines/{pl_name}/config.json"
-                )
-            self.set_paths()
+        pl_name = pl.name
+        self.source = os.path.join(CACHE_ROOT, f"tmp-{pl_name}-config.json")
+        if "{pl_name}" in self.path:
+            self.path = (
+                f"{settings.workspace_laktory_root}pipelines/{pl_name}/config.json"
+            )
+        self.set_paths()
 
     def write_source(self):
         pl = self.parent_pipeline

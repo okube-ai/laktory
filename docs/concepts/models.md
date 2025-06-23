@@ -38,7 +38,7 @@ Below is an example of how `Catalog`, `Schema`, and `Table` models can be declar
     from laktory import models
     
     with open("catalog.yaml", "r") as fp:
-        catalog = models.resources.databricks.Catalog.model_validate_yaml(fp)
+        schema = models.resources.databricks.Catalog.model_validate_yaml(fp)
     ```
 
 === "Python"

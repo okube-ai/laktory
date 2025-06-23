@@ -1,7 +1,6 @@
 # COMMAND ----------
 # Install dependencies
 
-
 laktory_root = "/Workspace" + spark.conf.get("workspace_laktory_root", "/.laktory/")
 pl_name = spark.conf.get("pipeline_name", "dlt-stock-prices")
 filepath = f"{laktory_root}/pipelines/{pl_name}/requirements.txt"

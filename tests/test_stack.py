@@ -1,134 +1,649 @@
-from pathlib import Path
+import os
 
 import pytest
 
 from laktory import models
 from laktory._settings import settings
-from laktory._testing import skip_pulumi_preview
-from laktory._testing import skip_terraform_plan
+from laktory._testing import MonkeyPatch
+from laktory._testing import Paths
+from laktory._testing.stackvalidator import StackValidator
 
-root = Path(__file__).parent
+paths = Paths(__file__)
 
+with open(paths.data / "stack.yaml", "r") as fp:
+    stack = models.Stack.model_validate_yaml(fp)
 
-@pytest.fixture
-def stack():
-    with open(root / "data/stack.yaml", "r") as fp:
-        stack = models.Stack.model_validate_yaml(fp)
-
-    stack.terraform.backend = {
-        "azurerm": {
-            "resource_group_name": "o3-rg-laktory-dev",
-            "storage_account_name": "o3stglaktorydev",
-            "container_name": "unit-testing",
-            "key": "terraform/dev.terraform.tfstate",
-        }
+stack.terraform.backend = {
+    "azurerm": {
+        "resource_group_name": "o3-rg-laktory-dev",
+        "storage_account_name": "o3stglaktorydev",
+        "container_name": "unit-testing",
+        "key": "terraform/dev.terraform.tfstate",
     }
+}
 
-    return stack
 
+def get_validator(monkeypatch):
+    monkeypatch.setenv("DATABRICKS_HOST", "my-host")
+    monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
 
-@pytest.fixture
-def full_stack():
-    from tests.resources.test_alert import alert
-    from tests.resources.test_catalog import catalog
-    from tests.resources.test_cluster_policy import cluster_policy
-    from tests.resources.test_dashboard import dashboard
-    from tests.resources.test_directory import directory
-    from tests.resources.test_job import job
-    from tests.resources.test_job import job_for_each
-    from tests.resources.test_metastore import metastore
-    from tests.resources.test_mlflow_experiment import mlexp
-    from tests.resources.test_mlflow_model import mlmodel
-    from tests.resources.test_mlflow_webhook import mlwebhook
-    from tests.resources.test_notebook import get_notebook
-    from tests.resources.test_permissions import permissions
-    from tests.resources.test_pipeline_orchestrators import get_pl_dlt
-    from tests.resources.test_query import query
-    from tests.resources.test_repo import repo
-    from tests.resources.test_schema import schema
-    from tests.resources.test_user import group
-    from tests.resources.test_user import user
-    from tests.resources.test_vectorsearchendpoint import vector_search_endpoint
-    from tests.resources.test_vectorsearchindex import vector_search_index
-    from tests.resources.test_workspacebinding import workspace_binding
-    from tests.resources.test_workspacefile import get_workspace_file
+    from laktory._testing import Paths
+    from tests.test_alert import alert
+    from tests.test_catalog import catalog
+    from tests.test_cluster_policy import cluster_policy
+    from tests.test_dashboard import dashboard
+    from tests.test_directory import directory
+    from tests.test_job import job
+    from tests.test_job import job_for_each
+    from tests.test_metastore import metastore
+    from tests.test_mlflow_experiment import mlexp
+    from tests.test_mlflow_model import mlmodel
+    from tests.test_mlflow_webhook import mlwebhook
+    from tests.test_notebook import nb
+    from tests.test_permissions import permissions
+    from tests.test_pipeline_orchestrators import pl_dlt
+    from tests.test_query import query
+    from tests.test_repo import repo
+    from tests.test_schema import schema
+    from tests.test_user import group
+    from tests.test_user import user
+    from tests.test_vectorsearchendpoint import vector_search_endpoint
+    from tests.test_vectorsearchindex import vector_search_index
+    from tests.test_workspacebinding import workspace_binding
+    from tests.test_workspacefile import workspace_file
 
-    # Update paths because preview is executed in tmp_path
-    nb = get_notebook()
-    workspace_file = get_workspace_file()
-    nb.source = str(root / "resources" / nb.source)
-    workspace_file.source = str(root / "resources" / workspace_file.source)
+    paths = Paths(__file__)
 
-    _resources = {
-        "databricks_alerts": [alert],
-        "databricks_catalogs": [catalog],
-        "databricks_clusterpolicies": [cluster_policy],
-        "databricks_dashboards": [dashboard],
-        "databricks_directories": [directory],
-        "databricks_jobs": [job, job_for_each],
-        "databricks_metastores": [metastore],
-        "databricks_mlflowexperiments": [mlexp],
-        "databricks_mlflowmodels": [mlmodel],
-        "databricks_mlflowwebhooks": [mlwebhook],
-        "databricks_notebooks": [nb],
-        "databricks_permissions": [permissions],
-        "databricks_queries": [query],
-        "databricks_repos": [repo],
-        "databricks_schemas": [schema],
-        "databricks_groups": [group],
-        "databricks_users": [user],
-        "databricks_vectorsearchendpoints": [vector_search_endpoint],
-        "databricks_vectorsearchindexes": [vector_search_index],
-        "databricks_workspacefiles": [workspace_file],
-        "databricks_workspacebindings": [workspace_binding],
-        "pipelines": [get_pl_dlt()],  # required by job
-    }
+    nb.source = os.path.join(paths.root, nb.source)
+    workspace_file.source = os.path.join(paths.root, workspace_file.source)
 
-    resources = {}
-    for k, v in _resources.items():
-        resources[k] = {r.resource_name: r for r in v}
-
-    resources["providers"] = {
-        "provider-workspace-neptune": {
-            "host": "${vars.DATABRICKS_HOST}",
-            # "azure_client_id": "0",
-            # "azure_client_secret": "0",
-            # "azure_tenant_id": "0",
+    validator = StackValidator(
+        resources={
+            "databricks_alerts": [alert],
+            "databricks_catalogs": [catalog],
+            "databricks_clusterpolicies": [cluster_policy],
+            "databricks_dashboards": [dashboard],
+            "databricks_directories": [directory],
+            "databricks_jobs": [job, job_for_each],
+            "databricks_metastores": [metastore],
+            "databricks_mlflowexperiments": [mlexp],
+            "databricks_mlflowmodels": [mlmodel],
+            "databricks_mlflowwebhooks": [mlwebhook],
+            "databricks_notebooks": [nb],
+            "databricks_permissions": [permissions],
+            "databricks_queries": [query],
+            "databricks_repos": [repo],
+            "databricks_schemas": [schema],
+            "databricks_groups": [group],
+            "databricks_users": [user],
+            "databricks_vectorsearchendpoints": [vector_search_endpoint],
+            "databricks_vectorsearchindexes": [vector_search_index],
+            "databricks_workspacefiles": [workspace_file],
+            "databricks_workspacebindings": [workspace_binding],
+            "pipelines": [pl_dlt],  # required by job
         },
-        "databricks": {
-            "host": "${vars.DATABRICKS_HOST}",
-            "token": "${vars.DATABRICKS_TOKEN}",
+        providers={
+            "provider-workspace-neptune": {
+                "host": "${vars.DATABRICKS_HOST}",
+                # "azure_client_id": "0",
+                # "azure_client_secret": "0",
+                # "azure_tenant_id": "0",
+            },
+            "databricks1": {
+                "host": "${vars.DATABRICKS_HOST}",
+            },
+            "databricks2": {
+                "host": "${vars.DATABRICKS_HOST}",
+            },
         },
-        "databricks1": {
-            "host": "${vars.DATABRICKS_HOST}",
-        },
-        "databricks2": {
-            "host": "${vars.DATABRICKS_HOST}",
-        },
-    }
+    )
+    return validator
 
-    stack = models.Stack(
-        organization="okube",
-        name="unit-testing",
-        backend="pulumi",
-        pulumi={
+
+def test_stack_model():
+    data = stack.model_dump()
+    print(data)
+    assert data == {
+        "variables": {"business_unit": "laktory", "workflow_name": "UNDEFINED"},
+        "backend": "pulumi",
+        "description": None,
+        "environments": {
+            "dev": {
+                "variables": {
+                    "env": "dev",
+                    "is_dev": True,
+                    "node_type_id": "Standard_DS3_v2",
+                },
+                "resources": None,
+                "terraform": {"backend": None},
+            },
+            "prod": {
+                "variables": {
+                    "env": "prod",
+                    "is_dev": False,
+                    "node_type_id": "Standard_DS4_v2",
+                },
+                "resources": {
+                    "pipelines": {
+                        "pl-custom-name": {"databricks_dlt": {"development": False}}
+                    }
+                },
+                "terraform": {"backend": None},
+            },
+        },
+        "name": "unit-testing",
+        "organization": "okube",
+        "pulumi": {
             "config": {
                 "databricks:host": "${vars.DATABRICKS_HOST}",
                 "databricks:token": "${vars.DATABRICKS_TOKEN}",
+            },
+            "outputs": {},
+        },
+        "resources": {
+            "databricks_alerts": {},
+            "databricks_catalogs": {},
+            "databricks_clusterpolicies": {},
+            "databricks_clusters": {},
+            "databricks_dashboards": {},
+            "databricks_dbfsfiles": {},
+            "databricks_directories": {},
+            "databricks_dltpipelines": {},
+            "databricks_externallocations": {},
+            "databricks_grant": {},
+            "databricks_grants": {},
+            "databricks_groups": {},
+            "databricks_jobs": {
+                "job-stock-prices-ut-stack": {
+                    "access_controls": [],
+                    "clusters": [
+                        {
+                            "apply_policy_default_values": None,
+                            "autoscale": None,
+                            "autotermination_minutes": None,
+                            "cluster_id": None,
+                            "custom_tags": None,
+                            "data_security_mode": "USER_ISOLATION",
+                            "driver_instance_pool_id": None,
+                            "driver_node_type_id": None,
+                            "enable_elastic_disk": None,
+                            "enable_local_disk_encryption": None,
+                            "idempotency_token": None,
+                            "init_scripts": [],
+                            "instance_pool_id": None,
+                            "name": "main",
+                            "node_type_id": "${vars.node_type_id}",
+                            "num_workers": None,
+                            "policy_id": None,
+                            "runtime_engine": None,
+                            "single_user_name": None,
+                            "spark_conf": {},
+                            "spark_env_vars": {
+                                "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
+                                "LAKTORY_WORKSPACE_ENV": "${vars.env}",
+                            },
+                            "spark_version": "14.0.x-scala2.12",
+                            "ssh_public_keys": [],
+                        }
+                    ],
+                    "continuous": None,
+                    "control_run_state": None,
+                    "description": None,
+                    "email_notifications": None,
+                    "environments": None,
+                    "format": None,
+                    "git_source": None,
+                    "health": None,
+                    "max_concurrent_runs": None,
+                    "max_retries": None,
+                    "min_retry_interval_millis": None,
+                    "name": "job-stock-prices-ut-stack",
+                    "name_prefix": None,
+                    "name_suffix": None,
+                    "notification_settings": None,
+                    "parameters": [],
+                    "queue": None,
+                    "retry_on_timeout": None,
+                    "run_as": None,
+                    "schedule": None,
+                    "tags": {},
+                    "tasks": [
+                        {
+                            "dbt_task": None,
+                            "condition_task": None,
+                            "depends_ons": None,
+                            "description": None,
+                            "email_notifications": None,
+                            "environment_key": None,
+                            "existing_cluster_id": None,
+                            "health": None,
+                            "job_cluster_key": "main",
+                            "libraries": [
+                                {
+                                    "cran": None,
+                                    "egg": None,
+                                    "jar": None,
+                                    "maven": None,
+                                    "pypi": {
+                                        "package": "laktory==0.0.27",
+                                        "repo": None,
+                                    },
+                                    "whl": None,
+                                },
+                                {
+                                    "cran": None,
+                                    "egg": None,
+                                    "jar": None,
+                                    "maven": None,
+                                    "pypi": {"package": "yfinance", "repo": None},
+                                    "whl": None,
+                                },
+                            ],
+                            "max_retries": None,
+                            "min_retry_interval_millis": None,
+                            "notebook_task": {
+                                "notebook_path": "/jobs/ingest_stock_metadata.py",
+                                "base_parameters": None,
+                                "warehouse_id": None,
+                                "source": None,
+                            },
+                            "notification_settings": None,
+                            "pipeline_task": None,
+                            "retry_on_timeout": None,
+                            "run_if": None,
+                            "run_job_task": None,
+                            "sql_task": None,
+                            "task_key": "ingest-metadata",
+                            "timeout_seconds": None,
+                            "for_each_task": None,
+                        },
+                        {
+                            "dbt_task": None,
+                            "condition_task": None,
+                            "depends_ons": None,
+                            "description": None,
+                            "email_notifications": None,
+                            "environment_key": None,
+                            "existing_cluster_id": None,
+                            "health": None,
+                            "job_cluster_key": None,
+                            "libraries": None,
+                            "max_retries": None,
+                            "min_retry_interval_millis": None,
+                            "notebook_task": None,
+                            "notification_settings": None,
+                            "pipeline_task": {
+                                "pipeline_id": "${resources.dlt-custom-name.id}",
+                                "full_refresh": None,
+                            },
+                            "retry_on_timeout": None,
+                            "run_if": None,
+                            "run_job_task": None,
+                            "sql_task": None,
+                            "task_key": "run-pipeline",
+                            "timeout_seconds": None,
+                            "for_each_task": None,
+                        },
+                    ],
+                    "timeout_seconds": None,
+                    "trigger": None,
+                    "webhook_notifications": None,
+                },
+                "job-disabled": {
+                    "access_controls": [],
+                    "clusters": [],
+                    "continuous": None,
+                    "control_run_state": None,
+                    "description": None,
+                    "email_notifications": None,
+                    "environments": None,
+                    "format": None,
+                    "git_source": None,
+                    "health": None,
+                    "max_concurrent_runs": None,
+                    "max_retries": None,
+                    "min_retry_interval_millis": None,
+                    "name": "job-disabled",
+                    "name_prefix": None,
+                    "name_suffix": None,
+                    "notification_settings": None,
+                    "parameters": [],
+                    "queue": None,
+                    "retry_on_timeout": None,
+                    "run_as": None,
+                    "schedule": None,
+                    "tags": {},
+                    "tasks": [
+                        {
+                            "dbt_task": None,
+                            "condition_task": None,
+                            "depends_ons": None,
+                            "description": None,
+                            "email_notifications": None,
+                            "environment_key": None,
+                            "existing_cluster_id": None,
+                            "health": None,
+                            "job_cluster_key": None,
+                            "libraries": None,
+                            "max_retries": None,
+                            "min_retry_interval_millis": None,
+                            "notebook_task": {
+                                "notebook_path": "/jobs/ingest_stock_metadata.py",
+                                "base_parameters": None,
+                                "warehouse_id": None,
+                                "source": None,
+                            },
+                            "notification_settings": None,
+                            "pipeline_task": None,
+                            "retry_on_timeout": None,
+                            "run_if": None,
+                            "run_job_task": None,
+                            "sql_task": None,
+                            "task_key": "ingest-metadata",
+                            "timeout_seconds": None,
+                            "for_each_task": None,
+                        }
+                    ],
+                    "timeout_seconds": None,
+                    "trigger": None,
+                    "webhook_notifications": None,
+                },
+            },
+            "databricks_metastoreassignments": {},
+            "databricks_metastoredataaccesses": {},
+            "databricks_metastores": {},
+            "databricks_mlflowexperiments": {},
+            "databricks_mlflowmodels": {},
+            "databricks_mlflowwebhooks": {},
+            "databricks_networkconnectivityconfig": {},
+            "databricks_notebooks": {
+                "notebook-external": {
+                    "access_controls": [
+                        {
+                            "group_name": "role-analysts",
+                            "permission_level": "CAN_READ",
+                            "service_principal_name": None,
+                            "user_name": None,
+                        }
+                    ],
+                    "dirpath": "",
+                    "language": None,
+                    "path": "/.laktory",
+                    "rootpath": "/.laktory/",
+                    "source": "",
+                }
+            },
+            "databricks_permissions": {
+                "permissions_test": {
+                    "access_controls": [
+                        {
+                            "group_name": None,
+                            "permission_level": "CAN_MANAGE",
+                            "service_principal_name": None,
+                            "user_name": "user1",
+                        },
+                        {
+                            "group_name": None,
+                            "permission_level": "CAN_RUN",
+                            "service_principal_name": None,
+                            "user_name": "user2",
+                        },
+                    ],
+                    "authorization": None,
+                    "pipeline_id": "pipeline_123",
+                    "job_id": None,
+                    "cluster_id": None,
+                    "cluster_policy_id": None,
+                    "dashboard_id": None,
+                    "directory_id": None,
+                    "directory_path": None,
+                    "experiment_id": None,
+                    "notebook_id": None,
+                    "notebook_path": None,
+                    "object_type": None,
+                    "registered_model_id": None,
+                    "repo_id": None,
+                    "repo_path": None,
+                    "serving_endpoint_id": None,
+                    "sql_alert_id": None,
+                    "sql_dashboard_id": None,
+                    "sql_endpoint_id": None,
+                    "sql_query_id": None,
+                    "workspace_file_id": None,
+                    "workspace_file_path": None,
+                }
+            },
+            "databricks_queries": {},
+            "databricks_repos": {},
+            "databricks_schemas": {},
+            "databricks_secrets": {},
+            "databricks_secretscopes": {},
+            "databricks_serviceprincipals": {},
+            "databricks_storagecredentials": {},
+            "databricks_tables": {},
+            "databricks_users": {},
+            "databricks_vectorsearchendpoints": {},
+            "databricks_vectorsearchindexes": {},
+            "databricks_volumes": {},
+            "databricks_warehouses": {
+                "warehouse-external": {
+                    "cluster_size": "2X-Small",
+                    "access_controls": [
+                        {
+                            "group_name": "role-analysts",
+                            "permission_level": "CAN_USE",
+                            "service_principal_name": None,
+                            "user_name": None,
+                        }
+                    ],
+                    "auto_stop_mins": None,
+                    "channel_name": None,
+                    "enable_photon": None,
+                    "enable_serverless_compute": None,
+                    "instance_profile_arn": None,
+                    "jdbc_url": None,
+                    "max_num_clusters": None,
+                    "min_num_clusters": None,
+                    "name": "",
+                    "num_clusters": None,
+                    "spot_instance_policy": None,
+                    "tags": None,
+                    "warehouse_type": None,
+                },
+                "warehouse-disabled": {
+                    "cluster_size": "X-Small",
+                    "access_controls": [],
+                    "auto_stop_mins": None,
+                    "channel_name": None,
+                    "enable_photon": None,
+                    "enable_serverless_compute": None,
+                    "instance_profile_arn": None,
+                    "jdbc_url": None,
+                    "max_num_clusters": None,
+                    "min_num_clusters": None,
+                    "name": "disabled",
+                    "num_clusters": None,
+                    "spot_instance_policy": None,
+                    "tags": None,
+                    "warehouse_type": None,
+                },
+            },
+            "databricks_workspacebindings": {},
+            "databricks_workspacefiles": {},
+            "pipelines": {
+                "pl-custom-name": {
+                    "dataframe_backend": None,
+                    "databricks_job": None,
+                    "databricks_dlt": {
+                        "dataframe_backend": None,
+                        "access_controls": [
+                            {
+                                "group_name": "account users",
+                                "permission_level": "CAN_VIEW",
+                                "service_principal_name": None,
+                                "user_name": None,
+                            },
+                            {
+                                "group_name": "role-engineers",
+                                "permission_level": "CAN_RUN",
+                                "service_principal_name": None,
+                                "user_name": None,
+                            },
+                        ],
+                        "allow_duplicate_names": None,
+                        "catalog": None,
+                        "channel": "PREVIEW",
+                        "clusters": [],
+                        "configuration": {
+                            "business_unit": "${vars.business_unit}",
+                            "workflow_name": "${vars.workflow_name}",
+                            "pipeline_name": "${vars.workflow_name}",
+                            "workspace_laktory_root": "/.laktory/",
+                        },
+                        "continuous": None,
+                        "development": None,
+                        "edition": None,
+                        "libraries": [
+                            {
+                                "file": None,
+                                "notebook": {"path": "/pipelines/dlt_brz_template.py"},
+                            }
+                        ],
+                        "name": "${vars.workflow_name}",
+                        "name_prefix": None,
+                        "name_suffix": None,
+                        "notifications": [],
+                        "photon": None,
+                        "serverless": None,
+                        "storage": None,
+                        "target": None,
+                        "config_file": {
+                            "dataframe_backend": None,
+                            "access_controls": [
+                                {
+                                    "group_name": "users",
+                                    "permission_level": "CAN_READ",
+                                    "service_principal_name": None,
+                                    "user_name": None,
+                                }
+                            ],
+                            "dirpath": "",
+                            "path": "/.laktory/pipelines/${vars.workflow_name}/config.json",
+                            "rootpath": "/.laktory/",
+                            "source": "./tmp-${vars.workflow_name}-config.json",
+                        },
+                        "requirements_file": {
+                            "dataframe_backend": None,
+                            "access_controls": [
+                                {
+                                    "group_name": "users",
+                                    "permission_level": "CAN_READ",
+                                    "service_principal_name": None,
+                                    "user_name": None,
+                                }
+                            ],
+                            "dirpath": "",
+                            "path": "/.laktory/pipelines/${vars.workflow_name}/requirements.txt",
+                            "rootpath": "/.laktory/",
+                            "source": "./tmp-${vars.workflow_name}-requirements.txt",
+                        },
+                    },
+                    "dependencies": [],
+                    "name": "${vars.workflow_name}",
+                    "nodes": [
+                        {
+                            "dataframe_backend": None,
+                            "add_layer_columns": True,
+                            "dlt_template": None,
+                            "description": None,
+                            "drop_duplicates": None,
+                            "drop_source_columns": None,
+                            "transformer": None,
+                            "expectations": [],
+                            "expectations_checkpoint_location": None,
+                            "layer": None,
+                            "name": "first_node",
+                            "primary_keys": None,
+                            "sinks": None,
+                            "root_path": None,
+                            "source": {
+                                "dataframe_backend": None,
+                                "as_stream": False,
+                                "broadcast": False,
+                                "drop_duplicates": None,
+                                "drops": None,
+                                "filter": None,
+                                "limit": None,
+                                "renames": None,
+                                "sample": None,
+                                "selects": None,
+                                "watermark": None,
+                                "format": "JSONL",
+                                "path": "/tmp/",
+                                "read_options": {},
+                                "schema_definition": None,
+                                "schema_location": None,
+                            },
+                            "timestamp_key": None,
+                        }
+                    ],
+                    "orchestrator": "DATABRICKS_DLT",
+                    "udfs": [],
+                    "root_path": None,
+                }
+            },
+            "providers": {
+                "databricks": {
+                    "alias": None,
+                    "account_id": None,
+                    "auth_type": None,
+                    "azure_client_id": None,
+                    "azure_client_secret": None,
+                    "azure_environment": None,
+                    "azure_login_app_id": None,
+                    "azure_tenant_id": None,
+                    "azure_use_msi": None,
+                    "azure_workspace_resource_id": None,
+                    "client_id": None,
+                    "client_secret": None,
+                    "cluster_id": None,
+                    "config_file": None,
+                    "databricks_cli_path": None,
+                    "debug_headers": None,
+                    "debug_truncate_bytes": None,
+                    "google_credentials": None,
+                    "google_service_account": None,
+                    "host": "${vars.DATABRICKS_HOST}",
+                    "http_timeout_seconds": None,
+                    "metadata_service_url": None,
+                    "password": None,
+                    "profile": None,
+                    "rate_limit": None,
+                    "retry_timeout_seconds": None,
+                    "skip_verify": None,
+                    "token": "${vars.DATABRICKS_TOKEN}",
+                    "username": None,
+                    "warehouse_id": None,
+                }
+            },
+        },
+        "settings": None,
+        "terraform": {
+            "backend": {
+                "azurerm": {
+                    "resource_group_name": "o3-rg-laktory-dev",
+                    "storage_account_name": "o3stglaktorydev",
+                    "container_name": "unit-testing",
+                    "key": "terraform/dev.terraform.tfstate",
+                }
             }
         },
-        resources=resources,
-        environments={"dev": {}},
-    )
+    }
 
     return stack
 
 
-def test_stack_model(stack):
-    stack.model_dump()
-
-
-def test_stack_env_model(stack):
+def test_stack_env_model():
     # dev
     _stack = stack.get_env("dev").inject_vars()
     pl = _stack.resources.pipelines["pl-custom-name"]
@@ -140,10 +655,10 @@ def test_stack_env_model(stack):
         "is_dev": True,
         "node_type_id": "Standard_DS3_v2",
     }
-    assert pl.orchestrator.development is None
+    assert pl.databricks_dlt.development is None
     assert pl.nodes[0].dlt_template is None
     assert (
-        pl.orchestrator.config_file.path
+        pl.databricks_dlt.config_file.path
         == "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json"
     )
     assert pl.variables == {
@@ -164,7 +679,7 @@ def test_stack_env_model(stack):
         "is_dev": False,
         "node_type_id": "Standard_DS4_v2",
     }
-    assert not pl.orchestrator.development
+    assert not pl.databricks_dlt.development
     assert pl.nodes[0].dlt_template is None
     assert pl.variables == {
         "workflow_name": "pl-stock-prices-ut-stack",
@@ -191,15 +706,14 @@ def test_stack_resources_unique_name():
         )
 
 
-def test_pulumi_stack(monkeypatch, stack):
+def test_pulumi_stack(monkeypatch):
     monkeypatch.setenv("DATABRICKS_HOST", "my-host")
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
 
     pstack = stack.to_pulumi(env_name=None)
     assert pstack.organization == "okube"
-
     data_default = pstack.model_dump()
-
+    print(data_default)
     assert data_default == {
         "variables": {},
         "name": "unit-testing",
@@ -241,7 +755,7 @@ def test_pulumi_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "${vars.env}",
                                 },
-                                "sparkVersion": "16.3.x-scala2.12",
+                                "sparkVersion": "14.0.x-scala2.12",
                                 "sshPublicKeys": [],
                             },
                         }
@@ -392,6 +906,7 @@ def test_pulumi_stack(monkeypatch, stack):
 
     # Prod
     data = stack.to_pulumi(env_name="prod").model_dump()
+    print(data)
     assert data == {
         "variables": {},
         "name": "unit-testing",
@@ -433,7 +948,7 @@ def test_pulumi_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "prod",
                                 },
-                                "sparkVersion": "16.3.x-scala2.12",
+                                "sparkVersion": "14.0.x-scala2.12",
                                 "sshPublicKeys": [],
                             },
                         }
@@ -583,13 +1098,35 @@ def test_pulumi_stack(monkeypatch, stack):
         "outputs": {},
     }
 
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
 
-def test_terraform_stack(monkeypatch, stack):
-    # To prevent from exposing sensitive data, we overwrite some env vars
+
+def test_pulumi_preview():
+    pstack = stack.to_pulumi(env_name="dev")
+    pstack.preview(stack="okube/dev")
+
+
+@pytest.mark.skipif(
+    not os.getenv("PULUMI_ACCESS_TOKEN"),
+    reason="Storage account connection string missing.",
+)
+def test_pulumi_all_resources(monkeypatch):
+    validator = get_validator(monkeypatch)
+    validator.validate_pulumi()
+
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
+
+
+def test_terraform_stack(monkeypatch):
     monkeypatch.setenv("DATABRICKS_HOST", "my-host")
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
 
     data_default = stack.to_terraform().model_dump()
+    print(data_default)
     assert data_default == {
         "terraform": {
             "required_providers": {
@@ -642,7 +1179,7 @@ def test_terraform_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "${vars.env}",
                                 },
-                                "spark_version": "16.3.x-scala2.12",
+                                "spark_version": "14.0.x-scala2.12",
                                 "ssh_public_keys": [],
                             },
                         }
@@ -752,6 +1289,7 @@ def test_terraform_stack(monkeypatch, stack):
 
     # Dev
     data = stack.to_terraform(env_name="dev").model_dump()
+    print(data)
     assert data == {
         "terraform": {
             "required_providers": {
@@ -796,7 +1334,7 @@ def test_terraform_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "dev",
                                 },
-                                "spark_version": "16.3.x-scala2.12",
+                                "spark_version": "14.0.x-scala2.12",
                                 "ssh_public_keys": [],
                             },
                         }
@@ -906,6 +1444,7 @@ def test_terraform_stack(monkeypatch, stack):
 
     # Prod
     data = stack.to_terraform(env_name="prod").model_dump()
+    print(data)
     assert data == {
         "terraform": {
             "required_providers": {
@@ -950,7 +1489,7 @@ def test_terraform_stack(monkeypatch, stack):
                                     "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
                                     "LAKTORY_WORKSPACE_ENV": "prod",
                                 },
-                                "spark_version": "16.3.x-scala2.12",
+                                "spark_version": "14.0.x-scala2.12",
                                 "ssh_public_keys": [],
                             },
                         }
@@ -1059,40 +1598,27 @@ def test_terraform_stack(monkeypatch, stack):
         },
     }
 
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
 
-@pytest.mark.parametrize("is_full", [True, False])
-def test_terraform_plan(monkeypatch, stack, full_stack, is_full):
-    if is_full:
-        stack = full_stack
 
-    c0 = settings.cli_raise_external_exceptions
-    settings.cli_raise_external_exceptions = True
-
-    # Pulumi requires valid Databricks Host and Token and Pulumi Token to run a preview.
-    skip_terraform_plan()
-
+def test_terraform_plan():
     tstack = stack.to_terraform(env_name="dev")
-    tstack.init(flags=["-reconfigure"])
+    tstack.terraform.backend = (
+        None  # TODO: Add credentials to git actions to use azure backend
+    )
+    tstack.init(flags=["-migrate-state", "-upgrade"])
     tstack.plan()
 
-    settings.cli_raise_external_exceptions = c0
 
+def test_terraform_all_resources(monkeypatch):
+    validator = get_validator(monkeypatch)
+    validator.validate_terraform()
 
-@pytest.mark.parametrize("is_full", [True, False])
-def test_pulumi_preview(monkeypatch, stack, full_stack, is_full):
-    if is_full:
-        stack = full_stack
-
-    c0 = settings.cli_raise_external_exceptions
-    settings.cli_raise_external_exceptions = True
-
-    # Pulumi requires valid Databricks Host and Token and Pulumi Token to run a preview.
-    skip_pulumi_preview()
-
-    _stack = stack.to_pulumi("dev")
-    _stack.preview(stack="okube/dev")
-
-    settings.cli_raise_external_exceptions = c0
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
 
 
 def test_stack_settings():
@@ -1136,3 +1662,17 @@ def test_get_env():
 
     prd = stack.get_env("prd").inject_vars()
     assert prd.name == "stack-value0-prd"
+
+
+if __name__ == "__main__":
+    test_stack_model()
+    test_stack_env_model()
+    test_stack_resources_unique_name()
+    test_pulumi_stack(MonkeyPatch())
+    test_pulumi_preview()
+    test_pulumi_all_resources(MonkeyPatch())
+    test_terraform_stack(MonkeyPatch())
+    test_terraform_plan()
+    test_terraform_all_resources(MonkeyPatch())
+    test_stack_settings()
+    test_get_env()

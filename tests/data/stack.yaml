@@ -15,8 +15,13 @@ resources:
       variables:
         workflow_name: pl-stock-prices-ut-stack
       name: ${vars.workflow_name}
-      orchestrator:
-        type: DATABRICKS_DLT
+      orchestrator: DATABRICKS_DLT
+      nodes:
+        - name: first_node
+          source:
+            path: /tmp/
+          dlt_template: null
+      databricks_dlt:
         configuration:
           business_unit: ${vars.business_unit}
           workflow_name: ${vars.workflow_name}
@@ -31,18 +36,12 @@ resources:
             permission_level: CAN_RUN
         options:
           provider: ${resources.databricks}
-      nodes:
-        - name: first_node
-          source:
-            path: /tmp/
-            format: JSON
-          dlt_template: null
   databricks_jobs:
     job-stock-prices-ut-stack:
       name: job-stock-prices-ut-stack
       clusters:
         - name: main
-          spark_version: 16.3.x-scala2.12
+          spark_version: 14.0.x-scala2.12
           node_type_id: ${vars.node_type_id}
           spark_env_vars:
             AZURE_TENANT_ID: "{{secrets/azure/tenant-id}}"
@@ -115,9 +114,10 @@ environments:
     resources:
       pipelines:
         pl-custom-name:
-          orchestrator:
+          databricks_dlt:
             development: False
     variables:
       env: prod
       is_dev: false
       node_type_id: Standard_DS4_v2
+

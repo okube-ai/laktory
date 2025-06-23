@@ -1,0 +1,1 @@
+{"data":{"created_at":"2023-09-15T00:00:00","symbol":"AAPL","open":176.47999572753906,"close":175.00999450683594,"high":176.5,"low":173.82000732421875,"@id":"_id","_name":"stock_price","_producer_name":"yahoo-finance","_created_at":"2023-09-15T00:00:00Z"},"description":null,"name":"stock_price","producer":{"name":"yahoo-finance","description":null,"party":1}}

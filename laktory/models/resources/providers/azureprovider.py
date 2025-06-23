@@ -7,7 +7,7 @@ class AzureProvider(BaseProvider, PulumiResource, TerraformResource):
     """
     Azure Provider
 
-    Parameters
+    Attributes
     ----------
     auxiliary_tenant_ids:
         #TODO

@@ -1,68 +1,63 @@
-??? "API Documentation"
-    [`laktory.models.DataFrameTransformer`][laktory.models.DataFrameTransformer]<br>
-
 <img src="/../../images/transformer_logo.png" alt="node transformer" width="100"/>
 
-The `DataFrameTransformer` class is the core model for transforming dataframes in Laktory. It serializes chained 
-DataFrame operations and is generally used between a data source and a data sink.
+The transformer is the process in which data read from the source is modified before being written to a sink.
 
-<img src="/../../images/transformer_diagram.png" alt="node transformer" width="600"/>
-
-A Transformer is composed of a series of nodes, each representing a transformation applied to a dataframe as an 
-expression or as a method. The output of one node is passed as input to the next, enabling complex transformations.
-
-#### DataFrameExpr
+### Spark Chain
 ??? "API Documentation"
-    [`laktory.models.DataFrameExpr`][laktory.models.DataFrameExpr]<br>
+    [`laktory.models.SparkChain`][laktory.models.SparkChain]<br>
 
-The `DataFrameExpr` class expresses a transformation as `SELECT` SQL expression, including joins and unions.
+The Spark Chain is the core model for transforming dataframes in Laktory. It serializes chained Spark operations and 
+supports [data sources](sourcessinks.md) instances as inputs in addition to dataframes.
 
-#### DataFrameMethod
-??? "API Documentation"
-    [`laktory.models.DataFrameMethod`][laktory.models.DataFrameMethod]<br>
+<img src="/../../images/spark_chain_diagram.png" alt="node transformer" width="600"/>
 
-The `DataFrameMethod` class expresses a transformation as a method applied to the DataFrame and its required arguments.
-It supports receiving data sources, including other pipeline nodes, as argument instead of DataFrames. By default, 
-Narwhals DataFrame API is used, but native DataFrame backend can also be selected. You can also extend this 
-functionality by creating a custom [namespace](extension_custom.md).
+A Spark Chain is a series of nodes, each representing a transformation applied to a dataframe. Each node can declare a
+SQL transformation or a Spark function with the arguments passed to that function. The output of one node is passed
+as input to the next, enabling complex transformations. Additionally, nodes can declare new columns derived from SQL
+or Spark expressions.
+
+A Spark chain is defined as a series of nodes, each one representing a transformation applied to a dataframe. A node
+declares either a SQL transformation or the spark function responsible for the transformation and the arguments to
+pass to that function. Each function is expected to output a dataframe and receive as an input the output of the 
+previous node. As a convenience, a node can also declare a new column from a sql or spark expression.
 
 For example, if you have a dataframe with a column `x` and want to:
 
 - rename `x` to `theta` using SQL
-- compute `cos(theta)` using Narwhals API
+- compute `cos(theta)` using Spark
 - drop duplicated rows using Spark
 
-here is how you would do it:
+here is how you would do it with `SparkChain`
 
 ```python title="pipeline.yaml"
 import pandas as pd
 
-import laktory as lk
+from laktory import models
 
 df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 2, 3]}))
 
 # Build Chain
-sc = lk.models.DataFrameTransformer(
+sc = models.SparkChain(
     nodes=[
         {
-            "expr": "SELECT x AS theta FROM {df}",
+            "sql_expr": "SELECT x AS theta FROM {df}",
         },
         {
-            "func_name": "with_columns",
-            "func_kwargs": {
-                "cos": "nw.col('theta').cos()"
-            }
+            "with_column": {
+                "name": "cos",
+                "type": "double",
+                "expr": "F.cos('theta')",
+            },
         },
         {
-            "func_name": "drop_duplicates",
-            "func_args": ["theta"],
-            "dataframe_api": "NATIVE",
+            "spark_func_name": "dropDuplicates",
+            "spark_func_args": ["theta"],
         },
     ]
 )
 
 # Execute Chain
-df = sc.execute(df0)
+df = sc.execute(df0, spark=spark)
 ```
 
 In this example, `{df}` refers to the output of the previous node in the Spark Chain. You can also
@@ -74,3 +69,13 @@ posts
 and
 [SparkChain](https://www.linkedin.com/pulse/laktory-sparkchain-serializable-spark-based-data-olivier-soucy-oihxe/)
 .
+
+
+### Polars Chain
+??? "API Documentation"
+    [`laktory.models.SparkChain`][laktory.models.SparkChain]<br>
+
+The Polars chain is very similar to the Spark Chain as it defines a series of
+core data transformations, except that it uses Polars instead of Spark as its
+engine. The supported functions and syntax are also slightly different to
+accommodate for Polars.

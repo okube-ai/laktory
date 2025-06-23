@@ -632,12 +632,6 @@ class JobTaskForEachTaskTask(BaseModel):
     task_key: str = None
     timeout_seconds: int = None
 
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "email_notifications": "email_notifications",
-        }
-
     @field_validator("depends_ons")
     @classmethod
     def sort_depends_ons(cls, v: list[JobTaskDependsOn]) -> list[JobTaskDependsOn]:
@@ -907,7 +901,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     name: job-stock-prices
     clusters:
       - name: main
-        spark_version: 16.3.x-scala2.12
+        spark_version: 14.0.x-scala2.12
         node_type_id: Standard_DS3_v2
 
     tasks:
@@ -1087,12 +1081,6 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "email_notifications": "email_notifications",
-        }
 
     @property
     def terraform_resource_type(self) -> str:

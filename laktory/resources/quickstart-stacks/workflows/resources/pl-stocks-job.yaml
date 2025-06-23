@@ -5,9 +5,11 @@
 #
 name: pl-stocks-job
 
+# Select Orchestrator
+orchestrator: DATABRICKS_JOB
+
 # Configure Orchestrator
-orchestrator:
-  type: DATABRICKS_JOB
+databricks_job:
   clusters:
     - name: node-cluster
       autoscale:
@@ -44,13 +46,10 @@ nodes:
 
   # The transformer is a chain of SQL statements and / or serialized spark
   # functions. In this case, we use SQL to select some columns from the
-  # source and we use pyspark df.drop_duplicates to clean the data. Because the API
-  # used by default by Laktory is Narwhals, we need to specific `dataframe_api: NATIVE`
-  # to directly use spark API
+  # source and we use Spark df.drop_duplicates to clean the data.
   transformer:
     nodes:
-    - expr: !use ../sql/slv_stock_prices.sql
+    - sql_expr: !use ../sql/slv_stock_prices.sql
     - func_name: drop_duplicates
       func_kwargs:
         subset: ["created_at", "symbol"]
-      dataframe_api: NATIVE

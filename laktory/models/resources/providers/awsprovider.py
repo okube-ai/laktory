@@ -39,7 +39,7 @@ class AWSProvider(BaseProvider, PulumiResource, TerraformResource):
     """
     AWS Provider
 
-    Parameters
+    Attributes
     ----------
     access_key:
         The access key for API operations. You can retrieve this from the

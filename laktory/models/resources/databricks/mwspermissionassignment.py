@@ -10,7 +10,7 @@ class MwsPermissionAssignment(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Mws Permission Assignment
 
-    Parameters
+    Attributes
     ----------
     permissions:
         The list of workspace permissions to assign to the principal:

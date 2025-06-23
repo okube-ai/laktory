@@ -7,7 +7,7 @@ class TableGrant(BaseModel):
     """
     Privileges granted to a principal and operating on a table
 
-    Parameters
+    Attributes
     ----------
     principal
         User, group or service principal name

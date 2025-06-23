@@ -14,7 +14,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 class CatalogLookup(ResourceLookup):
     """
-    Parameters
+    Attributes
     ----------
     name:
         Catalog name
@@ -28,7 +28,7 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     A catalog is the first layer of Unity Catalog’s three-level namespace. It’s
     used to organize your data assets.
 
-    Parameters
+    Attributes
     ----------
     comment:
         Text description of the catalog

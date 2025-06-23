@@ -6,20 +6,18 @@ lakehouses.
 ## What is it?
 Laktory is your all-in-one solution for defining both data transformations and 
 Databricks resources. Imagine if Terraform, Databricks Asset Bundles, and dbt
-combined forces and added support for DataFrame API—that’s essentially Laktory.
+combined forces—that’s essentially Laktory.
 
-This open-source framework streamlines the creation, deployment, and execution
-of data pipelines while adhering to essential DevOps practices such as version
-control, code reviews, and CI/CD integration. Powered by Narwhals, Laktory
-enables seamless transitions between Apache Spark, Polars, and other frameworks
-to perform data transformations reliably and at scale. Its modular and flexible
-design allows you to effortlessly combine SQL statements with DataFrame
-operations, reducing complexity and enhancing productivity.
+This open-source framework simplifies the creation, deployment, and execution 
+of data pipelines while adhering to essential DevOps practices like version 
+control, code reviews, and CI/CD integration. With Apache Spark and Polars
+driving its data transformation, Laktory ensures reliable and scalable data
+processing. Its modular, flexible approach allows you to seamlessly combine SQL
+statements with DataFrame operations.
 
-#TODO UPDATE DIAGRAM TO INCLUDE NARWHALS
 <img src="images/laktory_diagram.png" alt="what is laktory" width="800"/>
 
-Since Laktory pipelines are built on top of Narwhals, they can run in
+Since Laktory pipelines are built on top of Spark and Polars, they can run in
 any environment that supports python—from your local machine to a Kubernetes 
 cluster. They can also be deployed and orchestrated as Databricks Jobs or
 [Delta Live Tables](https://www.databricks.com/product/delta-live-tables),
@@ -58,10 +56,10 @@ value—while minimizing boilerplate code.
 
 ### Scalability
 Scale the right job to the right level. Run on a powerful Spark cluster when 
-dealing with large datasets, or experiment locally with Polars on your machine
-with smaller ones. Switching between environments is effortless with a simple
-configuration change, ensuring that Laktory adapts to both small and 
-large-scale needs without complexity.
+dealing with large datasets, or experiment locally on your machine with smaller
+ones. Switching between environments is effortless with a simple configuration
+change, ensuring that Laktory adapts to both small and large-scale needs
+without complexity.
 
 ### Quality
 Elevate data quality to a first-class citizen. Laktory integrates robust data 
@@ -81,139 +79,59 @@ their lakehouses with confidence.
 Curious about their experience? Read their [testimonials](users.md).
 
 ## How does it work?
-Using YAML configuration files or python code, define a [stack](concepts/stack.md) of
+Using YAML configuration files, define a [stack](concepts/stack.md) of
 resources, such as a data [pipelines](concepts/pipeline.md) with SQL-based and
-Spark-based transformations.
-
+Spark-based transformations. 
 ### Declare
-
-=== "YAML"
-    
-    ```yaml title="pipeline_node.yaml"
-    name: slv_stock_prices
-    dataframe_backend: PYSPARK
-    source:
-      path: /Volumes/dev/sources/landing/tables/brz_stock_prices/
-      format: JSON
-    sinks:
-    - schema_name: finance
-      table_name: slv_stock_prices
-    transformer:
-      nodes:
-      - expr: |
-            SELECT
-              data.created_at AS created_at,
-              data.symbol AS symbol,
-              data.open AS open,
-              data.close AS close,
-              data.high AS high,
-              data.low AS low,
-              data.volume AS volume
-            FROM
-              {df}
-      - func_name: drop_duplicates
-        func_kwargs:
-          subset:
-            - symbol
-            - timestamp
-    ...
-    ```
-
-=== "Python"
-
-    ```py title="pipeline_node.py"
-    from laktory import models
-    
-    node = models.PipelineNode(
-        name="slv_stock_prices",
-        dataframe_backend="PYSPARK",
-        source=models.FileDataSource(
-            path="/Volumes/dev/sources/landing/tables/brz_stock_prices/",
-            format="JSON",
-        ),
-        sinks=[
-            models.UnityCatalogDataSink(
-                schema_name="finance",
-                table_name="slv_stock_prices"
-            )
-        ],
-        transformer=models.DataFrameTransformer(
-            nodes=[
-                {"expr": """
-                    SELECT
-                      data.created_at AS created_at,
-                      data.symbol AS symbol,
-                      data.open AS open,
-                      data.close AS close,
-                      data.high AS high,
-                      data.low AS low,
-                      data.volume AS volume
-                    FROM
-                      {df}
-                """},
-                {
-                    "func_name": "drop_duplicates",
-                    "func_kwargs": {
-                        "subset": ["symbol", "created_at"]
-                    }
-                }
-            ]
-        )
-    )
-    ```
-
+```yaml title="pipeline_node.yaml"
+name: slv_stock_prices
+source:
+  path: /Volumes/dev/sources/landing/tables/brz_stock_prices/
+sinks:
+- schema_name: finance
+  table_name: slv_stock_prices
+transformer:
+  nodes:
+  - sql_expr: |
+        SELECT
+          data.created_at AS created_at,
+          data.symbol AS symbol,
+          data.open AS open,
+          data.close AS close,
+          data.high AS high,
+          data.low AS low,
+          data.volume AS volume
+        FROM
+          {df}
+  - func_name: drop_duplicates
+    func_kwargs:
+      subset:
+        - symbol
+        - timestamp
+...
+```
 ### Debug
 Execute your pipline from your IDE using python and a local or remote Spark
 session.
+```py
+from laktory import models
 
-=== "YAML"
-    
-    ```py
-    from databricks.connect import DatabricksSession
+with open("pipeline_node.yaml") as fp:
+    node = models.PipelineNode.model_validate(fp)
 
-    from laktory import models
-    from laktory import register_spark_session
-
-    with open("pipeline_node.yaml") as fp:
-        node = models.PipelineNode.model_validate(fp)
-
-    spark = DatabricksSession.builder.getOrCreate()
-    register_spark_session(spark)
-
-    node.execute()
-    node.output_df.laktory.display()
-    print(node.output_df.to_native().show())
-    ```
-
-=== "Python"
-
-    ```py
-    from databricks.connect import DatabricksSession
-
-    from laktory import register_spark_session
-
-    spark = DatabricksSession.builder.getOrCreate()
-    register_spark_session(spark)
-
-    node = ...
-
-    node.execute()
-    node.output_df.laktory.display()
-    print(node.output_df.to_native().show())
-    ```
+node.execute(spark)
+node.output_df.laktory.display()
+```
 
 <div class="code-output">
 ```commandline title="output"
-[laktory] Executing pipeline node slv_stock_prices
-[laktory] Reading `PipelineNodeDataSource` brz_stock_prices with DataFrameBackends.PYSPARK
-[laktory] Reading pipeline node brz_stock_prices from output DataFrame
-[laktory] Read completed.
-[laktory] Executing DataFrame Transformer
-[laktory] Executing DataFrame transformer node 0 (DataFrameExpr).
-[laktory] DataFrame as 
+laktory.models.pipelinenode - INFO - Executing pipeline node slv_stock_prices (None)
+laktory.models.datasources.filedatasource - INFO - Reading /Volumes/dev/sources/landing/tables/brz_stock_prices/ as static
+laktory.models.transformers.basechain - INFO - Executing SPARK chain
+laktory.models.transformers.basechain - INFO - Executing SPARK chain node 0 (SparkChainNode).
+laktory.models.transformers.sparkchainnode - INFO - DataFrame df as 
 SELECT
-  CAST(data.created_at AS TIMESTAMP) AS created_at,
-  data.symbol AS name,
+  data.created_at AS created_at,
   data.symbol AS symbol,
   data.open AS open,
   data.close AS close,
@@ -222,37 +140,24 @@ SELECT
   data.volume AS volume
 FROM
   {df}
-[laktory] Executing DataFrame transformer node 1 (DataFrameMethod).
-[laktory] Applying df.unique(subset=['symbol', 'created_at'],keep=any)
-[laktory] Writing static df to ./data/slv_stock_prices.parquet with format 'PARQUET' and {}
-[laktory] Write completed.
-┌────────────────┬───────┬────────┬────────────┬────────────┬────────────┬────────────┬────────────┐
-│ created_at     ┆ name  ┆ symbol ┆ open       ┆ close      ┆ high       ┆ low        ┆ volume     │
-│ ---            ┆ ---   ┆ ---    ┆ ---        ┆ ---        ┆ ---        ┆ ---        ┆ ---        │
-│ datetime[μs]   ┆ str   ┆ str    ┆ f64        ┆ f64        ┆ f64        ┆ f64        ┆ f64        │
-╞════════════════╪═══════╪════════╪════════════╪════════════╪════════════╪════════════╪════════════╡
-│ 2023-04-04     ┆ AMZN  ┆ AMZN   ┆ 103.175003 ┆ 103.129997 ┆ 103.419998 ┆ 103.072502 ┆ 3.998703e6 │
-│ 13:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
-│ 2023-04-06     ┆ MSFT  ┆ MSFT   ┆ 288.859985 ┆ 290.360107 ┆ 291.070007 ┆ 288.700012 ┆ 4.355298e6 │
-│ 13:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
-│ 2023-03-02     ┆ AMZN  ┆ AMZN   ┆ 90.589996  ┆ 90.860001  ┆ 91.004997  ┆ 90.529999  ┆ 4.143251e6 │
-│ 12:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
-│ 2023-10-03     ┆ AMZN  ┆ AMZN   ┆ 125.150002 ┆ 125.580002 ┆ 125.699997 ┆ 124.800003 ┆ 5.416032e6 │
-│ 11:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
-│ 2024-03-05     ┆ AAPL  ┆ AAPL   ┆ 170.785004 ┆ 170.470001 ┆ 170.828705 ┆ 170.149994 ┆ 4.315788e6 │
-│ 12:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
-│ …              ┆ …     ┆ …      ┆ …          ┆ …          ┆ …          ┆ …          ┆ …          │
-│ 2023-11-30     ┆ AAPL  ┆ AAPL   ┆ 188.335007 ┆ 188.789993 ┆ 188.830002 ┆ 188.289993 ┆ 2.75059e6  │
-│ 13:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
-│ 2023-03-22     ┆ MSFT  ┆ MSFT   ┆ 275.850006 ┆ 277.049988 ┆ 277.149994 ┆ 275.764008 ┆ 1.790997e6 │
-│ 12:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
-│ 2023-01-12     ┆ GOOGL ┆ GOOGL  ┆ 91.480003  ┆ 91.510002  ┆ 91.870003  ┆ 89.75      ┆ 7.320764e6 │
-│ 09:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
-│ 2023-07-20     ┆ GOOGL ┆ GOOGL  ┆ 120.459999 ┆ 120.059998 ┆ 120.470001 ┆ 119.764999 ┆ 2.94552e6  │
-│ 12:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
-│ 2023-08-22     ┆ AAPL  ┆ AAPL   ┆ 176.922897 ┆ 177.214996 ┆ 177.429993 ┆ 176.310104 ┆ 6.823573e6 │
-│ 10:30:00       ┆       ┆        ┆            ┆            ┆            ┆            ┆            │
-└────────────────┴───────┴────────┴────────────┴────────────┴────────────┴────────────┴────────────┘
+laktory.models.transformers.basechain - INFO - Executing SPARK chain node 1 (SparkChainNode).
+laktory.models.transformers.sparkchainnode - INFO - DataFrame df as drop_duplicates(subset=['symbol', 'created_at'])
+laktory.models.datasinks.filedatasink - INFO - Writing df as static DELTA to finance.slv_stock_prices with mode OVERWRITE and options {'mergeSchema': 'false', 'overwriteSchema': 'true'}
++-------------------------+------+------------------+------------------+------------------+------------------+---------+
+|created_at               |symbol|open              |close             |high              |low               |volume   |
++-------------------------+------+------------------+------------------+------------------+------------------+---------+
+|2023-07-06T11:30:00-04:00|MSFT  |338.7200012207031 |341.6199951171875 |341.6600036621094 |338.4200134277344 |2850613.0|
+|2023-02-15T13:30:00-05:00|AAPL  |154.3800048828125 |155.2321014404297 |155.32550048828125|154.14999389648438|6005631.0|
+|2023-02-15T10:30:00-05:00|MSFT  |268.0098876953125 |267.9599914550781 |268.6300048828125 |266.5299987792969 |5300365.0|
+|2023-10-18T13:30:00-04:00|MSFT  |332.7200012207031 |331.54998779296875|332.7200012207031 |330.739990234375  |2036767.0|
+|2023-10-19T12:30:00-04:00|AAPL  |176.69000244140625|177.47999572753906|177.83999633789062|175.4600067138672 |7575857.0|
+|2023-05-16T11:30:00-04:00|AMZN  |113.59500122070312|114.4832992553711 |114.48999786376953|113.2750015258789 |8034165.0|
+|2023-07-06T10:30:00-04:00|MSFT  |340.5799865722656 |338.70001220703125|341.1199951171875 |338.0899963378906 |3748565.0|
+|2023-03-30T10:30:00-04:00|GOOGL |100.59500122070312|100.4749984741211 |100.875           |100.24019622802734|3869214.0|
+|2023-01-17T15:30:00-05:00|GOOGL |91.55500030517578 |91.30999755859375 |91.61000061035156 |91.23999786376953 |3977790.0|
+|2023-03-22T12:30:00-04:00|AMZN  |99.94010162353516 |100.193603515625  |100.21659851074219|99.83219909667969 |3250304.0|
++-------------------------+------+------------------+------------------+------------------+------------------+---------+
+only showing top 10 rows
 ```
 </div>
 

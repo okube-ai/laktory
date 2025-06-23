@@ -9,7 +9,7 @@ class MetastoreAssignment(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Metastore Assignment
 
-    Parameters
+    Attributes
     ----------
     metastore_id:
         Unique identifier of the parent Metastore

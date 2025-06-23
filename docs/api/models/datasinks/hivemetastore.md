@@ -1,1 +1,0 @@
-::: laktory.models.datasinks.HiveMetastoreDataSink

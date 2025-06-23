@@ -1,0 +1,1 @@
+{"data":{"created_at":"2023-09-25T00:00:00","symbol":"AMZN","open":129.36000061035156,"close":131.27000427246094,"high":131.77999877929688,"low":128.77000427246094,"@id":"_id","_name":"stock_price","_producer_name":"yahoo-finance","_created_at":"2023-09-25T00:00:00Z"},"description":null,"name":"stock_price","producer":{"name":"yahoo-finance","description":null,"party":1}}

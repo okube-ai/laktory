@@ -16,5 +16,8 @@
 
 ::: laktory.models.resources.databricks.dltpipeline.PipelineNotifications
 
+---
+
+::: laktory.models.resources.databricks.dltpipeline.PipelineCluster
 
 

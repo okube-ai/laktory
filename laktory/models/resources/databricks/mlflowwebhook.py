@@ -11,7 +11,7 @@ class MlflowWebhookHttpUrlSpec(BaseModel):
     """
     MLflow webhook URL Specifications
 
-    Parameters
+    Attributes
     ----------
     url:
         External HTTPS URL called on event trigger (by using a POST request). Structure of payload depends on the event
@@ -43,7 +43,7 @@ class MlflowWebhookJobSpec(BaseModel):
     """
     MLflow webhook Job Specifications
 
-    Parameters
+    Attributes
     ----------
     access_token:
         The personal access token used to authorize webhook's job runs.
@@ -63,7 +63,7 @@ class MLflowWebhook(BaseModel, PulumiResource, TerraformResource):
     """
     MLflow Model
 
-    Parameters
+    Attributes
     ----------
     events:
         The list of events that will trigger execution of Databricks job or POSTing to an URL, for example,

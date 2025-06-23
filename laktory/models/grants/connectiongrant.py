@@ -7,7 +7,7 @@ class ConnectionGrant(BaseModel):
     """
     Privileges granted to a principal and operating on a connection
 
-    Parameters
+    Attributes
     ----------
     principal
         User, group or service principal name

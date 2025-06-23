@@ -7,7 +7,7 @@ class ExternalLocationGrant(BaseModel):
     """
     Privileges granted to a principal and operating on an external location
 
-    Parameters
+    Attributes
     ----------
     principal
         User, group or service principal name

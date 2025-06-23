@@ -7,7 +7,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 # class VectorSearchEndpointLookup(ResourceLookup):
 #     """
-#     Parameters
+#     Attributes
 #     ----------
 #     id:
 #         The ID of the Vector Search Endpoint warehouse.
@@ -20,7 +20,7 @@ class VectorSearchEndpoint(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Warehouse
 
-    Parameters
+    Attributes
     ----------
     endpoint_type:
         Type of Vector Search Endpoint.

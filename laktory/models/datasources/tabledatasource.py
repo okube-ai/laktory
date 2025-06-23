@@ -1,48 +1,48 @@
-from typing import Any
-
-import narwhals as nw
-from pydantic import Field
-from pydantic import model_validator
+from typing import Literal
+from typing import Union
 
 from laktory._logger import get_logger
 from laktory.models.datasources.basedatasource import BaseDataSource
-from laktory.models.readerwritermethod import ReaderWriterMethod
+from laktory.spark import SparkDataFrame
 
 logger = get_logger(__name__)
 
 
 class TableDataSource(BaseDataSource):
-    catalog_name: str | None = Field(
-        None,
-        description="Source table catalog name",
-    )
-    schema_name: str | None = Field(
-        None,
-        description="Source table schema name",
-    )
-    table_name: str = Field(
-        ...,
-        description="Source table name. Also supports fully qualified name (`{catalog}.{schema}.{table}`). In this case, `catalog_name` and `schema_name` arguments are ignored.",
-    )
-    reader_methods: list[ReaderWriterMethod] = Field(
-        [], description="DataFrame backend reader methods."
-    )
+    """
+    Data source using a data warehouse data table, generally used in the
+    context of a data pipeline. Currently only supported by Spark dataframes.
 
-    @model_validator(mode="after")
-    def table_full_name(self) -> Any:
-        name = self.table_name
-        if name is None:
-            return
-        names = name.split(".")
+    Attributes
+    ----------
+    catalog_name:
+        Name of the catalog of the source table
+    schema_name:
+        Name of the schema of the source table
+    table_name:
+        Name of the source table
 
-        with self.validate_assignment_disabled():
-            self.table_name = names[-1]
-            if len(names) > 1:
-                self.schema_name = names[-2]
-            if len(names) > 2:
-                self.catalog_name = names[-3]
+    Examples
+    ---------
+    ```python
+    from laktory import models
 
-        return self
+    source = models.TableDataSource(
+        catalog_name="dev",
+        schema_name="finance",
+        table_name="brz_stock_prices",
+        selects=["symbol", "open", "close"],
+        filter="symbol='AAPL'",
+        as_stream=True,
+    )
+    # df = source.read(spark)
+    ```
+    """
+
+    catalog_name: Union[str, None] = None
+    table_name: Union[str, None] = None
+    schema_name: Union[str, None] = None
+    warehouse: Union[Literal["DATABRICKS"], None] = "DATABRICKS"
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -75,11 +75,19 @@ class TableDataSource(BaseDataSource):
     def _id(self) -> str:
         return self.full_name
 
-    def _read_spark(self, spark=None) -> nw.LazyFrame:
-        from laktory import get_spark_session
+    # ----------------------------------------------------------------------- #
+    # Readers                                                                 #
+    # ----------------------------------------------------------------------- #
 
-        spark = get_spark_session()
+    def _read_spark(self, spark) -> SparkDataFrame:
+        if self.warehouse == "DATABRICKS":
+            return self._read_spark_databricks(spark)
+        else:
+            raise NotImplementedError(
+                f"Warehouse '{self.warehouse}' is not yet supported."
+            )
 
+    def _read_spark_databricks(self, spark) -> SparkDataFrame:
         if self.as_stream:
             logger.info(f"Reading {self._id} as stream")
             df = spark.readStream.table(self.full_name)
@@ -87,4 +95,4 @@ class TableDataSource(BaseDataSource):
             logger.info(f"Reading {self._id} as static")
             df = spark.read.table(self.full_name)
 
-        return nw.from_native(df)
+        return df

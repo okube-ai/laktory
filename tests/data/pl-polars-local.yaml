@@ -1,0 +1,94 @@
+name: pl-polars-local
+dataframe_backend: POLARS
+nodes:
+- name: brz_stock_prices
+  layer: BRONZE
+  source:
+    format: DELTA
+    path: {data_dir}/brz_stock_prices_delta/
+    as_stream: False
+  sinks:
+  - format: DELTA
+    mode: OVERWRITE
+    path: {pl_dir}/brz_stock_prices
+
+- name: slv_stock_prices
+  layer: SILVER
+  source:
+    node_name: brz_stock_prices
+    as_stream: False
+  sinks:
+  - path: {pl_dir}/slv_stock_prices
+    format: DELTA
+    mode: OVERWRITE
+  - path: {pl_dir}/slv_stock_prices_quarantine
+    format: DELTA
+    mode: APPEND
+    is_quarantine: True
+  expectations:
+    - name: not amazon
+      expr: symbol != 'AMZN'
+      action: DROP
+    - name: low price
+      expr: close < 330
+      action: QUARANTINE
+  drop_source_columns: False
+  transformer:
+    nodes:
+    - sql_expr: |
+        SELECT
+          _bronze_at,
+          CAST(data.created_at AS TIMESTAMP) AS created_at,
+          data.symbol as symbol,
+          data.close as close
+        FROM
+          {df}
+    - func_name: laktory.smart_join
+      func_kwargs:
+        'on':
+          - symbol
+        other:
+          node_name: slv_stock_meta
+          renames:
+            symbol2: symbol
+
+- name: slv_stock_prices_tmp
+  source:
+    node_name: slv_stock_prices
+
+- name: gld_stock_prices
+  source:
+    node_name: slv_stock_prices_tmp
+  sinks:
+  - format: DELTA
+    mode: OVERWRITE
+    path: {pl_dir}/gld_stock_prices
+  transformer:
+    nodes:
+    - func_name: laktory.groupby_and_agg
+      func_kwargs:
+        agg_expressions:
+        - name: max_price
+          expr: F.max('close')
+        - name: min_price
+          expr: F.min('close')
+        - name: mean_price
+          expr: F.mean('close')
+        groupby_columns:
+        - symbol
+
+- name: brz_stock_meta
+  source:
+    format: PARQUET
+    path: {data_dir}/slv_stock_meta/*.parquet
+  sinks:
+  - format: PARQUET
+    path: {pl_dir}/brz_stock_meta
+
+- name: slv_stock_meta
+  source:
+    node_name: brz_stock_meta
+  sinks:
+  - format: PARQUET
+    path: {pl_dir}/slv_stock_meta
+

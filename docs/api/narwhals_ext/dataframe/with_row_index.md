@@ -1,1 +1,0 @@
-::: laktory.narwhals_ext.dataframe.with_row_index

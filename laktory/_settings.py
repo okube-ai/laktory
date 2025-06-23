@@ -1,6 +1,5 @@
 import os
 from typing import Any
-from typing import Literal
 from typing import Union
 
 from pydantic import ConfigDict
@@ -34,10 +33,7 @@ class Settings(BaseSettings):
     workspace_landing_root: str = Field("", alias="LAKTORY_WORKSPACE_LANDING_ROOT")
 
     # Dataframe
-    dataframe_backend: str = Field("PYSPARK", alias="LAKTORY_DATAFRAME_BACKEND")
-    dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(
-        "NARWHALS", alias="LAKTORY_DATAFRAME_API"
-    )
+    dataframe_backend: str = Field("SPARK", alias="LAKTORY_DATAFRAME_BACKEND")
 
     # Paths
     laktory_root: str = Field("", alias="LAKTORY_ROOT")

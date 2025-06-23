@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING
-
 from laktory._logger import get_logger
+from laktory.spark import SparkDataFrame
 
 try:
     from dlt import *
@@ -10,8 +9,6 @@ try:
 except Exception:
     pass
 
-if TYPE_CHECKING:
-    from pyspark.sql import DataFrame
 
 logger = get_logger(__name__)
 
@@ -66,7 +63,7 @@ def is_debug() -> bool:
     return False
 
 
-def get_df(df_wrapper) -> "DataFrame":
+def get_df(df_wrapper) -> SparkDataFrame:
     """
     When executed in debug mode (ref `dlt.is_debug`), executes and returns
     the output dataframe of a function decorated with `@dlt.table` or
@@ -115,7 +112,7 @@ def get_df(df_wrapper) -> "DataFrame":
 # --------------------------------------------------------------------------- #
 
 
-def read(*args, **kwargs) -> "DataFrame":
+def read(*args, **kwargs) -> SparkDataFrame:
     """
     When `is_debug()` is `True` read table from storage, else read table from
     pipeline with native Databricks `dlt.read`
@@ -245,7 +242,7 @@ def apply_changes(*args, node=None, **kwargs):
     if is_debug():
         if node is None:
             return
-        df = node.source.read().to_native()
+        df = node.source.read(spark=spark)
         # TODO: Apply changes
         logger.warning(
             "Laktory does not currently support applying CDC changes. Returned dataframe is CDC source."

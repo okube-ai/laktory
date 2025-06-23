@@ -17,7 +17,7 @@ class PipelineLibraryFile(BaseModel):
     """
     Pipeline Library File specifications
 
-    Parameters
+    Attributes
     ----------
     path:
         Workspace filepath
@@ -30,7 +30,7 @@ class PipelineLibraryNotebook(BaseModel):
     """
     Pipeline Library Notebook specifications
 
-    Parameters
+    Attributes
     ----------
     path:
         Workspace notebook filepath
@@ -43,7 +43,7 @@ class PipelineLibrary(BaseModel):
     """
     Pipeline Library specifications
 
-    Parameters
+    Attributes
     ----------
     file:
         File specifications
@@ -59,7 +59,7 @@ class PipelineNotifications(BaseModel):
     """
     Pipeline Notifications specifications
 
-    Parameters
+    Attributes
     ----------
     alerts:
         Alert types
@@ -136,7 +136,7 @@ class DLTPipeline(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Delta Live Tables (DLT) Pipeline
 
-    Parameters
+    Attributes
     ----------
     access_controls:
         Pipeline access controls

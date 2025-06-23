@@ -1,7 +1,0 @@
-- Review models API doc to sort parent class attributes
-- Review why Literal don't show expected values (it seems to show type instead)
-- Find why `VariableType` does not receive a hyperlink
-- Figure out why inputs to base models shows as invalid type (linting)
-- Support views in data sinks
-- Support purge in data sinks
-- Sort parameters when importing from parent classes.

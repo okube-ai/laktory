@@ -1,7 +1,6 @@
 name: unity-catalog
-organization: my_organization  # Will be used as Pulumi organization
 description: Lakehouse - Unity Catalog Configuration
-backend: pulumi
+backend: terraform
 
 # Account Provider
 # The account-level provider configuration varies by cloud provider.
@@ -13,7 +12,6 @@ pulumi:
     databricks:azure_tenant_id: ${vars.AZURE_TENANT_ID}
     databricks:azure_client_id: ${vars.AZURE_CLIENT_ID}
     databricks:azure_client_secret: ${vars.AZURE_CLIENT_SECRET}
-    databricks:auth_type: azure-client-secret
 
 
 # List of Resources to deploy
@@ -46,6 +44,3 @@ resources:
 
 variables:
   workspace_id_dev: 2211091707396001  # TODO: CUSTOMIZE WITH YOUR WORKSPACE ID
-
-environments:
-  global: {}

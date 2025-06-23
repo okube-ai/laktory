@@ -77,6 +77,7 @@ theme:
 #        name: "Switch to dark mode"
 
 plugins:
+#  - markdown-exec
   - mkdocstrings:
       handlers:
         python:
@@ -89,28 +90,29 @@ plugins:
             docstring_options:
               ignore_init_summary: true
             docstring_section_style: spacy
-            docstring_style: "numpy"
+            docstring_style: numpy
             filters: ["!^_"]
             group_by_category: true
             heading_level: 2
-            inherited_members: true  # this only apply to methods and properties, not to pydantic fields
-            members_order: alphabetical  # source
+            inherited_members: false  # this only apply to methods and properties, not to pydantic fields
+            members_order: source
             merge_init_into_class: true
-            separate_signature: false
-            show_category_heading: false   # functions vs property vs etc
+            separate_signature: true
+            show_category_heading: true
             show_if_no_docstring: false
             show_root_full_path: true
             show_root_heading: true
-#            show_signature_annotations: true  # redundant as annotations available in parameters section
+            show_signature_annotations: false  # redundant as annotations available in parameters section
             show_source: true
-            show_symbol_type_heading: true
-            show_symbol_type_toc: true
+            show_symbol_type_heading: true  # sponsors only
+            show_symbol_type_toc: true  # sponsors only
             signature_crossrefs: true
             summary: true
-            extensions:
-              - griffe_fieldz:
-                  include_inherited: True
   - mkdocs-video
+
+#  - sear
+#  - snippets
+
 
 
 nav:
@@ -140,9 +142,9 @@ nav:
       - Data Transformer: concepts/transformer.md
       - Change Data Capture: concepts/cdc.md
       - Data Quality: concepts/dataquality.md
-    - Narwhal API Extension:
-      - Laktory Extension: concepts/extension_laktory.md
-      - Custom Extension: concepts/extension_custom.md
+      - Data Event: concepts/dataevent.md
+      - DataFrames: concepts/dataframes.md
+      - Spark Extension: concepts/spark.md
     - DataOps:
       - DataOps: concepts/dataops.md
       - Infrastructure-as-Code: concepts/iac.md
@@ -162,32 +164,28 @@ nav:
   - Lakehouse As Code: lakehouseascode.md
   - API Reference:
     - Models:
-      - DataFrame:
-        - DataFrameColumn: api/models/dataframe/dataframecolumn.md
-        - DataFrameColumnExpr: api/models/dataframe/dataframecolumnexpr.md
-        - DataFrameExpr: api/models/dataframe/dataframeexpr.md
-        - DataFrameMethod: api/models/dataframe/dataframemethod.md
-        - DataFrameSchema: api/models/dataframe/dataframeschema.md
-        - DataFrameTransformer: api/models/dataframe/dataframetransformer.md
-      - DataTypes: api/models/datatypes.md
+      - BaseModel: api/models/basemodel.md
+#      - DataEventHeader: api/models/dataeventheader.md
+      - DataEvent: api/models/dataevent.md
+      - DataFrameColumnExpression: api/models/dataframecolumnexpression.md
+      - DataProducer: api/models/dataproducer.md
       - DataSinks:
-        - MergeCDCOptions: api/models/datasinks/mergecdcoptions.md
-        - FileDataSink: api/models/datasinks/file.md
-        - HiveMetastoreDataSink: api/models/datasinks/hivemetastore.md
-        - UnityCatalogDataSink: api/models/datasinks/unitycatalog.md
+        - BaseDataSink: api/models/datasinks/basedatasink.md
+        - FileDataSink: api/models/datasinks/filedatasink.md
+        - TableDataSink: api/models/datasinks/tabledatasink.md
       - DataSources:
-        - ReaderWriterMethod: api/models/datasources/readerwritermethod.md
-        - DataFrameDataSource: api/models/datasources/dataframe.md
-        - FileDataSource: api/models/datasources/file.md
+        - BaseDataSource: api/models/datasources/basedatasource.md
+        - FileDataSource: api/models/datasources/filedatasource.md
+        - MemoryDataSource: api/models/datasources/memorydatasource.md
         - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
-        - HiveMetastoreDataSource: api/models/datasources/hivemetastore.md
-        - UnityCatalogDataSource: api/models/datasources/unitycatalog.md
+        - TableDataSource: api/models/datasources/tabledatasource.md
       - DataQuality:
         - DataQualityCheck: api/models/dataquality/check.md
         - DataQualityExpectation: api/models/dataquality/expectation.md
       - Pipeline:
         - Pipeline: api/models/pipeline/pipeline.md
         - PipelineNode: api/models/pipeline/pipelinenode.md
+        - PipelineChild: api/models/pipeline/pipelinechild.md
         - Orchestrators:
             - Databricks Job: api/models/pipeline/orchestrators/databricksjoborchestrator.md
             - Databricks DLT: api/models/pipeline/orchestrators/databricksdltorchestrator.md
@@ -206,9 +204,7 @@ nav:
           - Dashboard: api/models/resources/databricks/dashboard.md
           - DbfsFile: api/models/resources/databricks/dbfsfile.md
           - api/models/resources/databricks/directory.md
-          - DLT Pipeline:
-            - api/models/resources/databricks/dltpipeline.md
-            - api/models/resources/databricks/dltpipeline_cluster.md
+          - DLT Pipeline: api/models/resources/databricks/dltpipeline.md
           - ExternalLocation: api/models/resources/databricks/externallocation.md
           - api/models/resources/databricks/grant.md
           - api/models/resources/databricks/grants.md
@@ -248,42 +244,60 @@ nav:
           - Stack: api/models/stacks/stack.md
           - PulumiStack: api/models/stacks/pulumistack.md
           - TerraformStack: api/models/stacks/terraformstack.md
+      - Transformers:
+#        - BaseChainNode: api/models/transformers/basechainnode.md
+        - PolarsChain: api/models/transformers/polarschain.md
+        - SparkChain: api/models/transformers/sparkchain.md
     - Types: api/types.md
     - CLI: api/cli.md
     - RecursiveLoader: api/recursiveloader.md
-    - SQLParser: api/sqlparser.md
-    - Narwhals Extension:
+    - Spark:
       - DataFrame:
-        - groupby_and_agg: api/narwhals_ext/dataframe/groupby_and_agg.md
-        - has_column: api/narwhals_ext/dataframe/has_column.md
-        - schema_flat: api/narwhals_ext/dataframe/schema_flat.md
-        - signature: api/narwhals_ext/dataframe/signature.md
-        - union: api/narwhals_ext/dataframe/union.md
-        - window_filter: api/narwhals_ext/dataframe/window_filter.md
-        - with_row_index: api/narwhals_ext/dataframe/with_row_index.md
-      - Expr:
-        - convert_units: api/narwhals_ext/expr/convert_units.md
-        - roundp: api/narwhals_ext/expr/roundp.md
-        - string_split: api/narwhals_ext/expr/string_split.md
+        - display: api/spark/dataframe/display.md
+        - groupby_and_agg: api/spark/dataframe/groupby_and_agg.md
+        - has_column: api/spark/dataframe/has_column.md
+        - schema_flat: api/spark/dataframe/schema_flat.md
+        - smart_join: api/spark/dataframe/smart_join.md
+        - show_string: api/spark/dataframe/show_string.md
+        - window_filter: api/spark/dataframe/window_filter.md
       - Functions:
-        - current_timestamp: api/narwhals_ext/functions/current_timestamp.md
-        - sql_expr: api/narwhals_ext/functions/sql_expr.md
-#    - DLT:
-#      - apply_changes: api/dlt/apply_changes.md
-#      - get_df: api/dlt/get_df.md
-#      - is_debug: api/dlt/is_debug.md
-#      - is_mocked: api/dlt/is_mocked.md
-#      - read: api/dlt/read.md
-#      - read_stream: api/dlt/read_stream.md
+        - constants: api/spark/functions/_constants.md
+        - compare: api/spark/functions/compare.md
+        - convert_units: api/spark/functions/convert_units.md
+        - roundp: api/spark/functions/roundp.md
+        - string_split: api/spark/functions/string_split.md
+        - sub: api/spark/functions/sub.md
+        - uuid: api/spark/functions/uuid.md
+    - Polars:
+      - DataFrame:
+        - groupby_and_agg: api/polars/dataframe/groupby_and_agg.md
+        - has_column: api/polars/dataframe/has_column.md
+        - schema_flat: api/polars/dataframe/schema_flat.md
+        - signature: api/polars/dataframe/signature.md
+        - smart_join: api/polars/dataframe/smart_join.md
+        - union: api/polars/dataframe/union.md
+        - window_filter: api/polars/dataframe/window_filter.md
+      - Expressions:
+        - compare: api/polars/expressions/compare.md
+        - convert_units: api/polars/expressions/convert_units.md
+        - current_timestamp: api/polars/expressions/current_timestamp.md
+        - roundp: api/polars/expressions/roundp.md
+        - row_number: api/polars/expressions/row_number.md
+        - scaled_power: api/polars/expressions/scaled_power.md
+        - string_split: api/polars/expressions/string_split.md
+        - uuid: api/polars/expressions/uuid.md
+    - DLT:
+      - apply_changes: api/dlt/apply_changes.md
+      - get_df: api/dlt/get_df.md
+      - is_debug: api/dlt/is_debug.md
+      - is_mocked: api/dlt/is_mocked.md
+      - read: api/dlt/read.md
+      - read_stream: api/dlt/read_stream.md
     - Dispatcher:
         - Dispatcher: api/dispatcher/dispatcher.md
         - DispatcherRunner: api/dispatcher/dispatcherrunner.md
         - JobRunner: api/dispatcher/jobrunner.md
         - PipelineRunner: api/dispatcher/pipelinerunner.md
     - Datetime: api/datetime.md
-    - Extending the API:
-        - register_expr_namespace: api/api/register_expr_namespace.md
-        - register_dataframe_namespace: api/api/register_dataframe_namespace.md
-        - register_lazyframe_namespace: api/api/register_lazyframe_namespace.md
 
   - Changelog: changelog.md

@@ -1,6 +1,7 @@
 import pytest
 
 from laktory import models
+from laktory._testing import MonkeyPatch
 
 
 class Owner(models.BaseModel):
@@ -74,6 +75,10 @@ def test_envvar(monkeypatch):
     ).inject_vars()
     assert c.name == "east-dev"
 
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
+
 
 def test_case_sensitive(monkeypatch):
     monkeypatch.setenv("HOST", ".local")
@@ -95,6 +100,10 @@ def test_case_sensitive(monkeypatch):
         name="cluster${vars.host}",
     ).inject_vars()
     assert c.name == "cluster.local"
+
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
 
 
 def test_submodels(monkeypatch):
@@ -138,6 +147,10 @@ def test_submodels(monkeypatch):
     ).inject_vars()
     assert c.name == "cluster-stg"
     assert c.owner.name == "owner-dev"
+
+    # Test executed as script
+    if isinstance(monkeypatch, MonkeyPatch):
+        monkeypatch.cleanup()
 
 
 def test_expression():
@@ -289,3 +302,19 @@ def test_stack():
     _stack = stack.get_env("prd").inject_vars()
     tags = _stack.resources.databricks_clusters["cl"].custom_tags
     assert tags == {"catalog": "prod", "catalog_local": "prod_local"}
+
+
+if __name__ == "__main__":
+    test_simple_substitution()
+    test_regex()
+    test_nested()
+    test_missing()
+    test_envvar(MonkeyPatch())
+    test_case_sensitive(MonkeyPatch())
+    test_submodels(MonkeyPatch())
+    test_expression()
+    test_self_referencing()
+    test_complex()
+    test_inplace()
+    test_dump()
+    test_stack()

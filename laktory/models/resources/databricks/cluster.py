@@ -15,7 +15,7 @@ class ClusterAutoScale(BaseModel):
     """
     Cluster Autoscale
 
-    Parameters
+    Attributes
     ----------
     min_workers:
         Minimum number of worker nodes
@@ -31,7 +31,7 @@ class ClusterInitScriptVolumes(BaseModel):
     """
     Cluster Init Script Workspace
 
-    Parameters
+    Attributes
     ----------
     destination:
         Volume filepath
@@ -44,7 +44,7 @@ class ClusterInitScriptWorkspace(BaseModel):
     """
     Cluster Init Script Workspace
 
-    Parameters
+    Attributes
     ----------
     destination:
         Workspace filepath
@@ -57,7 +57,7 @@ class ClusterInitScript(BaseModel):
     """
     Cluster Init Script
 
-    Parameters
+    Attributes
     ----------
     volumes:
         Volumes file specification
@@ -84,7 +84,7 @@ class ClusterLibraryPypi(BaseModel):
     """
     Cluster Library Pypi
 
-    Parameters
+    Attributes
     ----------
     package:
         Package name
@@ -100,7 +100,7 @@ class ClusterLibrary(BaseModel):
     """
     Cluster Library
 
-    Parameters
+    Attributes
     ----------
     cran:
         Cran library specifications
@@ -125,7 +125,7 @@ class ClusterLibrary(BaseModel):
 
 class ClusterLookup(ResourceLookup):
     """
-    Parameters
+    Attributes
     ----------
     cluster_id:
         The id of the cluster
@@ -138,7 +138,7 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks cluster
 
-    Parameters
+    Attributes
     ----------
 
     access_controls:
@@ -271,7 +271,7 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
 
     cluster = models.resources.databricks.Cluster(
         name="default",
-        spark_version="16.3.x-scala2.12",
+        spark_version="14.0.x-scala2.12",
         data_security_mode="USER_ISOLATION",
         node_type_id="Standard_DS3_v2",
         autoscale={

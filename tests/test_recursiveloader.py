@@ -95,3 +95,8 @@ def test_read_with_variables():
         "variables": {"symbol": "aapl"},
         "query": "SELECT\n    *\nFORM\n    {df}\nWHERE\n-- COMMENT\n    SYMBOL = 'AAPL'\n;\n",
     }
+
+
+if __name__ == "__main__":
+    test_read()
+    test_read_with_variables()

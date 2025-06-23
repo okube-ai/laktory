@@ -1,0 +1,1 @@
+{"data":{"created_at":"2023-09-20T00:00:00","symbol":"MSFT","open":329.510009765625,"close":320.7699890136719,"high":329.5899963378906,"low":320.510009765625,"@id":"_id","_name":"stock_price","_producer_name":"yahoo-finance","_created_at":"2023-09-20T00:00:00Z"},"description":null,"name":"stock_price","producer":{"name":"yahoo-finance","description":null,"party":1}}

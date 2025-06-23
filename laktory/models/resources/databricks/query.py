@@ -18,7 +18,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 class QueryParameterTextValue(BaseModel):
     """
-    Parameters
+    Attributes
     ----------
     value:
         Actual text value.
@@ -29,7 +29,7 @@ class QueryParameterTextValue(BaseModel):
 
 class QueryParameterQueryBackedValueMultiValuesOptions(BaseModel):
     """
-    Parameters
+    Attributes
     ----------
     prefix:
         Character that prefixes each selected parameter value.
@@ -47,7 +47,7 @@ class QueryParameterQueryBackedValueMultiValuesOptions(BaseModel):
 
 class QueryParameterQueryBackedValue(BaseModel):
     """
-    Parameters
+    Attributes
     ----------
     query_id:
         ID of the query that provides the parameter values.
@@ -64,7 +64,7 @@ class QueryParameterQueryBackedValue(BaseModel):
 
 class QueryParameterNumericValue(BaseModel):
     """
-    Parameters
+    Attributes
     ----------
     value:
         Actual numeric value

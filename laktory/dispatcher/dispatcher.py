@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from laktory._useragent import DATABRICKS_USER_AGENT
@@ -57,25 +59,18 @@ class Dispatcher:
     def init_resources(self):
         """Set resource for each of the resources defined in the stack"""
 
-        from laktory.models.pipeline.orchestrators.databricksdltorchestrator import (
-            DatabricksDLTOrchestrator,
-        )
-        from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
-            DatabricksJobOrchestrator,
-        )
-
         for k, pl in self.stack.resources.pipelines.items():
             if not pl.options.is_enabled:
                 continue
 
-            if isinstance(pl.orchestrator, DatabricksDLTOrchestrator):
-                self.resources[pl.orchestrator.name] = DLTPipelineRunner(
-                    dispatcher=self, name=pl.orchestrator.name
+            if pl.databricks_dlt is not None:
+                self.resources[pl.databricks_dlt.name] = DLTPipelineRunner(
+                    dispatcher=self, name=pl.databricks_dlt.name
                 )
 
-            if isinstance(pl.orchestrator, DatabricksJobOrchestrator):
-                self.resources[pl.orchestrator.name] = JobRunner(
-                    dispatcher=self, name=pl.orchestrator.name
+            if pl.databricks_job is not None:
+                self.resources[pl.databricks_job.name] = JobRunner(
+                    dispatcher=self, name=pl.databricks_job.name
                 )
 
         for k, pl in self.stack.resources.databricks_dltpipelines.items():
@@ -156,7 +151,7 @@ class Dispatcher:
         return kwargs
 
     @property
-    def wc(self) -> "WorkspaceClient":
+    def wc(self) -> WorkspaceClient:
         """Databricks Workspace Client"""
         from databricks.sdk import WorkspaceClient
 

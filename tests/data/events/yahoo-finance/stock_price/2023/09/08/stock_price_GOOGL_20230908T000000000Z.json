@@ -1,0 +1,1 @@
+{"data":{"created_at":"2023-09-08T00:00:00","symbol":"GOOGL","open":134.91000366210938,"close":136.3800048828125,"high":136.66000366210938,"low":134.85000610351562,"@id":"_id","_name":"stock_price","_producer_name":"yahoo-finance","_created_at":"2023-09-08T00:00:00Z"},"description":null,"name":"stock_price","producer":{"name":"yahoo-finance","description":null,"party":1}}
