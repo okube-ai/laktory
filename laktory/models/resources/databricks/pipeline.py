@@ -231,7 +231,7 @@ class PipelineCluster(Cluster):
 
 class Pipeline(BaseModel, PulumiResource, TerraformResource):
     """
-    Databricks Delta Live Tables (DLT) Pipeline
+    Databricks Lakeflow Declarative Pipeline (formerly Delta Live Tables)
 
     Examples
     --------

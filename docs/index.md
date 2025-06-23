@@ -21,7 +21,7 @@ operations, reducing complexity and enhancing productivity.
 Since Laktory pipelines are built on top of Narwhals, they can run in
 any environment that supports python—from your local machine to a Kubernetes 
 cluster. They can also be deployed and orchestrated as Databricks Jobs or
-[Delta Live Tables](https://www.databricks.com/product/delta-live-tables),
+[Lakeflow Declarative Pipelines](https://www.databricks.com/product/data-engineering/lakeflow-declarative-pipelines),
 offering a simple, fully managed, and low-maintenance solution.
 
 But Laktory goes beyond data pipelines. It empowers you to define and deploy 

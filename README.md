@@ -27,7 +27,7 @@ statements with DataFrame operations.
 Since Laktory pipelines are built on top of Spark and Polars, they can run in
 any environment that supports Python—from your local machine to a Kubernetes 
 cluster. They can also be deployed and orchestrated as Databricks Jobs or
-[Delta Live Tables](https://www.databricks.com/product/delta-live-tables),
+[Declarative Pipelines](https://www.databricks.com/product/data-engineering/lakeflow-declarative-pipelines),
 offering a simple, fully managed, and low-maintenance solution.
 
 But Laktory goes beyond data pipelines. It empowers you to define and deploy 

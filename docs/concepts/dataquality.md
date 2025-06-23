@@ -118,15 +118,15 @@ are supported.
 
 Specific configurations might limit the ability of check data quality expectations.
 
-#### Databricks Delta Live Tables (DLT) Orchestrator
+#### Databricks Declarative Pipelines Orchestrator
 
-- `WARN` expectations appear as `ALLOW` in the DLT Data Quality Tab.
-- `QUARANTINE` expectations appear as `DROP` in the DLT Data Quality Tab,
+- `WARN` expectations appear as `ALLOW` in the Data Quality Tab.
+- `QUARANTINE` expectations appear as `DROP` in the Data Quality Tab,
   though quarantine sinks remain fully supported.
-- `AGGREGATE` expectations do not appear in the DLT Data Quality Tab but can
+- `AGGREGATE` expectations do not appear in the Data Quality Tab but can
   be accessed via logs.
 - Expectations defined with DataFrame expressions (instead of SQL) are not
-  displayed in the DLT Data Quality Tab.
+  displayed in the Data Quality Tab.
 - `WARN` and `FAIL` actions on streaming tables are supported only for SQL
   expressions. Static tables support both SQL and DataFrame expressions.
 

@@ -10,7 +10,7 @@
 * `DataFrameMethod`: represents a DataFrame as a method call with support for both Narwhals and Native API  
 * `DataFrameTransformer`: represents a DataFrame as a series of chained transformations
 * `DatabricksPipeline`: configuration options
-* `DLTViewDataSink`: View inside a DLT pipeline
+* `PipelineViewDataSink`: View inside a Declarative Pipeline
 * `DTypes`: defines a serializable column data type
 * `UnityCatalogDataSource`: reads DataFrame from Unity Catalog 
 * `HiveMetastoreDataSource`: reads DataFrame from Hive Metastore 

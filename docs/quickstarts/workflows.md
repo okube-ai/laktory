@@ -1,5 +1,5 @@
 The `workflows` stack sets up and deploys three key components: a "Hello World!" Databricks job, a Laktory pipeline for
-stock prices (as a Databricks Job and as a Delta Live Table), and all the necessary supporting resources.
+stock prices (as a Databricks Job and as a Lakeflow Declarative Pipeline), and all the necessary supporting resources.
 
 ### Create Stack
 To create the stack, use the following command:
@@ -210,7 +210,7 @@ You can also lookup the resulting run from the workspace.
 
 ### Run Pipeline DLT
 
-For the pipeline we deployed as a Delta Live Tables, we can also run it using
+For the pipeline we deployed as a Declarative Pipeline, we can also run it using
 the CLI or simply from the UI.
 
 ![dlt-pl-stocks-run](../images/quickstarts/dlt_pl_stocks_run.png)

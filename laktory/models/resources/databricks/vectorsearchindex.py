@@ -51,7 +51,7 @@ class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
     embedding_writeback_table:
         TODO
     pipeline_id:
-        ID of the associated Delta Live Table pipeline.
+        ID of the associated Declarative Pipeline.
     pipeline_type:
         Pipeline execution mode. Possible values are:
             TRIGGERED: If the pipeline uses the triggered execution mode, the

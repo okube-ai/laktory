@@ -310,50 +310,45 @@ provided by the job.
 Selecting the `DATABRICKS_JOB` orchestrator will deploy a pipeline json 
 configuration file which can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{pipeline_name}/`.
 
-#### Delta Live Tables (DLT)
-[Databricks Delta Live Tables](https://www.databricks.com/product/delta-live-tables)
+#### Databricks Lakeflow Declarative Pipeline
+[Lakeflow Declarative Pipelines](https://www.databricks.com/product/data-engineering/lakeflow-declarative-pipelines)
 offers features like automatic schema change management, continuous execution, advanced monitoring and 
 autoscaling. 
 
 ![dlt](../../images/screenshots/dlt_stock_prices.png)
 
-Each pipeline node runs inside a dlt.table() or dlt.view() function. In the context of DLT, node execution does not 
-trigger a sink write, as this operation is managed by DLT. When a source is a pipeline node, `dlt.read()` and
-`dlt.read_stream()` functions are called to ensure compatibility with the DLT framework.
+Each pipeline node runs inside a dlt.table() or dlt.view() function. In the context of Declarative Pipelines, node
+execution does not trigger a sink write, as this operation is internally managed by Lakeflow. When a source is a 
+pipeline node, `dlt.read()` and `dlt.read_stream()` functions are called to ensure compatibility with the framework.
 
 To use the `DATABRICKS_PIPELINE` orchestrator, you must also add the supporting
 [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py) 
 to your stack. 
 
 Here is a simplified version:
-TODO: REWVIEW NOTEBOOK!!!
 ```py title="dlt_laktory_pl"
 import laktory as lk
+import dlt
 
 with open("pipeline.yaml") as fp:
     pl = lk.models.Pipeline.model_validate_yaml(fp.read())
 
 
 def define_table(node, sink):
-    @lk.dlt.table_or_view(
-        name=sink.name,
+    @dlt.table(
+        name=sink.dlt_name,
         comment=node.description,
-        as_view=sink is None,
     )
     def get_df():
-
         # Execute node
         node.execute()
-        if sink.is_quarantine:
+        if sink and sink.is_quarantine:
             df = node.quarantine_df
         else:
             df = node.output_df
-        df.printSchema()
 
         # Return
-        return df
-
-    return get_df
+        return df.to_native()
 
 
 # Build nodes
@@ -383,7 +378,7 @@ By setting `as_stream: True` in a pipeline node's data source, the DataFrame bec
 new rows of data at each run instead of re-processing the entire dataset.
 
 Streaming does not mean the pipeline is continuously running. Execution can still be scheduled, but each run is
-incremental. Currently, the only way to deploy a continuously running pipeline is by selecting the Delta Live Tables
+incremental. Currently, the only way to deploy a continuously running pipeline is by selecting the Databricks pipeline
 orchestrator with `continuous: True`.
 
 For more information about streaming data, consider reading this 

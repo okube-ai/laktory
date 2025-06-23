@@ -101,7 +101,7 @@ class PipelineNode(BaseModel, PipelineChild):
 
     dlt_template: str | None = Field(
         "DEFAULT",
-        description="Specify which template (notebook) to use when Delta Live Tables is selected as the orchestrator.",
+        description="Specify which template (notebook) to use when Databricks pipeline is selected as the orchestrator.",
     )
     comment: str = Field(
         None,
@@ -176,7 +176,7 @@ class PipelineNode(BaseModel, PipelineChild):
 
             if self.expectations and self._expectations_checkpoint_path is None:
                 warnings.warn(
-                    f"Node '{self.name}' requires `expectations_checkpoint_location` specified unless Delta Live Tables is selected as an orchestrator and expectations are compatbile with DLT."
+                    f"Node '{self.name}' requires `expectations_checkpoint_location` specified unless Databricks pipeline is selected as an orchestrator and expectations are compatible with Declarative Pipelines."
                 )
 
         return self

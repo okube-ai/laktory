@@ -70,7 +70,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     A pipeline may be run manually by using python or the CLI, but it may also
     be deployed and scheduled using one of the supported orchestrators, such as
-    a Databricks Delta Live Tables or job.
+    a Databricks job or Lakeflow Declarative Pipeline.
 
     The DataFrame backend used to run the pipeline can be configured at the pipeline
     level or at the nodes level.

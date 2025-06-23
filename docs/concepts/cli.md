@@ -30,7 +30,7 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 `laktory deploy` executes the deployment by creating or updating resources.  Similar to `pulumi up` or `terraform apply`.
 
 #### run
-`laktory run` execute remote job or DLT pipeline and monitor failures until completion. Local execution (without an orchestrator) of a pipeline is not yet supported.
+`laktory run` execute remote job or declarative pipeline and monitor failures until completion. Local execution (without an orchestrator) of a pipeline is not yet supported.
 
 #### destroy
 `laktory destroy` destroy all resources declared in your stack. Similar to `pulumi destroy` or `terraform destroy`
