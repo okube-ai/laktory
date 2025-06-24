@@ -2,6 +2,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
 
+from packaging.requirements import Requirement
+from packaging.requirements import InvalidRequirement
+
 import networkx as nx
 from pydantic import Field
 from pydantic import field_validator
@@ -34,28 +37,12 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 
 
-# class PipelineUDF(BaseModel):
-#     # TODO: Revisit to allow for automatic registration of UDF
-#     """
-#     Pipeline User Define Function
-#
-#     Parameters
-#     ----------
-#     module_name:
-#         Name of the module from which the function needs to be imported.
-#     function_name:
-#         Name of the function.
-#     module_path:
-#         Workspace filepath of the module, if not in the same directory as the pipeline notebook
-#     """
-#
-#     module_name: str
-#     function_name: str
-#     module_path: str = None
-
 def _read_and_execute():
+    """Execute pipeline as a script"""
 
     import argparse
+    import laktory as lk
+    import importlib
 
     # Parse arguments
     parser = argparse.ArgumentParser(
@@ -77,31 +64,21 @@ def _read_and_execute():
         required = False,
     )
 
+    # Get arguments
     args = parser.parse_args()
-
-
     filepath = args.filepath
     node_name = args.node_name
     full_refresh = args.full_refresh
-    #
-    # # COMMAND ----------
-    # install_dependencies = dbutils.widgets.get("install_dependencies").lower() == "true"
-
-    # if install_dependencies:
-    #     import json
-    #
-    #     reqs = dbutils.widgets.get("requirements")
-    #     reqs = " ".join(json.loads(reqs))
-    #     # MAGIC %pip install $reqs
-    #     # MAGIC %restart_python
-
-    # COMMAND ----------
-    import laktory as lk
 
     # Read
     logger.info(f"Reading pipeline at {filepath}")
     with open(filepath, "r") as fp:
         pl = lk.models.Pipeline.model_validate_json(fp.read())
+
+    # Install dependencies
+    for package_name in pl.dependencies:
+        logger.info(f"Importing {package_name}")
+        importlib.import_module(package_name)
 
     # Execute
     if node_name:
@@ -383,6 +360,17 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             dependencies += [f"laktory=={__version__}"]
 
         return dependencies
+
+    @property
+    def imports(self) -> list[str]:
+        pkg_names = []
+        for req in self.dependencies:
+            try:
+                r = Requirement(req)
+                pkg_names.append(r.name)
+            except InvalidRequirement:
+                logger.info(f"Skipping non-parseable requirement: {req}")
+        return pkg_names
 
     # ----------------------------------------------------------------------- #
     # Orchestrator                                                            #
