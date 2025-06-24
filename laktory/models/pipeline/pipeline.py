@@ -30,7 +30,7 @@ logger = get_logger(__name__)
 
 
 # --------------------------------------------------------------------------- #
-# Helper Classes                                                              #
+# Helper Functions                                                            #
 # --------------------------------------------------------------------------- #
 
 
@@ -53,6 +53,40 @@ logger = get_logger(__name__)
 #     function_name: str
 #     module_path: str = None
 
+def _read_and_execute(filepath, node_name=None, full_refresh=False, imports=None):
+
+    # # COMMAND ----------
+    # dbutils.widgets.text("pipeline_name", "pl-stocks-job")
+    # dbutils.widgets.text("node_name", "")
+    # dbutils.widgets.text("full_refresh", "False")
+    # dbutils.widgets.text("install_dependencies", "True")
+    # dbutils.widgets.text("requirements", "")
+    # dbutils.widgets.text("config_filepath", "")
+    #
+    # # COMMAND ----------
+    # install_dependencies = dbutils.widgets.get("install_dependencies").lower() == "true"
+
+    # if install_dependencies:
+    #     import json
+    #
+    #     reqs = dbutils.widgets.get("requirements")
+    #     reqs = " ".join(json.loads(reqs))
+    #     # MAGIC %pip install $reqs
+    #     # MAGIC %restart_python
+
+    # COMMAND ----------
+    import laktory as lk
+
+    # Read
+    logger.info(f"Reading pipeline at {filepath}")
+    with open(filepath, "r") as fp:
+        pl = lk.models.Pipeline.model_validate_json(fp.read())
+
+    # Execute
+    if node_name:
+        pl.nodes_dict[node_name].execute(full_refresh=full_refresh)
+    else:
+        pl.execute(full_refresh=full_refresh)
 
 # --------------------------------------------------------------------------- #
 # Main Class                                                                  #
