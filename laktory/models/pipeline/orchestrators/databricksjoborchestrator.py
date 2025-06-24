@@ -2,6 +2,7 @@ import json
 from typing import Literal
 
 from pydantic import Field
+from requests.packages import package
 
 from laktory._settings import settings
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
@@ -11,8 +12,11 @@ from laktory.models.pipeline.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.cluster import ClusterLibrary
 from laktory.models.resources.databricks.cluster import ClusterLibraryPypi
 from laktory.models.resources.databricks.job import Job
+from laktory.models.resources.databricks.job import JobEnvironment
+from laktory.models.resources.databricks.job import JobEnvironmentSpec
 from laktory.models.resources.databricks.job import JobParameter
 from laktory.models.resources.databricks.job import JobTask
+from laktory.models.resources.databricks.job import JobTaskPythonWheelTask
 from laktory.models.resources.pulumiresource import PulumiResource
 
 
@@ -82,6 +86,30 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                     depends_on += _get_depends_on(_node, pl)
             return depends_on
 
+
+        # Environment
+        env_key = "laktory"
+        env_found = False
+        envs = self.environments
+        if envs is None:
+            envs = []
+        for env in envs:
+            if env.environment_key == env_key:
+                env_found = True
+                break
+        if not env_found:
+            envs += [
+                JobEnvironment(
+                    environment_key=env_key,
+                    spec=JobEnvironmentSpec(
+                        client="3",
+                        dependencies=pl._dependencies,
+                    ),
+                )
+            ]
+            self.environments = envs
+
+
         # Sorting Node Names to prevent job update trigger with Pulumi
         node_names = [node.name for node in pl.nodes]
         node_names.sort()
@@ -95,10 +123,11 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
             task = JobTask(
                 task_key="node-" + node.name,
-                notebook_task={
-                    "base_parameters": {"node_name": node.name},
-                    "notebook_path": notebook_path,
-                },
+                python_wheel_task=JobTaskPythonWheelTask(
+                    entry_point="print_version",
+                    package_name="laktory",
+                    # parameters=["version"]
+                ),
                 depends_ons=depends_on,
             )
             if cluster_found:
@@ -109,6 +138,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                 task.job_cluster_key = "node-cluster"
                 task.libraries = libraries
             else:
+                task.environment_key = env_key
                 pass
                 # TODO: Notebook tasks don't currently support environments. To Enable when they do
 
