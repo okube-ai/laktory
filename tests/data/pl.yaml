@@ -1,4 +1,8 @@
 name: pl-local
+dependencies:
+  - requests>=2.0
+imports:
+  - re
 nodes:
 - name: gld_ab
   sinks:

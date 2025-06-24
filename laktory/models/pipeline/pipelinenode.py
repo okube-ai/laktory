@@ -23,7 +23,7 @@ from laktory.models.datasources import BaseDataSource
 from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import PipelineNodeDataSource
 from laktory.models.datasources import TableDataSource
-from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)

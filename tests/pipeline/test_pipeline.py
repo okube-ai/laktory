@@ -4,9 +4,12 @@ from pathlib import Path
 import networkx as nx
 import polars
 import pytest
+import sys
 
 from laktory import get_spark_session
 from laktory import models
+from laktory._version import VERSION
+import laktory as lk
 from laktory._testing import StreamingSource
 from laktory._testing import assert_dfs_equal
 
@@ -130,9 +133,9 @@ def test_update_from_parent():
     # Test
     assert pl.orchestrator.parent == pl
     assert pl.orchestrator.parent_pipeline == pl
-    assert len(pl.orchestrator.parameters) == 5
+    assert len(pl.orchestrator.parameters) == 1
     assert pl.orchestrator.config_file.content_base64_.startswith(
-        "ewogICAgIm5hbWUiOiAicGwtbG9j"
+        "ewogICAgImRlcGVuZGVuY2llcy"
     )
 
     # Assign As Model
@@ -142,9 +145,9 @@ def test_update_from_parent():
     # Test
     assert pl.orchestrator.parent == pl
     assert pl.orchestrator.parent_pipeline == pl
-    assert len(pl.orchestrator.parameters) == 5
+    assert len(pl.orchestrator.parameters) == 1
     assert pl.orchestrator.config_file.content_base64_.startswith(
-        "ewogICAgIm5hbWUiOiAicGwtbG9j"
+        "ewogICAgImRlcGVuZGVuY2llcy"
     )
 
 
@@ -164,6 +167,11 @@ def test_paths(tmp_path):
                 s._checkpoint_path
                 == pl_path / node.name / "checkpoints" / f"sink-{s._uuid}"
             )
+
+def test_dependencies(tmp_path):
+    pl = get_pl(tmp_path)
+    assert pl._dependencies == ['requests>=2.0', f'laktory=={VERSION}']
+    assert pl._imports == ['re', 'requests']
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])

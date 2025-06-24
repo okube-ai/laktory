@@ -275,37 +275,8 @@ writing operation is entirely handled by Laktory source and sink.
 
 ![job](../../images/screenshots/job_stock_prices.png)
 
-To use the `DATABRICKS_JOB` orchestrator, you must also add the supporting
-[notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/jobs/job_laktory_pl.py) 
-to your stack. 
-
-TODO: Review is still working with notebook!
-Here is a simplified version:
-```py title="job_laktory_pl"
-dbutils.widgets.text("pipeline_name", "pl-stock-prices")
-dbutils.widgets.text("node_name", "")
-
-import laktory as lk  # noqa: E402
-
-lk.register_spark_session(spark)
-
-# Read Pipeline
-pl_name = dbutils.widgets.get("pipeline_name")
-node_name = dbutils.widgets.get("node_name")
-filepath = f"/Workspace{lk.settings.workspace_laktory_root}pipelines/{pl_name}.json"
-with open(filepath, "r") as fp:
-    pl = lk.models.Pipeline.model_validate_json(fp.read())
-
-
-# Execution
-if node_name:
-    pl.nodes_dict[node_name].execute()
-else:
-    pl.execute()
-```
-
-The notebook reads the pipeline configuration using the pipeline name provided by the job and execute a node, also
-provided by the job.
+Each task will call a Laktory function that will read the pipeline configuration 
+and execute a node.
 
 Selecting the `DATABRICKS_JOB` orchestrator will deploy a pipeline json 
 configuration file which can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{pipeline_name}/`.

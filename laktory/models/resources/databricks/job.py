@@ -552,6 +552,17 @@ class JobTaskSQLTask(BaseModel):
     warehouse_id: str
 
 
+class JobTaskPythonWheelTask(BaseModel):
+    """
+    Job Task Python Wheel specifications
+    """
+
+    entry_point: str = Field(..., description="Python function as entry point for the task")
+    named_parameters: dict[str, str] = Field(None, description="Named parameters for the task")
+    package_name: str = Field(None, description="Name of Python package")
+    parameters: list[str] = Field(None, description="Parameters for the task")
+
+
 class JobTaskForEachTaskTask(BaseModel):
     """
     Job Task specifications
@@ -622,7 +633,7 @@ class JobTaskForEachTaskTask(BaseModel):
     notebook_task: JobTaskNotebookTask = None
     notification_settings: JobNotificationSettings = None
     pipeline_task: JobTaskPipelineTask = None
-    # python_wheel_task:
+    python_wheel_task: JobTaskPythonWheelTask = None
     retry_on_timeout: bool = None
     run_if: str = None
     run_job_task: JobTaskRunJobTask = None

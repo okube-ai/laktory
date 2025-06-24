@@ -8,7 +8,7 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
-from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.pipelinechild import PipelineChild
 from laktory.narwhals_ext.functions.sql_expr import sql_expr
 from laktory.typing import AnyFrame
 

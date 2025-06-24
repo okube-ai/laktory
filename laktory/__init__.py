@@ -66,3 +66,7 @@ def is_dlt_execute() -> bool:
         v = None
 
     return v is not None
+
+def print_version():
+    print(show_version_info())
+

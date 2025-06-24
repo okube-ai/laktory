@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
+import re
 
 import networkx as nx
 from pydantic import Field
@@ -17,7 +18,7 @@ from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
 from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
     DatabricksPipelineOrchestrator,
 )
-from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.pipelinechild import PipelineChild
 from laktory.models.pipeline.pipelinenode import PipelineNode
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -30,28 +31,94 @@ logger = get_logger(__name__)
 
 
 # --------------------------------------------------------------------------- #
-# Helper Classes                                                              #
+# Helper Functions                                                            #
 # --------------------------------------------------------------------------- #
 
+def str2bool(v):
+    return v.lower() in ("yes", "true", "t", "1")
 
-# class PipelineUDF(BaseModel):
-#     # TODO: Revisit to allow for automatic registration of UDF
-#     """
-#     Pipeline User Define Function
-#
-#     Parameters
-#     ----------
-#     module_name:
-#         Name of the module from which the function needs to be imported.
-#     function_name:
-#         Name of the function.
-#     module_path:
-#         Workspace filepath of the module, if not in the same directory as the pipeline notebook
-#     """
-#
-#     module_name: str
-#     function_name: str
-#     module_path: str = None
+
+def parse_requirement_name(req: str) -> str | None:
+    """
+    Extract the package name from a requirement string.
+    Returns None if it looks like a non-standard format (e.g., git+).
+    """
+    if req.startswith("git+") or "://" in req or req.startswith("."):
+        return None
+
+    # Extract up to the first occurrence of one of these: [<=>~]
+    match = re.match(r"^\s*([A-Za-z0-9_.-]+)", req)
+    if match:
+        return match.group(1)
+    return None
+
+def _read_and_execute():
+    """Execute pipeline as a script"""
+    #TODO: Refactor and integrate into dispatcher / executor / CLI
+
+    import argparse
+    import laktory as lk
+    import importlib
+
+    # Parse arguments
+    parser = argparse.ArgumentParser(
+        description="Read pipeline configuration file and execute"
+    )
+    parser.add_argument("--filepath", type=str, help="Laktory branch name", required=True)
+    parser.add_argument(
+        "--node_name",
+        type=str,
+        help="Node name",
+        default=None,
+        required = False,
+    )
+    parser.add_argument(
+        "--full_refresh",
+        type=str2bool,
+        help="Full refresh",
+        default=False,
+        required = False,
+    )
+
+    # Get arguments
+    args = parser.parse_args()
+    filepath = args.filepath
+    node_name = args.node_name
+    full_refresh = args.full_refresh
+    node_str = ""
+    if node_name:
+        node_str = f" node '{node_name}' of "
+    logger.info(f"Executing{node_str} pipeline '{filepath}' with full refresh {full_refresh}")
+
+    # Read
+    with open(filepath, "r") as fp:
+        if str(filepath).endswith(".yaml"):
+            pl = lk.models.Pipeline.model_validate_yaml(fp)
+        else:
+            pl = lk.models.Pipeline.model_validate_json(fp.read())
+
+    # Install dependencies
+    # TODO: move to pipeline/node execute?
+    for package_name in pl._imports:
+        try:
+            logger.info(f"Importing {package_name}")
+            importlib.import_module(package_name)
+        except ModuleNotFoundError:
+            logger.info(f"Importing {package_name} failed.")
+
+    # Execute
+    if node_name:
+        pl.nodes_dict[node_name].execute(full_refresh=full_refresh)
+    else:
+        pl.execute(full_refresh=full_refresh)
+
+
+def _read_and_execute_dlt():
+    """Execute pipeline as a script"""
+    #TODO: Add DLT notebook content
+    raise NotImplementedError()
+
+
 
 
 # --------------------------------------------------------------------------- #
@@ -198,6 +265,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         [],
         description="List of dependencies required to run the pipeline. If Laktory is not provided, it's current version is added to the list.",
     )
+    imports: list[str] = Field(
+        [],
+        description="List of modules to import before execution. Generally used to load Narwhals extensions. Packages listed in `dependencies` are automatically included in the list of imports."
+    )
     name: str = Field(..., description="Name of the pipeline")
     nodes: list[PipelineNode] = Field(
         [],
@@ -328,6 +399,19 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             dependencies += [f"laktory=={__version__}"]
 
         return dependencies
+
+    @property
+    def _imports(self) -> list[str]:
+        pkg_names = self.imports
+        for req in self.dependencies:
+            name = parse_requirement_name(req)
+            if name is None:
+                logger.info(f"Skipping non-parseable requirement: {req}")
+                continue
+            if name not in pkg_names:
+                pkg_names += [name]
+
+        return pkg_names
 
     # ----------------------------------------------------------------------- #
     # Orchestrator                                                            #

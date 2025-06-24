@@ -2,7 +2,7 @@ import base64
 import json
 
 from laktory._settings import settings
-from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
 

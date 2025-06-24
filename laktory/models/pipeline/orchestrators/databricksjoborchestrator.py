@@ -7,12 +7,15 @@ from laktory._settings import settings
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
 )
-from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.cluster import ClusterLibrary
 from laktory.models.resources.databricks.cluster import ClusterLibraryPypi
 from laktory.models.resources.databricks.job import Job
+from laktory.models.resources.databricks.job import JobEnvironment
+from laktory.models.resources.databricks.job import JobEnvironmentSpec
 from laktory.models.resources.databricks.job import JobParameter
 from laktory.models.resources.databricks.job import JobTask
+from laktory.models.resources.databricks.job import JobTaskPythonWheelTask
 from laktory.models.resources.pulumiresource import PulumiResource
 
 
@@ -23,11 +26,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
     Job orchestrator supports incremental workloads with Spark Structured
     Streaming, but it does not support continuous processing.
 
-    Selecting this orchestrator requires to add the supporting
-    [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/jobs/job_laktory_pl.py)
-    to the stack.
-
-
     References
     ----------
     * [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
@@ -36,10 +34,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
     type: Literal["DATABRICKS_JOB"] = Field(
         "DATABRICKS_JOB", description="Type of orchestrator"
-    )
-    notebook_path: str = Field(
-        None,
-        description="Path for the notebook. If `None`, default path for laktory job notebooks is used.",
     )
     config_file: PipelineConfigWorkspaceFile = Field(
         PipelineConfigWorkspaceFile(),
@@ -66,10 +60,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         pl = self.parent_pipeline
 
-        notebook_path = self.notebook_path
-        if notebook_path is None:
-            notebook_path = f"{settings.workspace_laktory_root}jobs/job_laktory_pl.py"
-
         self.tasks = []
 
         def _get_depends_on(node, pl):
@@ -81,6 +71,35 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                 else:
                     depends_on += _get_depends_on(_node, pl)
             return depends_on
+
+        # Requirements and path
+        _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
+        _path = (
+            "/Workspace"
+            + self.inject_vars_into_dump({"path": self.config_file.path_})["path"]
+        )
+
+        # Environment
+        env_key = "laktory"
+        env_found = False
+        envs = self.environments
+        if envs is None:
+            envs = []
+        for env in envs:
+            if env.environment_key == env_key:
+                env_found = True
+                break
+        if not env_found:
+            envs += [
+                JobEnvironment(
+                    environment_key=env_key,
+                    spec=JobEnvironmentSpec(
+                        client="3",
+                        dependencies=_requirements,
+                    ),
+                )
+            ]
+            self.environments = envs
 
         # Sorting Node Names to prevent job update trigger with Pulumi
         node_names = [node.name for node in pl.nodes]
@@ -95,10 +114,15 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
             task = JobTask(
                 task_key="node-" + node.name,
-                notebook_task={
-                    "base_parameters": {"node_name": node.name},
-                    "notebook_path": notebook_path,
-                },
+                python_wheel_task=JobTaskPythonWheelTask(
+                    entry_point="models.pipeline._read_and_execute",
+                    package_name="laktory",
+                    named_parameters={
+                        "filepath": _path,
+                        "node_name": node.name,
+                        "full_refresh": "{{job.parameters.full_refresh}}"
+                    },
+                ),
                 depends_ons=depends_on,
             )
             if cluster_found:
@@ -109,8 +133,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                 task.job_cluster_key = "node-cluster"
                 task.libraries = libraries
             else:
-                pass
-                # TODO: Notebook tasks don't currently support environments. To Enable when they do
+                task.environment_key = env_key
 
             if self.node_max_retries:
                 task.max_retries = self.node_max_retries
@@ -120,19 +143,8 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         self.sort_tasks(self.tasks)
 
         # Update job parameters
-        _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
-        _path = (
-            "/Workspace"
-            + self.inject_vars_into_dump({"path": self.config_file.path_})["path"]
-        )
         self.parameters = [
             JobParameter(name="full_refresh", default="false"),
-            JobParameter(name="pipeline_name", default=pl.name),
-            JobParameter(
-                name="install_dependencies", default=str(not cluster_found).lower()
-            ),
-            JobParameter(name="requirements", default=json.dumps(_requirements)),
-            JobParameter(name="config_filepath", default=_path),
         ]
 
     # ----------------------------------------------------------------------- #
@@ -154,7 +166,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
     @property
     def pulumi_excludes(self) -> list[str] | dict[str, bool]:
         return super().pulumi_excludes + [
-            "notebook_path",
             "config_file",
             "node_max_retries",
             "type",
