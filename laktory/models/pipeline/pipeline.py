@@ -53,7 +53,7 @@ logger = get_logger(__name__)
 #     function_name: str
 #     module_path: str = None
 
-def _read_and_execute(filepath, node_name=None, full_refresh=False, imports=None):
+def _read_and_execute():
 
     import argparse
 
