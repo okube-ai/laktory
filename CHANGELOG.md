@@ -28,6 +28,8 @@
 * Support for 2- and 3-level namespace in source/sink `table_name` in addition to explicit `catalog_name` and `schema_name` definition
 * Pipeline Databricks Job and Pipeline orchestrators no longer deploy a requirements.txt file (passed as parameters)
 * Pipeline Databricks Job and Pipeline orchestrators no longer generate a temporary local config file
+* Pipeline Databricks Job uses python wheel task instead of notebooks
+
 ### Breaking changes
 * Dropped support for python 3.9
 * Data sources:

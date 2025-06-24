@@ -19,7 +19,6 @@ After running the quickstart command, the following structure is created:
 │   │   └── dlt_laktory_pl.py
 │   └── jobs
 │       ├── job_hello.py
-│       └── job_laktory_pl.py
 ├── read_env.sh
 ├── requirements.txt
 ├── resources

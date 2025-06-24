@@ -1,9 +1,7 @@
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
-
-from packaging.requirements import Requirement
-from packaging.requirements import InvalidRequirement
+import re
 
 import networkx as nx
 from pydantic import Field
@@ -38,6 +36,21 @@ logger = get_logger(__name__)
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
+
+
+def parse_requirement_name(req: str) -> str | None:
+    """
+    Extract the package name from a requirement string.
+    Returns None if it looks like a non-standard format (e.g., git+).
+    """
+    if req.startswith("git+") or "://" in req or req.startswith("."):
+        return None
+
+    # Extract up to the first occurrence of one of these: [<=>~]
+    match = re.match(r"^\s*([A-Za-z0-9_.-]+)", req)
+    if match:
+        return match.group(1)
+    return None
 
 def _read_and_execute():
     """Execute pipeline as a script"""
@@ -391,12 +404,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     def _imports(self) -> list[str]:
         pkg_names = self.imports
         for req in self.dependencies:
-            try:
-                r = Requirement(req)
-                if r not in pkg_names:
-                    pkg_names += [r.name]
-            except InvalidRequirement:
+            name = parse_requirement_name(req)
+            if name is None:
                 logger.info(f"Skipping non-parseable requirement: {req}")
+                continue
+            if name not in pkg_names:
+                pkg_names += [name]
 
         return pkg_names
 
