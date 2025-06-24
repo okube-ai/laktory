@@ -76,9 +76,12 @@ def _read_and_execute():
         pl = lk.models.Pipeline.model_validate_json(fp.read())
 
     # Install dependencies
-    for package_name in pl.dependencies:
-        logger.info(f"Importing {package_name}")
-        importlib.import_module(package_name)
+    for package_name in pl.imports:
+        try:
+            logger.info(f"Importing {package_name}")
+            importlib.import_module(package_name)
+        except ModuleNotFoundError:
+            logger.info(f"Importing {package_name} failed.")
 
     # Execute
     if node_name:
