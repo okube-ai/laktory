@@ -1,7 +1,7 @@
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
-import re
 
 import networkx as nx
 from pydantic import Field
@@ -18,8 +18,8 @@ from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
 from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
     DatabricksPipelineOrchestrator,
 )
-from laktory.models.pipelinechild import PipelineChild
 from laktory.models.pipeline.pipelinenode import PipelineNode
+from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 from laktory.typing import AnyFrame
@@ -33,6 +33,7 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 # Helper Functions                                                            #
 # --------------------------------------------------------------------------- #
+
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
@@ -52,32 +53,36 @@ def parse_requirement_name(req: str) -> str | None:
         return match.group(1)
     return None
 
+
 def _read_and_execute():
     """Execute pipeline as a script"""
-    #TODO: Refactor and integrate into dispatcher / executor / CLI
+    # TODO: Refactor and integrate into dispatcher / executor / CLI
 
     import argparse
-    import laktory as lk
     import importlib
+
+    import laktory as lk
 
     # Parse arguments
     parser = argparse.ArgumentParser(
         description="Read pipeline configuration file and execute"
     )
-    parser.add_argument("--filepath", type=str, help="Laktory branch name", required=True)
+    parser.add_argument(
+        "--filepath", type=str, help="Laktory branch name", required=True
+    )
     parser.add_argument(
         "--node_name",
         type=str,
         help="Node name",
         default=None,
-        required = False,
+        required=False,
     )
     parser.add_argument(
         "--full_refresh",
         type=str2bool,
         help="Full refresh",
         default=False,
-        required = False,
+        required=False,
     )
 
     # Get arguments
@@ -88,7 +93,9 @@ def _read_and_execute():
     node_str = ""
     if node_name:
         node_str = f" node '{node_name}' of "
-    logger.info(f"Executing{node_str} pipeline '{filepath}' with full refresh {full_refresh}")
+    logger.info(
+        f"Executing{node_str} pipeline '{filepath}' with full refresh {full_refresh}"
+    )
 
     # Read
     with open(filepath, "r") as fp:
@@ -115,10 +122,8 @@ def _read_and_execute():
 
 def _read_and_execute_dlt():
     """Execute pipeline as a script"""
-    #TODO: Add DLT notebook content
+    # TODO: Add DLT notebook content
     raise NotImplementedError()
-
-
 
 
 # --------------------------------------------------------------------------- #
@@ -263,16 +268,24 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
     dependencies: list[str] = Field(
         [],
-        description="List of dependencies required to run the pipeline. If Laktory is not provided, it's current version is added to the list.",
+        description="""
+        List of dependencies required to run the pipeline. If Laktory is not provided, it's current version is added
+        to the list.
+        """,
     )
     imports: list[str] = Field(
         [],
-        description="List of modules to import before execution. Generally used to load Narwhals extensions. Packages listed in `dependencies` are automatically included in the list of imports."
+        description="""
+        List of modules to import before execution. Generally used to load Narwhals extensions. 
+        Packages listed in `dependencies` are automatically included in the list of imports.
+        """,
     )
     name: str = Field(..., description="Name of the pipeline")
     nodes: list[PipelineNode] = Field(
         [],
-        description="List of pipeline nodes. Each node defines a data source, a series of transformations and optionally a sink.",
+        description="""
+        List of pipeline nodes. Each node defines a data source, a series of transformations and optionally a sink.
+        """,
     )
     orchestrator: DatabricksJobOrchestrator | DatabricksPipelineOrchestrator = Field(
         None,

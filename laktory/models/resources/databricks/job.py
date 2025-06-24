@@ -557,8 +557,12 @@ class JobTaskPythonWheelTask(BaseModel):
     Job Task Python Wheel specifications
     """
 
-    entry_point: str = Field(..., description="Python function as entry point for the task")
-    named_parameters: dict[str, str] = Field(None, description="Named parameters for the task")
+    entry_point: str = Field(
+        ..., description="Python function as entry point for the task"
+    )
+    named_parameters: dict[str, str] = Field(
+        None, description="Named parameters for the task"
+    )
     package_name: str = Field(None, description="Name of Python package")
     parameters: list[str] = Field(None, description="Parameters for the task")
 

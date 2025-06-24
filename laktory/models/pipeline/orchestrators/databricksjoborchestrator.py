@@ -1,9 +1,7 @@
-import json
 from typing import Literal
 
 from pydantic import Field
 
-from laktory._settings import settings
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
 )
@@ -120,7 +118,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                     named_parameters={
                         "filepath": _path,
                         "node_name": node.name,
-                        "full_refresh": "{{job.parameters.full_refresh}}"
+                        "full_refresh": "{{job.parameters.full_refresh}}",
                     },
                 ),
                 depends_ons=depends_on,

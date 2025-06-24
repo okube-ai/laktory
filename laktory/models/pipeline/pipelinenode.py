@@ -119,15 +119,15 @@ class PipelineNode(BaseModel, PipelineChild):
     primary_keys: list[str] = Field(
         None,
         description="""
-    A list of column names that uniquely identify each row in the
-    DataFrame. These columns are used to:
-        - Document the uniqueness constraints of the node's output data.
-        - Define the default primary keys for sinks CDC merge operations
-        - Referenced in expectations and unit tests.
-    While optional, specifying `primary_keys` helps enforce data integrity
-    and ensures that downstream operations, such as deduplication, are
-    consistent and reliable.
-    """,
+        A list of column names that uniquely identify each row in the
+        DataFrame. These columns are used to:
+            - Document the uniqueness constraints of the node's output data.
+            - Define the default primary keys for sinks CDC merge operations
+            - Referenced in expectations and unit tests.
+        While optional, specifying `primary_keys` helps enforce data integrity
+        and ensures that downstream operations, such as deduplication, are
+        consistent and reliable.
+        """,
     )
     source: DataSourcesUnion | None = Field(
         None, description="Definition of the data source(s)"

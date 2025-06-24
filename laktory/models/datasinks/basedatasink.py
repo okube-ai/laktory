@@ -85,8 +85,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     )
     writer_kwargs: dict[str, Any] = Field(
         {},
-        description="Keyword arguments passed directly to dataframe backend writer."
-        "Passed to `.options()` method when using PySpark.",
+        description="Keyword arguments passed directly to dataframe backend writer. Passed to `.options()` method when using PySpark.",
     )
     writer_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend writer methods."

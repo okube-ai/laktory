@@ -21,7 +21,10 @@ class PipelineChild(BaseChild):
     )
     dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(
         None,
-        description="DataFrame API to use in DataFrame Transformer nodes. Either 'NATIVE' (backend-specific) or 'NARWHALS' (backend-agnostic).",
+        description="""
+        DataFrame API to use in DataFrame Transformer nodes. Either 'NATIVE' (backend-specific) or 'NARWHALS' 
+        (backend-agnostic).
+        """,
     )
 
     @property

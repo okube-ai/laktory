@@ -15,4 +15,6 @@ class ShareGrant(BaseModel):
     """
 
     principal: str = Field(..., description="User, group or service principal name")
-    privileges: list[Literal["SELECT"]] = Field(..., description="List of allowed privileges")
+    privileges: list[Literal["SELECT"]] = Field(
+        ..., description="List of allowed privileges"
+    )

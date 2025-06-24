@@ -4,14 +4,12 @@ from pathlib import Path
 import networkx as nx
 import polars
 import pytest
-import sys
 
 from laktory import get_spark_session
 from laktory import models
-from laktory._version import VERSION
-import laktory as lk
 from laktory._testing import StreamingSource
 from laktory._testing import assert_dfs_equal
+from laktory._version import VERSION
 
 data_dirpath = Path(__file__).parent.parent / "data"
 
@@ -168,10 +166,11 @@ def test_paths(tmp_path):
                 == pl_path / node.name / "checkpoints" / f"sink-{s._uuid}"
             )
 
+
 def test_dependencies(tmp_path):
     pl = get_pl(tmp_path)
-    assert pl._dependencies == ['requests>=2.0', f'laktory=={VERSION}']
-    assert pl._imports == ['re', 'requests']
+    assert pl._dependencies == ["requests>=2.0", f"laktory=={VERSION}"]
+    assert pl._imports == ["re", "requests"]
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])

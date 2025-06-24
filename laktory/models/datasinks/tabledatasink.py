@@ -31,7 +31,10 @@ class TableDataSink(BaseDataSink):
     )
     table_name: str = Field(
         ...,
-        description="Sink table name. Also supports fully qualified name (`{catalog}.{schema}.{table}`). In this case, `catalog_name` and `schema_name` arguments are ignored.",
+        description="""
+        Sink table name. Also supports fully qualified name (`{catalog}.{schema}.{table}`). 
+        In this case, `catalog_name` and `schema_name` arguments are ignored.
+        """,
     )
     table_type: Literal["TABLE", "VIEW"] = Field(
         "TABLE",
@@ -40,8 +43,6 @@ class TableDataSink(BaseDataSink):
     view_definition: DataFrameExpr | str = Field(
         None, description="View definition of 'VIEW' `table_type` is selected."
     )
-    # _parsed_view_definition: BaseChainNodeSQLExpr = None
-    # _parsed_view_definition: str = None
 
     @model_validator(mode="after")
     def validate_table_full_name(self) -> Any:

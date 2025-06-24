@@ -16,60 +16,54 @@ from laktory.models.basemodel import ModelMetaclass
 class ResourceOptions(BaseModel):
     """
     Resource options for deployment.
-
-    Parameters
-    ----------
-    is_enabled:
-        If `False`, resource is not passed to the IaC backend and is not
-        deployed. May be used for deploying resources to specific stack
-        environments only or for disabling resources when debugging.
-    depends_on:
-        Explicit list of resources dependencies.
-        Supported by both pulumi and terraform.
-    provider:
-        Explicit declaration of resources provider.
-        Supported by both pulumi and terraform.
-    aliases:
-        Specify aliases for this resource, so that renaming or refactoring
-        doesn’t replace it.
-        Pulumi only.
-    delete_before_replace:
-        Override the default create-before-delete behavior when replacing a
-        resource.
-        Pulumi only.
-    ignore_changes:
-        Declare that changes to certain properties should be ignored during a
-        diff.
-        Pulumi only.
-    import_:
-        Bring an existing cloud resource into Pulumi.
-        Pulumi only.
-    parent:
-        Establish a parent/child relationship between resources.
-        Pulumi only.
-    replace_on_changes:
-        Declare that changes to certain properties should be treated as forcing
-        a replacement.
-        Pulumi only.
     """
 
     # laktory
-    is_enabled: bool = True
+    is_enabled: bool = Field(
+        True,
+        description="""
+        If `False`, resource is not passed to the IaC backend and is not deployed. May be used for deploying resources
+        to specific stack environments only or for disabling resources when debugging.
+        """,
+    )
 
     # pulumi + terraform
-    depends_on: list[str] = []
-    provider: str = None
-    ignore_changes: list[str] = None
+    depends_on: list[str] = Field(
+        [],
+        description="Explicit list of resources dependencies. Supported by both pulumi and terraform.",
+    )
+    provider: str = Field(
+        None,
+        description="Explicit declaration of resources provider. Supported by both pulumi and terraform.",
+    )
+    ignore_changes: list[str] = Field(
+        None,
+        description="Declare that changes to certain properties should be ignored during a diff.",
+    )
 
     # pulumi only
-    aliases: list[str] = None
-    delete_before_replace: bool = True
-    import_: str = None
+    aliases: list[str] = Field(
+        None,
+        description="Specify aliases for this resource, so that renaming or refactoring doesn’t replace it. Pulumi only.",
+    )
+    delete_before_replace: bool = Field(
+        True,
+        description="Override the default create-before-delete behavior when replacing a resource.Pulumi only.",
+    )
+    import_: str = Field(
+        None, description="Bring an existing cloud resource into Pulumi. Pulumi only."
+    )
     parent: str = None
-    replace_on_changes: list[str] = None
+    replace_on_changes: list[str] = Field(
+        None,
+        description="Declare that changes to certain properties should be treated as forcing a replacement. Pulumi only.",
+    )
 
     # terraform only
-    moved_from: str = None
+    moved_from: str = Field(
+        None,
+        description="Establish a parent/child relationship between resources. Pulumi only.",
+    )
 
     @property
     def pulumi_options(self) -> list[str]:
@@ -107,23 +101,26 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
     Parent class for all Laktory models deployable as one or multiple cloud
     core resources. This `BaseResource` class is derived from
     `pydantic.BaseModel`.
-
-    Parameters
-    ----------
-    resource_name:
-        Name of the resource in the context of infrastructure as code. If None,
-        `default_resource_name` will be used instead.
-    options:
-        Resources options specifications
     """
 
     resource_name_: str = Field(
         None,
         validation_alias=AliasChoices("resource_name_", "resource_name"),
         exclude=True,
+        description="""
+        Name of the resource in the context of infrastructure as code. If None, `default_resource_name` will be used
+        instead.
+        """,
     )
-    options: ResourceOptions = Field(ResourceOptions(), exclude=True)
-    lookup_existing: ResourceLookup = Field(None, exclude=True, frozen=False)
+    options: ResourceOptions = Field(
+        ResourceOptions(), exclude=True, description="Resources options specifications"
+    )
+    lookup_existing: ResourceLookup = Field(
+        None,
+        exclude=True,
+        frozen=False,
+        description="Lookup resource instead of creating a new one.",
+    )
     _core_resources: list[Any] = None
 
     @model_validator(mode="before")
