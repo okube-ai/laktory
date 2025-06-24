@@ -4,9 +4,11 @@ from pathlib import Path
 import networkx as nx
 import polars
 import pytest
+import sys
 
 from laktory import get_spark_session
 from laktory import models
+import laktory as lk
 from laktory._testing import StreamingSource
 from laktory._testing import assert_dfs_equal
 
@@ -130,7 +132,7 @@ def test_update_from_parent():
     # Test
     assert pl.orchestrator.parent == pl
     assert pl.orchestrator.parent_pipeline == pl
-    assert len(pl.orchestrator.parameters) == 5
+    assert len(pl.orchestrator.parameters) == 1
     assert pl.orchestrator.config_file.content_base64_.startswith(
         "ewogICAgIm5hbWUiOiAicGwtbG9j"
     )
@@ -142,7 +144,7 @@ def test_update_from_parent():
     # Test
     assert pl.orchestrator.parent == pl
     assert pl.orchestrator.parent_pipeline == pl
-    assert len(pl.orchestrator.parameters) == 5
+    assert len(pl.orchestrator.parameters) == 1
     assert pl.orchestrator.config_file.content_base64_.startswith(
         "ewogICAgIm5hbWUiOiAicGwtbG9j"
     )

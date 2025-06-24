@@ -66,6 +66,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-examples",
+    "pytest-mock",
     "ruff",
     "yfinance",
 #    "mkdocs-snippets",

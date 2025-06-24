@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
 
+from docutils.nodes import description
 from packaging.requirements import Requirement
 from packaging.requirements import InvalidRequirement
 
@@ -36,9 +37,12 @@ logger = get_logger(__name__)
 # Helper Functions                                                            #
 # --------------------------------------------------------------------------- #
 
+def str2bool(v):
+    return v.lower() in ("yes", "true", "t", "1")
 
 def _read_and_execute():
     """Execute pipeline as a script"""
+    #TODO: Refactor and integrate into dispatcher / executor / CLI
 
     import argparse
     import laktory as lk
@@ -58,7 +62,7 @@ def _read_and_execute():
     )
     parser.add_argument(
         "--full_refresh",
-        type=bool,
+        type=str2bool,
         help="Full refresh",
         default=False,
         required = False,
@@ -69,14 +73,21 @@ def _read_and_execute():
     filepath = args.filepath
     node_name = args.node_name
     full_refresh = args.full_refresh
+    node_str = ""
+    if node_name:
+        node_str = f" node '{node_name}' of "
+    logger.info(f"Executing{node_str} pipeline '{filepath}' with full refresh {full_refresh}")
 
     # Read
-    logger.info(f"Reading pipeline at {filepath}")
     with open(filepath, "r") as fp:
-        pl = lk.models.Pipeline.model_validate_json(fp.read())
+        if str(filepath).endswith(".yaml"):
+            pl = lk.models.Pipeline.model_validate_yaml(fp)
+        else:
+            pl = lk.models.Pipeline.model_validate_json(fp.read())
 
     # Install dependencies
-    for package_name in pl.imports:
+    # TODO: move to pipeline/node execute?
+    for package_name in pl._imports:
         try:
             logger.info(f"Importing {package_name}")
             importlib.import_module(package_name)
@@ -88,6 +99,15 @@ def _read_and_execute():
         pl.nodes_dict[node_name].execute(full_refresh=full_refresh)
     else:
         pl.execute(full_refresh=full_refresh)
+
+
+def _read_and_execute_dlt():
+    """Execute pipeline as a script"""
+    #TODO: Add DLT notebook content
+    raise NotImplementedError()
+
+
+
 
 # --------------------------------------------------------------------------- #
 # Main Class                                                                  #
@@ -233,6 +253,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         [],
         description="List of dependencies required to run the pipeline. If Laktory is not provided, it's current version is added to the list.",
     )
+    imports: list[str] = Field(
+        [],
+        description="List of modules to import before execution. Generally used to load Narwhals extensions. Packages listed in `dependencies` are automatically included in the list of imports."
+    )
     name: str = Field(..., description="Name of the pipeline")
     nodes: list[PipelineNode] = Field(
         [],
@@ -365,14 +389,16 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         return dependencies
 
     @property
-    def imports(self) -> list[str]:
-        pkg_names = []
+    def _imports(self) -> list[str]:
+        pkg_names = self.imports
         for req in self.dependencies:
             try:
                 r = Requirement(req)
-                pkg_names.append(r.name)
+                if r not in pkg_names:
+                    pkg_names += [r.name]
             except InvalidRequirement:
                 logger.info(f"Skipping non-parseable requirement: {req}")
+
         return pkg_names
 
     # ----------------------------------------------------------------------- #
