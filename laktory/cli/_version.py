@@ -16,4 +16,11 @@ def version():
     laktory version
     ```
     """
-    print(show_version_info())
+
+    try:
+        print(show_version_info())
+    except SystemExit as e:
+        if e.code != 0:
+            raise
+
+    # print(show_version_info())
