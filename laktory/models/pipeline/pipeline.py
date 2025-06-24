@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
 
-from docutils.nodes import description
 from packaging.requirements import Requirement
 from packaging.requirements import InvalidRequirement
 
