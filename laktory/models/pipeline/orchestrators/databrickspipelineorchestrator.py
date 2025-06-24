@@ -7,7 +7,7 @@ from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
 )
-from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.pipeline import Pipeline
 from laktory.models.resources.pulumiresource import PulumiResource
 

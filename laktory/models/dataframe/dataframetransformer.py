@@ -6,7 +6,7 @@ from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframeexpr import DataFrameExpr
 from laktory.models.dataframe.dataframemethod import DataFrameMethod
-from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
 
 if TYPE_CHECKING:

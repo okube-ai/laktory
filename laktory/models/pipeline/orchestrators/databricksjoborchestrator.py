@@ -2,13 +2,12 @@ import json
 from typing import Literal
 
 from pydantic import Field
-from requests.packages import package
 
 from laktory._settings import settings
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
 )
-from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.cluster import ClusterLibrary
 from laktory.models.resources.databricks.cluster import ClusterLibraryPypi
 from laktory.models.resources.databricks.job import Job
@@ -86,6 +85,12 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                     depends_on += _get_depends_on(_node, pl)
             return depends_on
 
+        # Requirements and path
+        _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
+        _path = (
+            "/Workspace"
+            + self.inject_vars_into_dump({"path": self.config_file.path_})["path"]
+        )
 
         # Environment
         env_key = "laktory"
@@ -103,12 +108,11 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                     environment_key=env_key,
                     spec=JobEnvironmentSpec(
                         client="3",
-                        dependencies=pl._dependencies,
+                        dependencies=_requirements,
                     ),
                 )
             ]
             self.environments = envs
-
 
         # Sorting Node Names to prevent job update trigger with Pulumi
         node_names = [node.name for node in pl.nodes]
@@ -124,9 +128,9 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             task = JobTask(
                 task_key="node-" + node.name,
                 python_wheel_task=JobTaskPythonWheelTask(
-                    entry_point="print_version",
+                    entry_point="models.pipeline._read_and_execute",
                     package_name="laktory",
-                    # parameters=["version"]
+                    parameters=[_path, node.name]
                 ),
                 depends_ons=depends_on,
             )

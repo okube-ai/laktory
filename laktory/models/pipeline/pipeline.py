@@ -17,7 +17,7 @@ from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
 from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
     DatabricksPipelineOrchestrator,
 )
-from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.pipelinechild import PipelineChild
 from laktory.models.pipeline.pipelinenode import PipelineNode
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource

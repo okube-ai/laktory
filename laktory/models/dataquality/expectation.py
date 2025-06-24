@@ -13,7 +13,7 @@ from laktory.exceptions import DataQualityCheckFailedError
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframecolumnexpr import DataFrameColumnExpr
 from laktory.models.dataquality.check import DataQualityCheck
-from laktory.models.pipeline.pipelinechild import PipelineChild
+from laktory.models.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
