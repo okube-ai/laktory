@@ -3,7 +3,6 @@ from typing import Any
 from typing import Literal
 from typing import Union
 
-from docutils.nodes import description
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
