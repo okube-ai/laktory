@@ -55,13 +55,34 @@ logger = get_logger(__name__)
 
 def _read_and_execute(filepath, node_name=None, full_refresh=False, imports=None):
 
-    # # COMMAND ----------
-    # dbutils.widgets.text("pipeline_name", "pl-stocks-job")
-    # dbutils.widgets.text("node_name", "")
-    # dbutils.widgets.text("full_refresh", "False")
-    # dbutils.widgets.text("install_dependencies", "True")
-    # dbutils.widgets.text("requirements", "")
-    # dbutils.widgets.text("config_filepath", "")
+    import argparse
+
+    # Parse arguments
+    parser = argparse.ArgumentParser(
+        description="Read pipeline configuration file and execute"
+    )
+    parser.add_argument("--filepath", type=str, help="Laktory branch name", required=True)
+    parser.add_argument(
+        "--node_name",
+        type=str,
+        help="Node name",
+        default=None,
+        required = False,
+    )
+    parser.add_argument(
+        "--full_refresh",
+        type=bool,
+        help="Full refresh",
+        default=False,
+        required = False,
+    )
+
+    args = parser.parse_args()
+
+
+    filepath = args.filepath
+    node_name = args.node_name
+    full_refresh = args.full_refresh
     #
     # # COMMAND ----------
     # install_dependencies = dbutils.widgets.get("install_dependencies").lower() == "true"
