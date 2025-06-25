@@ -17,44 +17,18 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class NotebookLookup(ResourceLookup):
-    """
-    Attributes
-    ----------
-    path:
-        Notebook path on the workspace
-    format:
-        Notebook format to export. Either `SOURCE`, `HTML`, `JUPYTER`, or `DBC`
-    """
-
-    path: str = Field(serialization_alias="id")
-    format: str = "SOURCE"
+    path: str = Field(
+        serialization_alias="id", description="Notebook path on the workspace"
+    )
+    format: str = Field(
+        "SOURCE",
+        description="Notebook format to export. Either `SOURCE`, `HTML`, `JUPYTER`, or `DBC`",
+    )
 
 
 class Notebook(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Notebook
-
-    Attributes
-    ----------
-    access_controls:
-        List of notebook access controls
-    dirpath:
-        Workspace directory inside rootpath in which the notebook is deployed.
-        Used only if `path` is not specified.
-    language:
-         Notebook programming language
-    lookup_existing:
-        Specifications for looking up existing resource. Other attributes will
-        be ignored.
-    path:
-        Workspace filepath for the notebook. Overwrite `rootpath` and `dirpath`.
-    rootpath:
-        Root directory to which all notebooks are deployed to. Can also be
-        configured by settings LAKTORY_WORKSPACE_LAKTORY_ROOT environment
-        variable. Default is `/.laktory/`. Used only if `path` is not
-        specified.
-    source:
-        Path to notebook in source code format on local filesystem.
 
     Examples
     --------
@@ -84,13 +58,35 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    access_controls: list[AccessControl] = []
-    dirpath: str = None
-    language: Literal["SCALA", "PYTHON", "SQL", "R"] = None
-    lookup_existing: NotebookLookup = Field(None, exclude=True)
-    path: str = None
-    rootpath: str = None
-    source: str
+    access_controls: list[AccessControl] = Field(
+        [], description="List of notebook access controls"
+    )
+    dirpath: str = Field(
+        None,
+        description="Workspace directory inside rootpath in which the notebook is deployed. Used only if `path` is not specified.",
+    )
+    language: Literal["SCALA", "PYTHON", "SQL", "R"] = Field(
+        None, description="Notebook programming language"
+    )
+    lookup_existing: NotebookLookup = Field(
+        None,
+        exclude=True,
+        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+    )
+    path: str = Field(
+        None,
+        description="Workspace filepath for the notebook. Overwrite `rootpath` and `dirpath`.",
+    )
+    rootpath: str = Field(
+        None,
+        description="""
+    Root directory to which all notebooks are deployed to. Can also be configured by settings 
+    LAKTORY_WORKSPACE_LAKTORY_ROOT environment variable. Default is `/.laktory/`. Used only if `path` is not specified.
+    """,
+    )
+    source: str = Field(
+        ..., description="Path to notebook in source code format on local filesystem."
+    )
 
     @property
     def filename(self) -> str:

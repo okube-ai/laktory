@@ -16,14 +16,10 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class ServicePrincipalLookup(ResourceLookup):
-    """
-    Parameters
-    ----------
-    application_id:
-        ID of the service principal. The service principal must exist before this resource can be retrieved.
-    """
-
-    application_id: str = Field(serialization_alias="id")
+    application_id: str = Field(
+        serialization_alias="id",
+        description="ID of the service principal. The service principal must exist before this resource can be retrieved.",
+    )
 
 
 class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
@@ -33,24 +29,21 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     Attributes
     ----------
     allow_cluster_create:
-        When `True`, the group is allowed to have cluster create permissions
+
     application_id:
-        This is the Azure Application ID of the given Azure service principal
-        and will be their form of access and identity. On other clouds than
-        Azure this value is auto-generated.
+
     disable_as_user_deletion:
-        If `True` user is disabled instead of delete when the resource is deleted
+
     display_name:
-        Display name for the service principal
+
     group_ids:
-        List of the group ids that the user should be member of.
+
     lookup_existing:
-        Specifications for looking up existing resource. Other attributes will
-        be ignored.
+
     roles:
-        List of roles assigned to the user e.g. ("account_admin")
+
     workspace_access
-        When `True`, the group is allowed to have workspace access
+
 
     Examples
     --------
@@ -71,15 +64,39 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    allow_cluster_create: bool = False
-    application_id: str = None
-    disable_as_user_deletion: bool = False
-    display_name: str
-    lookup_existing: ServicePrincipalLookup = Field(None, exclude=True)
-    group_ids: list[str] = []
-    roles: list[str] = []
-    workspace_access: bool = None
-    workspace_permission_assignments: list[MwsPermissionAssignment] = None
+    allow_cluster_create: bool = Field(
+        False,
+        description="When `True`, the group is allowed to have cluster create permissions",
+    )
+    application_id: str = Field(
+        None,
+        description="""
+    This is the Azure Application ID of the given Azure service principal and will be their form of access and 
+    identity. On other clouds than Azure this value is auto-generated.
+    """,
+    )
+    disable_as_user_deletion: bool = Field(
+        False,
+        description="If `True` user is disabled instead of delete when the resource is deleted",
+    )
+    display_name: str = Field(..., description="Display name for the service principal")
+    lookup_existing: ServicePrincipalLookup = Field(
+        None,
+        exclude=True,
+        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+    )
+    group_ids: list[str] = Field(
+        [], description="List of the group ids that the user should be member of."
+    )
+    roles: list[str] = Field(
+        [], description="List of roles assigned to the user e.g. ('account_admin')"
+    )
+    workspace_access: bool = Field(
+        None, description="When `True`, the group is allowed to have workspace access"
+    )
+    workspace_permission_assignments: list[MwsPermissionAssignment] = Field(
+        None, description=""
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

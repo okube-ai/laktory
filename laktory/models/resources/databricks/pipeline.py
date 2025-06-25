@@ -30,26 +30,18 @@ class PipelineRunAs(BaseModel):
 
 
 class PipelineRestartWindow(BaseModel):
-    """Pipeline Restart Window specifications"""
-
     start_hour: int = Field(..., description="")
     days_of_weeks: list[str] = Field(None, description="")
     time_zone_id: str = Field(None, description="")
 
 
 class PipelineLatestUpdate(BaseModel):
-    """Pipeline Latest Update specifications"""
-
     creation_time: str = Field(None, description="")
     state: str = Field(None, description="")
     update_id: str = Field(None, description="")
 
 
 class PipelineGatewayDefinition(BaseModel):
-    """
-    Pipeline Gateway Definition specifications
-    """
-
     connection_id: str = Field(
         None,
         description="Immutable. The Unity Catalog connection this gateway pipeline uses to communicate with the source.",
@@ -61,7 +53,11 @@ class PipelineGatewayDefinition(BaseModel):
     )
     gateway_storage_name: str = Field(
         None,
-        description="Required. The Unity Catalog-compatible naming for the gateway storage location. This is the destination to use for the data that is extracted by the gateway. Delta Live Tables system will automatically create the storage location under the catalog and schema.",
+        description="""
+        Required. The Unity Catalog-compatible naming for the gateway storage location. This is the destination to use 
+        for the data that is extracted by the gateway. Delta Live Tables system will automatically create the storage 
+        location under the catalog and schema.
+        """,
     )
     gateway_storage_schema: str = Field(
         ...,
@@ -70,10 +66,6 @@ class PipelineGatewayDefinition(BaseModel):
 
 
 class PipelineDeployment(BaseModel):
-    """
-    Pipeline Deployment specifications
-    """
-
     kind: str = Field(
         ..., description="The deployment method that manages the pipeline."
     )
@@ -84,10 +76,6 @@ class PipelineDeployment(BaseModel):
 
 
 class PipelineEventLog(BaseModel):
-    """
-    Pipeline Event Log specifications
-    """
-
     name: str = Field(
         ..., description="The table name the event log is published to in UC."
     )
@@ -102,68 +90,26 @@ class PipelineEventLog(BaseModel):
 
 
 class PipelineFilters(BaseModel):
-    """
-    Pipeline Filters specifications
-    """
-
     excludes: str = Field(..., description="Paths to exclude.")
     includes: str = Field(..., description="Paths to include.")
 
 
 class PipelineLibraryFile(BaseModel):
-    """
-    Pipeline Library File specifications
-
-    Parameters
-    ----------
-    path:
-        Workspace filepath
-    """
-
-    path: str
+    path: str = Field(..., description="")
 
 
 class PipelineLibraryNotebook(BaseModel):
-    """
-    Pipeline Library Notebook specifications
-
-    Parameters
-    ----------
-    path:
-        Workspace notebook filepath
-    """
-
-    path: str
+    path: str = Field(..., description="Workspace notebook filepath")
 
 
 class PipelineLibrary(BaseModel):
-    """
-    Pipeline Library specifications
-
-    Parameters
-    ----------
-    file:
-        File specifications
-    notebook:
-        Notebook specifications
-    """
-
-    file: str = None
-    notebook: PipelineLibraryNotebook = None
+    file: str = Field(None, description="File specifications")
+    notebook: PipelineLibraryNotebook = Field(
+        None, description="Notebook specifications"
+    )
 
 
 class PipelineNotifications(BaseModel):
-    """
-    Pipeline Notifications specifications
-
-    Parameters
-    ----------
-    alerts:
-        Alert types
-    recipients:
-        List of user/group/service principal names
-    """
-
     alerts: list[
         Literal[
             "on-update-success",
@@ -171,8 +117,10 @@ class PipelineNotifications(BaseModel):
             "on-update-fatal-failure",
             "on-flow-failure",
         ]
-    ]
-    recipients: list[str]
+    ] = Field(..., description="Alert types")
+    recipients: list[str] = Field(
+        ..., description="List of user/group/service principal names"
+    )
 
 
 class PipelineCluster(Cluster):
@@ -287,7 +235,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     )
     allow_duplicate_names: bool = Field(
         None,
-        description="If `False`, deployment will fail if name conflicts with that of another pipeline.",
+        description="""
+        If `False`, deployment will fail if name conflicts with that of another pipeline.
+        """,
     )
     budget_policy_id: str = Field(
         None,
@@ -304,7 +254,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     cluster_id: str = Field(None, description="")
     clusters: list[PipelineCluster] = Field(
         [],
-        description="Clusters to run the pipeline. If none is specified, pipelines will automatically select a default cluster configuration for the pipeline.",
+        description="""
+        Clusters to run the pipeline. If none is specified, pipelines will automatically select a default cluster 
+        configuration for the pipeline.
+        """,
     )
     creator_user_name: str = Field(None, description="")
     configuration: dict[str, str] = Field(
@@ -352,24 +305,38 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     restart_window: PipelineRestartWindow = Field(None, description="")
     root_path: str = Field(
         None,
-        description="An optional string specifying the root path for this pipeline. This is used as the root directory when editing the pipeline in the Databricks user interface and it is added to sys.path when executing Python sources during pipeline execution.",
+        description="""
+        An optional string specifying the root path for this pipeline. This is used as the root directory when editing
+        the pipeline in the Databricks user interface and it is added to sys.path when executing Python sources during 
+        pipeline execution.
+        """,
     )
     run_as: PipelineRunAs = Field(None, description="")
     run_as_user_name: str = Field(None, description="")
     schema_: str = Field(
         None,
-        description="The default schema (database) where tables are read from or published to. The presence of this attribute implies that the pipeline is in direct publishing mode.",
+        description="""
+        The default schema (database) where tables are read from or published to. The presence of this
+        attribute implies that the pipeline is in direct publishing mode.
+        """,
         validation_alias=AliasChoices("schema", "schema_"),
     )
     serverless: bool = Field(None, description="If `True`, serverless is enabled")
     state: str = Field(None, description="")
     storage: str = Field(
         None,
-        description="A location on DBFS or cloud storage where output data and metadata required for pipeline execution are stored. By default, tables are stored in a subdirectory of this location. Change of this parameter forces recreation of the pipeline. (Conflicts with `catalog`).",
+        description="""
+        A location on DBFS or cloud storage where output data and metadata required for pipeline execution are stored.
+        By default, tables are stored in a subdirectory of this location. Change of this parameter forces recreation of
+        the pipeline. (Conflicts with `catalog`).
+        """,
     )
     target: str = Field(
         None,
-        description=" The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data. Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.",
+        description="""
+        The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data.
+        Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
+        """,
     )
     trigger: PipelineTrigger = Field(None, description="")
     url: str = Field(
