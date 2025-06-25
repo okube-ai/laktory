@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any
 from typing import Union
 
+from pydantic import Field
 from pydantic import model_validator
 
 from laktory._settings import settings
@@ -13,126 +14,62 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class AlertConditionThresholdValue(BaseModel):
-    """
-    Attributes
-    ----------
-    bool_value:
-        boolean value (`true` or `false`) to compare against boolean results.
-    double_value:
-        double value to compare against integer and double results.
-    string_value:
-        string value to compare against string results.
-    """
-
-    bool_value: bool = None
-    double_value: float = None
-    string_value: str = None
+    bool_value: bool = Field(
+        None,
+        description="boolean value (`true` or `false`) to compare against boolean results.",
+    )
+    double_value: float = Field(
+        None, description="double value to compare against integer and double results."
+    )
+    string_value: str = Field(
+        None, description="string value to compare against string results."
+    )
 
 
 class AlertConditionThreshold(BaseModel):
-    """
-    Attributes
-    ----------
-    value:
-        Actual value used in comparison (one of the attributes is required)
-    """
-
-    value: AlertConditionThresholdValue
+    value: AlertConditionThresholdValue = Field(
+        ...,
+        description="Actual value used in comparison (one of the attributes is required)",
+    )
 
 
 class AlertConditionOperandColumn(BaseModel):
-    """
-    Attributes
-    ----------
-    name:
-        Name of the column
-    """
-
-    name: str
+    name: str = Field(..., description="Name of the column")
 
 
 class AlertConditionOperand(BaseModel):
-    """
-    Attributes
-    ----------
-    column:
-        Block describing the column from the query result to use for comparison
-        in alert evaluation
-    """
-
-    column: AlertConditionOperandColumn
+    column: AlertConditionOperandColumn = Field(
+        ...,
+        description="""
+    Block describing the column from the query result to use for comparison in alert evaluation
+    """,
+    )
 
 
 class AlertCondition(BaseModel):
-    """
-    Alert Conditions
-
-    Attributes
-    ----------
-    op:
-        Operator used to compare in alert evaluation. (Enum: `GREATER_THAN`,
-        `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `EQUAL`,
-        `NOT_EQUAL`, `IS_NULL`)
-    operand:
-        Name of the column from the query result to use for comparison in alert
-        evaluation.
-    empty_result_state:
-        Alert state if the result is empty (`UNKNOWN`, `OK`, `TRIGGERED`)
-    threshold:
-        Threshold value used for comparison in alert evaluation:
-    """
-
-    op: str
-    operand: AlertConditionOperand
-    empty_result_state: str = None
-    threshold: AlertConditionThreshold
+    op: str = Field(
+        ...,
+        description="""
+    Operator used to compare in alert evaluation. (Enum: `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, 
+    `LESS_THAN_OR_EQUAL`, `EQUAL`, `NOT_EQUAL`, `IS_NULL`)
+    """,
+    )
+    operand: AlertConditionOperand = Field(
+        ...,
+        description="Name of the column from the query result to use for comparison in alert evaluation.",
+    )
+    empty_result_state: str = Field(
+        None,
+        description="Alert state if the result is empty (`UNKNOWN`, `OK`, `TRIGGERED`)",
+    )
+    threshold: AlertConditionThreshold = Field(
+        ..., description="Threshold value used for comparison in alert evaluation:"
+    )
 
 
 class Alert(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks SQL Query
-
-    Attributes
-    ----------
-    access_controls:
-        SQL Alert access controls
-    condition:
-        Trigger conditions of the alert.
-    dirpath:
-        Workspace directory inside rootpath in which the alert is deployed.
-        Used only if `parent_path` is not specified.
-    display_name:
-        Name of the alert.
-    query_id:
-        ID of the query evaluated by the alert. Mutually exclusive with `query`.
-    custom_body:
-        Custom body of alert notification, if it exists. See [Alerts API reference](https://docs.databricks.com/sql/user/alerts/index.html)
-        for custom templating instructions.
-    custom_subject:
-        Custom subject of alert notification, if it exists. This includes email subject, Slack notification header, etc.
-        See [Alerts API reference](https://docs.databricks.com/sql/user/alerts/index.html) for custom templating
-        instructions.
-    name_prefix:
-        Prefix added to the alert display name
-    name_suffix:
-        Suffix added to the alert display name
-    notify_on_ok:
-        Whether to notify alert subscribers when alert returns back to normal.
-    owner_user_name:
-        Alert owner's username.
-    parent_path:
-        The path to a workspace folder containing the alert. Set to `None`
-        to use user's home folder. Overwrite `rootpath` and `dirpath`. If
-        changed, the alert will be recreated.
-    rootpath:
-        Root directory to which all alerts are deployed to. Can also be
-        configured by settings LAKTORY_WORKSPACE_LAKTORY_ROOT environment
-        variable. Default is `/.laktory/`. Used only if `parent_path` is not
-        specified.
-    seconds_to_retrigger:
-        Number of seconds an alert must wait after being triggered to rearm
-        itself. After rearming, it can be triggered again. If 0 or not
-        specified, the alert will not be triggered again.
 
     Examples
     --------
@@ -152,20 +89,65 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    access_controls: list[AccessControl] = []
-    condition: AlertCondition
-    custom_body: str = None
-    custom_subject: str = None
-    dirpath: str = None
-    display_name: str
-    name_prefix: str = None
-    name_suffix: str = None
-    notify_on_ok: bool = None
-    owner_user_name: str = None
-    parent_path: str = None
-    query_id: str = None
-    rootpath: str = None
-    seconds_to_retrigger: int = None
+    access_controls: list[AccessControl] = Field(
+        [], description="SQL Alert access controls"
+    )
+    condition: AlertCondition = Field(
+        ..., description="Trigger conditions of the alert."
+    )
+    custom_body: str = Field(
+        None,
+        description="""
+    Custom body of alert notification, if it exists. See [Alerts API reference](https://docs.databricks.com/sql/user/alerts/index.html)
+        for custom templating instructions.
+    """,
+    )
+    custom_subject: str = Field(
+        None,
+        description="""
+    Custom subject of alert notification, if it exists. This includes email subject, Slack notification header, etc.
+    See [Alerts API reference](https://docs.databricks.com/sql/user/alerts/index.html) for custom templating
+    instructions.
+    """,
+    )
+    dirpath: str = Field(
+        None,
+        description="Workspace directory inside rootpath in which the alert is deployed. Used only if `parent_path` is not specified.",
+    )
+    display_name: str = Field(..., description="Name of the alert.")
+    name_prefix: str = Field(None, description="Prefix added to the alert display name")
+    name_suffix: str = Field(None, description="Suffix added to the alert display name")
+    notify_on_ok: bool = Field(
+        None,
+        description="Whether to notify alert subscribers when alert returns back to normal.",
+    )
+    owner_user_name: str = Field(None, description="Alert owner's username.")
+    parent_path: str = Field(
+        None,
+        description="""
+    The path to a workspace folder containing the alert. Set to `None` to use user's home folder. Overwrite `rootpath` 
+    and `dirpath`. If changed, the alert will be recreated.
+    """,
+    )
+    query_id: str = Field(
+        None,
+        description="ID of the query evaluated by the alert. Mutually exclusive with `query`.",
+    )
+    rootpath: str = Field(
+        None,
+        description="""
+    Root directory to which all alerts are deployed to. Can also be configured by settings 
+    LAKTORY_WORKSPACE_LAKTORY_ROOT environment variable. Default is `/.laktory/`. Used only if `parent_path` is not
+    specified.
+    """,
+    )
+    seconds_to_retrigger: int = Field(
+        None,
+        description="""
+    Number of seconds an alert must wait after being triggered to rearm itself. After rearming, it can be triggered 
+    again. If 0 or not specified, the alert will not be triggered again.
+    """,
+    )
 
     @model_validator(mode="after")
     def set_paths(self) -> Any:

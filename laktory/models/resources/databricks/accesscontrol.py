@@ -1,5 +1,6 @@
 from typing import Any
 
+from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
@@ -13,17 +14,6 @@ class AccessControl(BaseModel):
     pipeline, etc. For providing access to securable data, refer to
     `models.Grant` instead.
 
-    Attributes
-    ----------
-    group_name:
-        Name of the group to assign the permission to.
-    permission_level:
-        Name of the permission to assign
-    service_principal_name:
-        Name of the service principal to assign the permission to.
-    user_name
-        Name of the user to assign the permission to.
-
     Examples
     --------
     ```py
@@ -35,10 +25,16 @@ class AccessControl(BaseModel):
     ```
     """
 
-    group_name: str = None
-    permission_level: str
-    service_principal_name: str = None
-    user_name: str = None
+    group_name: str = Field(
+        None, description="Name of the group to assign the permission to."
+    )
+    permission_level: str = Field(..., description="Name of the permission to assign")
+    service_principal_name: str = Field(
+        None, description="Name of the service principal to assign the permission to."
+    )
+    user_name: str = Field(
+        None, description="Name of the user to assign the permission to."
+    )
 
     @model_validator(mode="after")
     def single_input(self) -> Any:
