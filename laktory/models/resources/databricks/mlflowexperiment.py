@@ -1,5 +1,7 @@
 from typing import Union
 
+from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
@@ -10,25 +12,6 @@ from laktory.models.resources.terraformresource import TerraformResource
 class MLflowExperiment(BaseModel, PulumiResource, TerraformResource):
     """
     MLflow Experiment
-
-    Attributes
-    ----------
-    access_controls:
-        MLflow Experiment access controls
-    artifact_location:
-        Path to dbfs:/ or s3:// artifact location of the MLflow experiment.
-    creation_time:
-    description:
-        The description of the MLflow experiment.
-    experiment_id:
-    last_update_time:
-    lifecycle_stage:
-    name:
-        Name of MLflow experiment. It must be an absolute path within the
-        Databricks workspace, e.g. `/Users/<some-username>/my-experiment`.
-        For more information about changes to experiment naming conventions,
-        see [mlflow docs](https://docs.databricks.com/applications/mlflow/experiments.html#experiment-migration).
-
 
     Examples
     --------
@@ -49,14 +32,26 @@ class MLflowExperiment(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    access_controls: list[AccessControl] = []
-    artifact_location: str = None
-    creation_time: int = None
-    description: str = None
-    experiment_id: str = None
-    last_update_time: int = None
-    lifecycle_stage: str = None
-    name: str
+    access_controls: list[AccessControl] = Field([], description="Access controls list")
+    artifact_location: str = Field(
+        None,
+        description="Path to dbfs:/ or s3:// artifact location of the MLflow experiment.",
+    )
+    creation_time: int = Field(None, description="")
+    description: str = Field(
+        None, description="The description of the MLflow experiment."
+    )
+    experiment_id: str = Field(None, description="")
+    last_update_time: int = Field(None, description="")
+    lifecycle_stage: str = Field(None, description="")
+    name: str = Field(
+        ...,
+        description="""
+    Name of MLflow experiment. It must be an absolute path within the Databricks workspace, e.g. 
+    `/Users/<some-username>/my-experiment`. For more information about changes to experiment naming conventions,
+    see [mlflow docs](https://docs.databricks.com/applications/mlflow/experiments.html#experiment-migration).
+    """,
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

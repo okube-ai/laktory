@@ -31,29 +31,6 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
     Authoritative for all principals. Sets the grants of a securable and replaces any
     existing grants defined inside or outside of Laktory.
 
-    Parameters
-    ----------
-    catalog:
-        Name of the catalog to assign the grants to
-    external_location:
-        Name of the external location to assign the grants to
-    grants:
-        List of grant assigned to the selected object
-    metastore:
-        Name of the metastore to assign the grants to
-    model
-        Name of the user to assign the permission to.
-    schema:
-        Name of the schema to assign the permission to.
-    share:
-        Name of the share to assign the permission to.
-    storage_credential:
-        Name of the storage credential to assign the permission to.
-    view:
-        Name of the view to assign the permission to.
-    volume:
-        Name of the volume to assign the permission to.
-
     Examples
     --------
     ```py
@@ -66,19 +43,39 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    catalog: str = None
-    external_location: str = None
-    grants: list[GrantsGrant]
-    metastore: str = None
-    model: str = None
+    catalog: str = Field(
+        None, description="Name of the catalog to assign the grants to"
+    )
+    external_location: str = Field(
+        None, description="Name of the external location to assign the grants to"
+    )
+    grants: list[GrantsGrant] = Field(
+        ..., description="List of grant assigned to the selected object"
+    )
+    metastore: str = Field(
+        None, description="Name of the metastore to assign the grants to"
+    )
+    model: str = Field(
+        None, description="Name of the user to assign the permission to."
+    )
     schema_: str = Field(
-        None, validation_alias=AliasChoices("schema", "schema_")
+        None,
+        validation_alias=AliasChoices("schema", "schema_"),
+        description="Name of the schema to assign the permission to.",
     )  # required not to overwrite BaseModel attribute
-    share: str = None
-    storage_credential: str = None
-    table: str = None
-    view: str = None
-    volume: str = None
+    share: str = Field(
+        None, description="Name of the share to assign the permission to."
+    )
+    storage_credential: str = Field(
+        None, description="Name of the storage credential to assign the permission to."
+    )
+    table: str = Field(
+        None, description="Name of the table to assign the permission to."
+    )
+    view: str = Field(None, description="Name of the view to assign the permission to.")
+    volume: str = Field(
+        None, description="Name of the volume to assign the permission to."
+    )
 
     # ----------------------------------------------------------------------- #
     # Pulumi Methods                                                          #

@@ -26,12 +26,11 @@ class Directory(BaseModel, PulumiResource, TerraformResource):
     Attributes
     ----------
     delete_recursive:
-        When `True`, subdirectories are also deleted when the directory is deleted
+
     lookup_existing:
-        Specifications for looking up existing resource. Other attributes will
-        be ignored.
+
     path:
-        The absolute path of the directory, beginning with "/", e.g. "/pipelines".
+
 
     Examples
     --------
@@ -50,9 +49,19 @@ class Directory(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    delete_recursive: Union[bool, None] = None
-    lookup_existing: DirectoryLookup = Field(None, exclude=True)
-    path: str
+    delete_recursive: Union[bool, None] = Field(
+        None,
+        description=" When `True`, subdirectories are also deleted when the directory is deleted",
+    )
+    lookup_existing: DirectoryLookup = Field(
+        None,
+        exclude=True,
+        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+    )
+    path: str = Field(
+        ...,
+        description="The absolute path of the directory, beginning with '/', e.g. '/pipelines'.",
+    )
 
     @property
     def resource_key(self) -> str:

@@ -26,99 +26,84 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Metastore
 
-    Attributes
-    ----------
-    cloud:
-        todo
-    created_at:
-        todo
-    created_by:
-        todo
-    data_accesses:
-        List of data accesses (storage credentials)
-    default_data_access_config_id:
-        todo
-    delta_sharing_organization_name:
-        The organization name of a Delta Sharing entity. This field is used for
-         Databricks to Databricks sharing. Once this is set it cannot be
-        removed and can only be modified to another valid value. To delete
-        this value please taint and recreate the resource.
-    delta_sharing_recipient_token_lifetime_in_seconds:
-        Required along with `delta_sharing_scope`. Used to set expiration
-        duration in seconds on recipient data access tokens.
-        Set to 0 for unlimited duration.
-    delta_sharing_scope:
-        Required along with delta_sharing_recipient_token_lifetime_in_seconds.
-         Used to enable delta sharing on the metastore.
-        Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.
-    force_destroy:
-        Destroy metastore regardless of its contents.
-    global_metastore_id:
-        todo
-    grant:
-        Grant(s) operating on the Metastore and authoritative for a specific principal.
-        Other principals within the grants are preserved. Mutually exclusive with
-        `grants`.
-    grants:
-        Grants operating on the Metastore and authoritative for all principals.
-        Replaces any existing grants defined inside or outside of Laktory. Mutually
-        exclusive with `grant`.
-    grants_provider:
-        Provider used for deploying grants
-    lookup_existing:
-        Specifications for looking up existing resource. Other attributes will
-        be ignored.
-    metastore_id:
-        todo
-    name:
-        Name of metastore.
-    owner:
-        Username/groupname/sp application_id of the metastore owner.
-    region:
-        The region of the metastore
-    storage_root:
-        Path on cloud storage account, where managed databricks.Table are
-        stored. Change forces creation of a new resource. If no storage_root is
-        defined for the metastore, each catalog must have a storage_root
-        defined.
-    storage_root_credential_id:
-        todo
-    updated_at:
-        todo
-    updated_by:
-        todo
-    workspace_assignments:
-        List of workspace to which metastore is assigned to
-
     Examples
     --------
     ```py
     ```
     """
 
-    cloud: str = None
-    created_at: int = None
-    created_by: str = None
-    data_accesses: list[MetastoreDataAccess] = None
-    default_data_access_config_id: str = None
-    delta_sharing_organization_name: str = None
-    delta_sharing_recipient_token_lifetime_in_seconds: int = None
-    delta_sharing_scope: str = None
-    force_destroy: bool = None
-    global_metastore_id: str = None
-    grant: Union[MetastoreGrant, list[MetastoreGrant]] = None
-    grants: list[MetastoreGrant] = None
-    grants_provider: str = None
-    lookup_existing: MetastoreLookup = Field(None, exclude=True)
-    metastore_id: str = None
-    name: str = None
-    owner: str = None
-    region: str = None
-    storage_root: str = None
-    storage_root_credential_id: Union[str, None] = None
-    updated_at: int = None
-    updated_by: str = None
-    workspace_assignments: list[MetastoreAssignment] = None
+    cloud: str = Field(None, description="")
+    created_at: int = Field(None, description="")
+    created_by: str = Field(None, description="")
+    data_accesses: list[MetastoreDataAccess] = Field(
+        None, description="List of data accesses (storage credentials)"
+    )
+    default_data_access_config_id: str = Field(None, description="")
+    delta_sharing_organization_name: str = Field(
+        None,
+        description="""
+    The organization name of a Delta Sharing entity. This field is used for Databricks to Databricks sharing. Once 
+    this is set it cannot be removed and can only be modified to another valid value. To delete this value please 
+    taint and recreate the resource.
+    """,
+    )
+    delta_sharing_recipient_token_lifetime_in_seconds: int = Field(
+        None,
+        description="""
+    Required along with `delta_sharing_scope`. Used to set expiration duration in seconds on recipient data access 
+    tokens. Set to 0 for unlimited duration.
+    """,
+    )
+    delta_sharing_scope: str = Field(
+        None,
+        description="""
+    Required along with delta_sharing_recipient_token_lifetime_in_seconds. Used to enable delta sharing on the 
+    metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.
+    """,
+    )
+    force_destroy: bool = Field(
+        None, description="Destroy metastore regardless of its contents."
+    )
+    global_metastore_id: str = Field(None, description="")
+    grant: Union[MetastoreGrant, list[MetastoreGrant]] = Field(
+        None,
+        description="""
+    Grant(s) operating on the Metastore and authoritative for a specific principal. Other principals within the grants 
+    are preserved. Mutually exclusive with `grants`.
+    """,
+    )
+    grants: list[MetastoreGrant] = Field(
+        None,
+        description="""
+    Grants operating on the Metastore and authoritative for all principals. Replaces any existing grants defined inside
+    or outside of Laktory. Mutually exclusive with `grant`.
+    """,
+    )
+    grants_provider: str = Field(None, description="Provider used for deploying grants")
+    lookup_existing: MetastoreLookup = Field(
+        None,
+        exclude=True,
+        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+    )
+    metastore_id: str = Field(None, description="")
+    name: str = Field(None, description="Name of metastore.")
+    owner: str = Field(
+        None, description="Username/groupname/sp application_id of the metastore owner."
+    )
+    region: str = Field(None, description="The region of the metastore")
+    storage_root: str = Field(
+        None,
+        description="""
+    Path on cloud storage account, where managed databricks.Table are stored. Change forces creation of a new resource.
+     If no storage_root is defined for the metastore, each catalog must have a storage_root defined.
+    """,
+    )
+    storage_root_credential_id: Union[str, None] = Field(None, description="")
+    updated_at: int = Field(None, description="")
+    updated_by: str = Field(None, description="")
+    workspace_assignments: list[MetastoreAssignment] = Field(
+        None, description="List of workspace to which metastore is assigned to"
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
