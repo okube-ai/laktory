@@ -3,6 +3,7 @@ from typing import Any
 from typing import Literal
 from typing import Union
 
+from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -69,26 +70,18 @@ class Terraform(BaseModel):
 class LaktorySettings(BaseModel):
     """
     Laktory Settings
-
-    Parameters
-    ----------
-    dataframe_backend:
-        DataFrame backend
-    laktory_root:
-        Laktory cache root directory. Used when a pipeline needs to write
-        checkpoint files.
-    workspace_laktory_root:
-        Root directory of a Databricks Workspace (excluding `"/Workspace") to
-        which databricks objects like notebooks and workspace files are
-        deployed.
-
-
     """
 
-    dataframe_backend: str = None
-    dataframe_api: Literal["NARWHALS", "NATIVE"] = None
-    workspace_laktory_root: str = "/.laktory/"
-    laktory_root: str = "/laktory/"
+    dataframe_backend: str = Field(None, description="DataFrame backend")
+    dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(None, description="")
+    workspace_laktory_root: str = Field(
+        "/.laktory/",
+        description="Root directory of a Databricks Workspace (excluding `'/Workspace') to which databricks objects like notebooks and workspace files are deployed.",
+    )
+    laktory_root: str = Field(
+        "/laktory/",
+        description="Laktory cache root directory. Used when a pipeline needs to write checkpoint files.",
+    )
 
     @model_validator(mode="after")
     def apply_settings(self) -> Any:
@@ -109,102 +102,25 @@ class LaktorySettings(BaseModel):
 
 class Pulumi(BaseModel):
     """
-    config:
-        Pulumi configuration settings. Generally used to
-        configure providers. See references for more details.
-    outputs:
-        Requested resources-related outputs. See references for details.
-
     References
     ----------
     - Pulumi [configuration](https://www.pulumi.com/docs/concepts/config/)
     - Pulumi [outputs](https://www.pulumi.com/docs/concepts/inputs-outputs/#outputs)
     """
 
-    config: dict[str, str] = {}
-    outputs: dict[str, str] = {}
+    config: dict[str, str] = Field(
+        {},
+        description="Pulumi configuration settings. Generally used to configure providers. See references for more details.",
+    )
+    outputs: dict[str, str] = Field(
+        {},
+        description="Requested resources-related outputs. See references for details.",
+    )
 
 
 class StackResources(BaseModel):
     """
     Resources definition for a given stack or stack environment.
-
-    Parameters
-    ----------
-    databricks_alerts:
-        Databricks Alerts
-    databricks_dbfsfiles:
-        Databricks DbfsFiles
-    databricks_catalogs:
-        Databricks Catalogs
-    databricks_clusters:
-        Databricks Clusters
-    databricks_clusterpolicies:
-        Databricks Cluster Policies
-    databricks_dashboards:
-        Databricks Dashboards
-    databricks_directories:
-        Databricks Directories
-    databricks_pipelines:
-        Databricks Lakeflow Declartive Pipelines
-    databricks_externallocations:
-        Databricks External Locations
-    databricks_groups:
-        Databricks Groups
-    databricks_grant:
-        Databricks Grant
-    databricks_grants:
-        Databricks Grants
-    databricks_jobs:
-        Databricks Jobs
-    databricks_metastoreassignments:
-        Databricks Metastore Assignments
-    databricks_metastoredataaccesses:
-        Databricks Metastore Data Accesses
-    databricks_metastores:
-        Databricks Metastores
-    databricks_mlflowexperiments:
-        Databricks MLflow Experiments
-    databricks_mlflowmodels:
-        Databricks MLflow models
-    databricks_mlflowwebhooks:
-        Databricks MLflow webhooks
-    databricks_networkconnectivityconfig
-        Databricks Network Connectivity Config
-    databricks_notebooks:
-        Databricks Notebooks
-    databricks_permissions:
-        Databricks Permissions
-    databricks_queries:
-        Databricks Queries
-    databricks_repo:
-        Databricks Repo
-    databricks_schemas:
-        Databricks Schemas
-    databricks_secretscopes:
-        Databricks SecretScopes
-    databricks_serviceprincipals:
-        Databricks ServicePrincipals
-    databricks_tables:
-        Databricks Tables
-    databricks_users:
-        Databricks Users
-    databricks_vectorsearchendpoint:
-        Databricks Vector Search Endpoint
-    databricks_vectorsearchindex:
-        Databricks Vector Search Index
-    databricks_volumes:
-        Databricks Volumes
-    databricks_warehouses:
-        Databricks Warehouses
-    databricks_workspacebindings:
-        Databricks Workspace Bindings
-    databricks_workspacefiles:
-        Databricks WorkspacFiles
-    pipelines:
-        Laktory Pipelines
-    providers:
-        Providers
     """
 
     databricks_alerts: dict[str, Alert] = {}
@@ -285,41 +201,31 @@ class StackResources(BaseModel):
 class EnvironmentStack(BaseModel):
     """
     Environment-specific stack definition.
-
-    Parameters
-    ----------
-    backend:
-        IaC backend used for deployment.
-    description:
-        Description of the stack
-    name:
-        Name of the stack. If Pulumi is used as a backend, it should match
-        the name of the Pulumi project.
-    organization:
-        Organization
-    pulumi:
-        Pulumi-specific settings
-    resources:
-        Dictionary of resources to be deployed. Each key should be a resource
-        type and each value should be a dictionary of resources who's keys are
-        the resource names and the values the resources definitions.
-    settings:
-        Laktory settings
-    terraform:
-        Terraform-specific settings
-    variables:
-        Dictionary of variables made available in the resources definition.
     """
 
-    backend: Literal["pulumi", "terraform"] = None
-    description: str = None
-    name: str
-    organization: str = None
-    pulumi: Pulumi = Pulumi()
-    resources: Union[StackResources, None] = StackResources()
-    settings: LaktorySettings = None
-    terraform: Terraform = Terraform()
-    variables: dict[str, Any] = {}
+    backend: Literal["pulumi", "terraform"] = Field(
+        None, description="IaC backend used for deployment."
+    )
+    description: str = Field(None, description="Description of the stack")
+    name: str = Field(
+        ...,
+        description=" Name of the stack. If Pulumi is used as a backend, it should match the name of the Pulumi project.",
+    )
+    organization: str = Field(None, description="Organization")
+    pulumi: Pulumi = Field(Pulumi(), description="Pulumi-specific settings")
+    resources: Union[StackResources, None] = Field(
+        StackResources(),
+        description="""
+    Dictionary of resources to be deployed. Each key should be a resource type and each value should be a dictionary of
+    resources who's keys are the resource names and the values the resources definitions.
+    """,
+    )
+    settings: LaktorySettings = Field(None, description="Laktory settings")
+    terraform: Terraform = Field(Terraform(), description="Terraform-specific settings")
+    variables: dict[str, Any] = Field(
+        {},
+        description="Dictionary of variables made available in the resources definition.",
+    )
 
 
 class EnvironmentSettings(BaseModel):
@@ -329,51 +235,31 @@ class EnvironmentSettings(BaseModel):
     Parameters
     ----------
     resources:
-        Dictionary of resources to be deployed. Each key should be a resource
-        type and each value should be a dictionary of resources who's keys are
-        the resource names and the values the resources definitions.
+
     variables:
-        Dictionary of variables made available in the resources definition.
+
     terraform:
-        Terraform-specific settings
+
     """
 
-    resources: Any = None
-    variables: dict[str, Any] = None
-    terraform: Terraform = Terraform()
+    resources: Any = Field(
+        None,
+        description="""
+    Dictionary of resources to be deployed. Each key should be a resource type and each value should be a dictionary of
+    resources who's keys are the resource names and the values the resources definitions.
+    """,
+    )
+    variables: dict[str, Any] = Field(
+        None,
+        description="Dictionary of variables made available in the resources definition.",
+    )
+    terraform: Terraform = Field(Terraform(), description="Terraform-specific settings")
 
 
 class Stack(BaseModel):
     """
     The Stack defines a collection of deployable resources, the deployment
     configuration, some variables and the environment-specific settings.
-
-    Parameters
-    ----------
-    backend:
-        IaC backend used for deployment.
-    description:
-        Description of the stack
-    environments:
-        Environment-specific overwrite of config, resources or variables
-        arguments.
-    name:
-        Name of the stack. If Pulumi is used as a backend, it should match
-        the name of the Pulumi project.
-    organization:
-        Organization
-    pulumi:
-        Pulumi-specific settings
-    resources:
-        Dictionary of resources to be deployed. Each key should be a resource
-        type and each value should be a dictionary of resources who's keys are
-        the resource names and the values the resources definitions.
-    settings:
-        Laktory settings
-    terraform:
-        Terraform-specific settings
-    variables:
-        Dictionary of variables made available in the resources definition.
 
     Examples
     --------
@@ -450,16 +336,33 @@ class Stack(BaseModel):
 
     """
 
-    backend: Literal["pulumi", "terraform"] = None
-    description: str = None
-    environments: dict[str, EnvironmentSettings] = {}
-    name: str
-    organization: Union[str, None] = None
-    pulumi: Pulumi = Pulumi()
-    resources: Union[StackResources, None] = StackResources()
-    settings: LaktorySettings = None
-    terraform: Terraform = Terraform()
-    variables: dict[str, Any] = {}
+    backend: Literal["pulumi", "terraform"] = Field(
+        None, description="IaC backend used for deployment."
+    )
+    description: str = Field(None, description="Description of the stack")
+    environments: dict[str, EnvironmentSettings] = Field(
+        {},
+        description="Environment-specific overwrite of config, resources or variables arguments.",
+    )
+    name: str = Field(
+        ...,
+        description="Name of the stack. If Pulumi is used as a backend, it should match the name of the Pulumi project.",
+    )
+    organization: Union[str, None] = Field(None, description="Organization")
+    pulumi: Pulumi = Field(Pulumi(), description="Pulumi-specific settings")
+    resources: Union[StackResources, None] = Field(
+        StackResources(),
+        description="""
+    Dictionary of resources to be deployed. Each key should be a resource type and each value should be a dictionary of
+    resources who's keys are the resource names and the values the resources definitions.
+    """,
+    )
+    settings: LaktorySettings = Field(None, description="Laktory settings")
+    terraform: Terraform = Field(Terraform(), description="Terraform-specific settings")
+    variables: dict[str, Any] = Field(
+        {},
+        description="Dictionary of variables made available in the resources definition.",
+    )
     _envs: dict[str, EnvironmentStack] = None
 
     @model_validator(mode="before")

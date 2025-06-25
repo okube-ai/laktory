@@ -23,24 +23,16 @@ class DataFrameSample(BaseModel):
 
 class Watermark(BaseModel):
     """
-    Definition of a spark structured streaming watermark for joining data
-    streams.
-
-    Attributes
-    ----------
-    column:
-        Event time column name
-    threshold:
-        How late, expressed in seconds, the data is expected to be with
-        respect to event time.
-
     References
     ----------
     https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#handling-late-data-and-watermarking
     """
 
-    column: str
-    threshold: str
+    column: str = Field(..., description="Event time column name")
+    threshold: str = Field(
+        ...,
+        description="How late, expressed in seconds, the data is expected to be with respect to event time.",
+    )
 
 
 class BaseDataSource(BaseModel, PipelineChild):

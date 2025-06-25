@@ -97,7 +97,6 @@ def test_databricks_job():
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job/config.json",
                         "node_name": "brz",
-                        "full_refresh": "{{job.parameters.full_refresh}}",
                     },
                     "package_name": "laktory",
                 },
@@ -115,7 +114,6 @@ def test_databricks_job():
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job/config.json",
                         "node_name": "gld",
-                        "full_refresh": "{{job.parameters.full_refresh}}",
                     },
                     "package_name": "laktory",
                 },
@@ -133,7 +131,6 @@ def test_databricks_job():
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job/config.json",
                         "node_name": "gld_a",
-                        "full_refresh": "{{job.parameters.full_refresh}}",
                     },
                     "package_name": "laktory",
                 },
@@ -151,7 +148,6 @@ def test_databricks_job():
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job/config.json",
                         "node_name": "gld_ab",
-                        "full_refresh": "{{job.parameters.full_refresh}}",
                     },
                     "package_name": "laktory",
                 },
@@ -169,7 +165,6 @@ def test_databricks_job():
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job/config.json",
                         "node_name": "gld_b",
-                        "full_refresh": "{{job.parameters.full_refresh}}",
                     },
                     "package_name": "laktory",
                 },
@@ -187,7 +182,6 @@ def test_databricks_job():
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job/config.json",
                         "node_name": "slv",
-                        "full_refresh": "{{job.parameters.full_refresh}}",
                     },
                     "package_name": "laktory",
                 },

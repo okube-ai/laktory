@@ -47,11 +47,11 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     def update_from_parent(self):
-        cluster_found = False
+        serverless = True
         for c in self.job_clusters:
             if c.job_cluster_key == "node-cluster":
-                cluster_found = True
-        if len(self.job_clusters) > 0 and not cluster_found:
+                serverless = False
+        if len(self.job_clusters) > 0 and serverless:
             raise ValueError(
                 "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
             )
@@ -118,20 +118,22 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                     named_parameters={
                         "filepath": _path,
                         "node_name": node.name,
-                        "full_refresh": "{{job.parameters.full_refresh}}",
                     },
                 ),
                 depends_ons=depends_on,
             )
-            if cluster_found:
+            if serverless:
+                task.environment_key = env_key
+                task.python_wheel_task.named_parameters["full_refresh"] = (
+                    "{{job.parameters.full_refresh}}"
+                )
+            else:
                 libraries = [
                     ClusterLibrary(pypi=ClusterLibraryPypi(package=d))
                     for d in pl._dependencies
                 ]
                 task.job_cluster_key = "node-cluster"
                 task.libraries = libraries
-            else:
-                task.environment_key = env_key
 
             if self.node_max_retries:
                 task.max_retries = self.node_max_retries

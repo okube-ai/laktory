@@ -419,7 +419,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         for req in self.dependencies:
             name = parse_requirement_name(req)
             if name is None:
-                logger.info(f"Skipping non-parseable requirement: {req}")
+                logger.info(f"Skipping import of non-parseable requirement: {req}")
                 continue
             if name not in pkg_names:
                 pkg_names += [name]

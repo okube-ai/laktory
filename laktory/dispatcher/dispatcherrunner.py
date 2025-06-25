@@ -12,21 +12,14 @@ if TYPE_CHECKING:
 class DispatcherRunner(BaseModel):
     """
     Base runner for jobs, pipelines and other executables.
-
-    Attributes
-    ----------
-    name:
-        Name of the resource attached to the runner
-    id:
-        ID of the deployed resource
-    dispatcher:
-        Dispatcher managing the runs
     """
 
     model_config = ConfigDict(extra="forbid")
-    name: str = None
-    id: str = None
-    dispatcher: Any = Field(default=None, exclude=True)
+    name: str = Field(None, description="Name of the resource attached to the runner")
+    id: str = Field(None, description="ID of the deployed resource")
+    dispatcher: Any = Field(
+        default=None, exclude=True, description="Dispatcher managing the runs"
+    )
 
     @property
     def wc(self) -> "WorkspaceClient":
