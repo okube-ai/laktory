@@ -18,11 +18,6 @@ class PipelineNodeDataSource(BaseDataSource):
     - upstream node sink
     - DLT table
 
-    Attributes
-    ----------
-    node_name:
-        Name of the upstream pipeline node
-
     Examples
     ---------
     ```python
@@ -59,7 +54,7 @@ class PipelineNodeDataSource(BaseDataSource):
     ```
     """
 
-    node_name: str
+    node_name: str = Field(..., description="Name of the upstream pipeline node")
     type: str = Field("PIPELINE_NODE", frozen=True)
 
     # ----------------------------------------------------------------------- #

@@ -14,92 +14,32 @@ logger = get_logger(__name__)
 
 
 class TableLookup(ResourceLookup):
-    """
-    Parameters
-    ----------
-    name:
-        Full name of the databricks_table: `catalog`.`schema`.`table`
-    """
-
-    name: str = Field(serialization_alias="id")
+    name: str = Field(
+        serialization_alias="id",
+        description="Full name of the databricks_table: `catalog`.`schema`.`table`",
+    )
 
 
 class TableColumn(BaseModel):
-    """
-    A table column.
-
-    Parameters
-    ----------
-    name:
-        User-visible name of column
-    comment:
-        User-supplied free-form text.
-    identity:
-        Whether field is an identity column. Can be `default`, `always` or
-        `unset`. It is `unset` by default.
-    nullable:
-        Whether field is nullable (Default: `true`)
-    type:
-        Column type spec (with metadata) as SQL text. Not supported for `VIEW`
-        table_type.
-    type_json:
-
-    """
-
-    name: str
-    comment: str = None
-    identity: str = None
-    nullable: bool = None
-    type: str = None
-    type_json: str = None
+    name: str = Field(..., description="User-visible name of column")
+    comment: str = Field(None, description="User-supplied free-form text.")
+    identity: str = Field(
+        None,
+        description="Whether field is an identity column. Can be `default`, `always` or `unset`. It is `unset` by default.",
+    )
+    nullable: bool = Field(
+        None, description="Whether field is nullable (Default: `true`)"
+    )
+    type: str = Field(
+        None,
+        description="Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.",
+    )
+    type_json: str = Field(None, description="")
 
 
 class Table(BaseModel, PulumiResource, TerraformResource):
     """
-    A table resides in the third layer of Unity Catalog’s three-level
-    namespace. It contains rows of data.
-
-    Parameters
-    ----------
-    catalog_name:
-        Name of the catalog storing the table
-    columns:
-        List of columns stored in the table
-    comment:
-        Text description of the catalog
-    data_source_format:
-        External tables are supported in multiple data source formats. The string constants identifying these formats
-        are DELTA, CSV, JSON, AVRO, PARQUET, ORC, TEXT. Change forces creation of a new resource. Not supported for
-        MANAGED tables or VIEW.
-    grant:
-        Grant(s) operating on the Table and authoritative for a specific principal.
-        Other principals within the grants are preserved. Mutually exclusive with
-        `grants`.
-    grants:
-        Grants operating on the Table and authoritative for all principals.
-        Replaces any existing grants defined inside or outside of Laktory. Mutually
-        exclusive with `grant`.
-    lookup_existing:
-        Specifications for looking up existing resource. Other attributes will
-        be ignored.
-    name:
-        Name of the table
-    schema_name:
-        Name of the schema storing the table
-    storage_credential_name:
-        For EXTERNAL Tables only: the name of storage credential to use. Change forces creation of a new resource.
-    storage_location:
-        URL of storage location for Table data (required for EXTERNAL Tables). Not supported for VIEW or MANAGED
-        table_type.
-    table_type:
-        Distinguishes a view vs. managed/external Table.
-    view_definition:
-        SQL text defining the view (for `table_type == "VIEW"`). Not supported
-        for MANAGED or EXTERNAL table_type.
-    warehouse_id:
-        All table CRUD operations must be executed on a running cluster or SQL
-        warehouse. If a warehouse_id is specified, that SQL warehouse will be
-        used to execute SQL commands to manage this table.
+    A table resides in the third layer of Unity Catalog’s three-level namespace. It contains rows of data.
 
     Examples
     --------
@@ -119,21 +59,69 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     * [Pulumi Databricks Table](https://www.pulumi.com/registry/packages/databricks/api-docs/sqltable/)
     """
 
-    catalog_name: Union[str, None] = None
-    columns: Union[list[TableColumn], None] = None
-    comment: Union[str, None] = None
-    data_source_format: str = "DELTA"
-    grant: Union[TableGrant, list[TableGrant]] = None
-    grants: list[TableGrant] = None
-    lookup_existing: TableLookup = Field(None, exclude=True)
-    name: str
-    properties: Union[dict[str, str], None] = None
-    schema_name: Union[str, None] = None
-    storage_credential_name: Union[str, None] = None
-    storage_location: Union[str, None] = None
-    table_type: Literal["MANAGED", "EXTERNAL", "VIEW"] = "MANAGED"  # required
-    view_definition: Union[str, None] = None
-    warehouse_id: Union[str, None] = None
+    catalog_name: Union[str, None] = Field(
+        None, description="Name of the catalog storing the table"
+    )
+    columns: Union[list[TableColumn], None] = Field(
+        None, description="List of columns stored in the table"
+    )
+    comment: Union[str, None] = Field(
+        None, description="Text description of the catalog"
+    )
+    data_source_format: str = Field(
+        "DELTA",
+        description="""
+    External tables are supported in multiple data source formats. The string constants identifying these formats
+    are DELTA, CSV, JSON, AVRO, PARQUET, ORC, TEXT. Change forces creation of a new resource. Not supported for
+    MANAGED tables or VIEW.
+    """,
+    )
+    grant: Union[TableGrant, list[TableGrant]] = Field(
+        None,
+        description="""
+    Grant(s) operating on the Table and authoritative for a specific principal. Other principals within the grants are 
+    preserved. Mutually exclusive with `grants`. 
+    """,
+    )
+    grants: list[TableGrant] = Field(
+        None,
+        description="""
+    Grants operating on the Table and authoritative for all principals. Replaces any existing grants defined inside or
+    outside of Laktory. Mutually exclusive with `grant`.
+    """,
+    )
+    lookup_existing: TableLookup = Field(
+        None,
+        exclude=True,
+        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+    )
+    name: str = Field(..., description="Name of the table")
+    properties: Union[dict[str, str], None] = Field(None, description="")
+    schema_name: Union[str, None] = Field(
+        None, description="Name of the schema storing the table"
+    )
+    storage_credential_name: Union[str, None] = Field(
+        None,
+        description="For EXTERNAL Tables only: the name of storage credential to use. Change forces creation of a new resource.",
+    )
+    storage_location: Union[str, None] = Field(
+        None,
+        description="URL of storage location for Table data (required for EXTERNAL Tables). Not supported for VIEW or MANAGED table_type.",
+    )
+    table_type: Literal["MANAGED", "EXTERNAL", "VIEW"] = Field(
+        "MANAGED", description="Distinguishes a view vs. managed/external Table."
+    )  # required
+    view_definition: Union[str, None] = Field(
+        None,
+        description="SQL text defining the view (for `table_type == 'VIEW'`). Not supported for MANAGED or EXTERNAL table_type.",
+    )
+    warehouse_id: Union[str, None] = Field(
+        None,
+        description="""
+    All table CRUD operations must be executed on a running cluster or SQL warehouse. If a warehouse_id is specified, 
+    that SQL warehouse will be used to execute SQL commands to manage this table.
+    """,
+    )
 
     # ----------------------------------------------------------------------- #
     # Validators                                                              #

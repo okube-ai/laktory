@@ -1,22 +1,15 @@
+from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
 
 class UserRole(BaseModel, PulumiResource, TerraformResource):
-    """
-    Databricks User role
-
-    Attributes
-    ----------
-    role:
-        This is the id of the role or instance profile resource.
-    user_id:
-        This is the id of the user resource.
-    """
-
-    role: str = None
-    user_id: str = None
+    role: str = Field(
+        None, description="This is the id of the role or instance profile resource."
+    )
+    user_id: str = Field(None, description="This is the id of the user resource.")
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

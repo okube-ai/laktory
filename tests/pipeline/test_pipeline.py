@@ -115,17 +115,20 @@ def test_children(tmp_path):
 def test_update_from_parent():
     o = models.DatabricksJobOrchestrator(
         name="pl-job",
-        clusters=[
+        job_clusters=[
             {
-                "name": "node-cluster",
-                "node_type_id": "Standard_DS3_v2",
-                "spark_version": "16.3.x-scala2.12",
+                "job_cluster_key": "node-cluster",
+                "new_cluster": {
+                    "node_type_id": "Standard_DS3_v2",
+                    "spark_version": "16.3.x-scala2.12",
+                },
             }
         ],
     )
 
     # Assign As Dict
     pl = get_pl("")
+    print(o.model_dump(exclude_unset=True))
     pl.orchestrator = o.model_dump(exclude_unset=True)
 
     # Test

@@ -26,25 +26,6 @@ class ServicePrincipal(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks account service principal
 
-    Attributes
-    ----------
-    allow_cluster_create:
-
-    application_id:
-
-    disable_as_user_deletion:
-
-    display_name:
-
-    group_ids:
-
-    lookup_existing:
-
-    roles:
-
-    workspace_access
-
-
     Examples
     --------
     ```py

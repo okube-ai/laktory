@@ -3,11 +3,13 @@ from laktory.models.resources.databricks import Job
 job = Job(
     name="job-stock-prices",
     name_prefix="osoucy]",
-    clusters=[
+    job_clusters=[
         {
-            "name": "main",
-            "spark_version": "16.3.x-scala2.12",
-            "node_type_id": "Standard_DS3_v2",
+            "job_cluster_key": "main",
+            "new_cluster": {
+                "spark_version": "16.3.x-scala2.12",
+                "node_type_id": "Standard_DS3_v2",
+            },
         },
     ],
     tasks=[

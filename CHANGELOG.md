@@ -50,6 +50,8 @@
 * DataFrame Extensions
   * Deprecated `polars` extension 
   * Deprecated `spark` extension 
+* Job Databricks Resource
+  * Renamed `clusters` to `job_clusters`
 * PipelineNode:
   * Removed "Layers" concept in pipeline node
   * Removed custom functions such as `with_columns`, `drop_duplicates`, etc.

@@ -9,28 +9,15 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class DirectoryLookup(ResourceLookup):
-    """
-    Attributes
-    ----------
-    path:
-        The absolute path of the directory, beginning with "/", e.g. "/Demo".
-    """
-
-    path: str = Field(serialization_alias="id")
+    path: str = Field(
+        serialization_alias="id",
+        description="The absolute path of the directory, beginning with '/', e.g. '/Demo'.",
+    )
 
 
 class Directory(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Directory
-
-    Attributes
-    ----------
-    delete_recursive:
-
-    lookup_existing:
-
-    path:
-
 
     Examples
     --------

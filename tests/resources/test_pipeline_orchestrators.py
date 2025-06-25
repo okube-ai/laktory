@@ -33,11 +33,13 @@ def get_pl_job():
     pl.name = "pl-job"
     pl.dependencies = ["yfinance"]
     pl.orchestrator = {
-        "clusters": [
+        "job_clusters": [
             {
-                "name": "node-cluster",
-                "node_type_id": "Standard_DS3_v2",
-                "spark_version": "16.3.x-scala2.12",
+                "job_cluster_key": "node-cluster",
+                "new_cluster": {
+                    "node_type_id": "Standard_DS3_v2",
+                    "spark_version": "16.3.x-scala2.12",
+                },
             }
         ],
         "name": "pl-job",
@@ -62,19 +64,21 @@ def test_databricks_job():
     )
     print(data)
     assert data == {
-        "clusters": [
-            {
-                "name": "node-cluster",
-                "node_type_id": "Standard_DS3_v2",
-                "spark_version": "16.3.x-scala2.12",
-            }
-        ],
         "environments": [
             {
                 "environment_key": "laktory",
                 "spec": {
                     "client": "3",
                     "dependencies": ["yfinance", "laktory==__version__"],
+                },
+            }
+        ],
+        "job_clusters": [
+            {
+                "job_cluster_key": "node-cluster",
+                "new_cluster": {
+                    "node_type_id": "Standard_DS3_v2",
+                    "spark_version": "16.3.x-scala2.12",
                 },
             }
         ],

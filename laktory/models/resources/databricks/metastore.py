@@ -12,14 +12,9 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class MetastoreLookup(ResourceLookup):
-    """
-    Attributes
-    ----------
-    metastore_id:
-        ID of the metastore
-    """
-
-    metastore_id: str = Field(serialization_alias="id")
+    metastore_id: str = Field(
+        serialization_alias="id", description="ID of the metastore"
+    )
 
 
 class Metastore(BaseModel, PulumiResource, TerraformResource):

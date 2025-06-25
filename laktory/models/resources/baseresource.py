@@ -312,6 +312,7 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
                 resources = []
 
                 provider = r.options.provider
+                print(type(r))
                 k0 = f"${{resources.{r.resource_name}}}"
 
                 for _r in r.additional_core_resources:
