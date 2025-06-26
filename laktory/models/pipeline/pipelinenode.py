@@ -1,3 +1,4 @@
+import importlib
 import os
 import shutil
 import warnings
@@ -529,6 +530,17 @@ class PipelineNode(BaseModel, PipelineChild):
             output Spark DataFrame
         """
         logger.info(f"Executing pipeline node {self.name}")
+
+        # Install dependencies
+        pl = self.parent_pipeline
+        if pl and not pl._imports_imported:
+            for package_name in pl._imports:
+                try:
+                    logger.info(f"Importing {package_name}")
+                    importlib.import_module(package_name)
+                except ModuleNotFoundError:
+                    logger.info(f"Importing {package_name} failed.")
+            pl._imports_imported = True
 
         # Parse DLT
         if self.is_orchestrator_dlt:

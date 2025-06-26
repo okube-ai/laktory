@@ -59,7 +59,6 @@ def _read_and_execute():
     # TODO: Refactor and integrate into dispatcher / executor / CLI
 
     import argparse
-    import importlib
 
     import laktory as lk
 
@@ -103,15 +102,6 @@ def _read_and_execute():
             pl = lk.models.Pipeline.model_validate_yaml(fp)
         else:
             pl = lk.models.Pipeline.model_validate_json(fp.read())
-
-    # Install dependencies
-    # TODO: move to pipeline/node execute?
-    for package_name in pl._imports:
-        try:
-            logger.info(f"Importing {package_name}")
-            importlib.import_module(package_name)
-        except ModuleNotFoundError:
-            logger.info(f"Importing {package_name} failed.")
 
     # Execute
     if node_name:
@@ -312,6 +302,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         None,
         description="Location of the pipeline node root used to store logs, metrics and checkpoints.",
     )
+    _imports_imported: bool = False
 
     @field_validator("root_path", mode="before")
     @classmethod
