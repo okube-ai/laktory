@@ -13,52 +13,13 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class CatalogLookup(ResourceLookup):
-    """
-    Parameters
-    ----------
-    name:
-        Catalog name
-    """
-
-    name: str = Field(serialization_alias="id")
+    name: str = Field(serialization_alias="id", description="Catalog name")
 
 
 class Catalog(BaseModel, PulumiResource, TerraformResource):
     """
     A catalog is the first layer of Unity Catalog’s three-level namespace. It’s
     used to organize your data assets.
-
-    Parameters
-    ----------
-    comment:
-        Text description of the catalog
-    force_destroy:
-        If `True` catalog can be deleted, even when not empty
-    grant:
-        Grant(s) operating on the Catalog and authoritative for a specific principal.
-        Other principals within the grants are preserved. Mutually exclusive with
-        `grants`.
-    grants:
-        Grants operating on the Catalog and authoritative for all principals.
-        Replaces any existing grants defined inside or outside of Laktory. Mutually
-        exclusive with `grant`.
-    isolation_mode:
-        Whether the catalog is accessible from all workspaces or a specific set
-        of workspaces. Can be ISOLATED or OPEN. Setting the catalog to ISOLATED
-        will automatically allow access from the current workspace.
-    lookup_existing:
-        Specifications for looking up existing resource. Other attributes will
-        be ignored.
-    name:
-        Name of the catalog
-    owner:
-        User/group/service principal name of the catalog owner
-    schemas:
-        List of schemas stored in the catalog
-    storage_root:
-        Managed location of the catalog. Location in cloud storage where data
-        for managed tables will be stored. If not specified, the location will
-        default to the metastore root location.
 
     Examples
     --------
@@ -107,16 +68,54 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     * [Pulumi Databricks Catalog](https://www.pulumi.com/registry/packages/databricks/api-docs/catalog/)
     """
 
-    comment: Union[str, None] = None
-    force_destroy: bool = True
-    grant: Union[CatalogGrant, list[CatalogGrant]] = None
-    grants: list[CatalogGrant] = None
-    isolation_mode: Literal["OPEN", "ISOLATED"] = "OPEN"
-    lookup_existing: CatalogLookup = Field(None, exclude=True)
-    name: str
-    owner: str = None
-    schemas: list[Schema] = []
-    storage_root: str = None
+    comment: Union[str, None] = Field(
+        None, description="Text description of the catalog"
+    )
+    force_destroy: bool = Field(
+        True, description="If `True` catalog can be deleted, even when not empty"
+    )
+    grant: Union[CatalogGrant, list[CatalogGrant]] = Field(
+        None,
+        description="""
+     Grant(s) operating on the Catalog and authoritative for a specific principal. Other principals within the grants 
+     are preserved. Mutually exclusive with `grants`.
+    """,
+    )
+    grants: list[CatalogGrant] = Field(
+        None,
+        description="""
+     Grants operating on the Catalog and authoritative for all principals. Replaces any existing grants defined inside 
+     or outside of Laktory. Mutually exclusive with `grant`.
+    """,
+    )
+    isolation_mode: Literal["OPEN", "ISOLATED"] = Field(
+        "OPEN",
+        description="""
+    Whether the catalog is accessible from all workspaces or a specific set of workspaces. Can be ISOLATED or OPEN. 
+    Setting the catalog to ISOLATED will automatically allow access from the current workspace.
+    """,
+    )
+    lookup_existing: CatalogLookup = Field(
+        None,
+        exclude=True,
+        description="""
+    Specifications for looking up existing resource. Other attributes will be ignored.
+    """,
+    )
+    name: str = Field(..., description="Name of the catalog")
+    owner: str = Field(
+        None, description="User/group/service principal name of the catalog owner"
+    )
+    schemas: list[Schema] = Field(
+        [], description="List of schemas stored in the catalog"
+    )
+    storage_root: str = Field(
+        None,
+        description="""
+    Managed location of the catalog. Location in cloud storage where data for managed tables will be stored. If not 
+    specified, the location will default to the metastore root location.
+    """,
+    )
 
     @model_validator(mode="after")
     def assign_name(self):

@@ -55,15 +55,14 @@ class DataSinkMergeCDCOptions(BaseModel):
     # apply_as_truncates: Union[str, None] = None
     delete_where: str = Field(
         None,
-        description="""
-        Specifies when a CDC event should be treated as a DELETE rather than an upsert.
-        """,
+        description="Specifies when a CDC event should be treated as a DELETE rather than an upsert.",
     )
     end_at_column_name: str = Field(
         "__end_at",
-        description="""When using SCD type 2, name of the column storing the end time (or
-        sequencing index) during which a row is active. This attribute is not
-        used when using Databricks DLT which does not allow column rename.""",
+        description="""
+        When using SCD type 2, name of the column storing the end time (or sequencing index) during which a row is 
+        active. This attribute is not used when using Databricks DLT which does not allow column rename.
+        """,
     )
     exclude_columns: list[str] = Field(
         None, description="A subset of columns to exclude in the target table."
@@ -71,34 +70,31 @@ class DataSinkMergeCDCOptions(BaseModel):
     ignore_null_updates: bool = Field(
         False,
         description="""
-        Allow ingesting updates containing a subset of the target columns.
-        When a CDC event matches an existing row and ignore_null_updates is
-        `True`, columns with a null will retain their existing values in the
-        target. This also applies to nested columns with a value of null. When
-        ignore_null_updates is `False`, existing values will be overwritten
-        with null values.
+        Allow ingesting updates containing a subset of the target columns. When a CDC event matches an existing row and
+        ignore_null_updates is `True`, columns with a null will retain their existing values in the target. This also 
+        applies to nested columns with a value of null. When ignore_null_updates is `False`, existing values will be 
+        overwritten with null values.
         """,
     )
     include_columns: list[str] = Field(
         None,
         description="""
-        A subset of columns to include in the target table. Use
-        `include_columns` to specify the complete list of columns to include.
+        A subset of columns to include in the target table. Use `include_columns` to specify the complete list of 
+        columns to include.
         """,
     )
     order_by: str = Field(
         None,
         description="""
-        The column name specifying the logical order of CDC events in the
-        source data. Used to handle change events that arrive out of order.
+        The column name specifying the logical order of CDC events in the source data. Used to handle
+        change events that arrive out of order.
         """,
     )
     primary_keys: list[str] = Field(
         None,
         description="""
-        The column or combination of columns that uniquely identify a row in
-        the source data. This is used to identify which CDC events apply to
-        specific records in the target table.
+        The column or combination of columns that uniquely identify a row in the source data. This is used to 
+        identify which CDC events apply to specific records in the target table.
         """,
     )
     scd_type: Literal[1, 2] = Field(
@@ -107,9 +103,8 @@ class DataSinkMergeCDCOptions(BaseModel):
     start_at_column_name: str = Field(
         "__start_at",
         description="""
-        When using SCD type 2, name of the column storing the start time (or
-        sequencing index) during which a row is active. This attribute is not
-        used when using Databricks DLT which does not allow column rename.
+        When using SCD type 2, name of the column storing the start time (or sequencing index) during which 
+        a row is active. This attribute is not used when using Databricks DLT which does not allow column rename.
         """,
     )
     # track_history_columns: Union[list[str], None] = None

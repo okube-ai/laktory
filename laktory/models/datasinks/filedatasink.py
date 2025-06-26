@@ -126,22 +126,6 @@ class FileDataSink(BaseDataSink):
     def _write_spark(self, df, mode, full_refresh=False) -> None:
         df = df.to_native()
 
-        # Full Refresh
-        # if full_refresh or not self.exists(spark=df.sparkSession):
-        #     if df.isStreaming:
-        #         pass
-        #         # .is_aggregate() method seems unreliable. Disabling for now.
-        #         # if df.laktory.is_aggregate():
-        #         #     logger.info(
-        #         #         "Full refresh or initial load. Switching to COMPLETE mode."
-        #         #     )
-        #         #     mode = "COMPLETE"
-        #     else:
-        #         logger.info(
-        #             "Full refresh or initial load. Switching to OVERWRITE mode."
-        #         )
-        #         mode = "OVERWRITE"
-
         # Format
         methods = self._get_spark_writer_methods(mode=mode, is_streaming=df.isStreaming)
 

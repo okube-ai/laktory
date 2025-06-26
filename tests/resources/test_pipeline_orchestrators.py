@@ -3,9 +3,9 @@ import json
 import sys
 from pathlib import Path
 
+import laktory as lk
 from laktory import __version__
 from laktory import models
-import laktory as lk
 from laktory.enums import DataFrameBackends
 
 data_dirpath = Path(__file__).parent.parent / "data"
@@ -33,11 +33,13 @@ def get_pl_job():
     pl.name = "pl-job"
     pl.dependencies = ["yfinance"]
     pl.orchestrator = {
-        "clusters": [
+        "job_clusters": [
             {
-                "name": "node-cluster",
-                "node_type_id": "Standard_DS3_v2",
-                "spark_version": "16.3.x-scala2.12",
+                "job_cluster_key": "node-cluster",
+                "new_cluster": {
+                    "node_type_id": "Standard_DS3_v2",
+                    "spark_version": "16.3.x-scala2.12",
+                },
             }
         ],
         "name": "pl-job",
@@ -61,7 +63,133 @@ def test_databricks_job():
         json.dumps(data).replace(f"laktory=={__version__}", "laktory==__version__")
     )
     print(data)
-    assert data == {'clusters': [{'name': 'node-cluster', 'node_type_id': 'Standard_DS3_v2', 'spark_version': '16.3.x-scala2.12'}], 'environments': [{'environment_key': 'laktory', 'spec': {'client': '3', 'dependencies': ['yfinance', 'laktory==__version__']}}], 'name': 'pl-job', 'parameters': [{'default': 'false', 'name': 'full_refresh'}], 'tasks': [{'depends_ons': [], 'job_cluster_key': 'node-cluster', 'libraries': [{'pypi': {'package': 'yfinance'}}, {'pypi': {'package': 'laktory==__version__'}}], 'python_wheel_task': {'entry_point': 'models.pipeline._read_and_execute', 'named_parameters': {'filepath': '/Workspace/.laktory/pipelines/pl-job/config.json', 'node_name': 'brz', 'full_refresh': '{{job.parameters.full_refresh}}'}, 'package_name': 'laktory'}, 'task_key': 'node-brz'}, {'depends_ons': [{'task_key': 'node-slv'}], 'job_cluster_key': 'node-cluster', 'libraries': [{'pypi': {'package': 'yfinance'}}, {'pypi': {'package': 'laktory==__version__'}}], 'python_wheel_task': {'entry_point': 'models.pipeline._read_and_execute', 'named_parameters': {'filepath': '/Workspace/.laktory/pipelines/pl-job/config.json', 'node_name': 'gld', 'full_refresh': '{{job.parameters.full_refresh}}'}, 'package_name': 'laktory'}, 'task_key': 'node-gld'}, {'depends_ons': [{'task_key': 'node-gld'}], 'job_cluster_key': 'node-cluster', 'libraries': [{'pypi': {'package': 'yfinance'}}, {'pypi': {'package': 'laktory==__version__'}}], 'python_wheel_task': {'entry_point': 'models.pipeline._read_and_execute', 'named_parameters': {'filepath': '/Workspace/.laktory/pipelines/pl-job/config.json', 'node_name': 'gld_a', 'full_refresh': '{{job.parameters.full_refresh}}'}, 'package_name': 'laktory'}, 'task_key': 'node-gld_a'}, {'depends_ons': [{'task_key': 'node-gld_a'}, {'task_key': 'node-gld_b'}], 'job_cluster_key': 'node-cluster', 'libraries': [{'pypi': {'package': 'yfinance'}}, {'pypi': {'package': 'laktory==__version__'}}], 'python_wheel_task': {'entry_point': 'models.pipeline._read_and_execute', 'named_parameters': {'filepath': '/Workspace/.laktory/pipelines/pl-job/config.json', 'node_name': 'gld_ab', 'full_refresh': '{{job.parameters.full_refresh}}'}, 'package_name': 'laktory'}, 'task_key': 'node-gld_ab'}, {'depends_ons': [{'task_key': 'node-gld'}], 'job_cluster_key': 'node-cluster', 'libraries': [{'pypi': {'package': 'yfinance'}}, {'pypi': {'package': 'laktory==__version__'}}], 'python_wheel_task': {'entry_point': 'models.pipeline._read_and_execute', 'named_parameters': {'filepath': '/Workspace/.laktory/pipelines/pl-job/config.json', 'node_name': 'gld_b', 'full_refresh': '{{job.parameters.full_refresh}}'}, 'package_name': 'laktory'}, 'task_key': 'node-gld_b'}, {'depends_ons': [{'task_key': 'node-brz'}], 'job_cluster_key': 'node-cluster', 'libraries': [{'pypi': {'package': 'yfinance'}}, {'pypi': {'package': 'laktory==__version__'}}], 'python_wheel_task': {'entry_point': 'models.pipeline._read_and_execute', 'named_parameters': {'filepath': '/Workspace/.laktory/pipelines/pl-job/config.json', 'node_name': 'slv', 'full_refresh': '{{job.parameters.full_refresh}}'}, 'package_name': 'laktory'}, 'task_key': 'node-slv'}], 'type': 'DATABRICKS_JOB'}
+    assert data == {
+        "environments": [
+            {
+                "environment_key": "laktory",
+                "spec": {
+                    "client": "3",
+                    "dependencies": ["yfinance", "laktory==__version__"],
+                },
+            }
+        ],
+        "job_clusters": [
+            {
+                "job_cluster_key": "node-cluster",
+                "new_cluster": {
+                    "node_type_id": "Standard_DS3_v2",
+                    "spark_version": "16.3.x-scala2.12",
+                },
+            }
+        ],
+        "name": "pl-job",
+        "parameters": [{"default": "false", "name": "full_refresh"}],
+        "tasks": [
+            {
+                "depends_ons": [],
+                "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": "laktory==__version__"}},
+                ],
+                "python_wheel_task": {
+                    "entry_point": "models.pipeline._read_and_execute",
+                    "named_parameters": {
+                        "filepath": "/Workspace/.laktory/pipelines/pl-job/config.json",
+                        "node_name": "brz",
+                    },
+                    "package_name": "laktory",
+                },
+                "task_key": "node-brz",
+            },
+            {
+                "depends_ons": [{"task_key": "node-slv"}],
+                "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": "laktory==__version__"}},
+                ],
+                "python_wheel_task": {
+                    "entry_point": "models.pipeline._read_and_execute",
+                    "named_parameters": {
+                        "filepath": "/Workspace/.laktory/pipelines/pl-job/config.json",
+                        "node_name": "gld",
+                    },
+                    "package_name": "laktory",
+                },
+                "task_key": "node-gld",
+            },
+            {
+                "depends_ons": [{"task_key": "node-gld"}],
+                "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": "laktory==__version__"}},
+                ],
+                "python_wheel_task": {
+                    "entry_point": "models.pipeline._read_and_execute",
+                    "named_parameters": {
+                        "filepath": "/Workspace/.laktory/pipelines/pl-job/config.json",
+                        "node_name": "gld_a",
+                    },
+                    "package_name": "laktory",
+                },
+                "task_key": "node-gld_a",
+            },
+            {
+                "depends_ons": [{"task_key": "node-gld_a"}, {"task_key": "node-gld_b"}],
+                "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": "laktory==__version__"}},
+                ],
+                "python_wheel_task": {
+                    "entry_point": "models.pipeline._read_and_execute",
+                    "named_parameters": {
+                        "filepath": "/Workspace/.laktory/pipelines/pl-job/config.json",
+                        "node_name": "gld_ab",
+                    },
+                    "package_name": "laktory",
+                },
+                "task_key": "node-gld_ab",
+            },
+            {
+                "depends_ons": [{"task_key": "node-gld"}],
+                "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": "laktory==__version__"}},
+                ],
+                "python_wheel_task": {
+                    "entry_point": "models.pipeline._read_and_execute",
+                    "named_parameters": {
+                        "filepath": "/Workspace/.laktory/pipelines/pl-job/config.json",
+                        "node_name": "gld_b",
+                    },
+                    "package_name": "laktory",
+                },
+                "task_key": "node-gld_b",
+            },
+            {
+                "depends_ons": [{"task_key": "node-brz"}],
+                "job_cluster_key": "node-cluster",
+                "libraries": [
+                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": "laktory==__version__"}},
+                ],
+                "python_wheel_task": {
+                    "entry_point": "models.pipeline._read_and_execute",
+                    "named_parameters": {
+                        "filepath": "/Workspace/.laktory/pipelines/pl-job/config.json",
+                        "node_name": "slv",
+                    },
+                    "package_name": "laktory",
+                },
+                "task_key": "node-slv",
+            },
+        ],
+        "type": "DATABRICKS_JOB",
+    }
 
     # Test resources
     resources = job.core_resources
@@ -69,7 +197,6 @@ def test_databricks_job():
 
 
 def test_databricks_job_execute(mocker):
-
     pl = get_pl_job()
 
     # Patch the model loader to set tmp_path value and skip execution
@@ -79,16 +206,17 @@ def test_databricks_job_execute(mocker):
     # Setup arguments
     test_args = [
         "_read_and_execute",
-        "--filepath", str(data_dirpath / "pl.yaml"),
-        "--node_name", "brz",
-        "--full_refresh", "true",
+        "--filepath",
+        str(data_dirpath / "pl.yaml"),
+        "--node_name",
+        "brz",
+        "--full_refresh",
+        "true",
     ]
     mocker.patch.object(sys, "argv", test_args)
 
     # Run function
     lk.models.pipeline._read_and_execute()
-
-
 
 
 def test_databricks_pipeline(tmp_path):
@@ -217,7 +345,6 @@ def test_databricks_pipeline(tmp_path):
 
     assert dlt.options.depends_on == []
     assert dltp.options.depends_on == ["${resources.dlt-pipeline-pl-dlt}"]
-
 
 
 def test_databricks_pipeline_execute():

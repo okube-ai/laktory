@@ -9,13 +9,14 @@ name: pl-stocks-job
 orchestrator:
   type: DATABRICKS_JOB
 # Uncomment to use job cluster instead of serverless
-#  clusters:
-#    - name: node-cluster
-#      autoscale:
-#        min_workers: 1
-#        max_workers: 2
-#      spark_version: 15.2.x-scala2.12
-#      node_type_id: Standard_DS3_v2  # TODO: Change to your desired cloud-specific node type
+#  job_clusters:
+#    - job_cluster_key: node-cluster
+#      new_cluster:
+#        autoscale:
+#          min_workers: 1
+#          max_workers: 2
+#        spark_version: 16.4.x-scala2.13
+#        node_type_id: Standard_DS3_v2
 
 dependencies:
   - laktory==<laktory_version>

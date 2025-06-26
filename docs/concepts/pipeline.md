@@ -298,8 +298,9 @@ to your stack.
 
 Here is a simplified version:
 ```py title="dlt_laktory_pl"
-import laktory as lk
 import dlt
+
+import laktory as lk
 
 with open("pipeline.yaml") as fp:
     pl = lk.models.Pipeline.model_validate_yaml(fp.read())

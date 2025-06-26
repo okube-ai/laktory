@@ -72,8 +72,7 @@ class DataFrameExpr(BaseModel, PipelineChild):
     expr: str = Field(..., description="SQL Expression")
     type: Literal["SQL"] = Field(
         "SQL",
-        description="Expression type. Only SQL is currently supported, but `DF` could"
-        "be added in the future.",
+        description="Expression type. Only SQL is currently supported, but `DF` could be added in the future.",
     )
     _data_sources: list["PipelineNodeDataSource"] = None
 

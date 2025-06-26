@@ -13,53 +13,22 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class SecretScopePermission(BaseModel):
-    """
-    Secret scope permission
-
-    Attributes
-    ----------
-    permission:
-        Name of the permission to assign
-    principal:
-        Name of the service principal to assign the permission to
-    """
-
-    permission: Literal["READ", "WRITE", "MANAGE"] = None
-    principal: str = None
+    permission: Literal["READ", "WRITE", "MANAGE"] = Field(
+        None, description="Name of the permission to assign"
+    )
+    principal: str = Field(
+        None, description="Name of the service principal to assign the permission to"
+    )
 
 
 class SecretScopeKeyvaultMetadata(BaseModel):
-    """
-    Keyvault specifications when used as a secret scope backend
-
-    Attributes
-    ----------
-    dns_name:
-
-    resource_id:
-        Id of the keyvault resource
-    """
-
-    dns_name: str = None
-    resource_id: str = None
+    dns_name: str = Field(None, description="")
+    resource_id: str = Field(None, description="Id of the keyvault resource")
 
 
 class SecretScope(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks secret scope
-
-    Attributes
-    ----------
-    backend_type:
-        Backend for managing the secrets inside the scope
-    keyvault_metadata:
-        Keyvault specifications if used as a scope backend
-    name:
-        Secret scope name
-    permissions:
-        Permissions given to the secret scope
-    secrets:
-        List of secret to add to the scope
 
     Examples
     --------
@@ -80,11 +49,17 @@ class SecretScope(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    backend_type: Literal["DATABRICKS", "AZURE_KEYVAULT"] = "DATABRICKS"
-    keyvault_metadata: SecretScopeKeyvaultMetadata = None
-    name: str = Field(...)
-    permissions: list[SecretScopePermission] = []
-    secrets: list[Secret] = []
+    backend_type: Literal["DATABRICKS", "AZURE_KEYVAULT"] = Field(
+        "DATABRICKS", description="Backend for managing the secrets inside the scope"
+    )
+    keyvault_metadata: SecretScopeKeyvaultMetadata = Field(
+        None, description="Keyvault specifications if used as a scope backend"
+    )
+    name: str = Field(..., description="Secret scope name")
+    permissions: list[SecretScopePermission] = Field(
+        [], description="Permissions given to the secret scope"
+    )
+    secrets: list[Secret] = Field([], description="List of secret to add to the scope")
 
     @model_validator(mode="after")
     def set_secrets_scope(self) -> Any:

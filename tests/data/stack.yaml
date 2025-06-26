@@ -42,13 +42,14 @@ resources:
   databricks_jobs:
     job-stock-prices-ut-stack:
       name: job-stock-prices-ut-stack
-      clusters:
-        - name: main
-          spark_version: 16.3.x-scala2.12
-          node_type_id: ${vars.node_type_id}
-          spark_env_vars:
-            AZURE_TENANT_ID: "{{secrets/azure/tenant-id}}"
-            LAKTORY_WORKSPACE_ENV: ${vars.env}
+      job_clusters:
+        - job_cluster_key: main
+          new_cluster:
+            spark_version: 16.3.x-scala2.12
+            node_type_id: ${vars.node_type_id}
+            spark_env_vars:
+              AZURE_TENANT_ID: "{{secrets/azure/tenant-id}}"
+              LAKTORY_WORKSPACE_ENV: ${vars.env}
       tasks:
         - task_key: ingest-metadata
           job_cluster_key: main

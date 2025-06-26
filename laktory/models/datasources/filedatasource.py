@@ -98,7 +98,10 @@ class FileDataSource(BaseDataSource):
     )
     infer_schema: bool = Field(
         False,
-        description="When `True`, the schema is inferred from the data. When `False`, the schema is not inferred and will be string if not specified in schema_definition. Only applicable to some format like CSV and JSON.",
+        description="""
+        When `True`, the schema is inferred from the data. When `False`, the schema is not inferred and will be string 
+        if not specified in schema_definition. Only applicable to some format like CSV and JSON.
+        """,
     )
     path: str = Field(
         ...,
@@ -106,13 +109,17 @@ class FileDataSource(BaseDataSource):
     )
     reader_kwargs: dict[str, Any] = Field(
         {},
-        description="Keyword arguments passed directly to dataframe backend reader. "
-        "Passed to `.options()` method when using PySpark.",
+        description="""
+        Keyword arguments passed directly to dataframe backend reader. Passed to `.options()` method when using PySpark.
+        """,
     )
     schema_definition: DataFrameSchema = Field(
         None,
         validation_alias="schema",
-        description="Target schema specified as a list of columns, as a dict or a json serialization. Only used when reading data from non-strongly typed files such as JSON or csv files.",
+        description="""
+        Target schema specified as a list of columns, as a dict or a json serialization. Only used when
+        reading data from non-strongly typed files such as JSON or csv files.
+        """,
     )
     schema_location: str = Field(
         None,

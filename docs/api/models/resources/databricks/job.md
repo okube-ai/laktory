@@ -2,7 +2,11 @@
 
 ---
 
-::: laktory.models.resources.databricks.job.JobCluster
+::: laktory.models.resources.databricks.job.JobJobClusterNewCluster
+
+---
+
+::: laktory.models.resources.databricks.job.JobJobCluster
 
 ---
 

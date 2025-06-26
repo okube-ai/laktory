@@ -35,8 +35,7 @@ def show_version_info() -> str:
         "pytest-examples",
         "python-dateutil",
         "pyyaml",
-        "sqlglot"
-        "sqlparse",
+        "sqlglotsqlparse",
         "typer",
         "typing_extensions",
         "uv",

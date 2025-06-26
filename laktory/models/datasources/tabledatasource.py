@@ -22,7 +22,10 @@ class TableDataSource(BaseDataSource):
     )
     table_name: str = Field(
         ...,
-        description="Source table name. Also supports fully qualified name (`{catalog}.{schema}.{table}`). In this case, `catalog_name` and `schema_name` arguments are ignored.",
+        description="""
+        Source table name. Also supports fully qualified name (`{catalog}.{schema}.{table}`). In this case, 
+        `catalog_name` and `schema_name` arguments are ignored.
+        """,
     )
     reader_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend reader methods."

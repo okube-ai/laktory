@@ -30,40 +30,6 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks group
 
-    Parameters
-    ----------
-    acl_principal_id:
-        Identifier for use in databricks_access_control_rule_set, e.g. `groups/Some Group`.
-    allow_cluster_create:
-        This is a field to allow the group to have cluster create privileges. More
-        fine grained permissions could be assigned with databricks.Permissions and
-        cluster_id argument. Everyone without `allow_cluster_create` argument set, but
-        with permission to use Cluster Policy would be able to create clusters, but
-        within boundaries of that specific policy.
-    allow_instance_pool_create:
-        This is a field to allow the group to have instance pool create privileges. More
-        fine grained permissions could be assigned with databricks.Permissions and
-        instance_pool_id argument.
-    databricks_sql_access:
-        This is a field to allow the group to have access to Databricks SQL feature in
-        User Interface and through databricks_sql_endpoint.
-    display_name:
-        Display name for the group.
-    external_id:
-        ID of the group in an external identity provider.
-    force:
-        Ignore `cannot create group: Group with name X already exists.` errors and
-        implicitly import the specific group into IaC state, enforcing entitlements
-        defined in the instance of resource. This functionality is experimental and is
-        designed to simplify corner cases, like Azure Active Directory synchronisation.
-    lookup_existing:
-        Specifications for looking up existing resource. Other attributes will
-        be ignored.
-    member_ids:
-        A list of all member ids of the group. Can be users, groups or service principals
-    workspace_access
-        When `True`, the group is allowed to have workspace access
-
     Examples
     --------
     ```py
@@ -73,18 +39,61 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    acl_principal_id: str = None
-    allow_cluster_create: bool = False
-    allow_instance_pool_create: bool = None
-    databricks_sql_access: bool = None
-    display_name: str = None
-    external_id: str = None
-    force: bool = None
-    lookup_existing: GroupLookup = Field(None, exclude=True)
-    member_ids: list[str] = []
-    url: str = None
-    workspace_access: bool = None
-    workspace_permission_assignments: list[MwsPermissionAssignment] = None
+    acl_principal_id: str = Field(
+        None,
+        description="Identifier for use in databricks_access_control_rule_set, e.g. `groups/Some Group`.",
+    )
+    allow_cluster_create: bool = Field(
+        False,
+        description="""
+    This is a field to allow the group to have cluster create privileges. More fine grained permissions could be 
+    assigned with databricks.Permissions and cluster_id argument. Everyone without `allow_cluster_create` argument set,
+    but with permission to use Cluster Policy would be able to create clusters, but within boundaries of that specific 
+    policy.
+    """,
+    )
+    allow_instance_pool_create: bool = Field(
+        None,
+        description="""
+    This is a field to allow the group to have instance pool create privileges. More fine grained permissions could 
+    be assigned with databricks.Permissions and instance_pool_id argument.
+    """,
+    )
+    databricks_sql_access: bool = Field(
+        None,
+        description="""
+    This is a field to allow the group to have access to Databricks SQL feature in User Interface and through 
+    databricks_sql_endpoint.
+    """,
+    )
+    display_name: str = Field(None, description="Display name for the group.")
+    external_id: str = Field(
+        None, description="ID of the group in an external identity provider."
+    )
+    force: bool = Field(
+        None,
+        description="""
+    Ignore `cannot create group: Group with name X already exists.` errors and implicitly import the specific group 
+    into IaC state, enforcing entitlements defined in the instance of resource. This functionality is experimental and 
+    is designed to simplify corner cases, like Azure Active Directory synchronisation.
+    """,
+    )
+    lookup_existing: GroupLookup = Field(
+        None,
+        exclude=True,
+        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+    )
+    member_ids: list[str] = Field(
+        [],
+        description="A list of all member ids of the group. Can be users, groups or service principals",
+    )
+    url: str = Field(None, description="")
+    workspace_access: bool = Field(
+        None, description="When `True`, the group is allowed to have workspace access"
+    )
+    workspace_permission_assignments: list[MwsPermissionAssignment] = Field(
+        None, description="Workspace access privileges"
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

@@ -123,8 +123,7 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
     expr: str = Field(..., description="Expression string representation")
     type: Literal["SQL", "DF"] = Field(
         None,
-        description="Expression type: DF or SQL. If `None` is specified, type is "
-        "guessed from provided expression.",
+        description="Expression type: DF or SQL. If `None` is specified, type is guessed from provided expression.",
     )
 
     @model_validator(mode="after")
