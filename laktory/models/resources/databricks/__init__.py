@@ -24,6 +24,7 @@ from .mwspermissionassignment import MwsPermissionAssignment
 from .notebook import Notebook
 from .permissions import Permissions
 from .pipeline import Pipeline
+from .pythonpackage import PythonPackage
 from .query import Query
 from .repo import Repo
 from .schema import Schema
