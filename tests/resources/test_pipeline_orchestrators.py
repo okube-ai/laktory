@@ -71,7 +71,7 @@ def test_databricks_job():
                     "client": "3",
                     "dependencies": [
                         "requests>=2.0",
-                        "lake.whl",
+                        "./wheels/lake-0.0.1-py3-none-any.whl",
                         "laktory==__version__",
                     ],
                 },
@@ -94,7 +94,7 @@ def test_databricks_job():
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "requests>=2.0"}},
-                    {"whl": "lake.whl"},
+                    {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
@@ -112,7 +112,7 @@ def test_databricks_job():
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "requests>=2.0"}},
-                    {"whl": "lake.whl"},
+                    {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
@@ -130,7 +130,7 @@ def test_databricks_job():
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "requests>=2.0"}},
-                    {"whl": "lake.whl"},
+                    {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
@@ -148,7 +148,7 @@ def test_databricks_job():
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "requests>=2.0"}},
-                    {"whl": "lake.whl"},
+                    {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
@@ -166,7 +166,7 @@ def test_databricks_job():
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "requests>=2.0"}},
-                    {"whl": "lake.whl"},
+                    {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
@@ -184,7 +184,7 @@ def test_databricks_job():
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "requests>=2.0"}},
-                    {"whl": "lake.whl"},
+                    {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {

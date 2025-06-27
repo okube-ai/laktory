@@ -21,8 +21,6 @@ orchestrator:
 dependencies:
   - laktory==<laktory_version>
   - ${vars.wheel_filepath}
-imports:
-  - lake
 
 # Define nodes (each node is a table or a view)
 nodes:

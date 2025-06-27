@@ -28,10 +28,21 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
     Examples
     --------
     ```py
+    import laktory as lk
+
+    pp = lk.models.resources.databricks.PythonPackage(
+        package_name="lake",
+        config_filepath="lake/pyproject.toml",
+        dirpath="/wheels/",
+    )
     ```
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")
+    build_command: str = Field(
+        "uv build --wheel",
+        description="The build command used to generate the wheel file.",
+    )
     config_filepath: str = Field(
         ...,
         description="File path of the pyproject.toml file or setup.py configuration file.",
@@ -53,7 +64,7 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
     LAKTORY_WORKSPACE_LAKTORY_ROOT environment variable. Default is `/.laktory/`. Used only if `path` is not specified.
     """,
     )
-    wheel_filename: str = Field(None, description="Overrides default wheel filename")
+    # wheel_filename: str = Field(None, description="Overrides default wheel filename")
     _wheel_path: Path = None
 
     @classmethod
@@ -114,7 +125,7 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
 
             worker = Worker()
 
-            cmd = ["uv", "build", "--wheel", "-o", str(dist_path.absolute().resolve())]
+            cmd = self.build_command.split(" ")
 
             logger.info(
                 f"Building package '{self.package_name}' from {package_root} with '{' '.join(cmd)}'"
@@ -131,11 +142,11 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
             self._wheel_path = file
 
             # Renaming wheel file
-            if self.wheel_filename:
-                new_path = self._wheel_path.with_name(self.wheel_filename)
-                logger.info(f"Renaming {self._wheel_path} -> {new_path}")
-                self._wheel_path.rename(new_path)
-                self._wheel_path = new_path
+            # if self.wheel_filename:
+            #     new_path = self._wheel_path.with_name(self.wheel_filename)
+            #     logger.info(f"Renaming {self._wheel_path} -> {new_path}")
+            #     self._wheel_path.rename(new_path)
+            #     self._wheel_path = new_path
 
             self._wheel_path = self._wheel_path.absolute().resolve()
 
@@ -175,11 +186,12 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
     def pulumi_excludes(self) -> list[str] | dict[str, bool]:
         return [
             "access_controls",
+            "build_command",
+            "config_filepath",
             "dirpath",
+            "package_name",
             "rootpath",
             "wheel_filename",
-            "package_name",
-            "config_filepath",
         ]
 
     # ----------------------------------------------------------------------- #

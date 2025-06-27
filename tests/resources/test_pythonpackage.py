@@ -13,7 +13,6 @@ def get_python_package():
     return PythonPackage(
         package_name="lake",
         config_filepath=str(config_filepath),
-        wheel_filename="lake.whl",
         dirpath="/wheels/",
     )
 
@@ -21,10 +20,10 @@ def get_python_package():
 def test_python_package():
     pp = get_python_package()
     assert pp.source.endswith(
-        "laktory/laktory/resources/quickstart-stacks/workflows/lake/dist/lake.whl"
+        "laktory/laktory/resources/quickstart-stacks/workflows/lake/dist/lake-0.0.1-py3-none-any.whl"
     )
     assert Path(pp.source).exists()
-    assert pp.path == "/.laktory/wheels/lake.whl"
+    assert pp.path == "/.laktory/wheels/lake-0.0.1-py3-none-any.whl"
 
 
 def test_python_package_path():
@@ -37,7 +36,6 @@ def test_python_package_path():
     pp = PythonPackage(
         package_name="lake",
         config_filepath=str(config_filepath),
-        wheel_filename="lake.whl",
         path="/Workspace/lake_1.whl",
     )
     assert pp.path == "/Workspace/lake_1.whl"

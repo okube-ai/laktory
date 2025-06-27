@@ -1,3 +1,4 @@
+import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -44,14 +45,25 @@ def parse_requirement_name(req: str) -> str | None:
     Extract the package name from a requirement string.
     Returns None if it looks like a non-standard format (e.g., git+).
     """
-    if (
-        req.startswith("git+")
-        or "://" in req
-        or req.startswith(".")
-        or req.endswith(".whl")
-    ):
+
+    # Wheel file
+    if req.endswith(".whl") or req.endswith(".wheel"):
+        # Match the wheel filename pattern: {name}-{version}-{build?}-{python_tag}-{abi_tag}-{platform_tag}.whl
+        # https://peps.python.org/pep-0427/
+        filename = os.path.basename(req)
+        match = re.match(
+            r"^(?P<name>.+?)-\d+\.\d+(?:\.\d+)?(?:[a-zA-Z0-9]*)?-.*\.whl$", filename
+        )
+        if match:
+            return match.group("name")
+        else:
+            return None
+
+    # Git
+    if req.startswith("git+") or "://" in req:
         return None
 
+    # PyPi
     # Extract up to the first occurrence of one of these: [<=>~]
     match = re.match(r"^\s*([A-Za-z0-9_.-]+)", req)
     if match:
