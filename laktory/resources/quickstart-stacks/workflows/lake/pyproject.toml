@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lake"
+# version = dynamic
+requires-python = ">=3.10"
+description = "An ETL and DataOps framework for building a lakehouse"
+readme = "README.md"
+dynamic = ["version"]
+dependencies = [
+    "laktory",
+    "narwhals",
+]
+
+[tool.hatch.build]
+include = ["lake*"]
+
+[tool.hatch.version]
+path = "lake/_version.py"

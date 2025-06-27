@@ -15,6 +15,9 @@ resources:
   # DBFS Files: Stock prices data json file
   databricks_dbfsfiles: !use resources/dbfsfiles.yaml
 
+  # Python package (lake)
+  databricks_pythonpackages: !use resources/pythonpackages.yaml
+
   # Notebooks for jobs and pipelines
   databricks_notebooks: !use resources/notebooks.yaml
 
@@ -30,6 +33,8 @@ resources:
     pl-stocks-job: !use resources/pl-stocks-job.yaml
     pl-stocks-dlt: !use resources/pl-stocks-dlt.yaml
 
+  variables:
+    wheel_filepath: /Workspace${vars.workspace_laktory_root}wheels/lake-0.0.1-py3-none-any.whl
 
 # Environment Specific Settings
 environments:

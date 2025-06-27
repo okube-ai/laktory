@@ -124,14 +124,15 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             )
             if serverless:
                 task.environment_key = env_key
-                task.python_wheel_task.named_parameters["full_refresh"] = (
-                    "{{job.parameters.full_refresh}}"
-                )
             else:
-                libraries = [
-                    ClusterLibrary(pypi=ClusterLibraryPypi(package=d))
-                    for d in pl._dependencies
-                ]
+                libraries = []
+                for r in _requirements:
+                    if r.endswith(".whl"):
+                        l = ClusterLibrary(whl=r)
+                    else:
+                        l = ClusterLibrary(pypi=ClusterLibraryPypi(package=r))
+                    libraries += [l]
+
                 task.job_cluster_key = "node-cluster"
                 task.libraries = libraries
 

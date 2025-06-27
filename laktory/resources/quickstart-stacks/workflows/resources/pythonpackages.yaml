@@ -1,0 +1,7 @@
+workspace-file-lake-package:
+  package_name: lake
+  config_filepath: ./lake/pyproject.toml
+  dirpath: wheels/
+  access_controls:
+    - group_name: account users
+      permission_level: CAN_READ

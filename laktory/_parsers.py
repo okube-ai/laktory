@@ -178,6 +178,13 @@ def _resolve_variable(name, vars):
         _vars = {k.lower(): v for k, v in os.environ.items()}
         value = _vars.get(name.lower())
 
+    # Fetch from laktory settings
+    if value is None:
+        from laktory._settings import settings
+
+        _vars = {k.lower(): getattr(settings, k) for k in settings.model_fields.keys()}
+        value = _vars.get(name.lower())
+
     # Value not found returning original value
     if value is None:
         return f"${{vars.{name}}}"  # Default value if not resolved
