@@ -23,6 +23,7 @@ orchestrator:
 
 dependencies:
   - laktory==<laktory_version>
+  - ${vars.wheel_filepath}
 
 # Define nodes (each node is a table or a view)
 nodes:
@@ -66,3 +67,6 @@ nodes:
       func_kwargs:
         subset: ["created_at", "symbol"]
       dataframe_api: NATIVE
+
+    # Custom function from lake package deployed as wheel file
+    - func_name: lake.with_last_modified

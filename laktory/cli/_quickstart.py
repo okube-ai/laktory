@@ -118,6 +118,7 @@ def quickstart(
             # Update laktory version
             if (
                 target_filepath.endswith("requirements.txt")
+                or target_filepath.endswith("pyproject.toml")
                 or target_filepath.endswith(".py")
                 or target_filepath.endswith(".yaml")
             ):

@@ -133,6 +133,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         singular_serialization = self._singular_serialization
 
         fields = {k: v for k, v in self.model_fields.items()}
+        fields = fields | {k: v for k, v in self.model_computed_fields.items()}
         if camel_serialization:
             keys = list(dump.keys())
             for k in keys:
@@ -163,6 +164,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                 else:
                     # Automatic singularization
                     k_singular = k
+                    if not hasattr(fields[k], "annotation"):
+                        continue
                     ann = fields[k].annotation
                     if annotation_contains_list_of_basemodel(ann, BaseModel):
                         k_singular = engine.singular_noun(k) or k

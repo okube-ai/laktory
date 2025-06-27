@@ -5,14 +5,14 @@ from laktory import Settings
 
 def test_settings():
     settings0 = Settings()
-    settings1 = Settings(workspace_landing_root="/mnt/landing/")
-    os.environ["LAKTORY_WORKSPACE_LANDING_ROOT"] = "staging"
+    settings1 = Settings(laktory_root="/tmp/laktory/")
+    os.environ["LAKTORY_ROOT"] = "/tmp2/laktory/"
     settings2 = Settings()
-    del os.environ["LAKTORY_WORKSPACE_LANDING_ROOT"]
+    del os.environ["LAKTORY_ROOT"]
 
-    assert settings0.workspace_landing_root == "/Volumes/dev/sources/landing/"
-    assert settings1.workspace_landing_root == "/mnt/landing/"
-    assert settings2.workspace_landing_root == "staging"
+    assert settings0.laktory_root == "./"
+    assert settings1.laktory_root == "/tmp/laktory/"
+    assert settings2.laktory_root == "/tmp2/laktory/"
 
 
 if __name__ == "__main__":

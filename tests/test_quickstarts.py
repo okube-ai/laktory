@@ -57,6 +57,7 @@ def test_read(monkeypatch, template, backend, env, tmp_path):
             "databricks_dbfsfiles",
             "databricks_jobs",
             "databricks_notebooks",
+            "databricks_pythonpackages",
             "pipelines",
         ]
     elif template == "workspace":

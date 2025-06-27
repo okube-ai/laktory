@@ -8,6 +8,9 @@ resources:
   # DBFS Files: Stock prices data json file
   databricks_dbfsfiles: !use resources/dbfsfiles.yaml
 
+  # Python package (lake)
+  databricks_pythonpackages: !use resources/pythonpackages.yaml
+
   # Notebooks for jobs and pipelines
   databricks_notebooks: !use resources/notebooks.yaml
 
@@ -28,6 +31,9 @@ resources:
     databricks:
       host: ${vars.DATABRICKS_HOST}
       token: ${vars.DATABRICKS_TOKEN}
+
+  variables:
+    wheel_filepath: /Workspace${vars.workspace_laktory_root}wheels/lake-0.0.1-py3-none-any.whl
 
 # Environment Specific Settings
 environments:

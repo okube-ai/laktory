@@ -35,6 +35,7 @@ from laktory.models.resources.databricks.mwsnetworkconnectivityconfig import (
 from laktory.models.resources.databricks.notebook import Notebook
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.pipeline import Pipeline as DatabricksPipeline
+from laktory.models.resources.databricks.pythonpackage import PythonPackage
 from laktory.models.resources.databricks.query import Query
 from laktory.models.resources.databricks.repo import Repo
 from laktory.models.resources.databricks.schema import Schema
@@ -145,6 +146,7 @@ class StackResources(BaseModel):
     databricks_networkconnectivityconfig: dict[str, MwsNetworkConnectivityConfig] = {}
     databricks_notebooks: dict[str, Notebook] = {}
     databricks_permissions: dict[str, Permissions] = {}
+    databricks_pythonpackages: dict[str, PythonPackage] = {}
     databricks_queries: dict[str, Query] = {}
     databricks_repos: dict[str, Repo] = {}
     databricks_schemas: dict[str, Schema] = {}
@@ -159,7 +161,7 @@ class StackResources(BaseModel):
     databricks_volumes: dict[str, Volume] = {}
     databricks_warehouses: dict[str, Warehouse] = {}
     databricks_workspacebindings: dict[str, WorkspaceBinding] = {}
-    databricks_workspacefiles: dict[str, WorkspaceFile] = {}
+    databricks_workspacefiles: dict[str, WorkspaceFile | PythonPackage] = {}
     pipelines: dict[str, Pipeline] = {}
     providers: dict[
         str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]
@@ -422,7 +424,7 @@ class Stack(BaseModel):
 
                 # Get model dump
                 model = obj
-                data = model.model_dump(exclude_unset=True)
+                data = model.model_dump(exclude_unset=True, round_trip=True)
 
                 # Loop through all model fields
                 for field_name, field in model.model_fields.items():

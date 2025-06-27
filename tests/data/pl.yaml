@@ -1,6 +1,7 @@
 name: pl-local
 dependencies:
   - requests>=2.0
+  - ./wheels/lake-0.0.1-py3-none-any.whl
 imports:
   - re
 nodes:

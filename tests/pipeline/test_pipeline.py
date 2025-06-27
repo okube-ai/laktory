@@ -172,8 +172,12 @@ def test_paths(tmp_path):
 
 def test_dependencies(tmp_path):
     pl = get_pl(tmp_path)
-    assert pl._dependencies == ["requests>=2.0", f"laktory=={VERSION}"]
-    assert pl._imports == ["re", "requests"]
+    assert pl._dependencies == [
+        "requests>=2.0",
+        "./wheels/lake-0.0.1-py3-none-any.whl",
+        f"laktory=={VERSION}",
+    ]
+    assert pl._imports == ["re", "requests", "lake"]
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])

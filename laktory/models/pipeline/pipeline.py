@@ -1,3 +1,4 @@
+import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -44,9 +45,25 @@ def parse_requirement_name(req: str) -> str | None:
     Extract the package name from a requirement string.
     Returns None if it looks like a non-standard format (e.g., git+).
     """
-    if req.startswith("git+") or "://" in req or req.startswith("."):
+
+    # Wheel file
+    if req.endswith(".whl") or req.endswith(".wheel"):
+        # Match the wheel filename pattern: {name}-{version}-{build?}-{python_tag}-{abi_tag}-{platform_tag}.whl
+        # https://peps.python.org/pep-0427/
+        filename = os.path.basename(req)
+        match = re.match(
+            r"^(?P<name>.+?)-\d+\.\d+(?:\.\d+)?(?:[a-zA-Z0-9]*)?-.*\.whl$", filename
+        )
+        if match:
+            return match.group("name")
+        else:
+            return None
+
+    # Git
+    if req.startswith("git+") or "://" in req:
         return None
 
+    # PyPi
     # Extract up to the first occurrence of one of these: [<=>~]
     match = re.match(r"^\s*([A-Za-z0-9_.-]+)", req)
     if match:
@@ -59,7 +76,6 @@ def _read_and_execute():
     # TODO: Refactor and integrate into dispatcher / executor / CLI
 
     import argparse
-    import importlib
 
     import laktory as lk
 
@@ -103,15 +119,6 @@ def _read_and_execute():
             pl = lk.models.Pipeline.model_validate_yaml(fp)
         else:
             pl = lk.models.Pipeline.model_validate_json(fp.read())
-
-    # Install dependencies
-    # TODO: move to pipeline/node execute?
-    for package_name in pl._imports:
-        try:
-            logger.info(f"Importing {package_name}")
-            importlib.import_module(package_name)
-        except ModuleNotFoundError:
-            logger.info(f"Importing {package_name} failed.")
 
     # Execute
     if node_name:
@@ -312,6 +319,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         None,
         description="Location of the pipeline node root used to store logs, metrics and checkpoints.",
     )
+    _imports_imported: bool = False
 
     @field_validator("root_path", mode="before")
     @classmethod
