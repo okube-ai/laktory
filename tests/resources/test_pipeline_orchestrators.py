@@ -31,7 +31,7 @@ def get_pl(tmp_path="", is_dlt=False):
 def get_pl_job():
     pl = get_pl()
     pl.name = "pl-job"
-    pl.dependencies = ["yfinance"]
+    # pl.dependencies = ["yfinance"]
     pl.orchestrator = {
         "job_clusters": [
             {
@@ -69,7 +69,11 @@ def test_databricks_job():
                 "environment_key": "laktory",
                 "spec": {
                     "client": "3",
-                    "dependencies": ["yfinance", "laktory==__version__"],
+                    "dependencies": [
+                        "requests>=2.0",
+                        "lake.whl",
+                        "laktory==__version__",
+                    ],
                 },
             }
         ],
@@ -89,7 +93,8 @@ def test_databricks_job():
                 "depends_ons": [],
                 "job_cluster_key": "node-cluster",
                 "libraries": [
-                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": "requests>=2.0"}},
+                    {"whl": "lake.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
@@ -106,7 +111,8 @@ def test_databricks_job():
                 "depends_ons": [{"task_key": "node-slv"}],
                 "job_cluster_key": "node-cluster",
                 "libraries": [
-                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": "requests>=2.0"}},
+                    {"whl": "lake.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
@@ -123,7 +129,8 @@ def test_databricks_job():
                 "depends_ons": [{"task_key": "node-gld"}],
                 "job_cluster_key": "node-cluster",
                 "libraries": [
-                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": "requests>=2.0"}},
+                    {"whl": "lake.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
@@ -140,7 +147,8 @@ def test_databricks_job():
                 "depends_ons": [{"task_key": "node-gld_a"}, {"task_key": "node-gld_b"}],
                 "job_cluster_key": "node-cluster",
                 "libraries": [
-                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": "requests>=2.0"}},
+                    {"whl": "lake.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
@@ -157,7 +165,8 @@ def test_databricks_job():
                 "depends_ons": [{"task_key": "node-gld"}],
                 "job_cluster_key": "node-cluster",
                 "libraries": [
-                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": "requests>=2.0"}},
+                    {"whl": "lake.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
@@ -174,7 +183,8 @@ def test_databricks_job():
                 "depends_ons": [{"task_key": "node-brz"}],
                 "job_cluster_key": "node-cluster",
                 "libraries": [
-                    {"pypi": {"package": "yfinance"}},
+                    {"pypi": {"package": "requests>=2.0"}},
+                    {"whl": "lake.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {

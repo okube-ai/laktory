@@ -1,6 +1,7 @@
 name: pl-local
 dependencies:
   - requests>=2.0
+  - lake.whl
 imports:
   - re
 nodes:

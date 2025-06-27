@@ -44,7 +44,12 @@ def parse_requirement_name(req: str) -> str | None:
     Extract the package name from a requirement string.
     Returns None if it looks like a non-standard format (e.g., git+).
     """
-    if req.startswith("git+") or "://" in req or req.startswith("."):
+    if (
+        req.startswith("git+")
+        or "://" in req
+        or req.startswith(".")
+        or req.endswith(".whl")
+    ):
         return None
 
     # Extract up to the first occurrence of one of these: [<=>~]

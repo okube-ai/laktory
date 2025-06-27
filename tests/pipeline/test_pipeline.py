@@ -172,7 +172,7 @@ def test_paths(tmp_path):
 
 def test_dependencies(tmp_path):
     pl = get_pl(tmp_path)
-    assert pl._dependencies == ["requests>=2.0", f"laktory=={VERSION}"]
+    assert pl._dependencies == ["requests>=2.0", "lake.whl", f"laktory=={VERSION}"]
     assert pl._imports == ["re", "requests"]
 
 

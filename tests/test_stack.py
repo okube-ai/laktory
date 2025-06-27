@@ -43,6 +43,7 @@ def full_stack():
     from tests.resources.test_notebook import get_notebook
     from tests.resources.test_permissions import permissions
     from tests.resources.test_pipeline_orchestrators import get_pl_dlt
+    from tests.resources.test_pythonpackage import get_python_package
     from tests.resources.test_query import query
     from tests.resources.test_repo import repo
     from tests.resources.test_schema import schema
@@ -70,6 +71,7 @@ def full_stack():
         "databricks_mlflowexperiments": [mlexp],
         "databricks_mlflowmodels": [mlmodel],
         "databricks_mlflowwebhooks": [mlwebhook],
+        "databricks_pythonpackages": [get_python_package()],
         "databricks_notebooks": [nb],
         "databricks_permissions": [permissions],
         "databricks_queries": [query],
@@ -125,7 +127,7 @@ def full_stack():
 
 
 def test_stack_model(stack):
-    stack.model_dump()
+    _ = stack.model_dump()
 
 
 def test_stack_env_model(stack):
