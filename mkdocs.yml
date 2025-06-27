@@ -142,6 +142,8 @@ nav:
     - Narwhal API Extension:
       - Laktory Extension: concepts/extension_laktory.md
       - Custom Extension: concepts/extension_custom.md
+    - Python Extension:
+      - Python Package: concepts/extension_python_package.md
     - DataOps:
       - DataOps: concepts/dataops.md
       - Infrastructure-as-Code: concepts/iac.md
@@ -222,6 +224,7 @@ nav:
           - MwsNccBinding: api/models/resources/databricks/mwsnccbinding.md
           - MwsNetworkConnectivityConfig: api/models/resources/databricks/mwsnetworkconnectivityconfig.md
           - api/models/resources/databricks/notebook.md
+          - PythonPackage: api/models/resources/databricks/pythonpackage.md
           - api/models/resources/databricks/query.md
           - api/models/resources/databricks/repo.md
           - api/models/resources/databricks/schema.md

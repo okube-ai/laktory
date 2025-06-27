@@ -1,15 +1,14 @@
 ??? "API Documentation"
     [`laktory.models.resources.databricks.PythonPackage`][laktory.models.resources.databricks.PythonPackage]<br>
 
-When developing production-grade code, it is generally recommended to build python 
-package as it helps with re-usability, modularity, clean deployment and unit testing.
+When developing production-grade code, it is generally recommended to use Python packages.
+This promotes reusability, modularity, clean deployment, and better unit testing.
 
-Some Laktory resources, such as the `models.resources.databricks.PyhonPackage` facilitates 
-that process by dynamically building and deploying wheel files out of local python pacakge
-source code.
+Laktory supports this approach through resources such as 
+`models.resources.databricks.PyhonPackage`, which automates the building and deployment
+of wheel files from local Python package source code.
 
-Consider the following structure
-
+Consider the following directory structure:
 ```terminal
 .
 ├── lake
@@ -28,13 +27,12 @@ Consider the following structure
 │   └── pythonpackages.yaml
 ├── stack.yaml
 ```
-in which, in addition the stack and resource files,
-you also have a python package called `lake` with the required `pyproject.toml` 
-configuration file to build the project.
+In addition to the usual stack and resource files, this structure contains a Python package named `lake`,
+defined by a `pyproject.toml` file.
 
-The package itself declares a [Narwhals extension](extension_custom.md) that can be
-used for data transformations
-```py dataframe_ext.py
+Inside the `lake` package, a custom [Narwhals extension](extension_custom.md) is 
+declared for data transformations:
+```py title="dataframe_ext.py"
 from datetime import datetime
 import narwhals as nw
 import laktory as lk
@@ -48,8 +46,11 @@ class LakeNamespace:
         return self._df.with_columns(last_modified=nw.lit(datetime.now()))
 ```
 
-The stack includes the declaration of the python packages resources and declare the
-workspace path to which the wheel file will be deployed as a variable.
+The stack file declares:
+
+- a `PythonPackage` databricks resource
+- a variable `wheel_filepath` that defines the workspace path to which the wheel file will be deployed
+
 ```yaml title="stack.yaml"
 name: workflows
 
@@ -66,10 +67,11 @@ environments:
       env: dev
       is_dev: true
 ```
+The `PythonPackage` resource declares:
 
-The `PythonPackage` resource declares the name of the package, the local filepath of
-the configuration file as well as the target directory in the workspace (inside laktory
-root). 
+- the name of the package
+- the path to the pyproject.toml file
+- the target directory in the Databricks workspace under the Laktory root
 
 ```yaml title="pythonpackages.yaml"
 workspace-file-lake-package:
@@ -81,10 +83,10 @@ workspace-file-lake-package:
       permission_level: CAN_READ
 ```
 
-Finally, the pipeline includes the wheel file as a dependency and uses the `lake`
-namespace to declare a transformation. The `dependencies` declaration will ensure
-that the package is installed when executed as a Databricks Job / Pipeline and imported
-during the pipeline execution.
+Finally, the pipeline references the wheel file as a dependency and uses the `lake` 
+namespace  to apply a custom transformation. The dependencies section ensures the 
+package is installed at runtime (in Databricks Jobs or Pipelines) and imported during 
+execution.
 
 ```yaml title="pl-stocks-job.yaml"
 name: pl-stocks-job
@@ -108,6 +110,9 @@ nodes:
         - func_name: lake.with_last_modified
 ```
 
+When you run `laktory deploy`, the Python package is:
 
-When calling `laktory deploy`, package is built and deployed as a Workspace file in the
-{laktory_root}/wheels directory using infrastructure as code.
+- built into a wheel file using the configuration in pyproject.toml
+- deployed as a Databricks workspace file to ${vars.workspace_laktory_root}/wheels/
+
+This workflow enables clean, repeatable deployment of custom transformation logic alongside your data pipelines.

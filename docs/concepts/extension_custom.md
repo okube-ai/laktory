@@ -41,3 +41,6 @@ transformer:
 ```
 
 This same approach can be used to extend the functionality of Narwhals `Expr` and `LazyFrame` objects as well.
+
+You can combine this feature and the development of a [Python Package](extension_python_package.md) 
+to define custom functions available from a Laktory pipeline.
