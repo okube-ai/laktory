@@ -9,7 +9,11 @@ DataFrame operations and is generally used between a data source and a data sink
 <img src="/../../images/diagrams/transformer_diagram.png" alt="node transformer" width="600"/>
 
 A Transformer is composed of a series of nodes, each representing a transformation applied to a dataframe as an 
-expression or as a method. The output of one node is passed as input to the next, enabling complex transformations.
+expression or as a method. The output of one node is passed as input to the next, enabling complex and modular
+transformations.
+
+By default, operations are declared using [Narwhals DataFrames](https://narwhals-dev.github.io/narwhals/basics/dataframe/) 
+API, but it can also be configured to use the selected DataFrame backend API. 
 
 #### DataFrameExpr
 ??? "API Documentation"
@@ -34,36 +38,49 @@ For example, if you have a dataframe with a column `x` and want to:
 
 here is how you would do it:
 
-```python title="pipeline.yaml"
-import pandas as pd
+=== "YAML"
+    ```yaml
+    nodes:
+    - expr: SELECT x AS theta FROM {df}
+    - func_name: with_columns
+      func_kwargs:
+         cos: nw.col('theta').cost()
+    - func_name: drop_duplicates
+      func_args: theta
+      dataframe_api: NATIVE
+    ```
 
-import laktory as lk
-
-df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 2, 3]}))
-
-# Build Chain
-sc = lk.models.DataFrameTransformer(
-    nodes=[
-        {
-            "expr": "SELECT x AS theta FROM {df}",
-        },
-        {
-            "func_name": "with_columns",
-            "func_kwargs": {
-                "cos": "nw.col('theta').cos()"
-            }
-        },
-        {
-            "func_name": "drop_duplicates",
-            "func_args": ["theta"],
-            "dataframe_api": "NATIVE",
-        },
-    ]
-)
-
-# Execute Chain
-df = sc.execute(df0)
-```
+=== "Python"
+    ```python
+    import pandas as pd
+    
+    import laktory as lk
+    
+    df0 = spark.createDataFrame(pd.DataFrame({"x": [1, 2, 2, 3]}))
+    
+    # Build Chain
+    sc = lk.models.DataFrameTransformer(
+        nodes=[
+            {
+                "expr": "SELECT x AS theta FROM {df}",
+            },
+            {
+                "func_name": "with_columns",
+                "func_kwargs": {
+                    "cos": "nw.col('theta').cos()"
+                }
+            },
+            {
+                "func_name": "drop_duplicates",
+                "func_args": ["theta"],
+                "dataframe_api": "NATIVE",
+            },
+        ]
+    )
+    
+    # Execute Chain
+    df = sc.execute(df0)
+    ```
 
 In this example, `{df}` refers to the output of the previous node in the Spark Chain. You can also
 directly reference other pipeline nodes in your SQL queries by using `{nodes.node_name}`.
