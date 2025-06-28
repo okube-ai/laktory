@@ -11,17 +11,10 @@ from laktory.models.resources.terraformresource import TerraformResource
 class GrantsGrant(BaseModel):
     """
     Grants grant
-
-    Parameters
-    ----------
-    principal:
-        User, group or service principal name
-    privileges:
-        List of allowed privileges
     """
 
-    principal: str
-    privileges: list[str]
+    principal: str = Field(..., description="User, group or service principal name")
+    privileges: list[str] = Field(..., description="List of allowed privileges")
 
 
 class Grants(BaseModel, PulumiResource, TerraformResource):

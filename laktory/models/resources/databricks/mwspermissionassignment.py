@@ -12,15 +12,6 @@ class MwsPermissionAssignment(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Mws Permission Assignment
 
-    Parameters
-    ----------
-    permissions:
-
-    principal_id:
-
-    workspace_id:
-
-
     Examples
     --------
     ```py

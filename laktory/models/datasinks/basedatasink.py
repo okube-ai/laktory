@@ -462,5 +462,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
         Returns
         -------
+        AnyFrame
+            DataFrame
         """
         return self.as_source(as_stream=as_stream).read()

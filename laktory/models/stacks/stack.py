@@ -233,15 +233,6 @@ class EnvironmentStack(BaseModel):
 class EnvironmentSettings(BaseModel):
     """
     Settings overwrite for a specific environments
-
-    Parameters
-    ----------
-    resources:
-
-    variables:
-
-    terraform:
-
     """
 
     resources: Any = Field(

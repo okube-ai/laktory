@@ -109,7 +109,7 @@ This type of data source adapts to its execution context.
 ## Data Sinks
 ??? "API Documentation"
     [`laktory.models.FileDataSink`][laktory.models.FileDataSink]<br>
-    [`laktory.models.TableDataSink`][laktory.models.TableDataSink]<br>
+    [`laktory.models.UnityCatalogDataSink`][laktory.models.UnityCatalogDataSink]<br>
 
 <img src="/../../images/diagrams/sink_logo.png" alt="node sink" width="100"/>
 

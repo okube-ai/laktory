@@ -265,7 +265,7 @@ laktory deploy --env dev
 ```commandline title="command line"
 laktory run --env dev --job slv_stock_prices
 ```
-![job](../../images/screenshots/job_stock_prices.png)
+![job](./images/screenshots/job_stock_prices.png)
 
 
 ## Watch it

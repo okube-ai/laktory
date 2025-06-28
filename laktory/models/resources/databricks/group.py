@@ -13,17 +13,13 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class GroupLookup(ResourceLookup):
-    """
-    Parameters
-    ----------
-    id:
-        Id of the group. Only supported when using Pulumi backend.
-    display_name:
-        Display name of the group. Only support when using Terraform backend
-    """
-
-    id: str = None
-    display_name: str = None
+    id: str = Field(
+        None, description="Id of the group. Only supported when using Pulumi backend."
+    )
+    display_name: str = Field(
+        None,
+        description="Display name of the group. Only support when using Terraform backend",
+    )
 
 
 class Group(BaseModel, PulumiResource, TerraformResource):
