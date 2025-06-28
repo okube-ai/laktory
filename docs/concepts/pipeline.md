@@ -24,13 +24,13 @@ from a designated source, applies specified transformations, and optionally writ
 <img src="/../../images/diagrams/source_logo.png" alt="node source" width="100"/>
 <img src="/../../images/diagrams/sink_logo.png" alt="node sink" width="100"/>
 
-Laktory supports a variety of [sources and sinks](./sources.md), including data files and data tables. By linking 
+Laktory supports a variety of [sources and sinks](./sourcessinks.md), including data files and data tables. By linking 
 a node as the source for a downstream node, you establish dependencies, creating a directed acyclic graph (DAG).
 
 ## Transformer
 <img src="/../../images/diagrams/transformer_logo.png" alt="node transformer" width="100"/>
 
-The transformations are defined through a [transformer](./transformers.md) which is a chain of SQL statements and/or 
+The transformations are defined through a [transformer](./transformer.md) which is a chain of SQL statements and/or 
 DataFrame API function calls. This flexible and highly modular framework supports scalable batch and
 streaming operations.
 
@@ -273,7 +273,7 @@ is a powerful orchestration mechanism. In this case, Laktory will create a
 task for each node, enabling parallel execution of nodes. Each reading and 
 writing operation is entirely handled by Laktory source and sink. 
 
-![job](../../images/screenshots/job_stock_prices.png)
+![job](../images/screenshots/job_stock_prices.png)
 
 Each task will call a Laktory function that will read the pipeline configuration 
 and execute a node.
@@ -286,7 +286,7 @@ configuration file which can be found in your workspace under `/Workspace/{lakto
 offers features like automatic schema change management, continuous execution, advanced monitoring and 
 autoscaling. 
 
-![dlt](../../images/screenshots/dlt_stock_prices.png)
+![dlt](../images/screenshots/dlt_stock_prices.png)
 
 Each pipeline node runs inside a dlt.table() or dlt.view() function. In the context of Declarative Pipelines, node
 execution does not trigger a sink write, as this operation is internally managed by Lakeflow. When a source is a 
@@ -343,7 +343,7 @@ Support for Dagster as an orchestrator is on the roadmap.
 ## Streaming Operations
 
 Laktory supports event-based and kappa architectures using [Apache Spark
-Structured Streaming]((https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html)) 
+Structured Streaming](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html) 
 for continuous, scalable data processing.
 
 By setting `as_stream: True` in a pipeline node's data source, the DataFrame becomes streaming-enabled, processing only

@@ -1,4 +1,5 @@
 from typing import Any
+from typing import Literal
 from typing import Union
 
 import narwhals as nw
@@ -98,6 +99,9 @@ class DType(BaseModel):
     )
     shape: Union[int, list[int]] = Field(
         None, description="Definition of shape for `Array` type."
+    )
+    category: Literal["NUMERIC", "STRING", "STRUCT"] = Field(
+        "NUMERIC", description="Data type category"
     )
 
     @field_validator("name", mode="before")

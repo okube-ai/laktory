@@ -21,8 +21,8 @@ They don't define what data a user may be able to access, but rather what kind o
 
 ## Users and Groups
 ??? "API Documentation"
-    [`laktory.models.User`][laktory.models.User]<br>
-    [`laktory.models.Group`][laktory.models.Group]<br>
+    [`laktory.models.resources.databricks.User`][laktory.models.resources.databricks.User]<br>
+    [``laktory.models.resources.databricks.Group`][laktory.models.resources.databricks.Group]<br>
 The first step in administering data access is to set some users and assign them to groups.
 It is generally recommended to have a set of groups for managing the data grants and another set of groups for managing the workspace permissions.
 

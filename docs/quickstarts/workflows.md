@@ -14,11 +14,16 @@ After running the quickstart command, the following structure is created:
 .
 ├── data
 │   └── stock_prices.json
+├── lake
+│   ├── lake
+│     ├── __init__.py
+│     ├── _version.py
+│     └──  dataframe_ext.py
+│   ├── pyproject.toml
+│   └── README.md
 ├── notebooks
-│   ├── dlt
-│   │   └── dlt_laktory_pl.py
-│   └── jobs
-│       ├── job_hello.py
+│   ├── dlt_laktory_pl.py
+│   └── job_hello.py
 ├── read_env.sh
 ├── requirements.txt
 ├── resources
@@ -26,9 +31,10 @@ After running the quickstart command, the following structure is created:
 │   ├── job-hello.yaml
 │   ├── notebooks.yaml
 │   ├── pl-stocks-dlt.yaml
-│   └── pl-stocks-job.yaml
+│   ├── pl-stocks-job.yaml
+│   └── pythonpackages.yaml
 ├── scripts
-│   ├── debug_pl.py
+│   └── debug_pl.py
 ├── sql
 │   └── slv_stock_prices.sql
 ├── stack.yaml
@@ -41,6 +47,11 @@ deployed. Each file specifies one or more resources.
 #### Notebooks Directory
 The `notebooks` directory contains the notebooks to be deployed to the Databricks workspace, as defined in the 
 `resources/notebooks.yaml` file. These notebooks are also referenced in job and pipeline definitions.
+
+#### Lake Directory
+The `lake` directory contains a python package that is built and deployed by Laktory to augment the DataFrame engine
+with custom, productizable and testable data transformations. See [PythonPackage](../concepts/extension_python_package.md)
+for more information.
 
 #### Data Directory
 For the pipeline to run, a sample `stock_prices.json` data file is provided and will be uploaded to DBFS as declared in 

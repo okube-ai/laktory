@@ -94,7 +94,8 @@ plugins:
             group_by_category: true
             heading_level: 2
             inherited_members: true  # this only apply to methods and properties, not to pydantic fields
-            members_order: alphabetical  # source
+            members_order: alphabetical  # source, don't apply to pydantic fields
+#            members_order: source  # source
             merge_init_into_class: true
             separate_signature: false
             show_category_heading: false   # functions vs property vs etc
@@ -108,6 +109,8 @@ plugins:
             signature_crossrefs: true
             summary: true
             extensions:
+#              - griffe_pydantic:   # does not support fields description
+#                  schema: false
               - griffe_fieldz:
                   include_inherited: True
   - mkdocs-video
@@ -163,6 +166,7 @@ nav:
   - Lakehouse As Code: lakehouseascode.md
   - API Reference:
     - Models:
+      - BaseModel: api/models/basemodel.md
       - DataFrame:
         - DataFrameColumn: api/models/dataframe/dataframecolumn.md
         - DataFrameColumnExpr: api/models/dataframe/dataframecolumnexpr.md
@@ -172,15 +176,16 @@ nav:
         - DataFrameTransformer: api/models/dataframe/dataframetransformer.md
       - DataTypes: api/models/datatypes.md
       - DataSinks:
-        - MergeCDCOptions: api/models/datasinks/mergecdcoptions.md
         - FileDataSink: api/models/datasinks/file.md
         - HiveMetastoreDataSink: api/models/datasinks/hivemetastore.md
+        - PipelineViewDataSink: api/models/datasinks/pipelineview.md
         - UnityCatalogDataSink: api/models/datasinks/unitycatalog.md
+        - DataSinkMergeCDCOptions: api/models/datasinks/mergecdcoptions.md
       - DataSources:
         - ReaderWriterMethod: api/models/datasources/readerwritermethod.md
         - DataFrameDataSource: api/models/datasources/dataframe.md
         - FileDataSource: api/models/datasources/file.md
-        - PipelineNodeDataSource: api/models/datasources/pipelinenodedatasource.md
+        - PipelineNodeDataSource: api/models/datasources/pipelinenode.md
         - HiveMetastoreDataSource: api/models/datasources/hivemetastore.md
         - UnityCatalogDataSource: api/models/datasources/unitycatalog.md
       - DataQuality:
@@ -191,7 +196,7 @@ nav:
         - PipelineNode: api/models/pipeline/pipelinenode.md
         - Orchestrators:
             - Databricks Job: api/models/pipeline/orchestrators/databricksjoborchestrator.md
-            - Databricks Pipeline: api/models/pipeline/orchestrators/databrickspieplineorchestrator.md
+            - Databricks Pipeline: api/models/pipeline/orchestrators/databrickspipelineorchestrator.md
             - Pipeline Config Workspace File: api/models/pipeline/orchestrators/pipelineconfigworkspacefile.md
       - Resources:
         - BaseResource: api/models/resources/baseresource.md
@@ -233,6 +238,7 @@ nav:
           - SecretScope: api/models/resources/databricks/secretscope.md
           - ServicePrincipal: api/models/resources/databricks/serviceprincipal.md
           - ServicePrincipalRole: api/models/resources/databricks/serviceprincipalrole.md
+          - StorageCredential: api/models/resources/databricks/storagecredential.md
           - api/models/resources/databricks/table.md
           - api/models/resources/databricks/user.md
           - UserRole: api/models/resources/databricks/userrole.md
@@ -242,9 +248,9 @@ nav:
           - WorkspaceBinding: api/models/resources/databricks/workspacebinding.md
         - Providers:
           - AzureProvider: api/models/resources/providers/azure.md
-          - AzurePulumiProvider: api/resources/models/providers/azurepulumi.md
+          - AzurePulumiProvider: api/models/resources/providers/azurepulumi.md
           - AWSProvider: api/models/resources/providers/aws.md
-          - DatabricksProvider: api/resources/models/providers/databricks.md
+          - DatabricksProvider: api/models/resources/providers/databricks.md
       - Stacks:
           - Stack: api/models/stacks/stack.md
           - PulumiStack: api/models/stacks/pulumistack.md

@@ -1,5 +1,5 @@
 ??? "API Documentation"
-    [`laktory.cli.app.app`][laktory.cli.app.app]<br>
+    [`laktory.cli.app`][laktory.cli.app]<br>
 
 When Laktory is pip installed, it also installs the Laktory CLI that can be invoked from the terminal.
 
@@ -18,7 +18,7 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 `laktory version` returns CLI version and installed dependencies.
 
 #### quickstart
-`laktory quickstart` setup a working example of a deployable stack that you can use as a baseline. See [Quickstart](/quickstart) for more details.
+`laktory quickstart` setup a working example of a deployable stack that you can use as a baseline. See [Quickstart](../quickstarts/quickstart.md) for more details.
 
 #### init
 `laktory init` setups IaC backend and download required resources. Only available with Terraform backend.

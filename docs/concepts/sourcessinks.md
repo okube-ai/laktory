@@ -109,7 +109,7 @@ This type of data source adapts to its execution context.
 ## Data Sinks
 ??? "API Documentation"
     [`laktory.models.FileDataSink`][laktory.models.FileDataSink]<br>
-    [`laktory.models.TableDataSink`][laktory.models.TableDataSink]<br>
+    [`laktory.models.UnityCatalogDataSink`][laktory.models.UnityCatalogDataSink]<br>
 
 <img src="/../../images/diagrams/sink_logo.png" alt="node sink" width="100"/>
 
@@ -192,3 +192,21 @@ sink = lk.models.TableDataSink(
 )
 sink.write(df)
 ``` 
+
+#### Pipeline View Data Sink
+??? "API Documentation"
+    [`laktory.models.PipelineViewDataSink`][laktory.models.PipelineViewDataSink]<br>
+    [`laktory.models.PipelineViewDataSink`][laktory.models.PipelineViewDataSink]<br>
+
+The `PipelineViewDataSink` can be used in the context of a [Declarative Pipeline](https://www.databricks.com/blog/bringing-declarative-pipelines-apache-spark-open-source-project) 
+such as Databricks Lakeflow Declarative Pipeline. A virtual view is created in the context of the pipeline, but the
+data is not materialized. Views are useful for simplifying complex queries, encapsulating business logic, and providing
+a consistent interface to the underlying data without duplicating storage.
+
+```py
+import laktory as lk
+
+sink = lk.models.PipelineViewDataSink(
+    pipeline_view_name="brz_stock_prices",
+)
+```

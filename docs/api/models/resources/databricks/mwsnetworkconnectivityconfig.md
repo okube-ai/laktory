@@ -1,4 +1,4 @@
-::: laktory.models.resources.databricks.MwsPermissionAssignment
+::: laktory.models.resources.databricks.MwsNetworkConnectivityConfig
 
 ---
 
