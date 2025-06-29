@@ -52,6 +52,9 @@ class PipelineNodeDataSource(BaseDataSource):
 
     # pl.execute(spark=spark)
     ```
+    References
+    ----------
+    * [Data Sources and Sinks](https://www.laktory.ai/concepts/sourcessinks/)
     """
 
     node_name: str = Field(..., description="Name of the upstream pipeline node")

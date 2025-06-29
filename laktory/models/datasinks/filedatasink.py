@@ -81,6 +81,9 @@ class FileDataSink(BaseDataSink):
     )
     sink.write(df)
     ```
+    References
+    ----------
+    * [Data Sources and Sinks](https://www.laktory.ai/concepts/sourcessinks/)
     """
 
     format: Literal.__getitem__(ALL_SUPPORTED_FORMATS) = Field(

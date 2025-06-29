@@ -26,8 +26,8 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
     References
     ----------
+    * [Data Pipeline](https://www.laktory.ai/concepts/pipeline/)
     * [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
-
     """
 
     type: Literal["DATABRICKS_JOB"] = Field(

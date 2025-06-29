@@ -33,6 +33,9 @@ class DataQualityCheck(BaseModel):
     print(check)
     # > variables={} fails_count=2 rows_count=10 status='PASS'
     ```
+    References
+    ----------
+    * [Data Quality](https://www.laktory.ai/concepts/dataquality/)
     """
 
     fails_count: int = Field(

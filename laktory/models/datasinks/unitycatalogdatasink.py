@@ -28,6 +28,9 @@ class UnityCatalogDataSink(TableDataSink):
     )
     sink.write(df)
     ```
+    References
+    ----------
+    * [Data Sources and Sinks](https://www.laktory.ai/concepts/sourcessinks/)
     """
 
     type: Literal["UNITY_CATALOG"] = Field(

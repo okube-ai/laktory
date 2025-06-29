@@ -98,6 +98,9 @@ class PipelineNode(BaseModel, PipelineChild):
 
     # node.execute()
     ```
+    References
+    ----------
+    * [Data Pipeline](https://www.laktory.ai/concepts/pipeline/)
     """
 
     dlt_template: str | None = Field(

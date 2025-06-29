@@ -79,7 +79,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
 
     References
     ----------
-
+    * [Data Quality](https://www.laktory.ai/concepts/dataquality/)
     * [DLT Table Expectations](https://docs.databricks.com/en/delta-live-tables/expectations.html)
     """
 

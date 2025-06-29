@@ -326,7 +326,9 @@ class Stack(BaseModel):
         },
     )
     ```
-
+    References
+    ----------
+    * [Stack](https://www.laktory.ai/concepts/stack/)
     """
 
     backend: Literal["pulumi", "terraform"] = Field(

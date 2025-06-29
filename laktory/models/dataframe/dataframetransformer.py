@@ -63,6 +63,9 @@ class DataFrameTransformer(BaseModel, PipelineChild):
     └──────────────────┘
     '''
     ```
+    References
+    ----------
+    * [Data Transformer](https://www.laktory.ai/concepts/transformer/)
     """
 
     nodes: list[DataFrameMethod | DataFrameExpr] = Field(

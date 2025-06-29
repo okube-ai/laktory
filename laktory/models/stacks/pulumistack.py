@@ -32,7 +32,8 @@ class PulumiStack(BaseModel):
 
     References
     ----------
-    - pulumi yaml [options](https://www.pulumi.com/docs/languages-sdks/yaml/yaml-language-reference/)
+    * [Stack](https://www.laktory.ai/concepts/stack/)
+    * pulumi yaml [options](https://www.pulumi.com/docs/languages-sdks/yaml/yaml-language-reference/)
     """
 
     name: str = Field(..., description="")

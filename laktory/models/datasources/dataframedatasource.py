@@ -74,6 +74,9 @@ class DataFrameDataSource(BaseDataSource):
     └──────────────────┘
     '''
     ```
+    References
+    ----------
+    * [Data Sources and Sinks](https://www.laktory.ai/concepts/sourcessinks/)
     """
 
     data: dict[str, list[Any]] | list[dict[str, Any]] = Field(

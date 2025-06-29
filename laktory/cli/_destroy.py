@@ -50,8 +50,9 @@ def destroy(
 
     References
     ----------
-    - terraform [destroy](https://developer.hashicorp.com/terraform/cli/commands/destroy)
-    - pulumi [destroy](https://www.pulumi.com/docs/cli/commands/pulumi_destroy/)
+    * [CLI](https://www.laktory.ai/concepts/cli/)
+    * terraform [destroy](https://developer.hashicorp.com/terraform/cli/commands/destroy)
+    * pulumi [destroy](https://www.pulumi.com/docs/cli/commands/pulumi_destroy/)
     """
     controller = CLIController(
         env=environment,

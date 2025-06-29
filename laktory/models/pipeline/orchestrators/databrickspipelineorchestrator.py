@@ -27,8 +27,8 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
 
     References
     ----------
+    * [Data Pipeline](https://www.laktory.ai/concepts/pipeline/)
     * [Databricks DLT](https://www.databricks.com/product/delta-live-tables)
-
     """
 
     type: Literal["DATABRICKS_PIPELINE"] = Field(

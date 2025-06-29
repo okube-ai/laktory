@@ -48,8 +48,9 @@ class DataSinkMergeCDCOptions(BaseModel):
 
     References
     ----------
-    - [How to Implement SCD 2 using Delta Table](https://iterationinsights.com/article/how-to-implement-slowly-changing-dimensions-scd-type-2-using-delta-table/)
-    - [Change Data Capture with Databricks DLT](https://docs.databricks.com/en/delta-live-tables/python-ref.html#change-data-capture-with-python-in-delta-live-tables)
+    * [Change Data Capture](https://www.laktory.ai/concepts/cdc/)
+    * [How to Implement SCD 2 using Delta Table](https://iterationinsights.com/article/how-to-implement-slowly-changing-dimensions-scd-type-2-using-delta-table/)
+    * [Change Data Capture with Databricks DLT](https://docs.databricks.com/en/delta-live-tables/python-ref.html#change-data-capture-with-python-in-delta-live-tables)
     """
 
     # apply_as_truncates: Union[str, None] = None

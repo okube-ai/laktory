@@ -30,6 +30,10 @@ def validate(
     ```cmd
     laktory validate --env dev
     ```
+
+    References
+    ----------
+    * [CLI](https://www.laktory.ai/concepts/cli/)
     """
     CLIController(
         env=environment,

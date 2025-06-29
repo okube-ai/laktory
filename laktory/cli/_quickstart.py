@@ -43,6 +43,10 @@ def quickstart(
     ```cmd
     laktory quickstart
     ```
+
+    References
+    ----------
+    * [CLI](https://www.laktory.ai/concepts/cli/)
     """
 
     # Template

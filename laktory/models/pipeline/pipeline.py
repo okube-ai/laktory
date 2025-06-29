@@ -271,6 +271,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     '''
     pl = lk.models.Pipeline.model_validate_yaml(io.StringIO(pipeline_yaml))
     ```
+    References
+    ----------
+    * [Data Pipeline](https://www.laktory.ai/concepts/pipeline/)
     """
 
     dependencies: list[str] = Field(

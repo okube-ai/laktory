@@ -49,6 +49,9 @@ class TerraformStack(BaseModel):
     It is generally not instantiated directly, but rather created using
     `laktory.models.Stack.to_terraform()`.
 
+    References
+    ----------
+    * [Stack](https://www.laktory.ai/concepts/stack/)
     """
 
     terraform: TerraformConfig = TerraformConfig()

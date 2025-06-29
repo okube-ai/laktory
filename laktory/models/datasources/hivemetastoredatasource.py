@@ -23,6 +23,9 @@ class HiveMetastoreDataSource(TableDataSource):
     )
     # df = source.read()
     ```
+    References
+    ----------
+    * [Data Sources and Sinks](https://www.laktory.ai/concepts/sourcessinks/)
     """
 
     # connection: Connection = None

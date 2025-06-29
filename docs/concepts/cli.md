@@ -20,6 +20,9 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 #### quickstart
 `laktory quickstart` setup a working example of a deployable stack that you can use as a baseline. See [Quickstart](../quickstarts/quickstart.md) for more details.
 
+#### validate
+`laktory validate` validates the stack and highlights any error in the definition of the resources or data pipelines.
+
 #### init
 `laktory init` setups IaC backend and download required resources. Only available with Terraform backend.
 

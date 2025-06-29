@@ -57,6 +57,10 @@ def register_expr_namespace(name: str):
     └──────────────────┘
     '''
     ```
+
+    References
+    ----------
+    * [Narwhals Extension](https://www.laktory.ai/concepts/extension_custom/)
     """
 
     def wrapper(ns_cls: type):
@@ -68,7 +72,7 @@ def register_expr_namespace(name: str):
 
 def register_anyframe_namespace(name: str):
     """
-    Decorator for registering custom method to a Narwhal DataFrame and LazyFrame.
+    Decorator for registering custom method to a Narwhals DataFrame and LazyFrame.
 
     Parameters
     ----------
@@ -109,6 +113,10 @@ def register_anyframe_namespace(name: str):
     └──────────────────┘
     '''
     ```
+
+    References
+    ----------
+    * [Narwhals Extension](https://www.laktory.ai/concepts/extension_custom/)
     """
 
     def wrapper(ns_cls: type):
@@ -121,7 +129,7 @@ def register_anyframe_namespace(name: str):
 
 def register_dataframe_namespace(name: str):
     """
-    Decorator for registering custom method to a Narwhal DataFrame.
+    Decorator for registering custom method to a Narwhals DataFrame.
 
     Parameters
     ----------
@@ -162,6 +170,10 @@ def register_dataframe_namespace(name: str):
     └──────────────────┘
     '''
     ```
+
+    References
+    ----------
+    * [Narwhals Extension](https://www.laktory.ai/concepts/extension_custom/)
     """
 
     def wrapper(ns_cls: type):
@@ -173,7 +185,7 @@ def register_dataframe_namespace(name: str):
 
 def register_lazyframe_namespace(name: str):
     """
-    Decorator for registering custom method to a Narwhal LazyFrame.
+    Decorator for registering custom method to a Narwhals LazyFrame.
 
     Parameters
     ----------
@@ -214,6 +226,10 @@ def register_lazyframe_namespace(name: str):
     └──────────────────┘
     '''
     ```
+
+    References
+    ----------
+    * [Narwhals Extension](https://www.laktory.ai/concepts/extension_custom/)
     """
 
     def wrapper(ns_cls: type):

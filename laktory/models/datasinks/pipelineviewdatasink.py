@@ -25,6 +25,9 @@ class PipelineViewDataSink(BaseDataSink):
     )
     sink.write(df)
     ```
+    References
+    ----------
+    * [Data Sources and Sinks](https://www.laktory.ai/concepts/sourcessinks/)
     """
 
     pipeline_view_name: str | None = Field(..., description="Pipeline View name")

@@ -83,9 +83,8 @@ class FileDataSource(BaseDataSource):
 
     References
     ----------
-
+    * [Data Sources and Sinks](https://www.laktory.ai/concepts/sourcessinks/)
     * [autoloader schema inference](https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema)
-
     """
 
     model_config = ConfigDict(populate_by_name=True)

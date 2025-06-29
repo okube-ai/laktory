@@ -15,5 +15,9 @@ def version():
     ```cmd
     laktory version
     ```
+
+    References
+    ----------
+    * [CLI](https://www.laktory.ai/concepts/cli/)
     """
     print(show_version_info())

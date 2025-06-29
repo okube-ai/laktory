@@ -142,7 +142,7 @@ nav:
       - Data Transformer: concepts/transformer.md
       - Change Data Capture: concepts/cdc.md
       - Data Quality: concepts/dataquality.md
-    - Narwhal API Extension:
+    - Narwhals API Extension:
       - Laktory Extension: concepts/extension_laktory.md
       - Custom Extension: concepts/extension_custom.md
     - Python Extension:

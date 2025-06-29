@@ -72,6 +72,11 @@ def run(
     ```cmd
     laktory run --env dev --dlt pl-stock-prices --full_refresh --action CANCEL
     ```
+
+    References
+    ----------
+    * [CLI](https://www.laktory.ai/concepts/cli/)
+
     """
 
     # Set Resource Name
