@@ -1,1 +1,1 @@
-::: laktory.dispatcher.DLTPipelineRunner
+::: laktory.dispatcher.DatabricksPipelineRunner

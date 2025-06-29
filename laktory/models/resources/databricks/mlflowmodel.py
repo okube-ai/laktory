@@ -1,5 +1,7 @@
 from typing import Union
 
+from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
@@ -8,35 +10,13 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class MlflowModelTag(BaseModel):
-    """
-    MLflow model Tags Specifications
-
-    Attributes
-    ----------
-    key:
-
-    value:
-
-    """
-
-    key: str
-    value: str
+    key: str = Field(..., description="")
+    value: str = Field(..., description="")
 
 
 class MLflowModel(BaseModel, PulumiResource, TerraformResource):
     """
     MLflow Model
-
-    Attributes
-    ----------
-    access_controls:
-        MLflow model access controls
-    description:
-        The description of the MLflow model.
-    name:
-        Name of MLflow model. Change of name triggers new resource.
-    tags:
-        Tags for the MLflow model.
 
     Examples
     --------
@@ -60,10 +40,12 @@ class MLflowModel(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    access_controls: list[AccessControl] = []
-    description: str = None
-    name: str
-    tags: list[MlflowModelTag] = None
+    access_controls: list[AccessControl] = Field([], description="Access controls list")
+    description: str = Field(None, description="The description of the MLflow model.")
+    name: str = Field(
+        ..., description="Name of MLflow model. Change of name triggers new resource."
+    )
+    tags: list[MlflowModelTag] = Field(None, description="Tags for the MLflow model.")
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

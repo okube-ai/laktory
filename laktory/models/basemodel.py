@@ -1,3 +1,5 @@
+#
+
 import copy
 import json
 import re
@@ -23,10 +25,31 @@ from pydantic._internal._model_construction import ModelMetaclass as _ModelMetac
 from laktory._parsers import _resolve_value
 from laktory._parsers import _resolve_values
 from laktory._parsers import _snake_to_camel
-from laktory.typing import var
+from laktory.typing import VariableType
 from laktory.yaml.recursiveloader import RecursiveLoader
 
 Model = TypeVar("Model", bound="BaseModel")
+
+
+def annotation_contains_list_of_basemodel(annotation, mymodel_cls) -> bool:
+    origin = get_origin(annotation)
+    args = get_args(annotation)
+
+    # Base case: direct subclass
+    if isinstance(annotation, type) and issubclass(annotation, mymodel_cls):
+        return True
+
+    # Handle ForwardRefs or strings (optional: depending on your context)
+    if isinstance(annotation, str):
+        return False  # or implement custom string resolution if needed
+
+    # Handle generic containers like list, Union, dict, etc.
+    if origin is not None:
+        for arg in args:
+            if annotation_contains_list_of_basemodel(arg, mymodel_cls):
+                return True
+
+    return False
 
 
 class ModelMetaclass(_ModelMetaclass):
@@ -61,12 +84,12 @@ class ModelMetaclass(_ModelMetaclass):
             new_type_hint = type_hint
 
             if origin is list:
-                new_type_hint = list[tuple([Union[args[0], var]])]
+                new_type_hint = list[tuple([args[0] | VariableType])]
 
             elif origin is dict:
-                new_type_hint = dict[Union[args[0], var], Union[args[1], var]]
+                new_type_hint = dict[args[0] | VariableType, args[1] | VariableType]
 
-            new_type_hint = Union[new_type_hint, var]
+            new_type_hint = Union[new_type_hint, VariableType]
 
             namespace["__annotations__"][field_name] = new_type_hint
 
@@ -77,11 +100,6 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     """
     Parent class for all Laktory models offering generic functions and
     properties. This `BaseModel` class is derived from `pydantic.BaseModel`.
-
-    Attributes
-    ----------
-    variables:
-        Variable values to be resolved when using `inject_vars` method.
     """
 
     model_config = ConfigDict(
@@ -90,7 +108,11 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         # target model and more suitable when models are dynamically updated in code.
         validate_assignment=True,
     )
-    variables: dict[str, Any] = Field(default={}, exclude=True)
+    variables: dict[str, Any] = Field(
+        default={},
+        exclude=True,
+        description="Dict of variables to be injected in the model at runtime",
+    )
     _camel_serialization: bool = False
     _singular_serialization: bool = False
 
@@ -100,10 +122,13 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         if dump is None:
             return dump
 
+        dump = self._post_serialization(dump)
+
         camel_serialization = self._camel_serialization
         singular_serialization = self._singular_serialization
 
         fields = {k: v for k, v in self.model_fields.items()}
+        fields = fields | {k: v for k, v in self.model_computed_fields.items()}
         if camel_serialization:
             keys = list(dump.keys())
             for k in keys:
@@ -134,13 +159,24 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                 else:
                     # Automatic singularization
                     k_singular = k
-                    ann = str(fields[k].annotation)
-                    if "list[typing.Union[laktory.models" in ann:
+                    if not hasattr(fields[k], "annotation"):
+                        continue
+                    ann = fields[k].annotation
+                    if annotation_contains_list_of_basemodel(ann, BaseModel):
                         k_singular = engine.singular_noun(k) or k
 
                 if k_singular != k:
                     dump[k_singular] = dump.pop(k)
 
+        return dump
+
+    #
+    # def _pre_serialization(self):
+    #     """"""
+    #     pass
+
+    def _post_serialization(self, dump):
+        """"""
         return dump
 
     @model_validator(mode="after")
@@ -186,12 +222,14 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
 
         Custom Tags
         -----------
-        !use {filepath}:
+        - `!use {filepath}`:
             Directly inject the content of the file at `filepath`
-        - !extend {filepath}:
+
+        - `- !extend {filepath}`:
             Extend the current list with the elements found in the file at `filepath`.
             Similar to python list.extend method.
-        <<: !update {filepath}:
+
+        - `<<: !update {filepath}`:
             Merge the current dictionary with the content of the dictionary defined at
             `filepath`. Similar to python dict.update method.
 

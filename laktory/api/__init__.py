@@ -1,0 +1,4 @@
+from laktory.narwhals_ext.namespace import register_anyframe_namespace
+from laktory.narwhals_ext.namespace import register_dataframe_namespace
+from laktory.narwhals_ext.namespace import register_expr_namespace
+from laktory.narwhals_ext.namespace import register_lazyframe_namespace

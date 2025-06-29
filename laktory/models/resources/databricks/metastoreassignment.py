@@ -1,5 +1,7 @@
 from typing import Union
 
+from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -9,24 +11,22 @@ class MetastoreAssignment(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Metastore Assignment
 
-    Attributes
-    ----------
-    metastore_id:
-        Unique identifier of the parent Metastore
-    workspace_id:
-        id of the workspace for the assignment
-    default_catalog_name:
-        Default catalog used for this assignment, default to hive_metastore
-
     Examples
     --------
     ```py
     ```
     """
 
-    default_catalog_name: str = None
-    metastore_id: Union[int, str] = None
-    workspace_id: Union[int, str] = None
+    default_catalog_name: str = Field(
+        None, description="Unique identifier of the parent Metastore"
+    )
+    metastore_id: Union[int, str] = Field(
+        None, description="id of the workspace for the assignment"
+    )
+    workspace_id: Union[int, str] = Field(
+        None,
+        description="Default catalog used for this assignment, default to hive_metastore",
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

@@ -98,21 +98,21 @@ jobs:
         if: ${{ inputs.run_workflows }}
         run: |
           source ../.venv/bin/activate
-          laktory run --job job-hello
+          laktory run --dbks-job job-hello
         working-directory: ${{ env.CWD }}
 
       - name: laktory run job
         if: ${{ inputs.run_workflows }}
         run: |
           source ../.venv/bin/activate
-          laktory run --job pl-stocks-job
+          laktory run --dbks-job pl-stocks-job
         working-directory: ${{ env.CWD }}
 
       - name: laktory run dlt
         if: ${{ inputs.run_workflows }}
         run: |
           source ../.venv/bin/activate
-          laktory run --dlt pl-stocks-dlt
+          laktory run --dbks-pipeline pl-stocks-dlt
         working-directory: ${{ env.CWD }}
 
       - name: laktory destroy

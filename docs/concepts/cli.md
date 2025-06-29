@@ -1,5 +1,5 @@
 ??? "API Documentation"
-    [`laktory.cli.app.app`][laktory.cli.app.app]<br>
+    [`laktory.cli.app`][laktory.cli.app]<br>
 
 When Laktory is pip installed, it also installs the Laktory CLI that can be invoked from the terminal.
 
@@ -18,7 +18,10 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 `laktory version` returns CLI version and installed dependencies.
 
 #### quickstart
-`laktory quickstart` setup a working example of a deployable stack that you can use as a baseline. See [Quickstart](/quickstart) for more details.
+`laktory quickstart` setup a working example of a deployable stack that you can use as a baseline. See [Quickstart](../quickstarts/quickstart.md) for more details.
+
+#### validate
+`laktory validate` validates the stack and highlights any error in the definition of the resources or data pipelines.
 
 #### init
 `laktory init` setups IaC backend and download required resources. Only available with Terraform backend.
@@ -30,7 +33,7 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 `laktory deploy` executes the deployment by creating or updating resources.  Similar to `pulumi up` or `terraform apply`.
 
 #### run
-`laktory run` execute remote job or DLT pipeline and monitor failures until completion. Local execution (without an orchestrator) of a pipeline is not yet supported.
+`laktory run` execute remote job or declarative pipeline and monitor failures until completion. Local execution (without an orchestrator) of a pipeline is not yet supported.
 
 #### destroy
 `laktory destroy` destroy all resources declared in your stack. Similar to `pulumi destroy` or `terraform destroy`

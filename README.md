@@ -9,7 +9,7 @@
 An open-source DataOps and dataframe-centric ETL framework for building 
 lakehouses.
 
-<img src="docs/images/logo_sg.png" alt="laktory logo" width="85"/>
+<img src="docs/images/logos/laktory_logo_sg.png" alt="laktory logo" width="85"/>
 
 Laktory is your all-in-one solution for defining both data transformations and 
 Databricks resources. Imagine if Terraform, Databricks Asset Bundles, and dbt
@@ -22,12 +22,12 @@ driving its data transformation, Laktory ensures reliable and scalable data
 processing. Its modular, flexible approach allows you to seamlessly combine SQL
 statements with DataFrame operations.
 
-<img src="docs/images/laktory_diagram.png" alt="what is laktory" width="800"/>
+<img src="docs/images/diagrams/laktory_diagram.png" alt="what is laktory" width="800"/>
 
 Since Laktory pipelines are built on top of Spark and Polars, they can run in
 any environment that supports Python—from your local machine to a Kubernetes 
 cluster. They can also be deployed and orchestrated as Databricks Jobs or
-[Delta Live Tables](https://www.databricks.com/product/delta-live-tables),
+[Declarative Pipelines](https://www.databricks.com/product/data-engineering/lakeflow-declarative-pipelines),
 offering a simple, fully managed, and low-maintenance solution.
 
 But Laktory goes beyond data pipelines. It empowers you to define and deploy 
@@ -41,7 +41,7 @@ to combine Databricks Asset Bundles and dbt to build data pipelines. Laktory
 consolidates these functions, simplifying the entire process and reducing
 the overall cost.
 
-<img src="docs/images/why_simplicity.png" alt="dataops" width="500"/>
+<img src="docs/images/diagrams/why_simplicity.png" alt="dataops" width="500"/>
 
 
 ## Help
@@ -68,8 +68,7 @@ node_brz = models.PipelineNode(
         "path": "./data/brz_stock_prices/"
     },
     transformer={
-        "nodes": [
-        ]
+        "nodes": []
     }
 )
 
@@ -88,7 +87,7 @@ node_slv = models.PipelineNode(
             
             # SQL Transformation
             {
-                "sql_expr": """
+                "expr": """
                     SELECT
                       data.created_at AS created_at,
                       data.symbol AS symbol,
@@ -118,9 +117,6 @@ pipeline = models.Pipeline(
     nodes=[node_brz, node_slv],
 )
 
-print(pipeline)
-#> resource_name_=None options=ResourceOptions(variables={}, depends_on=[], provider=None, aliases=None, delete_before_replace=True, ignore_changes=None, import_=None, parent=None, replace_on_changes=None) variables={} databricks_job=None dlt=None name='stock_prices' nodes=[PipelineNode(variables={}, add_layer_columns=True, dlt_template='DEFAULT', description=None, drop_duplicates=None, drop_source_columns=False, transformer=SparkChain(variables={}, nodes=[SparkChainNode(variables={}, allow_missing_column_args=False, column=None, spark_func_args=[SparkFuncArg(variables={}, value='symbol'), SparkFuncArg(variables={}, value='timestamp'), SparkFuncArg(variables={}, value='open'), SparkFuncArg(variables={}, value='close')], spark_func_kwargs={}, spark_func_name='select', sql_expression=None)]), expectations=[], layer='BRONZE', name='brz_stock_prices', primary_key=None, sink=None, source=FileDataSource(variables={}, as_stream=False, broadcast=False, cdc=None, dataframe_backend='SPARK', drops=None, filter=None, mock_df=None, renames=None, selects=None, watermark=None, format='PARQUET', header=True, multiline=False, path='./data/brz_stock_prices/', read_options={}, schema_location=None), timestamp_key=None), PipelineNode(variables={}, add_layer_columns=True, dlt_template='DEFAULT', description=None, drop_duplicates=None, drop_source_columns=True, transformer=SparkChain(variables={}, nodes=[SparkChainNode(variables={}, allow_missing_column_args=False, column=None, spark_func_args=[], spark_func_kwargs={'subset': SparkFuncArg(variables={}, value=['timestamp', 'symbol'])}, spark_func_name='drop_duplicates', sql_expression=None)]), expectations=[], layer='SILVER', name='slv_stock_prices', primary_key=None, sink=FileDataSink(variables={}, mode='OVERWRITE', checkpoint_location=None, format='PARQUET', path='./data/slv_stock_prices', write_options={}), source=PipelineNodeDataSource(variables={}, as_stream=False, broadcast=False, cdc=None, dataframe_backend='SPARK', drops=None, filter=None, mock_df=None, renames=None, selects=None, watermark=None, node_name='brz_stock_prices', node=PipelineNode(variables={}, add_layer_columns=True, dlt_template='DEFAULT', description=None, drop_duplicates=None, drop_source_columns=False, transformer=SparkChain(variables={}, nodes=[SparkChainNode(variables={}, allow_missing_column_args=False, column=None, spark_func_args=[SparkFuncArg(variables={}, value='symbol'), SparkFuncArg(variables={}, value='timestamp'), SparkFuncArg(variables={}, value='open'), SparkFuncArg(variables={}, value='close')], spark_func_kwargs={}, spark_func_name='select', sql_expression=None)]), expectations=[], layer='BRONZE', name='brz_stock_prices', primary_key=None, sink=None, source=FileDataSource(variables={}, as_stream=False, broadcast=False, cdc=None, dataframe_backend='SPARK', drops=None, filter=None, mock_df=None, renames=None, selects=None, watermark=None, format='PARQUET', header=True, multiline=False, path='./data/brz_stock_prices/', read_options={}, schema_location=None), timestamp_key=None)), timestamp_key=None)] orchestrator=None udfs=[]
-
 pipeline.execute(spark=spark)
 ```
 
@@ -144,7 +140,7 @@ In this template, 4 pulumi projects are used to:
 - `workflows`: The data workflows to build your lakehouse
 
 ## Okube Company
-<img src="docs/images/okube.png" alt="okube logo" width="85"/>
+<img src="docs/images/logos/okube_logo.png" alt="okube logo" width="85"/>
 
 [Okube](https://www.okube.ai) is dedicated to building open source frameworks, known as the *kubes*, empowering businesses to build, deploy and operate highly scalable data platforms and AI models.
 

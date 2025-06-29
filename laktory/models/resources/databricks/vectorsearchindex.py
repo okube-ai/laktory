@@ -2,6 +2,7 @@ from typing import Any
 from typing import Literal
 from typing import Union
 
+from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
@@ -10,59 +11,26 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn(BaseModel):
-    """
-    Attributes
-    ----------
-    embedding_model_endpoint_name:
-        The name of the embedding model endpoint
-    name:
-        Three-level name of the Vector Search Index to create
-        (catalog.schema.index_name).
-    """
-
-    embedding_model_endpoint_name: str
-    name: str
+    embedding_model_endpoint_name: str = Field(
+        ..., description="The name of the embedding model endpoint"
+    )
+    name: str = Field(
+        ...,
+        description="Three-level name of the Vector Search Index to create (catalog.schema.index_name).",
+    )
 
 
 class VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn(BaseModel):
-    """
-    Attributes
-    ----------
-    embedding_dimension:
-        Dimension of the embedding vector.
-    name:
-        Three-level name of the Vector Search Index to create
-        (catalog.schema.index_name).
-    """
-
-    embedding_dimension: int
-    name: str
+    embedding_dimension: int = Field(
+        ..., description="Dimension of the embedding vector."
+    )
+    name: str = Field(
+        ...,
+        description="Three-level name of the Vector Search Index to create (catalog.schema.index_name).",
+    )
 
 
 class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
-    """
-    Attributes
-    ----------
-    embedding_source_columns:
-        Array of objects representing columns that contain the embedding source
-    embedding_vector_columns:
-        (required if embedding_source_columns isn't provided) array of objects
-        representing columns that contain the embedding vectors.
-    embedding_writeback_table:
-        TODO
-    pipeline_id:
-        ID of the associated Delta Live Table pipeline.
-    pipeline_type:
-        Pipeline execution mode. Possible values are:
-            TRIGGERED: If the pipeline uses the triggered execution mode, the
-            system stops processing after successfully refreshing the source
-            table in the pipeline once, ensuring the table is updated based on
-            the data available when the update started.
-            CONTINUOUS: If the pipeline uses continuous execution, the pipeline
-            processes new data as it arrives in the source table to keep the
-            vector index fresh.
-    """
-
     @property
     def singularizations(self) -> dict[str, str]:
         return {
@@ -72,30 +40,38 @@ class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
 
     embedding_source_columns: list[
         VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn
-    ] = None
+    ] = Field(
+        None,
+        description="Array of objects representing columns that contain the embedding source",
+    )
     embedding_vector_columns: list[
         VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn
-    ] = None
-    embedding_writeback_table: str = None
-    pipeline_id: str = None
-    pipeline_type: Literal["TRIGGERED", "CONTINUOUS"] = None
-    source_table: str = None
+    ] = Field(
+        None,
+        description="""
+    (required if embedding_source_columns isn't provided) array of objects representing columns that contain the 
+    embedding vectors.
+    """,
+    )
+    embedding_writeback_table: str = Field(None, description="")
+    pipeline_id: str = Field(
+        None, description="ID of the associated Declarative Pipeline."
+    )
+    pipeline_type: Literal["TRIGGERED", "CONTINUOUS"] = Field(None, description="")
+    source_table: str = Field(
+        None,
+        description="""
+    Pipeline execution mode. Possible values are:
+    - TRIGGERED: If the pipeline uses the triggered execution mode, the system stops processing after successfully 
+      refreshing the source table in the pipeline once, ensuring the table is updated based on the data available when 
+      the update started.
+    - CONTINUOUS: If the pipeline uses continuous execution, the pipeline processes new data as it arrives in the 
+      source table to keep the vector index fresh.
+    """,
+    )
 
 
 class VectorSearchIndexDirectAccessIndexSpec(BaseModel):
-    """
-    Attributes
-    ----------
-    embedding_source_columns:
-        Array of objects representing columns that contain the embedding source
-    embedding_vector_columns:
-        (required if embedding_source_columns isn't provided) array of objects
-        representing columns that contain the embedding vectors.
-    schema_json:
-        The schema of the index in JSON format. Check the API documentation for
-        a list of supported data types.
-    """
-
     @property
     def singularizations(self) -> dict[str, str]:
         return {
@@ -105,43 +81,25 @@ class VectorSearchIndexDirectAccessIndexSpec(BaseModel):
 
     embedding_source_columns: list[
         VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn
-    ] = None
+    ] = Field(
+        None,
+        description="Array of objects representing columns that contain the embedding source",
+    )
     embedding_vector_columns: list[
         VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn
-    ] = None
+    ] = Field(
+        None,
+        description="""
+        (required if embedding_source_columns isn't provided) array of objects representing columns that contain the
+        embedding vectors.
+        """,
+    )
     # schema_json: str
 
 
 class VectorSearchIndex(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Warehouse
-
-    Attributes
-    ----------
-    access_controls:
-        Vector search endpoint access controls
-    endpoint_name:
-        The name of the Vector Search Endpoint that will be used for indexing
-        the data.
-    index_type:
-        Vector Search index type. Currently supported values are:
-        DELTA_SYNC: An index that automatically syncs with a source Delta
-                    Table, automatically and incrementally updating the index
-                    as the underlying data in the Delta Table changes.
-        DIRECT_ACCESS: An index that supports the direct read and write of
-                       vectors and metadata through our REST and SDK APIs.
-                       With this model, the user manages index updates.
-    primary_key:
-        The column name that will be used as a primary key.
-    delta_sync_index_spec:
-        Specification for Delta Sync Index. Required if index_type is
-        DELTA_SYNC.
-    direct_access_index_spec:
-        Specification for Direct Vector Access Index. Required if index_type is
-         DIRECT_ACCESS.
-    name:
-        Three-level name of the Vector Search Index to create (catalog.schema.index_name).
-
 
     Examples
     --------
@@ -165,12 +123,35 @@ class VectorSearchIndex(BaseModel, PulumiResource, TerraformResource):
     """
 
     # access_controls: list[AccessControl] = []
-    endpoint_name: str
-    index_type: Literal["DELTA_SYNC", "DIRECT_ACCESS"]
-    primary_key: str
-    delta_sync_index_spec: VectorSearchIndexDeltaSyncIndexSpec = None
-    direct_access_index_spec: VectorSearchIndexDirectAccessIndexSpec = None
-    name: str
+    endpoint_name: str = Field(
+        ...,
+        description="The name of the Vector Search Endpoint that will be used for indexing the data.",
+    )
+    index_type: Literal["DELTA_SYNC", "DIRECT_ACCESS"] = Field(
+        ...,
+        description="""
+    Vector Search index type. Currently supported values are:
+        - DELTA_SYNC: An index that automatically syncs with a source Delta Table, automatically and incrementally 
+          updating the index as the underlying data in the Delta Table changes.
+        - DIRECT_ACCESS: An index that supports the direct read and write of vectors and metadata through our REST and 
+          SDK APIs. With this model, the user manages index updates.
+    """,
+    )
+    primary_key: str = Field(
+        ..., description="The column name that will be used as a primary key."
+    )
+    delta_sync_index_spec: VectorSearchIndexDeltaSyncIndexSpec = Field(
+        None,
+        description="Specification for Delta Sync Index. Required if index_type is DELTA_SYNC.",
+    )
+    direct_access_index_spec: VectorSearchIndexDirectAccessIndexSpec = Field(
+        None,
+        description="Specification for Direct Vector Access Index. Required if index_type is DIRECT_ACCESS.",
+    )
+    name: str = Field(
+        ...,
+        description="Three-level name of the Vector Search Index to create (catalog.schema.index_name).",
+    )
 
     @model_validator(mode="after")
     def check_index_spec(self) -> Any:

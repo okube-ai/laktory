@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from laktory.models.resources.providers.baseprovider import BaseProvider
 from laktory.models.resources.pulumiresource import PulumiResource
 
@@ -5,57 +7,6 @@ from laktory.models.resources.pulumiresource import PulumiResource
 class AzurePulumiProvider(BaseProvider, PulumiResource):
     """
     Azure Pulumi (Native) Provider
-
-    Attributes
-    ----------
-    auxiliary_tenant_ids:
-        #TODO
-    client_certificate_password:
-        The password associated with the Client Certificate. For use when
-        authenticating as a Service Principal using a Client Certificate
-    client_certificate_path:
-        The path to the Client Certificate associated with the Service
-        Principal for use when authenticating as a Service Principal using
-        a Client Certificate.
-    client_id:
-        The Client ID which should be used.
-    client_secret:
-        The Client Secret which should be used. For use When authenticating as
-        a Service Principal using a Client Secret.
-    environment:
-        The Cloud Environment which should be used. Possible values are public,
-        usgovernment, and china. Defaults to public. It can also be sourced
-        from the following environment variables: AZURE_ENVIRONMENT,
-        ARM_ENVIRONMENT
-    metadata_host:
-        The Hostname which should be used for the Azure Metadata Service. It
-        can also be sourced from the following environment variable:
-        ARM_METADATA_HOSTNAME
-    msi_endpoint:
-        The path to a custom endpoint for Managed Service Identity - in most
-        circumstances this should be detected automatically.
-    oidc_request_token:
-        The bearer token for the request to the OIDC provider. For use
-        when authenticating as a Service Principal using OpenID Connect.
-    oidc_request_url:
-        The URL for the OIDC provider from which to request an ID token. For
-        use when authenticating as a Service Principal using OpenID Connect.
-    oidc_token:
-        The OIDC ID token for use when authenticating as a Service Principal
-        using OpenID Connect.
-    partner_id:
-        A GUID/UUID that is registered with Microsoft to facilitate partner
-        resource usage attribution.
-    subscription_id:
-        The Subscription ID which should be used. It can also be sourced from
-        the following environment variable: ARM_SUBSCRIPTION_ID
-    tenant_id:
-        The Tenant ID which should be used.
-    use_msi:
-        Allow Managed Service Identity to be used for Authentication.
-    use_oidc:
-        Allow OpenID Connect to be used for authentication
-
 
     Examples
     --------
@@ -69,24 +20,92 @@ class AzurePulumiProvider(BaseProvider, PulumiResource):
     ```
     """
 
-    auxiliary_tenant_ids: list[str] = None
-    client_certificate_password: str = None
-    client_certificate_path: str = None
-    client_id: str = None
-    client_secret: str = None
-    disable_pulumi_partner_id: bool = None
-    environment: str = None
-    location: str = None
-    metadata_host: str = None
-    msi_endpoint: str = None
-    oidc_request_token: str = None
-    oidc_request_url: str = None
-    oidc_token: str = None
-    partner_id: str = None
-    subscription_id: str = None
-    tenant_id: str = None
-    use_msi: bool = None
-    use_oidc: bool = None
+    auxiliary_tenant_ids: list[str] = Field(None, description="")
+    client_certificate_password: str = Field(
+        None,
+        description="""
+    The password associated with the Client Certificate. For use when
+    authenticating as a Service Principal using a Client Certificate
+    """,
+    )
+    client_certificate_path: str = Field(
+        None,
+        description="""
+    The path to the Client Certificate associated with the Service Principal for use
+    when authenticating as a Service Principal using a Client Certificate.
+    """,
+    )
+    client_id: str = Field(None, description="The Client ID which should be used.")
+    client_secret: str = Field(
+        None,
+        description="""
+    The Client Secret which should be used. For use When authenticating as a Service Principal using a Client Secret.
+    """,
+    )
+    disable_pulumi_partner_id: bool = Field(None, description="")
+    environment: str = Field(
+        None,
+        description="""
+    The Cloud Environment which should be used. Possible values are public, usgovernment, and china. Defaults to 
+    public. It can also be sourced from the following environment variables: AZURE_ENVIRONMENT, ARM_ENVIRONMENT
+    """,
+    )
+    location: str = Field(None, description="")
+    metadata_host: str = Field(
+        None,
+        description="""
+    The Hostname which should be used for the Azure Metadata Service. It can also be sourced from the following 
+    environment variable: ARM_METADATA_HOSTNAME
+    """,
+    )
+    msi_endpoint: str = Field(
+        None,
+        description="""
+    The path to a custom endpoint for Managed Service Identity - in most circumstances this should be detected 
+    automatically.
+    """,
+    )
+    oidc_request_token: str = Field(
+        None,
+        description="""
+    The bearer token for the request to the OIDC provider. For use when authenticating as a Service Principal using 
+    OpenID Connect.
+    """,
+    )
+    oidc_request_url: str = Field(
+        None,
+        description="""
+    The URL for the OIDC provider from which to request an ID token. For use when authenticating as a Service Principal 
+    using OpenID Connect.
+    """,
+    )
+    oidc_token: str = Field(
+        None,
+        description="""
+    The OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.
+    """,
+    )
+    partner_id: str = Field(
+        None,
+        description=""""
+    A GUID/UUID that is registered with Microsoft to facilitate partner resource usage attribution.
+    """,
+    )
+    subscription_id: str = Field(
+        None,
+        description="""
+    The Subscription ID which should be used. It can also be sourced from the following environment variable: 
+    ARM_SUBSCRIPTION_ID
+    """,
+    )
+    tenant_id: str = Field(None, description="The Tenant ID which should be used.")
+    use_msi: bool = Field(
+        None,
+        description="Allow Managed Service Identity to be used for Authentication.",
+    )
+    use_oidc: bool = Field(
+        None, description="Allow OpenID Connect to be used for authentication"
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

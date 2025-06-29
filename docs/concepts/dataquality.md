@@ -8,14 +8,14 @@ during execution. Whether by failing a pipeline before corrupted data is
 written, or by quarantining invalid records, Laktory guarantees that only clean,
 reliable data enters your analytics.
 
-<img src="/../../images/expectations_diagram.png" alt="node transformer" width="500"/>
+<img src="/../../images/diagrams/expectations_diagram.png" alt="node transformer" width="500"/>
 
 ### Expectations
 
 ??? "API Documentation"
 [`laktory.models.DataQualityExpectation`][laktory.models.DataQualityExpectation]<br>
 
-<img src="/../../images/expectations_logo.png" alt="node transformer" width="100"/>
+<img src="/../../images/diagrams/expectations_logo.png" alt="node transformer" width="100"/>
 
 Data quality expectations can be assigned directly to pipeline nodes, as shown
 in the example below:
@@ -114,24 +114,27 @@ are supported.
 | Batch     | yes   | yes         |
 | Streaming | yes   | no          |
 
-### Orchestrator Limitations
+### Limitations
 
-Certain orchestrators impose restrictions on how expectations can be applied to
-pipeline operations. Below is a summary of known limitations for supported
-orchestrators:
+Specific configurations might limit the ability of check data quality expectations.
 
-- Databricks Delta Live Tables (DLT)
+#### Databricks Declarative Pipelines Orchestrator
 
-  - `WARN` expectations appear as `ALLOW` in the DLT Data Quality Tab.
-  - `QUARANTINE` expectations appear as `DROP` in the DLT Data Quality Tab,
-    though quarantine sinks remain fully supported.
-  - `AGGREGATE` expectations do not appear in the DLT Data Quality Tab but can
-    be accessed via logs.
-  - Expectations defined with DataFrame expressions (instead of SQL) are not
-    displayed in the DLT Data Quality Tab.
-  - `WARN` and `FAIL` actions on streaming tables are supported only for SQL
-    expressions. Static tables support both SQL and DataFrame expressions.
+- `WARN` expectations appear as `ALLOW` in the Data Quality Tab.
+- `QUARANTINE` expectations appear as `DROP` in the Data Quality Tab,
+  though quarantine sinks remain fully supported.
+- `AGGREGATE` expectations do not appear in the Data Quality Tab but can
+  be accessed via logs.
+- Expectations defined with DataFrame expressions (instead of SQL) are not
+  displayed in the Data Quality Tab.
+- `WARN` and `FAIL` actions on streaming tables are supported only for SQL
+  expressions. Static tables support both SQL and DataFrame expressions.
 
-- Databricks Jobs
-  - Expectations on streaming DataFrames using Serverless Compute are not
-    supported
+#### Spark Connect
+
+Pipeline executed using Spark Connect (from an IDE) and having expectations set on a 
+streaming DataFrame must:
+
+- Use Spark >= 3.5
+- Have the same python version locally as on the remote cluster
+- Have Laktory installed on the remote cluster

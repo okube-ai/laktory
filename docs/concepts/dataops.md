@@ -7,7 +7,7 @@ and dbt. Additionally, Laktory speeds up iteration by enabling testing directly 
 
 For non-Databricks users, Laktory still offers a robust ETL framework that can run locally or scale to environments like Kubernetes.
 
-<img src="/../../images/dataops_diagram.png" alt="pipeline node" width="500"/>
+<img src="/../../images/diagrams/dataops_diagram.png" alt="pipeline node" width="500"/>
 
 ## Declare
 Declarative definitions for your data transformations using SQL and/or familiar dataframe operators.
@@ -106,5 +106,5 @@ pl.execute(spark=spark)
 
 #### Remote Testing
 ```commandline title="command line"
-laktory run --job pl-stock-prices --env dev
+laktory run --dbks-job pl-stock-prices --env dev
 ```

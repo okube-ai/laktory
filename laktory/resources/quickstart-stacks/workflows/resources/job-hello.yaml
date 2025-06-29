@@ -1,13 +1,15 @@
 name: job-hello
-clusters:
-  - name: main
-    num_workers: 1
-    spark_version: 15.2.x-scala2.12
-    node_type_id: Standard_DS3_v2  # TODO: Change to your desired cloud-specific node type
+
+# Uncomment to use job cluster instead of serverless
+#clusters:
+#  - name: main
+#    num_workers: 1
+#    spark_version: 15.2.x-scala2.12
+#    node_type_id: Standard_DS3_v2
 
 tasks:
   - task_key: print_hello
-    job_cluster_key: main  # remove for serverless execution
+#    job_cluster_key: main  # Uncomment to use job cluster instead of serverless
     notebook_task:
       notebook_path: /.laktory/jobs/job_hello.py
 

@@ -1,5 +1,7 @@
 from typing import Literal
 
+from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
 
 
@@ -7,19 +9,12 @@ class SchemaGrant(BaseModel):
     """
     Privileges granted to a principal and operating on a schema
 
-    Attributes
-    ----------
-    principal
-        User, group or service principal name
-    privileges
-        List of allowed privileges
-
     References
     ----------
     * [privilege types](https://docs.databricks.com/en/sql/language-manual/sql-ref-privileges.html#privilege-types)
     """
 
-    principal: str
+    principal: str = Field(..., description="User, group or service principal name")
     privileges: list[
         Literal[
             "ALL_PRIVILEGES",
@@ -35,4 +30,4 @@ class SchemaGrant(BaseModel):
             "USE_SCHEMA",
             "WRITE_VOLUME",
         ]
-    ]
+    ] = Field(..., description="List of allowed privileges")

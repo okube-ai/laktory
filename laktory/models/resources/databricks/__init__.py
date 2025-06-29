@@ -6,7 +6,6 @@ from .clusterpolicy import ClusterPolicy
 from .dashboard import Dashboard
 from .dbfsfile import DbfsFile
 from .directory import Directory
-from .dltpipeline import DLTPipeline
 from .externallocation import ExternalLocation
 from .grant import Grant
 from .grants import Grants
@@ -24,6 +23,8 @@ from .mwsnetworkconnectivityconfig import MwsNetworkConnectivityConfig
 from .mwspermissionassignment import MwsPermissionAssignment
 from .notebook import Notebook
 from .permissions import Permissions
+from .pipeline import Pipeline
+from .pythonpackage import PythonPackage
 from .query import Query
 from .repo import Repo
 from .schema import Schema

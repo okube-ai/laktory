@@ -1,5 +1,7 @@
 from typing import Literal
 
+from pydantic import Field
+
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 
@@ -9,16 +11,6 @@ logger = get_logger(__name__)
 class DataQualityCheck(BaseModel):
     """
     A Data Quality Check is the result of an expectation compared to a dataset.
-
-    Attributes
-    ----------
-    fails_count:
-        Number of rows not meeting the expectation.
-    rows_count:
-        Total number of rows in dataset.
-    status:
-        Result of comparison, considering the expectation criteria and
-        tolerances.
 
     Examples
     --------
@@ -41,11 +33,19 @@ class DataQualityCheck(BaseModel):
     print(check)
     # > variables={} fails_count=2 rows_count=10 status='PASS'
     ```
+    References
+    ----------
+    * [Data Quality](https://www.laktory.ai/concepts/dataquality/)
     """
 
-    fails_count: int = None
-    rows_count: int = None
-    status: Literal["PASS", "FAIL"]
+    fails_count: int = Field(
+        None, description="Number of rows not meeting the expectation."
+    )
+    rows_count: int = Field(None, description="Total number of rows in dataset.")
+    status: Literal["PASS", "FAIL"] = Field(
+        ...,
+        description="Result of comparison, considering the expectation criteria and tolerances.",
+    )
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

@@ -1,5 +1,5 @@
 The `workflows` stack sets up and deploys three key components: a "Hello World!" Databricks job, a Laktory pipeline for
-stock prices (as a Databricks Job and as a Delta Live Table), and all the necessary supporting resources.
+stock prices (as a Databricks Job and as a Lakeflow Declarative Pipeline), and all the necessary supporting resources.
 
 ### Create Stack
 To create the stack, use the following command:
@@ -14,12 +14,16 @@ After running the quickstart command, the following structure is created:
 .
 ├── data
 │   └── stock_prices.json
+├── lake
+│   ├── lake
+│     ├── __init__.py
+│     ├── _version.py
+│     └──  dataframe_ext.py
+│   ├── pyproject.toml
+│   └── README.md
 ├── notebooks
-│   ├── dlt
-│   │   └── dlt_laktory_pl.py
-│   └── jobs
-│       ├── job_hello.py
-│       └── job_laktory_pl.py
+│   ├── dlt_laktory_pl.py
+│   └── job_hello.py
 ├── read_env.sh
 ├── requirements.txt
 ├── resources
@@ -27,9 +31,10 @@ After running the quickstart command, the following structure is created:
 │   ├── job-hello.yaml
 │   ├── notebooks.yaml
 │   ├── pl-stocks-dlt.yaml
-│   └── pl-stocks-job.yaml
+│   ├── pl-stocks-job.yaml
+│   └── pythonpackages.yaml
 ├── scripts
-│   ├── debug_pl.py
+│   └── debug_pl.py
 ├── sql
 │   └── slv_stock_prices.sql
 ├── stack.yaml
@@ -42,6 +47,11 @@ deployed. Each file specifies one or more resources.
 #### Notebooks Directory
 The `notebooks` directory contains the notebooks to be deployed to the Databricks workspace, as defined in the 
 `resources/notebooks.yaml` file. These notebooks are also referenced in job and pipeline definitions.
+
+#### Lake Directory
+The `lake` directory contains a python package that is built and deployed by Laktory to augment the DataFrame engine
+with custom, productizable and testable data transformations. See [PythonPackage](../concepts/extension_python_package.md)
+for more information.
 
 #### Data Directory
 For the pipeline to run, a sample `stock_prices.json` data file is provided and will be uploaded to DBFS as declared in 
@@ -176,14 +186,14 @@ only showing top 10 rows
 You can now run your pipeline either from the Databricks UI or using the Laktory CLI:
 
 ```cmd
-laktory run --env dev --job pl-stock-job
+laktory run --env dev --dbks-job pl-stock-job
 ```
 This will start the pipeline run and provide real-time status updates for each task in the job. The output will show the
 job's progress, including any tasks that are pending, running, or completed.
 
 <div class="code-output">
 ```cmd
-(laktory) osoucy@countach workflows % laktory run --env dev --job job-pl-stocks
+(laktory) osoucy@countach workflows % laktory run --env dev --dbks-job job-pl-stocks
 INFO - Getting id for job job-pl-stocks
 INFO - Getting id for pipeline pl-stocks-dlt
 INFO - Getting id for job job-hello
@@ -210,7 +220,7 @@ You can also lookup the resulting run from the workspace.
 
 ### Run Pipeline DLT
 
-For the pipeline we deployed as a Delta Live Tables, we can also run it using
+For the pipeline we deployed as a Declarative Pipeline, we can also run it using
 the CLI or simply from the UI.
 
 ![dlt-pl-stocks-run](../images/quickstarts/dlt_pl_stocks_run.png)

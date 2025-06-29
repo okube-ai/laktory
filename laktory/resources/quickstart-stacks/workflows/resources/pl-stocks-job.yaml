@@ -5,18 +5,22 @@
 #
 name: pl-stocks-job
 
-# Select Orchestrator
-orchestrator: DATABRICKS_JOB
-
 # Configure Orchestrator
-databricks_job:
-  clusters:
-    - name: node-cluster
-      autoscale:
-        min_workers: 1
-        max_workers: 2
-      spark_version: 15.2.x-scala2.12
-      node_type_id: Standard_DS3_v2  # TODO: Change to your desired cloud-specific node type
+orchestrator:
+  type: DATABRICKS_JOB
+# Uncomment to use job cluster instead of serverless
+#  job_clusters:
+#    - job_cluster_key: node-cluster
+#      new_cluster:
+#        autoscale:
+#          min_workers: 1
+#          max_workers: 2
+#        spark_version: 16.4.x-scala2.13
+#        node_type_id: Standard_DS3_v2
+
+dependencies:
+  - laktory==<laktory_version>
+  - ${vars.wheel_filepath}
 
 # Define nodes (each node is a table or a view)
 nodes:
@@ -46,10 +50,16 @@ nodes:
 
   # The transformer is a chain of SQL statements and / or serialized spark
   # functions. In this case, we use SQL to select some columns from the
-  # source and we use Spark df.drop_duplicates to clean the data.
+  # source and we use pyspark df.drop_duplicates to clean the data. Because the API
+  # used by default by Laktory is Narwhals, we need to specific `dataframe_api: NATIVE`
+  # to directly use spark API
   transformer:
     nodes:
-    - sql_expr: !use ../sql/slv_stock_prices.sql
+    - expr: !use ../sql/slv_stock_prices.sql
     - func_name: drop_duplicates
       func_kwargs:
         subset: ["created_at", "symbol"]
+      dataframe_api: NATIVE
+
+    # Custom function from lake package deployed as wheel file
+    - func_name: lake.with_last_modified

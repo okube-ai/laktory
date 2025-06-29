@@ -1,9 +1,14 @@
-::: laktory.typing.AnyDataFrame
+::: laktory.enums.DataFrameBackends
 
 ---
 
-::: laktory.typing.AnyDataFrameColumn
+::: laktory.typing.VariableType
 
 ---
 
-::: laktory.typing.var
+::: laktory.typing.AnyFrame
+
+---
+
+[//]: # (::: laktory.typing.var)
+

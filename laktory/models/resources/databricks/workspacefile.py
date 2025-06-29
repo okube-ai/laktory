@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 from typing import Union
 
+from pydantic import Field
 from pydantic import model_validator
 
 from laktory import settings
@@ -16,23 +17,6 @@ from laktory.models.resources.terraformresource import TerraformResource
 class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Workspace File
-
-    Attributes
-    ----------
-    access_controls:
-        List of file access controls
-    dirpath:
-        Workspace directory inside rootpath in which the workspace file is
-        deployed. Used only if `path` is not specified.
-    path:
-         Workspace filepath for the file. Overwrite `rootpath` and `dirpath`.
-    rootpath:
-        Root directory to which all workspace files are deployed to. Can also
-        be configured by settings LAKTORY_WORKSPACE_LAKTORY_ROOT environment
-        variable. Default is `/.laktory/`. Used only if `path` is not
-        specified.
-    source:
-        Path to file on local filesystem.
 
     Examples
     --------
@@ -62,11 +46,31 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    access_controls: list[AccessControl] = []
-    dirpath: str = None
-    path: str = None
-    rootpath: str = None
-    source: str
+    access_controls: list[AccessControl] = Field([], description="Access controls list")
+    dirpath: str = Field(
+        None,
+        description="Workspace directory inside rootpath in which the workspace file is deployed. Used only if `path` is not specified.",
+    )
+    path: str = Field(
+        None,
+        description="Workspace filepath for the file. Overwrite `rootpath` and `dirpath`.",
+    )
+    rootpath: str = Field(
+        None,
+        description="""
+    Root directory to which all workspace files are deployed to. Can also be configured by settings 
+    LAKTORY_WORKSPACE_LAKTORY_ROOT environment variable. Default is `/.laktory/`. Used only if `path` is not specified.
+    """,
+    )
+    source: str = Field(None, description="Path to file on local filesystem.")
+    content_base64: str = Field(
+        None,
+        description="""
+    The base64-encoded file content. Conflicts with source. Use of content_base64 is discouraged, as it's increasing 
+    memory footprint of Pulumi state and should only be used in exceptional circumstances, like creating a workspace 
+    file with configuration properties for a data pipeline.
+    """,
+    )
 
     @classmethod
     def lookup_defaults(cls) -> dict:
@@ -75,12 +79,16 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     @property
     def filename(self) -> str:
         """File filename"""
-        return os.path.basename(self.source)
+        if self.source:
+            return os.path.basename(self.source)
 
     @model_validator(mode="after")
     def set_paths(self) -> Any:
         # Path set
         if self.path:
+            return self
+
+        if not self.source:
             return self
 
         # root

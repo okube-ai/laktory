@@ -28,6 +28,9 @@ When resolved:
 ### From Environment
 When resolving a variable, Laktory first searches for declared model variables. If not found, it falls back to environment variables.
 
+### From Settings
+If a variable has not been resolved from model variables nor environment variables, it looks up `laktory.settings` values.
+
 ### From CLI
 Injecting variables via the CLI is **not currently supported**, but this feature will be available in the future.
 

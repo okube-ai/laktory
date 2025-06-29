@@ -1,5 +1,7 @@
 from typing import Literal
 
+from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
 
 
@@ -7,19 +9,12 @@ class ExternalLocationGrant(BaseModel):
     """
     Privileges granted to a principal and operating on an external location
 
-    Attributes
-    ----------
-    principal
-        User, group or service principal name
-    privileges
-        List of allowed privileges
-
     References
     ----------
     * [privilege types](https://docs.databricks.com/en/sql/language-manual/sql-ref-privileges.html#privilege-types)
     """
 
-    principal: str
+    principal: str = Field(..., description="User, group or service principal name")
     privileges: list[
         Literal[
             "ALL_PRIVILEGES",
@@ -29,4 +24,4 @@ class ExternalLocationGrant(BaseModel):
             "WRITE_FILES",
             "CREATE_MANAGED_STORAGE",
         ]
-    ]
+    ] = Field(..., description="List of allowed privileges")

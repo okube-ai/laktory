@@ -1,13 +1,15 @@
 from typing import Literal
 from typing import Union
 
+from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
 # class VectorSearchEndpointLookup(ResourceLookup):
 #     """
-#     Attributes
+#     Parameters
 #     ----------
 #     id:
 #         The ID of the Vector Search Endpoint warehouse.
@@ -19,14 +21,6 @@ from laktory.models.resources.terraformresource import TerraformResource
 class VectorSearchEndpoint(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Warehouse
-
-    Attributes
-    ----------
-    endpoint_type:
-        Type of Vector Search Endpoint.
-        Currently only accepting single value: STANDARD
-    name:
-        Name of the Vector Search Endpoint to create.
 
     Examples
     --------
@@ -40,8 +34,11 @@ class VectorSearchEndpoint(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    endpoint_type: Literal["STANDARD"] = "STANDARD"  # required
-    name: str = None
+    endpoint_type: Literal["STANDARD"] = Field(
+        "STANDARD",
+        description="Type of Vector Search Endpoint. Currently only accepting single value: STANDARD",
+    )  # required
+    name: str = Field(None, description="Name of the Vector Search Endpoint to create.")
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

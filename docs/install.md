@@ -42,6 +42,7 @@ Laktory CLI version 0.5.13
 In the spirit of having a package that is as lightweight as possible, only a
 few core dependencies will be installed by default:
 
+* [`narwhals`](https://pypi.org/project/narwhals/): Core library for all data transformations. Supports multiple backends such as Polars and Spark.
 * [`networkx`](https://pypi.org/project/networkx/): Creation manipulation of networks for creating pipeline DAG.
 * [`pydantic`](https://pypi.org/project/pydantic/): All laktory models derived from Pydantic `BaseModel`.
 * [`typer`](https://pypi.org/project/typer/): Library for building CLI applications. 
@@ -53,16 +54,15 @@ or a deployment, one of the optional dependencies must be installed.
 
 If you want to run your pipeline locally or test some of the transformations,
 you will have to install the dataframe library used by your transformations.
-Available options are `spark` and `polars`.
+Available options are `pyspark` and `polars`.
 
 * Apache Spark
   ```cmd
-  uv pip install laktory[spark]
+  uv pip install laktory[pyspark]
   ```
   For running spark locally, you also need to follow instructions provided [here](https://www.machinelearningplus.com/pyspark/install-pyspark-on-mac/). 
   If you use homebrew to install java, your `JAVA_HOME` and `SPARK_HOME` environment variables should look something like:
-    * `JAVA_HOME=/opt/homebrew/opt/java`
-    * `SPARK_HOME=/opt/homebrew/Cellar/apache-spark/3.5.0/libexec`
+    * `JAVA_HOME=/opt/homebrew/opt/openjdk@17/`
 
 * Polars
   ```cmd
@@ -87,25 +87,6 @@ orchestrator you will have to install their respective packages.
   ```cmd
   uv pip install laktory[databricks] databricks-connect
   ```
-
-### Cloud Provider
-The `DataEvent` class lets you write data events to various cloud storage 
-accounts, but requires to install additional dependencies.
-
-* Microsoft Azure: 
-  ```terminal
-  uv pip install laktory[azure]
-  ```
-
-* Amazon Web Services (AWS)
-    ```terminal
-    uv pip install laktory[aws]
-    ```
-  
-[//]: # (* Google Cloud Platform &#40;GCP&#41;)
-[//]: # (    ```terminal)
-[//]: # (    pip install laktory[gcp])
-[//]: # (    ```)
 
 ## Git-based installation
 If you need or prefer installing Laktory from git, you can use:

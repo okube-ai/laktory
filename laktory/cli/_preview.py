@@ -40,8 +40,9 @@ def preview(
 
     References
     ----------
-    - pulumi [preview](https://www.pulumi.com/docs/cli/commands/pulumi_preview/)
-    - terraform [preview](https://developer.hashicorp.com/terraform/cli/commands/plan)
+    * [CLI](https://www.laktory.ai/concepts/cli/)
+    * pulumi [preview](https://www.pulumi.com/docs/cli/commands/pulumi_preview/)
+    * terraform [preview](https://developer.hashicorp.com/terraform/cli/commands/plan)
     """
     controller = CLIController(
         env=environment,

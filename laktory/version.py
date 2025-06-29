@@ -9,16 +9,15 @@ def show_version_info() -> str:
     from importlib.metadata import version
 
     package_names = {
-        "azure-identity",
-        "azure-storage-blob",
-        "boto3",
         "databricks-sdk",
+        "delta-spark",
         "deltalake",
         "inflect",
         "mkdocs",
         "mkdocs-material",
         "mkdocs-video",
         "mkdocstrings",
+        "narwhals",
         "networkx",
         "numpy",
         "pandas",
@@ -36,11 +35,10 @@ def show_version_info() -> str:
         "pytest-examples",
         "python-dateutil",
         "pyyaml",
-        "sqlparse",
+        "sqlglotsqlparse",
         "typer",
         "typing_extensions",
         "uv",
-        "yfinance",
     }
     packages = {}
 

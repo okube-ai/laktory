@@ -1,17 +1,20 @@
 import warnings
 from typing import Any
 from typing import Literal
-from typing import Union
 
+import narwhals as nw
+from narwhals import Expr
+from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory.enums import DataFrameBackends
 from laktory.exceptions import DataQualityCheckFailedError
 from laktory.models.basemodel import BaseModel
-from laktory.models.dataframecolumnexpression import DataFrameColumnExpression
+from laktory.models.dataframe.dataframecolumnexpr import DataFrameColumnExpr
 from laktory.models.dataquality.check import DataQualityCheck
-from laktory.typing import AnyDataFrame
-from laktory.typing import AnyDataFrameColumn
+from laktory.models.pipelinechild import PipelineChild
+from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
 
@@ -20,17 +23,14 @@ class ExpectationTolerance(BaseModel):
     """
     Tolerance values for data quality expectations with support for either
     absolute or relative tolerances.
-
-    Attributes
-    ----------
-    abs:
-        Maximum number of rows with failure for a PASS status
-    rel:
-        Relative number of rows with failure for a PASS status
     """
 
-    abs: int = None
-    rel: float = None
+    abs: int = Field(
+        None, description="Maximum number of rows with failure for a PASS status"
+    )
+    rel: float = Field(
+        None, description="Relative number of rows with failure for a PASS status"
+    )
 
     @model_validator(mode="after")
     def at_least_one(self) -> Any:
@@ -43,34 +43,12 @@ class ExpectationTolerance(BaseModel):
         return self
 
 
-class DataQualityExpectation(BaseModel):
+class DataQualityExpectation(BaseModel, PipelineChild):
     """
     Data Quality Expectation for a given DataFrame expressed as a row-specific
     condition (`type="ROW"`) or as an aggregated metric (`type="AGGREGATE"`).
 
     The expression may be defined as a SQL statement or a DataFrame expression.
-
-    Attributes
-    ----------
-    action:
-        Action to take when expectation is not met.
-        `WARN`: Write invalid records to the output DataFrame, but log
-        exception.
-        `DROP`: Drop Invalid records to the output DataFrame and log exception.
-        `QUARANTINE`: Forward invalid data for quarantine.
-        `FAIL`: Raise exception when invalid records are found.
-    type:
-        Type of expectation:
-        `"ROW"`: Row-specific condition. Must be a boolean expression.
-        `"AGGREGATE"`: Global condition. Must be a boolean expression.
-    name:
-        Name of the expectation
-    expr:
-        SQL or DataFrame expression representing a row-specific condition or
-        an aggregated metric.
-    tolerance:
-        Tolerance for non-matching rows before resulting in failure. Only
-        available for "ROW" type expectation.
 
     Examples
     --------
@@ -85,7 +63,7 @@ class DataQualityExpectation(BaseModel):
     )
     print(dqe)
     '''
-    variables={} action='WARN' type='ROW' name='price higher than 10' expr=DataFrameColumnExpression(variables={}, value='close > 127', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=None, rel=0.05)
+    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='ROW' name='price higher than 10' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='close > 127', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=None, rel=0.05)
     '''
 
     dqe = models.DataQualityExpectation(
@@ -95,28 +73,50 @@ class DataQualityExpectation(BaseModel):
     )
     print(dqe)
     '''
-    variables={} action='WARN' type='AGGREGATE' name='rows count' expr=DataFrameColumnExpression(variables={}, value='COUNT(*) > 50', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=0, rel=None)
+    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='AGGREGATE' name='rows count' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='COUNT(*) > 50', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=0, rel=None)
     '''
     ```
 
     References
     ----------
-
+    * [Data Quality](https://www.laktory.ai/concepts/dataquality/)
     * [DLT Table Expectations](https://docs.databricks.com/en/delta-live-tables/expectations.html)
     """
 
-    action: Literal["WARN", "DROP", "QUARANTINE", "FAIL"] = "WARN"
-    type: Literal["AGGREGATE", "ROW"] = "ROW"
-    name: str
-    expr: Union[str, DataFrameColumnExpression] = None
-    tolerance: ExpectationTolerance = ExpectationTolerance(abs=0)
-    _dataframe_backend: Literal["SPARK", "POLARS"] = None
+    action: Literal["WARN", "DROP", "QUARANTINE", "FAIL"] = Field(
+        "WARN",
+        description="""
+        Action to take when expectation is not met.
+        - `WARN`: Write invalid records to the output DataFrame, but log
+        exception.
+        - `DROP`: Drop Invalid records to the output DataFrame and log exception.
+        - `QUARANTINE`: Forward invalid data for quarantine.
+        - `FAIL`: Raise exception when invalid records are found.
+        """,
+    )
+    type: Literal["AGGREGATE", "ROW"] = Field(
+        "ROW",
+        description="""
+        Type of expectation:
+        - `"ROW"`: Row-specific condition. Must be a boolean expression.
+        - `"AGGREGATE"`: Global condition. Must be a boolean expression.
+        """,
+    )
+    name: str = Field(..., description="Name of the expectation")
+    expr: str | DataFrameColumnExpr = Field(
+        None,
+        description=" SQL or DataFrame expression representing a row-specific condition or an aggregated metric.",
+    )
+    tolerance: ExpectationTolerance = Field(
+        ExpectationTolerance(abs=0),
+        description="Tolerance for non-matching rows before resulting in failure. Only available for 'ROW' type expectation.",
+    )
     _check: DataQualityCheck = None
 
     @model_validator(mode="after")
     def parse_expr(self) -> Any:
         if isinstance(self.expr, str):
-            self.expr = DataFrameColumnExpression(value=self.expr)
+            self.expr = DataFrameColumnExpr(expr=self.expr)
         return self
 
     @model_validator(mode="after")
@@ -141,17 +141,17 @@ class DataQualityExpectation(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @property
-    def pass_filter(self) -> Union[AnyDataFrameColumn, None]:
+    def pass_filter(self) -> Expr | None:
         """Expression representing all rows meeting the expectation."""
-        return self.expr.eval(dataframe_backend=self._dataframe_backend)
+        return self.expr.to_expr()
 
     @property
-    def fail_filter(self) -> Union[AnyDataFrameColumn, None]:
+    def fail_filter(self) -> Expr | None:
         """Expression representing all rows not meeting the expectation."""
-        return ~self.expr.eval(dataframe_backend=self._dataframe_backend)
+        return ~self.expr.to_expr()
 
     @property
-    def keep_filter(self) -> Union[AnyDataFrameColumn, None]:
+    def keep_filter(self) -> Expr | None:
         """
         Expression representing all rows to keep, considering both the
         expectation and the selected action.
@@ -167,7 +167,7 @@ class DataQualityExpectation(BaseModel):
         return self.pass_filter
 
     @property
-    def quarantine_filter(self) -> Union[AnyDataFrameColumn, None]:
+    def quarantine_filter(self) -> Expr | None:
         """
         Expression representing all rows to quarantine, considering both the
         expectation and the selected action.
@@ -187,8 +187,27 @@ class DataQualityExpectation(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @property
-    def is_dlt_compatible(self):
+    def is_dlt_compatible(self) -> bool:
+        """Expectation is supported by DLT"""
         return self.expr.type == "SQL" and self.type == "ROW"
+
+    @property
+    def is_dlt_managed(self) -> bool:
+        """Expectation is DLT-compatible and pipeline node is executed by DLT"""
+
+        if not self.is_dlt_compatible:
+            return False
+
+        pl = self.parent_pipeline
+        if pl is None:
+            return False
+
+        if not pl.is_orchestrator_dlt:
+            return False
+
+        from laktory import is_dlt_execute
+
+        return is_dlt_execute()
 
     @property
     def is_streaming_compatible(self):
@@ -218,14 +237,14 @@ class DataQualityExpectation(BaseModel):
                 "row_number(",
                 "rank(",
             ]:
-                if k in self.expr.value.lower():
-                    msg = f"'ROW' type is selected for expectation '{self.name}' ({self.expr.value}). Should probably be 'AGGREGATE'."
+                if k in self.expr.expr.lower():
+                    msg = f"'ROW' type is selected for expectation '{self.name}' ({self.expr.expr}). Should probably be 'AGGREGATE'."
                     break
         return msg
 
     @property
     def log_msg(self) -> str:
-        msg = f"expr: {self.expr.value} | status: {self.check.status}"
+        msg = f"expr: {self.expr.expr} | status: {self.check.status}"
         if self.type == "ROW" and self.check.fails_count:
             msg += f" | fails count: {self.check.fails_count} / {self.check.rows_count} ({100 * self.check.failure_rate:5.2f} %)"
         return msg
@@ -240,7 +259,7 @@ class DataQualityExpectation(BaseModel):
 
     def run_check(
         self,
-        df: AnyDataFrame,
+        df: AnyFrame,
         raise_or_warn: bool = False,
         node=None,
     ) -> DataQualityCheck:
@@ -263,17 +282,8 @@ class DataQualityExpectation(BaseModel):
         """
 
         logger.info(
-            f"Checking expectation '{self.name}' | {self.expr.value} (type: {self.type})"
+            f"Checking expectation '{self.name}' | {self.expr.expr} (type: {self.type})"
         )
-
-        # Assign DataFrame type
-        dtype = str(type(df)).lower()
-        if "spark" in dtype:
-            self._dataframe_backend = "SPARK"
-        elif "polars" in dtype:
-            self._dataframe_backend = "POLARS"
-        else:
-            raise ValueError(f"DataFrame type '{dtype}' not supported")
 
         # Run Check
         self._check = self._check_df(df)
@@ -284,12 +294,16 @@ class DataQualityExpectation(BaseModel):
         return self._check
 
     def _check_df(self, df):
-        if self._dataframe_backend == "SPARK":
-            rows_count = df.count()
-        elif self._dataframe_backend == "POLARS":
-            import polars as pl
-
-            rows_count = df.select(pl.len()).collect().item()
+        if isinstance(df, nw.LazyFrame):
+            if (
+                DataFrameBackends.from_nw_implementation(df.implementation)
+                == DataFrameBackends.PYSPARK
+            ):
+                # Using the pandas backend to avoid pyarrow version compatibility issues
+                df = df.collect(backend="pandas")
+            else:
+                df = df.collect()
+        rows_count = df.shape[0]
 
         if rows_count == 0:
             _check = DataQualityCheck(
@@ -309,12 +323,7 @@ class DataQualityExpectation(BaseModel):
                     e.desc += f"\n{self.type_warning_msg}"
                 raise e
 
-            if self._dataframe_backend == "SPARK":
-                fails_count = df_fail.count()
-            elif self._dataframe_backend == "POLARS":
-                import polars as pl
-
-                fails_count = df_fail.select(pl.len()).collect().item()
+            fails_count = df_fail.shape[0]
 
             status = "PASS"
             if self.tolerance.abs is not None:
@@ -339,12 +348,14 @@ class DataQualityExpectation(BaseModel):
             return _check
 
         if self.type == "AGGREGATE":
-            import pyspark.sql.functions as F  # noqa: F401
-
-            if self.expr.type == "SQL":
-                _df = df.select(self.expr.eval()).toPandas()
-            else:
-                _df = df.agg(self.expr.eval()).toPandas()
+            _df = df.select(self.expr.to_expr()).to_pandas()
+            #
+            # import pyspark.sql.functions as F  # noqa: F401
+            #
+            # if self.expr.type == "SQL":
+            #     _df = df.select(self.expr.eval()).toPandas()
+            # else:
+            #     _df = df.agg(self.expr.eval()).toPandas()
 
             status = _df.iloc[0].values[0]
 

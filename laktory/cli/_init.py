@@ -39,7 +39,8 @@ def init(
 
     References
     ----------
-    - terraform [init](https://developer.hashicorp.com/terraform/cli/commands/init)
+    * [CLI](https://www.laktory.ai/concepts/cli/)
+    * terraform [init](https://developer.hashicorp.com/terraform/cli/commands/init)
     """
     controller = CLIController(
         env=environment,

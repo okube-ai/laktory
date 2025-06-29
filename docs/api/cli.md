@@ -1,8 +1,8 @@
-::: laktory.cli.app
+::: laktory.cli.version
 
 ---
 
-::: laktory.cli.version
+::: laktory.cli.validate
 
 ---
 

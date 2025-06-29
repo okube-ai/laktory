@@ -16,40 +16,18 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class DbfsFileLookup(ResourceLookup):
-    """
-    Attributes
-    ----------
-    path:
-        Path on DBFS for the file from which to get content.
-    limit_file_size:
-        Do not load content for files larger than 4MB.
-    """
-
-    path: str = Field(serialization_alias="id")
-    limit_file_size: bool = True
+    path: str = Field(
+        serialization_alias="id",
+        description="Path on DBFS for the file from which to get content.",
+    )
+    limit_file_size: bool = Field(
+        True, description="Do not load content for files larger than 4MB."
+    )
 
 
 class DbfsFile(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks DBFS File
-
-    Attributes
-    ----------
-    access_controls:
-        List of file access controls
-    dirpath:
-        Workspace directory inside rootpath in which the DBFS file is
-        deployed. Used only if `path` is not specified.
-    lookup_existing:
-        Specifications for looking up existing resource. Other attributes will
-        be ignored.
-    path:
-         DBFS filepath for the file. Overwrite `rootpath` and `dirpath`.
-    rootpath:
-        Root directory to which all DBFS files are deployed to. Used only if
-        `path` is not specified.
-    source:
-        Path to file on local filesystem.
 
     Examples
     --------
@@ -79,12 +57,29 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    access_controls: list[AccessControl] = []
-    dirpath: str = None
-    lookup_existing: DbfsFileLookup = Field(None, exclude=True)
-    path: str = None
-    rootpath: str = "/"
-    source: str
+    access_controls: list[AccessControl] = Field(
+        [], description="List of file access controls"
+    )
+    dirpath: str = Field(
+        None,
+        description="""
+    Workspace directory inside rootpath in which the DBFS file is deployed. Used only if `path` is not specified.
+    """,
+    )
+    lookup_existing: DbfsFileLookup = Field(
+        None,
+        exclude=True,
+        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+    )
+    path: str = Field(
+        None,
+        description="DBFS filepath for the file. Overwrite `rootpath` and `dirpath`.",
+    )
+    rootpath: str = Field(
+        "/",
+        description="Root directory to which all DBFS files are deployed to. Used only if `path` is not specified.",
+    )
+    source: str = Field(..., description="Path to file on local filesystem.")
 
     @classmethod
     def lookup_defaults(cls) -> dict:

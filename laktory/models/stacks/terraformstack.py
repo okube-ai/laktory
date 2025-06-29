@@ -33,6 +33,12 @@ class TerraformConfig(BaseModel):
     required_providers: dict[str, TerraformRequiredProvider] = None
     backend: Union[dict[str, Any], None] = None
 
+    @property
+    def singularizations(self) -> dict[str, str]:
+        return {
+            "required_providers": "required_providers",
+        }
+
 
 class TerraformStack(BaseModel):
     """
@@ -43,6 +49,9 @@ class TerraformStack(BaseModel):
     It is generally not instantiated directly, but rather created using
     `laktory.models.Stack.to_terraform()`.
 
+    References
+    ----------
+    * [Stack](https://www.laktory.ai/concepts/stack/)
     """
 
     terraform: TerraformConfig = TerraformConfig()

@@ -2,6 +2,7 @@ import json
 from typing import Any
 from typing import Union
 
+from pydantic import Field
 from pydantic import field_validator
 
 from laktory.models.basemodel import BaseModel
@@ -12,97 +13,38 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class ClusterPolicyLibraryCran(BaseModel):
-    package: str
-    repo: str = None
+    package: str = Field(..., description="")
+    repo: str = Field(None, description="")
 
 
 class ClusterPolicyLibraryMaven(BaseModel):
-    coordinates: str
-    exclusions: list[str] = None
-    repo: str = None
+    coordinates: str = Field(..., description="")
+    exclusions: list[str] = Field(None, description="")
+    repo: str = Field(None, description="")
 
 
 class ClusterPolicyLibraryPypi(BaseModel):
-    package: str = None
-    repo: str = None
+    package: str = Field(None, description="")
+    repo: str = Field(None, description="")
 
 
 class ClusterPolicyLibrary(BaseModel):
-    """
-    Cluster Policy Library
-
-    Attributes
-    ----------
-    cran:
-        Cran library specifications
-    egg:
-        Egg filepath
-    jar:
-        Jar filepath
-    maven:
-        TODO
-    pypi:
-        Pypi library specifications
-    requirements:
-        TODO
-    whl:
-        Wheel filepath
-    """
-
-    cran: ClusterPolicyLibraryCran = None
-    egg: str = None
-    jar: str = None
-    maven: ClusterPolicyLibraryMaven = None
-    pypi: ClusterPolicyLibraryPypi = None
-    requirement: str = None
-    whl: str = None
-
-
-# class ClusterLookup(ResourceLookup):
-#     """
-#     Attributes
-#     ----------
-#     cluster_id:
-#         The id of the cluster
-#     """
-#
-#     cluster_id: str = Field(serialization_alias="id")
+    cran: ClusterPolicyLibraryCran = Field(
+        None, description="Cran library specifications"
+    )
+    egg: str = Field(None, description="Egg filepath")
+    jar: str = Field(None, description="Jar filepath")
+    maven: ClusterPolicyLibraryMaven = Field(None, description="")
+    pypi: ClusterPolicyLibraryPypi = Field(
+        None, description="Pypi library specifications"
+    )
+    requirement: str = Field(None, description="")
+    whl: str = Field(None, description="Wheel filepath")
 
 
 class ClusterPolicy(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks cluster policy
-
-    Attributes
-    ----------
-
-    access_controls:
-        List of access controls
-    definition:
-        Policy definition: JSON document expressed in [Databricks Policy
-        Definition Language](https://docs.databricks.com/en/admin/clusters/policies.html#cluster-policy-definition).
-        Cannot be used with `policy_family_id`.
-    description:
-        Additional human-readable description of the cluster policy.
-    libraries:
-        TODO
-    max_clusters_per_user:
-        Maximum number of clusters allowed per user. When omitted, there is no
-        limit. If specified, value must be greater than zero.
-    name:
-        Cluster policy name. This must be unique. Length must be between 1 and
-        100 characters.
-    policy_family_definition_overrides:
-        Policy definition JSON document expressed in Databricks Policy
-        Definition Language. The JSON document must be passed as a string and
-         cannot be embedded in the requests. You can use this to customize the
-         policy definition inherited from the policy family. Policy rules
-         specified here are merged into the inherited policy definition.
-    policy_family_id:
-        ID of the policy family. The cluster policy's policy definition
-        inherits the policy family's policy definition. Cannot be used with
-        `definition`. Use `policy_family_definition_overrides` instead to
-        customize the policy definition.
 
     Examples
     --------
@@ -143,14 +85,47 @@ class ClusterPolicy(BaseModel, PulumiResource, TerraformResource):
 
     """
 
-    access_controls: list[AccessControl] = []
-    definition: Union[str, dict[str, Any]] = None
-    description: str = None
-    libraries: list[ClusterPolicyLibrary] = None
-    max_clusters_per_user: int = None
-    name: str
-    policy_family_definition_overrides: str = None
-    policy_family_id: str = None
+    access_controls: list[AccessControl] = Field(
+        [], description="List of access controls"
+    )
+    definition: Union[str, dict[str, Any]] = Field(
+        None,
+        description="""
+    Policy definition: JSON document expressed in [Databricks Policy Definition Language](https://docs.databricks.com/en/admin/clusters/policies.html#cluster-policy-definition).
+    Cannot be used with `policy_family_id`.
+    """,
+    )
+    description: str = Field(
+        None, description="Additional human-readable description of the cluster policy."
+    )
+    libraries: list[ClusterPolicyLibrary] = Field(None, description="")
+    max_clusters_per_user: int = Field(
+        None,
+        description="""
+    Maximum number of clusters allowed per user. When omitted, there is no limit. If specified, value must be greater 
+    than zero.
+    """,
+    )
+    name: str = Field(
+        ...,
+        description="Cluster policy name. This must be unique. Length must be between 1 and 100 characters.",
+    )
+    policy_family_definition_overrides: str = Field(
+        None,
+        description="""
+    Policy definition JSON document expressed in Databricks Policy Definition Language. The JSON document must be 
+    passed as a string and cannot be embedded in the requests. You can use this to customize the policy definition 
+    inherited from the policy family. Policy rules specified here are merged into the inherited policy definition.
+    """,
+    )
+    policy_family_id: str = Field(
+        None,
+        description="""
+    ID of the policy family. The cluster policy's policy definition inherits the policy family's policy definition.
+    Cannot be used with `definition`. Use `policy_family_definition_overrides` instead to customize the policy 
+    definition.
+    """,
+    )
 
     @field_validator("definition")
     def validate_type(cls, v: Union[str, dict[str, str]]) -> str:

@@ -17,9 +17,9 @@ logger = get_logger(__name__)
 
 
 class ConfigValue(BaseModel):
-    type: str = "String"
-    description: str = None
-    default: Any = None
+    type: str = Field("String", description="")
+    description: str = Field(None, description="")
+    default: Any = Field(None, description="")
 
 
 class PulumiStack(BaseModel):
@@ -32,17 +32,18 @@ class PulumiStack(BaseModel):
 
     References
     ----------
-    - pulumi yaml [options](https://www.pulumi.com/docs/languages-sdks/yaml/yaml-language-reference/)
+    * [Stack](https://www.laktory.ai/concepts/stack/)
+    * pulumi yaml [options](https://www.pulumi.com/docs/languages-sdks/yaml/yaml-language-reference/)
     """
 
-    name: str
-    organization: str = Field(None, exclude=True)
-    runtime: str = "yaml"
-    description: Union[str, None] = None
-    config: dict[str, Union[str, ConfigValue]] = {}
-    variables: dict[str, Any] = {}
-    resources: dict[str, Any] = {}
-    outputs: dict[str, str] = {}
+    name: str = Field(..., description="")
+    organization: str = Field(None, exclude=True, description="")
+    runtime: str = Field("yaml", description="")
+    description: Union[str, None] = Field(None, description="")
+    config: dict[str, Union[str, ConfigValue]] = Field({}, description="")
+    variables: dict[str, Any] = Field({}, description="")
+    resources: dict[str, Any] = Field({}, description="")
+    outputs: dict[str, str] = Field({}, description="")
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         """Serialize model to match the structure of a Pulumi.yaml file."""
@@ -106,9 +107,9 @@ class PulumiStack(BaseModel):
         worker = Worker()
 
         cmd = ["pulumi", command]
-        cmd += ["-s", stack]
-
-        if flags is not None:
+        if stack:
+            cmd += ["-s", stack]
+        if flags:
             cmd += flags
 
         # Inject user-agent value for monitoring usage as a Databricks partner

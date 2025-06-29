@@ -54,7 +54,7 @@ def unix_timestamp(
         pass
 
     if dt is None:
-        dt = datetime.utcnow()
+        dt = datetime.now(timezone.utc)
     elif type(dt) in numeric_types:
         dt = dt
     elif type(dt) == date:  # noqa: E721
@@ -136,7 +136,7 @@ def utc_datetime(
         pass
 
     if not unixtime:
-        dt = datetime.utcnow()
+        dt = datetime.now(timezone.utc)
     elif isinstance(unixtime, datetime):
         dt = unixtime
     elif isinstance(unixtime, date):

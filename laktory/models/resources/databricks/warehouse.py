@@ -14,32 +14,12 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class WarehouseCustomTag(BaseModel):
-    """
-    Warehouse Custom Tag specifications
-
-    Attributes
-    ----------
-    key:
-        Tag key
-    value:
-        Tag value
-    """
-
-    key: str
-    value: str
+    key: str = Field(..., description="Tag key")
+    value: str = Field(..., description="Tag value")
 
 
 class WarehouseTags(BaseModel):
-    """
-    Warehouse Tags specifications
-
-    Attributes
-    ----------
-    custom_tags:
-        Tags specifications
-    """
-
-    custom_tags: list[WarehouseCustomTag] = []
+    custom_tags: list[WarehouseCustomTag] = Field([], description="Tags specifications")
 
     @property
     def singularizations(self) -> dict[str, str]:
@@ -49,18 +29,18 @@ class WarehouseTags(BaseModel):
 
 
 class WarehouseLookup(ResourceLookup):
-    """
-    Attributes
-    ----------
-    id:
-        The ID of the SQL warehouse.
-    name:
-        Name of the SQL warehouse. Name of the SQL warehouse to search (case-sensitive).
-        Argument only supported by Terraform IaC backend.
-    """
-
-    id: str = Field(serialization_alias="id", default=None)
-    name: str = None
+    id: str = Field(
+        serialization_alias="id",
+        default=None,
+        description="The ID of the SQL warehouse.",
+    )
+    name: str = Field(
+        None,
+        description="""
+        Name of the SQL warehouse. Name of the SQL warehouse to search (case-sensitive). Argument only supported by 
+        Terraform IaC backend.
+        """,
+    )
 
     @model_validator(mode="after")
     def at_least_one(self) -> Any:
@@ -76,43 +56,6 @@ class WarehouseLookup(ResourceLookup):
 class Warehouse(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks Warehouse
-
-    Attributes
-    ----------
-    access_controls:
-        Warehouse access controls
-    auto_stop_mins:
-        Time in minutes until an idle SQL warehouse terminates all clusters and stops.
-    channel_name:
-        Channel specifications
-    cluster_size:
-        The size of the clusters allocated to the endpoint
-    enable_photon:
-        If `True`, photon is enabled
-    enable_serverless_compute:
-        If `True`, warehouse is serverless.
-        See details [here](https://www.pulumi.com/registry/packages/databricks/api-docs/sqlendpoint/)
-    instance_profile_arn:
-        TODO
-    jdbc_url:
-        JDBC connection string.
-    lookup_existing:
-        Specifications for looking up existing resource. Other attributes will
-        be ignored.
-    max_num_clusters:
-        Maximum number of clusters available when a SQL warehouse is running.
-    min_num_clusters:
-        Minimum number of clusters available when a SQL warehouse is running.
-    name:
-        Warehouse name
-    num_clusters:
-        Fixed number of clusters when autoscaling is not enabled.
-    spot_instance_policy:
-        The spot policy to use for allocating instances to clusters.
-    tags:
-        Databricks tags all endpoint resources with these tags.
-    warehouse_type:
-        SQL warehouse type.
 
     Examples
     --------
@@ -143,27 +86,50 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
         "2X-Large",
         "3X-Large",
         "4X-Large",
-    ]
-    access_controls: list[AccessControl] = []
-    auto_stop_mins: int = None
+    ] = Field(..., description="The size of the clusters allocated to the endpoint")
+    access_controls: list[AccessControl] = Field([], description="Access controls list")
+    auto_stop_mins: int = Field(
+        None,
+        description="Time in minutes until an idle SQL warehouse terminates all clusters and stops.",
+    )
     channel_name: Union[
         Literal["CHANNEL_NAME_CURRENT", "CHANNEL_NAME_PREVIEW"], str
-    ] = None
+    ] = Field(None, description="Channel specifications")
     # data_source_id
-    enable_photon: bool = None
-    enable_serverless_compute: bool = None
-    instance_profile_arn: str = None
-    jdbc_url: str = None
-    lookup_existing: WarehouseLookup = Field(None, exclude=True)
-    max_num_clusters: int = None
-    min_num_clusters: int = None
-    name: str
-    num_clusters: int = None
+    enable_photon: bool = Field(None, description="If `True`, photon is enabled")
+    enable_serverless_compute: bool = Field(
+        None, description="If `True`, warehouse is serverless."
+    )
+    instance_profile_arn: str = Field(None, description="")
+    jdbc_url: str = Field(None, description="JDBC connection string.")
+    lookup_existing: WarehouseLookup = Field(
+        None,
+        exclude=True,
+        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+    )
+    max_num_clusters: int = Field(
+        None,
+        description="Maximum number of clusters available when a SQL warehouse is running.",
+    )
+    min_num_clusters: int = Field(
+        None,
+        description="Minimum number of clusters available when a SQL warehouse is running.",
+    )
+    name: str = Field(..., description="Warehouse name")
+    num_clusters: int = Field(
+        None, description="Fixed number of clusters when autoscaling is not enabled."
+    )
     # odbc_params
-    spot_instance_policy: Literal["COST_OPTIMIZED", "RELIABILITY_OPTIMIZED"] = None
+    spot_instance_policy: Literal["COST_OPTIMIZED", "RELIABILITY_OPTIMIZED"] = Field(
+        None, description="The spot policy to use for allocating instances to clusters."
+    )
     # state
-    tags: WarehouseTags = None
-    warehouse_type: Literal["CLASSIC", "PRO"] = None
+    tags: WarehouseTags = Field(
+        None, description="Databricks tags all endpoint resources with these tags."
+    )
+    warehouse_type: Literal["CLASSIC", "PRO"] = Field(
+        None, description="SQL warehouse type."
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

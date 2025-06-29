@@ -8,6 +8,9 @@ resources:
   # DBFS Files: Stock prices data json file
   databricks_dbfsfiles: !use resources/dbfsfiles.yaml
 
+  # Python package (lake)
+  databricks_pythonpackages: !use resources/pythonpackages.yaml
+
   # Notebooks for jobs and pipelines
   databricks_notebooks: !use resources/notebooks.yaml
 
@@ -18,7 +21,7 @@ resources:
   # Laktory Sample Pipelines
   #   - Deployed resources depend on selected orchestrator
   #   - pl-stocks-job: Deployed as a Job with SQL transformations
-  #   - pl-stocks-dlt: Deployed as a Delta Live Tables with spark transformations
+  #   - pl-stocks-dlt: Deployed as a Lakeflow Declarative Pipeline with spark transformations
   pipelines:
     pl-stocks-job: !use resources/pl-stocks-job.yaml
     pl-stocks-dlt: !use resources/pl-stocks-dlt.yaml
@@ -28,6 +31,9 @@ resources:
     databricks:
       host: ${vars.DATABRICKS_HOST}
       token: ${vars.DATABRICKS_TOKEN}
+
+  variables:
+    wheel_filepath: /Workspace${vars.workspace_laktory_root}wheels/lake-0.0.1-py3-none-any.whl
 
 # Environment Specific Settings
 environments:

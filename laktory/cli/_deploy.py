@@ -50,8 +50,9 @@ def deploy(
 
     References
     ----------
-    - pulumi [up](https://www.pulumi.com/docs/cli/commands/pulumi_up/)
-    - terraform [apply](https://developer.hashicorp.com/terraform/cli/commands/apply)
+    * [CLI](https://www.laktory.ai/concepts/cli/)
+    * pulumi [up](https://www.pulumi.com/docs/cli/commands/pulumi_up/)
+    * terraform [apply](https://developer.hashicorp.com/terraform/cli/commands/apply)
     """
     controller = CLIController(
         env=environment,

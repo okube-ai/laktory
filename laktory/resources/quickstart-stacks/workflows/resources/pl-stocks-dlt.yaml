@@ -1,16 +1,14 @@
 #
-# This is an example of a pipeline that uses Delta Live Tables as the
+# This is an example of a pipeline that uses Databricks Declarative Pipeline as the
 # orchestrator. It runs in stream mode (as_stream = `True`), meaning that
 # new files are incrementally pushed downstream as new rows instead of
 # re-computing entirely the downstream tables.
 #
 name: pl-stocks-dlt
 
-# Select Orchestrator
-orchestrator: DATABRICKS_DLT
-
 # Configure Orchestrator
-databricks_dlt:
+orchestrator:
+  type: DATABRICKS_PIPELINE
   development: ${vars.is_dev}
   target: default
   clusters:
@@ -23,6 +21,10 @@ databricks_dlt:
   - notebook:
       path: /.laktory/dlt/dlt_laktory_pl.py
 
+dependencies:
+  - laktory==<laktory_version>
+  - ${vars.wheel_filepath}
+
 # Define nodes (each node is a table or a view)
 nodes:
 
@@ -32,6 +34,7 @@ nodes:
     path: dbfs:/laktory/data/stock_prices/
     as_stream: true
     format: JSONL
+    infer_schema: true
   sinks:
   - table_name: brz_stock_prices
 
@@ -44,28 +47,26 @@ nodes:
   source:
     node_name: brz_stock_prices
     as_stream: true
-  drop_source_columns: True
   sinks:
   - table_name: slv_stock_prices
 
   # The transformer is a chain of SQL statements and / or serialized spark
-  # functions. In this case, we use `with_columns` helper function to easily
-  # create columns using a spark-like syntax and we use Spark
-  # df.drop_duplicates to clean the data.
+  # functions. In this case, we use `with_columns` from Narwhals API and the
+  # drop_duplicates method from Spark. By default, laktory will use Narwhals API to
+  # ensure seamless transition between DataFrame backends, but you can also choose to
+  # use DataFrame backend API by setting `dataframe_api` to "NATIVE".
   transformer:
     nodes:
-    - with_columns:
-      - name: created_at
-        type: timestamp
-        expr: data.created_at
-      - name: symbol
-        expr: data.symbol
-      - name: open
-        type: double
-        expr: data.open
-      - name: close
-        type: double
-        expr: data.close
+    - func_name: select
+      func_kwargs:
+        created_at: nw.col("data").struct.field("created_at").cast(nw.dtypes.Datetime(time_zone="UTC"))
+        symbol: nw.col("data").struct.field("symbol").cast(nw.dtypes.String())
+        open: nw.col("data").struct.field("open").cast(nw.dtypes.Float64())
+        close: nw.col("data").struct.field("close").cast(nw.dtypes.Float64())
     - func_name: drop_duplicates
       func_kwargs:
         subset: ["created_at", "symbol"]
+      dataframe_api: NATIVE
+
+    # Custom function from lake package deployed as wheel file
+    - func_name: lake.with_last_modified

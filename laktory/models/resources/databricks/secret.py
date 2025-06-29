@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -6,20 +8,11 @@ from laktory.models.resources.terraformresource import TerraformResource
 class Secret(BaseModel, PulumiResource, TerraformResource):
     """
     Databricks secret
-
-    Attributes
-    ----------
-    scope:
-        Scope associated with the secret
-    key:
-        Key associated with the secret.
-    value:
-        Value associated with the secret
     """
 
-    scope: str = None
-    key: str = None
-    value: str = None
+    scope: str = Field(None, description="Scope associated with the secret")
+    key: str = Field(None, description="Key associated with the secret.")
+    value: str = Field(None, description="Value associated with the secret")
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

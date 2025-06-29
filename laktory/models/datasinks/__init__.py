@@ -1,17 +1,19 @@
-from typing import Union
-
 from .basedatasink import BaseDataSink
-from .basedatasink import DataSinkMergeCDCOptions
 from .filedatasink import FileDataSink
+from .hivemetastoredatasink import HiveMetastoreDataSink
+from .mergecdcoptions import DataSinkMergeCDCOptions
+from .pipelineviewdatasink import PipelineViewDataSink
 from .tabledatasink import TableDataSink
+from .unitycatalogdatasink import UnityCatalogDataSink
 
 classes = [
+    PipelineViewDataSink,
     FileDataSink,
-    TableDataSink,
+    UnityCatalogDataSink,
+    HiveMetastoreDataSink,
 ]
 
 
-DataSinksUnion = Union[
-    FileDataSink,
-    TableDataSink,
-]
+DataSinksUnion = (
+    PipelineViewDataSink | FileDataSink | UnityCatalogDataSink | HiveMetastoreDataSink
+)
