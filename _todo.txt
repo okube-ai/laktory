@@ -1,3 +1,0 @@
-- Review models API doc to sort parent class attributes
-- Find why `VariableType` does not receive a hyperlink
-- Sort parameters when importing from parent classes.
