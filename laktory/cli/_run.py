@@ -70,7 +70,7 @@ def run(
     Examples
     --------
     ```cmd
-    laktory run --env dev --dlt pl-stock-prices --full_refresh --action CANCEL
+    laktory run --env dev --dbks-pipeline pl-stock-prices --full_refresh --action CANCEL
     ```
 
     References

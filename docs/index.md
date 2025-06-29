@@ -263,7 +263,7 @@ laktory deploy --env dev
 ```
 
 ```commandline title="command line"
-laktory run --env dev --job slv_stock_prices
+laktory run --env dev --dbks-job slv_stock_prices
 ```
 ![job](./images/screenshots/job_stock_prices.png)
 

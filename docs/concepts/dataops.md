@@ -106,5 +106,5 @@ pl.execute(spark=spark)
 
 #### Remote Testing
 ```commandline title="command line"
-laktory run --job pl-stock-prices --env dev
+laktory run --dbks-job pl-stock-prices --env dev
 ```

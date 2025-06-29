@@ -186,14 +186,14 @@ only showing top 10 rows
 You can now run your pipeline either from the Databricks UI or using the Laktory CLI:
 
 ```cmd
-laktory run --env dev --job pl-stock-job
+laktory run --env dev --dbks-job pl-stock-job
 ```
 This will start the pipeline run and provide real-time status updates for each task in the job. The output will show the
 job's progress, including any tasks that are pending, running, or completed.
 
 <div class="code-output">
 ```cmd
-(laktory) osoucy@countach workflows % laktory run --env dev --job job-pl-stocks
+(laktory) osoucy@countach workflows % laktory run --env dev --dbks-job job-pl-stocks
 INFO - Getting id for job job-pl-stocks
 INFO - Getting id for pipeline pl-stocks-dlt
 INFO - Getting id for job job-hello
