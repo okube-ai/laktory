@@ -27,5 +27,5 @@ publish:
 	uv publish
 
 publishdoc:
-	uv pip install pydantic 'mkdocs<1.6' 'mkdocstrings[python]' mkdocs-material mkdocs-video griffe_fieldz
+	uv pip install griffe_fieldz mkdocs mkdocs-video 'mkdocstrings[python]' mkdocs-material pydantic
 	mkdocs gh-deploy --force

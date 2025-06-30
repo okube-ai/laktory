@@ -230,6 +230,9 @@ def test_databricks_job_execute(mocker):
 
 
 def test_databricks_pipeline(tmp_path):
+    # Mock laktory version to account for dynamically changing value
+    lk.__version__ = "<version>"
+
     pl = get_pl_dlt()
 
     # Test node names
@@ -264,6 +267,7 @@ def test_databricks_pipeline(tmp_path):
     }
 
     data = pl.orchestrator.model_dump()
+    # data["configuration"]["requirements"] = data["configuration"]["requirements"].replace(__version__, "<version>")
     print(data)
     assert data == {
         "dataframe_backend": None,
@@ -286,7 +290,7 @@ def test_databricks_pipeline(tmp_path):
         "creator_user_name": None,
         "configuration": {
             "pipeline_name": "pl-dlt",
-            "requirements": '["laktory==0.8.0"]',
+            "requirements": '["laktory==<version>"]',
             "config_filepath": "/Workspace/.laktory/pipelines/pl-dlt/config.json",
         },
         "continuous": None,
