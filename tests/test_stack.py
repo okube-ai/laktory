@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+import laktory as lk
 from laktory import models
 from laktory._settings import settings
 from laktory._testing import skip_pulumi_preview
@@ -190,6 +191,9 @@ def test_stack_resources_unique_name():
 
 
 def test_pulumi_stack(monkeypatch, stack):
+    # Mock laktory version to account for dynamically changing value
+    lk.__version__ = "<version>"
+
     monkeypatch.setenv("DATABRICKS_HOST", "my-host")
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
 
@@ -298,7 +302,7 @@ def test_pulumi_stack(monkeypatch, stack):
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
-                        "requirements": '["laktory==0.8.0"]',
+                        "requirements": '["laktory==<version>"]',
                         "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
                     },
                     "libraries": [
@@ -327,7 +331,7 @@ def test_pulumi_stack(monkeypatch, stack):
                 "type": "databricks:WorkspaceFile",
                 "properties": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
-                    "contentBase64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfSwKICAgICAgICAgICAgInNpbmtzIjogWwogICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICJwaXBlbGluZV92aWV3X25hbWUiOiAiZmlyc3Rfbm9kZSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT0wLjguMFwiXSIsCiAgICAgICAgICAgICJjb25maWdfZmlsZXBhdGgiOiAiL1dvcmtzcGFjZS8ubGFrdG9yeS9waXBlbGluZXMvcGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrL2NvbmZpZy5qc29uIgogICAgICAgIH0sCiAgICAgICAgImxpYnJhcmllcyI6IFsKICAgICAgICAgICAgewogICAgICAgICAgICAgICAgIm5vdGVib29rIjogewogICAgICAgICAgICAgICAgICAgICJwYXRoIjogIi9waXBlbGluZXMvZGx0X2Jyel90ZW1wbGF0ZS5weSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAidHlwZSI6ICJEQVRBQlJJQ0tTX1BJUEVMSU5FIgogICAgfQp9",
+                    "contentBase64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfSwKICAgICAgICAgICAgInNpbmtzIjogWwogICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICJwaXBlbGluZV92aWV3X25hbWUiOiAiZmlyc3Rfbm9kZSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT08dmVyc2lvbj5cIl0iLAogICAgICAgICAgICAiY29uZmlnX2ZpbGVwYXRoIjogIi9Xb3Jrc3BhY2UvLmxha3RvcnkvcGlwZWxpbmVzL3BsLXN0b2NrLXByaWNlcy11dC1zdGFjay9jb25maWcuanNvbiIKICAgICAgICB9LAogICAgICAgICJsaWJyYXJpZXMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJub3RlYm9vayI6IHsKICAgICAgICAgICAgICAgICAgICAicGF0aCI6ICIvcGlwZWxpbmVzL2RsdF9icnpfdGVtcGxhdGUucHkiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJuYW1lIjogInBsLXN0b2NrLXByaWNlcy11dC1zdGFjayIsCiAgICAgICAgInR5cGUiOiAiREFUQUJSSUNLU19QSVBFTElORSIKICAgIH0KfQ==",
                 },
                 "options": {
                     "provider": "${databricks}",
@@ -460,7 +464,7 @@ def test_pulumi_stack(monkeypatch, stack):
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
-                        "requirements": '["laktory==0.8.0"]',
+                        "requirements": '["laktory==<version>"]',
                         "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
                     },
                     "development": False,
@@ -490,7 +494,7 @@ def test_pulumi_stack(monkeypatch, stack):
                 "type": "databricks:WorkspaceFile",
                 "properties": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
-                    "contentBase64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfSwKICAgICAgICAgICAgInNpbmtzIjogWwogICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICJwaXBlbGluZV92aWV3X25hbWUiOiAiZmlyc3Rfbm9kZSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT0wLjguMFwiXSIsCiAgICAgICAgICAgICJjb25maWdfZmlsZXBhdGgiOiAiL1dvcmtzcGFjZS8ubGFrdG9yeS9waXBlbGluZXMvcGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrL2NvbmZpZy5qc29uIgogICAgICAgIH0sCiAgICAgICAgImRldmVsb3BtZW50IjogZmFsc2UsCiAgICAgICAgImxpYnJhcmllcyI6IFsKICAgICAgICAgICAgewogICAgICAgICAgICAgICAgIm5vdGVib29rIjogewogICAgICAgICAgICAgICAgICAgICJwYXRoIjogIi9waXBlbGluZXMvZGx0X2Jyel90ZW1wbGF0ZS5weSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAidHlwZSI6ICJEQVRBQlJJQ0tTX1BJUEVMSU5FIgogICAgfQp9",
+                    "contentBase64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfSwKICAgICAgICAgICAgInNpbmtzIjogWwogICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICJwaXBlbGluZV92aWV3X25hbWUiOiAiZmlyc3Rfbm9kZSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT08dmVyc2lvbj5cIl0iLAogICAgICAgICAgICAiY29uZmlnX2ZpbGVwYXRoIjogIi9Xb3Jrc3BhY2UvLmxha3RvcnkvcGlwZWxpbmVzL3BsLXN0b2NrLXByaWNlcy11dC1zdGFjay9jb25maWcuanNvbiIKICAgICAgICB9LAogICAgICAgICJkZXZlbG9wbWVudCI6IGZhbHNlLAogICAgICAgICJsaWJyYXJpZXMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJub3RlYm9vayI6IHsKICAgICAgICAgICAgICAgICAgICAicGF0aCI6ICIvcGlwZWxpbmVzL2RsdF9icnpfdGVtcGxhdGUucHkiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJuYW1lIjogInBsLXN0b2NrLXByaWNlcy11dC1zdGFjayIsCiAgICAgICAgInR5cGUiOiAiREFUQUJSSUNLU19QSVBFTElORSIKICAgIH0KfQ==",
                 },
                 "options": {
                     "provider": "${databricks}",
@@ -523,6 +527,9 @@ def test_pulumi_stack(monkeypatch, stack):
 
 
 def test_terraform_stack(monkeypatch, stack):
+    # Mock laktory version to account for dynamically changing value
+    lk.__version__ = "<version>"
+
     # To prevent from exposing sensitive data, we overwrite some env vars
     monkeypatch.setenv("DATABRICKS_HOST", "my-host")
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
@@ -549,6 +556,23 @@ def test_terraform_stack(monkeypatch, stack):
                 "job-stock-prices-ut-stack": {
                     "name": "job-stock-prices-ut-stack",
                     "tags": {},
+                    "job_cluster": [
+                        {
+                            "job_cluster_key": "main",
+                            "new_cluster": {
+                                "data_security_mode": "USER_ISOLATION",
+                                "init_scripts": [],
+                                "node_type_id": "${vars.node_type_id}",
+                                "spark_conf": {},
+                                "spark_env_vars": {
+                                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
+                                    "LAKTORY_WORKSPACE_ENV": "${vars.env}",
+                                },
+                                "spark_version": "16.3.x-scala2.12",
+                                "ssh_public_keys": [],
+                            },
+                        }
+                    ],
                     "parameter": [],
                     "task": [
                         {
@@ -568,23 +592,6 @@ def test_terraform_stack(monkeypatch, stack):
                             },
                             "task_key": "run-pipeline",
                         },
-                    ],
-                    "job_cluster": [
-                        {
-                            "job_cluster_key": "main",
-                            "new_cluster": {
-                                "data_security_mode": "USER_ISOLATION",
-                                "init_scripts": [],
-                                "node_type_id": "${vars.node_type_id}",
-                                "spark_conf": {},
-                                "spark_env_vars": {
-                                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
-                                    "LAKTORY_WORKSPACE_ENV": "${vars.env}",
-                                },
-                                "spark_version": "16.3.x-scala2.12",
-                                "ssh_public_keys": [],
-                            },
-                        }
                     ],
                 }
             },
@@ -637,7 +644,7 @@ def test_terraform_stack(monkeypatch, stack):
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
-                        "requirements": '["laktory==0.8.0"]',
+                        "requirements": '["laktory==<version>"]',
                         "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
                     },
                     "name": "pl-stock-prices-ut-stack",
@@ -652,7 +659,7 @@ def test_terraform_stack(monkeypatch, stack):
             "databricks_workspace_file": {
                 "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
-                    "content_base64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfSwKICAgICAgICAgICAgInNpbmtzIjogWwogICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICJwaXBlbGluZV92aWV3X25hbWUiOiAiZmlyc3Rfbm9kZSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT0wLjguMFwiXSIsCiAgICAgICAgICAgICJjb25maWdfZmlsZXBhdGgiOiAiL1dvcmtzcGFjZS8ubGFrdG9yeS9waXBlbGluZXMvcGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrL2NvbmZpZy5qc29uIgogICAgICAgIH0sCiAgICAgICAgImxpYnJhcmllcyI6IFsKICAgICAgICAgICAgewogICAgICAgICAgICAgICAgIm5vdGVib29rIjogewogICAgICAgICAgICAgICAgICAgICJwYXRoIjogIi9waXBlbGluZXMvZGx0X2Jyel90ZW1wbGF0ZS5weSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAidHlwZSI6ICJEQVRBQlJJQ0tTX1BJUEVMSU5FIgogICAgfQp9",
+                    "content_base64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfSwKICAgICAgICAgICAgInNpbmtzIjogWwogICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICJwaXBlbGluZV92aWV3X25hbWUiOiAiZmlyc3Rfbm9kZSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT08dmVyc2lvbj5cIl0iLAogICAgICAgICAgICAiY29uZmlnX2ZpbGVwYXRoIjogIi9Xb3Jrc3BhY2UvLmxha3RvcnkvcGlwZWxpbmVzL3BsLXN0b2NrLXByaWNlcy11dC1zdGFjay9jb25maWcuanNvbiIKICAgICAgICB9LAogICAgICAgICJsaWJyYXJpZXMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJub3RlYm9vayI6IHsKICAgICAgICAgICAgICAgICAgICAicGF0aCI6ICIvcGlwZWxpbmVzL2RsdF9icnpfdGVtcGxhdGUucHkiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJuYW1lIjogInBsLXN0b2NrLXByaWNlcy11dC1zdGFjayIsCiAgICAgICAgInR5cGUiOiAiREFUQUJSSUNLU19QSVBFTElORSIKICAgIH0KfQ==",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
                 }
@@ -683,6 +690,23 @@ def test_terraform_stack(monkeypatch, stack):
                 "job-stock-prices-ut-stack": {
                     "name": "job-stock-prices-ut-stack",
                     "tags": {},
+                    "job_cluster": [
+                        {
+                            "job_cluster_key": "main",
+                            "new_cluster": {
+                                "data_security_mode": "USER_ISOLATION",
+                                "init_scripts": [],
+                                "node_type_id": "Standard_DS3_v2",
+                                "spark_conf": {},
+                                "spark_env_vars": {
+                                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
+                                    "LAKTORY_WORKSPACE_ENV": "dev",
+                                },
+                                "spark_version": "16.3.x-scala2.12",
+                                "ssh_public_keys": [],
+                            },
+                        }
+                    ],
                     "parameter": [],
                     "task": [
                         {
@@ -702,23 +726,6 @@ def test_terraform_stack(monkeypatch, stack):
                             },
                             "task_key": "run-pipeline",
                         },
-                    ],
-                    "job_cluster": [
-                        {
-                            "job_cluster_key": "main",
-                            "new_cluster": {
-                                "data_security_mode": "USER_ISOLATION",
-                                "init_scripts": [],
-                                "node_type_id": "Standard_DS3_v2",
-                                "spark_conf": {},
-                                "spark_env_vars": {
-                                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
-                                    "LAKTORY_WORKSPACE_ENV": "dev",
-                                },
-                                "spark_version": "16.3.x-scala2.12",
-                                "ssh_public_keys": [],
-                            },
-                        }
                     ],
                 }
             },
@@ -771,7 +778,7 @@ def test_terraform_stack(monkeypatch, stack):
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
-                        "requirements": '["laktory==0.8.0"]',
+                        "requirements": '["laktory==<version>"]',
                         "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
                     },
                     "name": "pl-stock-prices-ut-stack",
@@ -786,7 +793,7 @@ def test_terraform_stack(monkeypatch, stack):
             "databricks_workspace_file": {
                 "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
-                    "content_base64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfSwKICAgICAgICAgICAgInNpbmtzIjogWwogICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICJwaXBlbGluZV92aWV3X25hbWUiOiAiZmlyc3Rfbm9kZSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT0wLjguMFwiXSIsCiAgICAgICAgICAgICJjb25maWdfZmlsZXBhdGgiOiAiL1dvcmtzcGFjZS8ubGFrdG9yeS9waXBlbGluZXMvcGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrL2NvbmZpZy5qc29uIgogICAgICAgIH0sCiAgICAgICAgImxpYnJhcmllcyI6IFsKICAgICAgICAgICAgewogICAgICAgICAgICAgICAgIm5vdGVib29rIjogewogICAgICAgICAgICAgICAgICAgICJwYXRoIjogIi9waXBlbGluZXMvZGx0X2Jyel90ZW1wbGF0ZS5weSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAidHlwZSI6ICJEQVRBQlJJQ0tTX1BJUEVMSU5FIgogICAgfQp9",
+                    "content_base64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfSwKICAgICAgICAgICAgInNpbmtzIjogWwogICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICJwaXBlbGluZV92aWV3X25hbWUiOiAiZmlyc3Rfbm9kZSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT08dmVyc2lvbj5cIl0iLAogICAgICAgICAgICAiY29uZmlnX2ZpbGVwYXRoIjogIi9Xb3Jrc3BhY2UvLmxha3RvcnkvcGlwZWxpbmVzL3BsLXN0b2NrLXByaWNlcy11dC1zdGFjay9jb25maWcuanNvbiIKICAgICAgICB9LAogICAgICAgICJsaWJyYXJpZXMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJub3RlYm9vayI6IHsKICAgICAgICAgICAgICAgICAgICAicGF0aCI6ICIvcGlwZWxpbmVzL2RsdF9icnpfdGVtcGxhdGUucHkiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJuYW1lIjogInBsLXN0b2NrLXByaWNlcy11dC1zdGFjayIsCiAgICAgICAgInR5cGUiOiAiREFUQUJSSUNLU19QSVBFTElORSIKICAgIH0KfQ==",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
                 }
@@ -817,6 +824,23 @@ def test_terraform_stack(monkeypatch, stack):
                 "job-stock-prices-ut-stack": {
                     "name": "job-stock-prices-ut-stack",
                     "tags": {},
+                    "job_cluster": [
+                        {
+                            "job_cluster_key": "main",
+                            "new_cluster": {
+                                "data_security_mode": "USER_ISOLATION",
+                                "init_scripts": [],
+                                "node_type_id": "Standard_DS4_v2",
+                                "spark_conf": {},
+                                "spark_env_vars": {
+                                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
+                                    "LAKTORY_WORKSPACE_ENV": "prod",
+                                },
+                                "spark_version": "16.3.x-scala2.12",
+                                "ssh_public_keys": [],
+                            },
+                        }
+                    ],
                     "parameter": [],
                     "task": [
                         {
@@ -836,23 +860,6 @@ def test_terraform_stack(monkeypatch, stack):
                             },
                             "task_key": "run-pipeline",
                         },
-                    ],
-                    "job_cluster": [
-                        {
-                            "job_cluster_key": "main",
-                            "new_cluster": {
-                                "data_security_mode": "USER_ISOLATION",
-                                "init_scripts": [],
-                                "node_type_id": "Standard_DS4_v2",
-                                "spark_conf": {},
-                                "spark_env_vars": {
-                                    "AZURE_TENANT_ID": "{{secrets/azure/tenant-id}}",
-                                    "LAKTORY_WORKSPACE_ENV": "prod",
-                                },
-                                "spark_version": "16.3.x-scala2.12",
-                                "ssh_public_keys": [],
-                            },
-                        }
                     ],
                 }
             },
@@ -905,7 +912,7 @@ def test_terraform_stack(monkeypatch, stack):
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
                         "pipeline_name": "pl-stock-prices-ut-stack",
-                        "requirements": '["laktory==0.8.0"]',
+                        "requirements": '["laktory==<version>"]',
                         "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
                     },
                     "development": False,
@@ -921,7 +928,7 @@ def test_terraform_stack(monkeypatch, stack):
             "databricks_workspace_file": {
                 "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-config-json": {
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack/config.json",
-                    "content_base64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfSwKICAgICAgICAgICAgInNpbmtzIjogWwogICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICJwaXBlbGluZV92aWV3X25hbWUiOiAiZmlyc3Rfbm9kZSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT0wLjguMFwiXSIsCiAgICAgICAgICAgICJjb25maWdfZmlsZXBhdGgiOiAiL1dvcmtzcGFjZS8ubGFrdG9yeS9waXBlbGluZXMvcGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrL2NvbmZpZy5qc29uIgogICAgICAgIH0sCiAgICAgICAgImRldmVsb3BtZW50IjogZmFsc2UsCiAgICAgICAgImxpYnJhcmllcyI6IFsKICAgICAgICAgICAgewogICAgICAgICAgICAgICAgIm5vdGVib29rIjogewogICAgICAgICAgICAgICAgICAgICJwYXRoIjogIi9waXBlbGluZXMvZGx0X2Jyel90ZW1wbGF0ZS5weSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAidHlwZSI6ICJEQVRBQlJJQ0tTX1BJUEVMSU5FIgogICAgfQp9",
+                    "content_base64": "ewogICAgIm5hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICJub2RlcyI6IFsKICAgICAgICB7CiAgICAgICAgICAgICJkbHRfdGVtcGxhdGUiOiBudWxsLAogICAgICAgICAgICAibmFtZSI6ICJmaXJzdF9ub2RlIiwKICAgICAgICAgICAgInNvdXJjZSI6IHsKICAgICAgICAgICAgICAgICJmb3JtYXQiOiAiSlNPTiIsCiAgICAgICAgICAgICAgICAicGF0aCI6ICIvdG1wLyIKICAgICAgICAgICAgfSwKICAgICAgICAgICAgInNpbmtzIjogWwogICAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgICAgICJwaXBlbGluZV92aWV3X25hbWUiOiAiZmlyc3Rfbm9kZSIKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgIH0KICAgIF0sCiAgICAib3JjaGVzdHJhdG9yIjogewogICAgICAgICJhY2Nlc3NfY29udHJvbHMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogImFjY291bnQgdXNlcnMiLAogICAgICAgICAgICAgICAgInBlcm1pc3Npb25fbGV2ZWwiOiAiQ0FOX1ZJRVciCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJncm91cF9uYW1lIjogInJvbGUtZW5naW5lZXJzIiwKICAgICAgICAgICAgICAgICJwZXJtaXNzaW9uX2xldmVsIjogIkNBTl9SVU4iCiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJjb25maWd1cmF0aW9uIjogewogICAgICAgICAgICAiYnVzaW5lc3NfdW5pdCI6ICJsYWt0b3J5IiwKICAgICAgICAgICAgIndvcmtmbG93X25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInBpcGVsaW5lX25hbWUiOiAicGwtc3RvY2stcHJpY2VzLXV0LXN0YWNrIiwKICAgICAgICAgICAgInJlcXVpcmVtZW50cyI6ICJbXCJsYWt0b3J5PT08dmVyc2lvbj5cIl0iLAogICAgICAgICAgICAiY29uZmlnX2ZpbGVwYXRoIjogIi9Xb3Jrc3BhY2UvLmxha3RvcnkvcGlwZWxpbmVzL3BsLXN0b2NrLXByaWNlcy11dC1zdGFjay9jb25maWcuanNvbiIKICAgICAgICB9LAogICAgICAgICJkZXZlbG9wbWVudCI6IGZhbHNlLAogICAgICAgICJsaWJyYXJpZXMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJub3RlYm9vayI6IHsKICAgICAgICAgICAgICAgICAgICAicGF0aCI6ICIvcGlwZWxpbmVzL2RsdF9icnpfdGVtcGxhdGUucHkiCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJuYW1lIjogInBsLXN0b2NrLXByaWNlcy11dC1zdGFjayIsCiAgICAgICAgInR5cGUiOiAiREFUQUJSSUNLU19QSVBFTElORSIKICAgIH0KfQ==",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
                 }

@@ -27,5 +27,6 @@ publish:
 	uv publish
 
 publishdoc:
-	uv pip install 'mkdocs<1.6' 'mkdocstrings[python]' mkdocs-material mkdocs-video
+	uv pip install -e ./
+	uv pip install griffe_fieldz mkdocs mkdocs-video 'mkdocstrings[python]' mkdocs-material
 	mkdocs gh-deploy --force
