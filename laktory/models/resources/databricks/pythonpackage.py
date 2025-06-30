@@ -137,6 +137,10 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
             )
 
             files = [f for f in dist_path.glob("*.whl") if f.is_file()]
+            if len(files) == 0:
+                raise RuntimeError(
+                    "Wheel file could not be built. Make sure the `config_filepath` and `build_command` are correct."
+                )
             file = max(files, key=lambda f: f.stat().st_mtime)
 
             self._wheel_path = file

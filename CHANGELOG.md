@@ -6,9 +6,10 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* raise `RuntimeError` when wheel file can't be built.
 ### Breaking changes
 * n/a
+
 ## [0.8.0] - 2025-06-29
 ### Added
 * Narwhals as the core engine for DataFrame manipulations
