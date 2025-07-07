@@ -4,9 +4,10 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* DLT notebook for CDC merge operations
 ### Updated
 * raise `RuntimeError` when wheel file can't be built.
+* removed required to have a sink defined with Databricks orchestrator
 ### Breaking changes
 * n/a
 
