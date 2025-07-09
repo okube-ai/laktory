@@ -149,13 +149,17 @@ class DataSinkMergeCDCOptions(BaseModel):
 
     @property
     def target_name(self):
-        if self._parent and "TableDataSink" in str(type(self._parent)):
+        from laktory.models.datasinks.tabledatasink import TableDataSink
+
+        if self._parent and isinstance(self._parent, TableDataSink):
             return self._parent.full_name
         return None
 
     @property
     def target_path(self):
-        if self._parent and "FileDataSink" in str(type(self._parent)):
+        from laktory.models.datasinks.filedatasink import FileDataSink
+
+        if self._parent and isinstance(self._parent, FileDataSink):
             return self._parent.path
         return None
 
