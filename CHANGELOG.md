@@ -1,14 +1,14 @@
 # Release History
 
 ## [0.8.1] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
+* DLT notebook for CDC merge operations
 ### Updated
-* n/a
+* raise `RuntimeError` when wheel file can't be built.
+* removed required to have a sink defined with Databricks orchestrator
 ### Breaking changes
-* n/a
+* Data type fields definition
+
 ## [0.8.0] - 2025-06-29
 ### Added
 * Narwhals as the core engine for DataFrame manipulations

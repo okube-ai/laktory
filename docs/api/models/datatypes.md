@@ -2,6 +2,10 @@
 
 ---
 
+::: laktory.models.DField
+
+---
+
 ::: laktory.models.dtypes.Array
 
 ---

@@ -70,7 +70,9 @@ def define_cdc_table(node, sink):
         comment=node.comment,
     )
 
-    dlt.apply_changes(source=node.source.table_name, **sink.dlt_apply_changes_kwargs)
+    dlt.apply_changes(
+        source=node.source.node.primary_sink.dlt_name, **sink.dlt_apply_changes_kwargs
+    )
 
 
 # --------------------------------------------------------------------------- #

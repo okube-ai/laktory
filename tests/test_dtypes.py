@@ -43,8 +43,16 @@ def test_complex_types():
     t0 = DType(name="list", inner="int")
     t1 = DType(name="list", inner={"name": "list", "inner": "str"})
     t2 = dtypes.List(inner=DType(name="list", inner="str"))
-    t3 = DType(name="struct", fields={"x": "double", "y": "int"})
-    t4 = dtypes.Struct(fields={"x": {"name": "list", "inner": "double"}, "y": t3})
+    t3 = DType(
+        name="struct",
+        fields=[{"name": "x", "dtype": "double"}, {"name": "y", "dtype": "int"}],
+    )
+    t4 = dtypes.Struct(
+        fields=[
+            {"name": "x", "dtype": {"name": "list", "inner": "double"}},
+            {"name": "y", "dtype": t3},
+        ]
+    )
 
     # Narwhals
     assert t0.to_narwhals() == nw.List(inner=nw.Int32)
@@ -134,7 +142,13 @@ def test_serialization():
     assert dump1 == dump0
 
     # Struct
-    dtype0 = DType(name="Struct", fields={"s": dtypes.String(), "x": dtypes.Float64()})
+    dtype0 = DType(
+        name="Struct",
+        fields=[
+            {"name": "s", "dtype": dtypes.String()},
+            {"name": "x", "dtype": dtypes.Float64()},
+        ],
+    )
     dump0 = dtype0.model_dump(exclude_unset=True)
     dtype1 = DType.model_validate(dump0)
     dump1 = dtype1.model_dump(exclude_unset=True)

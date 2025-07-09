@@ -170,3 +170,41 @@ def test_execute_view(backend, tmp_path):
     df1_read = get_spark_session().read.table("default.df1")
 
     assert_dfs_equal(df1_output, df1_read)
+
+
+@pytest.mark.parametrize("backend", ["PYSPARK"])
+def test_purge_multisinks(backend, tmp_path):
+    df0 = get_df0(backend)
+
+    # Create table
+    table_path = tmp_path / "df0/"
+    (
+        df0.to_native()
+        .write.mode("OVERWRITE")
+        .option("path", table_path)
+        .saveAsTable("default.df0")
+    )
+
+    node = models.PipelineNode(
+        name="node0",
+        source={
+            "schema_name": "default",
+            "table_name": "df0",
+        },
+        sinks=[
+            {
+                "schema_name": "default",
+                "table_name": "df1",
+                "table_type": "VIEW",
+                "view_definition": "SELECT id FROM {df}",
+            },
+            {
+                "schema_name": "default",
+                "table_name": "df2",
+                "table_type": "VIEW",
+                "view_definition": "SELECT id FROM {df}",
+            },
+        ],
+    )
+
+    node.purge()

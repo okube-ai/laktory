@@ -353,14 +353,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         o = self.orchestrator
 
         for n in self.nodes:
-            if isinstance(
-                o, (DatabricksPipelineOrchestrator, DatabricksJobOrchestrator)
-            ):
-                if not n.has_sinks:
-                    raise ValueError(
-                        f"Node '{n.name}' must have a sink with orchestrator of type {type(o)}."
-                    )
-
             if isinstance(o, DatabricksPipelineOrchestrator):
                 for i, s in enumerate(n.sinks):
                     if not isinstance(

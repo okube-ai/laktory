@@ -390,7 +390,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         else:
             raise NotImplementedError()
 
-    def _purge_checkpoint(self, spark=None):
+    def _purge_checkpoint(self):
         if self._checkpoint_path:
             if os.path.exists(self._checkpoint_path):
                 logger.info(

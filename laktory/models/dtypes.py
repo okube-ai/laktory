@@ -62,7 +62,22 @@ ALIASES = {
 }
 
 
-__all__ = ["DType"] + NAMES
+__all__ = ["DType", "DField"] + NAMES
+
+
+class DField(BaseModel):
+    """
+    Data Field definition
+    """
+
+    name: str = Field(..., description="Field name")
+    dtype: Union[str, "DType"] = Field(..., description="Field data type")
+
+    @field_validator("dtype", mode="before")
+    def update_dtype(cls, dtype: Any) -> Any:
+        if isinstance(dtype, str):
+            dtype = DType(name=dtype)
+        return dtype
 
 
 class DType(BaseModel):
@@ -94,10 +109,10 @@ class DType(BaseModel):
     inner: Union[str, "DType"] = Field(
         None, description="Data type for sub-elements for `Array` or `List` types."
     )
-    fields: dict[str, Union[str, "DType"]] = Field(
+    fields: list[DField] = Field(
         None, description="Definition of fields for `Struct` type."
     )
-    shape: Union[int, list[int]] = Field(
+    shape: int | list[int] = Field(
         None, description="Definition of shape for `Array` type."
     )
     category: Literal["NUMERIC", "STRING", "STRUCT"] = Field(
@@ -141,21 +156,21 @@ class DType(BaseModel):
 
         return v
 
-    @field_validator("fields", mode="before")
-    def update_fields(cls, fields: Any) -> Any:
-        if fields is None:
-            return
-
-        for k, v in fields.items():
-            if isinstance(v, str):
-                fields[k] = DType(name=v)
-
-            elif isinstance(v, DType) and type(v) is not DType:
-                """Required to prevent serialization issue with pydantic"""
-                dump = v.model_dump(exclude_unset=True)
-                fields[k] = DType(**dump)
-
-        return fields
+    # @field_validator("fields", mode="before")
+    # def update_fields(cls, fields: Any) -> Any:
+    #     if fields is None:
+    #         return
+    #
+    #     for k, v in fields.items():
+    #         if isinstance(v, str):
+    #             fields[k] = DType(name=v)
+    #
+    #         elif isinstance(v, DType) and type(v) is not DType:
+    #             """Required to prevent serialization issue with pydantic"""
+    #             dump = v.model_dump(exclude_unset=True)
+    #             fields[k] = DType(**dump)
+    #
+    #     return fields
 
     def to_generic(self):
         return DType(**self.model_dump(exclude_unset=True))
@@ -174,8 +189,8 @@ class DType(BaseModel):
 
         if _type == "Struct":
             fields = []
-            for name, _dtype in self.fields.items():
-                fields += [nw.Field(name=name, dtype=_dtype.to_narwhals())]
+            for field in self.fields:
+                fields += [nw.Field(name=field.name, dtype=field.dtype.to_narwhals())]
             return nw_dtypes.Struct(fields)
 
         if hasattr(nw_dtypes, _type):
@@ -189,20 +204,23 @@ class DType(BaseModel):
         import pyspark.sql.types as T
         from narwhals._spark_like.utils import narwhals_to_native_dtype
 
-        return narwhals_to_native_dtype(self.to_narwhals(), nw._utils.Version.MAIN, T)
+        from laktory import get_spark_session
+
+        spark = get_spark_session()
+        return narwhals_to_native_dtype(
+            dtype=self.to_narwhals(),
+            version=nw._utils.Version.MAIN,
+            spark_types=T,
+            session=spark,
+        )
 
     def to_polars(self):
         """Get equivalent Polars data type"""
-        import polars as pl
         from narwhals._polars.utils import narwhals_to_native_dtype
-        from narwhals._utils import parse_version
-
-        pl_version = parse_version(pl)
 
         return narwhals_to_native_dtype(
             dtype=self.to_narwhals(),
             version=nw._utils.Version.MAIN,
-            backend_version=pl_version,
         )
 
     def to_string(self):
@@ -220,18 +238,18 @@ class SpecificDType(DType):
 # Complex types
 class Array(SpecificDType):
     name: str = Field("Array", frozen=True)
-    inner: Union[str, DType]
-    shape: Union[int, list[int]]
+    inner: str | DType
+    shape: int | list[int]
 
 
 class List(SpecificDType):
     name: str = Field("List", frozen=True)
-    inner: Union[str, DType]
+    inner: str | DType
 
 
 class Struct(SpecificDType):
     name: str = Field("Struct", frozen=True)
-    fields: dict[str, Union[str, DType]]
+    fields: list[DField]
 
 
 # Integer types
@@ -327,3 +345,7 @@ class Date(SpecificDType):
 # Unknown
 class Unknown(SpecificDType):
     name: str = Field("Unknown", frozen=True)
+
+
+DType.model_rebuild()
+DField.model_rebuild()
