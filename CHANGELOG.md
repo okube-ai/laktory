@@ -3,6 +3,7 @@
 ## [0.8.1] - Unreleased
 ### Fixed
 * DLT notebook for CDC merge operations
+* `target_id` and `target_name` for CDC merge options
 ### Updated
 * raise `RuntimeError` when wheel file can't be built.
 * removed required to have a sink defined with Databricks orchestrator
