@@ -9,7 +9,7 @@
 * raise `RuntimeError` when wheel file can't be built.
 * removed required to have a sink defined with Databricks orchestrator
 ### Breaking changes
-* n/a
+* Data type fields definition
 
 ## [0.8.0] - 2025-06-29
 ### Added
