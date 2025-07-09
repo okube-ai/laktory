@@ -1,8 +1,6 @@
 # Release History
 
 ## [0.8.1] - Unreleased
-### Added
-* n/a
 ### Fixed
 * DLT notebook for CDC merge operations
 ### Updated
