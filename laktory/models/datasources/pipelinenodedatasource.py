@@ -130,7 +130,7 @@ class PipelineNodeDataSource(BaseDataSource):
                 df = self.node.primary_sink.read(as_stream=self.as_stream)
             else:
                 logger.info("Executing parent pipeline node")
-                self.node.to_df()
+                self.node.execute()
                 df = self.node.output_df
 
         elif self.node.output_df is not None:
