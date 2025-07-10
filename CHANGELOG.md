@@ -4,6 +4,7 @@
 ### Fixed
 * DLT notebook for CDC merge operations
 * `target_id` and `target_name` for CDC merge options
+* Parsing of data sources in `DataFrameMethod` when NATIVE dataframe API is used
 ### Updated
 * raise `RuntimeError` when wheel file can't be built.
 * removed required to have a sink defined with Databricks orchestrator
