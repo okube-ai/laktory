@@ -652,6 +652,10 @@ def test_dlt_kwargs(tmp_path, backend):
         ),
     )
 
+    assert sink.merge_cdc_options.target_id == "my_table"
+    assert sink.merge_cdc_options.target_name == "my_table"
+    assert sink.merge_cdc_options.target_path is None
+
     assert sink.dlt_apply_changes_kwargs == {
         "apply_as_deletes": "_is_deleted = true",
         "column_list": None,
