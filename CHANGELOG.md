@@ -3,6 +3,7 @@
 ## [0.8.1] - Unreleased
 ### Fixed
 * DLT notebook for CDC merge operations
+* Parsing of data sources in `DataFrameMethod` when NATIVE dataframe API is used
 ### Updated
 * raise `RuntimeError` when wheel file can't be built.
 * removed required to have a sink defined with Databricks orchestrator

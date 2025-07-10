@@ -55,6 +55,20 @@ def test_arg_source(backend):
     assert node.data_sources == [source]
 
 
+@pytest.mark.parametrize("backend", ["PYSPARK"])
+def test_arg_source_native(backend):
+    df0 = get_df0(backend)
+    source = DataFrameDataSource(df=get_df1(backend))
+
+    node = DataFrameMethod(
+        func_name="union",
+        func_args=[source],
+        dataframe_api="NATIVE",
+    )
+    df = node.execute(df0)
+    assert_dfs_equal(df, df0.to_native().union(source.read().to_native()))
+
+
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_arg_nw_expr(backend):
     df0 = get_df0(backend)

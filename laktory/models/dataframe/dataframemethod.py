@@ -39,6 +39,8 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
 
         if isinstance(v, BaseDataSource):
             v = self.value.read()
+            if self.df_api == "NATIVE":
+                v = v.to_native()
 
         elif isinstance(v, str):
             # Imports required to evaluate expressions
