@@ -1,6 +1,12 @@
 # Release History
 
-## [0.8.1] - Unreleased
+## [0.8.3] - Unreleased
+### Fixed
+* a
+### Updated
+* a
+
+## [0.8.2] - 2025-07-11
 ### Fixed
 * DLT notebook for CDC merge operations
 * `target_id` and `target_name` for CDC merge options
