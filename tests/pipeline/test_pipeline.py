@@ -21,7 +21,7 @@ def get_pl(tmp_path):
         data = fp.read()
         data = data.replace("{tmp_path}", str(tmp_path))
         pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
-        pl.root_path = tmp_path
+        pl.root_path_ = tmp_path
 
     return pl
 
@@ -155,17 +155,17 @@ def test_update_from_parent():
 def test_paths(tmp_path):
     pl = get_pl(tmp_path)
     pl_path = tmp_path
-    assert pl._root_path == pl_path
+    assert pl.root_path == pl_path
 
     for node in pl.nodes:
-        assert node._root_path == pl_path / node.name
+        assert node.root_path == pl_path / node.name
         assert (
-            node._expectations_checkpoint_path
+            node.expectations_checkpoint_path
             == pl_path / node.name / "checkpoints" / "expectations"
         )
         for i, s in enumerate(node.all_sinks):
             assert (
-                s._checkpoint_path
+                s.checkpoint_path
                 == pl_path / node.name / "checkpoints" / f"sink-{s._uuid}"
             )
 
