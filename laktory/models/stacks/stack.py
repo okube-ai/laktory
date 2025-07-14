@@ -515,8 +515,6 @@ class Stack(BaseModel):
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
 
-        print("CREATING PULUMI STACK!")
-        print(resources.keys())
         return PulumiStack(
             name=env.name,
             organization=env.organization,

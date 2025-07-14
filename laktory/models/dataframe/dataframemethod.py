@@ -299,9 +299,6 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
         if f is None:
             df_type = type(df)
-            print(f"DATAFRAME_API_: {self.dataframe_api_}")
-            print(f"PARENT DATAFRAME API_: {self._parent.dataframe_api_}")
-            print(f"PARENT DATAFRAME API: {self._parent.dataframe_api}")
             raise ValueError(
                 f"Function {func_full_name} is not available on dataframe of type {str(df_type)} with {self.dataframe_api} API"
             )
