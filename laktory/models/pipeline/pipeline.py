@@ -9,6 +9,7 @@ from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
 from pydantic import model_validator
+from pydantic import field_serializer
 
 from laktory._logger import get_logger
 from laktory._settings import settings
@@ -445,6 +446,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             return Path(self.root_path_)
 
         return Path(settings.laktory_root) / "pipelines" / self.safe_name
+
+    @field_serializer("root_path", when_used="json")
+    def serialize_path(self, value: Path) -> str:
+        return value.as_posix()
 
     # ----------------------------------------------------------------------- #
     # Expectations                                                            #

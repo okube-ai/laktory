@@ -10,6 +10,7 @@ from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
 from pydantic import model_validator
+from pydantic import field_serializer
 
 from laktory._logger import get_logger
 from laktory._settings import settings
@@ -266,6 +267,10 @@ class PipelineNode(BaseModel, PipelineChild):
             return pl.root_path / self.name
 
         return Path(settings.laktory_root) / self.name
+
+    @field_serializer("root_path", "expectations_checkpoint_path", when_used="json")
+    def serialize_path(self, value: Path) -> str:
+        return value.as_posix()
 
     # ----------------------------------------------------------------------- #
     # Outputs and Sinks                                                       #

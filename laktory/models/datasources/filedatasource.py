@@ -10,6 +10,7 @@ from pydantic import Field
 from pydantic import computed_field
 from pydantic import field_validator
 from pydantic import model_validator
+from pydantic import field_serializer
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
@@ -179,6 +180,10 @@ class FileDataSource(BaseDataSource):
             return Path(self.schema_location_)
 
         return Path(os.path.dirname(self.path))
+
+    @field_serializer("schema_location", when_used="json")
+    def serialize_path(self, value: Path) -> str:
+        return value.as_posix()
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #

@@ -11,6 +11,7 @@ from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
 from pydantic import model_validator
+from pydantic import field_serializer
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
@@ -134,6 +135,10 @@ class BaseDataSink(BaseModel, PipelineChild):
                 if s == self:
                     return node.root_path / "checkpoints" / f"sink-{self._uuid}"
         return None
+
+    @field_serializer("checkpoint_path", when_used="json")
+    def serialize_path(self, value: Path) -> str:
+        return value.as_posix()
 
     @property
     def upstream_node_names(self) -> list[str]:
