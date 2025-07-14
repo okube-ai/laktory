@@ -8,9 +8,9 @@ from pydantic import AliasChoices
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import computed_field
+from pydantic import field_serializer
 from pydantic import field_validator
 from pydantic import model_validator
-from pydantic import field_serializer
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
@@ -267,11 +267,6 @@ class FileDataSource(BaseDataSource):
         if self.as_stream:
             # Cloud Files Formats
             if self.is_cloud_files:
-
-                print("SCHEMA LOCATION _ ", self.schema_location)
-                print("SCHEMA LOCATION ", self.schema_location)
-                print("SCHEMA LOCATION AS", self.schema_location.as_posix())
-
                 kwargs["cloudFiles.format"] = fmt
                 kwargs["recursiveFileLookup"] = True
                 kwargs["cloudFiles.schemaLocation"] = self.schema_location.as_posix()
