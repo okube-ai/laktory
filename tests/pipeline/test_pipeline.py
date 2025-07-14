@@ -21,7 +21,7 @@ def get_pl(tmp_path):
         data = fp.read()
         data = data.replace("{tmp_path}", str(tmp_path))
         pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
-        pl.root_path = tmp_path
+        pl.root_path_ = tmp_path
 
     return pl
 
@@ -152,20 +152,58 @@ def test_update_from_parent():
     )
 
 
+def test_root_path(tmp_path):
+    # Without Path
+    pl = models.Pipeline(name="pl")
+    dump = pl.model_dump(exclude_unset=True)
+    dumpj = pl.model_dump(exclude_unset=True, mode="json")
+    pl2 = models.Pipeline.model_validate(dump)
+    pl3 = models.Pipeline.model_validate(dumpj)
+
+    assert pl.root_path_ is None
+    assert pl.root_path == Path("pipelines/pl")
+    assert list(dump.keys()) == [
+        "name",
+        "dataframe_backend",
+        "dataframe_api",
+        "root_path",
+    ]
+    assert dump["root_path"] == Path("pipelines/pl")
+    assert dumpj["root_path"] == "pipelines/pl"
+    assert pl2.root_path_ == Path("pipelines/pl")
+    assert pl3.root_path_ == "pipelines/pl"
+
+    # With Path
+    pl = models.Pipeline(name="pl", root_path="/pl_root/")
+    dump = pl.model_dump(exclude_unset=True)
+    pl2 = models.Pipeline.model_validate(dump)
+
+    assert pl.root_path_ == "/pl_root/"
+    assert pl.root_path == Path("/pl_root/")
+    assert list(dump.keys()) == [
+        "name",
+        "dataframe_backend",
+        "dataframe_api",
+        "root_path",
+    ]
+    assert dump["root_path"] == Path("/pl_root/")
+    assert pl2.root_path_ == Path("/pl_root/")
+
+
 def test_paths(tmp_path):
     pl = get_pl(tmp_path)
     pl_path = tmp_path
-    assert pl._root_path == pl_path
+    assert pl.root_path == pl_path
 
     for node in pl.nodes:
-        assert node._root_path == pl_path / node.name
+        assert node.root_path == pl_path / node.name
         assert (
-            node._expectations_checkpoint_path
+            node.expectations_checkpoint_path
             == pl_path / node.name / "checkpoints" / "expectations"
         )
         for i, s in enumerate(node.all_sinks):
             assert (
-                s._checkpoint_path
+                s.checkpoint_path
                 == pl_path / node.name / "checkpoints" / f"sink-{s._uuid}"
             )
 
@@ -339,7 +377,7 @@ def test_single_node(backend, tmp_path):
 @pytest.mark.parametrize("backend", ["PYSPARK"])
 def test_full(backend, tmp_path):
     pl = get_pl(tmp_path)
-    pl.dataframe_backend = backend
+    pl.dataframe_backend_ = backend
 
     # Set Source
     ss = StreamingSource(backend)

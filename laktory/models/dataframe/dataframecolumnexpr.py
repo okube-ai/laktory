@@ -171,7 +171,7 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
 
         _value = self.expr.replace("\n", " ")
 
-        if self.df_api == "NARWHALS":
+        if self.dataframe_api == "NARWHALS":
             if self.type == "SQL":
                 from laktory.narwhals_ext.functions import sql_expr
 
@@ -184,7 +184,7 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
 
                 expr = eval(_value)
         else:
-            if self.df_backend == DataFrameBackends.PYSPARK:
+            if self.dataframe_backend == DataFrameBackends.PYSPARK:
                 if self.type == "SQL":
                     import pyspark.sql.functions as F
 
@@ -198,7 +198,7 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
 
                     expr = eval(_value)
 
-            elif self.df_backend == DataFrameBackends.POLARS:
+            elif self.dataframe_backend == DataFrameBackends.POLARS:
                 if self.type == "SQL":
                     import polars as pl
 
@@ -214,7 +214,7 @@ class DataFrameColumnExpr(BaseModel, PipelineChild):
 
             else:
                 raise ValueError(
-                    f"`dataframe_backend` '{self.df_backend}' is not supported."
+                    f"`dataframe_backend` '{self.dataframe_backend}' is not supported."
                 )
 
         return expr

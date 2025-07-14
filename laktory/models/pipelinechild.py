@@ -1,6 +1,8 @@
 from typing import Literal
 
+from pydantic import AliasChoices
 from pydantic import Field
+from pydantic import computed_field
 
 from laktory._logger import get_logger
 from laktory._settings import settings
@@ -16,48 +18,57 @@ class PipelineChild(BaseChild):
     """
 
     # model_config = ConfigDict(validate_assignment=True)
-    dataframe_backend: DataFrameBackends = Field(
-        None, description="Type of DataFrame backend"
+    dataframe_backend_: DataFrameBackends = Field(
+        None,
+        description="Type of DataFrame backend",
+        validation_alias=AliasChoices("dataframe_backend", "dataframe_backend_"),
+        exclude=True,
     )
-    dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(
+    dataframe_api_: Literal["NARWHALS", "NATIVE"] = Field(
         None,
         description="""
         DataFrame API to use in DataFrame Transformer nodes. Either 'NATIVE' (backend-specific) or 'NARWHALS' 
         (backend-agnostic).
         """,
+        validation_alias=AliasChoices("dataframe_api", "dataframe_api_"),
+        exclude=True,
     )
 
+    @computed_field(description="dataframe_backend")
     @property
-    def df_backend(self) -> DataFrameBackends:
+    def dataframe_backend(self) -> DataFrameBackends:
+        backend = self.dataframe_backend_
+
         # Direct value
-        backend = self.dataframe_backend
         if backend is not None:
             if not isinstance(backend, DataFrameBackends):
                 try:
                     backend = DataFrameBackends(backend)
                 except ValueError:
+                    # TODO: Review why this might occur
                     pass
+
             return backend
 
         # Value from parent
         parent = self._parent
         if parent is not None:
-            return parent.df_backend
+            return parent.dataframe_backend
 
         # Value from settings
         return DataFrameBackends(settings.dataframe_backend.upper())
 
+    @computed_field(description="dataframe_api")
     @property
-    def df_api(self) -> str:
+    def dataframe_api(self) -> str:
         # Direct value
-        dataframe_api = self.dataframe_api
-        if dataframe_api is not None:
-            return dataframe_api
+        if self.dataframe_api_:
+            return self.dataframe_api_
 
         # Value from parent
         parent = self._parent
         if parent is not None:
-            return parent.df_api
+            return parent.dataframe_api
 
         # Value from settings
         return settings.dataframe_api.upper()

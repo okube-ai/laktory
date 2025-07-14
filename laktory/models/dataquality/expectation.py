@@ -63,7 +63,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     )
     print(dqe)
     '''
-    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='ROW' name='price higher than 10' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='close > 127', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=None, rel=0.05)
+    dataframe_backend_=None dataframe_api_=None variables={} action='WARN' type='ROW' name='price higher than 10' expr=DataFrameColumnExpr(dataframe_backend_=None, dataframe_api_=None, variables={}, expr='close > 127', type='SQL', dataframe_backend=<DataFrameBackends.PYSPARK: 'PYSPARK'>, dataframe_api='NARWHALS') tolerance=ExpectationTolerance(variables={}, abs=None, rel=0.05) dataframe_backend=<DataFrameBackends.PYSPARK: 'PYSPARK'> dataframe_api='NARWHALS'
     '''
 
     dqe = models.DataQualityExpectation(
@@ -73,7 +73,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     )
     print(dqe)
     '''
-    dataframe_backend=None dataframe_api=None variables={} action='WARN' type='AGGREGATE' name='rows count' expr=DataFrameColumnExpr(dataframe_backend=None, dataframe_api=None, variables={}, expr='COUNT(*) > 50', type='SQL') tolerance=ExpectationTolerance(variables={}, abs=0, rel=None)
+    dataframe_backend_=None dataframe_api_=None variables={} action='WARN' type='AGGREGATE' name='rows count' expr=DataFrameColumnExpr(dataframe_backend_=None, dataframe_api_=None, variables={}, expr='COUNT(*) > 50', type='SQL', dataframe_backend=<DataFrameBackends.PYSPARK: 'PYSPARK'>, dataframe_api='NARWHALS') tolerance=ExpectationTolerance(variables={}, abs=0, rel=None) dataframe_backend=<DataFrameBackends.PYSPARK: 'PYSPARK'> dataframe_api='NARWHALS'
     '''
     ```
 

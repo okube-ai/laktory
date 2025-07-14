@@ -518,7 +518,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             if self.sink is None:
                 raise ValueError("Sink value required to fetch checkpoint location.")
 
-            if self.sink and self.sink._checkpoint_path is None:
+            if self.sink and self.sink.checkpoint_path is None:
                 raise ValueError(
                     f"Checkpoint location not specified for sink '{self.sink}'"
                 )
@@ -529,7 +529,7 @@ class DataSinkMergeCDCOptions(BaseModel):
                 )
                 .trigger(availableNow=True)
                 .options(
-                    checkpointLocation=self.sink._checkpoint_path,
+                    checkpointLocation=self.sink.checkpoint_path,
                 )
                 .start()
             )

@@ -7,7 +7,10 @@ from typing import Any
 from typing import Literal
 
 import narwhals as nw
+from pydantic import AliasChoices
 from pydantic import Field
+from pydantic import computed_field
+from pydantic import field_serializer
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -38,9 +41,11 @@ SUPPORTED_MODES = tuple(set(SPARK_MODES + SPARK_STREAMING_MODES + POLARS_DELTA_M
 class BaseDataSink(BaseModel, PipelineChild):
     """Base class for data sinks"""
 
-    checkpoint_path: str = Field(
+    checkpoint_path_: str | Path = Field(
         None,
         description="Path to which the checkpoint file for which a streaming dataframe should be written.",
+        validation_alias=AliasChoices("checkpoint_path", "checkpoint_path_"),
+        exclude=True,
     )
     is_quarantine: bool = Field(
         False,
@@ -109,7 +114,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     @property
     def _id(self):
-        return str(self)
+        raise NotImplementedError()
 
     @property
     def _uuid(self) -> str:
@@ -117,18 +122,23 @@ class BaseDataSink(BaseModel, PipelineChild):
         hash_digest = hash_object.hexdigest()
         return str(uuid.UUID(hash_digest[:32]))
 
+    @computed_field(description="checkpoint_path")
     @property
-    def _checkpoint_path(self) -> Path | None:
-        if self.checkpoint_path:
-            return Path(self.checkpoint_path)
+    def checkpoint_path(self) -> Path | None:
+        if self.checkpoint_path_:
+            return Path(self.checkpoint_path_)
 
         node = self.parent_pipeline_node
 
-        if node and node._root_path:
+        if node and node.root_path:
             for i, s in enumerate(node.all_sinks):
                 if s == self:
-                    return node._root_path / "checkpoints" / f"sink-{self._uuid}"
+                    return node.root_path / "checkpoints" / f"sink-{self._uuid}"
         return None
+
+    @field_serializer("checkpoint_path", when_used="json")
+    def serialize_path(self, value: Path) -> str:
+        return value.as_posix()
 
     @property
     def upstream_node_names(self) -> list[str]:
@@ -179,9 +189,9 @@ class BaseDataSink(BaseModel, PipelineChild):
         return None
 
     def _validate_mode(self, mode, df):
-        if self.df_backend == DataFrameBackends.POLARS:
+        if self.dataframe_backend == DataFrameBackends.POLARS:
             self._validate_mode_polars(mode, df)
-        elif self.df_backend == DataFrameBackends.PYSPARK:
+        elif self.dataframe_backend == DataFrameBackends.PYSPARK:
             self._validate_mode_spark(mode, df)
 
     def write(
@@ -202,9 +212,9 @@ class BaseDataSink(BaseModel, PipelineChild):
         """
 
         if getattr(self, "view_definition", None):
-            if self.df_backend == DataFrameBackends.PYSPARK:
+            if self.dataframe_backend == DataFrameBackends.PYSPARK:
                 self._write_spark_view()
-            elif self.df_backend == DataFrameBackends.POLARS:
+            elif self.dataframe_backend == DataFrameBackends.POLARS:
                 self._write_polars_view()
             else:
                 raise ValueError(
@@ -224,11 +234,11 @@ class BaseDataSink(BaseModel, PipelineChild):
                 f"DataFrame provided is of {dataframe_backend} backend, which is not supported."
             )
 
-        if self.dataframe_backend and self.dataframe_backend != dataframe_backend:
+        if self.dataframe_backend_ and self.dataframe_backend_ != dataframe_backend:
             raise ValueError(
-                f"DataFrame provided is {dataframe_backend} and source has been configure with {self.dataframe_backend} backend."
+                f"DataFrame provided is {dataframe_backend} and source has been configure with {self.dataframe_backend_} backend."
             )
-        self.dataframe_backend = dataframe_backend
+        self.dataframe_backend_ = dataframe_backend
 
         self._validate_mode(mode, df)
         self._validate_format()
@@ -287,7 +297,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             kwargs["mergeSchema"] = False
             kwargs["overwriteSchema"] = True
         if is_streaming:
-            kwargs["checkpointLocation"] = self._checkpoint_path
+            kwargs["checkpointLocation"] = self.checkpoint_path.as_posix()
 
         if fmt in ["jsonl", "ndjson"]:
             fmt = "json"
@@ -326,7 +336,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     def _write_spark(self, df, mode, full_refresh) -> None:
         raise NotImplementedError(
-            f"`{self.df_backend}` not supported for `{type(self)}`"
+            f"`{self.dataframe_backend}` not supported for `{type(self)}`"
         )
 
     # -------------------------------------------------------------------------------- #
@@ -368,7 +378,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     def _write_polars(self, df, mode, full_refresh) -> None:
         raise NotImplementedError(
-            f"`{self.df_backend}` not supported for `{type(self)}`"
+            f"`{self.dataframe_backend}` not supported for `{type(self)}`"
         )
 
     # ----------------------------------------------------------------------- #
@@ -376,7 +386,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     def exists(self):
-        if self.df_backend == DataFrameBackends.PYSPARK:
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
             from laktory import get_spark_session
 
             try:
@@ -391,14 +401,14 @@ class BaseDataSink(BaseModel, PipelineChild):
             raise NotImplementedError()
 
     def _purge_checkpoint(self):
-        if self._checkpoint_path:
-            if os.path.exists(self._checkpoint_path):
+        if self.checkpoint_path:
+            if os.path.exists(self.checkpoint_path):
                 logger.info(
-                    f"Deleting checkpoint at {self._checkpoint_path}",
+                    f"Deleting checkpoint at {self.checkpoint_path}",
                 )
-                shutil.rmtree(self._checkpoint_path)
+                shutil.rmtree(self.checkpoint_path)
 
-            if self.df_backend != DataFrameBackends.PYSPARK:
+            if self.dataframe_backend != DataFrameBackends.PYSPARK:
                 return
 
             try:
@@ -412,7 +422,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
             dbutils = DBUtils(spark)
 
-            _path = self._checkpoint_path.as_posix()
+            _path = self.checkpoint_path.as_posix()
             try:
                 dbutils.fs.ls(
                     _path

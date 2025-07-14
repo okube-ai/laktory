@@ -34,8 +34,11 @@ Inside the `lake` package, a custom [Narwhals extension](extension_custom.md) is
 declared for data transformations:
 ```py title="dataframe_ext.py"
 from datetime import datetime
+
 import narwhals as nw
+
 import laktory as lk
+
 
 @lk.api.register_anyframe_namespace("lake")
 class LakeNamespace:

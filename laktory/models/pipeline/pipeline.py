@@ -5,8 +5,10 @@ from typing import TYPE_CHECKING
 from typing import Any
 
 import networkx as nx
+from pydantic import AliasChoices
 from pydantic import Field
-from pydantic import field_validator
+from pydantic import computed_field
+from pydantic import field_serializer
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -318,18 +320,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         # discriminator="type",  # discriminator can't be used because BaseModel adds
         # str to Literal type to support variables
     )
-    root_path: str = Field(
+    root_path_: str | Path = Field(
         None,
         description="Location of the pipeline node root used to store logs, metrics and checkpoints.",
+        validation_alias=AliasChoices("root_path", "root_path_"),
+        exclude=True,
     )
     _imports_imported: bool = False
-
-    @field_validator("root_path", mode="before")
-    @classmethod
-    def root_path_to_string(cls, value: Any) -> Any:
-        if isinstance(value, Path):
-            value = str(value)
-        return value
 
     @model_validator(mode="before")
     @classmethod
@@ -442,12 +439,17 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     # Paths                                                                   #
     # ----------------------------------------------------------------------- #
 
+    @computed_field(description="root_path")
     @property
-    def _root_path(self) -> Path:
-        if self.root_path:
-            return Path(self.root_path)
+    def root_path(self) -> Path:
+        if self.root_path_:
+            return Path(self.root_path_)
 
         return Path(settings.laktory_root) / "pipelines" / self.safe_name
+
+    @field_serializer("root_path", when_used="json")
+    def serialize_path(self, value: Path) -> str:
+        return value.as_posix()
 
     # ----------------------------------------------------------------------- #
     # Expectations                                                            #

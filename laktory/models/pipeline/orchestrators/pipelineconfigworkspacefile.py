@@ -29,7 +29,7 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         return f"{settings.workspace_laktory_root}pipelines/{pl.name}/config.json"
 
     @property
-    def content_base64_(self):
+    def content_dict(self):
         pl = self.parent_pipeline
         if not pl:
             return None
@@ -42,15 +42,24 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         # Orchestrator (which includes WorkspaceFile) needs to be excluded to avoid
         # infinite re-cursive loop
         _config = self.inject_vars_into_dump(
-            {"config": pl.model_dump(exclude_unset=True, exclude="orchestrator")}
+            {
+                "config": pl.model_dump(
+                    exclude_unset=True, exclude="orchestrator", mode="json"
+                )
+            }
         )["config"]
         _config["orchestrator"] = pl.orchestrator.model_dump(
-            exclude_unset=True, exclude="config_file"
+            exclude_unset=True, exclude="config_file", mode="json"
         )
 
         # Reset serialization options
         pl._configure_serializer(singular=ss0, camel=cs0)
 
+        return _config
+
+    @property
+    def content_base64_(self):
+        _config = self.content_dict
         _config_str = json.dumps(_config, indent=4)
         return base64.b64encode(_config_str.encode("utf-8")).decode("utf-8")
 
@@ -82,6 +91,13 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_excludes(self) -> list[str] | dict[str, bool]:
+        return super().pulumi_excludes + [
+            "dataframe_backend",
+            "dataframe_api",
+        ]
 
     @property
     def resource_type_id(self):

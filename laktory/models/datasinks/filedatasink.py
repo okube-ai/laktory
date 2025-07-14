@@ -103,13 +103,21 @@ class FileDataSink(BaseDataSink):
         return path
 
     # ----------------------------------------------------------------------- #
+    # Properties                                                              #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def _id(self):
+        return self.path
+
+    # ----------------------------------------------------------------------- #
     # Writers                                                                 #
     # ----------------------------------------------------------------------- #
 
     def _validate_format(self) -> None:
-        if self.format not in SUPPORTED_FORMATS[self.df_backend]:
+        if self.format not in SUPPORTED_FORMATS[self.dataframe_backend]:
             raise ValueError(
-                f"'{self.format}' format is not supported with {self.dataframe_backend}. Use one of {SUPPORTED_FORMATS[self.df_backend]}"
+                f"'{self.format}' format is not supported with {self.dataframe_backend}. Use one of {SUPPORTED_FORMATS[self.dataframe_backend]}"
             )
         if self.mode == "MERGE" and self.format != "DELTA":
             raise ValueError("Only 'DELTA' format is supported with 'MERGE' mode.")
@@ -238,14 +246,14 @@ class FileDataSink(BaseDataSink):
         """
 
         source = FileDataSource(
-            path=self.path, format=self.format, dataframe_backend=self.df_backend
+            path=self.path, format=self.format, dataframe_backend=self.dataframe_backend
         )
 
         if as_stream:
             source.as_stream = as_stream
 
         # if self.dataframe_backend:
-        #     source.dataframe_backend = self.df_backend
+        #     source.dataframe_backend = self.dataframe_backend
         source.parent = self.parent
 
         return source
