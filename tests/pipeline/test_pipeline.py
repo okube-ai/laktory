@@ -7,7 +7,6 @@ import pytest
 
 from laktory import get_spark_session
 from laktory import models
-from laktory import settings
 from laktory._testing import StreamingSource
 from laktory._testing import assert_dfs_equal
 from laktory._version import VERSION
@@ -155,7 +154,6 @@ def test_update_from_parent():
 
 def test_root_path(tmp_path):
     # Without Path
-    settings.laktory_root = "/lk1/"
     pl = models.Pipeline(name="pl")
     dump = pl.model_dump(exclude_unset=True)
     dumpj = pl.model_dump(exclude_unset=True, mode="json")
@@ -163,17 +161,17 @@ def test_root_path(tmp_path):
     pl3 = models.Pipeline.model_validate(dumpj)
 
     assert pl.root_path_ is None
-    assert pl.root_path == Path("/lk1/pipelines/pl")
+    assert pl.root_path == Path("pipelines/pl")
     assert list(dump.keys()) == [
         "name",
         "dataframe_backend",
         "dataframe_api",
         "root_path",
     ]
-    assert dump["root_path"] == Path("/lk1/pipelines/pl")
-    assert dumpj["root_path"] == "/lk1/pipelines/pl"
-    assert pl2.root_path_ == Path("/lk1/pipelines/pl")
-    assert pl3.root_path_ == "/lk1/pipelines/pl"
+    assert dump["root_path"] == Path("pipelines/pl")
+    assert dumpj["root_path"] == "pipelines/pl"
+    assert pl2.root_path_ == Path("pipelines/pl")
+    assert pl3.root_path_ == "pipelines/pl"
 
     # With Path
     pl = models.Pipeline(name="pl", root_path="/pl_root/")
