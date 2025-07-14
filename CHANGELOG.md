@@ -1,6 +1,16 @@
 # Release History
 
-## [0.8.3] - Unreleased
+## [0.8.4] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.8.3] - 2025-07-14
 ### Updated
 * Refactored `dataframe_api`, `dataframe_backend` and `root_path` attributes to include `settings` values when model is dumped.
 
