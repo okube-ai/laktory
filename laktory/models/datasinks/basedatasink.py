@@ -292,7 +292,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             kwargs["mergeSchema"] = False
             kwargs["overwriteSchema"] = True
         if is_streaming:
-            kwargs["checkpointLocation"] = self.checkpoint_path
+            kwargs["checkpointLocation"] = self.checkpoint_path.as_posix()
 
         if fmt in ["jsonl", "ndjson"]:
             fmt = "json"
