@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Any
 from typing import Literal
@@ -177,7 +178,7 @@ class FileDataSource(BaseDataSource):
         if self.schema_location_:
             return Path(self.schema_location_)
 
-        return Path(self.path).parent
+        return Path(os.path.dirname(self.path))
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
@@ -261,6 +262,11 @@ class FileDataSource(BaseDataSource):
         if self.as_stream:
             # Cloud Files Formats
             if self.is_cloud_files:
+
+                print("SCHEMA LOCATION _ ", self.schema_location)
+                print("SCHEMA LOCATION ", self.schema_location)
+                print("SCHEMA LOCATION AS", self.schema_location.as_posix())
+
                 kwargs["cloudFiles.format"] = fmt
                 kwargs["recursiveFileLookup"] = True
                 kwargs["cloudFiles.schemaLocation"] = self.schema_location.as_posix()
