@@ -76,9 +76,9 @@ class BaseDataSource(BaseModel, PipelineChild):
     @model_validator(mode="after")
     def options(self) -> Any:
         with self.validate_assignment_disabled():
-            if self.df_backend == DataFrameBackends.PYSPARK:
+            if self.dataframe_backend == DataFrameBackends.PYSPARK:
                 pass
-            elif self.df_backend == DataFrameBackends.POLARS:
+            elif self.dataframe_backend == DataFrameBackends.POLARS:
                 if self.as_stream:
                     raise ValueError(
                         "Streaming read is not supported with Polars Backend."
@@ -112,7 +112,7 @@ class BaseDataSource(BaseModel, PipelineChild):
             Resulting dataframe
         """
         logger.info(
-            f"Reading `{self.__class__.__name__}` {self._id} with {self.df_backend}"
+            f"Reading `{self.__class__.__name__}` {self._id} with {self.dataframe_backend}"
         )
         df = self._read(**kwargs)
 
@@ -128,22 +128,22 @@ class BaseDataSource(BaseModel, PipelineChild):
         return df
 
     def _read(self, **kwargs) -> AnyFrame:
-        if self.df_backend == DataFrameBackends.PYSPARK:
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
             return self._read_spark()
 
-        if self.df_backend == DataFrameBackends.POLARS:
+        if self.dataframe_backend == DataFrameBackends.POLARS:
             return self._read_polars(**kwargs)
 
-        raise ValueError(f"`{self.df_backend}` not supported for `{type(self)}`")
+        raise ValueError(f"`{self.dataframe_backend}` not supported for `{type(self)}`")
 
     def _read_spark(self, **kwargs) -> nw.LazyFrame:
         raise NotImplementedError(
-            f"`{self.df_backend}` not supported for `{type(self)}`"
+            f"`{self.dataframe_backend}` not supported for `{type(self)}`"
         )
 
     def _read_polars(self, **kwargs) -> nw.LazyFrame:
         raise NotImplementedError(
-            f"`{self.df_backend}` not supported for `{type(self)}`"
+            f"`{self.dataframe_backend}` not supported for `{type(self)}`"
         )
 
     def _post_read(self, df: AnyFrame) -> AnyFrame:

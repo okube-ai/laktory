@@ -89,6 +89,9 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         excludes = super().pulumi_excludes
         excludes["config_file"] = True
         excludes["type"] = True
+        excludes["dataframe_backend"] = True
+        excludes["dataframe_api"] = True
+
         return excludes
 
     @property

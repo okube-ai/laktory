@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Any
 
 import narwhals as nw
+from pydantic import AliasChoices
 from pydantic import Field
-from pydantic import field_validator
+from pydantic import computed_field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -115,9 +116,13 @@ class PipelineNode(BaseModel, PipelineChild):
         [],
         description="List of data expectations. Can trigger warnings, drop invalid records or fail a pipeline.",
     )
-    expectations_checkpoint_path: str = Field(
+    expectations_checkpoint_path_: str | Path = Field(
         None,
         description="Path to which the checkpoint file for which expectations on a streaming dataframe should be written.",
+        validation_alias=AliasChoices(
+            "expectations_checkpoint_path", "expectations_checkpoint_path_"
+        ),
+        exclude=True,
     )
     name: str = Field(..., description="Name given to the node.")
     primary_keys: list[str] = Field(
@@ -144,20 +149,15 @@ class PipelineNode(BaseModel, PipelineChild):
         None,
         description="Data transformations applied between the source and the sink(s).",
     )
-    root_path: str = Field(
+    root_path_: str | Path = Field(
         None,
         description="Location of the pipeline node root used to store logs, metrics and checkpoints.",
+        validation_alias=AliasChoices("root_path", "root_path_"),
+        exclude=True,
     )
     _stage_df: Any = None
     _output_df: Any = None
     _quarantine_df: Any = None
-
-    @field_validator("root_path", "expectations_checkpoint_path", mode="before")
-    @classmethod
-    def posixpath_to_string(cls, value: Any) -> Any:
-        if isinstance(value, Path):
-            value = str(value)
-        return value
 
     @model_validator(mode="after")
     def push_primary_keys(self) -> Any:
@@ -178,7 +178,7 @@ class PipelineNode(BaseModel, PipelineChild):
                 if not e.is_streaming_compatible:
                     raise DataQualityExpectationsNotSupported(e, self)
 
-            if self.expectations and self._expectations_checkpoint_path is None:
+            if self.expectations and self.expectations_checkpoint_path is None:
                 warnings.warn(
                     f"Node '{self.name}' requires `expectations_checkpoint_location` specified unless Databricks pipeline is selected as an orchestrator and expectations are compatible with Declarative Pipelines."
                 )
@@ -255,14 +255,15 @@ class PipelineNode(BaseModel, PipelineChild):
     # Paths                                                                   #
     # ----------------------------------------------------------------------- #
 
+    @computed_field(description="root_path")
     @property
-    def _root_path(self) -> Path:
-        if self.root_path:
-            return Path(self.root_path)
+    def root_path(self) -> Path:
+        if self.root_path_:
+            return Path(self.root_path_)
 
-        node = self.parent_pipeline
-        if node and node._root_path:
-            return node._root_path / self.name
+        pl = self.parent_pipeline
+        if pl and pl.root_path:
+            return pl.root_path / self.name
 
         return Path(settings.laktory_root) / self.name
 
@@ -384,13 +385,14 @@ class PipelineNode(BaseModel, PipelineChild):
                 expectations[e.name] = e.expr.expr
         return expectations
 
+    @computed_field(description="expectations_checkpoint_path")
     @property
-    def _expectations_checkpoint_path(self) -> Path | None:
-        if self.expectations_checkpoint_path:
-            return Path(self.expectations_checkpoint_path)
+    def expectations_checkpoint_path(self) -> Path | None:
+        if self.expectations_checkpoint_path_:
+            return Path(self.expectations_checkpoint_path_)
 
-        if self._root_path:
-            return Path(self._root_path) / "checkpoints/expectations"
+        if self.root_path:
+            return Path(self.root_path) / "checkpoints/expectations"
 
         return None
 
@@ -453,14 +455,14 @@ class PipelineNode(BaseModel, PipelineChild):
         if self.has_sinks:
             for s in self.sinks:
                 s.purge()
-        if self._expectations_checkpoint_path:
-            if os.path.exists(self._expectations_checkpoint_path):
+        if self.expectations_checkpoint_path:
+            if os.path.exists(self.expectations_checkpoint_path):
                 logger.info(
-                    f"Deleting expectations checkpoint at {self._expectations_checkpoint_path}",
+                    f"Deleting expectations checkpoint at {self.expectations_checkpoint_path}",
                 )
-                shutil.rmtree(self._expectations_checkpoint_path)
+                shutil.rmtree(self.expectations_checkpoint_path)
 
-            if self.df_backend != DataFrameBackends.PYSPARK:
+            if self.dataframe_backend != DataFrameBackends.PYSPARK:
                 return
 
             try:
@@ -474,7 +476,7 @@ class PipelineNode(BaseModel, PipelineChild):
 
             dbutils = DBUtils(spark)
 
-            _path = self._expectations_checkpoint_path.as_posix()
+            _path = self.expectations_checkpoint_path.as_posix()
             try:
                 dbutils.fs.ls(
                     _path
@@ -655,7 +657,7 @@ class PipelineNode(BaseModel, PipelineChild):
                     f"DataFrame backend {backend} is not supported for streaming operations"
                 )
 
-            if self._expectations_checkpoint_path is None:
+            if self.expectations_checkpoint_path is None:
                 raise ValueError(
                     f"Expectations Checkpoint not specified for node '{self.name}'"
                 )
@@ -671,7 +673,7 @@ class PipelineNode(BaseModel, PipelineChild):
                     )
                     .trigger(availableNow=True)
                     .options(
-                        checkpointLocation=self._expectations_checkpoint_path,
+                        checkpointLocation=self.expectations_checkpoint_path,
                     )
                     .start()
                 )

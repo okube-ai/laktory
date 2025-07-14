@@ -170,6 +170,8 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             "config_file",
             "node_max_retries",
             "type",
+            "dataframe_backend",
+            "dataframe_api",
         ]
 
     @property

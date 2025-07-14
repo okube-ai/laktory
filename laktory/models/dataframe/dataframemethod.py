@@ -39,12 +39,12 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
 
         if isinstance(v, BaseDataSource):
             v = self.value.read()
-            if self.df_api == "NATIVE":
+            if self.dataframe_api == "NATIVE":
                 v = v.to_native()
 
         elif isinstance(v, str):
             # Imports required to evaluate expressions
-            if self.df_api == "NARWHALS":
+            if self.dataframe_api == "NARWHALS":
                 import narwhals as nw  # noqa: F401
                 from narwhals import col  # noqa: F401
                 from narwhals import lit  # noqa: F401
@@ -272,12 +272,12 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
         # Get and set Backend (required to evaluate arguments)
         backend = DataFrameBackends.from_df(df)
-        self.dataframe_backend = backend
+        self.dataframe_backend_ = backend
 
         # Convert to Narwhals
         if not isinstance(df, AnyFrame):
             df = nw.from_native(df)
-        if self.df_api == "NATIVE":
+        if self.dataframe_api == "NATIVE":
             df = df.to_native()
 
         # Get Function

@@ -1,11 +1,12 @@
-import os
 from pathlib import Path
 from typing import Any
 from typing import Literal
 
 import narwhals as nw
+from pydantic import AliasChoices
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import computed_field
 from pydantic import field_validator
 from pydantic import model_validator
 
@@ -120,9 +121,11 @@ class FileDataSource(BaseDataSource):
         reading data from non-strongly typed files such as JSON or csv files.
         """,
     )
-    schema_location: str = Field(
+    schema_location_: str | Path = Field(
         None,
         description="Path for schema inference when reading data as a stream. If `None`, parent directory of `path` is used.",
+        validation_alias=AliasChoices("schema_location", "schema_location_"),
+        exclude=True,
     )
     type: Literal["FILE"] = Field("FILE", frozen=True, description="Source Type")
     reader_methods: list[ReaderWriterMethod] = Field(
@@ -130,7 +133,7 @@ class FileDataSource(BaseDataSource):
     )
     # schema_overrides: DataFrameSchema = Field(None, validation_alias="schema")
 
-    @field_validator("path", "schema_location", mode="before")
+    @field_validator("path", mode="before")
     @classmethod
     def posixpath_to_string(cls, value: Any) -> Any:
         if isinstance(value, Path):
@@ -139,9 +142,9 @@ class FileDataSource(BaseDataSource):
 
     @model_validator(mode="after")
     def validate_format(self) -> Any:
-        if self.format not in SUPPORTED_FORMATS[self.df_backend]:
+        if self.format not in SUPPORTED_FORMATS[self.dataframe_backend]:
             raise ValueError(
-                f"'{self.format}' format is not supported with {self.df_backend}. Use one of {SUPPORTED_FORMATS[self.df_backend]}"
+                f"'{self.format}' format is not supported with {self.dataframe_backend}. Use one of {SUPPORTED_FORMATS[self.dataframe_backend]}"
             )
         return self
 
@@ -167,6 +170,14 @@ class FileDataSource(BaseDataSource):
     @property
     def _id(self):
         return str(self.path)
+
+    @computed_field(description="schema_location")
+    @property
+    def schema_location(self) -> Path:
+        if self.schema_location_:
+            return Path(self.schema_location)
+
+        return Path(self.path).parent
 
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
@@ -198,7 +209,7 @@ class FileDataSource(BaseDataSource):
             return False
 
         if key == "schema_definition":
-            if self.df_backend == DataFrameBackends.PYSPARK:
+            if self.dataframe_backend == DataFrameBackends.PYSPARK:
                 if self.format in [
                     "AVRO",
                     "CSV",
@@ -211,7 +222,7 @@ class FileDataSource(BaseDataSource):
                 ]:
                     return True
 
-            if self.df_backend == DataFrameBackends.POLARS:
+            if self.dataframe_backend == DataFrameBackends.POLARS:
                 if self.format in ["CSV", "JSON", "JSONL", "NDJSON", "PARQUET"]:
                     return True
 
@@ -252,12 +263,8 @@ class FileDataSource(BaseDataSource):
             if self.is_cloud_files:
                 kwargs["cloudFiles.format"] = fmt
                 kwargs["recursiveFileLookup"] = True
+                kwargs["cloudFiles.schemaLocation"] = str(self.schema_location)
                 fmt = "cloudFiles"
-
-                schema_location = self.schema_location
-                if schema_location is None:
-                    schema_location = os.path.dirname(self.path)
-                kwargs["cloudFiles.schemaLocation"] = schema_location
 
             # Native Streaming Formats
             else:

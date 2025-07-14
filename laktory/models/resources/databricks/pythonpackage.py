@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Any
 from typing import Union
 
 from pydantic import AliasChoices
@@ -56,6 +55,7 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
         None,
         description="Workspace filepath for the file. Overwrite `rootpath` and `dirpath`.",
         validation_alias=AliasChoices("path_", "path"),
+        exclude=True,
     )
     rootpath: str = Field(
         None,
@@ -77,15 +77,15 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
         if self.source:
             return os.path.basename(self.source)
 
-    @computed_field(description="path", return_type="str")
+    @computed_field(description="path")
     @property
-    def path(self) -> Any:
+    def path(self) -> str | None:
         # Path set
         if self.path_:
             return self.path_
 
         if not self.source:
-            return self
+            return None
 
         # root
         if self.rootpath is None:

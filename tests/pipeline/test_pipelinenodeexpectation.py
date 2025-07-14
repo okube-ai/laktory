@@ -174,7 +174,7 @@ def test_streaming_multi(backend, node, tmp_path):
         format="DELTA",
         as_stream=True,
     )
-    node.expectations_checkpoint_path = checkpoint_path
+    node.expectations_checkpoint_path_ = checkpoint_path
     node.expectations = [
         models.DataQualityExpectation(
             name="id_b",

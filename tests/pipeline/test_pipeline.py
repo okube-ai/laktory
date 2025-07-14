@@ -7,6 +7,7 @@ import pytest
 
 from laktory import get_spark_session
 from laktory import models
+from laktory import settings
 from laktory._testing import StreamingSource
 from laktory._testing import assert_dfs_equal
 from laktory._version import VERSION
@@ -150,6 +151,45 @@ def test_update_from_parent():
     assert pl.orchestrator.config_file.content_base64_.startswith(
         "ewogICAgImRlcGVuZGVuY2llcy"
     )
+
+
+def test_root_path(tmp_path):
+    # Without Path
+    settings.laktory_root = "/lk1/"
+    pl = models.Pipeline(name="pl")
+    dump = pl.model_dump(exclude_unset=True)
+    dumpj = pl.model_dump(exclude_unset=True, mode="json")
+    pl2 = models.Pipeline.model_validate(dump)
+    pl3 = models.Pipeline.model_validate(dumpj)
+
+    assert pl.root_path_ is None
+    assert pl.root_path == Path("/lk1/pipelines/pl")
+    assert list(dump.keys()) == [
+        "name",
+        "dataframe_backend",
+        "dataframe_api",
+        "root_path",
+    ]
+    assert dump["root_path"] == Path("/lk1/pipelines/pl")
+    assert dumpj["root_path"] == "/lk1/pipelines/pl"
+    assert pl2.root_path_ == Path("/lk1/pipelines/pl")
+    assert pl3.root_path_ == "/lk1/pipelines/pl"
+
+    # With Path
+    pl = models.Pipeline(name="pl", root_path="/pl_root/")
+    dump = pl.model_dump(exclude_unset=True)
+    pl2 = models.Pipeline.model_validate(dump)
+
+    assert pl.root_path_ == "/pl_root/"
+    assert pl.root_path == Path("/pl_root/")
+    assert list(dump.keys()) == [
+        "name",
+        "dataframe_backend",
+        "dataframe_api",
+        "root_path",
+    ]
+    assert dump["root_path"] == Path("/pl_root/")
+    assert pl2.root_path_ == Path("/pl_root/")
 
 
 def test_paths(tmp_path):
@@ -339,7 +379,7 @@ def test_single_node(backend, tmp_path):
 @pytest.mark.parametrize("backend", ["PYSPARK"])
 def test_full(backend, tmp_path):
     pl = get_pl(tmp_path)
-    pl.dataframe_backend = backend
+    pl.dataframe_backend_ = backend
 
     # Set Source
     ss = StreamingSource(backend)

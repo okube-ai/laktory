@@ -208,7 +208,7 @@ class TableDataSink(BaseDataSink):
         Delete sink data and checkpoints
         """
 
-        if self.df_backend == DataFrameBackends.PYSPARK:
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
             from laktory import get_spark_session
 
             spark = get_spark_session()
@@ -235,7 +235,9 @@ class TableDataSink(BaseDataSink):
             self._purge_checkpoint()
 
         else:
-            raise TypeError(f"DataFrame backend {self.df_backend} is not supported.")
+            raise TypeError(
+                f"DataFrame backend {self.dataframe_backend} is not supported."
+            )
 
     # ----------------------------------------------------------------------- #
     # Source                                                                  #
@@ -260,14 +262,14 @@ class TableDataSink(BaseDataSink):
             table_name=self.table_name,
             schema_name=self.schema_name,
             type=self.type,
-            dataframe_backend=self.df_backend,
+            dataframe_backend=self.dataframe_backend,
         )
 
         if as_stream:
             source.as_stream = as_stream
 
-        if self.dataframe_backend:
-            source.dataframe_backend = self.dataframe_backend
+        if self.dataframe_backend_:
+            source.dataframe_backend_ = self.dataframe_backend_
         source.parent = self.parent
 
         return source
