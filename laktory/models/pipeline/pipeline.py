@@ -8,8 +8,8 @@ import networkx as nx
 from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
-from pydantic import model_validator
 from pydantic import field_serializer
+from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory._settings import settings
