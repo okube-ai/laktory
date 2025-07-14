@@ -263,7 +263,7 @@ class FileDataSource(BaseDataSource):
             if self.is_cloud_files:
                 kwargs["cloudFiles.format"] = fmt
                 kwargs["recursiveFileLookup"] = True
-                kwargs["cloudFiles.schemaLocation"] = str(self.schema_location)
+                kwargs["cloudFiles.schemaLocation"] = self.schema_location.as_posix()
                 fmt = "cloudFiles"
 
             # Native Streaming Formats
