@@ -296,6 +296,19 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     def singularizations(self) -> dict[str, str]:
         return {}
 
+    @property
+    def computed_defaults(self) -> dict[str, str]:
+        # Dict whose keys are user input fields and whose values are the default/computed values when user input is not
+        # provided
+        m = {}
+
+        for cfield_name in self.model_computed_fields.keys():
+            field_name = cfield_name + "_"
+            if field_name in self.model_fields:
+                m[cfield_name] = field_name
+
+        return m
+
     # ----------------------------------------------------------------------- #
     # Serialization                                                           #
     # ----------------------------------------------------------------------- #

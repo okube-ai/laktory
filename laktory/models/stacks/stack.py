@@ -457,6 +457,15 @@ class Stack(BaseModel):
                         else:
                             data[field_name] = dump_with_excluded(a)
 
+                # Computed fields are excluded when using `round_trip=True`. The ones that provides default values when
+                # user input is not provided need to be injected back into the data. `dataframe_backend_` vs
+                # `dataframe_backend` is one example.
+                if hasattr(model, "computed_defaults"):
+                    for computed_field, user_field in model.computed_defaults.items():
+                        # _data = model.model_dump(mode="json", include=[v])
+                        # data[k] = _data[v]
+                        data[user_field] = getattr(model, computed_field)
+
                 return data
 
             envs = {}
@@ -506,6 +515,8 @@ class Stack(BaseModel):
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
 
+        print("CREATING PULUMI STACK!")
+        print(resources.keys())
         return PulumiStack(
             name=env.name,
             organization=env.organization,
