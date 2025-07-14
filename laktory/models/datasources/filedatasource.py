@@ -175,7 +175,7 @@ class FileDataSource(BaseDataSource):
     @property
     def schema_location(self) -> Path:
         if self.schema_location_:
-            return Path(self.schema_location)
+            return Path(self.schema_location_)
 
         return Path(self.path).parent
 
