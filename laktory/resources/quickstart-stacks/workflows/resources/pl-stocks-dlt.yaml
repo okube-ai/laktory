@@ -59,7 +59,7 @@ nodes:
     nodes:
     - func_name: select
       func_kwargs:
-        created_at: nw.col("data").struct.field("created_at").cast(nw.dtypes.Datetime(time_zone="UTC"))
+        created_at: nw.col("data").struct.field("created_at").cast(nw.dtypes.Datetime())
         symbol: nw.col("data").struct.field("symbol").cast(nw.dtypes.String())
         open: nw.col("data").struct.field("open").cast(nw.dtypes.Float64())
         close: nw.col("data").struct.field("close").cast(nw.dtypes.Float64())
