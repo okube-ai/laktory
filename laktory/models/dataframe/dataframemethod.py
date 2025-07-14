@@ -298,8 +298,9 @@ class DataFrameMethod(BaseModel, PipelineChild):
                 f = getattr(df, func_name, None)
 
         if f is None:
+            df_type = type(df)
             raise ValueError(
-                f"Function {func_full_name} is not available on dataframe of type {type(df)} with {self.dataframe_api} API"
+                f"Function {func_full_name} is not available on dataframe of type {str(df_type)} with {self.dataframe_api} API"
             )
 
         _args = self.func_args
