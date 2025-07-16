@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.8.4] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* User inputs for computed fields not injected properly when selecting environment.
 
 ## [0.8.3] - 2025-07-14
 ### Updated

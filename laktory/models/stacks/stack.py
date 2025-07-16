@@ -462,9 +462,9 @@ class Stack(BaseModel):
                 # `dataframe_backend` is one example.
                 if hasattr(model, "computed_defaults"):
                     for computed_field, user_field in model.computed_defaults.items():
-                        # _data = model.model_dump(mode="json", include=[v])
-                        # data[k] = _data[v]
-                        data[user_field] = getattr(model, computed_field)
+                        user_value = getattr(model, user_field, None)
+                        if user_value:
+                            data[user_field] = user_value
 
                 return data
 

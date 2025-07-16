@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 from pathlib import Path
 from typing import Any
@@ -49,7 +50,7 @@ class TableDataSink(BaseDataSink):
         name = self.table_name
         if name is None:
             return
-        names = name.split(".")
+        names = re.findall(r"\$\{vars\.[^}]+\}|[^.]+", name)
 
         with self.validate_assignment_disabled():
             self.table_name = names[-1]
