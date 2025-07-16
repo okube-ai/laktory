@@ -1,7 +1,6 @@
 import base64
 import json
 
-from laktory._settings import settings
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
@@ -31,27 +30,27 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         if not pl:
             return None
 
-        pl = pl.inject_vars()
-
         # Overwrite serialization options
         ss0 = self._singular_serialization
         cs0 = self._camel_serialization
-        #
-        # # Inject variables before serialization (in case computed fields hashes
-        # # other field values)
-        # o = _pl.orchestrator
-        # _pl.orchestrator = None
-        # _pl = _pl.inject_vars()
-        # # _pl.orchestrator = None
-        # # _pl = _pl.inject_vars()
-        #
-        # _config = _pl.model_dump(exclude_unset=True,  mode="json")
-        # _config["orchestrator"] = o.model_dump(exclude_unset=True,  mode="json")
+        pl._configure_serializer(singular=False, camel=False)
+        pl.push_vars()
+
+        # Orchestrator (which includes WorkspaceFile) needs to be excluded to avoid
+        # infinite re-cursive loop
+        _config = self.inject_vars_into_dump(
+            {
+                "config": pl.model_dump(
+                    exclude_unset=True, exclude="orchestrator", mode="json"
+                )
+            }
+        )["config"]
+        _config["orchestrator"] = pl.orchestrator.model_dump(
+            exclude_unset=True, exclude="config_file", mode="json"
+        )
 
         # Reset serialization options
         pl._configure_serializer(singular=ss0, camel=cs0)
-
-        _confg = {}
 
         return _config
 

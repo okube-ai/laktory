@@ -2,10 +2,10 @@ from typing import Literal
 
 from pydantic import Field
 
+from laktory import settings
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
 )
-from laktory import settings
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.cluster import ClusterLibrary
 from laktory.models.resources.databricks.cluster import ClusterLibraryPypi

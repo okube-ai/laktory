@@ -1,6 +1,8 @@
+import hashlib
 import io
 import json
 import sys
+import uuid
 from pathlib import Path
 
 import laktory as lk
@@ -23,6 +25,9 @@ def get_pl(tmp_path="", is_dlt=False):
         pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
 
         pl.root_path_ = tmp_path
+
+        pl.nodes[0].sinks[0].table_name = "${vars.table_name}"
+        pl.variables["table_name"] = "gld_ab"
 
     return pl
 
@@ -207,9 +212,17 @@ def test_databricks_job():
     resources = job.core_resources
     assert len(resources) == 3
 
-    config = job.config_file
-    print(config.content_dict)
-    assert config.content_dict == {
+    data = job.config_file.content_dict
+    data = json.loads(
+        json.dumps(data).replace(f"laktory=={__version__}", "laktory==__version__")
+    )
+    checkpoint_path = data["nodes"][0]["sinks"][0]["checkpoint_path"]
+    table_fullname = "default.gld_ab"
+    hash_object = hashlib.sha1(table_fullname.encode())
+    hash_digest = hash_object.hexdigest()
+    assert checkpoint_path.endswith(str(uuid.UUID(hash_digest[:32])))
+    print(data)
+    assert data == {
         "dependencies": ["requests>=2.0", "./wheels/lake-0.0.1-py3-none-any.whl"],
         "imports": ["re"],
         "name": "pl-job",
@@ -392,7 +405,7 @@ def test_databricks_job():
                         "dependencies": [
                             "requests>=2.0",
                             "./wheels/lake-0.0.1-py3-none-any.whl",
-                            "laktory==0.8.3",
+                            "laktory==__version__",
                         ],
                     },
                 }
@@ -415,7 +428,7 @@ def test_databricks_job():
                     "libraries": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
-                        {"pypi": {"package": "laktory==0.8.3"}},
+                        {"pypi": {"package": "laktory==__version__"}},
                     ],
                     "python_wheel_task": {
                         "entry_point": "models.pipeline._read_and_execute",
@@ -433,7 +446,7 @@ def test_databricks_job():
                     "libraries": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
-                        {"pypi": {"package": "laktory==0.8.3"}},
+                        {"pypi": {"package": "laktory==__version__"}},
                     ],
                     "python_wheel_task": {
                         "entry_point": "models.pipeline._read_and_execute",
@@ -451,7 +464,7 @@ def test_databricks_job():
                     "libraries": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
-                        {"pypi": {"package": "laktory==0.8.3"}},
+                        {"pypi": {"package": "laktory==__version__"}},
                     ],
                     "python_wheel_task": {
                         "entry_point": "models.pipeline._read_and_execute",
@@ -472,7 +485,7 @@ def test_databricks_job():
                     "libraries": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
-                        {"pypi": {"package": "laktory==0.8.3"}},
+                        {"pypi": {"package": "laktory==__version__"}},
                     ],
                     "python_wheel_task": {
                         "entry_point": "models.pipeline._read_and_execute",
@@ -490,7 +503,7 @@ def test_databricks_job():
                     "libraries": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
-                        {"pypi": {"package": "laktory==0.8.3"}},
+                        {"pypi": {"package": "laktory==__version__"}},
                     ],
                     "python_wheel_task": {
                         "entry_point": "models.pipeline._read_and_execute",
@@ -508,7 +521,7 @@ def test_databricks_job():
                     "libraries": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
-                        {"pypi": {"package": "laktory==0.8.3"}},
+                        {"pypi": {"package": "laktory==__version__"}},
                     ],
                     "python_wheel_task": {
                         "entry_point": "models.pipeline._read_and_execute",
@@ -682,9 +695,12 @@ def test_databricks_pipeline(tmp_path):
     assert dlt.options.depends_on == []
     assert dltp.options.depends_on == ["${resources.dlt-pipeline-pl-dlt}"]
 
-    config = dlt.config_file
-    print(config.content_dict)
-    assert config.content_dict == {
+    data = dlt.config_file.content_dict
+    data = json.loads(
+        json.dumps(data).replace(f"laktory=={__version__}", "laktory==__version__")
+    )
+    print(data)
+    assert data == {
         "name": "pl-dlt",
         "nodes": [
             {
