@@ -2,7 +2,7 @@
 
 ## [0.8.4] - Unreleased
 ### Fixed
-* Sink id (which affect checkpoint path) when table name includes variables
+* User inputs for computed fields not injected properly when selecting environment.
 
 ## [0.8.3] - 2025-07-14
 ### Updated
