@@ -1,12 +1,10 @@
 import hashlib
 import io
-import json
 import sys
 import uuid
 from pathlib import Path
 
 import laktory as lk
-from laktory import __version__
 from laktory import models
 from laktory.enums import DataFrameBackends
 
@@ -61,12 +59,12 @@ def get_pl_dlt():
 
 
 def test_databricks_job():
+    # Mock laktory version to account for dynamically changing value
+    lk.__version__ = "__version__"
+
     # Test job
     job = get_pl_job().orchestrator
     data = job.model_dump(exclude_unset=True)
-    data = json.loads(
-        json.dumps(data).replace(f"laktory=={__version__}", "laktory==__version__")
-    )
     print(data)
     assert data == {
         "environments": [
@@ -213,9 +211,6 @@ def test_databricks_job():
     assert len(resources) == 3
 
     data = job.config_file.content_dict
-    data = json.loads(
-        json.dumps(data).replace(f"laktory=={__version__}", "laktory==__version__")
-    )
     checkpoint_path = data["nodes"][0]["sinks"][0]["checkpoint_path"]
     table_fullname = "default.gld_ab"
     hash_object = hashlib.sha1(table_fullname.encode())
@@ -569,6 +564,7 @@ def test_databricks_pipeline(tmp_path):
     lk.__version__ = "<version>"
 
     pl = get_pl_dlt()
+    pl = pl.inject_vars()
 
     # Test node names
     assert pl.nodes_dict["brz"].primary_sink.dlt_name == "dev.sandbox.brz"
@@ -602,7 +598,6 @@ def test_databricks_pipeline(tmp_path):
     }
 
     data = pl.orchestrator.model_dump(mode="json")
-    # data["configuration"]["requirements"] = data["configuration"]["requirements"].replace(__version__, "<version>")
     print(data)
     assert data == {
         "access_controls": [
@@ -696,9 +691,6 @@ def test_databricks_pipeline(tmp_path):
     assert dltp.options.depends_on == ["${resources.dlt-pipeline-pl-dlt}"]
 
     data = dlt.config_file.content_dict
-    data = json.loads(
-        json.dumps(data).replace(f"laktory=={__version__}", "laktory==__version__")
-    )
     print(data)
     assert data == {
         "name": "pl-dlt",
