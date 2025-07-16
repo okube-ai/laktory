@@ -5,6 +5,7 @@ from pydantic import Field
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
 )
+from laktory import settings
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.cluster import ClusterLibrary
 from laktory.models.resources.databricks.cluster import ClusterLibraryPypi
@@ -42,6 +43,14 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         description="An optional maximum number of times to retry an unsuccessful run for each node.",
     )
 
+    @property
+    def config_file_path(self):
+        pl = self.parent_pipeline
+        if not pl:
+            return None
+
+        return f"{settings.workspace_laktory_root}pipelines/{pl.name}/config.json"
+
     # ----------------------------------------------------------------------- #
     # Update Job                                                              #
     # ----------------------------------------------------------------------- #
@@ -74,7 +83,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
         _path = (
             "/Workspace"
-            + self.inject_vars_into_dump({"path": self.config_file.path_})["path"]
+            + self.inject_vars_into_dump({"path": self.config_file_path})["path"]
         )
 
         # Environment

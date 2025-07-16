@@ -19,14 +19,11 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
     @property
     def path_(self):
-        if self.path:
-            return self.path
-
         pl = self.parent_pipeline
         if not pl:
             return None
 
-        return f"{settings.workspace_laktory_root}pipelines/{pl.name}/config.json"
+        return pl.orchestrator.config_file_path
 
     @property
     def content_dict(self):
@@ -34,26 +31,27 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         if not pl:
             return None
 
+        pl = pl.inject_vars()
+
         # Overwrite serialization options
         ss0 = self._singular_serialization
         cs0 = self._camel_serialization
-        pl._configure_serializer(singular=False, camel=False)
-
-        # Orchestrator (which includes WorkspaceFile) needs to be excluded to avoid
-        # infinite re-cursive loop
-        _config = self.inject_vars_into_dump(
-            {
-                "config": pl.model_dump(
-                    exclude_unset=True, exclude="orchestrator", mode="json"
-                )
-            }
-        )["config"]
-        _config["orchestrator"] = pl.orchestrator.model_dump(
-            exclude_unset=True, exclude="config_file", mode="json"
-        )
+        #
+        # # Inject variables before serialization (in case computed fields hashes
+        # # other field values)
+        # o = _pl.orchestrator
+        # _pl.orchestrator = None
+        # _pl = _pl.inject_vars()
+        # # _pl.orchestrator = None
+        # # _pl = _pl.inject_vars()
+        #
+        # _config = _pl.model_dump(exclude_unset=True,  mode="json")
+        # _config["orchestrator"] = o.model_dump(exclude_unset=True,  mode="json")
 
         # Reset serialization options
         pl._configure_serializer(singular=ss0, camel=cs0)
+
+        _confg = {}
 
         return _config
 
