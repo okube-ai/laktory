@@ -34,7 +34,6 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         ss0 = self._singular_serialization
         cs0 = self._camel_serialization
         pl._configure_serializer(singular=False, camel=False)
-        pl.push_vars()
 
         # Orchestrator (which includes WorkspaceFile) needs to be excluded to avoid
         # infinite re-cursive loop

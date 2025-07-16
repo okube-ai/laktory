@@ -118,7 +118,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     @property
     def _uuid(self) -> str:
-        _id = self.inject_vars_into_dump({"id": self._id})["id"]
+        _id = self._id
         hash_object = hashlib.sha1(_id.encode())
         hash_digest = hash_object.hexdigest()
         return str(uuid.UUID(hash_digest[:32]))
