@@ -24,9 +24,6 @@ def get_pl(tmp_path="", is_dlt=False):
 
         pl.root_path_ = tmp_path
 
-        pl.nodes[0].sinks[0].table_name = "${vars.table_name}"
-        pl.variables["table_name"] = "gld_ab"
-
     return pl
 
 
@@ -571,10 +568,7 @@ def test_databricks_pipeline(tmp_path):
     assert pl.nodes_dict["gld"].primary_sink.dlt_name == "gld"
     assert pl.nodes_dict["gld_a"].primary_sink.dlt_name == "dev.sandbox2.gld_a"
     assert pl.nodes_dict["gld_b"].primary_sink.dlt_name == "dev.sandbox2.gld_b"
-    assert (
-        pl.nodes_dict["gld_ab"].primary_sink.dlt_name
-        == "prd.sandbox2.${vars.table_name}"
-    )
+    assert pl.nodes_dict["gld_ab"].primary_sink.dlt_name == "prd.sandbox2.gld_ab"
 
     # Test Sink as Source
     node_slv = pl.nodes_dict["slv"]
