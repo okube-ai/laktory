@@ -1,6 +1,7 @@
 import base64
 import json
 
+from laktory._settings import settings
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
@@ -18,11 +19,14 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
     @property
     def path_(self):
+        if self.path:
+            return self.path
+
         pl = self.parent_pipeline
         if not pl:
             return None
 
-        return pl.orchestrator.config_file_path
+        return f"{settings.workspace_laktory_root}pipelines/{pl.name}/config.json"
 
     @property
     def content_dict(self):

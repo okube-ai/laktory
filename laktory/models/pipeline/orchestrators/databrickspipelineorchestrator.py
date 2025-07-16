@@ -3,7 +3,6 @@ from typing import Literal
 
 from pydantic import Field
 
-from laktory import settings
 from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
@@ -40,14 +39,6 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         description="Pipeline configuration (json) file deployed to the workspace and used by the job to read and execute the pipeline.",
     )
 
-    @property
-    def config_file_path(self):
-        pl = self.parent_pipeline
-        if not pl:
-            return None
-
-        return f"{settings.workspace_laktory_root}pipelines/{pl.name}/config.json"
-
     # ----------------------------------------------------------------------- #
     # Update DLT                                                              #
     # ----------------------------------------------------------------------- #
@@ -71,7 +62,7 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
         _path = (
             "/Workspace"
-            + self.inject_vars_into_dump({"path": self.config_file_path})["path"]
+            + self.inject_vars_into_dump({"path": self.config_file.path_})["path"]
         )
         self.configuration["pipeline_name"] = pl.name  # only for reference
         self.configuration["requirements"] = json.dumps(_requirements)
