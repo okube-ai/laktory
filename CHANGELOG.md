@@ -6,7 +6,7 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Improved environments extraction from stack
 ### Breaking changes
 * n/a
 

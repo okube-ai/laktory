@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from laktory._testing import Paths
@@ -7,8 +9,8 @@ paths = Paths(__file__)
 
 
 class A(BaseModel):
-    first_value: float
-    second_value: float
+    v0: float
+    v1: float
 
 
 class B(BaseModel):
@@ -23,12 +25,31 @@ class M(BaseModel):
     b_models: list[B]
 
 
+class M1(BaseModel):
+    i: int
+    d: dict[str, Any]
+    b: B
+    a_models: dict[str, A]
+    b_models: list[B]
+
+
 @pytest.fixture
 def m():
     return M(
         i=1,
         values=[1, 2],
-        a_models=[{"first_value": 0.0, "second_value": 1.0}],
+        a_models=[{"v0": 0.0, "v1": 1.0}],
+        b_models=[{"s0": "0", "s1": "1"}],
+    )
+
+
+@pytest.fixture
+def m1():
+    return M1(
+        i=1,
+        d={"x": 0, "y": 1},
+        b={"s0": "0", "s1": "1"},
+        a_models={"0": {"v0": 0.0, "v1": 1.0}},
         b_models=[{"s0": "0", "s1": "1"}],
     )
 
@@ -104,7 +125,7 @@ def test_camelize(m):
     m._configure_serializer(camel=False)
 
     assert "bModels" in dump
-    assert "secondValue" in dump["aModels"][0]
+    assert "v1" in dump["aModels"][0]
 
 
 def test_singular(m):
@@ -113,3 +134,30 @@ def test_singular(m):
 
     assert "values" in dump
     assert "a_model" in dump
+
+
+def test_update(m1):
+    # # Simple field
+    m = m1.model_copy()
+    m.update({"i": 2})
+    assert m.i == 2
+
+    # # Dict field
+    m = m1.model_copy()
+    m.update({"d": {"y": 2}})
+    assert m.d == {"x": 0, "y": 2}
+
+    # # Model field
+    m = m1.model_copy()
+    m.update({"b": {"s1": "2"}})
+    assert m.b == B(s0="0", s1="2")
+
+    # # Dict of models
+    m = m1.model_copy()
+    m.update({"a_models": {"0": {"v1": 2.0}}})
+    assert m.a_models["0"] == A(v0=0.0, v1=2.0)
+
+    # List of models
+    m = m1.model_copy()
+    m.update({"b_models": [{"s0": "00", "s1": "2"}]})
+    assert m.b_models == [B(s0="00", s1="2")]

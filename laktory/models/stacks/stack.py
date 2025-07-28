@@ -1,4 +1,3 @@
-import copy
 from typing import Any
 from typing import Literal
 from typing import Union
@@ -7,7 +6,6 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
-from laktory._parsers import merge_dicts
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipeline import Pipeline
@@ -200,36 +198,6 @@ class StackResources(BaseModel):
         return resources
 
 
-class EnvironmentStack(BaseModel):
-    """
-    Environment-specific stack definition.
-    """
-
-    backend: Literal["pulumi", "terraform"] = Field(
-        None, description="IaC backend used for deployment."
-    )
-    description: str = Field(None, description="Description of the stack")
-    name: str = Field(
-        ...,
-        description=" Name of the stack. If Pulumi is used as a backend, it should match the name of the Pulumi project.",
-    )
-    organization: str = Field(None, description="Organization")
-    pulumi: Pulumi = Field(Pulumi(), description="Pulumi-specific settings")
-    resources: Union[StackResources, None] = Field(
-        StackResources(),
-        description="""
-    Dictionary of resources to be deployed. Each key should be a resource type and each value should be a dictionary of
-    resources who's keys are the resource names and the values the resources definitions.
-    """,
-    )
-    settings: LaktorySettings = Field(None, description="Laktory settings")
-    terraform: Terraform = Field(Terraform(), description="Terraform-specific settings")
-    variables: dict[str, Any] = Field(
-        {},
-        description="Dictionary of variables made available in the resources definition.",
-    )
-
-
 class EnvironmentSettings(BaseModel):
     """
     Settings overwrite for a specific environments
@@ -358,7 +326,6 @@ class Stack(BaseModel):
         {},
         description="Dictionary of variables made available in the resources definition.",
     )
-    _envs: dict[str, EnvironmentStack] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -376,7 +343,7 @@ class Stack(BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def get_env(self, env_name: str) -> EnvironmentStack:
+    def get_env(self, env_name: str):
         """
         Complete definition the stack for a given environment. It takes into
         account both the default stack values and environment-specific
@@ -394,98 +361,14 @@ class Stack(BaseModel):
         """
 
         if env_name is None:
-            env = self
-            env.push_vars()
-            return env
+            return self
 
         if env_name not in self.environments.keys():
             raise ValueError(f"Environment '{env_name}' is not declared in the stack.")
 
-        if self._envs is None:
-            ENV_FIELDS = ["pulumi", "resources", "terraform", "variables"]
-
-            # Because some fields are excluded from the dump, they need to be
-            # manually dumped and added back to the base dump
-            def dump_with_excluded(obj: Any) -> Any:
-                # Check data type, call recursively if not a BaseModel
-                if isinstance(obj, list):
-                    return [dump_with_excluded(v) for v in obj]
-                elif isinstance(obj, dict):
-                    return {k: dump_with_excluded(v) for k, v in obj.items()}
-                elif not isinstance(obj, BaseModel):
-                    return obj
-
-                # Get model dump
-                model = obj
-                data = model.model_dump(exclude_unset=True, round_trip=True)
-
-                # Loop through all model fields
-                for field_name, field in model.model_fields.items():
-                    # Explicitly dump excluded fields - variables
-                    if field_name == "variables" and model.variables is not None:
-                        data["variables"] = copy.deepcopy(model.variables)
-
-                    # Explicitly dump excluded fields - resource options
-                    if field_name == "options" and "ResourceOptions" in str(
-                        field.annotation
-                    ):
-                        data["options"] = model.options.model_dump(exclude_unset=True)
-
-                    # Explicitly dump excluded fields - resource name
-                    if field_name == "resource_name_" and model.resource_name_:
-                        data["resource_name_"] = model.resource_name_
-
-                    # Explicitly dump excluded fields - lookup existing
-                    if field_name == "lookup_existing" and model.lookup_existing:
-                        data["lookup_existing"] = model.lookup_existing.model_dump(
-                            exclude_unset=True
-                        )
-
-                    # Parse list
-                    if isinstance(data.get(field_name, None), list):
-                        data[field_name] = [
-                            dump_with_excluded(v) for v in getattr(model, field_name)
-                        ]
-
-                    # Parse dict (might result from a dict or a BaseModel)
-                    elif isinstance(data.get(field_name, None), dict):
-                        a = getattr(model, field_name)
-
-                        if isinstance(a, dict):
-                            for k in a.keys():
-                                data[field_name][k] = dump_with_excluded(a[k])
-                        else:
-                            data[field_name] = dump_with_excluded(a)
-
-                # Computed fields are excluded when using `round_trip=True`. The ones that provides default values when
-                # user input is not provided need to be injected back into the data. `dataframe_backend_` vs
-                # `dataframe_backend` is one example.
-                if hasattr(model, "computed_defaults"):
-                    for computed_field, user_field in model.computed_defaults.items():
-                        user_value = getattr(model, user_field, None)
-                        if user_value:
-                            data[user_field] = user_value
-
-                return data
-
-            envs = {}
-            for _env_name, env in self.environments.items():
-                d = dump_with_excluded(self)
-                _envs = d.pop("environments")
-
-                for k in ENV_FIELDS:
-                    v1 = _envs[_env_name].get(k, {})
-                    if k in d:
-                        d[k] = merge_dicts(d[k], v1)
-                    elif k in _envs[_env_name]:
-                        d[k] = v1
-
-                envs[_env_name] = EnvironmentStack(**d)
-                envs[_env_name].push_vars()
-
-            self._envs = envs
-
-        return self._envs[env_name]
+        env = self.model_copy(update={"environments": {}})
+        env.update(self.environments[env_name].model_dump(exclude_unset=True))
+        return env
 
     # ----------------------------------------------------------------------- #
     # Pulumi Methods                                                          #

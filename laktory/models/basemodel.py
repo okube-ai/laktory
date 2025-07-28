@@ -296,18 +296,34 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     def singularizations(self) -> dict[str, str]:
         return {}
 
-    @property
-    def computed_defaults(self) -> dict[str, str]:
-        # Dict whose keys are user input fields and whose values are the default/computed values when user input is not
-        # provided
-        m = {}
+    # ----------------------------------------------------------------------- #
+    # Update                                                                  #
+    # ----------------------------------------------------------------------- #
 
-        for cfield_name in self.model_computed_fields.keys():
-            field_name = cfield_name + "_"
-            if field_name in self.model_fields:
-                m[cfield_name] = field_name
+    def update(self, update: dict[Any, Any]) -> None:
+        for key, value in update.items():
+            if isinstance(self, BaseModel):
+                current = getattr(self, key)
+            elif isinstance(self, dict):
+                current = self.get(key)
+            else:
+                raise TypeError(f"Unsupported self type: {type(self)}")
 
-        return m
+            if isinstance(current, BaseModel) and isinstance(value, dict):
+                current.update(value)
+            elif isinstance(current, dict) and isinstance(value, dict):
+                for subkey, subval in value.items():
+                    if isinstance(current.get(subkey), BaseModel) and isinstance(
+                        subval, dict
+                    ):
+                        current[subkey].update(subval)
+                    else:
+                        current[subkey] = subval
+            else:
+                if isinstance(self, BaseModel):
+                    setattr(self, key, value)
+                else:
+                    self[key] = value
 
     # ----------------------------------------------------------------------- #
     # Serialization                                                           #

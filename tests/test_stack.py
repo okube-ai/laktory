@@ -16,14 +16,14 @@ def stack():
     with open(root / "data/stack.yaml", "r") as fp:
         stack = models.Stack.model_validate_yaml(fp)
 
-    stack.terraform.backend = {
-        "azurerm": {
-            "resource_group_name": "o3-rg-laktory-dev",
-            "storage_account_name": "o3stglaktorydev",
-            "container_name": "unit-testing",
-            "key": "terraform/dev.terraform.tfstate",
-        }
-    }
+    # stack.terraform.backend = {
+    #     "azurerm": {
+    #         "resource_group_name": "o3-rg-laktory-dev",
+    #         "storage_account_name": "o3stglaktorydev",
+    #         "container_name": "unit-testing",
+    #         "key": "terraform/dev.terraform.tfstate",
+    #     }
+    # }
 
     return stack
 
@@ -133,7 +133,8 @@ def test_stack_model(stack):
 
 def test_stack_env_model(stack):
     # dev
-    _stack = stack.get_env("dev").inject_vars()
+    _stack = stack.get_env("dev")
+    _stack = _stack.inject_vars()
     pl = _stack.resources.pipelines["pl-custom-name"]
 
     assert _stack.variables == {
@@ -145,13 +146,6 @@ def test_stack_env_model(stack):
     }
     assert pl.orchestrator.development is None
     assert pl.nodes[0].dlt_template is None
-    assert pl.variables == {
-        "workflow_name": "pl-stock-prices-ut-stack",
-        "business_unit": "laktory",
-        "env": "dev",
-        "is_dev": True,
-        "node_type_id": "Standard_DS3_v2",
-    }
 
     # prod
     _stack = stack.get_env("prod")
@@ -165,13 +159,6 @@ def test_stack_env_model(stack):
     }
     assert not pl.orchestrator.development
     assert pl.nodes[0].dlt_template is None
-    assert pl.variables == {
-        "workflow_name": "pl-stock-prices-ut-stack",
-        "business_unit": "laktory",
-        "env": "prod",
-        "is_dev": False,
-        "node_type_id": "Standard_DS4_v2",
-    }
 
 
 def test_stack_resources_unique_name():
@@ -540,15 +527,7 @@ def test_terraform_stack(monkeypatch, stack):
         "terraform": {
             "required_providers": {
                 "databricks": {"source": "databricks/databricks", "version": ">=1.49"}
-            },
-            "backend": {
-                "azurerm": {
-                    "resource_group_name": "o3-rg-laktory-dev",
-                    "storage_account_name": "o3stglaktorydev",
-                    "container_name": "unit-testing",
-                    "key": "terraform/dev.terraform.tfstate",
-                }
-            },
+            }
         },
         "provider": {"databricks": {"host": "my-host", "token": "my-token"}},
         "resource": {

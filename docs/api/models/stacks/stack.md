@@ -14,10 +14,6 @@
 
 ---
 
-::: laktory.models.stacks.stack.EnvironmentStack
-
----
-
 ::: laktory.models.stacks.stack.Pulumi
 
 ---
