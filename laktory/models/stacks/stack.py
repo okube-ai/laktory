@@ -334,7 +334,7 @@ class Stack(BaseModel):
         settings = data.get("settings", None)
         if settings:
             if not isinstance(settings, dict):
-                settings = settings.model_dump()
+                settings = settings.model_dump(exclude_unset=True)
             LaktorySettings(**settings)
 
         return data
