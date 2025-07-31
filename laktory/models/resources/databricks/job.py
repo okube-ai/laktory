@@ -895,7 +895,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
         return "databricks_job"
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return self.pulumi_excludes
 
     @property
