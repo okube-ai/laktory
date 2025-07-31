@@ -67,6 +67,9 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         self.configuration["pipeline_name"] = pl.name  # only for reference
         self.configuration["requirements"] = json.dumps(_requirements)
         self.configuration["config_filepath"] = _path
+        # This is to ensure configuration is flagged as set and part of
+        # model_fields_set when injecting variables.
+        self.configuration = self.configuration
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
