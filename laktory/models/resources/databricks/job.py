@@ -541,6 +541,8 @@ class JobTaskForEachTaskTask(BaseModel):
     def singularizations(self) -> dict[str, str]:
         return {
             "email_notifications": "email_notifications",
+            "notification_settings": "notification_settings",
+            "webhook_notifications": "webhook_notifications",
         }
 
     @field_validator("depends_ons")
@@ -888,6 +890,8 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     def singularizations(self) -> dict[str, str]:
         return {
             "email_notifications": "email_notifications",
+            "notification_settings": "notification_settings",
+            "webhook_notifications": "webhook_notifications",
         }
 
     @property
