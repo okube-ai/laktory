@@ -41,6 +41,10 @@ class TableDataSink(BaseDataSink):
         "TABLE",
         description="Type of table. 'TABLE' and 'VIEW' are currently supported.",
     )
+    table_properties: dict[str, str] = Field(
+        {},
+        description="Table properties."
+    )
     view_definition: DataFrameExpr | str = Field(
         None, description="View definition of 'VIEW' `table_type` is selected."
     )
