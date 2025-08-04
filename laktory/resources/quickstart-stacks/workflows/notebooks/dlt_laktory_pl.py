@@ -37,13 +37,16 @@ def define_table(node, sink):
         dlt_fail_expectations = node.dlt_fail_expectations
 
     table_or_view = dlt.table
+    kwargs = {
+        "name": sink.dlt_name,
+        "comment": node.comment,
+    }
     if isinstance(sink, lk.models.PipelineViewDataSink):
         table_or_view = dlt.view
+    else:
+        kwargs["table_properties"] = sink.table_properties
 
-    @table_or_view(
-        name=sink.dlt_name,
-        comment=node.comment,
-    )
+    @table_or_view(**kwargs)
     @dlt.expect_all(dlt_warning_expectations)
     @dlt.expect_all_or_drop(dlt_drop_expectations)
     @dlt.expect_all_or_fail(dlt_fail_expectations)
@@ -68,6 +71,7 @@ def define_cdc_table(node, sink):
     dlt.create_streaming_table(
         name=sink.dlt_name,
         comment=node.comment,
+        table_properties=sink.table_properties,
     )
 
     dlt.apply_changes(

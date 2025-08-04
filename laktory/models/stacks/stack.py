@@ -9,6 +9,9 @@ from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipeline import Pipeline
+from laktory.models.resources.databricks.accesscontrolruleset import (
+    AccessControlRuleSet,
+)
 from laktory.models.resources.databricks.alert import Alert
 from laktory.models.resources.databricks.catalog import Catalog
 from laktory.models.resources.databricks.cluster import Cluster
@@ -31,6 +34,10 @@ from laktory.models.resources.databricks.mwsnetworkconnectivityconfig import (
     MwsNetworkConnectivityConfig,
 )
 from laktory.models.resources.databricks.notebook import Notebook
+from laktory.models.resources.databricks.notificationdestination import (
+    NotificationDestination,
+)
+from laktory.models.resources.databricks.obotoken import OboToken
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.pipeline import Pipeline as DatabricksPipeline
 from laktory.models.resources.databricks.pythonpackage import PythonPackage
@@ -122,6 +129,7 @@ class StackResources(BaseModel):
     Resources definition for a given stack or stack environment.
     """
 
+    databricks_accesscontrolrulesets: dict[str, AccessControlRuleSet] = {}
     databricks_alerts: dict[str, Alert] = {}
     databricks_catalogs: dict[str, Catalog] = {}
     databricks_clusterpolicies: dict[str, ClusterPolicy] = {}
@@ -143,6 +151,8 @@ class StackResources(BaseModel):
     databricks_mlflowwebhooks: dict[str, MLflowWebhook] = {}
     databricks_networkconnectivityconfig: dict[str, MwsNetworkConnectivityConfig] = {}
     databricks_notebooks: dict[str, Notebook] = {}
+    databricks_notificationdestinations: dict[str, NotificationDestination] = {}
+    databricks_obotokens: dict[str, OboToken] = {}
     databricks_permissions: dict[str, Permissions] = {}
     databricks_pythonpackages: dict[str, PythonPackage] = {}
     databricks_queries: dict[str, Query] = {}

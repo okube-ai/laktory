@@ -30,6 +30,7 @@ def stack():
 
 @pytest.fixture
 def full_stack():
+    from tests.resources.test_accesscontrolruleset import acrs
     from tests.resources.test_alert import alert
     from tests.resources.test_catalog import catalog
     from tests.resources.test_cluster_policy import cluster_policy
@@ -42,6 +43,10 @@ def full_stack():
     from tests.resources.test_mlflow_model import mlmodel
     from tests.resources.test_mlflow_webhook import mlwebhook
     from tests.resources.test_notebook import get_notebook
+    from tests.resources.test_notificationdestinations import nd_emails
+    from tests.resources.test_notificationdestinations import nd_slack
+    from tests.resources.test_notificationdestinations import nd_teams
+    from tests.resources.test_obotoken import obo_token
     from tests.resources.test_permissions import permissions
     from tests.resources.test_pipeline_orchestrators import get_pl_dlt
     from tests.resources.test_pythonpackage import get_python_package
@@ -62,6 +67,7 @@ def full_stack():
     workspace_file.source = str(root / "resources" / workspace_file.source)
 
     _resources = {
+        "databricks_accesscontrolrulesets": [acrs],
         "databricks_alerts": [alert],
         "databricks_catalogs": [catalog],
         "databricks_clusterpolicies": [cluster_policy],
@@ -72,8 +78,10 @@ def full_stack():
         "databricks_mlflowexperiments": [mlexp],
         "databricks_mlflowmodels": [mlmodel],
         "databricks_mlflowwebhooks": [mlwebhook],
+        "databricks_obotokens": [obo_token],
         "databricks_pythonpackages": [get_python_package()],
         "databricks_notebooks": [nb],
+        "databricks_notificationdestinations": [nd_emails, nd_teams, nd_slack],
         "databricks_permissions": [permissions],
         "databricks_queries": [query],
         "databricks_repos": [repo],
