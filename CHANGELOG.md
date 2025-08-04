@@ -1,6 +1,16 @@
 # Release History
 
-## [0.8.5] - Unreleased
+## [0.8.6] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.8.5] - 2025-08-04
 ### Added
 * Support for Databricks Access Control Rule Set [[#359](https://github.com/okube-ai/laktory/issues/359)]
 * Support for Databricks Notification Destination resources [[#406](https://github.com/okube-ai/laktory/issues/406)]
