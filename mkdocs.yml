@@ -204,6 +204,7 @@ nav:
         - TerraformResource: api/models/resources/terraformresource.md
         - Databricks:
           - AccessControl: api/models/resources/databricks/accesscontrol.md
+          - AccessControlRuleSet: api/models/resources/databricks/accesscontrolruleset.md
           - api/models/resources/databricks/alert.md
           - api/models/resources/databricks/catalog.md
           - api/models/resources/databricks/cluster.md

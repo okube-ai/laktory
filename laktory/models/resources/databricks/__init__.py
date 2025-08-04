@@ -1,4 +1,5 @@
 from .accesscontrol import AccessControl
+from .accesscontrolruleset import AccessControlRuleSet
 from .alert import Alert
 from .catalog import Catalog
 from .cluster import Cluster

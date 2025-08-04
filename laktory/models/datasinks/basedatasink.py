@@ -106,6 +106,22 @@ class BaseDataSink(BaseModel, PipelineChild):
             else:
                 self.merge_cdc_options._parent = self
 
+            from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
+                DatabricksPipelineOrchestrator,
+            )
+
+            if (
+                self.parent_pipeline
+                and self.parent_pipeline.orchestrator
+                and isinstance(
+                    self.parent_pipeline.orchestrator, DatabricksPipelineOrchestrator
+                )
+            ):
+                if self.merge_cdc_options.order_by is None:
+                    raise ValueError(
+                        "`merge_cdc_options` requires a value for `order_by` when Databricks Pipeline orchestrator is selected."
+                    )
+
         return self
 
     # -------------------------------------------------------------------------------- #

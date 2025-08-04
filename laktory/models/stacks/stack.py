@@ -9,6 +9,9 @@ from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipeline import Pipeline
+from laktory.models.resources.databricks.accesscontrolruleset import (
+    AccessControlRuleSet,
+)
 from laktory.models.resources.databricks.alert import Alert
 from laktory.models.resources.databricks.catalog import Catalog
 from laktory.models.resources.databricks.cluster import Cluster
@@ -125,6 +128,7 @@ class StackResources(BaseModel):
     Resources definition for a given stack or stack environment.
     """
 
+    databricks_accesscontrolrulesets: dict[str, AccessControlRuleSet] = {}
     databricks_alerts: dict[str, Alert] = {}
     databricks_catalogs: dict[str, Catalog] = {}
     databricks_clusterpolicies: dict[str, ClusterPolicy] = {}

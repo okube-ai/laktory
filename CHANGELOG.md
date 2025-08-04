@@ -2,9 +2,10 @@
 
 ## [0.8.5] - Unreleased
 ### Added
-* Support for Databricks Notification Destination resources
+* Support for Databricks Notification Destination resources [[#406](https://github.com/okube-ai/laktory/issues/406)]
 ### Updated
 * Improved environments extraction from stack
+* Additional validation for merge CDC options when using DLT [[#458](https://github.com/okube-ai/laktory/issues/458)] 
 
 ## [0.8.4] - 2025-07-16
 ### Fixed
