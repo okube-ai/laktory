@@ -231,6 +231,7 @@ nav:
           - MwsNetworkConnectivityConfig: api/models/resources/databricks/mwsnetworkconnectivityconfig.md
           - api/models/resources/databricks/notebook.md
           - NotificationDestination: api/models/resources/databricks/notificationdestination.md
+          - OboToken: api/models/resources/databricks/obotoken.md
           - PythonPackage: api/models/resources/databricks/pythonpackage.md
           - api/models/resources/databricks/query.md
           - api/models/resources/databricks/repo.md

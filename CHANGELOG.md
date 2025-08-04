@@ -2,7 +2,9 @@
 
 ## [0.8.5] - Unreleased
 ### Added
+* Support for Databricks Access Control Rule Set [[#359](https://github.com/okube-ai/laktory/issues/359)]
 * Support for Databricks Notification Destination resources [[#406](https://github.com/okube-ai/laktory/issues/406)]
+* Support for Databricks Obo Token [[#360](https://github.com/okube-ai/laktory/issues/360)]
 ### Updated
 * Improved environments extraction from stack
 * Additional validation for merge CDC options when using DLT [[#458](https://github.com/okube-ai/laktory/issues/458)] 
