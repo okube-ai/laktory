@@ -22,6 +22,7 @@ from .mwsnccbinding import MwsNccBinding
 from .mwsnetworkconnectivityconfig import MwsNetworkConnectivityConfig
 from .mwspermissionassignment import MwsPermissionAssignment
 from .notebook import Notebook
+from .notificationdestination import NotificationDestination
 from .permissions import Permissions
 from .pipeline import Pipeline
 from .pythonpackage import PythonPackage

@@ -31,6 +31,9 @@ from laktory.models.resources.databricks.mwsnetworkconnectivityconfig import (
     MwsNetworkConnectivityConfig,
 )
 from laktory.models.resources.databricks.notebook import Notebook
+from laktory.models.resources.databricks.notificationdestination import (
+    NotificationDestination,
+)
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.pipeline import Pipeline as DatabricksPipeline
 from laktory.models.resources.databricks.pythonpackage import PythonPackage
@@ -143,6 +146,7 @@ class StackResources(BaseModel):
     databricks_mlflowwebhooks: dict[str, MLflowWebhook] = {}
     databricks_networkconnectivityconfig: dict[str, MwsNetworkConnectivityConfig] = {}
     databricks_notebooks: dict[str, Notebook] = {}
+    databricks_notificationdestinations: dict[str, NotificationDestination] = {}
     databricks_permissions: dict[str, Permissions] = {}
     databricks_pythonpackages: dict[str, PythonPackage] = {}
     databricks_queries: dict[str, Query] = {}

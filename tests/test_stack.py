@@ -42,6 +42,9 @@ def full_stack():
     from tests.resources.test_mlflow_model import mlmodel
     from tests.resources.test_mlflow_webhook import mlwebhook
     from tests.resources.test_notebook import get_notebook
+    from tests.resources.test_notificationdestinations import nd_emails
+    from tests.resources.test_notificationdestinations import nd_slack
+    from tests.resources.test_notificationdestinations import nd_teams
     from tests.resources.test_permissions import permissions
     from tests.resources.test_pipeline_orchestrators import get_pl_dlt
     from tests.resources.test_pythonpackage import get_python_package
@@ -74,6 +77,7 @@ def full_stack():
         "databricks_mlflowwebhooks": [mlwebhook],
         "databricks_pythonpackages": [get_python_package()],
         "databricks_notebooks": [nb],
+        "databricks_notificationdestinations": [nd_emails, nd_teams, nd_slack],
         "databricks_permissions": [permissions],
         "databricks_queries": [query],
         "databricks_repos": [repo],

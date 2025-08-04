@@ -2,13 +2,9 @@
 
 ## [0.8.5] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
+* Support for Databricks Notification Destination resources
 ### Updated
 * Improved environments extraction from stack
-### Breaking changes
-* n/a
 
 ## [0.8.4] - 2025-07-16
 ### Fixed
