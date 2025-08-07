@@ -30,6 +30,7 @@ dependencies = [
     "narwhals>=1.46",
     "networkx",
     "planck>=0.0.8",
+    "platformdirs",
     "prompt_toolkit",
     "pyyaml",
     "pydantic>=2",
@@ -43,7 +44,7 @@ dependencies = [
 [project.optional-dependencies]
 polars = [
     "deltalake",
-    "polars>=1.0",
+    "polars<1.32.1",  # issue with 1.32.1 .__version__ is invalid
     "sqlparse",
 ]
 pyspark = [
