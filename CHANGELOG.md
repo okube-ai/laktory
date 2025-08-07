@@ -6,7 +6,7 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* `WorkspaceConfigFile` to use source file in user cache instead of base64 content
 ### Breaking changes
 * n/a
 

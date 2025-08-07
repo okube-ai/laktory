@@ -135,9 +135,6 @@ def test_update_from_parent():
     assert pl.orchestrator.parent == pl
     assert pl.orchestrator.parent_pipeline == pl
     assert len(pl.orchestrator.parameters) == 1
-    assert pl.orchestrator.config_file.content_base64_.startswith(
-        "ewogICAgImRlcGVuZGVuY2llcy"
-    )
 
     # Assign As Model
     pl = get_pl("")
@@ -147,9 +144,6 @@ def test_update_from_parent():
     assert pl.orchestrator.parent == pl
     assert pl.orchestrator.parent_pipeline == pl
     assert len(pl.orchestrator.parameters) == 1
-    assert pl.orchestrator.config_file.content_base64_.startswith(
-        "ewogICAgImRlcGVuZGVuY2llcy"
-    )
 
 
 def test_root_path(tmp_path):

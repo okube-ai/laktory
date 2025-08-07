@@ -16,6 +16,7 @@ import laktory.narwhals_ext
 import laktory.typing
 import laktory.yaml
 
+from ._cache import cache_dir
 from ._logger import get_logger
 from ._settings import Settings
 from .sqlparser import SQLParser

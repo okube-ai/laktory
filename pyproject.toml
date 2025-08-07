@@ -30,6 +30,7 @@ dependencies = [
     "narwhals>=1.46",
     "networkx",
     "planck>=0.0.8",
+    "platformdirs",
     "prompt_toolkit",
     "pyyaml",
     "pydantic>=2",

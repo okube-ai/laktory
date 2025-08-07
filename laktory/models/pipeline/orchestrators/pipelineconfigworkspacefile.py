@@ -1,5 +1,7 @@
-import base64
 import json
+from pathlib import Path
+
+from pydantic import computed_field
 
 from laktory._settings import settings
 from laktory.models.pipelinechild import PipelineChild
@@ -16,6 +18,23 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
     access_controls: list[AccessControl] = [
         AccessControl(permission_level="CAN_READ", group_name="users")
     ]
+
+    @computed_field(description="source")
+    @property
+    def source(self) -> str | None:
+        from laktory._cache import cache_dir
+
+        pl_name = ""
+        try:
+            pl = self.parent_pipeline
+            pl_name = pl.name
+        except ImportError:
+            # parent pipeline can't be access at initial import
+            pass
+
+        source_path = cache_dir / "pipelines" / pl_name / "config.json"
+
+        return str(source_path)
 
     @property
     def path_(self):
@@ -57,12 +76,6 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
         return _config
 
-    @property
-    def content_base64_(self):
-        _config = self.content_dict
-        _config_str = json.dumps(_config, indent=4)
-        return base64.b64encode(_config_str.encode("utf-8")).decode("utf-8")
-
     def update_from_parent(self):
         """
         Path is required to be set here (after instantiation). Other resource key is not
@@ -75,17 +88,15 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         # Set path
         self.path = self.path_
 
-        # Mock content
-        self.content_base64 = base64.b64encode("<place_holder>".encode("utf-8")).decode(
-            "utf-8"
-        )
-
     def _post_serialization(self, dump):
         """
         Content is required to be set here (at serialization). Otherwise, it leas to
         infinite lops.
         """
-        dump["content_base64"] = self.content_base64_
+        filepath = Path(self.source)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+        with open(filepath, "w") as fp:
+            json.dump(self.content_dict, fp, indent=4)
         return dump
 
     # ----------------------------------------------------------------------- #

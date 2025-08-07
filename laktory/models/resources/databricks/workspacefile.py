@@ -3,7 +3,9 @@ from pathlib import Path
 from typing import Any
 from typing import Union
 
+from pydantic import AliasChoices
 from pydantic import Field
+from pydantic import computed_field
 from pydantic import model_validator
 
 from laktory import settings
@@ -62,7 +64,12 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     LAKTORY_WORKSPACE_LAKTORY_ROOT environment variable. Default is `/.laktory/`. Used only if `path` is not specified.
     """,
     )
-    source: str = Field(None, description="Path to file on local filesystem.")
+    source_: str = Field(
+        None,
+        description="Path to file on local filesystem.",
+        validation_alias=AliasChoices("source", "source_"),
+        exclude=True,
+    )
     content_base64: str = Field(
         None,
         description="""
@@ -71,6 +78,11 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     file with configuration properties for a data pipeline.
     """,
     )
+
+    @computed_field(description="source")
+    @property
+    def source(self) -> str:
+        return self.source_
 
     @classmethod
     def lookup_defaults(cls) -> dict:
@@ -88,7 +100,7 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
         if self.path:
             return self
 
-        if not self.source:
+        if not self.source_:
             return self
 
         # root

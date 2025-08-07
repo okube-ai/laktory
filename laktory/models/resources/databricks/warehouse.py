@@ -131,8 +131,6 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
         None, description="SQL warehouse type."
     )
 
-
-
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
