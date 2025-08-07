@@ -2,7 +2,7 @@
 
 ## [0.8.6] - Unreleased
 ### Added
-* n/a
+* Support for tags in Databricks pipelines
 ### Fixed
 * n/a
 ### Updated
