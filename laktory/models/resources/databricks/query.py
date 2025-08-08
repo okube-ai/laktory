@@ -210,14 +210,6 @@ class Query(BaseModel, PulumiResource, TerraformResource):
     and `dirpath`. If changed, the query will be recreated.""",
     )
     query_text: str = Field(..., description="Text of SQL query.")
-    rootpath: str = Field(
-        None,
-        description="""
-    Root directory to which all queries are deployed to. Can also be configured by settings 
-    LAKTORY_WORKSPACE_LAKTORY_ROOT environment variable. Default is `/.laktory/`. Used only if `parent_path` is not
-    specified.
-    """,
-    )
     run_as_mode: str = Field(None, description="Sets the 'Run as' role for the object.")
     schema_: str = Field(
         None,
@@ -236,10 +228,6 @@ class Query(BaseModel, PulumiResource, TerraformResource):
         if "parent_path" in self.model_fields_set:
             return self
 
-        # root
-        if self.rootpath is None:
-            self.rootpath = settings.workspace_laktory_root
-
         # dir
         if self.dirpath is None:
             self.dirpath = ""
@@ -247,7 +235,7 @@ class Query(BaseModel, PulumiResource, TerraformResource):
             self.dirpath = self.dirpath[1:]
 
         # parent_path
-        _path = Path(self.rootpath) / self.dirpath
+        _path = Path(settings.workspace_laktory_root) / self.dirpath
         self.parent_path = _path.as_posix()
 
         return self

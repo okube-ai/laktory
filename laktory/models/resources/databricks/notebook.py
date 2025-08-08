@@ -43,18 +43,16 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
 
     notebook = models.resources.databricks.Notebook(
         source="./notebooks/dlt/dlt_laktory_pl.py",
-        rootpath="/src/",
     )
     print(notebook.path)
-    # > /src/dlt_laktory_pl.py
+    # > /.laktory/dlt_laktory_pl.py
 
     notebook = models.resources.databricks.Notebook(
         source="./notebooks/dlt/dlt_laktory_pl.py",
-        rootpath="/src/",
         dirpath="notebooks/dlt/",
     )
     print(notebook.path)
-    # > /src/notebooks/dlt/dlt_laktory_pl.py
+    # > /.laktory/notebooks/dlt/dlt_laktory_pl.py
     ```
     """
 
@@ -77,13 +75,6 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         None,
         description="Workspace filepath for the notebook. Overwrite `rootpath` and `dirpath`.",
     )
-    rootpath: str = Field(
-        None,
-        description="""
-    Root directory to which all notebooks are deployed to. Can also be configured by settings 
-    LAKTORY_WORKSPACE_LAKTORY_ROOT environment variable. Default is `/.laktory/`. Used only if `path` is not specified.
-    """,
-    )
     source: str = Field(
         ..., description="Path to notebook in source code format on local filesystem."
     )
@@ -99,10 +90,6 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         if self.path:
             return self
 
-        # root
-        if self.rootpath is None:
-            self.rootpath = settings.workspace_laktory_root
-
         # dir
         if self.dirpath is None:
             self.dirpath = ""
@@ -110,7 +97,7 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
             self.dirpath = self.dirpath[1:]
 
         # path
-        _path = Path(self.rootpath) / self.dirpath / self.filename
+        _path = Path(settings.workspace_laktory_root) / self.dirpath / self.filename
         self.path = _path.as_posix()
 
         return self

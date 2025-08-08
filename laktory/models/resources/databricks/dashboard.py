@@ -75,14 +75,6 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
     path: str = Field(
         None, description="Filepath for the file. Overwrite `rootpath` and `dirpath`."
     )
-    rootpath: str = Field(
-        None,
-        description="""
-    Root directory to which all dashboards are deployed to. Can also be configured by settings 
-    LAKTORY_WORKSPACE_LAKTORY_ROOT environment variable. Default is `/.laktory/`. Used only if `parent_path` is not
-    specified.
-    """,
-    )
     serialized_dashboard: str = Field(
         None,
         description="The contents of the dashboard in serialized string form. Conflicts with file_path.",
@@ -97,10 +89,6 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
         if self.parent_path:
             return self
 
-        # root
-        if self.rootpath is None:
-            self.rootpath = settings.workspace_laktory_root
-
         # dir
         if self.dirpath is None:
             self.dirpath = ""
@@ -108,7 +96,7 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
             self.dirpath = self.dirpath[1:]
 
         # parent_path
-        _path = Path(self.rootpath) / self.dirpath
+        _path = Path(settings.workspace_laktory_root) / self.dirpath
         self.parent_path = _path.as_posix()
 
         return self

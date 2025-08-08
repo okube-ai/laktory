@@ -33,18 +33,16 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
 
     file = models.resources.databricks.WorkspaceFile(
         source="./notebooks/dlt/dlt_laktory_pl.py",
-        rootpath="/src/",
     )
     print(file.path)
-    # > /src/dlt_laktory_pl.py
+    # > /.laktory/dlt_laktory_pl.py
 
     file = models.resources.databricks.WorkspaceFile(
         source="./notebooks/dlt/dlt_laktory_pl.py",
-        rootpath="/src/",
         dirpath="notebooks/dlt/",
     )
     print(file.path)
-    # > /src/notebooks/dlt/dlt_laktory_pl.py
+    # > /.laktory/notebooks/dlt/dlt_laktory_pl.py
     ```
     """
 
@@ -56,13 +54,6 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     path: str = Field(
         None,
         description="Workspace filepath for the file. Overwrite `rootpath` and `dirpath`.",
-    )
-    rootpath: str = Field(
-        None,
-        description="""
-    Root directory to which all workspace files are deployed to. Can also be configured by settings 
-    LAKTORY_WORKSPACE_LAKTORY_ROOT environment variable. Default is `/.laktory/`. Used only if `path` is not specified.
-    """,
     )
     source_: str = Field(
         None,
@@ -103,10 +94,6 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
         if not self.source_:
             return self
 
-        # root
-        if self.rootpath is None:
-            self.rootpath = settings.workspace_laktory_root
-
         # dir
         if self.dirpath is None:
             self.dirpath = ""
@@ -114,7 +101,7 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
             self.dirpath = self.dirpath[1:]
 
         # path
-        _path = Path(self.rootpath) / self.dirpath / self.filename
+        _path = Path(settings.workspace_laktory_root) / self.dirpath / self.filename
         self.path = _path.as_posix()
 
         return self

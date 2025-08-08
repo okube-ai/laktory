@@ -14,7 +14,6 @@ def get_notebook():
 def test_notebook():
     nb0 = Notebook(source="./hello_world.py")
     nb1 = Notebook(source="./hello_world.py", dirpath="notebooks/")
-    nb2 = Notebook(source="./hello_world.py", rootpath="/scr/notebooks")
     os.environ["LAKTORY_WORKSPACE_LAKTORY_ROOT"] = "/src/"
     settings.__init__()
     nb3 = Notebook(source="./hello_world.py")
@@ -26,5 +25,4 @@ def test_notebook():
     assert nb.source == "./test_notebook.py"
     assert nb0.path == "/.laktory/hello_world.py"
     assert nb1.path == "/.laktory/notebooks/hello_world.py"
-    assert nb2.path == "/scr/notebooks/hello_world.py"
     assert nb3.path == "/src/hello_world.py"

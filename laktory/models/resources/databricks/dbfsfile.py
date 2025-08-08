@@ -6,7 +6,6 @@ from typing import Union
 from pydantic import Field
 from pydantic import model_validator
 
-from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
@@ -42,18 +41,16 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
 
     file = models.resources.databricks.DbfsFile(
         source="./data/stock_prices/prices.json",
-        rootpath="/data/",
     )
     print(file.path)
-    # > /data/prices.json
+    # > /prices.json
 
     file = models.resources.databricks.DbfsFile(
         source="./data/stock_prices/prices.json",
-        rootpath="/data/",
         dirpath="stock_prices/",
     )
     print(file.path)
-    # > /data/stock_prices/prices.json
+    # > /stock_prices/prices.json
     ```
     """
 
@@ -75,10 +72,6 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
         None,
         description="DBFS filepath for the file. Overwrite `rootpath` and `dirpath`.",
     )
-    rootpath: str = Field(
-        "/",
-        description="Root directory to which all DBFS files are deployed to. Used only if `path` is not specified.",
-    )
     source: str = Field(..., description="Path to file on local filesystem.")
 
     @classmethod
@@ -96,10 +89,6 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
         if self.path:
             return self
 
-        # root
-        if self.rootpath is None:
-            self.rootpath = settings.workspace_laktory_root
-
         # dir
         if self.dirpath is None:
             self.dirpath = ""
@@ -107,7 +96,7 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
             self.dirpath = self.dirpath[1:]
 
         # path
-        _path = Path(self.rootpath) / self.dirpath / self.filename
+        _path = Path("/") / self.dirpath / self.filename
         self.path = _path.as_posix()
 
         return self
