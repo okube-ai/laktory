@@ -107,17 +107,7 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def resource_key(self) -> str:
-        """path with special characters `/`, `.`, `\\` replaced with `-`"""
-        key = self.path
-        if key is None:
-            return ""
-        key = key.replace("/", "-")
-        key = key.replace("\\", "-")
-        key = key.replace(".", "-")
-        for i in range(5):
-            if key.startswith("-"):
-                key = key[1:]
-        return key
+        return self.path
 
     @property
     def additional_core_resources(self) -> list[PulumiResource]:

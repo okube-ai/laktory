@@ -53,17 +53,7 @@ class Directory(BaseModel, PulumiResource, TerraformResource):
     @property
     def resource_key(self) -> str:
         """path with special characters `/`, `.`, `\\` replaced with `-`"""
-        key = self.path
-        key = key.replace("/", "-")
-        key = key.replace("\\", "-")
-        key = key.replace(".", "-")
-        for i in range(5):
-            if key.startswith("-"):
-                key = key[1:]
-        for i in range(5):
-            if key.endswith("-"):
-                key = key[:-1]
-        return key
+        return self.path
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

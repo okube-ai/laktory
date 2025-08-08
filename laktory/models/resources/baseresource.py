@@ -12,6 +12,54 @@ from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.basemodel import ModelMetaclass
 
+def to_safe_name(name: str) -> str:
+    """
+    Resource default name constructed as
+    - `{self.resource_type_id}-{self.resource_key}`
+    - removing ${resources....} tags
+    - preserving ${vars....} tags
+    - Replacing special characters with - to avoid conflicts with resource properties
+    """
+    if name.endswith("-"):
+        name = name[:-1]
+
+    # ${resources.x.property} -> x
+    pattern = r"\$\{resources\.(.*?)\.(.*?)\}"
+    name = re.sub(pattern, r"\1", name)
+
+    # Preserve ${vars...} tags
+    pattern_vars = r"\$\{vars\.[^}]+\}"
+    preserved_vars = re.findall(pattern_vars, name)
+
+    # Temporarily replace preserved vars with placeholders
+    for i, var in enumerate(preserved_vars):
+        placeholder = f"__VAR_PLACEHOLDER_{i}__"
+        name = name.replace(var, placeholder)
+
+    # Replace special characters
+    chars = [".", "@", "{", "}", "[", "]", "$", "|", "\\", "/"]
+    for c in chars:
+        name = name.replace(c, "-")
+
+    # Restore preserved ${vars...} tags
+    for i, var in enumerate(preserved_vars):
+        placeholder = f"__VAR_PLACEHOLDER_{i}__"
+        name = name.replace(placeholder, var)
+
+    # Remove duplicate dashes
+    while "--" in name:
+        name = name.replace("--", "-")
+
+    # Remove trailing dashes
+    if name.startswith("-"):
+        name = name[1:]
+
+    # Remove leading dashes
+    if name.endswith("-"):
+        name = name[:-1]
+
+    return name
+
 
 class ResourceOptions(BaseModel):
     """
@@ -173,15 +221,26 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
 
     @property
     def resource_name(self) -> str:
-        pattern = re.compile(r"^[a-zA-Z][a-zA-Z0-9-_]*$")
 
-        name = self.default_resource_name
         if self.resource_name_:
             name = self.resource_name_
+        else:
+            name = self.resource_safe_key
+            if name == "":
+                name = self.resource_type_id
+            elif self.resource_type_id not in self.resource_safe_key:
+                name = f"{self.resource_type_id}-{name}"
+            else:
+                pass
+
+        pattern = re.compile(
+            r"^[a-zA-Z][a-zA-Z0-9-_]*(\$\{vars\.[a-zA-Z0-9_]+\}[a-zA-Z0-9-_]*)*$"
+        )
 
         if not pattern.match(name):
             raise ValueError(
-                f"Resource name `{name}` is invalid. A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes."
+                f"Resource name `{name}` is invalid. A name must start with a letter or underscore, "
+                "may contain only letters, digits, underscores, dashes or a variable (`${vars.some_var}`)."
             )
 
         return name
@@ -254,37 +313,10 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
         return getattr(self, "name", "")
 
     @property
-    def default_resource_name(self) -> str:
-        """
-        Resource default name constructed as
-        - `{self.resource_type_id}-{self.resource_key}`
-        - removing ${resources....} tags
-        - removing ${vars....} tags
-        - Replacing special characters with - to avoid conflicts with resource properties
-        """
-
-        if self.resource_type_id not in self.resource_key:
-            name = f"{self.resource_type_id}-{self.resource_key}"
-        else:
-            name = f"{self.resource_key}"
-
-        if name.endswith("-"):
-            name = name[:-1]
-
-        # ${resources.x.property} -> x
-        pattern = r"\$\{resources\.(.*?)\.(.*?)\}"
-        name = re.sub(pattern, r"\1", name)
-
-        # ${vars.x} -> x
-        pattern = r"\$\{vars\.(.*?)\}"
-        name = re.sub(pattern, r"\1", name)
-
-        # Replace special characters
-        chars = [".", "@", "{", "}", "[", "]", "$", "|"]
-        for c in chars:
-            name = name.replace(c, "-")
-
-        return name
+    def resource_safe_key(self) -> str:
+        if self.resource_key is None:
+            return ""
+        return to_safe_name(self.resource_key)
 
     @property
     def self_as_core_resources(self):

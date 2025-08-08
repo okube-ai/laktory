@@ -123,7 +123,7 @@ class MLflowWebhook(BaseModel, PulumiResource, TerraformResource):
         for e in self.events:
             key += e + "-"
 
-        return key.replace(" ", "_")
+        return key
 
     # ----------------------------------------------------------------------- #
     # Pulumi Properties                                                       #
