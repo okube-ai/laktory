@@ -660,7 +660,6 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
             ],
             "dirpath": None,
             "path": "/.laktory/pipelines/pl-dlt/config.json",
-            "rootpath": None,
             "content_base64": None,
             "dataframe_backend": "PYSPARK",
             "dataframe_api": "NARWHALS",

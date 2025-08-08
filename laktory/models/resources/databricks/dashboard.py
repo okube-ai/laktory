@@ -2,7 +2,9 @@ from pathlib import Path
 from typing import Any
 from typing import Union
 
+from pydantic import AliasChoices
 from pydantic import Field
+from pydantic import computed_field
 from pydantic import model_validator
 
 from laktory._settings import settings
@@ -43,13 +45,6 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")
-    dirpath: str = Field(
-        None,
-        description="""
-    Workspace directory inside rootpath in which the dashboard is deployed. Used only 
-    if `parent_path` is not specified.
-    """,
-    )
     display_name: str = Field(..., description="The display name of the dashboard.")
     embed_credentials: bool = Field(
         None,
@@ -65,23 +60,14 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
     name_suffix: str = Field(
         None, description="Suffix added to the dashboard display name"
     )
-    parent_path: str = Field(
+    parent_path_: str | None = Field(
         None,
         description="""
-    The workspace path of the folder containing the dashboard. Includes leading slash and no trailing slash.
-    If folder doesn't exist, it will be created.
-    """,
-    )
-    path: str = Field(
-        None, description="Filepath for the file. Overwrite `rootpath` and `dirpath`."
-    )
-    rootpath: str = Field(
-        None,
-        description="""
-    Root directory to which all dashboards are deployed to. Can also be configured by settings 
-    LAKTORY_WORKSPACE_LAKTORY_ROOT environment variable. Default is `/.laktory/`. Used only if `parent_path` is not
-    specified.
-    """,
+        The path to a workspace folder (inside laktory root) containing the dashboard. If changed, the query will be
+        recreated.
+        """,
+        validation_alias=AliasChoices("parent_path", "dirpath", "parent_path_"),
+        exclude=True,
     )
     serialized_dashboard: str = Field(
         None,
@@ -91,27 +77,16 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
         ..., description="The warehouse ID used to run the dashboard."
     )
 
-    @model_validator(mode="after")
-    def set_paths(self) -> Any:
-        # Parent Path explicitly set
-        if self.parent_path:
-            return self
+    @computed_field(description="parent_path")
+    @property
+    def parent_path(self) -> str:
+        if self.parent_path_ is None:
+            self.parent_path_ = ""
+        if self.parent_path_.startswith("/"):
+            self.parent_path_ = self.parent_path_[1:]
 
-        # root
-        if self.rootpath is None:
-            self.rootpath = settings.workspace_laktory_root
-
-        # dir
-        if self.dirpath is None:
-            self.dirpath = ""
-        if self.dirpath.startswith("/"):
-            self.dirpath = self.dirpath[1:]
-
-        # parent_path
-        _path = Path(self.rootpath) / self.dirpath
-        self.parent_path = _path.as_posix()
-
-        return self
+        parent_path = Path(settings.workspace_laktory_root) / self.parent_path_
+        return parent_path.as_posix()
 
     @model_validator(mode="after")
     def update_name(self) -> Any:
@@ -160,8 +135,6 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
             "access_controls",
-            "dirpath",
-            "rootpath",
             "name_prefix",
             "name_suffix",
         ]

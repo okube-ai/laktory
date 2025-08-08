@@ -2,7 +2,9 @@ from pathlib import Path
 from typing import Any
 from typing import Union
 
+from pydantic import AliasChoices
 from pydantic import Field
+from pydantic import computed_field
 from pydantic import model_validator
 
 from laktory._settings import settings
@@ -110,10 +112,6 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
     instructions.
     """,
     )
-    dirpath: str = Field(
-        None,
-        description="Workspace directory inside rootpath in which the alert is deployed. Used only if `parent_path` is not specified.",
-    )
     display_name: str = Field(..., description="Name of the alert.")
     name_prefix: str = Field(None, description="Prefix added to the alert display name")
     name_suffix: str = Field(None, description="Suffix added to the alert display name")
@@ -122,24 +120,18 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
         description="Whether to notify alert subscribers when alert returns back to normal.",
     )
     owner_user_name: str = Field(None, description="Alert owner's username.")
-    parent_path: str = Field(
+    parent_path_: str | None = Field(
         None,
         description="""
-    The path to a workspace folder containing the alert. Set to `None` to use user's home folder. Overwrite `rootpath` 
-    and `dirpath`. If changed, the alert will be recreated.
-    """,
+        The path to a workspace folder (inside laktory root) containing the alert. If changed, the query will be
+        recreated.
+        """,
+        validation_alias=AliasChoices("parent_path", "dirpath", "parent_path_"),
+        exclude=True,
     )
     query_id: str = Field(
         None,
         description="ID of the query evaluated by the alert. Mutually exclusive with `query`.",
-    )
-    rootpath: str = Field(
-        None,
-        description="""
-    Root directory to which all alerts are deployed to. Can also be configured by settings 
-    LAKTORY_WORKSPACE_LAKTORY_ROOT environment variable. Default is `/.laktory/`. Used only if `parent_path` is not
-    specified.
-    """,
     )
     seconds_to_retrigger: int = Field(
         None,
@@ -149,27 +141,16 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
     """,
     )
 
-    @model_validator(mode="after")
-    def set_paths(self) -> Any:
-        # Parent Path explicitly set
-        if "parent_path" in self.model_fields_set:
-            return self
+    @computed_field(description="parent_path")
+    @property
+    def parent_path(self) -> str:
+        if self.parent_path_ is None:
+            self.parent_path_ = ""
+        if self.parent_path_.startswith("/"):
+            self.parent_path_ = self.parent_path_[1:]
 
-        # root
-        if self.rootpath is None:
-            self.rootpath = settings.workspace_laktory_root
-
-        # dir
-        if self.dirpath is None:
-            self.dirpath = ""
-        if self.dirpath.startswith("/"):
-            self.dirpath = self.dirpath[1:]
-
-        # parent_path
-        _path = Path(self.rootpath) / self.dirpath
-        self.parent_path = _path.as_posix()
-
-        return self
+        parent_path = Path(settings.workspace_laktory_root) / self.parent_path_
+        return parent_path.as_posix()
 
     @model_validator(mode="after")
     def update_name(self) -> Any:
@@ -217,7 +198,7 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "dirpath", "rootpath", "name_prefix", "name_suffix"]
+        return ["access_controls", "dirpath", "name_prefix", "name_suffix"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

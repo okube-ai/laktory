@@ -7,6 +7,8 @@
 * Detection of wheel file type in pipeline dependencies when variable is used
 ### Updated
 * `WorkspaceConfigFile` to use source file in user cache instead of base64 content
+### Breaking changes
+* Deprecated `root_path` attribute in workspace and dbfs files.
 
 ## [0.8.5] - 2025-08-04
 ### Added

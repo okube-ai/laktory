@@ -36,10 +36,11 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
         return str(source_path)
 
+    @computed_field(description="source")
     @property
-    def path_(self):
-        if self.path:
-            return self.path
+    def path(self) -> str | None:
+        if self.path_:
+            return self.path_
 
         pl = self.parent_pipeline
         if not pl:
@@ -75,18 +76,6 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         pl._configure_serializer(singular=ss0, camel=cs0)
 
         return _config
-
-    def update_from_parent(self):
-        """
-        Path is required to be set here (after instantiation). Other resource key is not
-        defined and resources are not created properly.
-        """
-        pl = self.parent_pipeline
-        if not pl:
-            return
-
-        # Set path
-        self.path = self.path_
 
     def _post_serialization(self, dump):
         """

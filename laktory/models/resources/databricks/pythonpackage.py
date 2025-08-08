@@ -57,14 +57,6 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
         validation_alias=AliasChoices("path_", "path"),
         exclude=True,
     )
-    rootpath: str = Field(
-        None,
-        description="""
-    Root directory to which all workspace files are deployed to. Can also be configured by settings 
-    LAKTORY_WORKSPACE_LAKTORY_ROOT environment variable. Default is `/.laktory/`. Used only if `path` is not specified.
-    """,
-    )
-    # wheel_filename: str = Field(None, description="Overrides default wheel filename")
     _wheel_path: Path = None
 
     @classmethod
@@ -87,10 +79,6 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
         if not self.source:
             return None
 
-        # root
-        if self.rootpath is None:
-            self.rootpath = settings.workspace_laktory_root
-
         # dir
         if self.dirpath is None:
             self.dirpath = ""
@@ -98,7 +86,7 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
             self.dirpath = self.dirpath[1:]
 
         # path
-        _path = Path(self.rootpath) / self.dirpath / self.filename
+        _path = Path(settings.workspace_laktory_root) / self.dirpath / self.filename
 
         return _path.as_posix()
 
@@ -194,7 +182,6 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
             "config_filepath",
             "dirpath",
             "package_name",
-            "rootpath",
             "wheel_filename",
         ]
 
