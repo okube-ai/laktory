@@ -644,6 +644,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
         "serverless": None,
         "state": None,
         "storage": None,
+        "tags": None,
         "target": None,
         "trigger": None,
         "url": None,
