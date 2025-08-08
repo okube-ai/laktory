@@ -5,6 +5,7 @@ from typing import Union
 
 from pydantic import AliasChoices
 from pydantic import Field
+from pydantic import computed_field
 from pydantic import model_validator
 
 from laktory._settings import settings
@@ -188,13 +189,6 @@ class Query(BaseModel, PulumiResource, TerraformResource):
         None,
         description="General description that conveys additional information about this query such as usage notes.",
     )
-    dirpath: str = Field(
-        None,
-        description="""
-        Workspace directory inside rootpath in which the query is deployed. Used only if `parent_path` 
-        is not specified.
-        """,
-    )
     display_name: str = Field(..., description="Name of the query.")
     name_prefix: str = Field(None, description="")
     name_suffix: str = Field(None, description="")
@@ -203,11 +197,14 @@ class Query(BaseModel, PulumiResource, TerraformResource):
         None,
         description="Query parameter definition. Consists of following attributes (one of `*_value` is required):",
     )
-    parent_path: Union[str, None] = Field(
+    parent_path_: str | None = Field(
         None,
         description="""
-    The path to a workspace folder containing the query. Set to `None` to use user's home folder. Overwrite `rootpath` 
-    and `dirpath`. If changed, the query will be recreated.""",
+        The path to a workspace folder (inside laktory root) containing the query. If changed, the query will be
+        recreated.
+        """,
+        validation_alias=AliasChoices("parent_path", "dirpath", "parent_path_"),
+        exclude=True,
     )
     query_text: str = Field(..., description="Text of SQL query.")
     run_as_mode: str = Field(None, description="Sets the 'Run as' role for the object.")
@@ -222,23 +219,16 @@ class Query(BaseModel, PulumiResource, TerraformResource):
         description="ID of a SQL warehouse which will be used to execute this query.",
     )
 
-    @model_validator(mode="after")
-    def set_paths(self) -> Any:
-        # Parent Path explicitly set
-        if "parent_path" in self.model_fields_set:
-            return self
+    @computed_field(description="parent_path")
+    @property
+    def parent_path(self) -> str:
+        if self.parent_path_ is None:
+            self.parent_path_ = ""
+        if self.parent_path_.startswith("/"):
+            self.parent_path_ = self.parent_path_[1:]
 
-        # dir
-        if self.dirpath is None:
-            self.dirpath = ""
-        if self.dirpath.startswith("/"):
-            self.dirpath = self.dirpath[1:]
-
-        # parent_path
-        _path = Path(settings.workspace_laktory_root) / self.dirpath
-        self.parent_path = _path.as_posix()
-
-        return self
+        parent_path = Path(settings.workspace_laktory_root) / self.parent_path_
+        return parent_path.as_posix()
 
     @model_validator(mode="after")
     def update_name(self) -> Any:
@@ -298,8 +288,6 @@ class Query(BaseModel, PulumiResource, TerraformResource):
         return [
             "access_controls",
             "alert",
-            "dirpath",
-            "rootpath",
             "name_prefix",
             "name_suffix",
         ]

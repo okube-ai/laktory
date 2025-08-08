@@ -1,10 +1,10 @@
 import os
 from pathlib import Path
-from typing import Any
 from typing import Union
 
+from pydantic import AliasChoices
 from pydantic import Field
-from pydantic import model_validator
+from pydantic import computed_field
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
@@ -68,11 +68,28 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
         exclude=True,
         description="Specifications for looking up existing resource. Other attributes will be ignored.",
     )
-    path: str = Field(
+    path_: str = Field(
         None,
-        description="DBFS filepath for the file. Overwrite `rootpath` and `dirpath`.",
+        description="DBFS filepath for the file. Overwrite `dirpath`.",
+        validation_alias=AliasChoices("path", "path_"),
+        exclude=True,
     )
     source: str = Field(..., description="Path to file on local filesystem.")
+
+    @computed_field(description="path")
+    @property
+    def path(self) -> str | None:
+        if self.path_:
+            return self.path_
+
+        # dir
+        if self.dirpath is None:
+            self.dirpath = ""
+        if self.dirpath.startswith("/"):
+            self.dirpath = self.dirpath[1:]
+
+        path = Path("/") / self.dirpath / self.filename
+        return path.as_posix()
 
     @classmethod
     def lookup_defaults(cls) -> dict:
@@ -82,24 +99,6 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
     def filename(self) -> str:
         """File filename"""
         return os.path.basename(self.source)
-
-    @model_validator(mode="after")
-    def set_paths(self) -> Any:
-        # Path set
-        if self.path:
-            return self
-
-        # dir
-        if self.dirpath is None:
-            self.dirpath = ""
-        if self.dirpath.startswith("/"):
-            self.dirpath = self.dirpath[1:]
-
-        # path
-        _path = Path("/") / self.dirpath / self.filename
-        self.path = _path.as_posix()
-
-        return self
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -141,7 +140,7 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "dirpath", "rootpath"]
+        return ["access_controls", "dirpath"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

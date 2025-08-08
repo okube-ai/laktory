@@ -62,7 +62,7 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
         _path = (
             "/Workspace"
-            + self.inject_vars_into_dump({"path": self.config_file.path_})["path"]
+            + self.inject_vars_into_dump({"path": self.config_file.path})["path"]
         )
         self.configuration["pipeline_name"] = pl.name  # only for reference
         self.configuration["requirements"] = json.dumps(_requirements)

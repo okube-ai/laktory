@@ -182,7 +182,6 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
             "config_filepath",
             "dirpath",
             "package_name",
-            "rootpath",
             "wheel_filename",
         ]
 

@@ -1,12 +1,10 @@
 import os
 from pathlib import Path
-from typing import Any
 from typing import Union
 
 from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
-from pydantic import model_validator
 
 from laktory import settings
 from laktory.models.basemodel import BaseModel
@@ -51,9 +49,11 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
         None,
         description="Workspace directory inside rootpath in which the workspace file is deployed. Used only if `path` is not specified.",
     )
-    path: str = Field(
+    path_: str = Field(
         None,
-        description="Workspace filepath for the file. Overwrite `rootpath` and `dirpath`.",
+        description="Workspace filepath for the file. Overwrite `dirpath`.",
+        validation_alias=AliasChoices("path", "path_"),
+        exclude=True,
     )
     source_: str = Field(
         None,
@@ -75,24 +75,14 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     def source(self) -> str:
         return self.source_
 
-    @classmethod
-    def lookup_defaults(cls) -> dict:
-        return {"path": ""}
-
+    @computed_field(description="path")
     @property
-    def filename(self) -> str:
-        """File filename"""
-        if self.source:
-            return os.path.basename(self.source)
-
-    @model_validator(mode="after")
-    def set_paths(self) -> Any:
-        # Path set
-        if self.path:
-            return self
+    def path(self) -> str | None:
+        if self.path_:
+            return self.path_
 
         if not self.source_:
-            return self
+            return None
 
         # dir
         if self.dirpath is None:
@@ -100,11 +90,18 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
         if self.dirpath.startswith("/"):
             self.dirpath = self.dirpath[1:]
 
-        # path
-        _path = Path(settings.workspace_laktory_root) / self.dirpath / self.filename
-        self.path = _path.as_posix()
+        path = Path(settings.workspace_laktory_root) / self.dirpath / self.filename
+        return path.as_posix()
 
-        return self
+    @classmethod
+    def lookup_defaults(cls) -> dict:
+        return {"path": ""}
+
+    @property
+    def filename(self) -> str | None:
+        """File filename"""
+        if self.source:
+            return os.path.basename(self.source)
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -147,7 +144,7 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "dirpath", "rootpath"]
+        return ["access_controls", "dirpath"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
