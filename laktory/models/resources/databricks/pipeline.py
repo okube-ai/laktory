@@ -331,6 +331,13 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         the pipeline. (Conflicts with `catalog`).
         """,
     )
+    tags: dict[str, str] = Field(
+        None,
+        description="""
+        A map of tags associated with the pipeline. These are forwarded to the cluster as cluster tags, and are 
+        therefore subject to the same limitations. A maximum of 25 tags can be added to the pipeline.
+        """,
+    )
     target: str = Field(
         None,
         description="""

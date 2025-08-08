@@ -46,6 +46,7 @@ def test_pipeline():
         "serverless": None,
         "state": None,
         "storage": None,
+        "tags": None,
         "target": None,
         "trigger": None,
         "url": None,

@@ -2,13 +2,11 @@
 
 ## [0.8.6] - Unreleased
 ### Added
-* n/a
+* Support for tags in Databricks pipelines
 ### Fixed
-* n/a
+* Detection of wheel file type in pipeline dependencies when variable is used
 ### Updated
 * `WorkspaceConfigFile` to use source file in user cache instead of base64 content
-### Breaking changes
-* n/a
 
 ## [0.8.5] - 2025-08-04
 ### Added

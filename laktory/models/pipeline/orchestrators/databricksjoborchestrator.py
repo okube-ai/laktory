@@ -127,7 +127,8 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             else:
                 libraries = []
                 for r in _requirements:
-                    if r.endswith(".whl"):
+                    is_var = "${vars." in r
+                    if r.endswith(".whl") or (is_var and "wheel" in r or "whl" in r):
                         l = ClusterLibrary(whl=r)
                     else:
                         l = ClusterLibrary(pypi=ClusterLibraryPypi(package=r))
