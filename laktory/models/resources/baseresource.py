@@ -25,8 +25,8 @@ def to_safe_name(name: str) -> str:
         name = name[:-1]
 
     # ${resources.x.property} -> x
-    pattern = r"\$\{resources\.(.*?)\.(.*?)\}"
-    name = re.sub(pattern, r"\1", name)
+    # pattern = r"\$\{resources\.(.*?)\.(.*?)\}"
+    # name = re.sub(pattern, r"\1", name)
 
     # Preserve ${vars...} tags
     pattern_vars = r"\$\{vars\.[^}]+\}"
@@ -350,14 +350,25 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
                     if not (r.options.is_enabled and _r.options.is_enabled):
                         continue
 
+                    _options_updated = False
                     if provider:
                         if _r.options.provider is None:
+                            _options_updated = True
                             _r.options.provider = provider
 
                     do = _r.options.depends_on
+                    l0 = len(do)
                     if r.self_as_core_resources and k0 not in do:
                         do += [k0]
                     _r.options.depends_on = do
+                    l1 = len(do)
+                    if l1 != l0:
+                        _options_updated = True
+
+                    # This is to ensure options is flagged as set and part of
+                    # model_fields_set when injecting variables.
+                    if _options_updated:
+                        _r.options = _r.options
 
                     if _r.self_as_core_resources:
                         resources += [_r]

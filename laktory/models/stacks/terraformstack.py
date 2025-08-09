@@ -150,8 +150,6 @@ class TerraformStack(BaseModel):
 
         # Because all variables are mapped to a string, it is more efficient
         # (>10x) to convert the dict to string before substitution.
-        for k, v in _vars.items():
-            print(f"{k} {v}")
         d = json.loads(_resolve_values(json.dumps(d), vars=_vars))
 
         return d
