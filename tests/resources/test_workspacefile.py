@@ -15,7 +15,9 @@ def test_workspace_file():
     workspace_file = get_workspace_file()
     assert workspace_file.filename == "test_workspacefile.py"
     assert workspace_file.path == "/.laktory/init_scripts/test_workspacefile.py"
-    assert workspace_file.resource_key == "laktory-init_scripts-test_workspacefile-py"
+    assert (
+        workspace_file.resource_safe_key == "laktory-init_scripts-test_workspacefile-py"
+    )
     assert (
         workspace_file.resource_name
         == "workspace-file-laktory-init_scripts-test_workspacefile-py"

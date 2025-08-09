@@ -12,6 +12,7 @@ from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.basemodel import ModelMetaclass
 
+
 def to_safe_name(name: str) -> str:
     """
     Resource default name constructed as
@@ -37,7 +38,7 @@ def to_safe_name(name: str) -> str:
         name = name.replace(var, placeholder)
 
     # Replace special characters
-    chars = [".", "@", "{", "}", "[", "]", "$", "|", "\\", "/"]
+    chars = [".", "@", "{", "}", "[", "]", "$", "|", "\\", "/", " "]
     for c in chars:
         name = name.replace(c, "-")
 
@@ -221,7 +222,6 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
 
     @property
     def resource_name(self) -> str:
-
         if self.resource_name_:
             name = self.resource_name_
         else:
