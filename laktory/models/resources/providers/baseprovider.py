@@ -11,14 +11,18 @@ class BaseProvider(BaseModel):
     version: str = Field(None, exclude=True)
 
     @property
-    def resource_name(self) -> str:
+    def resource_name(self) -> str | None:
         """
         dots (.) are allowed to support terraform aliases
         """
 
-        name = self.default_resource_name
-        if self.resource_name_:
-            name = self.resource_name_
+        # if self.resource_name_:
+        name = self.resource_name_
+        # else:
+        #     name = self.default_resource_name
+
+        if name is None:
+            return None
 
         alias_pattern = ""
         if self.alias is not None:

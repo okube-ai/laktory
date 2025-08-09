@@ -106,16 +106,7 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def resource_key(self) -> str:
-        """path with special characters `/`, `.`, `\\` replaced with `-`"""
-        # key = os.path.splitext(self.path)[0]
-        key = self.path
-        key = key.replace("/", "-")
-        key = key.replace("\\", "-")
-        key = key.replace(".", "-")
-        for i in range(5):
-            if key.startswith("-"):
-                key = key[1:]
-        return key
+        return self.path
 
     @property
     def additional_core_resources(self) -> list[PulumiResource]:

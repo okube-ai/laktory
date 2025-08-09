@@ -30,7 +30,7 @@ class Directory(BaseModel, PulumiResource, TerraformResource):
     resource_name_=None options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None, moved_from=None) lookup_existing=None variables={} delete_recursive=None path='/queries/views'
     '''
     print(d.resource_key)
-    # > queries-views
+    # > /queries/views
     print(d.resource_name)
     # > directory-queries-views
     ```
@@ -53,17 +53,7 @@ class Directory(BaseModel, PulumiResource, TerraformResource):
     @property
     def resource_key(self) -> str:
         """path with special characters `/`, `.`, `\\` replaced with `-`"""
-        key = self.path
-        key = key.replace("/", "-")
-        key = key.replace("\\", "-")
-        key = key.replace(".", "-")
-        for i in range(5):
-            if key.startswith("-"):
-                key = key[1:]
-        for i in range(5):
-            if key.endswith("-"):
-                key = key[:-1]
-        return key
+        return self.path
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

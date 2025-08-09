@@ -11,7 +11,7 @@ def test_dbfs_file():
     print(dbfs_file)
     assert dbfs_file.filename == "test_workspacefile.py"
     assert dbfs_file.path == "/tmp/test_workspacefile.py"
-    assert dbfs_file.resource_key == "tmp-test_workspacefile-py"
+    assert dbfs_file.resource_safe_key == "tmp-test_workspacefile-py"
     print(dbfs_file.resource_name)
     assert dbfs_file.resource_name == "dbfs-file-tmp-test_workspacefile-py"
 

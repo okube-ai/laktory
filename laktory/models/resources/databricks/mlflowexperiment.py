@@ -59,7 +59,7 @@ class MLflowExperiment(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def resource_key(self) -> str:
-        return self.name.replace("/", "_").replace("\\", "_").replace(" ", "_")
+        return self.name
 
     @property
     def additional_core_resources(self) -> list[PulumiResource]:
