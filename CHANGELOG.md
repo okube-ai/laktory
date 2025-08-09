@@ -1,6 +1,16 @@
 # Release History
 
-## [0.8.6] - Unreleased
+## [0.8.7] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.8.6] - 2025-08-09
 ### Added
 * Support for tags in Databricks pipelines
 ### Fixed
