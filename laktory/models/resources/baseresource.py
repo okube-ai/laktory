@@ -25,8 +25,8 @@ def to_safe_name(name: str) -> str:
         name = name[:-1]
 
     # ${resources.x.property} -> x
-    # pattern = r"\$\{resources\.(.*?)\.(.*?)\}"
-    # name = re.sub(pattern, r"\1", name)
+    pattern = r"\$\{resources\.(.*?)\.(.*?)\}"
+    name = re.sub(pattern, r"\1", name)
 
     # Preserve ${vars...} tags
     pattern_vars = r"\$\{vars\.[^}]+\}"

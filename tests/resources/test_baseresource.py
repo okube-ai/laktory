@@ -37,6 +37,5 @@ def test_resource_safe_key():
     r = MyResource(name="x-${vars.env}-y--")
     assert r.resource_safe_key == "x-${vars.env}-y"
 
-    # r = MyResource(name="x-${resources.job.id}-y--")
-    # print(r.resource_safe_key)
-    # assert r.resource_safe_key == "x-job-y"  # TODO: Review if valid
+    r = MyResource(name="${resources.secret-scope-my-scope.id}-s2")
+    assert r.resource_safe_key == "secret-scope-my-scope-s2"

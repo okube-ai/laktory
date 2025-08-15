@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.8.7] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Resource names which incorrectly included `resources` and `{property_name}`.
 
 ## [0.8.6] - 2025-08-09
 ### Added
