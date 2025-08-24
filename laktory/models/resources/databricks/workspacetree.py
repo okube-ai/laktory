@@ -52,12 +52,17 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
     def additional_core_resources(self) -> list[PulumiResource]:
         resources = []
 
+        # Get file paths
         root = Path(self.source).resolve()
-
+        filepaths = []
         for filepath in root.rglob("*"):
             if filepath.is_dir():
                 continue
+            filepaths += [filepath]
+        filepaths.sort()
 
+        # Create resources
+        for filepath in filepaths:
             # Check if notebook
             is_notebook = filepath.suffix == ".ipynb"
             if filepath.suffix == ".py":
