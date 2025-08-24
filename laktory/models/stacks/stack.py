@@ -58,6 +58,7 @@ from laktory.models.resources.databricks.volume import Volume
 from laktory.models.resources.databricks.warehouse import Warehouse
 from laktory.models.resources.databricks.workspacebinding import WorkspaceBinding
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
+from laktory.models.resources.databricks.workspacetree import WorkspaceTree
 from laktory.models.resources.providers.awsprovider import AWSProvider
 from laktory.models.resources.providers.azureprovider import AzureProvider
 from laktory.models.resources.providers.azurepulumiprovider import AzurePulumiProvider
@@ -170,6 +171,7 @@ class StackResources(BaseModel):
     databricks_warehouses: dict[str, Warehouse] = {}
     databricks_workspacebindings: dict[str, WorkspaceBinding] = {}
     databricks_workspacefiles: dict[str, WorkspaceFile | PythonPackage] = {}
+    databricks_workspacetrees: dict[str, WorkspaceTree | PythonPackage] = {}
     pipelines: dict[str, Pipeline] = {}
     providers: dict[
         str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]

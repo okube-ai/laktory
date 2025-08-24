@@ -46,3 +46,4 @@ from .volume import Volume
 from .warehouse import Warehouse
 from .workspacebinding import WorkspaceBinding
 from .workspacefile import WorkspaceFile
+from .workspacetree import WorkspaceTree

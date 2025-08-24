@@ -2,7 +2,7 @@
 
 ## [0.8.8] - Unreleased
 ### Added
-* n/a
+* Databricks WorkspaceTree
 ### Fixed
 * n/a
 ### Updated

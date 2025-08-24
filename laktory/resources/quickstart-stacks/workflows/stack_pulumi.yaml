@@ -19,7 +19,9 @@ resources:
   databricks_pythonpackages: !use resources/pythonpackages.yaml
 
   # Notebooks for jobs and pipelines
-  databricks_notebooks: !use resources/notebooks.yaml
+  databricks_workspacetrees:
+    workspacetree-notebooks:
+      source: ./notebooks/
 
   # Simple sample job
   databricks_jobs:

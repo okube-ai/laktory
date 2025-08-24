@@ -1,2 +1,2 @@
 # Databricks notebook source
-print("Hello Laktory!")
+dbutils.secrets.listScopes()
