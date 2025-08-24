@@ -58,6 +58,8 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
         for filepath in root.rglob("*"):
             if filepath.is_dir():
                 continue
+            if filepath.name.startswith("."):
+                continue
             filepaths += [filepath]
         filepaths.sort()
 
