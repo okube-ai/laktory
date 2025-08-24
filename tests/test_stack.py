@@ -59,10 +59,12 @@ def full_stack():
     from tests.resources.test_vectorsearchindex import vector_search_index
     from tests.resources.test_workspacebinding import workspace_binding
     from tests.resources.test_workspacefile import get_workspace_file
+    from tests.resources.test_workspacetree import get_workspace_tree
 
     # Update paths because preview is executed in tmp_path
     nb = get_notebook()
     workspace_file = get_workspace_file()
+    workspace_tree = get_workspace_tree()
     nb.source = str(root / "resources" / nb.source)
     workspace_file.source_ = str(root / "resources" / workspace_file.source)
 
@@ -91,6 +93,7 @@ def full_stack():
         "databricks_vectorsearchendpoints": [vector_search_endpoint],
         "databricks_vectorsearchindexes": [vector_search_index],
         "databricks_workspacefiles": [workspace_file],
+        "databricks_workspacetrees": [workspace_tree],
         "databricks_workspacebindings": [workspace_binding],
         "pipelines": [get_pl_dlt()],  # required by job
     }
