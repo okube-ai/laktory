@@ -79,7 +79,7 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
     def _post_serialization(self, dump):
         """
-        Content is required to be set here (at serialization). Otherwise, it leas to
+        Content is required to be set here (at serialization). Otherwise, it leads to
         infinite lops.
         """
         filepath = Path(self.source)

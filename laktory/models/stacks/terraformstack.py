@@ -79,7 +79,7 @@ class TerraformStack(BaseModel):
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         """Serialize model to match the structure of a Terraform json file."""
-        self._configure_serializer(singular=True)
+        self._configure_serializer(singular=True, build=True)
         kwargs["exclude_none"] = kwargs.get("exclude_none", True)
         d = super().model_dump(*args, **kwargs)
 
@@ -103,7 +103,7 @@ class TerraformStack(BaseModel):
         if len(d["data"]) == 0:
             del d["data"]
         d["resource"] = dict(d["resource"])
-        self._configure_serializer(singular=False)
+        self._configure_serializer(singular=False, build=False)
 
         # Special treatment of moved
         # `moved_from` should generally be used with Terraform, but we also

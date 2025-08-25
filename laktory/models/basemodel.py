@@ -115,6 +115,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     )
     _camel_serialization: bool = False
     _singular_serialization: bool = False
+    _build_package: bool = False
 
     @model_serializer(mode="wrap")
     def custom_serializer(self, handler) -> dict[str, Any]:
@@ -329,21 +330,22 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     # Serialization                                                           #
     # ----------------------------------------------------------------------- #
 
-    def _configure_serializer(self, camel=False, singular=False):
+    def _configure_serializer(self, camel=False, singular=False, build=False):
         self._camel_serialization = camel
         self._singular_serialization = singular
+        self._build_package = build
         for k in self.model_fields:
             f = getattr(self, k)
             if isinstance(f, BaseModel):
-                f._configure_serializer(camel, singular)
+                f._configure_serializer(camel, singular, build)
             elif isinstance(f, list):
                 for i in f:
                     if isinstance(i, BaseModel):
-                        i._configure_serializer(camel, singular)
+                        i._configure_serializer(camel, singular, build)
             elif isinstance(f, dict):
                 for i in f.values():
                     if isinstance(i, BaseModel):
-                        i._configure_serializer(camel, singular)
+                        i._configure_serializer(camel, singular, build)
 
     # ----------------------------------------------------------------------- #
     # Validation ByPass                                                       #
