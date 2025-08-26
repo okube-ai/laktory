@@ -2,6 +2,10 @@
 
 ---
 
+::: laktory.cli.build
+
+---
+
 ::: laktory.cli.validate
 
 ---

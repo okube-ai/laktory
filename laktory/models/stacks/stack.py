@@ -355,7 +355,40 @@ class Stack(BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def get_env(self, env_name: str):
+    def build(self, env_name: str | None, inject_vars: bool = True):
+        """
+        Build stack artifacts before preview or deploy.
+
+        Parameters
+        ----------
+        env_name:
+            Name of the environment
+        inject_vars:
+            Inject stack variables
+        """
+
+        logger.info("Building artifacts...")
+
+        env = self.get_env(env_name=env_name)
+        if inject_vars:
+            env = env.inject_vars()
+
+        for k, r in env.resources._get_all(providers_excluded=True).items():
+            if isinstance(r, PythonPackage):
+                r.build()
+
+        logger.info("Writing pipeline config files...")
+        for k, r in env.resources._get_all(providers_excluded=True).items():
+            if isinstance(r, Pipeline):
+                if not r.orchestrator:
+                    continue
+                config_file = getattr(r.orchestrator, "config_file")
+                if config_file:
+                    config_file.build()
+
+        logger.info("Build completed.")
+
+    def get_env(self, env_name: str | None):
         """
         Complete definition the stack for a given environment. It takes into
         account both the default stack values and environment-specific
@@ -403,6 +436,7 @@ class Stack(BaseModel):
         from laktory.models.stacks.pulumistack import PulumiStack
 
         env = self.get_env(env_name=env_name).inject_vars()
+        env.build(env_name=None, inject_vars=False)
 
         # Resources
         resources = {}
@@ -440,6 +474,7 @@ class Stack(BaseModel):
         from laktory.models.stacks.terraformstack import TerraformStack
 
         env = self.get_env(env_name=env_name).inject_vars()
+        env.build(env_name=None, inject_vars=False)
 
         # Providers
         providers = {}

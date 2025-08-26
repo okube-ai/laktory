@@ -3,12 +3,9 @@
 ## [0.8.8] - Unreleased
 ### Added
 * Databricks WorkspaceTree
-### Fixed
-* n/a
+* CLI `build` command
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* Python packages are built just-in-time
 
 ## [0.8.7] - 2025-08-15
 ### Fixed

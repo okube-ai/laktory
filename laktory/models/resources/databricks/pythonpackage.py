@@ -10,7 +10,6 @@ from laktory import settings
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
-from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -69,9 +68,8 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
         if self.source:
             return os.path.basename(self.source)
 
-    @computed_field(description="path")
-    @property
-    def path(self) -> str | None:
+    def get_path(self):
+        """Get workspace path"""
         # Path set
         if self.path_:
             return self.path_
@@ -90,13 +88,17 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
 
         return _path.as_posix()
 
+    @computed_field(description="path")
+    @property
+    def path(self) -> str | None:
+        return self.get_path()
+
     @computed_field(description="Wheel file path", return_type=str)
     @property
     def source(self) -> str:
-        self.build_package()
         return str(self._wheel_path)
 
-    def build_package(self):
+    def build(self):
         # Ideally we would want to deterministically find the value of wheel_path
         # without building it, but it seems cumbersome and unreliable to parse
         # the config file and find the version.
@@ -157,11 +159,15 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
     def additional_core_resources(self) -> list[PulumiResource]:
         resources = []
         if self.access_controls:
+            from laktory.models.resources.databricks.pythonpackagepermissions import (
+                PythonPackagePermissions,
+            )
+
             resources += [
-                Permissions(
+                PythonPackagePermissions(
                     resource_name=f"permissions-{self.resource_name}",
                     access_controls=self.access_controls,
-                    workspace_file_path=self.path,
+                    get_workspace_file_path=self.get_path,
                 )
             ]
         return resources

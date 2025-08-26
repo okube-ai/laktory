@@ -169,4 +169,4 @@ def test_window_filter():
         rows_to_keep=2,
     )
 
-    assert df.sort("x", "y")["_row_index"] == [0, 1] * 3
+    assert df.sort("x", "y")["_row_index"].to_list() == [0, 1] * 3

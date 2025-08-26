@@ -1,3 +1,4 @@
+import laktory.cli._build
 import laktory.cli._deploy
 import laktory.cli._destroy
 import laktory.cli._init
@@ -6,6 +7,7 @@ import laktory.cli._quickstart
 import laktory.cli._run
 import laktory.cli._validate
 import laktory.cli._version
+from laktory.cli._build import build
 from laktory.cli._deploy import deploy
 from laktory.cli._destroy import destroy
 from laktory.cli._init import init

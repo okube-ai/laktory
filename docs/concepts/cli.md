@@ -17,6 +17,9 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 #### version
 `laktory version` returns CLI version and installed dependencies.
 
+#### build
+`laktory build` builds python packages and write temporary files.
+
 #### quickstart
 `laktory quickstart` setup a working example of a deployable stack that you can use as a baseline. See [Quickstart](../quickstarts/quickstart.md) for more details.
 

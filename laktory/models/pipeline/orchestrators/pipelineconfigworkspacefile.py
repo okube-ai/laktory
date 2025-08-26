@@ -3,10 +3,13 @@ from pathlib import Path
 
 from pydantic import computed_field
 
+from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
+
+logger = get_logger(__name__)
 
 
 class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
@@ -77,16 +80,15 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
         return _config
 
-    def _post_serialization(self, dump):
+    def build(self):
         """
-        Content is required to be set here (at serialization). Otherwise, it leas to
-        infinite lops.
+        Write config file to cache (required for deployment).
         """
         filepath = Path(self.source)
         filepath.parent.mkdir(parents=True, exist_ok=True)
-        with open(filepath, "w") as fp:
+        logger.debug(f"Writing config file at {filepath}")
+        with filepath.open(mode="w") as fp:
             json.dump(self.content_dict, fp, indent=4)
-        return dump
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
