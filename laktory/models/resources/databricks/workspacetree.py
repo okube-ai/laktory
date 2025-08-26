@@ -9,6 +9,10 @@ from laktory.models.resources.databricks.workspacefile import WorkspaceFile
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
+from laktory._logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
     """
@@ -72,7 +76,10 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
                 if "# Databricks notebook source" in content:
                     is_notebook = True
 
-            # Set path
+            # Set source (local file system)
+            _source = filepath.relative_to(root.parent)
+
+            # Set path (Databricks / unix file system)
             dirpath = str(filepath.parent).replace(str(root), "")
             if self.path:
                 if dirpath.startswith("/"):
@@ -81,15 +88,15 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
                     "path": (Path(self.path) / dirpath / filepath.name).as_posix()
                 }
             else:
-                kwargs = {"dirpath": dirpath}
+                kwargs = {"dirpath": Path(dirpath).as_posix()}
 
             # Set access controls
             kwargs["access_controls"] = self.access_controls
 
             if is_notebook:
-                r = Notebook(source=str(filepath), **kwargs)
+                r = Notebook(source=str(_source), **kwargs)
             else:
-                r = WorkspaceFile(source=str(filepath), **kwargs)
+                r = WorkspaceFile(source=str(_source), **kwargs)
 
             resources += [r]
 
