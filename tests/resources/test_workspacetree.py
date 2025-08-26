@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import laktory as lk
 from laktory._testing import Paths
 
@@ -24,34 +22,34 @@ def test_workspace_tree():
         print(r.source)
 
     r = resources[0]
-    assert r.source == "tree/notebooks/listfiles.py"
+    assert r.source.endswith("/tests/data/tree/notebooks/listfiles.py")
     assert isinstance(r, lk.models.resources.databricks.WorkspaceFile)
     assert r.dirpath == "notebooks"
 
     r = resources[1]
-    assert r.source == "tree/notebooks/listsecrets.ipynb"
+    assert r.source.endswith("/tests/data/tree/notebooks/listsecrets.ipynb")
     assert isinstance(r, lk.models.resources.databricks.Notebook)
     assert r.dirpath == "notebooks"
 
     r = resources[2]
-    assert r.source == "tree/notebooks/listsecrets.py"
+    assert r.source.endswith("/tests/data/tree/notebooks/listsecrets.py")
     assert isinstance(r, lk.models.resources.databricks.Notebook)
     assert r.dirpath == "notebooks"
 
     r = resources[3]
-    assert r.source == "tree/pyfiles/hello.py"
+    assert r.source.endswith("/tests/data/tree/pyfiles/hello.py")
     assert isinstance(r, lk.models.resources.databricks.WorkspaceFile)
     assert r.dirpath == "pyfiles"
 
     r = resources[4]
-    assert r.source == "tree/pyfiles/sysversion.py"
+    assert r.source.endswith("/tests/data/tree/pyfiles/sysversion.py")
     assert isinstance(r, lk.models.resources.databricks.WorkspaceFile)
     assert r.dirpath == "pyfiles"
 
 
-def test_workspace_tree_absolute():
+def test_workspace_tree_rel():
     tree = get_workspace_tree()
-    tree.source = str(Path(tree.source).absolute())
+    tree.source = "./tests/data/tree"
 
     resources = tree.core_resources
     assert len(resources) == 5
@@ -60,7 +58,7 @@ def test_workspace_tree_absolute():
         print(r.source)
 
     r = resources[0]
-    assert r.source.endswith("/tests/data/tree/notebooks/listfiles.py")
+    assert r.source == "tree/notebooks/listfiles.py"
 
 
 def test_workspace_tree_with_path():
