@@ -47,7 +47,7 @@ class PulumiStack(BaseModel):
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         """Serialize model to match the structure of a Pulumi.yaml file."""
-        self._configure_serializer(camel=True, build=True)
+        self._configure_serializer(camel=True)
         kwargs["exclude_none"] = kwargs.get("exclude_none", True)
         d = super().model_dump(*args, **kwargs)
 
@@ -66,7 +66,7 @@ class PulumiStack(BaseModel):
                 d["resources"][r.resource_name]["get"] = lookup.pulumi_dump()
                 del d["resources"][r.resource_name]["properties"]
 
-        self._configure_serializer(camel=False, build=False)
+        self._configure_serializer(camel=False)
 
         # Pulumi YAML requires the keyword "resources." to be removed
         _vars = {r"\$\{resources\.(.*?)\}": r"${\1}"}

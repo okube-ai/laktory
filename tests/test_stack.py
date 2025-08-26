@@ -188,6 +188,19 @@ def test_stack_resources_unique_name():
         )
 
 
+@pytest.mark.parametrize("is_full", [True, False])
+def test_build(monkeypatch, stack, full_stack, is_full):
+    if is_full:
+        stack = full_stack
+
+    c0 = settings.cli_raise_external_exceptions
+    settings.cli_raise_external_exceptions = True
+
+    stack.build(env_name="dev")
+
+    settings.cli_raise_external_exceptions = c0
+
+
 def test_pulumi_stack(monkeypatch, stack):
     # Mock laktory version to account for dynamically changing value
     lk.__version__ = "<version>"

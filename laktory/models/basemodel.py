@@ -115,15 +115,12 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     )
     _camel_serialization: bool = False
     _singular_serialization: bool = False
-    _build_package: bool = False
 
     @model_serializer(mode="wrap")
     def custom_serializer(self, handler) -> dict[str, Any]:
         dump = handler(self)
         if dump is None:
             return dump
-
-        dump = self._post_serialization(dump)
 
         camel_serialization = self._camel_serialization
         singular_serialization = self._singular_serialization
@@ -169,15 +166,6 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                 if k_singular != k:
                     dump[k_singular] = dump.pop(k)
 
-        return dump
-
-    #
-    # def _pre_serialization(self):
-    #     """"""
-    #     pass
-
-    def _post_serialization(self, dump):
-        """"""
         return dump
 
     @model_validator(mode="after")
@@ -330,22 +318,21 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     # Serialization                                                           #
     # ----------------------------------------------------------------------- #
 
-    def _configure_serializer(self, camel=False, singular=False, build=False):
+    def _configure_serializer(self, camel=False, singular=False):
         self._camel_serialization = camel
         self._singular_serialization = singular
-        self._build_package = build
         for k in self.model_fields:
             f = getattr(self, k)
             if isinstance(f, BaseModel):
-                f._configure_serializer(camel, singular, build)
+                f._configure_serializer(camel, singular)
             elif isinstance(f, list):
                 for i in f:
                     if isinstance(i, BaseModel):
-                        i._configure_serializer(camel, singular, build)
+                        i._configure_serializer(camel, singular)
             elif isinstance(f, dict):
                 for i in f.values():
                     if isinstance(i, BaseModel):
-                        i._configure_serializer(camel, singular, build)
+                        i._configure_serializer(camel, singular)
 
     # ----------------------------------------------------------------------- #
     # Validation ByPass                                                       #

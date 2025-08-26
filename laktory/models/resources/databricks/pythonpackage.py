@@ -96,11 +96,9 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
     @computed_field(description="Wheel file path", return_type=str)
     @property
     def source(self) -> str:
-        if self._build_package:
-            self.build_package()
         return str(self._wheel_path)
 
-    def build_package(self):
+    def build(self):
         # Ideally we would want to deterministically find the value of wheel_path
         # without building it, but it seems cumbersome and unreliable to parse
         # the config file and find the version.

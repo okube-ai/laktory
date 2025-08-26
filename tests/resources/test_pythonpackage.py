@@ -29,13 +29,12 @@ def test_python_package():
     assert pp.path == "/.laktory/wheels/None"
 
     # Build Package
-    pp._build_package = True
+    pp.build()
     assert pp.source.endswith(
         "laktory/laktory/resources/quickstart-stacks/workflows/lake/dist/lake-0.0.1-py3-none-any.whl"
     )
     assert Path(pp.source).exists()
     assert pp.path == "/.laktory/wheels/lake-0.0.1-py3-none-any.whl"
-    pp._build_package = False
 
     permissions = pp.core_resources[1]
     assert (

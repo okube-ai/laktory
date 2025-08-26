@@ -108,6 +108,9 @@ class CLIController(BaseModel):
         pstack = self.stack.to_terraform(env_name=self.env)
         getattr(pstack, cmd)(flags=self.terraform_options)
 
+    def build(self):
+        self.stack.build(env_name=self.env)
+
 
 class Worker:
     def run(self, cmd, cwd=None, raise_exceptions=True):
