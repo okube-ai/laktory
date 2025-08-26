@@ -1,6 +1,16 @@
 # Release History
 
-## [0.8.8] - Unreleased
+## [0.8.9] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.8.8] - 2025-08-26
 ### Added
 * Databricks WorkspaceTree
 * CLI `build` command
