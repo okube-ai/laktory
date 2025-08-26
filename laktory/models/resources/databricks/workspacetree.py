@@ -2,14 +2,13 @@ from pathlib import Path
 
 from pydantic import Field
 
+from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.notebook import Notebook
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
-
-from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -57,7 +56,8 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # Get file paths
-        root = Path(self.source).resolve()
+        source = Path(self.source)
+        root = source.resolve()
         filepaths = []
         for filepath in root.rglob("*"):
             if filepath.is_dir():
@@ -77,7 +77,10 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
                     is_notebook = True
 
             # Set source (local file system)
-            _source = filepath.relative_to(root.parent)
+            if source.is_absolute():
+                _source = str(filepath)
+            else:
+                _source = filepath.relative_to(root.parent)
 
             # Set path (Databricks / unix file system)
             dirpath = str(filepath.parent).replace(str(root), "")
