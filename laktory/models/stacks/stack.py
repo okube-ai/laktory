@@ -377,6 +377,8 @@ class Stack(BaseModel):
             if isinstance(r, PythonPackage):
                 r.build()
 
+        logger.info("Writing pipeline config files...")
+        for k, r in env.resources._get_all(providers_excluded=True).items():
             if isinstance(r, Pipeline):
                 if not r.orchestrator:
                     continue

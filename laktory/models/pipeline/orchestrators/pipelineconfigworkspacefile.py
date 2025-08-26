@@ -86,7 +86,7 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         """
         filepath = Path(self.source)
         filepath.parent.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Writing config file at {filepath}")
+        logger.debug(f"Writing config file at {filepath}")
         with filepath.open(mode="w") as fp:
             json.dump(self.content_dict, fp, indent=4)
 
