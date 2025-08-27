@@ -1,6 +1,16 @@
 # Release History
 
-## [0.8.9] - Unreleased
+## [0.8.10] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.8.9] - 2025-08-27
 ### Fixed
 * Issue with SQL expressions with curly braces `{}` used in `DataFrameExpr`
 
