@@ -25,8 +25,21 @@ if TYPE_CHECKING:
 # --------------------------------------------------------------------------- #
 
 
-def to_safe_name(name):
-    return name.replace("{", "__").replace("}", "__").replace("nodes.", "nodes_")
+def to_safe_expr(expr, df_names=None):
+    if df_names is None:
+        df_names = []
+    df_names += ["df"]
+
+    # Update nodes
+    pattern = r"\{nodes\.(.*?)\}"
+    repl = r"__nodes_\1___"
+    expr = re.sub(pattern, repl, expr)
+
+    # Replace df names
+    for df_name in df_names:
+        expr = expr.replace("{" + df_name + "}", f"__{df_name}__")
+
+    return expr
 
 
 # --------------------------------------------------------------------------- #
@@ -223,9 +236,9 @@ class DataFrameExpr(BaseModel, PipelineChild):
             _dfs = {}
             for k, v in dfs.items():
                 _k = "{" + k + "}"
-                _dfs[to_safe_name(_k)] = v
+                _dfs[to_safe_expr(_k, df_names=[k])] = v
 
-            expr = to_safe_name(self.expr)
+            expr = to_safe_expr(self.expr, df_names=list(dfs.keys()))
 
             df = pl.SQLContext(frames=_dfs).execute(expr)
             return nw.from_native(df)
@@ -240,14 +253,14 @@ class DataFrameExpr(BaseModel, PipelineChild):
             # with double underscores (__)
             for k, _df in dfs.items():
                 _k = "{" + k + "}"
-                _df.createOrReplaceTempView(to_safe_name(_k))
+                _df.createOrReplaceTempView(to_safe_expr(_k, df_names=[k]))
 
             # Run query
             _df = None
             for expr in self.expr.split(";"):
                 if expr.replace("\n", " ").strip() == "":
                     continue
-                _df = _spark.sql(to_safe_name(expr))
+                _df = _spark.sql(to_safe_expr(expr, df_names=list(dfs.keys())))
             if _df is None:
                 raise ValueError(f"SQL Expression '{self.expr}' is invalid")
             return nw.from_native(_df)

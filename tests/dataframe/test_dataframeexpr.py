@@ -1,3 +1,4 @@
+import narwhals as nw
 import polars as pl
 import pytest
 
@@ -43,3 +44,28 @@ def test_sql_with_nodes():
         lk.models.PipelineNodeDataSource(node_name="node_01"),
         lk.models.PipelineNodeDataSource(node_name="node_02"),
     ]
+
+
+@pytest.mark.parametrize("backend", ["PYSPARK"])
+def test_sql_with_curly(backend):
+    df0 = get_df0(backend)
+
+    df0 = df0.with_columns(filename=nw.lit("file_20250826.csv"))
+
+    node = lk.models.DataFrameExpr(
+        expr="SELECT regexp_extract(filename, 'file_([0-9]{8,8})', 1) AS date FROM {df}"
+    )
+
+    df = node.to_df({"df": df0})
+    df.to_native().show()
+    assert_dfs_equal(
+        df.select("date"),
+        pl.DataFrame(
+            {
+                "date": [
+                    "20250826",
+                ]
+                * 3
+            }
+        ),
+    )
