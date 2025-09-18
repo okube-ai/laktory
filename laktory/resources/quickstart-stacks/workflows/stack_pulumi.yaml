@@ -12,6 +12,9 @@ pulumi:
 # List of Resources to deploy
 resources:
 
+  # DBFS Files: Stock prices data json file
+  databricks_dbfsfiles: !use resources/dbfsfiles.yaml
+
   # Python package (lake)
   databricks_pythonpackages: !use resources/pythonpackages.yaml
 

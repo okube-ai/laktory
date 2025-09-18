@@ -28,7 +28,7 @@ nodes:
 # Bronze Table
 - name: brz_stock_prices
   source:
-    path: /laktory/data/stock_prices/
+    path: dbfs:/laktory/data/stock_prices/
     as_stream: false
     format: JSONL
   sinks:
