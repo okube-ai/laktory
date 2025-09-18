@@ -17,7 +17,7 @@ def test_roundp():
     )
 
     df = df0.with_columns(roundp_1=nw.col("pi").laktory.roundp(p=0.2))
-    df = df.with_columns(roundp_2=nw.col("pi").laktory.roundp(p=pl.col("p")))
+    df = df.with_columns(roundp_2=nw.col("pi").laktory.roundp(p=nw.col("p")))
 
     assert df["roundp_1"].to_list() == pytest.approx([3.2, 3.2, 3.2], abs=0.0001)
     assert df["roundp_2"].to_list() == pytest.approx([4, 3.20, 3.15], abs=0.0001)
