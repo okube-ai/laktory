@@ -27,12 +27,12 @@ def test_workspace_tree():
     assert r.dirpath == "notebooks"
 
     r = resources[1]
-    assert r.source.endswith("/tests/data/tree/notebooks/listsecrets.ipynb")
+    assert r.source.endswith("/tests/data/tree/notebooks/listsecrets0.ipynb")
     assert isinstance(r, lk.models.resources.databricks.Notebook)
     assert r.dirpath == "notebooks"
 
     r = resources[2]
-    assert r.source.endswith("/tests/data/tree/notebooks/listsecrets.py")
+    assert r.source.endswith("/tests/data/tree/notebooks/listsecrets1.py")
     assert isinstance(r, lk.models.resources.databricks.Notebook)
     assert r.dirpath == "notebooks"
 
@@ -73,8 +73,8 @@ def test_workspace_tree_with_path():
 
     assert [r.path for r in resources] == [
         "/Workspace/tmp/notebooks/listfiles.py",
-        "/Workspace/tmp/notebooks/listsecrets.ipynb",
-        "/Workspace/tmp/notebooks/listsecrets.py",
+        "/Workspace/tmp/notebooks/listsecrets0.ipynb",
+        "/Workspace/tmp/notebooks/listsecrets1.py",
         "/Workspace/tmp/pyfiles/hello.py",
         "/Workspace/tmp/pyfiles/sysversion.py",
     ]
