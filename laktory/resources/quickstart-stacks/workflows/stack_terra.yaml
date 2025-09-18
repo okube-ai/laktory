@@ -5,16 +5,13 @@ backend: terraform
 # List of Resources to deploy
 resources:
 
-  # DBFS Files: Stock prices data json file
-  databricks_dbfsfiles: !use resources/dbfsfiles.yaml
-
   # Python package (lake)
   databricks_pythonpackages: !use resources/pythonpackages.yaml
 
   # Notebooks for jobs and pipelines
   databricks_workspacetrees:
-    workspacetree-notebooks:
-      source: ./notebooks/
+    workspacetree-0:
+      source: ./workspacefiles/
 
   # Simple sample job
   databricks_jobs:

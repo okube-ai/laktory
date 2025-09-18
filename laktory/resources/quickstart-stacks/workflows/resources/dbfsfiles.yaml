@@ -1,3 +1,0 @@
-dbfs-file-stock-prices:
-  path: /laktory/data/stock_prices/stock_prices.json
-  source: ./data/stock_prices.json

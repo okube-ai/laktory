@@ -19,7 +19,7 @@ orchestrator:
       max_workers: 2
   libraries:
   - notebook:
-      path: /.laktory/dlt/dlt_laktory_pl.py
+      path: /.laktory/notebooks/dlt_laktory_pl.py
 
 dependencies:
   - laktory==<laktory_version>
@@ -31,7 +31,7 @@ nodes:
 # Bronze Table
 - name: brz_stock_prices
   source:
-    path: dbfs:/laktory/data/stock_prices/
+    path: /.laktory/data/stock_prices/
     as_stream: true
     format: JSONL
     infer_schema: true
