@@ -42,7 +42,7 @@ class SQLParser:
         Narwhals Expr
         metadata: ExprMetadata(
           expansion_kind: ExpansionKind.SINGLE,
-          last_node: ExprKind.NARY,
+          last_node: ExprKind.ELEMENTWISE,
           has_windows: False,
           n_orderable_ops: 0,
           is_elementwise: False,

@@ -19,7 +19,7 @@ orchestrator:
       max_workers: 2
   libraries:
   - notebook:
-      path: /.laktory/dlt/dlt_laktory_pl.py
+      path: /.laktory/notebooks/dlt_laktory_pl.py
 
 dependencies:
   - laktory==<laktory_version>

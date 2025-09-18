@@ -11,7 +11,7 @@ tasks:
   - task_key: print_hello
 #    job_cluster_key: main  # Uncomment to use job cluster instead of serverless
     notebook_task:
-      notebook_path: /.laktory/jobs/job_hello.py
+      notebook_path: /.laktory/notebooks/job_hello.py
 
 access_controls:
   - group_name: users
