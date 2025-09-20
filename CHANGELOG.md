@@ -2,7 +2,7 @@
 
 ## [0.8.10] - Unreleased
 ### Added
-* n/a
+* Pipeline config files path in Databricks workspace
 ### Fixed
 * Quickstart workflows
 ### Updated
