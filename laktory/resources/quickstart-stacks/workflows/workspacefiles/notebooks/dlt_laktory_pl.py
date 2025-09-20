@@ -47,7 +47,7 @@ def define_table(node, sink):
     else:
         kwargs["table_properties"] = sink.table_properties
 
-    if sink.is_cdc:
+    if not sink.is_cdc:
 
         @table_or_view(**kwargs)
         @dlt.expect_all(dlt_warning_expectations)
@@ -77,9 +77,7 @@ def define_table(node, sink):
             table_properties=sink.table_properties,
         )
 
-        dlt.apply_changes(
-            source=sink.dlt_pre_merge_name, **sink.dlt_apply_changes_kwargs
-        )
+        dlt.apply_changes(**sink.dlt_apply_changes_kwargs)
 
 
 # --------------------------------------------------------------------------- #
