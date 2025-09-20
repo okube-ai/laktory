@@ -180,7 +180,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         """
         DLT view applying node transformer prior to applying CDC changes.
         """
-        return "_" + self.dlt_name
+        return "_" + self.dlt_name.split(".")[-1]
 
     @property
     def dlt_apply_changes_kwargs(self) -> dict[str, str]:
