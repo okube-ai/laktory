@@ -2,11 +2,11 @@
 
 ## [0.8.10] - Unreleased
 ### Added
-* n/a
+* Pipeline config files path in Databricks workspace
 ### Fixed
 * Quickstart workflows
 ### Updated
-* n/a
+* Automatic view creation with DLT when CDC apply changes is used
 ### Breaking changes
 * n/a
 

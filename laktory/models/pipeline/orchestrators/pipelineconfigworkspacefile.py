@@ -35,7 +35,7 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
             # parent pipeline can't be access at initial import
             pass
 
-        source_path = cache_dir / "pipelines" / pl_name / "config.json"
+        source_path = cache_dir / "pipelines" / (pl_name + ".json")
 
         return str(source_path)
 
@@ -49,7 +49,7 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         if not pl:
             return None
 
-        return f"{settings.workspace_laktory_root}pipelines/{pl.name}/config.json"
+        return f"{settings.workspace_laktory_root}pipelines/{pl.name}.json"
 
     @property
     def content_dict(self):
