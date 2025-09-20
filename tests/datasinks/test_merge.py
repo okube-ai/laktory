@@ -663,6 +663,7 @@ def test_dlt_kwargs(tmp_path, backend):
         "ignore_null_updates": False,
         "keys": ["symbol", "date"],
         "sequence_by": "index",
+        "source": "_my_table",
         "stored_as_scd_type": 2,
         "target": "my_table",
     }
