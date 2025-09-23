@@ -153,7 +153,7 @@ def _read_and_update_tables_metadata():
 
     # Get arguments
     args = parser.parse_args()
-    filepaths = args.filepath.split(",")
+    filepaths = args.filepaths.split(",")
     logger.info(f"Executing metadata update for pipelines {filepaths}")
 
     # Read
