@@ -39,7 +39,7 @@ def define_table(node, sink):
 
     table_or_view = dlt.table
     kwargs = {
-        "name": sink.dlt_name,
+        "name": sink.dlt_table_or_view_name,
         "comment": node.comment,
     }
     if isinstance(sink, lk.models.PipelineViewDataSink):
@@ -72,7 +72,7 @@ def define_table(node, sink):
             return node.output_df.to_native()
 
         dlt.create_streaming_table(
-            name=sink.dlt_name,
+            name=sink.dlt_table_or_view_name,
             comment=node.comment,
             table_properties=sink.table_properties,
         )

@@ -116,17 +116,6 @@ class TableDataSink(BaseDataSink):
         return self.full_name
 
     @property
-    def dlt_name(self) -> str:
-        if self.catalog_name:
-            # Unity catalog is used only when catalog is defined. In this case
-            # DLT allows full name specification
-            return self.full_name
-
-        # If catalog is not defined, table is written to Hive Metastore and only table
-        # name is allowed
-        return self.table_name
-
-    @property
     def upstream_node_names(self) -> list[str]:
         """Pipeline node names required to write sink"""
         if self.view_definition:
@@ -279,3 +268,49 @@ class TableDataSink(BaseDataSink):
         source.parent = self.parent
 
         return source
+
+    # ----------------------------------------------------------------------- #
+    # Lakeflow Declarative Pipelines DLT                                      #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def dlt_table_or_view_name(self) -> str:
+        if self.catalog_name:
+            # Unity catalog is used only when catalog is defined. In this case
+            # DLT allows full name specification
+            return self.full_name
+
+        # If catalog is not defined, table is written to Hive Metastore and only table
+        # name is allowed
+        return self.table_name
+
+    @property
+    def dlt_table_or_view_kwargs(self):
+        kwargs = {"name": self.dlt_table_or_view_name}
+        if self.metadata:
+            if self.metadata.comment:
+                kwargs["comment"] = self.metadata.comment
+            if self.metadata.properties:
+                kwargs["table_properties"] = self.metadata.properties
+        return kwargs
+
+    @property
+    def dlt_warning_expectations(self):
+        e = {}
+        if not self.is_quarantine:
+            e = self.parent_pipeline_node.dlt_warning_expectations
+        return e
+
+    @property
+    def dlt_drop_expectations(self):
+        e = {}
+        if not self.is_quarantine:
+            e = self.parent_pipeline_node.dlt_drop_expectations
+        return e
+
+    @property
+    def dlt_fail_expectations(self):
+        e = {}
+        if not self.is_quarantine:
+            e = self.parent_pipeline_node.dlt_fail_expectations
+        return e

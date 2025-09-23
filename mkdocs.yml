@@ -181,6 +181,7 @@ nav:
         - PipelineViewDataSink: api/models/datasinks/pipelineview.md
         - UnityCatalogDataSink: api/models/datasinks/unitycatalog.md
         - DataSinkMergeCDCOptions: api/models/datasinks/mergecdcoptions.md
+        - TableDataSinkMetadata: api/models/datasinks/tablemetadata.md
       - DataSources:
         - ReaderWriterMethod: api/models/datasources/readerwritermethod.md
         - DataFrameDataSource: api/models/datasources/dataframe.md
