@@ -314,6 +314,13 @@ def test_databricks_job():
                 "name": "gld",
                 "sinks": [
                     {
+                        "type": "HIVE_METASTORE",
+                        "metadata": {
+                            "columns": {"id": {"comment": "Identification column"}},
+                            "comment": "Gold",
+                            "dataframe_backend": "PYSPARK",
+                            "dataframe_api": "NARWHALS",
+                        },
                         "mode": "OVERWRITE",
                         "writer_kwargs": {"path": "/gld_sink/"},
                         "format": "PARQUET",
@@ -763,6 +770,12 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                 },
                 "sinks": [
                     {
+                        "metadata": {
+                            "columns": {"id": {"comment": "Identification column"}},
+                            "comment": "Silver",
+                            "dataframe_backend": "PYSPARK",
+                            "dataframe_api": "NARWHALS",
+                        },
                         "catalog_name": "dev",
                         "schema_name": "sandbox",
                         "table_name": "slv",

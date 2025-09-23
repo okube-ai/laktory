@@ -23,6 +23,9 @@ class ColumnMetadata(BaseModel):
         table_id = table.full_name
         id = f"{table_id}.{column}"
         is_uc = isinstance(table, UnityCatalogDataSink)
+        object_type = "TABLE"
+        if table.table_type == "VIEW":
+            object_type = "VIEW"
 
         # Comment
         if "comment" in self.model_fields_set:
@@ -33,13 +36,17 @@ class ColumnMetadata(BaseModel):
                 else:
                     spark.sql(f"COMMENT ON COLUMN {id} IS NULL")
             else:
+                if object_type == "VIEW":
+                    raise ValueError(
+                        f"Column comments are not supported for VIEW {type(table)}"
+                    )
                 if self.comment:
                     spark.sql(
-                        f"ALTER TABLE {table_id} CHANGE COLUMN {column} {column} {dtypes[column]} COMMENT '{self.comment}'"
+                        f"ALTER {object_type} {table_id} CHANGE COLUMN {column} {column} {dtypes[column]} COMMENT '{self.comment}'"
                     )
                 else:
                     spark.sql(
-                        f"ALTER TABLE {table_id} CHANGE COLUMN {column} {column} {dtypes[column]}"
+                        f"ALTER {object_type} {table_id} CHANGE COLUMN {column} {column} {dtypes[column]}"
                     )
 
         # Tags
@@ -76,14 +83,20 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         table = self.parent
         is_uc = isinstance(table, UnityCatalogDataSink)
         id = table.full_name
+        object_type = "TABLE"
+        if table.table_type == "VIEW":
+            object_type = "VIEW"
 
         # Comment
         if "comment" in self.model_fields_set:
             logger.info(f"Setting table '{id}' comment to '{self.comment}'")
-            if self.comment:
-                spark.sql(f"COMMENT ON TABLE {id} IS '{self.comment}'")
+            if is_uc:
+                if self.comment:
+                    spark.sql(f"COMMENT ON TABLE {id} IS '{self.comment}'")
+                else:
+                    spark.sql(f"COMMENT ON TABLE {id} IS NULL")
             else:
-                spark.sql(f"COMMENT ON TABLE {id} IS NULL")
+                self.properties["comment"] = self.comment
 
         # Columns
         if self.columns:
@@ -102,7 +115,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         # Owner
         if self.owner:
             logger.info(f"Setting table '{id}' owner to '{self.comment}'")
-            spark.sql("ALTER TABLE default.df SET OWNER TO `okube`")
+            spark.sql(f"ALTER {object_type} {id} SET OWNER TO `{self.owner}`")
 
         # Options
         # https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-tblproperties#options
@@ -113,7 +126,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
             props = []
             for k, v in self.properties.items():
                 if v is not None:
-                    props += [f"{k} = {v}"]
+                    props += [f"{k} = '{v}'"]
             if props:
                 props_string = ",".join(props)
                 logger.info(f"Setting table '{id}' properties to ({props_string})")
@@ -136,8 +149,8 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                 for k, v in self.tags.items():
                     logger.info(f"Setting table '{id}' tag `{k}` to '{v}'")
                     if v is not None:
-                        spark.sql(f"SET TAG ON TABLE {id} `{k}` = `{v}`")
+                        spark.sql(f"SET TAG ON {object_type} {id} `{k}` = `{v}`")
                     else:
-                        spark.sql(f"UNSET TAG ON TABLE {id} `{k}`")
+                        spark.sql(f"UNSET TAG ON {object_type} {id} `{k}`")
             else:
                 raise ValueError(f"Tags are not supported for {type(table)}")

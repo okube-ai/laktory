@@ -41,7 +41,11 @@ nodes:
     - expr: SELECT id, x1, y1 from {df}
   sinks:
   - table_name: slv
-
+    metadata:
+      comment: "Silver"
+      columns:
+        id:
+          comment: "Identification column"
 - name: gld
   transformer:
     nodes:

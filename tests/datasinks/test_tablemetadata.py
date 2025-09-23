@@ -7,7 +7,7 @@ from laktory.models import HiveMetastoreDataSink
 
 
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
-def test_hive(backend, tmp_path):
+def test_hive_table(backend, tmp_path):
     df0 = get_df0(backend)
     spark = get_spark_session()
 
@@ -51,12 +51,22 @@ def test_hive(backend, tmp_path):
     sink.write(df0)
 
     # Update metadata
+    meta = (
+        spark.sql(f"DESCRIBE TABLE EXTENDED {schema}.{table}")
+        .toPandas()
+        .set_index("col_name")
+    )
+    print(meta)
     sink.metadata.execute()
 
     # Read metadata
-    desc = spark.sql("DESC TABLE EXTENDED default.df").toPandas().set_index("col_name")
-    dtypes = desc["data_type"].to_dict()
-    comments = desc["comment"].to_dict()
+    meta = (
+        spark.sql(f"DESCRIBE TABLE EXTENDED {schema}.{table}")
+        .toPandas()
+        .set_index("col_name")
+    )
+    dtypes = meta["data_type"].to_dict()
+    comments = meta["comment"].to_dict()
 
     # Test
     assert dtypes["Comment"] == "unit test table"

@@ -42,10 +42,16 @@ nodes:
   sinks:
   - schema_name: default
     table_name: gld
+    type: HIVE_METASTORE
     mode: OVERWRITE
     format: PARQUET
     writer_kwargs:
       path: {tmp_path}/gld_sink/
+    metadata:
+      comment: "Gold"
+      columns:
+        id:
+          comment: "Identification column"
 
 - name: gld_a
   sinks:
