@@ -119,12 +119,12 @@ class PipelineNodeDataSource(BaseDataSource):
 
             if self.as_stream:
                 logger.info(f"Reading pipeline node {self._id} with DLT as stream")
-                # df = dlt.read_stream(self.node.primary_sink.dlt_table_or_view_name)
-                df = dlt.read_stream(self.node.primary_sink.dlt_name)
+                df = dlt.read_stream(self.node.primary_sink.dlt_table_or_view_name)
+                # df = dlt.read_stream(self.node.primary_sink.dlt_name)
             else:
                 logger.info(f"Reading pipeline node {self._id} with DLT as static")
-                # df = dlt.read(self.node.primary_sink.dlt_table_or_view_name)
-                df = dlt.read(self.node.primary_sink.dlt_name)
+                df = dlt.read(self.node.primary_sink.dlt_table_or_view_name)
+                # df = dlt.read(self.node.primary_sink.dlt_name)
 
         elif stream_to_batch or self.node.output_df is None:
             if self.node.has_sinks:
