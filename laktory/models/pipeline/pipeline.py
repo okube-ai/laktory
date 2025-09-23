@@ -86,7 +86,7 @@ def _read_and_execute():
         description="Read pipeline configuration file and execute"
     )
     parser.add_argument(
-        "--filepath", type=str, help="Laktory branch name", required=True
+        "--filepath", type=str, help="Pipeline configuration filepath", required=True
     )
     parser.add_argument(
         "--node_name",
@@ -127,6 +127,45 @@ def _read_and_execute():
         pl.nodes_dict[node_name].execute(full_refresh=full_refresh)
     else:
         pl.execute(full_refresh=full_refresh)
+
+
+def _read_and_update_tables_metadata():
+    """Update pipeline tables metadata as a script"""
+    # TODO: Refactor and integrate into dispatcher / executor / CLI
+
+    import argparse
+
+    import laktory as lk
+
+    # Parse arguments
+    parser = argparse.ArgumentParser(
+        description="Read pipeline configuration file and execute"
+    )
+    parser.add_argument(
+        "--filepaths", type=str, help="Pipeline configuration filepaths", required=True
+    )
+    parser.add_argument(
+        "--env",
+        type=str,
+        help="Dummy argument to facilitate databricks jobs",
+        required=False,
+    )
+
+    # Get arguments
+    args = parser.parse_args()
+    filepaths = args.filepaths.split(",")
+    logger.info(f"Executing metadata update for pipelines {filepaths}")
+
+    # Read
+    for filepath in filepaths:
+        with open(filepath, "r") as fp:
+            if str(filepath).endswith(".yaml"):
+                pl = lk.models.Pipeline.model_validate_yaml(fp)
+            else:
+                pl = lk.models.Pipeline.model_validate_json(fp.read())
+
+        # Execute
+        pl.update_tables_metadata()
 
 
 def _read_and_execute_dlt():
@@ -583,6 +622,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         write_sinks=True,
         full_refresh: bool = False,
         named_dfs: dict[str, AnyFrame] = None,
+        update_tables_metadata: bool = True,
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -598,6 +638,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             existing data and checkpoints before processing.
         named_dfs:
             Named DataFrames to be passed to pipeline nodes transformer.
+        update_tables_metadata:
+            Update tables metadata
         """
         logger.info("Executing Pipeline")
 
@@ -609,7 +651,16 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 write_sinks=write_sinks,
                 full_refresh=full_refresh,
                 named_dfs=named_dfs,
+                update_tables_metadata=update_tables_metadata,
             )
+
+    def update_tables_metadata(self):
+        logger.info("Updating pipeline tables metadata")
+
+        for inode, node in enumerate(self.sorted_nodes):
+            for s in node.sinks:
+                if s.metadata:
+                    s.metadata.execute()
 
     def dag_figure(self) -> "Figure":
         """

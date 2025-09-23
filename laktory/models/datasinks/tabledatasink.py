@@ -13,6 +13,7 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.dataframe.dataframeexpr import DataFrameExpr
 from laktory.models.datasinks.basedatasink import BaseDataSink
+from laktory.models.datasinks.tabledatasinkmetadata import TableDataSinkMetadata
 from laktory.models.datasources.tabledatasource import TableDataSource
 
 logger = get_logger(__name__)
@@ -30,6 +31,9 @@ class TableDataSink(BaseDataSink):
         None,
         description="Sink table schema name",
     )
+    metadata: TableDataSinkMetadata = Field(
+        None, description="Table and columns metadata."
+    )
     table_name: str = Field(
         ...,
         description="""
@@ -41,7 +45,6 @@ class TableDataSink(BaseDataSink):
         "TABLE",
         description="Type of table. 'TABLE' and 'VIEW' are currently supported.",
     )
-    table_properties: dict[str, str] = Field({}, description="Table properties.")
     view_definition: DataFrameExpr | str = Field(
         None, description="View definition of 'VIEW' `table_type` is selected."
     )
@@ -113,17 +116,6 @@ class TableDataSink(BaseDataSink):
         return self.full_name
 
     @property
-    def dlt_name(self) -> str:
-        if self.catalog_name:
-            # Unity catalog is used only when catalog is defined. In this case
-            # DLT allows full name specification
-            return self.full_name
-
-        # If catalog is not defined, table is written to Hive Metastore and only table
-        # name is allowed
-        return self.table_name
-
-    @property
     def upstream_node_names(self) -> list[str]:
         """Pipeline node names required to write sink"""
         if self.view_definition:
@@ -144,6 +136,7 @@ class TableDataSink(BaseDataSink):
     @property
     def children_names(self):
         return [
+            "metadata",
             "view_definition",
         ]
 
@@ -275,3 +268,49 @@ class TableDataSink(BaseDataSink):
         source.parent = self.parent
 
         return source
+
+    # ----------------------------------------------------------------------- #
+    # Lakeflow Declarative Pipelines DLT                                      #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def dlt_table_or_view_name(self) -> str:
+        if self.catalog_name:
+            # Unity catalog is used only when catalog is defined. In this case
+            # DLT allows full name specification
+            return self.full_name
+
+        # If catalog is not defined, table is written to Hive Metastore and only table
+        # name is allowed
+        return self.table_name
+
+    @property
+    def dlt_table_or_view_kwargs(self):
+        kwargs = {"name": self.dlt_table_or_view_name}
+        if self.metadata:
+            if self.metadata.comment:
+                kwargs["comment"] = self.metadata.comment
+            if self.metadata.properties:
+                kwargs["table_properties"] = self.metadata.properties
+        return kwargs
+
+    @property
+    def dlt_warning_expectations(self):
+        e = {}
+        if not self.is_quarantine:
+            e = self.parent_pipeline_node.dlt_warning_expectations
+        return e
+
+    @property
+    def dlt_drop_expectations(self):
+        e = {}
+        if not self.is_quarantine:
+            e = self.parent_pipeline_node.dlt_drop_expectations
+        return e
+
+    @property
+    def dlt_fail_expectations(self):
+        e = {}
+        if not self.is_quarantine:
+            e = self.parent_pipeline_node.dlt_fail_expectations
+        return e

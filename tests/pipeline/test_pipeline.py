@@ -387,3 +387,43 @@ def test_full(backend, tmp_path):
     # Test
     df = get_spark_session().read.table("default.gld_ab")
     assert_dfs_equal(df, polars.DataFrame({"id": ["a", "b"], "max_x1": [1, 2]}))
+
+
+@pytest.mark.parametrize("backend", ["PYSPARK"])
+def test_update_metadata(backend, tmp_path):
+    spark = get_spark_session()
+
+    pl = get_pl(tmp_path)
+    pl.dataframe_backend_ = backend
+
+    # Set Source
+    ss = StreamingSource(backend)
+
+    # Execute
+    ss.write_to_json(tmp_path / "brz_source")
+    pl.execute(update_tables_metadata=False)
+
+    meta = (
+        spark.sql("DESCRIBE TABLE EXTENDED default.gld")
+        .toPandas()
+        .set_index("col_name")
+    )
+    dtypes = meta["data_type"].to_dict()
+    comments = meta["comment"].to_dict()
+    assert comments["id"] is None
+    assert dtypes.get("Comment", None) is None
+
+    # Update metadata
+    pl.update_tables_metadata()
+
+    meta = (
+        spark.sql("DESCRIBE TABLE EXTENDED default.gld")
+        .toPandas()
+        .set_index("col_name")
+    )
+    dtypes = meta["data_type"].to_dict()
+    comments = meta["comment"].to_dict()
+    print(meta.to_string())
+    dtypes = meta["data_type"].to_dict()
+    assert comments["id"] == "Identification column"
+    assert dtypes.get("Comment", None) == "Gold"

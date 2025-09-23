@@ -28,35 +28,20 @@ with open(config_filepath, "r") as fp:
 
 
 def define_table(node, sink):
-    # Get Expectations
-    dlt_warning_expectations = {}
-    dlt_drop_expectations = {}
-    dlt_fail_expectations = {}
-    if sink and not sink.is_quarantine:
-        dlt_warning_expectations = node.dlt_warning_expectations
-        dlt_drop_expectations = node.dlt_drop_expectations
-        dlt_fail_expectations = node.dlt_fail_expectations
-
     table_or_view = dlt.table
-    kwargs = {
-        "name": sink.dlt_name,
-        "comment": node.comment,
-    }
     if isinstance(sink, lk.models.PipelineViewDataSink):
         table_or_view = dlt.view
-    else:
-        kwargs["table_properties"] = sink.table_properties
 
     if not sink.is_cdc:
 
-        @table_or_view(**kwargs)
-        @dlt.expect_all(dlt_warning_expectations)
-        @dlt.expect_all_or_drop(dlt_drop_expectations)
-        @dlt.expect_all_or_fail(dlt_fail_expectations)
+        @table_or_view(**sink.dlt_table_or_view_kwargs)
+        @dlt.expect_all(sink.dlt_warning_expectations)
+        @dlt.expect_all_or_drop(sink.dlt_drop_expectations)
+        @dlt.expect_all_or_fail(sink.dlt_fail_expectations)
         def get_df():
             # Execute node
             node.execute()
-            if sink and sink.is_quarantine:
+            if sink.is_quarantine:
                 df = node.quarantine_df
             else:
                 df = node.output_df
@@ -66,17 +51,12 @@ def define_table(node, sink):
 
     else:
 
-        @dlt.view(name=sink.dlt_pre_merge_name)
+        @dlt.view(name=sink.dlt_pre_merge_view_name)
         def get_df():
             node.execute()
             return node.output_df.to_native()
 
-        dlt.create_streaming_table(
-            name=sink.dlt_name,
-            comment=node.comment,
-            table_properties=sink.table_properties,
-        )
-
+        dlt.create_streaming_table(**sink.dlt_table_or_view_kwargs)
         dlt.apply_changes(**sink.dlt_apply_changes_kwargs)
 
 

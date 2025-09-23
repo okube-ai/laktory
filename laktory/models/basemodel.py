@@ -73,6 +73,12 @@ class ModelMetaclass(_ModelMetaclass):
             ]:
                 continue
 
+            if cls_name in ["UnityCatalogDataSink", "HiveMetastoreDataSink"]:
+                if field_name in [
+                    "type",  # this is required to properly select the type of sink
+                ]:
+                    continue
+
             if type_hint is None:
                 continue
 

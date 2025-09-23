@@ -314,6 +314,13 @@ def test_databricks_job():
                 "name": "gld",
                 "sinks": [
                     {
+                        "type": "HIVE_METASTORE",
+                        "metadata": {
+                            "columns": {"id": {"comment": "Identification column"}},
+                            "comment": "Gold",
+                            "dataframe_backend": "PYSPARK",
+                            "dataframe_api": "NARWHALS",
+                        },
                         "mode": "OVERWRITE",
                         "writer_kwargs": {"path": "/gld_sink/"},
                         "format": "PARQUET",
@@ -565,12 +572,21 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
     pl = get_pl_dlt()
 
     # Test node names
-    assert pl.nodes_dict["brz"].primary_sink.dlt_name == "dev.sandbox.brz"
-    assert pl.nodes_dict["slv"].primary_sink.dlt_name == "dev.sandbox.slv"
-    assert pl.nodes_dict["gld"].primary_sink.dlt_name == "gld"
-    assert pl.nodes_dict["gld_a"].primary_sink.dlt_name == "dev.sandbox2.gld_a"
-    assert pl.nodes_dict["gld_b"].primary_sink.dlt_name == "dev.sandbox2.gld_b"
-    assert pl.nodes_dict["gld_ab"].primary_sink.dlt_name == "prd.sandbox2.gld_ab"
+    assert pl.nodes_dict["brz"].primary_sink.dlt_table_or_view_name == "dev.sandbox.brz"
+    assert pl.nodes_dict["slv"].primary_sink.dlt_table_or_view_name == "dev.sandbox.slv"
+    assert pl.nodes_dict["gld"].primary_sink.dlt_table_or_view_name == "gld"
+    assert (
+        pl.nodes_dict["gld_a"].primary_sink.dlt_table_or_view_name
+        == "dev.sandbox2.gld_a"
+    )
+    assert (
+        pl.nodes_dict["gld_b"].primary_sink.dlt_table_or_view_name
+        == "dev.sandbox2.gld_b"
+    )
+    assert (
+        pl.nodes_dict["gld_ab"].primary_sink.dlt_table_or_view_name
+        == "prd.sandbox2.gld_ab"
+    )
 
     # Test Sink as Source
     node_slv = pl.nodes_dict["slv"]
@@ -754,6 +770,12 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                 },
                 "sinks": [
                     {
+                        "metadata": {
+                            "columns": {"id": {"comment": "Identification column"}},
+                            "comment": "Silver",
+                            "dataframe_backend": "PYSPARK",
+                            "dataframe_api": "NARWHALS",
+                        },
                         "catalog_name": "dev",
                         "schema_name": "sandbox",
                         "table_name": "slv",

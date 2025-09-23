@@ -307,10 +307,7 @@ with open("pipeline.yaml") as fp:
 
 
 def define_table(node, sink):
-    @dlt.table(
-        name=sink.dlt_name,
-        comment=node.description,
-    )
+    @dlt.table(**sink.dlt_table_or_view_kwargs)
     def get_df():
         # Execute node
         node.execute()
