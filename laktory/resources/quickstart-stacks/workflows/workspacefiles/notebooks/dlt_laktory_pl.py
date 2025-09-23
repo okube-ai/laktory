@@ -66,7 +66,7 @@ def define_table(node, sink):
 
     else:
 
-        @dlt.view(name=sink.dlt_pre_merge_name)
+        @dlt.view(name=sink.dlt_pre_merge_view_name)
         def get_df():
             node.execute()
             return node.output_df.to_native()

@@ -177,7 +177,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         return self.merge_cdc_options is not None
 
     @property
-    def dlt_pre_merge_name(self):
+    def dlt_pre_merge_view_name(self):
         """
         DLT view applying node transformer prior to applying CDC changes.
         """
@@ -202,7 +202,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             "ignore_null_updates": cdc.ignore_null_updates,
             "keys": cdc.primary_keys,
             "sequence_by": cdc.order_by,
-            "source": self.dlt_pre_merge_name,
+            "source": self.dlt_pre_merge_view_name,
             "stored_as_scd_type": cdc.scd_type,
             "target": self.table_name,
             # "track_history_column_list": cdc.track_history_columns,  # NOT SUPPORTED

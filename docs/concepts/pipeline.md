@@ -306,7 +306,7 @@ with open("pipeline.yaml") as fp:
     pl = lk.models.Pipeline.model_validate_yaml(fp.read())
 
 
-def define_table(sink):
+def define_table(node, sink):
     @dlt.table(**sink.dlt_table_or_view_kwargs)
     def get_df():
         # Execute node
@@ -323,7 +323,7 @@ def define_table(sink):
 # Build nodes
 for node in pl.nodes:
     for sink in node.sinks:
-        wrapper = define_table(sink)
+        wrapper = define_table(node, sink)
         df = lk.dlt.get_df(wrapper)
         display(df)
 ```
