@@ -144,6 +144,12 @@ def _read_and_update_tables_metadata():
     parser.add_argument(
         "--filepaths", type=str, help="Pipeline configuration filepaths", required=True
     )
+    parser.add_argument(
+        "--env",
+        type=str,
+        help="Dummy argument to facilitate databricks jobs",
+        required=False,
+    )
 
     # Get arguments
     args = parser.parse_args()
