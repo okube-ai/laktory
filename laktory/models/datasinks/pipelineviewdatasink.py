@@ -43,11 +43,6 @@ class PipelineViewDataSink(BaseDataSink):
     def _id(self) -> str:
         return self.pipeline_view_name
 
-    #
-    # @property
-    # def dlt_name(self) -> str:
-    #     return self.pipeline_view_name
-
     @property
     def upstream_node_names(self) -> list[str]:
         """Pipeline node names required to write sink"""
