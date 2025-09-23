@@ -116,6 +116,17 @@ class TableDataSink(BaseDataSink):
         return self.full_name
 
     @property
+    def dlt_name(self) -> str:
+        if self.catalog_name:
+            # Unity catalog is used only when catalog is defined. In this case
+            # DLT allows full name specification
+            return self.full_name
+
+        # If catalog is not defined, table is written to Hive Metastore and only table
+        # name is allowed
+        return self.table_name
+
+    @property
     def upstream_node_names(self) -> list[str]:
         """Pipeline node names required to write sink"""
         if self.view_definition:
