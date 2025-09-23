@@ -46,7 +46,7 @@ class ColumnMetadata(BaseModel):
         if self.tags:
             if is_uc:
                 for k, v in self.tags.items():
-                    logger.info(f"Setting column '{id}' tag to ({k}={v})")
+                    logger.info(f"Setting column '{id}' tag `{k}` to '{v}'")
                     if v is not None:
                         spark.sql(f"SET TAG ON COLUMN {id} `{k}` = `{v}`")
                     else:
@@ -134,7 +134,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         if self.tags:
             if is_uc:
                 for k, v in self.tags.items():
-                    logger.info(f"Setting table '{id}' tag to ({k}={v})")
+                    logger.info(f"Setting table '{id}' tag `{k}` to '{v}'")
                     if v is not None:
                         spark.sql(f"SET TAG ON TABLE {id} `{k}` = `{v}`")
                     else:
