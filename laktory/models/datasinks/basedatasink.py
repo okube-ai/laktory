@@ -54,6 +54,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     type: Literal["FILE", "HIVE_METASTORE", "UNITY_CATALOG"] = Field(
         ..., description="Name of the data sink type"
     )
+    metadata: Literal[None] = Field(None, description="Table and columns metadata.")
     merge_cdc_options: DataSinkMergeCDCOptions = Field(
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",

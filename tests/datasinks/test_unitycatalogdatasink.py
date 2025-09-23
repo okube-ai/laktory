@@ -8,7 +8,7 @@ from laktory.models import UnityCatalogDataSink
 
 @pytest.mark.xfail(reason="Requires Databricks Spark Session (for now)")
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
-def test_read_polars(backend, tmp_path):
+def test_write(backend, tmp_path):
     df0 = get_df0(backend)
 
     if DataFrameBackends(backend) not in ["PYSPARK"]:

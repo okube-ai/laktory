@@ -13,6 +13,7 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.dataframe.dataframeexpr import DataFrameExpr
 from laktory.models.datasinks.basedatasink import BaseDataSink
+from laktory.models.datasinks.tabledatasinkmetadata import TableDataSinkMetadata
 from laktory.models.datasources.tabledatasource import TableDataSource
 
 logger = get_logger(__name__)
@@ -30,6 +31,9 @@ class TableDataSink(BaseDataSink):
         None,
         description="Sink table schema name",
     )
+    metadata: TableDataSinkMetadata = Field(
+        None, description="Table and columns metadata."
+    )
     table_name: str = Field(
         ...,
         description="""
@@ -41,7 +45,6 @@ class TableDataSink(BaseDataSink):
         "TABLE",
         description="Type of table. 'TABLE' and 'VIEW' are currently supported.",
     )
-    table_properties: dict[str, str] = Field({}, description="Table properties.")
     view_definition: DataFrameExpr | str = Field(
         None, description="View definition of 'VIEW' `table_type` is selected."
     )
@@ -144,6 +147,7 @@ class TableDataSink(BaseDataSink):
     @property
     def children_names(self):
         return [
+            "metadata",
             "view_definition",
         ]
 

@@ -2,11 +2,12 @@
 
 ## [0.8.10] - Unreleased
 ### Added
-* Pipeline config files path in Databricks workspace
+* Support for tables metadata (comment, properties, tags, column comment, column tags, etc.)
 ### Fixed
 * Quickstart workflows
 ### Updated
 * Automatic view creation with DLT when CDC apply changes is used
+* Pipeline config files path in Databricks workspace
 ### Breaking changes
 * n/a
 

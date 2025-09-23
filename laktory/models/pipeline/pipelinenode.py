@@ -588,10 +588,14 @@ class PipelineNode(BaseModel, PipelineChild):
                     self._output_df = s.as_source().read()
                 else:
                     s.write(self._output_df, full_refresh=full_refresh)
+                if s.metadata:
+                    s.metadata.execute()
 
             if self._quarantine_df is not None:
                 for s in self.quarantine_sinks:
                     s.write(self._quarantine_df, full_refresh=full_refresh)
+                    if s.metadata:
+                        s.metadata.execute()
 
         return self._output_df
 
