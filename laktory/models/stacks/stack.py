@@ -41,6 +41,7 @@ from laktory.models.resources.databricks.obotoken import OboToken
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.pipeline import Pipeline as DatabricksPipeline
 from laktory.models.resources.databricks.pythonpackage import PythonPackage
+from laktory.models.resources.databricks.qualitymonitor import QualityMonitor
 from laktory.models.resources.databricks.query import Query
 from laktory.models.resources.databricks.repo import Repo
 from laktory.models.resources.databricks.schema import Schema
@@ -155,6 +156,7 @@ class StackResources(BaseModel):
     databricks_notificationdestinations: dict[str, NotificationDestination] = {}
     databricks_obotokens: dict[str, OboToken] = {}
     databricks_permissions: dict[str, Permissions] = {}
+    databricks_qualitymonitors: dict[str, QualityMonitor] = {}
     databricks_pythonpackages: dict[str, PythonPackage] = {}
     databricks_queries: dict[str, Query] = {}
     databricks_repos: dict[str, Repo] = {}

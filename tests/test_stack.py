@@ -50,6 +50,7 @@ def full_stack():
     from tests.resources.test_permissions import permissions
     from tests.resources.test_pipeline_orchestrators import get_pl_dlt
     from tests.resources.test_pythonpackage import get_python_package
+    from tests.resources.test_qualitymonitor import qm
     from tests.resources.test_query import query
     from tests.resources.test_repo import repo
     from tests.resources.test_schema import schema
@@ -85,6 +86,7 @@ def full_stack():
         "databricks_notebooks": [nb],
         "databricks_notificationdestinations": [nd_emails, nd_teams, nd_slack],
         "databricks_permissions": [permissions],
+        "databricks_qualitymonitors": [qm],
         "databricks_queries": [query],
         "databricks_repos": [repo],
         "databricks_schemas": [schema],

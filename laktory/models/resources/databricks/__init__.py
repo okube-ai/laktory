@@ -28,6 +28,7 @@ from .obotoken import OboToken
 from .permissions import Permissions
 from .pipeline import Pipeline
 from .pythonpackage import PythonPackage
+from .qualitymonitor import QualityMonitor
 from .query import Query
 from .repo import Repo
 from .schema import Schema
