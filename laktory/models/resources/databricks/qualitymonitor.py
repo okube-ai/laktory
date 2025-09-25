@@ -1,10 +1,16 @@
+from importlib import Path
 from typing import Union
 
+from databricks.sdk import WorkspaceClient
 from pydantic import Field
 
+from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
+from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
+
+logger = get_logger(__name__)
 
 
 class QualityMonitorCustomMetric(BaseModel):
@@ -115,8 +121,8 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
     output_schema_name: str = Field(
         ..., description="Schema where output metric tables are created"
     )
-    table_name: str = Field(
-        ...,
+    table_name: str | None = Field(
+        None,
         description="The full name of the table to attach the monitor too. Its of the format {catalog}.{schema}.{tableName}",
     )
     baseline_table_name: str = Field(
@@ -163,6 +169,7 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
         None,
         description="Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used. (Can't be updated after creation)",
     )
+    _table: TableDataSink = None
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -184,7 +191,7 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return []
+        return ["_table"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
@@ -197,3 +204,49 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
         return self.pulumi_excludes
+
+    # ----------------------------------------------------------------------- #
+    # SDK Methods                                                             #
+    # ----------------------------------------------------------------------- #
+
+    def _init_workspace_client(self, w):
+        if w is None:
+            return WorkspaceClient()
+
+    def delete_with_sdk(self, workspace_client: WorkspaceClient | None):
+        if self._table is None:
+            raise ValueError("Table has not been set")
+
+        w = self._init_workspace_client(workspace_client)
+
+        for ext in [
+            "drift_metrics",
+            "profile_metrics",
+        ]:
+            table_metrics = f"{self.output_schema_name}.{self._table.full_name}_{ext}"
+            if w.tables.exists(table_metrics):
+                logger.info(f"Deleting metrics table {table_metrics}")
+                w.tables.delete(table_metrics)
+
+        assets_dir = Path(self.assets_dir) / self._table.full_name
+        logger.info(f"Deleting monitor assets directory {assets_dir.as_posix()}")
+        w.workspace.delete(assets_dir.as_posix(), recursive=True)
+
+    def create_with_sdk(self, workspace_client: WorkspaceClient):
+        if self._table is None:
+            raise ValueError("Table has not been set")
+
+        w = self._init_workspace_client(workspace_client)
+
+        logger.info(f"Creating Quality Monitor for {self._table.full_name}")
+        kwargs = self.model_dump(exclude_unset=True)
+
+        w.quality_monitors.create(**kwargs)
+        # table_name=self._table.full_name,
+        # assets_dir=self.assets_dir,
+        # output_schema_name=self.output_schema_name,
+        # time_series=self.MonitorTimeSeries(
+        #   timestamp_col="DateHeure",
+        #   granularities=["1 hour"]
+        # )
+        # )
