@@ -16,6 +16,7 @@ from laktory.models.resources.databricks.job import JobTask
 from laktory.models.resources.databricks.job import JobTaskPythonWheelTask
 from laktory.models.resources.pulumiresource import PulumiResource
 
+ENV_KEY = "laktory"
 
 class DatabricksJobOrchestrator(Job, PipelineChild):
     """
@@ -45,6 +46,23 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
     # ----------------------------------------------------------------------- #
     # Update Job                                                              #
     # ----------------------------------------------------------------------- #
+
+    def _set_task_compute(self, task, serverless, _requirements):
+        if serverless:
+            task.environment_key = ENV_KEY
+        else:
+            libraries = []
+            for r in _requirements:
+                is_var = "${vars." in r
+                if r.endswith(".whl") or (is_var and "wheel" in r or "whl" in r):
+                    l = ClusterLibrary(whl=r)
+                else:
+                    l = ClusterLibrary(pypi=ClusterLibraryPypi(package=r))
+                libraries += [l]
+
+            task.job_cluster_key = "node-cluster"
+            task.libraries = libraries
+        return task
 
     def update_from_parent(self):
         serverless = True
@@ -78,19 +96,18 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         )
 
         # Environment
-        env_key = "laktory"
         env_found = False
         envs = self.environments
         if envs is None:
             envs = []
         for env in envs:
-            if env.environment_key == env_key:
+            if env.environment_key == ENV_KEY:
                 env_found = True
                 break
         if not env_found:
             envs += [
                 JobEnvironment(
-                    environment_key=env_key,
+                    environment_key=ENV_KEY,
                     spec=JobEnvironmentSpec(
                         client="3",
                         dependencies=_requirements,
@@ -113,7 +130,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             task = JobTask(
                 task_key="node-" + node.name,
                 python_wheel_task=JobTaskPythonWheelTask(
-                    entry_point="models.pipeline._read_and_execute",
+                    entry_point="models.pipeline._exectute",
                     package_name="laktory",
                     named_parameters={
                         "filepath": _path,
@@ -122,24 +139,26 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                 ),
                 depends_ons=depends_on,
             )
-            if serverless:
-                task.environment_key = env_key
-            else:
-                libraries = []
-                for r in _requirements:
-                    is_var = "${vars." in r
-                    if r.endswith(".whl") or (is_var and "wheel" in r or "whl" in r):
-                        l = ClusterLibrary(whl=r)
-                    else:
-                        l = ClusterLibrary(pypi=ClusterLibraryPypi(package=r))
-                    libraries += [l]
-
-                task.job_cluster_key = "node-cluster"
-                task.libraries = libraries
+            task = self._set_task_compute(task, serverless, _requirements)
 
             if self.node_max_retries:
                 task.max_retries = self.node_max_retries
 
+            self.tasks += [task]
+
+        if pl.databricks_quality_monitor_enabled:
+            task = JobTask(
+                task_key="quality-monitor",
+                python_wheel_task=JobTaskPythonWheelTask(
+                    entry_point="models.pipeline._update_quality_monitors",
+                    package_name="laktory",
+                    named_parameters={
+                        "filepath": _path,
+                    },
+                ),
+                depends_ons=[t.task_key for t in self.tasks],
+            )
+            task = self._set_task_compute(task, serverless, _requirements)
             self.tasks += [task]
 
         self.sort_tasks(self.tasks)

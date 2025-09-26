@@ -15,6 +15,7 @@ from laktory.models.dataframe.dataframeexpr import DataFrameExpr
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.models.datasinks.tabledatasinkmetadata import TableDataSinkMetadata
 from laktory.models.datasources.tabledatasource import TableDataSource
+from laktory.models.resources.databricks.qualitymonitor import QualityMonitor
 
 logger = get_logger(__name__)
 
@@ -48,6 +49,9 @@ class TableDataSink(BaseDataSink):
     view_definition: DataFrameExpr | str = Field(
         None, description="View definition of 'VIEW' `table_type` is selected."
     )
+    databricks_quality_monitor: QualityMonitor | None = Field(
+        None, description="Databricks Quality Monitor"
+    )
 
     @model_validator(mode="after")
     def validate_table_full_name(self) -> Any:
@@ -74,6 +78,13 @@ class TableDataSink(BaseDataSink):
             raise ValueError(
                 'View definition must be provided for "VIEW" `table_type`.'
             )
+        return self
+
+    @model_validator(mode="after")
+    def set_qm_table(self):
+        if self.databricks_quality_monitor is None:
+            return self
+        self.databricks_quality_monitor._table = self
         return self
 
     @field_validator("view_definition")

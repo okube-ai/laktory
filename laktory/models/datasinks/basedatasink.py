@@ -41,6 +41,7 @@ SUPPORTED_MODES = tuple(set(SPARK_MODES + SPARK_STREAMING_MODES + POLARS_DELTA_M
 class BaseDataSink(BaseModel, PipelineChild):
     """Base class for data sinks"""
 
+    databricks_quality_monitor: Literal[None] = Field(None, description="Databricks Quality Monitor")
     checkpoint_path_: str | Path = Field(
         None,
         description="Path to which the checkpoint file for which a streaming dataframe should be written.",
@@ -407,6 +408,17 @@ class BaseDataSink(BaseModel, PipelineChild):
         raise NotImplementedError(
             f"`{self.dataframe_backend}` not supported for `{type(self)}`"
         )
+
+    # ----------------------------------------------------------------------- #
+    # Metadata                                                                #
+    # ----------------------------------------------------------------------- #
+
+    def update_metadata(self):
+        pass
+
+    # ----------------------------------------------------------------------- #
+    # Quality Monitor                                                         #
+    # ----------------------------------------------------------------------- #
 
     # ----------------------------------------------------------------------- #
     # Purge                                                                   #

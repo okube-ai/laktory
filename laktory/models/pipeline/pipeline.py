@@ -73,107 +73,6 @@ def parse_requirement_name(req: str) -> str | None:
     return None
 
 
-def _read_and_execute():
-    """Execute pipeline as a script"""
-    # TODO: Refactor and integrate into dispatcher / executor / CLI
-
-    import argparse
-
-    import laktory as lk
-
-    # Parse arguments
-    parser = argparse.ArgumentParser(
-        description="Read pipeline configuration file and execute"
-    )
-    parser.add_argument(
-        "--filepath", type=str, help="Pipeline configuration filepath", required=True
-    )
-    parser.add_argument(
-        "--node_name",
-        type=str,
-        help="Node name",
-        default=None,
-        required=False,
-    )
-    parser.add_argument(
-        "--full_refresh",
-        type=str2bool,
-        help="Full refresh",
-        default=False,
-        required=False,
-    )
-
-    # Get arguments
-    args = parser.parse_args()
-    filepath = args.filepath
-    node_name = args.node_name
-    full_refresh = args.full_refresh
-    node_str = ""
-    if node_name:
-        node_str = f" node '{node_name}' of "
-    logger.info(
-        f"Executing{node_str} pipeline '{filepath}' with full refresh {full_refresh}"
-    )
-
-    # Read
-    with open(filepath, "r") as fp:
-        if str(filepath).endswith(".yaml"):
-            pl = lk.models.Pipeline.model_validate_yaml(fp)
-        else:
-            pl = lk.models.Pipeline.model_validate_json(fp.read())
-
-    # Execute
-    if node_name:
-        pl.nodes_dict[node_name].execute(full_refresh=full_refresh)
-    else:
-        pl.execute(full_refresh=full_refresh)
-
-
-def _read_and_update_tables_metadata():
-    """Update pipeline tables metadata as a script"""
-    # TODO: Refactor and integrate into dispatcher / executor / CLI
-
-    import argparse
-
-    import laktory as lk
-
-    # Parse arguments
-    parser = argparse.ArgumentParser(
-        description="Read pipeline configuration file and execute"
-    )
-    parser.add_argument(
-        "--filepaths", type=str, help="Pipeline configuration filepaths", required=True
-    )
-    parser.add_argument(
-        "--env",
-        type=str,
-        help="Dummy argument to facilitate databricks jobs",
-        required=False,
-    )
-
-    # Get arguments
-    args = parser.parse_args()
-    filepaths = args.filepaths.split(",")
-    logger.info(f"Executing metadata update for pipelines {filepaths}")
-
-    # Read
-    for filepath in filepaths:
-        with open(filepath, "r") as fp:
-            if str(filepath).endswith(".yaml"):
-                pl = lk.models.Pipeline.model_validate_yaml(fp)
-            else:
-                pl = lk.models.Pipeline.model_validate_json(fp.read())
-
-        # Execute
-        pl.update_tables_metadata()
-
-
-def _read_and_execute_dlt():
-    """Execute pipeline as a script"""
-    # TODO: Add DLT notebook content
-    raise NotImplementedError()
-
-
 # --------------------------------------------------------------------------- #
 # Main Class                                                                  #
 # --------------------------------------------------------------------------- #
@@ -365,6 +264,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         validation_alias=AliasChoices("root_path", "root_path_"),
         exclude=True,
     )
+    databricks_quality_monitor_enabled: bool = Field(False, description="Enable Databricks Quality Monitor. When enabled, quality monitors are created for each sink configured with a quality monitor and deleted for sinks without.")
     _imports_imported: bool = False
 
     @model_validator(mode="before")
@@ -606,6 +506,18 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         return sources
 
     # ----------------------------------------------------------------------- #
+    # Quality Monitor                                                         #
+    # ----------------------------------------------------------------------- #
+
+    # @property
+    # def has_quality_monitor(self):
+    #     """At least one node has a quality monitor."""
+    #     for node in self.nodes:
+    #         if node.has_quality_monitor:
+    #             return True
+    #     return False
+
+    # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
@@ -661,6 +573,20 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             for s in node.sinks:
                 if s.metadata:
                     s.metadata.execute()
+
+    def update_quality_monitors(self):
+        if not self.databricks_quality_monitor_enabled:
+            logger.info(f"Databricks Quality Monitor is disabled for pipeline {self.name}. Skipping update.")
+
+        logger.info("Updating pipeline quality monitors")
+        for inode, node in enumerate(self.sorted_nodes):
+            for s in node.sinks:
+                if s.databricks_quality_monitor:
+                    s.databricks_quality_monitor.create_with_sdk()
+                else:
+                    # TODO
+                    pass
+                    # s.databricks_quality_monitor.delete_with_sdk()
 
     def dag_figure(self) -> "Figure":
         """

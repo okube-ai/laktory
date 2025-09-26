@@ -98,7 +98,7 @@ def test_databricks_job():
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
-                    "entry_point": "models.pipeline._read_and_execute",
+                    "entry_point": "models.pipeline._exectute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
                         "node_name": "brz",
@@ -116,7 +116,7 @@ def test_databricks_job():
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
-                    "entry_point": "models.pipeline._read_and_execute",
+                    "entry_point": "models.pipeline._exectute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
                         "node_name": "gld",
@@ -134,7 +134,7 @@ def test_databricks_job():
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
-                    "entry_point": "models.pipeline._read_and_execute",
+                    "entry_point": "models.pipeline._exectute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
                         "node_name": "gld_a",
@@ -152,7 +152,7 @@ def test_databricks_job():
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
-                    "entry_point": "models.pipeline._read_and_execute",
+                    "entry_point": "models.pipeline._exectute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
                         "node_name": "gld_ab",
@@ -170,7 +170,7 @@ def test_databricks_job():
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
-                    "entry_point": "models.pipeline._read_and_execute",
+                    "entry_point": "models.pipeline._exectute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
                         "node_name": "gld_b",
@@ -188,7 +188,7 @@ def test_databricks_job():
                     {"pypi": {"package": "laktory==__version__"}},
                 ],
                 "python_wheel_task": {
-                    "entry_point": "models.pipeline._read_and_execute",
+                    "entry_point": "models.pipeline._exectute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
                         "node_name": "slv",
@@ -430,7 +430,7 @@ def test_databricks_job():
                         {"pypi": {"package": "laktory==__version__"}},
                     ],
                     "python_wheel_task": {
-                        "entry_point": "models.pipeline._read_and_execute",
+                        "entry_point": "models.pipeline._exectute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
                             "node_name": "brz",
@@ -448,7 +448,7 @@ def test_databricks_job():
                         {"pypi": {"package": "laktory==__version__"}},
                     ],
                     "python_wheel_task": {
-                        "entry_point": "models.pipeline._read_and_execute",
+                        "entry_point": "models.pipeline._exectute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
                             "node_name": "gld",
@@ -466,7 +466,7 @@ def test_databricks_job():
                         {"pypi": {"package": "laktory==__version__"}},
                     ],
                     "python_wheel_task": {
-                        "entry_point": "models.pipeline._read_and_execute",
+                        "entry_point": "models.pipeline._exectute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
                             "node_name": "gld_a",
@@ -487,7 +487,7 @@ def test_databricks_job():
                         {"pypi": {"package": "laktory==__version__"}},
                     ],
                     "python_wheel_task": {
-                        "entry_point": "models.pipeline._read_and_execute",
+                        "entry_point": "models.pipeline._exectute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
                             "node_name": "gld_ab",
@@ -505,7 +505,7 @@ def test_databricks_job():
                         {"pypi": {"package": "laktory==__version__"}},
                     ],
                     "python_wheel_task": {
-                        "entry_point": "models.pipeline._read_and_execute",
+                        "entry_point": "models.pipeline._exectute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
                             "node_name": "gld_b",
@@ -523,7 +523,7 @@ def test_databricks_job():
                         {"pypi": {"package": "laktory==__version__"}},
                     ],
                     "python_wheel_task": {
-                        "entry_point": "models.pipeline._read_and_execute",
+                        "entry_point": "models.pipeline._exectute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
                             "node_name": "slv",
@@ -549,7 +549,7 @@ def test_databricks_job_execute(mocker):
 
     # Setup arguments
     test_args = [
-        "_read_and_execute",
+        "_exectute",
         "--filepath",
         str(data_dirpath / "pl.yaml"),
         "--node_name",
@@ -560,7 +560,7 @@ def test_databricks_job_execute(mocker):
     mocker.patch.object(sys, "argv", test_args)
 
     # Run function
-    lk.models.pipeline._read_and_execute()
+    lk.models.pipeline._exectute()
 
 
 def test_databricks_pipeline(tmp_path, monkeypatch):

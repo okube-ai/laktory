@@ -219,6 +219,8 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
 
         w = self._init_workspace_client(workspace_client)
 
+        w.quality_monitors.delete(table_name=self._table.full_name)
+
         for ext in [
             "drift_metrics",
             "profile_metrics",
