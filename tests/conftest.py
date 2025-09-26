@@ -1,4 +1,11 @@
 import narwhals as nw
+import pytest
+
+from laktory import get_spark_session
+
+# --------------------------------------------------------------------------- #
+# DataFrame                                                                   #
+# --------------------------------------------------------------------------- #
 
 
 def assert_dfs_equal(result, expected, sort=True) -> None:
@@ -33,3 +40,18 @@ def assert_dfs_equal(result, expected, sort=True) -> None:
         if r != e:
             print(c, r, e)
         assert r == e
+
+
+# --------------------------------------------------------------------------- #
+# Spark                                                                       #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.fixture()
+def spark_dbks():
+    raise NotImplementedError()
+
+
+@pytest.fixture()
+def spark():
+    return get_spark_session()

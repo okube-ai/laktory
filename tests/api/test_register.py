@@ -1,8 +1,9 @@
 import narwhals as nw
 
 import laktory as lk
-from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
+
+from ..conftest import assert_dfs_equal
 
 
 def test_register_df_namespace():

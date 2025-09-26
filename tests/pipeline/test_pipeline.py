@@ -8,8 +8,9 @@ import pytest
 from laktory import get_spark_session
 from laktory import models
 from laktory._testing import StreamingSource
-from laktory._testing import assert_dfs_equal
 from laktory._version import VERSION
+
+from ..conftest import assert_dfs_equal
 
 data_dirpath = Path(__file__).parent.parent / "data"
 

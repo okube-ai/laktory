@@ -1,7 +1,6 @@
 import polars as pl
 import pytest
 
-from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
 from laktory._testing import get_df1
 from laktory.api import register_anyframe_namespace
@@ -9,6 +8,8 @@ from laktory.api import register_expr_namespace
 from laktory.enums import DataFrameBackends
 from laktory.models import DataFrameDataSource
 from laktory.models import DataFrameMethod
+
+from ..conftest import assert_dfs_equal
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])

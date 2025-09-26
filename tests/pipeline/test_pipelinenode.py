@@ -5,10 +5,11 @@ import pytest
 from laktory import get_spark_session
 from laktory import models
 from laktory._testing import StreamingSource
-from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
 from laktory.enums import STREAMING_BACKENDS
 from laktory.enums import DataFrameBackends
+
+from ..conftest import assert_dfs_equal
 
 
 def test_parents():
