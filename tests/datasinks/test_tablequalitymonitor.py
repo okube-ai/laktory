@@ -1,8 +1,17 @@
+import sys
+
+import pytest
+
 from laktory.models import UnityCatalogDataSink
 from laktory.models.resources.databricks import QualityMonitor
 
 
 def test_create_or_update(wsclient):
+    if not sys.version.startswith("3.12"):
+        # Run only for a single version of python to
+        # prevent collision when writing to Unity Catalog.
+        pytest.skip()
+
     # Config
     catalog = "laktory"
     schema = "unit_tests"
