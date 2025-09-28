@@ -1,5 +1,5 @@
 name: pl-dlt
-
+databricks_quality_monitor_enabled: true
 orchestrator:
   type: DATABRICKS_PIPELINE
   catalog: dev

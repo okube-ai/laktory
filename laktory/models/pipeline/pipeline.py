@@ -13,8 +13,11 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory._settings import settings
+from laktory.models import UnityCatalogDataSink
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
+from laktory.models.pipeline._execute import _execute  # noqa: F401
+from laktory.models.pipeline._post_execute import _post_execute  # noqa: F401
 from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
     DatabricksJobOrchestrator,
 )
@@ -28,6 +31,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 from laktory.typing import AnyFrame
 
 if TYPE_CHECKING:
+    from databricks.sdk import WorkspaceClient
     from plotly.graph_objs import Figure
 
 logger = get_logger(__name__)
@@ -264,7 +268,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         validation_alias=AliasChoices("root_path", "root_path_"),
         exclude=True,
     )
-    databricks_quality_monitor_enabled: bool = Field(False, description="Enable Databricks Quality Monitor. When enabled, quality monitors are created for each sink configured with a quality monitor and deleted for sinks without.")
+    databricks_quality_monitor_enabled: bool = Field(
+        False,
+        description="Enable Databricks Quality Monitor. When enabled, quality monitors are created for each sink configured with a quality monitor and deleted for sinks without.",
+    )
     _imports_imported: bool = False
 
     @model_validator(mode="before")
@@ -574,19 +581,37 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 if s.metadata:
                     s.metadata.execute()
 
-    def update_quality_monitors(self):
+    def update_quality_monitors(self, workspace_client: "WorkspaceClient" = None):
         if not self.databricks_quality_monitor_enabled:
-            logger.info(f"Databricks Quality Monitor is disabled for pipeline {self.name}. Skipping update.")
+            logger.info(
+                f"Databricks Quality Monitor is disabled for pipeline {self.name}. Skipping update."
+            )
 
         logger.info("Updating pipeline quality monitors")
         for inode, node in enumerate(self.sorted_nodes):
             for s in node.sinks:
+                if not isinstance(s, UnityCatalogDataSink):
+                    continue
+
                 if s.databricks_quality_monitor:
-                    s.databricks_quality_monitor.create_with_sdk()
+                    sdk = s.databricks_quality_monitor.sdk(
+                        workspace_client=workspace_client
+                    )
+                    sdk.create_or_update()
                 else:
-                    # TODO
-                    pass
-                    # s.databricks_quality_monitor.delete_with_sdk()
+                    from laktory.models.resources.databricks import QualityMonitor
+
+                    # Create a dummy quality monitor to access the delete function
+                    # Current quality monitor properties will be used to delete
+                    # existing assets.
+                    qm = QualityMonitor(
+                        table_name=s.full_name,
+                        output_schema_name="dummy_schema",
+                        assets_dir="dummy_path",
+                        snapshot={},
+                    )
+                    sdk = qm.sdk(workspace_client=workspace_client)
+                    sdk.delete()
 
     def dag_figure(self) -> "Figure":
         """

@@ -2,11 +2,12 @@ from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
+
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
 
 
-def _exectute():
+def _execute():
     """Execute pipeline as a script"""
     # TODO: Refactor and integrate into dispatcher / executor / CLI
 

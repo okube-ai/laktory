@@ -18,6 +18,7 @@ from laktory.models.resources.pulumiresource import PulumiResource
 
 ENV_KEY = "laktory"
 
+
 class DatabricksJobOrchestrator(Job, PipelineChild):
     """
     Databricks job used as an orchestrator to execute a Laktory pipeline.
@@ -130,7 +131,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             task = JobTask(
                 task_key="node-" + node.name,
                 python_wheel_task=JobTaskPythonWheelTask(
-                    entry_point="models.pipeline._exectute",
+                    entry_point="models.pipeline._execute",
                     package_name="laktory",
                     named_parameters={
                         "filepath": _path,
@@ -150,13 +151,15 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             task = JobTask(
                 task_key="quality-monitor",
                 python_wheel_task=JobTaskPythonWheelTask(
-                    entry_point="models.pipeline._update_quality_monitors",
+                    entry_point="models.pipeline._post_execute",
                     package_name="laktory",
                     named_parameters={
-                        "filepath": _path,
+                        "filepaths": _path,
+                        "tables_metadata": "false",  # this has been already update in the pl.execute()
+                        "quality_monitors": "true",  # this has been already update in the pl.execute()
                     },
                 ),
-                depends_ons=[t.task_key for t in self.tasks],
+                depends_ons=[{"task_key": t.task_key} for t in self.tasks],
             )
             task = self._set_task_compute(task, serverless, _requirements)
             self.tasks += [task]

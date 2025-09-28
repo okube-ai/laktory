@@ -10,6 +10,7 @@ from typing import Union
 from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
+from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
@@ -277,6 +278,7 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
         assets_dir="/.laktory/qualitymonitors",
         output_schema_name="dev.monitoring",
         table_name="dev.slv_stock_prices",
+        snapshot={},
     )
     ```
     """
@@ -342,6 +344,16 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
     )
     _table: Any = None
 
+    @model_validator(mode="after")
+    def validate_type(self) -> Any:
+        if self.snapshot is None and self.time_series is None:
+            raise ValueError("Either `snapshot` or `time_series` must be configured.")
+        if self.snapshot is not None and self.time_series is not None:
+            raise ValueError(
+                "Only one of `snapshot` or `time_series` must be configured."
+            )
+        return self
+
     @computed_field(description="table_name")
     @property
     def table_name(self) -> str | None:
@@ -391,5 +403,5 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
     # SDK Client                                                              #
     # ----------------------------------------------------------------------- #
 
-    def sdk(self, workspace_client: Union["WorkspaceClient", None]):
+    def sdk(self, workspace_client: Union["WorkspaceClient", None] = None):
         return QualityMonitorSDKClient(self, workspace_client=workspace_client)

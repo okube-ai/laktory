@@ -606,7 +606,7 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Update tables metadata
         if update_tables_metadata:
-            for s in self.sinks:
+            for s in self.all_sinks:
                 if s.metadata:
                     s.metadata.execute()
 
