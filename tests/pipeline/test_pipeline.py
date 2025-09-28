@@ -1,4 +1,5 @@
 import io
+import sys
 from pathlib import Path
 
 import networkx as nx
@@ -432,6 +433,11 @@ def test_update_metadata(backend, tmp_path, spark):
 @pytest.mark.parametrize("backend", ["PYSPARK"])
 def test_update_quality_monitors(backend, tmp_path, wsclient):
     skip_dbks_test()
+
+    if not sys.version.startswith("3.12"):
+        # Run only for a single version of python to
+        # prevent collision when writing to Unity Catalog.
+        pytest.skip()
 
     pl = models.Pipeline(
         name="pl",
