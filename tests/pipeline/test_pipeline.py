@@ -1,4 +1,5 @@
 import io
+import sys
 from pathlib import Path
 
 import networkx as nx
@@ -8,8 +9,10 @@ import pytest
 from laktory import get_spark_session
 from laktory import models
 from laktory._testing import StreamingSource
-from laktory._testing import assert_dfs_equal
 from laktory._version import VERSION
+
+from ..conftest import assert_dfs_equal
+from ..conftest import skip_dbks_test
 
 data_dirpath = Path(__file__).parent.parent / "data"
 
@@ -390,9 +393,7 @@ def test_full(backend, tmp_path):
 
 
 @pytest.mark.parametrize("backend", ["PYSPARK"])
-def test_update_metadata(backend, tmp_path):
-    spark = get_spark_session()
-
+def test_update_metadata(backend, tmp_path, spark):
     pl = get_pl(tmp_path)
     pl.dataframe_backend_ = backend
 
@@ -427,3 +428,50 @@ def test_update_metadata(backend, tmp_path):
     dtypes = meta["data_type"].to_dict()
     assert comments["id"] == "Identification column"
     assert dtypes.get("Comment", None) == "Gold"
+
+
+@pytest.mark.parametrize("backend", ["PYSPARK"])
+def test_update_quality_monitors(backend, tmp_path, wsclient):
+    skip_dbks_test()
+
+    if not sys.version.startswith("3.12"):
+        # Run only for a single version of python to
+        # prevent collision when writing to Unity Catalog.
+        pytest.skip()
+
+    pl = models.Pipeline(
+        name="pl",
+        databricks_quality_monitor_enabled=True,
+        nodes=[
+            models.PipelineNode(
+                name="node_with_qm",
+                source=models.UnityCatalogDataSource(
+                    table_name="laktory.unit_tests.sin"
+                ),
+                sinks=[
+                    models.UnityCatalogDataSink(
+                        table_name="laktory.unit_tests.sin",
+                        databricks_quality_monitor=models.resources.databricks.QualityMonitor(
+                            assets_dir="/tmp/",
+                            output_schema_name="laktory.unit_tests",
+                            snapshot={},
+                        ),
+                    )
+                ],
+            ),
+            models.PipelineNode(
+                name="node_without_qm",
+                source=models.UnityCatalogDataSource(
+                    table_name="laktory.unit_tests.sin"
+                ),
+                sinks=[
+                    models.UnityCatalogDataSink(
+                        table_name="laktory.unit_tests.sin",
+                    )
+                ],
+            ),
+        ],
+    )
+
+    # Update metadata
+    pl.update_quality_monitors(workspace_client=wsclient)

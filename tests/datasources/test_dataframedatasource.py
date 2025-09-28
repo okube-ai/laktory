@@ -3,8 +3,9 @@ import polars as pl
 import pytest
 
 from laktory import get_spark_session
-from laktory._testing import assert_dfs_equal
 from laktory.models.datasources import DataFrameDataSource
+
+from ..conftest import assert_dfs_equal
 
 spark = get_spark_session()
 

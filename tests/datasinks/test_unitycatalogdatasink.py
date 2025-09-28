@@ -1,9 +1,10 @@
 import pytest
 
-from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
 from laktory.enums import DataFrameBackends
 from laktory.models import UnityCatalogDataSink
+
+from ..conftest import assert_dfs_equal
 
 
 @pytest.mark.xfail(reason="Requires Databricks Spark Session (for now)")

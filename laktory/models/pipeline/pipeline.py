@@ -13,8 +13,11 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory._settings import settings
+from laktory.models import UnityCatalogDataSink
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
+from laktory.models.pipeline._execute import _execute  # noqa: F401
+from laktory.models.pipeline._post_execute import _post_execute  # noqa: F401
 from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
     DatabricksJobOrchestrator,
 )
@@ -28,6 +31,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 from laktory.typing import AnyFrame
 
 if TYPE_CHECKING:
+    from databricks.sdk import WorkspaceClient
     from plotly.graph_objs import Figure
 
 logger = get_logger(__name__)
@@ -71,107 +75,6 @@ def parse_requirement_name(req: str) -> str | None:
     if match:
         return match.group(1)
     return None
-
-
-def _read_and_execute():
-    """Execute pipeline as a script"""
-    # TODO: Refactor and integrate into dispatcher / executor / CLI
-
-    import argparse
-
-    import laktory as lk
-
-    # Parse arguments
-    parser = argparse.ArgumentParser(
-        description="Read pipeline configuration file and execute"
-    )
-    parser.add_argument(
-        "--filepath", type=str, help="Pipeline configuration filepath", required=True
-    )
-    parser.add_argument(
-        "--node_name",
-        type=str,
-        help="Node name",
-        default=None,
-        required=False,
-    )
-    parser.add_argument(
-        "--full_refresh",
-        type=str2bool,
-        help="Full refresh",
-        default=False,
-        required=False,
-    )
-
-    # Get arguments
-    args = parser.parse_args()
-    filepath = args.filepath
-    node_name = args.node_name
-    full_refresh = args.full_refresh
-    node_str = ""
-    if node_name:
-        node_str = f" node '{node_name}' of "
-    logger.info(
-        f"Executing{node_str} pipeline '{filepath}' with full refresh {full_refresh}"
-    )
-
-    # Read
-    with open(filepath, "r") as fp:
-        if str(filepath).endswith(".yaml"):
-            pl = lk.models.Pipeline.model_validate_yaml(fp)
-        else:
-            pl = lk.models.Pipeline.model_validate_json(fp.read())
-
-    # Execute
-    if node_name:
-        pl.nodes_dict[node_name].execute(full_refresh=full_refresh)
-    else:
-        pl.execute(full_refresh=full_refresh)
-
-
-def _read_and_update_tables_metadata():
-    """Update pipeline tables metadata as a script"""
-    # TODO: Refactor and integrate into dispatcher / executor / CLI
-
-    import argparse
-
-    import laktory as lk
-
-    # Parse arguments
-    parser = argparse.ArgumentParser(
-        description="Read pipeline configuration file and execute"
-    )
-    parser.add_argument(
-        "--filepaths", type=str, help="Pipeline configuration filepaths", required=True
-    )
-    parser.add_argument(
-        "--env",
-        type=str,
-        help="Dummy argument to facilitate databricks jobs",
-        required=False,
-    )
-
-    # Get arguments
-    args = parser.parse_args()
-    filepaths = args.filepaths.split(",")
-    logger.info(f"Executing metadata update for pipelines {filepaths}")
-
-    # Read
-    for filepath in filepaths:
-        with open(filepath, "r") as fp:
-            if str(filepath).endswith(".yaml"):
-                pl = lk.models.Pipeline.model_validate_yaml(fp)
-            else:
-                pl = lk.models.Pipeline.model_validate_json(fp.read())
-
-        # Execute
-        pl.update_tables_metadata()
-
-
-def _read_and_execute_dlt():
-    """Execute pipeline as a script"""
-    # TODO: Add DLT notebook content
-    raise NotImplementedError()
 
 
 # --------------------------------------------------------------------------- #
@@ -364,6 +267,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         description="Location of the pipeline node root used to store logs, metrics and checkpoints.",
         validation_alias=AliasChoices("root_path", "root_path_"),
         exclude=True,
+    )
+    databricks_quality_monitor_enabled: bool = Field(
+        False,
+        description="Enable Databricks Quality Monitor. When enabled, quality monitors are created for each sink configured with a quality monitor and deleted for sinks without.",
     )
     _imports_imported: bool = False
 
@@ -661,6 +568,38 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             for s in node.sinks:
                 if s.metadata:
                     s.metadata.execute()
+
+    def update_quality_monitors(self, workspace_client: "WorkspaceClient" = None):
+        if not self.databricks_quality_monitor_enabled:
+            logger.info(
+                f"Databricks Quality Monitor is disabled for pipeline {self.name}. Skipping update."
+            )
+
+        logger.info("Updating pipeline quality monitors")
+        for inode, node in enumerate(self.sorted_nodes):
+            for s in node.sinks:
+                if not isinstance(s, UnityCatalogDataSink):
+                    continue
+
+                if s.databricks_quality_monitor:
+                    sdk = s.databricks_quality_monitor.sdk(
+                        workspace_client=workspace_client
+                    )
+                    sdk.create_or_update()
+                else:
+                    from laktory.models.resources.databricks import QualityMonitor
+
+                    # Create a dummy quality monitor to access the delete function
+                    # Current quality monitor properties will be used to delete
+                    # existing assets.
+                    qm = QualityMonitor(
+                        table_name=s.full_name,
+                        output_schema_name="dummy_schema",
+                        assets_dir="dummy_path",
+                        snapshot={},
+                    )
+                    sdk = qm.sdk(workspace_client=workspace_client)
+                    sdk.delete()
 
     def dag_figure(self) -> "Figure":
         """

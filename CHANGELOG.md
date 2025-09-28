@@ -3,6 +3,7 @@
 ## [0.8.10] - Unreleased
 ### Added
 * Support for tables metadata (comment, properties, tags, column comment, column tags, etc.)
+* Databricks QualityMonitor resource 
 ### Fixed
 * Quickstart workflows
 ### Updated

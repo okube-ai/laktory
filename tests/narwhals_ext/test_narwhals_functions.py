@@ -5,8 +5,9 @@ import polars as pl
 import pytest
 
 import laktory as lk  # noqa: F401
-from laktory._testing import assert_dfs_equal
 from laktory.datetime import utc_datetime
+
+from ..conftest import assert_dfs_equal
 
 
 def test_current_timestamp():

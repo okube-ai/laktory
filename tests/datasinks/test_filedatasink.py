@@ -1,11 +1,12 @@
 import narwhals as nw
 import pytest
 
-from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
 from laktory.enums import DataFrameBackends
 from laktory.models.datasinks import FileDataSink
 from laktory.models.datasources.filedatasource import SUPPORTED_FORMATS
+
+from ..conftest import assert_dfs_equal
 
 pl_write_tests = [
     ("POLARS", fmt) for fmt in SUPPORTED_FORMATS[DataFrameBackends.POLARS]

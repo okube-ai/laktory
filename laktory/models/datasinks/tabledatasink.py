@@ -76,6 +76,13 @@ class TableDataSink(BaseDataSink):
             )
         return self
 
+    @model_validator(mode="after")
+    def set_qm_table(self):
+        if self.databricks_quality_monitor is None:
+            return self
+        self.databricks_quality_monitor._table = self
+        return self
+
     @field_validator("view_definition")
     def set_view_definition(
         cls, value: DataFrameExpr | str | None

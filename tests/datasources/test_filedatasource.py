@@ -6,12 +6,13 @@ import pytest
 from pydantic import ValidationError
 
 import laktory
-from laktory._testing import assert_dfs_equal
 from laktory._testing import get_df0
 from laktory.enums import DataFrameBackends
 from laktory.models import DataFrameSchema
 from laktory.models.datasources import FileDataSource
 from laktory.models.datasources.filedatasource import SUPPORTED_FORMATS
+
+from ..conftest import assert_dfs_equal
 
 pl_read_tests = [("POLARS", fmt) for fmt in SUPPORTED_FORMATS[DataFrameBackends.POLARS]]
 spark_read_tests = [
