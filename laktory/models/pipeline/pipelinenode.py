@@ -362,14 +362,6 @@ class PipelineNode(BaseModel, PipelineChild):
 
         return self.output_sinks[0]
 
-    @property
-    def has_quality_monitor(self):
-        """At least one sink has a quality monitor."""
-        for s in self.sinks:
-            if s.databricks_quality_monitor is not None:
-                return True
-        return False
-
     # ----------------------------------------------------------------------- #
     # Expectations                                                            #
     # ----------------------------------------------------------------------- #

@@ -513,18 +513,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         return sources
 
     # ----------------------------------------------------------------------- #
-    # Quality Monitor                                                         #
-    # ----------------------------------------------------------------------- #
-
-    # @property
-    # def has_quality_monitor(self):
-    #     """At least one node has a quality monitor."""
-    #     for node in self.nodes:
-    #         if node.has_quality_monitor:
-    #             return True
-    #     return False
-
-    # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
