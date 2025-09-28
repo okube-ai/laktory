@@ -234,6 +234,7 @@ nav:
           - NotificationDestination: api/models/resources/databricks/notificationdestination.md
           - OboToken: api/models/resources/databricks/obotoken.md
           - PythonPackage: api/models/resources/databricks/pythonpackage.md
+          - QualityMonitor: api/models/resources/databricks/qualitymonitor.md
           - api/models/resources/databricks/query.md
           - api/models/resources/databricks/repo.md
           - api/models/resources/databricks/schema.md
