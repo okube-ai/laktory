@@ -37,6 +37,13 @@ def _post_execute():
         required=False,
     )
     parser.add_argument(
+        "--full_refresh",
+        type=str2bool,
+        help="Full refresh",
+        default=False,
+        required=False,
+    )
+    parser.add_argument(
         "--env",
         type=str,
         help="Dummy argument to facilitate databricks jobs",
