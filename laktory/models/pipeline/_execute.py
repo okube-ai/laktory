@@ -38,7 +38,7 @@ def _execute():
     )
 
     # Get arguments
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
     filepath = args.filepath
     node_name = args.node_name
     full_refresh = args.full_refresh
