@@ -221,7 +221,7 @@ def test_databricks_job():
                     },
                     "package_name": "laktory",
                 },
-                "task_key": "quality-monitor",
+                "task_key": "post-execute",
             },
         ],
         "type": "DATABRICKS_JOB",
@@ -342,7 +342,9 @@ def test_databricks_job():
                     {
                         "type": "HIVE_METASTORE",
                         "metadata": {
-                            "columns": {"id": {"comment": "Identification column"}},
+                            "columns": [
+                                {"name": "id", "comment": "Identification column"}
+                            ],
                             "comment": "Gold",
                             "dataframe_backend": "PYSPARK",
                             "dataframe_api": "NARWHALS",
@@ -583,7 +585,7 @@ def test_databricks_job():
                         },
                         "package_name": "laktory",
                     },
-                    "task_key": "quality-monitor",
+                    "task_key": "post-execute",
                 },
             ],
             "type": "DATABRICKS_JOB",
@@ -825,7 +827,9 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                 "sinks": [
                     {
                         "metadata": {
-                            "columns": {"id": {"comment": "Identification column"}},
+                            "columns": [
+                                {"name": "id", "comment": "Identification column"}
+                            ],
                             "comment": "Silver",
                             "dataframe_backend": "PYSPARK",
                             "dataframe_api": "NARWHALS",

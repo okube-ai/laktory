@@ -5,6 +5,9 @@ import pytest
 from databricks.sdk.core import Config
 
 from laktory import get_spark_session
+from laktory._logger import get_logger
+
+logger = get_logger(__name__)
 
 # --------------------------------------------------------------------------- #
 # Databricks                                                                  #
@@ -116,4 +119,12 @@ def spark_dbks():
 
 @pytest.fixture()
 def spark():
-    return get_spark_session()
+    try:
+        from databricks.connect import DatabricksSession
+    except (ModuleNotFoundError, ImportError):
+        logger.info("Using local spark session")
+        return get_spark_session()
+
+    logger.info("Using Databricks Connect spark session")
+
+    return DatabricksSession.builder.sdkConfig(get_databricks_config()).getOrCreate()

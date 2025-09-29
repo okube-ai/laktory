@@ -51,7 +51,7 @@ nodes:
     metadata:
       comment: "Gold"
       columns:
-        id:
+        - name: id
           comment: "Identification column"
 
 - name: gld_a

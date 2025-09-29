@@ -149,7 +149,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         if pl.databricks_quality_monitor_enabled:
             task = JobTask(
-                task_key="quality-monitor",
+                task_key="post-execute",
                 python_wheel_task=JobTaskPythonWheelTask(
                     entry_point="models.pipeline._post_execute",
                     package_name="laktory",

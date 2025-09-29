@@ -54,7 +54,6 @@ pyspark = [
     "setuptools; python_version >= '3.12'"
 ]
 dev = [
-    "databricks-sdk",
     "flit",
     "griffe_fieldz",
     "mkdocs",

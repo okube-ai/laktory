@@ -36,15 +36,9 @@ def _post_execute():
         default=False,
         required=False,
     )
-    parser.add_argument(
-        "--env",
-        type=str,
-        help="Dummy argument to facilitate databricks jobs",
-        required=False,
-    )
 
     # Get arguments
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
     filepaths = args.filepaths.split(",")
     tables_metadata = args.tables_metadata
     quality_monitors = args.quality_monitors

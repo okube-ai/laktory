@@ -597,7 +597,7 @@ class PipelineNode(BaseModel, PipelineChild):
                     s.write(self._quarantine_df, full_refresh=full_refresh)
 
         # Update tables metadata
-        if update_tables_metadata:
+        if update_tables_metadata and not self.is_dlt_execute:
             for s in self.all_sinks:
                 if s.metadata:
                     s.metadata.execute()
