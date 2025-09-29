@@ -302,8 +302,14 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
         ...,
         description="The directory to store the monitoring assets (Eg. Dashboard and Metric Tables)",
     )
-    output_schema_name: str = Field(
-        ..., description="Schema where output metric tables are created"
+
+    output_schema_name_: str = Field(
+        None,
+        description="""
+        Schema where output metric tables are created. Its of the format {catalog}.{schema}.
+        """,
+        validation_alias=AliasChoices("output_schema_name", "output_schema_name_"),
+        exclude=True,
     )
     table_name_: str = Field(
         None,
@@ -377,6 +383,17 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
 
         if self._table:
             return self._table.full_name
+
+        return None
+
+    @computed_field(description="table_name")
+    @property
+    def output_schema_name(self) -> str | None:
+        if self.output_schema_name_:
+            return self.output_schema_name_
+
+        if self._table:
+            return self._table.catalog_name + "." + self._table.schema_name
 
         return None
 
