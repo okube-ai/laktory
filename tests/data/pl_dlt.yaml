@@ -44,7 +44,7 @@ nodes:
     metadata:
       comment: "Silver"
       columns:
-        id:
+        - name: id
           comment: "Identification column"
 - name: gld
   transformer:

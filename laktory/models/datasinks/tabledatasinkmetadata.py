@@ -14,6 +14,34 @@ logger = get_logger(__name__)
 #     not_null: bool = None
 
 
+def set_tags(object, full_name, current, new, is_uc):
+    from laktory import get_spark_session
+
+    spark = get_spark_session()
+
+    if not is_uc:
+        logger.info("Tags are only supported on Unity Catalog. Skipping.")
+        return
+
+    # Apply new tags
+    for k, v in new.items():
+        v0 = current.get(k, None)
+        if v != v0:
+            logger.info(f"Setting {object} '{full_name}' tag `{k}` to '{v}'")
+            if v is None or v0 is not None:
+                # Tags can't be overwritten. They need to be unset first.
+                spark.sql(f"UNSET TAG ON {object} {full_name} {k}")
+
+            if v is not None:
+                spark.sql(f"SET TAG ON {object} {full_name} `{k}` = `{v}`")
+
+    # Remove old tags
+    for k in current.keys():
+        if k not in new:
+            logger.info(f"Unsetting {object} '{full_name}' tag `{k}`")
+            spark.sql(f"UNSET TAG ON {object} {full_name} {k}")
+
+
 class ColumnMetadata(BaseModel):
     name: str = Field(..., description="Column name")
     comment: str | None = Field(None, description="Column description")
@@ -60,32 +88,13 @@ class ColumnMetadata(BaseModel):
                     )
 
         # Tags
-        if self.tags:
-            if not is_uc:
-                raise ValueError(f"Tags are not supported for {type(table_meta.table)}")
-
-            # Apply new tags
-            for k, v in self.tags.items():
-                v0 = current.tags.get(k, None)
-
-                if v != v0:
-                    logger.info(
-                        f"Setting column '{column_full_name}' tag `{k}` to '{v}'"
-                    )
-                    if v is None or v0 is not None:
-                        # Tags can't be overwritten. They need to be unset first.
-                        spark.sql(f"UNSET TAG ON COLUMN {column_full_name}")
-
-                    if v is not None:
-                        spark.sql(f"SET TAG ON COLUMN {column_full_name} `{k}` = `{v}`")
-
-            # Remove old tags
-            for k, v in current.tags.keys():
-                if k not in self.tags:
-                    logger.info(
-                        f"Setting column '{column_full_name}' tag `{k}` to '{v}'"
-                    )
-                    spark.sql(f"UNSET TAG ON COLUMN {column_full_name}")
+        set_tags(
+            object="COLUMN",
+            full_name=column_full_name,
+            current=current.tags,
+            new=self.tags,
+            is_uc=is_uc,
+        )
 
 
 class TableDataSinkMetadata(BaseModel, PipelineChild):
@@ -193,18 +202,13 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                 )
 
         # Tags
-        if self.tags:
-            if self.is_uc:
-                for k, v in self.tags.items():
-                    logger.info(f"Setting table '{table_full_name}' tag `{k}` to '{v}'")
-                    if v is not None:
-                        spark.sql(
-                            f"SET TAG ON {object_type} {table_full_name} `{k}` = `{v}`"
-                        )
-                    else:
-                        spark.sql(f"UNSET TAG ON {object_type} {table_full_name} `{k}`")
-            else:
-                raise ValueError(f"Tags are not supported for {type(table)}")
+        set_tags(
+            object="TABLE",
+            full_name=table_full_name,
+            current=self.current.tags,
+            new=self.tags,
+            is_uc=self.is_uc,
+        )
 
     def get_current(self):
         from laktory import get_spark_session
@@ -226,7 +230,10 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         for col_name, row in df.iterrows():
             if col_name == "":
                 break
-            columns += [ColumnMetadata(name=col_name, comment=row["comment"])]
+            comment = row["comment"]
+            if comment == "":
+                comment = None
+            columns += [ColumnMetadata(name=col_name, comment=comment)]
             columns[-1]._type = row["data_type"]
 
         df.index = df.index.str.lower()
