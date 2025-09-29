@@ -137,6 +137,9 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
 
         table = self.parent
         table_full_name = table.full_name
+        self._table_type = self.current._table_type
+
+        logger.info(f"Processing table '{table_full_name}' of type '{self.table_type}'")
 
         # Comment
         if self.comment != self.current.comment:
