@@ -25,7 +25,7 @@ def set_tags(object, full_name, current, new, is_uc):
 
     # Apply new tags
     for k, v in new.items():
-        v0 = current.get(k, "__undefined__")
+        v0 = current.get(k, "__lk_undefined__")
         if v != v0:
             logger.info(f"Setting {object} '{full_name}' tag `{k}` to '{v}'")
             if k in current.keys():
