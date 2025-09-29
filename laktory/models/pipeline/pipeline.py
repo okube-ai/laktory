@@ -585,6 +585,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                     logger.info(
                         f"Backticks '`' are not supported by Databricks REST API. Skipping update for '{s.full_name}'"
                     )
+                    continue
 
                 if s.databricks_quality_monitor:
                     sdk = s.databricks_quality_monitor.sdk(
