@@ -25,21 +25,23 @@ def set_tags(object, full_name, current, new, is_uc):
 
     # Apply new tags
     for k, v in new.items():
-        v0 = current.get(k, None)
+        v0 = current.get(k, "__undefined__")
         if v != v0:
             logger.info(f"Setting {object} '{full_name}' tag `{k}` to '{v}'")
-            if v is None or v0 is not None:
+            if k in current.keys():
                 # Tags can't be overwritten. They need to be unset first.
-                spark.sql(f"UNSET TAG ON {object} {full_name} {k}")
+                spark.sql(f"UNSET TAG ON {object} {full_name} `{k}`")
 
             if v is not None:
                 spark.sql(f"SET TAG ON {object} {full_name} `{k}` = `{v}`")
+            else:
+                spark.sql(f"SET TAG ON {object} {full_name} `{k}`")
 
     # Remove old tags
     for k in current.keys():
         if k not in new:
             logger.info(f"Unsetting {object} '{full_name}' tag `{k}`")
-            spark.sql(f"UNSET TAG ON {object} {full_name} {k}")
+            spark.sql(f"UNSET TAG ON {object} {full_name} `{k}`")
 
 
 class ColumnMetadata(BaseModel):
@@ -304,6 +306,8 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                 col_name = row["column_name"]
                 tag_name = row["tag_name"]
                 tag_value = row["tag_value"]
+                if tag_value == "":
+                    tag_value = None
                 for col in columns:
                     if col.name == col_name:
                         col.tags[tag_name] = tag_value
@@ -315,6 +319,8 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
             for _, row in df.iterrows():
                 tag_name = row["tag_name"]
                 tag_value = row["tag_value"]
+                if tag_value == "":
+                    tag_value = None
                 table_tags[tag_name] = tag_value
 
         meta = TableDataSinkMetadata(

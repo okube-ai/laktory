@@ -20,6 +20,7 @@ def tags():
         "framework": "laktory",
         "random_value": random_string(4),
         random_string(4): "random_key",
+        "empty tag": None,
     }
 
 
