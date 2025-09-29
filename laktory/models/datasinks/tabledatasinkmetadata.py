@@ -57,9 +57,7 @@ class ColumnMetadata(BaseModel):
         table_full_name = table_meta.table_full_name
         column_full_name = f"{table_full_name}.{self.name}"
         is_uc = table_meta.is_uc
-        object_type = "TABLE"
-        if table_meta.table.table_type == "VIEW":
-            object_type = "VIEW"
+        table_type = table_meta.table_type
 
         # Comment
         if self.comment != current.comment:
@@ -74,17 +72,17 @@ class ColumnMetadata(BaseModel):
                 else:
                     spark.sql(f"COMMENT ON COLUMN {column_full_name} IS NULL")
             else:
-                if object_type == "VIEW":
+                if table_type == "VIEW":
                     raise ValueError(
                         f"Column comments are not supported for VIEW {type(table_meta.table)}"
                     )
                 if self.comment:
                     spark.sql(
-                        f"ALTER {object_type} {table_full_name} CHANGE COLUMN {self.name} {self.name} {current._type} COMMENT '{self.comment}'"
+                        f"ALTER {table_type} {table_full_name} CHANGE COLUMN {self.name} {self.name} {current._type} COMMENT '{self.comment}'"
                     )
                 else:
                     spark.sql(
-                        f"ALTER {object_type} {table_full_name} CHANGE COLUMN {self.name} {self.name} {current._type}"
+                        f"ALTER {table_type} {table_full_name} CHANGE COLUMN {self.name} {self.name} {current._type}"
                     )
 
         # Tags
@@ -104,10 +102,17 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
     owner: str | None = None
     properties: dict[str, str] | None = Field({}, description="Table properties.")
     tags: dict[str, str | None] | None = Field({}, description="Table tags")
+    _table_type: str | None = None
 
     @property
     def table(self):
         return self.parent
+
+    @property
+    def table_type(self):
+        if self._table_type in ["EXTERNAL", "MANAGED", None]:
+            return "TABLE"
+        return self._table_type
 
     @property
     def is_uc(self):
@@ -132,22 +137,27 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
 
         table = self.parent
         table_full_name = table.full_name
-        object_type = "TABLE"
-        if table.table_type == "VIEW":
-            object_type = "VIEW"
 
         # Comment
         if self.comment != self.current.comment:
-            logger.info(
-                f"Setting table '{table_full_name}' comment to '{self.comment}'"
-            )
-            if self.is_uc:
-                if self.comment:
-                    spark.sql(f"COMMENT ON TABLE {table_full_name} IS '{self.comment}'")
-                else:
-                    spark.sql(f"COMMENT ON TABLE {table_full_name} IS NULL")
+            if self.table_type == "STREAMING_TABLE":
+                logger.info(
+                    f"Table '{table_full_name}' is a STREAMING_TABLE. Comment can't be updated. Skipping."
+                )
+
             else:
-                self.properties["comment"] = self.comment
+                logger.info(
+                    f"Setting table '{table_full_name}' comment to '{self.comment}'"
+                )
+                if self.is_uc:
+                    if self.comment:
+                        spark.sql(
+                            f"COMMENT ON TABLE {table_full_name} IS '{self.comment}'"
+                        )
+                    else:
+                        spark.sql(f"COMMENT ON TABLE {table_full_name} IS NULL")
+                else:
+                    self.properties["comment"] = self.comment
 
         # Columns
         for current in self.current.columns:
@@ -165,7 +175,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         if self.owner and self.owner != self.current.owner:
             logger.info(f"Setting table '{table_full_name}' owner to '{self.owner}'")
             spark.sql(
-                f"ALTER {object_type} {table_full_name} SET OWNER TO `{self.owner}`"
+                f"ALTER {self.table_type} {table_full_name} SET OWNER TO `{self.owner}`"
             )
 
         # Options
@@ -239,6 +249,9 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         df.index = df.index.str.lower()
         _meta = df["data_type"].to_dict()
 
+        # Type
+        _table_type = _meta.get("type", None)
+
         # Comment
         comment = _meta.get("comment", None)
 
@@ -290,10 +303,12 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                 tag_value = row["tag_value"]
                 table_tags[tag_name] = tag_value
 
-        return TableDataSinkMetadata(
+        meta = TableDataSinkMetadata(
             columns=columns,
             owner=owner,
             comment=comment,
             tags=table_tags,
             properties=properties,
         )
+        meta._table_type = _table_type
+        return meta
