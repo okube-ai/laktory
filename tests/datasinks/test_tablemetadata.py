@@ -87,7 +87,6 @@ def test_hive_table(backend, tmp_path):
 
 @pytest.mark.databricks_connect
 def test_uc_table(spark, tags):
-    # Config
     catalog = "laktory"
     schema = "unit_tests"
     table = "sin"

@@ -131,17 +131,32 @@ class QualityMonitorSDKClient:
             return False
         if self.qmr.time_series is not None and _qm.time_series is None:
             return False
-        body.pop("assets_dir")
+        table_name = body.pop("table_name")
         body.pop("warehouse_id", None)
-
-        logger.info(f"Updating Quality Monitor for {self.table_name}")
+        body.pop("assets_dir", None)
 
         # Wait for previous update or creation to be completed
         while _qm.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
             time.sleep(1.0)
             _qm = self.get()
 
-        table_name = body.pop("table_name")
+        # Get current state
+        body0 = _qm.as_dict()
+
+        update_required = False
+        for k, v in body.items():
+            v0 = body0.get(k, None)
+            if v != v0:
+                print("to update", k, v0, v)
+                update_required = True
+                break
+
+        if not update_required:
+            logger.info(f"Quality Monitor for {self.table_name} is already up-to-date.")
+            return _qm
+
+        logger.info(f"Updating Quality Monitor for {self.table_name}.")
+
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",

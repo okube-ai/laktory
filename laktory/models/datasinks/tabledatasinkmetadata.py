@@ -130,6 +130,8 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
 
         spark = get_spark_session()
 
+        logger.info("CURRENT METADATA", self.get_current().model_dump())
+
         table = self.parent
         table_full_name = table.full_name
         object_type = "TABLE"
@@ -209,6 +211,8 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
             new=self.tags,
             is_uc=self.is_uc,
         )
+
+        logger.info("FINAL METADATA", self.get_current().model_dump())
 
     def get_current(self):
         from laktory import get_spark_session
