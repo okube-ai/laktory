@@ -15,7 +15,7 @@ format-and-lint:
 	ruff check ./
 
 test:
-	uv run pytest -m "not dbks" --junitxml=junit/test-results.xml --cov=laktory --cov-report=xml --cov-report=html tests
+	uv run pytest -m "not databricks_connect" --junitxml=junit/test-results.xml --cov=laktory --cov-report=xml --cov-report=html tests
 
 coverage:
 	open htmlcov/index.html
