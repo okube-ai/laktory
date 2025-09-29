@@ -49,6 +49,12 @@ class ColumnMetadata(BaseModel):
     tags: dict[str, str | None] = Field({}, description="Column tags")
     _type: str | None = None
 
+    @property
+    def comment_str(self):
+        if self.comment is None:
+            return ""
+        return "'" + self.comment + "'"
+
     def execute(self, current, table_meta):
         from laktory import get_spark_session
 
@@ -65,12 +71,14 @@ class ColumnMetadata(BaseModel):
                 f"Setting column '{column_full_name}' comment to '{self.comment}'"
             )
             if is_uc:
-                if self.comment:
+                if table_type == "STREAMING_TABLE":
                     spark.sql(
-                        f"COMMENT ON COLUMN {column_full_name} IS '{self.comment}'"
+                        f"ALTER STREAMING TABLE {table_full_name} ALTER COLUMN {self.name} COMMENT {self.comment_str}"
                     )
                 else:
-                    spark.sql(f"COMMENT ON COLUMN {column_full_name} IS NULL")
+                    spark.sql(
+                        f"COMMENT ON COLUMN {column_full_name} IS {self.comment_str}"
+                    )
             else:
                 if table_type == "VIEW":
                     raise ValueError(
@@ -103,6 +111,12 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
     properties: dict[str, str] | None = Field({}, description="Table properties.")
     tags: dict[str, str | None] | None = Field({}, description="Table tags")
     _table_type: str | None = None
+
+    @property
+    def comment_str(self):
+        if self.comment is None:
+            return ""
+        return "'" + self.comment + "'"
 
     @property
     def table(self):
@@ -153,12 +167,9 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                     f"Setting table '{table_full_name}' comment to '{self.comment}'"
                 )
                 if self.is_uc:
-                    if self.comment:
-                        spark.sql(
-                            f"COMMENT ON TABLE {table_full_name} IS '{self.comment}'"
-                        )
-                    else:
-                        spark.sql(f"COMMENT ON TABLE {table_full_name} IS NULL")
+                    spark.sql(
+                        f"COMMENT ON TABLE {table_full_name} IS {self.comment_str}"
+                    )
                 else:
                     self.properties["comment"] = self.comment
 
