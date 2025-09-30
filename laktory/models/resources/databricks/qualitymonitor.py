@@ -147,7 +147,6 @@ class QualityMonitorSDKClient:
         for k, v in body.items():
             v0 = body0.get(k, None)
             if v != v0:
-                print("to update", k, v0, v)
                 update_required = True
                 break
 
@@ -155,7 +154,7 @@ class QualityMonitorSDKClient:
             logger.info(f"Quality Monitor for {self.table_name} is already up-to-date.")
             return _qm
 
-        logger.info(f"Updating Quality Monitor for {self.table_name}.")
+        logger.info(f"Updating Quality Monitor for {self.table_name} with body {body}.")
 
         headers = {
             "Accept": "application/json",
