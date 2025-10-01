@@ -376,11 +376,12 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
     @computed_field(description="table_name")
     @property
     def table_name(self) -> str | None:
+        """Remove backticks from table name as they are not accepted by the API"""
         if self.table_name_:
-            return self.table_name_
+            return self.table_name_.replace("`", "")
 
         if self._table:
-            return self._table.full_name
+            return self._table.full_name.replace("`", "")
 
         return None
 
