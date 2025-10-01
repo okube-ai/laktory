@@ -581,12 +581,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 if not isinstance(s, UnityCatalogDataSink):
                     continue
 
-                if '`' in s.full_name:
-                    logger.info(
-                        f"Backticks '`' are not supported by Databricks REST API. Skipping update for '{s.full_name}'"
-                    )
-                    continue
-
                 if s.databricks_quality_monitor:
                     sdk = s.databricks_quality_monitor.sdk(
                         workspace_client=workspace_client
