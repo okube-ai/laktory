@@ -277,7 +277,6 @@ class QualityMonitorSchedule(BaseModel):
         ...,
         description="string with timezone id (e.g., PST) in which to evaluate the Quartz expression.",
     )
-    pause_status: str = Field(None, description="")
 
 
 class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
@@ -341,7 +340,7 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
     notifications: QualityMonitorNotifications = Field(
         None, description="The notification settings for the monitor."
     )
-    schedule: QualityMonitorSchedule = Field(
+    schedule: QualityMonitorSchedule | None = Field(
         None,
         description="The schedule for automatically updating and refreshing metric tables.",
     )

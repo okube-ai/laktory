@@ -29,6 +29,10 @@ def test_create_or_update(wsclient):
             output_schema_name=f"{catalog}.{schema}",
             notifications={"on_failure": {"email_addresses": ["a@b.com"]}},
             snapshot={},
+            schedule={
+                "quartz_cron_expression": "0 0 0 * * ?",
+                "timezone_id": "UTC",
+            },
         ),
     )
     sdk = sink.databricks_quality_monitor.sdk(wsclient)
