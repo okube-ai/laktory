@@ -98,7 +98,7 @@ def test_uc_table(spark, tags):
         table_name=table,
         mode="OVERWRITE",
         metadata=lk.models.TableDataSinkMetadata(
-            comment="unit test table",
+            comment="""Okube's "unit test" table""",
             owner="olivier.soucy@okube.ai",
             tags=tags,
             properties={
@@ -129,7 +129,7 @@ def test_uc_table(spark, tags):
     meta1 = sink.metadata.get_current()
 
     # Test
-    assert meta1.comment == "unit test table"
+    assert meta1.comment == """Okube's "unit test" table"""
     assert meta1.owner == "olivier.soucy@okube.ai"
     assert meta1.properties == {
         "delta.feature.appendOnly": "supported",

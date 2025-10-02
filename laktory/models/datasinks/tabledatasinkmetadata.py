@@ -30,18 +30,18 @@ def set_tags(object, full_name, current, new, is_uc):
             logger.info(f"Setting {object} '{full_name}' tag `{k}` to '{v}'")
             if k in current.keys():
                 # Tags can't be overwritten. They need to be unset first.
-                spark.sql(f"UNSET TAG ON {object} {full_name} `{k}`")
+                spark.sql(f"""UNSET TAG ON {object} {full_name} `{k}`""")
 
             if v is not None:
-                spark.sql(f"SET TAG ON {object} {full_name} `{k}` = `{v}`")
+                spark.sql(f"""SET TAG ON {object} {full_name} `{k}` = `{v}`""")
             else:
-                spark.sql(f"SET TAG ON {object} {full_name} `{k}`")
+                spark.sql(f"""SET TAG ON {object} {full_name} `{k}`""")
 
     # Remove old tags
     for k in current.keys():
         if k not in new:
             logger.info(f"Unsetting {object} '{full_name}' tag `{k}`")
-            spark.sql(f"UNSET TAG ON {object} {full_name} `{k}`")
+            spark.sql(f"""UNSET TAG ON {object} {full_name} `{k}`""")
 
 
 class ColumnMetadata(BaseModel):
@@ -55,7 +55,7 @@ class ColumnMetadata(BaseModel):
     def comment_str(self):
         if self.comment is None:
             return ""
-        return "'" + self.comment + "'"
+        return "'" + self.comment.replace("'", "\\'") + "'"
 
     def execute(self, current, table_meta):
         from laktory import get_spark_session
@@ -70,16 +70,16 @@ class ColumnMetadata(BaseModel):
         # Comment
         if self.comment != current.comment:
             logger.info(
-                f"Setting column '{column_full_name}' comment to '{self.comment}'"
+                f"Setting column '{column_full_name}' comment to {self.comment_str}"
             )
             if is_uc:
                 if table_type == "STREAMING_TABLE":
                     spark.sql(
-                        f"ALTER STREAMING TABLE {table_full_name} ALTER COLUMN {self.name} COMMENT {self.comment_str}"
+                        f"""ALTER STREAMING TABLE {table_full_name} ALTER COLUMN {self.name} COMMENT {self.comment_str}"""
                     )
                 else:
                     spark.sql(
-                        f"COMMENT ON COLUMN {column_full_name} IS {self.comment_str}"
+                        f"""COMMENT ON COLUMN {column_full_name} IS {self.comment_str}"""
                     )
             else:
                 if table_type == "VIEW":
@@ -88,11 +88,11 @@ class ColumnMetadata(BaseModel):
                     )
                 if self.comment:
                     spark.sql(
-                        f"ALTER {table_type} {table_full_name} CHANGE COLUMN {self.name} {self.name} {current._type} COMMENT '{self.comment}'"
+                        f"""ALTER {table_type} {table_full_name} CHANGE COLUMN {self.name} {self.name} {current._type} COMMENT {self.comment_str}"""
                     )
                 else:
                     spark.sql(
-                        f"ALTER {table_type} {table_full_name} CHANGE COLUMN {self.name} {self.name} {current._type}"
+                        f"""ALTER {table_type} {table_full_name} CHANGE COLUMN {self.name} {self.name} {current._type}"""
                     )
 
         # Tags
@@ -118,7 +118,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
     def comment_str(self):
         if self.comment is None:
             return ""
-        return "'" + self.comment + "'"
+        return "'" + self.comment.replace("'", "\\'") + "'"
 
     @property
     def table(self):
@@ -166,14 +166,14 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
 
             else:
                 logger.info(
-                    f"Setting table '{table_full_name}' comment to '{self.comment}'"
+                    f"Setting table '{table_full_name}' comment to {self.comment_str}"
                 )
                 if self.is_uc:
                     spark.sql(
-                        f"COMMENT ON TABLE {table_full_name} IS {self.comment_str}"
+                        f"""COMMENT ON TABLE {table_full_name} IS {self.comment_str}"""
                     )
                 else:
-                    self.properties["comment"] = self.comment
+                    self.properties["comment"] = self.comment_str
 
         # Columns
         for current in self.current.columns:
@@ -191,7 +191,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         if self.owner and self.owner != self.current.owner:
             logger.info(f"Setting table '{table_full_name}' owner to '{self.owner}'")
             spark.sql(
-                f"ALTER {self.table_type} {table_full_name} SET OWNER TO `{self.owner}`"
+                f"""ALTER {self.table_type} {table_full_name} SET OWNER TO `{self.owner}`"""
             )
 
         # Options
@@ -207,10 +207,10 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
             if props:
                 props_string = ",".join(props)
                 logger.info(
-                    f"Setting table '{table_full_name}' properties to ({props_string})"
+                    f"""Setting table '{table_full_name}' properties to ({props_string})"""
                 )
                 spark.sql(
-                    f"ALTER TABLE {table_full_name} SET TBLPROPERTIES({props_string});"
+                    f"""ALTER TABLE {table_full_name} SET TBLPROPERTIES({props_string});"""
                 )
 
             # Remove old properties
@@ -224,7 +224,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                     f"Unsetting table '{table_full_name}' properties ({props_string})"
                 )
                 spark.sql(
-                    f"ALTER TABLE {table_full_name} UNSET TBLPROPERTIES IF EXISTS ({props_string});"
+                    f"""ALTER TABLE {table_full_name} UNSET TBLPROPERTIES IF EXISTS ({props_string});"""
                 )
 
         # Tags
@@ -246,7 +246,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         spark = get_spark_session()
 
         df = (
-            spark.sql(f"DESCRIBE EXTENDED {self.table_full_name}")
+            spark.sql(f"""DESCRIBE EXTENDED {self.table_full_name}""")
             .toPandas()
             .set_index("col_name")
         )
@@ -300,7 +300,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
 
             # Column tags
             df = spark.sql(
-                f"SELECT * FROM system.information_schema.column_tags WHERE {where}"
+                f"""SELECT * FROM system.information_schema.column_tags WHERE {where}"""
             ).toPandas()
             for _, row in df.iterrows():
                 col_name = row["column_name"]
@@ -314,7 +314,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
 
             # Table tags
             df = spark.sql(
-                f"SELECT * FROM system.information_schema.table_tags WHERE {where}"
+                f"""SELECT * FROM system.information_schema.table_tags WHERE {where}"""
             ).toPandas()
             for _, row in df.iterrows():
                 tag_name = row["tag_name"]
