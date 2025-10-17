@@ -25,21 +25,23 @@ def set_tags(object, full_name, current, new, is_uc):
 
     # Apply new tags
     for k, v in new.items():
-        v0 = current.get(k, None)
+        v0 = current.get(k, "__lk_undefined__")
         if v != v0:
             logger.info(f"Setting {object} '{full_name}' tag `{k}` to '{v}'")
-            if v is None or v0 is not None:
+            if k in current.keys():
                 # Tags can't be overwritten. They need to be unset first.
-                spark.sql(f"UNSET TAG ON {object} {full_name} {k}")
+                spark.sql(f"""UNSET TAG ON {object} {full_name} `{k}`""")
 
             if v is not None:
-                spark.sql(f"SET TAG ON {object} {full_name} `{k}` = `{v}`")
+                spark.sql(f"""SET TAG ON {object} {full_name} `{k}` = `{v}`""")
+            else:
+                spark.sql(f"""SET TAG ON {object} {full_name} `{k}`""")
 
     # Remove old tags
     for k in current.keys():
         if k not in new:
             logger.info(f"Unsetting {object} '{full_name}' tag `{k}`")
-            spark.sql(f"UNSET TAG ON {object} {full_name} {k}")
+            spark.sql(f"""UNSET TAG ON {object} {full_name} `{k}`""")
 
 
 class ColumnMetadata(BaseModel):
@@ -49,6 +51,12 @@ class ColumnMetadata(BaseModel):
     tags: dict[str, str | None] = Field({}, description="Column tags")
     _type: str | None = None
 
+    @property
+    def comment_str(self):
+        if self.comment is None:
+            return ""
+        return "'" + self.comment.replace("'", "\\'") + "'"
+
     def execute(self, current, table_meta):
         from laktory import get_spark_session
 
@@ -57,34 +65,34 @@ class ColumnMetadata(BaseModel):
         table_full_name = table_meta.table_full_name
         column_full_name = f"{table_full_name}.{self.name}"
         is_uc = table_meta.is_uc
-        object_type = "TABLE"
-        if table_meta.table.table_type == "VIEW":
-            object_type = "VIEW"
+        table_type = table_meta.table_type
 
         # Comment
         if self.comment != current.comment:
             logger.info(
-                f"Setting column '{column_full_name}' comment to '{self.comment}'"
+                f"Setting column '{column_full_name}' comment to {self.comment_str}"
             )
             if is_uc:
-                if self.comment:
+                if table_type == "STREAMING_TABLE":
                     spark.sql(
-                        f"COMMENT ON COLUMN {column_full_name} IS '{self.comment}'"
+                        f"""ALTER STREAMING TABLE {table_full_name} ALTER COLUMN {self.name} COMMENT {self.comment_str}"""
                     )
                 else:
-                    spark.sql(f"COMMENT ON COLUMN {column_full_name} IS NULL")
+                    spark.sql(
+                        f"""COMMENT ON COLUMN {column_full_name} IS {self.comment_str}"""
+                    )
             else:
-                if object_type == "VIEW":
+                if table_type == "VIEW":
                     raise ValueError(
                         f"Column comments are not supported for VIEW {type(table_meta.table)}"
                     )
                 if self.comment:
                     spark.sql(
-                        f"ALTER {object_type} {table_full_name} CHANGE COLUMN {self.name} {self.name} {current._type} COMMENT '{self.comment}'"
+                        f"""ALTER {table_type} {table_full_name} CHANGE COLUMN {self.name} {self.name} {current._type} COMMENT {self.comment_str}"""
                     )
                 else:
                     spark.sql(
-                        f"ALTER {object_type} {table_full_name} CHANGE COLUMN {self.name} {self.name} {current._type}"
+                        f"""ALTER {table_type} {table_full_name} CHANGE COLUMN {self.name} {self.name} {current._type}"""
                     )
 
         # Tags
@@ -104,10 +112,23 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
     owner: str | None = None
     properties: dict[str, str] | None = Field({}, description="Table properties.")
     tags: dict[str, str | None] | None = Field({}, description="Table tags")
+    _table_type: str | None = None
+
+    @property
+    def comment_str(self):
+        if self.comment is None:
+            return ""
+        return "'" + self.comment.replace("'", "\\'") + "'"
 
     @property
     def table(self):
         return self.parent
+
+    @property
+    def table_type(self):
+        if self._table_type in ["EXTERNAL", "MANAGED", None]:
+            return "TABLE"
+        return self._table_type
 
     @property
     def is_uc(self):
@@ -132,22 +153,27 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
 
         table = self.parent
         table_full_name = table.full_name
-        object_type = "TABLE"
-        if table.table_type == "VIEW":
-            object_type = "VIEW"
+        self._table_type = self.current._table_type
+
+        logger.info(f"Processing table '{table_full_name}' of type '{self.table_type}'")
 
         # Comment
         if self.comment != self.current.comment:
-            logger.info(
-                f"Setting table '{table_full_name}' comment to '{self.comment}'"
-            )
-            if self.is_uc:
-                if self.comment:
-                    spark.sql(f"COMMENT ON TABLE {table_full_name} IS '{self.comment}'")
-                else:
-                    spark.sql(f"COMMENT ON TABLE {table_full_name} IS NULL")
+            if self.table_type == "STREAMING_TABLE":
+                logger.info(
+                    f"Table '{table_full_name}' is a STREAMING_TABLE. Comment can't be updated. Skipping."
+                )
+
             else:
-                self.properties["comment"] = self.comment
+                logger.info(
+                    f"Setting table '{table_full_name}' comment to {self.comment_str}"
+                )
+                if self.is_uc:
+                    spark.sql(
+                        f"""COMMENT ON TABLE {table_full_name} IS {self.comment_str}"""
+                    )
+                else:
+                    self.properties["comment"] = self.comment_str
 
         # Columns
         for current in self.current.columns:
@@ -165,7 +191,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         if self.owner and self.owner != self.current.owner:
             logger.info(f"Setting table '{table_full_name}' owner to '{self.owner}'")
             spark.sql(
-                f"ALTER {object_type} {table_full_name} SET OWNER TO `{self.owner}`"
+                f"""ALTER {self.table_type} {table_full_name} SET OWNER TO `{self.owner}`"""
             )
 
         # Options
@@ -177,14 +203,17 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
             # Set new properties
             props = []
             for k, v in self.properties.items():
-                props += [f"{k} = '{v}'"]
+                v_string = "'" + v + "'"
+                if k == "comment" and self.comment:
+                    v_string = v
+                props += [f"{k} = {v_string}"]
             if props:
                 props_string = ",".join(props)
                 logger.info(
-                    f"Setting table '{table_full_name}' properties to ({props_string})"
+                    f"""Setting table '{table_full_name}' properties to ({props_string})"""
                 )
                 spark.sql(
-                    f"ALTER TABLE {table_full_name} SET TBLPROPERTIES({props_string});"
+                    f"""ALTER TABLE {table_full_name} SET TBLPROPERTIES({props_string});"""
                 )
 
             # Remove old properties
@@ -198,7 +227,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                     f"Unsetting table '{table_full_name}' properties ({props_string})"
                 )
                 spark.sql(
-                    f"ALTER TABLE {table_full_name} UNSET TBLPROPERTIES IF EXISTS ({props_string});"
+                    f"""ALTER TABLE {table_full_name} UNSET TBLPROPERTIES IF EXISTS ({props_string});"""
                 )
 
         # Tags
@@ -220,7 +249,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         spark = get_spark_session()
 
         df = (
-            spark.sql(f"DESCRIBE EXTENDED {self.table_full_name}")
+            spark.sql(f"""DESCRIBE EXTENDED {self.table_full_name}""")
             .toPandas()
             .set_index("col_name")
         )
@@ -238,6 +267,9 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
 
         df.index = df.index.str.lower()
         _meta = df["data_type"].to_dict()
+
+        # Type
+        _table_type = _meta.get("type", None)
 
         # Comment
         comment = _meta.get("comment", None)
@@ -271,29 +303,35 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
 
             # Column tags
             df = spark.sql(
-                f"SELECT * FROM system.information_schema.column_tags WHERE {where}"
+                f"""SELECT * FROM system.information_schema.column_tags WHERE {where}"""
             ).toPandas()
             for _, row in df.iterrows():
                 col_name = row["column_name"]
                 tag_name = row["tag_name"]
                 tag_value = row["tag_value"]
+                if tag_value == "":
+                    tag_value = None
                 for col in columns:
                     if col.name == col_name:
                         col.tags[tag_name] = tag_value
 
             # Table tags
             df = spark.sql(
-                f"SELECT * FROM system.information_schema.table_tags WHERE {where}"
+                f"""SELECT * FROM system.information_schema.table_tags WHERE {where}"""
             ).toPandas()
             for _, row in df.iterrows():
                 tag_name = row["tag_name"]
                 tag_value = row["tag_value"]
+                if tag_value == "":
+                    tag_value = None
                 table_tags[tag_name] = tag_value
 
-        return TableDataSinkMetadata(
+        meta = TableDataSinkMetadata(
             columns=columns,
             owner=owner,
             comment=comment,
             tags=table_tags,
             properties=properties,
         )
+        meta._table_type = _table_type
+        return meta

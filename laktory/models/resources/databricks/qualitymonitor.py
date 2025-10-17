@@ -147,7 +147,6 @@ class QualityMonitorSDKClient:
         for k, v in body.items():
             v0 = body0.get(k, None)
             if v != v0:
-                print("to update", k, v0, v)
                 update_required = True
                 break
 
@@ -155,7 +154,7 @@ class QualityMonitorSDKClient:
             logger.info(f"Quality Monitor for {self.table_name} is already up-to-date.")
             return _qm
 
-        logger.info(f"Updating Quality Monitor for {self.table_name}.")
+        logger.info(f"Updating Quality Monitor for {self.table_name} with body {body}.")
 
         headers = {
             "Accept": "application/json",
@@ -277,7 +276,6 @@ class QualityMonitorSchedule(BaseModel):
         ...,
         description="string with timezone id (e.g., PST) in which to evaluate the Quartz expression.",
     )
-    pause_status: str = Field(None, description="")
 
 
 class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
@@ -302,8 +300,14 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
         ...,
         description="The directory to store the monitoring assets (Eg. Dashboard and Metric Tables)",
     )
-    output_schema_name: str = Field(
-        ..., description="Schema where output metric tables are created"
+
+    output_schema_name_: str = Field(
+        None,
+        description="""
+        Schema where output metric tables are created. Its of the format {catalog}.{schema}.
+        """,
+        validation_alias=AliasChoices("output_schema_name", "output_schema_name_"),
+        exclude=True,
     )
     table_name_: str = Field(
         None,
@@ -335,7 +339,7 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
     notifications: QualityMonitorNotifications = Field(
         None, description="The notification settings for the monitor."
     )
-    schedule: QualityMonitorSchedule = Field(
+    schedule: QualityMonitorSchedule | None = Field(
         None,
         description="The schedule for automatically updating and refreshing metric tables.",
     )
@@ -372,11 +376,23 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
     @computed_field(description="table_name")
     @property
     def table_name(self) -> str | None:
+        """Remove backticks from table name as they are not accepted by the API"""
         if self.table_name_:
-            return self.table_name_
+            return self.table_name_.replace("`", "")
 
         if self._table:
-            return self._table.full_name
+            return self._table.full_name.replace("`", "")
+
+        return None
+
+    @computed_field(description="table_name")
+    @property
+    def output_schema_name(self) -> str | None:
+        if self.output_schema_name_:
+            return self.output_schema_name_
+
+        if self._table:
+            return self._table.catalog_name + "." + self._table.schema_name
 
         return None
 
