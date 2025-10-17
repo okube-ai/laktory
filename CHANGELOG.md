@@ -1,6 +1,16 @@
 # Release History
 
-## [0.8.10] - Unreleased
+## [0.8.11] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.8.10] - 2025-10-17
 ### Added
 * Support for tables metadata (comment, properties, tags, column comment, column tags, etc.)
 * Databricks QualityMonitor resource 
