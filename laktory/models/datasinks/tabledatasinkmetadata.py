@@ -203,7 +203,10 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
             # Set new properties
             props = []
             for k, v in self.properties.items():
-                props += [f"{k} = '{v}'"]
+                v_string = "'" + v + "'"
+                if k == "comment" and self.comment:
+                    v_string = v
+                props += [f"{k} = {v_string}"]
             if props:
                 props_string = ",".join(props)
                 logger.info(
