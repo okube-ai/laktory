@@ -264,6 +264,13 @@ class SQLParser:
     def visit_function(self, expr):
         expr_type = type(expr)
 
+        # To support sqlglot >= 27.27.0
+        nullary_nodes = {
+            expressions.Pi: lambda: engine.lit(math.pi),
+        }
+        if expr_type in nullary_nodes:
+            return nullary_nodes[expr_type]()
+
         def _log(s):
             import numpy as np
 
@@ -317,13 +324,12 @@ class SQLParser:
                 if hasattr(args[i], "meta") and args[i].meta.is_literal():
                     args[i] = engine.select(args[i]).item()
 
-            f = func_types[expr_type]
-            f = f(args[0])
-
+            f = func_types[expr_type](args[0])
             if hasattr(f, "__call__"):
                 f = f(*args[1:])
             return f
 
+        # To support sqlglot < 27.27.0
         expr_name = expr.this
         if isinstance(expr_name, str):
             expr_name = expr_name.lower()
