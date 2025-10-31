@@ -128,15 +128,12 @@ class TerraformStack(BaseModel):
         i = -1
         for r in self.resources.values():
             import_ = r.options.import_
-            print(r.resource_name, r.options)
             if import_:
-                print("FOUND IMPORT!!!")
                 i += 1
                 d[f"import_{i:05d}"] = {
                     "id": import_,
                     "to": f"{r.terraform_resource_type}.{r.resource_name}",
                 }
-            print()
 
         # Terraform JSON requires the keyword "resources." to be removed and the
         # resource_name to be replaced with resource_type.resource_name.
