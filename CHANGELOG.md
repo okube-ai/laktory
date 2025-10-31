@@ -2,13 +2,7 @@
 
 ## [0.8.11] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* `import_` resources option support for Terraform to import existing cloud resources.
 
 ## [0.8.10] - 2025-10-17
 ### Added
