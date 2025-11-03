@@ -97,11 +97,9 @@ class ResourceOptions(BaseModel):
     )
     delete_before_replace: bool = Field(
         True,
-        description="Override the default create-before-delete behavior when replacing a resource.Pulumi only.",
+        description="Override the default create-before-delete behavior when replacing a resource. Pulumi only.",
     )
-    import_: str = Field(
-        None, description="Bring an existing cloud resource into Pulumi. Pulumi only."
-    )
+    import_: str = Field(None, description="Bring an existing cloud resource.")
     parent: str = None
     replace_on_changes: list[str] = Field(
         None,
@@ -134,6 +132,7 @@ class ResourceOptions(BaseModel):
             "provider",
             "ignore_changes",
             "moved_from",
+            "import_",
         ]
 
 

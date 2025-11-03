@@ -8,6 +8,7 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.grants.cataloggrant import CatalogGrant
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.schema import Schema
+from laktory.models.resources.databricks.workspacebinding import WorkspaceBinding
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -116,12 +117,24 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     specified, the location will default to the metastore root location.
     """,
     )
+    workspace_bindings: list[WorkspaceBinding] = Field(
+        None,
+        description="""
+    If you use workspaces to isolate user data access, you may want to limit access from
+    specific workspaces in your account, also known as workspace binding..
+    """,
+    )
 
     @model_validator(mode="after")
     def assign_name(self):
         for schema in self.schemas:
             schema.catalog_name = self.name
             schema.assign_name()
+
+        if self.workspace_bindings:
+            for b in self.workspace_bindings:
+                b.securable_type = "catalog"
+                b.securable_name = self.name
 
         return self
 
@@ -155,6 +168,10 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
             for s in self.schemas:
                 resources += s.core_resources
 
+        # Workspace Bindings
+        if self.workspace_bindings:
+            resources += self.workspace_bindings
+
         return resources
 
     # ----------------------------------------------------------------------- #
@@ -167,7 +184,7 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["schemas", "is_unity", "grants", "grant"]
+        return ["schemas", "is_unity", "grants", "grant", "workspace_bindings"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
