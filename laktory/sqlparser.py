@@ -38,19 +38,7 @@ class SQLParser:
         parser = lk.SQLParser()
 
         print(parser.parse("2*x + y"))
-        '''
-        Narwhals Expr
-        metadata: ExprMetadata(
-          expansion_kind: ExpansionKind.SINGLE,
-          last_node: ExprKind.ELEMENTWISE,
-          has_windows: False,
-          n_orderable_ops: 0,
-          is_elementwise: False,
-          preserves_length: True,
-          is_scalar_like: False,
-          is_literal: False,
-        )
-        '''
+        # > lit(value=2, dtype=None).__mul__(col(x)).__add__(col(y))
         ```
         """
         parsed_expr = sqlglot.parse_one(sql)
