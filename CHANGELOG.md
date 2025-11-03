@@ -2,6 +2,7 @@
 
 ## [0.8.11] - Unreleased
 ### Added
+* Databricks `catalog` resource directly support workspace binding
 * `import_` resources option support for Terraform to import existing cloud resources.
 
 ## [0.8.10] - 2025-10-17
