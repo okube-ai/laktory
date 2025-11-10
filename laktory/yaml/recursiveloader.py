@@ -10,13 +10,15 @@ VARIABLES_KEY = "variables"
 
 # Register the constructors
 class RecursiveLoader(yaml.SafeLoader):
-    def __init__(self, stream, parent_loader=None):
+    def __init__(self, stream, parent_loader=None, vars=None):
         self.dirpath = Path("./")
         stream = self.preprocess_stream(stream)
 
         self.variables = []
+        if vars:
+            self.variables += [vars]
         if parent_loader:
-            self.variables = parent_loader.variables
+            self.variables += parent_loader.variables
         super().__init__(stream)
 
     def preprocess_stream(self, stream):
@@ -36,7 +38,7 @@ class RecursiveLoader(yaml.SafeLoader):
         return "\n".join(_lines)
 
     @classmethod
-    def load(cls, stream, parent_loader: "RecursiveLoader" = None):
+    def load(cls, stream, parent_loader: "RecursiveLoader" = None, vars=None):
         """
         Load yaml file with support for reference to external yaml and sql files using
         `!use`, `!extend` and `!update` tags.
@@ -61,6 +63,9 @@ class RecursiveLoader(yaml.SafeLoader):
             file object structured as a yaml file
         parent_loader:
             Parent loader if file loader from another loader.
+        vars:
+            Dict of variables available when parsing filepaths references in yaml files
+            i.e. `!use catalog_${vars.env}.yaml`
 
         Returns
         -------
@@ -87,7 +92,7 @@ class RecursiveLoader(yaml.SafeLoader):
               - extend! emails.yaml
         ```
         """
-        loader = cls(stream, parent_loader)
+        loader = cls(stream, parent_loader, vars=vars)
         try:
             return loader.get_single_data()
         finally:

@@ -207,7 +207,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     # ----------------------------------------------------------------------- #
 
     @classmethod
-    def model_validate_yaml(cls: Type[Model], fp: TextIO) -> Model:
+    def model_validate_yaml(cls: Type[Model], fp: TextIO, vars=None) -> Model:
         """
         Load model from yaml file object using laktory.yaml.RecursiveLoader. Supports
         reference to external yaml and sql files using `!use`, `!extend` and `!update` tags.
@@ -232,6 +232,9 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         ----------
         fp:
             file object structured as a yaml file
+        vars:
+            Dict of variables available when parsing filepaths references in yaml files
+            i.e. `!use catalog_${vars.env}.yaml`
 
         Returns
         -------
@@ -259,7 +262,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         ```
         """
 
-        data = RecursiveLoader.load(fp)
+        data = RecursiveLoader.load(fp, vars=vars)
         return cls.model_validate(data)
 
     def model_dump_yaml(self, *args, **kwargs):

@@ -72,7 +72,7 @@ def test_read_yaml():
         query: str = None
 
     with open(paths.data / "yaml_loader" / "stocks_with_vars.yaml", "r") as fp:
-        b = Stocks.model_validate_yaml(fp)
+        b = Stocks.model_validate_yaml(fp, vars={"symbol_amazon": "AMZN"})
 
     data = b.model_dump(exclude_unset=True)
     assert data == {

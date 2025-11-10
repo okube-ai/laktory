@@ -5,7 +5,7 @@ stocks:
     <<: !update common.yaml
   - name: amazon
     symbol: AMZN
-    prices: !use ${vars.symbol}_prices.yaml
+    prices: !use ${vars.symbol_amazon}_prices.yaml
     <<: !update common.yaml
     variables:
       symbol: amzn
