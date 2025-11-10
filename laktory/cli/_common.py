@@ -45,16 +45,34 @@ class CLIController(BaseModel):
     def model_post_init(self, __context):
         super().model_post_init(__context)
 
-        # Read stack
-        if self.stack_filepath is None:
-            self.stack_filepath = "./stack.yaml"
-        logger.info(f"Reading stack from '{self.stack_filepath}'")
+        # Read Stack Environments
         with open(self.stack_filepath, "r", encoding="utf-8") as fp:
-            self.stack = Stack.model_validate_yaml(fp)
+            lines = fp.readlines()
+
+        env_names = []
+        envs_found = False
+        target_indent = None
+        for line in lines:
+            if line.strip() == "":
+                continue
+
+            if line.strip().startswith("#"):
+                continue
+
+            if line.startswith("environments"):
+                envs_found = True
+                continue
+
+            if envs_found:
+                indent = len(line) - len(line.lstrip())
+                if target_indent is None:
+                    target_indent = indent
+
+                if indent == target_indent:
+                    env_names += [line.strip().replace(":", "")]
 
         # Check environment
         if self.env is None:
-            env_names = list(self.stack.environments.keys())
             if env_names:
                 logger.warn(
                     f"Environment not specified, defaulting to first available ({env_names[0]})"
@@ -62,6 +80,16 @@ class CLIController(BaseModel):
                 self.env = env_names[0]
 
         logger.info("Stack validation completed.")
+
+        # Read stack
+        if self.stack_filepath is None:
+            self.stack_filepath = "./stack.yaml"
+        logger.info(f"Reading stack from '{self.stack_filepath}'")
+        with open(self.stack_filepath, "r", encoding="utf-8") as fp:
+            vars = None
+            if self.env is not None:
+                vars = {"env": self.env}
+            self.stack = Stack.model_validate_yaml(fp, vars=vars)
 
     @property
     def backend(self) -> str:

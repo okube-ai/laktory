@@ -53,7 +53,7 @@ def test_read_with_variables():
     filepath = paths.data / "yaml_loader" / "stocks_with_vars.yaml"
 
     with open(filepath, "r") as fp:
-        data = RecursiveLoader.load(fp)
+        data = RecursiveLoader.load(fp, vars={"symbol_amazon": "amzn"})
 
     assert data == {
         "stocks": [
