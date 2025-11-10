@@ -1,6 +1,16 @@
 # Release History
 
-## [0.8.12] - Unreleased
+## [0.8.13] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.8.12] - 2025-11-10
 ### Added
 * Support for `${vars.env}` when using yaml injection in Stack
 
