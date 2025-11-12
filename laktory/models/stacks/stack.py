@@ -43,11 +43,13 @@ from laktory.models.resources.databricks.pipeline import Pipeline as DatabricksP
 from laktory.models.resources.databricks.pythonpackage import PythonPackage
 from laktory.models.resources.databricks.qualitymonitor import QualityMonitor
 from laktory.models.resources.databricks.query import Query
+from laktory.models.resources.databricks.recipient import Recipient
 from laktory.models.resources.databricks.repo import Repo
 from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.databricks.secret import Secret
 from laktory.models.resources.databricks.secretscope import SecretScope
 from laktory.models.resources.databricks.serviceprincipal import ServicePrincipal
+from laktory.models.resources.databricks.share import Share
 from laktory.models.resources.databricks.storagecredential import StorageCredential
 from laktory.models.resources.databricks.table import Table
 from laktory.models.resources.databricks.user import User
@@ -159,11 +161,13 @@ class StackResources(BaseModel):
     databricks_qualitymonitors: dict[str, QualityMonitor] = {}
     databricks_pythonpackages: dict[str, PythonPackage] = {}
     databricks_queries: dict[str, Query] = {}
+    databricks_recipients: dict[str, Recipient] = {}
     databricks_repos: dict[str, Repo] = {}
     databricks_schemas: dict[str, Schema] = {}
     databricks_secrets: dict[str, Secret] = {}
     databricks_secretscopes: dict[str, SecretScope] = {}
     databricks_serviceprincipals: dict[str, ServicePrincipal] = {}
+    databricks_shares: dict[str, Share] = {}
     databricks_storagecredentials: dict[str, StorageCredential] = {}
     databricks_tables: dict[str, Table] = {}
     databricks_users: dict[str, User] = {}
