@@ -34,6 +34,11 @@ class Recipient(BaseModel, PulumiResource, TerraformResource):
         None, description="The authentication type for the recipient"
     )
     
+    data_recipient_global_metastore_id: str = Field(
+        None,
+        description="Global metastore id associated with the recipient. Required when `authentication_type` is DATABRICKS",
+    )
+    
     ip_access_list: list[str] = Field(
         None, description="IP access list for the recipient"
     )
