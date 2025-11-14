@@ -3,8 +3,7 @@ import pytest
 from laktory.models.resources.databricks.share import Share, ShareObject
 
 
-def share():
-    return Share(
+share = Share(
         name="test-share",
         comment="Test share for Delta Sharing",
         owner="user@example.com",
@@ -12,7 +11,7 @@ def share():
 
 
 def test_share_model():
-    s = share()
+    s = share
     assert s.name == "test-share"
     assert s.comment == "Test share for Delta Sharing"
     assert s.owner == "user@example.com"
@@ -35,17 +34,17 @@ def test_share_with_objects():
 
 
 def test_share_pulumi_resource_type():
-    s = share()
+    s = share
     assert s.pulumi_resource_type == "databricks:Share"
 
 
 def test_share_terraform_resource_type():
-    s = share()
+    s = share
     assert s.terraform_resource_type == "databricks_share"
 
 
 def test_share_model_dump():
-    s = share()
+    s = share
     data = s.model_dump(exclude_unset=True)
     assert data["name"] == "test-share"
     assert data["comment"] == "Test share for Delta Sharing"
