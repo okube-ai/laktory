@@ -1,13 +1,11 @@
-import pytest
-
-from laktory.models.resources.databricks.share import Share, ShareObject
-
+from laktory.models.resources.databricks.share import Share
+from laktory.models.resources.databricks.share import ShareObject
 
 share = Share(
-        name="test-share",
-        comment="Test share for Delta Sharing",
-        owner="user@example.com",
-    )
+    name="test-share",
+    comment="Test share for Delta Sharing",
+    owner="user@example.com",
+)
 
 
 def test_share_model():

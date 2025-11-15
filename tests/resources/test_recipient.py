@@ -1,14 +1,11 @@
-import pytest
-
 from laktory.models.resources.databricks.recipient import Recipient
 
-
 recipient = Recipient(
-        name="test-recipient",
-        comment="Test recipient for Delta Sharing",
-        authentication_type="TOKEN",
-        owner="user@example.com",
-    )
+    name="test-recipient",
+    comment="Test recipient for Delta Sharing",
+    authentication_type="TOKEN",
+    owner="user@example.com",
+)
 
 
 def test_recipient_model():

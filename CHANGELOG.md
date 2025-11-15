@@ -2,8 +2,8 @@
 
 ## [0.8.13] - Unreleased
 ### Added
-* Databricks `Recipient` resource for Delta Sharing
-* Databricks `Share` resource for Delta Sharing
+* Databricks `Recipient` resource for Delta Sharing [[#487](https://github.com/okube-ai/laktory/issues/487)]
+* Databricks `Share` resource for Delta Sharing [[#487](https://github.com/okube-ai/laktory/issues/487)]
 
 ## [0.8.12] - 2025-11-10
 ### Added
