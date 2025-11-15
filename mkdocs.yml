@@ -236,6 +236,7 @@ nav:
           - PythonPackage: api/models/resources/databricks/pythonpackage.md
           - QualityMonitor: api/models/resources/databricks/qualitymonitor.md
           - api/models/resources/databricks/query.md
+          - api/models/resources/databricks/recipient.md
           - api/models/resources/databricks/repo.md
           - api/models/resources/databricks/schema.md
           - api/models/resources/databricks/secret.md
@@ -243,6 +244,7 @@ nav:
           - SecretScope: api/models/resources/databricks/secretscope.md
           - ServicePrincipal: api/models/resources/databricks/serviceprincipal.md
           - ServicePrincipalRole: api/models/resources/databricks/serviceprincipalrole.md
+          - Share: api/models/resources/databricks/share.md
           - StorageCredential: api/models/resources/databricks/storagecredential.md
           - api/models/resources/databricks/table.md
           - api/models/resources/databricks/user.md

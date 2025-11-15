@@ -65,7 +65,10 @@ def skip_dbks_test():
 def wsclient():
     from databricks.sdk import WorkspaceClient
 
-    return WorkspaceClient(config=get_databricks_config())
+    try:
+        return WorkspaceClient(config=get_databricks_config())
+    except ValueError:
+        return None
 
 
 # --------------------------------------------------------------------------- #

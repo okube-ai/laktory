@@ -30,6 +30,7 @@ from .pipeline import Pipeline
 from .pythonpackage import PythonPackage
 from .qualitymonitor import QualityMonitor
 from .query import Query
+from .recipient import Recipient
 from .repo import Repo
 from .schema import Schema
 from .secret import Secret
@@ -37,6 +38,7 @@ from .secretacl import SecretAcl
 from .secretscope import SecretScope
 from .serviceprincipal import ServicePrincipal
 from .serviceprincipalrole import ServicePrincipalRole
+from .share import Share
 from .storagecredential import StorageCredential
 from .table import Table
 from .user import User

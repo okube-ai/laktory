@@ -52,8 +52,10 @@ def full_stack():
     from tests.resources.test_pythonpackage import get_python_package
     from tests.resources.test_qualitymonitor import qm
     from tests.resources.test_query import query
+    from tests.resources.test_recipient import recipient
     from tests.resources.test_repo import repo
     from tests.resources.test_schema import schema
+    from tests.resources.test_share import share
     from tests.resources.test_user import group
     from tests.resources.test_user import user
     from tests.resources.test_vectorsearchendpoint import vector_search_endpoint
@@ -88,8 +90,10 @@ def full_stack():
         "databricks_permissions": [permissions],
         "databricks_qualitymonitors": [qm],
         "databricks_queries": [query],
+        "databricks_recipients": [recipient],
         "databricks_repos": [repo],
         "databricks_schemas": [schema],
+        "databricks_shares": [share],
         "databricks_groups": [group],
         "databricks_users": [user],
         "databricks_vectorsearchendpoints": [vector_search_endpoint],

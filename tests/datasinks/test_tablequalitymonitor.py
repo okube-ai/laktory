@@ -5,8 +5,12 @@ import pytest
 from laktory.models import UnityCatalogDataSink
 from laktory.models.resources.databricks import QualityMonitor
 
+from ..conftest import skip_dbks_test
+
 
 def test_create_or_update(wsclient):
+    skip_dbks_test()
+
     if not sys.version.startswith("3.12"):
         # Run only for a single version of python to
         # prevent collision when writing to Unity Catalog.
