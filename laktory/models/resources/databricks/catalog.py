@@ -17,6 +17,20 @@ class CatalogLookup(ResourceLookup):
     name: str = Field(serialization_alias="id", description="Catalog name")
 
 
+class CatalogEffectivePredictiveOptimizationFlag(BaseModel):
+    """Catalog Effective Predictive Optimization Flag"""
+
+    value: str = Field(..., description="")
+    inherited_from_name: str = Field(..., description="")
+    inherited_from_type: str = Field(..., description="")
+
+
+class CatalogProvisioningInfo(BaseModel):
+    """Catalog Provisioning Info"""
+
+    state: str = Field(None, description="")
+
+
 class Catalog(BaseModel, PulumiResource, TerraformResource):
     """
     A catalog is the first layer of Unity Catalog’s three-level namespace. It’s
@@ -69,11 +83,27 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     * [Pulumi Databricks Catalog](https://www.pulumi.com/registry/packages/databricks/api-docs/catalog/)
     """
 
+    browse_only: bool = Field(None, description="Browse catalog")
     comment: Union[str, None] = Field(
         None, description="Text description of the catalog"
     )
+    connection_name: str = Field(
+        None,
+        description="For Foreign Catalogs: the name of the connection to an external data source. Changes forces creation of a new resource.",
+    )
+    effective_predictive_optimization_flag: CatalogEffectivePredictiveOptimizationFlag = Field(
+        None, description=""
+    )
+    enable_predictive_optimization: str = Field(
+        None,
+        description="Whether predictive optimization should be enabled for this object and objects under it. Can be `ENABLE`, `DISABLE` or `INHERIT`",
+    )
     force_destroy: bool = Field(
         True, description="If `True` catalog can be deleted, even when not empty"
+    )
+    foreign_options: dict[str, str] = Field(
+        None,
+        description="For Foreign Catalogs: the name of the entity from an external data source that maps to a catalog. For example, the database name in a PostgreSQL server.",
     )
     grant: Union[CatalogGrant, list[CatalogGrant]] = Field(
         None,
@@ -103,9 +133,22 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     Specifications for looking up existing resource. Other attributes will be ignored.
     """,
     )
+    metastore_id: str = Field(None, description="ID of the parent metastore.")
     name: str = Field(..., description="Name of the catalog")
     owner: str = Field(
         None, description="User/group/service principal name of the catalog owner"
+    )
+    properties: dict[str, str] = Field(
+        None, description="Extensible Catalog properties."
+    )
+    provider_name: str = Field(
+        None,
+        description="For Delta Sharing Catalogs: the name of the delta sharing provider. Change forces creation of a new resource.",
+    )
+    provisioning_info: CatalogProvisioningInfo = Field(None, description="")
+    share_name: str = Field(
+        None,
+        description="For Delta Sharing Catalogs: the name of the share under the share provider. Change forces creation of a new resource.",
     )
     schemas: list[Schema] = Field(
         [], description="List of schemas stored in the catalog"
@@ -179,6 +222,10 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def pulumi_renames(self) -> dict[str, str]:
+        return {"foreign_options": "options"}
+
+    @property
     def pulumi_resource_type(self) -> str:
         return "databricks:Catalog"
 
@@ -197,3 +244,7 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
         return self.pulumi_excludes
+
+    @property
+    def terraform_renames(self) -> dict[str, str]:
+        return self.pulumi_renames
