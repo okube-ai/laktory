@@ -159,6 +159,11 @@ class TerraformStack(BaseModel):
                 pattern = r"\$\{resources\." + k0 + r"\.(.*?)\}"
                 _vars[pattern] = rf"${{{k1}.\1}}"
 
+        print("VARS")
+        for k, v in _vars.items():
+            print(k, v)
+        print("_------_")
+
         # Because all variables are mapped to a string, it is more efficient
         # (>10x) to convert the dict to string before substitution.
         d = json.loads(_resolve_values(json.dumps(d), vars=_vars))
