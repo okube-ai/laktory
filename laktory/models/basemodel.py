@@ -446,6 +446,16 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         # Fetching vars
         if vars is None:
             vars = {}
+
+        from laktory.models.pipeline import Pipeline
+        from laktory.models.pipeline import PipelineNode
+
+        if isinstance(self, Pipeline):
+            vars["_pl"] = self
+
+        if isinstance(self, PipelineNode):
+            vars["_pl_node"] = self
+
         vars = deepcopy(vars)
         vars.update(self.variables)
 
@@ -464,7 +474,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                 _resolve_values(o, vars)
             else:
                 # Simple objects must be updated explicitly
-                setattr(self, k, _resolve_value(o, vars))
+                with self.validate_assignment_disabled():
+                    setattr(self, k, _resolve_value(o, vars))
 
         # Inject into child resources
         if hasattr(self, "core_resources"):
