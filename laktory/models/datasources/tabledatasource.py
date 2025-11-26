@@ -37,7 +37,8 @@ class TableDataSource(BaseDataSource):
         name = self.table_name
         if name is None:
             return
-        names = re.findall(r"\$\{vars\.[^}]+\}|[^.]+", name)
+        # names = re.findall(r"\$\{vars\.[^}]+\}|[^.]+", name)
+        names = re.split(r"\.(?![^{}]*})", name)
 
         with self.validate_assignment_disabled():
             self.table_name = names[-1]

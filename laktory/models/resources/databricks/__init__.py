@@ -4,6 +4,7 @@ from .alert import Alert
 from .catalog import Catalog
 from .cluster import Cluster
 from .clusterpolicy import ClusterPolicy
+from .currentuser import CurrentUser
 from .dashboard import Dashboard
 from .dbfsfile import DbfsFile
 from .directory import Directory
