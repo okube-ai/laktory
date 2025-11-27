@@ -446,6 +446,16 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         # Fetching vars
         if vars is None:
             vars = {}
+
+        from laktory.models.pipeline import Pipeline
+        from laktory.models.pipeline import PipelineNode
+
+        if isinstance(self, Pipeline):
+            vars["_pl"] = self
+
+        if isinstance(self, PipelineNode):
+            vars["_pl_node"] = self
+
         vars = deepcopy(vars)
         vars.update(self.variables)
 

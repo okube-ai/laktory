@@ -30,3 +30,26 @@ def test_full_name():
     )
     assert source.schema_name == "default"
     assert source.table_name == "df"
+
+
+def test_inject_vars():
+    source = HiveMetastoreDataSource(catalog_name="c", schema_name="s", table_name="t")
+    assert source.full_name == "c.s.t"
+
+    source = HiveMetastoreDataSource(
+        catalog_name="c",
+        schema_name="s",
+        table_name="${vars.t_name}",
+        variables={"t_name": "t"},
+    )
+    source = source.inject_vars()
+    assert source.full_name == "c.s.t"
+
+    source = HiveMetastoreDataSource(
+        catalog_name="c",
+        schema_name="s",
+        table_name="${{ vars.t_name['x'] }}",
+        variables={"t_name": {"x": "t"}},
+    )
+    source = source.inject_vars()
+    assert source.full_name == "c.s.t"

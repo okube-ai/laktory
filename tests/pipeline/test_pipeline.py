@@ -475,3 +475,25 @@ def test_update_quality_monitors(backend, tmp_path, wsclient):
 
     # Update metadata
     pl.update_quality_monitors(workspace_client=wsclient)
+
+
+def test_inject_vars(tmp_path):
+
+    pl = get_pl(tmp_path)
+    pl.nodes = pl.nodes[:1]
+    pl.variables = {"pks": [1, 2, 3]}
+
+    node = pl.nodes[0]
+    sink = node.sinks[0]
+
+    with sink.validate_assignment_disabled():
+        sink.schema_name = "${{ vars._pl_node.name }}"
+        sink.table_name = "${{ vars._pl.name }}"
+
+    pl2 = pl.inject_vars()
+
+    sink = pl2.nodes[0].sinks[0]
+
+    assert sink.schema_name == "gld_ab"
+    assert sink.table_name == "pl-local"
+

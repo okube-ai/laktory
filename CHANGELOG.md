@@ -3,6 +3,7 @@
 ## [0.8.14] - Unreleased
 ### Added
 * Databricks `CurrentUser` lookup resource.
+* Public preview of `_pl` and `_pl_node` variables.
 ### Fixed
 * Invalid parsing of table name when variable is used
 
