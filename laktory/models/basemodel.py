@@ -474,8 +474,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                 _resolve_values(o, vars)
             else:
                 # Simple objects must be updated explicitly
-                with self.validate_assignment_disabled():
-                    setattr(self, k, _resolve_value(o, vars))
+                setattr(self, k, _resolve_value(o, vars))
 
         # Inject into child resources
         if hasattr(self, "core_resources"):
