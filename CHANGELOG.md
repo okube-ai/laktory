@@ -4,6 +4,7 @@
 ### Added
 * Databricks `CurrentUser` lookup resource.
 * Public preview of `_pl` and `_pl_node` variables.
+* Support for PipelineIngestion attribute to DatabricksPipeline
 ### Fixed
 * Invalid parsing of table name when variable is used
 

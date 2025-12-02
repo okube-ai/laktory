@@ -94,6 +94,240 @@ class PipelineFilters(BaseModel):
     includes: str = Field(..., description="Paths to include.")
 
 
+class PipelineIngestionDefinitionTableConfigurationWorkdayReportParametersReportParameter(
+    BaseModel
+):
+    key: str = Field(None, description="")
+    value: str = Field(None, description="")
+
+
+class PipelineIngestionDefinitionTableConfigurationWorkdayReportParameters(BaseModel):
+    incremental: bool = Field(None, description="")
+    parameters: dict[str, str] = Field(None, description="")
+    report_parameters: list[
+        PipelineIngestionDefinitionTableConfigurationWorkdayReportParametersReportParameter
+    ] = Field(None, description="")
+
+
+class PipelineIngestionDefinitionTableConfigurationQueryBasedConnectorConfig(BaseModel):
+    cursor_columns: list[str] = Field(None, description="")
+    deletion_condition: str = Field(None, description="")
+    hard_deletion_sync_min_interval_in_seconds: int = Field(None, description="")
+
+
+class PipelineIngestionDefinitionTableConfiguration(BaseModel):
+    exclude_columns: list[str] = Field(None, description="")
+    include_columns: list[str] = Field(None, description="")
+    primary_keys: list[str] = Field(None, description="")
+    query_based_connector_config: PipelineIngestionDefinitionTableConfigurationQueryBasedConnectorConfig = Field(
+        None, description=""
+    )
+    salesforce_include_formula_fields: bool = Field(None, description="")
+    scd_type: str = Field(None, description="")
+    sequence_bies: list[str] = Field(None, description="")
+    workday_report_parameters: PipelineIngestionDefinitionTableConfigurationWorkdayReportParameters = Field(
+        None, description=""
+    )
+
+
+class PipelineIngestionDefinitionSourceConfigurationCatalogPostgresSlotConfig(
+    BaseModel
+):
+    publication_name: str = Field(None, description="")
+    slot_name: str = Field(None, description="")
+
+
+class PipelineIngestionDefinitionSourceConfigurationCatalogPostgres(BaseModel):
+    slot_config: PipelineIngestionDefinitionSourceConfigurationCatalogPostgresSlotConfig = Field(
+        None, description=""
+    )
+
+
+class PipelineIngestionDefinitionSourceConfigurationCatalog(BaseModel):
+    postgres: PipelineIngestionDefinitionSourceConfigurationCatalogPostgres = Field(
+        None, description=""
+    )
+    source_catalog: str = Field(None, description="")
+
+
+class PipelineIngestionDefinitionSourceConfiguration(BaseModel):
+    catalog: PipelineIngestionDefinitionSourceConfigurationCatalog = Field(
+        None, description=""
+    )
+
+
+class PipelineIngestionDefinitionObjectTableTableConfigurationWorkdayReportParametersReportParameter(
+    BaseModel
+):
+    key: str = Field(None, description="")
+    value: str = Field(None, description="")
+
+
+class PipelineIngestionDefinitionObjectTableTableConfigurationWorkdayReportParameters(
+    BaseModel
+):
+    incremental: bool = Field(None, description="")
+    parameters: dict[str, str] = Field(None, description="")
+    report_parameters: list[
+        PipelineIngestionDefinitionObjectTableTableConfigurationWorkdayReportParametersReportParameter
+    ] = Field(None, description="")
+
+
+class PipelineIngestionDefinitionObjectTableTableConfigurationQueryBasedConnectorConfig(
+    BaseModel
+):
+    cursor_columns: list[str] = Field(None, description="")
+    deletion_condition: str = Field(None, description="")
+    hard_deletion_sync_min_interval_in_seconds: int = Field(None, description="")
+
+
+class PipelineIngestionDefinitionObjectTableTableConfiguration(BaseModel):
+    exclude_columns: list[str] = Field(None, description="")
+    include_columns: list[str] = Field(None, description="")
+    primary_keys: list[str] = Field(None, description="")
+    query_based_connector_config: PipelineIngestionDefinitionObjectTableTableConfigurationQueryBasedConnectorConfig = Field(
+        None, description=""
+    )
+    salesforce_include_formula_fields: bool = Field(None, description="")
+    scd_type: str = Field(None, description="")
+    sequence_bies: list[str] = Field(None, description="")
+    workday_report_parameters: PipelineIngestionDefinitionObjectTableTableConfigurationWorkdayReportParameters = Field(
+        None, description=""
+    )
+
+
+class PipelineIngestionDefinitionObjectTable(BaseModel):
+    destination_catalog: str = Field(None, description="")
+    destination_schema: str = Field(None, description="")
+    source_table: str = Field(None, description="")
+    destination_table: str = Field(None, description="")
+    source_catalog: str = Field(None, description="")
+    source_schema: str = Field(None, description="")
+    table_configuration: PipelineIngestionDefinitionObjectTableTableConfiguration = (
+        Field(None, description="")
+    )
+
+
+class PipelineIngestionDefinitionObjectSchemaTableConfigurationWorkdayReportParametersReportParameter(
+    BaseModel
+):
+    key: str = Field(None, description="")
+    value: str = Field(None, description="")
+
+
+class PipelineIngestionDefinitionObjectSchemaTableConfigurationWorkdayReportParameters(
+    BaseModel
+):
+    incremental: bool = Field(None, description="")
+    parameters: dict[str, str] = Field(None, description="")
+    report_parameters: list[
+        PipelineIngestionDefinitionObjectSchemaTableConfigurationWorkdayReportParametersReportParameter
+    ] = Field(None, description="")
+
+
+class PipelineIngestionDefinitionObjectSchemaTableConfigurationQueryBasedConnectorConfig(
+    BaseModel
+):
+    cursor_columns: list[str] = Field(None, description="")
+    deletion_condition: str = Field(None, description="")
+    hard_deletion_sync_min_interval_in_seconds: int = Field(None, description="")
+
+
+class PipelineIngestionDefinitionObjectSchemaTableConfiguration(BaseModel):
+    exclude_columns: list[str] = Field(None, description="")
+    include_columns: list[str] = Field(None, description="")
+    primary_keys: list[str] = Field(None, description="")
+    query_based_connector_config: PipelineIngestionDefinitionObjectSchemaTableConfigurationQueryBasedConnectorConfig = Field(
+        None, description=""
+    )
+    salesforce_include_formula_fields: bool = Field(None, description="")
+    scd_type: str = Field(None, description="")
+    sequence_bies: list[str] = Field(None, description="")
+    workday_report_parameters: PipelineIngestionDefinitionObjectSchemaTableConfigurationWorkdayReportParameters = Field(
+        None, description=""
+    )
+
+
+class PipelineIngestionDefinitionObjectSchema:
+    destination_catalog: str = Field(None, description="")
+    destination_schema: str = Field(None, description="")
+    source_schema: str = Field(None, description="")
+    source_catalog: str = Field(None, description="")
+    table_configuration: PipelineIngestionDefinitionObjectSchemaTableConfiguration = (
+        Field(None, description="")
+    )
+
+
+class PipelineIngestionDefinitionObjectReportTableConfigurationWorkdayReportParametersReportParameter(
+    BaseModel
+):
+    key: str
+    value: str
+
+
+class PipelineIngestionDefinitionObjectReportTableConfigurationWorkdayReportParameters(
+    BaseModel
+):
+    incremental: bool = Field(None, description="")
+    parameters: dict[str, str] = Field(None, description="")
+    report_parameters: list[
+        PipelineIngestionDefinitionObjectReportTableConfigurationWorkdayReportParametersReportParameter
+    ] = Field(None, description="")
+
+
+class PipelineIngestionDefinitionObjectReportTableConfigurationQueryBasedConnectorConfig(
+    BaseModel
+):
+    cursor_columns: list[str] = Field(None, description="")
+    deletion_condition: str = Field(None, description="")
+    hard_deletion_sync_min_interval_in_seconds: int = Field(None, description="")
+
+
+class PipelineIngestionDefinitionObjectReportTableConfiguration(BaseModel):
+    exclude_columns: list[str] = Field(None, description="")
+    include_columns: list[str] = Field(None, description="")
+    primary_keys: list[str] = Field(None, description="")
+    query_based_connector_config: PipelineIngestionDefinitionObjectReportTableConfigurationQueryBasedConnectorConfig = Field(
+        None, description=""
+    )
+    salesforce_include_formula_fields: bool = Field(None, description="")
+    scd_type: str = Field(None, description="")
+    sequence_bies: list[str] = Field(None, description="")
+    workday_report_parameters: PipelineIngestionDefinitionObjectReportTableConfigurationWorkdayReportParameters = Field(
+        None, description=""
+    )
+
+
+class PipelineIngestionDefinitionObjectReport(BaseModel):
+    destination_catalog: str = Field(None, description="")
+    destination_schema: str = Field(None, description="")
+    source_url: str = Field(None, description="")
+    destination_table: str = Field(None, description="")
+    table_configuration: PipelineIngestionDefinitionObjectReportTableConfiguration = (
+        Field(None, description="")
+    )
+
+
+class PipelineIngestionDefinitionObject(BaseModel):
+    report: PipelineIngestionDefinitionObjectReport = Field(None, description="")
+    schema: PipelineIngestionDefinitionObjectSchema = Field(None, description="")
+    table: PipelineIngestionDefinitionObjectTable = Field(None, description="")
+
+
+class PipelineIngestionDefinition(BaseModel):
+    connection_name: str = Field(..., description="Connection Name")
+    ingestion_gateway_id: str = Field(None, description="Ingestion Gateway Id")
+    netsuite_jar_path: str = Field(None, description="Netsuite JAR path")
+    objects: list[PipelineIngestionDefinitionObject] = Field(None, description="")
+    source_configurations: list[PipelineIngestionDefinitionSourceConfiguration] = Field(
+        None, description=""
+    )
+    source_type: str = Field(None, description="")
+    table_configuration: PipelineIngestionDefinitionTableConfiguration = Field(
+        None, description=""
+    )
+
+
 class PipelineLibraryFile(BaseModel):
     path: str = Field(..., description="")
 
