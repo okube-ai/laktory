@@ -1,6 +1,16 @@
 # Release History
 
-## [0.8.14] - Unreleased
+## [0.8.15] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.8.14] - 2025-12-03
 ### Added
 * Databricks `CurrentUser` lookup resource.
 ### Fixed
