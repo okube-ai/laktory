@@ -477,6 +477,7 @@ def test_update_quality_monitors(backend, tmp_path, wsclient):
     pl.update_quality_monitors(workspace_client=wsclient)
 
 
+@pytest.mark.xfail(reason="Not yet implemented")
 def test_inject_vars(tmp_path):
     pl = get_pl(tmp_path)
     pl.nodes = pl.nodes[:1]

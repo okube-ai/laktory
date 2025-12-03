@@ -447,17 +447,18 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         if vars is None:
             vars = {}
 
-        from laktory.models.pipeline import Pipeline
-        from laktory.models.pipeline import PipelineNode
-
-        if isinstance(self, Pipeline):
-            vars["_pl"] = self
-
-        if isinstance(self, PipelineNode):
-            vars["_pl_node"] = self
-
         vars = deepcopy(vars)
         vars.update(self.variables)
+
+        # TODO: Review implementation as it results in serious performance hits
+        # from laktory.models.pipeline import Pipeline
+        # from laktory.models.pipeline import PipelineNode
+        #
+        # if isinstance(self, Pipeline):
+        #     vars["_pl"] = self
+        #
+        # if isinstance(self, PipelineNode):
+        #     vars["_pl_node"] = self
 
         # Create copy
         if not inplace:
