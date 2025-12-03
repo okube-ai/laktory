@@ -418,7 +418,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         if k in d:
             _clusters = []
             for c in d[k]:
-                c["label"] = c.pop("name")
+                c["label"] = c.pop("clusterName")
                 _clusters += [c]
             d[k] = _clusters
         return d
@@ -446,7 +446,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         if k in d:
             _clusters = []
             for c in d[k]:
-                c["label"] = c.pop("name")
+                c["label"] = c.pop("cluster_name")
                 _clusters += [c]
             d[k] = _clusters
         return d

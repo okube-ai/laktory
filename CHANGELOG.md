@@ -32,6 +32,7 @@
 ### Updated
 * Automatic view creation with DLT when CDC apply changes is used
 * Pipeline config files path in Databricks workspace
+* Databricks Cluster attributes support
 
 ## [0.8.9] - 2025-08-27
 ### Fixed

@@ -1,6 +1,7 @@
 from typing import Literal
 from typing import Union
 
+from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
@@ -120,6 +121,14 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     cluster_id: str = Field(
         None, description="Cluster ID. Used when assigning a cluster to a job task."
     )
+    cluster_name: str = Field(
+        None,
+        description="""
+    Cluster name, which doesn’t have to be unique. If not specified at creation, the cluster name will be an empty string.
+    """,
+        validation_alias=AliasChoices("cluster_name", "name"),
+    )
+
     # cluster_log_conf
     # cluster_source
     # cluster_mount_infos
@@ -131,12 +140,16 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     cluster tag, the custom tag is prefixed with an x_ when it is propagated.
     """,
     )
-    data_security_mode: Literal["NONE", "SINGLE_USER", "USER_ISOLATION"] = Field(
-        "USER_ISOLATION",
+    data_security_mode: str = Field(
+        None,
         description="""
-        Select the security features of the cluster. Unity Catalog requires SINGLE_USER or USER_ISOLATION mode. If 
-        omitted, no security features are enabled. In the Databricks UI, this has been recently been renamed Access
-        Mode and USER_ISOLATION has been renamed Shared, but use these terms here.
+    Select the security features of the cluster (see API docs for full list of values). Unity Catalog requires 
+    SINGLE_USER or USER_ISOLATION mode. LEGACY_PASSTHROUGH for passthrough cluster and LEGACY_TABLE_ACL for Table ACL
+    cluster. If omitted, default security features are enabled. To disable security features use NONE or legacy mode
+    NO_ISOLATION. If kind is specified, then the following options are available:
+    - DATA_SECURITY_MODE_AUTO: Databricks will choose the most appropriate access mode depending on your compute configuration.
+    - DATA_SECURITY_MODE_STANDARD: Alias for USER_ISOLATION.
+    - DATA_SECURITY_MODE_DEDICATED: Alias for SINGLE_USER.
         """,
     )
     # docker_image
@@ -211,6 +224,19 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     (this number may change over time, so check Databricks documentation for actual number).
     """,
     )
+    is_single_node: bool = Field(
+        None,
+        description="""
+    When set to true, Databricks will automatically set single node related custom_tags, spark_conf, and num_workers.
+        """,
+    )
+    kind: str = Field(
+        None,
+        description="""
+    The kind of compute described by this compute specification. Possible values (see API docs for full list): 
+    CLASSIC_PREVIEW (if corresponding public preview is enabled).
+        """,
+    )
     libraries: list[ClusterLibrary] = Field(
         [], description="List of libraries specifications"
     )
@@ -218,12 +244,6 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
         None,
         exclude=True,
         description="Specifications for looking up existing resource. Other attributes will be ignored.",
-    )
-    name: str = Field(
-        None,
-        description="""
-    Cluster name, which doesn’t have to be unique. If not specified at creation, the cluster name will be an empty string.
-    """,
     )
     node_type_id: str = Field(
         ...,
@@ -252,6 +272,7 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     spark_version value
     """,
     )
+    remote_disk_throughput: int = Field(None, description="""""")
     single_user_name: str = Field(
         None,
         description="""
@@ -288,6 +309,14 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     can be used to login with the user name ubuntu on port 2200. You can specify up to 10 keys.
     """,
     )
+    total_initial_remote_disk_size: int = Field(None, description="""""")
+    use_ml_runtime: bool = Field(
+        None,
+        description="""
+    Whenever ML runtime should be selected or not. Actual runtime is determined by spark_version (DBR release), this
+    field use_ml_runtime, and whether node_type_id is GPU node or not.
+        """,
+    )
     # workload_type:
 
     # ----------------------------------------------------------------------- #
@@ -319,10 +348,6 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
         return "databricks:Cluster"
 
     @property
-    def pulumi_renames(self) -> dict[str, str]:
-        return {"name": "cluster_name"}
-
-    @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return ["access_controls"]
 
@@ -339,10 +364,6 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_cluster"
-
-    @property
-    def terraform_renames(self) -> dict[str, str]:
-        return self.pulumi_renames
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
