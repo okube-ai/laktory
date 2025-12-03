@@ -478,7 +478,6 @@ def test_update_quality_monitors(backend, tmp_path, wsclient):
 
 
 def test_inject_vars(tmp_path):
-
     pl = get_pl(tmp_path)
     pl.nodes = pl.nodes[:1]
     pl.variables = {"pks": [1, 2, 3]}
@@ -496,4 +495,3 @@ def test_inject_vars(tmp_path):
 
     assert sink.schema_name == "gld_ab"
     assert sink.table_name == "pl-local"
-

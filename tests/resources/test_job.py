@@ -88,8 +88,9 @@ def test_job_model():
                     "autoscale": None,
                     "autotermination_minutes": None,
                     "cluster_id": None,
+                    "cluster_name": None,
                     "custom_tags": None,
-                    "data_security_mode": "USER_ISOLATION",
+                    "data_security_mode": None,
                     "driver_instance_pool_id": None,
                     "driver_node_type_id": None,
                     "enable_elastic_disk": None,
@@ -97,15 +98,20 @@ def test_job_model():
                     "idempotency_token": None,
                     "init_scripts": [],
                     "instance_pool_id": None,
+                    "is_single_node": None,
+                    "kind": None,
                     "node_type_id": "Standard_DS3_v2",
                     "num_workers": None,
                     "policy_id": None,
                     "runtime_engine": None,
+                    "remote_disk_throughput": None,
                     "single_user_name": None,
                     "spark_conf": {},
                     "spark_env_vars": {},
                     "spark_version": "16.3.x-scala2.12",
                     "ssh_public_keys": [],
+                    "total_initial_remote_disk_size": None,
+                    "use_ml_runtime": None,
                 },
             }
         ],
@@ -329,6 +335,20 @@ def test_job_pulumi():
             "on_starts": ["info@okube.ai"],
             "on_successes": ["info@okube.ai"],
         },
+        "job_clusters": [
+            {
+                "job_cluster_key": "main",
+                "new_cluster": {
+                    "init_scripts": [],
+                    "node_type_id": "Standard_DS3_v2",
+                    "spark_conf": {},
+                    "spark_env_vars": {},
+                    "spark_version": "16.3.x-scala2.12",
+                    "ssh_public_keys": [],
+                },
+            }
+        ],
+        "name": "osoucy]job-stock-prices",
         "parameters": [],
         "tags": {},
         "tasks": [
@@ -347,21 +367,6 @@ def test_job_pulumi():
                 "task_key": "view",
             },
         ],
-        "job_clusters": [
-            {
-                "job_cluster_key": "main",
-                "new_cluster": {
-                    "data_security_mode": "USER_ISOLATION",
-                    "init_scripts": [],
-                    "node_type_id": "Standard_DS3_v2",
-                    "spark_conf": {},
-                    "spark_env_vars": {},
-                    "spark_version": "16.3.x-scala2.12",
-                    "ssh_public_keys": [],
-                },
-            }
-        ],
-        "name": "osoucy]job-stock-prices",
     }
 
 
