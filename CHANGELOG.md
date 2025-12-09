@@ -2,13 +2,7 @@
 
 ## [0.8.15] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* `pipeline` and `pipeline_node` objects available for expressions evaluation
 
 ## [0.8.14] - 2025-12-03
 ### Added

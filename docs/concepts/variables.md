@@ -165,6 +165,37 @@ variables:
     prd: 4
 ```
 
+### Expressions Objects
+Under certain context, specific python objects are available when evaluating expressions
+
+#### Pipeline
+When inside a pipeline and its child (node, source, sink, transformer, orchestrator, etc) the pipeline object is available.
+
+```yaml title="pipeline.yaml"
+pipeline:
+  name: pl-stocks-prices
+  orchestrator:
+    type: DATABRICKS_JOB
+    name: job-${{ pipeline.name }}
+```
+
+
+#### Pipeline Node
+When inside a pipeline node and its child (source, sink, transformer, orchestrator, etc) the pipeline_node object is available.
+
+```yaml title="pipeline.yaml"
+pipeline:
+  name: pl-stocks-prices
+  nodes:
+    - name: slv_prices
+      primary_keys:
+        - tstamp
+        - symbol
+      sink:
+        merge_cdc_options:
+          primary_keys: ${{ pipeline_node.primary_keys }}
+```
+
 ## Special Cases
 
 ### Pipeline Nodes

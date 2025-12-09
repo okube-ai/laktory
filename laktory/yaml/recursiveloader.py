@@ -112,7 +112,7 @@ class RecursiveLoader(yaml.SafeLoader):
             variables = {}
             for _vars in loader.variables:
                 variables.update(_vars)
-            filepath = _resolve_value(str(filepath), variables)
+            filepath = _resolve_value(str(filepath), variables, {})
 
             if "${vars." in filepath:
                 raise ValueError(f"Some variables in {filepath} could not be resolved.")
