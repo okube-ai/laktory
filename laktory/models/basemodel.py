@@ -395,7 +395,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
 
         return None
 
-    def inject_vars(self, inplace: bool = False, vars: dict = None):
+    def inject_vars(self, inplace: bool = False, vars: dict = None, objs: dict = None):
         """
         Inject model variables values into a model attributes.
 
@@ -407,6 +407,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         vars:
             A dictionary of variables to be injected in addition to the
             model internal variables.
+        objs:
+            A dictionary of objects available when resolving expressions.
 
 
         Returns
@@ -450,15 +452,20 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         vars = deepcopy(vars)
         vars.update(self.variables)
 
+        # Fetching objs
+        if objs is None:
+            objs = {}
+
         # TODO: Review implementation as it results in serious performance hits
-        # from laktory.models.pipeline import Pipeline
-        # from laktory.models.pipeline import PipelineNode
-        #
-        # if isinstance(self, Pipeline):
-        #     vars["_pl"] = self
-        #
-        # if isinstance(self, PipelineNode):
-        #     vars["_pl_node"] = self
+        from laktory.models.pipeline import Pipeline
+        from laktory.models.pipeline import PipelineNode
+
+
+        if isinstance(self, Pipeline):
+            objs["pipeline"] = self
+
+        if isinstance(self, PipelineNode):
+            objs["pipeline_node"] = self
 
         # Create copy
         if not inplace:
@@ -472,23 +479,23 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
 
             if isinstance(o, BaseModel) or isinstance(o, dict) or isinstance(o, list):
                 # Mutable objects will be updated in place
-                _resolve_values(o, vars)
+                _resolve_values(o, vars, objs)
             else:
                 # Simple objects must be updated explicitly
-                setattr(self, k, _resolve_value(o, vars))
+                setattr(self, k, _resolve_value(o, vars, objs))
 
         # Inject into child resources
         if hasattr(self, "core_resources"):
             for r in self.core_resources:
                 if r == self:
                     continue
-                r.inject_vars(vars=vars, inplace=True)
+                r.inject_vars(vars=vars, inplace=True, objs=objs)
 
         if not inplace:
             return self
 
     def inject_vars_into_dump(
-        self, dump: dict[str, Any], inplace: bool = False, vars: dict[str, Any] = None
+        self, dump: dict[str, Any], inplace: bool = False, vars: dict[str, Any] = None, objs: dict[str, Any] = None
     ):
         """
         Inject model variables values into a model dump.
@@ -503,6 +510,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         vars:
             A dictionary of variables to be injected in addition to the
             model internal variables.
+        objs:
+            A dictionary of objects available when resolving expressions.
 
 
         Returns
@@ -545,7 +554,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
             dump = copy.deepcopy(dump)
 
         # Inject into field values
-        _resolve_values(dump, vars)
+        _resolve_values(dump, vars, objs)
 
         if not inplace:
             return dump
