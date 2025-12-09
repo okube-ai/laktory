@@ -146,6 +146,18 @@ class PipelineNode(BaseModel, PipelineChild):
         None,
         description="Definition of the data sink(s). Set `is_quarantine` to True to store node quarantine DataFrame.",
     )
+    time_column: str | None = Field(
+        None,
+        description="""
+        The name of the column that represents the timestamp or temporal dimension in the DataFrame. This column is 
+        used to:
+            - Document the time-based ordering and filtering semantics of the node’s output data.
+            - Enable time-aware operations such as point-in-time joins, incremental processing, and time-series analysis.
+            - Serve as a reference in expectations, unit tests, and feature engineering workflows.
+        While optional, specifying time_column helps ensure consistency in time-based logic and improves the 
+        reliability of downstream operations that depend on temporal alignment.        
+        """
+    )
     transformer: DataFrameTransformer = Field(
         None,
         description="Data transformations applied between the source and the sink(s).",
