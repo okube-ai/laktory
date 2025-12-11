@@ -469,9 +469,11 @@ class PipelineNode(BaseModel, PipelineChild):
 
     def purge(self):
         logger.info(f"Purging pipeline node {self.name}")
+
         if self.has_sinks:
             for s in self.sinks:
                 s.purge()
+
         if self.expectations_checkpoint_path:
             if os.path.exists(self.expectations_checkpoint_path):
                 logger.info(
@@ -499,7 +501,7 @@ class PipelineNode(BaseModel, PipelineChild):
                     _path
                 )  # TODO: Figure out why this does not work with databricks connect
                 logger.info(
-                    f"Deleting checkpoint at dbfs {_path}",
+                    f"Deleting expectation checkpoint at dbfs {_path}",
                 )
                 dbutils.fs.rm(_path, True)
 
@@ -510,12 +512,16 @@ class PipelineNode(BaseModel, PipelineChild):
                     type(e)
                 ):
                     pass
+                elif "com.databricks.sql.io.CloudFileNotFoundException" in str(
+                    type(e)
+                ):
+                    pass
                 elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
                     type(e)
                 ):
                     # TODO: Figure out why this is happening. It seems that the databricks SDK
                     #       modify the path before sending to REST API.
-                    logger.warn(f"dbutils could not delete checkpoint {_path}: {e}")
+                    logger.warn(f"dbutils could not delete expectation checkpoint {_path}: {e}")
                 else:
                     raise e
 

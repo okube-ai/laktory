@@ -469,6 +469,10 @@ class BaseDataSink(BaseModel, PipelineChild):
                     type(e)
                 ):
                     pass
+                elif "com.databricks.sql.io.CloudFileNotFoundException" in str(
+                    type(e)
+                ):
+                    pass
                 elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
                     type(e)
                 ):
