@@ -432,6 +432,10 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     def _purge_checkpoint(self):
         if self.checkpoint_path:
+            logger.info(
+                "DELETE DELETE DELETE Deleting checkpoint.",
+            )
+
             if os.path.exists(self.checkpoint_path):
                 logger.info(
                     f"Deleting checkpoint at {self.checkpoint_path}",
@@ -469,9 +473,7 @@ class BaseDataSink(BaseModel, PipelineChild):
                     type(e)
                 ):
                     pass
-                elif "com.databricks.sql.io.CloudFileNotFoundException" in str(
-                    type(e)
-                ):
+                elif "com.databricks.sql.io.CloudFileNotFoundException" in str(type(e)):
                     pass
                 elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
                     type(e)
