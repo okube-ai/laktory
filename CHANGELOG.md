@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.8.16] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* More robust detection of file existence on DBFS and prevention of "com.databricks.sql.io.CloudFileNotFoundException" exception when purging checkpoints.
 
 ## [0.8.15] - 2025-12-09
 ### Added

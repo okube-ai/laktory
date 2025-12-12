@@ -169,12 +169,13 @@ def test_expression():
     ).inject_vars()
     assert c.id == 4
 
+
 def test_objects():
     from laktory._parsers import _resolve_expression
 
     owner = Owner(name="a", id=9)
-    assert _resolve_expression("a", {}, {"a":2}) == 2
-    assert _resolve_expression("a+owner.id", {}, {"a":2, "owner": owner}) == 11
+    assert _resolve_expression("a", {}, {"a": 2}) == 2
+    assert _resolve_expression("a+owner.id", {}, {"a": 2, "owner": owner}) == 11
 
 
 def test_self_referencing():

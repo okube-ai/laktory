@@ -156,7 +156,7 @@ class PipelineNode(BaseModel, PipelineChild):
             - Serve as a reference in expectations, unit tests, and feature engineering workflows.
         While optional, specifying time_column helps ensure consistency in time-based logic and improves the 
         reliability of downstream operations that depend on temporal alignment.        
-        """
+        """,
     )
     transformer: DataFrameTransformer = Field(
         None,
@@ -469,9 +469,11 @@ class PipelineNode(BaseModel, PipelineChild):
 
     def purge(self):
         logger.info(f"Purging pipeline node {self.name}")
+
         if self.has_sinks:
             for s in self.sinks:
                 s.purge()
+
         if self.expectations_checkpoint_path:
             if os.path.exists(self.expectations_checkpoint_path):
                 logger.info(
@@ -479,45 +481,47 @@ class PipelineNode(BaseModel, PipelineChild):
                 )
                 shutil.rmtree(self.expectations_checkpoint_path)
 
+            # Try with DBFS
+            # If spark is not used, dbfs is most likely not used
             if self.dataframe_backend != DataFrameBackends.PYSPARK:
                 return
 
+            # Check if a workspace client can be instantiated
             try:
-                from pyspark.dbutils import DBUtils
+                from databricks.sdk import WorkspaceClient
+                from databricks.sdk.errors import ResourceDoesNotExist
 
-                from laktory import get_spark_session
+                w = WorkspaceClient()
 
-                spark = get_spark_session()
-            except ModuleNotFoundError:
+            except (
+                ModuleNotFoundError,  # SDK not installed
+                ImportError,  # SDK with different version / API
+                ValueError,  # client not configure (would never happen in a notebook)
+            ):
                 return
 
-            dbutils = DBUtils(spark)
-
+            # Format path for DBFS
             _path = self.expectations_checkpoint_path.as_posix()
-            try:
-                dbutils.fs.ls(
-                    _path
-                )  # TODO: Figure out why this does not work with databricks connect
-                logger.info(
-                    f"Deleting checkpoint at dbfs {_path}",
-                )
-                dbutils.fs.rm(_path, True)
+            if not _path.startswith("/") and not _path.startswith("dbfs:"):
+                _path = "/" + _path
+            if _path.startswith("/dbfs/"):
+                _path = _path.replace("/dbfs/", "dbfs:/")
+            if not _path.startswith("dbfs:"):
+                _path = "dbfs:" + _path
 
-            except Exception as e:
-                if "java.io.FileNotFoundException" in str(e):
-                    pass
-                elif "databricks.sdk.errors.platform.ResourceDoesNotExist" in str(
-                    type(e)
-                ):
-                    pass
-                elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
-                    type(e)
-                ):
-                    # TODO: Figure out why this is happening. It seems that the databricks SDK
-                    #       modify the path before sending to REST API.
-                    logger.warn(f"dbutils could not delete checkpoint {_path}: {e}")
-                else:
-                    raise e
+            # Check Status
+            try:
+                w.dbfs.get_status(_path)
+            except ResourceDoesNotExist:
+                logger.info(
+                    f"Expectation checkpoint at {_path} does not exist. Skipping.",
+                )
+                return
+
+            logger.info(
+                f"Deleting expectation checkpoint at {_path}.",
+            )
+            w.dbfs.delete(_path, recursive=True)
 
     def execute(
         self,
