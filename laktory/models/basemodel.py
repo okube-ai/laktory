@@ -460,7 +460,6 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         from laktory.models.pipeline import Pipeline
         from laktory.models.pipeline import PipelineNode
 
-
         if isinstance(self, Pipeline):
             objs["pipeline"] = self
 
@@ -495,7 +494,11 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
             return self
 
     def inject_vars_into_dump(
-        self, dump: dict[str, Any], inplace: bool = False, vars: dict[str, Any] = None, objs: dict[str, Any] = None
+        self,
+        dump: dict[str, Any],
+        inplace: bool = False,
+        vars: dict[str, Any] = None,
+        objs: dict[str, Any] = None,
     ):
         """
         Inject model variables values into a model dump.

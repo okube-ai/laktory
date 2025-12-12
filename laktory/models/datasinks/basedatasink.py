@@ -432,10 +432,6 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     def _purge_checkpoint(self):
         if self.checkpoint_path:
-            logger.info(
-                "DELETE DELETE DELETE Deleting checkpoint.",
-            )
-
             # Try with simple paths (supported by local file system or Unity Catalog)
             if os.path.exists(self.checkpoint_path):
                 logger.info(
@@ -444,12 +440,12 @@ class BaseDataSink(BaseModel, PipelineChild):
                 shutil.rmtree(self.checkpoint_path)
 
             # Try with DBFS
+            # If spark is not used, dbfs is most likely not used
             if self.dataframe_backend != DataFrameBackends.PYSPARK:
-                # If spark is not used, dbfs is most likely not used
                 return
 
+            # Check if a workspace client can be instantiated
             try:
-                # Check if a workspace client can be instantiated
                 from databricks.sdk import WorkspaceClient
                 from databricks.sdk.errors import ResourceDoesNotExist
 
@@ -480,6 +476,9 @@ class BaseDataSink(BaseModel, PipelineChild):
                 )
                 return
 
+            logger.info(
+                f"Deleting checkpoint at {_path}.",
+            )
             w.dbfs.delete(_path, recursive=True)
 
     def purge(self):
