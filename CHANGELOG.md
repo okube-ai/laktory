@@ -2,7 +2,7 @@
 
 ## [0.8.16] - Unreleased
 ### Fixed
-* Support for new Databricks "com.databricks.sql.io.CloudFileNotFoundException" exception
+* More robust detection of file existence on DBFS and prevention of "com.databricks.sql.io.CloudFileNotFoundException" exception when purging checkpoints.
 
 ## [0.8.15] - 2025-12-09
 ### Added
