@@ -1,6 +1,16 @@
 # Release History
 
-## [0.8.17] - Unreleased
+## [0.8.18] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.8.17] - 2025-12-17
 ### Fixed
 * Secret scope with Keyvault backend
 
