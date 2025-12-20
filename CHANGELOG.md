@@ -2,7 +2,7 @@
 
 ## [0.8.18] - Unreleased
 ### Added
-* n/a
+* Support to reference directories as lists in YAML injection
 ### Fixed
 * n/a
 ### Updated
