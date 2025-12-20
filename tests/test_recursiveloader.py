@@ -47,8 +47,8 @@ def test_read():
         ],
         "query": "SELECT\n    *\nFORM\n    {df}\nWHERE\n-- COMMENT\n    SYMBOL = 'AAPL'\n;\n",
         "sources": [
-            {"name": "source_b", "url": "url_b"},
             {"name": "source_a", "url": "url_a"},
+            {"name": "source_b", "url": "url_b"},
         ],
     }
 
@@ -99,7 +99,7 @@ def test_read_with_variables():
         "variables": {"symbol": "aapl"},
         "query": "SELECT\n    *\nFORM\n    {df}\nWHERE\n-- COMMENT\n    SYMBOL = 'AAPL'\n;\n",
         "sources": [
-            {"name": "source_b", "url": "url_b"},
             {"name": "source_a", "url": "url_a"},
+            {"name": "source_b", "url": "url_b"},
         ],
     }

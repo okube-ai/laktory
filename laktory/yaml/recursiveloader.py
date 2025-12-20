@@ -134,7 +134,7 @@ class RecursiveLoader(yaml.SafeLoader):
 
         if filepath.is_dir():
             objs = []
-            for _filepath in filepath.rglob("*"):
+            for _filepath in sorted(filepath.rglob("*")):
                 if not (
                     _filepath.as_posix().endswith(".yaml")
                     or _filepath.as_posix().endswith(".yml")
