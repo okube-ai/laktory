@@ -14,3 +14,4 @@ variables:
   symbol: aapl
 query:
   !use stocks.sql
+sources: !use sources/

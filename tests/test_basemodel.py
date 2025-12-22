@@ -59,6 +59,10 @@ def test_read_yaml():
         open: float = None
         close: float = None
 
+    class Source(BaseModel):
+        name: str = None
+        url: str = None
+
     class Stock(BaseModel):
         name: str = None
         symbol: str = None
@@ -70,6 +74,7 @@ def test_read_yaml():
     class Stocks(BaseModel):
         stocks: list[Stock] = None
         query: str = None
+        sources: list[Source] = None
 
     with open(paths.data / "yaml_loader" / "stocks_with_vars.yaml", "r") as fp:
         b = Stocks.model_validate_yaml(fp, vars={"symbol_amazon": "amzn"})
@@ -111,6 +116,10 @@ def test_read_yaml():
             },
         ],
         "query": "SELECT\n    *\nFORM\n    {df}\nWHERE\n-- COMMENT\n    SYMBOL = 'AAPL'\n;\n",
+        "sources": [
+            {"name": "source_a", "url": "url_a"},
+            {"name": "source_b", "url": "url_b"},
+        ],
     }
 
 

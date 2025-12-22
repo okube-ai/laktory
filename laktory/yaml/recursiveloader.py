@@ -47,7 +47,9 @@ class RecursiveLoader(yaml.SafeLoader):
         Custom Tags
         -----------
         !use {filepath}:
-            Directly inject the content of the file at `filepath`
+            Directly inject the content of the file at `filepath`. A directory can also
+            be provided. In this case, each yaml file found in the directory will be
+            loaded as an element of a list.
 
         - !extend {filepath}:
             Extend the current list with the elements found in the file at `filepath`.
@@ -123,15 +125,29 @@ class RecursiveLoader(yaml.SafeLoader):
     def inject_constructor(loader, node):
         """Inject content of another YAML file."""
 
-        filepath = loader.get_path(loader, node)
+        filepath = Path(loader.get_path(loader, node))
 
-        if filepath.endswith(".sql"):
-            with open(filepath, "r", encoding="utf-8") as _fp:
+        if filepath.as_posix().endswith(".sql"):
+            with filepath.open("r", encoding="utf-8") as _fp:
                 data = _fp.read()
             return data
 
-        with open(filepath, "r") as f:
-            return RecursiveLoader.load(f, parent_loader=loader)
+        if filepath.is_dir():
+            objs = []
+            for _filepath in sorted(filepath.rglob("*")):
+                if not (
+                    _filepath.as_posix().endswith(".yaml")
+                    or _filepath.as_posix().endswith(".yml")
+                ):
+                    continue
+
+                with _filepath.open("r") as f:
+                    objs += [RecursiveLoader.load(f, parent_loader=loader)]
+            return objs
+
+        else:
+            with filepath.open("r") as f:
+                return RecursiveLoader.load(f, parent_loader=loader)
 
     @staticmethod
     def merge_constructor(loader, node):
