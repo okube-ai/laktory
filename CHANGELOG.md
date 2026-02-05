@@ -3,6 +3,7 @@
 ## [0.8.18] - Unreleased
 ### Added
 * Support to reference directories as lists in YAML injection
+* More granular control over pipeline nodes orchestration
 ### Fixed
 * n/a
 ### Updated
