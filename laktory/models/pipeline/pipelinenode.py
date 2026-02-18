@@ -125,6 +125,10 @@ class PipelineNode(BaseModel, PipelineChild):
         ),
         exclude=True,
     )
+    group: str = Field(
+        None,
+        description="Execution group"
+    )
     name: str = Field(..., description="Name given to the node.")
     primary_keys: list[str] = Field(
         None,
@@ -145,6 +149,10 @@ class PipelineNode(BaseModel, PipelineChild):
     sinks: list[DataSinksUnion] = Field(
         None,
         description="Definition of the data sink(s). Set `is_quarantine` to True to store node quarantine DataFrame.",
+    )
+    tags: list[str] = Field(
+        None,
+        description="Node tags for selective execution"
     )
     time_column: str | None = Field(
         None,
