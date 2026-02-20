@@ -1,14 +1,15 @@
+from collections import defaultdict
+
 import networkx as nx
 from pydantic import Field
-from collections import defaultdict
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline._execute import _execute  # noqa: F401
 from laktory.models.pipeline._post_execute import _post_execute  # noqa: F401
-from laktory.models.pipelinechild import PipelineChild
 from laktory.models.pipeline.pipeline import Pipeline
 from laktory.models.pipeline.pipelinetask import PipelineTask
+from laktory.models.pipelinechild import PipelineChild
 
 logger = get_logger(__name__)
 
@@ -29,11 +30,12 @@ class PipelineExecutionPlan(BaseModel, PipelineChild):
     and their dependencies. It constructs a DAG of pipeline tasks, where each task can consist of one or more nodes
     that share the same group.
     """
+
     pipeline: Pipeline = Field(
         ...,
         description="""Pipeline""",
     )
-    selects: list[str] = Field(
+    selects: list[str] | None = Field(
         None,
         description="""
         List of node names with optional dependency notation:
@@ -41,7 +43,7 @@ class PipelineExecutionPlan(BaseModel, PipelineChild):
         - *{node_name}": Execute the node and its upstream dependencies.
         - "{node_name}*": Execute the node and its downstream dependencies.
         - "*{node_name}*": Execute the node, its upstream, and downstream dependencies.
-        """
+        """,
     )
 
     @property
@@ -79,13 +81,23 @@ class PipelineExecutionPlan(BaseModel, PipelineChild):
         for upstream, downstream in pipeline_dag.edges:
             # Find the groups or nodes for upstream and downstream
             upstream_group = next(
-                (group for group, nodes in group_mapping.items() if upstream in nodes), None
+                (group for group, nodes in group_mapping.items() if upstream in nodes),
+                None,
             )
             downstream_group = next(
-                (group for group, nodes in group_mapping.items() if downstream in nodes), None
+                (
+                    group
+                    for group, nodes in group_mapping.items()
+                    if downstream in nodes
+                ),
+                None,
             )
 
-            if upstream_group and downstream_group and upstream_group != downstream_group:
+            if (
+                upstream_group
+                and downstream_group
+                and upstream_group != downstream_group
+            ):
                 execution_dag.add_edge(upstream_group, downstream_group)
 
         return execution_dag
@@ -113,7 +125,6 @@ class PipelineExecutionPlan(BaseModel, PipelineChild):
 
     @property
     def node_names(self) -> list[str]:
-
         if self.selects is None:
             return self.pipeline.sorted_node_names
 
@@ -132,7 +143,9 @@ class PipelineExecutionPlan(BaseModel, PipelineChild):
                 else:
                     # Check if it's a group or tag
                     group_or_tag_nodes = [
-                        n.name for n in self.pipeline.nodes if n.group == node_name or node_name in n.tags
+                        n.name
+                        for n in self.pipeline.nodes
+                        if n.group == node_name or node_name in n.tags
                     ]
                     if not group_or_tag_nodes:
                         raise ValueError(f"Invalid node, group, or tag: {node_name}")
@@ -149,7 +162,9 @@ class PipelineExecutionPlan(BaseModel, PipelineChild):
                 else:
                     # Check if it's a group or tag
                     group_or_tag_nodes = [
-                        n.name for n in self.pipeline.nodes if n.group == node_name or node_name in n.tags
+                        n.name
+                        for n in self.pipeline.nodes
+                        if n.group == node_name or node_name in n.tags
                     ]
                     if not group_or_tag_nodes:
                         raise ValueError(f"Invalid node, group, or tag: {node_name}")
@@ -165,7 +180,9 @@ class PipelineExecutionPlan(BaseModel, PipelineChild):
                 else:
                     # Check if it's a group or tag
                     group_or_tag_nodes = [
-                        n.name for n in self.pipeline.nodes if n.group == node_name or node_name in n.tags
+                        n.name
+                        for n in self.pipeline.nodes
+                        if n.group == node_name or node_name in n.tags
                     ]
                     if not group_or_tag_nodes:
                         raise ValueError(f"Invalid node, group, or tag: {node_name}")
@@ -179,7 +196,9 @@ class PipelineExecutionPlan(BaseModel, PipelineChild):
                 else:
                     # Check if it's a group or tag
                     group_or_tag_nodes = [
-                        n.name for n in self.pipeline.nodes if n.group == item or item in n.tags
+                        n.name
+                        for n in self.pipeline.nodes
+                        if n.group == item or item in n.tags
                     ]
                     if not group_or_tag_nodes:
                         raise ValueError(f"Invalid node, group, or tag: {item}")
@@ -191,4 +210,3 @@ class PipelineExecutionPlan(BaseModel, PipelineChild):
         ]
 
         return sorted_node_names
-

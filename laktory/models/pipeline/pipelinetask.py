@@ -1,12 +1,11 @@
-import networkx as nx
 from pydantic import Field
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline._execute import _execute  # noqa: F401
 from laktory.models.pipeline._post_execute import _post_execute  # noqa: F401
-from laktory.models.pipelinechild import PipelineChild
 from laktory.models.pipeline.pipeline import Pipeline
+from laktory.models.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
@@ -26,6 +25,7 @@ class PipelineTask(BaseModel, PipelineChild):
     """
     A pipeline task is a unit of execution within a pipeline, defined by a set of nodes to be executed together.
     """
+
     name: str = Field(
         ...,
         description="""Pipeline task name""",
@@ -35,16 +35,15 @@ class PipelineTask(BaseModel, PipelineChild):
         description="""Pipeline""",
     )
     node_names: list[str] = Field(
-        ...,
-        description="""List of node names in sorted order of execution"""
+        ..., description="""List of node names in sorted order of execution"""
     )
 
     def execute(
-            self,
-            write_sinks=True,
-            full_refresh: bool = False,
-            named_dfs: dict[str, AnyFrame] = None,
-            update_tables_metadata: bool = True,
+        self,
+        write_sinks=True,
+        full_refresh: bool = False,
+        named_dfs: dict[str, AnyFrame] = None,
+        update_tables_metadata: bool = True,
     ) -> None:
         """
         Execute the pipeline task.
@@ -62,7 +61,7 @@ class PipelineTask(BaseModel, PipelineChild):
             Update tables metadata
         """
 
-        logger.info(f"Executing Pipeline Task {self.name}")
+        logger.info(f"Executing pipeline task '{self.name}'")
 
         # Execute nodes
         for node_name in self.node_names:

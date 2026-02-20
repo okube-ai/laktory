@@ -525,12 +525,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             )
 
     def execute(
-            self,
-            write_sinks=True,
-            full_refresh: bool = False,
-            named_dfs: dict[str, AnyFrame] = None,
-            update_tables_metadata: bool = True,
-            selects: list[str] = None,
+        self,
+        write_sinks=True,
+        full_refresh: bool = False,
+        named_dfs: dict[str, AnyFrame] = None,
+        update_tables_metadata: bool = True,
+        selects: list[str] | None = None,
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -558,7 +558,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
         from laktory.models.pipeline.pipelineexecutionplan import PipelineExecutionPlan
 
-        logger.info("Executing Pipeline")
+        logger.info(f"Executing pipeline '{self.name}'")
 
         plan = PipelineExecutionPlan(
             pipeline=self,

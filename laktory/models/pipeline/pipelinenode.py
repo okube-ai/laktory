@@ -127,7 +127,7 @@ class PipelineNode(BaseModel, PipelineChild):
     )
     group: str = Field(
         None,
-        description="Execution group. Nodes with the same group will be executed together in a single task (if orchestrator supports it)."
+        description="Execution group. Nodes with the same group will be executed together in a single task (if orchestrator supports it).",
     )
     name: str = Field(..., description="Name given to the node.")
     primary_keys: list[str] = Field(
@@ -150,10 +150,7 @@ class PipelineNode(BaseModel, PipelineChild):
         None,
         description="Definition of the data sink(s). Set `is_quarantine` to True to store node quarantine DataFrame.",
     )
-    tags: list[str] = Field(
-        [],
-        description="Node tags for selective execution."
-    )
+    tags: list[str] = Field([], description="Node tags for selective execution.")
     time_column: str | None = Field(
         None,
         description="""
