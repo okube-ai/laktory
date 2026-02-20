@@ -525,11 +525,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             )
 
     def execute(
-        self,
-        write_sinks=True,
-        full_refresh: bool = False,
-        named_dfs: dict[str, AnyFrame] = None,
-        update_tables_metadata: bool = True,
+            self,
+            write_sinks=True,
+            full_refresh: bool = False,
+            named_dfs: dict[str, AnyFrame] = None,
+            update_tables_metadata: bool = True,
+            selects: list[str] = None,
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -547,14 +548,31 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             Named DataFrames to be passed to pipeline nodes transformer.
         update_tables_metadata:
             Update tables metadata
+        selects:
+            List of node names with optional dependency notation:
+            - "{node_name}": Execute the node only.
+            - *{node_name}": Execute the node and its upstream dependencies.
+            - "{node_name}*": Execute the node and its downstream dependencies.
+            - "*{node_name}*": Execute the node, its upstream, and downstream dependencies.
         """
+
+        from laktory.models.pipeline.pipelineexecutionplan import PipelineExecutionPlan
+
         logger.info("Executing Pipeline")
 
-        for inode, node in enumerate(self.sorted_nodes):
-            if named_dfs is None:
-                named_dfs = {}
+        plan = PipelineExecutionPlan(
+            pipeline=self,
+            selects=selects,
+        )
+        node_names = plan.node_names
 
-            node.execute(
+        logger.info(f"Selected nodes: {node_names}")
+
+        if named_dfs is None:
+            named_dfs = {}
+
+        for task in plan.tasks:
+            task.execute(
                 write_sinks=write_sinks,
                 full_refresh=full_refresh,
                 named_dfs=named_dfs,
