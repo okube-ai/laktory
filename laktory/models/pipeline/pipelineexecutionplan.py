@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import networkx as nx
 from pydantic import Field
+from pydantic import SkipValidation
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
@@ -9,7 +10,6 @@ from laktory.models.pipeline._execute import _execute  # noqa: F401
 from laktory.models.pipeline._post_execute import _post_execute  # noqa: F401
 from laktory.models.pipeline.pipeline import Pipeline
 from laktory.models.pipeline.pipelinetask import PipelineTask
-from laktory.models.pipelinechild import PipelineChild
 
 logger = get_logger(__name__)
 
@@ -24,14 +24,14 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 
 
-class PipelineExecutionPlan(BaseModel, PipelineChild):
+class PipelineExecutionPlan(BaseModel):
     """
     A pipeline execution plan defines the pipeline tasks to be executed according to the selected nodes/groups/tags
     and their dependencies. It constructs a DAG of pipeline tasks, where each task can consist of one or more nodes
     that share the same group.
     """
 
-    pipeline: Pipeline = Field(
+    pipeline: SkipValidation[Pipeline] = Field(
         ...,
         description="""Pipeline""",
     )
@@ -122,6 +122,11 @@ class PipelineExecutionPlan(BaseModel, PipelineChild):
             ]
 
         return tasks
+
+    @property
+    def tasks_dict(self):
+        """Tasks dictionary"""
+        return {task.name: task for task in self.tasks}
 
     @property
     def node_names(self) -> list[str]:

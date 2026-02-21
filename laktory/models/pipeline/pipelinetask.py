@@ -1,11 +1,11 @@
 from pydantic import Field
+from pydantic import SkipValidation
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline._execute import _execute  # noqa: F401
 from laktory.models.pipeline._post_execute import _post_execute  # noqa: F401
 from laktory.models.pipeline.pipeline import Pipeline
-from laktory.models.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 
 
-class PipelineTask(BaseModel, PipelineChild):
+class PipelineTask(BaseModel):
     """
     A pipeline task is a unit of execution within a pipeline, defined by a set of nodes to be executed together.
     """
@@ -30,7 +30,7 @@ class PipelineTask(BaseModel, PipelineChild):
         ...,
         description="""Pipeline task name""",
     )
-    pipeline: Pipeline = Field(
+    pipeline: SkipValidation[Pipeline] = Field(
         ...,
         description="""Pipeline""",
     )
@@ -75,3 +75,18 @@ class PipelineTask(BaseModel, PipelineChild):
                 named_dfs=named_dfs,
                 update_tables_metadata=update_tables_metadata,
             )
+
+    @property
+    def nodes(self):
+        """Task nodes"""
+        return [self.pipeline.nodes_dict[node_name] for node_name in self.node_names]
+
+    @property
+    def has_sinks(self) -> bool:
+        """`True` if at least one sink is found in task nodes."""
+        has_sinks = False
+        for node in self.nodes:
+            if node.has_sinks:
+                has_sinks = True
+                break
+        return has_sinks

@@ -524,6 +524,32 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 spark=spark,
             )
 
+    def get_execution_plan(
+        self,
+        selects: list[str] | None = None,
+    ):
+        """
+        Execute the pipeline (read sources and write sinks) by sequentially
+        executing each node. The selected orchestrator might impact how
+        data sources or sinks are processed.
+
+        Parameters
+        ----------
+        selects:
+            List of node names with optional dependency notation:
+            - "{node_name}": Execute the node only.
+            - *{node_name}": Execute the node and its upstream dependencies.
+            - "{node_name}*": Execute the node and its downstream dependencies.
+            - "*{node_name}*": Execute the node, its upstream, and downstream dependencies.
+        """
+
+        from laktory.models.pipeline.pipelineexecutionplan import PipelineExecutionPlan
+
+        return PipelineExecutionPlan(
+            pipeline=self,
+            selects=selects,
+        )
+
     def execute(
         self,
         write_sinks=True,
@@ -556,14 +582,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             - "*{node_name}*": Execute the node, its upstream, and downstream dependencies.
         """
 
-        from laktory.models.pipeline.pipelineexecutionplan import PipelineExecutionPlan
-
         logger.info(f"Executing pipeline '{self.name}'")
 
-        plan = PipelineExecutionPlan(
-            pipeline=self,
-            selects=selects,
-        )
+        plan = self.get_execution_plan(selects=selects)
         node_names = plan.node_names
 
         logger.info(f"Selected nodes: {node_names}")
