@@ -3,7 +3,8 @@
 ## [0.9.0] - Unreleased
 ### Added
 * Support to reference directories as lists in YAML injection
-* More granular control over pipeline nodes orchestration
+* Pipeline node `group` attribute for more granular control over pipeline orchestration
+* Pipeline node `tag` attribute to facilitate nodes selection at execution
 ### Fixed
 * n/a
 ### Updated
