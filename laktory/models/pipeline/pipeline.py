@@ -537,10 +537,11 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         ----------
         selects:
             List of node names with optional dependency notation:
-            - "{node_name}": Execute the node only.
-            - *{node_name}": Execute the node and its upstream dependencies.
-            - "{node_name}*": Execute the node and its downstream dependencies.
-            - "*{node_name}*": Execute the node, its upstream, and downstream dependencies.
+
+            - `{node_name}`: Execute the node only.
+            - `*{node_name}`: Execute the node and its upstream dependencies.
+            - `{node_name}*`: Execute the node and its downstream dependencies.
+            - `*{node_name}*`: Execute the node, its upstream, and downstream dependencies.
         """
 
         from laktory.models.pipeline.pipelineexecutionplan import PipelineExecutionPlan
@@ -576,10 +577,11 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             Update tables metadata
         selects:
             List of node names with optional dependency notation:
-            - "{node_name}": Execute the node only.
-            - *{node_name}": Execute the node and its upstream dependencies.
-            - "{node_name}*": Execute the node and its downstream dependencies.
-            - "*{node_name}*": Execute the node, its upstream, and downstream dependencies.
+
+            - `{node_name}`: Execute the node only.
+            - `*{node_name}`: Execute the node and its upstream dependencies.
+            - `{node_name}*`: Execute the node and its downstream dependencies.
+            - `*{node_name}*`: Execute the node, its upstream, and downstream dependencies.
         """
 
         logger.info(f"Executing pipeline '{self.name}'")

@@ -39,10 +39,11 @@ class PipelineExecutionPlan(BaseModel):
         None,
         description="""
         List of node names with optional dependency notation:
-        - "{node_name}": Execute the node only.
-        - *{node_name}": Execute the node and its upstream dependencies.
-        - "{node_name}*": Execute the node and its downstream dependencies.
-        - "*{node_name}*": Execute the node, its upstream, and downstream dependencies.
+        
+        - `{node_name}`: Execute the node only.
+        - `*{node_name}`: Execute the node and its upstream dependencies.
+        - `{node_name}*`: Execute the node and its downstream dependencies.
+        - `*{node_name}*`: Execute the node, its upstream, and downstream dependencies.
         """,
     )
 

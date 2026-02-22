@@ -195,6 +195,8 @@ nav:
       - Pipeline:
         - Pipeline: api/models/pipeline/pipeline.md
         - PipelineNode: api/models/pipeline/pipelinenode.md
+        - PipelineTask: api/models/pipeline/pipelinetask.md
+        - PipelineExecutionPlan: api/models/pipeline/pipelineexecutionplan.md
         - Orchestrators:
             - Databricks Job: api/models/pipeline/orchestrators/databricksjoborchestrator.md
             - Databricks Pipeline: api/models/pipeline/orchestrators/databrickspipelineorchestrator.md
