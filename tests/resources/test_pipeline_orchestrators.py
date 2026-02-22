@@ -101,7 +101,7 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._execute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "node_name": "brz",
+                        "selects": "brz",
                     },
                     "package_name": "laktory",
                 },
@@ -119,7 +119,7 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._execute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "node_name": "gld",
+                        "selects": "gld",
                     },
                     "package_name": "laktory",
                 },
@@ -137,7 +137,7 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._execute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "node_name": "gld_a",
+                        "selects": "gld_a",
                     },
                     "package_name": "laktory",
                 },
@@ -155,7 +155,7 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._execute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "node_name": "gld_ab",
+                        "selects": "gld_ab",
                     },
                     "package_name": "laktory",
                 },
@@ -173,7 +173,7 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._execute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "node_name": "gld_b",
+                        "selects": "gld_b",
                     },
                     "package_name": "laktory",
                 },
@@ -191,7 +191,7 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._execute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "node_name": "slv",
+                        "selects": "slv",
                     },
                     "package_name": "laktory",
                 },
@@ -216,8 +216,8 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._post_execute",
                     "named_parameters": {
                         "filepaths": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "quality_monitors": "true",
                         "tables_metadata": "false",
+                        "quality_monitors": "true",
                     },
                     "package_name": "laktory",
                 },
@@ -462,7 +462,7 @@ def test_databricks_job():
                         "entry_point": "models.pipeline._execute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                            "node_name": "brz",
+                            "selects": "brz",
                         },
                         "package_name": "laktory",
                     },
@@ -480,7 +480,7 @@ def test_databricks_job():
                         "entry_point": "models.pipeline._execute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                            "node_name": "gld",
+                            "selects": "gld",
                         },
                         "package_name": "laktory",
                     },
@@ -498,7 +498,7 @@ def test_databricks_job():
                         "entry_point": "models.pipeline._execute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                            "node_name": "gld_a",
+                            "selects": "gld_a",
                         },
                         "package_name": "laktory",
                     },
@@ -519,7 +519,7 @@ def test_databricks_job():
                         "entry_point": "models.pipeline._execute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                            "node_name": "gld_ab",
+                            "selects": "gld_ab",
                         },
                         "package_name": "laktory",
                     },
@@ -537,7 +537,7 @@ def test_databricks_job():
                         "entry_point": "models.pipeline._execute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                            "node_name": "gld_b",
+                            "selects": "gld_b",
                         },
                         "package_name": "laktory",
                     },
@@ -555,7 +555,7 @@ def test_databricks_job():
                         "entry_point": "models.pipeline._execute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                            "node_name": "slv",
+                            "selects": "slv",
                         },
                         "package_name": "laktory",
                     },
@@ -607,7 +607,7 @@ def test_databricks_job_execute(mocker):
         "_execute",
         "--filepath",
         str(data_dirpath / "pl.yaml"),
-        "--node_name",
+        "--selects",
         "brz",
         "--full_refresh",
         "true",

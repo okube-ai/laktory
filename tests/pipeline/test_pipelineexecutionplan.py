@@ -63,7 +63,7 @@ def pl():
 
 def test_selected_nodes(pl):
     # All nodes
-    plan = models.PipelineExecutionPlan(pipeline=pl)
+    plan = pl.get_execution_plan()
     assert plan.node_names == [
         "brz_a",
         "brz_b",
@@ -76,39 +76,39 @@ def test_selected_nodes(pl):
     ]
 
     # Single Nodes
-    plan = models.PipelineExecutionPlan(pipeline=pl, selects=["slv_a1"])
+    plan = pl.get_execution_plan(selects=["slv_a1"])
     assert plan.node_names == ["slv_a1"]
 
     # Single Group
-    plan = models.PipelineExecutionPlan(pipeline=pl, selects=["slv_a"])
+    plan = pl.get_execution_plan(selects=["slv_a"])
     assert plan.node_names == ["slv_a1", "slv_a2"]
 
     # Single Group
-    plan = models.PipelineExecutionPlan(pipeline=pl, selects=["slv_b"])
+    plan = pl.get_execution_plan(selects=["slv_b"])
     assert plan.node_names == ["slv_b2", "slv_b1"]
 
     # Single Tag
-    plan = models.PipelineExecutionPlan(pipeline=pl, selects=["gld"])
+    plan = pl.get_execution_plan(selects=["gld"])
     assert plan.node_names == ["gld_a", "gld_b"]
 
     # Upstream
-    plan = models.PipelineExecutionPlan(pipeline=pl, selects=["*slv_a1"])
+    plan = pl.get_execution_plan(selects=["*slv_a1"])
     assert plan.node_names == ["brz_a", "slv_a1"]
 
     # Downstream
-    plan = models.PipelineExecutionPlan(pipeline=pl, selects=["slv_a1*"])
+    plan = pl.get_execution_plan(selects=["slv_a1*"])
     assert plan.node_names == ["slv_a1", "gld_a"]
 
     # Downstream and Upstream
-    plan = models.PipelineExecutionPlan(pipeline=pl, selects=["*slv_a1*"])
+    plan = pl.get_execution_plan(selects=["*slv_a1*"])
     assert plan.node_names == ["brz_a", "slv_a1", "gld_a"]
 
     # Downstream and Upstream Group
-    plan = models.PipelineExecutionPlan(pipeline=pl, selects=["*slv_a*"])
+    plan = pl.get_execution_plan(selects=["*slv_a*"])
     assert plan.node_names == ["brz_a", "slv_a1", "slv_a2", "gld_a"]
 
     # Downstream tag
-    plan = models.PipelineExecutionPlan(pipeline=pl, selects=["*gld"])
+    plan = pl.get_execution_plan(selects=["*gld"])
     assert plan.node_names == [
         "brz_a",
         "brz_b",
@@ -141,7 +141,7 @@ def test_plan_dag(pl):
         ["gld_b"],
     ]
 
-    plan = models.PipelineExecutionPlan(pipeline=pl, selects=["slv_a", "slv_b"])
+    plan = pl.get_execution_plan(selects=["slv_a", "slv_b"])
     assert [task.name for task in plan.tasks] == [
         "group-slv_a",
         "group-slv_b",
@@ -151,6 +151,6 @@ def test_plan_dag(pl):
         ["slv_b2", "slv_b1"],
     ]
 
-    plan = models.PipelineExecutionPlan(pipeline=pl, selects=["slv_a1*"])
+    plan = pl.get_execution_plan(selects=["slv_a1*"])
     assert [task.name for task in plan.tasks] == ["group-slv_a", "node-gld_a"]
     assert [task.node_names for task in plan.tasks] == [["slv_a1"], ["gld_a"]]
