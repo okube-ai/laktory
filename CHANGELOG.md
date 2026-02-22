@@ -10,7 +10,7 @@
 ### Updated
 * n/a
 ### Breaking changes
-* n/a
+* Removed obsolete `cloud` attribute from Metastore resource
 
 ## [0.8.17] - 2025-12-17
 ### Fixed
