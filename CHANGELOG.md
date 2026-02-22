@@ -1,14 +1,16 @@
 # Release History
 
-## [0.8.18] - Unreleased
+## [0.9.0] - Unreleased
 ### Added
 * Support to reference directories as lists in YAML injection
+* Pipeline node `group` attribute for more granular control over pipeline orchestration
+* Pipeline node `tag` attribute to facilitate nodes selection at execution
 ### Fixed
 * n/a
 ### Updated
 * n/a
 ### Breaking changes
-* n/a
+* Removed obsolete `cloud` attribute from Metastore resource
 
 ## [0.8.17] - 2025-12-17
 ### Fixed

@@ -27,7 +27,6 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    cloud: str = Field(None, description="")
     created_at: int = Field(None, description="")
     created_by: str = Field(None, description="")
     data_accesses: list[MetastoreDataAccess] = Field(

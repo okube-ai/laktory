@@ -79,14 +79,14 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         self.tasks = []
 
-        def _get_depends_on(node, pl):
+        def _get_depends_on(task, plan):
             depends_on = []
-            for edge in pl.dag.in_edges(node.name):
-                _node = pl.nodes_dict[edge[0]]
-                if _node.has_sinks:
-                    depends_on += [{"task_key": "node-" + edge[0]}]
+            for edge in plan.dag.in_edges(task.name):
+                _task = plan.tasks_dict[edge[0]]
+                if _task.has_sinks:
+                    depends_on += [{"task_key": edge[0]}]
                 else:
-                    depends_on += _get_depends_on(_node, pl)
+                    depends_on += _get_depends_on(_task, plan)
             return depends_on
 
         # Requirements and path
@@ -118,24 +118,26 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             self.environments = envs
 
         # Sorting Node Names to prevent job update trigger with Pulumi
-        node_names = [node.name for node in pl.nodes]
-        node_names.sort()
-        for node_name in node_names:
-            node = pl.nodes_dict[node_name]
+        plan = pl.get_execution_plan()
+        pl_tasks = plan.tasks_dict
+        pl_task_names = list(pl_tasks.keys())
+        pl_task_names.sort()
+        for pl_task_name in pl_task_names:
+            pl_task = pl_tasks[pl_task_name]
 
-            if not node.has_sinks:
+            if not pl_task.has_sinks:
                 continue
 
-            depends_on = _get_depends_on(node, pl=pl)
+            depends_on = _get_depends_on(pl_task, plan=plan)
 
             task = JobTask(
-                task_key="node-" + node.name,
+                task_key=pl_task.name,
                 python_wheel_task=JobTaskPythonWheelTask(
                     entry_point="models.pipeline._execute",
                     package_name="laktory",
                     named_parameters={
                         "filepath": _path,
-                        "node_name": node.name,
+                        "selects": ",".join(pl_task.node_names),
                     },
                 ),
                 depends_ons=depends_on,
