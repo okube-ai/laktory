@@ -45,9 +45,6 @@ class TableDataSink(BaseDataSink):
         "TABLE",
         description="Type of table. 'TABLE' and 'VIEW' are currently supported.",
     )
-    view_definition: DataFrameExpr | str = Field(
-        None, description="View definition of 'VIEW' `table_type` is selected."
-    )
 
     @model_validator(mode="after")
     def validate_table_full_name(self) -> Any:
@@ -68,30 +65,11 @@ class TableDataSink(BaseDataSink):
         return self
 
     @model_validator(mode="after")
-    def set_table_type(self):
-        with self.validate_assignment_disabled():
-            if self.view_definition is not None:
-                self.table_type = "VIEW"
-        if self.table_type == "VIEW" and self.view_definition is None:
-            raise ValueError(
-                'View definition must be provided for "VIEW" `table_type`.'
-            )
-        return self
-
-    @model_validator(mode="after")
     def set_qm_table(self):
         if self.databricks_quality_monitor is None:
             return self
         self.databricks_quality_monitor._table = self
         return self
-
-    @field_validator("view_definition")
-    def set_view_definition(
-        cls, value: DataFrameExpr | str | None
-    ) -> DataFrameExpr | None:
-        if value and not isinstance(value, DataFrameExpr):
-            value = DataFrameExpr(expr=value)
-        return value
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -127,15 +105,11 @@ class TableDataSink(BaseDataSink):
     @property
     def upstream_node_names(self) -> list[str]:
         """Pipeline node names required to write sink"""
-        if self.view_definition:
-            return self.view_definition.upstream_node_names
         return []
 
     @property
     def data_sources(self):
         """Get all sources feeding the sink"""
-        if self.view_definition:
-            return self.view_definition.data_sources
         return []
 
     # ----------------------------------------------------------------------- #
@@ -146,7 +120,6 @@ class TableDataSink(BaseDataSink):
     def children_names(self):
         return [
             "metadata",
-            "view_definition",
         ]
 
     # ----------------------------------------------------------------------- #
@@ -191,14 +164,15 @@ class TableDataSink(BaseDataSink):
 
             writer.saveAsTable(self.full_name)
 
-    def _write_spark_view(self) -> None:
+    def _write_spark_view(self, view_definition) -> None:
+
         from laktory import get_spark_session
 
         spark = get_spark_session()
 
-        logger.info(f"Creating view {self.full_name} AS {self.view_definition.expr}")
+        logger.info(f"Creating view {self.full_name} AS {view_definition.expr}")
 
-        _view = self.view_definition.to_sql()
+        _view = view_definition.to_sql()
         df = spark.sql(f"CREATE OR REPLACE VIEW {self.full_name} AS {_view}")
         if self.parent_pipeline_node:
             self.parent_pipeline_node._output_df = df

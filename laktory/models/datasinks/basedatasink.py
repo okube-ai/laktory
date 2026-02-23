@@ -225,7 +225,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             self._validate_mode_spark(mode, df)
 
     def write(
-        self, df: AnyFrame = None, mode: str = None, full_refresh: bool = False
+        self, df: AnyFrame = None, view_definition = None, mode: str = None, full_refresh: bool = False
     ) -> None:
         """
         Write dataframe into sink.
@@ -239,13 +239,17 @@ class BaseDataSink(BaseModel, PipelineChild):
             before write.
         mode:
             Write mode overwrite of the sink default mode.
+        view_definition:
+            View definition for table data sinks of `VIEW` type
         """
 
-        if getattr(self, "view_definition", None):
+        if getattr(self, "table_type", None) == "VIEW":
+            if view_definition is None:
+                raise ValueError(f"`view_definition` for '{self._id}' is `None`")
             if self.dataframe_backend == DataFrameBackends.PYSPARK:
-                self._write_spark_view()
+                self._write_spark_view(view_definition)
             elif self.dataframe_backend == DataFrameBackends.POLARS:
-                self._write_polars_view()
+                self._write_polars_view(view_definition)
             else:
                 raise ValueError(
                     f"DataFrame backend '{self.dataframe_backend}' is not supported"
@@ -289,12 +293,12 @@ class BaseDataSink(BaseModel, PipelineChild):
 
         logger.info("Write completed.")
 
-    def _write_spark_view(self) -> None:
+    def _write_spark_view(self, view_definition) -> None:
         raise NotImplementedError(
             f"View creation with spark is not implemented for type '{type(self)}'"
         )
 
-    def _write_polars_view(self) -> None:
+    def _write_polars_view(self, view_definition) -> None:
         raise NotImplementedError(
             f"View creation with polars is not implemented for type '{type(self)}'"
         )

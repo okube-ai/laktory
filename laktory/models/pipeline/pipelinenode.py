@@ -223,17 +223,25 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Validate Sinks
         m = f"node '{self.name}': "
-        for s in self.sinks:
-            if s.table_type != "VIEW":
-                raise ValueError(
-                    f"{m}If one pipeline node sink is a VIEW, all of them must be a view."
-                )
+
+        # Validate Transformer
+        if not self.transformer:
+            raise ValueError(f"{m}VIEW sink requires a transformer with single node expressed as SQL statement.")
+        if not self.transformer.is_valid_view_definition:
+            raise ValueError(f"{m}VIEW sink requires a transformer with single node expressed as SQL statement.")
 
         # Validate Expectations
         if self.expectations:
             raise ValueError(f"{m}Expectations not supported for a view sink.")
 
         return self
+
+    @property
+    def view_definition(self):
+        """Transformer View Definition (when applicable)"""
+        if self.transformer is None:
+            return None
+        return self.transformer.view_definition
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
@@ -606,16 +614,17 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Output and Quarantine to Sinks
         if write_sinks:
+            view_definition = self.view_definition
             for s in self.output_sinks:
                 if self.is_view:
                     s.write()
                     self._output_df = s.as_source().read()
                 else:
-                    s.write(self._output_df, full_refresh=full_refresh)
+                    s.write(df=self._output_df, full_refresh=full_refresh, view_definition=view_definition)
 
             if self._quarantine_df is not None:
                 for s in self.quarantine_sinks:
-                    s.write(self._quarantine_df, full_refresh=full_refresh)
+                    s.write(df=self._quarantine_df, full_refresh=full_refresh, view_definition=view_definition)
 
         # Update tables metadata
         if update_tables_metadata and not self.is_dlt_execute:
