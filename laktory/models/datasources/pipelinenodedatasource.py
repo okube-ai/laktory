@@ -82,10 +82,6 @@ class PipelineNodeDataSource(BaseDataSource):
                 f"Node '{self.node_name}' does not exists in pipeline '{pl.name}'"
             )
 
-        print(f"Node Name: {self.node_name}")
-        print(f"Nodes: {pl.nodes_dict.keys()}")
-        print(f"Node: '{pl.nodes_dict[self.node_name]}'")
-
         return pl.nodes_dict[self.node_name]
 
     @property
