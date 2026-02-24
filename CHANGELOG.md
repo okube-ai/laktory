@@ -11,6 +11,7 @@
 * n/a
 ### Breaking changes
 * Removed obsolete `cloud` attribute from Metastore resource
+* Refactored View Table Data Sinks structure (removed `view_definition` attribute)
 
 ## [0.8.17] - 2025-12-17
 ### Fixed
