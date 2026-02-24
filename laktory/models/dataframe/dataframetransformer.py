@@ -90,6 +90,21 @@ class DataFrameTransformer(BaseModel, PipelineChild):
 
         return sources
 
+    @property
+    def is_valid_view_definition(self):
+        """Identify if transformer can be used to create a SQL view."""
+        if len(self.nodes) != 1:
+            return False
+        if not isinstance(self.nodes[0], DataFrameExpr):
+            return False
+        return True
+
+    @property
+    def view_definition(self):
+        if not self.is_valid_view_definition:
+            return None
+        return self.nodes[0]
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #

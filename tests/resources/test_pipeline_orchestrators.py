@@ -252,16 +252,22 @@ def test_databricks_job():
                         "schema_name": "default",
                         "table_name": "gld_ab",
                         "table_type": "VIEW",
-                        "view_definition": {
-                            "expr": "SELECT * from {nodes.gld_a} UNION SELECT * from {nodes.gld_b}",
-                            "dataframe_backend": "PYSPARK",
-                            "dataframe_api": "NARWHALS",
-                        },
                         "dataframe_backend": "PYSPARK",
                         "dataframe_api": "NARWHALS",
                         "checkpoint_path": "pipelines/pl-job/gld_ab/checkpoints/sink-cd086c7d-37a3-0a0b-490b-96fa2980679e",
                     }
                 ],
+                "transformer": {
+                    "nodes": [
+                        {
+                            "expr": "SELECT * from {nodes.gld_a} UNION SELECT * from {nodes.gld_b}",
+                            "dataframe_backend": "PYSPARK",
+                            "dataframe_api": "NARWHALS",
+                        }
+                    ],
+                    "dataframe_backend": "PYSPARK",
+                    "dataframe_api": "NARWHALS",
+                },
                 "dataframe_backend": "PYSPARK",
                 "dataframe_api": "NARWHALS",
                 "root_path": "pipelines/pl-job/gld_ab",
@@ -382,16 +388,22 @@ def test_databricks_job():
                         "schema_name": "default",
                         "table_name": "gld_a",
                         "table_type": "VIEW",
-                        "view_definition": {
-                            "expr": "SELECT * from {nodes.gld} WHERE id = 'a'",
-                            "dataframe_backend": "PYSPARK",
-                            "dataframe_api": "NARWHALS",
-                        },
                         "dataframe_backend": "PYSPARK",
                         "dataframe_api": "NARWHALS",
                         "checkpoint_path": "pipelines/pl-job/gld_a/checkpoints/sink-514b35b8-117e-9aa5-362b-5dc5b3ece569",
                     }
                 ],
+                "transformer": {
+                    "nodes": [
+                        {
+                            "expr": "SELECT * from {nodes.gld} WHERE id = 'a'",
+                            "dataframe_backend": "PYSPARK",
+                            "dataframe_api": "NARWHALS",
+                        }
+                    ],
+                    "dataframe_backend": "PYSPARK",
+                    "dataframe_api": "NARWHALS",
+                },
                 "dataframe_backend": "PYSPARK",
                 "dataframe_api": "NARWHALS",
                 "root_path": "pipelines/pl-job/gld_a",
@@ -404,16 +416,22 @@ def test_databricks_job():
                         "schema_name": "default",
                         "table_name": "gld_b",
                         "table_type": "VIEW",
-                        "view_definition": {
-                            "expr": "SELECT * from {nodes.gld} WHERE id = 'b'",
-                            "dataframe_backend": "PYSPARK",
-                            "dataframe_api": "NARWHALS",
-                        },
                         "dataframe_backend": "PYSPARK",
                         "dataframe_api": "NARWHALS",
                         "checkpoint_path": "pipelines/pl-job/gld_b/checkpoints/sink-d897b6e7-771c-6620-a110-d2fd1c8c9ae3",
                     }
                 ],
+                "transformer": {
+                    "nodes": [
+                        {
+                            "expr": "SELECT * from {nodes.gld} WHERE id = 'b'",
+                            "dataframe_backend": "PYSPARK",
+                            "dataframe_api": "NARWHALS",
+                        }
+                    ],
+                    "dataframe_backend": "PYSPARK",
+                    "dataframe_api": "NARWHALS",
+                },
                 "dataframe_backend": "PYSPARK",
                 "dataframe_api": "NARWHALS",
                 "root_path": "pipelines/pl-job/gld_b",
