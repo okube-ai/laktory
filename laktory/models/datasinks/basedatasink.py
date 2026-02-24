@@ -225,7 +225,11 @@ class BaseDataSink(BaseModel, PipelineChild):
             self._validate_mode_spark(mode, df)
 
     def write(
-        self, df: AnyFrame = None, view_definition = None, mode: str = None, full_refresh: bool = False
+        self,
+        df: AnyFrame = None,
+        view_definition: str = None,
+        mode: str = None,
+        full_refresh: bool = False,
     ) -> None:
         """
         Write dataframe into sink.
@@ -246,6 +250,12 @@ class BaseDataSink(BaseModel, PipelineChild):
         if getattr(self, "table_type", None) == "VIEW":
             if view_definition is None:
                 raise ValueError(f"`view_definition` for '{self._id}' is `None`")
+
+            from laktory.models.dataframe.dataframeexpr import DataFrameExpr
+
+            if not isinstance(view_definition, DataFrameExpr):
+                view_definition = DataFrameExpr(expr=view_definition)
+
             if self.dataframe_backend == DataFrameBackends.PYSPARK:
                 self._write_spark_view(view_definition)
             elif self.dataframe_backend == DataFrameBackends.POLARS:

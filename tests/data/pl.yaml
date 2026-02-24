@@ -11,7 +11,9 @@ nodes:
   - schema_name: default
     table_name: gld_ab
     table_type: VIEW
-    view_definition: SELECT * from {nodes.gld_a} UNION SELECT * from {nodes.gld_b}
+  transformer:
+    nodes:
+    - expr: SELECT * from {nodes.gld_a} UNION SELECT * from {nodes.gld_b}
 
 - name: brz
   source:
@@ -59,11 +61,15 @@ nodes:
   - schema_name: default
     table_name: gld_a
     table_type: VIEW
-    view_definition: SELECT * from {nodes.gld} WHERE id = 'a'
+  transformer:
+    nodes:
+    - expr: SELECT * from {nodes.gld} WHERE id = 'a'
 
 - name: gld_b
   sinks:
   - schema_name: default
     table_name: gld_b
     table_type: VIEW
-    view_definition: SELECT * from {nodes.gld} WHERE id = 'b'
+  transformer:
+    nodes:
+    - expr: SELECT * from {nodes.gld} WHERE id = 'b'

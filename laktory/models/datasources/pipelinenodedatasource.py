@@ -72,6 +72,8 @@ class PipelineNodeDataSource(BaseDataSource):
     def node(self):
         pl = self.parent_pipeline
 
+        print("getting node!!")
+
         if pl is None:
             raise ValueError(f"Source '{self.node_name}' is not attached to a pipeline")
 
@@ -79,6 +81,10 @@ class PipelineNodeDataSource(BaseDataSource):
             raise ValueError(
                 f"Node '{self.node_name}' does not exists in pipeline '{pl.name}'"
             )
+
+        print(f"Node Name: {self.node_name}")
+        print(f"Nodes: {pl.nodes_dict.keys()}")
+        print(f"Node: '{pl.nodes_dict[self.node_name]}'")
 
         return pl.nodes_dict[self.node_name]
 
@@ -98,11 +104,15 @@ class PipelineNodeDataSource(BaseDataSource):
         return node.primary_sink.full_name
 
     # ----------------------------------------------------------------------- #
-    # Readers                                                                 #
+    # Readers                                                                 #z
     # ----------------------------------------------------------------------- #
 
     def _read_spark(self) -> AnyFrame:
-        stream_to_batch = not self.as_stream and self.node.source.as_stream
+        stream_to_batch = (
+            not self.as_stream
+            and self.node.source is not None
+            and self.node.source.as_stream
+        )
         is_dlt = False
 
         pl = self.parent_pipeline

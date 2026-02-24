@@ -328,12 +328,14 @@ def test_read_write_view(backend, tmp_path):
     ]
     slv = get_slv(tmp_path, backend)
     slv.source = None
+    slv.transformer = models.DataFrameTransformer(
+        nodes=[models.DataFrameExpr(expr="SELECT * from {nodes.brz}")]
+    )
     slv.sinks = [
         models.HiveMetastoreDataSink(
             schema_name="default",
             table_name="slv",
             table_type="VIEW",
-            view_definition="SELECT * from {nodes.brz}",
         )
     ]
     pl = models.Pipeline(name="pl", nodes=[brz, slv], dataframe_backend=backend)

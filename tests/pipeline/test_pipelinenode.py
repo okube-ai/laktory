@@ -162,9 +162,13 @@ def test_execute_view(backend, tmp_path):
                 "schema_name": "default",
                 "table_name": "df1",
                 "table_type": "VIEW",
-                "view_definition": "SELECT id FROM {df}",
             }
         ],
+        transformer={
+            "nodes": [
+                {"expr": "SELECT id FROM {df}"},
+            ]
+        },
     )
 
     df1_output = node.execute()
@@ -197,15 +201,14 @@ def test_purge_multisinks(backend, tmp_path):
                 "schema_name": "default",
                 "table_name": "df1",
                 "table_type": "VIEW",
-                "view_definition": "SELECT id FROM {df}",
             },
             {
                 "schema_name": "default",
                 "table_name": "df2",
                 "table_type": "VIEW",
-                "view_definition": "SELECT id FROM {df}",
             },
         ],
+        transformer={"nodes": [{"expr": "SELECT id FROM {df}"}]},
     )
 
     node.purge()

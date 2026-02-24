@@ -6,12 +6,10 @@ from typing import Any
 from typing import Literal
 
 from pydantic import Field
-from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
-from laktory.models.dataframe.dataframeexpr import DataFrameExpr
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.models.datasinks.tabledatasinkmetadata import TableDataSinkMetadata
 from laktory.models.datasources.tabledatasource import TableDataSource
@@ -165,7 +163,6 @@ class TableDataSink(BaseDataSink):
             writer.saveAsTable(self.full_name)
 
     def _write_spark_view(self, view_definition) -> None:
-
         from laktory import get_spark_session
 
         spark = get_spark_session()

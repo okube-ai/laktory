@@ -226,9 +226,13 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Validate Transformer
         if not self.transformer:
-            raise ValueError(f"{m}VIEW sink requires a transformer with single node expressed as SQL statement.")
+            raise ValueError(
+                f"{m}VIEW sink requires a transformer with single node expressed as SQL statement."
+            )
         if not self.transformer.is_valid_view_definition:
-            raise ValueError(f"{m}VIEW sink requires a transformer with single node expressed as SQL statement.")
+            raise ValueError(
+                f"{m}VIEW sink requires a transformer with single node expressed as SQL statement."
+            )
 
         # Validate Expectations
         if self.expectations:
@@ -617,14 +621,18 @@ class PipelineNode(BaseModel, PipelineChild):
             view_definition = self.view_definition
             for s in self.output_sinks:
                 if self.is_view:
-                    s.write()
+                    s.write(view_definition=view_definition)
                     self._output_df = s.as_source().read()
                 else:
-                    s.write(df=self._output_df, full_refresh=full_refresh, view_definition=view_definition)
+                    s.write(df=self._output_df, full_refresh=full_refresh)
 
             if self._quarantine_df is not None:
                 for s in self.quarantine_sinks:
-                    s.write(df=self._quarantine_df, full_refresh=full_refresh, view_definition=view_definition)
+                    s.write(
+                        df=self._quarantine_df,
+                        full_refresh=full_refresh,
+                        view_definition=view_definition,
+                    )
 
         # Update tables metadata
         if update_tables_metadata and not self.is_dlt_execute:
