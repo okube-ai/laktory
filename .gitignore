@@ -15,7 +15,8 @@
 .venv
 
 # Visual Studio
-.vscode
+.vscode/
+!.vscode/settings.json
 
 # PyCharm configuration
 **/.idea/**
