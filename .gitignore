@@ -49,10 +49,9 @@ stack.tf.json
 tests/*terraform*
 tests/.terraform/
 tests/Pulumi.yaml
-tests/datasinks/metastore_db/*
-tests/datasinks/spark-warehouse/*
+tests/**metastore_db**
+tests/**spark-warehouse**
 tests/pipeline/node*
-tests/pipeline/spark-warehouse/*
 tests/pipeline/tmp/*
 tests/stack.tf.json
 tests/tmp*
