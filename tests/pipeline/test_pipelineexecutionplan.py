@@ -11,50 +11,89 @@ OPEN_FIGURES = False
 
 @pytest.fixture
 def pl():
+    sink = {"format": "JSON", "mode": "OVERWRITE", "path": "file.json"}
+
     pl = models.Pipeline(
         name="test",
         nodes=[
             models.PipelineNode(
                 name="brz_a",
                 tags=["brz", "a"],
+                sinks=[sink],
             ),
             models.PipelineNode(
                 name="slv_a1",
                 group="slv_a",
                 source={"node_name": "brz_a"},
                 tags=["slv", "a"],
+                sinks=[sink],
             ),
             models.PipelineNode(
                 name="slv_a2",
                 group="slv_a",
                 source={"node_name": "brz_a"},
                 tags=["slv", "a"],
+                sinks=[sink],
             ),
             models.PipelineNode(
                 name="gld_a",
                 source={"node_name": "slv_a1"},
                 tags=["gld", "a"],
+                sinks=[sink],
             ),
             models.PipelineNode(
                 name="brz_b",
                 tags=["brz", "b"],
+                sinks=[sink],
             ),
             models.PipelineNode(
                 name="slv_b1",
                 group="slv_b",
                 source={"node_name": "slv_b2"},
                 tags=["slv", "b"],
+                sinks=[sink],
             ),
             models.PipelineNode(
                 name="slv_b2",
                 group="slv_b",
                 source={"node_name": "brz_b"},
                 tags=["slv", "b"],
+                sinks=[sink],
             ),
             models.PipelineNode(
                 name="gld_b",
                 source={"node_name": "slv_b1"},
                 tags=["gld", "b"],
+                sinks=[sink],
+            ),
+        ],
+    )
+    return pl
+
+
+@pytest.fixture
+def pl_with_views():
+    sink = {"format": "JSON", "mode": "OVERWRITE", "path": "file.json"}
+
+    pl = models.Pipeline(
+        name="test",
+        nodes=[
+            models.PipelineNode(
+                name="brz",
+                sinks=[sink],
+            ),
+            models.PipelineNode(
+                name="slv",
+                source={"node_name": "brz"},
+            ),
+            models.PipelineNode(
+                name="gld1",
+                source={"node_name": "slv"},
+                sinks=[sink],
+            ),
+            models.PipelineNode(
+                name="gld2",
+                source={"node_name": "slv"},
             ),
         ],
     )
@@ -124,33 +163,45 @@ def test_plan_dag(pl):
     plan = models.PipelineExecutionPlan(
         pipeline=pl,
     )
-    assert [task.name for task in plan.tasks] == [
-        "node-brz_a",
-        "node-brz_b",
-        "group-slv_a",
-        "group-slv_b",
-        "node-gld_a",
-        "node-gld_b",
-    ]
-    assert [task.node_names for task in plan.tasks] == [
-        ["brz_a"],
-        ["brz_b"],
-        ["slv_a1", "slv_a2"],
-        ["slv_b2", "slv_b1"],
-        ["gld_a"],
-        ["gld_b"],
-    ]
+    tasks = {task.name: task.node_names for task in plan.tasks}
+    upstreams = {task.name: task.upstream_task_names for task in plan.tasks}
+    assert tasks == {
+        "node-brz_a": ["brz_a"],
+        "node-brz_b": ["brz_b"],
+        "group-slv_a": ["slv_a1", "slv_a2"],
+        "group-slv_b": ["slv_b2", "slv_b1"],
+        "node-gld_a": ["gld_a"],
+        "node-gld_b": ["gld_b"],
+    }
+    assert upstreams == {
+        "node-brz_a": [],
+        "node-brz_b": [],
+        "group-slv_a": ["node-brz_a"],
+        "group-slv_b": ["node-brz_b"],
+        "node-gld_a": ["group-slv_a"],
+        "node-gld_b": ["group-slv_b"],
+    }
 
     plan = pl.get_execution_plan(selects=["slv_a", "slv_b"])
-    assert [task.name for task in plan.tasks] == [
-        "group-slv_a",
-        "group-slv_b",
-    ]
-    assert [task.node_names for task in plan.tasks] == [
-        ["slv_a1", "slv_a2"],
-        ["slv_b2", "slv_b1"],
-    ]
+    tasks = {task.name: task.node_names for task in plan.tasks}
+    upstreams = {task.name: task.upstream_task_names for task in plan.tasks}
+    assert tasks == {
+        "group-slv_a": ["slv_a1", "slv_a2"],
+        "group-slv_b": ["slv_b2", "slv_b1"],
+    }
+    assert upstreams == {"group-slv_a": [], "group-slv_b": []}
 
     plan = pl.get_execution_plan(selects=["slv_a1*"])
-    assert [task.name for task in plan.tasks] == ["group-slv_a", "node-gld_a"]
-    assert [task.node_names for task in plan.tasks] == [["slv_a1"], ["gld_a"]]
+    tasks = {task.name: task.node_names for task in plan.tasks}
+    upstreams = {task.name: task.upstream_task_names for task in plan.tasks}
+    assert tasks == {"group-slv_a": ["slv_a1"], "node-gld_a": ["gld_a"]}
+    assert upstreams == {"group-slv_a": [], "node-gld_a": ["group-slv_a"]}
+
+
+def test_views_plan_dag(pl_with_views):
+    plan = models.PipelineExecutionPlan(
+        pipeline=pl_with_views,
+    )
+
+    tasks = {task.name: task.node_names for task in plan.tasks}
+    assert tasks == {"node-brz": ["brz"], "node-gld1": ["gld1"], "node-gld2": ["gld2"]}

@@ -1,8 +1,10 @@
 from collections import defaultdict
+from typing import Any
 
 import networkx as nx
 from pydantic import Field
 from pydantic import SkipValidation
+from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
@@ -47,90 +49,20 @@ class PipelineExecutionPlan(BaseModel):
         """,
     )
 
-    @property
-    def dag(self):
-        """
-        Constructs a DAG for the execution plan, where each node is either:
-        - A single pipeline node (if it does not belong to a group), or
-        - A group of nodes (if they share the same group).
+    @model_validator(mode="after")
+    def update_pipeline(self) -> Any:
+        if self.pipeline is not None:
+            self.pipeline._plan = self
+        return self
 
-        Returns
-        -------
-        nx.DiGraph
-            A directed acyclic graph representing the execution plan.
-        """
-        pipeline_dag = self.pipeline.dag
-        selected_nodes = set(self.node_names)
-
-        # Create a mapping of groups to their nodes
-        group_mapping = defaultdict(lambda: [])
-        for node in self.pipeline.sorted_nodes:
-            if node.name in selected_nodes:
-                if node.group:
-                    group_mapping[f"group-{node.group}"] += [node.name]
-                else:
-                    group_mapping[f"node-{node.name}"] += [node.name]
-
-        # Initialize a new DAG
-        execution_dag = nx.DiGraph()
-
-        # Add nodes (individual nodes or groups) to the execution DAG
-        for group, nodes in group_mapping.items():
-            execution_dag.add_node(group, node_names=nodes)
-
-        # Add edges based on the pipeline DAG
-        for upstream, downstream in pipeline_dag.edges:
-            # Find the groups or nodes for upstream and downstream
-            upstream_group = next(
-                (group for group, nodes in group_mapping.items() if upstream in nodes),
-                None,
-            )
-            downstream_group = next(
-                (
-                    group
-                    for group, nodes in group_mapping.items()
-                    if downstream in nodes
-                ),
-                None,
-            )
-
-            if (
-                upstream_group
-                and downstream_group
-                and upstream_group != downstream_group
-            ):
-                execution_dag.add_edge(upstream_group, downstream_group)
-
-        return execution_dag
-
-    @property
-    def tasks(self):
-        """
-        List of pipeline tasks to be executed.
-
-        Returns
-        -------
-        output: list[PipelineTask]
-        """
-        tasks = []
-        for dag_node, attr in self.dag.nodes(data=True):
-            tasks += [
-                PipelineTask(
-                    name=dag_node,
-                    pipeline=self.pipeline,
-                    node_names=attr["node_names"],
-                )
-            ]
-
-        return tasks
-
-    @property
-    def tasks_dict(self):
-        """Tasks dictionary"""
-        return {task.name: task for task in self.tasks}
+    # -------------------------------------------------------------------------------- #
+    # Nodes                                                                            #
+    # -------------------------------------------------------------------------------- #
 
     @property
     def node_names(self) -> list[str]:
+        """Selected pipeline node names"""
+        # TODO: Refactor as a cached property??
         if self.selects is None:
             return self.pipeline.sorted_node_names
 
@@ -216,3 +148,143 @@ class PipelineExecutionPlan(BaseModel):
         ]
 
         return sorted_node_names
+
+    @property
+    def nodes_dict(self):
+        """Selected pipeline nodes dict"""
+        return {k: self.pipeline.nodes_dict[k] for k in self.node_names}
+
+    @property
+    def nodes_dag(self) -> nx.DiGraph:
+        """Selected pipeline nodes DAG"""
+        selected_nodes = set(self.node_names)
+        dag = self.pipeline.dag
+        for node_name in list(dag.nodes.keys()):
+            if node_name not in selected_nodes:
+                dag.remove_node(node_name)
+
+        return dag
+
+    # -------------------------------------------------------------------------------- #
+    # Tasks                                                                            #
+    # -------------------------------------------------------------------------------- #
+
+    @property
+    def dag(self) -> nx.DiGraph:
+        """
+        Constructs a DAG for the execution plan, where each node is either:
+        - A single pipeline node (if it does not belong to a group), or
+        - A group of nodes (if they share the same group).
+
+        Pipeline nodes without sink(s) are omitted unless they are leaf (terminal) nodes
+        as they will be executed implicitly when executing their downstream nodes.
+
+        Returns
+        -------
+        nx.DiGraph
+            A directed acyclic graph representing the execution plan.
+        """
+        nodes_dag = self.nodes_dag
+        nodes_dict = self.nodes_dict
+
+        def is_valid(node):
+            return node.has_sinks or nodes_dag.out_degree[node.name] == 0
+
+        # Create a mapping of execution nodes (groups or standalone) to their pipeline nodes
+        task_nodes = defaultdict(list)
+
+        for node in nodes_dict.values():
+            if not is_valid(node):
+                continue
+
+            task_name = f"group-{node.group}" if node.group else f"node-{node.name}"
+            task_nodes[task_name].append(node.name)
+
+        # Initialize a new DAG
+        dag = nx.DiGraph()
+
+        # Add execution nodes
+        for task_name, node_names in task_nodes.items():
+            dag.add_node(task_name, node_names=node_names)
+
+        # Map each included pipeline node to its task name
+        nodes_task_name = {}
+        for task_name, node_names in task_nodes.items():
+            for node_name in node_names:
+                nodes_task_name[node_name] = task_name
+
+        def resolve_upstream_task_names(node_name: str) -> list[str]:
+            """
+            Walk upstream from start_name, skipping selected nodes without sinks,
+            until we reach selected nodes with sinks (i.e., execution nodes).
+            """
+            resolved = set()
+            stack = list(nodes_dag.predecessors(node_name))
+            seen = set()
+
+            while stack:
+                pred_name = stack.pop()
+                if pred_name in seen:
+                    continue
+                seen.add(pred_name)
+
+                pred_node = nodes_dict.get(pred_name)
+                if pred_node is None:
+                    # Shouldn't happen if nodes_dag is consistent, but be safe.
+                    continue
+
+                if is_valid(pred_node):
+                    # This upstream node is a task node (group or standalone)
+                    task_name = nodes_task_name.get(pred_name)
+                    if task_name is not None:
+                        resolved.add(task_name)
+                    continue
+
+                # Not a task node: skip through it (it will run implicitly downstream)
+                stack.extend(list(nodes_dag.predecessors(pred_name)))
+
+            return list(resolved)
+
+        # Add edges
+        for task_name, node_names in task_nodes.items():
+            upstream_task_names = []
+            for node_name in node_names:
+                upstream_task_names += resolve_upstream_task_names(node_name)
+            upstream_task_names = list(set(upstream_task_names))
+
+            for upstream_task_name in upstream_task_names:
+                if upstream_task_name != task_name:
+                    dag.add_edge(upstream_task_name, task_name)
+
+        return dag
+
+    @property
+    def tasks(self):
+        """
+        List of pipeline tasks to be executed. Each task is either:
+        - A single pipeline node (if it does not belong to a group), or
+        - A group of nodes (if they share the same group).
+
+        Pipeline nodes without sink(s) are omitted unless they are leaf (terminal) nodes
+        as they will be executed implicitly when executing their downstream nodes.
+
+        Returns
+        -------
+        output: list[PipelineTask]
+        """
+        tasks = []
+        for dag_node, attr in self.dag.nodes(data=True):
+            tasks += [
+                PipelineTask(
+                    name=dag_node,
+                    pipeline=self.pipeline,
+                    node_names=attr["node_names"],
+                )
+            ]
+
+        return tasks
+
+    @property
+    def tasks_dict(self):
+        """Tasks dictionary"""
+        return {task.name: task for task in self.tasks}
