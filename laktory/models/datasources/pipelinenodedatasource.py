@@ -72,8 +72,6 @@ class PipelineNodeDataSource(BaseDataSource):
     def node(self):
         pl = self.parent_pipeline
 
-        print("getting node!!")
-
         if pl is None:
             raise ValueError(f"Source '{self.node_name}' is not attached to a pipeline")
 

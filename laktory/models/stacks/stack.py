@@ -197,7 +197,7 @@ class StackResources(BaseModel):
 
     def _get_all(self, providers_excluded=False, providers_only=False):
         resources = {}
-        for resource_type in self.model_fields.keys():
+        for resource_type in type(self).model_fields.keys():
             if resource_type in ["variables"]:
                 continue
 
