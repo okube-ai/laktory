@@ -157,7 +157,10 @@ class PipelineNodeDataSource(BaseDataSource):
             logger.info(f"Reading pipeline node {self._id} from sink")
             df = self.node.primary_sink.read(as_stream=self.as_stream)
 
+        # Execute upstream node
         else:
-            raise ValueError(f"Pipeline Node {self._id} can't read DataFrame")
+            logger.info("Executing parent pipeline node")
+            self.node.execute()
+            df = self.node.output_df
 
         return df

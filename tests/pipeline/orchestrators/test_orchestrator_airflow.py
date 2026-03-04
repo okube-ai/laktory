@@ -1,6 +1,8 @@
 import io
 from pathlib import Path
 
+import polars
+
 from laktory import models
 
 # from ./../conftest import assert_dfs_equal
@@ -29,10 +31,23 @@ def test_execute(tmp_path):
     # Set Orchestrator
     pl.orchestrator = models.AirflowOrchestrator()
 
-    # Execute
+    # Get Airflow dag
     dag = pl.to_airflow_dag()
+    assert len(dag.tasks) == 2
 
-    # Test
-    print(dag)
+    # Execute
     dag.test()
-    assert 1 == 2
+    df_brz = polars.read_parquet(tmp_path / "brz.parquet").sort("id")
+    # df_slv = polars.read_parquet(tmp_path/"slv.parquet").sort("id")
+    df_gld = polars.read_parquet(tmp_path / "gld.parquet").sort("id")
+    assert df_brz.to_dicts() == [
+        {"_idx": 0, "id": "a", "x1": 1},
+        {"_idx": 1, "id": "b", "x1": 2},
+        {"_idx": 2, "id": "c", "x1": 3},
+    ]
+    # assert df_slv.to_dicts() == [{'id': 'a', 'x1': 1, 'y1': 1}, {'id': 'b', 'x1': 2, 'y1': 2}, {'id': 'c', 'x1': 3, 'y1': 3}]
+    assert df_gld.to_dicts() == [
+        {"id": "a", "max_x1": 1},
+        {"id": "b", "max_x1": 2},
+        {"id": "c", "max_x1": 3},
+    ]

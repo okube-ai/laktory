@@ -1,13 +1,5 @@
 name: pl-simple
 nodes:
-# - name: gld_ab
-#   sinks:
-#   - schema_name: default
-#     table_name: gld_ab
-#     table_type: VIEW
-#   transformer:
-#     nodes:
-#     - expr: SELECT * from {nodes.gld_a} UNION SELECT * from {nodes.gld_b}
 
 - name: brz
   source:
@@ -17,7 +9,7 @@ nodes:
       x1: [1, 2, 3]
   sinks:
   - format: PARQUET
-    path: {tmp_path}/brz.parquet
+    path: "{tmp_path}/brz.parquet"
 
 - name: slv
   source:
@@ -28,9 +20,9 @@ nodes:
       func_kwargs:
         y1: x1
     - expr: SELECT id, x1, y1 from {df}
-  sinks:
-  - format: PARQUET
-    path: {tmp_path}/slv.parquet
+  # sinks:
+  # - format: PARQUET
+  #   path: {tmp_path}/slv.parquet
 
 - name: gld
   transformer:
@@ -38,22 +30,4 @@ nodes:
     - expr: SELECT id, MAX(x1) AS max_x1 from {nodes.slv} GROUP BY id
   sinks:
   - format: PARQUET
-    path: {tmp_path}/gld.parquet
-
-# - name: gld_a
-#   sinks:
-#   - schema_name: default
-#     table_name: gld_a
-#     table_type: VIEW
-#   transformer:
-#     nodes:
-#     - expr: SELECT * from {nodes.gld} WHERE id = 'a'
-
-# - name: gld_b
-#   sinks:
-#   - schema_name: default
-#     table_name: gld_b
-#     table_type: VIEW
-#   transformer:
-#     nodes:
-#     - expr: SELECT * from {nodes.gld} WHERE id = 'b'
+    path: "{tmp_path}/gld.parquet"
