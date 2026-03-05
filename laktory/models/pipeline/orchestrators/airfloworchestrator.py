@@ -1,10 +1,33 @@
+import re
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
+from typing import Any
 from typing import Literal
 
 from pydantic import Field
+from pydantic import field_validator
 
 from laktory.models.pipelinechild import PipelineChild
 
-ENV_KEY = "laktory"
+ScheduleInterval = str | timedelta
+# try:
+#     from dateutil.relativedelta import relativedelta
+#     ScheduleInterval = ScheduleInterval | relativedelta  # not serializable
+# except (ModuleNotFoundError, ImportError):
+#     pass
+
+# try:
+#     from airflow.timetables.base import Timetable
+#     # ScheduleInterval = ScheduleInterval | Timetable  # not serializable
+# except (ModuleNotFoundError, ImportError):
+#     pass
+
+# try:
+#     from airflow.sdk.definitions.asset import BaseAsset
+#     # ScheduleInterval = ScheduleInterval | BaseAsset | list[BaseAsset]  # not serializable
+# except (ModuleNotFoundError, ImportError):
+#     pass
 
 
 class AirflowOrchestrator(PipelineChild):
@@ -17,13 +40,63 @@ class AirflowOrchestrator(PipelineChild):
     """
 
     type: Literal["AIRFLOW"] = Field("AIRFLOW", description="Type of orchestrator")
-    # description:
+    description: str = None
+    schedule: ScheduleInterval = None
+    # schedule: str | timedelta |  = None
+    start_date: datetime = None
+    end_date: datetime = None
+    template_searchpath: str | list[str] = None
+    # template_undefined: Type[jinja2.StrictUndefined] = jinja2.StrictUndefined  # not serializable
+    user_defined_macros: dict = None
+    user_defined_filters: dict = None
+    default_args: dict[str, Any] = None
+    max_active_tasks: int = None
+    max_active_runs: int = None
+    max_consecutive_failed_dag_runs: int = None
+    dagrun_timeout: str | timedelta = None
+    catchup: bool = None
+    # on_success_callback: None | DagStateChangeCallback | list[DagStateChangeCallback] = None  # not serializable
+    # on_failure_callback: None | DagStateChangeCallback | list[DagStateChangeCallback] = None  # not serializable
+    # deadline: list[DeadlineAlert] | DeadlineAlert = None   # not serializable
+    doc_md: str = None
+    # params: ParamsDict | dict[str, Any] = None  # forced by Laktory
+    access_control: dict[str, dict[str, list[str]]] | dict[str, list[str]] = None
+    is_paused_upon_creation: bool = None
+    jinja_environment_kwargs: dict = None
+    render_template_as_native_obj: bool = None
+    tags: list[str] = None
+    owner_links: dict[str, str] = None
+    auto_register: bool = None
+    fail_fast: bool = None
+    dag_display_name: str = None
+    disable_bundle_versioning: bool = None
+
+    @field_validator("dagrun_timeout", "schedule", mode="before")
+    def validate_timedelta(cls, v: Any) -> Any:
+        pattern = re.compile(r"(\d+)([smhd])")
+
+        units = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
+        kwargs = {}
+
+        for value, unit in pattern.findall(v):
+            kwargs[units[unit]] = kwargs.get(units[unit], 0) + int(value)
+
+        return timedelta(**kwargs)
+
+    @field_validator("start_date", "end_date", mode="before")
+    def validate_datetime(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            v = datetime.fromisoformat(v)
+        if isinstance(v, datetime):
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=timezone.utc)
+        return v
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def to_airflow(self):
+    def to_airflow(self, **dag_kwargs):
         from airflow.sdk import dag
         from airflow.sdk import get_current_context
         from airflow.sdk import task
@@ -53,16 +126,18 @@ class AirflowOrchestrator(PipelineChild):
 
             return airflow_task
 
-        @dag(
-            dag_id=pl.name,
-            # start_date="",
-            # schedule=None,
-            # catchup=None,
-            # tags=[],
-            params={
+        kwargs = {
+            "dag_id": pl.name,
+            "params": {
                 "full_refresh": False,
             },
-        )
+        }
+        for fname in self.model_fields_set:
+            kwargs[fname] = getattr(self, fname)
+        for k, v in dag_kwargs.items():
+            kwargs[k] = v
+
+        @dag(**kwargs)
         def airflow_dag():
             tasks = {}
             nodes = {}

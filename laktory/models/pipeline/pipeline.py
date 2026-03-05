@@ -389,8 +389,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         """If `True`, pipeline orchestrator is DLT"""
         return isinstance(self.orchestrator, DatabricksPipelineOrchestrator)
 
-    def to_airflow_dag(self):
-        return self.orchestrator.to_airflow()
+    def to_airflow_dag(self, **dag_kwargs):
+        return self.orchestrator.to_airflow(**dag_kwargs)
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
