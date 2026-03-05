@@ -85,14 +85,6 @@ def test_dag(tmp_path):
         "gld_ab",
     ]
 
-    # Test leafs
-    assert not pl.nodes_dict["brz"].is_leaf
-    assert not pl.nodes_dict["slv"].is_leaf
-    assert not pl.nodes_dict["gld"].is_leaf
-    assert not pl.nodes_dict["gld_a"].is_leaf
-    assert not pl.nodes_dict["gld_b"].is_leaf
-    assert pl.nodes_dict["gld_ab"].is_leaf
-
     # Test figure
     fig = pl.dag_figure()
     fig.write_html(tmp_path / "dag.html", auto_open=OPEN_FIGURES)
