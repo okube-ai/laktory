@@ -36,7 +36,10 @@ def test_execute(tmp_path):
     # Set Orchestrator
     pl.orchestrator = models.AirflowOrchestrator(
         description="unit test pipeline",
-        schedule="1h",
+        schedule={
+            "cron": "0 0 * * *",
+            "timezone": "utc",
+        },
         start_date="2026-03-03",
         # end_date="2026-03-04",
         template_searchpath="some_path",
@@ -60,13 +63,12 @@ def test_execute(tmp_path):
     )
 
     # Get Airflow dag
-    s = CronDataIntervalTimetable(
+    dag = pl.to_airflow_dag()
+    assert len(dag.tasks) == 2
+    assert dag.schedule == CronDataIntervalTimetable(
         cron="0 0 * * *",
         timezone=UTC,
     )
-    dag = pl.to_airflow_dag(schedule=s)
-    assert len(dag.tasks) == 2
-    assert dag.schedule == s
     assert dag.start_date == datetime(2026, 3, 3, 0, 0, 0, tzinfo=timezone.utc)
     assert dag.user_defined_macros == {"a": 1}
     assert dag.max_active_tasks == 2
