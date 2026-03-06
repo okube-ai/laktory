@@ -198,6 +198,7 @@ nav:
         - PipelineTask: api/models/pipeline/pipelinetask.md
         - PipelineExecutionPlan: api/models/pipeline/pipelineexecutionplan.md
         - Orchestrators:
+            - Airflow: api/models/pipeline/orchestrators/airfloworchestrator.md
             - Databricks Job: api/models/pipeline/orchestrators/databricksjoborchestrator.md
             - Databricks Pipeline: api/models/pipeline/orchestrators/databrickspipelineorchestrator.md
             - Pipeline Config Workspace File: api/models/pipeline/orchestrators/pipelineconfigworkspacefile.md
