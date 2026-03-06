@@ -42,6 +42,26 @@ class AirflowOrchestrator(PipelineChild):
     """
     Airflow used as an orchestrator to execute a Laktory pipeline.
 
+    Examples
+    --------
+    ```python
+    import laktory as lk
+
+    o = lk.models.AirflowOrchestrator(
+        description="A Laktory pipeline",
+        schedule={
+            "cron": "0 0 * * *",
+            "timezone": "utc",
+        },
+        start_date="2026-03-03",
+        max_active_runs=1,
+    )
+    print(o)
+    '''
+    dataframe_backend_=None dataframe_api_=None type='AIRFLOW' description='A Laktory pipeline' schedule=CronSchedule(variables={}, cron='0 0 * * *', timezone='utc') start_date=datetime.datetime(2026, 3, 3, 0, 0, tzinfo=datetime.timezone.utc) end_date=None template_searchpath=None user_defined_macros=None user_defined_filters=None default_args=None max_active_tasks=None max_active_runs=1 max_consecutive_failed_dag_runs=None dagrun_timeout=None catchup=None doc_md=None access_control=None is_paused_upon_creation=None jinja_environment_kwargs=None render_template_as_native_obj=None tags=None owner_links=None auto_register=None fail_fast=None dag_display_name=None disable_bundle_versioning=None dataframe_backend=<DataFrameBackends.PYSPARK: 'PYSPARK'> dataframe_api='NARWHALS'
+    '''
+    ```
+
     References
     ----------
     * [Data Pipeline](https://www.laktory.ai/concepts/pipeline/)
