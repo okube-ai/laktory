@@ -23,14 +23,14 @@ def pl():
             ),
             models.PipelineNode(
                 name="slv_a1",
-                group="slv_a",
+                execution_task_name="slv_a",
                 source={"node_name": "brz_a"},
                 tags=["slv", "a"],
                 sinks=[sink],
             ),
             models.PipelineNode(
                 name="slv_a2",
-                group="slv_a",
+                execution_task_name="slv_a",
                 source={"node_name": "brz_a"},
                 tags=["slv", "a"],
                 sinks=[sink],
@@ -48,14 +48,14 @@ def pl():
             ),
             models.PipelineNode(
                 name="slv_b1",
-                group="slv_b",
+                execution_task_name="slv_b",
                 source={"node_name": "slv_b2"},
                 tags=["slv", "b"],
                 sinks=[sink],
             ),
             models.PipelineNode(
                 name="slv_b2",
-                group="slv_b",
+                execution_task_name="slv_b",
                 source={"node_name": "brz_b"},
                 tags=["slv", "b"],
                 sinks=[sink],
@@ -168,34 +168,34 @@ def test_plan_dag(pl):
     assert tasks == {
         "node-brz_a": ["brz_a"],
         "node-brz_b": ["brz_b"],
-        "group-slv_a": ["slv_a1", "slv_a2"],
-        "group-slv_b": ["slv_b2", "slv_b1"],
+        "slv_a": ["slv_a1", "slv_a2"],
+        "slv_b": ["slv_b2", "slv_b1"],
         "node-gld_a": ["gld_a"],
         "node-gld_b": ["gld_b"],
     }
     assert upstreams == {
         "node-brz_a": [],
         "node-brz_b": [],
-        "group-slv_a": ["node-brz_a"],
-        "group-slv_b": ["node-brz_b"],
-        "node-gld_a": ["group-slv_a"],
-        "node-gld_b": ["group-slv_b"],
+        "slv_a": ["node-brz_a"],
+        "slv_b": ["node-brz_b"],
+        "node-gld_a": ["slv_a"],
+        "node-gld_b": ["slv_b"],
     }
 
     plan = pl.get_execution_plan(selects=["slv_a", "slv_b"])
     tasks = {task.name: task.node_names for task in plan.tasks}
     upstreams = {task.name: task.upstream_task_names for task in plan.tasks}
     assert tasks == {
-        "group-slv_a": ["slv_a1", "slv_a2"],
-        "group-slv_b": ["slv_b2", "slv_b1"],
+        "slv_a": ["slv_a1", "slv_a2"],
+        "slv_b": ["slv_b2", "slv_b1"],
     }
-    assert upstreams == {"group-slv_a": [], "group-slv_b": []}
+    assert upstreams == {"slv_a": [], "slv_b": []}
 
     plan = pl.get_execution_plan(selects=["slv_a1*"])
     tasks = {task.name: task.node_names for task in plan.tasks}
     upstreams = {task.name: task.upstream_task_names for task in plan.tasks}
-    assert tasks == {"group-slv_a": ["slv_a1"], "node-gld_a": ["gld_a"]}
-    assert upstreams == {"group-slv_a": [], "node-gld_a": ["group-slv_a"]}
+    assert tasks == {"slv_a": ["slv_a1"], "node-gld_a": ["gld_a"]}
+    assert upstreams == {"slv_a": [], "node-gld_a": ["slv_a"]}
 
 
 def test_views_plan_dag(pl_with_views):

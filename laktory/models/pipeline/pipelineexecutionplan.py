@@ -28,9 +28,9 @@ logger = get_logger(__name__)
 
 class PipelineExecutionPlan(BaseModel):
     """
-    A pipeline execution plan defines the pipeline tasks to be executed according to the selected nodes/groups/tags
+    A pipeline execution plan defines the pipeline tasks to be executed according to the selected nodes/tasks/tags
     and their dependencies. It constructs a DAG of pipeline tasks, where each task can consist of one or more nodes
-    that share the same group.
+    that share the same `execution_task_name`.
     """
 
     pipeline: SkipValidation[Pipeline] = Field(
@@ -66,7 +66,7 @@ class PipelineExecutionPlan(BaseModel):
         if self.selects is None:
             return self.pipeline.sorted_node_names
 
-        # Validate and resolve selected nodes/groups/tags
+        # Validate and resolve selected nodes/tasks/tags
         selected_nodes = set()
         dag = self.pipeline.dag
 
@@ -79,15 +79,17 @@ class PipelineExecutionPlan(BaseModel):
                     selected_nodes.update(nx.ancestors(dag, node_name))
                     selected_nodes.update(nx.descendants(dag, node_name))
                 else:
-                    # Check if it's a group or tag
-                    group_or_tag_nodes = [
+                    # Check if it's a task or tag
+                    task_or_tag_nodes = [
                         n.name
                         for n in self.pipeline.nodes
-                        if n.group == node_name or node_name in n.tags
+                        if n.execution_task_name == node_name or node_name in n.tags
                     ]
-                    if not group_or_tag_nodes:
-                        raise ValueError(f"Invalid node, group, or tag: {node_name}")
-                    for group_node in group_or_tag_nodes:
+                    if not task_or_tag_nodes:
+                        raise ValueError(
+                            f"Invalid node, execution_task_name, or tag: {node_name}"
+                        )
+                    for group_node in task_or_tag_nodes:
                         selected_nodes.add(group_node)
                         selected_nodes.update(nx.ancestors(dag, group_node))
                         selected_nodes.update(nx.descendants(dag, group_node))
@@ -98,15 +100,17 @@ class PipelineExecutionPlan(BaseModel):
                     selected_nodes.add(node_name)
                     selected_nodes.update(nx.ancestors(dag, node_name))
                 else:
-                    # Check if it's a group or tag
-                    group_or_tag_nodes = [
+                    # Check if it's a task or tag
+                    task_or_tag_nodes = [
                         n.name
                         for n in self.pipeline.nodes
-                        if n.group == node_name or node_name in n.tags
+                        if n.execution_task_name == node_name or node_name in n.tags
                     ]
-                    if not group_or_tag_nodes:
-                        raise ValueError(f"Invalid node, group, or tag: {node_name}")
-                    for group_node in group_or_tag_nodes:
+                    if not task_or_tag_nodes:
+                        raise ValueError(
+                            f"Invalid node, execution_task_name, or tag: {node_name}"
+                        )
+                    for group_node in task_or_tag_nodes:
                         selected_nodes.add(group_node)
                         selected_nodes.update(nx.ancestors(dag, group_node))
             elif item.endswith("*"):
@@ -116,15 +120,17 @@ class PipelineExecutionPlan(BaseModel):
                     selected_nodes.add(node_name)
                     selected_nodes.update(nx.descendants(dag, node_name))
                 else:
-                    # Check if it's a group or tag
-                    group_or_tag_nodes = [
+                    # Check if it's a task or tag
+                    task_or_tag_nodes = [
                         n.name
                         for n in self.pipeline.nodes
-                        if n.group == node_name or node_name in n.tags
+                        if n.execution_task_name == node_name or node_name in n.tags
                     ]
-                    if not group_or_tag_nodes:
-                        raise ValueError(f"Invalid node, group, or tag: {node_name}")
-                    for group_node in group_or_tag_nodes:
+                    if not task_or_tag_nodes:
+                        raise ValueError(
+                            f"Invalid node, execution_task_name, or tag: {node_name}"
+                        )
+                    for group_node in task_or_tag_nodes:
                         selected_nodes.add(group_node)
                         selected_nodes.update(nx.descendants(dag, group_node))
             else:
@@ -132,15 +138,17 @@ class PipelineExecutionPlan(BaseModel):
                 if item in self.pipeline.nodes_dict:
                     selected_nodes.add(item)
                 else:
-                    # Check if it's a group or tag
-                    group_or_tag_nodes = [
+                    # Check if it's a task or tag
+                    task_or_tag_nodes = [
                         n.name
                         for n in self.pipeline.nodes
-                        if n.group == item or item in n.tags
+                        if n.execution_task_name == item or item in n.tags
                     ]
-                    if not group_or_tag_nodes:
-                        raise ValueError(f"Invalid node, group, or tag: {item}")
-                    selected_nodes.update(group_or_tag_nodes)
+                    if not task_or_tag_nodes:
+                        raise ValueError(
+                            f"Invalid node, execution_task_name, or tag: {item}"
+                        )
+                    selected_nodes.update(task_or_tag_nodes)
 
         # Sort nodes based on DAG topological order
         sorted_node_names = [
@@ -173,8 +181,8 @@ class PipelineExecutionPlan(BaseModel):
     def dag(self) -> nx.DiGraph:
         """
         Constructs a DAG for the execution plan, where each node is either:
-        - A single pipeline node (if it does not belong to a group), or
-        - A group of nodes (if they share the same group).
+        - A single pipeline node (default `execute_task_name`), or
+        - A group of nodes (if they share the same `execute_task_name`).
 
         Pipeline nodes without sink(s) are omitted unless they are leaf (terminal) nodes
         as they will be executed implicitly when executing their downstream nodes.
@@ -197,7 +205,7 @@ class PipelineExecutionPlan(BaseModel):
             if not is_valid(node):
                 continue
 
-            task_name = f"group-{node.group}" if node.group else f"node-{node.name}"
+            task_name = f"{node.execution_task_name}"
             task_nodes[task_name].append(node.name)
 
         # Initialize a new DAG
@@ -262,8 +270,8 @@ class PipelineExecutionPlan(BaseModel):
     def tasks(self):
         """
         List of pipeline tasks to be executed. Each task is either:
-        - A single pipeline node (if it does not belong to a group), or
-        - A group of nodes (if they share the same group).
+        - A single pipeline node (default `execute_task_name`), or
+        - A group of nodes (if they share the same `execute_task_name`).
 
         Pipeline nodes without sink(s) are omitted unless they are leaf (terminal) nodes
         as they will be executed implicitly when executing their downstream nodes.
