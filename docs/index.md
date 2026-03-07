@@ -20,7 +20,7 @@ operations, reducing complexity and enhancing productivity.
 
 Since Laktory pipelines are built on top of Narwhals, they can run in
 any environment that supports python—from your local machine to a Kubernetes 
-cluster. They can also be deployed and orchestrated as Databricks Jobs or
+cluster with Airflow. They can also be deployed and orchestrated as Databricks Jobs or
 [Lakeflow Declarative Pipelines](https://www.databricks.com/product/data-engineering/lakeflow-declarative-pipelines),
 offering a simple, fully managed, and low-maintenance solution.
 
@@ -73,6 +73,7 @@ A growing number of [businesses](users.md) rely on Laktory to build, deploy, and
 their lakehouses with confidence.
 
 <img src="/images/logos/energir.jpg" alt="energir" style="height:75px; margin-right:24px;"/> 
+<img src="/images/logos/mty.png" alt="mty" style="height:75px; margin-right:24px;"/> 
 <img src="/images/logos/ezbi.png" alt="ezbi" style="height:75px; margin-right:36px;"/> 
 <img src="/images/logos/nimblestax.png" alt="mimblestax" style="height:75px; margin-right:24px;"/> 
 <img src="/images/logos/taiga.png" alt="taiga" style="height:75px; margin-right:24px;"/> 

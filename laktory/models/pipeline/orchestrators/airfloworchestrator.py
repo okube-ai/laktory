@@ -232,6 +232,8 @@ class AirflowOrchestrator(PipelineChild):
             },
         }
         for fname in self.model_fields_set:
+            if fname in ["type"]:
+                continue
             kwargs[fname] = getattr(self, fname)
             if fname == "schedule":
                 kwargs[fname] = self._schedule

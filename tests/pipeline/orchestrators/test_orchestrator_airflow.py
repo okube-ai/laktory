@@ -26,44 +26,15 @@ def get_pl(tmp_path):
 def test_execute(tmp_path):
     from datetime import timezone
 
+    import jinja2
     from airflow.timetables.interval import CronDataIntervalTimetable
 
-    backend = "POLARS"
-
     pl = get_pl(tmp_path)
-    pl.dataframe_backend_ = backend
-
-    # Set Orchestrator
-    pl.orchestrator = models.AirflowOrchestrator(
-        description="unit test pipeline",
-        schedule={
-            "cron": "0 0 * * *",
-            "timezone": "utc",
-        },
-        start_date="2026-03-03",
-        # end_date="2026-03-04",
-        template_searchpath="some_path",
-        # # template_undefined=jinja2.DebugUndefined,
-        user_defined_macros={"a": 1},
-        user_defined_filters={"b": 2},
-        default_args={"full": True},
-        max_active_tasks=2,
-        max_active_runs=1,
-        max_consecutive_failed_dag_runs=2,
-        dagrun_timeout="5s",
-        catchup=False,
-        doc_md="Doc",
-        access_control={"a": ["1", "2"]},
-        is_paused_upon_creation=True,
-        render_template_as_native_obj=False,
-        tags=["pipeline", "stocks"],
-        owner_links={"a": "http://wwww.laktory.ai"},
-        dag_display_name="my simple pipeline",
-        disable_bundle_versioning=False,
-    )
 
     # Get Airflow dag
-    dag = pl.to_airflow_dag()
+    dag = pl.to_airflow_dag(
+        template_undefined=jinja2.DebugUndefined,
+    )
     assert len(dag.tasks) == 2
     assert dag.schedule == CronDataIntervalTimetable(
         cron="0 0 * * *",
@@ -72,12 +43,13 @@ def test_execute(tmp_path):
     assert dag.start_date == datetime(2026, 3, 3, 0, 0, 0, tzinfo=timezone.utc)
     assert dag.user_defined_macros == {"a": 1}
     assert dag.max_active_tasks == 2
-    assert dag.dagrun_timeout == timedelta(seconds=5)
+    assert dag.dagrun_timeout == timedelta(seconds=60)
     assert not dag.catchup
     assert dag.access_control == {"a": {"DAGs": {"1", "2"}}}
     assert dag.tags == {"stocks", "pipeline"}
     assert dag.auto_register
     assert not dag.fail_fast
+    assert dag.template_undefined == jinja2.DebugUndefined
 
     # Execute
     dag.test()

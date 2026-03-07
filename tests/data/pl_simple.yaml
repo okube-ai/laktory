@@ -1,6 +1,32 @@
 name: pl-simple
-nodes:
+orchestrator:
+  type: AIRFLOW
+  schedule:
+    cron: "0 0 * * *"
+    timezone: utc
+  start_date: 2026-03-03
+  # end_date: 2026-03-04
+  template_searchpath: some_path
+  user_defined_macros: {"a": 1}
+  user_defined_filters: {"b": 2}
+  default_args: {"full": True}
+  max_active_tasks: 2
+  max_active_runs: 1
+  max_consecutive_failed_dag_runs: 2
+  dagrun_timeout: "60s"
+  catchup: False
+  doc_md: "Doc"
+  access_control: {"a": ["1", "2"]}
+  is_paused_upon_creation: True
+  render_template_as_native_obj: False
+  tags: ["pipeline", "stocks"]
+  owner_links: {"a": "http://wwww.laktory.ai"}
+  dag_display_name: "A simple Laktory pipeline"
+  disable_bundle_versioning: False
 
+dataframe_backend: POLARS
+
+nodes:
 - name: brz
   source:
     data:
