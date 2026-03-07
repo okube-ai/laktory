@@ -4,6 +4,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import polars
+import pytest
 from pendulum.tz.timezone import UTC
 
 from laktory import models
@@ -23,7 +24,24 @@ def get_pl(tmp_path):
     return pl
 
 
-def test_execute(tmp_path):
+def is_airflow_initialized():
+    try:
+        from airflow.configuration import conf
+        from sqlalchemy import create_engine
+        from sqlalchemy import text
+
+        conn = conf.get("database", "sql_alchemy_conn")
+        engine = create_engine(conn)
+
+        with engine.connect() as c:
+            c.execute(text("SELECT 1 FROM task_instance LIMIT 1"))
+
+        return True
+    except Exception:
+        return False
+
+
+def test_get_dag(tmp_path):
     from datetime import timezone
 
     import jinja2
@@ -50,6 +68,17 @@ def test_execute(tmp_path):
     assert dag.auto_register
     assert not dag.fail_fast
     assert dag.template_undefined == jinja2.DebugUndefined
+
+
+@pytest.mark.skipif(
+    not is_airflow_initialized(),
+    reason="Airflow integration test disabled",
+)
+def test_execute(tmp_path):
+    pl = get_pl(tmp_path)
+
+    # Get Airflow dag
+    dag = pl.to_airflow_dag()
 
     # Execute
     dag.test()
