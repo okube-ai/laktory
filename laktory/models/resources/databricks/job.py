@@ -117,7 +117,8 @@ class JobEmailNotifications(BaseModel):
 
 
 class JobEnvironmentSpec(BaseModel):
-    client: str = Field(..., description="client version used by the environment")
+    base_environment: str = Field(None, description="")
+    client: str = Field(None, description="")
     dependencies: list[str] = Field(
         None,
         description="""
@@ -126,6 +127,14 @@ class JobEnvironmentSpec(BaseModel):
     [API docs](https://docs.databricks.com/api/workspace/jobs/create#environments-spec-dependencies)
     for more information.
     """,
+    )
+    environment_version: str = Field(
+        None,
+        description="client version used by the environment",
+    )
+    java_dependencies: list[str] = Field(
+        None,
+        description="",
     )
 
 

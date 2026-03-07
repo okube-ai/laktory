@@ -11,6 +11,9 @@
 ### Breaking changes
 * Removed obsolete `cloud` attribute from Metastore resource
 * Refactored View Table Data Sinks structure (removed `view_definition` attribute)
+### Updated
+* Added `environment_version` to `JobEnvironmentSpec` of Databricks Job resource to allow specification of serverless environment version [[#508](https://github.com/okube-ai/laktory/issues/508)]
+
 
 ## [0.8.17] - 2025-12-17
 ### Fixed
