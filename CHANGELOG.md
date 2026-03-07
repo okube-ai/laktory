@@ -2,13 +2,12 @@
 
 ## [0.9.0] - Unreleased
 ### Added
+* Support for Airflow orchestrator
 * Support to reference directories as lists in YAML injection
-* Pipeline node `group` attribute for more granular control over pipeline orchestration
+* Pipeline Execution Plan for finer control over nodes execution
+* Pipeline node `execution_task_name` attribute for more granular control over pipeline orchestration
 * Pipeline node `tag` attribute to facilitate nodes selection at execution
-### Fixed
-* n/a
-### Updated
-* n/a
+* Pipeline execution allows for `selects` argument
 ### Breaking changes
 * Removed obsolete `cloud` attribute from Metastore resource
 * Refactored View Table Data Sinks structure (removed `view_definition` attribute)

@@ -18,6 +18,9 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
 from laktory.models.pipeline._execute import _execute  # noqa: F401
 from laktory.models.pipeline._post_execute import _post_execute  # noqa: F401
+from laktory.models.pipeline.orchestrators.airfloworchestrator import (
+    AirflowOrchestrator,
+)
 from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
     DatabricksJobOrchestrator,
 )
@@ -33,6 +36,8 @@ from laktory.typing import AnyFrame
 if TYPE_CHECKING:
     from databricks.sdk import WorkspaceClient
     from plotly.graph_objs import Figure
+
+    from laktory.models.pipeline.pipelineexecutionplan import PipelineExecutionPlan
 
 logger = get_logger(__name__)
 
@@ -241,7 +246,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         List of pipeline nodes. Each node defines a data source, a series of transformations and optionally a sink.
         """,
     )
-    orchestrator: DatabricksJobOrchestrator | DatabricksPipelineOrchestrator = Field(
+    orchestrator: (
+        DatabricksJobOrchestrator | DatabricksPipelineOrchestrator | AirflowOrchestrator
+    ) = Field(
         None,
         description="""
         Orchestrator used for scheduling and executing the pipeline. The
@@ -273,18 +280,23 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         description="Enable Databricks Quality Monitor. When enabled, quality monitors are created for each sink configured with a quality monitor and deleted for sinks without.",
     )
     _imports_imported: bool = False
+    _plan: "PipelineExecutionPlan" = None
 
     @model_validator(mode="before")
     @classmethod
     def assign_name(cls, data: Any) -> Any:
         o = data.get("orchestrator", None)
-        if o and isinstance(o, dict):
-            # orchestrator as a dict
-            o["name"] = o.get("name", None) or data.get("name", None)
-        elif isinstance(o, (DatabricksPipelineOrchestrator, DatabricksJobOrchestrator)):
-            # orchestrator as a model
-            o.name = o.name or o.get("name", None)
 
+        pl_name = data.get("name", None)
+
+        # orchestrator as a dict
+        if o and isinstance(o, dict):
+            if o.get("type", None) in ["DATABRICKS_JOB", "DATABRICKS_PIPELINE"]:
+                o["name"] = o.get("name", None) or pl_name
+
+        # orchestrator as a model
+        elif isinstance(o, (DatabricksPipelineOrchestrator, DatabricksJobOrchestrator)):
+            o.name = o.name or pl_name
         return data
 
     @model_validator(mode="after")
@@ -380,6 +392,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
     def is_orchestrator_dlt(self) -> bool:
         """If `True`, pipeline orchestrator is DLT"""
         return isinstance(self.orchestrator, DatabricksPipelineOrchestrator)
+
+    def to_airflow_dag(self, **dag_kwargs):
+        return self.orchestrator.to_airflow(**dag_kwargs)
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
@@ -546,10 +561,12 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
 
         from laktory.models.pipeline.pipelineexecutionplan import PipelineExecutionPlan
 
-        return PipelineExecutionPlan(
+        plan = PipelineExecutionPlan(
             pipeline=self,
             selects=selects,
         )
+        self._plan = plan
+        return plan
 
     def execute(
         self,

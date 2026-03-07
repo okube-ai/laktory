@@ -77,6 +77,16 @@ class PipelineTask(BaseModel):
             )
 
     @property
+    def upstream_task_names(self) -> list[str]:
+        """Get upstream task names"""
+        plan = self.pipeline._plan
+        names = []
+        for edges in plan.dag.in_edges(self.name):
+            if edges[0] != self.name:
+                names += [edges[0]]
+        return names
+
+    @property
     def nodes(self):
         """Task nodes"""
         return [self.pipeline.nodes_dict[node_name] for node_name in self.node_names]

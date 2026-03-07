@@ -79,6 +79,10 @@ pulumi = [
 ]
 
 # Orchestrators
+airflow = [
+    "apache-airflow",
+    "graphviz",
+]
 databricks = [
 #    "databricks-connect",  # causing conflicts with local spark installation
     "databricks-sdk",

@@ -109,6 +109,15 @@ class PipelineNode(BaseModel, PipelineChild):
         "DEFAULT",
         description="Specify which template (notebook) to use when Databricks pipeline is selected as the orchestrator.",
     )
+    execution_task_name_: str = Field(
+        None,
+        description="""
+        Execution task name when orchestrator (such as Databricks Jobs and Airflow) supports multi-tasks execution. 
+        Nodes with the same task name will be executed together in a single task. If `None` is provided, node will be 
+        executed under `node-{node-name}`.
+        """,
+        validation_alias=AliasChoices("execution_task_name", "execution_task_name_"),
+    )
     comment: str = Field(
         None,
         description="Comment for the associated table or view",
@@ -124,10 +133,6 @@ class PipelineNode(BaseModel, PipelineChild):
             "expectations_checkpoint_path", "expectations_checkpoint_path_"
         ),
         exclude=True,
-    )
-    group: str = Field(
-        None,
-        description="Execution group. Nodes with the same group will be executed together in a single task (if orchestrator supports it).",
     )
     name: str = Field(..., description="Name given to the node.")
     primary_keys: list[str] = Field(
@@ -264,6 +269,12 @@ class PipelineNode(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
     # Orchestrator                                                            #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def execution_task_name(self) -> str:
+        if self.execution_task_name_:
+            return self.execution_task_name_
+        return f"node-{self.name}"
 
     @property
     def is_orchestrator_dlt(self) -> bool:

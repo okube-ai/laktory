@@ -79,16 +79,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         self.tasks = []
 
-        def _get_depends_on(task, plan):
-            depends_on = []
-            for edge in plan.dag.in_edges(task.name):
-                _task = plan.tasks_dict[edge[0]]
-                if _task.has_sinks:
-                    depends_on += [{"task_key": edge[0]}]
-                else:
-                    depends_on += _get_depends_on(_task, plan)
-            return depends_on
-
         # Requirements and path
         _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
         _path = (
@@ -125,10 +115,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         for pl_task_name in pl_task_names:
             pl_task = pl_tasks[pl_task_name]
 
-            if not pl_task.has_sinks:
-                continue
-
-            depends_on = _get_depends_on(pl_task, plan=plan)
+            depends_on = [{"task_key": n} for n in pl_task.upstream_task_names]
 
             task = JobTask(
                 task_key=pl_task.name,
