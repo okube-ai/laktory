@@ -105,7 +105,8 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                 raise ValueError(
                     "To use serverless a `serverless_environment_version` must be specified."
                 )
-            _version = self.serverless_environment_version
+            if self.serverless_environment_version:
+                _version = self.serverless_environment_version
 
             envs += [
                 JobEnvironment(
