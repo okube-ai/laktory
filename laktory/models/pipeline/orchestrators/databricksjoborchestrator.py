@@ -43,6 +43,9 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         None,
         description="An optional maximum number of times to retry an unsuccessful run for each node.",
     )
+    serverless_environment_version: str = Field(
+        None, description="Serverless environment version"
+    )
 
     # ----------------------------------------------------------------------- #
     # Update Job                                                              #
@@ -95,13 +98,23 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             if env.environment_key == ENV_KEY:
                 env_found = True
                 break
+
         if not env_found:
+            _version = "5"
+            if serverless and not self.serverless_environment_version:
+                raise ValueError(
+                    "To use serverless a `serverless_environment_version` must be specified."
+                )
+            if self.serverless_environment_version:
+                _version = self.serverless_environment_version
+
             envs += [
                 JobEnvironment(
                     environment_key=ENV_KEY,
                     spec=JobEnvironmentSpec(
-                        client="3",
+                        client=_version,  # TODO: Review if also works with Terraform
                         dependencies=_requirements,
+                        # environment_version="2",
                     ),
                 )
             ]
@@ -184,6 +197,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             "type",
             "dataframe_backend",
             "dataframe_api",
+            "serverless_environment_version",
         ]
 
     @property
