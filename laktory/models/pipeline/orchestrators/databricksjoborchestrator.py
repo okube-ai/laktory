@@ -112,9 +112,8 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                 JobEnvironment(
                     environment_key=ENV_KEY,
                     spec=JobEnvironmentSpec(
-                        client=_version,  # TODO: Review if also works with Terraform
                         dependencies=_requirements,
-                        # environment_version="2",
+                        environment_version=_version,
                     ),
                 )
             ]

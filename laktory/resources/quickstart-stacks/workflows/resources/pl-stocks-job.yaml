@@ -8,6 +8,7 @@ name: pl-stocks-job
 # Configure Orchestrator
 orchestrator:
   type: DATABRICKS_JOB
+  serverless_environment_version: "3"
 # Uncomment to use job cluster instead of serverless
 #  job_clusters:
 #    - job_cluster_key: node-cluster

@@ -179,6 +179,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         dataframe_backend: PYSPARK
         orchestrator:
           type: DATABRICKS_JOB
+          serverless_environment_version: "5"
 
         nodes:
 
