@@ -117,7 +117,6 @@ class JobEmailNotifications(BaseModel):
 
 
 class JobEnvironmentSpec(BaseModel):
-    client: str = Field(..., description="client version used by the environment")
     dependencies: list[str] = Field(
         None,
         description="""
@@ -126,6 +125,14 @@ class JobEnvironmentSpec(BaseModel):
     [API docs](https://docs.databricks.com/api/workspace/jobs/create#environments-spec-dependencies)
     for more information.
     """,
+    )
+    environment_version: str = Field(
+        None,
+        description="Client version used by the environment. Each version comes with a specific Python version and a set of Python packages.",
+    )  # named client in pulumi
+    java_dependencies: list[str] = Field(
+        None,
+        description="",
     )
 
 
@@ -880,6 +887,13 @@ class Job(BaseModel, PulumiResource, TerraformResource):
                     task["dbt_task"]["schema"] = task["dbt_task"]["schema_"]
                     del task["dbt_task"]["schema_"]
 
+        # Rename environment environment version
+        if "environments" in d:
+            for env in d["environments"]:
+                if "spec" in env:
+                    if "environmentVersion" in env["spec"]:
+                        env["spec"]["client"] = env["spec"]["environmentVersion"]
+                        del env["spec"]["environmentVersion"]
         return d
 
     # ----------------------------------------------------------------------- #

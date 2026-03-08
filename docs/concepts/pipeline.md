@@ -354,13 +354,14 @@ nodes: [...]
 
 The pipeline DAG can then be registered using a standard Python script:
 ```py title="stock_prices.py"
-import laktory as lk
 import jinja2
+
+import laktory as lk
 
 # Load Pipeline
 with open("./pipeline.yaml") as fp:
     pl = lk.models.Pipeline.model_validate_yaml(fp.read())
-    
+
 # Declare Dag
 dag = pl.to_airflow_dag(
     template_undefined=jinja2.DebugUndefined,  # Allow overriding attributes defined in YAML

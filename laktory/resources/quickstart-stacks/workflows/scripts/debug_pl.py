@@ -34,17 +34,11 @@ pl = stack.get_env("dev").resources.pipelines["pl-stocks-job"]
 # Execute Pipeline                                                            #
 # --------------------------------------------------------------------------- #
 
-if node_name:
-    pl.nodes_dict[node_name].execute(write_sinks=False)
-else:
-    pl.execute(write_sinks=False)
+pl.execute(write_sinks=False, selects=node_name)
 
 # --------------------------------------------------------------------------- #
 # Display Results                                                             #
 # --------------------------------------------------------------------------- #
 
-if node_name:
-    df = pl.nodes_dict[node_name].output_df
-else:
-    df = pl.nodes[-1].output_df
+df = pl.nodes_dict[node_name].output_df
 df.laktory.display()

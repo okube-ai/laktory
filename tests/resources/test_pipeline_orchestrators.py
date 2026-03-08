@@ -68,7 +68,7 @@ def test_databricks_job():
             {
                 "environment_key": "laktory",
                 "spec": {
-                    "client": "3",
+                    "environment_version": "5",
                     "dependencies": [
                         "requests>=2.0",
                         "./wheels/lake-0.0.1-py3-none-any.whl",
@@ -447,7 +447,7 @@ def test_databricks_job():
                 {
                     "environment_key": "laktory",
                     "spec": {
-                        "client": "3",
+                        "environment_version": "5",
                         "dependencies": [
                             "requests>=2.0",
                             "./wheels/lake-0.0.1-py3-none-any.whl",

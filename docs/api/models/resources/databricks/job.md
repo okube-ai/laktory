@@ -18,6 +18,26 @@
 
 ---
 
+::: laktory.models.resources.databricks.job.JobEnvironmentSpec
+
+---
+
+::: laktory.models.resources.databricks.job.JobEnvironment
+
+---
+
+::: laktory.models.resources.databricks.job.JobGitSourceGitSnapshot
+
+---
+
+::: laktory.models.resources.databricks.job.JobGitSourceJobSource
+
+---
+
+::: laktory.models.resources.databricks.job.JobGitSource
+
+---
+
 ::: laktory.models.resources.databricks.job.JobHealthRule
 
 ---
