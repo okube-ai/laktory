@@ -1,6 +1,16 @@
 # Release History
 
-## [0.9.0] - Unreleased
+## [0.9.1] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.9.0] - 2026-03-08
 ### Added
 * Support for Airflow orchestrator
 * Support to reference directories as lists in YAML injection
