@@ -1,6 +1,16 @@
 # Release History
 
-## [0.9.1] - Unreleased
+## [0.9.2] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.9.1] - 2026-03-18
 ### Added
 * `DatabricksApp` resource
 ### Fixed
