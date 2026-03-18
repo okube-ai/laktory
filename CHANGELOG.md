@@ -5,6 +5,8 @@
 * `DatabricksApp` resource
 ### Fixed
 * WorkspaceTree resource when using multilevel directory path
+### Updated
+* Auto-detection of SQL notebooks in WorkspaceTree
 
 ## [0.9.0] - 2026-03-08
 ### Added

@@ -73,10 +73,17 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
         for filepath in filepaths:
             # Check if notebook
             is_notebook = filepath.suffix == ".ipynb"
+            language = "PYTHON"
             if filepath.suffix == ".py":
                 content = filepath.read_text()
                 if "# Databricks notebook source" in content:
                     is_notebook = True
+                    language = "PYTHON"
+            elif filepath.suffix == ".sql":
+                content = filepath.read_text()
+                if "-- Databricks notebook source" in content:
+                    is_notebook = True
+                    language = "SQL"
 
             # Set source (local file system)
             if source.is_absolute():
@@ -99,7 +106,7 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
             kwargs["access_controls"] = self.access_controls
 
             if is_notebook:
-                r = Notebook(source=str(_source), **kwargs)
+                r = Notebook(source=str(_source), language=language, **kwargs)
             else:
                 r = WorkspaceFile(source=str(_source), **kwargs)
 
