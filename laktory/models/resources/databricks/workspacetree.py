@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from pydantic import Field
@@ -57,6 +58,7 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
 
         # Get file paths
         source = Path(self.source)
+        cwd = Path("./").resolve()
         root = source.resolve()
         filepaths = []
         for filepath in root.rglob("*"):
@@ -80,7 +82,7 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
             if source.is_absolute():
                 _source = str(filepath)
             else:
-                _source = filepath.relative_to(root.parent)
+                _source = Path(os.path.relpath(filepath, cwd))
 
             # Set path (Databricks / unix file system)
             dirpath = str(filepath.parent).replace(str(root), "")

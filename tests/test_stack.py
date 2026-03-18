@@ -32,6 +32,7 @@ def stack():
 def full_stack():
     from tests.resources.test_accesscontrolruleset import acrs
     from tests.resources.test_alert import alert
+    from tests.resources.test_app import app
     from tests.resources.test_catalog import catalog
     from tests.resources.test_cluster_policy import cluster_policy
     from tests.resources.test_dashboard import dashboard
@@ -74,6 +75,7 @@ def full_stack():
     _resources = {
         "databricks_accesscontrolrulesets": [acrs],
         "databricks_alerts": [alert],
+        "databricks_apps": [app],
         "databricks_catalogs": [catalog],
         "databricks_clusterpolicies": [cluster_policy],
         "databricks_dashboards": [dashboard],

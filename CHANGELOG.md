@@ -2,13 +2,9 @@
 
 ## [0.9.1] - Unreleased
 ### Added
-* n/a
+* `DatabricksApp` resource
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* WorkspaceTree resource when using multilevel directory path
 
 ## [0.9.0] - 2026-03-08
 ### Added

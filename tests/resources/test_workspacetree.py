@@ -49,7 +49,7 @@ def test_workspace_tree():
 
 def test_workspace_tree_rel():
     tree = get_workspace_tree()
-    tree.source = "./tests/data/tree"
+    tree.source = "../data/tree"
 
     resources = tree.core_resources
     assert len(resources) == 5
@@ -58,7 +58,7 @@ def test_workspace_tree_rel():
         print(r.source)
 
     r = resources[0]
-    assert r.source == "tree/notebooks/listfiles.py"
+    assert r.source == "../data/tree/notebooks/listfiles.py"
 
 
 def test_workspace_tree_with_path():
