@@ -13,6 +13,7 @@ from laktory.models.resources.databricks.accesscontrolruleset import (
     AccessControlRuleSet,
 )
 from laktory.models.resources.databricks.alert import Alert
+from laktory.models.resources.databricks.app import App
 from laktory.models.resources.databricks.catalog import Catalog
 from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.clusterpolicy import ClusterPolicy
@@ -136,6 +137,7 @@ class StackResources(BaseModel):
 
     databricks_accesscontrolrulesets: dict[str, AccessControlRuleSet] = {}
     databricks_alerts: dict[str, Alert] = {}
+    databricks_apps: dict[str, App] = {}
     databricks_catalogs: dict[str, Catalog] = {}
     databricks_clusterpolicies: dict[str, ClusterPolicy] = {}
     databricks_clusters: dict[str, Cluster] = {}
