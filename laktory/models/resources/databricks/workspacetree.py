@@ -59,7 +59,7 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
         # Get file paths
         source = Path(self.source)
         cwd = Path("./").resolve()
-        root = source.resolve()
+        root = (cwd / source).resolve()
         filepaths = []
         for filepath in root.rglob("*"):
             if filepath.is_dir():

@@ -236,6 +236,12 @@ class App(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def singularizations(self) -> dict[str, str]:
+        return {
+            "resources": "resources",
+        }
+
+    @property
     def terraform_resource_type(self) -> str:
         return "databricks_app"
 
