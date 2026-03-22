@@ -8,6 +8,11 @@ from laktory.models.pipelinechild import PipelineChild
 
 logger = get_logger(__name__)
 
+# TBLPROPERTY key used to track which properties are managed by Laktory.
+# Stored as a pipe-delimited list of keys on the table itself, enabling
+# cross-run state without external storage.
+_LAKTORY_MANAGED_KEY = "laktory.managedProperties"
+
 
 # class Constraint(BaseModel, PipelineChild):
 #     check: str = None
@@ -173,7 +178,9 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                         f"""COMMENT ON TABLE {table_full_name} IS {self.comment_str}"""
                     )
                 else:
-                    self.properties["comment"] = self.comment_str
+                    spark.sql(
+                        f"""ALTER TABLE {table_full_name} SET TBLPROPERTIES(comment = {self.comment_str});"""
+                    )
 
         # Columns
         for current in self.current.columns:
@@ -199,36 +206,44 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         "A table option is a key-value pair which you can initialize when you perform a CREATE TABLE. You cannot SET or UNSET a table option."
 
         # Properties
-        if self.properties:
-            # Set new properties
-            props = []
-            for k, v in self.properties.items():
-                v_string = "'" + v + "'"
-                if k == "comment" and self.comment:
-                    v_string = v
-                props += [f"{k} = {v_string}"]
-            if props:
-                props_string = ",".join(props)
-                logger.info(
-                    f"""Setting table '{table_full_name}' properties to ({props_string})"""
-                )
-                spark.sql(
-                    f"""ALTER TABLE {table_full_name} SET TBLPROPERTIES({props_string});"""
-                )
+        # previously_managed is read from the table's own TBLPROPERTIES (pipe-delimited
+        # to avoid corrupting the DESCRIBE EXTENDED comma-based parser). This provides
+        # cross-run state without external storage, so only Laktory-managed properties
+        # are ever unset — system properties are never touched.
+        previously_managed = set(
+            k.strip()
+            for k in self.current.properties.get(_LAKTORY_MANAGED_KEY, "").split("|")
+            if k.strip()
+        )
+        currently_managed = set(self.properties.keys()) if self.properties else set()
 
-            # Remove old properties
-            props = []
-            for k, v in self.current.properties.items():
-                if k not in self.properties:
-                    props += [k]
-            if props:
-                props_string = ",".join(props)
-                logger.info(
-                    f"Unsetting table '{table_full_name}' properties ({props_string})"
-                )
-                spark.sql(
-                    f"""ALTER TABLE {table_full_name} UNSET TBLPROPERTIES IF EXISTS ({props_string});"""
-                )
+        # Set new/updated properties and update the tracking key
+        all_set = dict(self.properties or {})
+        if currently_managed:
+            all_set[_LAKTORY_MANAGED_KEY] = "|".join(sorted(currently_managed))
+
+        if all_set:
+            props = [f"{k} = '{v}'" for k, v in all_set.items()]
+            props_string = ",".join(props)
+            logger.info(
+                f"Setting table '{table_full_name}' properties to ({props_string})"
+            )
+            spark.sql(
+                f"""ALTER TABLE {table_full_name} SET TBLPROPERTIES({props_string});"""
+            )
+
+        # Unset only previously-managed keys that are no longer in config
+        to_unset = previously_managed - currently_managed
+        if not currently_managed and previously_managed:
+            to_unset.add(_LAKTORY_MANAGED_KEY)
+        if to_unset:
+            props_string = ",".join(to_unset)
+            logger.info(
+                f"Unsetting table '{table_full_name}' properties ({props_string})"
+            )
+            spark.sql(
+                f"""ALTER TABLE {table_full_name} UNSET TBLPROPERTIES IF EXISTS ({props_string});"""
+            )
 
         # Tags
         set_tags(

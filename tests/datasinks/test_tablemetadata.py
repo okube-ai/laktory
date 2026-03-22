@@ -78,6 +78,7 @@ def test_hive_table(backend, tmp_path):
         "delta.minReaderVersion": "1",
         "delta.minWriterVersion": "2",
         "lk.version": "0",
+        "laktory.managedProperties": "delta.minWriterVersion|lk.version",
         "option.mergeSchema": "false",
         "option.overwriteSchema": "true",
     }

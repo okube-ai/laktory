@@ -10,6 +10,7 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
+from laktory.models.dataframe.dataframeschema import DataFrameSchema
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.models.datasinks.tabledatasinkmetadata import TableDataSinkMetadata
 from laktory.models.datasources.tabledatasource import TableDataSource
@@ -31,6 +32,11 @@ class TableDataSink(BaseDataSink):
     )
     metadata: TableDataSinkMetadata = Field(
         None, description="Table and columns metadata."
+    )
+    schema_definition: DataFrameSchema = Field(
+        None,
+        validation_alias="schema",
+        description="Explicit table schema used when creating the table. If not set, schema is inferred from the transformer output DataFrame.",
     )
     table_name: str = Field(
         ...,
@@ -161,6 +167,38 @@ class TableDataSink(BaseDataSink):
                 writer = getattr(writer, m.name)(*m.args, **m.kwargs)
 
             writer.saveAsTable(self.full_name)
+
+    def _initialize_table(self, df) -> bool:
+        """
+        Creates an empty Delta table with the expected schema if it does not already exist.
+
+        Returns True if the table was created, False if it already existed.
+        Schema is taken from `schema_definition` if set, otherwise inferred from `df`.
+        """
+        if self.dataframe_backend != DataFrameBackends.PYSPARK:
+            return False
+
+        if self.exists():
+            return False
+
+        from laktory import get_spark_session
+
+        spark = get_spark_session()
+
+        if self.schema_definition:
+            spark_schema = self.schema_definition.to_spark()
+        else:
+            spark_schema = df.to_native().schema
+
+        schema_ddl = ", ".join(
+            f"`{f.name}` {f.dataType.simpleString()}" for f in spark_schema.fields
+        )
+
+        logger.info(f"Creating table {self.full_name} with schema: {schema_ddl}")
+        spark.sql(
+            f"CREATE TABLE IF NOT EXISTS {self.full_name} ({schema_ddl}) USING DELTA"
+        )
+        return True
 
     def _write_spark_view(self, view_definition) -> None:
         from laktory import get_spark_session
