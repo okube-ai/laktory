@@ -33,6 +33,12 @@ class ClusterInitScript(BaseModel):
         None, description="Workspace file specifications"
     )
 
+    @property
+    def singularizations(self) -> dict[str, str]:
+        return {
+            "volumes": "volumes",
+        }
+
 
 class ClusterLibraryCran(BaseModel):
     package: str = Field(None, description="")
