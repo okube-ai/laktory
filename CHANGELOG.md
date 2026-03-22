@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* `cluster`.`init_scripts`.`volumes` property for Terraform (plural form instead of singular) [[#516](https://github.com/okube-ai/laktory/issues/516)]
 ### Updated
 * n/a
 ### Breaking changes
