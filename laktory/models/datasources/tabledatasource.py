@@ -28,6 +28,12 @@ class TableDataSource(BaseDataSource):
         `catalog_name` and `schema_name` arguments are ignored.
         """,
     )
+    reader_kwargs: dict[str, Any] = Field(
+        {},
+        description="""
+        Keyword arguments passed directly to dataframe backend reader. Passed to `.options()` method when using PySpark.
+        """,
+    )
     reader_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend reader methods."
     )
@@ -80,17 +86,60 @@ class TableDataSource(BaseDataSource):
     @property
     def _id(self) -> str:
         return self.full_name
+    # ----------------------------------------------------------------------- #
+    # Readers                                                                 #
+    # ----------------------------------------------------------------------- #
 
-    def _read_spark(self, spark=None) -> nw.LazyFrame:
+    def _get_spark_kwargs(self):
+        # fmt = self.format.lower()
+        fmt = None
+
+        # Build kwargs
+        kwargs = {}
+
+        for k, v in self.reader_kwargs.items():
+            kwargs[k] = v
+
+        return kwargs, fmt
+
+    def _get_spark_reader_methods(self):
+        methods = []
+
+        options, fmt = self._get_spark_kwargs()
+
+        if options:
+            methods += [ReaderWriterMethod(name="options", kwargs=options)]
+
+        for m in self.reader_methods:
+            methods += [m]
+
+        return methods
+
+    def _read_spark(self) -> nw.LazyFrame:
         from laktory import get_spark_session
 
         spark = get_spark_session()
 
+        # Create reader
         if self.as_stream:
-            logger.info(f"Reading {self._id} as stream")
-            df = spark.readStream.table(self.full_name)
+            mode = "stream"
+            reader = spark.readStream
         else:
-            logger.info(f"Reading {self._id} as static")
-            df = spark.read.table(self.full_name)
+            mode = "static"
+            reader = spark.read
+
+        # Build methods
+        methods = self._get_spark_reader_methods()
+
+        # Apply methods
+        for m in methods:
+            print("Adding method", m.name)
+            reader = getattr(reader, m.name)(*m.args, **m.kwargs)
+
+        # Load
+        logger.info(
+            f"Reading {self._id} as {mode} read.{'.'.join([m.as_string for m in methods])}"
+        )
+        df = reader.table(self.full_name)
 
         return nw.from_native(df)
