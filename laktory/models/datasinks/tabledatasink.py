@@ -143,7 +143,9 @@ class TableDataSink(BaseDataSink):
         schema = self._get_create_schema(df)
 
         if schema is None:
-            logger.info(f"Schema is empty and `df` is None. Skipping table '{self.full_name}' creation.")
+            logger.info(
+                f"Schema is empty and `df` is None. Skipping table '{self.full_name}' creation."
+            )
             return False
 
         # TODO: Add logging of schema
@@ -164,15 +166,10 @@ class TableDataSink(BaseDataSink):
                 **kwargs
             ).saveAsTable(self.full_name)
 
-            if self.metadata:
-                try:
-                    del self.metadata.current  # invalidate cached_property
-                except AttributeError:
-                    pass
         else:
-            raise NotImplementedError(f"Table Data Sink for '{self.dataframe_backend}' is not yet supported.")
-
-
+            raise NotImplementedError(
+                f"Table Data Sink for '{self.dataframe_backend}' is not yet supported."
+            )
 
         return True
 

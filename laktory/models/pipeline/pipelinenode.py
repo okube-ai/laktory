@@ -629,11 +629,9 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Output and Quarantine to Sinks
         if write_sinks and self.sinks:
-
             view_definition = self.view_definition
 
             for s in self.sinks:
-
                 # Get DataFrame
                 _df = self._output_df
                 if s.is_quarantine:
@@ -642,7 +640,9 @@ class PipelineNode(BaseModel, PipelineChild):
                 # Create Sink
                 s.create(df=_df)
 
-                _is_update_metadata = update_tables_metadata and s.metadata and not self.is_dlt_execute
+                _is_update_metadata = (
+                    update_tables_metadata and s.metadata and not self.is_dlt_execute
+                )
 
                 if self.is_view:
                     s.write(view_definition=view_definition)
@@ -654,7 +654,9 @@ class PipelineNode(BaseModel, PipelineChild):
                         s.metadata.execute()
                     s.write(df=self._output_df)
 
-
+                    # Metadata update required because of schema overwrite
+                    if _is_update_metadata and s.metadata.update_required:
+                        s.metadata.execute()
 
         return self._output_df
 

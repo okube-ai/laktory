@@ -385,7 +385,9 @@ class BaseDataSink(BaseModel, PipelineChild):
         kwargs["overwriteSchema"] = False
         if mode in ["OVERWRITE", "COMPLETE"]:
             kwargs["mergeSchema"] = False
-            kwargs["overwriteSchema"] = True
+            kwargs["overwriteSchema"] = True  # This option overwrite columns metadata
+            if self.metadata:
+                self.metadata._update_required = True
         if is_streaming:
             kwargs["checkpointLocation"] = self.checkpoint_path.as_posix()
 

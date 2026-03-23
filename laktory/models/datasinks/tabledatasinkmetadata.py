@@ -118,6 +118,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
     properties: dict[str, str] | None = Field({}, description="Table properties.")
     tags: dict[str, str | None] | None = Field({}, description="Table tags")
     _table_type: str | None = None
+    _update_required: bool = False
 
     @property
     def comment_str(self):
@@ -151,10 +152,20 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
     def current(self):
         return self.get_current()
 
+    @property
+    def update_required(self):
+        return self._update_required
+
     def execute(self):
         from laktory import get_spark_session
 
         spark = get_spark_session()
+
+        # Invalidate cached state so each execute() sees the current table state
+        try:
+            del self.current
+        except AttributeError:
+            pass
 
         table = self.parent
         table_full_name = table.full_name
@@ -254,6 +265,8 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
             is_uc=self.is_uc,
         )
 
+        self._update_required = False
+
     def get_current(self):
         from laktory import get_spark_session
 
@@ -265,6 +278,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
 
         df = (
             spark.sql(f"""DESCRIBE EXTENDED {self.table_full_name}""")
+            .fillna("", subset=["comment"])
             .toPandas()
             .set_index("col_name")
         )
