@@ -36,7 +36,8 @@ dependencies = [
     "pydantic>=2",
     "pydantic-settings",
     # "python-dateutil",
-    "sqlglot[rs]",
+    "sqlglot",
+    "sqlglotc",
     "typer",
     "tzdata; sys_platform == 'win32'"
 ]
@@ -103,6 +104,11 @@ path = "laktory/_version.py"
 # CLI
 [project.scripts]
 laktory = "laktory.cli.app:app"
+
+[pytest]
+markers = [
+    "databricks_connect: marks tests requiring databricks_connect package to run",
+]
 
 [tool.ruff]
 builtins = ["spark", "display", "dbutils"]
