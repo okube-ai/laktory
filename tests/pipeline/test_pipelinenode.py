@@ -46,8 +46,6 @@ def test_parents():
 def test_execute(backend, tmp_path):
     df0 = get_df0(backend)
 
-    print("DF0: ", type(df0.to_native()))
-
     mode = None
     sink_path = tmp_path / "pl_node_sink"
     if backend == "PYSPARK":

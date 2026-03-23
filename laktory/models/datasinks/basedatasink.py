@@ -222,7 +222,6 @@ class BaseDataSink(BaseModel, PipelineChild):
     # -------------------------------------------------------------------------------- #
 
     def _update_backend_from_df(self, df):
-
         dataframe_backend = DataFrameBackends.from_nw_implementation(df.implementation)
         if dataframe_backend not in SUPPORTED_BACKENDS:
             raise ValueError(
@@ -235,7 +234,6 @@ class BaseDataSink(BaseModel, PipelineChild):
             )
         self.dataframe_backend_ = dataframe_backend
 
-
     def _get_create_schema(self, df):
         schema = None
         if self.schema_definition:
@@ -244,23 +242,23 @@ class BaseDataSink(BaseModel, PipelineChild):
             elif self.dataframe_backend == DataFrameBackends.POLARS:
                 schema = self.schema_definition.to_polars()
             else:
-                raise NotImplementedError(f"DataFrame backend '{self.dataframe_backend}' is not supported.")
+                raise NotImplementedError(
+                    f"DataFrame backend '{self.dataframe_backend}' is not supported."
+                )
         elif df is not None:
             df = df.to_native()
             if self.dataframe_backend == DataFrameBackends.PYSPARK:
                 schema = df.schema
             elif self.dataframe_backend == DataFrameBackends.POLARS:
                 import polars as pl
+
                 schema = (
-                    df.collect_schema()
-                    if isinstance(df, pl.LazyFrame)
-                    else df.schema
+                    df.collect_schema() if isinstance(df, pl.LazyFrame) else df.schema
                 )
             else:
-                raise NotImplementedError(f"DataFrame backend '{self.dataframe_backend}' is not supported.")
-
-        print("Schema type: ", type(schema))
-        print("Schema: ", schema)
+                raise NotImplementedError(
+                    f"DataFrame backend '{self.dataframe_backend}' is not supported."
+                )
 
         return schema
 

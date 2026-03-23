@@ -133,14 +133,13 @@ class FileDataSink(BaseDataSink):
         schema = self._get_create_schema(df)
 
         if schema is None:
-            logger.info(f"Schema is empty and `df` is None. Skipping DataFrame '{self.path}' creation.")
+            logger.info(
+                f"Schema is empty and `df` is None. Skipping DataFrame '{self.path}' creation."
+            )
             return False
 
         # TODO: Add logging of schema
         logger.info(f"Creating empty DataFrame at '{self.path}'")
-
-        print("BACKEND: ", self.dataframe_backend)
-        print("DataFrame type", type(df.to_native()))
 
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
             from laktory import get_spark_session
@@ -152,6 +151,7 @@ class FileDataSink(BaseDataSink):
 
         elif self.dataframe_backend == DataFrameBackends.POLARS:
             import polars as pl
+
             df_empty = pl.DataFrame(schema=schema)
 
             if self.format.lower() == "delta":
@@ -159,10 +159,14 @@ class FileDataSink(BaseDataSink):
             elif self.format.lower() == "parquet":
                 df_empty.write_parquet(self.path)
             else:
-                raise NotImplementedError(f"Format '{self.format}' is not support for {self.dataframe_backend} backend.")
+                raise NotImplementedError(
+                    f"Format '{self.format}' is not support for {self.dataframe_backend} backend."
+                )
 
         else:
-            raise NotImplementedError(f"DataFrame creation is not implemented for '{self.dataframe_backend}' backend")
+            raise NotImplementedError(
+                f"DataFrame creation is not implemented for '{self.dataframe_backend}' backend"
+            )
 
         return True
 
@@ -258,7 +262,6 @@ class FileDataSink(BaseDataSink):
             for k, v in self.writer_kwargs.items():
                 kwargs[k] = v
             ds.write_dataset(data=df.to_arrow(), base_dir=self.path, **kwargs)
-
 
     # ----------------------------------------------------------------------- #
     # Purge                                                                   #
