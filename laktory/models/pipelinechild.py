@@ -39,8 +39,6 @@ class PipelineChild(BaseChild):
     def dataframe_backend(self) -> DataFrameBackends:
         backend = self.dataframe_backend_
 
-        print("GETTING DATAFRAME BACKEND! 0 - ", backend)
-
         # Direct value
         if backend is not None:
             if not isinstance(backend, DataFrameBackends):
@@ -55,11 +53,9 @@ class PipelineChild(BaseChild):
         # Value from parent
         parent = self._parent
         if parent is not None:
-            print("GETTING DATAFRAME BACKEND! 1 - ", parent.dataframe_backend)
             return parent.dataframe_backend
 
         # Value from settings
-        print("GETTING DATAFRAME BACKEND! 2 - ", settings.dataframe_backend.upper())
         return DataFrameBackends(settings.dataframe_backend.upper())
 
     @computed_field(description="dataframe_api")
