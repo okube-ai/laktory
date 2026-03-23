@@ -111,7 +111,63 @@ class FileDataSink(BaseDataSink):
         return self.path
 
     # ----------------------------------------------------------------------- #
-    # Writers                                                                 #
+    # Create                                                                  #
+    # ----------------------------------------------------------------------- #
+
+    def create(self, df=None) -> bool:
+        """
+        Creates an empty Delta table at `self.path` if the path does not already exist.
+
+        Returns True if the table was created, False otherwise.
+        Schema is taken from `schema_definition` if set, otherwise inferred from `df`.
+        """
+
+        # Create table only for formats that supports append/insert/merge/delete modes
+        if self.format.lower() not in ["delta", "parquet", "iceberg"]:
+            return False
+
+        if self.exists():
+            return False
+
+        self._update_backend_from_df(df)
+        schema = self._get_create_schema(df)
+
+        if schema is None:
+            logger.info(f"Schema is empty and `df` is None. Skipping DataFrame '{self.path}' creation.")
+            return False
+
+        # TODO: Add logging of schema
+        logger.info(f"Creating empty DataFrame at '{self.path}'")
+
+        print("BACKEND: ", self.dataframe_backend)
+        print("DataFrame type", type(df.to_native()))
+
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
+            from laktory import get_spark_session
+
+            spark = get_spark_session()
+
+            df_empty = spark.createDataFrame(data=[], schema=schema)
+            df_empty.write.format(self.format).mode("overwrite").save(self.path)
+
+        elif self.dataframe_backend == DataFrameBackends.POLARS:
+            import polars as pl
+            df_empty = pl.DataFrame(schema=schema)
+
+            if self.format.lower() == "delta":
+                df_empty.write_delta(self.path, mode="overwrite")
+            elif self.format.lower() == "parquet":
+                df_empty.write_parquet(self.path)
+            else:
+                raise NotImplementedError(f"Format '{self.format}' is not support for {self.dataframe_backend} backend.")
+
+        else:
+            raise NotImplementedError(f"DataFrame creation is not implemented for '{self.dataframe_backend}' backend")
+
+        return True
+
+    # ----------------------------------------------------------------------- #
+    # Write                                                                   #
     # ----------------------------------------------------------------------- #
 
     def _validate_format(self) -> None:
@@ -134,7 +190,7 @@ class FileDataSink(BaseDataSink):
                     f"Mode '{mode}' is not supported for Polars DataFrame. Set to `None`"
                 )
 
-    def _write_spark(self, df, mode, full_refresh=False) -> None:
+    def _write_spark(self, df, mode) -> None:
         df = df.to_native()
 
         # Format
@@ -162,7 +218,7 @@ class FileDataSink(BaseDataSink):
 
             writer.save(self.path)
 
-    def _write_polars(self, df, mode, full_refresh=False) -> None:
+    def _write_polars(self, df, mode) -> None:
         import polars as pl
 
         kwargs, fmt = self._get_polars_kwargs(mode=mode)
@@ -203,16 +259,20 @@ class FileDataSink(BaseDataSink):
                 kwargs[k] = v
             ds.write_dataset(data=df.to_arrow(), base_dir=self.path, **kwargs)
 
+
     # ----------------------------------------------------------------------- #
     # Purge                                                                   #
     # ----------------------------------------------------------------------- #
+
+    def exists(self):
+        return os.path.exists(self.path)
 
     def purge(self):
         """
         Delete sink data and checkpoints
         """
         # Remove Data
-        if os.path.exists(self.path):
+        if self.exists():
             is_dir = os.path.isdir(self.path)
             if is_dir:
                 logger.info(f"Deleting data dir {self.path}")

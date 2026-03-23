@@ -628,34 +628,33 @@ class PipelineNode(BaseModel, PipelineChild):
         self.check_expectations()
 
         # Output and Quarantine to Sinks
-        if write_sinks:
+        if write_sinks and self.sinks:
+
             view_definition = self.view_definition
-            for s in self.output_sinks:
+
+            for s in self.sinks:
+
+                # Get DataFrame
+                _df = self._output_df
+                if s.is_quarantine:
+                    _df = self._quarantine_df
+
+                # Create Sink
+                s.create(df=_df)
+
+                _is_update_metadata = update_tables_metadata and s.metadata and not self.is_dlt_execute
+
                 if self.is_view:
                     s.write(view_definition=view_definition)
+                    if _is_update_metadata:
+                        s.metadata.execute()
                     self._output_df = s.as_source().read()
                 else:
-                    # Initialize table (creates empty Delta table with schema if not
-                    # exists) then apply all metadata pre-write so that properties like
-                    # delta.enableChangeDataFeed are set before the first insert.
-                    if hasattr(s, "_initialize_table") and self._output_df is not None:
-                        created = s._initialize_table(self._output_df)
-                        if created and s.metadata:
-                            try:
-                                del s.metadata.current  # invalidate cached_property
-                            except AttributeError:
-                                pass
-                    if update_tables_metadata and s.metadata and not self.is_dlt_execute:
+                    if _is_update_metadata:
                         s.metadata.execute()
-                    s.write(df=self._output_df, full_refresh=full_refresh)
+                    s.write(df=self._output_df)
 
-            if self._quarantine_df is not None:
-                for s in self.quarantine_sinks:
-                    s.write(
-                        df=self._quarantine_df,
-                        full_refresh=full_refresh,
-                        view_definition=view_definition,
-                    )
+
 
         return self._output_df
 

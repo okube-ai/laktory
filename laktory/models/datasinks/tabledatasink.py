@@ -10,7 +10,6 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
-from laktory.models.dataframe.dataframeschema import DataFrameSchema
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.models.datasinks.tabledatasinkmetadata import TableDataSinkMetadata
 from laktory.models.datasources.tabledatasource import TableDataSource
@@ -32,11 +31,6 @@ class TableDataSink(BaseDataSink):
     )
     metadata: TableDataSinkMetadata = Field(
         None, description="Table and columns metadata."
-    )
-    schema_definition: DataFrameSchema = Field(
-        None,
-        validation_alias="schema",
-        description="Explicit table schema used when creating the table. If not set, schema is inferred from the transformer output DataFrame.",
     )
     table_name: str = Field(
         ...,
@@ -127,21 +121,67 @@ class TableDataSink(BaseDataSink):
         ]
 
     # ----------------------------------------------------------------------- #
-    # Writers                                                                 #
+    # Create                                                                  #
     # ----------------------------------------------------------------------- #
 
-    def _write_spark(self, df, mode, full_refresh=False) -> None:
-        df = df.to_native()
+    def create(self, df=None) -> bool:
+        """
+        Creates an empty Delta table with the expected schema if it does not already exist.
 
-        # Full Refresh
-        if full_refresh or not self.exists():
-            if df.isStreaming:
-                pass
-            else:
-                logger.info(
-                    "Full refresh or initial load. Switching to OVERWRITE mode."
-                )
-                mode = "OVERWRITE"
+        Returns True if the table was created, False otherwise.
+        Schema is taken from `schema_definition` if set, otherwise inferred from `df`.
+        """
+
+        # Skip for views
+        if self.table_type == "VIEW":
+            return False
+
+        if self.exists():
+            return False
+
+        self._update_backend_from_df(df)
+        schema = self._get_create_schema(df)
+
+        if schema is None:
+            logger.info(f"Schema is empty and `df` is None. Skipping table '{self.full_name}' creation.")
+            return False
+
+        # TODO: Add logging of schema
+        logger.info(f"Creating empty table '{self.full_name}'.")
+
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
+            from laktory import get_spark_session
+
+            spark = get_spark_session()
+
+            kwargs = {}
+            path = self.writer_kwargs.get("path", None)
+            if path:
+                kwargs["path"] = path
+
+            df_empty = spark.createDataFrame(data=[], schema=schema)
+            df_empty.write.format(self.format.lower()).mode("ignore").options(
+                **kwargs
+            ).saveAsTable(self.full_name)
+
+            if self.metadata:
+                try:
+                    del self.metadata.current  # invalidate cached_property
+                except AttributeError:
+                    pass
+        else:
+            raise NotImplementedError(f"Table Data Sink for '{self.dataframe_backend}' is not yet supported.")
+
+
+
+        return True
+
+    # ----------------------------------------------------------------------- #
+    # Write                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    def _write_spark(self, df, mode) -> None:
+        df = df.to_native()
 
         # Format
         methods = self._get_spark_writer_methods(mode=mode, is_streaming=df.isStreaming)
@@ -167,38 +207,6 @@ class TableDataSink(BaseDataSink):
                 writer = getattr(writer, m.name)(*m.args, **m.kwargs)
 
             writer.saveAsTable(self.full_name)
-
-    def _initialize_table(self, df) -> bool:
-        """
-        Creates an empty Delta table with the expected schema if it does not already exist.
-
-        Returns True if the table was created, False if it already existed.
-        Schema is taken from `schema_definition` if set, otherwise inferred from `df`.
-        """
-        if self.dataframe_backend != DataFrameBackends.PYSPARK:
-            return False
-
-        if self.exists():
-            return False
-
-        from laktory import get_spark_session
-
-        spark = get_spark_session()
-
-        if self.schema_definition:
-            spark_schema = self.schema_definition.to_spark()
-        else:
-            spark_schema = df.to_native().schema
-
-        schema_ddl = ", ".join(
-            f"`{f.name}` {f.dataType.simpleString()}" for f in spark_schema.fields
-        )
-
-        logger.info(f"Creating table {self.full_name} with schema: {schema_ddl}")
-        spark.sql(
-            f"CREATE TABLE IF NOT EXISTS {self.full_name} ({schema_ddl}) USING DELTA"
-        )
-        return True
 
     def _write_spark_view(self, view_definition) -> None:
         from laktory import get_spark_session
