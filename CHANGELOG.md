@@ -2,11 +2,11 @@
 
 ## [0.9.2] - Unreleased
 ### Added
-* Support for `TableDataSource` `reader_kwargs` attribute
+* Support for `TableDataSource` `reader_kwargs` attribute [[#513](https://github.com/okube-ai/laktory/issues/513)]
 ### Fixed
 * `cluster`.`init_scripts`.`volumes` property for Terraform (plural form instead of singular) [[#516](https://github.com/okube-ai/laktory/issues/516)]
 ### Updated
-* n/a
+* Pipeline node execution to include a creation step that facilitates injection of metadata before write data [[#507](https://github.com/okube-ai/laktory/issues/507)]
 ### Breaking changes
 * n/a
 
