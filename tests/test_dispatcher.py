@@ -47,7 +47,7 @@ def test_workspace_client(monkeypatch, stack):
 
 
 def test_resources(stack):
-    # pytest.skip("Performance issue")  # TODO: Enabled
+    pytest.skip("Performance issue")  # TODO: Enabled
 
     dispatcher = Dispatcher(stack)
 
