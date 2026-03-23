@@ -2,9 +2,9 @@
 
 ## [0.9.2] - Unreleased
 ### Added
-* n/a
+* Support for `TableDataSource` `reader_kwargs` attribute
 ### Fixed
-* n/a
+* `cluster`.`init_scripts`.`volumes` property for Terraform (plural form instead of singular) [[#516](https://github.com/okube-ai/laktory/issues/516)]
 ### Updated
 * n/a
 ### Breaking changes

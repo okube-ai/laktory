@@ -9,6 +9,7 @@ job = Job(
             "new_cluster": {
                 "spark_version": "16.3.x-scala2.12",
                 "node_type_id": "Standard_DS3_v2",
+                "init_scripts": [{"volumes": {"destination": "Volumes/some/path"}}],
             },
         },
     ],
@@ -96,7 +97,12 @@ def test_job_model():
                     "enable_elastic_disk": None,
                     "enable_local_disk_encryption": None,
                     "idempotency_token": None,
-                    "init_scripts": [],
+                    "init_scripts": [
+                        {
+                            "volumes": {"destination": "Volumes/some/path"},
+                            "workspace": None,
+                        }
+                    ],
                     "instance_pool_id": None,
                     "is_single_node": None,
                     "kind": None,
@@ -339,7 +345,7 @@ def test_job_pulumi():
             {
                 "job_cluster_key": "main",
                 "new_cluster": {
-                    "init_scripts": [],
+                    "init_scripts": [{"volumes": {"destination": "Volumes/some/path"}}],
                     "node_type_id": "Standard_DS3_v2",
                     "spark_conf": {},
                     "spark_env_vars": {},

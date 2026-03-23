@@ -35,7 +35,7 @@ def test_read_polars(df0, tmp_path):
 
 @pytest.mark.xfail(reason="Requires Databricks Spark Session (for now)")
 def test_read(tmp_path):
-    df0 = get_df0("PYSPARKS").to_native()
+    df0 = get_df0("PYSPARK").to_native()
 
     # Config
     catalog = "sandbox"
