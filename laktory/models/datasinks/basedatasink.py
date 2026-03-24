@@ -233,43 +233,48 @@ class BaseDataSink(BaseModel, PipelineChild):
                 f"DataFrame provided is {dataframe_backend} and source has been configure with {self.dataframe_backend_} backend."
             )
         self.dataframe_backend_ = dataframe_backend
+        if self.schema_definition:
+            self.schema_definition.dataframe_backend_ = dataframe_backend
 
     def _get_create_schema(self, df):
         schema = None
         if self.schema_definition:
-            if self.dataframe_backend == DataFrameBackends.PYSPARK:
-                schema = self.schema_definition.to_spark()
-            elif self.dataframe_backend == DataFrameBackends.POLARS:
-                schema = self.schema_definition.to_polars()
-            else:
-                raise NotImplementedError(
-                    f"DataFrame backend '{self.dataframe_backend}' is not supported."
-                )
-        elif df is not None:
-            df = df.to_native()
-            if self.dataframe_backend == DataFrameBackends.PYSPARK:
-                schema = df.schema
-            elif self.dataframe_backend == DataFrameBackends.POLARS:
-                import polars as pl
+            schema = self.schema_definition
+        if df is not None:
+            schema = DataFrameSchema.from_narwhals(
+                df.schema, dataframe_backend=df.implementation
+            )
 
-                schema = (
-                    df.collect_schema() if isinstance(df, pl.LazyFrame) else df.schema
-                )
-            else:
-                raise NotImplementedError(
-                    f"DataFrame backend '{self.dataframe_backend}' is not supported."
-                )
+        # TODO: We should probably validate that the schema from the DataFrame matches
+        # the schema_definition if provided.
 
-        return schema
+        if schema is None:
+            return
+
+        return schema.to_native()
 
     def create(self, df: "AnyFrame" = None) -> bool:
         """
-        Create the sink before writing.
+        Initialize the sink if required.
 
-        Returns `True` if the sink was created, `False` if
-        it already existed or creation is not applicable.
+        Some sinks (e.g., Unity Catalog or Delta tables) must exist before
+        metadata can be applied or data can be written in append mode.
 
-        Override in subclasses to implement sink-specific initialization logic.
+        Parameters
+        ----------
+        df : DataFrame
+            Input DataFrame that may be used during sink initialization.
+
+        Returns
+        -------
+        bool
+            True if the sink was created, False if it already existed or if
+            creation is not required.
+
+        Notes
+        -----
+        This method is intended to be overridden by subclasses to implement
+        sink-specific initialization logic.
         """
         return False
 

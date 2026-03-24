@@ -289,7 +289,7 @@ class FileDataSource(BaseDataSource):
         if self.schema_definition:
             methods += [
                 ReaderWriterMethod(
-                    name="schema", args=[self.schema_definition.to_spark()]
+                    name="schema", args=[self.schema_definition.to_pyspark()]
                 )
             ]
 

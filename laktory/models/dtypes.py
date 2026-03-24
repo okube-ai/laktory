@@ -222,7 +222,7 @@ class DType(BaseModel):
         # Not Found
         raise ValueError(f"Data type with name '{self.name}' is not supported")
 
-    def to_spark(self):
+    def to_pyspark(self):
         """Get equivalent Spark data type"""
         import pyspark.sql.types as T
         from narwhals._spark_like.utils import narwhals_to_native_dtype

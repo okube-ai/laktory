@@ -2,6 +2,7 @@ import narwhals as nw
 import polars as pl
 import pyspark.sql.types as T
 
+from laktory.enums import DataFrameBackends
 from laktory.models import DataFrameSchema
 from laktory.models import DType
 from laktory.models import dtypes
@@ -53,7 +54,7 @@ def test_narwhals():
 
 
 def test_spark():
-    assert s.to_spark() == T.StructType(
+    assert s.to_pyspark() == T.StructType(
         [
             T.StructField("x", T.LongType(), True),
             T.StructField("y", T.DoubleType(), True),
@@ -69,6 +70,13 @@ def test_polars():
     )
 
 
+def test_native():
+    s.dataframe_backend_ = DataFrameBackends.POLARS
+    assert s.to_native() == pl.Schema(
+        {"x": pl.Int64, "y": pl.Float64, "s": pl.String, "vals": pl.List(pl.String)}
+    )
+
+
 def test_to_string():
     assert (
         s.to_string()
@@ -77,4 +85,5 @@ def test_to_string():
 
 
 def test_from_narwhals():
-    assert DataFrameSchema.from_narwhals(s.to_narwhals()) == s
+    schema = DataFrameSchema.from_narwhals(s.to_narwhals())
+    assert schema == s

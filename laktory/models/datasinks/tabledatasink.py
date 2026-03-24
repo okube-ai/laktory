@@ -126,7 +126,7 @@ class TableDataSink(BaseDataSink):
 
     def create(self, df=None) -> bool:
         """
-        Creates an empty Delta table with the expected schema if it does not already exist.
+        Creates an empty table with the expected schema if it does not already exist.
 
         Returns True if the table was created, False otherwise.
         Schema is taken from `schema_definition` if set, otherwise inferred from `df`.
