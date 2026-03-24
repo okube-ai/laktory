@@ -71,8 +71,7 @@ def test_polars():
 
 
 def test_native():
-    s.dataframe_backend_ = DataFrameBackends.POLARS
-    assert s.to_native() == pl.Schema(
+    assert s.to_native(DataFrameBackends.POLARS) == pl.Schema(
         {"x": pl.Int64, "y": pl.Float64, "s": pl.String, "vals": pl.List(pl.String)}
     )
 

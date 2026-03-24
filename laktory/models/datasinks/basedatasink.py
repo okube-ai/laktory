@@ -238,12 +238,12 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     def _get_create_schema(self, df):
         schema = None
+        dataframe_backend = None
         if self.schema_definition:
             schema = self.schema_definition
         if df is not None:
-            schema = DataFrameSchema.from_narwhals(
-                df.schema, dataframe_backend=df.implementation
-            )
+            schema = DataFrameSchema.from_narwhals(df.schema)
+            dataframe_backend = DataFrameBackends.from_df(df)
 
         # TODO: We should probably validate that the schema from the DataFrame matches
         # the schema_definition if provided.
@@ -251,7 +251,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         if schema is None:
             return
 
-        return schema.to_native()
+        return schema.to_native(dataframe_backend=dataframe_backend)
 
     def create(self, df: "AnyFrame" = None) -> bool:
         """

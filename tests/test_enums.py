@@ -1,6 +1,7 @@
 import narwhals as nw
 import polars as pl
 
+from laktory._settings import settings
 from laktory.enums import DataFrameBackends
 
 
@@ -15,3 +16,8 @@ def test_dataframe_backends():
     )
     assert DataFrameBackends.from_df(df_pl) == DataFrameBackends.POLARS
     assert DataFrameBackends.from_df(df_nw) == DataFrameBackends.POLARS
+
+    assert DataFrameBackends.from_any() == DataFrameBackends(settings.dataframe_backend)
+    assert DataFrameBackends.from_any("POLARS") == DataFrameBackends.POLARS
+    assert DataFrameBackends.from_any(df_nw) == DataFrameBackends.POLARS
+    assert DataFrameBackends.from_any(df_nw.implementation) == DataFrameBackends.POLARS
