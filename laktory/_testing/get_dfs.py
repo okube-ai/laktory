@@ -12,7 +12,7 @@ from laktory.enums import DataFrameBackends
 def get_backend(v):
     if isinstance(v, str):
         return DataFrameBackends(v)
-    return DataFrameBackends.from_nw_implementation(nw.from_native(v).implementation)
+    return DataFrameBackends(nw.from_native(v).implementation)
 
 
 def to_backend(df, backend, lazy=False):

@@ -39,7 +39,11 @@ class DataFrameBackends(str, Enum):
     # """Unknown backend."""
 
     @classmethod
-    def from_any(cls, backend: str | nw.Implementation | AnyFrame = None):
+    def _missing_(cls, value):
+        return cls._from_any(value)
+
+    @classmethod
+    def _from_any(cls, backend: str | nw.Implementation | AnyFrame = None):
         if backend is None:
             return DataFrameBackends(settings.dataframe_backend)
         elif isinstance(backend, str):
@@ -58,7 +62,7 @@ class DataFrameBackends(str, Enum):
         cls, implementation: nw.Implementation
     ) -> "DataFrameBackends":  # pragma: no cover
         """
-        Instantiate DataFrameBackends object from a narwhals implementation.
+        Instantiate DataFrameBackends object from a Narwhals implementation.
 
         Parameters
         ----------

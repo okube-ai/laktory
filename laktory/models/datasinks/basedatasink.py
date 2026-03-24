@@ -222,7 +222,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     # -------------------------------------------------------------------------------- #
 
     def _update_backend_from_df(self, df):
-        dataframe_backend = DataFrameBackends.from_nw_implementation(df.implementation)
+        dataframe_backend = DataFrameBackends(df.implementation)
         if dataframe_backend not in SUPPORTED_BACKENDS:
             raise ValueError(
                 f"DataFrame provided is of {dataframe_backend} backend, which is not supported."
