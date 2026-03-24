@@ -9,6 +9,7 @@
 ### Updated
 * Pipeline node execution to include a creation step that facilitates injection of metadata before write data
 * Improved tracking of Laktory-managed table properties
+* `DType` and `DataFrameSchema` classes can be instantiated from Narwhals equivalent
 ### Breaking changes
 * n/a
 

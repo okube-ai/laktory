@@ -172,6 +172,29 @@ class DType(BaseModel):
     #
     #     return fields
 
+    @classmethod
+    def from_narwhals(cls, nw_dtype) -> "DType":
+        nw_dtypes = nw.dtypes
+        if isinstance(nw_dtype, nw_dtypes.List):
+            return DType(name="List", inner=DType.from_narwhals(nw_dtype.inner))
+        if isinstance(nw_dtype, nw_dtypes.Array):
+            return DType(
+                name="Array",
+                inner=DType.from_narwhals(nw_dtype.inner),
+                shape=nw_dtype.shape,
+            )
+        if isinstance(nw_dtype, nw_dtypes.Struct):
+            fields = [
+                DField(name=f.name, dtype=DType.from_narwhals(f.dtype))
+                for f in nw_dtype.fields
+            ]
+            return DType(name="Struct", fields=fields)
+        # Simple types are stored as classes in nw.Schema; complex types as instances
+        name = (
+            nw_dtype.__name__ if isinstance(nw_dtype, type) else type(nw_dtype).__name__
+        )
+        return DType(name=name)
+
     def to_generic(self):
         return DType(**self.model_dump(exclude_unset=True))
 

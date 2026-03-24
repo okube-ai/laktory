@@ -3,6 +3,7 @@ import polars as pl
 import pyspark.sql.types as T
 
 from laktory.models import DataFrameSchema
+from laktory.models import DType
 from laktory.models import dtypes
 
 s = DataFrameSchema(
@@ -13,6 +14,18 @@ s = DataFrameSchema(
         {"name": "vals", "dtype": {"name": "list", "inner": "string"}},
     ]
 )
+
+
+def test_dtype_round_trip():
+    nw_dtype = nw.dtypes.Int64()
+    dtype = DType.from_narwhals(nw_dtype)
+    assert dtype.to_narwhals() == nw.dtypes.Int64()
+
+    nw_dtype = nw.List(
+        inner=nw.dtypes.Struct({"x": nw.dtypes.Float64(), "id": nw.dtypes.String()})
+    )
+    dtype = DType.from_narwhals(nw_dtype)
+    assert dtype.to_narwhals() == nw_dtype
 
 
 def test_validation():
@@ -61,3 +74,7 @@ def test_to_string():
         s.to_string()
         == '{"x": "Int64", "y": "Float64", "s": "String", "vals": "List(String)"}'
     )
+
+
+def test_from_narwhals():
+    assert DataFrameSchema.from_narwhals(s.to_narwhals()) == s

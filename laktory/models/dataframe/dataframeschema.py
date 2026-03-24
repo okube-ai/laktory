@@ -55,6 +55,24 @@ class DataFrameSchema(BaseModel):
 
         return data
 
+    # -------------------------------------------------------------------------------- #
+    # Class Methods                                                                    #
+    # -------------------------------------------------------------------------------- #
+
+    # From Narwhals
+    @classmethod
+    def from_narwhals(cls, schema: nw.Schema) -> "DataFrameSchema":
+        """Create a DataFrameSchema from a Narwhals schema"""
+        columns = [
+            DataFrameColumn(name=name, dtype=DType.from_narwhals(dtype))
+            for name, dtype in schema.items()
+        ]
+        return cls(columns=columns)
+
+    # -------------------------------------------------------------------------------- #
+    # Instance Methods                                                                 #
+    # -------------------------------------------------------------------------------- #
+
     # Narwhals
     def to_narwhals(self) -> nw.Schema:
         """Returns a Narwhals schema object"""
@@ -84,6 +102,10 @@ class DataFrameSchema(BaseModel):
             columns += [T.StructField(c.name, _type, c.nullable)]
 
         return T.StructType(columns)
+
+    # -------------------------------------------------------------------------------- #
+    # Outputs                                                                          #
+    # -------------------------------------------------------------------------------- #
 
     # String
     def to_string(self, indent=None):
