@@ -2,11 +2,14 @@
 
 ## [0.9.2] - Unreleased
 ### Added
-* Support for `TableDataSource` `reader_kwargs` attribute
+* Support for `TableDataSource` `reader_kwargs` attribute [[#513](https://github.com/okube-ai/laktory/issues/513)]
 ### Fixed
 * `cluster`.`init_scripts`.`volumes` property for Terraform (plural form instead of singular) [[#516](https://github.com/okube-ai/laktory/issues/516)]
+* Table properties not set before first write [[#507](https://github.com/okube-ai/laktory/issues/507)]
 ### Updated
-* n/a
+* Pipeline node execution to include a creation step that facilitates injection of metadata before write data
+* Improved tracking of Laktory-managed table properties
+* `DType` and `DataFrameSchema` classes can be instantiated from Narwhals equivalent
 ### Breaking changes
 * n/a
 

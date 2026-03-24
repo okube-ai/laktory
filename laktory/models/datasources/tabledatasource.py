@@ -86,6 +86,7 @@ class TableDataSource(BaseDataSource):
     @property
     def _id(self) -> str:
         return self.full_name
+
     # ----------------------------------------------------------------------- #
     # Readers                                                                 #
     # ----------------------------------------------------------------------- #

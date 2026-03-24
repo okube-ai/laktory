@@ -62,11 +62,10 @@ def test_hive_table(backend, tmp_path):
             ],
         ),
     )
-    sink.write(df0)
+    sink.create(df0)
 
-    # Update metadata
-    meta0 = sink.metadata.current
-    print(meta0.model_dump())
+    # Update metadata and write
+    sink.write(df0)
     sink.metadata.execute()
 
     # Read metadata
@@ -78,12 +77,25 @@ def test_hive_table(backend, tmp_path):
         "delta.minReaderVersion": "1",
         "delta.minWriterVersion": "2",
         "lk.version": "0",
+        "laktory.managedProperties": "delta.minWriterVersion|lk.version",
         "option.mergeSchema": "false",
         "option.overwriteSchema": "true",
     }
     assert meta1.columns[0].comment is None
     assert meta1.columns[1].comment == "identification column"
     assert meta1.columns[2].comment == "x one"
+
+    # Remove table properties
+    sink.metadata.properties = {}
+    sink.metadata.execute()
+    meta2 = sink.metadata.get_current()
+    print(meta2.properties)
+    assert meta2.properties == {
+        "delta.minReaderVersion": "1",
+        "delta.minWriterVersion": "2",
+        "option.mergeSchema": "false",
+        "option.overwriteSchema": "true",
+    }
 
 
 @pytest.mark.databricks_connect
@@ -139,6 +151,7 @@ def test_uc_table(spark, tags):
         "delta.minWriterVersion": "7",
         "lk.installed": "true",
         "lk.version": "0",
+        "laktory.managedProperties": "lk.installed|lk.version",
     }
     assert meta1.tags == tags
     assert meta1.columns[0].comment == "Timestamp"

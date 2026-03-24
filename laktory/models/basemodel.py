@@ -131,7 +131,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         camel_serialization = self._camel_serialization
         singular_serialization = self._singular_serialization
 
-        fields = {k: v for k, v in self.model_fields.items()}
+        fields = {k: v for k, v in type(self).model_fields.items()}
         fields = fields | {k: v for k, v in self.model_computed_fields.items()}
         if camel_serialization:
             keys = list(dump.keys())
@@ -330,7 +330,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     def _configure_serializer(self, camel=False, singular=False):
         self._camel_serialization = camel
         self._singular_serialization = singular
-        for k in self.model_fields:
+        for k in type(self).model_fields:
             f = getattr(self, k)
             if isinstance(f, BaseModel):
                 f._configure_serializer(camel, singular)
@@ -385,7 +385,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
             else:
                 _update_model(o)
 
-        for k in self.model_fields.keys():
+        for k in type(self).model_fields.keys():
             _push_vars(getattr(self, k))
 
         if update_core_resources and hasattr(self, "core_resources"):

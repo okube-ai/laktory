@@ -29,9 +29,9 @@ def test_basic_types():
     assert t2.to_narwhals() == nw.String
 
     # Spark
-    assert t0.to_spark() == T.LongType()
-    assert t1.to_spark() == T.DoubleType()
-    assert t2.to_spark() == T.StringType()
+    assert t0.to_pyspark() == T.LongType()
+    assert t1.to_pyspark() == T.DoubleType()
+    assert t2.to_pyspark() == T.StringType()
 
     # Polars
     assert t0.to_polars() == pl.Int64
@@ -80,13 +80,13 @@ def test_complex_types():
     )
 
     # Spark
-    assert t0.to_spark() == T.ArrayType(T.IntegerType())
-    assert t1.to_spark() == T.ArrayType(T.ArrayType(T.StringType()))
-    assert t2.to_spark() == T.ArrayType(T.ArrayType(T.StringType()))
-    assert t3.to_spark() == T.StructType(
+    assert t0.to_pyspark() == T.ArrayType(T.IntegerType())
+    assert t1.to_pyspark() == T.ArrayType(T.ArrayType(T.StringType()))
+    assert t2.to_pyspark() == T.ArrayType(T.ArrayType(T.StringType()))
+    assert t3.to_pyspark() == T.StructType(
         [T.StructField("x", T.DoubleType()), T.StructField("y", T.IntegerType())]
     )
-    assert t4.to_spark() == T.StructType(
+    assert t4.to_pyspark() == T.StructType(
         [
             T.StructField("x", T.ArrayType(T.DoubleType())),
             T.StructField(

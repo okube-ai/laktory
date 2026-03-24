@@ -30,7 +30,11 @@ def test_workspace_client(monkeypatch, stack):
     tstack = stack.model_copy()
     tstack.backend = "terraform"
 
-    monkeypatch.setenv("DATABRICKS_HOST", "my-host")
+    # Using a dummy host results in taking a long time (minutes)
+    # to resolve host metadata. We use an actual one.
+    host = "https://adb-2211091707396001.1.azuredatabricks.net"
+
+    monkeypatch.setenv("DATABRICKS_HOST", host)
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
 
     for _stack in [stack, tstack]:
@@ -39,7 +43,7 @@ def test_workspace_client(monkeypatch, stack):
 
         kwargs = dispatcher._workspace_arguments
         assert kwargs == {
-            "host": "my-host",
+            "host": host,
             "token": "my-token",
         }
         assert dispatcher.wc is not None

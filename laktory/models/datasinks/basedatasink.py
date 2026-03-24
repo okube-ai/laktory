@@ -16,6 +16,7 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
+from laktory.models.dataframe.dataframeschema import DataFrameSchema
 from laktory.models.datasinks.mergecdcoptions import DataSinkMergeCDCOptions
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.readerwritermethod import ReaderWriterMethod
@@ -91,6 +92,11 @@ class BaseDataSink(BaseModel, PipelineChild):
         -------
         - MERGE: Append, update and optionally delete records. Only supported for DELTA format. Requires cdc specification.
         """,
+    )
+    schema_definition: DataFrameSchema = Field(
+        None,
+        validation_alias="schema",
+        description="Explicit table schema used when creating the table. If not set, schema is inferred from the transformer output DataFrame.",
     )
     writer_kwargs: dict[str, Any] = Field(
         {},
@@ -212,7 +218,68 @@ class BaseDataSink(BaseModel, PipelineChild):
         }
 
     # -------------------------------------------------------------------------------- #
-    # Writers                                                                          #
+    # Create                                                                           #
+    # -------------------------------------------------------------------------------- #
+
+    def _update_backend_from_df(self, df):
+        dataframe_backend = DataFrameBackends.from_nw_implementation(df.implementation)
+        if dataframe_backend not in SUPPORTED_BACKENDS:
+            raise ValueError(
+                f"DataFrame provided is of {dataframe_backend} backend, which is not supported."
+            )
+
+        if self.dataframe_backend_ and self.dataframe_backend_ != dataframe_backend:
+            raise ValueError(
+                f"DataFrame provided is {dataframe_backend} and source has been configure with {self.dataframe_backend_} backend."
+            )
+        self.dataframe_backend_ = dataframe_backend
+        if self.schema_definition:
+            self.schema_definition.dataframe_backend_ = dataframe_backend
+
+    def _get_create_schema(self, df):
+        schema = None
+        dataframe_backend = None
+        if self.schema_definition:
+            schema = self.schema_definition
+        if df is not None:
+            schema = DataFrameSchema.from_narwhals(df.schema)
+            dataframe_backend = DataFrameBackends.from_df(df)
+
+        # TODO: We should probably validate that the schema from the DataFrame matches
+        # the schema_definition if provided.
+
+        if schema is None:
+            return
+
+        return schema.to_native(dataframe_backend=dataframe_backend)
+
+    def create(self, df: "AnyFrame" = None) -> bool:
+        """
+        Initialize the sink if required.
+
+        Some sinks (e.g., Unity Catalog or Delta tables) must exist before
+        metadata can be applied or data can be written in append mode.
+
+        Parameters
+        ----------
+        df : DataFrame
+            Input DataFrame that may be used during sink initialization.
+
+        Returns
+        -------
+        bool
+            True if the sink was created, False if it already existed or if
+            creation is not required.
+
+        Notes
+        -----
+        This method is intended to be overridden by subclasses to implement
+        sink-specific initialization logic.
+        """
+        return False
+
+    # -------------------------------------------------------------------------------- #
+    # Write                                                                            #
     # -------------------------------------------------------------------------------- #
 
     def _validate_format(self):
@@ -229,7 +296,6 @@ class BaseDataSink(BaseModel, PipelineChild):
         df: AnyFrame = None,
         view_definition: str = None,
         mode: str = None,
-        full_refresh: bool = False,
     ) -> None:
         """
         Write dataframe into sink.
@@ -238,15 +304,11 @@ class BaseDataSink(BaseModel, PipelineChild):
         ----------
         df:
             Input dataframe.
-        full_refresh
-            If `True`, source is deleted/dropped (including checkpoint if applicable)
-            before write.
         mode:
             Write mode overwrite of the sink default mode.
         view_definition:
             View definition for table data sinks of `VIEW` type
         """
-
         if getattr(self, "table_type", None) == "VIEW":
             if view_definition is None:
                 raise ValueError(f"`view_definition` for '{self._id}' is `None`")
@@ -272,18 +334,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         if not isinstance(df, (nw.DataFrame, nw.LazyFrame)):
             df = nw.from_native(df)
 
-        dataframe_backend = DataFrameBackends.from_nw_implementation(df.implementation)
-        if dataframe_backend not in SUPPORTED_BACKENDS:
-            raise ValueError(
-                f"DataFrame provided is of {dataframe_backend} backend, which is not supported."
-            )
-
-        if self.dataframe_backend_ and self.dataframe_backend_ != dataframe_backend:
-            raise ValueError(
-                f"DataFrame provided is {dataframe_backend} and source has been configure with {self.dataframe_backend_} backend."
-            )
-        self.dataframe_backend_ = dataframe_backend
-
+        self._update_backend_from_df(df)
         self._validate_mode(mode, df)
         self._validate_format()
 
@@ -293,9 +344,9 @@ class BaseDataSink(BaseModel, PipelineChild):
             return
 
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
-            self._write_spark(df=df, mode=mode, full_refresh=full_refresh)
+            self._write_spark(df=df, mode=mode)
         elif self.dataframe_backend == DataFrameBackends.POLARS:
-            self._write_polars(df=df, mode=mode, full_refresh=full_refresh)
+            self._write_polars(df=df, mode=mode)
         else:
             raise ValueError(
                 f"DataFrame backend '{self.dataframe_backend}' is not supported"
@@ -314,7 +365,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         )
 
     # -------------------------------------------------------------------------------- #
-    # Writers - Spark                                                                  #
+    # Write - Spark                                                                    #
     # -------------------------------------------------------------------------------- #
 
     def _validate_mode_spark(self, mode, df):
@@ -339,7 +390,9 @@ class BaseDataSink(BaseModel, PipelineChild):
         kwargs["overwriteSchema"] = False
         if mode in ["OVERWRITE", "COMPLETE"]:
             kwargs["mergeSchema"] = False
-            kwargs["overwriteSchema"] = True
+            kwargs["overwriteSchema"] = True  # This option overwrite columns metadata
+            if self.metadata:
+                self.metadata._update_required = True
         if is_streaming:
             kwargs["checkpointLocation"] = self.checkpoint_path.as_posix()
 
@@ -378,13 +431,13 @@ class BaseDataSink(BaseModel, PipelineChild):
 
         return methods
 
-    def _write_spark(self, df, mode, full_refresh) -> None:
+    def _write_spark(self, df, mode) -> None:
         raise NotImplementedError(
             f"`{self.dataframe_backend}` not supported for `{type(self)}`"
         )
 
     # -------------------------------------------------------------------------------- #
-    # Writers - Polars                                                                 #
+    # Write - Polars                                                                   #
     # -------------------------------------------------------------------------------- #
 
     def _validate_mode_polars(self, mode, df):
@@ -404,9 +457,6 @@ class BaseDataSink(BaseModel, PipelineChild):
                     "'mode' configuration with Polars only supported by 'DELTA' format"
                 )
         else:
-            # if full_refresh or not self.exists():
-            #     mode = "OVERWRITE"
-
             if not mode:
                 raise ValueError(
                     "'mode' configuration required with Polars 'DELTA' format"
@@ -420,7 +470,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
         return kwargs, fmt
 
-    def _write_polars(self, df, mode, full_refresh) -> None:
+    def _write_polars(self, df, mode) -> None:
         raise NotImplementedError(
             f"`{self.dataframe_backend}` not supported for `{type(self)}`"
         )

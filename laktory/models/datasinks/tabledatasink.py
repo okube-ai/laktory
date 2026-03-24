@@ -121,21 +121,64 @@ class TableDataSink(BaseDataSink):
         ]
 
     # ----------------------------------------------------------------------- #
-    # Writers                                                                 #
+    # Create                                                                  #
     # ----------------------------------------------------------------------- #
 
-    def _write_spark(self, df, mode, full_refresh=False) -> None:
-        df = df.to_native()
+    def create(self, df=None) -> bool:
+        """
+        Creates an empty table with the expected schema if it does not already exist.
 
-        # Full Refresh
-        if full_refresh or not self.exists():
-            if df.isStreaming:
-                pass
-            else:
-                logger.info(
-                    "Full refresh or initial load. Switching to OVERWRITE mode."
-                )
-                mode = "OVERWRITE"
+        Returns True if the table was created, False otherwise.
+        Schema is taken from `schema_definition` if set, otherwise inferred from `df`.
+        """
+
+        # Skip for views
+        if self.table_type == "VIEW":
+            return False
+
+        if self.exists():
+            return False
+
+        self._update_backend_from_df(df)
+        schema = self._get_create_schema(df)
+
+        if schema is None:
+            logger.info(
+                f"Schema is empty and `df` is None. Skipping table '{self.full_name}' creation."
+            )
+            return False
+
+        # TODO: Add logging of schema
+        logger.info(f"Creating empty table '{self.full_name}'.")
+
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
+            from laktory import get_spark_session
+
+            spark = get_spark_session()
+
+            kwargs = {}
+            path = self.writer_kwargs.get("path", None)
+            if path:
+                kwargs["path"] = path
+
+            df_empty = spark.createDataFrame(data=[], schema=schema)
+            df_empty.write.format(self.format.lower()).mode("ignore").options(
+                **kwargs
+            ).saveAsTable(self.full_name)
+
+        else:
+            raise NotImplementedError(
+                f"Table Data Sink for '{self.dataframe_backend}' is not yet supported."
+            )
+
+        return True
+
+    # ----------------------------------------------------------------------- #
+    # Write                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    def _write_spark(self, df, mode) -> None:
+        df = df.to_native()
 
         # Format
         methods = self._get_spark_writer_methods(mode=mode, is_streaming=df.isStreaming)

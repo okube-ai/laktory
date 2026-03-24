@@ -675,7 +675,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
         "drop_duplicates": None,
         "drops": None,
         "filter": None,
-        'reader_kwargs': {},
+        "reader_kwargs": {},
         "renames": None,
         "selects": None,
         "type": "UNITY_CATALOG",
