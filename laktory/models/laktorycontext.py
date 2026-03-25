@@ -35,7 +35,7 @@ class LaktoryContext:
     pipeline:
         Parent Pipeline, or None when called outside a pipeline.
     sink:
-        Current data sink. Populated by DataSinkWriter; None in DataFrameMethod.
+        Current data sink. Populated by CustomWriter; None in DataFrameMethod.
     """
 
     node: Any = None  # PipelineNode

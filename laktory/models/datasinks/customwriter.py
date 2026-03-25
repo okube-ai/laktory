@@ -13,7 +13,7 @@ from laktory.models.pipelinechild import PipelineChild
 logger = get_logger(__name__)
 
 
-class DataSinkWriter(BaseModel, PipelineChild):
+class CustomWriter(BaseModel, PipelineChild):
     """
     Definition of a custom write function to be called when writing a DataFrame
     to a sink. Gives the user full control over how data is written.
@@ -47,7 +47,7 @@ class DataSinkWriter(BaseModel, PipelineChild):
     sink = models.FileDataSink(
         path="./my_table/",
         format="DELTA",
-        write_func={
+        custom_writer={
             "func_name": "mypackage.etl.my_write",
             "func_kwargs": {"extra_tag": "production"},
         },

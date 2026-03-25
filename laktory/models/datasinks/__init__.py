@@ -1,5 +1,5 @@
 from .basedatasink import BaseDataSink
-from .datasinkwriter import DataSinkWriter
+from .customwriter import CustomWriter
 from .filedatasink import FileDataSink
 from .hivemetastoredatasink import HiveMetastoreDataSink
 from .mergecdcoptions import DataSinkMergeCDCOptions

@@ -18,7 +18,7 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframeschema import DataFrameSchema
-from laktory.models.datasinks.datasinkwriter import DataSinkWriter
+from laktory.models.datasinks.customwriter import CustomWriter
 from laktory.models.datasinks.mergecdcoptions import DataSinkMergeCDCOptions
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.readerwritermethod import ReaderWriterMethod
@@ -107,34 +107,33 @@ class BaseDataSink(BaseModel, PipelineChild):
     writer_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend writer methods."
     )
-    write_func: DataSinkWriter | None = Field(
+    custom_writer: CustomWriter | None = Field(
         None,
         description=(
-            "Custom write function definition. Gives the user full control over how "
-            "data is written to the sink. Laktory manages the streaming query lifecycle "
+            "Custom writer that fully replaces Laktory's built-in write logic. "
+            "Laktory manages the streaming query lifecycle "
             "(foreachBatch, trigger, checkpoint, start/await). "
-            "Can be set as a plain string (func_name only) or a full DataSinkWriter object "
+            "Can be set as a plain string (func_name only) or a full CustomWriter object "
             "with func_name, func_args, and func_kwargs. "
-            "Function signature: func(df, *func_args, node=None, **func_kwargs) -> None. "
             "Mutually exclusive with `mode` and `merge_cdc_options`."
         ),
     )
 
-    @field_validator("write_func", mode="before")
+    @field_validator("custom_writer", mode="before")
     @classmethod
-    def coerce_write_func(cls, v):
+    def coerce_custom_writer(cls, v):
         if isinstance(v, str):
             return {"func_name": v}
         return v
 
     @model_validator(mode="after")
-    def write_func_is_exclusive(self) -> Any:
-        if self.write_func:
+    def custom_writer_is_exclusive(self) -> Any:
+        if self.custom_writer:
             if self.mode is not None:
-                raise ValueError("`write_func` and `mode` are mutually exclusive.")
+                raise ValueError("`custom_writer` and `mode` are mutually exclusive.")
             if self.merge_cdc_options is not None:
                 raise ValueError(
-                    "`write_func` and `merge_cdc_options` are mutually exclusive."
+                    "`custom_writer` and `merge_cdc_options` are mutually exclusive."
                 )
 
             from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
@@ -149,7 +148,7 @@ class BaseDataSink(BaseModel, PipelineChild):
                 )
             ):
                 raise ValueError(
-                    "`write_func` is not supported when using the Databricks Declarative Pipelines orchestrator."
+                    "`custom_writer` is not supported when using the Databricks Declarative Pipelines orchestrator."
                 )
         return self
 
@@ -187,7 +186,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     @property
     def children_names(self):
-        return ["write_func"]
+        return ["custom_writer"]
 
     # -------------------------------------------------------------------------------- #
     # Properties                                                                       #
@@ -388,7 +387,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         self._update_backend_from_df(df)
 
         # Custom Writer
-        if self.write_func:
+        if self.custom_writer:
             df_native = df.to_native()
 
             # Special Treatment for Spark Streaming
@@ -402,7 +401,7 @@ class BaseDataSink(BaseModel, PipelineChild):
                     )
                 query = (
                     df_native.writeStream.foreachBatch(
-                        lambda batch_df, _: self.write_func.execute(batch_df)
+                        lambda batch_df, _: self.custom_writer.execute(batch_df)
                     )
                     .trigger(availableNow=True)
                     .options(checkpointLocation=self.checkpoint_path)
@@ -411,7 +410,7 @@ class BaseDataSink(BaseModel, PipelineChild):
                 query.awaitTermination()
 
             else:
-                self.write_func.execute(df)
+                self.custom_writer.execute(df)
 
             logger.info("Write completed.")
             return

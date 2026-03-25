@@ -53,56 +53,56 @@ def _build_source_df():
 # --------------------------------------------------------------------------- #
 
 
-def test_write_func_model():
+def test_custom_writer_model():
     sink = models.FileDataSink(
         path="./my_table/",
         format="DELTA",
-        write_func={"func_name": "tests.datasinks.test_writefunc._dummy_write"},
+        custom_writer={"func_name": "tests.datasinks.test_writefunc._dummy_write"},
     )
-    assert sink.write_func.func_name == "tests.datasinks.test_writefunc._dummy_write"
+    assert sink.custom_writer.func_name == "tests.datasinks.test_writefunc._dummy_write"
     assert sink.mode is None
 
 
-def test_write_func_string_coercion():
+def test_custom_writer_string_coercion():
     sink = models.FileDataSink(
         path="./my_table/",
         format="DELTA",
-        write_func="tests.datasinks.test_writefunc._dummy_write",
+        custom_writer="tests.datasinks.test_writefunc._dummy_write",
     )
-    assert isinstance(sink.write_func, models.DataSinkWriter)
-    assert sink.write_func.func_name == "tests.datasinks.test_writefunc._dummy_write"
-    assert sink.write_func.func_args == []
-    assert sink.write_func.func_kwargs == {}
+    assert isinstance(sink.custom_writer, models.CustomWriter)
+    assert sink.custom_writer.func_name == "tests.datasinks.test_writefunc._dummy_write"
+    assert sink.custom_writer.func_args == []
+    assert sink.custom_writer.func_kwargs == {}
 
 
-def test_write_func_kwargs():
+def test_custom_writer_kwargs():
     sink = models.FileDataSink(
         path="./my_table/",
         format="DELTA",
-        write_func={
+        custom_writer={
             "func_name": "tests.datasinks.test_writefunc._append_write",
             "func_kwargs": {"target_path": "/tmp/test"},
         },
     )
-    assert sink.write_func.func_kwargs == {"target_path": "/tmp/test"}
+    assert sink.custom_writer.func_kwargs == {"target_path": "/tmp/test"}
 
 
-def test_write_func_and_mode_exclusive():
+def test_custom_writer_and_mode_exclusive():
     with pytest.raises(ValueError, match="mutually exclusive"):
         models.FileDataSink(
             path="./my_table/",
             format="DELTA",
             mode="APPEND",
-            write_func="tests.datasinks.test_writefunc._dummy_write",
+            custom_writer="tests.datasinks.test_writefunc._dummy_write",
         )
 
 
-def test_write_func_and_merge_cdc_options_exclusive():
+def test_custom_writer_and_merge_cdc_options_exclusive():
     with pytest.raises(ValueError, match="mutually exclusive"):
         models.FileDataSink(
             path="./my_table/",
             format="DELTA",
-            write_func="tests.datasinks.test_writefunc._dummy_write",
+            custom_writer="tests.datasinks.test_writefunc._dummy_write",
             merge_cdc_options=models.DataSinkMergeCDCOptions(
                 primary_keys=["symbol"],
             ),
@@ -114,21 +114,21 @@ def test_write_func_and_merge_cdc_options_exclusive():
 # --------------------------------------------------------------------------- #
 
 
-def test_resolve_write_func():
-    writer = models.DataSinkWriter(
+def test_resolve_custom_writer():
+    writer = models.CustomWriter(
         func_name="tests.datasinks.test_writefunc._dummy_write"
     )
     assert writer._resolve_func() is _dummy_write
 
 
-def test_resolve_write_func_missing_module():
-    writer = models.DataSinkWriter(func_name="nonexistent.module.my_func")
+def test_resolve_custom_writer_missing_module():
+    writer = models.CustomWriter(func_name="nonexistent.module.my_func")
     with pytest.raises(ModuleNotFoundError):
         writer._resolve_func()
 
 
-def test_resolve_write_func_missing_attr():
-    writer = models.DataSinkWriter(
+def test_resolve_custom_writer_missing_attr():
+    writer = models.CustomWriter(
         func_name="tests.datasinks.test_writefunc.nonexistent_func"
     )
     with pytest.raises(AttributeError):
@@ -144,15 +144,15 @@ def test_yaml_roundtrip():
     sink = models.FileDataSink(
         path="./my_table/",
         format="DELTA",
-        write_func={
+        custom_writer={
             "func_name": "tests.datasinks.test_writefunc._dummy_write",
             "func_kwargs": {"extra": "value"},
         },
     )
     data = sink.model_dump(exclude_none=True)
     sink2 = models.FileDataSink.model_validate(data)
-    assert sink2.write_func.func_name == sink.write_func.func_name
-    assert sink2.write_func.func_kwargs == sink.write_func.func_kwargs
+    assert sink2.custom_writer.func_name == sink.custom_writer.func_name
+    assert sink2.custom_writer.func_kwargs == sink.custom_writer.func_kwargs
 
 
 # --------------------------------------------------------------------------- #
@@ -176,7 +176,7 @@ def test_laktory_context(tmp_path):
     sink = models.FileDataSink(
         path=target_path,
         format="DELTA",
-        write_func={
+        custom_writer={
             "func_name": "tests.datasinks.test_writefunc._capture_context_write",
         },
         dataframe_api="NARWHALS",
@@ -196,7 +196,7 @@ def test_laktory_context_not_injected_when_not_declared(tmp_path):
     sink = models.FileDataSink(
         path=target_path,
         format="DELTA",
-        write_func={
+        custom_writer={
             "func_name": "tests.datasinks.test_writefunc._append_write",
             "func_kwargs": {"target_path": target_path},
         },
@@ -220,7 +220,7 @@ def test_batch(tmp_path):
     sink = models.FileDataSink(
         path=target_path,
         format="DELTA",
-        write_func={
+        custom_writer={
             "func_name": "tests.datasinks.test_writefunc._append_write",
             "func_kwargs": {"target_path": target_path},
         },
@@ -239,7 +239,7 @@ def test_batch_native(tmp_path):
     sink = models.FileDataSink(
         path=target_path,
         format="DELTA",
-        write_func={
+        custom_writer={
             "func_name": "tests.datasinks.test_writefunc._append_write_native",
             "func_kwargs": {"target_path": target_path},
         },
@@ -270,7 +270,7 @@ def test_stream(tmp_path):
         path=target_path,
         format="DELTA",
         checkpoint_path=checkpoint_path,
-        write_func={
+        custom_writer={
             "func_name": "tests.datasinks.test_writefunc._append_write",
             "func_kwargs": {"target_path": target_path},
         },
