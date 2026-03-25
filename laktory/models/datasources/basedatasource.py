@@ -69,8 +69,8 @@ class BaseDataSource(BaseModel, PipelineChild):
         description="Columns to select from the source. Can be specified as a list or as a dictionary to rename the source columns",
     )
     # watermark: Watermark | None = Field(None, description="Spark structured streaming watermark specifications")
-    type: Literal["DATAFRAME", "FILE", "UNITY_CATALOG", "HIVE_METASTORE"] = Field(
-        ..., description="Name of the data source type"
+    type: Literal["CUSTOM", "DATAFRAME", "FILE", "UNITY_CATALOG", "HIVE_METASTORE"] = (
+        Field(..., description="Name of the data source type")
     )
 
     @model_validator(mode="after")

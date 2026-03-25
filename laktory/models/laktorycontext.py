@@ -35,12 +35,15 @@ class LaktoryContext:
     pipeline:
         Parent Pipeline, or None when called outside a pipeline.
     sink:
-        Current data sink. Populated by CustomWriter; None in DataFrameMethod.
+        Current data sink. Populated by CustomWriter; None otherwise.
+    source:
+        Current data source. Populated by CustomReader; None otherwise.
     """
 
     node: Any = None  # PipelineNode
     pipeline: Any = None  # Pipeline
-    sink: Any = None  # DataSink
+    sink: Any = None  # BaseDataSink  (set by CustomWriter)
+    source: Any = None  # BaseDataSource (set by CustomReader)
 
 
 def _build_laktory_context_kwargs(func, context: LaktoryContext) -> dict:
