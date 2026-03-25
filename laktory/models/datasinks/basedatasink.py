@@ -17,7 +17,6 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframeschema import DataFrameSchema
-from laktory.models.datasinks.foreachbatchoptions import DataSinkForEachBatchOptions
 from laktory.models.datasinks.mergecdcoptions import DataSinkMergeCDCOptions
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.readerwritermethod import ReaderWriterMethod
@@ -27,7 +26,7 @@ logger = get_logger(__name__)
 
 
 SUPPORTED_BACKENDS = [DataFrameBackends.POLARS, DataFrameBackends.PYSPARK]
-LAKTORY_MODES = ["MERGE", "FOREACH_BATCH"]
+LAKTORY_MODES = ["MERGE"]
 SPARK_MODES = [
     "OVERWRITE",
     "APPEND",
@@ -36,7 +35,7 @@ SPARK_MODES = [
     "ERRORIFEXISTS",
 ] + LAKTORY_MODES
 SPARK_STREAMING_MODES = ["APPEND", "COMPLETE", "UPDATE"] + LAKTORY_MODES
-POLARS_DELTA_MODES = ["ERROR", "APPEND", "OVERWRITE", "MERGE"]
+POLARS_DELTA_MODES = ["ERROR", "APPEND", "OVERWRITE"] + LAKTORY_MODES
 SUPPORTED_MODES = tuple(set(SPARK_MODES + SPARK_STREAMING_MODES + POLARS_DELTA_MODES))
 
 
@@ -60,10 +59,6 @@ class BaseDataSink(BaseModel, PipelineChild):
         ..., description="Name of the data sink type"
     )
     metadata: Literal[None] = Field(None, description="Table and columns metadata.")
-    foreach_batch_options: DataSinkForEachBatchOptions = Field(
-        None,
-        description="Options for custom foreachBatch function. Only used when `FOREACH_BATCH` mode is selected.",
-    )
     merge_cdc_options: DataSinkMergeCDCOptions = Field(
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
@@ -96,7 +91,6 @@ class BaseDataSink(BaseModel, PipelineChild):
         Laktory
         -------
         - MERGE: Append, update and optionally delete records. Only supported for DELTA format. Requires cdc specification.
-        - FOREACH_BATCH: Delegate each micro-batch (or the full batch) to a user-supplied function. Requires `foreach_batch_options`.
         """,
     )
     schema_definition: DataFrameSchema = Field(
@@ -111,16 +105,44 @@ class BaseDataSink(BaseModel, PipelineChild):
     writer_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend writer methods."
     )
+    write_func: str | None = Field(
+        None,
+        description=(
+            "Fully qualified dotted path to a callable used as a custom write function. "
+            "Gives the user full control over how data is written to the sink. "
+            "For batch DataFrames, Laktory calls func(df) directly. "
+            "For streaming DataFrames, Laktory wraps it transparently in "
+            "writeStream.foreachBatch, managing the query lifecycle (trigger, checkpoint, start/await). "
+            "Example: 'mypackage.etl.my_write'. "
+            "Function signature: func(df) -> None where df is a native DataFrame. "
+            "Mutually exclusive with `mode` and `merge_cdc_options`."
+        ),
+    )
 
     @model_validator(mode="after")
-    def foreach_batch_has_options(self) -> Any:
-        if self.mode == "FOREACH_BATCH":
-            if self.foreach_batch_options is None:
+    def write_func_is_exclusive(self) -> Any:
+        if self.write_func:
+            if self.mode is not None:
+                raise ValueError("`write_func` and `mode` are mutually exclusive.")
+            if self.merge_cdc_options is not None:
                 raise ValueError(
-                    "If 'FOREACH_BATCH' `mode` is selected, `foreach_batch_options` must be specified."
+                    "`write_func` and `merge_cdc_options` are mutually exclusive."
                 )
-            else:
-                self.foreach_batch_options._parent = self
+
+            from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
+                DatabricksPipelineOrchestrator,
+            )
+
+            if (
+                self.parent_pipeline
+                and self.parent_pipeline.orchestrator
+                and isinstance(
+                    self.parent_pipeline.orchestrator, DatabricksPipelineOrchestrator
+                )
+            ):
+                raise ValueError(
+                    "`write_func` is not supported when using the Databricks Declarative Pipelines orchestrator."
+                )
         return self
 
     @model_validator(mode="after")
@@ -299,6 +321,14 @@ class BaseDataSink(BaseModel, PipelineChild):
     # Write                                                                            #
     # -------------------------------------------------------------------------------- #
 
+    @staticmethod
+    def _resolve_write_func(func_path: str):
+        import importlib
+
+        module_path, func_name = func_path.rsplit(".", 1)
+        module = importlib.import_module(module_path)
+        return getattr(module, func_name)
+
     def _validate_format(self):
         return None
 
@@ -345,23 +375,53 @@ class BaseDataSink(BaseModel, PipelineChild):
                 )
             return
 
+        if not isinstance(df, (nw.DataFrame, nw.LazyFrame)):
+            df = nw.from_native(df)
+        self._update_backend_from_df(df)
+
+        # Custom Writer
+        if self.write_func:
+            df_native = df.to_native()
+            func = self._resolve_write_func(self.write_func)
+
+            def abstract_df(_df):
+                if self.dataframe_api == "NATIVE":
+                    _df = nw.to_native(_df)
+                return _df
+
+            # Special Treatment for Spark Streaming
+            if (
+                self.dataframe_backend == DataFrameBackends.PYSPARK
+                and df_native.isStreaming
+            ):
+                if self.checkpoint_path is None:
+                    raise ValueError(
+                        f"Checkpoint location not specified for sink '{self._id}'"
+                    )
+                query = (
+                    df_native.writeStream.foreachBatch(
+                        lambda batch_df, _: func(abstract_df(nw.from_native(batch_df)))
+                    )
+                    .trigger(availableNow=True)
+                    .options(checkpointLocation=self.checkpoint_path)
+                    .start()
+                )
+                query.awaitTermination()
+
+            else:
+                func(abstract_df(df))
+
+            logger.info("Write completed.")
+            return
+
         if mode is None:
             mode = self.mode
 
-        if not isinstance(df, (nw.DataFrame, nw.LazyFrame)):
-            df = nw.from_native(df)
-
-        self._update_backend_from_df(df)
         self._validate_mode(mode, df)
         self._validate_format()
 
         if mode and mode.lower() == "merge":
             self.merge_cdc_options.execute(source=df)
-            logger.info("Write completed.")
-            return
-
-        if mode and mode.lower() == "foreach_batch":
-            self.foreach_batch_options.execute(source=df)
             logger.info("Write completed.")
             return
 

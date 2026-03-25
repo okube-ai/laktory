@@ -1,6 +1,5 @@
 from .basedatasink import BaseDataSink
 from .filedatasink import FileDataSink
-from .foreachbatchoptions import DataSinkForEachBatchOptions
 from .hivemetastoredatasink import HiveMetastoreDataSink
 from .mergecdcoptions import DataSinkMergeCDCOptions
 from .pipelineviewdatasink import PipelineViewDataSink
