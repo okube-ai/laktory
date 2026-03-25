@@ -17,6 +17,7 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframeschema import DataFrameSchema
+from laktory.models.datasinks.foreachbatchoptions import DataSinkForEachBatchOptions
 from laktory.models.datasinks.mergecdcoptions import DataSinkMergeCDCOptions
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.readerwritermethod import ReaderWriterMethod
@@ -26,7 +27,7 @@ logger = get_logger(__name__)
 
 
 SUPPORTED_BACKENDS = [DataFrameBackends.POLARS, DataFrameBackends.PYSPARK]
-LAKTORY_MODES = ["MERGE"]
+LAKTORY_MODES = ["MERGE", "FOREACH_BATCH"]
 SPARK_MODES = [
     "OVERWRITE",
     "APPEND",
@@ -35,7 +36,7 @@ SPARK_MODES = [
     "ERRORIFEXISTS",
 ] + LAKTORY_MODES
 SPARK_STREAMING_MODES = ["APPEND", "COMPLETE", "UPDATE"] + LAKTORY_MODES
-POLARS_DELTA_MODES = ["ERROR", "APPEND", "OVERWRITE"] + LAKTORY_MODES
+POLARS_DELTA_MODES = ["ERROR", "APPEND", "OVERWRITE", "MERGE"]
 SUPPORTED_MODES = tuple(set(SPARK_MODES + SPARK_STREAMING_MODES + POLARS_DELTA_MODES))
 
 
@@ -59,6 +60,10 @@ class BaseDataSink(BaseModel, PipelineChild):
         ..., description="Name of the data sink type"
     )
     metadata: Literal[None] = Field(None, description="Table and columns metadata.")
+    foreach_batch_options: DataSinkForEachBatchOptions = Field(
+        None,
+        description="Options for custom foreachBatch function. Only used when `FOREACH_BATCH` mode is selected.",
+    )
     merge_cdc_options: DataSinkMergeCDCOptions = Field(
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
@@ -91,6 +96,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         Laktory
         -------
         - MERGE: Append, update and optionally delete records. Only supported for DELTA format. Requires cdc specification.
+        - FOREACH_BATCH: Delegate each micro-batch (or the full batch) to a user-supplied function. Requires `foreach_batch_options`.
         """,
     )
     schema_definition: DataFrameSchema = Field(
@@ -105,6 +111,17 @@ class BaseDataSink(BaseModel, PipelineChild):
     writer_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend writer methods."
     )
+
+    @model_validator(mode="after")
+    def foreach_batch_has_options(self) -> Any:
+        if self.mode == "FOREACH_BATCH":
+            if self.foreach_batch_options is None:
+                raise ValueError(
+                    "If 'FOREACH_BATCH' `mode` is selected, `foreach_batch_options` must be specified."
+                )
+            else:
+                self.foreach_batch_options._parent = self
+        return self
 
     @model_validator(mode="after")
     def merge_has_options(self) -> Any:
@@ -340,6 +357,11 @@ class BaseDataSink(BaseModel, PipelineChild):
 
         if mode and mode.lower() == "merge":
             self.merge_cdc_options.execute(source=df)
+            logger.info("Write completed.")
+            return
+
+        if mode and mode.lower() == "foreach_batch":
+            self.foreach_batch_options.execute(source=df)
             logger.info("Write completed.")
             return
 
