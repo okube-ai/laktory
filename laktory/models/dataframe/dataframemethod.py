@@ -342,9 +342,6 @@ class DataFrameMethod(BaseModel, PipelineChild):
         kwargs.update(_build_laktory_context_kwargs(f, context))
 
         # Call function
-        print("f ", f)
-        print("args ", args)
-        print("kwargs ", kwargs)
         df = f(*args, **kwargs)
 
         # Convert to narwhals when custom function don't return a Narwhals DataFrame

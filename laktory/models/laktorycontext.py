@@ -13,7 +13,7 @@ class LaktoryContext:
     Runtime context object optionally injected into user-supplied functions by Laktory.
 
     Passed as the `laktory_context` keyword argument when the called function's
-    signature declares it (or accepts ``**kwargs``). Contains references to the
+    signature explicitly declares it. Contains references to the
     pipeline objects active at call time.
 
     To opt in, add `laktory_context=None` to your function signature:
@@ -45,14 +45,15 @@ class LaktoryContext:
 
 def _build_laktory_context_kwargs(func, context: LaktoryContext) -> dict:
     """
-    Return ``{'laktory_context': context}`` if *func* accepts a
-    ``laktory_context`` parameter (or ``**kwargs``), otherwise return ``{}``.
+    Return ``{'laktory_context': context}`` if *func* has an explicit
+    ``laktory_context`` parameter, otherwise return ``{}``.
+
+    Deliberately does not inject on ``**kwargs``-only signatures: many
+    DataFrame methods (e.g. ``df.select``) accept ``**kwargs`` as named
+    column expressions and would misinterpret a ``LaktoryContext`` value.
     """
     try:
         params = inspect.signature(func).parameters
     except (ValueError, TypeError):
         return {}
-    accepts = "laktory_context" in params or any(
-        p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values()
-    )
-    return {"laktory_context": context} if accepts else {}
+    return {"laktory_context": context} if "laktory_context" in params else {}
