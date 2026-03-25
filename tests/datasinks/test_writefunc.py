@@ -20,6 +20,10 @@ def _append_write(df, target_path=None, node=None) -> None:
     df.to_native().write.format("DELTA").mode("APPEND").save(target_path)
 
 
+def _append_write_native(df, target_path=None, node=None) -> None:
+    df.write.format("DELTA").mode("APPEND").save(target_path)
+
+
 # --------------------------------------------------------------------------- #
 # Helpers                                                                     #
 # --------------------------------------------------------------------------- #
@@ -168,6 +172,25 @@ def test_batch(tmp_path):
             "func_kwargs": {"target_path": target_path},
         },
         dataframe_api="NARWHALS",
+    )
+    sink.write(_build_source_df())
+
+    result = spark.read.format("DELTA").load(target_path).toPandas()
+    assert len(result) == 3
+    assert set(result["symbol"].tolist()) == {"S0", "S1", "S2"}
+
+
+def test_batch_native(tmp_path):
+    target_path = str(tmp_path / "target")
+
+    sink = models.FileDataSink(
+        path=target_path,
+        format="DELTA",
+        write_func={
+            "func_name": "tests.datasinks.test_writefunc._append_write_native",
+            "func_kwargs": {"target_path": target_path},
+        },
+        dataframe_api="NATIVE",
     )
     sink.write(_build_source_df())
 
