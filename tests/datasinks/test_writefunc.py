@@ -11,17 +11,13 @@ spark = laktory.get_spark_session()
 # Custom write functions (must be module-level for importlib resolution)      #
 # --------------------------------------------------------------------------- #
 
-# Mutable target path set by each test before calling sink.write()
-_write_path: str = None
 
-
-def _dummy_write(df) -> None:
+def _dummy_write(df, node=None) -> None:
     pass
 
 
-def _append_write(df) -> None:
-    df = df.to_native()
-    df.write.format("DELTA").mode("APPEND").save(_write_path)
+def _append_write(df, target_path=None, node=None) -> None:
+    df.to_native().write.format("DELTA").mode("APPEND").save(target_path)
 
 
 # --------------------------------------------------------------------------- #
@@ -50,10 +46,42 @@ def test_write_func_model():
     sink = models.FileDataSink(
         path="./my_table/",
         format="DELTA",
+        write_func={"func_name": "tests.datasinks.test_writefunc._dummy_write"},
+    )
+    assert sink.write_func.func_name == "tests.datasinks.test_writefunc._dummy_write"
+    assert sink.mode is None
+
+
+def test_write_func_string_coercion():
+    sink = models.FileDataSink(
+        path="./my_table/",
+        format="DELTA",
         write_func="tests.datasinks.test_writefunc._dummy_write",
     )
-    assert sink.write_func == "tests.datasinks.test_writefunc._dummy_write"
-    assert sink.mode is None
+    assert isinstance(sink.write_func, models.DataSinkWriter)
+    assert sink.write_func.func_name == "tests.datasinks.test_writefunc._dummy_write"
+    assert sink.write_func.func_args == []
+    assert sink.write_func.func_kwargs == {}
+
+
+def test_write_func_kwargs():
+    sink = models.FileDataSink(
+        path="./my_table/",
+        format="DELTA",
+        write_func={
+            "func_name": "tests.datasinks.test_writefunc._append_write",
+            "func_kwargs": {"target_path": "/tmp/test"},
+        },
+    )
+    assert sink.write_func.func_kwargs == {"target_path": "/tmp/test"}
+
+
+def test_write_func_reserved_node_key():
+    with pytest.raises(ValueError, match="reserved"):
+        models.DataSinkWriter(
+            func_name="tests.datasinks.test_writefunc._dummy_write",
+            func_kwargs={"node": "something"},
+        )
 
 
 def test_write_func_and_mode_exclusive():
@@ -84,22 +112,24 @@ def test_write_func_and_merge_cdc_options_exclusive():
 
 
 def test_resolve_write_func():
-    resolved = models.FileDataSink._resolve_write_func(
-        "tests.datasinks.test_writefunc._dummy_write"
+    writer = models.DataSinkWriter(
+        func_name="tests.datasinks.test_writefunc._dummy_write"
     )
-    assert resolved is _dummy_write
+    assert writer._resolve_func() is _dummy_write
 
 
 def test_resolve_write_func_missing_module():
+    writer = models.DataSinkWriter(func_name="nonexistent.module.my_func")
     with pytest.raises(ModuleNotFoundError):
-        models.FileDataSink._resolve_write_func("nonexistent.module.my_func")
+        writer._resolve_func()
 
 
 def test_resolve_write_func_missing_attr():
+    writer = models.DataSinkWriter(
+        func_name="tests.datasinks.test_writefunc.nonexistent_func"
+    )
     with pytest.raises(AttributeError):
-        models.FileDataSink._resolve_write_func(
-            "tests.datasinks.test_writefunc.nonexistent_func"
-        )
+        writer._resolve_func()
 
 
 # --------------------------------------------------------------------------- #
@@ -111,11 +141,15 @@ def test_yaml_roundtrip():
     sink = models.FileDataSink(
         path="./my_table/",
         format="DELTA",
-        write_func="tests.datasinks.test_writefunc._dummy_write",
+        write_func={
+            "func_name": "tests.datasinks.test_writefunc._dummy_write",
+            "func_kwargs": {"extra": "value"},
+        },
     )
     data = sink.model_dump(exclude_none=True)
     sink2 = models.FileDataSink.model_validate(data)
-    assert sink2.write_func == sink.write_func
+    assert sink2.write_func.func_name == sink.write_func.func_name
+    assert sink2.write_func.func_kwargs == sink.write_func.func_kwargs
 
 
 # --------------------------------------------------------------------------- #
@@ -124,14 +158,15 @@ def test_yaml_roundtrip():
 
 
 def test_batch(tmp_path):
-    global _write_path
     target_path = str(tmp_path / "target")
-    _write_path = target_path
 
     sink = models.FileDataSink(
         path=target_path,
         format="DELTA",
-        write_func="tests.datasinks.test_writefunc._append_write",
+        write_func={
+            "func_name": "tests.datasinks.test_writefunc._append_write",
+            "func_kwargs": {"target_path": target_path},
+        },
         dataframe_api="NARWHALS",
     )
     sink.write(_build_source_df())
@@ -147,11 +182,9 @@ def test_batch(tmp_path):
 
 
 def test_stream(tmp_path):
-    global _write_path
     source_path = str(tmp_path / "source")
     target_path = str(tmp_path / "target")
     checkpoint_path = str(tmp_path / "checkpoint")
-    _write_path = target_path
 
     # Write source as Delta then read back as stream
     _build_source_df().write.format("DELTA").mode("overwrite").save(source_path)
@@ -161,7 +194,10 @@ def test_stream(tmp_path):
         path=target_path,
         format="DELTA",
         checkpoint_path=checkpoint_path,
-        write_func="tests.datasinks.test_writefunc._append_write",
+        write_func={
+            "func_name": "tests.datasinks.test_writefunc._append_write",
+            "func_kwargs": {"target_path": target_path},
+        },
         dataframe_api="NARWHALS",
     )
     sink.write(streaming_df)

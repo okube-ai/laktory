@@ -11,12 +11,14 @@ from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
 from pydantic import field_serializer
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframeschema import DataFrameSchema
+from laktory.models.datasinks.datasinkwriter import DataSinkWriter
 from laktory.models.datasinks.mergecdcoptions import DataSinkMergeCDCOptions
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.readerwritermethod import ReaderWriterMethod
@@ -105,19 +107,25 @@ class BaseDataSink(BaseModel, PipelineChild):
     writer_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend writer methods."
     )
-    write_func: str | None = Field(
+    write_func: DataSinkWriter | None = Field(
         None,
         description=(
-            "Fully qualified dotted path to a callable used as a custom write function. "
-            "Gives the user full control over how data is written to the sink. "
-            "For batch DataFrames, Laktory calls func(df) directly. "
-            "For streaming DataFrames, Laktory wraps it transparently in "
-            "writeStream.foreachBatch, managing the query lifecycle (trigger, checkpoint, start/await). "
-            "Example: 'mypackage.etl.my_write'. "
-            "Function signature: func(df) -> None where df is a native DataFrame. "
+            "Custom write function definition. Gives the user full control over how "
+            "data is written to the sink. Laktory manages the streaming query lifecycle "
+            "(foreachBatch, trigger, checkpoint, start/await). "
+            "Can be set as a plain string (func_name only) or a full DataSinkWriter object "
+            "with func_name, func_args, and func_kwargs. "
+            "Function signature: func(df, *func_args, node=None, **func_kwargs) -> None. "
             "Mutually exclusive with `mode` and `merge_cdc_options`."
         ),
     )
+
+    @field_validator("write_func", mode="before")
+    @classmethod
+    def coerce_write_func(cls, v):
+        if isinstance(v, str):
+            return {"func_name": v}
+        return v
 
     @model_validator(mode="after")
     def write_func_is_exclusive(self) -> Any:
@@ -321,14 +329,6 @@ class BaseDataSink(BaseModel, PipelineChild):
     # Write                                                                            #
     # -------------------------------------------------------------------------------- #
 
-    @staticmethod
-    def _resolve_write_func(func_path: str):
-        import importlib
-
-        module_path, func_name = func_path.rsplit(".", 1)
-        module = importlib.import_module(module_path)
-        return getattr(module, func_name)
-
     def _validate_format(self):
         return None
 
@@ -382,12 +382,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         # Custom Writer
         if self.write_func:
             df_native = df.to_native()
-            func = self._resolve_write_func(self.write_func)
-
-            def abstract_df(_df):
-                if self.dataframe_api == "NATIVE":
-                    _df = nw.to_native(_df)
-                return _df
+            node = self.parent_pipeline_node
 
             # Special Treatment for Spark Streaming
             if (
@@ -400,7 +395,7 @@ class BaseDataSink(BaseModel, PipelineChild):
                     )
                 query = (
                     df_native.writeStream.foreachBatch(
-                        lambda batch_df, _: func(abstract_df(nw.from_native(batch_df)))
+                        lambda batch_df, _: self.write_func.execute(batch_df, node=node)
                     )
                     .trigger(availableNow=True)
                     .options(checkpointLocation=self.checkpoint_path)
@@ -409,7 +404,7 @@ class BaseDataSink(BaseModel, PipelineChild):
                 query.awaitTermination()
 
             else:
-                func(abstract_df(df))
+                self.write_func.execute(df, node=node)
 
             logger.info("Write completed.")
             return
