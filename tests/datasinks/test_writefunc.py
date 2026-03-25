@@ -3,6 +3,7 @@ import pytest
 
 import laktory
 from laktory import models
+from laktory.models import LaktoryContext
 
 spark = laktory.get_spark_session()
 
@@ -12,16 +13,22 @@ spark = laktory.get_spark_session()
 # --------------------------------------------------------------------------- #
 
 
-def _dummy_write(df, node=None) -> None:
+def _dummy_write(df) -> None:
     pass
 
 
-def _append_write(df, target_path=None, node=None) -> None:
+def _append_write(df, target_path=None) -> None:
     df.to_native().write.format("DELTA").mode("APPEND").save(target_path)
 
 
-def _append_write_native(df, target_path=None, node=None) -> None:
+def _append_write_native(df, target_path=None) -> None:
     df.write.format("DELTA").mode("APPEND").save(target_path)
+
+
+def _context_write(
+    df, target_path=None, laktory_context: LaktoryContext = None
+) -> None:
+    df.to_native().write.format("DELTA").mode("APPEND").save(target_path)
 
 
 # --------------------------------------------------------------------------- #
@@ -78,14 +85,6 @@ def test_write_func_kwargs():
         },
     )
     assert sink.write_func.func_kwargs == {"target_path": "/tmp/test"}
-
-
-def test_write_func_reserved_node_key():
-    with pytest.raises(ValueError, match="reserved"):
-        models.DataSinkWriter(
-            func_name="tests.datasinks.test_writefunc._dummy_write",
-            func_kwargs={"node": "something"},
-        )
 
 
 def test_write_func_and_mode_exclusive():
@@ -154,6 +153,60 @@ def test_yaml_roundtrip():
     sink2 = models.FileDataSink.model_validate(data)
     assert sink2.write_func.func_name == sink.write_func.func_name
     assert sink2.write_func.func_kwargs == sink.write_func.func_kwargs
+
+
+# --------------------------------------------------------------------------- #
+# LaktoryContext injection                                                    #
+# --------------------------------------------------------------------------- #
+
+# Captured context for assertion across the module boundary
+_captured_context: LaktoryContext = None
+
+
+def _capture_context_write(df, laktory_context: LaktoryContext = None) -> None:
+    global _captured_context
+    _captured_context = laktory_context
+    df.to_native().write.format("DELTA").mode("APPEND").save(laktory_context.sink.path)
+
+
+def test_laktory_context(tmp_path):
+    global _captured_context
+    target_path = str(tmp_path / "target")
+
+    sink = models.FileDataSink(
+        path=target_path,
+        format="DELTA",
+        write_func={
+            "func_name": "tests.datasinks.test_writefunc._capture_context_write",
+        },
+        dataframe_api="NARWHALS",
+    )
+    sink.write(_build_source_df())
+
+    assert isinstance(_captured_context, LaktoryContext)
+    assert _captured_context.sink is sink
+    assert _captured_context.node is None  # standalone sink, no pipeline node
+    assert _captured_context.pipeline is None
+
+
+def test_laktory_context_not_injected_when_not_declared(tmp_path):
+    """Functions without laktory_context in their signature receive no injection."""
+    target_path = str(tmp_path / "target")
+
+    sink = models.FileDataSink(
+        path=target_path,
+        format="DELTA",
+        write_func={
+            "func_name": "tests.datasinks.test_writefunc._append_write",
+            "func_kwargs": {"target_path": target_path},
+        },
+        dataframe_api="NARWHALS",
+    )
+    # Would raise TypeError if laktory_context were injected into _append_write
+    sink.write(_build_source_df())
+
+    result = spark.read.format("DELTA").load(target_path).toPandas()
+    assert len(result) == 3
 
 
 # --------------------------------------------------------------------------- #

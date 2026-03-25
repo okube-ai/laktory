@@ -158,7 +158,13 @@ class DataFrameMethod(BaseModel, PipelineChild):
         {},
         description="Keyword arguments passed to method. A `DataSource` model can be passed instead of a DataFrame.",
     )
-    func_name: str = Field(..., description="Method name.")
+    func_name: str = Field(
+        ...,
+        description=(
+            "DataFrame method or attribute name (e.g. 'select', 'filter', 'dt.strftime'). "
+            "Resolved as an attribute of the DataFrame object. "
+        ),
+    )
 
     @model_validator(mode="after")
     def set_args(self) -> Any:
@@ -325,7 +331,20 @@ class DataFrameMethod(BaseModel, PipelineChild):
         for k, _arg in _kwargs.items():
             kwargs[k] = _arg.eval(backend=backend)
 
+        # Inject laktory_context if the function accepts it
+        from laktory.models.laktorycontext import LaktoryContext
+        from laktory.models.laktorycontext import _build_laktory_context_kwargs
+
+        context = LaktoryContext(
+            node=self.parent_pipeline_node,
+            pipeline=self.parent_pipeline,
+        )
+        kwargs.update(_build_laktory_context_kwargs(f, context))
+
         # Call function
+        print("f ", f)
+        print("args ", args)
+        print("kwargs ", kwargs)
         df = f(*args, **kwargs)
 
         # Convert to narwhals when custom function don't return a Narwhals DataFrame

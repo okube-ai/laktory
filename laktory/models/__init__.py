@@ -6,6 +6,7 @@ from .datasinks import *
 from .datasources import *
 from .dtypes import *
 from .grants import *
+from .laktorycontext import LaktoryContext
 from .pipeline import *
 from .readerwritermethod import ReaderWriterMethod
 from .resources import *

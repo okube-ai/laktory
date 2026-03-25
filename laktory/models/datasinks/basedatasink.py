@@ -390,7 +390,6 @@ class BaseDataSink(BaseModel, PipelineChild):
         # Custom Writer
         if self.write_func:
             df_native = df.to_native()
-            node = self.parent_pipeline_node
 
             # Special Treatment for Spark Streaming
             if (
@@ -403,7 +402,7 @@ class BaseDataSink(BaseModel, PipelineChild):
                     )
                 query = (
                     df_native.writeStream.foreachBatch(
-                        lambda batch_df, _: self.write_func.execute(batch_df, node=node)
+                        lambda batch_df, _: self.write_func.execute(batch_df)
                     )
                     .trigger(availableNow=True)
                     .options(checkpointLocation=self.checkpoint_path)
@@ -412,7 +411,7 @@ class BaseDataSink(BaseModel, PipelineChild):
                 query.awaitTermination()
 
             else:
-                self.write_func.execute(df, node=node)
+                self.write_func.execute(df)
 
             logger.info("Write completed.")
             return

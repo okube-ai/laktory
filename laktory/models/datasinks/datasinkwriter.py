@@ -3,10 +3,11 @@ from typing import Any
 
 import narwhals as nw
 from pydantic import Field
-from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
+from laktory.models.laktorycontext import LaktoryContext
+from laktory.models.laktorycontext import _build_laktory_context_kwargs
 from laktory.models.pipelinechild import PipelineChild
 
 logger = get_logger(__name__)
@@ -24,12 +25,19 @@ class DataSinkWriter(BaseModel, PipelineChild):
     The function is called as:
 
     ```python
-    func(df, *func_args, node=node, **func_kwargs)
+    func(df, *func_args, **func_kwargs)
     ```
 
-    where `node` is the parent `PipelineNode` (or `None` when the sink is used
-    outside a pipeline) and `df` is the DataFrame (native or Narwhals depending
-    on the sink's `dataframe_api` setting).
+    where `df` is the DataFrame (native or Narwhals depending on the sink's
+    `dataframe_api` setting). Laktory optionally injects a `laktory_context`
+    keyword argument containing pipeline runtime objects — declare it in your
+    function signature to opt in:
+
+    ```python
+    def my_write(df, laktory_context=None) -> None:
+        sink = laktory_context.sink
+        node = laktory_context.node
+    ```
 
     Examples
     --------
@@ -49,10 +57,14 @@ class DataSinkWriter(BaseModel, PipelineChild):
 
     ```py
     # mypackage/etl.py
-    def my_write(df, extra_tag="default", node=None) -> None:
-        # Optionally use node context to avoid re-hardcoding sink coordinates
-        # sink = node.primary_sink
-        df.write.format("delta").mode("append").save("./my_table/")
+    from laktory.models import LaktoryContext
+
+
+    def my_write(
+        df, extra_tag="default", laktory_context: LaktoryContext = None
+    ) -> None:
+        sink = laktory_context.sink  # access sink coordinates without re-hardcoding
+        df.write.format("delta").mode("append").save(sink.path)
     ```
     """
 
@@ -62,28 +74,17 @@ class DataSinkWriter(BaseModel, PipelineChild):
     )
     func_kwargs: dict[str, Any] = Field(
         {},
-        description=(
-            "Keyword arguments passed to the function. "
-            "The key 'node' is reserved and injected automatically by Laktory "
-            "with the parent PipelineNode instance."
-        ),
+        description="Keyword arguments passed to the function.",
     )
     func_name: str = Field(
         ...,
         description=(
-            "Fully qualified dotted path to the callable. "
-            "Example: 'mypackage.etl.my_write'."
+            "Fully qualified importable module path to the callable "
+            "(e.g. 'mypackage.etl.my_write'). "
+            "The function is imported at runtime via `importlib` and called with the "
+            "DataFrame as its first argument. "
         ),
     )
-
-    @model_validator(mode="after")
-    def validate_reserved_keys(self):
-        if "node" in self.func_kwargs:
-            raise ValueError(
-                "'node' is a reserved key in `func_kwargs` and is injected "
-                "automatically by Laktory. Remove it from `func_kwargs`."
-            )
-        return self
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
@@ -95,17 +96,15 @@ class DataSinkWriter(BaseModel, PipelineChild):
         module = importlib.import_module(module_path)
         return getattr(module, func_name)
 
-    def execute(self, df, node=None) -> None:
+    def execute(self, df) -> None:
         """
         Invoke the user-supplied function with the DataFrame, configured
-        args/kwargs, and the pipeline node context.
+        args/kwargs, and optionally a `laktory_context` object.
 
         Parameters
         ----------
         df:
             Input DataFrame (native or Narwhals, as prepared by the caller).
-        node:
-            Parent PipelineNode, or None when the sink is used standalone.
         """
         func = self._resolve_func()
 
@@ -116,9 +115,18 @@ class DataSinkWriter(BaseModel, PipelineChild):
             df = nw.to_native(df)
 
         func_log = f"{self.func_name}("
-        func_log += ",".join(self.func_args)
+        func_log += ",".join([str(a) for a in self.func_args])
         func_log += ",".join([f"{k}={v}" for k, v in self.func_kwargs.items()])
         func_log += f") with df type {type(df)}"
         logger.info(f"Writing df with {func_log}")
 
-        func(df, *self.func_args, node=node, **self.func_kwargs)
+        context = LaktoryContext(
+            node=self.parent_pipeline_node,
+            pipeline=self.parent_pipeline,
+            sink=self.parent,
+        )
+        call_kwargs = {
+            **self.func_kwargs,
+            **_build_laktory_context_kwargs(func, context),
+        }
+        func(df, *self.func_args, **call_kwargs)
