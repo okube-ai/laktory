@@ -57,9 +57,11 @@ def test_custom_writer_model():
     sink = models.FileDataSink(
         path="./my_table/",
         format="DELTA",
-        custom_writer={"func_name": "tests.datasinks.test_writefunc._dummy_write"},
+        custom_writer={"func_name": "tests.datasinks.test_customwriter._dummy_write"},
     )
-    assert sink.custom_writer.func_name == "tests.datasinks.test_writefunc._dummy_write"
+    assert (
+        sink.custom_writer.func_name == "tests.datasinks.test_customwriter._dummy_write"
+    )
     assert sink.mode is None
 
 
@@ -67,10 +69,12 @@ def test_custom_writer_string_coercion():
     sink = models.FileDataSink(
         path="./my_table/",
         format="DELTA",
-        custom_writer="tests.datasinks.test_writefunc._dummy_write",
+        custom_writer="tests.datasinks.test_customwriter._dummy_write",
     )
     assert isinstance(sink.custom_writer, models.CustomWriter)
-    assert sink.custom_writer.func_name == "tests.datasinks.test_writefunc._dummy_write"
+    assert (
+        sink.custom_writer.func_name == "tests.datasinks.test_customwriter._dummy_write"
+    )
     assert sink.custom_writer.func_args == []
     assert sink.custom_writer.func_kwargs == {}
 
@@ -80,7 +84,7 @@ def test_custom_writer_kwargs():
         path="./my_table/",
         format="DELTA",
         custom_writer={
-            "func_name": "tests.datasinks.test_writefunc._append_write",
+            "func_name": "tests.datasinks.test_customwriter._append_write",
             "func_kwargs": {"target_path": "/tmp/test"},
         },
     )
@@ -93,7 +97,7 @@ def test_custom_writer_and_mode_exclusive():
             path="./my_table/",
             format="DELTA",
             mode="APPEND",
-            custom_writer="tests.datasinks.test_writefunc._dummy_write",
+            custom_writer="tests.datasinks.test_customwriter._dummy_write",
         )
 
 
@@ -102,7 +106,7 @@ def test_custom_writer_and_merge_cdc_options_exclusive():
         models.FileDataSink(
             path="./my_table/",
             format="DELTA",
-            custom_writer="tests.datasinks.test_writefunc._dummy_write",
+            custom_writer="tests.datasinks.test_customwriter._dummy_write",
             merge_cdc_options=models.DataSinkMergeCDCOptions(
                 primary_keys=["symbol"],
             ),
@@ -116,7 +120,7 @@ def test_custom_writer_and_merge_cdc_options_exclusive():
 
 def test_resolve_custom_writer():
     writer = models.CustomWriter(
-        func_name="tests.datasinks.test_writefunc._dummy_write"
+        func_name="tests.datasinks.test_customwriter._dummy_write"
     )
     assert writer._resolve_func() is _dummy_write
 
@@ -129,7 +133,7 @@ def test_resolve_custom_writer_missing_module():
 
 def test_resolve_custom_writer_missing_attr():
     writer = models.CustomWriter(
-        func_name="tests.datasinks.test_writefunc.nonexistent_func"
+        func_name="tests.datasinks.test_customwriter.nonexistent_func"
     )
     with pytest.raises(AttributeError):
         writer._resolve_func()
@@ -145,7 +149,7 @@ def test_yaml_roundtrip():
         path="./my_table/",
         format="DELTA",
         custom_writer={
-            "func_name": "tests.datasinks.test_writefunc._dummy_write",
+            "func_name": "tests.datasinks.test_customwriter._dummy_write",
             "func_kwargs": {"extra": "value"},
         },
     )
@@ -177,7 +181,7 @@ def test_laktory_context(tmp_path):
         path=target_path,
         format="DELTA",
         custom_writer={
-            "func_name": "tests.datasinks.test_writefunc._capture_context_write",
+            "func_name": "tests.datasinks.test_customwriter._capture_context_write",
         },
         dataframe_api="NARWHALS",
     )
@@ -197,7 +201,7 @@ def test_laktory_context_not_injected_when_not_declared(tmp_path):
         path=target_path,
         format="DELTA",
         custom_writer={
-            "func_name": "tests.datasinks.test_writefunc._append_write",
+            "func_name": "tests.datasinks.test_customwriter._append_write",
             "func_kwargs": {"target_path": target_path},
         },
         dataframe_api="NARWHALS",
@@ -221,7 +225,7 @@ def test_batch(tmp_path):
         path=target_path,
         format="DELTA",
         custom_writer={
-            "func_name": "tests.datasinks.test_writefunc._append_write",
+            "func_name": "tests.datasinks.test_customwriter._append_write",
             "func_kwargs": {"target_path": target_path},
         },
         dataframe_api="NARWHALS",
@@ -240,7 +244,7 @@ def test_batch_native(tmp_path):
         path=target_path,
         format="DELTA",
         custom_writer={
-            "func_name": "tests.datasinks.test_writefunc._append_write_native",
+            "func_name": "tests.datasinks.test_customwriter._append_write_native",
             "func_kwargs": {"target_path": target_path},
         },
         dataframe_api="NATIVE",
@@ -271,7 +275,7 @@ def test_stream(tmp_path):
         format="DELTA",
         checkpoint_path=checkpoint_path,
         custom_writer={
-            "func_name": "tests.datasinks.test_writefunc._append_write",
+            "func_name": "tests.datasinks.test_customwriter._append_write",
             "func_kwargs": {"target_path": target_path},
         },
         dataframe_api="NARWHALS",

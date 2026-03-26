@@ -17,13 +17,7 @@ class CustomReader(BaseModel, PipelineChild):
     Definition of a custom read function used by `CustomDataSource`. Gives the
     user full control over how data is read.
 
-    The function is called as:
-
-    ```python
-    func(*func_args, **func_kwargs)
-    ```
-
-    and must return a DataFrame (native or Narwhals). Laktory optionally injects
+    The function must return a DataFrame (native or Narwhals). Laktory optionally injects
     a `laktory_context` keyword argument — declare it in your function signature
     to opt in:
 
@@ -31,7 +25,7 @@ class CustomReader(BaseModel, PipelineChild):
     def my_read(laktory_context=None):
         source = laktory_context.source
         node = laktory_context.node
-        ...
+
         return df
     ```
 
@@ -46,7 +40,7 @@ class CustomReader(BaseModel, PipelineChild):
             "func_kwargs": {"table": "catalog.schema.my_table"},
         },
     )
-    df = source.read()
+    # df = source.read()
     ```
 
     ```py

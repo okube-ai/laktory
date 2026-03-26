@@ -25,19 +25,13 @@ class CustomWriter(BaseModel, PipelineChild):
     The function is called as:
 
     ```python
-    func(df, *func_args, **func_kwargs)
+    # func(df, *func_args, **func_kwargs)
     ```
 
     where `df` is the DataFrame (native or Narwhals depending on the sink's
     `dataframe_api` setting). Laktory optionally injects a `laktory_context`
     keyword argument containing pipeline runtime objects — declare it in your
-    function signature to opt in:
-
-    ```python
-    def my_write(df, laktory_context=None) -> None:
-        sink = laktory_context.sink
-        node = laktory_context.node
-    ```
+    function signature to opt in.
 
     Examples
     --------

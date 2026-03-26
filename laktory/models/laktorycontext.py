@@ -1,14 +1,17 @@
 import inspect
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from typing import Any
+
+from pydantic import Field
+from pydantic import SkipValidation
+
+from laktory.models.basemodel import BaseModel
 
 if TYPE_CHECKING:
     pass
 
 
-@dataclass
-class LaktoryContext:
+class LaktoryContext(BaseModel):
     """
     Runtime context object optionally injected into user-supplied functions by Laktory.
 
@@ -25,25 +28,23 @@ class LaktoryContext:
     def my_write(df, laktory_context: LaktoryContext = None) -> None:
         sink = laktory_context.sink
         node = laktory_context.node
-        ...
-    ```
 
-    Attributes
-    ----------
-    node:
-        Parent PipelineNode, or None when called outside a pipeline.
-    pipeline:
-        Parent Pipeline, or None when called outside a pipeline.
-    sink:
-        Current data sink. Populated by CustomWriter; None otherwise.
-    source:
-        Current data source. Populated by CustomReader; None otherwise.
+        return df
+    ```
     """
 
-    node: Any = None  # PipelineNode
-    pipeline: Any = None  # Pipeline
-    sink: Any = None  # BaseDataSink  (set by CustomWriter)
-    source: Any = None  # BaseDataSource (set by CustomReader)
+    node: SkipValidation[Any] = Field(
+        None, description="Parent PipelineNode, or None when called outside a pipeline."
+    )  # PipelineNode
+    pipeline: SkipValidation[Any] = Field(
+        None, description="Parent Pipeline, or None when called outside a pipeline."
+    )  # Pipeline
+    sink: SkipValidation[Any] = Field(
+        None, description="Current data sink."
+    )  # BaseDataSink  (set by CustomWriter)
+    source: SkipValidation[Any] = Field(
+        None, description="Current data source."
+    )  # BaseDataSource (set by CustomReader)
 
 
 def _build_laktory_context_kwargs(func, context: LaktoryContext) -> dict:

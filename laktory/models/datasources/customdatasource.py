@@ -32,7 +32,7 @@ class CustomDataSource(BaseDataSource):
             "func_kwargs": {"table": "catalog.schema.my_table"},
         },
     )
-    df = source.read()
+    # df = source.read()
     ```
 
     ```py
