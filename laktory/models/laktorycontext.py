@@ -26,8 +26,8 @@ class LaktoryContext(BaseModel):
 
 
     def my_write(df, laktory_context: LaktoryContext = None) -> None:
-        sink = laktory_context.sink
-        node = laktory_context.node
+        print(laktory_context.sink)
+        print(laktory_context.node)
 
         return df
     ```

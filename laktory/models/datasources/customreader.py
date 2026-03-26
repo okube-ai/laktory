@@ -23,10 +23,8 @@ class CustomReader(BaseModel, PipelineChild):
 
     ```python
     def my_read(laktory_context=None):
-        source = laktory_context.source
-        node = laktory_context.node
-
-        return df
+        print(laktory_context.source)
+        print(laktory_context.node)
     ```
 
     Examples
