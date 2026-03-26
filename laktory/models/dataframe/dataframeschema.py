@@ -84,7 +84,7 @@ class DataFrameSchema(BaseModel):
     def to_native(
         self, dataframe_backend: nw.Implementation | DataFrameBackends | None = None
     ):
-        dataframe_backend = DataFrameBackends.from_any(dataframe_backend)
+        dataframe_backend = DataFrameBackends(dataframe_backend)
 
         if dataframe_backend == DataFrameBackends.PYSPARK:
             return self.to_pyspark()

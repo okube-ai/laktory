@@ -11,12 +11,14 @@ from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
 from pydantic import field_serializer
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframeschema import DataFrameSchema
+from laktory.models.datasinks.customwriter import CustomWriter
 from laktory.models.datasinks.mergecdcoptions import DataSinkMergeCDCOptions
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.readerwritermethod import ReaderWriterMethod
@@ -105,6 +107,50 @@ class BaseDataSink(BaseModel, PipelineChild):
     writer_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend writer methods."
     )
+    custom_writer: CustomWriter | None = Field(
+        None,
+        description=(
+            "Custom writer that fully replaces Laktory's built-in write logic. "
+            "Laktory manages the streaming query lifecycle "
+            "(foreachBatch, trigger, checkpoint, start/await). "
+            "Can be set as a plain string (func_name only) or a full CustomWriter object "
+            "with func_name, func_args, and func_kwargs. "
+            "Mutually exclusive with `mode` and `merge_cdc_options`."
+        ),
+    )
+
+    @field_validator("custom_writer", mode="before")
+    @classmethod
+    def coerce_custom_writer(cls, v):
+        if isinstance(v, str):
+            return {"func_name": v}
+        return v
+
+    @model_validator(mode="after")
+    def custom_writer_is_exclusive(self) -> Any:
+        if self.custom_writer:
+            if self.mode is not None:
+                raise ValueError("`custom_writer` and `mode` are mutually exclusive.")
+            if self.merge_cdc_options is not None:
+                raise ValueError(
+                    "`custom_writer` and `merge_cdc_options` are mutually exclusive."
+                )
+
+            from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
+                DatabricksPipelineOrchestrator,
+            )
+
+            if (
+                self.parent_pipeline
+                and self.parent_pipeline.orchestrator
+                and isinstance(
+                    self.parent_pipeline.orchestrator, DatabricksPipelineOrchestrator
+                )
+            ):
+                raise ValueError(
+                    "`custom_writer` is not supported when using the Databricks Declarative Pipelines orchestrator."
+                )
+        return self
 
     @model_validator(mode="after")
     def merge_has_options(self) -> Any:
@@ -133,6 +179,14 @@ class BaseDataSink(BaseModel, PipelineChild):
                     )
 
         return self
+
+    # ----------------------------------------------------------------------- #
+    # Children                                                                #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def children_names(self):
+        return ["custom_writer"]
 
     # -------------------------------------------------------------------------------- #
     # Properties                                                                       #
@@ -222,7 +276,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     # -------------------------------------------------------------------------------- #
 
     def _update_backend_from_df(self, df):
-        dataframe_backend = DataFrameBackends.from_nw_implementation(df.implementation)
+        dataframe_backend = DataFrameBackends(df.implementation)
         if dataframe_backend not in SUPPORTED_BACKENDS:
             raise ValueError(
                 f"DataFrame provided is of {dataframe_backend} backend, which is not supported."
@@ -328,13 +382,42 @@ class BaseDataSink(BaseModel, PipelineChild):
                 )
             return
 
+        if not isinstance(df, (nw.DataFrame, nw.LazyFrame)):
+            df = nw.from_native(df)
+        self._update_backend_from_df(df)
+
+        # Custom Writer
+        if self.custom_writer:
+            df_native = df.to_native()
+
+            # Special Treatment for Spark Streaming
+            if (
+                self.dataframe_backend == DataFrameBackends.PYSPARK
+                and df_native.isStreaming
+            ):
+                if self.checkpoint_path is None:
+                    raise ValueError(
+                        f"Checkpoint location not specified for sink '{self._id}'"
+                    )
+                query = (
+                    df_native.writeStream.foreachBatch(
+                        lambda batch_df, _: self.custom_writer.execute(batch_df)
+                    )
+                    .trigger(availableNow=True)
+                    .options(checkpointLocation=self.checkpoint_path)
+                    .start()
+                )
+                query.awaitTermination()
+
+            else:
+                self.custom_writer.execute(df)
+
+            logger.info("Write completed.")
+            return
+
         if mode is None:
             mode = self.mode
 
-        if not isinstance(df, (nw.DataFrame, nw.LazyFrame)):
-            df = nw.from_native(df)
-
-        self._update_backend_from_df(df)
         self._validate_mode(mode, df)
         self._validate_format()
 
