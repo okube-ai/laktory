@@ -1,6 +1,16 @@
 # Release History
 
-## [0.9.2] - Unreleased
+## [0.9.3] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.9.2] - 2026-03-27
 ### Added
 * Support for `TableDataSource` `reader_kwargs` attribute [[#513](https://github.com/okube-ai/laktory/issues/513)]
 * `CustomWriter` class and `custom_writer` field on `BaseDataSink` — fully replaces Laktory's built-in write logic with a user-supplied function; Laktory manages the streaming query lifecycle (foreachBatch, trigger, checkpoint) [[#514](https://github.com/okube-ai/laktory/issues/514)]
