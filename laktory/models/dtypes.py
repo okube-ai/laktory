@@ -217,7 +217,7 @@ class DType(BaseModel):
             return nw_dtypes.Struct(fields)
 
         if hasattr(nw_dtypes, _type):
-            return getattr(nw_dtypes, _type)
+            return getattr(nw_dtypes, _type)()
 
         # Not Found
         raise ValueError(f"Data type with name '{self.name}' is not supported")
