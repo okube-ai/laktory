@@ -1,6 +1,16 @@
 # Release History
 
-## [0.9.3] - Unreleased
+## [0.9.4] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.9.3] - 2026-03-27
 ### Fixed
 * Roundtrip when creating a DataFrameSchema instance from a native dataframe schema. 
 
