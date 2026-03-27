@@ -221,6 +221,18 @@ class TableDataSink(BaseDataSink):
     # Purge                                                                   #
     # ----------------------------------------------------------------------- #
 
+    def exists(self):
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
+            try:
+                df = self.read(as_stream=False)
+                df.limit(1).collect()
+                return True
+            except Exception:
+                return False
+
+        else:
+            raise NotImplementedError()
+
     def purge(self):
         """
         Delete sink data and checkpoints

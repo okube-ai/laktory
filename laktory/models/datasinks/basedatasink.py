@@ -563,19 +563,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     def exists(self):
-        if self.dataframe_backend == DataFrameBackends.PYSPARK:
-            from laktory import get_spark_session
-
-            try:
-                spark = get_spark_session()
-                df = self.read(spark=spark, as_stream=False)
-                df.limit(1).collect()
-                return True
-            except Exception:
-                return False
-
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     def _purge_checkpoint(self):
         if self.checkpoint_path:
