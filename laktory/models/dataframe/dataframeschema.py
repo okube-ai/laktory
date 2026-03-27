@@ -63,7 +63,7 @@ class DataFrameSchema(BaseModel):
     # -------------------------------------------------------------------------------- #
 
     @classmethod
-    def from_dataframe(cls, df) -> "DataFrameSchema":
+    def from_df(cls, df) -> "DataFrameSchema":
         """
         Create a DataFrameSchema from a DataFrame
 
