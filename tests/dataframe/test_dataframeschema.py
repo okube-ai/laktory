@@ -1,6 +1,7 @@
 import narwhals as nw
 import polars as pl
 import pyspark.sql.types as T
+import pytest
 
 from laktory.enums import DataFrameBackends
 from laktory.models import DataFrameSchema
@@ -86,3 +87,20 @@ def test_to_string():
 def test_from_narwhals():
     schema = DataFrameSchema.from_narwhals(s.to_narwhals())
     assert schema == s
+
+
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_from_df(backend):
+    from laktory._testing import get_df0
+
+    df = get_df0(backend)
+    schema = DataFrameSchema.from_df(df)
+
+    # Columns are populated from the narwhals schema
+    assert [c.name for c in schema.columns] == ["_idx", "id", "x1"]
+
+    # Native schema is cached
+    assert schema._native_schema is not None
+
+    # to_native() returns the cached object directly, bypassing column conversion
+    assert schema.to_native() is schema._native_schema
