@@ -296,7 +296,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         if self.schema_definition:
             schema = self.schema_definition
         if df is not None:
-            schema = DataFrameSchema.from_narwhals(df.schema)
+            schema = DataFrameSchema.from_df(df)
             dataframe_backend = DataFrameBackends.from_df(df)
 
         # TODO: We should probably validate that the schema from the DataFrame matches
