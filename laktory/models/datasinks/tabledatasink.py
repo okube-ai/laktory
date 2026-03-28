@@ -131,12 +131,16 @@ class TableDataSink(BaseDataSink):
         Returns True if the table was created, False otherwise.
         Schema is taken from `schema_definition` if set, otherwise inferred from `df`.
         """
+        logger.info(f"Initiating table '{self.full_name}' creation.")
 
         # Skip for views
         if self.table_type == "VIEW":
+            logger.info(f"Table is view. Skipping.")
             return False
 
+        logger.info(f"Checking if table exists.")
         if self.exists():
+            logger.info(f"Table exists. Skipping.")
             return False
 
         self._update_backend_from_df(df)
@@ -170,6 +174,8 @@ class TableDataSink(BaseDataSink):
             raise NotImplementedError(
                 f"Table Data Sink for '{self.dataframe_backend}' is not yet supported."
             )
+
+        logger.info(f"Table creation completed.")
 
         return True
 
