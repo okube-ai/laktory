@@ -100,16 +100,6 @@ class TableDataSink(BaseDataSink):
     def _id(self) -> str:
         return self.full_name
 
-    @property
-    def upstream_node_names(self) -> list[str]:
-        """Pipeline node names required to write sink"""
-        return []
-
-    @property
-    def data_sources(self):
-        """Get all sources feeding the sink"""
-        return []
-
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #
@@ -131,26 +121,25 @@ class TableDataSink(BaseDataSink):
         Returns True if the table was created, False otherwise.
         Schema is taken from `schema_definition` if set, otherwise inferred from `df`.
         """
+        logger.info(f"Table '{self.full_name}' creation initiated.")
 
         # Skip for views
         if self.table_type == "VIEW":
+            logger.info("Table is view. Skipping.")
             return False
 
         if self.exists():
+            logger.info("Table exists. Skipping.")
             return False
 
         self._update_backend_from_df(df)
         schema = self._get_create_schema(df)
 
         if schema is None:
-            logger.info(
-                f"Schema is empty and `df` is None. Skipping table '{self.full_name}' creation."
-            )
+            logger.info("Schema is empty and `df` is None. Skipping table.")
             return False
 
-        # TODO: Add logging of schema
         logger.info(f"Creating empty table '{self.full_name}'.")
-
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
             from laktory import get_spark_session
 
@@ -170,6 +159,8 @@ class TableDataSink(BaseDataSink):
             raise NotImplementedError(
                 f"Table Data Sink for '{self.dataframe_backend}' is not yet supported."
             )
+
+        logger.info(f"Table '{self.full_name}' creation completed.")
 
         return True
 
@@ -223,12 +214,11 @@ class TableDataSink(BaseDataSink):
 
     def exists(self):
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
-            try:
-                df = self.read(as_stream=False)
-                df.limit(1).collect()
-                return True
-            except Exception:
-                return False
+            from laktory import get_spark_session
+
+            spark = get_spark_session()
+
+            return spark.catalog.tableExists(self.full_name)
 
         else:
             raise NotImplementedError()

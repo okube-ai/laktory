@@ -50,6 +50,12 @@ def get_logger(name, stream=True):
     # Get logger
     logger = logging.getLogger(name)
 
+    # Prevent log records from propagating to parent/root loggers.
+    # Without this, environments like Databricks notebooks (which configure
+    # their own root handler) would process each record twice, resulting in
+    # duplicate log entries with different formats.
+    logger.propagate = False
+
     # Set level
     logger.setLevel(settings.log_level)
 

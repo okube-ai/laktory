@@ -464,10 +464,6 @@ class PipelineNode(BaseModel, PipelineChild):
         if self.transformer:
             names += self.transformer.upstream_node_names
 
-        if self.sinks:
-            for s in self.sinks:
-                names += s.upstream_node_names
-
         return names
 
     # ----------------------------------------------------------------------- #
@@ -484,10 +480,6 @@ class PipelineNode(BaseModel, PipelineChild):
 
         if self.transformer:
             sources += self.transformer.data_sources
-
-        if self.sinks:
-            for s in self.sinks:
-                sources += s.data_sources
 
         return sources
 

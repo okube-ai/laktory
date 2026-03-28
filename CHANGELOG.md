@@ -4,7 +4,8 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* TableDataSink.exists() method.
+* Removed logs deduplication in Databricks notebooks
 ### Updated
 * n/a
 ### Breaking changes
