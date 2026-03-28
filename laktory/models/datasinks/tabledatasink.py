@@ -100,16 +100,6 @@ class TableDataSink(BaseDataSink):
     def _id(self) -> str:
         return self.full_name
 
-    @property
-    def upstream_node_names(self) -> list[str]:
-        """Pipeline node names required to write sink"""
-        return []
-
-    @property
-    def data_sources(self):
-        """Get all sources feeding the sink"""
-        return []
-
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #
@@ -135,20 +125,18 @@ class TableDataSink(BaseDataSink):
 
         # Skip for views
         if self.table_type == "VIEW":
-            logger.info(f"Table is view. Skipping.")
+            logger.info("Table is view. Skipping.")
             return False
 
         if self.exists():
-            logger.info(f"Table exists. Skipping.")
+            logger.info("Table exists. Skipping.")
             return False
 
         self._update_backend_from_df(df)
         schema = self._get_create_schema(df)
 
         if schema is None:
-            logger.info(
-                f"Schema is empty and `df` is None. Skipping table."
-            )
+            logger.info("Schema is empty and `df` is None. Skipping table.")
             return False
 
         logger.info(f"Creating empty table '{self.full_name}'.")
@@ -226,7 +214,6 @@ class TableDataSink(BaseDataSink):
 
     def exists(self):
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
-
             from laktory import get_spark_session
 
             spark = get_spark_session()

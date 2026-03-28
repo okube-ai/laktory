@@ -221,16 +221,6 @@ class BaseDataSink(BaseModel, PipelineChild):
     def serialize_path(self, value: Path) -> str:
         return value.as_posix()
 
-    @property
-    def upstream_node_names(self) -> list[str]:
-        """Pipeline node names required to write sink"""
-        return []
-
-    @property
-    def data_sources(self):
-        """Get all sources feeding the sink"""
-        return []
-
     # -------------------------------------------------------------------------------- #
     # CDC                                                                              #
     # -------------------------------------------------------------------------------- #
