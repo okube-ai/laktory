@@ -233,7 +233,9 @@ class TableDataSink(BaseDataSink):
                 df = self.read(as_stream=False)
                 df.limit(1).collect()
                 return True
-            except Exception:
+            except Exception as e:
+                logger.info("Table does not exist.")
+                logger.error("e")
                 return False
 
         else:
