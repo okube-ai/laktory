@@ -364,7 +364,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             View definition for table data sinks of `VIEW` type
         """
 
-        logger.info("Starting to write table.")
+        logger.info("Write initiated.")
 
         if getattr(self, "table_type", None) == "VIEW":
             if view_definition is None:
