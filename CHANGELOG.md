@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* TableDataSink.exists() method.
 ### Updated
 * n/a
 ### Breaking changes

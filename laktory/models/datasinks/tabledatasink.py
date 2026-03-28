@@ -131,14 +131,13 @@ class TableDataSink(BaseDataSink):
         Returns True if the table was created, False otherwise.
         Schema is taken from `schema_definition` if set, otherwise inferred from `df`.
         """
-        logger.info(f"Initiating table '{self.full_name}' creation.")
+        logger.info(f"Table '{self.full_name}' creation initiated.")
 
         # Skip for views
         if self.table_type == "VIEW":
             logger.info(f"Table is view. Skipping.")
             return False
 
-        logger.info(f"Checking if table exists.")
         if self.exists():
             logger.info(f"Table exists. Skipping.")
             return False
@@ -148,13 +147,11 @@ class TableDataSink(BaseDataSink):
 
         if schema is None:
             logger.info(
-                f"Schema is empty and `df` is None. Skipping table '{self.full_name}' creation."
+                f"Schema is empty and `df` is None. Skipping table."
             )
             return False
 
-        # TODO: Add logging of schema
         logger.info(f"Creating empty table '{self.full_name}'.")
-
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
             from laktory import get_spark_session
 
@@ -175,7 +172,7 @@ class TableDataSink(BaseDataSink):
                 f"Table Data Sink for '{self.dataframe_backend}' is not yet supported."
             )
 
-        logger.info(f"Table creation completed.")
+        logger.info(f"Table '{self.full_name}' creation completed.")
 
         return True
 
@@ -229,14 +226,12 @@ class TableDataSink(BaseDataSink):
 
     def exists(self):
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
-            try:
-                df = self.read(as_stream=False)
-                df.limit(1).collect()
-                return True
-            except Exception as e:
-                logger.info("Table does not exist.")
-                logger.error(f"{e}")
-                return False
+
+            from laktory import get_spark_session
+
+            spark = get_spark_session()
+
+            return spark.catalog.tableExists(self.full_name)
 
         else:
             raise NotImplementedError()
