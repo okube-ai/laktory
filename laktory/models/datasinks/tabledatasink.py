@@ -235,7 +235,7 @@ class TableDataSink(BaseDataSink):
                 return True
             except Exception as e:
                 logger.info("Table does not exist.")
-                logger.error("e")
+                logger.error(f"{e}")
                 return False
 
         else:
