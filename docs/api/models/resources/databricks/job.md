@@ -1,12 +1,4 @@
-::: laktory.models.resources.databricks.Job
-
----
-
-::: laktory.models.resources.databricks.job.JobJobClusterNewCluster
-
----
-
-::: laktory.models.resources.databricks.job.JobJobCluster
+::: models.resources.databricks.Job
 
 ---
 
@@ -18,11 +10,15 @@
 
 ---
 
+::: laktory.models.resources.databricks.job.JobEnvironment
+
+---
+
 ::: laktory.models.resources.databricks.job.JobEnvironmentSpec
 
 ---
 
-::: laktory.models.resources.databricks.job.JobEnvironment
+::: laktory.models.resources.databricks.job.JobGitSource
 
 ---
 
@@ -34,7 +30,7 @@
 
 ---
 
-::: laktory.models.resources.databricks.job.JobGitSource
+::: laktory.models.resources.databricks.job.JobHealth
 
 ---
 
@@ -42,7 +38,15 @@
 
 ---
 
-::: laktory.models.resources.databricks.job.JobHealth
+::: laktory.models.resources.databricks.job.JobJobCluster
+
+---
+
+::: laktory.models.resources.databricks.job.JobJobClusterNewCluster
+
+---
+
+::: laktory.models.resources.databricks.job.JobLookup
 
 ---
 
@@ -54,6 +58,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.job.JobQueue
+
+---
+
 ::: laktory.models.resources.databricks.job.JobRunAs
 
 ---
@@ -62,51 +70,19 @@
 
 ---
 
+::: laktory.models.resources.databricks.job.JobTask
+
+---
+
 ::: laktory.models.resources.databricks.job.JobTaskConditionTask
 
 ---
 
+::: laktory.models.resources.databricks.job.JobTaskDbtTask
+
+---
+
 ::: laktory.models.resources.databricks.job.JobTaskDependsOn
-
----
-
-::: laktory.models.resources.databricks.job.JobTaskNotebookTask
-
----
-
-::: laktory.models.resources.databricks.job.JobTaskPipelineTask
-
----
-
-::: laktory.models.resources.databricks.job.JobTaskRunJobTask
-
----
-
-::: laktory.models.resources.databricks.job.JobTaskSqlTaskQuery
-
----
-
-::: laktory.models.resources.databricks.job.JobTaskSqlTaskAlertSubscription
-
----
-
-::: laktory.models.resources.databricks.job.JobTaskSQLTaskAlert
-
----
-
-::: laktory.models.resources.databricks.job.JobTaskSqlTaskDashboard
-
----
-
-::: laktory.models.resources.databricks.job.JobTaskSqlTaskFile
-
----
-
-::: laktory.models.resources.databricks.job.JobTaskSQLTask
-
----
-
-::: laktory.models.resources.databricks.job.JobTaskSQLTask
 
 ---
 
@@ -118,7 +94,47 @@
 
 ---
 
-::: laktory.models.resources.databricks.job.JobTask
+::: laktory.models.resources.databricks.job.JobTaskNotebookTask
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskPipelineTask
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskPythonWheelTask
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskRunJobTask
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskSQLTask
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskSQLTaskAlert
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskSqlTaskAlertSubscription
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskSqlTaskDashboard
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskSqlTaskFile
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskSqlTaskQuery
+
+---
+
+::: laktory.models.resources.databricks.job.JobTrigger
 
 ---
 
@@ -126,7 +142,7 @@
 
 ---
 
-::: laktory.models.resources.databricks.job.JobTrigger
+::: laktory.models.resources.databricks.job.JobWebhookNotifications
 
 ---
 
@@ -143,11 +159,3 @@
 ---
 
 ::: laktory.models.resources.databricks.job.JobWebhookNotificationsOnSuccess
-
----
-
-::: laktory.models.resources.databricks.job.JobWebhookNotifications
-
---
-
-::: laktory.models.resources.databricks.job.JobLookup

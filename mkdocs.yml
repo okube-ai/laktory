@@ -177,6 +177,8 @@ nav:
         - DataFrameTransformer: api/models/dataframe/dataframetransformer.md
       - DataTypes: api/models/datatypes.md
       - DataSinks:
+        - BaseDataSink: api/models/datasinks/basedatasink.md
+        - TableDataSink: api/models/datasinks/tabledatasink.md
         - CustomWriter: api/models/datasinks/customwriter.md
         - FileDataSink: api/models/datasinks/file.md
         - HiveMetastoreDataSink: api/models/datasinks/hivemetastore.md
@@ -185,6 +187,8 @@ nav:
         - DataSinkMergeCDCOptions: api/models/datasinks/mergecdcoptions.md
         - TableDataSinkMetadata: api/models/datasinks/tablemetadata.md
       - DataSources:
+        - BaseDataSource: api/models/datasources/basedatasource.md
+        - TableDataSource: api/models/datasources/tabledatasource.md
         - ReaderWriterMethod: api/models/datasources/readerwritermethod.md
         - CustomDataSource: api/models/datasources/customdatasource.md
         - DataFrameDataSource: api/models/datasources/dataframe.md
@@ -228,6 +232,7 @@ nav:
           - ExternalLocation: api/models/resources/databricks/externallocation.md
           - api/models/resources/databricks/grant.md
           - api/models/resources/databricks/grants.md
+          - GroupMember: api/models/resources/databricks/groupmember.md
           - api/models/resources/databricks/group.md
           - api/models/resources/databricks/job.md
           - api/models/resources/databricks/metastore.md
@@ -242,7 +247,9 @@ nav:
           - api/models/resources/databricks/notebook.md
           - NotificationDestination: api/models/resources/databricks/notificationdestination.md
           - OboToken: api/models/resources/databricks/obotoken.md
+          - Permissions: api/models/resources/databricks/permissions.md
           - PythonPackage: api/models/resources/databricks/pythonpackage.md
+          - PythonPackagePermissions: api/models/resources/databricks/pythonpackagepermissions.md
           - QualityMonitor: api/models/resources/databricks/qualitymonitor.md
           - api/models/resources/databricks/query.md
           - api/models/resources/databricks/recipient.md
@@ -258,11 +265,15 @@ nav:
           - api/models/resources/databricks/table.md
           - api/models/resources/databricks/user.md
           - UserRole: api/models/resources/databricks/userrole.md
+          - VectorSearchEndpoint: api/models/resources/databricks/vectorsearchendpoint.md
+          - VectorSearchIndex: api/models/resources/databricks/vectorsearchindex.md
           - api/models/resources/databricks/volume.md
           - api/models/resources/databricks/warehouse.md
           - WorkspaceFile: api/models/resources/databricks/workspacefile.md
           - WorkspaceBinding: api/models/resources/databricks/workspacebinding.md
+          - WorkspaceTree: api/models/resources/databricks/workspacetree.md
         - Providers:
+          - BaseProvider: api/models/resources/providers/baseprovider.md
           - AzureProvider: api/models/resources/providers/azure.md
           - AzurePulumiProvider: api/models/resources/providers/azurepulumi.md
           - AWSProvider: api/models/resources/providers/aws.md
