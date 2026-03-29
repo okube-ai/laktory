@@ -10,6 +10,8 @@ from laktory.models.basemodel import ModelMetaclass
 # BaseChild must share the same metaclass as BaseModel for intellisense to work
 # properly.
 class BaseChild(BaseModel, metaclass=ModelMetaclass):
+    __doc_hide_base__ = True  # hide this class's fields and methods from child docs
+
     model_config = ConfigDict(
         extra="forbid",
         validate_assignment=True,

@@ -108,6 +108,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     properties. This `BaseModel` class is derived from `pydantic.BaseModel`.
     """
 
+    __doc_hide_base__ = True  # hide this class's fields and methods from child docs
+
     model_config = ConfigDict(
         extra="forbid",
         # `validate_assignment` is required when injecting complex variables to resolve

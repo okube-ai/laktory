@@ -113,6 +113,7 @@ plugins:
 #                  schema: false
               - griffe_fieldz:
                   include_inherited: True
+              - laktory.griffe_ext:
   - mkdocs-video
 
 
