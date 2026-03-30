@@ -8,11 +8,34 @@ from griffe import Attribute
 from griffe import Class
 from griffe import DocstringSectionAttributes
 from griffe import DocstringSectionParameters
+from griffe import Expr
+from griffe import ExprBinOp
+from griffe import ExprName
+from griffe import ExprSubscript
 from griffe import Extension
 from griffe import dynamic_import
 from griffe import get_logger
 
 logger = get_logger("laktory.griffe_ext")
+
+
+def _replace_expr_name(
+    expr: str | Expr | None,
+    name: str,
+    replacement: ExprName,
+) -> str | Expr | None:
+    """Recursively replace ExprName(name) nodes inside an expression tree."""
+    if expr is None or isinstance(expr, str):
+        return expr
+    if isinstance(expr, ExprName):
+        return replacement if expr.name == name else expr
+    if isinstance(expr, ExprBinOp):
+        expr.left = _replace_expr_name(expr.left, name, replacement)
+        expr.right = _replace_expr_name(expr.right, name, replacement)
+    elif isinstance(expr, ExprSubscript):
+        expr.left = _replace_expr_name(expr.left, name, replacement)
+        expr.slice = _replace_expr_name(expr.slice, name, replacement)
+    return expr
 
 
 class FieldSorterExtension(Extension):
@@ -93,6 +116,29 @@ class FieldSorterExtension(Extension):
             ]
             visible.sort(key=lambda x: x.name)
             section.value = visible
+
+        # Qualify bare VariableType ExprName nodes so autorefs can link them.
+        # griffe_fieldz uses display_as_type() which strips the module prefix,
+        # producing ExprName('VariableType') with no parent context.  We fix
+        # this by setting parent to the laktory.typing griffe module so that
+        # canonical_path resolves to 'laktory.typing.VariableType'.
+        try:
+            typing_module = cls.package["typing"]
+        except (KeyError, AttributeError):
+            typing_module = None
+
+        if typing_module is not None:
+            qualified = ExprName("VariableType", parent=typing_module)
+            for section in cls.docstring.parsed:
+                if not isinstance(
+                    section, (DocstringSectionParameters, DocstringSectionAttributes)
+                ):
+                    continue
+                for item in section.value:
+                    if item.annotation is not None:
+                        item.annotation = _replace_expr_name(
+                            item.annotation, "VariableType", qualified
+                        )
 
         # Remove empty parameter/attribute sections
         cls.docstring.parsed = [
