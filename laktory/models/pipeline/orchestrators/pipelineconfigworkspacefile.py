@@ -30,7 +30,8 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         pl_name = ""
         try:
             pl = self.parent_pipeline
-            pl_name = pl.name
+            if pl is not None:
+                pl_name = pl.name
         except ImportError:
             # parent pipeline can't be access at initial import
             pass

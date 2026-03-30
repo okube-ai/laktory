@@ -6,6 +6,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.cluster.ClusterInitScript
+
+---
+
 ::: laktory.models.resources.databricks.cluster.ClusterInitScriptVolumes
 
 ---
@@ -14,7 +18,7 @@
 
 ---
 
-::: laktory.models.resources.databricks.cluster.ClusterInitScript
+::: laktory.models.resources.databricks.cluster.ClusterLibrary
 
 ---
 
@@ -26,15 +30,7 @@
 
 ---
 
-::: laktory.models.resources.databricks.cluster.ClusterInitScript
-
----
-
 ::: laktory.models.resources.databricks.cluster.ClusterLibraryPypi
-
----
-
-::: laktory.models.resources.databricks.cluster.ClusterLibrary
 
 ---
 

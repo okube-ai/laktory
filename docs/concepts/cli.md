@@ -1,5 +1,5 @@
 ??? "API Documentation"
-    [`laktory.cli.app`][laktory.cli.app]<br>
+    [`laktory.cli`](../api/cli.md)<br>
 
 When Laktory is pip installed, it also installs the Laktory CLI that can be invoked from the terminal.
 

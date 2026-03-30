@@ -1,1 +1,1 @@
-::: laktory.models.CustomWriter
+::: laktory.models.datasinks.CustomWriter

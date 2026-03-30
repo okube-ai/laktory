@@ -1,1 +1,1 @@
-::: laktory.models.DataFrameColumn
+::: laktory.models.dataframe.DataFrameColumn

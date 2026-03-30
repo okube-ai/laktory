@@ -57,8 +57,8 @@ pyspark = [
 dev = [
     "flit",
     "griffe_fieldz",
-    "mkdocs",
-    "mkdocs-material",
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9,<10",
     "mkdocs-video",
     "mkdocstrings[python]",
     "pandas",

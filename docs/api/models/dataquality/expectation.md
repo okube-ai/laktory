@@ -1,4 +1,4 @@
-::: laktory.models.DataQualityExpectation
+::: laktory.models.dataquality.DataQualityExpectation
 
 ---
 

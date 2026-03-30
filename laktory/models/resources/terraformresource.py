@@ -9,6 +9,8 @@ class TerraformResource(BaseResource):
     Parent class for all Laktory models deployable with Terraform IaC backend.
     """
 
+    __doc_hide_base__ = True  # hide this class's fields and methods from child docs
+
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
     # ----------------------------------------------------------------------- #

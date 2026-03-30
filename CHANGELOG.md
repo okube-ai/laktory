@@ -7,7 +7,8 @@
 * TableDataSink.exists() method.
 * Removed logs deduplication in Databricks notebooks
 ### Updated
-* n/a
+* Clarified documentation by removing some base class attributes from child classes [[#443](https://github.com/okube-ai/laktory/issues/443)]
+* Clarified documentation of `VariableType` [[#444](https://github.com/okube-ai/laktory/issues/444)]
 ### Breaking changes
 * n/a
 

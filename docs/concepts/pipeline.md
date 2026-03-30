@@ -1,5 +1,5 @@
 ??? "API Documentation"
-    [`laktory.models.Pipeline`][laktory.models.Pipeline]<br>
+    [`laktory.models.Pipeline`][laktory.models.pipeline.pipeline.Pipeline]<br>
 
 The Pipeline model is the cornerstone of Laktory, orchestrating the process of reading, transforming, and writing data. 
 It is built around the concept of the DataFrame—a two-dimensional, tabular data structure with labeled rows and 

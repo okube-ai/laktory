@@ -1,1 +1,1 @@
-::: laktory.models.DataFrameMethod
+::: laktory.models.dataframe.DataFrameMethod

@@ -2,6 +2,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.clusterpolicy.ClusterPolicyLibrary
+
+---
+
 ::: laktory.models.resources.databricks.clusterpolicy.ClusterPolicyLibraryCran
 
 ---
@@ -11,7 +15,3 @@
 ---
 
 ::: laktory.models.resources.databricks.clusterpolicy.ClusterPolicyLibraryPypi
-
----
-
-::: laktory.models.resources.databricks.clusterpolicy.ClusterPolicyLibrary

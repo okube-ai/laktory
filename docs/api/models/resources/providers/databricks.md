@@ -1,1 +1,1 @@
-::: laktory.models.resources.DatabricksProvider
+::: laktory.models.resources.providers.DatabricksProvider

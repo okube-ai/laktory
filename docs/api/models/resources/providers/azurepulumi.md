@@ -1,1 +1,1 @@
-::: laktory.models.resources.AzurePulumiProvider
+::: laktory.models.resources.providers.AzurePulumiProvider

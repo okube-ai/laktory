@@ -1,5 +1,5 @@
-::: laktory.models.CustomDataSource
+::: laktory.models.datasources.CustomDataSource
 
 ---
 
-::: laktory.models.CustomReader
+::: laktory.models.datasources.CustomReader

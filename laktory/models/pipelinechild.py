@@ -17,6 +17,8 @@ class PipelineChild(BaseChild):
     Pipeline Child Class
     """
 
+    __doc_hide_base__ = True  # hide this class's fields and methods from child docs
+
     # model_config = ConfigDict(validate_assignment=True)
     dataframe_backend_: DataFrameBackends = Field(
         None,

@@ -1,1 +1,1 @@
-::: laktory.models.HiveMetastoreDataSource
+::: laktory.models.datasources.HiveMetastoreDataSource

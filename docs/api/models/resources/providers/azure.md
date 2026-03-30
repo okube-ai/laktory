@@ -1,1 +1,1 @@
-::: laktory.models.resources.AzureProvider
+::: laktory.models.resources.providers.AzureProvider

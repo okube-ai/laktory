@@ -1,1 +1,1 @@
-::: laktory.models.DataFrameExpr
+::: laktory.models.dataframe.DataFrameExpr
