@@ -1,1 +1,1 @@
-::: models.resources.databricks.PythonPackage
+::: laktory.models.resources.databricks.PythonPackage

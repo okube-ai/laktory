@@ -1,4 +1,4 @@
-::: models.resources.databricks.QualityMonitor
+::: laktory.models.resources.databricks.QualityMonitor
 
 ---
 

@@ -1,4 +1,4 @@
-::: models.resources.databricks.Job
+::: laktory.models.resources.databricks.Job
 
 ---
 

@@ -1,1 +1,1 @@
-::: models.resources.databricks.AccessControl
+::: laktory.models.resources.databricks.AccessControl

@@ -1,4 +1,4 @@
-::: models.resources.databricks.VectorSearchIndex
+::: laktory.models.resources.databricks.VectorSearchIndex
 
 ---
 

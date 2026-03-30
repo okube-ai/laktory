@@ -1,4 +1,4 @@
-::: models.resources.databricks.NotificationDestination
+::: laktory.models.resources.databricks.NotificationDestination
 
 ---
 

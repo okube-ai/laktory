@@ -1,1 +1,1 @@
-::: models.pipeline.PipelineNode
+::: laktory.models.pipeline.PipelineNode

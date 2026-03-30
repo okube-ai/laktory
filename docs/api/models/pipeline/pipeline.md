@@ -1,1 +1,1 @@
-::: models.resources.databricks.Pipeline
+::: laktory.models.pipeline.pipeline.Pipeline

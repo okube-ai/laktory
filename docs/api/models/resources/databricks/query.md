@@ -1,4 +1,4 @@
-::: models.resources.databricks.Query
+::: laktory.models.resources.databricks.Query
 
 ---
 

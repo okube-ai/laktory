@@ -1,1 +1,1 @@
-::: models.resources.databricks.MetastoreAssignment
+::: laktory.models.resources.databricks.MetastoreAssignment

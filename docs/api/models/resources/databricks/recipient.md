@@ -1,4 +1,4 @@
-::: models.resources.databricks.Recipient
+::: laktory.models.resources.databricks.Recipient
 
 ---
 

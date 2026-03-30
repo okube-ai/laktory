@@ -1,1 +1,1 @@
-::: models.resources.databricks.MwsNccBinding
+::: laktory.models.resources.databricks.MwsNccBinding

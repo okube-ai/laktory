@@ -1,1 +1,1 @@
-::: models.resources.databricks.WorkspaceBinding
+::: laktory.models.resources.databricks.WorkspaceBinding

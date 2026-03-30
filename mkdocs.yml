@@ -200,8 +200,22 @@ nav:
       - DataQuality:
         - DataQualityCheck: api/models/dataquality/check.md
         - DataQualityExpectation: api/models/dataquality/expectation.md
+      - Grants:
+        - CatalogGrant: api/models/grants/cataloggrant.md
+        - ConnectionGrant: api/models/grants/connectiongrant.md
+        - ExternalLocationGrant: api/models/grants/externallocationgrant.md
+        - FunctionGrant: api/models/grants/functiongrant.md
+        - MetastoreGrant: api/models/grants/metastoregrant.md
+        - RegisteredModelGrant: api/models/grants/registeredmodelgrant.md
+        - SchemaGrant: api/models/grants/schemagrant.md
+        - ShareGrant: api/models/grants/sharegrant.md
+        - StorageCredentialGrant: api/models/grants/storagecredentialgrant.md
+        - TableGrant: api/models/grants/tablegrant.md
+        - ViewGrant: api/models/grants/viewgrant.md
+        - VolumeGrant: api/models/grants/volumegrant.md
       - Pipeline:
         - Pipeline: api/models/pipeline/pipeline.md
+        - PipelineChild: api/models/pipeline/pipelinechild.md
         - PipelineNode: api/models/pipeline/pipelinenode.md
         - PipelineTask: api/models/pipeline/pipelinetask.md
         - PipelineExecutionPlan: api/models/pipeline/pipelineexecutionplan.md
@@ -228,7 +242,6 @@ nav:
           - api/models/resources/databricks/directory.md
           - Declarative Pipeline:
             - api/models/resources/databricks/pipeline.md
-            - api/models/resources/databricks/pipeline_cluster.md
           - ExternalLocation: api/models/resources/databricks/externallocation.md
           - api/models/resources/databricks/grant.md
           - api/models/resources/databricks/grants.md

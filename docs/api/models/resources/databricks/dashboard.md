@@ -1,1 +1,1 @@
-::: models.resources.databricks.Dashboard
+::: laktory.models.resources.databricks.Dashboard

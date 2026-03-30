@@ -1,4 +1,4 @@
-::: models.resources.databricks.StorageCredential
+::: laktory.models.resources.databricks.StorageCredential
 
 ---
 

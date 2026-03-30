@@ -1,4 +1,4 @@
-::: models.resources.databricks.Share
+::: laktory.models.resources.databricks.Share
 
 ---
 

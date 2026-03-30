@@ -1,1 +1,1 @@
-::: models.resources.databricks.ServicePrincipalRole
+::: laktory.models.resources.databricks.ServicePrincipalRole

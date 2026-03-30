@@ -1,4 +1,4 @@
-::: models.resources.databricks.MLflowWebhook
+::: laktory.models.resources.databricks.MLflowWebhook
 
 ---
 

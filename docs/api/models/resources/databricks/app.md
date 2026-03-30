@@ -1,4 +1,4 @@
-::: models.resources.databricks.App
+::: laktory.models.resources.databricks.App
 
 ---
 

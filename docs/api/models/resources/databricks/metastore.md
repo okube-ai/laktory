@@ -1,4 +1,4 @@
-::: models.resources.databricks.Metastore
+::: laktory.models.resources.databricks.Metastore
 
 ---
 

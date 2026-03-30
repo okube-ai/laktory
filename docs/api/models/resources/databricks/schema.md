@@ -1,1 +1,1 @@
-::: models.resources.databricks.Schema
+::: laktory.models.resources.databricks.Schema

@@ -1,1 +1,1 @@
-::: models.resources.databricks.VectorSearchEndpoint
+::: laktory.models.resources.databricks.VectorSearchEndpoint

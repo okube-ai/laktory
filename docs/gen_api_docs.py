@@ -38,14 +38,12 @@ DOCS_MODELS = ROOT / "docs" / "api" / "models"
 # ---------------------------------------------------------------------------
 SKIP_CLASSES = {
     "BaseChild",
-    "PipelineChild",
     "ModelMetaclass",
 }
 
 # Python source files whose classes are intentionally undocumented
 SKIP_FILES = {
     "basechild.py",
-    "pipelinechild.py",
 }
 
 # Directories (relative to MODELS_SRC) whose files are intentionally undocumented
@@ -58,6 +56,7 @@ SKIP_DIRS = {
 # Step 1 – Collect every class already referenced via a ::: directive
 # ---------------------------------------------------------------------------
 
+
 def _collect_documented_classes() -> dict[str, Path]:
     """Return {short_class_name: md_file} for every ::: directive found."""
     documented: dict[str, Path] = {}
@@ -66,7 +65,7 @@ def _collect_documented_classes() -> dict[str, Path]:
             m = re.match(r"^:::\s+([\w.]+)", line)
             if m:
                 full = m.group(1)
-                short = full.rsplit(".", 1)[-1]   # just the class name
+                short = full.rsplit(".", 1)[-1]  # just the class name
                 documented[short] = md
     return documented
 
@@ -74,6 +73,7 @@ def _collect_documented_classes() -> dict[str, Path]:
 # ---------------------------------------------------------------------------
 # Step 2 – Build canonical import path map from __init__.py files
 # ---------------------------------------------------------------------------
+
 
 def _build_import_map() -> dict[str, str]:
     """Return {ClassName: shortest_importable_dotted_path}."""
@@ -99,6 +99,7 @@ def _build_import_map() -> dict[str, str]:
 # ---------------------------------------------------------------------------
 # Step 3 – Discover classes in each Python source file
 # ---------------------------------------------------------------------------
+
 
 def _classes_in_file(py_file: Path) -> list[str]:
     try:
@@ -128,6 +129,7 @@ def _primary_class(classes: list[str], stem: str) -> str | None:
 # Step 4 – Canonical import path for a class
 # ---------------------------------------------------------------------------
 
+
 def _import_path(class_name: str, py_file: Path, import_map: dict[str, str]) -> str:
     if class_name in import_map:
         return import_map[class_name]
@@ -139,6 +141,7 @@ def _import_path(class_name: str, py_file: Path, import_map: dict[str, str]) -> 
 # ---------------------------------------------------------------------------
 # Step 5 – Build records for every model source file
 # ---------------------------------------------------------------------------
+
 
 def _discover_model_files(
     documented: dict[str, Path],
@@ -169,17 +172,21 @@ def _discover_model_files(
         # Expected doc path mirrors the source directory structure
         expected_doc = DOCS_MODELS / rel.with_suffix(".md")
         # If already documented in a different file, record that path instead
-        actual_doc = documented.get(primary, expected_doc) if is_documented else expected_doc
+        actual_doc = (
+            documented.get(primary, expected_doc) if is_documented else expected_doc
+        )
 
-        records.append(dict(
-            py_file=py_file,
-            rel=rel,
-            classes=classes,
-            primary=primary,
-            is_documented=is_documented,
-            doc_path=actual_doc,
-            expected_doc=expected_doc,
-        ))
+        records.append(
+            dict(
+                py_file=py_file,
+                rel=rel,
+                classes=classes,
+                primary=primary,
+                is_documented=is_documented,
+                doc_path=actual_doc,
+                expected_doc=expected_doc,
+            )
+        )
 
     return records
 
@@ -188,7 +195,10 @@ def _discover_model_files(
 # Step 6 – Generate .md content
 # ---------------------------------------------------------------------------
 
-def _md_content(classes: list[str], primary: str | None, py_file: Path, import_map: dict[str, str]) -> str:
+
+def _md_content(
+    classes: list[str], primary: str | None, py_file: Path, import_map: dict[str, str]
+) -> str:
     ordered = sorted(classes, key=lambda c: (0 if c == primary else 1, c))
     blocks = [f"::: {_import_path(cls, py_file, import_map)}" for cls in ordered]
     return "\n\n---\n\n".join(blocks) + "\n"
@@ -197,6 +207,7 @@ def _md_content(classes: list[str], primary: str | None, py_file: Path, import_m
 # ---------------------------------------------------------------------------
 # Step 7 – Nav YAML
 # ---------------------------------------------------------------------------
+
 
 def _nav_label(cls: str) -> str:
     return re.sub(r"(?<=[a-z])(?=[A-Z])", " ", cls)
@@ -213,7 +224,9 @@ def _build_nav(records: list[dict]) -> str:
         if top:
             lines.append(f"        - {top.capitalize()}:")
         for rec in sorted(groups[top], key=lambda r: r["rel"]):
-            label = _nav_label(rec["primary"]) if rec["primary"] else rec["py_file"].stem
+            label = (
+                _nav_label(rec["primary"]) if rec["primary"] else rec["py_file"].stem
+            )
             rel_doc = rec["expected_doc"].relative_to(ROOT / "docs")
             lines.append(f"          - {label}: {rel_doc}")
     return "\n".join(lines)
@@ -223,14 +236,16 @@ def _build_nav(records: list[dict]) -> str:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("--write", action="store_true", help="Write missing .md files")
     parser.add_argument(
-        "--nav-all", action="store_true",
-        help="Print nav YAML for ALL model files (not just missing ones)"
+        "--nav-all",
+        action="store_true",
+        help="Print nav YAML for ALL model files (not just missing ones)",
     )
     args = parser.parse_args()
 
@@ -252,16 +267,21 @@ def main() -> None:
         for rec in missing:
             extra = (
                 f"  [{', '.join(c for c in rec['classes'] if c != rec['primary'])}]"
-                if len(rec["classes"]) > 1 else ""
+                if len(rec["classes"]) > 1
+                else ""
             )
-            print(f"  {rec['expected_doc'].relative_to(ROOT)}  ({rec['primary']}{extra})")
+            print(
+                f"  {rec['expected_doc'].relative_to(ROOT)}  ({rec['primary']}{extra})"
+            )
         print()
 
     # Write ------------------------------------------------------------------
     if args.write:
         written = 0
         for rec in missing:
-            content = _md_content(rec["classes"], rec["primary"], rec["py_file"], import_map)
+            content = _md_content(
+                rec["classes"], rec["primary"], rec["py_file"], import_map
+            )
             rec["expected_doc"].parent.mkdir(parents=True, exist_ok=True)
             rec["expected_doc"].write_text(content)
             written += 1

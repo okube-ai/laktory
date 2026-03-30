@@ -1,4 +1,4 @@
-::: models.resources.databricks.Cluster
+::: laktory.models.resources.databricks.Cluster
 
 ---
 

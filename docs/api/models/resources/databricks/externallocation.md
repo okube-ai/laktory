@@ -1,4 +1,4 @@
-::: models.resources.databricks.ExternalLocation
+::: laktory.models.resources.databricks.ExternalLocation
 
 ---
 

@@ -1,4 +1,4 @@
-::: models.resources.databricks.Alert
+::: laktory.models.resources.databricks.Alert
 
 ---
 

@@ -1,4 +1,4 @@
-::: models.resources.databricks.SecretScope
+::: laktory.models.resources.databricks.SecretScope
 
 ---
 

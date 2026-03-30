@@ -1,4 +1,4 @@
-::: models.resources.databricks.ClusterPolicy
+::: laktory.models.resources.databricks.ClusterPolicy
 
 ---
 

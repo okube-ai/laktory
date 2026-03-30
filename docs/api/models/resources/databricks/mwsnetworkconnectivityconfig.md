@@ -1,4 +1,4 @@
-::: models.resources.databricks.MwsNetworkConnectivityConfig
+::: laktory.models.resources.databricks.MwsNetworkConnectivityConfig
 
 ---
 

@@ -1,4 +1,4 @@
-::: models.pipeline.AirflowOrchestrator
+::: laktory.models.pipeline.AirflowOrchestrator
 
 ---
 

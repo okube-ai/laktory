@@ -1,4 +1,4 @@
-::: models.resources.databricks.Warehouse
+::: laktory.models.resources.databricks.Warehouse
 
 ---
 
