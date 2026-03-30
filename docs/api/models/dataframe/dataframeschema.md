@@ -1,1 +1,1 @@
-::: laktory.models.DataFrameSchema
+::: laktory.models.dataframe.DataFrameSchema

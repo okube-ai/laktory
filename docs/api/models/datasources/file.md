@@ -1,1 +1,1 @@
-::: laktory.models.FileDataSource
+::: laktory.models.datasources.FileDataSource

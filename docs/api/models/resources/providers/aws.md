@@ -1,1 +1,1 @@
-::: laktory.models.resources.AWSProvider
+::: laktory.models.resources.providers.AWSProvider

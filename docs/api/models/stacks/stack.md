@@ -1,8 +1,8 @@
-::: laktory.models.Stack
+::: laktory.models.stacks.Stack
 
 ---
 
-::: laktory.models.StackResources
+::: laktory.models.stacks.StackResources
 
 ---
 

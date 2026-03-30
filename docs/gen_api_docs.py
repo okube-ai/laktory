@@ -76,12 +76,18 @@ def _collect_documented_classes() -> dict[str, Path]:
 
 
 def _build_import_map() -> dict[str, str]:
-    """Return {ClassName: shortest_importable_dotted_path}."""
+    """Return {ClassName: shortest_griffe-resolvable_dotted_path}.
+
+    Scans ``__init__.py`` files shallowest-first so that a sub-package that
+    explicitly re-exports a class (e.g. ``models.datasinks.TableDataSink``)
+    wins over the deeper module path.  Wildcard imports (``import *``) are
+    intentionally skipped because griffe cannot follow them statically.
+    """
     import_map: dict[str, str] = {}
 
-    for init in sorted(MODELS_SRC.rglob("__init__.py"), key=lambda p: -len(p.parts)):
+    for init in sorted(MODELS_SRC.rglob("__init__.py"), key=lambda p: len(p.parts)):
         rel = init.parent.relative_to(ROOT / "laktory")
-        pkg = str(rel).replace("/", ".")
+        pkg = "laktory." + str(rel).replace("/", ".")
         try:
             tree = ast.parse(init.read_text())
         except SyntaxError:
@@ -89,6 +95,8 @@ def _build_import_map() -> dict[str, str]:
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
                 for alias in node.names:
+                    if alias.name == "*":
+                        continue  # wildcards are not statically resolvable by griffe
                     name = alias.asname or alias.name
                     if name and name[0].isupper() and name not in import_map:
                         import_map[name] = f"{pkg}.{name}"

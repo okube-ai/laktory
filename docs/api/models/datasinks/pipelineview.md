@@ -1,1 +1,1 @@
-::: laktory.models.PipelineViewDataSink
+::: laktory.models.datasinks.PipelineViewDataSink

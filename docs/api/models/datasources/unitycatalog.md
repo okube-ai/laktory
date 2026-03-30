@@ -1,1 +1,1 @@
-::: laktory.models.UnityCatalogDataSource
+::: laktory.models.datasources.UnityCatalogDataSource

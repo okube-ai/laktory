@@ -1,1 +1,1 @@
-::: laktory.models.DataSinkMergeCDCOptions
+::: laktory.models.datasinks.DataSinkMergeCDCOptions

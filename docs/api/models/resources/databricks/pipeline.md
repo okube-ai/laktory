@@ -1,4 +1,4 @@
-::: laktory.models.resources.databricks.Pipeline
+::: laktory.models.resources.databricks.pipeline.Pipeline
 
 ---
 

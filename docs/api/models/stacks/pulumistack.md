@@ -1,1 +1,1 @@
-::: laktory.models.PulumiStack
+::: laktory.models.stacks.PulumiStack
