@@ -1,2 +1,1 @@
-::: laktory.models.resources.databricks.OboToken
-
+::: models.resources.databricks.OboToken

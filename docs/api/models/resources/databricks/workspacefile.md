@@ -1,1 +1,1 @@
-::: laktory.models.resources.databricks.WorkspaceFile
+::: models.resources.databricks.WorkspaceFile

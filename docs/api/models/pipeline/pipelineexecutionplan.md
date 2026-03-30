@@ -1,1 +1,1 @@
-::: laktory.models.PipelineExecutionPlan
+::: models.pipeline.PipelineExecutionPlan

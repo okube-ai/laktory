@@ -1,1 +1,1 @@
-::: laktory.models.resources.databricks.Permissions
+::: models.resources.databricks.Permissions

@@ -1,5 +1,5 @@
-::: laktory.models.resources.databricks.User
+::: models.resources.databricks.User
 
---
+---
 
 ::: laktory.models.resources.databricks.user.UserLookup

@@ -1,1 +1,1 @@
-::: laktory.models.PipelineTask
+::: models.pipeline.PipelineTask

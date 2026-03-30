@@ -1,1 +1,1 @@
-::: laktory.models.resources.databricks.MLflowExperiment
+::: models.resources.databricks.MLflowExperiment

@@ -1,4 +1,8 @@
-::: laktory.models.resources.databricks.vectorsearchindex.VectorSearchIndex
+::: models.resources.databricks.VectorSearchIndex
+
+---
+
+::: laktory.models.resources.databricks.vectorsearchindex.VectorSearchIndexDeltaSyncIndexSpec
 
 ---
 
@@ -7,10 +11,6 @@
 ---
 
 ::: laktory.models.resources.databricks.vectorsearchindex.VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn
-
----
-
-::: laktory.models.resources.databricks.vectorsearchindex.VectorSearchIndexDeltaSyncIndexSpec
 
 ---
 

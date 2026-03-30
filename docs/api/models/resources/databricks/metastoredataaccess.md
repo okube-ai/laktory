@@ -1,1 +1,1 @@
-::: laktory.models.resources.databricks.MetastoreDataAccess
+::: models.resources.databricks.MetastoreDataAccess

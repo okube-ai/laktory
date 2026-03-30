@@ -1,4 +1,4 @@
-::: laktory.models.resources.databricks.Grants
+::: models.resources.databricks.Grants
 
 ---
 

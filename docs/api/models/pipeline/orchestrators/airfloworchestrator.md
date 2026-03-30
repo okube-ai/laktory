@@ -1,5 +1,5 @@
-::: laktory.models.pipeline.AirflowOrchestrator
+::: models.pipeline.AirflowOrchestrator
 
---
+---
 
 ::: laktory.models.pipeline.orchestrators.airfloworchestrator.CronSchedule

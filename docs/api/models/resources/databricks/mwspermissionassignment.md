@@ -1,1 +1,1 @@
-::: laktory.models.resources.databricks.MwsPermissionAssignment
+::: models.resources.databricks.MwsPermissionAssignment

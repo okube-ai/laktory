@@ -1,11 +1,9 @@
-::: laktory.models.resources.databricks.SecretScope
-
----
-
-::: laktory.models.resources.databricks.secretscope.SecretScopePermission
+::: models.resources.databricks.SecretScope
 
 ---
 
 ::: laktory.models.resources.databricks.secretscope.SecretScopeKeyvaultMetadata
 
 ---
+
+::: laktory.models.resources.databricks.secretscope.SecretScopePermission

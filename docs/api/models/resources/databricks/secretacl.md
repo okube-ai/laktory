@@ -1,1 +1,1 @@
-::: laktory.models.resources.databricks.SecretAcl
+::: models.resources.databricks.SecretAcl

@@ -1,4 +1,4 @@
-::: laktory.models.resources.databricks.StorageCredential
+::: models.resources.databricks.StorageCredential
 
 ---
 
@@ -11,6 +11,10 @@
 ---
 
 ::: laktory.models.resources.databricks.storagecredential.AzureServicePrincipal
+
+---
+
+::: laktory.models.resources.databricks.storagecredential.CloudflareApiToken
 
 ---
 

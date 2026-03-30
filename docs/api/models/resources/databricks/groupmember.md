@@ -1,1 +1,1 @@
-::: laktory.models.resources.databricks.GroupMember
+::: models.resources.databricks.GroupMember

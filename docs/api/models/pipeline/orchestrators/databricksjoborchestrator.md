@@ -1,1 +1,1 @@
-::: laktory.models.pipeline.orchestrators.databricksjoborchestrator.DatabricksJobOrchestrator
+::: models.pipeline.DatabricksJobOrchestrator

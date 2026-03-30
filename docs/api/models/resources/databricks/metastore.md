@@ -1,5 +1,5 @@
-::: laktory.models.resources.databricks.Metastore
+::: models.resources.databricks.Metastore
 
---
+---
 
 ::: laktory.models.resources.databricks.metastore.MetastoreLookup

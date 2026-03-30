@@ -1,1 +1,1 @@
-::: laktory.models.resources.databricks.Volume
+::: models.resources.databricks.Volume

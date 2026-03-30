@@ -1,4 +1,8 @@
-::: laktory.models.resources.databricks.ClusterPolicy
+::: models.resources.databricks.ClusterPolicy
+
+---
+
+::: laktory.models.resources.databricks.clusterpolicy.ClusterPolicyLibrary
 
 ---
 
@@ -11,7 +15,3 @@
 ---
 
 ::: laktory.models.resources.databricks.clusterpolicy.ClusterPolicyLibraryPypi
-
----
-
-::: laktory.models.resources.databricks.clusterpolicy.ClusterPolicyLibrary

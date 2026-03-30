@@ -1,1 +1,1 @@
-::: laktory.models.resources.databricks.UserRole
+::: models.resources.databricks.UserRole
