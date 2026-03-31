@@ -619,7 +619,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     # Data Sources                                                            #
     # ----------------------------------------------------------------------- #
 
-    def as_source(self, as_stream=None):
+    def as_source(self, as_stream=None, reader_kwargs=None, reader_methods=None):
         raise NotImplementedError()
 
     def read(self, as_stream=None):

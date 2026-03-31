@@ -263,7 +263,9 @@ class TableDataSink(BaseDataSink):
     # Source                                                                  #
     # ----------------------------------------------------------------------- #
 
-    def as_source(self, as_stream=None) -> TableDataSource:
+    def as_source(
+        self, as_stream=None, reader_kwargs=None, reader_methods=None
+    ) -> TableDataSource:
         """
         Generate a table data source with the same properties as the sink.
 
@@ -271,6 +273,10 @@ class TableDataSink(BaseDataSink):
         ----------
         as_stream:
             If `True`, sink will be read as stream.
+        reader_kwargs:
+            Keyword arguments passed to the dataframe backend reader.
+        reader_methods:
+            DataFrame backend reader methods.
 
         Returns
         -------
@@ -287,6 +293,10 @@ class TableDataSink(BaseDataSink):
 
         if as_stream:
             source.as_stream = as_stream
+        if reader_kwargs:
+            source.reader_kwargs.update(reader_kwargs)
+        if reader_methods:
+            source.reader_methods.extend(reader_methods)
 
         if self.dataframe_backend_:
             source.dataframe_backend_ = self.dataframe_backend_
