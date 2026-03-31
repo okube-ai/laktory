@@ -6,6 +6,7 @@
 ### Fixed
 * TableDataSink.exists() method.
 * Removed logs deduplication in Databricks notebooks
+* Serialization roundtrip when `schema_definition` of `BaseDataSink` is used
 ### Updated
 * Clarified documentation by removing some base class attributes from child classes [[#443](https://github.com/okube-ai/laktory/issues/443)]
 * Clarified documentation of `VariableType` [[#444](https://github.com/okube-ai/laktory/issues/444)]
