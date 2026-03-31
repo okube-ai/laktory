@@ -74,7 +74,7 @@ class DataFrameSchema(BaseModel):
         if not isinstance(df, (nw.LazyFrame, nw.DataFrame)):
             df = df.from_native(df)
 
-        obj = cls.from_narwhals(df.schema)
+        obj = cls.from_narwhals(df.collect_schema())
         obj._native_schema = df.to_native().schema
 
         return obj

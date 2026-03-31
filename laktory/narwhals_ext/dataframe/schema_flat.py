@@ -70,4 +70,4 @@ def schema_flat(self) -> list[str]:
 
         return field_names
 
-    return get_fields(self._df.schema)
+    return get_fields(self._df.collect_schema())

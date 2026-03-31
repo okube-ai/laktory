@@ -149,7 +149,7 @@ def test_signature(df0):
 def test_union(df0):
     df = df0.laktory.union(df0)
     assert df.shape[0] == df0.shape[0] * 2
-    assert df.schema == df0.schema
+    assert df.collect_schema() == df0.collect_schema()
 
 
 def test_window_filter():
