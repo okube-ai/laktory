@@ -390,9 +390,22 @@ class BaseDataSink(BaseModel, PipelineChild):
                     raise ValueError(
                         f"Checkpoint location not specified for sink '{self._id}'"
                     )
+                # Build context before the foreachBatch lambda so that _parent
+                # references are captured while intact. Inside foreachBatch on
+                # Databricks, the lambda closure is serialized via cloudpickle
+                # and _parent attributes may not survive the round-trip.
+                from laktory.models.laktorycontext import LaktoryContext
+
+                _context = LaktoryContext(
+                    node=self.parent_pipeline_node,
+                    pipeline=self.parent_pipeline,
+                    sink=self,
+                )
                 query = (
                     df_native.writeStream.foreachBatch(
-                        lambda batch_df, _: self.custom_writer.execute(batch_df)
+                        lambda batch_df, _: self.custom_writer.execute(
+                            batch_df, context=_context
+                        )
                     )
                     .trigger(availableNow=True)
                     .options(checkpointLocation=self.checkpoint_path)

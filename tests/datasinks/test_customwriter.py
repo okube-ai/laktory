@@ -170,6 +170,12 @@ _captured_context: LaktoryContext = None
 def _capture_context_write(df, laktory_context: LaktoryContext = None) -> None:
     global _captured_context
     _captured_context = laktory_context
+
+    print(laktory_context)
+    print("node:", type(laktory_context.node))
+    print("source:", type(laktory_context.node.source))
+    print("sink:", type(laktory_context.node.primary_sink))
+
     df.to_native().write.format("DELTA").mode("APPEND").save(laktory_context.sink.path)
 
 
@@ -190,6 +196,32 @@ def test_laktory_context(tmp_path):
     assert isinstance(_captured_context, LaktoryContext)
     assert _captured_context.sink is sink
     assert _captured_context.node is None  # standalone sink, no pipeline node
+    assert _captured_context.pipeline is None
+
+
+def test_laktory_context_with_pipeline_node(tmp_path):
+    global _captured_context
+    target_path = str(tmp_path / "target")
+
+    node = models.PipelineNode(
+        name="test_node",
+        sinks=[
+            models.FileDataSink(
+                path=target_path,
+                format="DELTA",
+                custom_writer={
+                    "func_name": "tests.datasinks.test_customwriter._capture_context_write",
+                },
+                dataframe_api="NARWHALS",
+            )
+        ],
+    )
+    sink = node.sinks[0]
+    sink.write(_build_source_df())
+
+    assert isinstance(_captured_context, LaktoryContext)
+    assert _captured_context.sink is sink
+    assert _captured_context.node is node
     assert _captured_context.pipeline is None
 
 
@@ -285,3 +317,35 @@ def test_stream(tmp_path):
     result = spark.read.format("DELTA").load(target_path).toPandas()
     assert len(result) == 3
     assert set(result["symbol"].tolist()) == {"S0", "S1", "S2"}
+
+
+def test_laktory_context_stream_with_pipeline_node(tmp_path):
+    global _captured_context
+    source_path = str(tmp_path / "source")
+    target_path = str(tmp_path / "target")
+    checkpoint_path = str(tmp_path / "checkpoint")
+
+    _build_source_df().write.format("DELTA").mode("overwrite").save(source_path)
+    streaming_df = spark.readStream.format("DELTA").load(source_path)
+
+    node = models.PipelineNode(
+        name="test_node",
+        sinks=[
+            models.FileDataSink(
+                path=target_path,
+                format="DELTA",
+                checkpoint_path=checkpoint_path,
+                custom_writer={
+                    "func_name": "tests.datasinks.test_customwriter._capture_context_write",
+                },
+                dataframe_api="NARWHALS",
+            )
+        ],
+    )
+    sink = node.sinks[0]
+    sink.write(streaming_df)
+
+    assert isinstance(_captured_context, LaktoryContext)
+    assert _captured_context.sink is sink
+    assert _captured_context.node is node
+    assert _captured_context.pipeline is None
