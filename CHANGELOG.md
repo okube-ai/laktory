@@ -2,15 +2,13 @@
 
 ## [0.9.4] - Unreleased
 ### Added
-* n/a
+* `reader_kwargs` attribute to `PipelineNodeDataSource`
 ### Fixed
 * TableDataSink.exists() method.
 * Removed logs deduplication in Databricks notebooks
 ### Updated
 * Clarified documentation by removing some base class attributes from child classes [[#443](https://github.com/okube-ai/laktory/issues/443)]
 * Clarified documentation of `VariableType` [[#444](https://github.com/okube-ai/laktory/issues/444)]
-### Breaking changes
-* n/a
 
 ## [0.9.3] - 2026-03-27
 ### Fixed
