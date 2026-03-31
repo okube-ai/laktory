@@ -171,11 +171,6 @@ def _capture_context_write(df, laktory_context: LaktoryContext = None) -> None:
     global _captured_context
     _captured_context = laktory_context
 
-    print(laktory_context)
-    print("node:", type(laktory_context.node))
-    print("source:", type(laktory_context.node.source))
-    print("sink:", type(laktory_context.node.primary_sink))
-
     df.to_native().write.format("DELTA").mode("APPEND").save(laktory_context.sink.path)
 
 

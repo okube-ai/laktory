@@ -283,7 +283,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         dataframe_backend = None
         if self.schema_definition:
             schema = self.schema_definition
-        if df is not None:
+        elif df is not None:
             schema = DataFrameSchema.from_df(df)
             dataframe_backend = DataFrameBackends.from_df(df)
 
