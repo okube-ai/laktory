@@ -622,7 +622,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     def as_source(self, as_stream=None, reader_kwargs=None, reader_methods=None):
         raise NotImplementedError()
 
-    def read(self, as_stream=None):
+    def read(self, as_stream=None, reader_kwargs=None, reader_methods=None):
         """
         Read dataframe from sink.
 
@@ -630,10 +630,18 @@ class BaseDataSink(BaseModel, PipelineChild):
         ----------
         as_stream:
             If `True`, dataframe read as stream.
+        reader_kwargs:
+            Keyword arguments passed to the dataframe backend reader.
+        reader_methods:
+            DataFrame backend reader methods.
 
         Returns
         -------
         AnyFrame
             DataFrame
         """
-        return self.as_source(as_stream=as_stream).read()
+        return self.as_source(
+            as_stream=as_stream,
+            reader_kwargs=reader_kwargs,
+            reader_methods=reader_methods,
+        ).read()

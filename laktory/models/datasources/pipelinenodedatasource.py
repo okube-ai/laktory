@@ -143,12 +143,11 @@ class PipelineNodeDataSource(BaseDataSource):
         elif stream_to_batch or self.node.output_df is None:
             if self.node.has_sinks:
                 logger.info(f"Reading pipeline node {self._id} from primary sink")
-                source = self.node.primary_sink.as_source(
+                df = self.node.primary_sink.read(
                     as_stream=self.as_stream,
                     reader_kwargs=self.reader_kwargs,
                     reader_methods=self.reader_methods,
                 )
-                df = source.read()
             else:
                 logger.info("Executing parent pipeline node")
                 self.node.execute()
@@ -172,12 +171,11 @@ class PipelineNodeDataSource(BaseDataSource):
         # Read from node sink
         elif self.node.primary_sink:
             logger.info(f"Reading pipeline node {self._id} from sink")
-            source = self.node.primary_sink.as_source(
+            df = self.node.primary_sink.read(
                 as_stream=self.as_stream,
                 reader_kwargs=self.reader_kwargs,
                 reader_methods=self.reader_methods,
             )
-            df = source.read()
 
         # Execute upstream node
         else:
