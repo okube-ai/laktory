@@ -277,8 +277,6 @@ class BaseDataSink(BaseModel, PipelineChild):
                 f"DataFrame provided is {dataframe_backend} and source has been configure with {self.dataframe_backend_} backend."
             )
         self.dataframe_backend_ = dataframe_backend
-        if self.schema_definition:
-            self.schema_definition.dataframe_backend_ = dataframe_backend
 
     def _get_create_schema(self, df):
         schema = None
