@@ -97,7 +97,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     )
     schema_definition: DataFrameSchema = Field(
         None,
-        validation_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_definition"),
         description="Explicit table schema used when creating the table. If not set, schema is inferred from the transformer output DataFrame.",
     )
     writer_kwargs: dict[str, Any] = Field(
@@ -277,15 +277,13 @@ class BaseDataSink(BaseModel, PipelineChild):
                 f"DataFrame provided is {dataframe_backend} and source has been configure with {self.dataframe_backend_} backend."
             )
         self.dataframe_backend_ = dataframe_backend
-        if self.schema_definition:
-            self.schema_definition.dataframe_backend_ = dataframe_backend
 
     def _get_create_schema(self, df):
         schema = None
         dataframe_backend = None
         if self.schema_definition:
             schema = self.schema_definition
-        if df is not None:
+        elif df is not None:
             schema = DataFrameSchema.from_df(df)
             dataframe_backend = DataFrameBackends.from_df(df)
 
@@ -392,9 +390,22 @@ class BaseDataSink(BaseModel, PipelineChild):
                     raise ValueError(
                         f"Checkpoint location not specified for sink '{self._id}'"
                     )
+                # Build context before the foreachBatch lambda so that _parent
+                # references are captured while intact. Inside foreachBatch on
+                # Databricks, the lambda closure is serialized via cloudpickle
+                # and _parent attributes may not survive the round-trip.
+                from laktory.models.laktorycontext import LaktoryContext
+
+                _context = LaktoryContext(
+                    node=self.parent_pipeline_node,
+                    pipeline=self.parent_pipeline,
+                    sink=self,
+                )
                 query = (
                     df_native.writeStream.foreachBatch(
-                        lambda batch_df, _: self.custom_writer.execute(batch_df)
+                        lambda batch_df, _: self.custom_writer.execute(
+                            batch_df, context=_context
+                        )
                     )
                     .trigger(availableNow=True)
                     .options(checkpointLocation=self.checkpoint_path)
@@ -619,10 +630,10 @@ class BaseDataSink(BaseModel, PipelineChild):
     # Data Sources                                                            #
     # ----------------------------------------------------------------------- #
 
-    def as_source(self, as_stream=None):
+    def as_source(self, as_stream=None, reader_kwargs=None, reader_methods=None):
         raise NotImplementedError()
 
-    def read(self, as_stream=None):
+    def read(self, as_stream=None, reader_kwargs=None, reader_methods=None):
         """
         Read dataframe from sink.
 
@@ -630,10 +641,18 @@ class BaseDataSink(BaseModel, PipelineChild):
         ----------
         as_stream:
             If `True`, dataframe read as stream.
+        reader_kwargs:
+            Keyword arguments passed to the dataframe backend reader.
+        reader_methods:
+            DataFrame backend reader methods.
 
         Returns
         -------
         AnyFrame
             DataFrame
         """
-        return self.as_source(as_stream=as_stream).read()
+        return self.as_source(
+            as_stream=as_stream,
+            reader_kwargs=reader_kwargs,
+            reader_methods=reader_methods,
+        ).read()

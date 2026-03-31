@@ -2,19 +2,20 @@
 
 ## [0.9.4] - Unreleased
 ### Added
-* n/a
+* `reader_kwargs` attribute to `PipelineNodeDataSource`
 ### Fixed
 * TableDataSink.exists() method.
 * Removed logs deduplication in Databricks notebooks
+* Serialization roundtrip when `schema_definition` of `BaseDataSink` is used
+* Roundtrip when creating a DataFrameSchema instance from a native dataframe schema.
+* Provisioning `laktory_context` value when used inside a custom write used in a streaming query
 ### Updated
 * Clarified documentation by removing some base class attributes from child classes [[#443](https://github.com/okube-ai/laktory/issues/443)]
 * Clarified documentation of `VariableType` [[#444](https://github.com/okube-ai/laktory/issues/444)]
-### Breaking changes
-* n/a
 
 ## [0.9.3] - 2026-03-27
 ### Fixed
-* Roundtrip when creating a DataFrameSchema instance from a native dataframe schema. 
+* Roundtrip when creating a DataFrameSchema instance from a native dataframe schema.
 
 ## [0.9.2] - 2026-03-27
 ### Added

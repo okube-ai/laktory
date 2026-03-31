@@ -117,7 +117,7 @@ class FileDataSource(BaseDataSource):
     )
     schema_definition: DataFrameSchema = Field(
         None,
-        validation_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_definition"),
         description="""
         Target schema specified as a list of columns, as a dict or a json serialization. Only used when
         reading data from non-strongly typed files such as JSON or csv files.

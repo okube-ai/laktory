@@ -1,7 +1,10 @@
+from typing import Any
+
 from pydantic import Field
 
 from laktory._logger import get_logger
 from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory.models.readerwritermethod import ReaderWriterMethod
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
@@ -58,6 +61,15 @@ class PipelineNodeDataSource(BaseDataSource):
     """
 
     node_name: str = Field(..., description="Name of the upstream pipeline node")
+    reader_kwargs: dict[str, Any] = Field(
+        {},
+        description="""
+        Keyword arguments passed directly to dataframe backend reader. Passed to `.options()` method when using PySpark.
+        """,
+    )
+    reader_methods: list[ReaderWriterMethod] = Field(
+        [], description="DataFrame backend reader methods."
+    )
     type: str = Field("PIPELINE_NODE", frozen=True)
 
     # ----------------------------------------------------------------------- #
@@ -131,7 +143,11 @@ class PipelineNodeDataSource(BaseDataSource):
         elif stream_to_batch or self.node.output_df is None:
             if self.node.has_sinks:
                 logger.info(f"Reading pipeline node {self._id} from primary sink")
-                df = self.node.primary_sink.read(as_stream=self.as_stream)
+                df = self.node.primary_sink.read(
+                    as_stream=self.as_stream,
+                    reader_kwargs=self.reader_kwargs,
+                    reader_methods=self.reader_methods,
+                )
             else:
                 logger.info("Executing parent pipeline node")
                 self.node.execute()
@@ -155,7 +171,11 @@ class PipelineNodeDataSource(BaseDataSource):
         # Read from node sink
         elif self.node.primary_sink:
             logger.info(f"Reading pipeline node {self._id} from sink")
-            df = self.node.primary_sink.read(as_stream=self.as_stream)
+            df = self.node.primary_sink.read(
+                as_stream=self.as_stream,
+                reader_kwargs=self.reader_kwargs,
+                reader_methods=self.reader_methods,
+            )
 
         # Execute upstream node
         else:

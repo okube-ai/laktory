@@ -90,7 +90,7 @@ class CustomWriter(BaseModel, PipelineChild):
         module = importlib.import_module(module_path)
         return getattr(module, func_name)
 
-    def execute(self, df) -> None:
+    def execute(self, df, context: LaktoryContext = None) -> None:
         """
         Invoke the user-supplied function with the DataFrame, configured
         args/kwargs, and optionally a `laktory_context` object.
@@ -99,6 +99,12 @@ class CustomWriter(BaseModel, PipelineChild):
         ----------
         df:
             Input DataFrame (native or Narwhals, as prepared by the caller).
+        context:
+            Pre-built LaktoryContext to inject. When ``None`` (the default),
+            the context is built from the ``_parent`` chain at call time.
+            Callers that run inside a ``foreachBatch`` lambda should pre-build
+            the context before the lambda and pass it here so that the
+            ``_parent`` references are captured while they are still intact.
         """
         func = self._resolve_func()
 
@@ -114,11 +120,12 @@ class CustomWriter(BaseModel, PipelineChild):
         func_log += f") with df type {type(df)}"
         logger.info(f"Writing df with {func_log}")
 
-        context = LaktoryContext(
-            node=self.parent_pipeline_node,
-            pipeline=self.parent_pipeline,
-            sink=self.parent,
-        )
+        if context is None:
+            context = LaktoryContext(
+                node=self.parent_pipeline_node,
+                pipeline=self.parent_pipeline,
+                sink=self.parent,
+            )
         call_kwargs = {
             **self.func_kwargs,
             **_build_laktory_context_kwargs(func, context),
