@@ -97,7 +97,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     )
     schema_definition: DataFrameSchema = Field(
         None,
-        validation_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_definition"),
         description="Explicit table schema used when creating the table. If not set, schema is inferred from the transformer output DataFrame.",
     )
     writer_kwargs: dict[str, Any] = Field(
