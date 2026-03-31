@@ -1,6 +1,16 @@
 # Release History
 
-## [0.9.4] - Unreleased
+## [0.9.5] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.9.4] - 2026-03-31
 ### Added
 * `reader_kwargs` attribute to `PipelineNodeDataSource`
 ### Fixed
