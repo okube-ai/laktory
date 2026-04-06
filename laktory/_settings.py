@@ -1,6 +1,7 @@
 import os
 from typing import Any
 from typing import Literal
+from typing import Optional
 
 from pydantic import ConfigDict
 from pydantic import Field
@@ -30,6 +31,10 @@ class Settings(BaseSettings):
 
     # Paths
     laktory_root: str = Field("", alias="LAKTORY_ROOT")
+    laktory_build_root: str = Field(
+        None,
+        alias="LAKTORY_BUILD_ROOT",
+    )
 
     # Logging
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")

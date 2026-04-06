@@ -18,6 +18,12 @@ def build(
     """
     Build temporary files and python packages.
 
+    Pipeline config JSON files are written to the location set by
+    ``settings.laktory_build_dir`` in ``stack.yaml`` (or the default Laktory
+    cache when not set). For Databricks Asset Bundles users, set
+    ``settings.laktory_build_dir: .resources/`` in ``stack.yaml`` so that DABs can
+    sync the built files to the workspace.
+
     Parameters
     ----------
     environment:

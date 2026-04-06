@@ -94,6 +94,14 @@ class LaktorySettings(BaseModel):
         "/laktory/",
         description="Laktory cache root directory. Used when a pipeline needs to write checkpoint files.",
     )
+    laktory_build_root: str = Field(
+        None,
+        description="Local directory where pipeline config JSON files are written during build. "
+                    "Defaults to the Laktory cache directory. For Databricks Asset Bundles users, set this "
+                    "to a project-local path (e.g. 'laktory/.build/') so that DABs can sync the files "
+                    "to the workspace.",
+
+    )
 
     @model_validator(mode="after")
     def apply_settings(self) -> Any:
@@ -108,6 +116,9 @@ class LaktorySettings(BaseModel):
 
         if self.dataframe_api:
             settings.dataframe_api = self.dataframe_api
+
+        if self.laktory_build_root:
+            settings.laktory_build_root = self.laktory_build_root
 
         return self
 
@@ -369,6 +380,13 @@ class Stack(BaseModel):
         """
         Build stack artifacts before preview or deploy.
 
+        Pipeline config JSON files are written to the location determined by
+        ``settings.laktory_build_root`` (when set in ``stack.yaml`` under
+        ``settings:``) or the default Laktory cache directory. For Databricks
+        Asset Bundles users, set ``settings.laktory_build_root`` to a
+        project-local path (e.g. ``.laktory/.resources/``) so that DABs can
+        sync the files to the workspace.
+
         Parameters
         ----------
         env_name:
@@ -376,6 +394,7 @@ class Stack(BaseModel):
         inject_vars:
             Inject stack variables
         """
+        from pathlib import Path
 
         logger.info("Building artifacts...")
 
@@ -392,9 +411,19 @@ class Stack(BaseModel):
             if isinstance(r, Pipeline):
                 if not r.orchestrator:
                     continue
-                config_file = getattr(r.orchestrator, "config_file")
+                config_file = getattr(r.orchestrator, "config_file", None)
                 if config_file:
                     config_file.build()
+
+                # if settings.dlt_entry_dir:
+                #     from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
+                #         DatabricksPipelineOrchestrator,
+                #     )
+                #
+                #     if isinstance(r.orchestrator, DatabricksPipelineOrchestrator):
+                #         r.orchestrator.build_dlt_entry_file(
+                #             Path(settings.dlt_entry_dir)
+                #         )
 
         logger.info("Build completed.")
 

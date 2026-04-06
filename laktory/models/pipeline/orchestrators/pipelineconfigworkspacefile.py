@@ -36,7 +36,10 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
             # parent pipeline can't be access at initial import
             pass
 
-        source_path = cache_dir / "pipelines" / (pl_name + ".json")
+        if settings.laktory_build_root:
+            source_path = Path(settings.laktory_build_root) / "pipelines" / (pl_name + ".json")
+        else:
+            source_path = cache_dir / "pipelines" / (pl_name + ".json")
 
         return str(source_path)
 
@@ -83,7 +86,8 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
     def build(self):
         """
-        Write config file to cache (required for deployment).
+        Write config file to the location given by ``source`` (either the
+        default Laktory cache or ``settings.laktory_build_root`` when set).
         """
         filepath = Path(self.source)
         filepath.parent.mkdir(parents=True, exist_ok=True)

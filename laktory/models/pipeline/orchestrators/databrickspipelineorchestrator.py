@@ -1,4 +1,6 @@
 import json
+import shutil
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field
@@ -10,6 +12,8 @@ from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.pipeline import Pipeline
 from laktory.models.resources.pulumiresource import PulumiResource
+
+_RESOURCES_DIR = Path(__file__).parent.parent.parent.parent / "resources"
 
 
 class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
@@ -70,6 +74,32 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         # This is to ensure configuration is flagged as set and part of
         # model_fields_set when injecting variables.
         self.configuration = self.configuration
+
+    def build_dlt_entry_file(self, dirpath: Path) -> Path:
+        """
+        Write the auto-generated DLT entry Python file (for Databricks Asset
+        Bundles) to `dirpath/{pipeline_name}.py`. The file is a copy of the
+        Laktory DLT runner template without pip-install magic commands —
+        requirements are expected to be managed by the DABs DLT pipeline
+        `libraries` section instead.
+
+        Parameters
+        ----------
+        dirpath:
+            Directory where the file will be written.
+
+        Returns
+        -------
+        :
+            Path to the written file.
+        """
+        pl = self.parent_pipeline
+        dirpath = Path(dirpath)
+        dirpath.mkdir(parents=True, exist_ok=True)
+        src = _RESOURCES_DIR / "dlt_laktory_pl_dabs.py"
+        dst = dirpath / f"{pl.name}.py"
+        shutil.copy(src, dst)
+        return dst
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
