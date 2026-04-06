@@ -97,10 +97,9 @@ class LaktorySettings(BaseModel):
     laktory_build_root: str = Field(
         None,
         description="Local directory where pipeline config JSON files are written during build. "
-                    "Defaults to the Laktory cache directory. For Databricks Asset Bundles users, set this "
-                    "to a project-local path (e.g. 'laktory/.build/') so that DABs can sync the files "
-                    "to the workspace.",
-
+        "Defaults to the Laktory cache directory. For Databricks Asset Bundles users, set this "
+        "to a project-local path (e.g. 'laktory/.build/') so that DABs can sync the files "
+        "to the workspace.",
     )
 
     @model_validator(mode="after")
@@ -394,7 +393,6 @@ class Stack(BaseModel):
         inject_vars:
             Inject stack variables
         """
-        from pathlib import Path
 
         logger.info("Building artifacts...")
 
@@ -409,8 +407,13 @@ class Stack(BaseModel):
         logger.info("Writing pipeline config files...")
         for k, r in env.resources._get_all(providers_excluded=True).items():
             if isinstance(r, Pipeline):
-                if not r.orchestrator:
+                orchestrator = r.orchestrator
+                if not orchestrator:
                     continue
+
+                # IF DAB
+                orchestrator.build()
+
                 config_file = getattr(r.orchestrator, "config_file", None)
                 if config_file:
                     config_file.build()

@@ -1,7 +1,11 @@
+from pathlib import Path
 from typing import Literal
 
+import yaml
 from pydantic import Field
 
+from laktory._logger import get_logger
+from laktory._settings import settings
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
 )
@@ -15,6 +19,8 @@ from laktory.models.resources.databricks.job import JobParameter
 from laktory.models.resources.databricks.job import JobTask
 from laktory.models.resources.databricks.job import JobTaskPythonWheelTask
 from laktory.models.resources.pulumiresource import PulumiResource
+
+logger = get_logger(__name__)
 
 ENV_KEY = "laktory"
 
@@ -171,6 +177,41 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         self.parameters = [
             JobParameter(name="full_refresh", default="false"),
         ]
+
+    # ----------------------------------------------------------------------- #
+    # Build                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    def build(self):
+        """
+        Write config file to laktory build root.
+        """
+
+        pl_name = self.name
+        root = settings.laktory_build_root
+
+        if root:
+            filepath = (
+                Path(settings.laktory_build_root) / "pipelines" / (pl_name + ".yml")
+            )
+        else:
+            raise ValueError("`settings.laktory_build_root` is not defined.")
+
+        # Pipeline YAML
+        filepath = Path(filepath)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Writing pipeline '{pl_name}' DAB file at '{filepath}'")
+
+        d = self.model_dump(
+            exclude=self.terraform_excludes, exclude_unset=True, by_alias=True
+        )
+        for k, v in self.terraform_renames.items():
+            if k in d:
+                d[v] = d.pop(k)
+
+        data = {"resources": {"pipelines": {self.resource_name: d}}}
+        with filepath.open("w") as fp:
+            fp.write(yaml.dump(data))
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #

@@ -3,8 +3,11 @@ import shutil
 from pathlib import Path
 from typing import Literal
 
+import yaml
 from pydantic import Field
 
+from laktory._logger import get_logger
+from laktory._settings import settings
 from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
@@ -13,7 +16,7 @@ from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.pipeline import Pipeline
 from laktory.models.resources.pulumiresource import PulumiResource
 
-_RESOURCES_DIR = Path(__file__).parent.parent.parent.parent / "resources"
+logger = get_logger(__name__)
 
 
 class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
@@ -75,31 +78,55 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         # model_fields_set when injecting variables.
         self.configuration = self.configuration
 
-    def build_dlt_entry_file(self, dirpath: Path) -> Path:
-        """
-        Write the auto-generated DLT entry Python file (for Databricks Asset
-        Bundles) to `dirpath/{pipeline_name}.py`. The file is a copy of the
-        Laktory DLT runner template without pip-install magic commands —
-        requirements are expected to be managed by the DABs DLT pipeline
-        `libraries` section instead.
+    # ----------------------------------------------------------------------- #
+    # Build                                                                   #
+    # ----------------------------------------------------------------------- #
 
-        Parameters
-        ----------
-        dirpath:
-            Directory where the file will be written.
-
-        Returns
-        -------
-        :
-            Path to the written file.
+    def build(self):
         """
-        pl = self.parent_pipeline
-        dirpath = Path(dirpath)
-        dirpath.mkdir(parents=True, exist_ok=True)
-        src = _RESOURCES_DIR / "dlt_laktory_pl_dabs.py"
-        dst = dirpath / f"{pl.name}.py"
-        shutil.copy(src, dst)
-        return dst
+        Write config file to laktory build root.
+        """
+
+        pl_name = self.name
+        root = settings.laktory_build_root
+
+        if root:
+            filepath = (
+                Path(settings.laktory_build_root) / "pipelines" / (pl_name + ".yml")
+            )
+        else:
+            raise ValueError("`settings.laktory_build_root` is not defined.")
+
+        # Pipeline YAML
+        filepath = Path(filepath)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Writing pipeline '{pl_name}' DAB file at '{filepath}'")
+
+        d = self.model_dump(
+            exclude=self.terraform_excludes, exclude_unset=True, by_alias=True
+        )
+        for k, v in self.terraform_renames.items():
+            if k in d:
+                d[v] = d.pop(k)
+
+        data = {"resources": {"pipelines": {self.resource_name: d}}}
+        with filepath.open("w") as fp:
+            fp.write(yaml.dump(data))
+
+        # Pipeline notebook
+        source_filepath = (
+            Path(__file__).parent.parent.parent.parent
+            / "resources"
+            / "quickstart-stacks"
+            / "workflows"
+            / "workspacefiles"
+            / "notebooks"
+            / "dlt_laktory_pl.py"
+        )
+        target_filepath = (
+            Path(settings.laktory_build_root) / "pipelines" / "dlt_laktory_pl.py"
+        )
+        shutil.copy(source_filepath, target_filepath)
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
