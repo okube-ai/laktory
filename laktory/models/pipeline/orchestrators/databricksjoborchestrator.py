@@ -190,14 +190,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         """
 
         pl_name = self.name
-        root = settings.laktory_build_root
-
-        if root:
-            filepath = (
-                Path(settings.laktory_build_root) / "pipelines" / (pl_name + ".yml")
-            )
-        else:
-            raise ValueError("`settings.laktory_build_root` is not defined.")
+        filepath = Path(settings.laktory_build_root) / "pipelines" / (pl_name + ".yml")
 
         # Pipeline YAML
         filepath = Path(filepath)
@@ -211,7 +204,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             if k in d:
                 d[v] = d.pop(k)
 
-        data = {"resources": {"pipelines": {self.resource_name: d}}}
+        data = {"resources": {"jobs": {self.resource_name: d}}}
         with filepath.open("w") as fp:
             fp.write(yaml.dump(data))
 

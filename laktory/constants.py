@@ -9,7 +9,6 @@ QUICKSTART_TEMPLATES = [
 SUPPORTED_BACKENDS = [
     "pulumi",
     "terraform",
-    "dabs",
 ]
 
 

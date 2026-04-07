@@ -95,7 +95,7 @@ class LaktorySettings(BaseModel):
         description="Laktory cache root directory. Used when a pipeline needs to write checkpoint files.",
     )
     laktory_build_root: str = Field(
-        None,
+        "",
         description="""
         Local directory where pipeline config JSON and resource files are written during
         build. Defaults to the Laktory cache directory. Use when deployment is delegated
@@ -400,6 +400,9 @@ class Stack(BaseModel):
         env = self.get_env(env_name=env_name)
         if inject_vars:
             env = env.inject_vars()
+
+        if env.resources is None:
+            return
 
         for k, r in env.resources._get_all(providers_excluded=True).items():
             if isinstance(r, PythonPackage):

@@ -39,17 +39,6 @@ class Settings(BaseSettings):
 
     # Logging
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")
-    #
-    # @model_validator(mode="after")
-    # def update_laktory_build_root(self) -> Any:
-    #     from laktory._cache import cache_dir
-    #
-    #     if self.laktory_build_root != "":
-    #         return self
-    #
-    #     self.laktory_build_root = cache_dir.as_posix()
-    #
-    #     return self
 
     @model_validator(mode="after")
     def update_laktory_root(self) -> Any:
