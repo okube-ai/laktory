@@ -7,6 +7,8 @@ from pydantic import Field
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
+from laktory._cache import cache_dir
+
 
 class Settings(BaseSettings):
     model_config = ConfigDict(populate_by_name=True)
@@ -31,12 +33,23 @@ class Settings(BaseSettings):
     # Paths
     laktory_root: str = Field("", alias="LAKTORY_ROOT")
     laktory_build_root: str = Field(
-        "",
+        cache_dir.as_posix(),
         alias="LAKTORY_BUILD_ROOT",
     )
 
     # Logging
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")
+    #
+    # @model_validator(mode="after")
+    # def update_laktory_build_root(self) -> Any:
+    #     from laktory._cache import cache_dir
+    #
+    #     if self.laktory_build_root != "":
+    #         return self
+    #
+    #     self.laktory_build_root = cache_dir.as_posix()
+    #
+    #     return self
 
     @model_validator(mode="after")
     def update_laktory_root(self) -> Any:

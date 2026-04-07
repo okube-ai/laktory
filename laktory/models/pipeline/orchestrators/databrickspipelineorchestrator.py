@@ -84,7 +84,9 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
 
     def build(self):
         """
-        Write config file to laktory build root.
+        Write resource file to `settings.laktory_build_root` if
+        specified or default cache dir if not. These files may also be used when
+        deployment is delegated to third parties like Databricks Declarative Bundles.
         """
 
         pl_name = self.name

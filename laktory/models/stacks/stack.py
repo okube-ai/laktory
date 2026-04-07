@@ -96,10 +96,11 @@ class LaktorySettings(BaseModel):
     )
     laktory_build_root: str = Field(
         None,
-        description="Local directory where pipeline config JSON files are written during build. "
-        "Defaults to the Laktory cache directory. For Databricks Asset Bundles users, set this "
-        "to a project-local path (e.g. 'laktory/.build/') so that DABs can sync the files "
-        "to the workspace.",
+        description="""
+        Local directory where pipeline config JSON and resource files are written during
+        build. Defaults to the Laktory cache directory. Use when deployment is delegated
+        to third parties like Databricks Declarative Bundles.
+        """,
     )
 
     @model_validator(mode="after")
@@ -411,22 +412,16 @@ class Stack(BaseModel):
                 if not orchestrator:
                     continue
 
-                # IF DAB
+                # TODO: At this point, calling the orchestrator build is only required
+                # when using DAB. We could potentially set the backend to DAB and use
+                # the backend as a conditional statement, but I'm not sure the extra
+                # configuration is worth the effort. Otherwise, the file is generated
+                # but never used (maybe for debugging).
                 orchestrator.build()
 
                 config_file = getattr(r.orchestrator, "config_file", None)
                 if config_file:
                     config_file.build()
-
-                # if settings.dlt_entry_dir:
-                #     from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
-                #         DatabricksPipelineOrchestrator,
-                #     )
-                #
-                #     if isinstance(r.orchestrator, DatabricksPipelineOrchestrator):
-                #         r.orchestrator.build_dlt_entry_file(
-                #             Path(settings.dlt_entry_dir)
-                #         )
 
         logger.info("Build completed.")
 
