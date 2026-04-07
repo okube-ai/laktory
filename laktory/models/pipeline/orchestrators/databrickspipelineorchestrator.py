@@ -3,7 +3,6 @@ import shutil
 from pathlib import Path
 from typing import Literal
 
-import yaml
 from pydantic import Field
 
 from laktory._logger import get_logger
@@ -79,23 +78,20 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         self.configuration = self.configuration
 
     # ----------------------------------------------------------------------- #
-    # Build                                                                   #
+    # DABs                                                                    #
     # ----------------------------------------------------------------------- #
 
-    def build(self):
+    def to_dab_resource(self):
         """
-        Write resource file to `settings.laktory_build_root` if
-        specified or default cache dir if not. These files may also be used when
-        deployment is delegated to third parties like Databricks Declarative Bundles.
+        Convert to a DABs Python Pipeline resource object for use with
+        ``laktory.dabs.load_resources``.
+
+        Returns
+        -------
+        :
+            ``databricks.bundles.pipelines.Pipeline`` instance.
         """
-
-        pl_name = self.name
-        filepath = Path(settings.laktory_build_root) / "pipelines" / (pl_name + ".yml")
-
-        # Pipeline YAML
-        filepath = Path(filepath)
-        filepath.parent.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Writing pipeline '{pl_name}' DAB file at '{filepath}'")
+        from databricks.bundles.pipelines import Pipeline as DabsPipeline
 
         d = self.model_dump(
             exclude=self.terraform_excludes, exclude_unset=True, by_alias=True
@@ -103,10 +99,6 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         for k, v in self.terraform_renames.items():
             if k in d:
                 d[v] = d.pop(k)
-
-        data = {"resources": {"pipelines": {self.resource_name: d}}}
-        with filepath.open("w") as fp:
-            fp.write(yaml.dump(data))
 
         # Pipeline notebook
         source_filepath = (
@@ -122,6 +114,8 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
             Path(settings.laktory_build_root) / "pipelines" / "dlt_laktory_pl.py"
         )
         shutil.copy(source_filepath, target_filepath)
+
+        return DabsPipeline.from_dict(d)
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #

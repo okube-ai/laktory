@@ -1,11 +1,8 @@
-from pathlib import Path
 from typing import Literal
 
-import yaml
 from pydantic import Field
 
 from laktory._logger import get_logger
-from laktory._settings import settings
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
 )
@@ -179,23 +176,20 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         ]
 
     # ----------------------------------------------------------------------- #
-    # Build                                                                   #
+    # DABs                                                                    #
     # ----------------------------------------------------------------------- #
 
-    def build(self):
+    def to_dab_resource(self):
         """
-        Write resource file to `settings.laktory_build_root` if
-        specified or default cache dir if not. These files may also be used when
-        deployment is delegated to third parties like Databricks Declarative Bundles.
+        Convert to a DABs Python Job resource object for use with
+        ``laktory.dabs.load_resources``.
+
+        Returns
+        -------
+        :
+            ``databricks.bundles.jobs.Job`` instance.
         """
-
-        pl_name = self.name
-        filepath = Path(settings.laktory_build_root) / "pipelines" / (pl_name + ".yml")
-
-        # Pipeline YAML
-        filepath = Path(filepath)
-        filepath.parent.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Writing pipeline '{pl_name}' DAB file at '{filepath}'")
+        from databricks.bundles.jobs import Job as DabsJob
 
         d = self.model_dump(
             exclude=self.terraform_excludes, exclude_unset=True, by_alias=True
@@ -204,9 +198,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             if k in d:
                 d[v] = d.pop(k)
 
-        data = {"resources": {"jobs": {self.resource_name: d}}}
-        with filepath.open("w") as fp:
-            fp.write(yaml.dump(data))
+        return DabsJob.from_dict(d)
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
