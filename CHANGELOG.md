@@ -3,12 +3,6 @@
 ## [0.9.5] - Unreleased
 ### Added
 * Support for PipelineIngestion attribute to DatabricksPipeline
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
 
 ## [0.9.4] - 2026-03-31
 ### Added
