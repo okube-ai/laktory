@@ -1,6 +1,7 @@
 from .accesscontrol import AccessControl
 from .accesscontrolruleset import AccessControlRuleSet
 from .alert import Alert
+from .app import App
 from .catalog import Catalog
 from .cluster import Cluster
 from .clusterpolicy import ClusterPolicy

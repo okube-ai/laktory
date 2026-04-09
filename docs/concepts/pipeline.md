@@ -1,5 +1,5 @@
 ??? "API Documentation"
-    [`laktory.models.Pipeline`][laktory.models.Pipeline]<br>
+    [`laktory.models.Pipeline`][laktory.models.pipeline.pipeline.Pipeline]<br>
 
 The Pipeline model is the cornerstone of Laktory, orchestrating the process of reading, transforming, and writing data. 
 It is built around the concept of the DataFrame—a two-dimensional, tabular data structure with labeled rows and 
@@ -332,7 +332,44 @@ Selecting the `DATABRICKS_PIPELINE` orchestrator will deploy a pipeline json
 configuration file which can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{pipeline_name}/`.
 
 #### Apache Airflow
-Support for Apache Airflow as an orchestrator is on the roadmap.
+Apache Airflow is a widely used orchestrator for scheduling, monitoring, and managing data workflows. When used with
+Laktory, Airflow handles task orchestration while the execution logic of each pipeline node remains managed by Laktory.
+
+In this setup, each pipeline node is mapped to an Airflow task. Dependencies between nodes are translated into task 
+dependencies, allowing Airflow to execute independent branches in parallel while preserving the pipeline DAG structure.
+
+A typical Laktory pipeline configured to run on Airflow can be declared as:
+```yaml title="pipeline.yaml"
+name: stock-prices
+orchestrator: 
+    type: AIRFLOW
+    dag_display_name: "A simple Laktory pipeline"
+    schedule:
+      cron: "0 0 * * *"
+      timezone: utc
+    start_date: 2026-03-06
+    [...]
+nodes: [...]
+```
+
+The pipeline DAG can then be registered using a standard Python script:
+```py title="stock_prices.py"
+import jinja2
+
+import laktory as lk
+
+# Load Pipeline
+with open("./pipeline.yaml") as fp:
+    pl = lk.models.Pipeline.model_validate_yaml(fp.read())
+
+# Declare Dag
+dag = pl.to_airflow_dag(
+    template_undefined=jinja2.DebugUndefined,  # Allow overriding attributes defined in YAML
+)
+```
+
+The pipeline then becomes available in Airflow, where each node is automatically configured as a task.
+![airflow](../images/screenshots/airflow_pl_simple.png)
 
 #### Dagster
 Support for Dagster as an orchestrator is on the roadmap.

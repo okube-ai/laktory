@@ -36,7 +36,8 @@ dependencies = [
     "pydantic>=2",
     "pydantic-settings",
     # "python-dateutil",
-    "sqlglot[rs]",
+    "sqlglot",
+    "sqlglotc",
     "typer",
     "tzdata; sys_platform == 'win32'"
 ]
@@ -56,8 +57,8 @@ pyspark = [
 dev = [
     "flit",
     "griffe_fieldz",
-    "mkdocs",
-    "mkdocs-material",
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9,<10",
     "mkdocs-video",
     "mkdocstrings[python]",
     "pandas",
@@ -79,6 +80,10 @@ pulumi = [
 ]
 
 # Orchestrators
+airflow = [
+    "apache-airflow",
+    "graphviz",
+]
 databricks = [
 #    "databricks-connect",  # causing conflicts with local spark installation
     "databricks-sdk",
@@ -99,6 +104,11 @@ path = "laktory/_version.py"
 # CLI
 [project.scripts]
 laktory = "laktory.cli.app:app"
+
+[pytest]
+markers = [
+    "databricks_connect: marks tests requiring databricks_connect package to run",
+]
 
 [tool.ruff]
 builtins = ["spark", "display", "dbutils"]

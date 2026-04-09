@@ -328,12 +328,14 @@ def test_read_write_view(backend, tmp_path):
     ]
     slv = get_slv(tmp_path, backend)
     slv.source = None
+    slv.transformer = models.DataFrameTransformer(
+        nodes=[models.DataFrameExpr(expr="SELECT * from {nodes.brz}")]
+    )
     slv.sinks = [
         models.HiveMetastoreDataSink(
             schema_name="default",
             table_name="slv",
             table_type="VIEW",
-            view_definition="SELECT * from {nodes.brz}",
         )
     ]
     pl = models.Pipeline(name="pl", nodes=[brz, slv], dataframe_backend=backend)
@@ -477,8 +479,8 @@ def test_update_quality_monitors(backend, tmp_path, wsclient):
     pl.update_quality_monitors(workspace_client=wsclient)
 
 
+# @pytest.mark.xfail(reason="Not yet implemented")
 def test_inject_vars(tmp_path):
-
     pl = get_pl(tmp_path)
     pl.nodes = pl.nodes[:1]
     pl.variables = {"pks": [1, 2, 3]}
@@ -487,8 +489,8 @@ def test_inject_vars(tmp_path):
     sink = node.sinks[0]
 
     with sink.validate_assignment_disabled():
-        sink.schema_name = "${{ vars._pl_node.name }}"
-        sink.table_name = "${{ vars._pl.name }}"
+        sink.schema_name = "${{ pipeline_node.name }}"
+        sink.table_name = "${{ pipeline.name }}"
 
     pl2 = pl.inject_vars()
 
@@ -496,4 +498,3 @@ def test_inject_vars(tmp_path):
 
     assert sink.schema_name == "gld_ab"
     assert sink.table_name == "pl-local"
-

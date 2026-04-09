@@ -4,6 +4,9 @@ from typing import Any
 
 import narwhals as nw
 
+from laktory._settings import settings
+from laktory.typing import AnyFrame
+
 
 class DataFrameBackends(str, Enum):
     def _generate_next_value_(name, start, count, last_values):
@@ -36,11 +39,30 @@ class DataFrameBackends(str, Enum):
     # """Unknown backend."""
 
     @classmethod
+    def _missing_(cls, value):
+        return cls._from_any(value)
+
+    @classmethod
+    def _from_any(cls, backend: str | nw.Implementation | AnyFrame = None):
+        if backend is None:
+            return DataFrameBackends(settings.dataframe_backend)
+        elif isinstance(backend, str):
+            return DataFrameBackends(backend)
+        elif isinstance(backend, nw.Implementation):
+            return DataFrameBackends.from_nw_implementation(backend)
+        elif isinstance(backend, AnyFrame):
+            return DataFrameBackends.from_df(backend)
+        elif isinstance(backend, DataFrameBackends):
+            return backend
+        else:
+            raise NotImplementedError()
+
+    @classmethod
     def from_nw_implementation(
         cls, implementation: nw.Implementation
     ) -> "DataFrameBackends":  # pragma: no cover
         """
-        Instantiate DataFrameBackends object from a narwhals implementation.
+        Instantiate DataFrameBackends object from a Narwhals implementation.
 
         Parameters
         ----------

@@ -109,6 +109,15 @@ class PipelineNode(BaseModel, PipelineChild):
         "DEFAULT",
         description="Specify which template (notebook) to use when Databricks pipeline is selected as the orchestrator.",
     )
+    execution_task_name_: str = Field(
+        None,
+        description="""
+        Execution task name when orchestrator (such as Databricks Jobs and Airflow) supports multi-tasks execution. 
+        Nodes with the same task name will be executed together in a single task. If `None` is provided, node will be 
+        executed under `node-{node-name}`.
+        """,
+        validation_alias=AliasChoices("execution_task_name", "execution_task_name_"),
+    )
     comment: str = Field(
         None,
         description="Comment for the associated table or view",
@@ -145,6 +154,19 @@ class PipelineNode(BaseModel, PipelineChild):
     sinks: list[DataSinksUnion] = Field(
         None,
         description="Definition of the data sink(s). Set `is_quarantine` to True to store node quarantine DataFrame.",
+    )
+    tags: list[str] = Field([], description="Node tags for selective execution.")
+    time_column: str | None = Field(
+        None,
+        description="""
+        The name of the column that represents the timestamp or temporal dimension in the DataFrame. This column is 
+        used to:
+            - Document the time-based ordering and filtering semantics of the node’s output data.
+            - Enable time-aware operations such as point-in-time joins, incremental processing, and time-series analysis.
+            - Serve as a reference in expectations, unit tests, and feature engineering workflows.
+        While optional, specifying time_column helps ensure consistency in time-based logic and improves the 
+        reliability of downstream operations that depend on temporal alignment.        
+        """,
     )
     transformer: DataFrameTransformer = Field(
         None,
@@ -206,17 +228,29 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Validate Sinks
         m = f"node '{self.name}': "
-        for s in self.sinks:
-            if s.table_type != "VIEW":
-                raise ValueError(
-                    f"{m}If one pipeline node sink is a VIEW, all of them must be a view."
-                )
+
+        # Validate Transformer
+        if not self.transformer:
+            raise ValueError(
+                f"{m}VIEW sink requires a transformer with single node expressed as SQL statement."
+            )
+        if not self.transformer.is_valid_view_definition:
+            raise ValueError(
+                f"{m}VIEW sink requires a transformer with single node expressed as SQL statement."
+            )
 
         # Validate Expectations
         if self.expectations:
             raise ValueError(f"{m}Expectations not supported for a view sink.")
 
         return self
+
+    @property
+    def view_definition(self):
+        """Transformer View Definition (when applicable)"""
+        if self.transformer is None:
+            return None
+        return self.transformer.view_definition
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
@@ -235,6 +269,12 @@ class PipelineNode(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
     # Orchestrator                                                            #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def execution_task_name(self) -> str:
+        if self.execution_task_name_:
+            return self.execution_task_name_
+        return f"node-{self.name}"
 
     @property
     def is_orchestrator_dlt(self) -> bool:
@@ -424,10 +464,6 @@ class PipelineNode(BaseModel, PipelineChild):
         if self.transformer:
             names += self.transformer.upstream_node_names
 
-        if self.sinks:
-            for s in self.sinks:
-                names += s.upstream_node_names
-
         return names
 
     # ----------------------------------------------------------------------- #
@@ -445,10 +481,6 @@ class PipelineNode(BaseModel, PipelineChild):
         if self.transformer:
             sources += self.transformer.data_sources
 
-        if self.sinks:
-            for s in self.sinks:
-                sources += s.data_sources
-
         return sources
 
     # ----------------------------------------------------------------------- #
@@ -457,9 +489,11 @@ class PipelineNode(BaseModel, PipelineChild):
 
     def purge(self):
         logger.info(f"Purging pipeline node {self.name}")
+
         if self.has_sinks:
             for s in self.sinks:
                 s.purge()
+
         if self.expectations_checkpoint_path:
             if os.path.exists(self.expectations_checkpoint_path):
                 logger.info(
@@ -467,45 +501,47 @@ class PipelineNode(BaseModel, PipelineChild):
                 )
                 shutil.rmtree(self.expectations_checkpoint_path)
 
+            # Try with DBFS
+            # If spark is not used, dbfs is most likely not used
             if self.dataframe_backend != DataFrameBackends.PYSPARK:
                 return
 
+            # Check if a workspace client can be instantiated
             try:
-                from pyspark.dbutils import DBUtils
+                from databricks.sdk import WorkspaceClient
+                from databricks.sdk.errors import ResourceDoesNotExist
 
-                from laktory import get_spark_session
+                w = WorkspaceClient()
 
-                spark = get_spark_session()
-            except ModuleNotFoundError:
+            except (
+                ModuleNotFoundError,  # SDK not installed
+                ImportError,  # SDK with different version / API
+                ValueError,  # client not configure (would never happen in a notebook)
+            ):
                 return
 
-            dbutils = DBUtils(spark)
-
+            # Format path for DBFS
             _path = self.expectations_checkpoint_path.as_posix()
-            try:
-                dbutils.fs.ls(
-                    _path
-                )  # TODO: Figure out why this does not work with databricks connect
-                logger.info(
-                    f"Deleting checkpoint at dbfs {_path}",
-                )
-                dbutils.fs.rm(_path, True)
+            if not _path.startswith("/") and not _path.startswith("dbfs:"):
+                _path = "/" + _path
+            if _path.startswith("/dbfs/"):
+                _path = _path.replace("/dbfs/", "dbfs:/")
+            if not _path.startswith("dbfs:"):
+                _path = "dbfs:" + _path
 
-            except Exception as e:
-                if "java.io.FileNotFoundException" in str(e):
-                    pass
-                elif "databricks.sdk.errors.platform.ResourceDoesNotExist" in str(
-                    type(e)
-                ):
-                    pass
-                elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
-                    type(e)
-                ):
-                    # TODO: Figure out why this is happening. It seems that the databricks SDK
-                    #       modify the path before sending to REST API.
-                    logger.warn(f"dbutils could not delete checkpoint {_path}: {e}")
-                else:
-                    raise e
+            # Check Status
+            try:
+                w.dbfs.get_status(_path)
+            except ResourceDoesNotExist:
+                logger.info(
+                    f"Expectation checkpoint at {_path} does not exist. Skipping.",
+                )
+                return
+
+            logger.info(
+                f"Deleting expectation checkpoint at {_path}.",
+            )
+            w.dbfs.delete(_path, recursive=True)
 
     def execute(
         self,
@@ -584,23 +620,35 @@ class PipelineNode(BaseModel, PipelineChild):
         self.check_expectations()
 
         # Output and Quarantine to Sinks
-        if write_sinks:
-            for s in self.output_sinks:
+        if write_sinks and self.sinks:
+            view_definition = self.view_definition
+
+            for s in self.sinks:
+                # Get DataFrame
+                _df = self._output_df
+                if s.is_quarantine:
+                    _df = self._quarantine_df
+
+                # Create Sink
+                s.create(df=_df)
+
+                _is_update_metadata = (
+                    update_tables_metadata and s.metadata and not self.is_dlt_execute
+                )
+
                 if self.is_view:
-                    s.write()
+                    s.write(view_definition=view_definition)
+                    if _is_update_metadata:
+                        s.metadata.execute()
                     self._output_df = s.as_source().read()
                 else:
-                    s.write(self._output_df, full_refresh=full_refresh)
+                    if _is_update_metadata:
+                        s.metadata.execute()
+                    s.write(df=self._output_df)
 
-            if self._quarantine_df is not None:
-                for s in self.quarantine_sinks:
-                    s.write(self._quarantine_df, full_refresh=full_refresh)
-
-        # Update tables metadata
-        if update_tables_metadata and not self.is_dlt_execute:
-            for s in self.all_sinks:
-                if s.metadata:
-                    s.metadata.execute()
+                    # Metadata update required because of schema overwrite
+                    if _is_update_metadata and s.metadata.update_required:
+                        s.metadata.execute()
 
         return self._output_df
 

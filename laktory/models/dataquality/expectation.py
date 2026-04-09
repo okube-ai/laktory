@@ -295,10 +295,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
 
     def _check_df(self, df):
         if isinstance(df, nw.LazyFrame):
-            if (
-                DataFrameBackends.from_nw_implementation(df.implementation)
-                == DataFrameBackends.PYSPARK
-            ):
+            if DataFrameBackends(df.implementation) == DataFrameBackends.PYSPARK:
                 # Using the pandas backend to avoid pyarrow version compatibility issues
                 df = df.collect(backend="pandas")
             else:

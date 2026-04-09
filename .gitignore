@@ -15,7 +15,8 @@
 .venv
 
 # Visual Studio
-.vscode
+.vscode/*
+!.vscode/settings.json
 
 # PyCharm configuration
 **/.idea/**
@@ -45,14 +46,23 @@ htmlcov
 .terraform*
 Pulumi.yaml
 stack.tf.json
+tests/**/metastore_db/**
+tests/**/spark-warehouse/**
 tests/*terraform*
+tests/.terraform/
 tests/Pulumi.yaml
+tests/pipeline/node*
+tests/pipeline/tmp/*
 tests/stack.tf.json
 tests/tmp*
-tests/.terraform/
 tmp-*
 
 # Test results
 junit
 
 
+# --------------------------------------------------------------------------- #
+# Scratchpad                                                                  #
+# --------------------------------------------------------------------------- #
+
+scratchpad/*

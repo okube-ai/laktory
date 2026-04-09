@@ -23,9 +23,9 @@ def _execute():
         "--filepath", type=str, help="Pipeline configuration filepath", required=True
     )
     parser.add_argument(
-        "--node_name",
+        "--selects",
         type=str,
-        help="Node name",
+        help="Nodes selection",
         default=None,
         required=False,
     )
@@ -40,13 +40,14 @@ def _execute():
     # Get arguments
     args, unknown = parser.parse_known_args()
     filepath = args.filepath
-    node_name = args.node_name
+    selects = args.selects
     full_refresh = args.full_refresh
-    node_str = ""
-    if node_name:
-        node_str = f" node '{node_name}' of "
+    selects_str = ""
+    if selects:
+        selects = selects.split(",")
+        selects_str = f" nodes {selects} from"
     logger.info(
-        f"Executing{node_str} pipeline '{filepath}' with full refresh {full_refresh}"
+        f"Executing{selects_str} pipeline '{filepath}' with full refresh {full_refresh}"
     )
 
     # Read
@@ -57,7 +58,4 @@ def _execute():
             pl = lk.models.Pipeline.model_validate_json(fp.read())
 
     # Execute
-    if node_name:
-        pl.nodes_dict[node_name].execute(full_refresh=full_refresh)
-    else:
-        pl.execute(full_refresh=full_refresh)
+    pl.execute(full_refresh=full_refresh, selects=selects)

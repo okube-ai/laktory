@@ -20,6 +20,6 @@ def signature(self) -> str:
 
     """
 
-    s = ", ".join([f"{k}: {v}" for k, v in self._df.schema.items()])
+    s = ", ".join([f"{k}: {v}" for k, v in self._df.collect_schema().items()])
     s = f"DataFrame[{s}]"
     return s

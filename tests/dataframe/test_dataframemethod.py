@@ -8,6 +8,7 @@ from laktory.api import register_expr_namespace
 from laktory.enums import DataFrameBackends
 from laktory.models import DataFrameDataSource
 from laktory.models import DataFrameMethod
+from laktory.models import LaktoryContext
 
 from ..conftest import assert_dfs_equal
 
@@ -171,3 +172,28 @@ def test_udf(backend):
     )
     df = node.execute(df0)
     assert df.columns == ["m2"]
+
+
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_laktory_context(backend):
+    df0 = get_df0(backend)
+
+    _captured = {}
+
+    @register_anyframe_namespace("c_ctx")
+    class CCtx:
+        def __init__(self, _df):
+            self._df = _df
+
+        def passthrough(self, laktory_context: LaktoryContext = None):
+            _captured["ctx"] = laktory_context
+            return self._df
+
+    node = DataFrameMethod(func_name="c_ctx.passthrough")
+    df = node.execute(df0)
+
+    assert df.columns == df0.columns
+    assert isinstance(_captured["ctx"], LaktoryContext)
+    assert _captured["ctx"].node is None  # no pipeline node in standalone use
+    assert _captured["ctx"].pipeline is None
+    assert _captured["ctx"].sink is None

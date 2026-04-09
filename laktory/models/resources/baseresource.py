@@ -151,6 +151,8 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
     `pydantic.BaseModel`.
     """
 
+    __doc_hide_base__ = True  # hide this class's fields and methods from child docs
+
     resource_name_: str = Field(
         None,
         validation_alias=AliasChoices("resource_name_", "resource_name"),

@@ -1,8 +1,8 @@
-::: laktory.models.DType
+::: laktory.models.dtypes.DType
 
 ---
 
-::: laktory.models.DField
+::: laktory.models.dtypes.DField
 
 ---
 

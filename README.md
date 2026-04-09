@@ -13,22 +13,24 @@ lakehouses.
 
 Laktory is your all-in-one solution for defining both data transformations and 
 Databricks resources. Imagine if Terraform, Databricks Asset Bundles, and dbt
-combined forces—that's essentially Laktory.
+combined forces and added support for DataFrame API—that’s essentially Laktory.
 
-This open-source framework simplifies the creation, deployment, and execution 
-of data pipelines while adhering to essential DevOps practices like version 
-control, code reviews, and CI/CD integration. With Apache Spark and Polars
-driving its data transformation, Laktory ensures reliable and scalable data
-processing. Its modular, flexible approach allows you to seamlessly combine SQL
-statements with DataFrame operations.
+This open-source framework streamlines the creation, deployment, and execution
+of data pipelines while adhering to essential DevOps practices such as version
+control, code reviews, and CI/CD integration. Powered by Narwhals, Laktory
+enables seamless transitions between Apache Spark, Polars, and other frameworks
+to perform data transformations reliably and at scale. Its modular and flexible
+design allows you to effortlessly combine SQL statements with DataFrame
+operations, reducing complexity and enhancing productivity.
 
 <img src="docs/images/diagrams/laktory_diagram.png" alt="what is laktory" width="800"/>
 
-Since Laktory pipelines are built on top of Spark and Polars, they can run in
+Since Laktory pipelines are built on top of Narwhals, they can run in
 any environment that supports Python—from your local machine to a Kubernetes 
-cluster. They can also be deployed and orchestrated as Databricks Jobs or
+cluster. Pipelines can be orchestrated using tools like Apache Airflow or
+deployed directly as Databricks Jobs or
 [Declarative Pipelines](https://www.databricks.com/product/data-engineering/lakeflow-declarative-pipelines),
-offering a simple, fully managed, and low-maintenance solution.
+offering both flexible and fully managed execution options.
 
 But Laktory goes beyond data pipelines. It empowers you to define and deploy 
 your entire Databricks data platform—from Unity Catalog and access grants
@@ -43,6 +45,8 @@ the overall cost.
 
 <img src="docs/images/diagrams/why_simplicity.png" alt="dataops" width="500"/>
 
+Laktory pipelines can run locally for development, or be orchestrated at scale
+using tools like Apache Airflow or Databricks Workflows.
 
 ## Help
 See [documentation](https://www.laktory.ai/) for more details.

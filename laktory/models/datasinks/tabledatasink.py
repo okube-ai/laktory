@@ -6,12 +6,10 @@ from typing import Any
 from typing import Literal
 
 from pydantic import Field
-from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
-from laktory.models.dataframe.dataframeexpr import DataFrameExpr
 from laktory.models.datasinks.basedatasink import BaseDataSink
 from laktory.models.datasinks.tabledatasinkmetadata import TableDataSinkMetadata
 from laktory.models.datasources.tabledatasource import TableDataSource
@@ -45,9 +43,6 @@ class TableDataSink(BaseDataSink):
         "TABLE",
         description="Type of table. 'TABLE' and 'VIEW' are currently supported.",
     )
-    view_definition: DataFrameExpr | str = Field(
-        None, description="View definition of 'VIEW' `table_type` is selected."
-    )
 
     @model_validator(mode="after")
     def validate_table_full_name(self) -> Any:
@@ -68,30 +63,11 @@ class TableDataSink(BaseDataSink):
         return self
 
     @model_validator(mode="after")
-    def set_table_type(self):
-        with self.validate_assignment_disabled():
-            if self.view_definition is not None:
-                self.table_type = "VIEW"
-        if self.table_type == "VIEW" and self.view_definition is None:
-            raise ValueError(
-                'View definition must be provided for "VIEW" `table_type`.'
-            )
-        return self
-
-    @model_validator(mode="after")
     def set_qm_table(self):
         if self.databricks_quality_monitor is None:
             return self
         self.databricks_quality_monitor._table = self
         return self
-
-    @field_validator("view_definition")
-    def set_view_definition(
-        cls, value: DataFrameExpr | str | None
-    ) -> DataFrameExpr | None:
-        if value and not isinstance(value, DataFrameExpr):
-            value = DataFrameExpr(expr=value)
-        return value
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
@@ -124,20 +100,6 @@ class TableDataSink(BaseDataSink):
     def _id(self) -> str:
         return self.full_name
 
-    @property
-    def upstream_node_names(self) -> list[str]:
-        """Pipeline node names required to write sink"""
-        if self.view_definition:
-            return self.view_definition.upstream_node_names
-        return []
-
-    @property
-    def data_sources(self):
-        """Get all sources feeding the sink"""
-        if self.view_definition:
-            return self.view_definition.data_sources
-        return []
-
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #
@@ -146,25 +108,68 @@ class TableDataSink(BaseDataSink):
     def children_names(self):
         return [
             "metadata",
-            "view_definition",
         ]
 
     # ----------------------------------------------------------------------- #
-    # Writers                                                                 #
+    # Create                                                                  #
     # ----------------------------------------------------------------------- #
 
-    def _write_spark(self, df, mode, full_refresh=False) -> None:
-        df = df.to_native()
+    def create(self, df=None) -> bool:
+        """
+        Creates an empty table with the expected schema if it does not already exist.
 
-        # Full Refresh
-        if full_refresh or not self.exists():
-            if df.isStreaming:
-                pass
-            else:
-                logger.info(
-                    "Full refresh or initial load. Switching to OVERWRITE mode."
-                )
-                mode = "OVERWRITE"
+        Returns True if the table was created, False otherwise.
+        Schema is taken from `schema_definition` if set, otherwise inferred from `df`.
+        """
+        logger.info(f"Table '{self.full_name}' creation initiated.")
+
+        # Skip for views
+        if self.table_type == "VIEW":
+            logger.info("Table is view. Skipping.")
+            return False
+
+        if self.exists():
+            logger.info("Table exists. Skipping.")
+            return False
+
+        self._update_backend_from_df(df)
+        schema = self._get_create_schema(df)
+
+        if schema is None:
+            logger.info("Schema is empty and `df` is None. Skipping table.")
+            return False
+
+        logger.info(f"Creating empty table '{self.full_name}'.")
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
+            from laktory import get_spark_session
+
+            spark = get_spark_session()
+
+            kwargs = {}
+            path = self.writer_kwargs.get("path", None)
+            if path:
+                kwargs["path"] = path
+
+            df_empty = spark.createDataFrame(data=[], schema=schema)
+            df_empty.write.format(self.format.lower()).mode("ignore").options(
+                **kwargs
+            ).saveAsTable(self.full_name)
+
+        else:
+            raise NotImplementedError(
+                f"Table Data Sink for '{self.dataframe_backend}' is not yet supported."
+            )
+
+        logger.info(f"Table '{self.full_name}' creation completed.")
+
+        return True
+
+    # ----------------------------------------------------------------------- #
+    # Write                                                                   #
+    # ----------------------------------------------------------------------- #
+
+    def _write_spark(self, df, mode) -> None:
+        df = df.to_native()
 
         # Format
         methods = self._get_spark_writer_methods(mode=mode, is_streaming=df.isStreaming)
@@ -191,14 +196,14 @@ class TableDataSink(BaseDataSink):
 
             writer.saveAsTable(self.full_name)
 
-    def _write_spark_view(self) -> None:
+    def _write_spark_view(self, view_definition) -> None:
         from laktory import get_spark_session
 
         spark = get_spark_session()
 
-        logger.info(f"Creating view {self.full_name} AS {self.view_definition.expr}")
+        logger.info(f"Creating view {self.full_name} AS {view_definition.expr}")
 
-        _view = self.view_definition.to_sql()
+        _view = view_definition.to_sql()
         df = spark.sql(f"CREATE OR REPLACE VIEW {self.full_name} AS {_view}")
         if self.parent_pipeline_node:
             self.parent_pipeline_node._output_df = df
@@ -206,6 +211,17 @@ class TableDataSink(BaseDataSink):
     # ----------------------------------------------------------------------- #
     # Purge                                                                   #
     # ----------------------------------------------------------------------- #
+
+    def exists(self):
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
+            from laktory import get_spark_session
+
+            spark = get_spark_session()
+
+            return spark.catalog.tableExists(self.full_name)
+
+        else:
+            raise NotImplementedError()
 
     def purge(self):
         """
@@ -247,7 +263,9 @@ class TableDataSink(BaseDataSink):
     # Source                                                                  #
     # ----------------------------------------------------------------------- #
 
-    def as_source(self, as_stream=None) -> TableDataSource:
+    def as_source(
+        self, as_stream=None, reader_kwargs=None, reader_methods=None
+    ) -> TableDataSource:
         """
         Generate a table data source with the same properties as the sink.
 
@@ -255,6 +273,10 @@ class TableDataSink(BaseDataSink):
         ----------
         as_stream:
             If `True`, sink will be read as stream.
+        reader_kwargs:
+            Keyword arguments passed to the dataframe backend reader.
+        reader_methods:
+            DataFrame backend reader methods.
 
         Returns
         -------
@@ -271,6 +293,10 @@ class TableDataSink(BaseDataSink):
 
         if as_stream:
             source.as_stream = as_stream
+        if reader_kwargs:
+            source.reader_kwargs.update(reader_kwargs)
+        if reader_methods:
+            source.reader_methods.extend(reader_methods)
 
         if self.dataframe_backend_:
             source.dataframe_backend_ = self.dataframe_backend_

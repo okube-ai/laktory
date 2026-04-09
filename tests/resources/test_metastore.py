@@ -2,7 +2,6 @@ from laktory.models.resources.databricks import Metastore
 
 metastore = Metastore(
     name="metastore-lakehouse",
-    cloud="azure",
     storage_root="abfss://metastore@o3stglakehousedev.dfs.core.windows.net/",
     region="eastus",
     force_destroy=True,
@@ -44,7 +43,6 @@ def test_metastore():
     print(data)
 
     assert data == {
-        "cloud": "azure",
         "created_at": None,
         "created_by": None,
         "data_accesses": [

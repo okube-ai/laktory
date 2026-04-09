@@ -1,12 +1,90 @@
 # Release History
 
-## [0.8.14] - Unreleased
+## [0.9.5] - Unreleased
 ### Added
-* Databricks `CurrentUser` lookup resource.
-* Public preview of `_pl` and `_pl_node` variables.
 * Support for PipelineIngestion attribute to DatabricksPipeline
 ### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.9.4] - 2026-03-31
+### Added
+* `reader_kwargs` attribute to `PipelineNodeDataSource`
+### Fixed
+* TableDataSink.exists() method.
+* Removed logs deduplication in Databricks notebooks
+* Serialization roundtrip when `schema_definition` of `BaseDataSink` is used
+* Roundtrip when creating a DataFrameSchema instance from a native dataframe schema.
+* Provisioning `laktory_context` value when used inside a custom write used in a streaming query
+### Updated
+* Clarified documentation by removing some base class attributes from child classes [[#443](https://github.com/okube-ai/laktory/issues/443)]
+* Clarified documentation of `VariableType` [[#444](https://github.com/okube-ai/laktory/issues/444)]
+
+## [0.9.3] - 2026-03-27
+### Fixed
+* Roundtrip when creating a DataFrameSchema instance from a native dataframe schema.
+
+## [0.9.2] - 2026-03-27
+### Added
+* Support for `TableDataSource` `reader_kwargs` attribute [[#513](https://github.com/okube-ai/laktory/issues/513)]
+* `CustomWriter` class and `custom_writer` field on `BaseDataSink` — fully replaces Laktory's built-in write logic with a user-supplied function; Laktory manages the streaming query lifecycle (foreachBatch, trigger, checkpoint) [[#514](https://github.com/okube-ai/laktory/issues/514)]
+* `CustomDataSource` source type and `CustomReader` class — fully user-supplied read function as a first-class source alongside `FileDataSource`, `UnityCatalogDataSource`, etc.
+* `LaktoryContext` dataclass — runtime context object (`node`, `pipeline`, `sink`, `source`) optionally injected into user-supplied functions in `CustomWriter`, `CustomReader`, and `DataFrameMethod` by declaring `laktory_context=None` in the function signature [[#515](https://github.com/okube-ai/laktory/issues/515)]
+### Fixed
+* `cluster`.`init_scripts`.`volumes` property for Terraform (plural form instead of singular) [[#516](https://github.com/okube-ai/laktory/issues/516)]
+* Table properties not set before first write [[#507](https://github.com/okube-ai/laktory/issues/507)]
+### Updated
+* Pipeline node execution to include a creation step that facilitates injection of metadata before write data
+* Improved tracking of Laktory-managed table properties
+* `DType` and `DataFrameSchema` classes can be instantiated from Narwhals equivalent
+### Breaking changes
+* n/a
+
+## [0.9.1] - 2026-03-18
+### Added
+* `DatabricksApp` resource
+### Fixed
+* WorkspaceTree resource when using multilevel directory path
+### Updated
+* Auto-detection of SQL notebooks in WorkspaceTree
+
+## [0.9.0] - 2026-03-08
+### Added
+* Support for Airflow orchestrator
+* Support to reference directories as lists in YAML injection
+* Pipeline Execution Plan for finer control over nodes execution
+* Pipeline node `execution_task_name` attribute for more granular control over pipeline orchestration
+* Pipeline node `tag` attribute to facilitate nodes selection at execution
+* Pipeline execution allows for `selects` argument
+### Breaking changes
+* Removed obsolete `cloud` attribute from Metastore resource
+* Refactored View Table Data Sinks structure (removed `view_definition` attribute)
+### Updated
+* Added `environment_version` to `JobEnvironmentSpec` of Databricks Job resource to allow specification of serverless environment version [[#508](https://github.com/okube-ai/laktory/issues/508)]
+
+
+## [0.8.17] - 2025-12-17
+### Fixed
+* Secret scope with Keyvault backend
+
+## [0.8.16] - 2025-12-12
+### Fixed
+* More robust detection of file existence on DBFS and prevention of "com.databricks.sql.io.CloudFileNotFoundException" exception when purging checkpoints.
+
+## [0.8.15] - 2025-12-09
+### Added
+* `pipeline` and `pipeline_node` objects available for expressions evaluation
+
+## [0.8.14] - 2025-12-03
+### Added
+* Databricks `CurrentUser` lookup resource.
+### Fixed
 * Invalid parsing of table name when variable is used
+### Updated
+* Databricks `Cluster` resource to support the latest features
 
 ## [0.8.13] - 2025-11-17
 ### Added
@@ -33,6 +111,7 @@
 ### Updated
 * Automatic view creation with DLT when CDC apply changes is used
 * Pipeline config files path in Databricks workspace
+* Databricks Cluster attributes support
 
 ## [0.8.9] - 2025-08-27
 ### Fixed

@@ -59,9 +59,9 @@ def test_create_view(backend, tmp_path):
     sink = HiveMetastoreDataSink(
         schema_name=schema,
         table_name=view,
-        view_definition=f"SELECT * FROM {schema}.{table}",
+        table_type="VIEW",
     )
-    sink.write()
+    sink.write(view_definition=f"SELECT * FROM {schema}.{table}")
 
     # Read back data
     df = sink.read()

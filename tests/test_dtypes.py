@@ -29,9 +29,9 @@ def test_basic_types():
     assert t2.to_narwhals() == nw.String
 
     # Spark
-    assert t0.to_spark() == T.LongType()
-    assert t1.to_spark() == T.DoubleType()
-    assert t2.to_spark() == T.StringType()
+    assert t0.to_pyspark() == T.LongType()
+    assert t1.to_pyspark() == T.DoubleType()
+    assert t2.to_pyspark() == T.StringType()
 
     # Polars
     assert t0.to_polars() == pl.Int64
@@ -80,13 +80,13 @@ def test_complex_types():
     )
 
     # Spark
-    assert t0.to_spark() == T.ArrayType(T.IntegerType())
-    assert t1.to_spark() == T.ArrayType(T.ArrayType(T.StringType()))
-    assert t2.to_spark() == T.ArrayType(T.ArrayType(T.StringType()))
-    assert t3.to_spark() == T.StructType(
+    assert t0.to_pyspark() == T.ArrayType(T.IntegerType())
+    assert t1.to_pyspark() == T.ArrayType(T.ArrayType(T.StringType()))
+    assert t2.to_pyspark() == T.ArrayType(T.ArrayType(T.StringType()))
+    assert t3.to_pyspark() == T.StructType(
         [T.StructField("x", T.DoubleType()), T.StructField("y", T.IntegerType())]
     )
-    assert t4.to_spark() == T.StructType(
+    assert t4.to_pyspark() == T.StructType(
         [
             T.StructField("x", T.ArrayType(T.DoubleType())),
             T.StructField(
@@ -159,10 +159,46 @@ def test_serialization():
     assert dtype0.model_dump(exclude_unset=True) == {"name": "String"}
 
 
-if __name__ == "__main__":
-    test_nw_supported()
-    test_all_types()
-    test_basic_types()
-    test_complex_types()
-    test_explicit_types()
-    test_serialization()
+def test_dataframeschema_from_native():
+    import pyspark.sql.types as T
+
+    from laktory.models import DataFrameSchema
+
+    native = T.StructType(
+        [
+            T.StructField("amount", T.DecimalType(10, 2)),
+            T.StructField("name", T.StringType()),
+        ]
+    )
+    import narwhals as nw
+
+    nw_schema = nw.Schema({"amount": nw.Decimal(10, 2), "name": nw.String()})
+    schema = DataFrameSchema.from_narwhals(nw_schema, native)
+
+    # Columns are populated for introspection
+    assert len(schema.columns) == 2
+    assert schema.columns[0].name == "amount"
+
+    # to_native() returns the original object directly (no re-conversion)
+    assert schema.to_native() is native
+
+
+def test_decimal_pyspark():
+    import pyspark.sql.types as T
+
+    from laktory import get_spark_session
+    from laktory.models import DataFrameSchema
+
+    # DType-level conversion
+    dtype = DType(name="Decimal")
+    pyspark_type = dtype.to_pyspark()
+    assert isinstance(pyspark_type, T.DecimalType)
+
+    # Schema-level conversion + createDataFrame (reproduces the reported error)
+    schema = DataFrameSchema(columns={"amount": "Decimal", "name": "String"})
+    pyspark_schema = schema.to_pyspark()
+    assert isinstance(pyspark_schema, T.StructType)
+
+    spark = get_spark_session()
+    df = spark.createDataFrame(data=[], schema=pyspark_schema)
+    assert df.count() == 0

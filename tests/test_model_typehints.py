@@ -27,7 +27,7 @@ def test_bool():
     assert m.active == "yes"
 
     # annotation
-    ann = m.model_fields["active"].annotation
+    ann = type(m).model_fields["active"].annotation
     assert ann == bool | VariableType
 
 
@@ -41,7 +41,7 @@ def test_int():
     assert m.id == "some_id"
 
     # annotation
-    ann = m.model_fields["id"].annotation
+    ann = type(m).model_fields["id"].annotation
     assert ann == int | VariableType
 
 
@@ -55,7 +55,7 @@ def test_string():
     assert m.symbol == "other"
 
     # annotation
-    ann = m.model_fields["symbol"].annotation
+    ann = type(m).model_fields["symbol"].annotation
     assert ann == str | VariableType
 
 
@@ -70,7 +70,7 @@ def test_model():
     assert m.symbol == "some_prices"
 
     # annotation
-    ann = m.model_fields["price"].annotation
+    ann = type(m).model_fields["price"].annotation
     assert ann == Price | VariableType
 
 
@@ -88,7 +88,7 @@ def test_list():
     assert m.ids == ["id0", "id1", "id2"]
 
     # annotation
-    ann = m.model_fields["ids"].annotation
+    ann = type(m).model_fields["ids"].annotation
     assert ann == list[int | VariableType] | VariableType
 
 
@@ -111,5 +111,5 @@ def test_dict():
     assert m.prices_dict == {"id1": "price1", "id2": "price2"}
 
     # annotation
-    ann = m.model_fields["prices_dict"].annotation
+    ann = type(m).model_fields["prices_dict"].annotation
     assert ann == dict[int | VariableType, Price | VariableType] | VariableType

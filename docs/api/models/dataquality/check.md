@@ -1,1 +1,1 @@
-::: laktory.models.DataQualityCheck
+::: laktory.models.dataquality.DataQualityCheck

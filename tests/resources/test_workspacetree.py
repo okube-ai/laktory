@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import laktory as lk
 from laktory._testing import Paths
 
@@ -16,7 +19,7 @@ def test_workspace_tree():
     tree = get_workspace_tree()
 
     resources = tree.core_resources
-    assert len(resources) == 5
+    assert len(resources) == 6
 
     for r in resources:
         print(r.source)
@@ -37,28 +40,35 @@ def test_workspace_tree():
     assert r.dirpath == "notebooks"
 
     r = resources[3]
+    assert r.source.endswith("/tests/data/tree/notebooks/select.sql")
+    assert isinstance(r, lk.models.resources.databricks.Notebook)
+    assert r.dirpath == "notebooks"
+    assert r.language == "SQL"
+
+    r = resources[4]
     assert r.source.endswith("/tests/data/tree/pyfiles/hello.py")
     assert isinstance(r, lk.models.resources.databricks.WorkspaceFile)
     assert r.dirpath == "pyfiles"
 
-    r = resources[4]
+    r = resources[5]
     assert r.source.endswith("/tests/data/tree/pyfiles/sysversion.py")
     assert isinstance(r, lk.models.resources.databricks.WorkspaceFile)
     assert r.dirpath == "pyfiles"
 
 
 def test_workspace_tree_rel():
+    cwd = Path(os.getcwd())
     tree = get_workspace_tree()
-    tree.source = "./tests/data/tree"
+    tree.source = os.path.relpath(tree.source, cwd)
 
     resources = tree.core_resources
-    assert len(resources) == 5
+    assert len(resources) == 6
 
     for r in resources:
         print(r.source)
 
     r = resources[0]
-    assert r.source == "tree/notebooks/listfiles.py"
+    assert r.source == tree.source + "/notebooks/listfiles.py"
 
 
 def test_workspace_tree_with_path():
@@ -69,12 +79,13 @@ def test_workspace_tree_with_path():
     )
 
     resources = tree.core_resources
-    assert len(resources) == 5
+    assert len(resources) == 6
 
     assert [r.path for r in resources] == [
         "/Workspace/tmp/notebooks/listfiles.py",
         "/Workspace/tmp/notebooks/listsecrets0.ipynb",
         "/Workspace/tmp/notebooks/listsecrets1.py",
+        "/Workspace/tmp/notebooks/select.sql",
         "/Workspace/tmp/pyfiles/hello.py",
         "/Workspace/tmp/pyfiles/sysversion.py",
     ]

@@ -91,25 +91,25 @@ def is_pattern(s):
     return r"\$\{" in s
 
 
-def _resolve_values(o, vars) -> Any:
+def _resolve_values(o, vars, objs) -> Any:
     """Inject variables into a mutable object"""
 
     from laktory.models.basemodel import BaseModel
 
     if isinstance(o, BaseModel):
-        o.inject_vars(inplace=True, vars=vars)
+        o.inject_vars(inplace=True, vars=vars, objs=objs)
     elif isinstance(o, list):
         for i, _o in enumerate(o):
-            o[i] = _resolve_values(_o, vars)
+            o[i] = _resolve_values(_o, vars, objs)
     elif isinstance(o, dict):
         for k, _o in o.items():
-            o[k] = _resolve_values(_o, vars)
+            o[k] = _resolve_values(_o, vars, objs)
     else:
-        o = _resolve_value(o, vars)
+        o = _resolve_value(o, vars, objs)
     return o
 
 
-def _resolve_value(o, vars):
+def _resolve_value(o, vars, objs):
     """Replace variables in a simple object"""
 
     # Not a string
@@ -133,7 +133,7 @@ def _resolve_value(o, vars):
         var_name = match.group(1)
 
         # Resolve the variable value
-        resolved_value = _resolve_variable(var_name, vars)
+        resolved_value = _resolve_variable(var_name, vars, objs)
 
         # Update the value with the resolved value
         if isinstance(resolved_value, str):
@@ -143,7 +143,7 @@ def _resolve_value(o, vars):
 
             # Recursively resolve element if variable value is a dict or a list
             if isinstance(o, (list, dict)):
-                o = _resolve_values(o, vars)
+                o = _resolve_values(o, vars, objs)
 
     if not isinstance(o, str):
         return o
@@ -155,7 +155,7 @@ def _resolve_value(o, vars):
         expr = match.group(1)
 
         # Resolve the variable value
-        resolved_value = _resolve_expression(expr, vars)
+        resolved_value = _resolve_expression(expr, vars, objs)
 
         # Update the value with the resolved value
         if isinstance(resolved_value, str):
@@ -166,7 +166,7 @@ def _resolve_value(o, vars):
     return o
 
 
-def _resolve_variable(name, vars):
+def _resolve_variable(name, vars, objs):
     """Resolve a variable name from the variables or environment."""
 
     # Fetch from model variables
@@ -191,12 +191,12 @@ def _resolve_variable(name, vars):
 
     # If the resolved value is itself a string with variables, resolve it
     if isinstance(value, str) and ("${" in value or "$${" in value):
-        value = _resolve_value(value, vars)
+        value = _resolve_value(value, vars, objs)
 
     return value
 
 
-def _resolve_expression(expression, vars):
+def _resolve_expression(expression, vars, objs):
     """Evaluate an inline expression."""
     # Translate vars.env to variables_map['env']
     expression = re.sub(
@@ -206,8 +206,14 @@ def _resolve_expression(expression, vars):
     # Prepare a safe evaluation context
     local_context = copy.deepcopy(vars)
 
+    locals = {"variables_map": local_context}
+
+    if objs is not None:
+        for k, v in objs.items():
+            locals[k] = v
+
     try:
         # Allow Python evaluation of conditionals and operations
-        return eval(expression, {}, {"variables_map": local_context})
+        return eval(expression, {}, locals)
     except Exception as e:
         raise ValueError(f"Error evaluating expression '{expression}': {e}")

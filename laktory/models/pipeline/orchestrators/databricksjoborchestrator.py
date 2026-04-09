@@ -43,6 +43,9 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         None,
         description="An optional maximum number of times to retry an unsuccessful run for each node.",
     )
+    serverless_environment_version: str = Field(
+        None, description="Serverless environment version"
+    )
 
     # ----------------------------------------------------------------------- #
     # Update Job                                                              #
@@ -79,16 +82,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         self.tasks = []
 
-        def _get_depends_on(node, pl):
-            depends_on = []
-            for edge in pl.dag.in_edges(node.name):
-                _node = pl.nodes_dict[edge[0]]
-                if _node.has_sinks:
-                    depends_on += [{"task_key": "node-" + edge[0]}]
-                else:
-                    depends_on += _get_depends_on(_node, pl)
-            return depends_on
-
         # Requirements and path
         _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
         _path = (
@@ -105,37 +98,45 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             if env.environment_key == ENV_KEY:
                 env_found = True
                 break
+
         if not env_found:
+            _version = "5"
+            if serverless and not self.serverless_environment_version:
+                raise ValueError(
+                    "To use serverless a `serverless_environment_version` must be specified."
+                )
+            if self.serverless_environment_version:
+                _version = self.serverless_environment_version
+
             envs += [
                 JobEnvironment(
                     environment_key=ENV_KEY,
                     spec=JobEnvironmentSpec(
-                        client="3",
                         dependencies=_requirements,
+                        environment_version=_version,
                     ),
                 )
             ]
             self.environments = envs
 
         # Sorting Node Names to prevent job update trigger with Pulumi
-        node_names = [node.name for node in pl.nodes]
-        node_names.sort()
-        for node_name in node_names:
-            node = pl.nodes_dict[node_name]
+        plan = pl.get_execution_plan()
+        pl_tasks = plan.tasks_dict
+        pl_task_names = list(pl_tasks.keys())
+        pl_task_names.sort()
+        for pl_task_name in pl_task_names:
+            pl_task = pl_tasks[pl_task_name]
 
-            if not node.has_sinks:
-                continue
-
-            depends_on = _get_depends_on(node, pl=pl)
+            depends_on = [{"task_key": n} for n in pl_task.upstream_task_names]
 
             task = JobTask(
-                task_key="node-" + node.name,
+                task_key=pl_task.name,
                 python_wheel_task=JobTaskPythonWheelTask(
                     entry_point="models.pipeline._execute",
                     package_name="laktory",
                     named_parameters={
                         "filepath": _path,
-                        "node_name": node.name,
+                        "selects": ",".join(pl_task.node_names),
                     },
                 ),
                 depends_ons=depends_on,
@@ -195,6 +196,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             "type",
             "dataframe_backend",
             "dataframe_api",
+            "serverless_environment_version",
         ]
 
     @property

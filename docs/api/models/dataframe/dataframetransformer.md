@@ -1,1 +1,1 @@
-::: laktory.models.DataFrameTransformer
+::: laktory.models.dataframe.DataFrameTransformer

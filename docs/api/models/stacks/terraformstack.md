@@ -1,1 +1,1 @@
-::: laktory.models.TerraformStack
+::: laktory.models.stacks.TerraformStack

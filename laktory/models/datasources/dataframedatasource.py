@@ -102,9 +102,7 @@ class DataFrameDataSource(BaseDataSource):
                 self.df = nw.from_native(self.df)
 
             with self.validate_assignment_disabled():
-                self.dataframe_backend_ = DataFrameBackends.from_nw_implementation(
-                    self.df.implementation
-                )
+                self.dataframe_backend_ = DataFrameBackends(self.df.implementation)
 
         return self
 
@@ -118,7 +116,7 @@ class DataFrameDataSource(BaseDataSource):
 
         # Build Schema-like
         if self.df is not None:
-            d = self.df.schema
+            d = self.df.collect_schema()
         elif isinstance(self.data, dict):
             d = {k: str(type(v)) for k, v in self.data.items()}
         elif isinstance(self.data, list):

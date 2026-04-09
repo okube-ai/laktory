@@ -490,9 +490,7 @@ class DataSinkMergeCDCOptions(BaseModel):
             Source DataFrame to merge into target (sink).
         """
 
-        dataframe_backend = DataFrameBackends.from_nw_implementation(
-            source.implementation
-        )
+        dataframe_backend = DataFrameBackends(source.implementation)
         if dataframe_backend not in SUPPORTED_BACKENDS:
             raise NotImplementedError(
                 f"DataFrame provided is of {dataframe_backend} backend, which is not currently implemented for merge operations."

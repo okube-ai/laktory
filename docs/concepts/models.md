@@ -90,6 +90,24 @@ schemas: !use schemas.yaml
 - name: gold
 ```
 
+In addition to a YAML file path, you may also provide a directory path.
+When a directory is provided, all YAML files within that directory are loaded and 
+concatenated, and the resulting sequence is treated as a list.
+
+```yaml title="schemas.yaml"
+- name: finance
+  tables: !use tables.yaml
+- name: engineering
+  tables: !use tables/
+```
+```yaml title="tables/bronze.yaml"
+- name: bronze
+```
+
+```yaml title="tables/silver.yaml"
+- name: silver
+```
+
 #### List Concatenation
 In addition to direct injection, Laktory also supports the `!extend` tag to concatenate two lists. For example:
 

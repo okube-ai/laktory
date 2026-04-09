@@ -68,7 +68,7 @@ def test_databricks_job():
             {
                 "environment_key": "laktory",
                 "spec": {
-                    "client": "3",
+                    "environment_version": "5",
                     "dependencies": [
                         "requests>=2.0",
                         "./wheels/lake-0.0.1-py3-none-any.whl",
@@ -101,7 +101,7 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._execute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "node_name": "brz",
+                        "selects": "brz",
                     },
                     "package_name": "laktory",
                 },
@@ -119,7 +119,7 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._execute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "node_name": "gld",
+                        "selects": "gld",
                     },
                     "package_name": "laktory",
                 },
@@ -137,7 +137,7 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._execute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "node_name": "gld_a",
+                        "selects": "gld_a",
                     },
                     "package_name": "laktory",
                 },
@@ -155,7 +155,7 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._execute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "node_name": "gld_ab",
+                        "selects": "gld_ab",
                     },
                     "package_name": "laktory",
                 },
@@ -173,7 +173,7 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._execute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "node_name": "gld_b",
+                        "selects": "gld_b",
                     },
                     "package_name": "laktory",
                 },
@@ -191,7 +191,7 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._execute",
                     "named_parameters": {
                         "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "node_name": "slv",
+                        "selects": "slv",
                     },
                     "package_name": "laktory",
                 },
@@ -216,8 +216,8 @@ def test_databricks_job():
                     "entry_point": "models.pipeline._post_execute",
                     "named_parameters": {
                         "filepaths": "/Workspace/.laktory/pipelines/pl-job.json",
-                        "quality_monitors": "true",
                         "tables_metadata": "false",
+                        "quality_monitors": "true",
                     },
                     "package_name": "laktory",
                 },
@@ -252,16 +252,22 @@ def test_databricks_job():
                         "schema_name": "default",
                         "table_name": "gld_ab",
                         "table_type": "VIEW",
-                        "view_definition": {
-                            "expr": "SELECT * from {nodes.gld_a} UNION SELECT * from {nodes.gld_b}",
-                            "dataframe_backend": "PYSPARK",
-                            "dataframe_api": "NARWHALS",
-                        },
                         "dataframe_backend": "PYSPARK",
                         "dataframe_api": "NARWHALS",
                         "checkpoint_path": "pipelines/pl-job/gld_ab/checkpoints/sink-cd086c7d-37a3-0a0b-490b-96fa2980679e",
                     }
                 ],
+                "transformer": {
+                    "nodes": [
+                        {
+                            "expr": "SELECT * from {nodes.gld_a} UNION SELECT * from {nodes.gld_b}",
+                            "dataframe_backend": "PYSPARK",
+                            "dataframe_api": "NARWHALS",
+                        }
+                    ],
+                    "dataframe_backend": "PYSPARK",
+                    "dataframe_api": "NARWHALS",
+                },
                 "dataframe_backend": "PYSPARK",
                 "dataframe_api": "NARWHALS",
                 "root_path": "pipelines/pl-job/gld_ab",
@@ -382,16 +388,22 @@ def test_databricks_job():
                         "schema_name": "default",
                         "table_name": "gld_a",
                         "table_type": "VIEW",
-                        "view_definition": {
-                            "expr": "SELECT * from {nodes.gld} WHERE id = 'a'",
-                            "dataframe_backend": "PYSPARK",
-                            "dataframe_api": "NARWHALS",
-                        },
                         "dataframe_backend": "PYSPARK",
                         "dataframe_api": "NARWHALS",
                         "checkpoint_path": "pipelines/pl-job/gld_a/checkpoints/sink-514b35b8-117e-9aa5-362b-5dc5b3ece569",
                     }
                 ],
+                "transformer": {
+                    "nodes": [
+                        {
+                            "expr": "SELECT * from {nodes.gld} WHERE id = 'a'",
+                            "dataframe_backend": "PYSPARK",
+                            "dataframe_api": "NARWHALS",
+                        }
+                    ],
+                    "dataframe_backend": "PYSPARK",
+                    "dataframe_api": "NARWHALS",
+                },
                 "dataframe_backend": "PYSPARK",
                 "dataframe_api": "NARWHALS",
                 "root_path": "pipelines/pl-job/gld_a",
@@ -404,16 +416,22 @@ def test_databricks_job():
                         "schema_name": "default",
                         "table_name": "gld_b",
                         "table_type": "VIEW",
-                        "view_definition": {
-                            "expr": "SELECT * from {nodes.gld} WHERE id = 'b'",
-                            "dataframe_backend": "PYSPARK",
-                            "dataframe_api": "NARWHALS",
-                        },
                         "dataframe_backend": "PYSPARK",
                         "dataframe_api": "NARWHALS",
                         "checkpoint_path": "pipelines/pl-job/gld_b/checkpoints/sink-d897b6e7-771c-6620-a110-d2fd1c8c9ae3",
                     }
                 ],
+                "transformer": {
+                    "nodes": [
+                        {
+                            "expr": "SELECT * from {nodes.gld} WHERE id = 'b'",
+                            "dataframe_backend": "PYSPARK",
+                            "dataframe_api": "NARWHALS",
+                        }
+                    ],
+                    "dataframe_backend": "PYSPARK",
+                    "dataframe_api": "NARWHALS",
+                },
                 "dataframe_backend": "PYSPARK",
                 "dataframe_api": "NARWHALS",
                 "root_path": "pipelines/pl-job/gld_b",
@@ -429,7 +447,7 @@ def test_databricks_job():
                 {
                     "environment_key": "laktory",
                     "spec": {
-                        "client": "3",
+                        "environment_version": "5",
                         "dependencies": [
                             "requests>=2.0",
                             "./wheels/lake-0.0.1-py3-none-any.whl",
@@ -462,7 +480,7 @@ def test_databricks_job():
                         "entry_point": "models.pipeline._execute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                            "node_name": "brz",
+                            "selects": "brz",
                         },
                         "package_name": "laktory",
                     },
@@ -480,7 +498,7 @@ def test_databricks_job():
                         "entry_point": "models.pipeline._execute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                            "node_name": "gld",
+                            "selects": "gld",
                         },
                         "package_name": "laktory",
                     },
@@ -498,7 +516,7 @@ def test_databricks_job():
                         "entry_point": "models.pipeline._execute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                            "node_name": "gld_a",
+                            "selects": "gld_a",
                         },
                         "package_name": "laktory",
                     },
@@ -519,7 +537,7 @@ def test_databricks_job():
                         "entry_point": "models.pipeline._execute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                            "node_name": "gld_ab",
+                            "selects": "gld_ab",
                         },
                         "package_name": "laktory",
                     },
@@ -537,7 +555,7 @@ def test_databricks_job():
                         "entry_point": "models.pipeline._execute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                            "node_name": "gld_b",
+                            "selects": "gld_b",
                         },
                         "package_name": "laktory",
                     },
@@ -555,7 +573,7 @@ def test_databricks_job():
                         "entry_point": "models.pipeline._execute",
                         "named_parameters": {
                             "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
-                            "node_name": "slv",
+                            "selects": "slv",
                         },
                         "package_name": "laktory",
                     },
@@ -607,7 +625,7 @@ def test_databricks_job_execute(mocker):
         "_execute",
         "--filepath",
         str(data_dirpath / "pl.yaml"),
-        "--node_name",
+        "--selects",
         "brz",
         "--full_refresh",
         "true",
@@ -657,6 +675,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
         "drop_duplicates": None,
         "drops": None,
         "filter": None,
+        "reader_kwargs": {},
         "renames": None,
         "selects": None,
         "type": "UNITY_CATALOG",

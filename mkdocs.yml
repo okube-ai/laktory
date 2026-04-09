@@ -113,6 +113,7 @@ plugins:
 #                  schema: false
               - griffe_fieldz:
                   include_inherited: True
+              - laktory.griffe_ext:
   - mkdocs-video
 
 
@@ -176,6 +177,9 @@ nav:
         - DataFrameTransformer: api/models/dataframe/dataframetransformer.md
       - DataTypes: api/models/datatypes.md
       - DataSinks:
+        - BaseDataSink: api/models/datasinks/basedatasink.md
+        - TableDataSink: api/models/datasinks/tabledatasink.md
+        - CustomWriter: api/models/datasinks/customwriter.md
         - FileDataSink: api/models/datasinks/file.md
         - HiveMetastoreDataSink: api/models/datasinks/hivemetastore.md
         - PipelineViewDataSink: api/models/datasinks/pipelineview.md
@@ -183,19 +187,40 @@ nav:
         - DataSinkMergeCDCOptions: api/models/datasinks/mergecdcoptions.md
         - TableDataSinkMetadata: api/models/datasinks/tablemetadata.md
       - DataSources:
+        - BaseDataSource: api/models/datasources/basedatasource.md
+        - TableDataSource: api/models/datasources/tabledatasource.md
         - ReaderWriterMethod: api/models/datasources/readerwritermethod.md
+        - CustomDataSource: api/models/datasources/customdatasource.md
         - DataFrameDataSource: api/models/datasources/dataframe.md
         - FileDataSource: api/models/datasources/file.md
         - PipelineNodeDataSource: api/models/datasources/pipelinenode.md
         - HiveMetastoreDataSource: api/models/datasources/hivemetastore.md
         - UnityCatalogDataSource: api/models/datasources/unitycatalog.md
+      - LaktoryContext: api/models/laktorycontext.md
       - DataQuality:
         - DataQualityCheck: api/models/dataquality/check.md
         - DataQualityExpectation: api/models/dataquality/expectation.md
+      - Grants:
+        - CatalogGrant: api/models/grants/cataloggrant.md
+        - ConnectionGrant: api/models/grants/connectiongrant.md
+        - ExternalLocationGrant: api/models/grants/externallocationgrant.md
+        - FunctionGrant: api/models/grants/functiongrant.md
+        - MetastoreGrant: api/models/grants/metastoregrant.md
+        - RegisteredModelGrant: api/models/grants/registeredmodelgrant.md
+        - SchemaGrant: api/models/grants/schemagrant.md
+        - ShareGrant: api/models/grants/sharegrant.md
+        - StorageCredentialGrant: api/models/grants/storagecredentialgrant.md
+        - TableGrant: api/models/grants/tablegrant.md
+        - ViewGrant: api/models/grants/viewgrant.md
+        - VolumeGrant: api/models/grants/volumegrant.md
       - Pipeline:
         - Pipeline: api/models/pipeline/pipeline.md
+        - PipelineChild: api/models/pipeline/pipelinechild.md
         - PipelineNode: api/models/pipeline/pipelinenode.md
+        - PipelineTask: api/models/pipeline/pipelinetask.md
+        - PipelineExecutionPlan: api/models/pipeline/pipelineexecutionplan.md
         - Orchestrators:
+            - Airflow: api/models/pipeline/orchestrators/airfloworchestrator.md
             - Databricks Job: api/models/pipeline/orchestrators/databricksjoborchestrator.md
             - Databricks Pipeline: api/models/pipeline/orchestrators/databrickspipelineorchestrator.md
             - Pipeline Config Workspace File: api/models/pipeline/orchestrators/pipelineconfigworkspacefile.md
@@ -207,6 +232,7 @@ nav:
           - AccessControl: api/models/resources/databricks/accesscontrol.md
           - AccessControlRuleSet: api/models/resources/databricks/accesscontrolruleset.md
           - api/models/resources/databricks/alert.md
+          - App: api/models/resources/databricks/app.md
           - api/models/resources/databricks/catalog.md
           - api/models/resources/databricks/cluster.md
           - ClusterPolicy: api/models/resources/databricks/clusterpolicy.md
@@ -216,10 +242,10 @@ nav:
           - api/models/resources/databricks/directory.md
           - Declarative Pipeline:
             - api/models/resources/databricks/pipeline.md
-            - api/models/resources/databricks/pipeline_cluster.md
           - ExternalLocation: api/models/resources/databricks/externallocation.md
           - api/models/resources/databricks/grant.md
           - api/models/resources/databricks/grants.md
+          - GroupMember: api/models/resources/databricks/groupmember.md
           - api/models/resources/databricks/group.md
           - api/models/resources/databricks/job.md
           - api/models/resources/databricks/metastore.md
@@ -234,7 +260,9 @@ nav:
           - api/models/resources/databricks/notebook.md
           - NotificationDestination: api/models/resources/databricks/notificationdestination.md
           - OboToken: api/models/resources/databricks/obotoken.md
+          - Permissions: api/models/resources/databricks/permissions.md
           - PythonPackage: api/models/resources/databricks/pythonpackage.md
+          - PythonPackagePermissions: api/models/resources/databricks/pythonpackagepermissions.md
           - QualityMonitor: api/models/resources/databricks/qualitymonitor.md
           - api/models/resources/databricks/query.md
           - api/models/resources/databricks/recipient.md
@@ -250,11 +278,15 @@ nav:
           - api/models/resources/databricks/table.md
           - api/models/resources/databricks/user.md
           - UserRole: api/models/resources/databricks/userrole.md
+          - VectorSearchEndpoint: api/models/resources/databricks/vectorsearchendpoint.md
+          - VectorSearchIndex: api/models/resources/databricks/vectorsearchindex.md
           - api/models/resources/databricks/volume.md
           - api/models/resources/databricks/warehouse.md
           - WorkspaceFile: api/models/resources/databricks/workspacefile.md
           - WorkspaceBinding: api/models/resources/databricks/workspacebinding.md
+          - WorkspaceTree: api/models/resources/databricks/workspacetree.md
         - Providers:
+          - BaseProvider: api/models/resources/providers/baseprovider.md
           - AzureProvider: api/models/resources/providers/azure.md
           - AzurePulumiProvider: api/models/resources/providers/azurepulumi.md
           - AWSProvider: api/models/resources/providers/aws.md

@@ -10,3 +10,4 @@ stocks:
   - !extend stocks_others.yaml
 query:
   !use stocks.sql
+sources: !use sources/

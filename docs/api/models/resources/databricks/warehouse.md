@@ -2,12 +2,12 @@
 
 ---
 
-::: laktory.models.resources.databricks.warehouse.WarehouseTags
+::: laktory.models.resources.databricks.warehouse.WarehouseCustomTag
 
 ---
 
-::: laktory.models.resources.databricks.warehouse.WarehouseCustomTag
-
---
-
 ::: laktory.models.resources.databricks.warehouse.WarehouseLookup
+
+---
+
+::: laktory.models.resources.databricks.warehouse.WarehouseTags

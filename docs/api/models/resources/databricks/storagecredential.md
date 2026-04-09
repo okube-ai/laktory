@@ -14,6 +14,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.storagecredential.CloudflareApiToken
+
+---
+
 ::: laktory.models.resources.databricks.storagecredential.DatabricksGcpServiceAccount
 
 ---

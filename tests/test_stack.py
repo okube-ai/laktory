@@ -32,6 +32,7 @@ def stack():
 def full_stack():
     from tests.resources.test_accesscontrolruleset import acrs
     from tests.resources.test_alert import alert
+    from tests.resources.test_app import app
     from tests.resources.test_catalog import catalog
     from tests.resources.test_cluster_policy import cluster_policy
     from tests.resources.test_dashboard import dashboard
@@ -74,6 +75,7 @@ def full_stack():
     _resources = {
         "databricks_accesscontrolrulesets": [acrs],
         "databricks_alerts": [alert],
+        "databricks_apps": [app],
         "databricks_catalogs": [catalog],
         "databricks_clusterpolicies": [cluster_policy],
         "databricks_dashboards": [dashboard],
@@ -254,7 +256,6 @@ def test_pulumi_stack(monkeypatch, stack):
                         {
                             "jobClusterKey": "main",
                             "newCluster": {
-                                "dataSecurityMode": "USER_ISOLATION",
                                 "initScripts": [],
                                 "nodeTypeId": "${vars.node_type_id}",
                                 "sparkConf": {},
@@ -348,8 +349,8 @@ def test_pulumi_stack(monkeypatch, stack):
             "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
                 "properties": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "/tmp/laktory/cache/pipelines/pl-stock-prices-ut-stack.json",
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                 },
                 "options": {
                     "provider": "${databricks}",
@@ -416,7 +417,6 @@ def test_pulumi_stack(monkeypatch, stack):
                         {
                             "jobClusterKey": "main",
                             "newCluster": {
-                                "dataSecurityMode": "USER_ISOLATION",
                                 "initScripts": [],
                                 "nodeTypeId": "Standard_DS4_v2",
                                 "sparkConf": {},
@@ -511,8 +511,8 @@ def test_pulumi_stack(monkeypatch, stack):
             "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:WorkspaceFile",
                 "properties": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "/tmp/laktory/cache/pipelines/pl-stock-prices-ut-stack.json",
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                 },
                 "options": {
                     "provider": "${databricks}",
@@ -571,7 +571,6 @@ def test_terraform_stack(monkeypatch, stack):
                         {
                             "job_cluster_key": "main",
                             "new_cluster": {
-                                "data_security_mode": "USER_ISOLATION",
                                 "init_scripts": [],
                                 "node_type_id": "${vars.node_type_id}",
                                 "spark_conf": {},
@@ -669,8 +668,8 @@ def test_terraform_stack(monkeypatch, stack):
             },
             "databricks_workspace_file": {
                 "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "/tmp/laktory/cache/pipelines/pl-stock-prices-ut-stack.json",
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
                 }
@@ -705,7 +704,6 @@ def test_terraform_stack(monkeypatch, stack):
                         {
                             "job_cluster_key": "main",
                             "new_cluster": {
-                                "data_security_mode": "USER_ISOLATION",
                                 "init_scripts": [],
                                 "node_type_id": "Standard_DS3_v2",
                                 "spark_conf": {},
@@ -803,8 +801,8 @@ def test_terraform_stack(monkeypatch, stack):
             },
             "databricks_workspace_file": {
                 "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "/tmp/laktory/cache/pipelines/pl-stock-prices-ut-stack.json",
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
                 }
@@ -839,7 +837,6 @@ def test_terraform_stack(monkeypatch, stack):
                         {
                             "job_cluster_key": "main",
                             "new_cluster": {
-                                "data_security_mode": "USER_ISOLATION",
                                 "init_scripts": [],
                                 "node_type_id": "Standard_DS4_v2",
                                 "spark_conf": {},
@@ -938,8 +935,8 @@ def test_terraform_stack(monkeypatch, stack):
             },
             "databricks_workspace_file": {
                 "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "source": "/tmp/laktory/cache/pipelines/pl-stock-prices-ut-stack.json",
+                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
                 }

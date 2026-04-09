@@ -152,7 +152,7 @@ def test_read_stream(backend, fmt, tmp_path):
         pytest.skip("Requires Databricks Autoloader. Skipping Test.")
 
     df = source.read()
-    assert df.schema == nw.Schema(
+    assert df.collect_schema() == nw.Schema(
         {"_idx": nw.Int64(), "id": nw.String(), "x1": nw.Int64()}
     )
     assert df.to_native().isStreaming

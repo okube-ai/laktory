@@ -2,7 +2,7 @@
 
 ---
 
-::: laktory.models.resources.databricks.share.SharedObjectPartitionValue
+::: laktory.models.resources.databricks.share.ShareObject
 
 ---
 
@@ -10,8 +10,8 @@
 
 ---
 
-::: laktory.models.resources.databricks.share.ShareObject
+::: laktory.models.resources.databricks.share.ShareProviderConfig
 
 ---
 
-::: laktory.models.resources.databricks.share.ShareProviderConfig
+::: laktory.models.resources.databricks.share.SharedObjectPartitionValue

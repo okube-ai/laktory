@@ -11,11 +11,14 @@ from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
 from pydantic import field_serializer
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
+from laktory.models.dataframe.dataframeschema import DataFrameSchema
+from laktory.models.datasinks.customwriter import CustomWriter
 from laktory.models.datasinks.mergecdcoptions import DataSinkMergeCDCOptions
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.readerwritermethod import ReaderWriterMethod
@@ -92,6 +95,11 @@ class BaseDataSink(BaseModel, PipelineChild):
         - MERGE: Append, update and optionally delete records. Only supported for DELTA format. Requires cdc specification.
         """,
     )
+    schema_definition: DataFrameSchema = Field(
+        None,
+        validation_alias=AliasChoices("schema", "schema_definition"),
+        description="Explicit table schema used when creating the table. If not set, schema is inferred from the transformer output DataFrame.",
+    )
     writer_kwargs: dict[str, Any] = Field(
         {},
         description="Keyword arguments passed directly to dataframe backend writer. Passed to `.options()` method when using PySpark.",
@@ -99,6 +107,50 @@ class BaseDataSink(BaseModel, PipelineChild):
     writer_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend writer methods."
     )
+    custom_writer: CustomWriter | None = Field(
+        None,
+        description=(
+            "Custom writer that fully replaces Laktory's built-in write logic. "
+            "Laktory manages the streaming query lifecycle "
+            "(foreachBatch, trigger, checkpoint, start/await). "
+            "Can be set as a plain string (func_name only) or a full CustomWriter object "
+            "with func_name, func_args, and func_kwargs. "
+            "Mutually exclusive with `mode` and `merge_cdc_options`."
+        ),
+    )
+
+    @field_validator("custom_writer", mode="before")
+    @classmethod
+    def coerce_custom_writer(cls, v):
+        if isinstance(v, str):
+            return {"func_name": v}
+        return v
+
+    @model_validator(mode="after")
+    def custom_writer_is_exclusive(self) -> Any:
+        if self.custom_writer:
+            if self.mode is not None:
+                raise ValueError("`custom_writer` and `mode` are mutually exclusive.")
+            if self.merge_cdc_options is not None:
+                raise ValueError(
+                    "`custom_writer` and `merge_cdc_options` are mutually exclusive."
+                )
+
+            from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
+                DatabricksPipelineOrchestrator,
+            )
+
+            if (
+                self.parent_pipeline
+                and self.parent_pipeline.orchestrator
+                and isinstance(
+                    self.parent_pipeline.orchestrator, DatabricksPipelineOrchestrator
+                )
+            ):
+                raise ValueError(
+                    "`custom_writer` is not supported when using the Databricks Declarative Pipelines orchestrator."
+                )
+        return self
 
     @model_validator(mode="after")
     def merge_has_options(self) -> Any:
@@ -127,6 +179,14 @@ class BaseDataSink(BaseModel, PipelineChild):
                     )
 
         return self
+
+    # ----------------------------------------------------------------------- #
+    # Children                                                                #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def children_names(self):
+        return ["custom_writer"]
 
     # -------------------------------------------------------------------------------- #
     # Properties                                                                       #
@@ -160,16 +220,6 @@ class BaseDataSink(BaseModel, PipelineChild):
     @field_serializer("checkpoint_path", when_used="json")
     def serialize_path(self, value: Path) -> str:
         return value.as_posix()
-
-    @property
-    def upstream_node_names(self) -> list[str]:
-        """Pipeline node names required to write sink"""
-        return []
-
-    @property
-    def data_sources(self):
-        """Get all sources feeding the sink"""
-        return []
 
     # -------------------------------------------------------------------------------- #
     # CDC                                                                              #
@@ -212,7 +262,66 @@ class BaseDataSink(BaseModel, PipelineChild):
         }
 
     # -------------------------------------------------------------------------------- #
-    # Writers                                                                          #
+    # Create                                                                           #
+    # -------------------------------------------------------------------------------- #
+
+    def _update_backend_from_df(self, df):
+        dataframe_backend = DataFrameBackends(df.implementation)
+        if dataframe_backend not in SUPPORTED_BACKENDS:
+            raise ValueError(
+                f"DataFrame provided is of {dataframe_backend} backend, which is not supported."
+            )
+
+        if self.dataframe_backend_ and self.dataframe_backend_ != dataframe_backend:
+            raise ValueError(
+                f"DataFrame provided is {dataframe_backend} and source has been configure with {self.dataframe_backend_} backend."
+            )
+        self.dataframe_backend_ = dataframe_backend
+
+    def _get_create_schema(self, df):
+        schema = None
+        dataframe_backend = None
+        if self.schema_definition:
+            schema = self.schema_definition
+        elif df is not None:
+            schema = DataFrameSchema.from_df(df)
+            dataframe_backend = DataFrameBackends.from_df(df)
+
+        # TODO: We should probably validate that the schema from the DataFrame matches
+        # the schema_definition if provided.
+
+        if schema is None:
+            return
+
+        return schema.to_native(dataframe_backend=dataframe_backend)
+
+    def create(self, df: "AnyFrame" = None) -> bool:
+        """
+        Initialize the sink if required.
+
+        Some sinks (e.g., Unity Catalog or Delta tables) must exist before
+        metadata can be applied or data can be written in append mode.
+
+        Parameters
+        ----------
+        df : DataFrame
+            Input DataFrame that may be used during sink initialization.
+
+        Returns
+        -------
+        bool
+            True if the sink was created, False if it already existed or if
+            creation is not required.
+
+        Notes
+        -----
+        This method is intended to be overridden by subclasses to implement
+        sink-specific initialization logic.
+        """
+        return False
+
+    # -------------------------------------------------------------------------------- #
+    # Write                                                                            #
     # -------------------------------------------------------------------------------- #
 
     def _validate_format(self):
@@ -225,7 +334,10 @@ class BaseDataSink(BaseModel, PipelineChild):
             self._validate_mode_spark(mode, df)
 
     def write(
-        self, df: AnyFrame = None, mode: str = None, full_refresh: bool = False
+        self,
+        df: AnyFrame = None,
+        view_definition: str = None,
+        mode: str = None,
     ) -> None:
         """
         Write dataframe into sink.
@@ -234,41 +346,81 @@ class BaseDataSink(BaseModel, PipelineChild):
         ----------
         df:
             Input dataframe.
-        full_refresh
-            If `True`, source is deleted/dropped (including checkpoint if applicable)
-            before write.
         mode:
             Write mode overwrite of the sink default mode.
+        view_definition:
+            View definition for table data sinks of `VIEW` type
         """
 
-        if getattr(self, "view_definition", None):
+        logger.info("Write initiated.")
+
+        if getattr(self, "table_type", None) == "VIEW":
+            if view_definition is None:
+                raise ValueError(f"`view_definition` for '{self._id}' is `None`")
+
+            from laktory.models.dataframe.dataframeexpr import DataFrameExpr
+
+            if not isinstance(view_definition, DataFrameExpr):
+                view_definition = DataFrameExpr(expr=view_definition)
+
             if self.dataframe_backend == DataFrameBackends.PYSPARK:
-                self._write_spark_view()
+                self._write_spark_view(view_definition)
             elif self.dataframe_backend == DataFrameBackends.POLARS:
-                self._write_polars_view()
+                self._write_polars_view(view_definition)
             else:
                 raise ValueError(
                     f"DataFrame backend '{self.dataframe_backend}' is not supported"
                 )
             return
 
-        if mode is None:
-            mode = self.mode
-
         if not isinstance(df, (nw.DataFrame, nw.LazyFrame)):
             df = nw.from_native(df)
+        self._update_backend_from_df(df)
 
-        dataframe_backend = DataFrameBackends.from_nw_implementation(df.implementation)
-        if dataframe_backend not in SUPPORTED_BACKENDS:
-            raise ValueError(
-                f"DataFrame provided is of {dataframe_backend} backend, which is not supported."
-            )
+        # Custom Writer
+        if self.custom_writer:
+            df_native = df.to_native()
 
-        if self.dataframe_backend_ and self.dataframe_backend_ != dataframe_backend:
-            raise ValueError(
-                f"DataFrame provided is {dataframe_backend} and source has been configure with {self.dataframe_backend_} backend."
-            )
-        self.dataframe_backend_ = dataframe_backend
+            # Special Treatment for Spark Streaming
+            if (
+                self.dataframe_backend == DataFrameBackends.PYSPARK
+                and df_native.isStreaming
+            ):
+                if self.checkpoint_path is None:
+                    raise ValueError(
+                        f"Checkpoint location not specified for sink '{self._id}'"
+                    )
+                # Build context before the foreachBatch lambda so that _parent
+                # references are captured while intact. Inside foreachBatch on
+                # Databricks, the lambda closure is serialized via cloudpickle
+                # and _parent attributes may not survive the round-trip.
+                from laktory.models.laktorycontext import LaktoryContext
+
+                _context = LaktoryContext(
+                    node=self.parent_pipeline_node,
+                    pipeline=self.parent_pipeline,
+                    sink=self,
+                )
+                query = (
+                    df_native.writeStream.foreachBatch(
+                        lambda batch_df, _: self.custom_writer.execute(
+                            batch_df, context=_context
+                        )
+                    )
+                    .trigger(availableNow=True)
+                    .options(checkpointLocation=self.checkpoint_path)
+                    .start()
+                )
+                query.awaitTermination()
+
+            else:
+                self.custom_writer.execute(df)
+
+            logger.info("Write completed.")
+            return
+
+        if mode is None:
+            mode = self.mode
 
         self._validate_mode(mode, df)
         self._validate_format()
@@ -279,9 +431,9 @@ class BaseDataSink(BaseModel, PipelineChild):
             return
 
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
-            self._write_spark(df=df, mode=mode, full_refresh=full_refresh)
+            self._write_spark(df=df, mode=mode)
         elif self.dataframe_backend == DataFrameBackends.POLARS:
-            self._write_polars(df=df, mode=mode, full_refresh=full_refresh)
+            self._write_polars(df=df, mode=mode)
         else:
             raise ValueError(
                 f"DataFrame backend '{self.dataframe_backend}' is not supported"
@@ -289,18 +441,18 @@ class BaseDataSink(BaseModel, PipelineChild):
 
         logger.info("Write completed.")
 
-    def _write_spark_view(self) -> None:
+    def _write_spark_view(self, view_definition) -> None:
         raise NotImplementedError(
             f"View creation with spark is not implemented for type '{type(self)}'"
         )
 
-    def _write_polars_view(self) -> None:
+    def _write_polars_view(self, view_definition) -> None:
         raise NotImplementedError(
             f"View creation with polars is not implemented for type '{type(self)}'"
         )
 
     # -------------------------------------------------------------------------------- #
-    # Writers - Spark                                                                  #
+    # Write - Spark                                                                    #
     # -------------------------------------------------------------------------------- #
 
     def _validate_mode_spark(self, mode, df):
@@ -325,7 +477,9 @@ class BaseDataSink(BaseModel, PipelineChild):
         kwargs["overwriteSchema"] = False
         if mode in ["OVERWRITE", "COMPLETE"]:
             kwargs["mergeSchema"] = False
-            kwargs["overwriteSchema"] = True
+            kwargs["overwriteSchema"] = True  # This option overwrite columns metadata
+            if self.metadata:
+                self.metadata._update_required = True
         if is_streaming:
             kwargs["checkpointLocation"] = self.checkpoint_path.as_posix()
 
@@ -364,13 +518,13 @@ class BaseDataSink(BaseModel, PipelineChild):
 
         return methods
 
-    def _write_spark(self, df, mode, full_refresh) -> None:
+    def _write_spark(self, df, mode) -> None:
         raise NotImplementedError(
             f"`{self.dataframe_backend}` not supported for `{type(self)}`"
         )
 
     # -------------------------------------------------------------------------------- #
-    # Writers - Polars                                                                 #
+    # Write - Polars                                                                   #
     # -------------------------------------------------------------------------------- #
 
     def _validate_mode_polars(self, mode, df):
@@ -390,9 +544,6 @@ class BaseDataSink(BaseModel, PipelineChild):
                     "'mode' configuration with Polars only supported by 'DELTA' format"
                 )
         else:
-            # if full_refresh or not self.exists():
-            #     mode = "OVERWRITE"
-
             if not mode:
                 raise ValueError(
                     "'mode' configuration required with Polars 'DELTA' format"
@@ -406,7 +557,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
         return kwargs, fmt
 
-    def _write_polars(self, df, mode, full_refresh) -> None:
+    def _write_polars(self, df, mode) -> None:
         raise NotImplementedError(
             f"`{self.dataframe_backend}` not supported for `{type(self)}`"
         )
@@ -416,67 +567,58 @@ class BaseDataSink(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     def exists(self):
-        if self.dataframe_backend == DataFrameBackends.PYSPARK:
-            from laktory import get_spark_session
-
-            try:
-                spark = get_spark_session()
-                df = self.read(spark=spark, as_stream=False)
-                df.limit(1).collect()
-                return True
-            except Exception:
-                return False
-
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     def _purge_checkpoint(self):
         if self.checkpoint_path:
+            # Try with simple paths (supported by local file system or Unity Catalog)
             if os.path.exists(self.checkpoint_path):
                 logger.info(
                     f"Deleting checkpoint at {self.checkpoint_path}",
                 )
                 shutil.rmtree(self.checkpoint_path)
 
+            # Try with DBFS
+            # If spark is not used, dbfs is most likely not used
             if self.dataframe_backend != DataFrameBackends.PYSPARK:
                 return
 
+            # Check if a workspace client can be instantiated
             try:
-                from pyspark.dbutils import DBUtils
+                from databricks.sdk import WorkspaceClient
+                from databricks.sdk.errors import ResourceDoesNotExist
 
-                from laktory import get_spark_session
+                w = WorkspaceClient()
 
-                spark = get_spark_session()
-            except ModuleNotFoundError:
+            except (
+                ModuleNotFoundError,  # SDK not installed
+                ImportError,  # SDK with different version / API
+                ValueError,  # client not configure (would never happen in a notebook)
+            ):
                 return
 
-            dbutils = DBUtils(spark)
-
+            # Format path for DBFS
             _path = self.checkpoint_path.as_posix()
-            try:
-                dbutils.fs.ls(
-                    _path
-                )  # TODO: Figure out why this does not work with databricks connect
-                logger.info(
-                    f"Deleting checkpoint at dbfs {_path}",
-                )
-                dbutils.fs.rm(_path, True)
+            if not _path.startswith("/") and not _path.startswith("dbfs:"):
+                _path = "/" + _path
+            if _path.startswith("/dbfs/"):
+                _path = _path.replace("/dbfs/", "dbfs:/")
+            if not _path.startswith("dbfs:"):
+                _path = "dbfs:" + _path
 
-            except Exception as e:
-                if "java.io.FileNotFoundException" in str(e):
-                    pass
-                elif "databricks.sdk.errors.platform.ResourceDoesNotExist" in str(
-                    type(e)
-                ):
-                    pass
-                elif "databricks.sdk.errors.platform.InvalidParameterValue" in str(
-                    type(e)
-                ):
-                    # TODO: Figure out why this is happening. It seems that the databricks SDK
-                    #       modify the path before sending to REST API.
-                    logger.warn(f"dbutils could not delete checkpoint {_path}: {e}")
-                else:
-                    raise e
+            # Check Status
+            try:
+                w.dbfs.get_status(_path)
+            except ResourceDoesNotExist:
+                logger.info(
+                    f"Checkpoint at {_path} does not exist. Skipping.",
+                )
+                return
+
+            logger.info(
+                f"Deleting checkpoint at {_path}.",
+            )
+            w.dbfs.delete(_path, recursive=True)
 
     def purge(self):
         """
@@ -488,10 +630,10 @@ class BaseDataSink(BaseModel, PipelineChild):
     # Data Sources                                                            #
     # ----------------------------------------------------------------------- #
 
-    def as_source(self, as_stream=None):
+    def as_source(self, as_stream=None, reader_kwargs=None, reader_methods=None):
         raise NotImplementedError()
 
-    def read(self, as_stream=None):
+    def read(self, as_stream=None, reader_kwargs=None, reader_methods=None):
         """
         Read dataframe from sink.
 
@@ -499,10 +641,18 @@ class BaseDataSink(BaseModel, PipelineChild):
         ----------
         as_stream:
             If `True`, dataframe read as stream.
+        reader_kwargs:
+            Keyword arguments passed to the dataframe backend reader.
+        reader_methods:
+            DataFrame backend reader methods.
 
         Returns
         -------
         AnyFrame
             DataFrame
         """
-        return self.as_source(as_stream=as_stream).read()
+        return self.as_source(
+            as_stream=as_stream,
+            reader_kwargs=reader_kwargs,
+            reader_methods=reader_methods,
+        ).read()

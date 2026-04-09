@@ -1,4 +1,4 @@
-::: laktory.models.BaseResource
+::: laktory.models.resources.BaseResource
     options:
         show_bases: false
 

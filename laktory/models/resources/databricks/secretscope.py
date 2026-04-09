@@ -118,6 +118,12 @@ class SecretScope(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def singularizations(self) -> dict[str, str]:
+        return {
+            "keyvault_metadata": "keyvault_metadata",
+        }
+
+    @property
     def terraform_resource_type(self) -> str:
         return "databricks_secret_scope"
 
