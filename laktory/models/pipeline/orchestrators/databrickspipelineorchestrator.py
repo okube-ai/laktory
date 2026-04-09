@@ -115,6 +115,11 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         )
         shutil.copy(source_filepath, target_filepath)
 
+        # Laktory pipelines use a common notebook (copied above). Its path is
+        # hardcoded here, but should probably be hardcoded in the base resource as well.
+        # TODO: Allow for other libraries?
+        d["libraries"] = [{"notebook": {"path": target_filepath}}]
+
         return DabsPipeline.from_dict(d)
 
     # ----------------------------------------------------------------------- #
