@@ -523,7 +523,9 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         None, description="The definition of a gateway pipeline to support CDC."
     )
     health: str = Field(None, description="")
-    # ingestion_definition: = Field(None, description="")  #TODO
+    ingestion_definition: PipelineIngestionDefinition = Field(
+        None, description="Lakeflow Ingestion Pipeline definition"
+    )
     last_modified: int = Field(None, description="")
     latest_updates: list[PipelineLatestUpdate] = Field(None, description="")
     libraries: list[PipelineLibrary] = Field(
