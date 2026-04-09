@@ -1,6 +1,16 @@
 # Release History
 
-## [0.9.5] - Unreleased
+## [0.9.6] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.9.5] - 2026-04-09
 ### Added
 * Support for PipelineIngestion attribute to DatabricksPipeline
 
