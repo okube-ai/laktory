@@ -30,6 +30,7 @@ def test_pipeline():
         "filters": None,
         "gateway_definition": None,
         "health": None,
+        "ingestion_definition": None,
         "last_modified": None,
         "latest_updates": None,
         "libraries": None,

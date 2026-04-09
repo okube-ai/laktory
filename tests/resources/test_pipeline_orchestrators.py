@@ -719,6 +719,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
         "filters": None,
         "gateway_definition": None,
         "health": None,
+        "ingestion_definition": None,
         "last_modified": None,
         "latest_updates": None,
         "libraries": None,
