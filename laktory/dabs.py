@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,13 +20,20 @@ def load_resources(bundle):
           laktory_stack_filepath: ./stack.yml
 
         sync:
-          include:
-            - .laktory/pipelines/**
+          paths:
+            - ./laktory
 
         python:
           venv_path: .venv
           resources:
             - 'laktory.dabs:load_resources'
+
+    And in ``stack.yaml``:
+
+    .. code-block:: yaml
+
+        settings:
+          laktory_build_root: ./laktory/.resources/
 
     Parameters
     ----------
@@ -40,14 +45,12 @@ def load_resources(bundle):
     :
         DABs Resources object containing all pipeline/job definitions.
     """
-    from databricks.bundles.core import Location
     from databricks.bundles.core import Resources
 
     from laktory.models.pipeline.pipeline import Pipeline
     from laktory.models.stacks.stack import Stack
 
     # Resolve stack filepath from bundle variable
-    # stack_filepath = bundle.resolve_variable("laktory_stack_filepath")  # TODO: Review why this method does not work and returns "laktory_stack_filepath"
     stack_filepath = bundle.variables["laktory_stack_filepath"]
     logger.info(f"Loading Laktory stack from '{stack_filepath}'")
 
@@ -69,24 +72,16 @@ def load_resources(bundle):
         # Write pipeline config JSON for DABs to sync to the workspace
         config_file = getattr(orchestrator, "config_file", None)
         if config_file:
+            # print(config_file.)
+            # raise ValueError(settings.workspace_laktory_root)
+            # raise ValueError(config_file.path)
             config_file.build()
 
-        # Return orchestrator as a DABs resource object.
-        # We pass an explicit location pointing to the generated pipeline YAML
-        # in laktory_build_root/pipelines/ so that DABs resolves relative paths
-        # (e.g. notebook paths like ./dlt_laktory_pl.py) relative to that
-        # directory instead of the laktory package source directory.
-        from laktory._settings import settings
-
-        build_yaml = (
-            Path(settings.laktory_build_root) / "pipelines" / (r.name + ".yml")
-        ).resolve()
-        location = Location(file=str(build_yaml))
-
+        # to_dab_resource() returns the dab resource, but also copies supporting files
+        # (e.g. DLT notebook) to laktory_build_root and set notebook paths when
+        # applicable.
         dab_resource = orchestrator.to_dab_resource()
-        resources.add_resource(
-            orchestrator.resource_name, dab_resource, location=location
-        )
+        resources.add_resource(orchestrator.resource_name, dab_resource)
         logger.info(f"Added DABs resource '{orchestrator.resource_name}'")
 
     return resources
