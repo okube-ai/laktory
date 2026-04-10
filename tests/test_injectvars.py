@@ -297,3 +297,37 @@ def test_stack():
     _stack = stack.get_env("prd").inject_vars()
     tags = _stack.resources.databricks_clusters["cl"].custom_tags
     assert tags == {"catalog": "prod", "catalog_local": "prod_local"}
+
+
+def test_var_syntax():
+    """${var.x} (DABs-style, no trailing s) should work identically to ${vars.x}."""
+
+    # Simple substitution
+    c = Cluster(
+        name="${var.my_cluster}",
+        id="${var.cluster_id}",
+        variables={
+            "my_cluster": "laktory-cluster",
+            "cluster_id": 23,
+        },
+    ).inject_vars()
+    assert c.name == "laktory-cluster"
+    assert c.id == 23
+
+    # Expression block
+    c = Cluster(
+        id="${{ 4 if var.env == 'prod' else 2 }}",
+        variables={"env": "prod"},
+    ).inject_vars()
+    assert c.id == 4
+
+    # Self-reference detection
+    with pytest.raises(ValueError):
+        Cluster(
+            variables={"env": "${var.env}+a"},
+        )
+
+    with pytest.raises(ValueError):
+        Cluster(
+            variables={"env": "${{ var.env + '_local' }}"},
+        )

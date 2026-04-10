@@ -6,7 +6,7 @@
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Variable interpolation now supports `{var.[]}` in addition to `{vars.[]}` 
 ### Breaking changes
 * n/a
 
