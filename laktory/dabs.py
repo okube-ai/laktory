@@ -58,7 +58,16 @@ def load_resources(bundle):
         stack = Stack.model_validate_yaml(fp)
 
     env = stack.get_env(env_name=None)
-    env = env.inject_vars()
+
+    # Expose bundle variables to the stack. Laktory variables (declared in the
+    # stack or its resources) take priority because inject_vars() applies them
+    # on top of the provided vars dict via vars.update(self.variables).
+    bundle_vars = {
+        k: v
+        for k, v in bundle.variables.items()
+        if v is not None and k not in env.variables
+    }
+    env = env.inject_vars(vars=bundle_vars)
 
     resources = Resources()
 
