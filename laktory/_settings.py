@@ -9,6 +9,9 @@ from pydantic_settings import BaseSettings
 
 from laktory._cache import cache_dir
 
+DEFAULT_LAKTORY_BUILD_ROOT = cache_dir.as_posix()
+DEFAULT_LAKTORY_ROOT = "/.laktory/"
+
 
 class Settings(BaseSettings):
     model_config = ConfigDict(populate_by_name=True)
@@ -20,7 +23,7 @@ class Settings(BaseSettings):
 
     # Databricks
     workspace_laktory_root: str = Field(
-        "/.laktory/",
+        DEFAULT_LAKTORY_ROOT,
         alias="LAKTORY_WORKSPACE_LAKTORY_ROOT",
     )
 
@@ -33,7 +36,7 @@ class Settings(BaseSettings):
     # Paths
     laktory_root: str = Field("", alias="LAKTORY_ROOT")
     laktory_build_root: str = Field(
-        cache_dir.as_posix(),
+        DEFAULT_LAKTORY_BUILD_ROOT,
         alias="LAKTORY_BUILD_ROOT",
     )
 

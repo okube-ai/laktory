@@ -118,7 +118,12 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         # Laktory pipelines use a common notebook (copied above). Its path is
         # hardcoded here, but should probably be hardcoded in the base resource as well.
         # TODO: Allow for other libraries?
-        d["libraries"] = [{"notebook": {"path": target_filepath}}]
+        notebook_filepath = (
+            Path("/Workspace" + settings.workspace_laktory_root)
+            / "pipelines"
+            / "dlt_laktory_pl"
+        )
+        d["libraries"] = [{"notebook": {"path": notebook_filepath.as_posix()}}]
 
         return DabsPipeline.from_dict(d)
 
