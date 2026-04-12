@@ -63,9 +63,21 @@ def is_dlt_execute() -> bool:
 
     logger.info("Testing is dlt execute")
     spark = get_spark_session()
+    for k in [
+        "spark.databricks.pipeline.id",
+        "spark.databricks.pipeline.name",
+        "pipelines.dbrVersion",
+    ]:
+        logger.info(f"{k}: {spark.conf.get(k, None)}")
     try:
-        v = spark.conf.get("pipelines.dbrVersion", None)
-        logger.info(f"pipelines.dbrVersion: {v}")
+        v = any(
+            [
+                spark.conf.get("pipelines.dbrVersion", None),
+                spark.conf.get("spark.databricks.pipeline.id", None),
+                spark.conf.get("spark.databricks.pipeline.name", None),
+            ]
+        )
+        logger.info(f"v: {v}")
     except AnalysisException:
         # Default value is not supported on serverless
         v = None
