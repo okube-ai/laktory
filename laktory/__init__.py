@@ -63,12 +63,15 @@ def is_dlt_execute() -> bool:
 
     # TODO: Review and make more robust (transition to spark pipelines)
     try:
-        is_dlt = any(
-            [
-                spark.conf.get("pipelines.dbrVersion", False),
-                spark.conf.get("spark.pipelines.flow.name", False),
-            ]
-        )
+        is_dlt = False
+        for k in [
+            "pipelines.dbrVersion",
+            "spark.pipelines.flow.name",
+        ]:
+            if spark.conf.get(k, "na") != "na":
+                is_dlt = True
+                break
+
     except AnalysisException:
         # Default value is not supported on earlier versions of serverless
         is_dlt = False
