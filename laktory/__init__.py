@@ -63,6 +63,10 @@ def is_dlt_execute() -> bool:
 
     logger.info("Testing is dlt execute")
     spark = get_spark_session()
+
+    for k, v in spark.conf.getAll().items():
+        print(f"{k} = {v}")
+
     for k in [
         "spark.databricks.pipeline.id",
         "spark.databricks.pipeline.name",
