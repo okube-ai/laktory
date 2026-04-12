@@ -70,6 +70,7 @@ def is_dlt_execute() -> bool:
     logger.info(dir(dlt))
 
     logger.info(f"{spark.conf}")
+    logger.info(f"{dir(spark.conf)}")
     for k, v in spark.conf.getAll().items():
         logger.info(f"{k} = {v}")
 
