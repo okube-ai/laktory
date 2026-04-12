@@ -63,6 +63,7 @@ def is_dlt_execute() -> bool:
 
     logger.info("Testing is dlt execute")
     spark = get_spark_session()
+    v = spark.conf.get("pipelines.dbrVersion", None)
     try:
         v = spark.conf.get("pipelines.dbrVersion", None)
         logger.info("pipelines.dbrVersion:", v)
