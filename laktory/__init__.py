@@ -59,9 +59,13 @@ def get_spark_session():
 def is_dlt_execute() -> bool:
     from pyspark.errors import AnalysisException
 
+    logger = get_logger(__name__)
+
+    logger.info("Testing is dlt execute")
     spark = get_spark_session()
     try:
         v = spark.conf.get("pipelines.dbrVersion", None)
+        logger.info("pipelines.dbrVersion:", v)
     except AnalysisException:
         # Default value is not supported on serverless
         v = None
