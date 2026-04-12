@@ -64,20 +64,33 @@ def is_dlt_execute() -> bool:
     logger.info("Testing is dlt execute")
     spark = get_spark_session()
 
-    import dlt
+    # is_dlt = False
 
-    logger.info(dlt)
-    logger.info(dir(dlt))
+    # # Check if dlt module can be imported
+    # try:
+    #     import dlt
+    #     is_dlt = True
+    # except ModuleNotFoundError:
+    #     pass
+    #
+    # return is_dlt
 
-    logger.info(f"{spark.conf}")
-    logger.info(f"{dir(spark.conf)}")
-    for k, v in spark.conf.getAll().items():
-        logger.info(f"{k} = {v}")
+    # logger.info(dlt)
+    # logger.info(dir(dlt))
+
+    # logger.info(f"{spark.conf}")
+    # logger.info(f"{dir(spark.conf)}")
+    # for k, v in spark.conf.getAll().items():
+    #     logger.info(f"{k} = {v}")
 
     for k in [
         "spark.databricks.pipeline.id",
         "spark.databricks.pipeline.name",
         "pipelines.dbrVersion",
+        "spark.pipelines.flow.name",
+        "pipelines.flow.name",
+        "pipelines",
+        "pipelines.flow",
     ]:
         logger.info(f"{k}: {spark.conf.get(k, None)}")
     try:
