@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* Running Databricks Declarative Pipelines on more recent version of Spark 
 ### Updated
 * Variable interpolation now supports `{var.[]}` in addition to `{vars.[]}` 
 ### Breaking changes

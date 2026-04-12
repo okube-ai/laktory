@@ -59,54 +59,21 @@ def get_spark_session():
 def is_dlt_execute() -> bool:
     from pyspark.errors import AnalysisException
 
-    logger = get_logger(__name__)
-
-    logger.info("Testing is dlt execute")
     spark = get_spark_session()
 
-    # is_dlt = False
-
-    # # Check if dlt module can be imported
-    # try:
-    #     import dlt
-    #     is_dlt = True
-    # except ModuleNotFoundError:
-    #     pass
-    #
-    # return is_dlt
-
-    # logger.info(dlt)
-    # logger.info(dir(dlt))
-
-    # logger.info(f"{spark.conf}")
-    # logger.info(f"{dir(spark.conf)}")
-    # for k, v in spark.conf.getAll().items():
-    #     logger.info(f"{k} = {v}")
-
-    for k in [
-        "spark.databricks.pipeline.id",
-        "spark.databricks.pipeline.name",
-        "pipelines.dbrVersion",
-        "spark.pipelines.flow.name",
-        "pipelines.flow.name",
-        "pipelines",
-        "pipelines.flow",
-    ]:
-        logger.info(f"{k}: {spark.conf.get(k, None)}")
+    # TODO: Review and make more robust (transition to spark pipelines)
     try:
-        v = any(
+        is_dlt = any(
             [
-                spark.conf.get("pipelines.dbrVersion", None),
-                spark.conf.get("spark.databricks.pipeline.id", None),
-                spark.conf.get("spark.databricks.pipeline.name", None),
+                spark.conf.get("pipelines.dbrVersion", False),
+                spark.conf.get("spark.pipelines.flow.name", False),
             ]
         )
-        logger.info(f"v: {v}")
     except AnalysisException:
-        # Default value is not supported on serverless
-        v = None
+        # Default value is not supported on earlier versions of serverless
+        is_dlt = False
 
-    return v is not None
+    return is_dlt
 
 
 def print_version():
