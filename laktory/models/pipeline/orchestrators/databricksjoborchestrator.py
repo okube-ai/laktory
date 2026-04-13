@@ -197,6 +197,10 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         for k, v in self.terraform_renames.items():
             if k in d:
                 d[v] = d.pop(k)
+        # depends_ons → depends_on in all tasks (DABs API field name)
+        for task in d.get("tasks", []):
+            if "depends_ons" in task:
+                task["depends_on"] = task.pop("depends_ons")
 
         return DabsJob.from_dict(d)
 

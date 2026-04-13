@@ -1,4 +1,5 @@
 import os
+import shutil
 from pathlib import Path
 
 from laktory._logger import get_logger
@@ -101,6 +102,13 @@ def load_resources(bundle):
     settings.workspace_laktory_root = settings.workspace_laktory_root.replace(
         "/Workspace/", "/"
     )
+
+    # Clean the build directory to remove stale files from deleted pipelines
+    build_dir = Path(settings.laktory_build_root)
+    if build_dir.exists():
+        shutil.rmtree(build_dir)
+        logger.info(f"Cleaned stale build directory '{build_dir}'")
+    build_dir.mkdir(parents=True, exist_ok=True)
 
     # --- Bundle variables ---
     # Expose all bundle variables for injection into pipeline models.
