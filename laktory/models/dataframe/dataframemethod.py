@@ -62,11 +62,12 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
                 if backend == DataFrameBackends.PYSPARK:
                     # Imports required to evaluate expressions
                     import pyspark.sql.functions as F  # noqa: F401
+                    import pyspark.sql.types as T  # noqa: F401
                     from pyspark.sql.functions import col  # noqa: F401
                     from pyspark.sql.functions import expr  # noqa: F401
                     from pyspark.sql.functions import lit  # noqa: F401
 
-                    targets = ["lit(", "col(", "expr(", "F."]
+                    targets = ["lit(", "col(", "expr(", "F.", "T."]
 
                 elif backend == DataFrameBackends.POLARS:
                     # Imports required to evaluate expressions
