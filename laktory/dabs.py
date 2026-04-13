@@ -13,43 +13,42 @@ def load_resources(bundle):
     DABs Python entry point for loading Laktory pipeline resources.
 
     This function is called by the Databricks CLI during bundle resolution
-    and returns Job and DLT Pipeline resources derived from the Laktory stack.
+    and returns Job and DLT Pipeline resources derived from Laktory pipeline
+    YAML files found in one or more directories.
+
     It also writes pipeline config JSON files for DABs to sync to the workspace.
 
-    Two global settings are configured automatically when not already set by
-    the stack:
+    Two global settings are configured automatically when not already set:
 
     - ``settings.laktory_build_root`` defaults to ``laktory/.build/`` relative
       to the bundle root (the directory containing ``databricks.yml``).
     - ``settings.workspace_laktory_root`` is derived from the
-      ``dab_workspace_root`` bundle variable (if provided) as
+      ``dab_workspace_root`` bundle variable as
       ``{dab_workspace_root}/files/{laktory_build_root}/``.
-
-    To expose the workspace root path, add to ``databricks.yml``:
-
-    .. code-block:: yaml
-
-        variables:
-          dab_workspace_root:
-            default: ${workspace.root_path}
 
     To use, declare in ``databricks.yml``:
 
     .. code-block:: yaml
 
         variables:
-          laktory_stack_filepath: ./stack.yml
+          laktory_pipelines_dir:
+            default: ./laktory/pipelines   # comma-separated for multiple dirs
           dab_workspace_root:
             default: ${workspace.root_path}
 
         sync:
           paths:
             - ./laktory
+          include:
+            - laktory/.build/**  # needed if laktory/.build/ is in .gitignore
 
         python:
           venv_path: .venv
           resources:
             - 'laktory.dabs:load_resources'
+
+    Laktory settings (``laktory_build_root``, etc.) can also be controlled via
+    environment variables (``LAKTORY_BUILD_ROOT``, etc.).
 
     Parameters
     ----------
@@ -65,17 +64,6 @@ def load_resources(bundle):
 
     from laktory._settings import settings
     from laktory.models.pipeline.pipeline import Pipeline
-    from laktory.models.stacks.stack import Stack
-
-    # Resolve stack filepath from bundle variable
-    stack_filepath = bundle.variables["laktory_stack_filepath"]
-    logger.info(f"Loading Laktory stack from '{stack_filepath}'")
-
-    with open(stack_filepath, "r", encoding="utf-8") as fp:
-        stack = Stack.model_validate_yaml(fp)
-
-    # target = bundle.target
-    env = stack.get_env(env_name=None)
 
     # Get Bundle (databricks.yml) directory. This only works if CLI is called from the
     # same directory (i.e. --bundle-dir is not used)
@@ -93,13 +81,13 @@ def load_resources(bundle):
     # This is where Laktory files (pipeline config, queries, dashboards, etc.) are
     # deployed. When using Laktory only, default is /Workspace/.laktory/. In
     # the context of DAB, we set it to {dab_workspace_root}/laktory/.build/
-    # Unfortuantely, {dab_workspace_root} is not available unless the user
+    # Unfortunately, {dab_workspace_root} is not available unless the user
     # adds it to the variables.
     dab_workspace_root = bundle.variables.get("dab_workspace_root")
     if settings.workspace_laktory_root == DEFAULT_LAKTORY_ROOT:
         if dab_workspace_root is None:
             raise ValueError(
-                "Variale `dab_workspace_root` must be set to '${workspace.root_path}' in databricks.yml to use Laktory."
+                "Variable `dab_workspace_root` must be set to '${workspace.root_path}' in databricks.yml to use Laktory."
             )
 
         # Build Path relative to Bundle root
@@ -114,35 +102,53 @@ def load_resources(bundle):
         "/Workspace/", "/"
     )
 
-    # --- Inject variables ---
-    # Expose bundle variables to the stack. Laktory variables (declared in the
-    # stack or its resources) take priority because inject_vars() applies them
-    # on top of the provided vars dict via vars.update(self.variables).
-    bundle_vars = {
-        k: v
-        for k, v in bundle.variables.items()
-        if v is not None and k not in env.variables
-    }
-    env = env.inject_vars(vars=bundle_vars)
+    # --- Bundle variables ---
+    # Expose all bundle variables for injection into pipeline models.
+    bundle_vars = {k: v for k, v in bundle.variables.items() if v is not None}
+
+    # --- Discover pipeline YAML files ---
+    dirs_raw = bundle_vars.get("laktory_pipelines_dir", "laktory/pipelines")
+    pipelines_dirs = [d.strip() for d in dirs_raw.split(",")]
 
     resources = Resources()
 
-    for k, r in env.resources._get_all(providers_excluded=True).items():
-        if not isinstance(r, Pipeline):
-            continue
-        orchestrator = r.orchestrator
-        if not orchestrator:
+    for pipelines_dir in pipelines_dirs:
+        dirpath = Path(pipelines_dir)
+        if not dirpath.is_absolute():
+            dirpath = bundle_dirpath / dirpath
+
+        if not dirpath.exists():
+            logger.warning(f"Pipelines directory '{dirpath}' does not exist. Skipping.")
             continue
 
-        # Write pipeline config JSON for DABs to sync to the workspace
-        config_file = getattr(orchestrator, "config_file", None)
-        if config_file:
-            config_file.build()
+        yaml_files = sorted(dirpath.glob("*.yaml")) + sorted(dirpath.glob("*.yml"))
+        if not yaml_files:
+            logger.warning(f"No pipeline YAML files found in '{dirpath}'.")
+            continue
 
-        # to_dab_resource() returns the dab resource, but also copies supporting
-        # files (e.g. DLT notebook) to laktory_build_root and sets notebook paths.
-        dab_resource = orchestrator.to_dab_resource()
-        resources.add_resource(orchestrator.resource_name, dab_resource)
-        logger.info(f"Added DABs resource '{orchestrator.resource_name}'")
+        for yaml_file in yaml_files:
+            logger.info(f"Loading pipeline from '{yaml_file}'")
+            with open(yaml_file, "r", encoding="utf-8") as fp:
+                pl = Pipeline.model_validate_yaml(fp)
+
+            # Inject bundle variables. Pipeline-level variables take priority
+            # because inject_vars() applies them on top of the provided vars dict.
+            pl = pl.inject_vars(vars=bundle_vars)
+
+            orchestrator = pl.orchestrator
+            if not orchestrator:
+                logger.info(f"Pipeline '{pl.name}' has no orchestrator. Skipping.")
+                continue
+
+            # Write pipeline config JSON for DABs to sync to the workspace
+            config_file = getattr(orchestrator, "config_file", None)
+            if config_file:
+                config_file.build()
+
+            # to_dab_resource() returns the dab resource, and also copies supporting
+            # files (e.g. DLT notebook) to laktory_build_root and sets notebook paths.
+            dab_resource = orchestrator.to_dab_resource()
+            resources.add_resource(orchestrator.resource_name, dab_resource)
+            logger.info(f"Added DABs resource '{orchestrator.resource_name}'")
 
     return resources
