@@ -84,7 +84,7 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
     def to_dab_resource(self):
         """
         Convert to a DABs Python Pipeline resource object for use with
-        ``laktory.dabs.load_resources``.
+        ``laktory.dab.build_resources``.
 
         Returns
         -------

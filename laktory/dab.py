@@ -9,15 +9,14 @@ from laktory._settings import DEFAULT_LAKTORY_ROOT
 logger = get_logger(__name__)
 
 
-def load_resources(bundle):
+def build_resources(bundle):
     """
-    DABs Python entry point for loading Laktory pipeline resources.
+    DABs Python entry point for building and loading Laktory pipeline resources.
 
-    This function is called by the Databricks CLI during bundle resolution
-    and returns Job and DLT Pipeline resources derived from Laktory pipeline
-    YAML files found in one or more directories.
-
-    It also writes pipeline config JSON files for DABs to sync to the workspace.
+    This function is called by the Databricks CLI during bundle resolution.
+    It discovers Laktory pipeline YAML files, writes their JSON config files to
+    disk (for DABs to sync to the workspace), and returns Job and DLT Pipeline
+    resources as a DABs ``Resources`` object.
 
     Two global settings are configured automatically when not already set:
 
@@ -46,7 +45,7 @@ def load_resources(bundle):
         python:
           venv_path: .venv
           resources:
-            - 'laktory.dabs:load_resources'
+            - 'laktory.dab:build_resources'
 
     Laktory settings (``laktory_build_root``, etc.) can also be controlled via
     environment variables (``LAKTORY_BUILD_ROOT``, etc.).

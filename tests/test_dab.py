@@ -4,7 +4,7 @@ Tests for DABs integration features:
   - PipelineConfigWorkspaceFile.source / build()
   - DatabricksPipelineOrchestrator.to_dab_resource()
   - DatabricksJobOrchestrator.to_dab_resource()
-  - laktory.dabs.load_resources() — folder-scan approach
+  - laktory.dab.build_resources() — folder-scan approach
   - ${var.x} syntax support (DABs-style variable prefix)
 """
 
@@ -236,25 +236,25 @@ def _make_pipelines_dir(tmp_path, yaml_content, filename="pl-stocks.yaml"):
 
 def test_load_resources_pipeline_count(tmp_path, mock_bundle, monkeypatch):
     """load_resources() returns one pipeline per DLT orchestrator YAML file."""
-    from laktory.dabs import load_resources
+    from laktory.dab import build_resources
 
     pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
     monkeypatch.chdir(tmp_path)
     mock_bundle.variables["laktory_pipelines_dir"] = str(pipelines_dir)
 
-    resources = load_resources(mock_bundle)
+    resources = build_resources(mock_bundle)
     assert len(resources.pipelines) == 1
 
 
 def test_load_resources_writes_config_json(tmp_path, mock_bundle, monkeypatch):
     """load_resources() writes the pipeline config JSON to laktory_build_root/pipelines/."""
-    from laktory.dabs import load_resources
+    from laktory.dab import build_resources
 
     pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
     monkeypatch.chdir(tmp_path)
     mock_bundle.variables["laktory_pipelines_dir"] = str(pipelines_dir)
 
-    load_resources(mock_bundle)
+    build_resources(mock_bundle)
 
     config = tmp_path / "laktory" / ".build" / "pipelines" / "pl-stocks.json"
     assert config.exists()
@@ -265,14 +265,14 @@ def test_load_resources_writes_config_json(tmp_path, mock_bundle, monkeypatch):
 
 def test_load_resources_bundle_vars_injected(tmp_path, mock_bundle, monkeypatch):
     """Bundle variables are substituted in pipeline fields."""
-    from laktory.dabs import load_resources
+    from laktory.dab import build_resources
 
     pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_WITH_VAR_YAML)
     monkeypatch.chdir(tmp_path)
     mock_bundle.variables["laktory_pipelines_dir"] = str(pipelines_dir)
     mock_bundle.variables["env"] = "dev"
 
-    resources = load_resources(mock_bundle)
+    resources = build_resources(mock_bundle)
     assert len(resources.pipelines) == 1
     config = tmp_path / "laktory" / ".build" / "pipelines" / "pl-dev.json"
     assert config.exists()
@@ -280,14 +280,14 @@ def test_load_resources_bundle_vars_injected(tmp_path, mock_bundle, monkeypatch)
 
 def test_load_resources_laktory_vars_take_priority(tmp_path, mock_bundle, monkeypatch):
     """Pipeline-level variables override bundle variables of the same name."""
-    from laktory.dabs import load_resources
+    from laktory.dab import build_resources
 
     pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_WITH_LAKTORY_VAR_YAML)
     monkeypatch.chdir(tmp_path)
     mock_bundle.variables["laktory_pipelines_dir"] = str(pipelines_dir)
     mock_bundle.variables["env"] = "dev"  # bundle says dev, pipeline says prod
 
-    resources = load_resources(mock_bundle)
+    resources = build_resources(mock_bundle)
     assert len(resources.pipelines) == 1
     config = tmp_path / "laktory" / ".build" / "pipelines" / "pl-prod.json"
     assert config.exists()
@@ -295,7 +295,7 @@ def test_load_resources_laktory_vars_take_priority(tmp_path, mock_bundle, monkey
 
 def test_load_resources_multiple_dirs(tmp_path, mock_bundle, monkeypatch):
     """Comma-separated laktory_pipelines_dir scans all listed directories."""
-    from laktory.dabs import load_resources
+    from laktory.dab import build_resources
 
     dir_a = tmp_path / "pipelines_a"
     dir_b = tmp_path / "pipelines_b"
@@ -307,25 +307,25 @@ def test_load_resources_multiple_dirs(tmp_path, mock_bundle, monkeypatch):
     monkeypatch.chdir(tmp_path)
     mock_bundle.variables["laktory_pipelines_dir"] = f"{dir_a},{dir_b}"
 
-    resources = load_resources(mock_bundle)
+    resources = build_resources(mock_bundle)
     assert len(resources.pipelines) == 2
 
 
 def test_load_resources_missing_dir_skipped(tmp_path, mock_bundle, monkeypatch):
     """A non-existent pipelines directory is skipped with a warning, not an error."""
-    from laktory.dabs import load_resources
+    from laktory.dab import build_resources
 
     nonexistent = tmp_path / "does_not_exist"
     monkeypatch.chdir(tmp_path)
     mock_bundle.variables["laktory_pipelines_dir"] = str(nonexistent)
 
-    resources = load_resources(mock_bundle)
+    resources = build_resources(mock_bundle)
     assert len(resources.pipelines) == 0
 
 
 def test_load_resources_default_dir(tmp_path, mock_bundle, monkeypatch):
     """When laktory_pipelines_dir is absent, load_resources() scans laktory/pipelines/."""
-    from laktory.dabs import load_resources
+    from laktory.dab import build_resources
 
     pipelines_dir = tmp_path / "laktory" / "pipelines"
     pipelines_dir.mkdir(parents=True)
@@ -334,7 +334,7 @@ def test_load_resources_default_dir(tmp_path, mock_bundle, monkeypatch):
     monkeypatch.chdir(tmp_path)
     # Do NOT set laktory_pipelines_dir — should use default
 
-    resources = load_resources(mock_bundle)
+    resources = build_resources(mock_bundle)
     assert len(resources.pipelines) == 1
 
 
@@ -346,7 +346,7 @@ def test_load_resources_default_dir(tmp_path, mock_bundle, monkeypatch):
 def test_build_root_auto_set(tmp_path, mock_bundle, monkeypatch):
     """When laktory_build_root is at its default, load_resources() sets it to {cwd}/laktory/.build."""
     from laktory._settings import settings
-    from laktory.dabs import load_resources
+    from laktory.dab import build_resources
 
     settings.laktory_build_root = DEFAULT_LAKTORY_BUILD_ROOT
 
@@ -354,7 +354,7 @@ def test_build_root_auto_set(tmp_path, mock_bundle, monkeypatch):
     monkeypatch.chdir(tmp_path)
     mock_bundle.variables["laktory_pipelines_dir"] = str(pipelines_dir)
 
-    load_resources(mock_bundle)
+    build_resources(mock_bundle)
 
     assert settings.laktory_build_root == str(tmp_path / "laktory" / ".build")
 
@@ -362,7 +362,7 @@ def test_build_root_auto_set(tmp_path, mock_bundle, monkeypatch):
 def test_build_root_env_var_overrides_auto(tmp_path, mock_bundle, monkeypatch):
     """LAKTORY_BUILD_ROOT env var (via Settings) takes priority over the auto-set default."""
     from laktory._settings import settings
-    from laktory.dabs import load_resources
+    from laktory.dab import build_resources
 
     custom_root = tmp_path / "my_custom_build"
     custom_root.mkdir()
@@ -372,7 +372,7 @@ def test_build_root_env_var_overrides_auto(tmp_path, mock_bundle, monkeypatch):
     monkeypatch.chdir(tmp_path)
     mock_bundle.variables["laktory_pipelines_dir"] = str(pipelines_dir)
 
-    load_resources(mock_bundle)
+    build_resources(mock_bundle)
 
     assert settings.laktory_build_root == str(custom_root)
     assert settings.laktory_build_root != str(tmp_path / "laktory" / ".build")
@@ -381,7 +381,7 @@ def test_build_root_env_var_overrides_auto(tmp_path, mock_bundle, monkeypatch):
 def test_workspace_root_auto_set(tmp_path, mock_bundle, monkeypatch):
     """workspace_laktory_root is derived from dab_workspace_root, /Workspace/ prefix stripped."""
     from laktory._settings import settings
-    from laktory.dabs import load_resources
+    from laktory.dab import build_resources
 
     pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
     monkeypatch.chdir(tmp_path)
@@ -390,7 +390,7 @@ def test_workspace_root_auto_set(tmp_path, mock_bundle, monkeypatch):
     workspace_root = "/Workspace/Users/test/.bundle/myapp/dev"
     mock_bundle.variables["dab_workspace_root"] = workspace_root
 
-    load_resources(mock_bundle)
+    build_resources(mock_bundle)
 
     stripped_root = workspace_root.replace("/Workspace/", "/")
     expected_rel = "laktory/.build"
@@ -399,14 +399,14 @@ def test_workspace_root_auto_set(tmp_path, mock_bundle, monkeypatch):
 
 def test_workspace_root_no_bundle_var(tmp_path, mock_bundle, monkeypatch):
     """When dab_workspace_root bundle variable is absent, load_resources() raises ValueError."""
-    from laktory.dabs import load_resources
+    from laktory.dab import build_resources
 
     pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
     monkeypatch.chdir(tmp_path)
     mock_bundle.variables = {"laktory_pipelines_dir": str(pipelines_dir)}
 
     with pytest.raises(ValueError, match="dab_workspace_root"):
-        load_resources(mock_bundle)
+        build_resources(mock_bundle)
 
 
 if __name__ == "__main__":
