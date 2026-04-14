@@ -20,6 +20,6 @@ def test_notebook():
 
 
 def test_notebook_laktory_root(monkeypatch):
-    monkeypatch.setattr("laktory.settings.workspace_laktory_root", "/src/")
+    monkeypatch.setattr("laktory.settings.workspace_root", "/src/")
     nb3 = Notebook(source="./hello_world.py")
     assert nb3.path == "/src/hello_world.py"

@@ -3,8 +3,8 @@ import shutil
 from pathlib import Path
 
 from laktory._logger import get_logger
-from laktory._settings import DEFAULT_LAKTORY_BUILD_ROOT
-from laktory._settings import DEFAULT_LAKTORY_ROOT
+from laktory._settings import DEFAULT_BUILD_ROOT
+from laktory._settings import DEFAULT_RUNTIME_ROOT
 
 logger = get_logger(__name__)
 
@@ -24,7 +24,7 @@ def build_resources(bundle):
       to the bundle root (the directory containing ``databricks.yml``).
     - ``WORKSPACE_LAKTORY_ROOT`` is derived from the
       ``dab_workspace_root`` bundle variable as
-      ``{dab_workspace_root}/files/{laktory_build_root}/``.
+      ``{dab_workspace_root}/files/{build_root}/``.
 
     Examples
     --------
@@ -69,40 +69,36 @@ def build_resources(bundle):
     # TODO: build a more reliable approach.
     bundle_dirpath = Path(os.getcwd())
 
-    # Laktory Build Root
-    if settings.laktory_build_root == DEFAULT_LAKTORY_BUILD_ROOT:
-        settings.laktory_build_root = str(bundle_dirpath / "laktory" / ".build")
+    # Build Root
+    if settings.build_root == DEFAULT_BUILD_ROOT:
+        settings.build_root = str(bundle_dirpath / "laktory" / ".build")
     logger.info(
-        f"Setting `laktory_build_root` to default '{settings.laktory_build_root}'. Make sure this path is added to Bundle sync paths."
+        f"Setting `build_root` to default '{settings.build_root}'. Make sure this path is added to Bundle sync paths."
     )
 
-    # Workspace Laktory root
+    # Workspace root
     # This is where Laktory files (pipeline config, queries, dashboards, etc.) are
     # deployed. When using Laktory only, default is /Workspace/.laktory/. In
     # the context of DAB, we set it to {dab_workspace_root}/laktory/.build/
     # Unfortunately, {dab_workspace_root} is not available unless the user
     # adds it to the variables.
     dab_workspace_root = bundle.variables.get("dab_workspace_root")
-    if settings.workspace_laktory_root == DEFAULT_LAKTORY_ROOT:
+    if settings.workspace_root == DEFAULT_RUNTIME_ROOT:
         if dab_workspace_root is None:
             raise ValueError(
                 "Variable `dab_workspace_root` must be set to '${workspace.root_path}' in databricks.yml to use Laktory."
             )
 
         # Build Path relative to Bundle root
-        build_root_abs = settings.laktory_build_root
+        build_root_abs = settings.build_root
         build_root_rel = os.path.relpath(build_root_abs, bundle_dirpath)
-        settings.workspace_laktory_root = (
-            f"{dab_workspace_root}/files/{build_root_rel}/"
-        )
+        settings.workspace_root = f"{dab_workspace_root}/files/{build_root_rel}/"
 
     # Laktory expect the workspace root to exclude "/Workspace/"
-    settings.workspace_laktory_root = settings.workspace_laktory_root.replace(
-        "/Workspace/", "/"
-    )
+    settings.workspace_root = settings.workspace_root.replace("/Workspace/", "/")
 
     # Clean the build directory to remove stale files from deleted pipelines
-    build_dir = Path(settings.laktory_build_root)
+    build_dir = Path(settings.build_root)
     if build_dir.exists():
         shutil.rmtree(build_dir)
         logger.info(f"Cleaned stale build directory '{build_dir}'")
@@ -118,8 +114,8 @@ def build_resources(bundle):
 
     resources = Resources()
 
-    for pipelines_dir in pipelines_dirs:
-        dirpath = Path(pipelines_dir)
+    for laktory_pipelines_dir in pipelines_dirs:
+        dirpath = Path(laktory_pipelines_dir)
         if not dirpath.is_absolute():
             dirpath = bundle_dirpath / dirpath
 
@@ -152,7 +148,7 @@ def build_resources(bundle):
                 config_file.build()
 
             # to_dab_resource() returns the dab resource, and also copies supporting
-            # files (e.g. DLT notebook) to laktory_build_root and sets notebook paths.
+            # files (e.g. DLT notebook) to build_root and sets notebook paths.
             dab_resource = orchestrator.to_dab_resource()
             resources.add_resource(orchestrator.resource_name, dab_resource)
             logger.info(f"Added DABs resource '{orchestrator.resource_name}'")

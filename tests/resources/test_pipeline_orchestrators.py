@@ -642,7 +642,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
     # Mock laktory version to account for dynamically changing value
     lk.__version__ = "<version>"
 
-    monkeypatch.setattr(settings, "laktory_build_root", "/tmp/laktory/cache")
+    monkeypatch.setattr(settings, "build_root", "/tmp/laktory/cache")
 
     pl = get_pl_dlt()
 

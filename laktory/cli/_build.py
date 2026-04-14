@@ -16,7 +16,7 @@ def build(
     ] = "./stack.yaml",
 ):
     """
-    Build temporary files and python packages into `settings.laktory_build_root` if
+    Build temporary files and python packages into `settings.build_root` if
     specified or default cache dir if not. These files may also be used when
     deployment is delegated to third parties like Databricks Declarative Bundles.
 

@@ -86,15 +86,15 @@ class LaktorySettings(BaseModel):
 
     dataframe_backend: str = Field(None, description="DataFrame backend")
     dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(None, description="")
-    workspace_laktory_root: str = Field(
+    workspace_root: str = Field(
         "/.laktory/",
         description="Root directory of a Databricks Workspace (excluding `'/Workspace') to which databricks objects like notebooks and workspace files are deployed.",
     )
-    laktory_root: str = Field(
+    runtime_root: str = Field(
         "/laktory/",
         description="Laktory cache root directory. Used when a pipeline needs to write checkpoint files.",
     )
-    laktory_build_root: str = Field(
+    build_root: str = Field(
         "",
         description="""
         Local directory where pipeline config JSON and resource files are written during
@@ -108,17 +108,17 @@ class LaktorySettings(BaseModel):
         if self.dataframe_backend:
             settings.dataframe_backend = self.dataframe_backend
 
-        if self.workspace_laktory_root:
-            settings.workspace_laktory_root = self.workspace_laktory_root
+        if self.workspace_root:
+            settings.workspace_root = self.workspace_root
 
-        if self.laktory_root:
-            settings.laktory_root = self.laktory_root
+        if self.runtime_root:
+            settings.runtime_root = self.runtime_root
 
         if self.dataframe_api:
             settings.dataframe_api = self.dataframe_api
 
-        if self.laktory_build_root:
-            settings.laktory_build_root = self.laktory_build_root
+        if self.build_root:
+            settings.build_root = self.build_root
 
         return self
 
@@ -381,9 +381,9 @@ class Stack(BaseModel):
         Build stack artifacts before preview or deploy.
 
         Pipeline config JSON files are written to the location determined by
-        ``settings.laktory_build_root`` (when set in ``stack.yaml`` under
+        ``settings.build_root`` (when set in ``stack.yaml`` under
         ``settings:``) or the default Laktory cache directory. For Databricks
-        Asset Bundles users, set ``settings.laktory_build_root`` to a
+        Asset Bundles users, set ``settings.build_root`` to a
         project-local path (e.g. ``.laktory/.resources/``) so that DABs can
         sync the files to the workspace.
 

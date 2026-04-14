@@ -215,7 +215,7 @@ def test_pulumi_stack(monkeypatch, stack):
 
     monkeypatch.setenv("DATABRICKS_HOST", "my-host")
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
-    monkeypatch.setattr(settings, "laktory_build_root", "/tmp/laktory/cache")
+    monkeypatch.setattr(settings, "build_root", "/tmp/laktory/cache")
 
     pstack = stack.to_pulumi(env_name=None)
     assert pstack.organization == "okube"
@@ -551,7 +551,7 @@ def test_terraform_stack(monkeypatch, stack):
     # To prevent from exposing sensitive data, we overwrite some env vars
     monkeypatch.setenv("DATABRICKS_HOST", "my-host")
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
-    monkeypatch.setattr(settings, "laktory_build_root", "/tmp/laktory/cache")
+    monkeypatch.setattr(settings, "build_root", "/tmp/laktory/cache")
 
     data_default = stack.to_terraform().model_dump()
     print(data_default)
@@ -989,15 +989,15 @@ def test_pulumi_preview(monkeypatch, stack, full_stack, is_full):
 
 
 def test_stack_settings():
-    current_root = settings.laktory_root
+    current_root = settings.runtime_root
     custom_root = "/custom/path/"
 
-    assert settings.laktory_root != custom_root
+    assert settings.runtime_root != custom_root
 
-    _ = models.Stack(name="one_stack", settings={"laktory_root": custom_root})
+    _ = models.Stack(name="one_stack", settings={"runtime_root": custom_root})
 
-    assert settings.laktory_root == custom_root
-    settings.laktory_root = current_root
+    assert settings.runtime_root == custom_root
+    settings.runtime_root = current_root
 
 
 def test_get_env():

@@ -110,16 +110,14 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
             / "notebooks"
             / "dlt_laktory_pl.py"
         )
-        target_filepath = (
-            Path(settings.laktory_build_root) / "pipelines" / "dlt_laktory_pl.py"
-        )
+        target_filepath = Path(settings.build_root) / "pipelines" / "dlt_laktory_pl.py"
         shutil.copy(source_filepath, target_filepath)
 
         # Laktory pipelines use a common notebook (copied above). Its path is
         # hardcoded here, but should probably be hardcoded in the base resource as well.
         # TODO: Allow for other libraries?
         notebook_filepath = (
-            Path("/Workspace" + settings.workspace_laktory_root)
+            Path("/Workspace" + settings.workspace_root)
             / "pipelines"
             / "dlt_laktory_pl"
         )

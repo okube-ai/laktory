@@ -183,11 +183,11 @@ orchestrator:
 
 Two settings control where Laktory writes and reads files during bundle resolution:
 
-| Setting                  | Environment variable             | Description                                                          |
-|--------------------------|----------------------------------|----------------------------------------------------------------------|
-| `laktory_build_root`     | `LAKTORY_BUILD_ROOT`             | Local directory for generated config JSON files and the DLT notebook |
-| `workspace_laktory_root` | `LAKTORY_WORKSPACE_LAKTORY_ROOT` | Workspace path where Laktory files are synced by DABs                |
+| Setting          | Environment variable     | Description                                                          |
+|------------------|--------------------------|----------------------------------------------------------------------|
+| `build_root`     | `LAKTORY_BUILD_ROOT`     | Local directory for generated config JSON files and the DLT notebook |
+| `workspace_root` | `LAKTORY_WORKSPACE_ROOT` | Workspace path where Laktory files are synced by DABs              |
 
-Both are auto-configured from the bundle context when left at their defaults. The `laktory_build_root` is set to 
-`{bundle_root}/laktory/.build/` and `workspace_laktory_root` is derived as 
+Both are auto-configured from the bundle context when left at their defaults. The `build_root` is set to 
+`{bundle_root}/laktory/.build/` and `workspace_root` is derived as 
 `{dab_workspace_root}/files/laktory/.build/`. Explicit overrides via environment variables take priority.

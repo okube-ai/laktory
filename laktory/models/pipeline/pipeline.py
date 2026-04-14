@@ -407,7 +407,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         if self.root_path_:
             return Path(self.root_path_)
 
-        return Path(settings.laktory_root) / "pipelines" / self.safe_name
+        return Path(settings.runtime_root) / "pipelines" / self.safe_name
 
     @field_serializer("root_path", when_used="json")
     def serialize_path(self, value: Path) -> str:

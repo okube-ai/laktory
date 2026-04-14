@@ -9,8 +9,8 @@ from pydantic_settings import BaseSettings
 
 from laktory._cache import cache_dir
 
-DEFAULT_LAKTORY_BUILD_ROOT = cache_dir.as_posix()
-DEFAULT_LAKTORY_ROOT = "/.laktory/"
+DEFAULT_BUILD_ROOT = cache_dir.as_posix()
+DEFAULT_RUNTIME_ROOT = "/.laktory/"
 
 
 class Settings(BaseSettings):
@@ -22,9 +22,9 @@ class Settings(BaseSettings):
     )
 
     # Databricks
-    workspace_laktory_root: str = Field(
-        DEFAULT_LAKTORY_ROOT,
-        alias="LAKTORY_WORKSPACE_LAKTORY_ROOT",
+    workspace_root: str = Field(
+        DEFAULT_RUNTIME_ROOT,
+        alias="LAKTORY_WORKSPACE_ROOT",
     )
 
     # Dataframe
@@ -34,9 +34,9 @@ class Settings(BaseSettings):
     )
 
     # Paths
-    laktory_root: str = Field("", alias="LAKTORY_ROOT")
-    laktory_build_root: str = Field(
-        DEFAULT_LAKTORY_BUILD_ROOT,
+    runtime_root: str = Field("", alias="LAKTORY_ROOT")
+    build_root: str = Field(
+        DEFAULT_BUILD_ROOT,
         alias="LAKTORY_BUILD_ROOT",
     )
 
@@ -44,17 +44,17 @@ class Settings(BaseSettings):
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")
 
     @model_validator(mode="after")
-    def update_laktory_root(self) -> Any:
-        if self.laktory_root != "":
+    def update_runtime_root(self) -> Any:
+        if self.runtime_root != "":
             return self
 
         # In Databricks
         # Could also use spark.conf.get("spark.databricks.cloudProvider") is not None
         if os.getenv("DATABRICKS_RUNTIME_VERSION"):
-            self.laktory_root = "/laktory/"
+            self.runtime_root = "/laktory/"
         else:
             # Local execution
-            self.laktory_root = "./"
+            self.runtime_root = "./"
 
         return self
 

@@ -11,7 +11,7 @@ import laktory as lk
 stack_filepath = "../stack.yaml"
 
 # Laktory root on DBFS, required to read checkpoints
-lk.settings.laktory_root = "/laktory/"
+lk.settings.runtime_root = "/laktory/"
 
 # Get Remote Spark Session
 # TODO: use your own profile
