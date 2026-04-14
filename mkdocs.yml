@@ -150,6 +150,7 @@ nav:
       - Python Package: concepts/extension_python_package.md
     - DataOps:
       - DataOps: concepts/dataops.md
+      - Declarative Automation Bundles: concepts/dab.md
       - Infrastructure-as-Code: concepts/iac.md
       - CLI: concepts/cli.md
     - Best Practices:
@@ -297,6 +298,7 @@ nav:
           - TerraformStack: api/models/stacks/terraformstack.md
     - Types: api/types.md
     - CLI: api/cli.md
+    - dab: api/dab.md
     - RecursiveLoader: api/recursiveloader.md
     - SQLParser: api/sqlparser.md
     - Narwhals Extension:

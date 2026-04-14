@@ -20,35 +20,34 @@ def build_resources(bundle):
 
     Two global settings are configured automatically when not already set:
 
-    - ``settings.laktory_build_root`` defaults to ``laktory/.build/`` relative
+    - ``LAKTORY_BUILD_ROOT`` defaults to ``./laktory/.build/`` relative
       to the bundle root (the directory containing ``databricks.yml``).
-    - ``settings.workspace_laktory_root`` is derived from the
+    - ``WORKSPACE_LAKTORY_ROOT`` is derived from the
       ``dab_workspace_root`` bundle variable as
       ``{dab_workspace_root}/files/{laktory_build_root}/``.
 
+    Examples
+    --------
     To use, declare in ``databricks.yml``:
 
-    .. code-block:: yaml
+    ```yaml
+    variables:
+      laktory_pipelines_dir:
+        default: ./laktory/pipelines   # comma-separated for multiple dirs
+      dab_workspace_root:
+        default: ${workspace.root_path}
 
-        variables:
-          laktory_pipelines_dir:
-            default: ./laktory/pipelines   # comma-separated for multiple dirs
-          dab_workspace_root:
-            default: ${workspace.root_path}
+    sync:
+      paths:
+        - ./laktory/
+      include:
+        - ./laktory/.build/**  # needed if laktory/.build/ is in .gitignore
 
-        sync:
-          paths:
-            - ./laktory
-          include:
-            - laktory/.build/**  # needed if laktory/.build/ is in .gitignore
-
-        python:
-          venv_path: .venv
-          resources:
-            - 'laktory.dab:build_resources'
-
-    Laktory settings (``laktory_build_root``, etc.) can also be controlled via
-    environment variables (``LAKTORY_BUILD_ROOT``, etc.).
+    python:
+      venv_path: .venv
+      resources:
+        - 'laktory.dab:build_resources'
+    ```
 
     Parameters
     ----------
