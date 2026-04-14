@@ -36,7 +36,7 @@ resources:
     pl-stocks-dlt: !use resources/pl-stocks-dlt.yaml
 
   variables:
-    wheel_filepath: /Workspace${vars.workspace_laktory_root}wheels/lake-0.0.1-py3-none-any.whl
+    wheel_filepath: /Workspace${vars.workspace_root}wheels/lake-0.0.1-py3-none-any.whl
 
 # Environment Specific Settings
 environments:

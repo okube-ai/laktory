@@ -279,7 +279,7 @@ Each task will call a Laktory function that will read the pipeline configuration
 and execute a node.
 
 Selecting the `DATABRICKS_JOB` orchestrator will deploy a pipeline json 
-configuration file which can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{pipeline_name}/`.
+configuration file which can be found in your workspace under `/Workspace/{runtime_root}/pipelines/{pipeline_name}/`.
 
 #### Databricks Lakeflow Declarative Pipeline
 [Lakeflow Declarative Pipelines](https://www.databricks.com/product/data-engineering/lakeflow-declarative-pipelines)
@@ -329,7 +329,7 @@ for node in pl.nodes:
 ```
 
 Selecting the `DATABRICKS_PIPELINE` orchestrator will deploy a pipeline json 
-configuration file which can be found in your workspace under `/Workspace/{laktory_root}/pipelines/{pipeline_name}/`.
+configuration file which can be found in your workspace under `/Workspace/{runtime_root}/pipelines/{pipeline_name}/`.
 
 #### Apache Airflow
 Apache Airflow is a widely used orchestrator for scheduling, monitoring, and managing data workflows. When used with
