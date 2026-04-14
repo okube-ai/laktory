@@ -7,6 +7,7 @@
 * Running Databricks Declarative Pipelines on more recent version of Spark 
 ### Updated
 * Variable interpolation now supports `{var.[]}` in addition to `{vars.[]}` 
+* `T.` support in PySpark dataframe expression evaluation
 ### Breaking changes
 * n/a
 
