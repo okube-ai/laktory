@@ -6,6 +6,7 @@ from pathlib import Path
 
 import laktory as lk
 from laktory import models
+from laktory._settings import settings
 from laktory.enums import DataFrameBackends
 
 data_dirpath = Path(__file__).parent.parent / "data"
@@ -641,7 +642,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
     # Mock laktory version to account for dynamically changing value
     lk.__version__ = "<version>"
 
-    monkeypatch.setattr("laktory._cache.cache_dir", Path("/tmp/laktory/cache"))
+    monkeypatch.setattr(settings, "laktory_build_root", "/tmp/laktory/cache")
 
     pl = get_pl_dlt()
 
