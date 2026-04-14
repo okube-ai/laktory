@@ -215,7 +215,7 @@ def test_pulumi_stack(monkeypatch, stack):
 
     monkeypatch.setenv("DATABRICKS_HOST", "my-host")
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
-    monkeypatch.setattr("laktory._cache.cache_dir", Path("/tmp/laktory/cache"))
+    monkeypatch.setattr(settings, "laktory_build_root", "/tmp/laktory/cache")
 
     pstack = stack.to_pulumi(env_name=None)
     assert pstack.organization == "okube"
@@ -551,7 +551,7 @@ def test_terraform_stack(monkeypatch, stack):
     # To prevent from exposing sensitive data, we overwrite some env vars
     monkeypatch.setenv("DATABRICKS_HOST", "my-host")
     monkeypatch.setenv("DATABRICKS_TOKEN", "my-token")
-    monkeypatch.setattr("laktory._cache.cache_dir", Path("/tmp/laktory/cache"))
+    monkeypatch.setattr(settings, "laktory_build_root", "/tmp/laktory/cache")
 
     data_default = stack.to_terraform().model_dump()
     print(data_default)
