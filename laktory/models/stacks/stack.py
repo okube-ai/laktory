@@ -415,13 +415,6 @@ class Stack(BaseModel):
                 if not orchestrator:
                     continue
 
-                # TODO: At this point, calling the orchestrator build is only required
-                # when using DAB. We could potentially set the backend to DAB and use
-                # the backend as a conditional statement, but I'm not sure the extra
-                # configuration is worth the effort. Otherwise, the file is generated
-                # but never used (maybe for debugging).
-                orchestrator.build()
-
                 config_file = getattr(r.orchestrator, "config_file", None)
                 if config_file:
                     config_file.build()
