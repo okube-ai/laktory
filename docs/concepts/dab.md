@@ -32,7 +32,7 @@ Add the following to your bundle configuration:
 variables:
   dab_workspace_root:        # required: workspace path where Laktory files will be synced
     default: ${workspace.root_path}
-  laktory_pipelines_dir:             # local directory containing pipeline YAML files
+  laktory_pipelines_dir:     # local directory containing pipeline YAML files
     default: ./laktory/pipelines
 
 sync:

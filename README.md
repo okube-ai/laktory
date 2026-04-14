@@ -12,7 +12,7 @@ lakehouses.
 <img src="docs/images/logos/laktory_logo_sg.png" alt="laktory logo" width="85"/>
 
 Laktory is your all-in-one solution for defining both data transformations and 
-Databricks resources. Imagine if Terraform, Databricks Asset Bundles, and dbt
+Databricks resources. Imagine if Terraform, Declarative Automation Bundles, and dbt
 combined forces and added support for DataFrame API—that’s essentially Laktory.
 
 This open-source framework streamlines the creation, deployment, and execution
@@ -32,15 +32,18 @@ deployed directly as Databricks Jobs or
 [Declarative Pipelines](https://www.databricks.com/product/data-engineering/lakeflow-declarative-pipelines),
 offering both flexible and fully managed execution options.
 
-But Laktory goes beyond data pipelines. It empowers you to define and deploy 
-your entire Databricks data platform—from Unity Catalog and access grants
-to compute and quality monitoring—providing a complete, modern solution
-for data platform management. This empowers your data team to take full 
-ownership of the solution, eliminating the need to juggle multiple technologies.
-Say goodbye to relying on external Terraform experts to handle compute, workspace
-configuration, and Unity Catalog, while your data engineers and analysts try 
-to combine Databricks Asset Bundles and dbt to build data pipelines. Laktory
-consolidates these functions, simplifying the entire process and reducing
+But Laktory goes beyond data pipelines. It integrates seamlessly with Databricks [Declarative
+Automation Bundles (DAB)](https://www.laktory.ai/concepts/dab/) to let you defines 
+data transformations directly into YAML configuration files in addition to your existing
+resources.
+
+Used on its own, Laktory empower you to define and deploy your entire Databricks data platform—from Unity Catalog and access grants to compute and quality 
+monitoring—providing a complete, modern solution for data platform management. This 
+empowers your data team to take full ownership of the solution, eliminating the need to
+juggle multiple technologies. Say goodbye to relying on external Terraform experts to
+handle compute, workspace configuration, and Unity Catalog, while your data engineers
+and analysts try to combine DAB and dbt to build data pipelines.
+Laktory consolidates these functions, simplifying the entire process and reducing
 the overall cost.
 
 <img src="docs/images/diagrams/why_simplicity.png" alt="dataops" width="500"/>

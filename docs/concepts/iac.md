@@ -16,6 +16,18 @@ capabilities may be added in the future.
 such as Python, Node.js, Go, and Java. In the context of Laktory, Pulumi offers a strong alternative by enabling the use
 of Python for configuration, instead of a YAML file. However, only YAML is currently supported through Laktory.
 
+
+### Databricks Declarative Automation Bundles (DABs) <img src="../../images/logos/databricks.png" alt="databricks" width="16"/>
+
+[Declarative Automation Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) is Databricks' native 
+IaC solution, built directly into the Databricks CLI. Laktory integrates with DABs through a Python resource hook: 
+declare your pipelines as individual YAML files, register the hook in `databricks.yml`, and run 
+`databricks bundle deploy`. Laktory generates the required Job and DLT Pipeline resources automatically — no 
+`stack.yaml` file required.
+
+If your team already uses the Databricks CLI and DABs to manage workspace resources, this is the fastest path to 
+getting Laktory pipelines deployed. See the [DABs concept page](dab.md) for full details.
+
 ## Terraform
 Deploying resources is achieved by creating a [stack](stack.md) in a yaml file and using laktory [CLI](cli.md)
 to run the deployment.
@@ -84,3 +96,37 @@ This command is equivalent to running `pulumi preview --stack okube/dev`. Ensure
 
 Refer to pulumi [stacks](https://www.pulumi.com/learn/building-with-pulumi/understanding-stacks/)
 for more information.
+
+
+## Declarative Automation Bundles
+If your team already uses the Databricks CLI, DABs integration requires only a few additions to your existing 
+`databricks.yml`.
+
+```yaml title="databricks.yml"
+variables:
+  dab_workspace_root:
+    default: ${workspace.root_path}
+  laktory_pipelines_dir:
+    default: ./laktory/pipelines
+
+sync:
+  paths:
+    - ./laktory
+  include:
+    - ./laktory/.build/**
+
+python:
+  venv_path: .venv
+  resources:
+    - 'laktory.dab:build_resources'
+```
+
+Each pipeline YAML file in `laktory_pipelines_dir` is loaded automatically. Laktory generates the corresponding 
+Databricks Job or DLT Pipeline resource and writes the pipeline config to `laktory/.build/` for DABs to sync to the 
+workspace. Then deploy as usual:
+
+```cmd
+databricks bundle deploy --target dev
+```
+
+See the [DABs concept page](dab.md) for full details including orchestrator options, variable injection, and settings.
