@@ -125,6 +125,7 @@ def quickstart(
                 or target_filepath.endswith("pyproject.toml")
                 or target_filepath.endswith(".py")
                 or target_filepath.endswith(".yaml")
+                or target_filepath.endswith(".yml")
             ):
                 with open(target_filepath, "r") as fp:
                     data = fp.read()
