@@ -1,0 +1,115 @@
+name: run-quickstart-dab
+
+on:
+  workflow_call:
+    inputs:
+      cwd:
+        type: string
+        description: 'Working Directory'
+        required: true
+      run_workflows:
+        type: boolean
+        description: 'Run workflows or not'
+        required: true
+      destroy:
+        type: boolean
+        description: 'Destroy bundle after deployment'
+        default: true
+
+env:
+  DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+  CWD: ${{ inputs.cwd }}
+
+jobs:
+  laktory-quickstart-dab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.14"
+          python-version: "3.12"
+
+      - name: Install Databricks CLI
+        uses: databricks/setup-cli@main
+
+      - name: Install Laktory
+        run: |
+          make install-with-dbks
+
+      - name: make dir
+        run: |
+          mkdir -p ${{ env.CWD }}
+
+      - name: create databricks.yml
+        run: |
+          cat > databricks.yml << 'EOF'
+          bundle:
+            name: quickstart-workflows-dab
+
+          targets:
+            dev:
+              mode: development
+              workspace:
+                host: ${{ vars.DATABRICKS_HOST }}
+
+          variables:
+            catalog:
+              default: main
+            dab_workspace_root:
+              default: ${workspace.root_path}
+            laktory_pipelines_dir:
+              default: ./laktory/pipelines
+
+          sync:
+            paths:
+              - ./laktory
+            include:
+              - ./laktory/.build/**
+
+          include:
+            - resources/*.yml
+
+          python:
+            venv_path: .venv
+            resources:
+              - 'laktory.dab:build_resources'
+          EOF
+        working-directory: ${{ env.CWD }}
+
+      - name: run quickstart
+        run: |
+          source ../.venv/bin/activate
+          laktory quickstart -t workflows-dab
+        working-directory: ${{ env.CWD }}
+
+      - name: bundle deploy
+        run: |
+          source ../.venv/bin/activate
+          databricks bundle deploy --target dev
+        working-directory: ${{ env.CWD }}
+
+      - name: run job pipeline
+        if: ${{ inputs.run_workflows }}
+        run: |
+          databricks bundle run pl-taxi-trips --target dev
+        working-directory: ${{ env.CWD }}
+
+      - name: run dlt pipeline
+        if: ${{ inputs.run_workflows }}
+        run: |
+          databricks bundle run pl-tpch --target dev
+        working-directory: ${{ env.CWD }}
+
+      - name: bundle destroy
+        if: ${{ inputs.destroy }}
+        run: |
+          databricks bundle destroy --auto-approve --target dev
+        working-directory: ${{ env.CWD }}
