@@ -6,7 +6,7 @@
 name: pl-tpch
 
 dependencies:
-  - ${var.laktory_package}
+  - laktory==<laktory_version>
 
 dataframe_api: NATIVE
 
