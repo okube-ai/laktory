@@ -15,7 +15,8 @@ orchestrator:
   type: DATABRICKS_PIPELINE
   development: ${vars.is_dev}
   serverless: true
-  target: default
+  catalog: dev
+  schema: default
   libraries:
   - notebook:
       path: /.laktory/notebooks/dlt_laktory_pl.py
