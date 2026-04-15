@@ -8,10 +8,10 @@ name: pl-taxi-trips
 dependencies:
   - laktory==<laktory_version>
 
+dataframe_api: NATIVE
+
 variables:
   schema: nyctaxi
-
-dataframe_api: NATIVE
 
 orchestrator:
   type: DATABRICKS_JOB
