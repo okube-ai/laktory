@@ -11,6 +11,7 @@ dependencies:
 dataframe_api: NATIVE
 
 variables:
+  catalog: dev  # This line can be removed if this variable is defined in databricks.yml
   schema: nyctaxi
 
 # Configure Orchestrator
