@@ -1,0 +1,19 @@
+resources:
+  jobs:
+    tpch:
+      name: job-tpch
+
+      trigger:
+        periodic:
+          interval: 1
+          unit: DAYS
+
+      tasks:
+        - task_key: pl-tpch-dlt
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.pl-tpch.id}
+
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"

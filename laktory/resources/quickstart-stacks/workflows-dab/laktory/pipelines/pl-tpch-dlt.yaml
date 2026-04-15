@@ -1,0 +1,45 @@
+#
+# Example pipeline using Databricks Declarative Pipeline (DLT) as the orchestrator.
+# Source data is the built-in samples.tpch.lineitem Unity Catalog table,
+# available in every Databricks workspace.
+#
+name: pl-tpch
+
+orchestrator:
+  resource_name: pl-tpch
+  type: DATABRICKS_PIPELINE
+  serverless: true
+  catalog: ${var.catalog}
+  schema: tpch
+
+dependencies:
+  - laktory==<laktory_version>
+
+nodes:
+
+# Bronze Table — raw ingest from TPC-H line items
+- name: brz_line_items
+  source:
+    table_name: samples.tpch.lineitem
+  sinks:
+  - table_name: brz_line_items
+
+# Silver Table — net revenue aggregated per order
+- name: slv_order_revenue
+  source:
+    node_name: brz_line_items
+  sinks:
+  - table_name: slv_order_revenue
+  transformer:
+    nodes:
+    - expr: |
+        SELECT
+          l_orderkey,
+          COUNT(*) AS line_item_count,
+          SUM(l_quantity) AS total_quantity,
+          SUM(l_extendedprice * (1 - l_discount)) AS discounted_revenue,
+          SUM(l_extendedprice * (1 - l_discount) * (1 + l_tax)) AS net_revenue
+        FROM 
+          {df}
+        GROUP BY 
+          l_orderkey

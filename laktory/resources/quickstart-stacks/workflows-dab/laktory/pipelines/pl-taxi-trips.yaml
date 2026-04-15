@@ -1,0 +1,69 @@
+#
+# Example pipeline using Databricks Jobs as the orchestrator.
+# Source data is the built-in samples.nyctaxi.trips Unity Catalog table,
+# available in every Databricks workspace.
+#
+name: pl-taxi-trips
+
+dependencies:
+  - laktory==<laktory_version>
+
+variables:
+  schema: nyctaxi
+
+dataframe_api: NATIVE
+
+orchestrator:
+  type: DATABRICKS_JOB
+  serverless_environment_version: "4"
+  schedule:
+    timezone_id: UTC
+    quartz_cron_expression: '0 0 0 ? * * *'  # daily at midnight
+
+# --------------------------------------------------------------------------- #
+# Nodes                                                                       #
+# --------------------------------------------------------------------------- #
+
+nodes:
+
+  - name: sample_trips
+    source:
+      table_name: samples.nyctaxi.trips
+      as_stream: False
+    sinks:
+    - table_name: ${var.catalog}.${var.schema}.sample_trips
+      mode: OVERWRITE
+    transformer:
+      nodes:
+      - func_name: withColumn
+        func_args:
+        - duration
+        - F.col("tpep_dropoff_datetime") - F.col("tpep_pickup_datetime")
+
+  - name: sample_zones
+    source:
+      node_name: sample_trips
+    sinks:
+    - table_name: ${var.catalog}.${var.schema}.sample_zones
+      mode: OVERWRITE
+    transformer:
+      nodes:
+      - expr: |
+          SELECT
+              pickup_zip,
+              SUM(fare_amount) AS total_fare
+          FROM 
+            {df}
+          GROUP BY 
+            pickup_zip
+
+  - name: short_trips
+    source:
+      node_name: sample_trips
+      as_stream: False
+    sinks:
+    - table_name: ${var.catalog}.${var.schema}.short_trips
+      table_type: VIEW
+    transformer:
+      nodes:
+      - expr: SELECT * FROM {df} WHERE trip_distance < 1
