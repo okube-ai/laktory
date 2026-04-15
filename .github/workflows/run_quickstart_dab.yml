@@ -78,7 +78,7 @@ jobs:
             - resources/*.yml
 
           python:
-            venv_path: .venv
+            venv_path: ../.venv
             resources:
               - 'laktory.dab:build_resources'
           EOF

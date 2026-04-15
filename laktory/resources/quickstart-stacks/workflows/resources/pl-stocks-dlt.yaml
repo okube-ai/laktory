@@ -10,13 +10,8 @@ name: pl-stocks-dlt
 orchestrator:
   type: DATABRICKS_PIPELINE
   development: ${vars.is_dev}
+  serverless: true
   target: default
-  clusters:
-  - name: default
-    node_type_id: Standard_DS3_v2  # TODO: Change to your desired cloud-specific node type
-    autoscale:
-      min_workers: 1
-      max_workers: 2
   libraries:
   - notebook:
       path: /.laktory/notebooks/dlt_laktory_pl.py
