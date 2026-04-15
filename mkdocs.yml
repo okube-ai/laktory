@@ -123,6 +123,7 @@ nav:
     - Installation: install.md
     - Quickstarts:
       - Quickstart : quickstarts/quickstart.md
+      - Workflows DAB: quickstarts/workflows-dab.md
       - Workflows: quickstarts/workflows.md
       - Workspace: quickstarts/workspace.md
       - Unity Catalog: quickstarts/unity-catalog.md
