@@ -26,6 +26,7 @@ orchestrator:
 
 nodes:
 
+  # Simple copy of trips with a derived duration column
   - name: sample_trips
     source:
       table_name: samples.nyctaxi.trips
@@ -33,6 +34,9 @@ nodes:
     sinks:
     - table_name: ${var.catalog}.${var.schema}.sample_trips
       mode: OVERWRITE
+
+    # The transformer lets you chain DataFrame transformations using the Spark DataFrame
+    # API. You can also define your own transformation functions.
     transformer:
       nodes:
       - func_name: withColumn
@@ -40,12 +44,16 @@ nodes:
         - duration
         - F.col("tpep_dropoff_datetime") - F.col("tpep_pickup_datetime")
 
+  # Custom transformation grouping trips by pickup zone
   - name: sample_zones
     source:
       node_name: sample_trips
     sinks:
     - table_name: ${var.catalog}.${var.schema}.sample_zones
       mode: OVERWRITE
+
+    # In this case we use a SQL expression in the transformer. You can mix-and-match
+    # whichever suits you best.
     transformer:
       nodes:
       - expr: |
@@ -57,6 +65,7 @@ nodes:
           GROUP BY 
             pickup_zip
 
+  # View creation
   - name: short_trips
     source:
       node_name: sample_trips
@@ -64,6 +73,8 @@ nodes:
     sinks:
     - table_name: ${var.catalog}.${var.schema}.short_trips
       table_type: VIEW
+
+    # In the case of a view, only SQL expressions are allowed
     transformer:
       nodes:
       - expr: SELECT * FROM {df} WHERE trip_distance < 1

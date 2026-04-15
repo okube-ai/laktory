@@ -6,7 +6,7 @@
 name: pl-tpch
 
 dependencies:
-  - laktory==<laktory_version>
+  - ${var.laktory_package}
 
 dataframe_api: NATIVE
 
@@ -43,8 +43,8 @@ nodes:
     nodes:
     - func_name: select
       func_args:
-      - F.col("l_orderkey").alias("order_key)
-      - F.col("l_quantity").alias("quantity)
+      - F.col("l_orderkey").alias("order_key")
+      - F.col("l_quantity").alias("quantity")
       - F.col("l_extendedprice").alias("extended_price")
       - F.col("l_discount").alias("discount")
       - F.col("l_tax").alias("tax")
@@ -71,7 +71,7 @@ nodes:
           SUM(quantity) AS total_quantity,
           SUM(extended_price * (1 - discount)) AS discounted_revenue,
           SUM(extended_price * (1 - discount) * (1 + tax)) AS net_revenue
-        FROM 
+        FROM
           {df}
-        GROUP BY 
+        GROUP BY
           order_key

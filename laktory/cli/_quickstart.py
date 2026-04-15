@@ -58,9 +58,9 @@ def quickstart(
             validator=TemplateValidator(),
         )
 
-    # Backend
+    # Backend (not needed for local-pipeline or workflows-dab templates)
     completer = WordCompleter(SUPPORTED_BACKENDS, ignore_case=True)
-    if backend is None and template not in ["local-pipeline"]:
+    if backend is None and template not in ["local-pipeline", "workflows-dab"]:
         backend = prompt(
             f"Select IaC backend {SUPPORTED_BACKENDS}: ",
             completer=completer,
@@ -143,3 +143,39 @@ def quickstart(
                             "provider: ${resources.provider-databricks-",
                         )
                     )
+
+    if template == "workflows-dab":
+        print(
+            """
+Sample pipeline files have been written to ./laktory/pipelines/.
+A sample DAB job resource has been written to ./resources/.
+
+Add the following to your databricks.yml to enable Laktory:
+
+    variables:
+      dab_workspace_root:
+        default: ${workspace.root_path}
+      laktory_pipelines_dir:
+        default: ./laktory/pipelines
+
+    sync:
+      paths:
+        - ./laktory
+      include:
+        - ./laktory/.build/**
+
+    include:
+      - resources/*.yml
+
+    python:
+      venv_path: .venv
+      resources:
+        - 'laktory.dab:build_resources'
+
+Then deploy with:
+
+    databricks bundle deploy --target dev
+
+See https://www.laktory.ai/concepts/dab/ for full details.
+"""
+        )
