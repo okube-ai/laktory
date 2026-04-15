@@ -90,6 +90,12 @@ jobs:
           laktory quickstart -t workflows-dab
         working-directory: ${{ env.CWD }}
 
+      - name: update stack
+        run: |
+          source ../.venv/bin/activate
+          python ../.github/scripts/update_quickstart_stack.py ${{ github.ref }}
+        working-directory: ${{ env.CWD }}
+
       - name: bundle deploy
         run: |
           source ../.venv/bin/activate

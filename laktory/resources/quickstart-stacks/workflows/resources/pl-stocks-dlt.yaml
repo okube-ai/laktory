@@ -6,6 +6,10 @@
 #
 name: pl-stocks-dlt
 
+dependencies:
+  - laktory==<laktory_version>
+  - ${vars.wheel_filepath}
+
 # Configure Orchestrator
 orchestrator:
   type: DATABRICKS_PIPELINE
@@ -15,10 +19,6 @@ orchestrator:
   libraries:
   - notebook:
       path: /.laktory/notebooks/dlt_laktory_pl.py
-
-dependencies:
-  - laktory==<laktory_version>
-  - ${vars.wheel_filepath}
 
 # Define nodes (each node is a table or a view)
 nodes:

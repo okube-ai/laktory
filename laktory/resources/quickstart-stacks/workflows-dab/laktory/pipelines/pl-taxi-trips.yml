@@ -13,6 +13,7 @@ dataframe_api: NATIVE
 variables:
   schema: nyctaxi
 
+# Configure Orchestrator
 orchestrator:
   resource_name: pl-taxi-trips
   type: DATABRICKS_JOB

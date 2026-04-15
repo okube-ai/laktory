@@ -5,14 +5,14 @@
 #
 name: pl-stocks-job
 
+dependencies:
+  - laktory==<laktory_version>
+  - ${vars.wheel_filepath}
+
 # Configure Orchestrator
 orchestrator:
   type: DATABRICKS_JOB
   serverless_environment_version: "3"
-
-dependencies:
-  - laktory==<laktory_version>
-  - ${vars.wheel_filepath}
 
 # Define nodes (each node is a table or a view)
 nodes:

@@ -10,6 +10,7 @@ dependencies:
 
 dataframe_api: NATIVE
 
+# Configure Orchestrator
 orchestrator:
   resource_name: pl-tpch
   type: DATABRICKS_PIPELINE
