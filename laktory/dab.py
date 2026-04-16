@@ -11,7 +11,8 @@ logger = get_logger(__name__)
 
 def build_resources(bundle):
     """
-    DABs Python entry point for building and loading Laktory pipeline resources.
+    Databricks Declarative Automation Bundles Python entry point for building and
+    loading Laktory pipeline resources.
 
     This function is called by the Databricks CLI during bundle resolution.
     It discovers Laktory pipeline YAML files, writes their JSON config files to
@@ -19,21 +20,19 @@ def build_resources(bundle):
     resources as a DABs ``Resources`` object.
 
     Two global settings are configured automatically when not already set:
-
-    - ``LAKTORY_BUILD_ROOT`` defaults to ``./laktory/.build/`` relative
-      to the bundle root (the directory containing ``databricks.yml``).
-    - ``WORKSPACE_LAKTORY_ROOT`` is derived from the
-      ``dab_workspace_root`` bundle variable as
-      ``{dab_workspace_root}/files/{build_root}/``.
+    - `build_root` defaults to `./laktory/.build/` relative
+      to the bundle root (the directory containing `databricks.yml`).
+    - laktory workspace root is derived from the `dab_workspace_root` bundle variable
+      as `{dab_workspace_root}/files/{build_root}/`.
 
     Examples
     --------
-    To use, declare in ``databricks.yml``:
+    To use, declare in `databricks.yml`:
 
     ```yaml
     variables:
       laktory_pipelines_dir:
-        default: ./laktory/pipelines   # comma-separated for multiple dirs
+        default: ./laktory/pipelines/   # comma-separated for multiple dirs
       dab_workspace_root:
         default: ${workspace.root_path}
 

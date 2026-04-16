@@ -17,8 +17,6 @@ orchestrator:
   serverless: true
   catalog: dev
   schema: default
-#  configuration:
-#    spark.sql.session.timeZone: UTC
   libraries:
   - notebook:
       path: /.laktory/notebooks/dlt_laktory_pl.py

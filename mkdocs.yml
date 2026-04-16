@@ -299,7 +299,7 @@ nav:
           - TerraformStack: api/models/stacks/terraformstack.md
     - Types: api/types.md
     - CLI: api/cli.md
-    - dab: api/dab.md
+    - DAB: api/dab.md
     - RecursiveLoader: api/recursiveloader.md
     - SQLParser: api/sqlparser.md
     - Narwhals Extension:

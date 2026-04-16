@@ -1,7 +1,6 @@
-The `workflows-dab` template generates sample Laktory pipeline files for use with
-[Databricks Asset Bundles (DAB)](../concepts/dab.md). Unlike other templates, it does not produce a
-`stack.yaml` — Laktory acts as a Python resource hook inside your existing bundle rather than as a
-standalone IaC backend.
+The `workflows-dab` template generates sample Laktory pipeline files for use with Databricks
+[Declarative Automation Bundles (DAB)](../concepts/dab.md). In this case, the deployment is managed by DAB
+and Laktory can be used to define pipelines and automatically create the associated Job and Pipeline resources.
 
 ### Prerequisites
 
@@ -16,7 +15,7 @@ Run the following command in the root of your bundle:
 laktory quickstart -t workflows-dab
 ```
 
-Laktory will copy the pipeline files and print the changes required in your `databricks.yml`.
+Laktory will copy the sample pipeline files and print the changes required in your `databricks.yml`.
 
 #### Files
 After running the quickstart command, the following structure is created:
