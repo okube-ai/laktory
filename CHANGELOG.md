@@ -1,6 +1,16 @@
 # Release History
 
-## [0.10.0] - Unreleased
+## [0.10.1] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.10.0] - 2026-04-16
 ### Added
 * Integration with Databricks Declarative Deployment Bundles (DAB)
 ### Fixed
