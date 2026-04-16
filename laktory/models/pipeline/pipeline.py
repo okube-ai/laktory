@@ -417,7 +417,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
                 (DatabricksPipelineOrchestrator, DatabricksJobOrchestrator),
             )
         ):
-            root = "/laktory/"
+            root = "/.laktory/"
 
         return Path(root) / "pipelines" / self.safe_name
 

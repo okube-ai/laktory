@@ -8,7 +8,7 @@ from laktory._cache import cache_dir
 
 DEFAULT_BUILD_ROOT = cache_dir.as_posix()
 DEFAULT_WORKSPACE_ROOT = "/.laktory/"
-DEFAULT_RUNTIME_ROOT = "/.laktory/"
+DEFAULT_RUNTIME_ROOT = "./.laktory/"
 
 
 class Settings(BaseSettings):
@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     )
 
     # Paths
-    runtime_root: str = Field("", alias="LAKTORY_ROOT")
+    runtime_root: str = Field(DEFAULT_RUNTIME_ROOT, alias="LAKTORY_RUNTIME_ROOT")
     build_root: str = Field(
         DEFAULT_BUILD_ROOT,
         alias="LAKTORY_BUILD_ROOT",
