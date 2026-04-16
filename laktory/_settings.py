@@ -1,15 +1,13 @@
-import os
-from typing import Any
 from typing import Literal
 
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
 from laktory._cache import cache_dir
 
 DEFAULT_BUILD_ROOT = cache_dir.as_posix()
+DEFAULT_WORKSPACE_ROOT = "/.laktory/"
 DEFAULT_RUNTIME_ROOT = "/.laktory/"
 
 
@@ -23,7 +21,7 @@ class Settings(BaseSettings):
 
     # Databricks
     workspace_root: str = Field(
-        DEFAULT_RUNTIME_ROOT,
+        DEFAULT_WORKSPACE_ROOT,
         alias="LAKTORY_WORKSPACE_ROOT",
     )
 
@@ -42,21 +40,6 @@ class Settings(BaseSettings):
 
     # Logging
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")
-
-    @model_validator(mode="after")
-    def update_runtime_root(self) -> Any:
-        if self.runtime_root != "":
-            return self
-
-        # In Databricks
-        # Could also use spark.conf.get("spark.databricks.cloudProvider") is not None
-        if os.getenv("DATABRICKS_RUNTIME_VERSION"):
-            self.runtime_root = "/laktory/"
-        else:
-            # Local execution
-            self.runtime_root = "./"
-
-        return self
 
 
 settings = Settings()

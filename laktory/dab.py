@@ -4,7 +4,7 @@ from pathlib import Path
 
 from laktory._logger import get_logger
 from laktory._settings import DEFAULT_BUILD_ROOT
-from laktory._settings import DEFAULT_RUNTIME_ROOT
+from laktory._settings import DEFAULT_WORKSPACE_ROOT
 
 logger = get_logger(__name__)
 
@@ -83,7 +83,7 @@ def build_resources(bundle):
     # Unfortunately, {dab_workspace_root} is not available unless the user
     # adds it to the variables.
     dab_workspace_root = bundle.variables.get("dab_workspace_root")
-    if settings.workspace_root == DEFAULT_RUNTIME_ROOT:
+    if settings.workspace_root == DEFAULT_WORKSPACE_ROOT:
         if dab_workspace_root is None:
             raise ValueError(
                 "Variable `dab_workspace_root` must be set to '${workspace.root_path}' in databricks.yml to use Laktory."
