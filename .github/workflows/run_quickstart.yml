@@ -92,8 +92,6 @@ jobs:
           laktory deploy -y
         working-directory: ${{ env.CWD }}
 
-      # TODO: Convert to serverless in update_quickstart_stack.py to save
-      #       compute time?
       - name: laktory run hello
         if: ${{ inputs.run_workflows }}
         run: |

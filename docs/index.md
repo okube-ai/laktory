@@ -5,7 +5,7 @@ lakehouses.
 
 ## What is it?
 Laktory is your all-in-one solution for defining both data transformations and 
-Databricks resources. Imagine if Terraform, Databricks Asset Bundles, and dbt
+Databricks resources. Imagine if Terraform, Declarative Automation Bundles, and dbt
 combined forces and added support for DataFrame API—that’s essentially Laktory.
 
 This open-source framework streamlines the creation, deployment, and execution
@@ -41,7 +41,7 @@ streamlined into a single tool. This empowers your data team to take full
 ownership of the solution, eliminating the need to juggle multiple technologies.
 Say goodbye to relying on external Terraform experts to handle compute, workspace
 configuration, and Unity Catalog, while your data engineers and analysts try 
-to combine Databricks Asset Bundles and dbt to build data pipelines. Laktory
+to combine Declarative Automation Bundles and dbt to build data pipelines. Laktory
 consolidates these functions, simplifying the entire process and reducing
 the overall cost.
 <img src="images/diagrams/why_simplicity.png" alt="dataops" width="500"/>

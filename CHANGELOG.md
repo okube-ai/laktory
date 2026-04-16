@@ -1,6 +1,6 @@
 # Release History
 
-## [0.9.5] - Unreleased
+## [0.10.1] - Unreleased
 ### Added
 * n/a
 ### Fixed
@@ -9,6 +9,23 @@
 * n/a
 ### Breaking changes
 * n/a
+
+## [0.10.0] - 2026-04-16
+### Added
+* Integration with Databricks Declarative Deployment Bundles (DAB)
+### Fixed
+* Running Databricks Declarative Pipelines on more recent version of Spark 
+### Updated
+* Variable interpolation now supports `{var.[]}` in addition to `{vars.[]}` 
+* `T.` support in PySpark dataframe expression evaluation
+### Breaking changes
+* Renamed settings `laktory_root` to `runtime_root` and changed default value
+* Renamed settings `workspace_laktory_root` to `workspace_root`
+
+
+## [0.9.5] - 2026-04-09
+### Added
+* Support for PipelineIngestion attribute to DatabricksPipeline
 
 ## [0.9.4] - 2026-03-31
 ### Added

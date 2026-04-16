@@ -12,6 +12,7 @@ from pydantic import field_serializer
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory._settings import DEFAULT_RUNTIME_ROOT
 from laktory._settings import settings
 from laktory.models import UnityCatalogDataSink
 from laktory.models.basemodel import BaseModel
@@ -407,7 +408,18 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         if self.root_path_:
             return Path(self.root_path_)
 
-        return Path(settings.laktory_root) / "pipelines" / self.safe_name
+        root = settings.runtime_root
+        if (
+            root == DEFAULT_RUNTIME_ROOT
+            and self.orchestrator
+            and isinstance(
+                self.orchestrator,
+                (DatabricksPipelineOrchestrator, DatabricksJobOrchestrator),
+            )
+        ):
+            root = "/.laktory/"
+
+        return Path(root) / "pipelines" / self.safe_name
 
     @field_serializer("root_path", when_used="json")
     def serialize_path(self, value: Path) -> str:

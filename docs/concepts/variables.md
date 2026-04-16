@@ -5,7 +5,7 @@ When declaring models in Laktory, it's not always practical, desirable, or even 
 
 ## Syntax
 
-To use a variable, follow this syntax: `${vars.VARIABLE_NAME}`.
+To use a variable, follow this syntax: `${vars.VARIABLE_NAME}` or `${var.VARIABLE_NAME}`.
 
 ## Declaration
 
@@ -150,7 +150,7 @@ variables:
   env: prd
 ```
 
-Here, `size` evaluates to `4`. Any valid inline python expression is supported.
+Here, `size` evaluates to `4`. Any valid inline Python expression is supported.
 
 You can also use variables as dictionary keys:
 

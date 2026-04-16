@@ -1,8 +1,12 @@
 import json
+import shutil
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field
 
+from laktory._logger import get_logger
+from laktory._settings import settings
 from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
@@ -10,6 +14,8 @@ from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.pipeline import Pipeline
 from laktory.models.resources.pulumiresource import PulumiResource
+
+logger = get_logger(__name__)
 
 
 class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
@@ -70,6 +76,54 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         # This is to ensure configuration is flagged as set and part of
         # model_fields_set when injecting variables.
         self.configuration = self.configuration
+
+    # ----------------------------------------------------------------------- #
+    # DABs                                                                    #
+    # ----------------------------------------------------------------------- #
+
+    def to_dab_resource(self):
+        """
+        Convert to a DABs Python Pipeline resource object for use with
+        ``laktory.dab.build_resources``.
+
+        Returns
+        -------
+        :
+            ``databricks.bundles.pipelines.Pipeline`` instance.
+        """
+        from databricks.bundles.pipelines import Pipeline as DabsPipeline
+
+        d = self.model_dump(
+            exclude=self.terraform_excludes, exclude_unset=True, by_alias=True
+        )
+        for k, v in self.terraform_renames.items():
+            if k in d:
+                d[v] = d.pop(k)
+
+        # Pipeline notebook
+        source_filepath = (
+            Path(__file__).parent.parent.parent.parent
+            / "resources"
+            / "quickstart-stacks"
+            / "workflows"
+            / "workspacefiles"
+            / "notebooks"
+            / "dlt_laktory_pl.py"
+        )
+        target_filepath = Path(settings.build_root) / "pipelines" / "dlt_laktory_pl.py"
+        shutil.copy(source_filepath, target_filepath)
+
+        # Laktory pipelines use a common notebook (copied above). Its path is
+        # hardcoded here, but should probably be hardcoded in the base resource as well.
+        # TODO: Allow for other libraries?
+        notebook_filepath = (
+            Path("/Workspace" + settings.workspace_root)
+            / "pipelines"
+            / "dlt_laktory_pl"
+        )
+        d["libraries"] = [{"notebook": {"path": notebook_filepath.as_posix()}}]
+
+        return DabsPipeline.from_dict(d)
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #

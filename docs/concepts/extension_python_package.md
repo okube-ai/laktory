@@ -62,7 +62,7 @@ resources:
   pipelines:
     pl-stocks-job: !use resources/pl-stocks-job.yaml
   variables:
-    wheel_filepath: /Workspace${vars.workspace_laktory_root}wheels/lake-0.0.1-py3-none-any.whl
+    wheel_filepath: /Workspace${vars.workspace_root}wheels/lake-0.0.1-py3-none-any.whl
 
 environments:
   dev:
@@ -116,6 +116,6 @@ nodes:
 When you run `laktory deploy`, the Python package is:
 
 - built into a wheel file using the configuration in pyproject.toml
-- deployed as a Databricks workspace file to ${vars.workspace_laktory_root}/wheels/
+- deployed as a Databricks workspace file to ${vars.workspace_root}/wheels/
 
 This workflow enables clean, repeatable deployment of custom transformation logic alongside your data pipelines.

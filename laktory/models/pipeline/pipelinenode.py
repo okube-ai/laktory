@@ -306,7 +306,7 @@ class PipelineNode(BaseModel, PipelineChild):
         if pl and pl.root_path:
             return pl.root_path / self.name
 
-        return Path(settings.laktory_root) / self.name
+        return Path(settings.runtime_root) / self.name
 
     @field_serializer("root_path", "expectations_checkpoint_path", when_used="json")
     def serialize_path(self, value: Path) -> str:

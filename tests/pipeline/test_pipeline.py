@@ -158,17 +158,17 @@ def test_root_path(tmp_path):
     pl3 = models.Pipeline.model_validate(dumpj)
 
     assert pl.root_path_ is None
-    assert pl.root_path == Path("pipelines/pl")
+    assert pl.root_path == Path(".laktory/pipelines/pl")
     assert list(dump.keys()) == [
         "name",
         "dataframe_backend",
         "dataframe_api",
         "root_path",
     ]
-    assert dump["root_path"] == Path("pipelines/pl")
-    assert dumpj["root_path"] == "pipelines/pl"
-    assert pl2.root_path_ == Path("pipelines/pl")
-    assert pl3.root_path_ == "pipelines/pl"
+    assert dump["root_path"] == Path(".laktory/pipelines/pl")
+    assert dumpj["root_path"] == ".laktory/pipelines/pl"
+    assert pl2.root_path_ == Path(".laktory/pipelines/pl")
+    assert pl3.root_path_ == ".laktory/pipelines/pl"
 
     # With Path
     pl = models.Pipeline(name="pl", root_path="/pl_root/")

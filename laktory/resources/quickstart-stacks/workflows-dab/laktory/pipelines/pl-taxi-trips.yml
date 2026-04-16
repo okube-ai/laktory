@@ -1,0 +1,83 @@
+#
+# Example pipeline using Databricks Jobs as the orchestrator.
+# Source data is the built-in samples.nyctaxi.trips Unity Catalog table,
+# available in every Databricks workspace.
+#
+name: pl-taxi-trips
+
+dependencies:
+  - laktory==<laktory_version>
+
+dataframe_api: NATIVE
+
+variables:
+  catalog: dev  # This line can be removed if this variable is defined in databricks.yml
+  schema: nyctaxi
+
+# Configure Orchestrator
+orchestrator:
+  resource_name: pl-taxi-trips
+  type: DATABRICKS_JOB
+  serverless_environment_version: "4"
+  schedule:
+    timezone_id: UTC
+    quartz_cron_expression: '0 0 0 ? * * *'  # daily at midnight
+
+# --------------------------------------------------------------------------- #
+# Nodes                                                                       #
+# --------------------------------------------------------------------------- #
+
+nodes:
+
+  # Simple copy of trips with a derived duration column
+  - name: sample_trips
+    source:
+      table_name: samples.nyctaxi.trips
+      as_stream: False
+    sinks:
+    - table_name: ${var.catalog}.${var.schema}.sample_trips
+      mode: OVERWRITE
+
+    # The transformer lets you chain DataFrame transformations using the Spark DataFrame
+    # API. You can also define your own transformation functions.
+    transformer:
+      nodes:
+      - func_name: withColumn
+        func_args:
+        - duration
+        - F.col("tpep_dropoff_datetime") - F.col("tpep_pickup_datetime")
+
+  # Custom transformation grouping trips by pickup zone
+  - name: sample_zones
+    source:
+      node_name: sample_trips
+    sinks:
+    - table_name: ${var.catalog}.${var.schema}.sample_zones
+      mode: OVERWRITE
+
+    # In this case we use a SQL expression in the transformer. You can mix-and-match
+    # whichever suits you best.
+    transformer:
+      nodes:
+      - expr: |
+          SELECT
+              pickup_zip,
+              SUM(fare_amount) AS total_fare
+          FROM 
+            {df}
+          GROUP BY 
+            pickup_zip
+
+  # View creation
+  - name: short_trips
+    source:
+      node_name: sample_trips
+      as_stream: False
+    sinks:
+    - table_name: ${var.catalog}.${var.schema}.short_trips
+      table_type: VIEW
+
+    # In the case of a view, only SQL expressions are allowed
+    transformer:
+      nodes:
+      - expr: SELECT * FROM {df} WHERE trip_distance < 1

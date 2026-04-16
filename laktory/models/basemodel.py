@@ -186,12 +186,12 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                 continue
 
             self_reference = False
-            if "${vars." + k + "}" in v:
+            if "${vars." + k + "}" in v or "${var." + k + "}" in v:
                 self_reference = True
 
             if v.startswith("${{"):
-                # Regular expression to match 'vars.env'
-                pattern = rf"\bvars\.{k}\b"
+                # Regular expression to match 'vars.env' or 'var.env'
+                pattern = rf"\bvars?\.{k}\b"
 
                 # Check for match
                 if re.search(pattern, v):
