@@ -126,8 +126,8 @@ def _resolve_value(o, vars, objs):
     if not isinstance(o, str):
         return o
 
-    # Resolve ${vars.<name>} syntax
-    pattern = re.compile(r"\$\{vars\.([a-zA-Z_][a-zA-Z0-9_]*)\}")
+    # Resolve ${vars.<name>} or ${var.<name>} syntax
+    pattern = re.compile(r"\$\{vars?\.([a-zA-Z_][a-zA-Z0-9_]*)\}")
     for match in pattern.finditer(o):
         # Extract the variable name
         var_name = match.group(1)
@@ -198,9 +198,9 @@ def _resolve_variable(name, vars, objs):
 
 def _resolve_expression(expression, vars, objs):
     """Evaluate an inline expression."""
-    # Translate vars.env to variables_map['env']
+    # Translate vars.env or var.env to variables_map['env']
     expression = re.sub(
-        r"\bvars\.([a-zA-Z_][a-zA-Z0-9_]*)\b", r"variables_map['\1']", expression
+        r"\bvars?\.([a-zA-Z_][a-zA-Z0-9_]*)\b", r"variables_map['\1']", expression
     )
 
     # Prepare a safe evaluation context

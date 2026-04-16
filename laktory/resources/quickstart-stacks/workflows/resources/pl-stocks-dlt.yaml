@@ -6,24 +6,20 @@
 #
 name: pl-stocks-dlt
 
+dependencies:
+  - laktory==<laktory_version>
+  - ${vars.wheel_filepath}
+
 # Configure Orchestrator
 orchestrator:
   type: DATABRICKS_PIPELINE
   development: ${vars.is_dev}
-  target: default
-  clusters:
-  - name: default
-    node_type_id: Standard_DS3_v2  # TODO: Change to your desired cloud-specific node type
-    autoscale:
-      min_workers: 1
-      max_workers: 2
+  serverless: true
+  catalog: dev
+  schema: default
   libraries:
   - notebook:
       path: /.laktory/notebooks/dlt_laktory_pl.py
-
-dependencies:
-  - laktory==<laktory_version>
-  - ${vars.wheel_filepath}
 
 # Define nodes (each node is a table or a view)
 nodes:
@@ -51,7 +47,7 @@ nodes:
   - table_name: slv_stock_prices
 
   # The transformer is a chain of SQL statements and / or serialized spark
-  # functions. In this case, we use `with_columns` from Narwhals API and the
+  # functions. In this case, we use `select` from Narwhals API and the
   # drop_duplicates method from Spark. By default, laktory will use Narwhals API to
   # ensure seamless transition between DataFrame backends, but you can also choose to
   # use DataFrame backend API by setting `dataframe_api` to "NATIVE".
@@ -59,7 +55,7 @@ nodes:
     nodes:
     - func_name: select
       func_kwargs:
-        created_at: nw.col("data").struct.field("created_at").cast(nw.dtypes.Datetime())
+        created_at: nw.col("data").struct.field("created_at").cast(nw.dtypes.Datetime(time_zone="Etc/UTC"))
         symbol: nw.col("data").struct.field("symbol").cast(nw.dtypes.String())
         open: nw.col("data").struct.field("open").cast(nw.dtypes.Float64())
         close: nw.col("data").struct.field("close").cast(nw.dtypes.Float64())

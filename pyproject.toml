@@ -87,6 +87,7 @@ airflow = [
 databricks = [
 #    "databricks-connect",  # causing conflicts with local spark installation
     "databricks-sdk",
+    "databricks-bundles",
 ]
 
 [project.urls]

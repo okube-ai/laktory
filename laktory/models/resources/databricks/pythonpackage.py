@@ -84,7 +84,7 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
             self.dirpath = self.dirpath[1:]
 
         # path
-        _path = Path(settings.workspace_laktory_root) / self.dirpath / self.filename
+        _path = Path(settings.workspace_root) / self.dirpath / self.filename
 
         return _path.as_posix()
 

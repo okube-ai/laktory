@@ -2,6 +2,7 @@ QUICKSTART_TEMPLATES = [
     "unity-catalog",
     "workspace",
     "workflows",
+    "workflows-dab",
     "local-pipeline",
 ]
 

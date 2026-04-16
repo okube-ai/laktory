@@ -1,0 +1,81 @@
+#
+# Example pipeline using Databricks Declarative Pipeline (DLT) as the orchestrator.
+# Source data is the built-in samples.tpch Unity Catalog tables,
+# available in every Databricks workspace.
+#
+name: pl-tpch
+
+dependencies:
+  - laktory==<laktory_version>
+
+dataframe_api: NATIVE
+
+variables:
+  catalog: dev  # This line can be removed if this variable is defined in databricks.yml
+
+# Configure Orchestrator
+orchestrator:
+  resource_name: pl-tpch
+  type: DATABRICKS_PIPELINE
+  serverless: true
+  catalog: ${var.catalog}
+  schema: tpch
+
+# --------------------------------------------------------------------------- #
+# Nodes                                                                       #
+# --------------------------------------------------------------------------- #
+
+nodes:
+
+# Bronze: Simple copy of line items
+- name: brz_line_items
+  source:
+    table_name: samples.tpch.lineitem
+  sinks:
+  - table_name: brz_line_items
+
+# Silver: Columns selection and renaming
+- name: slv_line_items
+  source:
+    node_name: brz_line_items
+  sinks:
+  - table_name: slv_line_items
+
+  # The transformer lets you chain DataFrame transformations using the Spark DataFrame
+  # API. You can also define your own transformation functions.
+  transformer:
+    nodes:
+    - func_name: select
+      func_args:
+      - F.col("l_orderkey").alias("order_key")
+      - F.col("l_quantity").alias("quantity")
+      - F.col("l_extendedprice").alias("extended_price")
+      - F.col("l_discount").alias("discount")
+      - F.col("l_tax").alias("tax")
+    - func_name: withColumn
+      func_args:
+      - tax_percentage
+      - F.col("tax") * 100.0
+
+# Gold: Aggregation by order key
+- name: gld_order_revenue
+  source:
+    node_name: slv_line_items
+  sinks:
+  - table_name: gld_order_revenue
+
+  # In this case we use a SQL expression in the transformer. You can mix-and-match
+  # whichever suits you best.
+  transformer:
+    nodes:
+    - expr: |
+        SELECT
+          order_key,
+          COUNT(*) AS line_item_count,
+          SUM(quantity) AS total_quantity,
+          SUM(extended_price * (1 - discount)) AS discounted_revenue,
+          SUM(extended_price * (1 - discount) * (1 + tax)) AS net_revenue
+        FROM
+          {df}
+        GROUP BY
+          order_key

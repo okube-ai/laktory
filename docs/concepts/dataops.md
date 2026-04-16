@@ -2,7 +2,7 @@ Laktory is built from the ground up to simplify and adhere to DataOps best pract
 
 For Databricks users, it provides an all-in-one solution for managing both Databricks resources—such as catalogs, 
 schemas, users, groups, notebooks, and jobs—and data transformations, all through simple YAML files. This dramatically
-simplifies workflows for teams that previously had to juggle a cumbersome mix of Terraform, Databricks Asset Bundles, 
+simplifies workflows for teams that previously had to juggle a cumbersome mix of Terraform, Declarative Automation Bundles, 
 and dbt. Additionally, Laktory speeds up iteration by enabling testing directly from your favorite IDE.
 
 For non-Databricks users, Laktory still offers a robust ETL framework that can run locally or scale to environments like Kubernetes.

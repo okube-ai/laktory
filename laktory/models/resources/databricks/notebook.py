@@ -93,7 +93,7 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         if self.dirpath.startswith("/"):
             self.dirpath = self.dirpath[1:]
 
-        path = Path(settings.workspace_laktory_root) / self.dirpath / self.filename
+        path = Path(settings.workspace_root) / self.dirpath / self.filename
         return path.as_posix()
 
     @property

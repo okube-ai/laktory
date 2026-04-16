@@ -41,3 +41,10 @@ jobs:
       template: workflows
       run_workflows: true
     secrets: inherit
+
+  laktory-quickstart-workflows-dab:
+    uses: ./.github/workflows/run_quickstart_dab.yml
+    with:
+      cwd:  ./run_quickstart_workflows_dab
+      run_workflows: true
+    secrets: inherit

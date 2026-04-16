@@ -86,13 +86,21 @@ class LaktorySettings(BaseModel):
 
     dataframe_backend: str = Field(None, description="DataFrame backend")
     dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(None, description="")
-    workspace_laktory_root: str = Field(
+    workspace_root: str = Field(
         "/.laktory/",
         description="Root directory of a Databricks Workspace (excluding `'/Workspace') to which databricks objects like notebooks and workspace files are deployed.",
     )
-    laktory_root: str = Field(
+    runtime_root: str = Field(
         "/laktory/",
         description="Laktory cache root directory. Used when a pipeline needs to write checkpoint files.",
+    )
+    build_root: str = Field(
+        "",
+        description="""
+        Local directory where pipeline config JSON and resource files are written during
+        build. Defaults to the Laktory cache directory. Use when deployment is delegated
+        to third parties like Databricks Declarative Bundles.
+        """,
     )
 
     @model_validator(mode="after")
@@ -100,14 +108,17 @@ class LaktorySettings(BaseModel):
         if self.dataframe_backend:
             settings.dataframe_backend = self.dataframe_backend
 
-        if self.workspace_laktory_root:
-            settings.workspace_laktory_root = self.workspace_laktory_root
+        if self.workspace_root:
+            settings.workspace_root = self.workspace_root
 
-        if self.laktory_root:
-            settings.laktory_root = self.laktory_root
+        if self.runtime_root:
+            settings.runtime_root = self.runtime_root
 
         if self.dataframe_api:
             settings.dataframe_api = self.dataframe_api
+
+        if self.build_root:
+            settings.build_root = self.build_root
 
         return self
 
@@ -369,6 +380,13 @@ class Stack(BaseModel):
         """
         Build stack artifacts before preview or deploy.
 
+        Pipeline config JSON files are written to the location determined by
+        ``settings.build_root`` (when set in ``stack.yaml`` under
+        ``settings:``) or the default Laktory cache directory. For Databricks
+        Asset Bundles users, set ``settings.build_root`` to a
+        project-local path (e.g. ``.laktory/.resources/``) so that DABs can
+        sync the files to the workspace.
+
         Parameters
         ----------
         env_name:
@@ -383,6 +401,9 @@ class Stack(BaseModel):
         if inject_vars:
             env = env.inject_vars()
 
+        if env.resources is None:
+            return
+
         for k, r in env.resources._get_all(providers_excluded=True).items():
             if isinstance(r, PythonPackage):
                 r.build()
@@ -390,9 +411,11 @@ class Stack(BaseModel):
         logger.info("Writing pipeline config files...")
         for k, r in env.resources._get_all(providers_excluded=True).items():
             if isinstance(r, Pipeline):
-                if not r.orchestrator:
+                orchestrator = r.orchestrator
+                if not orchestrator:
                     continue
-                config_file = getattr(r.orchestrator, "config_file")
+
+                config_file = getattr(r.orchestrator, "config_file", None)
                 if config_file:
                     config_file.build()
 

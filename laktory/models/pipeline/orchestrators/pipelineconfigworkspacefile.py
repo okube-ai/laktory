@@ -25,8 +25,6 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
     @computed_field(description="source")
     @property
     def source(self) -> str | None:
-        from laktory._cache import cache_dir
-
         pl_name = ""
         try:
             pl = self.parent_pipeline
@@ -36,7 +34,7 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
             # parent pipeline can't be access at initial import
             pass
 
-        source_path = cache_dir / "pipelines" / (pl_name + ".json")
+        source_path = Path(settings.build_root) / "pipelines" / (pl_name + ".json")
 
         return str(source_path)
 
@@ -50,7 +48,7 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         if not pl:
             return None
 
-        return f"{settings.workspace_laktory_root}pipelines/{pl.name}.json"
+        return f"{settings.workspace_root}pipelines/{pl.name}.json"
 
     @property
     def content_dict(self):
@@ -83,7 +81,9 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
     def build(self):
         """
-        Write config file to cache (required for deployment).
+        Write config file to `settings.build_root` if
+        specified or default cache dir if not. These files may also be used when
+        deployment is delegated to third parties like Databricks Declarative Bundles.
         """
         filepath = Path(self.source)
         filepath.parent.mkdir(parents=True, exist_ok=True)

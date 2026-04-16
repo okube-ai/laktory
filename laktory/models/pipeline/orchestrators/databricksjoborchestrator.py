@@ -2,6 +2,7 @@ from typing import Literal
 
 from pydantic import Field
 
+from laktory._logger import get_logger
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
 )
@@ -15,6 +16,8 @@ from laktory.models.resources.databricks.job import JobParameter
 from laktory.models.resources.databricks.job import JobTask
 from laktory.models.resources.databricks.job import JobTaskPythonWheelTask
 from laktory.models.resources.pulumiresource import PulumiResource
+
+logger = get_logger(__name__)
 
 ENV_KEY = "laktory"
 
@@ -171,6 +174,35 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         self.parameters = [
             JobParameter(name="full_refresh", default="false"),
         ]
+
+    # ----------------------------------------------------------------------- #
+    # DABs                                                                    #
+    # ----------------------------------------------------------------------- #
+
+    def to_dab_resource(self):
+        """
+        Convert to a DABs Python Job resource object for use with
+        ``laktory.dab.build_resources``.
+
+        Returns
+        -------
+        :
+            ``databricks.bundles.jobs.Job`` instance.
+        """
+        from databricks.bundles.jobs import Job as DabsJob
+
+        d = self.model_dump(
+            exclude=self.terraform_excludes, exclude_unset=True, by_alias=True
+        )
+        for k, v in self.terraform_renames.items():
+            if k in d:
+                d[v] = d.pop(k)
+        # depends_ons → depends_on in all tasks (DABs API field name)
+        for task in d.get("tasks", []):
+            if "depends_ons" in task:
+                task["depends_on"] = task.pop("depends_ons")
+
+        return DabsJob.from_dict(d)
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #

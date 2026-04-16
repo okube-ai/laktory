@@ -149,7 +149,7 @@ class Alert(BaseModel, PulumiResource, TerraformResource):
         if self.parent_path_.startswith("/"):
             self.parent_path_ = self.parent_path_[1:]
 
-        parent_path = Path(settings.workspace_laktory_root) / self.parent_path_
+        parent_path = Path(settings.workspace_root) / self.parent_path_
         return parent_path.as_posix()
 
     @model_validator(mode="after")
