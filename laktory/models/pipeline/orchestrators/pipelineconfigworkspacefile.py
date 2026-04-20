@@ -57,9 +57,8 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
             return None
 
         # Overwrite serialization options
-        ss0 = self._singular_serialization
         cs0 = self._camel_serialization
-        pl._configure_serializer(singular=False, camel=False)
+        pl._configure_serializer(camel=False)
 
         # Orchestrator (which includes WorkspaceFile) needs to be excluded to avoid
         # infinite re-cursive loop
@@ -75,7 +74,7 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         )
 
         # Reset serialization options
-        pl._configure_serializer(singular=ss0, camel=cs0)
+        pl._configure_serializer(camel=cs0)
 
         return _config
 

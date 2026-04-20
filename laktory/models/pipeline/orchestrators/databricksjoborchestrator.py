@@ -192,15 +192,15 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         from databricks.bundles.jobs import Job as DabsJob
 
         d = self.model_dump(
-            exclude=self.terraform_excludes, exclude_unset=True, by_alias=True
+            exclude=self.terraform_excludes, exclude_unset=True, by_alias=False
         )
-        for k, v in self.terraform_renames.items():
-            if k in d:
-                d[v] = d.pop(k)
-        # depends_ons → depends_on in all tasks (DABs API field name)
         for task in d.get("tasks", []):
+            # depends_ons → depends_on (DABs API field name)
             if "depends_ons" in task:
                 task["depends_on"] = task.pop("depends_ons")
+            # schema_ is a Python workaround for the reserved name; DABs expects "schema"
+            if "dbt_task" in task and "schema_" in task["dbt_task"]:
+                task["dbt_task"]["schema"] = task["dbt_task"].pop("schema_")
 
         return DabsJob.from_dict(d)
 

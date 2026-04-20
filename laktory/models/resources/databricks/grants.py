@@ -43,7 +43,10 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
         None, description="Name of the external location to assign the grants to"
     )
     grants: list[GrantsGrant] = Field(
-        ..., description="List of grant assigned to the selected object"
+        ...,
+        validation_alias=AliasChoices("grants", "grant"),
+        serialization_alias="grant",
+        description="List of grant assigned to the selected object",
     )
     metastore: str = Field(
         None, description="Name of the metastore to assign the grants to"
@@ -54,6 +57,7 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
     schema_: str = Field(
         None,
         validation_alias=AliasChoices("schema", "schema_"),
+        serialization_alias="schema",
         description="Name of the schema to assign the permission to.",
     )  # required not to overwrite BaseModel attribute
     share: str = Field(

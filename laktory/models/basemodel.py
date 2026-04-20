@@ -115,6 +115,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         # `validate_assignment` is required when injecting complex variables to resolve
         # target model and more suitable when models are dynamically updated in code.
         validate_assignment=True,
+        # Allow field names (in addition to aliases) to be used in model_validate().
+        populate_by_name=True,
     )
     variables: dict[str, Any] = Field(
         default={},
@@ -122,7 +124,6 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         description="Dict of variables to be injected in the model at runtime",
     )
     _camel_serialization: bool = False
-    _singular_serialization: bool = False
 
     @model_serializer(mode="wrap")
     def custom_serializer(self, handler) -> dict[str, Any]:
@@ -131,7 +132,6 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
             return dump
 
         camel_serialization = self._camel_serialization
-        singular_serialization = self._singular_serialization
 
         fields = {k: v for k, v in type(self).model_fields.items()}
         fields = fields | {k: v for k, v in self.model_computed_fields.items()}
@@ -152,27 +152,6 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                     values = dump[k].split(".")
                     values[-1] = _snake_to_camel(values[-1])
                     dump[k] = ".".join(values)
-
-        if singular_serialization:
-            import inflect
-
-            engine = inflect.engine()
-            keys = list(dump.keys())
-            for k in keys:
-                if k in self.singularizations:
-                    # Explicit singularization
-                    k_singular = self.singularizations[k] or k
-                else:
-                    # Automatic singularization
-                    k_singular = k
-                    if not hasattr(fields[k], "annotation"):
-                        continue
-                    ann = fields[k].annotation
-                    if annotation_contains_list_of_basemodel(ann, BaseModel):
-                        k_singular = engine.singular_noun(k) or k
-
-                if k_singular != k:
-                    dump[k_singular] = dump.pop(k)
 
         return dump
 
@@ -289,14 +268,6 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         return cls.model_validate(data)
 
     # ----------------------------------------------------------------------- #
-    # Properties                                                              #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {}
-
-    # ----------------------------------------------------------------------- #
     # Update                                                                  #
     # ----------------------------------------------------------------------- #
 
@@ -329,21 +300,20 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     # Serialization                                                           #
     # ----------------------------------------------------------------------- #
 
-    def _configure_serializer(self, camel=False, singular=False):
+    def _configure_serializer(self, camel=False):
         self._camel_serialization = camel
-        self._singular_serialization = singular
         for k in type(self).model_fields:
             f = getattr(self, k)
             if isinstance(f, BaseModel):
-                f._configure_serializer(camel, singular)
+                f._configure_serializer(camel)
             elif isinstance(f, list):
                 for i in f:
                     if isinstance(i, BaseModel):
-                        i._configure_serializer(camel, singular)
+                        i._configure_serializer(camel)
             elif isinstance(f, dict):
                 for i in f.values():
                     if isinstance(i, BaseModel):
-                        i._configure_serializer(camel, singular)
+                        i._configure_serializer(camel)
 
     # ----------------------------------------------------------------------- #
     # Validation ByPass                                                       #
@@ -355,13 +325,23 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         Updating a model attribute inside a model validator when `validate_assignment`
         is `True` causes an infinite recursion by design and must be turned off
         temporarily.
+
+        Pydantic v2 memoizes setattr handlers at the class level. If a field's handler
+        was memoized as the validate_assignment handler (because a previous setattr ran
+        while validate_assignment=True), it would still call validate_assignment() even
+        after setting model_config["validate_assignment"] = False. We clear and restore
+        the memoized handlers to force re-evaluation with the disabled config.
         """
-        original_state = self.model_config["validate_assignment"]
-        self.model_config["validate_assignment"] = False
+        cls = self.__class__
+        original_state = cls.model_config["validate_assignment"]
+        original_handlers = dict(cls.__pydantic_setattr_handlers__)
+        cls.model_config["validate_assignment"] = False
+        cls.__pydantic_setattr_handlers__.clear()
         try:
             yield
         finally:
-            self.model_config["validate_assignment"] = original_state
+            cls.model_config["validate_assignment"] = original_state
+            cls.__pydantic_setattr_handlers__.update(original_handlers)
 
     # ----------------------------------------------------------------------- #
     # Variables Injection                                                     #

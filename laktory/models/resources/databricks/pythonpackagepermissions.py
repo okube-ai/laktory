@@ -1,5 +1,6 @@
 from typing import Callable
 
+from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
 
@@ -14,7 +15,10 @@ logger = get_logger(__name__)
 
 class PythonPackagePermissions(BaseModel, PulumiResource, TerraformResource):
     access_controls: list[AccessControl] = Field(
-        ..., description="Access controls list"
+        ...,
+        validation_alias=AliasChoices("access_controls", "access_control"),
+        serialization_alias="access_control",
+        description="Access controls list",
     )
     get_workspace_file_path: Callable = Field(
         ..., description="Callable returning workspace filepath", exclude=True

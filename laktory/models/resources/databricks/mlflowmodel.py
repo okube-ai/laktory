@@ -89,12 +89,6 @@ class MLflowModel(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "tags": "tags",
-        }
-
-    @property
     def terraform_resource_type(self) -> str:
         return "databricks_mlflow_model"
 

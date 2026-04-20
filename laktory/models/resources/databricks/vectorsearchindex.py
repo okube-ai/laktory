@@ -31,13 +31,6 @@ class VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn(BaseModel):
 
 
 class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "embedding_source_columns": "embedding_source_columns",
-            "embedding_vector_columns": "embedding_vector_columns",
-        }
-
     embedding_source_columns: list[
         VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn
     ] = Field(
@@ -72,13 +65,6 @@ class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
 
 
 class VectorSearchIndexDirectAccessIndexSpec(BaseModel):
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "embedding_source_columns": "embedding_source_columns",
-            "embedding_vector_columns": "embedding_vector_columns",
-        }
-
     embedding_source_columns: list[
         VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn
     ] = Field(

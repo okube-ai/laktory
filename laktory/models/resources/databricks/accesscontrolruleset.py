@@ -53,12 +53,6 @@ class AccessControlRuleSet(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "grant_rules": "grant_rules",
-        }
-
-    @property
     def terraform_resource_type(self) -> str:
         return "databricks_access_control_rule_set"
 

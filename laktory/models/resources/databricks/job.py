@@ -3,6 +3,7 @@ from typing import Any
 from typing import Literal
 from typing import Union
 
+from pydantic import AliasChoices
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import field_validator
@@ -90,30 +91,34 @@ class JobEmailNotifications(BaseModel):
     )
     on_duration_warning_threshold_exceededs: list[str] = Field(
         None,
+        validation_alias=AliasChoices(
+            "on_duration_warning_threshold_exceededs",
+            "on_duration_warning_threshold_exceeded",
+        ),
+        serialization_alias="on_duration_warning_threshold_exceeded",
         description="""
     List of emails to notify when the duration of a run exceeds the threshold specified by the RUN_DURATION_SECONDS
     metric in the health block.
     """,
     )
     on_failures: list[str] = Field(
-        None, description="List of emails to notify when the run fails."
+        None,
+        validation_alias=AliasChoices("on_failures", "on_failure"),
+        serialization_alias="on_failure",
+        description="List of emails to notify when the run fails.",
     )
     on_starts: list[str] = Field(
-        None, description="List of emails to notify when the run starts."
+        None,
+        validation_alias=AliasChoices("on_starts", "on_start"),
+        serialization_alias="on_start",
+        description="List of emails to notify when the run starts.",
     )
     on_successes: list[str] = Field(
         None,
+        validation_alias=AliasChoices("on_successes", "on_success"),
+        serialization_alias="on_success",
         description="List of emails to notify when the run completes successfully.",
     )
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "on_failures": "on_failure",
-            "on_starts": "on_start",
-            "on_successes": "on_success",
-            "on_duration_warning_threshold_exceededs": "on_duration_warning_threshold_exceeded",
-        }
 
 
 class JobEnvironmentSpec(BaseModel):
@@ -209,7 +214,10 @@ class JobHealthRule(BaseModel):
 
 class JobHealth(BaseModel):
     rules: list[JobHealthRule] = Field(
-        None, description="Job health rules specifications"
+        None,
+        validation_alias=AliasChoices("rules", "rule"),
+        serialization_alias="rule",
+        description="Job health rules specifications",
     )
 
 
@@ -410,8 +418,10 @@ class JobTaskSQLTaskAlert(BaseModel):
     alert_id: str = Field(None, description="Identifier of the Databricks SQL Alert.")
     subscriptions: list[JobTaskSqlTaskAlertSubscription] = Field(
         None,
+        validation_alias=AliasChoices("subscriptions", "subscription"),
+        serialization_alias="subscription",
         description="""
-    A list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or 
+    A list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or
     `destination_id` - for Alert destination's identifier.
     """,
     )
@@ -429,7 +439,10 @@ class JobTaskSqlTaskDashboard(BaseModel):
         None, description="Custom subject specifications"
     )
     subscriptions: list[JobTaskSqlTaskAlertSubscription] = Field(
-        None, description="Subscriptions specifications"
+        None,
+        validation_alias=AliasChoices("subscriptions", "subscription"),
+        serialization_alias="subscription",
+        description="Subscriptions specifications",
     )
 
 
@@ -476,7 +489,10 @@ class JobTaskForEachTaskTask(BaseModel):
         None, description="Condition Task specifications"
     )
     depends_ons: list[JobTaskDependsOn] = Field(
-        None, description="Depends On specifications"
+        None,
+        validation_alias=AliasChoices("depends_ons", "depends_on"),
+        serialization_alias="depends_on",
+        description="Depends On specifications",
     )
     description: str = Field(None, description="Description for this task")
     email_notifications: JobEmailNotifications = Field(
@@ -499,7 +515,10 @@ class JobTaskForEachTaskTask(BaseModel):
         description="Identifier that can be referenced in task block, so that cluster is shared between tasks",
     )
     libraries: list[ClusterLibrary] = Field(
-        None, description="Cluster Library specifications"
+        None,
+        validation_alias=AliasChoices("libraries", "library"),
+        serialization_alias="library",
+        description="Cluster Library specifications",
     )
     max_retries: int = Field(
         None,
@@ -543,14 +562,6 @@ class JobTaskForEachTaskTask(BaseModel):
         None,
         description="An optional timeout applied to each run of this job. The default behavior is to have no timeout.",
     )
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "email_notifications": "email_notifications",
-            "notification_settings": "notification_settings",
-            "webhook_notifications": "webhook_notifications",
-        }
 
     @field_validator("depends_ons")
     @classmethod
@@ -644,15 +655,32 @@ class JobWebhookNotificationsOnSuccess(BaseModel):
 class JobWebhookNotifications(BaseModel):
     on_duration_warning_threshold_exceededs: list[
         JobWebhookNotificationsOnDurationWarningThresholdExceeded
-    ] = Field(None, description="Warnings threshold exceeded specifications")
+    ] = Field(
+        None,
+        validation_alias=AliasChoices(
+            "on_duration_warning_threshold_exceededs",
+            "on_duration_warning_threshold_exceeded",
+        ),
+        serialization_alias="on_duration_warning_threshold_exceeded",
+        description="Warnings threshold exceeded specifications",
+    )
     on_failures: list[JobWebhookNotificationsOnFailure] = Field(
-        None, description="On failure specifications"
+        None,
+        validation_alias=AliasChoices("on_failures", "on_failure"),
+        serialization_alias="on_failure",
+        description="On failure specifications",
     )
     on_starts: list[JobWebhookNotificationsOnStart] = Field(
-        None, description="On starts specifications"
+        None,
+        validation_alias=AliasChoices("on_starts", "on_start"),
+        serialization_alias="on_start",
+        description="On starts specifications",
     )
     on_successes: list[JobWebhookNotificationsOnSuccess] = Field(
-        None, description="On successes specifications"
+        None,
+        validation_alias=AliasChoices("on_successes", "on_success"),
+        serialization_alias="on_success",
+        description="On successes specifications",
     )
 
 
@@ -758,7 +786,10 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     """,
     )
     environments: list[JobEnvironment] = Field(
-        None, description="List of environments available for the tasks."
+        None,
+        validation_alias=AliasChoices("environments", "environment"),
+        serialization_alias="environment",
+        description="List of environments available for the tasks.",
     )
     format: str = Field(None, description="")
     git_source: JobGitSource = Field(
@@ -767,8 +798,10 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     health: JobHealth = Field(None, description="Health specifications")
     job_clusters: list[JobJobCluster] = Field(
         [],
+        validation_alias=AliasChoices("job_clusters", "job_cluster"),
+        serialization_alias="job_cluster",
         description="""
-    A list of job databricks.Cluster specifications that can be shared and reused by tasks of this job. Libraries 
+    A list of job databricks.Cluster specifications that can be shared and reused by tasks of this job. Libraries
     cannot be declared in a shared job cluster. You must declare dependent libraries in task settings.
     """,
     )
@@ -804,7 +837,12 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     notification_settings: JobNotificationSettings = Field(
         None, description="Notifications specifications"
     )
-    parameters: list[JobParameter] = Field([], description="Parameters specifications")
+    parameters: list[JobParameter] = Field(
+        [],
+        validation_alias=AliasChoices("parameters", "parameter"),
+        serialization_alias="parameter",
+        description="Parameters specifications",
+    )
     queue: JobQueue = Field(None, description="")
     retry_on_timeout: bool = Field(
         None,
@@ -816,7 +854,12 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     run_as: JobRunAs = Field(None, description="Run as specifications")
     schedule: JobSchedule = Field(None, description="Schedule specifications")
     tags: dict[str, Any] = Field({}, description="Tags as key, value pairs")
-    tasks: list[JobTask] = Field([], description="Tasks specifications")
+    tasks: list[JobTask] = Field(
+        [],
+        validation_alias=AliasChoices("tasks", "task"),
+        serialization_alias="task",
+        description="Tasks specifications",
+    )
     timeout_seconds: int = Field(
         None,
         description="An optional timeout applied to each run of this job. The default behavior is to have no timeout.",
@@ -899,14 +942,6 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "email_notifications": "email_notifications",
-            "notification_settings": "notification_settings",
-            "webhook_notifications": "webhook_notifications",
-        }
 
     @property
     def terraform_resource_type(self) -> str:

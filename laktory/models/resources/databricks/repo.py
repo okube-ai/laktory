@@ -127,12 +127,6 @@ class Repo(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "libraries": "libraries",
-        }
-
-    @property
     def terraform_resource_type(self) -> str:
         return "databricks_repo"
 

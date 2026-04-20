@@ -550,8 +550,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     cluster_id: str = Field(None, description="")
     clusters: list[PipelineCluster] = Field(
         [],
+        validation_alias=AliasChoices("clusters", "cluster"),
+        serialization_alias="cluster",
         description="""
-        Clusters to run the pipeline. If none is specified, pipelines will automatically select a default cluster 
+        Clusters to run the pipeline. If none is specified, pipelines will automatically select a default cluster
         configuration for the pipeline.
         """,
     )
@@ -591,13 +593,19 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     last_modified: int = Field(None, description="")
     latest_updates: list[PipelineLatestUpdate] = Field(None, description="")
     libraries: list[PipelineLibrary] = Field(
-        None, description="Specifies pipeline code (notebooks) and required artifacts."
+        None,
+        validation_alias=AliasChoices("libraries", "library"),
+        serialization_alias="library",
+        description="Specifies pipeline code (notebooks) and required artifacts.",
     )
     name: str = Field(..., description="Pipeline name")
     name_prefix: str = Field(None, description="Prefix added to the DLT pipeline name")
     name_suffix: str = Field(None, description="Suffix added to the DLT pipeline name")
     notifications: list[PipelineNotifications] = Field(
-        [], description="Notifications specifications"
+        [],
+        validation_alias=AliasChoices("notifications", "notification"),
+        serialization_alias="notification",
+        description="Notifications specifications",
     )
     photon: bool = Field(None, description="If `True`, Photon engine enabled.")
     restart_window: PipelineRestartWindow = Field(None, description="")

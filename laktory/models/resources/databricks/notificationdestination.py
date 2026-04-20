@@ -66,12 +66,6 @@ class NotificationDestinationConfig(BaseModel):
         None, description="The Slack configuration of the Notification Destination."
     )
 
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "microsoft_teams": "microsoft_teams",
-        }
-
 
 class NotificationDestination(BaseModel, PulumiResource, TerraformResource):
     """

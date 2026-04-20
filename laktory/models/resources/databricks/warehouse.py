@@ -21,12 +21,6 @@ class WarehouseCustomTag(BaseModel):
 class WarehouseTags(BaseModel):
     custom_tags: list[WarehouseCustomTag] = Field([], description="Tags specifications")
 
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "custom_tags": "custom_tags",
-        }
-
 
 class WarehouseLookup(ResourceLookup):
     id: str = Field(
@@ -175,12 +169,6 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "tags": "tags",
-        }
 
     @property
     def terraform_resource_type(self) -> str:

@@ -1,6 +1,7 @@
 from typing import Literal
 from typing import Union
 
+from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory._logger import get_logger
@@ -63,7 +64,10 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         None, description="Name of the catalog storing the table"
     )
     columns: Union[list[TableColumn], None] = Field(
-        None, description="List of columns stored in the table"
+        None,
+        validation_alias=AliasChoices("columns", "column"),
+        serialization_alias="column",
+        description="List of columns stored in the table",
     )
     comment: Union[str, None] = Field(
         None, description="Text description of the catalog"
@@ -212,12 +216,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "columns": "column",
-        }
 
     @property
     def terraform_resource_type(self) -> str:

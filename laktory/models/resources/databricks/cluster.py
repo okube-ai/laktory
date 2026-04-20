@@ -33,12 +33,6 @@ class ClusterInitScript(BaseModel):
         None, description="Workspace file specifications"
     )
 
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "volumes": "volumes",
-        }
-
 
 class ClusterLibraryCran(BaseModel):
     package: str = Field(None, description="")
@@ -244,7 +238,10 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
         """,
     )
     libraries: list[ClusterLibrary] = Field(
-        [], description="List of libraries specifications"
+        [],
+        validation_alias=AliasChoices("libraries", "library"),
+        serialization_alias="library",
+        description="List of libraries specifications",
     )
     lookup_existing: ClusterLookup = Field(
         None,
@@ -360,12 +357,6 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "init_scripts": "init_scripts",
-        }
 
     @property
     def terraform_resource_type(self) -> str:

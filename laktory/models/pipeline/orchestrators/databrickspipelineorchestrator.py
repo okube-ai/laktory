@@ -94,11 +94,11 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         from databricks.bundles.pipelines import Pipeline as DabsPipeline
 
         d = self.model_dump(
-            exclude=self.terraform_excludes, exclude_unset=True, by_alias=True
+            exclude=self.terraform_excludes, exclude_unset=True, by_alias=False
         )
-        for k, v in self.terraform_renames.items():
-            if k in d:
-                d[v] = d.pop(k)
+        # schema_ is a Python workaround for the reserved name; DABs expects "schema"
+        if "schema_" in d:
+            d["schema"] = d.pop("schema_")
 
         # Pipeline notebook
         source_filepath = (
