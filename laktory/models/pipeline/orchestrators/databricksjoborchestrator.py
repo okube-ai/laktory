@@ -142,7 +142,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                         "selects": ",".join(pl_task.node_names),
                     },
                 ),
-                depends_ons=depends_on,
+                depends_on=depends_on,
             )
             task = self._set_task_compute(task, serverless, _requirements)
 
@@ -163,7 +163,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                         "quality_monitors": "true",  # this has been already update in the pl.execute()
                     },
                 ),
-                depends_ons=[{"task_key": t.task_key} for t in self.tasks],
+                depends_on=[{"task_key": t.task_key} for t in self.tasks],
             )
             task = self._set_task_compute(task, serverless, _requirements)
             self.tasks += [task]
@@ -195,9 +195,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             exclude=self.terraform_excludes, exclude_unset=True, by_alias=False
         )
         for task in d.get("tasks", []):
-            # depends_ons → depends_on (DABs API field name)
-            if "depends_ons" in task:
-                task["depends_on"] = task.pop("depends_ons")
             # schema_ is a Python workaround for the reserved name; DABs expects "schema"
             if "dbt_task" in task and "schema_" in task["dbt_task"]:
                 task["dbt_task"]["schema"] = task["dbt_task"].pop("schema_")

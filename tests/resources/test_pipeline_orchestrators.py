@@ -91,7 +91,7 @@ def test_databricks_job():
         "parameters": [{"default": "false", "name": "full_refresh"}],
         "tasks": [
             {
-                "depends_ons": [],
+                "depends_on": [],
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "requests>=2.0"}},
@@ -109,7 +109,7 @@ def test_databricks_job():
                 "task_key": "node-brz",
             },
             {
-                "depends_ons": [{"task_key": "node-slv"}],
+                "depends_on": [{"task_key": "node-slv"}],
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "requests>=2.0"}},
@@ -127,7 +127,7 @@ def test_databricks_job():
                 "task_key": "node-gld",
             },
             {
-                "depends_ons": [{"task_key": "node-gld"}],
+                "depends_on": [{"task_key": "node-gld"}],
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "requests>=2.0"}},
@@ -145,7 +145,7 @@ def test_databricks_job():
                 "task_key": "node-gld_a",
             },
             {
-                "depends_ons": [{"task_key": "node-gld_a"}, {"task_key": "node-gld_b"}],
+                "depends_on": [{"task_key": "node-gld_a"}, {"task_key": "node-gld_b"}],
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "requests>=2.0"}},
@@ -163,7 +163,7 @@ def test_databricks_job():
                 "task_key": "node-gld_ab",
             },
             {
-                "depends_ons": [{"task_key": "node-gld"}],
+                "depends_on": [{"task_key": "node-gld"}],
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "requests>=2.0"}},
@@ -181,7 +181,7 @@ def test_databricks_job():
                 "task_key": "node-gld_b",
             },
             {
-                "depends_ons": [{"task_key": "node-brz"}],
+                "depends_on": [{"task_key": "node-brz"}],
                 "job_cluster_key": "node-cluster",
                 "libraries": [
                     {"pypi": {"package": "requests>=2.0"}},
@@ -199,7 +199,7 @@ def test_databricks_job():
                 "task_key": "node-slv",
             },
             {
-                "depends_ons": [
+                "depends_on": [
                     {"task_key": "node-brz"},
                     {"task_key": "node-gld"},
                     {"task_key": "node-gld_a"},
@@ -470,7 +470,7 @@ def test_databricks_job():
             "parameters": [{"default": "false", "name": "full_refresh"}],
             "tasks": [
                 {
-                    "depends_ons": [],
+                    "depends_on": [],
                     "job_cluster_key": "node-cluster",
                     "libraries": [
                         {"pypi": {"package": "requests>=2.0"}},
@@ -488,7 +488,7 @@ def test_databricks_job():
                     "task_key": "node-brz",
                 },
                 {
-                    "depends_ons": [{"task_key": "node-slv"}],
+                    "depends_on": [{"task_key": "node-slv"}],
                     "job_cluster_key": "node-cluster",
                     "libraries": [
                         {"pypi": {"package": "requests>=2.0"}},
@@ -506,7 +506,7 @@ def test_databricks_job():
                     "task_key": "node-gld",
                 },
                 {
-                    "depends_ons": [{"task_key": "node-gld"}],
+                    "depends_on": [{"task_key": "node-gld"}],
                     "job_cluster_key": "node-cluster",
                     "libraries": [
                         {"pypi": {"package": "requests>=2.0"}},
@@ -524,7 +524,7 @@ def test_databricks_job():
                     "task_key": "node-gld_a",
                 },
                 {
-                    "depends_ons": [
+                    "depends_on": [
                         {"task_key": "node-gld_a"},
                         {"task_key": "node-gld_b"},
                     ],
@@ -545,7 +545,7 @@ def test_databricks_job():
                     "task_key": "node-gld_ab",
                 },
                 {
-                    "depends_ons": [{"task_key": "node-gld"}],
+                    "depends_on": [{"task_key": "node-gld"}],
                     "job_cluster_key": "node-cluster",
                     "libraries": [
                         {"pypi": {"package": "requests>=2.0"}},
@@ -563,7 +563,7 @@ def test_databricks_job():
                     "task_key": "node-gld_b",
                 },
                 {
-                    "depends_ons": [{"task_key": "node-brz"}],
+                    "depends_on": [{"task_key": "node-brz"}],
                     "job_cluster_key": "node-cluster",
                     "libraries": [
                         {"pypi": {"package": "requests>=2.0"}},
@@ -581,7 +581,7 @@ def test_databricks_job():
                     "task_key": "node-slv",
                 },
                 {
-                    "depends_ons": [
+                    "depends_on": [
                         {"task_key": "node-brz"},
                         {"task_key": "node-gld"},
                         {"task_key": "node-gld_a"},

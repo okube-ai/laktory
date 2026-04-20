@@ -488,10 +488,9 @@ class JobTaskForEachTaskTask(BaseModel):
     condition_task: JobTaskConditionTask = Field(
         None, description="Condition Task specifications"
     )
-    depends_ons: list[JobTaskDependsOn] = Field(
+    depends_on: list[JobTaskDependsOn] = Field(
         None,
-        validation_alias=AliasChoices("depends_ons", "depends_on"),
-        serialization_alias="depends_on",
+        validation_alias=AliasChoices("depends_on", "depends_ons"),
         description="Depends On specifications",
     )
     description: str = Field(None, description="Description for this task")
@@ -563,9 +562,9 @@ class JobTaskForEachTaskTask(BaseModel):
         description="An optional timeout applied to each run of this job. The default behavior is to have no timeout.",
     )
 
-    @field_validator("depends_ons")
+    @field_validator("depends_on")
     @classmethod
-    def sort_depends_ons(cls, v: list[JobTaskDependsOn]) -> list[JobTaskDependsOn]:
+    def sort_depends_on(cls, v: list[JobTaskDependsOn]) -> list[JobTaskDependsOn]:
         return sorted(v, key=lambda task: task.task_key)
 
 
@@ -723,7 +722,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
               package: yfinance
 
       - task_key: pipeline
-        depends_ons:
+        depends_on:
           - task_key: ingest
         pipeline_task:
           pipeline_id: 74900655-3641-49f1-8323-b8507f0e3e3b

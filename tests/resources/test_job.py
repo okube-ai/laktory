@@ -15,7 +15,7 @@ job = Job(
     ],
     tasks=[
         {
-            "depends_ons": [{"task_key": "ingestion"}],
+            "depends_on": [{"task_key": "ingestion"}],
             "pipeline_task": {"pipeline_id": "${resources.dlt-pipeline-pl-dlt.id}"},
             "task_key": "pipeline",
         },
@@ -138,7 +138,7 @@ def test_job_model():
             {
                 "dbt_task": None,
                 "condition_task": None,
-                "depends_ons": None,
+                "depends_on": None,
                 "description": None,
                 "email_notifications": None,
                 "environment_key": None,
@@ -168,7 +168,7 @@ def test_job_model():
             {
                 "dbt_task": None,
                 "condition_task": None,
-                "depends_ons": [{"task_key": "ingestion", "outcome": None}],
+                "depends_on": [{"task_key": "ingestion", "outcome": None}],
                 "description": None,
                 "email_notifications": None,
                 "environment_key": None,
@@ -196,7 +196,7 @@ def test_job_model():
             {
                 "dbt_task": None,
                 "condition_task": None,
-                "depends_ons": None,
+                "depends_on": None,
                 "description": None,
                 "email_notifications": None,
                 "environment_key": None,
@@ -264,7 +264,7 @@ def test_job_for_each_task():
             {
                 "dbt_task": None,
                 "condition_task": None,
-                "depends_ons": None,
+                "depends_on": None,
                 "description": None,
                 "email_notifications": None,
                 "environment_key": None,
@@ -289,7 +289,7 @@ def test_job_for_each_task():
                     "task": {
                         "dbt_task": None,
                         "condition_task": None,
-                        "depends_ons": None,
+                        "depends_on": None,
                         "description": None,
                         "email_notifications": None,
                         "environment_key": None,
@@ -364,7 +364,7 @@ def test_job_pulumi():
                 "task_key": "ingestion",
             },
             {
-                "depends_ons": [{"task_key": "ingestion"}],
+                "depends_on": [{"task_key": "ingestion"}],
                 "pipeline_task": {"pipeline_id": "${resources.dlt-pipeline-pl-dlt.id}"},
                 "task_key": "pipeline",
             },
