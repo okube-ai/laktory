@@ -425,7 +425,7 @@ def main():
         all_descriptions = json.loads(DESCRIPTIONS_PATH.read_text())
     else:
         print(
-            f"[WARN] {DESCRIPTIONS_PATH.name} not found — run fetch_tf_descriptions.py to add field descriptions"
+            f"[WARN] {DESCRIPTIONS_PATH.name} not found — run scripts/build_resources/00_fetch.py to add field descriptions"
         )
 
     out_dir = OUTPUT_DIR

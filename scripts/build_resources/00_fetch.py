@@ -9,9 +9,9 @@ Steps:
      field descriptions.
 
 Usage:
-    python scripts/refresh_provider_data.py 1.81.1
-    python scripts/refresh_provider_data.py 1.81.1 --schema-only
-    python scripts/refresh_provider_data.py 1.81.1 --descriptions-only
+    python scripts/build_resources/00_fetch.py 1.81.1
+    python scripts/build_resources/00_fetch.py 1.81.1 --schema-only
+    python scripts/build_resources/00_fetch.py 1.81.1 --descriptions-only
 
 Outputs (written to the same directory as this script):
     databricks_schema.json
@@ -35,7 +35,7 @@ GITHUB_RAW = (
     "https://raw.githubusercontent.com/databricks/terraform-provider-databricks"
 )
 
-# Mirrors the mapping in fetch_tf_descriptions.py
+# Mirrors the mapping in 00_fetch.py
 RESOURCE_STRUCTS: dict[str, dict] = {
     "databricks_catalog": {
         "service": "catalog_tf",
@@ -117,7 +117,7 @@ def generate_schema(version: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Description fetching (duplicated/inlined from fetch_tf_descriptions.py
+# Description fetching (duplicated/inlined from 00_fetch.py
 # so this script is self-contained)
 # ---------------------------------------------------------------------------
 
