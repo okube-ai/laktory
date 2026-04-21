@@ -1,5 +1,5 @@
 # GENERATED FILE — DO NOT EDIT
-# Regenerate with: python scripts/build_base_resources.py databricks_schema
+# Regenerate with: python scripts/build_resources/01_build.py databricks_schema
 from __future__ import annotations
 
 from pydantic import Field
@@ -11,7 +11,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 class SchemaBase(BaseModel, TerraformResource):
     """
     Generated base class for `databricks_schema`.
-    DO NOT EDIT — regenerate from `scripts/build_base_resources.py`.
+    DO NOT EDIT — regenerate from `scripts/build_resources/01_build.py`.
     """
 
     catalog_name: str = Field(..., description="Name of parent catalog.")

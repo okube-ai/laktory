@@ -1,5 +1,5 @@
 # GENERATED FILE — DO NOT EDIT
-# Regenerate with: python scripts/build_base_resources.py databricks_volume
+# Regenerate with: python scripts/build_resources/01_build.py databricks_volume
 from __future__ import annotations
 
 from pydantic import Field
@@ -11,7 +11,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 class VolumeBase(BaseModel, TerraformResource):
     """
     Generated base class for `databricks_volume`.
-    DO NOT EDIT — regenerate from `scripts/build_base_resources.py`.
+    DO NOT EDIT — regenerate from `scripts/build_resources/01_build.py`.
     """
 
     catalog_name: str = Field(

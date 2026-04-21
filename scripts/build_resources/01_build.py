@@ -3,7 +3,7 @@ Generates Pydantic *_base.py model files for Databricks resources directly from
 `databricks_schema.json` (produced by `terraform providers schema -json`).
 
 Usage:
-    python scripts/build_base_resources.py
+    python scripts/build_resources/01_build.py
 """
 
 from __future__ import annotations
@@ -21,7 +21,11 @@ from pathlib import Path
 SCHEMA_PATH = Path(__file__).parent / "databricks_schema.json"
 DESCRIPTIONS_PATH = Path(__file__).parent / "databricks_descriptions.json"
 OUTPUT_DIR = (
-    Path(__file__).parent.parent / "laktory" / "models" / "resources" / "databricks"
+    Path(__file__).parent.parent.parent
+    / "laktory"
+    / "models"
+    / "resources"
+    / "databricks"
 )
 PROVIDER_KEY = "registry.terraform.io/databricks/databricks"
 
@@ -307,7 +311,7 @@ def emit_resource_module(
     main_lines.append('    """')
     main_lines.append(f"    Generated base class for `{resource_key}`.")
     main_lines.append(
-        "    DO NOT EDIT — regenerate from `scripts/build_base_resources.py`."
+        "    DO NOT EDIT — regenerate from `scripts/build_resources/01_build.py`."
     )
     main_lines.append('    """')
     main_lines.append("")
@@ -383,7 +387,7 @@ def emit_resource_module(
     any_import = ", Any" if needs_any else ""
     header = textwrap.dedent(f"""\
         # GENERATED FILE — DO NOT EDIT
-        # Regenerate with: python scripts/build_base_resources.py {resource_key}
+        # Regenerate with: python scripts/build_resources/01_build.py {resource_key}
         from __future__ import annotations
 
         from typing{any_import} import Union

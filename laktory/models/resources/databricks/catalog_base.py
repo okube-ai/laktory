@@ -1,5 +1,5 @@
 # GENERATED FILE — DO NOT EDIT
-# Regenerate with: python scripts/build_base_resources.py databricks_catalog
+# Regenerate with: python scripts/build_resources/01_build.py databricks_catalog
 from __future__ import annotations
 
 from pydantic import Field
@@ -14,6 +14,20 @@ class CatalogEffectivePredictiveOptimizationFlag(BaseModel):
     value: str = Field(...)
 
 
+class CatalogManagedEncryptionSettingsAzureEncryptionSettings(BaseModel):
+    azure_cmk_access_connector_id: str | None = Field(None)
+    azure_cmk_managed_identity_id: str | None = Field(None)
+    azure_tenant_id: str = Field(...)
+
+
+class CatalogManagedEncryptionSettings(BaseModel):
+    azure_key_vault_key_id: str | None = Field(None)
+    customer_managed_key_id: str | None = Field(None)
+    azure_encryption_settings: (
+        CatalogManagedEncryptionSettingsAzureEncryptionSettings | None
+    ) = Field(None)
+
+
 class CatalogProvisioningInfo(BaseModel):
     state: str | None = Field(None)
 
@@ -21,7 +35,7 @@ class CatalogProvisioningInfo(BaseModel):
 class CatalogBase(BaseModel, TerraformResource):
     """
     Generated base class for `databricks_catalog`.
-    DO NOT EDIT — regenerate from `scripts/build_base_resources.py`.
+    DO NOT EDIT — regenerate from `scripts/build_resources/01_build.py`.
     """
 
     browse_only: bool | None = Field(
@@ -68,6 +82,9 @@ class CatalogBase(BaseModel, TerraformResource):
     effective_predictive_optimization_flag: (
         CatalogEffectivePredictiveOptimizationFlag | None
     ) = Field(None)
+    managed_encryption_settings: CatalogManagedEncryptionSettings | None = Field(
+        None, description="Control CMK encryption for managed catalog data"
+    )
     provisioning_info: CatalogProvisioningInfo | None = Field(None)
 
     @property

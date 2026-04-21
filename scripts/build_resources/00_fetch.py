@@ -258,7 +258,7 @@ def main() -> None:
         generate_descriptions(version)
 
     print(
-        "\nDone. Run `python scripts/build_base_resources.py` to regenerate base classes."
+        "\nDone. Run `python scripts/build_resources/01_build.py` to regenerate base classes."
     )
 
 
