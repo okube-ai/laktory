@@ -19,6 +19,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 
 SCHEMA_PATH = Path(__file__).parent / "databricks_schema.json"
+DESCRIPTIONS_PATH = Path(__file__).parent / "databricks_descriptions.json"
 OUTPUT_DIR = (
     Path(__file__).parent.parent / "laktory" / "models" / "resources" / "databricks"
 )
@@ -152,7 +153,10 @@ def field_default(attr: dict) -> str:
 
 
 def emit_block_class(
-    class_name: str, block: dict, indent: int = 0
+    class_name: str,
+    block: dict,
+    descriptions: dict[str, str],
+    indent: int = 0,
 ) -> tuple[list[str], list[str]]:
     """
     Recursively emit a nested block as a Pydantic BaseModel class.
@@ -178,7 +182,7 @@ def emit_block_class(
 
         py_type = tf_type_to_python(attr["type"])
         default = field_default(attr)
-        description = attr.get("description", "").strip().replace('"', "'")
+        description = descriptions.get(attr_name, "").strip().replace('"', "'")
         field_name = safe_field_name(attr_name)
 
         if default == "...":
@@ -186,7 +190,7 @@ def emit_block_class(
         else:
             type_str = f"{py_type} | None"
 
-        desc_snippet = f', description="{description[:80]}"' if description else ""
+        desc_snippet = f', description="{description}"' if description else ""
         alias_snippet = (
             f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
         )
@@ -201,7 +205,9 @@ def emit_block_class(
             continue
 
         nested_class = block_class_name(class_name, bt_name)
-        nested_pre, nested_lines = emit_block_class(nested_class, bt_def["block"])
+        nested_pre, nested_lines = emit_block_class(
+            nested_class, bt_def["block"], descriptions
+        )
         pre_classes.extend(nested_pre)
         pre_classes.append("\n".join(nested_lines))
         pre_classes.append("")  # blank line between classes
@@ -217,7 +223,14 @@ def emit_block_class(
             default = "None"
 
         bt_field_name = safe_field_name(bt_name)
-        lines.append(f"    {bt_field_name}: {type_str} = Field({default})")
+        desc_snippet = (
+            f', description="{descriptions[bt_name]}"'
+            if bt_name in descriptions
+            else ""
+        )
+        lines.append(
+            f"    {bt_field_name}: {type_str} = Field({default}{desc_snippet})"
+        )
         has_fields = True
 
     if not has_fields:
@@ -226,7 +239,11 @@ def emit_block_class(
     return pre_classes, lines
 
 
-def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
+def emit_resource_module(
+    resource_key: str,
+    resource_schema: dict,
+    descriptions: dict[str, str],
+) -> str:
     """
     Generate the full content of a Python module for a Databricks resource.
     """
@@ -251,7 +268,9 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
             continue
 
         nested_class = block_class_name(class_name, bt_name)
-        nested_pre, nested_lines = emit_block_class(nested_class, bt_def["block"])
+        nested_pre, nested_lines = emit_block_class(
+            nested_class, bt_def["block"], descriptions
+        )
         pre_classes.extend(nested_pre)
         pre_classes.append("\n".join(nested_lines))
         pre_classes.append("")
@@ -267,14 +286,19 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
             default_val = "None"
 
         bt_field_name = safe_field_name(bt_name)
+        desc_snippet = (
+            f', description="{descriptions[bt_name]}"'
+            if bt_name in descriptions
+            else ""
+        )
         if type_str.startswith("list["):
             plural = pluralize(bt_field_name)
             nested_field_lines.append(
-                f'    {bt_field_name}: {type_str} = PluralField({default_val}, plural="{plural}")'
+                f'    {bt_field_name}: {type_str} = PluralField({default_val}, plural="{plural}"{desc_snippet})'
             )
         else:
             nested_field_lines.append(
-                f"    {bt_field_name}: {type_str} = Field({default_val})"
+                f"    {bt_field_name}: {type_str} = Field({default_val}{desc_snippet})"
             )
 
     # --- Build main class ---
@@ -306,9 +330,9 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
 
     for attr_name, attr in sorted(required_attrs.items()):
         py_type = tf_type_to_python(attr["type"])
-        description = attr.get("description", "").strip().replace('"', "'")
+        description = descriptions.get(attr_name, "").strip().replace('"', "'")
         field_name = safe_field_name(attr_name)
-        desc_snippet = f', description="{description[:100]}"' if description else ""
+        desc_snippet = f', description="{description}"' if description else ""
         alias_snippet = (
             f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
         )
@@ -325,9 +349,9 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
 
     for attr_name, attr in sorted(optional_attrs.items()):
         py_type = tf_type_to_python(attr["type"])
-        description = attr.get("description", "").strip().replace('"', "'")
+        description = descriptions.get(attr_name, "").strip().replace('"', "'")
         field_name = safe_field_name(attr_name)
-        desc_snippet = f', description="{description[:100]}"' if description else ""
+        desc_snippet = f', description="{description}"' if description else ""
         alias_snippet = (
             f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
         )
@@ -392,6 +416,14 @@ def main():
     schema = json.loads(SCHEMA_PATH.read_text())
     resource_schemas = schema["provider_schemas"][PROVIDER_KEY]["resource_schemas"]
 
+    all_descriptions: dict[str, dict[str, str]] = {}
+    if DESCRIPTIONS_PATH.exists():
+        all_descriptions = json.loads(DESCRIPTIONS_PATH.read_text())
+    else:
+        print(
+            f"[WARN] {DESCRIPTIONS_PATH.name} not found — run fetch_tf_descriptions.py to add field descriptions"
+        )
+
     out_dir = OUTPUT_DIR
     written: list[Path] = []
 
@@ -400,7 +432,10 @@ def main():
             print(f"[SKIP] {resource_key} — not found in schema")
             continue
 
-        code = emit_resource_module(resource_key, resource_schemas[resource_key])
+        descriptions = all_descriptions.get(resource_key, {})
+        code = emit_resource_module(
+            resource_key, resource_schemas[resource_key], descriptions
+        )
         fname = f"{resource_key.removeprefix('databricks_')}_base.py"
         out_path = out_dir / fname
         out_path.write_text(code)
