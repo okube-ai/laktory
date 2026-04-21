@@ -3,13 +3,12 @@ from typing import Union
 
 from pydantic import Field
 
-from laktory.models.basemodel import BaseModel
 from laktory.models.grants.volumegrant import VolumeGrant
+from laktory.models.resources.databricks.volume_base import VolumeBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class Volume(BaseModel, PulumiResource, TerraformResource):
+class Volume(VolumeBase, PulumiResource):
     """
     Volumes are Unity Catalog objects representing a logical volume of storage
     in a cloud object storage location. Volumes provide capabilities for
@@ -48,16 +47,28 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
     * [Pulumi Databricks Volume](https://www.pulumi.com/registry/packages/databricks/api-docs/volume/)
     """
 
-    name: str = Field(..., description="Name of the volume")
+    # Relax fields the base marks required but Laktory fills via parent validators
     catalog_name: str = Field(
         None, description="Name of the catalog storing the volume"
     )
-    comment: str = Field(None, description="Text description of the volume")
+    schema_name: str = Field(None, description="Name of the schema storing the volume")
+
+    # Narrow the type from base's plain str
+    volume_type: Literal["MANAGED", "EXTERNAL"] = Field(
+        "MANAGED",
+        description="""
+    Type of volume. A managed volume is a Unity Catalog-governed storage volume created within the default storage
+    location of the containing schema. An external volume is a Unity Catalog-governed storage volume registered against
+    a directory within an external location.
+    """,
+    )
+
+    # Laktory-specific
     grant: Union[VolumeGrant, list[VolumeGrant]] = Field(
         None,
         description="""
-    Grant(s) operating on the Volume and authoritative for a specific principal. Other principals within the grants are 
-    preserved. Mutually exclusive with `grants`. 
+    Grant(s) operating on the Volume and authoritative for a specific principal. Other principals within the grants are
+    preserved. Mutually exclusive with `grants`.
     """,
     )
     grants: list[VolumeGrant] = Field(
@@ -65,19 +76,6 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
         description="""
     Grants operating on the Volume and authoritative for all principals. Replaces any existing grants defined inside or
     outside of Laktory. Mutually exclusive with `grant`.
-    """,
-    )
-    schema_name: str = Field(None, description="Name of the schema storing the volume")
-    storage_location: str = Field(
-        None,
-        description="Path inside an External Location. Only used for EXTERNAL Volumes.",
-    )
-    volume_type: Literal["MANAGED", "EXTERNAL"] = Field(
-        "MANAGED",
-        description="""
-    Type of volume. A managed volume is a Unity Catalog-governed storage volume created within the default storage 
-    location of the containing schema. An external volume is a Unity Catalog-governed storage volume registered against
-    a directory within an external location.
     """,
     )
 
@@ -145,10 +143,6 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_volume"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
