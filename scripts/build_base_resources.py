@@ -26,8 +26,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 
 SCHEMA_PATH = Path(__file__).parent / "databricks_schema.json"
-OUTPUT_DIR = Path(__file__).parent / "compare_output"
-PRODUCTION_OUTPUT_DIR = Path(__file__).parent.parent.parent / "laktory" / "models" / "resources" / "databricks"
+OUTPUT_DIR = Path(__file__).parent.parent / "laktory" / "models" / "resources" / "databricks"
 PROVIDER_KEY = "registry.terraform.io/databricks/databricks"
 
 # Fields that are always excluded regardless of resource
@@ -354,30 +353,14 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
 # ---------------------------------------------------------------------------
 
 def main():
-    import tempfile
-
-    args = sys.argv[1:]
-    production = "--production" in args
-    check = "--check" in args
-    targets_raw = [a for a in args if not a.startswith("--")]
-
     schema = json.loads(SCHEMA_PATH.read_text())
     resource_schemas = schema["provider_schemas"][PROVIDER_KEY]["resource_schemas"]
 
-    if production or check:
-        out_dir = PRODUCTION_OUTPUT_DIR
-        def filename(resource_key):
-            return f"{resource_key.removeprefix('databricks_')}_base.py"
-    else:
-        out_dir = OUTPUT_DIR
-        out_dir.mkdir(exist_ok=True)
-        def filename(resource_key):
-            return f"{resource_key.removeprefix('databricks_')}_gen_a.py"
+    out_dir = OUTPUT_DIR
+    def filename(resource_key):
+        return f"{resource_key.removeprefix('databricks_')}_base.py"
 
-    targets = targets_raw if targets_raw else DEFAULT_TARGETS
-
-    drift_found = False
-    for resource_key in targets:
+    for resource_key in DEFAULT_TARGETS:
         if resource_key not in resource_schemas:
             print(f"[SKIP] {resource_key} — not found in schema")
             continue
@@ -385,23 +368,9 @@ def main():
         code = emit_resource_module(resource_key, resource_schemas[resource_key])
         fname = filename(resource_key)
 
-        if check:
-            committed = out_dir / fname
-            if not committed.exists():
-                print(f"[MISSING] {fname} — not yet generated")
-                drift_found = True
-            elif committed.read_text() != code:
-                print(f"[DRIFT]   {fname} — committed file differs from generator output")
-                drift_found = True
-            else:
-                print(f"[OK]      {fname}")
-        else:
-            out_path = out_dir / fname
-            out_path.write_text(code)
-            print(f"[OK]   {resource_key} -> {out_path.relative_to(Path(__file__).parent.parent.parent)}")
-
-    if check and drift_found:
-        sys.exit(1)
+        out_path = out_dir / fname
+        out_path.write_text(code)
+        print(f"[OK]   {resource_key} -> {out_path.relative_to(Path(__file__).parent.parent.parent)}")
 
 
 if __name__ == "__main__":
