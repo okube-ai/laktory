@@ -44,6 +44,22 @@ RESERVED_FIELD_RENAMES: dict[str, str] = {
 # Block types that are always excluded (Laktory infrastructure, not Databricks fields)
 ALWAYS_SKIP_BLOCK_TYPES = {"provider_config"}
 
+# Irregular singular→plural mappings for PluralField
+IRREGULAR_PLURALS: dict[str, str] = {
+    "library": "libraries",
+    "init_scripts": "init_scripts",  # already plural; same form accepted
+    "ssh_public_keys": "ssh_public_keys",  # already plural
+    "cluster_mount_info": "cluster_mount_infos",
+    "on_success": "on_successes",
+    "on_duration_warning_threshold_exceeded": "on_duration_warning_threshold_exceededs",
+}
+
+
+def pluralize(name: str) -> str:
+    """Derive plural form of a field name. Returns explicit mapping or name + 's'."""
+    return IRREGULAR_PLURALS.get(name, name + "s")
+
+
 # Default generation targets
 DEFAULT_TARGETS = [
     "databricks_volume",
@@ -242,7 +258,13 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
             default_val = "None"
 
         bt_field_name = safe_field_name(bt_name)
-        nested_field_lines.append(f"    {bt_field_name}: {type_str} = Field({default_val})")
+        if type_str.startswith("list["):
+            plural = pluralize(bt_field_name)
+            nested_field_lines.append(
+                f'    {bt_field_name}: {type_str} = PluralField({default_val}, plural="{plural}")'
+            )
+        else:
+            nested_field_lines.append(f"    {bt_field_name}: {type_str} = Field({default_val})")
 
     # --- Build main class ---
     main_lines: list[str] = []
@@ -267,7 +289,11 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
         field_name = safe_field_name(attr_name)
         desc_snippet = f', description="{description[:100]}"' if description else ""
         alias_snippet = f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
-        main_lines.append(f'    {field_name}: {py_type} = Field(...{desc_snippet}{alias_snippet})')
+        if py_type.startswith("list["):
+            plural = pluralize(field_name)
+            main_lines.append(f'    {field_name}: {py_type} = PluralField(..., plural="{plural}"{desc_snippet}{alias_snippet})')
+        else:
+            main_lines.append(f'    {field_name}: {py_type} = Field(...{desc_snippet}{alias_snippet})')
         has_fields = True
 
     for attr_name, attr in sorted(optional_attrs.items()):
@@ -276,7 +302,11 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
         field_name = safe_field_name(attr_name)
         desc_snippet = f', description="{description[:100]}"' if description else ""
         alias_snippet = f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
-        main_lines.append(f'    {field_name}: {py_type} | None = Field(None{desc_snippet}{alias_snippet})')
+        if py_type.startswith("list["):
+            plural = pluralize(field_name)
+            main_lines.append(f'    {field_name}: {py_type} | None = PluralField(None, plural="{plural}"{desc_snippet}{alias_snippet})')
+        else:
+            main_lines.append(f'    {field_name}: {py_type} | None = Field(None{desc_snippet}{alias_snippet})')
         has_fields = True
 
     # Nested block fields
@@ -303,7 +333,7 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
 
         from pydantic import Field
 
-        from laktory.models.basemodel import BaseModel
+        from laktory.models.basemodel import BaseModel, PluralField
         from laktory.models.resources.terraformresource import TerraformResource
 
     """)
