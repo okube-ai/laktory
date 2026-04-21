@@ -2,7 +2,6 @@
 # Regenerate with: python scripts/build_base_resources.py databricks_catalog
 from __future__ import annotations
 
-# 1
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
