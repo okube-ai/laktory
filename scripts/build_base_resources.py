@@ -3,15 +3,13 @@ Generates Pydantic *_base.py model files for Databricks resources directly from
 `databricks_schema.json` (produced by `terraform providers schema -json`).
 
 Usage:
-    python scripts/build_base_resources.py                       # generate all targets
+    python scripts/build_base_resources.py
 """
 
 from __future__ import annotations
 
 import json
 import keyword
-import os
-import re
 import sys
 import textwrap
 from pathlib import Path
@@ -21,7 +19,9 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 
 SCHEMA_PATH = Path(__file__).parent / "databricks_schema.json"
-OUTPUT_DIR = Path(__file__).parent.parent / "laktory" / "models" / "resources" / "databricks"
+OUTPUT_DIR = (
+    Path(__file__).parent.parent / "laktory" / "models" / "resources" / "databricks"
+)
 PROVIDER_KEY = "registry.terraform.io/databricks/databricks"
 
 # Fields that are always excluded regardless of resource
@@ -69,6 +69,7 @@ DEFAULT_TARGETS = [
 # Type mapping
 # ---------------------------------------------------------------------------
 
+
 def tf_type_to_python(tf_type) -> str:
     """Convert a Terraform type descriptor to a Python type annotation string."""
     if isinstance(tf_type, str):
@@ -96,6 +97,7 @@ def tf_type_to_python(tf_type) -> str:
 # ---------------------------------------------------------------------------
 # Naming helpers
 # ---------------------------------------------------------------------------
+
 
 def resource_to_class_name(resource_key: str) -> str:
     """databricks_catalog -> Catalog"""
@@ -127,9 +129,14 @@ def needs_alias(name: str) -> bool:
 # Attribute classification
 # ---------------------------------------------------------------------------
 
+
 def is_computed_only(attr: dict) -> bool:
     """True if the field is set by the provider and not user-settable."""
-    return attr.get("computed", False) and not attr.get("optional", False) and not attr.get("required", False)
+    return (
+        attr.get("computed", False)
+        and not attr.get("optional", False)
+        and not attr.get("required", False)
+    )
 
 
 def field_default(attr: dict) -> str:
@@ -143,7 +150,10 @@ def field_default(attr: dict) -> str:
 # Code emitters
 # ---------------------------------------------------------------------------
 
-def emit_block_class(class_name: str, block: dict, indent: int = 0) -> tuple[list[str], list[str]]:
+
+def emit_block_class(
+    class_name: str, block: dict, indent: int = 0
+) -> tuple[list[str], list[str]]:
     """
     Recursively emit a nested block as a Pydantic BaseModel class.
 
@@ -177,8 +187,12 @@ def emit_block_class(class_name: str, block: dict, indent: int = 0) -> tuple[lis
             type_str = f"{py_type} | None"
 
         desc_snippet = f', description="{description[:80]}"' if description else ""
-        alias_snippet = f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
-        lines.append(f'    {field_name}: {type_str} = Field({default}{desc_snippet}{alias_snippet})')
+        alias_snippet = (
+            f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
+        )
+        lines.append(
+            f"    {field_name}: {type_str} = Field({default}{desc_snippet}{alias_snippet})"
+        )
         has_fields = True
 
     # Emit block_type fields (nested models)
@@ -259,36 +273,54 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
                 f'    {bt_field_name}: {type_str} = PluralField({default_val}, plural="{plural}")'
             )
         else:
-            nested_field_lines.append(f"    {bt_field_name}: {type_str} = Field({default_val})")
+            nested_field_lines.append(
+                f"    {bt_field_name}: {type_str} = Field({default_val})"
+            )
 
     # --- Build main class ---
     main_lines: list[str] = []
     main_lines.append(f"class {class_name}Base(BaseModel, TerraformResource):")
-    main_lines.append(f'    """')
-    main_lines.append(f'    Generated base class for `{resource_key}`.')
-    main_lines.append(f'    DO NOT EDIT — regenerate from `scripts/build_base_resources.py`.')
-    main_lines.append(f'    """')
+    main_lines.append('    """')
+    main_lines.append(f"    Generated base class for `{resource_key}`.")
+    main_lines.append(
+        "    DO NOT EDIT — regenerate from `scripts/build_base_resources.py`."
+    )
+    main_lines.append('    """')
     main_lines.append("")
 
     has_fields = False
 
     # Required fields first
-    required_attrs = {k: v for k, v in attrs.items()
-                      if v.get("required") and k not in ALWAYS_SKIP_ATTRS}
-    optional_attrs = {k: v for k, v in attrs.items()
-                      if not v.get("required") and not is_computed_only(v) and k not in ALWAYS_SKIP_ATTRS}
+    required_attrs = {
+        k: v
+        for k, v in attrs.items()
+        if v.get("required") and k not in ALWAYS_SKIP_ATTRS
+    }
+    optional_attrs = {
+        k: v
+        for k, v in attrs.items()
+        if not v.get("required")
+        and not is_computed_only(v)
+        and k not in ALWAYS_SKIP_ATTRS
+    }
 
     for attr_name, attr in sorted(required_attrs.items()):
         py_type = tf_type_to_python(attr["type"])
         description = attr.get("description", "").strip().replace('"', "'")
         field_name = safe_field_name(attr_name)
         desc_snippet = f', description="{description[:100]}"' if description else ""
-        alias_snippet = f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
+        alias_snippet = (
+            f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
+        )
         if py_type.startswith("list["):
             plural = pluralize(field_name)
-            main_lines.append(f'    {field_name}: {py_type} = PluralField(..., plural="{plural}"{desc_snippet}{alias_snippet})')
+            main_lines.append(
+                f'    {field_name}: {py_type} = PluralField(..., plural="{plural}"{desc_snippet}{alias_snippet})'
+            )
         else:
-            main_lines.append(f'    {field_name}: {py_type} = Field(...{desc_snippet}{alias_snippet})')
+            main_lines.append(
+                f"    {field_name}: {py_type} = Field(...{desc_snippet}{alias_snippet})"
+            )
         has_fields = True
 
     for attr_name, attr in sorted(optional_attrs.items()):
@@ -296,12 +328,18 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
         description = attr.get("description", "").strip().replace('"', "'")
         field_name = safe_field_name(attr_name)
         desc_snippet = f', description="{description[:100]}"' if description else ""
-        alias_snippet = f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
+        alias_snippet = (
+            f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
+        )
         if py_type.startswith("list["):
             plural = pluralize(field_name)
-            main_lines.append(f'    {field_name}: {py_type} | None = PluralField(None, plural="{plural}"{desc_snippet}{alias_snippet})')
+            main_lines.append(
+                f'    {field_name}: {py_type} | None = PluralField(None, plural="{plural}"{desc_snippet}{alias_snippet})'
+            )
         else:
-            main_lines.append(f'    {field_name}: {py_type} | None = Field(None{desc_snippet}{alias_snippet})')
+            main_lines.append(
+                f"    {field_name}: {py_type} | None = Field(None{desc_snippet}{alias_snippet})"
+            )
         has_fields = True
 
     # Nested block fields
@@ -347,6 +385,7 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main():
     import subprocess
 
@@ -366,7 +405,9 @@ def main():
         out_path = out_dir / fname
         out_path.write_text(code)
         written.append(out_path)
-        print(f"[OK]   {resource_key} -> {out_path.relative_to(Path(__file__).parent.parent.parent)}")
+        print(
+            f"[OK]   {resource_key} -> {out_path.relative_to(Path(__file__).parent.parent.parent)}"
+        )
 
     if written:
         sys.stdout.flush()
