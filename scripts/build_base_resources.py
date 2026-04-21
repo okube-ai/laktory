@@ -1,14 +1,9 @@
 """
-Approach A: Pure Python string generation from Terraform provider schema.
-
-Generates Pydantic model files for Databricks resources directly from
+Generates Pydantic *_base.py model files for Databricks resources directly from
 `databricks_schema.json` (produced by `terraform providers schema -json`).
 
 Usage:
-    python approach_a_templates.py                  # generate all targets
-    python approach_a_templates.py databricks_volume # generate one resource
-
-Output lands in compare_output/*.py
+    python scripts/build_base_resources.py                       # generate all targets
 """
 
 from __future__ import annotations
@@ -271,7 +266,7 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
     main_lines.append(f"class {class_name}Base(BaseModel, TerraformResource):")
     main_lines.append(f'    """')
     main_lines.append(f'    Generated base class for `{resource_key}`.')
-    main_lines.append(f'    DO NOT EDIT — regenerate from `approach_a_templates.py`.')
+    main_lines.append(f'    DO NOT EDIT — regenerate from `scripts/build_base_resources.py`.')
     main_lines.append(f'    """')
     main_lines.append("")
 
@@ -353,12 +348,13 @@ def emit_resource_module(resource_key: str, resource_schema: dict) -> str:
 # ---------------------------------------------------------------------------
 
 def main():
+    import subprocess
+
     schema = json.loads(SCHEMA_PATH.read_text())
     resource_schemas = schema["provider_schemas"][PROVIDER_KEY]["resource_schemas"]
 
     out_dir = OUTPUT_DIR
-    def filename(resource_key):
-        return f"{resource_key.removeprefix('databricks_')}_base.py"
+    written: list[Path] = []
 
     for resource_key in DEFAULT_TARGETS:
         if resource_key not in resource_schemas:
@@ -366,11 +362,18 @@ def main():
             continue
 
         code = emit_resource_module(resource_key, resource_schemas[resource_key])
-        fname = filename(resource_key)
-
+        fname = f"{resource_key.removeprefix('databricks_')}_base.py"
         out_path = out_dir / fname
         out_path.write_text(code)
+        written.append(out_path)
         print(f"[OK]   {resource_key} -> {out_path.relative_to(Path(__file__).parent.parent.parent)}")
+
+    if written:
+        sys.stdout.flush()
+        str_paths = [str(p) for p in written]
+        subprocess.run(["ruff", "format"] + str_paths, check=True)
+        subprocess.run(["ruff", "check", "--fix"] + str_paths, check=True)
+        print("[OK]   ruff format + check applied")
 
 
 if __name__ == "__main__":

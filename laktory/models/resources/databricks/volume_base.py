@@ -11,7 +11,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 class VolumeBase(BaseModel, TerraformResource):
     """
     Generated base class for `databricks_volume`.
-    DO NOT EDIT — regenerate from `approach_a_templates.py`.
+    DO NOT EDIT — regenerate from `scripts/build_base_resources.py`.
     """
 
     catalog_name: str = Field(...)

@@ -21,7 +21,7 @@ class CatalogProvisioningInfo(BaseModel):
 class CatalogBase(BaseModel, TerraformResource):
     """
     Generated base class for `databricks_catalog`.
-    DO NOT EDIT — regenerate from `approach_a_templates.py`.
+    DO NOT EDIT — regenerate from `scripts/build_base_resources.py`.
     """
 
     browse_only: bool | None = Field(None)
