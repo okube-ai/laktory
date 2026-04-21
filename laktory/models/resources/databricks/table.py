@@ -1,11 +1,11 @@
 from typing import Literal
 from typing import Union
 
-from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import PluralField
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -63,10 +63,8 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     catalog_name: Union[str, None] = Field(
         None, description="Name of the catalog storing the table"
     )
-    columns: Union[list[TableColumn], None] = Field(
+    column: Union[list[TableColumn], None] = PluralField(
         None,
-        validation_alias=AliasChoices("columns", "column"),
-        serialization_alias="column",
         description="List of columns stored in the table",
     )
     comment: Union[str, None] = Field(

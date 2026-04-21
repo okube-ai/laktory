@@ -5,6 +5,7 @@ from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import PluralField
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
@@ -237,10 +238,9 @@ class Cluster(BaseModel, PulumiResource, TerraformResource):
     CLASSIC_PREVIEW (if corresponding public preview is enabled).
         """,
     )
-    libraries: list[ClusterLibrary] = Field(
+    library: list[ClusterLibrary] = PluralField(
         [],
-        validation_alias=AliasChoices("libraries", "library"),
-        serialization_alias="library",
+        plural="libraries",
         description="List of libraries specifications",
     )
     lookup_existing: ClusterLookup = Field(

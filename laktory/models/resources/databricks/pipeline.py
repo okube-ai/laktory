@@ -7,6 +7,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import PluralField
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.permissions import Permissions
@@ -445,7 +446,7 @@ class PipelineCluster(Cluster):
     enable_elastic_disk: bool = Field(None, exclude=True)
     idempotency_token: str = Field(None, exclude=True)
     is_pinned: bool = Field(None, exclude=True)
-    libraries: list[Any] = Field(None, exclude=True)
+    library: list[Any] = Field(None, exclude=True)
     node_type_id: str = None
     no_wait: bool = Field(None, exclude=True)
     runtime_engine: str = Field(None, exclude=True)
@@ -461,7 +462,7 @@ class PipelineCluster(Cluster):
             "enable_elastic_disk",
             "idempotency_token",
             "is_pinned",
-            "libraries",
+            "library",
             "no_wait",
             "runtime_engine",
             "single_user_name",
@@ -548,10 +549,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
         description="Name of the release channel for Spark version used by DLT pipeline.",
     )
     cluster_id: str = Field(None, description="")
-    clusters: list[PipelineCluster] = Field(
+    cluster: list[PipelineCluster] = PluralField(
         [],
-        validation_alias=AliasChoices("clusters", "cluster"),
-        serialization_alias="cluster",
         description="""
         Clusters to run the pipeline. If none is specified, pipelines will automatically select a default cluster
         configuration for the pipeline.
@@ -592,19 +591,16 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     )
     last_modified: int = Field(None, description="")
     latest_updates: list[PipelineLatestUpdate] = Field(None, description="")
-    libraries: list[PipelineLibrary] = Field(
+    library: list[PipelineLibrary] = PluralField(
         None,
-        validation_alias=AliasChoices("libraries", "library"),
-        serialization_alias="library",
+        plural="libraries",
         description="Specifies pipeline code (notebooks) and required artifacts.",
     )
     name: str = Field(..., description="Pipeline name")
     name_prefix: str = Field(None, description="Prefix added to the DLT pipeline name")
     name_suffix: str = Field(None, description="Suffix added to the DLT pipeline name")
-    notifications: list[PipelineNotifications] = Field(
+    notification: list[PipelineNotifications] = PluralField(
         [],
-        validation_alias=AliasChoices("notifications", "notification"),
-        serialization_alias="notification",
         description="Notifications specifications",
     )
     photon: bool = Field(None, description="If `True`, Photon engine enabled.")
@@ -712,7 +708,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     def pulumi_excludes(self) -> list[str] | dict[str, bool]:
         return {
             "access_controls": True,
-            "clusters": {"__all__": {"access_controls"}},
+            "cluster": {"__all__": {"access_controls"}},
             "name_prefix": True,
             "name_suffix": True,
         }
@@ -720,7 +716,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_properties(self):
         d = super().pulumi_properties
-        k = "clusters"
+        k = "cluster"
         if k in d:
             _clusters = []
             for c in d[k]:

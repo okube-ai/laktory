@@ -37,8 +37,8 @@ schema = Schema(
 
 
 def test_model():
-    assert schema.tables[0].columns[0].name == "airspeed"
-    assert isinstance(schema.tables[0].columns[0], TableColumn)
+    assert schema.tables[0].column[0].name == "airspeed"
+    assert isinstance(schema.tables[0].column[0], TableColumn)
     assert schema.name == "flights"
     assert schema.full_name == "laktory_testing.flights"
 

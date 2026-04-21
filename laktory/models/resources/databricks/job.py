@@ -10,6 +10,7 @@ from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import PluralField
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.cluster import Cluster
@@ -34,7 +35,7 @@ class JobJobClusterNewCluster(Cluster):
 
     access_controls: list[Any] = Field(None, exclude=True)
     is_pinned: bool = Field(None, exclude=True)
-    libraries: list[Any] = Field(None, exclude=True)
+    library: list[Any] = Field(None, exclude=True)
     name: str = Field(None, exclude=True)
     no_wait: bool = Field(None, exclude=True)
 
@@ -43,7 +44,7 @@ class JobJobClusterNewCluster(Cluster):
         for f in [
             "access_controls",
             "is_pinned",
-            "libraries",
+            "library",
             "name",
             "no_wait",
         ]:
@@ -89,34 +90,25 @@ class JobEmailNotifications(BaseModel):
     notification_settings configuration block).
     """,
     )
-    on_duration_warning_threshold_exceededs: list[str] = Field(
+    on_duration_warning_threshold_exceeded: list[str] = PluralField(
         None,
-        validation_alias=AliasChoices(
-            "on_duration_warning_threshold_exceededs",
-            "on_duration_warning_threshold_exceeded",
-        ),
-        serialization_alias="on_duration_warning_threshold_exceeded",
+        plural="on_duration_warning_threshold_exceededs",
         description="""
     List of emails to notify when the duration of a run exceeds the threshold specified by the RUN_DURATION_SECONDS
     metric in the health block.
     """,
     )
-    on_failures: list[str] = Field(
+    on_failure: list[str] = PluralField(
         None,
-        validation_alias=AliasChoices("on_failures", "on_failure"),
-        serialization_alias="on_failure",
         description="List of emails to notify when the run fails.",
     )
-    on_starts: list[str] = Field(
+    on_start: list[str] = PluralField(
         None,
-        validation_alias=AliasChoices("on_starts", "on_start"),
-        serialization_alias="on_start",
         description="List of emails to notify when the run starts.",
     )
-    on_successes: list[str] = Field(
+    on_success: list[str] = PluralField(
         None,
-        validation_alias=AliasChoices("on_successes", "on_success"),
-        serialization_alias="on_success",
+        plural="on_successes",
         description="List of emails to notify when the run completes successfully.",
     )
 
@@ -213,10 +205,8 @@ class JobHealthRule(BaseModel):
 
 
 class JobHealth(BaseModel):
-    rules: list[JobHealthRule] = Field(
+    rule: list[JobHealthRule] = PluralField(
         None,
-        validation_alias=AliasChoices("rules", "rule"),
-        serialization_alias="rule",
         description="Job health rules specifications",
     )
 
@@ -416,10 +406,8 @@ class JobTaskSqlTaskAlertSubscription(BaseModel):
 
 class JobTaskSQLTaskAlert(BaseModel):
     alert_id: str = Field(None, description="Identifier of the Databricks SQL Alert.")
-    subscriptions: list[JobTaskSqlTaskAlertSubscription] = Field(
+    subscription: list[JobTaskSqlTaskAlertSubscription] = PluralField(
         None,
-        validation_alias=AliasChoices("subscriptions", "subscription"),
-        serialization_alias="subscription",
         description="""
     A list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or
     `destination_id` - for Alert destination's identifier.
@@ -438,10 +426,8 @@ class JobTaskSqlTaskDashboard(BaseModel):
     custom_subject: list[JobTaskSqlTaskAlertSubscription] = Field(
         None, description="Custom subject specifications"
     )
-    subscriptions: list[JobTaskSqlTaskAlertSubscription] = Field(
+    subscription: list[JobTaskSqlTaskAlertSubscription] = PluralField(
         None,
-        validation_alias=AliasChoices("subscriptions", "subscription"),
-        serialization_alias="subscription",
         description="Subscriptions specifications",
     )
 
@@ -513,10 +499,9 @@ class JobTaskForEachTaskTask(BaseModel):
         None,
         description="Identifier that can be referenced in task block, so that cluster is shared between tasks",
     )
-    libraries: list[ClusterLibrary] = Field(
+    library: list[ClusterLibrary] = PluralField(
         None,
-        validation_alias=AliasChoices("libraries", "library"),
-        serialization_alias="library",
+        plural="libraries",
         description="Cluster Library specifications",
     )
     max_retries: int = Field(
@@ -652,33 +637,24 @@ class JobWebhookNotificationsOnSuccess(BaseModel):
 
 
 class JobWebhookNotifications(BaseModel):
-    on_duration_warning_threshold_exceededs: list[
+    on_duration_warning_threshold_exceeded: list[
         JobWebhookNotificationsOnDurationWarningThresholdExceeded
-    ] = Field(
+    ] = PluralField(
         None,
-        validation_alias=AliasChoices(
-            "on_duration_warning_threshold_exceededs",
-            "on_duration_warning_threshold_exceeded",
-        ),
-        serialization_alias="on_duration_warning_threshold_exceeded",
+        plural="on_duration_warning_threshold_exceededs",
         description="Warnings threshold exceeded specifications",
     )
-    on_failures: list[JobWebhookNotificationsOnFailure] = Field(
+    on_failure: list[JobWebhookNotificationsOnFailure] = PluralField(
         None,
-        validation_alias=AliasChoices("on_failures", "on_failure"),
-        serialization_alias="on_failure",
         description="On failure specifications",
     )
-    on_starts: list[JobWebhookNotificationsOnStart] = Field(
+    on_start: list[JobWebhookNotificationsOnStart] = PluralField(
         None,
-        validation_alias=AliasChoices("on_starts", "on_start"),
-        serialization_alias="on_start",
         description="On starts specifications",
     )
-    on_successes: list[JobWebhookNotificationsOnSuccess] = Field(
+    on_success: list[JobWebhookNotificationsOnSuccess] = PluralField(
         None,
-        validation_alias=AliasChoices("on_successes", "on_success"),
-        serialization_alias="on_success",
+        plural="on_successes",
         description="On successes specifications",
     )
 
@@ -784,10 +760,8 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     behavior is to not send any emails. This field is a block and is documented below.
     """,
     )
-    environments: list[JobEnvironment] = Field(
+    environment: list[JobEnvironment] = PluralField(
         None,
-        validation_alias=AliasChoices("environments", "environment"),
-        serialization_alias="environment",
         description="List of environments available for the tasks.",
     )
     format: str = Field(None, description="")
@@ -795,10 +769,8 @@ class Job(BaseModel, PulumiResource, TerraformResource):
         None, description="Specifies a Git repository for task source code."
     )
     health: JobHealth = Field(None, description="Health specifications")
-    job_clusters: list[JobJobCluster] = Field(
+    job_cluster: list[JobJobCluster] = PluralField(
         [],
-        validation_alias=AliasChoices("job_clusters", "job_cluster"),
-        serialization_alias="job_cluster",
         description="""
     A list of job databricks.Cluster specifications that can be shared and reused by tasks of this job. Libraries
     cannot be declared in a shared job cluster. You must declare dependent libraries in task settings.
@@ -836,10 +808,8 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     notification_settings: JobNotificationSettings = Field(
         None, description="Notifications specifications"
     )
-    parameters: list[JobParameter] = Field(
+    parameter: list[JobParameter] = PluralField(
         [],
-        validation_alias=AliasChoices("parameters", "parameter"),
-        serialization_alias="parameter",
         description="Parameters specifications",
     )
     queue: JobQueue = Field(None, description="")
@@ -853,10 +823,8 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     run_as: JobRunAs = Field(None, description="Run as specifications")
     schedule: JobSchedule = Field(None, description="Schedule specifications")
     tags: dict[str, Any] = Field({}, description="Tags as key, value pairs")
-    tasks: list[JobTask] = Field(
+    task: list[JobTask] = PluralField(
         [],
-        validation_alias=AliasChoices("tasks", "task"),
-        serialization_alias="task",
         description="Tasks specifications",
     )
     timeout_seconds: int = Field(
@@ -868,7 +836,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
         None, description="Webhook notifications specifications"
     )
 
-    @field_validator("tasks")
+    @field_validator("task")
     @classmethod
     def sort_tasks(cls, v: list[JobTask]) -> list[JobTask]:
         return sorted(v, key=lambda task: task.task_key)
@@ -923,15 +891,15 @@ class Job(BaseModel, PulumiResource, TerraformResource):
         d = super().pulumi_properties
 
         # Rename dbt task schema
-        for task in d["tasks"]:
+        for task in d["task"]:
             if "dbt_task" in task:
                 if "schema_" in task["dbt_task"]:
                     task["dbt_task"]["schema"] = task["dbt_task"]["schema_"]
                     del task["dbt_task"]["schema_"]
 
         # Rename environment environment version
-        if "environments" in d:
-            for env in d["environments"]:
+        if "environment" in d:
+            for env in d["environment"]:
                 if "spec" in env:
                     if "environmentVersion" in env["spec"]:
                         env["spec"]["client"] = env["spec"]["environmentVersion"]
@@ -955,8 +923,8 @@ class Job(BaseModel, PulumiResource, TerraformResource):
         d = super().terraform_properties
 
         # Rename dbt task schema
-        if "tasks" in d:
-            for task in d["tasks"]:
+        if "task" in d:
+            for task in d["task"]:
                 if "dbt_task" in task:
                     if "schema_" in task["dbt_task"]:
                         task["dbt_task"]["schema"] = task["dbt_task"]["schema_"]

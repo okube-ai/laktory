@@ -72,16 +72,16 @@ def test_job_model():
         "description": None,
         "email_notifications": {
             "no_alert_for_skipped_runs": None,
-            "on_duration_warning_threshold_exceededs": ["info@okube.ai"],
-            "on_failures": ["info@okube.ai"],
-            "on_starts": ["info@okube.ai"],
-            "on_successes": ["info@okube.ai"],
+            "on_duration_warning_threshold_exceeded": ["info@okube.ai"],
+            "on_failure": ["info@okube.ai"],
+            "on_start": ["info@okube.ai"],
+            "on_success": ["info@okube.ai"],
         },
-        "environments": None,
+        "environment": None,
         "format": None,
         "git_source": None,
         "health": None,
-        "job_clusters": [
+        "job_cluster": [
             {
                 "job_cluster_key": "main",
                 "new_cluster": {
@@ -128,13 +128,13 @@ def test_job_model():
         "name_prefix": "",
         "name_suffix": None,
         "notification_settings": None,
-        "parameters": [],
+        "parameter": [],
         "queue": None,
         "retry_on_timeout": None,
         "run_as": None,
         "schedule": None,
         "tags": {},
-        "tasks": [
+        "task": [
             {
                 "dbt_task": None,
                 "condition_task": None,
@@ -145,7 +145,7 @@ def test_job_model():
                 "existing_cluster_id": None,
                 "health": None,
                 "job_cluster_key": "main",
-                "libraries": None,
+                "library": None,
                 "max_retries": None,
                 "min_retry_interval_millis": None,
                 "notebook_task": {
@@ -175,7 +175,7 @@ def test_job_model():
                 "existing_cluster_id": None,
                 "health": None,
                 "job_cluster_key": None,
-                "libraries": None,
+                "library": None,
                 "max_retries": None,
                 "min_retry_interval_millis": None,
                 "notebook_task": None,
@@ -203,7 +203,7 @@ def test_job_model():
                 "existing_cluster_id": None,
                 "health": None,
                 "job_cluster_key": None,
-                "libraries": None,
+                "library": None,
                 "max_retries": None,
                 "min_retry_interval_millis": None,
                 "notebook_task": None,
@@ -242,11 +242,11 @@ def test_job_for_each_task():
         "control_run_state": None,
         "description": None,
         "email_notifications": None,
-        "environments": None,
+        "environment": None,
         "format": None,
         "git_source": None,
         "health": None,
-        "job_clusters": [],
+        "job_cluster": [],
         "max_concurrent_runs": None,
         "max_retries": None,
         "min_retry_interval_millis": None,
@@ -254,13 +254,13 @@ def test_job_for_each_task():
         "name_prefix": None,
         "name_suffix": None,
         "notification_settings": None,
-        "parameters": [],
+        "parameter": [],
         "queue": None,
         "retry_on_timeout": None,
         "run_as": None,
         "schedule": None,
         "tags": {},
-        "tasks": [
+        "task": [
             {
                 "dbt_task": None,
                 "condition_task": None,
@@ -271,7 +271,7 @@ def test_job_for_each_task():
                 "existing_cluster_id": None,
                 "health": None,
                 "job_cluster_key": None,
-                "libraries": None,
+                "library": None,
                 "max_retries": None,
                 "min_retry_interval_millis": None,
                 "notebook_task": None,
@@ -296,7 +296,7 @@ def test_job_for_each_task():
                         "existing_cluster_id": None,
                         "health": None,
                         "job_cluster_key": None,
-                        "libraries": None,
+                        "library": None,
                         "max_retries": None,
                         "min_retry_interval_millis": None,
                         "notebook_task": {
@@ -336,12 +336,12 @@ def test_job_pulumi():
     print(data)
     assert data == {
         "email_notifications": {
-            "on_duration_warning_threshold_exceededs": ["info@okube.ai"],
-            "on_failures": ["info@okube.ai"],
-            "on_starts": ["info@okube.ai"],
-            "on_successes": ["info@okube.ai"],
+            "on_duration_warning_threshold_exceeded": ["info@okube.ai"],
+            "on_failure": ["info@okube.ai"],
+            "on_start": ["info@okube.ai"],
+            "on_success": ["info@okube.ai"],
         },
-        "job_clusters": [
+        "job_cluster": [
             {
                 "job_cluster_key": "main",
                 "new_cluster": {
@@ -355,9 +355,9 @@ def test_job_pulumi():
             }
         ],
         "name": "osoucy]job-stock-prices",
-        "parameters": [],
+        "parameter": [],
         "tags": {},
-        "tasks": [
+        "task": [
             {
                 "job_cluster_key": "main",
                 "notebook_task": {"notebook_path": "job/ingest_stock_prices"},
@@ -390,10 +390,10 @@ def test_job_task_dbt():
     )
     assert job.pulumi_properties == {
         "name": "job-stock-prices",
-        "parameters": [],
+        "parameter": [],
         "tags": {},
-        "tasks": [
+        "task": [
             {"dbt_task": {"commands": ["dbt build", "dbt run"], "schema": "finance"}}
         ],
-        "job_clusters": [],
+        "job_cluster": [],
     }

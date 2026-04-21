@@ -68,22 +68,22 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                 libraries += [l]
 
             task.job_cluster_key = "node-cluster"
-            task.libraries = libraries
+            task.library = libraries
         return task
 
     def update_from_parent(self):
         serverless = True
-        for c in self.job_clusters:
+        for c in self.job_cluster:
             if c.job_cluster_key == "node-cluster":
                 serverless = False
-        if len(self.job_clusters) > 0 and serverless:
+        if len(self.job_cluster) > 0 and serverless:
             raise ValueError(
                 "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
             )
 
         pl = self.parent_pipeline
 
-        self.tasks = []
+        self.task = []
 
         # Requirements and path
         _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
@@ -94,7 +94,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         # Environment
         env_found = False
-        envs = self.environments
+        envs = self.environment
         if envs is None:
             envs = []
         for env in envs:
@@ -120,7 +120,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                     ),
                 )
             ]
-            self.environments = envs
+            self.environment = envs
 
         # Sorting Node Names to prevent job update trigger with Pulumi
         plan = pl.get_execution_plan()
@@ -149,7 +149,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             if self.node_max_retries:
                 task.max_retries = self.node_max_retries
 
-            self.tasks += [task]
+            self.task += [task]
 
         if pl.databricks_quality_monitor_enabled:
             task = JobTask(
@@ -163,15 +163,15 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                         "quality_monitors": "true",  # this has been already update in the pl.execute()
                     },
                 ),
-                depends_on=[{"task_key": t.task_key} for t in self.tasks],
+                depends_on=[{"task_key": t.task_key} for t in self.task],
             )
             task = self._set_task_compute(task, serverless, _requirements)
-            self.tasks += [task]
+            self.task += [task]
 
-        self.sort_tasks(self.tasks)
+        self.sort_tasks(self.task)
 
         # Update job parameters
-        self.parameters = [
+        self.parameter = [
             JobParameter(name="full_refresh", default="false"),
         ]
 
@@ -194,10 +194,23 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         d = self.model_dump(
             exclude=self.terraform_excludes, exclude_unset=True, by_alias=False
         )
-        for task in d.get("tasks", []):
+        for task in d.get("task", []):
             # schema_ is a Python workaround for the reserved name; DABs expects "schema"
             if "dbt_task" in task and "schema_" in task["dbt_task"]:
                 task["dbt_task"]["schema"] = task["dbt_task"].pop("schema_")
+            # DABs SDK uses plural names for list fields
+            if "library" in task:
+                task["libraries"] = task.pop("library")
+
+        # DABs SDK uses plural names for top-level list fields
+        for singular, plural in [
+            ("task", "tasks"),
+            ("job_cluster", "job_clusters"),
+            ("environment", "environments"),
+            ("parameter", "parameters"),
+        ]:
+            if singular in d:
+                d[plural] = d.pop(singular)
 
         return DabsJob.from_dict(d)
 

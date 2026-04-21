@@ -4,6 +4,7 @@ from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import PluralField
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -42,10 +43,8 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
     external_location: str = Field(
         None, description="Name of the external location to assign the grants to"
     )
-    grants: list[GrantsGrant] = Field(
+    grant: list[GrantsGrant] = PluralField(
         ...,
-        validation_alias=AliasChoices("grants", "grant"),
-        serialization_alias="grant",
         description="List of grant assigned to the selected object",
     )
     metastore: str = Field(

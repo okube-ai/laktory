@@ -65,7 +65,7 @@ def test_databricks_job():
     data = job.model_dump(exclude_unset=True)
     print(data)
     assert data == {
-        "environments": [
+        "environment": [
             {
                 "environment_key": "laktory",
                 "spec": {
@@ -78,7 +78,7 @@ def test_databricks_job():
                 },
             }
         ],
-        "job_clusters": [
+        "job_cluster": [
             {
                 "job_cluster_key": "node-cluster",
                 "new_cluster": {
@@ -88,12 +88,12 @@ def test_databricks_job():
             }
         ],
         "name": "pl-job",
-        "parameters": [{"default": "false", "name": "full_refresh"}],
-        "tasks": [
+        "parameter": [{"default": "false", "name": "full_refresh"}],
+        "task": [
             {
                 "depends_on": [],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -111,7 +111,7 @@ def test_databricks_job():
             {
                 "depends_on": [{"task_key": "node-slv"}],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -129,7 +129,7 @@ def test_databricks_job():
             {
                 "depends_on": [{"task_key": "node-gld"}],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -147,7 +147,7 @@ def test_databricks_job():
             {
                 "depends_on": [{"task_key": "node-gld_a"}, {"task_key": "node-gld_b"}],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -165,7 +165,7 @@ def test_databricks_job():
             {
                 "depends_on": [{"task_key": "node-gld"}],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -183,7 +183,7 @@ def test_databricks_job():
             {
                 "depends_on": [{"task_key": "node-brz"}],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -208,7 +208,7 @@ def test_databricks_job():
                     {"task_key": "node-slv"},
                 ],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -444,7 +444,7 @@ def test_databricks_job():
         "dataframe_api": "NARWHALS",
         "root_path": "/.laktory/pipelines/pl-job",
         "orchestrator": {
-            "environments": [
+            "environment": [
                 {
                     "environment_key": "laktory",
                     "spec": {
@@ -457,7 +457,7 @@ def test_databricks_job():
                     },
                 }
             ],
-            "job_clusters": [
+            "job_cluster": [
                 {
                     "job_cluster_key": "node-cluster",
                     "new_cluster": {
@@ -467,12 +467,12 @@ def test_databricks_job():
                 }
             ],
             "name": "pl-job",
-            "parameters": [{"default": "false", "name": "full_refresh"}],
-            "tasks": [
+            "parameter": [{"default": "false", "name": "full_refresh"}],
+            "task": [
                 {
                     "depends_on": [],
                     "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -490,7 +490,7 @@ def test_databricks_job():
                 {
                     "depends_on": [{"task_key": "node-slv"}],
                     "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -508,7 +508,7 @@ def test_databricks_job():
                 {
                     "depends_on": [{"task_key": "node-gld"}],
                     "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -529,7 +529,7 @@ def test_databricks_job():
                         {"task_key": "node-gld_b"},
                     ],
                     "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -547,7 +547,7 @@ def test_databricks_job():
                 {
                     "depends_on": [{"task_key": "node-gld"}],
                     "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -565,7 +565,7 @@ def test_databricks_job():
                 {
                     "depends_on": [{"task_key": "node-brz"}],
                     "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -590,7 +590,7 @@ def test_databricks_job():
                         {"task_key": "node-slv"},
                     ],
                     "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -704,7 +704,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
         "cause": None,
         "channel": "PREVIEW",
         "cluster_id": None,
-        "clusters": [],
+        "cluster": [],
         "creator_user_name": None,
         "configuration": {
             "pipeline_name": "pl-dlt",
@@ -723,11 +723,11 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
         "ingestion_definition": None,
         "last_modified": None,
         "latest_updates": None,
-        "libraries": None,
+        "library": None,
         "name": "pl-dlt",
         "name_prefix": None,
         "name_suffix": None,
-        "notifications": [],
+        "notification": [],
         "photon": None,
         "restart_window": None,
         "root_path": None,

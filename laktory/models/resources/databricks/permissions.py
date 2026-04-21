@@ -1,17 +1,15 @@
-from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import PluralField
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
 
 class Permissions(BaseModel, PulumiResource, TerraformResource):
-    access_controls: list[AccessControl] = Field(
+    access_control: list[AccessControl] = PluralField(
         ...,
-        validation_alias=AliasChoices("access_controls", "access_control"),
-        serialization_alias="access_control",
         description="Access controls list",
     )
     app_name: str = Field(None, description="")

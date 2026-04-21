@@ -30,7 +30,7 @@ def test_model():
     print(data)
     assert data == {
         "catalog_name": "dev",
-        "columns": [
+        "column": [
             {
                 "name": "created_at",
                 "comment": None,

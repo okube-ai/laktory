@@ -15,6 +15,7 @@ from typing import get_args
 from typing import get_origin
 
 import yaml  # TODO: Move into functions?
+from pydantic import AliasChoices
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
@@ -29,6 +30,28 @@ from laktory.typing import VariableType
 from laktory.yaml.recursiveloader import RecursiveLoader
 
 Model = TypeVar("Model", bound="BaseModel")
+
+
+class _PluralFieldSpec:
+    """
+    Defers plural alias creation until the field name is known by the metaclass.
+    Use `PluralField()` instead of instantiating this directly.
+    """
+
+    __slots__ = ("field_info", "plural")
+
+    def __init__(self, field_info, plural):
+        self.field_info = field_info
+        self.plural = plural  # None = auto-derive as field_name + "s"
+
+
+def PluralField(default=None, *, plural: str = None, **kwargs):
+    """
+    Field helper for list fields whose name is the singular form (matching Terraform/DAB).
+    The plural form is automatically added as a validation alias so YAML input can use
+    either form. Set `plural` explicitly only for irregular plurals (e.g. `plural="libraries"`).
+    """
+    return _PluralFieldSpec(Field(default, **kwargs), plural)
 
 
 def annotation_contains_list_of_basemodel(annotation, mymodel_cls) -> bool:
@@ -60,6 +83,17 @@ class ModelMetaclass(_ModelMetaclass):
         namespace: dict[str, Any],
         **kwargs: Any,
     ) -> type:
+        # Resolve PluralField specs: inject plural validation alias using the field name
+        for fname in list(namespace.keys()):
+            value = namespace[fname]
+            if isinstance(value, _PluralFieldSpec):
+                plural = value.plural or (fname + "s")
+                fi = value.field_info
+                alias = AliasChoices(plural)
+                fi.validation_alias = alias
+                fi._attributes_set["validation_alias"] = alias
+                namespace[fname] = fi
+
         # Add var as a possible type hint of each model field to support variables injection
         for field_name in namespace.get("__annotations__", {}):
             type_hint = namespace["__annotations__"][field_name]

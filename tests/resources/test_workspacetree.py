@@ -105,5 +105,5 @@ def test_access_controls():
     assert isinstance(r0, lk.models.resources.databricks.WorkspaceFile)
     r1 = tree.core_resources[1]
     assert isinstance(r1, lk.models.resources.databricks.Permissions)
-    assert r1.access_controls[0].permission_level == "CAN_READ"
+    assert r1.access_control[0].permission_level == "CAN_READ"
     assert r1.workspace_file_path == "/.laktory/notebooks/listfiles.py"

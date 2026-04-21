@@ -9,7 +9,7 @@ permissions = Permissions(access_controls=access_controls, pipeline_id="pipeline
 
 
 def test_permissions_initialization():
-    assert permissions.access_controls == access_controls
+    assert permissions.access_control == access_controls
     assert permissions.pipeline_id == "pipeline_123"
     assert permissions.job_id is None
     assert permissions.cluster_id is None
