@@ -14,6 +14,8 @@ class VolumeBase(BaseModel, TerraformResource):
     DO NOT EDIT — regenerate from `scripts/build_resources/01_build.py`.
     """
 
+    __doc_generated_base__ = True
+
     catalog_name: str = Field(
         ..., description="The name of the catalog where the schema and the volume are"
     )

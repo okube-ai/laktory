@@ -64,9 +64,9 @@ def pluralize(name: str) -> str:
 DEFAULT_TARGETS = [
     "databricks_volume",
     "databricks_catalog",
-    "databricks_metastore",
+    # "databricks_metastore",
     "databricks_schema",
-    "databricks_cluster",
+    # "databricks_cluster",
 ]
 
 
@@ -314,6 +314,8 @@ def emit_resource_module(
         "    DO NOT EDIT — regenerate from `scripts/build_resources/01_build.py`."
     )
     main_lines.append('    """')
+    main_lines.append("")
+    main_lines.append("    __doc_generated_base__ = True")
     main_lines.append("")
 
     has_fields = False

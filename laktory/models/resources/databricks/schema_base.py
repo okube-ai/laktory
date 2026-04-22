@@ -14,6 +14,8 @@ class SchemaBase(BaseModel, TerraformResource):
     DO NOT EDIT — regenerate from `scripts/build_resources/01_build.py`.
     """
 
+    __doc_generated_base__ = True
+
     catalog_name: str = Field(..., description="Name of parent catalog.")
     name: str = Field(..., description="Name of schema, relative to parent catalog.")
     comment: str | None = Field(

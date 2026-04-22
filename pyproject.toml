@@ -61,6 +61,7 @@ dev = [
     "mkdocs-material>=9,<10",
     "mkdocs-video",
     "mkdocstrings[python]",
+    "Pygments<2.20",  # pymdownx 10.21 passes filename=None to HtmlFormatter; fixed in Pygments 2.20 side requires upstream pymdownx fix
     "pandas",
     "plotly",
     "pre-commit",

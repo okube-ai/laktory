@@ -38,6 +38,8 @@ class CatalogBase(BaseModel, TerraformResource):
     DO NOT EDIT — regenerate from `scripts/build_resources/01_build.py`.
     """
 
+    __doc_generated_base__ = True
+
     browse_only: bool | None = Field(
         None,
         description="Indicates whether the principal is limited to retrieving metadata for the associated object through the BROWSE privilege when include_browse is enabled in the request.",

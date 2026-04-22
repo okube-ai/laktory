@@ -85,6 +85,18 @@ class FieldSorterExtension(Extension):
 
         all_hidden_fields = hidden_field_names | per_class_hidden
 
+        # Find the nearest generated base class (marked __doc_generated_base__ = True).
+        # Its field names determine the "Base / Databricks" split vs "Laktory" split.
+        generated_base = None
+        generated_base_fields: set[str] = set()
+        for ancestor in runtime_obj.__mro__[1:]:
+            if ancestor.__dict__.get("__doc_generated_base__", False):
+                generated_base = ancestor
+                generated_base_fields = set(
+                    ancestor.__dict__.get("__annotations__", {}).keys()
+                )
+                break
+
         # Shadow public members of hidden griffe base classes with no-docstring stubs.
         # Because inherited_members only includes names NOT in cls.members, the stub
         # prevents the real inherited member from appearing. show_if_no_docstring=false
@@ -104,18 +116,49 @@ class FieldSorterExtension(Extension):
             except (ValueError, Exception) as e:
                 logger.debug("MRO walk failed for %s: %s", cls.path, e)
 
-        # Filter hidden fields and sort all remaining fields alphabetically
+        # Filter hidden fields, split by origin (base vs Laktory), and sort.
         sections = cls.docstring.parsed
-        for section in list(sections):
+        new_sections: list = []
+        for section in sections:
             if not isinstance(
                 section, (DocstringSectionParameters, DocstringSectionAttributes)
             ):
+                new_sections.append(section)
                 continue
+
             visible = [
                 item for item in section.value if item.name not in all_hidden_fields
             ]
-            visible.sort(key=lambda x: x.name)
-            section.value = visible
+
+            if generated_base is not None and isinstance(
+                section, DocstringSectionParameters
+            ):
+                # Split: fields whose name appears in the generated base → "Base",
+                # everything else → "Laktory".
+                base_items = sorted(
+                    [i for i in visible if i.name in generated_base_fields],
+                    key=lambda x: x.name,
+                )
+                laktory_items = sorted(
+                    [i for i in visible if i.name not in generated_base_fields],
+                    key=lambda x: x.name,
+                )
+                if base_items:
+                    new_sections.append(
+                        DocstringSectionParameters(value=base_items, title="Base")
+                    )
+                if laktory_items:
+                    new_sections.append(
+                        DocstringSectionParameters(value=laktory_items, title="Laktory")
+                    )
+            else:
+                visible.sort(key=lambda x: x.name)
+                if visible:
+                    section.value = visible
+                    new_sections.append(section)
+
+        cls.docstring.parsed = new_sections
+        sections = new_sections
 
         # Qualify bare VariableType ExprName nodes so autorefs can link them.
         # griffe_fieldz uses display_as_type() which strips the module prefix,
@@ -139,13 +182,3 @@ class FieldSorterExtension(Extension):
                         item.annotation = _replace_expr_name(
                             item.annotation, "VariableType", qualified
                         )
-
-        # Remove empty parameter/attribute sections
-        cls.docstring.parsed = [
-            s
-            for s in sections
-            if not isinstance(
-                s, (DocstringSectionParameters, DocstringSectionAttributes)
-            )
-            or s.value
-        ]
