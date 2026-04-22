@@ -15,9 +15,9 @@ from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.cluster import ClusterLibrary
+from laktory.models.resources.databricks.job_base import JobBase
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
 class JobJobClusterNewCluster(Cluster):
@@ -669,7 +669,7 @@ class JobLookup(ResourceLookup):
     )
 
 
-class Job(BaseModel, PulumiResource, TerraformResource):
+class Job(JobBase, PulumiResource):
     """
     Databricks Job
 
@@ -740,101 +740,14 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")
-    continuous: JobContinuous = Field(None, description="Continuous specifications")
-    control_run_state: bool = Field(
-        None,
-        description="""
-    If `True`, the Databricks provider will stop and start the job as needed to ensure that the active run for the
-    job reflects the deployed configuration. For continuous jobs, the provider respects the pause_status by
-    stopping the current active run. This flag cannot be set for non-continuous jobs.
-    """,
-    )
-    description: str = Field(
-        None,
-        description="An optional description for the job. The maximum length is 1024 characters in UTF-8 encoding.",
-    )
-    email_notifications: JobEmailNotifications = Field(
-        None,
-        description="""
-    An optional set of email addresses notified when runs of this job begins, completes or fails. The default
-    behavior is to not send any emails. This field is a block and is documented below.
-    """,
-    )
-    environment: list[JobEnvironment] = PluralField(
-        None,
-        description="List of environments available for the tasks.",
-    )
-    format: str = Field(None, description="")
-    git_source: JobGitSource = Field(
-        None, description="Specifies a Git repository for task source code."
-    )
-    health: JobHealth = Field(None, description="Health specifications")
-    job_cluster: list[JobJobCluster] = PluralField(
-        [],
-        description="""
-    A list of job databricks.Cluster specifications that can be shared and reused by tasks of this job. Libraries
-    cannot be declared in a shared job cluster. You must declare dependent libraries in task settings.
-    """,
-    )
 
     lookup_existing: JobLookup = Field(
         None,
         exclude=True,
         description="Specifications for looking up existing resource. Other attributes will be ignored.",
     )
-    max_concurrent_runs: int = Field(
-        None,
-        description="An optional maximum allowed number of concurrent runs of the job. Defaults to 1.",
-    )
-    max_retries: int = Field(
-        None,
-        description="""
-    An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it
-    completes with a FAILED or INTERNAL_ERROR lifecycle state. The value -1 means to retry indefinitely and the
-    value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle
-    state: PENDING, RUNNING, TERMINATING, TERMINATED, SKIPPED or INTERNAL_ERROR.
-    """,
-    )
-    min_retry_interval_millis: int = Field(
-        None,
-        description="""
-    An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run.
-    The default behavior is that unsuccessful runs are immediately retried.
-    """,
-    )
-    name: str = Field(None, description="Name of the job")
     name_prefix: str = Field(None, description="Prefix added to the job name")
     name_suffix: str = Field(None, description="Suffix added to the job name")
-    notification_settings: JobNotificationSettings = Field(
-        None, description="Notifications specifications"
-    )
-    parameter: list[JobParameter] = PluralField(
-        [],
-        description="Parameters specifications",
-    )
-    queue: JobQueue = Field(None, description="")
-    retry_on_timeout: bool = Field(
-        None,
-        description="""
-        An optional policy to specify whether to retry a job when it times out. The default behavior is to not retry on
-        timeout.
-        """,
-    )
-    run_as: JobRunAs = Field(None, description="Run as specifications")
-    schedule: JobSchedule = Field(None, description="Schedule specifications")
-    tags: dict[str, Any] = Field({}, description="Tags as key, value pairs")
-    task: list[JobTask] = PluralField(
-        [],
-        description="Tasks specifications",
-    )
-    timeout_seconds: int = Field(
-        None,
-        description="An optional timeout applied to each run of this job. The default behavior is to have no timeout.",
-    )
-    trigger: JobTrigger = Field(None, description="Trigger specifications")
-    webhook_notifications: JobWebhookNotifications = Field(
-        None, description="Webhook notifications specifications"
-    )
 
     @field_validator("task")
     @classmethod
@@ -909,10 +822,6 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_job"
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:

@@ -4,12 +4,10 @@ from typing import Union
 from pydantic import Field
 
 from laktory._logger import get_logger
-from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks.table_base import TableBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 logger = get_logger(__name__)
 
@@ -21,24 +19,7 @@ class TableLookup(ResourceLookup):
     )
 
 
-class TableColumn(BaseModel):
-    name: str = Field(..., description="User-visible name of column")
-    comment: str = Field(None, description="User-supplied free-form text.")
-    identity: str = Field(
-        None,
-        description="Whether field is an identity column. Can be `default`, `always` or `unset`. It is `unset` by default.",
-    )
-    nullable: bool = Field(
-        None, description="Whether field is nullable (Default: `true`)"
-    )
-    type: str = Field(
-        None,
-        description="Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.",
-    )
-    type_json: str = Field(None, description="")
-
-
-class Table(BaseModel, PulumiResource, TerraformResource):
+class Table(TableBase, PulumiResource):
     """
     A table resides in the third layer of Unity Catalog’s three-level namespace. It contains rows of data.
 
@@ -60,24 +41,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     * [Pulumi Databricks Table](https://www.pulumi.com/registry/packages/databricks/api-docs/sqltable/)
     """
 
-    catalog_name: Union[str, None] = Field(
-        None, description="Name of the catalog storing the table"
-    )
-    column: Union[list[TableColumn], None] = PluralField(
-        None,
-        description="List of columns stored in the table",
-    )
-    comment: Union[str, None] = Field(
-        None, description="Text description of the catalog"
-    )
-    data_source_format: str = Field(
-        "DELTA",
-        description="""
-    External tables are supported in multiple data source formats. The string constants identifying these formats
-    are DELTA, CSV, JSON, AVRO, PARQUET, ORC, TEXT. Change forces creation of a new resource. Not supported for
-    MANAGED tables or VIEW.
-    """,
-    )
     grant: Union[TableGrant, list[TableGrant]] = Field(
         None,
         description="""
@@ -163,7 +126,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @property
     def column_names(self) -> list[str]:
         """List of column names"""
-        return [c.name for c in self.columns]
+        return [c.name for c in self.column]
 
     @property
     def is_from_cdc(self) -> bool:
@@ -214,10 +177,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_sql_table"
 
     @property
     def terraform_resource_lookup_type(self) -> str:

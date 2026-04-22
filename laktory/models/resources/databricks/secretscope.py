@@ -8,8 +8,8 @@ from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.secret import Secret
 from laktory.models.resources.databricks.secretacl import SecretAcl
+from laktory.models.resources.databricks.secretscope_base import SecretScopeBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
 class SecretScopePermission(BaseModel):
@@ -21,12 +21,7 @@ class SecretScopePermission(BaseModel):
     )
 
 
-class SecretScopeKeyvaultMetadata(BaseModel):
-    dns_name: str = Field(None, description="")
-    resource_id: str = Field(None, description="Id of the keyvault resource")
-
-
-class SecretScope(BaseModel, PulumiResource, TerraformResource):
+class SecretScope(SecretScopeBase, PulumiResource):
     """
     Databricks secret scope
 
@@ -49,13 +44,6 @@ class SecretScope(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    backend_type: Literal["DATABRICKS", "AZURE_KEYVAULT"] = Field(
-        "DATABRICKS", description="Backend for managing the secrets inside the scope"
-    )
-    keyvault_metadata: SecretScopeKeyvaultMetadata = Field(
-        None, description="Keyvault specifications if used as a scope backend"
-    )
-    name: str = Field(..., description="Secret scope name")
     permissions: list[SecretScopePermission] = Field(
         [], description="Permissions given to the secret scope"
     )
@@ -116,10 +104,6 @@ class SecretScope(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_secret_scope"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

@@ -30,6 +30,7 @@ OUTPUT_DIR = (
 PROVIDER_KEY = "registry.terraform.io/databricks/databricks"
 
 # Fields that are always excluded regardless of resource
+# Also skips any attribute starting with "__" (internal Terraform provider fields)
 ALWAYS_SKIP_ATTRS = {"id"}
 
 # Field names reserved by BaseResource / BaseModel — must be renamed to avoid shadowing
@@ -130,13 +131,13 @@ DEFAULT_TARGETS = [
     "databricks_vector_search_index",
     "databricks_workspace_file",
     # Phase 2 — complex resources
-    # "databricks_cluster",
-    # "databricks_job",
-    # "databricks_pipeline",
-    # "databricks_secret_scope",
-    # "databricks_table",
-    # "databricks_grant",
-    # "databricks_grants",
+    "databricks_cluster",
+    "databricks_job",
+    "databricks_pipeline",
+    "databricks_secret_scope",
+    "databricks_table",
+    "databricks_grant",
+    "databricks_grants",
 ]
 
 
@@ -249,7 +250,7 @@ def emit_block_class(
 
     # Emit attributes
     for attr_name, attr in sorted(attrs.items()):
-        if attr_name in ALWAYS_SKIP_ATTRS:
+        if attr_name in ALWAYS_SKIP_ATTRS or attr_name.startswith("__"):
             continue
         if is_computed_only(attr):
             continue
@@ -404,6 +405,7 @@ def emit_resource_module(
         for k, v in attrs.items()
         if v.get("required")
         and k not in ALWAYS_SKIP_ATTRS
+        and not k.startswith("__")
         and k not in per_resource_skip
     }
     optional_attrs = {
@@ -412,6 +414,7 @@ def emit_resource_module(
         if not v.get("required")
         and not is_computed_only(v)
         and k not in ALWAYS_SKIP_ATTRS
+        and not k.startswith("__")
         and k not in per_resource_skip
     }
 
