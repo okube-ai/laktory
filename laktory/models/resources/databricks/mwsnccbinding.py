@@ -1,11 +1,8 @@
-from pydantic import Field
-
-from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.mwsnccbinding_base import MwsNccBindingBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class MwsNccBinding(BaseModel, PulumiResource, TerraformResource):
+class MwsNccBinding(MwsNccBindingBase, PulumiResource):
     """
     Databricks Mws Network Connectivity Config Binding
 
@@ -14,15 +11,6 @@ class MwsNccBinding(BaseModel, PulumiResource, TerraformResource):
     ```py
     ```
     """
-
-    network_connectivity_config_id: str = Field(
-        None,
-        description="Canonical unique identifier of Network Connectivity Config in Databricks Account.",
-    )
-    workspace_id: str = Field(
-        ...,
-        description="Identifier of the workspace to attach the NCC to. Change forces creation of a new resource.",
-    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -43,7 +31,3 @@ class MwsNccBinding(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_mws_ncc_binding"

@@ -2,12 +2,13 @@ from typing import Union
 
 from pydantic import Field
 
-from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.metastoreassignment_base import (
+    MetastoreAssignmentBase,
+)
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class MetastoreAssignment(BaseModel, PulumiResource, TerraformResource):
+class MetastoreAssignment(MetastoreAssignmentBase, PulumiResource):
     """
     Databricks Metastore Assignment
 
@@ -17,16 +18,8 @@ class MetastoreAssignment(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    default_catalog_name: str = Field(
-        None, description="Unique identifier of the parent Metastore"
-    )
-    metastore_id: Union[int, str] = Field(
-        None, description="id of the workspace for the assignment"
-    )
-    workspace_id: Union[int, str] = Field(
-        None,
-        description="Default catalog used for this assignment, default to hive_metastore",
-    )
+    # Laktory injects metastore_id from the parent Metastore resource
+    metastore_id: Union[int, str, None] = Field(None, description="ID of the metastore")
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -51,7 +44,3 @@ class MetastoreAssignment(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_metastore_assignment"

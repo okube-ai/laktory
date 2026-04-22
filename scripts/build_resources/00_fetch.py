@@ -35,7 +35,8 @@ GITHUB_RAW = (
     "https://raw.githubusercontent.com/databricks/terraform-provider-databricks"
 )
 
-# Mirrors the mapping in 00_fetch.py
+# Resources whose descriptions come from Go model struct comments.
+# Format: resource_key → {service dir, primary struct, fallback structs}
 RESOURCE_STRUCTS: dict[str, dict] = {
     "databricks_catalog": {
         "service": "catalog_tf",
@@ -63,6 +64,70 @@ RESOURCE_STRUCTS: dict[str, dict] = {
         "fallbacks": ["ClusterSpec", "CreateCluster", "EditCluster"],
     },
 }
+
+# Resources whose descriptions are fetched from provider docs markdown files.
+# Each entry maps the terraform resource name to its docs filename stem
+# (usually the resource name without the "databricks_" prefix).
+MARKDOWN_TARGETS: list[str] = [
+    "databricks_access_control_rule_set",
+    "databricks_alert",
+    "databricks_app",
+    "databricks_cluster_policy",
+    "databricks_dashboard",
+    "databricks_dbfs_file",
+    "databricks_directory",
+    "databricks_external_location",
+    "databricks_group",
+    "databricks_group_member",
+    "databricks_metastore_assignment",
+    "databricks_metastore_data_access",
+    "databricks_mlflow_experiment",
+    "databricks_mlflow_model",
+    "databricks_mlflow_webhook",
+    "databricks_mws_ncc_binding",
+    "databricks_mws_network_connectivity_config",
+    "databricks_mws_permission_assignment",
+    "databricks_notebook",
+    "databricks_notification_destination",
+    "databricks_obo_token",
+    "databricks_quality_monitor",
+    "databricks_query",
+    "databricks_recipient",
+    "databricks_repo",
+    "databricks_service_principal",
+    "databricks_service_principal_role",
+    "databricks_sql_endpoint",
+    "databricks_storage_credential",
+    "databricks_user",
+    "databricks_user_role",
+    "databricks_vector_search_endpoint",
+    "databricks_vector_search_index",
+    "databricks_workspace_file",
+    # Phase 2 — resources with grants/child resources
+    "databricks_grant",
+    "databricks_grants",
+    "databricks_permissions",
+    "databricks_registered_model",
+    "databricks_secret",
+    "databricks_secret_acl",
+    "databricks_secret_scope",
+    "databricks_share",
+    "databricks_sql_table",
+    "databricks_workspace_binding",
+    # Phase 3 — complex resources
+    "databricks_job",
+    "databricks_pipeline",
+    # Other commonly used resources
+    "databricks_entitlements",
+    "databricks_git_credential",
+    "databricks_global_init_script",
+    "databricks_instance_pool",
+    "databricks_ip_access_list",
+    "databricks_library",
+    "databricks_model_serving",
+    "databricks_online_table",
+    "databricks_token",
+]
 
 MAIN_TF_TEMPLATE = """\
 terraform {{
@@ -190,11 +255,86 @@ def build_resource_descriptions(
     return result
 
 
+def parse_md_descriptions(md_source: str) -> dict[str, str]:
+    """
+    Parse field descriptions from a Terraform provider docs markdown file.
+
+    Sections "Argument reference" and "Attribute reference" are scanned for
+    bullet lines of the form:
+        * `field_name` - [(Required|Optional)] Description text.
+    Nested bullets (indented) are included using the parent heading as context
+    but are stored under their own field name.
+    """
+    import re
+
+    descriptions: dict[str, str] = {}
+    in_ref_section = False
+    pending_field: str | None = None
+    pending_lines: list[str] = []
+
+    def flush():
+        nonlocal pending_field, pending_lines
+        if pending_field and pending_lines:
+            desc = " ".join(pending_lines).strip()
+            # Strip requirement markers like "(Required)" / "(Optional)"
+            desc = re.sub(r"^\((?:Required|Optional)[^)]*\)\s*", "", desc)
+            desc = desc.strip(" .")
+            if desc:
+                descriptions[pending_field] = desc
+        pending_field = None
+        pending_lines = []
+
+    for line in md_source.splitlines():
+        # Detect section headers
+        if re.match(r"^##\s+", line):
+            in_ref_section = bool(re.search(r"argument|attribute", line, re.IGNORECASE))
+            flush()
+            continue
+
+        if not in_ref_section:
+            continue
+
+        # Match a bullet: * `field_name` - description
+        m = re.match(r"^\s*\*\s+`([^`]+)`\s+-\s+(.*)", line)
+        if m:
+            flush()
+            pending_field = m.group(1)
+            pending_lines = [m.group(2).strip()]
+            continue
+
+        # Continuation line for current field (non-empty, non-header)
+        if pending_field and line.strip() and not line.startswith("#"):
+            pending_lines.append(line.strip())
+            continue
+
+        # Blank line ends the current field description
+        if not line.strip():
+            flush()
+
+    flush()
+    return descriptions
+
+
+def fetch_md_descriptions(resource_key: str, tag: str) -> dict[str, str]:
+    """Fetch field descriptions from the provider docs markdown file."""
+    stem = resource_key.removeprefix("databricks_")
+    url = f"{GITHUB_RAW}/{tag}/docs/resources/{stem}.md"
+    try:
+        source = fetch_text(url)
+        descriptions = parse_md_descriptions(source)
+        print(f"    {resource_key}: {len(descriptions)} field descriptions (markdown)")
+        return descriptions
+    except Exception as exc:
+        print(f"  [WARN] Could not fetch docs for {resource_key}: {exc}")
+        return {}
+
+
 def generate_descriptions(version: str) -> None:
-    """Fetch Go model files from GitHub at the given version tag and parse descriptions."""
+    """Fetch descriptions from Go model files and provider docs markdown."""
     tag = f"v{version}"
     print(f"\n── Descriptions (tag {tag}) ──────────────────────────────────")
 
+    # --- Go struct approach (high quality, original 5 resources) ---
     service_to_resources: dict[str, list[str]] = {}
     for resource_key, cfg in RESOURCE_STRUCTS.items():
         service_to_resources.setdefault(cfg["service"], []).append(resource_key)
@@ -220,7 +360,15 @@ def generate_descriptions(version: str) -> None:
             all_structs, cfg["primary"], cfg["fallbacks"]
         )
         cache[resource_key] = descs
-        print(f"    {resource_key}: {len(descs)} field descriptions")
+        print(f"    {resource_key}: {len(descs)} field descriptions (go structs)")
+
+    # --- Markdown docs approach (Phase 1 and beyond) ---
+    print("\n  Fetching descriptions from provider docs markdown ...")
+    for resource_key in MARKDOWN_TARGETS:
+        if resource_key in cache:
+            continue  # already covered by Go struct approach
+        descs = fetch_md_descriptions(resource_key, tag)
+        cache[resource_key] = descs
 
     DESCRIPTIONS_PATH.write_text(json.dumps(cache, indent=2, sort_keys=True))
     print(f"  Saved → {DESCRIPTIONS_PATH.name}")

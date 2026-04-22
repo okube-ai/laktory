@@ -6,12 +6,11 @@ from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
 
-from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.dbfsfile_base import DbfsFileBase
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
 class DbfsFileLookup(ResourceLookup):
@@ -24,7 +23,7 @@ class DbfsFileLookup(ResourceLookup):
     )
 
 
-class DbfsFile(BaseModel, PulumiResource, TerraformResource):
+class DbfsFile(DbfsFileBase, PulumiResource):
     """
     Databricks DBFS File
 
@@ -74,7 +73,6 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
         validation_alias=AliasChoices("path", "path_"),
         exclude=True,
     )
-    source: str = Field(..., description="Path to file on local filesystem.")
 
     @computed_field(description="path")
     @property
@@ -136,10 +134,6 @@ class DbfsFile(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_dbfs_file"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

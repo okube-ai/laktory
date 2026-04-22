@@ -1,19 +1,11 @@
-from pydantic import Field
-
-from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.groupmember_base import GroupMemberBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class GroupMember(BaseModel, PulumiResource, TerraformResource):
+class GroupMember(GroupMemberBase, PulumiResource):
     """
     Databricks secret ACL
     """
-
-    group_id: str = Field(None, description="This is the id of the group resource.")
-    member_id: str = Field(
-        None, description="This is the id of the group, service principal, or user."
-    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -34,7 +26,3 @@ class GroupMember(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_group_member"

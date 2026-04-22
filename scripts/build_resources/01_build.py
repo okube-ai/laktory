@@ -40,12 +40,36 @@ RESERVED_FIELD_RENAMES: dict[str, str] = {
     "variables": "variables_",
     "lookup_existing": "lookup_existing_",
     "schema": "schema_",  # shadows Pydantic BaseModel.schema()
+    "schema_json": "schema_json_",  # shadows Pydantic v1 BaseModel.schema_json()
     "validate": "validate_",  # shadows Pydantic BaseModel.validate() (v1 compat)
     "update": "update_",  # shadows Laktory BaseModel.update()
 }
 
 # Block types that are always excluded (Laktory infrastructure, not Databricks fields)
 ALWAYS_SKIP_BLOCK_TYPES = {"provider_config"}
+
+# Per-resource attribute exclusions: fields that override classes handle via
+# @computed_field. If the base emits these as regular fields, Pydantic raises
+# "override with a computed_field is incompatible".
+PER_RESOURCE_SKIP_ATTRS: dict[str, set[str]] = {
+    "databricks_alert": {"parent_path"},
+    "databricks_dashboard": {"parent_path"},
+    "databricks_dbfs_file": {"path"},
+    "databricks_notebook": {"path"},
+    "databricks_quality_monitor": {
+        "table_name",
+        "output_schema_name",
+        # block_types used as single objects in override (TF marks them as list)
+        "data_classification_config",
+        "inference_log",
+        "notifications",
+        "schedule",
+        "snapshot",
+        "time_series",
+    },
+    "databricks_query": {"parent_path"},
+    "databricks_workspace_file": {"path", "source"},
+}
 
 # Irregular singular→plural mappings for PluralField
 IRREGULAR_PLURALS: dict[str, str] = {
@@ -65,11 +89,54 @@ def pluralize(name: str) -> str:
 
 # Default generation targets
 DEFAULT_TARGETS = [
+    # Phase 0 — original
     "databricks_volume",
     "databricks_catalog",
-    # "databricks_metastore",
     "databricks_schema",
+    # Phase 1 — simple/flat resources
+    "databricks_access_control_rule_set",
+    "databricks_alert",
+    "databricks_app",
+    "databricks_cluster_policy",
+    "databricks_dashboard",
+    "databricks_dbfs_file",
+    "databricks_directory",
+    "databricks_external_location",
+    "databricks_group",
+    "databricks_group_member",
+    "databricks_metastore",
+    "databricks_metastore_assignment",
+    "databricks_metastore_data_access",
+    "databricks_mlflow_experiment",
+    "databricks_mlflow_model",
+    "databricks_mlflow_webhook",
+    "databricks_mws_ncc_binding",
+    "databricks_mws_network_connectivity_config",
+    "databricks_mws_permission_assignment",
+    "databricks_notification_destination",
+    "databricks_notebook",
+    "databricks_obo_token",
+    "databricks_quality_monitor",
+    "databricks_query",
+    "databricks_recipient",
+    "databricks_repo",
+    "databricks_service_principal",
+    "databricks_service_principal_role",
+    "databricks_sql_endpoint",  # Warehouse
+    "databricks_storage_credential",
+    "databricks_user",
+    "databricks_user_role",
+    "databricks_vector_search_endpoint",
+    "databricks_vector_search_index",
+    "databricks_workspace_file",
+    # Phase 2 — complex resources
     # "databricks_cluster",
+    # "databricks_job",
+    # "databricks_pipeline",
+    # "databricks_secret_scope",
+    # "databricks_table",
+    # "databricks_grant",
+    # "databricks_grants",
 ]
 
 
@@ -187,9 +254,13 @@ def emit_block_class(
         if is_computed_only(attr):
             continue
 
-        py_type = tf_type_to_python(attr["type"])
+        py_type = tf_type_to_python(attr.get("type", "dynamic"))
         default = field_default(attr)
-        description = descriptions.get(attr_name, "").strip().replace('"', "'")
+        description = (
+            (descriptions.get(attr_name) or attr.get("description", ""))
+            .strip()
+            .replace('"', "'")
+        )
         field_name = safe_field_name(attr_name)
 
         if default == "...":
@@ -261,10 +332,12 @@ def emit_resource_module(
 
     # Determine if Any is needed
     needs_any = any(
-        "Any" in tf_type_to_python(a["type"])
+        "Any" in tf_type_to_python(a.get("type", "dynamic"))
         for a in attrs.values()
         if not is_computed_only(a) and a.get("name") not in ALWAYS_SKIP_ATTRS
     )
+
+    per_resource_skip = PER_RESOURCE_SKIP_ATTRS.get(resource_key, set())
 
     # --- Build nested classes ---
     pre_classes: list[str] = []
@@ -272,6 +345,8 @@ def emit_resource_module(
 
     for bt_name, bt_def in sorted(block_types.items()):
         if bt_name in ALWAYS_SKIP_BLOCK_TYPES:
+            continue
+        if bt_name in per_resource_skip:
             continue
 
         nested_class = block_class_name(class_name, bt_name)
@@ -327,7 +402,9 @@ def emit_resource_module(
     required_attrs = {
         k: v
         for k, v in attrs.items()
-        if v.get("required") and k not in ALWAYS_SKIP_ATTRS
+        if v.get("required")
+        and k not in ALWAYS_SKIP_ATTRS
+        and k not in per_resource_skip
     }
     optional_attrs = {
         k: v
@@ -335,11 +412,16 @@ def emit_resource_module(
         if not v.get("required")
         and not is_computed_only(v)
         and k not in ALWAYS_SKIP_ATTRS
+        and k not in per_resource_skip
     }
 
     for attr_name, attr in sorted(required_attrs.items()):
-        py_type = tf_type_to_python(attr["type"])
-        description = descriptions.get(attr_name, "").strip().replace('"', "'")
+        py_type = tf_type_to_python(attr.get("type", "dynamic"))
+        description = (
+            (descriptions.get(attr_name) or attr.get("description", ""))
+            .strip()
+            .replace('"', "'")
+        )
         field_name = safe_field_name(attr_name)
         desc_snippet = f', description="{description}"' if description else ""
         alias_snippet = (
@@ -357,8 +439,12 @@ def emit_resource_module(
         has_fields = True
 
     for attr_name, attr in sorted(optional_attrs.items()):
-        py_type = tf_type_to_python(attr["type"])
-        description = descriptions.get(attr_name, "").strip().replace('"', "'")
+        py_type = tf_type_to_python(attr.get("type", "dynamic"))
+        description = (
+            (descriptions.get(attr_name) or attr.get("description", ""))
+            .strip()
+            .replace('"', "'")
+        )
         field_name = safe_field_name(attr_name)
         desc_snippet = f', description="{description}"' if description else ""
         alias_snippet = (
@@ -389,13 +475,13 @@ def emit_resource_module(
     main_lines.append(f'        return "{resource_key}"')
 
     # --- Assemble module ---
-    any_import = ", Any" if needs_any else ""
+    any_import = "Any, " if needs_any else ""
     header = textwrap.dedent(f"""\
         # GENERATED FILE — DO NOT EDIT
         # Regenerate with: python scripts/build_resources/01_build.py {resource_key}
         from __future__ import annotations
 
-        from typing{any_import} import Union
+        from typing import {any_import}Union
 
         from pydantic import Field
 
@@ -445,7 +531,7 @@ def main():
         code = emit_resource_module(
             resource_key, resource_schemas[resource_key], descriptions
         )
-        fname = f"{resource_key.removeprefix('databricks_')}_base.py"
+        fname = f"{resource_key.removeprefix('databricks_').replace('_', '')}_base.py"
         out_path = out_dir / fname
         out_path.write_text(code)
         written.append(out_path)

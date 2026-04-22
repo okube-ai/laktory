@@ -751,9 +751,11 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                     "user_name": None,
                 }
             ],
-            "dirpath": None,
-            "path": "/.laktory/pipelines/pl-dlt.json",
             "content_base64": None,
+            "dirpath": None,
+            "md5": None,
+            "object_id": None,
+            "path": "/.laktory/pipelines/pl-dlt.json",
             "dataframe_backend": "PYSPARK",
             "dataframe_api": "NARWHALS",
             "source": "/tmp/laktory/cache/pipelines/pl-dlt.json",

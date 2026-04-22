@@ -4,9 +4,9 @@ from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.mlflowmodel_base import MlflowModelBase
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
 class MlflowModelTag(BaseModel):
@@ -14,7 +14,7 @@ class MlflowModelTag(BaseModel):
     value: str = Field(..., description="")
 
 
-class MLflowModel(BaseModel, PulumiResource, TerraformResource):
+class MLflowModel(MlflowModelBase, PulumiResource):
     """
     MLflow Model
 
@@ -41,11 +41,6 @@ class MLflowModel(BaseModel, PulumiResource, TerraformResource):
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")
-    description: str = Field(None, description="The description of the MLflow model.")
-    name: str = Field(
-        ..., description="Name of MLflow model. Change of name triggers new resource."
-    )
-    tags: list[MlflowModelTag] = Field(None, description="Tags for the MLflow model.")
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -87,10 +82,6 @@ class MLflowModel(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_mlflow_model"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

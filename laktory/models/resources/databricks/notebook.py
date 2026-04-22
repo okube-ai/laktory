@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Literal
 from typing import Union
 
 from pydantic import AliasChoices
@@ -8,12 +7,11 @@ from pydantic import Field
 from pydantic import computed_field
 
 from laktory import settings
-from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.notebook_base import NotebookBase
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
 class NotebookLookup(ResourceLookup):
@@ -26,7 +24,7 @@ class NotebookLookup(ResourceLookup):
     )
 
 
-class Notebook(BaseModel, PulumiResource, TerraformResource):
+class Notebook(NotebookBase, PulumiResource):
     """
     Databricks Notebook
 
@@ -63,9 +61,6 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         None,
         description="Workspace directory inside rootpath in which the notebook is deployed. Used only if `path` is not specified.",
     )
-    language: Literal["SCALA", "PYTHON", "SQL", "R"] = Field(
-        None, description="Notebook programming language"
-    )
     lookup_existing: NotebookLookup = Field(
         None,
         exclude=True,
@@ -76,9 +71,6 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
         description="Workspace filepath for the notebook. Overwrite `rootpath` and `dirpath`.",
         validation_alias=AliasChoices("path", "path_"),
         exclude=True,
-    )
-    source: str = Field(
-        ..., description="Path to notebook in source code format on local filesystem."
     )
 
     @computed_field(description="path")
@@ -99,6 +91,8 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
     @property
     def filename(self) -> str:
         """Notebook file name"""
+        if self.source is None:
+            return ""
         return os.path.basename(self.source)
 
     # ----------------------------------------------------------------------- #
@@ -141,10 +135,6 @@ class Notebook(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_notebook"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

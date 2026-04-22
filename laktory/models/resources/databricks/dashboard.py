@@ -8,14 +8,13 @@ from pydantic import computed_field
 from pydantic import model_validator
 
 from laktory._settings import settings
-from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.dashboard_base import DashboardBase
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class Dashboard(BaseModel, PulumiResource, TerraformResource):
+class Dashboard(DashboardBase, PulumiResource):
     """
     Databricks Lakeview Dashboard
 
@@ -45,15 +44,6 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")
-    display_name: str = Field(..., description="The display name of the dashboard.")
-    embed_credentials: bool = Field(
-        None,
-        description="Whether to embed credentials in the dashboard. Default is true.",
-    )
-    file_path: str = Field(
-        None,
-        description="The path to the dashboard JSON file. Conflicts with serialized_dashboard.",
-    )
     name_prefix: str = Field(
         None, description="Prefix added to the dashboard display name"
     )
@@ -68,13 +58,6 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
         """,
         validation_alias=AliasChoices("parent_path", "dirpath", "parent_path_"),
         exclude=True,
-    )
-    serialized_dashboard: str = Field(
-        None,
-        description="The contents of the dashboard in serialized string form. Conflicts with file_path.",
-    )
-    warehouse_id: str = Field(
-        ..., description="The warehouse ID used to run the dashboard."
     )
 
     @computed_field(description="parent_path")
@@ -142,10 +125,6 @@ class Dashboard(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_dashboard"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

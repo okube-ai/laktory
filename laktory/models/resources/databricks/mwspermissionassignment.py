@@ -1,14 +1,12 @@
-from typing import Literal
-from typing import Union
-
 from pydantic import Field
 
-from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.mwspermissionassignment_base import (
+    MwsPermissionAssignmentBase,
+)
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class MwsPermissionAssignment(BaseModel, PulumiResource, TerraformResource):
+class MwsPermissionAssignment(MwsPermissionAssignmentBase, PulumiResource):
     """
     Databricks Mws Permission Assignment
 
@@ -18,26 +16,11 @@ class MwsPermissionAssignment(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    permissions: list[Literal["USER", "ADMIN"]] = Field(
-        ["USER"],
-        description="""
-    The list of workspace permissions to assign to the principal:
-    - "USER" Can access the workspace with basic privileges.
-    - "ADMIN" Can access the workspace and has workspace admin
-      privileges to manage users and groups, workspace configurations,
-      and more.    
-    """,
-    )  # required
-    principal_id: Union[int, str] = Field(
+    principal_id: int = Field(
         None,
-        description="""
-    Databricks ID of the user, service principal, or group. The principal ID can be retrieved using the SCIM API, or 
-    using databricks_user, databricks.ServicePrincipal or databricks.Group data sources.    
-    """,
-    )  # required
-    workspace_id: Union[int, str] = Field(
-        None, description="Databricks workspace ID."
-    )  # required
+        description="Databricks ID of the user, service principal, or group. The principal ID can be retrieved using the SCIM API, or using [databricks_user](../data-sources/user.md), [databricks_service_principal](../data-sources/service_principal.md) or [databricks_group](../data-sources/group.md) data sources",
+    )
+    workspace_id: int = Field(None, description="Databricks workspace ID")
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -62,7 +45,3 @@ class MwsPermissionAssignment(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_mws_permission_assignment"
