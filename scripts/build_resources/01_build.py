@@ -39,6 +39,9 @@ RESERVED_FIELD_RENAMES: dict[str, str] = {
     "options": "options_",
     "variables": "variables_",
     "lookup_existing": "lookup_existing_",
+    "schema": "schema_",  # shadows Pydantic BaseModel.schema()
+    "validate": "validate_",  # shadows Pydantic BaseModel.validate() (v1 compat)
+    "update": "update_",  # shadows Laktory BaseModel.update()
 }
 
 # Block types that are always excluded (Laktory infrastructure, not Databricks fields)
