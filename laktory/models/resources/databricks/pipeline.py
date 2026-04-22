@@ -294,7 +294,12 @@ class PipelineIngestionDefinitionObjectsTable(BaseModel):
 
 class PipelineIngestionDefinitionObjects(BaseModel):
     report: PipelineIngestionDefinitionObjectsReport = Field(None, description="")
-    schema: PipelineIngestionDefinitionObjectsSchema = Field(None, description="")
+    schema_: PipelineIngestionDefinitionObjectsSchema = Field(
+        None,
+        validation_alias=AliasChoices("schema", "schema_"),
+        serialization_alias="schema",
+        description="",
+    )
     table: PipelineIngestionDefinitionObjectsTable = Field(None, description="")
 
 
