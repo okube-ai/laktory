@@ -8,6 +8,7 @@ from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.secret import Secret
 from laktory.models.resources.databricks.secretacl import SecretAcl
+from laktory.models.resources.databricks.secretscope_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.secretscope_base import SecretScopeBase
 from laktory.models.resources.pulumiresource import PulumiResource
 

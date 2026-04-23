@@ -1,3 +1,4 @@
+from laktory.models.resources.databricks.obotoken_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.obotoken_base import OboTokenBase
 from laktory.models.resources.pulumiresource import PulumiResource
 

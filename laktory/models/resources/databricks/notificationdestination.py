@@ -1,5 +1,6 @@
 from typing import Union
 
+from laktory.models.resources.databricks.notificationdestination_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.notificationdestination_base import (
     NotificationDestinationBase,
 )

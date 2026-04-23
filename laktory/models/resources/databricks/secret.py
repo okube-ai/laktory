@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from laktory.models.resources.databricks.secret_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.secret_base import SecretBase
 from laktory.models.resources.pulumiresource import PulumiResource
 

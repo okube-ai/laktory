@@ -8,6 +8,7 @@ from pydantic import computed_field
 
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.dbfsfile_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.dbfsfile_base import DbfsFileBase
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource

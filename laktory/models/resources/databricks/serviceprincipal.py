@@ -7,6 +7,7 @@ from laktory.models.resources.databricks.groupmember import GroupMember
 from laktory.models.resources.databricks.mwspermissionassignment import (
     MwsPermissionAssignment,
 )
+from laktory.models.resources.databricks.serviceprincipal_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.serviceprincipal_base import (
     ServicePrincipalBase,
 )

@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from laktory.models.resources.databricks.mwspermissionassignment_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.mwspermissionassignment_base import (
     MwsPermissionAssignmentBase,
 )

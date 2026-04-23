@@ -4,6 +4,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.grants.schemagrant import SchemaGrant
+from laktory.models.resources.databricks.schema_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.schema_base import SchemaBase
 from laktory.models.resources.databricks.table import Table
 from laktory.models.resources.databricks.volume import Volume

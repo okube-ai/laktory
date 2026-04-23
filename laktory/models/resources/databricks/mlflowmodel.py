@@ -4,6 +4,7 @@ from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.mlflowmodel_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.mlflowmodel_base import MlflowModelBase
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource

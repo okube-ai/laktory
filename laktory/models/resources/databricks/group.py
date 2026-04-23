@@ -3,6 +3,7 @@ from typing import Union
 from pydantic import Field
 
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks.group_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.group_base import GroupBase
 from laktory.models.resources.databricks.groupmember import GroupMember
 from laktory.models.resources.databricks.mwspermissionassignment import (

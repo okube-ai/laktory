@@ -14,6 +14,7 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.qualitymonitor_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.qualitymonitor_base import QualityMonitorBase
 from laktory.models.resources.pulumiresource import PulumiResource
 

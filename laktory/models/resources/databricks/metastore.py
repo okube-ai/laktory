@@ -4,6 +4,7 @@ from pydantic import Field
 
 from laktory.models.grants.metastoregrant import MetastoreGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks.metastore_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.metastore_base import MetastoreBase
 from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess

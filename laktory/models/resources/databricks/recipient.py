@@ -1,3 +1,4 @@
+from laktory.models.resources.databricks.recipient_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.recipient_base import RecipientBase
 from laktory.models.resources.pulumiresource import PulumiResource
 

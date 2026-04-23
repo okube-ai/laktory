@@ -7,6 +7,7 @@ from pydantic import model_validator
 
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.job_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.job_base import JobBase
 from laktory.models.resources.databricks.job_base import JobTask
 from laktory.models.resources.databricks.permissions import Permissions

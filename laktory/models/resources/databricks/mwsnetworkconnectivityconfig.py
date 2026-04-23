@@ -3,6 +3,7 @@ from typing import Union
 from pydantic import Field
 
 from laktory.models.resources.databricks.mwsnccbinding import MwsNccBinding
+from laktory.models.resources.databricks.mwsnetworkconnectivityconfig_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.mwsnetworkconnectivityconfig_base import (
     MwsNetworkConnectivityConfigBase,
 )

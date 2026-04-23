@@ -5,6 +5,7 @@ from pydantic import Field
 from laktory._logger import get_logger
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks.table_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.table_base import TableBase
 from laktory.models.resources.pulumiresource import PulumiResource
 

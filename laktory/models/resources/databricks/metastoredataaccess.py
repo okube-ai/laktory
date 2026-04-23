@@ -3,6 +3,7 @@ from typing import Union
 from pydantic import Field
 
 from laktory.models.grants.storagecredentialgrant import StorageCredentialGrant
+from laktory.models.resources.databricks.metastoredataaccess_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.metastoredataaccess_base import (
     MetastoreDataAccessBase,
 )

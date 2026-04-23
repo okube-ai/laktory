@@ -1,3 +1,4 @@
+from laktory.models.resources.databricks.userrole_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.userrole_base import UserRoleBase
 from laktory.models.resources.pulumiresource import PulumiResource
 

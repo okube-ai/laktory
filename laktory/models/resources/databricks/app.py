@@ -5,6 +5,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.app_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.app_base import AppBase
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource

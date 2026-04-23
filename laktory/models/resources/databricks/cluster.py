@@ -5,6 +5,7 @@ from pydantic import Field
 
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.cluster_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.cluster_base import ClusterBase
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource

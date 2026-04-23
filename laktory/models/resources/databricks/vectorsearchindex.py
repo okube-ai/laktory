@@ -6,6 +6,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.vectorsearchindex_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.vectorsearchindex_base import (
     VectorSearchIndexBase,
 )

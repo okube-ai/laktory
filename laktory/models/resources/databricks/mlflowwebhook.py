@@ -1,5 +1,6 @@
 from pydantic import ConfigDict
 
+from laktory.models.resources.databricks.mlflowwebhook_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.mlflowwebhook_base import MlflowWebhookBase
 from laktory.models.resources.pulumiresource import PulumiResource
 

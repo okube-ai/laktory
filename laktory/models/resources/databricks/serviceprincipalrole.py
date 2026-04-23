@@ -1,3 +1,4 @@
+from laktory.models.resources.databricks.serviceprincipalrole_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.serviceprincipalrole_base import (
     ServicePrincipalRoleBase,
 )

@@ -3,6 +3,7 @@ from typing import Union
 from pydantic import Field
 
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.mlflowexperiment_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.mlflowexperiment_base import (
     MlflowExperimentBase,
 )

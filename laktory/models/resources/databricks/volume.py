@@ -4,6 +4,7 @@ from typing import Union
 from pydantic import Field
 
 from laktory.models.grants.volumegrant import VolumeGrant
+from laktory.models.resources.databricks.volume_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.volume_base import VolumeBase
 from laktory.models.resources.pulumiresource import PulumiResource
 

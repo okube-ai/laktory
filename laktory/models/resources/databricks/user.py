@@ -9,6 +9,7 @@ from laktory.models.resources.databricks.groupmember import GroupMember
 from laktory.models.resources.databricks.mwspermissionassignment import (
     MwsPermissionAssignment,
 )
+from laktory.models.resources.databricks.user_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.user_base import UserBase
 from laktory.models.resources.databricks.userrole import UserRole
 from laktory.models.resources.pulumiresource import PulumiResource

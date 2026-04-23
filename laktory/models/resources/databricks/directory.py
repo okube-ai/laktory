@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks.directory_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.directory_base import DirectoryBase
 from laktory.models.resources.pulumiresource import PulumiResource
 

@@ -4,6 +4,7 @@ from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.storagecredentialgrant import StorageCredentialGrant
+from laktory.models.resources.databricks.storagecredential_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.storagecredential_base import (
     StorageCredentialBase,
 )

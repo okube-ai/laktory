@@ -3,6 +3,7 @@ from typing import Union
 from pydantic import Field
 
 from laktory.models.grants.externallocationgrant import ExternalLocationGrant
+from laktory.models.resources.databricks.externallocation_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.externallocation_base import (
     ExternalLocationBase,
 )
