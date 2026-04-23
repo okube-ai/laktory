@@ -99,6 +99,24 @@ def extract_lookup_class(override_file: Path) -> str | None:
     return m.group(1) if m else None
 
 
+def extract_override_helper_classes(
+    override_file: Path, public_class: str, already_known: set[str]
+) -> list[str]:
+    """Return names of hand-authored helper classes defined in the override file.
+
+    Excludes the public class, the Lookup class, and anything already collected
+    from the *_base __all__ to avoid duplicates.
+    """
+    text = override_file.read_text()
+    return [
+        m.group(1)
+        for m in re.finditer(r"^class\s+(\w+)\s*\(", text, re.MULTILINE)
+        if m.group(1) not in already_known
+        and m.group(1) != public_class
+        and not m.group(1).endswith("Lookup")
+    ]
+
+
 def read_base_all(base_file: Path) -> list[str]:
     """Parse __all__ from a *_base.py file, excluding the *Base entry."""
     text = base_file.read_text()
@@ -155,6 +173,10 @@ def main(targets: list[str] | None = None) -> None:
         lookup_class = extract_lookup_class(override_file)
         if lookup_class:
             nested_classes.append(lookup_class)
+        override_helpers = extract_override_helper_classes(
+            override_file, public_class, set(nested_classes)
+        )
+        nested_classes.extend(override_helpers)
 
         content = emit_doc(public_class, override_file.stem, nested_classes)
         doc_path = DOCS_DIR / f"{override_file.stem}.md"
