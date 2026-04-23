@@ -1,14 +1,14 @@
 # Release History
 
-## [0.10.1] - Unreleased
+## [0.11.0] - Unreleased
 ### Added
 * n/a
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Automated resources definition by using Terraform provider.
 ### Breaking changes
-* n/a
+* Renamed some fields to be consistent with Terraform and Databricks API.
 
 ## [0.10.0] - 2026-04-16
 ### Added
