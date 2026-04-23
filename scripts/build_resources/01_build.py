@@ -242,15 +242,17 @@ def emit_block_class(
     block: dict,
     descriptions: dict[str, str],
     indent: int = 0,
-) -> tuple[list[str], list[str]]:
+) -> tuple[list[str], list[str], list[str]]:
     """
     Recursively emit a nested block as a Pydantic BaseModel class.
 
-    Returns (nested_classes, field_lines) where nested_classes contains
-    companion class code that must be emitted before this class.
+    Returns (nested_classes, field_lines, all_class_names) where nested_classes
+    contains companion class code that must be emitted before this class and
+    all_class_names is the list of every class name defined (including nested ones).
     """
     pre_classes: list[str] = []
     lines: list[str] = []
+    all_class_names: list[str] = [class_name]
 
     lines.append(f"class {class_name}(BaseModel):")
 
@@ -298,12 +300,13 @@ def emit_block_class(
             continue
 
         nested_class = block_class_name(class_name, bt_name)
-        nested_pre, nested_lines = emit_block_class(
+        nested_pre, nested_lines, nested_names = emit_block_class(
             nested_class, bt_def["block"], descriptions
         )
         pre_classes.extend(nested_pre)
         pre_classes.append("\n".join(nested_lines))
         pre_classes.append("")  # blank line between classes
+        all_class_names.extend(nested_names)
 
         nesting_mode = bt_def.get("nesting_mode", "list")
         max_items = bt_def.get("max_items", None)
@@ -335,7 +338,7 @@ def emit_block_class(
     if not has_fields:
         lines.append("    pass")
 
-    return pre_classes, lines
+    return pre_classes, lines, all_class_names
 
 
 def emit_resource_module(
@@ -365,6 +368,7 @@ def emit_resource_module(
     # --- Build nested classes ---
     pre_classes: list[str] = []
     nested_field_lines: list[str] = []
+    all_class_names: list[str] = []
 
     for bt_name, bt_def in sorted(block_types.items()):
         if bt_name in ALWAYS_SKIP_BLOCK_TYPES:
@@ -373,12 +377,13 @@ def emit_resource_module(
             continue
 
         nested_class = block_class_name(class_name, bt_name)
-        nested_pre, nested_lines = emit_block_class(
+        nested_pre, nested_lines, nested_names = emit_block_class(
             nested_class, bt_def["block"], descriptions
         )
         pre_classes.extend(nested_pre)
         pre_classes.append("\n".join(nested_lines))
         pre_classes.append("")
+        all_class_names.extend(nested_names)
 
         nesting_mode = bt_def.get("nesting_mode", "list")
         max_items = bt_def.get("max_items", None)
@@ -407,6 +412,7 @@ def emit_resource_module(
             )
 
     # --- Build main class ---
+    all_class_names.append(f"{class_name}Base")
     main_lines: list[str] = []
     main_lines.append(f"class {class_name}Base(BaseModel, TerraformResource):")
     main_lines.append('    """')
@@ -532,8 +538,10 @@ def emit_resource_module(
 
     """)
 
-    parts = [header, body]
-    parts.append("")  # trailing newline
+    all_str = ", ".join(f'"{n}"' for n in all_class_names)
+    all_decl = f"__all__ = [{all_str}]"
+
+    parts = [header, body, all_decl, ""]
 
     return "\n".join(parts)
 
@@ -559,6 +567,7 @@ def main():
 
     out_dir = OUTPUT_DIR
     written: list[Path] = []
+    written_keys: list[str] = []
 
     for resource_key in DEFAULT_TARGETS:
         if resource_key not in resource_schemas:
@@ -577,6 +586,7 @@ def main():
         out_path = out_dir / fname
         out_path.write_text(code)
         written.append(out_path)
+        written_keys.append(resource_key)
         print(
             f"[OK]   {resource_key} -> {out_path.relative_to(Path(__file__).parent.parent.parent)}"
         )
@@ -587,6 +597,9 @@ def main():
         subprocess.run(["ruff", "format"] + str_paths, check=True)
         subprocess.run(["ruff", "check", "--fix"] + str_paths, check=True)
         print("[OK]   ruff format + check applied")
+
+        update_api = Path(__file__).parent / "02_update_api.py"
+        subprocess.run([sys.executable, str(update_api)] + written_keys, check=True)
 
 
 if __name__ == "__main__":
