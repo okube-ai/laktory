@@ -3,8 +3,8 @@ from laktory.models.resources.databricks import SecretScope
 scope = SecretScope(
     name="my-scope",
     secrets=[
-        {"key": "s1", "value": "v1"},
-        {"key": "s2", "value": "v2"},
+        {"key": "s1", "string_value": "v1"},
+        {"key": "s2", "string_value": "v2"},
     ],
 )
 

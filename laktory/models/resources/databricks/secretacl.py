@@ -1,18 +1,11 @@
-from pydantic import Field
-
-from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.secretacl_base import SecretAclBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class SecretAcl(BaseModel, PulumiResource, TerraformResource):
+class SecretAcl(SecretAclBase, PulumiResource):
     """
     Databricks secret ACL
     """
-
-    permission: str = Field(None, description="Scope associated with the secret")
-    principal: str = Field(None, description="Key associated with the secret.")
-    scope: str = Field(None, description="Value associated with the secret")
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -29,11 +22,3 @@ class SecretAcl(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_resource_type(self) -> str:
         return "databricks:SecretAcl"
-
-    # ----------------------------------------------------------------------- #
-    # Terraform Properties                                                    #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_secret_acl"

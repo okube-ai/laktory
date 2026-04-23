@@ -33,8 +33,14 @@ class SecretScope(SecretScopeBase, PulumiResource):
     ss = models.resources.databricks.SecretScope(
         name="azure",
         secrets=[
-            {"key": "keyvault-url", "value": "https://my-secrets.vault.azure.net/"},
-            {"key": "client-id", "value": "f461daa2-c281-4166-bc3e-538b90223184"},
+            {
+                "key": "keyvault-url",
+                "string_value": "https://my-secrets.vault.azure.net/",
+            },
+            {
+                "key": "client-id",
+                "string_value": "f461daa2-c281-4166-bc3e-538b90223184",
+            },
         ],
         permissions=[
             {"permission": "READ", "principal": "role-metastore-admins"},
@@ -72,7 +78,7 @@ class SecretScope(SecretScopeBase, PulumiResource):
             resources += [
                 Secret(
                     key=s.key,
-                    value=s.value,
+                    string_value=s.string_value,
                     scope=f"${{resources.{self.resource_name}.id}}",
                 )
             ]

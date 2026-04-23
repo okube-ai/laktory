@@ -26,9 +26,9 @@ def test_share_with_objects():
         comment="Test share with objects",
         objects=[obj],
     )
-    assert len(s.objects) == 1
-    assert s.objects[0].name == "my_table"
-    assert s.objects[0].data_object_type == "TABLE"
+    assert len(s.object) == 1
+    assert s.object[0].name == "my_table"
+    assert s.object[0].data_object_type == "TABLE"
 
 
 def test_share_pulumi_resource_type():
