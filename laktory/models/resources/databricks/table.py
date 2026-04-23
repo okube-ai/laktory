@@ -3,30 +3,12 @@ from typing import Union
 from pydantic import Field
 
 from laktory._logger import get_logger
-from laktory.models.basemodel import BaseModel
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.table_base import TableBase
 from laktory.models.resources.pulumiresource import PulumiResource
 
 logger = get_logger(__name__)
-
-
-class TableColumn(BaseModel):
-    name: str = Field(..., description="User-visible name of column")
-    comment: str = Field(None, description="User-supplied free-form text.")
-    identity: str = Field(
-        None,
-        description="Whether field is an identity column. Can be `default`, `always` or `unset`. It is `unset` by default.",
-    )
-    nullable: bool = Field(
-        None, description="Whether field is nullable (Default: `true`)"
-    )
-    type: str = Field(
-        None,
-        description="Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.",
-    )
-    type_json: str = Field(None, description="")
 
 
 class TableLookup(ResourceLookup):
@@ -58,6 +40,9 @@ class Table(TableBase, PulumiResource):
     * [Pulumi Databricks Table](https://www.pulumi.com/registry/packages/databricks/api-docs/sqltable/)
     """
 
+    catalog_name: str | None = Field(
+        None, description="Name of the catalog storing the table"
+    )
     grant: Union[TableGrant, list[TableGrant]] = Field(
         None,
         description="""
@@ -76,6 +61,9 @@ class Table(TableBase, PulumiResource):
         None,
         exclude=True,
         description="Specifications for looking up existing resource. Other attributes will be ignored.",
+    )
+    schema_name: str | None = Field(
+        None, description="Name of the schema storing the table"
     )
 
     # ----------------------------------------------------------------------- #

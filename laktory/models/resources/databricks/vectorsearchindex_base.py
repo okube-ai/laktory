@@ -6,7 +6,6 @@ from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -40,16 +39,14 @@ class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
     source_table: str | None = Field(None)
     embedding_source_columns: (
         list[VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumns] | None
-    ) = PluralField(
+    ) = Field(
         None,
-        plural="embedding_source_columnss",
         description="(required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:",
     )
     embedding_vector_columns: (
         list[VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumns] | None
-    ) = PluralField(
+    ) = Field(
         None,
-        plural="embedding_vector_columnss",
         description="(required if `embedding_source_columns` isn't provided)  array of objects representing columns that contain the embedding vectors. Each entry consists of:",
     )
 
@@ -81,16 +78,14 @@ class VectorSearchIndexDirectAccessIndexSpec(BaseModel):
     )
     embedding_source_columns: (
         list[VectorSearchIndexDirectAccessIndexSpecEmbeddingSourceColumns] | None
-    ) = PluralField(
+    ) = Field(
         None,
-        plural="embedding_source_columnss",
         description="(required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:",
     )
     embedding_vector_columns: (
         list[VectorSearchIndexDirectAccessIndexSpecEmbeddingVectorColumns] | None
-    ) = PluralField(
+    ) = Field(
         None,
-        plural="embedding_vector_columnss",
         description="(required if `embedding_source_columns` isn't provided)  array of objects representing columns that contain the embedding vectors. Each entry consists of:",
     )
 

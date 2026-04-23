@@ -5,7 +5,6 @@ from __future__ import annotations
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -58,9 +57,8 @@ class RecipientBase(BaseModel, TerraformResource):
         None,
         description="Recipient properties - object consisting of following fields: * `properties` (Required) a map of string key-value pairs with recipient's properties.  Properties with name starting with `databricks.` are reserved",
     )
-    tokens: list[RecipientTokens] | None = PluralField(
+    tokens: list[RecipientTokens] | None = Field(
         None,
-        plural="tokenss",
         description="List of Recipient Tokens. This field is only present when the authentication_type is TOKEN. Each list element is an object with following attributes:",
     )
 

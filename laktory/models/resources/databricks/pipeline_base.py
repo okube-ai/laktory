@@ -141,9 +141,7 @@ class PipelineCluster(BaseModel):
     azure_attributes: PipelineClusterAzureAttributes | None = Field(None)
     cluster_log_conf: PipelineClusterClusterLogConf | None = Field(None)
     gcp_attributes: PipelineClusterGcpAttributes | None = Field(None)
-    init_scripts: list[PipelineClusterInitScripts] | None = PluralField(
-        None, plural="init_scripts"
-    )
+    init_scripts: list[PipelineClusterInitScripts] | None = Field(None)
 
 
 class PipelineDeployment(BaseModel):
@@ -258,7 +256,7 @@ class PipelineIngestionDefinitionObjectsReportTableConfigurationWorkdayReportPar
             PipelineIngestionDefinitionObjectsReportTableConfigurationWorkdayReportParametersReportParameters
         ]
         | None
-    ) = PluralField(None, plural="report_parameterss")
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsReportTableConfiguration(BaseModel):
@@ -322,7 +320,7 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptionsFileI
             PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptionsFileIngestionOptionsFileFilters
         ]
         | None
-    ) = PluralField(None, plural="file_filterss")
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptions(BaseModel):
@@ -371,7 +369,7 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptionsF
             PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptionsFileIngestionOptionsFileFilters
         ]
         | None
-    ) = PluralField(None, plural="file_filterss")
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptions(
@@ -447,7 +445,7 @@ class PipelineIngestionDefinitionObjectsSchemaTableConfigurationWorkdayReportPar
             PipelineIngestionDefinitionObjectsSchemaTableConfigurationWorkdayReportParametersReportParameters
         ]
         | None
-    ) = PluralField(None, plural="report_parameterss")
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsSchemaTableConfiguration(BaseModel):
@@ -514,7 +512,7 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptionsFileIn
             PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptionsFileIngestionOptionsFileFilters
         ]
         | None
-    ) = PluralField(None, plural="file_filterss")
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptions(BaseModel):
@@ -563,7 +561,7 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptionsFi
             PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptionsFileIngestionOptionsFileFilters
         ]
         | None
-    ) = PluralField(None, plural="file_filterss")
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptions(
@@ -639,7 +637,7 @@ class PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportPara
             PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportParametersReportParameters
         ]
         | None
-    ) = PluralField(None, plural="report_parameterss")
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsTableTableConfiguration(BaseModel):
@@ -742,7 +740,7 @@ class PipelineIngestionDefinitionTableConfigurationWorkdayReportParameters(BaseM
             PipelineIngestionDefinitionTableConfigurationWorkdayReportParametersReportParameters
         ]
         | None
-    ) = PluralField(None, plural="report_parameterss")
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionTableConfiguration(BaseModel):
@@ -783,16 +781,14 @@ class PipelineIngestionDefinition(BaseModel):
     full_refresh_window: PipelineIngestionDefinitionFullRefreshWindow | None = Field(
         None
     )
-    objects: list[PipelineIngestionDefinitionObjects] | None = PluralField(
+    objects: list[PipelineIngestionDefinitionObjects] | None = Field(
         None,
-        plural="objectss",
         description="Required. Settings specifying tables to replicate and the destination for the replicated tables",
     )
     source_configurations: (
         list[PipelineIngestionDefinitionSourceConfigurations] | None
-    ) = PluralField(
+    ) = Field(
         None,
-        plural="source_configurationss",
         description="Array of objects describing top-level source configurations. See the [REST API docs](https://docs.databricks.com/api/workspace/pipelines/create#ingestion_definition-source_configurations) for reference",
     )
     table_configuration: PipelineIngestionDefinitionTableConfiguration | None = Field(
@@ -987,9 +983,7 @@ class PipelineBase(BaseModel, TerraformResource):
         description="The definition of a gateway pipeline to support CDC. Consists of following attributes:",
     )
     ingestion_definition: PipelineIngestionDefinition | None = Field(None)
-    latest_updates: list[PipelineLatestUpdates] | None = PluralField(
-        None, plural="latest_updatess"
-    )
+    latest_updates: list[PipelineLatestUpdates] | None = Field(None)
     library: list[PipelineLibrary] | None = PluralField(None, plural="libraries")
     notification: list[PipelineNotification] | None = PluralField(
         None, plural="notifications"

@@ -5,7 +5,6 @@ from __future__ import annotations
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -28,8 +27,8 @@ class MlflowModelBase(BaseModel, TerraformResource):
     description: str | None = Field(
         None, description="The description of the MLflow model"
     )
-    tags: list[MlflowModelTags] | None = PluralField(
-        None, plural="tagss", description="Tags for the MLflow model"
+    tags: list[MlflowModelTags] | None = Field(
+        None, description="Tags for the MLflow model"
     )
 
     @property

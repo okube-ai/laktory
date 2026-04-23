@@ -44,8 +44,6 @@ def test_metastore():
 
     assert data == {
         "api": None,
-        "created_at": None,
-        "created_by": None,
         "data_accesses": [
             {
                 "api": None,
@@ -99,7 +97,6 @@ def test_metastore():
             }
         ],
         "grants_provider": "${resources.provider-workspace-neptune}",
-        "metastore_id": None,
         "name": "metastore-lakehouse",
         "owner": None,
         "privilege_model_version": None,
@@ -107,8 +104,6 @@ def test_metastore():
         "storage_root": "abfss://metastore@o3stglakehousedev.dfs.core.windows.net/",
         "storage_root_credential_id": None,
         "storage_root_credential_name": None,
-        "updated_at": None,
-        "updated_by": None,
         "workspace_assignments": [
             {
                 "api": None,

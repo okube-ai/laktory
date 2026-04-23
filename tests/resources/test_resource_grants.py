@@ -13,6 +13,7 @@ def test_grants():
         name="slv_stock_prices",
         catalog_name="dev",
         schema_name="markets",
+        table_type="MANAGED",
         grant={
             "principal": "users",
             "privileges": [
@@ -31,6 +32,7 @@ def test_grants():
         name="slv_stock_prices",
         catalog_name="dev",
         schema_name="markets",
+        table_type="MANAGED",
         grant=[
             {
                 "principal": "users",
@@ -57,6 +59,7 @@ def test_grants():
         name="slv_stock_prices",
         catalog_name="dev",
         schema_name="markets",
+        table_type="MANAGED",
         grants=[
             {
                 "principal": "users",

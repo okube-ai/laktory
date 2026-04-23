@@ -5,7 +5,6 @@ from __future__ import annotations
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -36,9 +35,8 @@ class AccessControlRuleSetBase(BaseModel, TerraformResource):
         None,
         description="Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host",
     )
-    grant_rules: list[AccessControlRuleSetGrantRules] | None = PluralField(
+    grant_rules: list[AccessControlRuleSetGrantRules] | None = Field(
         None,
-        plural="grant_ruless",
         description="The access control rules to be granted by this rule set, consisting of a set of principals and roles to be granted to them",
     )
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -45,18 +44,16 @@ class QualityMonitorBase(BaseModel, TerraformResource):
         None,
         description="Whether to skip creating a default dashboard summarizing data quality metrics.  (Can't be updated after creation)",
     )
-    slicing_exprs: list[str] | None = PluralField(
+    slicing_exprs: list[str] | None = Field(
         None,
-        plural="slicing_exprss",
         description="List of column expressions to slice data with for targeted analysis. The data is grouped by each expression independently, resulting in a separate slice for each predicate and its complements. For high-cardinality columns, only the top 100 unique values by frequency will generate slices",
     )
     warehouse_id: str | None = Field(
         None,
         description="Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used.  (Can't be updated after creation)",
     )
-    custom_metrics: list[QualityMonitorCustomMetrics] | None = PluralField(
+    custom_metrics: list[QualityMonitorCustomMetrics] | None = Field(
         None,
-        plural="custom_metricss",
         description="Custom metrics to compute on the monitored table. These can be aggregate metrics, derived metrics (from already computed aggregate metrics), or drift metrics (comparing metrics across time windows)",
     )
 

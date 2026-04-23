@@ -280,9 +280,8 @@ class ClusterBase(BaseModel, TerraformResource):
         None,
         description="An object containing a set of optional, user-specified environment variable key-value pairs. Please note that key-value pair of the form (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the driver and workers.",
     )
-    ssh_public_keys: list[str] | None = PluralField(
+    ssh_public_keys: list[str] | None = Field(
         None,
-        plural="ssh_public_keys",
         description="SSH public key contents that will be added to each Spark node in this cluster. The corresponding private keys can be used to login with the user name `ubuntu` on port `2200`. Up to 10 keys can be specified.",
     )
     total_initial_remote_disk_size: float | None = Field(
@@ -321,9 +320,8 @@ class ClusterBase(BaseModel, TerraformResource):
         None,
         description="Attributes related to clusters running on Google Cloud Platform. If not specified at cluster creation, a set of default values will be used.",
     )
-    init_scripts: list[ClusterInitScripts] | None = PluralField(
+    init_scripts: list[ClusterInitScripts] | None = Field(
         None,
-        plural="init_scripts",
         description="The configuration for storing init scripts. Any number of destinations can be specified. The scripts are executed sequentially in the order provided. If `cluster_log_conf` is specified, init script logs are sent to `<destination>/<cluster-ID>/init_scripts`.",
     )
     library: list[ClusterLibrary] | None = PluralField(None, plural="libraries")

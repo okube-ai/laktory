@@ -70,6 +70,8 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
             "/Workspace"
             + self.inject_vars_into_dump({"path": self.config_file.path})["path"]
         )
+        if self.configuration is None:
+            self.configuration = {}
         self.configuration["pipeline_name"] = pl.name  # only for reference
         self.configuration["requirements"] = json.dumps(_requirements)
         self.configuration["config_filepath"] = _path

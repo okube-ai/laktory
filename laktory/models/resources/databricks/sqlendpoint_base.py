@@ -5,7 +5,6 @@ from __future__ import annotations
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -23,9 +22,7 @@ class SqlEndpointTagsCustomTags(BaseModel):
 
 
 class SqlEndpointTags(BaseModel):
-    custom_tags: list[SqlEndpointTagsCustomTags] | None = PluralField(
-        None, plural="custom_tagss"
-    )
+    custom_tags: list[SqlEndpointTagsCustomTags] | None = Field(None)
 
 
 class SqlEndpointTimeouts(BaseModel):

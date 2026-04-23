@@ -5,7 +5,6 @@ from __future__ import annotations
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -50,9 +49,8 @@ class MlflowWebhookBase(BaseModel, TerraformResource):
 
     __doc_generated_base__ = True
 
-    events: list[str] = PluralField(
+    events: list[str] = Field(
         ...,
-        plural="eventss",
         description="The list of events that will trigger execution of Databricks job or POSTing to an URL, for example, `MODEL_VERSION_CREATED`, `MODEL_VERSION_TRANSITIONED_STAGE`, `TRANSITION_REQUEST_CREATED`, etc.  Refer to the [Webhooks API documentation](https://docs.databricks.com/dev-tools/api/latest/mlflow.html#operation/create-registry-webhook) for a full list of supported events",
     )
     description: str | None = Field(

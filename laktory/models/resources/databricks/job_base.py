@@ -160,9 +160,8 @@ class JobHealthRules(BaseModel):
 
 
 class JobHealth(BaseModel):
-    rules: list[JobHealthRules] | None = PluralField(
+    rules: list[JobHealthRules] | None = Field(
         None,
-        plural="ruless",
         description="(List) list of rules that are represented as objects with the following attributes:",
     )
 
@@ -383,9 +382,7 @@ class JobJobClusterNewCluster(BaseModel):
         JobJobClusterNewClusterDriverNodeTypeFlexibility | None
     ) = Field(None)
     gcp_attributes: JobJobClusterNewClusterGcpAttributes | None = Field(None)
-    init_scripts: list[JobJobClusterNewClusterInitScripts] | None = PluralField(
-        None, plural="init_scripts"
-    )
+    init_scripts: list[JobJobClusterNewClusterInitScripts] | None = Field(None)
     library: list[JobJobClusterNewClusterLibrary] | None = PluralField(
         None,
         plural="libraries",
@@ -652,9 +649,7 @@ class JobNewCluster(BaseModel):
         None
     )
     gcp_attributes: JobNewClusterGcpAttributes | None = Field(None)
-    init_scripts: list[JobNewClusterInitScripts] | None = PluralField(
-        None, plural="init_scripts"
-    )
+    init_scripts: list[JobNewClusterInitScripts] | None = Field(None)
     library: list[JobNewClusterLibrary] | None = PluralField(
         None,
         plural="libraries",
@@ -816,9 +811,7 @@ class JobTaskAlertTask(BaseModel):
         description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
     workspace_path: str | None = Field(None)
-    subscribers: list[JobTaskAlertTaskSubscribers] | None = PluralField(
-        None, plural="subscriberss"
-    )
+    subscribers: list[JobTaskAlertTaskSubscribers] | None = Field(None)
 
 
 class JobTaskCleanRoomsNotebookTask(BaseModel):
@@ -863,9 +856,7 @@ class JobTaskDashboardTaskSubscription(BaseModel):
         None, description="string specifying a custom subject of email sent"
     )
     paused: bool | None = Field(None)
-    subscribers: list[JobTaskDashboardTaskSubscriptionSubscribers] | None = PluralField(
-        None, plural="subscriberss"
-    )
+    subscribers: list[JobTaskDashboardTaskSubscriptionSubscribers] | None = Field(None)
 
 
 class JobTaskDashboardTask(BaseModel):
@@ -975,9 +966,7 @@ class JobTaskForEachTaskTaskAlertTask(BaseModel):
         description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
     workspace_path: str | None = Field(None)
-    subscribers: list[JobTaskForEachTaskTaskAlertTaskSubscribers] | None = PluralField(
-        None, plural="subscriberss"
-    )
+    subscribers: list[JobTaskForEachTaskTaskAlertTaskSubscribers] | None = Field(None)
 
 
 class JobTaskForEachTaskTaskCleanRoomsNotebookTask(BaseModel):
@@ -1024,7 +1013,7 @@ class JobTaskForEachTaskTaskDashboardTaskSubscription(BaseModel):
     paused: bool | None = Field(None)
     subscribers: (
         list[JobTaskForEachTaskTaskDashboardTaskSubscriptionSubscribers] | None
-    ) = PluralField(None, plural="subscriberss")
+    ) = Field(None)
 
 
 class JobTaskForEachTaskTaskDashboardTask(BaseModel):
@@ -1154,9 +1143,8 @@ class JobTaskForEachTaskTaskHealthRules(BaseModel):
 
 
 class JobTaskForEachTaskTaskHealth(BaseModel):
-    rules: list[JobTaskForEachTaskTaskHealthRules] | None = PluralField(
+    rules: list[JobTaskForEachTaskTaskHealthRules] | None = Field(
         None,
-        plural="ruless",
         description="(List) list of rules that are represented as objects with the following attributes:",
     )
 
@@ -1409,9 +1397,7 @@ class JobTaskForEachTaskTaskNewCluster(BaseModel):
         JobTaskForEachTaskTaskNewClusterDriverNodeTypeFlexibility | None
     ) = Field(None)
     gcp_attributes: JobTaskForEachTaskTaskNewClusterGcpAttributes | None = Field(None)
-    init_scripts: list[JobTaskForEachTaskTaskNewClusterInitScripts] | None = (
-        PluralField(None, plural="init_scripts")
-    )
+    init_scripts: list[JobTaskForEachTaskTaskNewClusterInitScripts] | None = Field(None)
     library: list[JobTaskForEachTaskTaskNewClusterLibrary] | None = PluralField(
         None,
         plural="libraries",
@@ -1498,9 +1484,7 @@ class JobTaskForEachTaskTaskPowerBiTask(BaseModel):
         description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
     power_bi_model: JobTaskForEachTaskTaskPowerBiTaskPowerBiModel | None = Field(None)
-    tables: list[JobTaskForEachTaskTaskPowerBiTaskTables] | None = PluralField(
-        None, plural="tabless"
-    )
+    tables: list[JobTaskForEachTaskTaskPowerBiTaskTables] | None = Field(None)
 
 
 class JobTaskForEachTaskTaskPythonWheelTask(BaseModel):
@@ -1590,12 +1574,9 @@ class JobTaskForEachTaskTaskSqlTaskAlert(BaseModel):
     pause_subscriptions: bool | None = Field(
         None, description="flag that specifies if subscriptions are paused or not"
     )
-    subscriptions: list[JobTaskForEachTaskTaskSqlTaskAlertSubscriptions] | None = (
-        PluralField(
-            None,
-            plural="subscriptionss",
-            description="a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier",
-        )
+    subscriptions: list[JobTaskForEachTaskTaskSqlTaskAlertSubscriptions] | None = Field(
+        None,
+        description="a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier",
     )
 
 
@@ -1619,9 +1600,8 @@ class JobTaskForEachTaskTaskSqlTaskDashboard(BaseModel):
         None, description="flag that specifies if subscriptions are paused or not"
     )
     subscriptions: list[JobTaskForEachTaskTaskSqlTaskDashboardSubscriptions] | None = (
-        PluralField(
+        Field(
             None,
-            plural="subscriptionss",
             description="a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier",
         )
     )
@@ -1876,9 +1856,8 @@ class JobTaskHealthRules(BaseModel):
 
 
 class JobTaskHealth(BaseModel):
-    rules: list[JobTaskHealthRules] | None = PluralField(
+    rules: list[JobTaskHealthRules] | None = Field(
         None,
-        plural="ruless",
         description="(List) list of rules that are represented as objects with the following attributes:",
     )
 
@@ -2125,9 +2104,7 @@ class JobTaskNewCluster(BaseModel):
         Field(None)
     )
     gcp_attributes: JobTaskNewClusterGcpAttributes | None = Field(None)
-    init_scripts: list[JobTaskNewClusterInitScripts] | None = PluralField(
-        None, plural="init_scripts"
-    )
+    init_scripts: list[JobTaskNewClusterInitScripts] | None = Field(None)
     library: list[JobTaskNewClusterLibrary] | None = PluralField(
         None,
         plural="libraries",
@@ -2214,7 +2191,7 @@ class JobTaskPowerBiTask(BaseModel):
         description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
     power_bi_model: JobTaskPowerBiTaskPowerBiModel | None = Field(None)
-    tables: list[JobTaskPowerBiTaskTables] | None = PluralField(None, plural="tabless")
+    tables: list[JobTaskPowerBiTaskTables] | None = Field(None)
 
 
 class JobTaskPythonWheelTask(BaseModel):
@@ -2304,9 +2281,8 @@ class JobTaskSqlTaskAlert(BaseModel):
     pause_subscriptions: bool | None = Field(
         None, description="flag that specifies if subscriptions are paused or not"
     )
-    subscriptions: list[JobTaskSqlTaskAlertSubscriptions] | None = PluralField(
+    subscriptions: list[JobTaskSqlTaskAlertSubscriptions] | None = Field(
         None,
-        plural="subscriptionss",
         description="a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier",
     )
 
@@ -2330,9 +2306,8 @@ class JobTaskSqlTaskDashboard(BaseModel):
     pause_subscriptions: bool | None = Field(
         None, description="flag that specifies if subscriptions are paused or not"
     )
-    subscriptions: list[JobTaskSqlTaskDashboardSubscriptions] | None = PluralField(
+    subscriptions: list[JobTaskSqlTaskDashboardSubscriptions] | None = Field(
         None,
-        plural="subscriptionss",
         description="a list of subscription blocks consisting out of one of the required fields: `user_name` for user emails or `destination_id` - for Alert destination's identifier",
     )
 

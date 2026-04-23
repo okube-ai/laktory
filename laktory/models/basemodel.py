@@ -87,7 +87,9 @@ class ModelMetaclass(_ModelMetaclass):
         for fname in list(namespace.keys()):
             value = namespace[fname]
             if isinstance(value, _PluralFieldSpec):
-                plural = value.plural or (fname + "s")
+                plural = value.plural or (
+                    fname if fname.endswith("s") else (fname + "s")
+                )
                 fi = value.field_info
                 alias = AliasChoices(plural)
                 fi.validation_alias = alias

@@ -178,8 +178,8 @@ class QueryBase(BaseModel, TerraformResource):
         serialization_alias="schema",
         validation_alias=AliasChoices("schema", "schema_"),
     )
-    tags: list[str] | None = PluralField(
-        None, plural="tagss", description="Tags that will be added to the query"
+    tags: list[str] | None = Field(
+        None, description="Tags that will be added to the query"
     )
     parameter: list[QueryParameter] | None = PluralField(
         None,

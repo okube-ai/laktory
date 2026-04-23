@@ -5,7 +5,6 @@ from __future__ import annotations
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -38,8 +37,8 @@ class MlflowExperimentBase(BaseModel, TerraformResource):
     experiment_id: str | None = Field(None)
     last_update_time: float | None = Field(None)
     lifecycle_stage: str | None = Field(None)
-    tags: list[MlflowExperimentTags] | None = PluralField(
-        None, plural="tagss", description="Tags for the MLflow experiment"
+    tags: list[MlflowExperimentTags] | None = Field(
+        None, description="Tags for the MLflow experiment"
     )
     timeouts: MlflowExperimentTimeouts | None = Field(None)
 

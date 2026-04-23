@@ -5,7 +5,6 @@ from __future__ import annotations
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -96,13 +95,13 @@ class MwsNetworkConnectivityConfigEgressConfigTargetRules(BaseModel):
     aws_private_endpoint_rules: (
         list[MwsNetworkConnectivityConfigEgressConfigTargetRulesAwsPrivateEndpointRules]
         | None
-    ) = PluralField(None, plural="aws_private_endpoint_ruless")
+    ) = Field(None)
     azure_private_endpoint_rules: (
         list[
             MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRules
         ]
         | None
-    ) = PluralField(None, plural="azure_private_endpoint_ruless")
+    ) = Field(None)
 
 
 class MwsNetworkConnectivityConfigEgressConfig(BaseModel):

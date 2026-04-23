@@ -7,7 +7,6 @@ from typing import Any
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -40,10 +39,8 @@ class AppBase(BaseModel, TerraformResource):
     space: str | None = Field(None)
     telemetry_export_destinations: Any | None = Field(None)
     usage_policy_id: str | None = Field(None)
-    user_api_scopes: list[str] | None = PluralField(
-        None,
-        plural="user_api_scopess",
-        description="A list of api scopes granted to the user access token",
+    user_api_scopes: list[str] | None = Field(
+        None, description="A list of api scopes granted to the user access token"
     )
 
     @property

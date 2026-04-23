@@ -6,7 +6,6 @@ from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -19,7 +18,7 @@ class GrantBase(BaseModel, TerraformResource):
     __doc_generated_base__ = True
 
     principal: str = Field(...)
-    privileges: list[str] = PluralField(..., plural="privilegess")
+    privileges: list[str] = Field(...)
     catalog: str | None = Field(None)
     credential: str | None = Field(None)
     external_location: str | None = Field(None)

@@ -8,13 +8,13 @@ from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
 )
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.job import Job
-from laktory.models.resources.databricks.job import JobEnvironment
-from laktory.models.resources.databricks.job import JobEnvironmentSpec
-from laktory.models.resources.databricks.job import JobParameter
-from laktory.models.resources.databricks.job import JobTask
-from laktory.models.resources.databricks.job import JobTaskLibrary
-from laktory.models.resources.databricks.job import JobTaskLibraryPypi
-from laktory.models.resources.databricks.job import JobTaskPythonWheelTask
+from laktory.models.resources.databricks.job_base import JobEnvironment
+from laktory.models.resources.databricks.job_base import JobEnvironmentSpec
+from laktory.models.resources.databricks.job_base import JobParameter
+from laktory.models.resources.databricks.job_base import JobTask
+from laktory.models.resources.databricks.job_base import JobTaskLibrary
+from laktory.models.resources.databricks.job_base import JobTaskLibraryPypi
+from laktory.models.resources.databricks.job_base import JobTaskPythonWheelTask
 from laktory.models.resources.pulumiresource import PulumiResource
 
 logger = get_logger(__name__)
@@ -73,13 +73,14 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
     def update_from_parent(self):
         serverless = True
-        for c in self.job_cluster:
-            if c.job_cluster_key == "node-cluster":
-                serverless = False
-        if len(self.job_cluster) > 0 and serverless:
-            raise ValueError(
-                "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
-            )
+        if self.job_cluster:
+            for c in self.job_cluster:
+                if c.job_cluster_key == "node-cluster":
+                    serverless = False
+            if len(self.job_cluster) > 0 and serverless:
+                raise ValueError(
+                    "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
+                )
 
         pl = self.parent_pipeline
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -17,10 +16,8 @@ class MwsPermissionAssignmentBase(BaseModel, TerraformResource):
 
     __doc_generated_base__ = True
 
-    permissions: list[str] = PluralField(
-        ...,
-        plural="permissionss",
-        description="The list of workspace permissions to assign to the principal:",
+    permissions: list[str] = Field(
+        ..., description="The list of workspace permissions to assign to the principal:"
     )
     principal_id: float = Field(
         ...,

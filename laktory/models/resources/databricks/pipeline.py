@@ -26,11 +26,10 @@ class Pipeline(PipelineBase, PulumiResource):
     name: pl-stock-prices
 
     catalog: dev
-    target: finance
+    schema: finance
 
     clusters:
-      - name : default
-        node_type_id: Standard_DS3_v2
+      - node_type_id: Standard_DS3_v2
         autoscale:
           min_workers: 1
           max_workers: 2
