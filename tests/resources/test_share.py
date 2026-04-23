@@ -1,5 +1,5 @@
 from laktory.models.resources.databricks.share import Share
-from laktory.models.resources.databricks.share import ShareObject
+from laktory.models.resources.databricks.share_base import ShareObject
 
 share = Share(
     name="test-share",
