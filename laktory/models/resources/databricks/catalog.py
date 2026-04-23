@@ -7,12 +7,6 @@ from pydantic import model_validator
 from laktory.models.grants.cataloggrant import CatalogGrant
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.catalog_base import CatalogBase
-from laktory.models.resources.databricks.catalog_base import (  # noqa: F401 — re-export
-    CatalogEffectivePredictiveOptimizationFlag,
-)
-from laktory.models.resources.databricks.catalog_base import (  # noqa: F401 — re-export
-    CatalogProvisioningInfo,
-)
 from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.databricks.workspacebinding import WorkspaceBinding
 from laktory.models.resources.pulumiresource import PulumiResource

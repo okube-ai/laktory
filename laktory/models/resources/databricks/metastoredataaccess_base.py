@@ -84,3 +84,14 @@ class MetastoreDataAccessBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_metastore_data_access"
+
+
+__all__ = [
+    "MetastoreDataAccessAwsIamRole",
+    "MetastoreDataAccessAzureManagedIdentity",
+    "MetastoreDataAccessAzureServicePrincipal",
+    "MetastoreDataAccessCloudflareApiToken",
+    "MetastoreDataAccessDatabricksGcpServiceAccount",
+    "MetastoreDataAccessGcpServiceAccountKey",
+    "MetastoreDataAccessBase",
+]

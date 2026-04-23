@@ -52,3 +52,6 @@ class DashboardBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_dashboard"
+
+
+__all__ = ["DashboardBase"]

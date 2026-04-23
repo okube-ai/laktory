@@ -65,3 +65,11 @@ class RecipientBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_recipient"
+
+
+__all__ = [
+    "RecipientIpAccessList",
+    "RecipientPropertiesKvpairs",
+    "RecipientTokens",
+    "RecipientBase",
+]

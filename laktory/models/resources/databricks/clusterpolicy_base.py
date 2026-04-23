@@ -64,3 +64,12 @@ class ClusterPolicyBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_cluster_policy"
+
+
+__all__ = [
+    "ClusterPolicyLibraries",
+    "ClusterPolicyLibrariesCran",
+    "ClusterPolicyLibrariesMaven",
+    "ClusterPolicyLibrariesPypi",
+    "ClusterPolicyBase",
+]

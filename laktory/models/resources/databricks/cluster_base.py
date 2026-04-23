@@ -334,3 +334,38 @@ class ClusterBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_cluster"
+
+
+__all__ = [
+    "ClusterAutoscale",
+    "ClusterAwsAttributes",
+    "ClusterAzureAttributes",
+    "ClusterAzureAttributesLogAnalyticsInfo",
+    "ClusterClusterLogConf",
+    "ClusterClusterLogConfDbfs",
+    "ClusterClusterLogConfS3",
+    "ClusterClusterLogConfVolumes",
+    "ClusterClusterMountInfo",
+    "ClusterClusterMountInfoNetworkFilesystemInfo",
+    "ClusterDockerImage",
+    "ClusterDockerImageBasicAuth",
+    "ClusterDriverNodeTypeFlexibility",
+    "ClusterGcpAttributes",
+    "ClusterInitScripts",
+    "ClusterInitScriptsAbfss",
+    "ClusterInitScriptsDbfs",
+    "ClusterInitScriptsFile",
+    "ClusterInitScriptsGcs",
+    "ClusterInitScriptsS3",
+    "ClusterInitScriptsVolumes",
+    "ClusterInitScriptsWorkspace",
+    "ClusterLibrary",
+    "ClusterLibraryCran",
+    "ClusterLibraryMaven",
+    "ClusterLibraryPypi",
+    "ClusterTimeouts",
+    "ClusterWorkerNodeTypeFlexibility",
+    "ClusterWorkloadType",
+    "ClusterWorkloadTypeClients",
+    "ClusterBase",
+]

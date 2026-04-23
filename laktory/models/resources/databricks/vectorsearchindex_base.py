@@ -128,3 +128,15 @@ class VectorSearchIndexBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_vector_search_index"
+
+
+__all__ = [
+    "VectorSearchIndexDeltaSyncIndexSpec",
+    "VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumns",
+    "VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumns",
+    "VectorSearchIndexDirectAccessIndexSpec",
+    "VectorSearchIndexDirectAccessIndexSpecEmbeddingSourceColumns",
+    "VectorSearchIndexDirectAccessIndexSpecEmbeddingVectorColumns",
+    "VectorSearchIndexTimeouts",
+    "VectorSearchIndexBase",
+]

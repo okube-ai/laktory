@@ -28,3 +28,6 @@ class MwsNccBindingBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_mws_ncc_binding"
+
+
+__all__ = ["MwsNccBindingBase"]

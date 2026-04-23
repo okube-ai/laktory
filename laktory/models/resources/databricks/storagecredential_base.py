@@ -76,3 +76,14 @@ class StorageCredentialBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_storage_credential"
+
+
+__all__ = [
+    "StorageCredentialAwsIamRole",
+    "StorageCredentialAzureManagedIdentity",
+    "StorageCredentialAzureServicePrincipal",
+    "StorageCredentialCloudflareApiToken",
+    "StorageCredentialDatabricksGcpServiceAccount",
+    "StorageCredentialGcpServiceAccountKey",
+    "StorageCredentialBase",
+]

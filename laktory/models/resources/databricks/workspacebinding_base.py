@@ -36,3 +36,6 @@ class WorkspaceBindingBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_workspace_binding"
+
+
+__all__ = ["WorkspaceBindingBase"]

@@ -109,3 +109,14 @@ class NotificationDestinationBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_notification_destination"
+
+
+__all__ = [
+    "NotificationDestinationConfig",
+    "NotificationDestinationConfigEmail",
+    "NotificationDestinationConfigGenericWebhook",
+    "NotificationDestinationConfigMicrosoftTeams",
+    "NotificationDestinationConfigPagerduty",
+    "NotificationDestinationConfigSlack",
+    "NotificationDestinationBase",
+]

@@ -60,3 +60,6 @@ class QualityMonitorBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_quality_monitor"
+
+
+__all__ = ["QualityMonitorCustomMetrics", "QualityMonitorBase"]

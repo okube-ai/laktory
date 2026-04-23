@@ -46,3 +46,6 @@ class AppBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_app"
+
+
+__all__ = ["AppBase"]

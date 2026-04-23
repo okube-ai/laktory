@@ -35,3 +35,6 @@ class MetastoreAssignmentBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_metastore_assignment"
+
+
+__all__ = ["MetastoreAssignmentBase"]

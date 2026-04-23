@@ -32,3 +32,6 @@ class OboTokenBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_obo_token"
+
+
+__all__ = ["OboTokenBase"]

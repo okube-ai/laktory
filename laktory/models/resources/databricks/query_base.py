@@ -190,3 +190,18 @@ class QueryBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_query"
+
+
+__all__ = [
+    "QueryParameter",
+    "QueryParameterDateRangeValue",
+    "QueryParameterDateRangeValueDateRangeValue",
+    "QueryParameterDateValue",
+    "QueryParameterEnumValue",
+    "QueryParameterEnumValueMultiValuesOptions",
+    "QueryParameterNumericValue",
+    "QueryParameterQueryBackedValue",
+    "QueryParameterQueryBackedValueMultiValuesOptions",
+    "QueryParameterTextValue",
+    "QueryBase",
+]

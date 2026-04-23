@@ -98,3 +98,6 @@ class TableBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_sql_table"
+
+
+__all__ = ["TableColumn", "TableBase"]

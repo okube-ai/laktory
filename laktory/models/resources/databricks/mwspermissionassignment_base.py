@@ -28,3 +28,6 @@ class MwsPermissionAssignmentBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_mws_permission_assignment"
+
+
+__all__ = ["MwsPermissionAssignmentBase"]

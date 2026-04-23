@@ -150,3 +150,15 @@ class MwsNetworkConnectivityConfigBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_mws_network_connectivity_config"
+
+
+__all__ = [
+    "MwsNetworkConnectivityConfigEgressConfig",
+    "MwsNetworkConnectivityConfigEgressConfigDefaultRules",
+    "MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule",
+    "MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRule",
+    "MwsNetworkConnectivityConfigEgressConfigTargetRules",
+    "MwsNetworkConnectivityConfigEgressConfigTargetRulesAwsPrivateEndpointRules",
+    "MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRules",
+    "MwsNetworkConnectivityConfigBase",
+]

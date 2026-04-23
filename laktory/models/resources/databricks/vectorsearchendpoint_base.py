@@ -42,3 +42,10 @@ class VectorSearchEndpointBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_vector_search_endpoint"
+
+
+__all__ = [
+    "VectorSearchEndpointScalingInfo",
+    "VectorSearchEndpointTimeouts",
+    "VectorSearchEndpointBase",
+]

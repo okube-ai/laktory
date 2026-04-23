@@ -32,3 +32,6 @@ class ServicePrincipalRoleBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_service_principal_role"
+
+
+__all__ = ["ServicePrincipalRoleBase"]

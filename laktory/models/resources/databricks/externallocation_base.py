@@ -137,3 +137,24 @@ class ExternalLocationBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_external_location"
+
+
+__all__ = [
+    "ExternalLocationEffectiveFileEventQueue",
+    "ExternalLocationEffectiveFileEventQueueManagedAqs",
+    "ExternalLocationEffectiveFileEventQueueManagedPubsub",
+    "ExternalLocationEffectiveFileEventQueueManagedSqs",
+    "ExternalLocationEffectiveFileEventQueueProvidedAqs",
+    "ExternalLocationEffectiveFileEventQueueProvidedPubsub",
+    "ExternalLocationEffectiveFileEventQueueProvidedSqs",
+    "ExternalLocationEncryptionDetails",
+    "ExternalLocationEncryptionDetailsSseEncryptionDetails",
+    "ExternalLocationFileEventQueue",
+    "ExternalLocationFileEventQueueManagedAqs",
+    "ExternalLocationFileEventQueueManagedPubsub",
+    "ExternalLocationFileEventQueueManagedSqs",
+    "ExternalLocationFileEventQueueProvidedAqs",
+    "ExternalLocationFileEventQueueProvidedPubsub",
+    "ExternalLocationFileEventQueueProvidedSqs",
+    "ExternalLocationBase",
+]

@@ -26,3 +26,6 @@ class SecretAclBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_secret_acl"
+
+
+__all__ = ["SecretAclBase"]

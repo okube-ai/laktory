@@ -38,3 +38,6 @@ class NotebookBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_notebook"
+
+
+__all__ = ["NotebookBase"]

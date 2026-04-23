@@ -87,3 +87,11 @@ class ShareBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_share"
+
+
+__all__ = [
+    "ShareObject",
+    "ShareObjectPartition",
+    "ShareObjectPartitionValue",
+    "ShareBase",
+]

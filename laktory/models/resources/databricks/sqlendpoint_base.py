@@ -91,3 +91,12 @@ class SqlEndpointBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_sql_endpoint"
+
+
+__all__ = [
+    "SqlEndpointChannel",
+    "SqlEndpointTags",
+    "SqlEndpointTagsCustomTags",
+    "SqlEndpointTimeouts",
+    "SqlEndpointBase",
+]

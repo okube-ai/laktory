@@ -86,3 +86,6 @@ class UserBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_user"
+
+
+__all__ = ["UserBase"]

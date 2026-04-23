@@ -28,3 +28,6 @@ class WorkspaceFileBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_workspace_file"
+
+
+__all__ = ["WorkspaceFileBase"]

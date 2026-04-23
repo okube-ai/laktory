@@ -59,3 +59,6 @@ class PermissionsBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_permissions"
+
+
+__all__ = ["PermissionsAccessControl", "PermissionsBase"]

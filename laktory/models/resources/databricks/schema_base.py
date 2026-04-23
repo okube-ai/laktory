@@ -40,3 +40,6 @@ class SchemaBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_schema"
+
+
+__all__ = ["SchemaBase"]

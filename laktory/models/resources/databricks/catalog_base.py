@@ -94,3 +94,12 @@ class CatalogBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_catalog"
+
+
+__all__ = [
+    "CatalogEffectivePredictiveOptimizationFlag",
+    "CatalogManagedEncryptionSettings",
+    "CatalogManagedEncryptionSettingsAzureEncryptionSettings",
+    "CatalogProvisioningInfo",
+    "CatalogBase",
+]

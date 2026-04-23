@@ -31,3 +31,6 @@ class UserRoleBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_user_role"
+
+
+__all__ = ["UserRoleBase"]

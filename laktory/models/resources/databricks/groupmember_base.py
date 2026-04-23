@@ -32,3 +32,6 @@ class GroupMemberBase(BaseModel, TerraformResource):
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_group_member"
+
+
+__all__ = ["GroupMemberBase"]
