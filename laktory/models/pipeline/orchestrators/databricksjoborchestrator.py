@@ -8,13 +8,13 @@ from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
 )
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.job import Job
-from laktory.models.resources.databricks.job_base import JobEnvironment
-from laktory.models.resources.databricks.job_base import JobEnvironmentSpec
-from laktory.models.resources.databricks.job_base import JobParameter
-from laktory.models.resources.databricks.job_base import JobTask
-from laktory.models.resources.databricks.job_base import JobTaskLibrary
-from laktory.models.resources.databricks.job_base import JobTaskLibraryPypi
-from laktory.models.resources.databricks.job_base import JobTaskPythonWheelTask
+from laktory.models.resources.databricks.job import JobEnvironment
+from laktory.models.resources.databricks.job import JobEnvironmentSpec
+from laktory.models.resources.databricks.job import JobParameter
+from laktory.models.resources.databricks.job import JobTask
+from laktory.models.resources.databricks.job import JobTaskLibrary
+from laktory.models.resources.databricks.job import JobTaskLibraryPypi
+from laktory.models.resources.databricks.job import JobTaskPythonWheelTask
 from laktory.models.resources.pulumiresource import PulumiResource
 
 logger = get_logger(__name__)
