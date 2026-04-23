@@ -83,9 +83,16 @@ IRREGULAR_PLURALS: dict[str, str] = {
 }
 
 
+# Maps a resource_key to an alternate naming key used for class/file naming.
+# The terraform_resource_type property still returns the original resource_key.
+RESOURCE_NAME_OVERRIDES: dict[str, str] = {
+    "databricks_sql_table": "databricks_table",
+}
+
+
 def pluralize(name: str) -> str:
     """Derive plural form of a field name. Returns explicit mapping or name + 's'."""
-    return IRREGULAR_PLURALS.get(name, name + "s")
+    return IRREGULAR_PLURALS.get(name, name if name.endswith("s") else name + "s")
 
 
 # Default generation targets
@@ -135,7 +142,7 @@ DEFAULT_TARGETS = [
     "databricks_job",
     "databricks_pipeline",
     "databricks_secret_scope",
-    "databricks_table",
+    "databricks_sql_table",
     "databricks_grant",
     "databricks_grants",
 ]
@@ -311,8 +318,8 @@ def emit_block_class(
             if bt_name in descriptions
             else ""
         )
-        if type_str.startswith("list["):
-            plural = pluralize(bt_field_name)
+        plural = pluralize(bt_field_name)
+        if type_str.startswith("list[") and bt_field_name != plural:
             lines.append(
                 f'    {bt_field_name}: {type_str} = PluralField({default}, plural="{plural}"{desc_snippet})'
             )
@@ -332,11 +339,13 @@ def emit_resource_module(
     resource_key: str,
     resource_schema: dict,
     descriptions: dict[str, str],
+    name_key: str | None = None,
 ) -> str:
     """
     Generate the full content of a Python module for a Databricks resource.
     """
-    class_name = resource_to_class_name(resource_key)
+    naming_key = name_key or resource_key
+    class_name = resource_to_class_name(naming_key)
     block = resource_schema["block"]
     attrs = block.get("attributes", {})
     block_types = block.get("block_types", {})
@@ -384,8 +393,8 @@ def emit_resource_module(
             if bt_name in descriptions
             else ""
         )
-        if type_str.startswith("list["):
-            plural = pluralize(bt_field_name)
+        plural = pluralize(bt_field_name)
+        if type_str.startswith("list[") and plural != bt_field_name:
             nested_field_lines.append(
                 f'    {bt_field_name}: {type_str} = PluralField({default_val}, plural="{plural}"{desc_snippet})'
             )
@@ -444,8 +453,9 @@ def emit_resource_module(
             )
         else:
             alias_snippet = ""
-        if py_type.startswith("list["):
-            plural = pluralize(field_name)
+
+        plural = pluralize(field_name)
+        if py_type.startswith("list[") and field_name != plural:
             main_lines.append(
                 f'    {field_name}: {py_type} = PluralField(..., plural="{plural}"{desc_snippet}{alias_snippet})'
             )
@@ -471,8 +481,8 @@ def emit_resource_module(
             )
         else:
             alias_snippet = ""
-        if py_type.startswith("list["):
-            plural = pluralize(field_name)
+        plural = pluralize(field_name)
+        if py_type.startswith("list[") and plural != field_name:
             main_lines.append(
                 f'    {field_name}: {py_type} | None = PluralField(None, plural="{plural}"{desc_snippet}{alias_snippet})'
             )
@@ -553,10 +563,14 @@ def main():
             continue
 
         descriptions = all_descriptions.get(resource_key, {})
+        naming_key = RESOURCE_NAME_OVERRIDES.get(resource_key, resource_key)
         code = emit_resource_module(
-            resource_key, resource_schemas[resource_key], descriptions
+            resource_key,
+            resource_schemas[resource_key],
+            descriptions,
+            name_key=naming_key,
         )
-        fname = f"{resource_key.removeprefix('databricks_').replace('_', '')}_base.py"
+        fname = f"{naming_key.removeprefix('databricks_').replace('_', '')}_base.py"
         out_path = out_dir / fname
         out_path.write_text(code)
         written.append(out_path)
