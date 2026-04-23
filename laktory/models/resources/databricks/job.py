@@ -4,14 +4,55 @@ from typing import Union
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
+from pydantic._internal._decorators import Decorator
+from pydantic._internal._decorators import FieldValidatorDecoratorInfo
+from pydantic_core import PydanticUndefined
 
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.job_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.job_base import JobBase
 from laktory.models.resources.databricks.job_base import JobTask
+from laktory.models.resources.databricks.job_base import JobTaskForEachTaskTask
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
+
+
+def _inject_field_validator(model_cls, field_name, method_name, func):
+    """Duck-type a field validator onto an existing Pydantic model class."""
+    cls_ref = f"{model_cls.__module__}.{model_cls.__qualname__}:{id(model_cls)}"
+    model_cls.__pydantic_decorators__.field_validators[method_name] = Decorator(
+        cls_ref=cls_ref,
+        cls_var_name=method_name,
+        func=classmethod(func).__get__(model_cls),
+        shim=None,
+        info=FieldValidatorDecoratorInfo(
+            fields=(field_name,),
+            mode="after",
+            check_fields=None,
+            json_schema_input_type=PydanticUndefined,
+        ),
+    )
+    model_cls.model_rebuild(force=True)
+
+
+@field_validator("depends_on")
+@classmethod
+def sort_depends_on(cls, v):
+    if v is None:
+        return v
+    return sorted(v, key=lambda task: task.task_key)
+
+
+_inject_field_validator(
+    JobTask, "depends_on", "sort_depends_on", sort_depends_on.wrapped.__func__
+)
+_inject_field_validator(
+    JobTaskForEachTaskTask,
+    "depends_on",
+    "sort_depends_on",
+    sort_depends_on.wrapped.__func__,
+)
 
 
 class JobLookup(ResourceLookup):
