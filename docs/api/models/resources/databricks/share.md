@@ -1,3 +1,4 @@
+<!-- GENERATED FILE — DO NOT EDIT -->
 ::: laktory.models.resources.databricks.Share
 
 ---
@@ -10,8 +11,4 @@
 
 ---
 
-::: laktory.models.resources.databricks.share.ShareProviderConfig
-
----
-
-::: laktory.models.resources.databricks.share.SharedObjectPartitionValue
+::: laktory.models.resources.databricks.share.ShareObjectPartitionValue
