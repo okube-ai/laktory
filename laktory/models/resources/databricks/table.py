@@ -1,15 +1,32 @@
-from typing import Literal
 from typing import Union
 
 from pydantic import Field
 
 from laktory._logger import get_logger
+from laktory.models.basemodel import BaseModel
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.table_base import TableBase
 from laktory.models.resources.pulumiresource import PulumiResource
 
 logger = get_logger(__name__)
+
+
+class TableColumn(BaseModel):
+    name: str = Field(..., description="User-visible name of column")
+    comment: str = Field(None, description="User-supplied free-form text.")
+    identity: str = Field(
+        None,
+        description="Whether field is an identity column. Can be `default`, `always` or `unset`. It is `unset` by default.",
+    )
+    nullable: bool = Field(
+        None, description="Whether field is nullable (Default: `true`)"
+    )
+    type: str = Field(
+        None,
+        description="Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.",
+    )
+    type_json: str = Field(None, description="")
 
 
 class TableLookup(ResourceLookup):
@@ -44,8 +61,8 @@ class Table(TableBase, PulumiResource):
     grant: Union[TableGrant, list[TableGrant]] = Field(
         None,
         description="""
-    Grant(s) operating on the Table and authoritative for a specific principal. Other principals within the grants are 
-    preserved. Mutually exclusive with `grants`. 
+    Grant(s) operating on the Table and authoritative for a specific principal. Other principals within the grants are
+    preserved. Mutually exclusive with `grants`.
     """,
     )
     grants: list[TableGrant] = Field(
@@ -59,33 +76,6 @@ class Table(TableBase, PulumiResource):
         None,
         exclude=True,
         description="Specifications for looking up existing resource. Other attributes will be ignored.",
-    )
-    name: str = Field(..., description="Name of the table")
-    properties: Union[dict[str, str], None] = Field(None, description="")
-    schema_name: Union[str, None] = Field(
-        None, description="Name of the schema storing the table"
-    )
-    storage_credential_name: Union[str, None] = Field(
-        None,
-        description="For EXTERNAL Tables only: the name of storage credential to use. Change forces creation of a new resource.",
-    )
-    storage_location: Union[str, None] = Field(
-        None,
-        description="URL of storage location for Table data (required for EXTERNAL Tables). Not supported for VIEW or MANAGED table_type.",
-    )
-    table_type: Literal["MANAGED", "EXTERNAL", "VIEW"] = Field(
-        "MANAGED", description="Distinguishes a view vs. managed/external Table."
-    )  # required
-    view_definition: Union[str, None] = Field(
-        None,
-        description="SQL text defining the view (for `table_type == 'VIEW'`). Not supported for MANAGED or EXTERNAL table_type.",
-    )
-    warehouse_id: Union[str, None] = Field(
-        None,
-        description="""
-    All table CRUD operations must be executed on a running cluster or SQL warehouse. If a warehouse_id is specified, 
-    that SQL warehouse will be used to execute SQL commands to manage this table.
-    """,
     )
 
     # ----------------------------------------------------------------------- #

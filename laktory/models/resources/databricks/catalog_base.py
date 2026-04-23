@@ -2,6 +2,7 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_catalog
 from __future__ import annotations
 
+from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
@@ -67,6 +68,7 @@ class CatalogBase(BaseModel, TerraformResource):
         None,
         description="A map of key-value properties attached to the securable.",
         serialization_alias="options",
+        validation_alias=AliasChoices("options", "options_"),
     )
     owner: str | None = Field(None, description="Username of current owner of catalog.")
     properties: dict[str, str] | None = Field(

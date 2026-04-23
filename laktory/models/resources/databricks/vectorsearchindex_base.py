@@ -2,9 +2,11 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_vector_search_index
 from __future__ import annotations
 
+from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -36,16 +38,18 @@ class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
         description="Pipeline execution mode. Possible values are: * `TRIGGERED`: If the pipeline uses the triggered execution mode, the system stops processing after successfully refreshing the source table in the pipeline once, ensuring the table is updated based on the data available when the update started. * `CONTINUOUS`: If the pipeline uses continuous execution, the pipeline processes new data as it arrives in the source table to keep the vector index fresh",
     )
     source_table: str | None = Field(None)
-    embedding_source_columns: list[
-        VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumns
-    ] = Field(
+    embedding_source_columns: (
+        list[VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumns] | None
+    ) = PluralField(
         None,
+        plural="embedding_source_columnss",
         description="(required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:",
     )
-    embedding_vector_columns: list[
-        VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumns
-    ] = Field(
+    embedding_vector_columns: (
+        list[VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumns] | None
+    ) = PluralField(
         None,
+        plural="embedding_vector_columnss",
         description="(required if `embedding_source_columns` isn't provided)  array of objects representing columns that contain the embedding vectors. Each entry consists of:",
     )
 
@@ -73,17 +77,20 @@ class VectorSearchIndexDirectAccessIndexSpec(BaseModel):
         None,
         description="The schema of the index in JSON format.  Check the [API documentation](https://docs.databricks.com/api/workspace/vectorsearchindexes/createindex#direct_access_index_spec-schema_json) for a list of supported data types",
         serialization_alias="schema_json",
+        validation_alias=AliasChoices("schema_json", "schema_json_"),
     )
-    embedding_source_columns: list[
-        VectorSearchIndexDirectAccessIndexSpecEmbeddingSourceColumns
-    ] = Field(
+    embedding_source_columns: (
+        list[VectorSearchIndexDirectAccessIndexSpecEmbeddingSourceColumns] | None
+    ) = PluralField(
         None,
+        plural="embedding_source_columnss",
         description="(required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:",
     )
-    embedding_vector_columns: list[
-        VectorSearchIndexDirectAccessIndexSpecEmbeddingVectorColumns
-    ] = Field(
+    embedding_vector_columns: (
+        list[VectorSearchIndexDirectAccessIndexSpecEmbeddingVectorColumns] | None
+    ) = PluralField(
         None,
+        plural="embedding_vector_columnss",
         description="(required if `embedding_source_columns` isn't provided)  array of objects representing columns that contain the embedding vectors. Each entry consists of:",
     )
 

@@ -2,6 +2,7 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_cluster
 from __future__ import annotations
 
+from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
@@ -173,7 +174,11 @@ class ClusterLibrary(BaseModel):
 class ClusterTimeouts(BaseModel):
     create: str | None = Field(None)
     delete: str | None = Field(None)
-    update_: str | None = Field(None, serialization_alias="update")
+    update_: str | None = Field(
+        None,
+        serialization_alias="update",
+        validation_alias=AliasChoices("update", "update_"),
+    )
 
 
 class ClusterWorkerNodeTypeFlexibility(BaseModel):

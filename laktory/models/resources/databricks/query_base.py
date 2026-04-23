@@ -2,6 +2,7 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_query
 from __future__ import annotations
 
+from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
@@ -175,6 +176,7 @@ class QueryBase(BaseModel, TerraformResource):
         None,
         description="Name of the schema where this query will be executed",
         serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_"),
     )
     tags: list[str] | None = PluralField(
         None, plural="tagss", description="Tags that will be added to the query"

@@ -2,6 +2,7 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_pipeline
 from __future__ import annotations
 
+from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
@@ -140,7 +141,9 @@ class PipelineCluster(BaseModel):
     azure_attributes: PipelineClusterAzureAttributes | None = Field(None)
     cluster_log_conf: PipelineClusterClusterLogConf | None = Field(None)
     gcp_attributes: PipelineClusterGcpAttributes | None = Field(None)
-    init_scripts: list[PipelineClusterInitScripts] = Field(None)
+    init_scripts: list[PipelineClusterInitScripts] | None = PluralField(
+        None, plural="init_scripts"
+    )
 
 
 class PipelineDeployment(BaseModel):
@@ -172,6 +175,7 @@ class PipelineEventLog(BaseModel):
         None,
         description="The UC schema the event log is published under",
         serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_"),
     )
 
 
@@ -249,9 +253,12 @@ class PipelineIngestionDefinitionObjectsReportTableConfigurationWorkdayReportPar
 ):
     incremental: bool | None = Field(None)
     parameters: dict[str, str] | None = Field(None)
-    report_parameters: list[
-        PipelineIngestionDefinitionObjectsReportTableConfigurationWorkdayReportParametersReportParameters
-    ] = Field(None)
+    report_parameters: (
+        list[
+            PipelineIngestionDefinitionObjectsReportTableConfigurationWorkdayReportParametersReportParameters
+        ]
+        | None
+    ) = PluralField(None, plural="report_parameterss")
 
 
 class PipelineIngestionDefinitionObjectsReportTableConfiguration(BaseModel):
@@ -310,9 +317,12 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptionsFileI
     schema_evolution_mode: str | None = Field(None)
     schema_hints: str | None = Field(None)
     single_variant_column: str | None = Field(None)
-    file_filters: list[
-        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptionsFileIngestionOptionsFileFilters
-    ] = Field(None)
+    file_filters: (
+        list[
+            PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptionsFileIngestionOptionsFileFilters
+        ]
+        | None
+    ) = PluralField(None, plural="file_filterss")
 
 
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptions(BaseModel):
@@ -356,9 +366,12 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptionsF
     schema_evolution_mode: str | None = Field(None)
     schema_hints: str | None = Field(None)
     single_variant_column: str | None = Field(None)
-    file_filters: list[
-        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptionsFileIngestionOptionsFileFilters
-    ] = Field(None)
+    file_filters: (
+        list[
+            PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptionsFileIngestionOptionsFileFilters
+        ]
+        | None
+    ) = PluralField(None, plural="file_filterss")
 
 
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptions(
@@ -429,9 +442,12 @@ class PipelineIngestionDefinitionObjectsSchemaTableConfigurationWorkdayReportPar
 ):
     incremental: bool | None = Field(None)
     parameters: dict[str, str] | None = Field(None)
-    report_parameters: list[
-        PipelineIngestionDefinitionObjectsSchemaTableConfigurationWorkdayReportParametersReportParameters
-    ] = Field(None)
+    report_parameters: (
+        list[
+            PipelineIngestionDefinitionObjectsSchemaTableConfigurationWorkdayReportParametersReportParameters
+        ]
+        | None
+    ) = PluralField(None, plural="report_parameterss")
 
 
 class PipelineIngestionDefinitionObjectsSchemaTableConfiguration(BaseModel):
@@ -493,9 +509,12 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptionsFileIn
     schema_evolution_mode: str | None = Field(None)
     schema_hints: str | None = Field(None)
     single_variant_column: str | None = Field(None)
-    file_filters: list[
-        PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptionsFileIngestionOptionsFileFilters
-    ] = Field(None)
+    file_filters: (
+        list[
+            PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptionsFileIngestionOptionsFileFilters
+        ]
+        | None
+    ) = PluralField(None, plural="file_filterss")
 
 
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptions(BaseModel):
@@ -539,9 +558,12 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptionsFi
     schema_evolution_mode: str | None = Field(None)
     schema_hints: str | None = Field(None)
     single_variant_column: str | None = Field(None)
-    file_filters: list[
-        PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptionsFileIngestionOptionsFileFilters
-    ] = Field(None)
+    file_filters: (
+        list[
+            PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptionsFileIngestionOptionsFileFilters
+        ]
+        | None
+    ) = PluralField(None, plural="file_filterss")
 
 
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptions(
@@ -612,9 +634,12 @@ class PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportPara
 ):
     incremental: bool | None = Field(None)
     parameters: dict[str, str] | None = Field(None)
-    report_parameters: list[
-        PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportParametersReportParameters
-    ] = Field(None)
+    report_parameters: (
+        list[
+            PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportParametersReportParameters
+        ]
+        | None
+    ) = PluralField(None, plural="report_parameterss")
 
 
 class PipelineIngestionDefinitionObjectsTableTableConfiguration(BaseModel):
@@ -712,9 +737,12 @@ class PipelineIngestionDefinitionTableConfigurationWorkdayReportParametersReport
 class PipelineIngestionDefinitionTableConfigurationWorkdayReportParameters(BaseModel):
     incremental: bool | None = Field(None)
     parameters: dict[str, str] | None = Field(None)
-    report_parameters: list[
-        PipelineIngestionDefinitionTableConfigurationWorkdayReportParametersReportParameters
-    ] = Field(None)
+    report_parameters: (
+        list[
+            PipelineIngestionDefinitionTableConfigurationWorkdayReportParametersReportParameters
+        ]
+        | None
+    ) = PluralField(None, plural="report_parameterss")
 
 
 class PipelineIngestionDefinitionTableConfiguration(BaseModel):
@@ -755,15 +783,17 @@ class PipelineIngestionDefinition(BaseModel):
     full_refresh_window: PipelineIngestionDefinitionFullRefreshWindow | None = Field(
         None
     )
-    objects: list[PipelineIngestionDefinitionObjects] = Field(
+    objects: list[PipelineIngestionDefinitionObjects] | None = PluralField(
         None,
+        plural="objectss",
         description="Required. Settings specifying tables to replicate and the destination for the replicated tables",
     )
-    source_configurations: list[PipelineIngestionDefinitionSourceConfigurations] = (
-        Field(
-            None,
-            description="Array of objects describing top-level source configurations. See the [REST API docs](https://docs.databricks.com/api/workspace/pipelines/create#ingestion_definition-source_configurations) for reference",
-        )
+    source_configurations: (
+        list[PipelineIngestionDefinitionSourceConfigurations] | None
+    ) = PluralField(
+        None,
+        plural="source_configurationss",
+        description="Array of objects describing top-level source configurations. See the [REST API docs](https://docs.databricks.com/api/workspace/pipelines/create#ingestion_definition-source_configurations) for reference",
     )
     table_configuration: PipelineIngestionDefinitionTableConfiguration | None = Field(
         None,
@@ -914,6 +944,7 @@ class PipelineBase(BaseModel, TerraformResource):
         None,
         description="The UC schema the event log is published under",
         serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_"),
     )
     serverless: bool | None = Field(
         None,

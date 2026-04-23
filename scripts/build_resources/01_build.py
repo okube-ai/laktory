@@ -270,9 +270,13 @@ def emit_block_class(
             type_str = f"{py_type} | None"
 
         desc_snippet = f', description="{description}"' if description else ""
-        alias_snippet = (
-            f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
-        )
+        if needs_alias(attr_name):
+            alias_snippet = (
+                f', serialization_alias="{attr_name}", '
+                f'validation_alias=AliasChoices("{attr_name}", "{field_name}")'
+            )
+        else:
+            alias_snippet = ""
         lines.append(
             f"    {field_name}: {type_str} = Field({default}{desc_snippet}{alias_snippet})"
         )
@@ -298,7 +302,7 @@ def emit_block_class(
             type_str = f"{nested_class} | None"
             default = "None"
         else:
-            type_str = f"list[{nested_class}]"
+            type_str = f"list[{nested_class}] | None"
             default = "None"
 
         bt_field_name = safe_field_name(bt_name)
@@ -307,9 +311,15 @@ def emit_block_class(
             if bt_name in descriptions
             else ""
         )
-        lines.append(
-            f"    {bt_field_name}: {type_str} = Field({default}{desc_snippet})"
-        )
+        if type_str.startswith("list["):
+            plural = pluralize(bt_field_name)
+            lines.append(
+                f'    {bt_field_name}: {type_str} = PluralField({default}, plural="{plural}"{desc_snippet})'
+            )
+        else:
+            lines.append(
+                f"    {bt_field_name}: {type_str} = Field({default}{desc_snippet})"
+            )
         has_fields = True
 
     if not has_fields:
@@ -427,9 +437,13 @@ def emit_resource_module(
         )
         field_name = safe_field_name(attr_name)
         desc_snippet = f', description="{description}"' if description else ""
-        alias_snippet = (
-            f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
-        )
+        if needs_alias(attr_name):
+            alias_snippet = (
+                f', serialization_alias="{attr_name}", '
+                f'validation_alias=AliasChoices("{attr_name}", "{field_name}")'
+            )
+        else:
+            alias_snippet = ""
         if py_type.startswith("list["):
             plural = pluralize(field_name)
             main_lines.append(
@@ -450,9 +464,13 @@ def emit_resource_module(
         )
         field_name = safe_field_name(attr_name)
         desc_snippet = f', description="{description}"' if description else ""
-        alias_snippet = (
-            f', serialization_alias="{attr_name}"' if needs_alias(attr_name) else ""
-        )
+        if needs_alias(attr_name):
+            alias_snippet = (
+                f', serialization_alias="{attr_name}", '
+                f'validation_alias=AliasChoices("{attr_name}", "{field_name}")'
+            )
+        else:
+            alias_snippet = ""
         if py_type.startswith("list["):
             plural = pluralize(field_name)
             main_lines.append(
@@ -478,7 +496,15 @@ def emit_resource_module(
     main_lines.append(f'        return "{resource_key}"')
 
     # --- Assemble module ---
+    body_parts: list[str] = []
+    if pre_classes:
+        body_parts.append("\n".join(pre_classes))
+        body_parts.append("")
+    body_parts.append("\n".join(main_lines))
+    body = "\n".join(body_parts)
+
     any_import = "Any, " if needs_any else ""
+    alias_choices_import = ", AliasChoices" if "AliasChoices(" in body else ""
     header = textwrap.dedent(f"""\
         # GENERATED FILE — DO NOT EDIT
         # Regenerate with: python scripts/build_resources/01_build.py {resource_key}
@@ -486,18 +512,14 @@ def emit_resource_module(
 
         from typing import {any_import}Union
 
-        from pydantic import Field
+        from pydantic import Field{alias_choices_import}
 
         from laktory.models.basemodel import BaseModel, PluralField
         from laktory.models.resources.terraformresource import TerraformResource
 
     """)
 
-    parts = [header]
-    if pre_classes:
-        parts.append("\n".join(pre_classes))
-        parts.append("")
-    parts.append("\n".join(main_lines))
+    parts = [header, body]
     parts.append("")  # trailing newline
 
     return "\n".join(parts)

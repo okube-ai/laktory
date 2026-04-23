@@ -2,6 +2,7 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_grant
 from __future__ import annotations
 
+from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
@@ -28,7 +29,11 @@ class GrantBase(BaseModel, TerraformResource):
     model: str | None = Field(None)
     pipeline: str | None = Field(None)
     recipient: str | None = Field(None)
-    schema_: str | None = Field(None, serialization_alias="schema")
+    schema_: str | None = Field(
+        None,
+        serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_"),
+    )
     share: str | None = Field(None)
     storage_credential: str | None = Field(None)
     table: str | None = Field(None)

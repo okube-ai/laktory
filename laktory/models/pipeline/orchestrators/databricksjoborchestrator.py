@@ -7,13 +7,13 @@ from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
 )
 from laktory.models.pipelinechild import PipelineChild
-from laktory.models.resources.databricks.cluster import ClusterLibrary
-from laktory.models.resources.databricks.cluster import ClusterLibraryPypi
 from laktory.models.resources.databricks.job import Job
 from laktory.models.resources.databricks.job import JobEnvironment
 from laktory.models.resources.databricks.job import JobEnvironmentSpec
 from laktory.models.resources.databricks.job import JobParameter
 from laktory.models.resources.databricks.job import JobTask
+from laktory.models.resources.databricks.job import JobTaskLibrary
+from laktory.models.resources.databricks.job import JobTaskLibraryPypi
 from laktory.models.resources.databricks.job import JobTaskPythonWheelTask
 from laktory.models.resources.pulumiresource import PulumiResource
 
@@ -62,9 +62,9 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             for r in _requirements:
                 is_var = "${vars." in r
                 if r.endswith(".whl") or (is_var and "wheel" in r or "whl" in r):
-                    l = ClusterLibrary(whl=r)
+                    l = JobTaskLibrary(whl=r)
                 else:
-                    l = ClusterLibrary(pypi=ClusterLibraryPypi(package=r))
+                    l = JobTaskLibrary(pypi=JobTaskLibraryPypi(package=r))
                 libraries += [l]
 
             task.job_cluster_key = "node-cluster"
