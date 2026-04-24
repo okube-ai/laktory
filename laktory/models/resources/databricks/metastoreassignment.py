@@ -6,10 +6,9 @@ from laktory.models.resources.databricks.metastoreassignment_base import *  # NO
 from laktory.models.resources.databricks.metastoreassignment_base import (
     MetastoreAssignmentBase,
 )
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class MetastoreAssignment(MetastoreAssignmentBase, PulumiResource):
+class MetastoreAssignment(MetastoreAssignmentBase):
     """
     Databricks Metastore Assignment
 
@@ -33,14 +32,6 @@ class MetastoreAssignment(MetastoreAssignmentBase, PulumiResource):
     @property
     def resource_key(self):
         return f"{self.metastore_id}-{self.workspace_id}"
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:MetastoreAssignment"
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

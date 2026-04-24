@@ -8,7 +8,6 @@ from laktory.models.resources.databricks.metastore_base import *  # NOQA: F403 r
 from laktory.models.resources.databricks.metastore_base import MetastoreBase
 from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class MetastoreLookup(ResourceLookup):
@@ -17,7 +16,7 @@ class MetastoreLookup(ResourceLookup):
     )
 
 
-class Metastore(MetastoreBase, PulumiResource):
+class Metastore(MetastoreBase):
     """
     Databricks Metastore
 
@@ -71,7 +70,7 @@ class Metastore(MetastoreBase, PulumiResource):
         return key
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - workspace assignments
         - grants
@@ -111,15 +110,11 @@ class Metastore(MetastoreBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
+    # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Metastore"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
             "workspace_assignments",
             "grant",
@@ -127,11 +122,3 @@ class Metastore(MetastoreBase, PulumiResource):
             "grants_provider",
             "data_accesses",
         ]
-
-    # ----------------------------------------------------------------------- #
-    # Terraform Properties                                                    #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes + ["cloud"]
