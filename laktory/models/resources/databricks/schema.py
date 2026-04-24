@@ -8,10 +8,9 @@ from laktory.models.resources.databricks.schema_base import *  # NOQA: F403 requ
 from laktory.models.resources.databricks.schema_base import SchemaBase
 from laktory.models.resources.databricks.table import Table
 from laktory.models.resources.databricks.volume import Volume
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class Schema(SchemaBase, PulumiResource):
+class Schema(SchemaBase):
     """
     A schema (also called a database) is the second layer of Unity Catalog's
     three-level namespace. A schema organizes tables and views.
@@ -32,7 +31,6 @@ class Schema(SchemaBase, PulumiResource):
     ----------
 
     * [Databricks Unity Schema](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#schemas)
-    * [Pulumi Databricks Schema](https://www.pulumi.com/registry/packages/databricks/api-docs/schema/)
     """
 
     # Relax fields the base marks required but Laktory fills via parent validators
@@ -104,7 +102,7 @@ class Schema(SchemaBase, PulumiResource):
         return self.full_name
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - schema grants
         - tables
@@ -128,21 +126,9 @@ class Schema(SchemaBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Schema"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["tables", "volumes", "grant", "grants"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["tables", "volumes", "grant", "grants"]

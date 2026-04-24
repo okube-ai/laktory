@@ -1,9 +1,8 @@
 from laktory.models.resources.databricks.recipient_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.recipient_base import RecipientBase
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class Recipient(RecipientBase, PulumiResource):
+class Recipient(RecipientBase):
     """
     Databricks Recipient for Delta Sharing
 
@@ -15,14 +14,6 @@ class Recipient(RecipientBase, PulumiResource):
     ```py
     ```
     """
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Recipient"
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
