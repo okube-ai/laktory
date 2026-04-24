@@ -1,11 +1,10 @@
 from pydantic import Field
 
 from laktory.models.resources.providers.baseprovider import BaseProvider
-from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
 
-class AzureProvider(BaseProvider, PulumiResource, TerraformResource):
+class AzureProvider(BaseProvider, TerraformResource):
     """
     Azure Provider
 
@@ -167,11 +166,3 @@ class AzureProvider(BaseProvider, PulumiResource, TerraformResource):
     # @property
     # def resource_key(self) -> str:
     #     return self.display_name
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "pulumi:providers:azure"
