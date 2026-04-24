@@ -43,10 +43,10 @@ def test_metastore():
     print(data)
 
     assert data == {
-        "created_at": None,
-        "created_by": None,
+        "api": None,
         "data_accesses": [
             {
+                "api": None,
                 "aws_iam_role": None,
                 "azure_managed_identity": {
                     "access_connector_id": "test",
@@ -80,6 +80,7 @@ def test_metastore():
         "delta_sharing_organization_name": None,
         "delta_sharing_recipient_token_lifetime_in_seconds": None,
         "delta_sharing_scope": None,
+        "external_access_enabled": None,
         "force_destroy": True,
         "global_metastore_id": None,
         "grant": None,
@@ -96,16 +97,20 @@ def test_metastore():
             }
         ],
         "grants_provider": "${resources.provider-workspace-neptune}",
-        "metastore_id": None,
         "name": "metastore-lakehouse",
         "owner": None,
+        "privilege_model_version": None,
         "region": "eastus",
         "storage_root": "abfss://metastore@o3stglakehousedev.dfs.core.windows.net/",
         "storage_root_credential_id": None,
-        "updated_at": None,
-        "updated_by": None,
+        "storage_root_credential_name": None,
         "workspace_assignments": [
-            {"default_catalog_name": None, "metastore_id": None, "workspace_id": 0}
+            {
+                "api": None,
+                "default_catalog_name": None,
+                "metastore_id": None,
+                "workspace_id": 0.0,
+            }
         ],
     }
 

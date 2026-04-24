@@ -1,3 +1,4 @@
+<!-- GENERATED FILE — DO NOT EDIT -->
 ::: laktory.models.resources.databricks.MwsNetworkConnectivityConfig
 
 ---
@@ -22,4 +23,8 @@
 
 ---
 
-::: laktory.models.resources.databricks.mwsnetworkconnectivityconfig.MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRule
+::: laktory.models.resources.databricks.mwsnetworkconnectivityconfig.MwsNetworkConnectivityConfigEgressConfigTargetRulesAwsPrivateEndpointRules
+
+---
+
+::: laktory.models.resources.databricks.mwsnetworkconnectivityconfig.MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRules

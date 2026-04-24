@@ -5,6 +5,7 @@ from pydantic import computed_field
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import PluralField
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -13,8 +14,9 @@ logger = get_logger(__name__)
 
 
 class PythonPackagePermissions(BaseModel, PulumiResource, TerraformResource):
-    access_controls: list[AccessControl] = Field(
-        ..., description="Access controls list"
+    access_control: list[AccessControl] = PluralField(
+        ...,
+        description="Access controls list",
     )
     get_workspace_file_path: Callable = Field(
         ..., description="Callable returning workspace filepath", exclude=True
@@ -28,6 +30,10 @@ class PythonPackagePermissions(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Pulumi Methods                                                          #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def pulumi_renames(self) -> dict[str, str]:
+        return {"access_control": "access_controls"}
 
     @property
     def pulumi_resource_type(self) -> str:

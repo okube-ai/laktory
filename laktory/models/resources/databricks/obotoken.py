@@ -1,26 +1,12 @@
-from pydantic import Field
-
-from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.obotoken_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.obotoken_base import OboTokenBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class OboToken(BaseModel, PulumiResource, TerraformResource):
+class OboToken(OboTokenBase, PulumiResource):
     """
     Databricks On-Behalf-Of token
     """
-
-    application_id: str = Field(
-        None,
-        description="Application ID of databricks.ServicePrincipal to create a PAT token for.",
-    )
-    comment: str = Field(
-        None, description="Comment that describes the purpose of the token."
-    )
-    lifetime_seconds: str = Field(
-        None,
-        description="The number of seconds before the token expires. Token resource is re-created when it expires. If no lifetime is specified, the token remains valid indefinitely.",
-    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -45,10 +31,6 @@ class OboToken(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_obo_token"
 
     @property
     def terraform_renames(self) -> dict[str, str]:

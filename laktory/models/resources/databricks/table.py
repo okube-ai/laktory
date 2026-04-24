@@ -1,14 +1,13 @@
-from typing import Literal
 from typing import Union
 
 from pydantic import Field
 
 from laktory._logger import get_logger
-from laktory.models.basemodel import BaseModel
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks.table_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.table_base import TableBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 logger = get_logger(__name__)
 
@@ -20,24 +19,7 @@ class TableLookup(ResourceLookup):
     )
 
 
-class TableColumn(BaseModel):
-    name: str = Field(..., description="User-visible name of column")
-    comment: str = Field(None, description="User-supplied free-form text.")
-    identity: str = Field(
-        None,
-        description="Whether field is an identity column. Can be `default`, `always` or `unset`. It is `unset` by default.",
-    )
-    nullable: bool = Field(
-        None, description="Whether field is nullable (Default: `true`)"
-    )
-    type: str = Field(
-        None,
-        description="Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.",
-    )
-    type_json: str = Field(None, description="")
-
-
-class Table(BaseModel, PulumiResource, TerraformResource):
+class Table(TableBase, PulumiResource):
     """
     A table resides in the third layer of Unity Catalog’s three-level namespace. It contains rows of data.
 
@@ -59,28 +41,14 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     * [Pulumi Databricks Table](https://www.pulumi.com/registry/packages/databricks/api-docs/sqltable/)
     """
 
-    catalog_name: Union[str, None] = Field(
+    catalog_name: str | None = Field(
         None, description="Name of the catalog storing the table"
-    )
-    columns: Union[list[TableColumn], None] = Field(
-        None, description="List of columns stored in the table"
-    )
-    comment: Union[str, None] = Field(
-        None, description="Text description of the catalog"
-    )
-    data_source_format: str = Field(
-        "DELTA",
-        description="""
-    External tables are supported in multiple data source formats. The string constants identifying these formats
-    are DELTA, CSV, JSON, AVRO, PARQUET, ORC, TEXT. Change forces creation of a new resource. Not supported for
-    MANAGED tables or VIEW.
-    """,
     )
     grant: Union[TableGrant, list[TableGrant]] = Field(
         None,
         description="""
-    Grant(s) operating on the Table and authoritative for a specific principal. Other principals within the grants are 
-    preserved. Mutually exclusive with `grants`. 
+    Grant(s) operating on the Table and authoritative for a specific principal. Other principals within the grants are
+    preserved. Mutually exclusive with `grants`.
     """,
     )
     grants: list[TableGrant] = Field(
@@ -95,32 +63,8 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         exclude=True,
         description="Specifications for looking up existing resource. Other attributes will be ignored.",
     )
-    name: str = Field(..., description="Name of the table")
-    properties: Union[dict[str, str], None] = Field(None, description="")
-    schema_name: Union[str, None] = Field(
+    schema_name: str | None = Field(
         None, description="Name of the schema storing the table"
-    )
-    storage_credential_name: Union[str, None] = Field(
-        None,
-        description="For EXTERNAL Tables only: the name of storage credential to use. Change forces creation of a new resource.",
-    )
-    storage_location: Union[str, None] = Field(
-        None,
-        description="URL of storage location for Table data (required for EXTERNAL Tables). Not supported for VIEW or MANAGED table_type.",
-    )
-    table_type: Literal["MANAGED", "EXTERNAL", "VIEW"] = Field(
-        "MANAGED", description="Distinguishes a view vs. managed/external Table."
-    )  # required
-    view_definition: Union[str, None] = Field(
-        None,
-        description="SQL text defining the view (for `table_type == 'VIEW'`). Not supported for MANAGED or EXTERNAL table_type.",
-    )
-    warehouse_id: Union[str, None] = Field(
-        None,
-        description="""
-    All table CRUD operations must be executed on a running cluster or SQL warehouse. If a warehouse_id is specified, 
-    that SQL warehouse will be used to execute SQL commands to manage this table.
-    """,
     )
 
     # ----------------------------------------------------------------------- #
@@ -161,7 +105,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @property
     def column_names(self) -> list[str]:
         """List of column names"""
-        return [c.name for c in self.columns]
+        return [c.name for c in self.column]
 
     @property
     def is_from_cdc(self) -> bool:
@@ -199,6 +143,10 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def pulumi_renames(self) -> dict[str, str]:
+        return {"column": "columns"}
+
+    @property
     def pulumi_resource_type(self) -> str:
         return "databricks:SqlTable"
 
@@ -212,16 +160,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "columns": "column",
-        }
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_sql_table"
 
     @property
     def terraform_resource_lookup_type(self) -> str:

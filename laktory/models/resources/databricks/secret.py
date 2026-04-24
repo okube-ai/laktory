@@ -1,18 +1,16 @@
 from pydantic import Field
 
-from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.secret_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.secret_base import SecretBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class Secret(BaseModel, PulumiResource, TerraformResource):
+class Secret(SecretBase, PulumiResource):
     """
     Databricks secret
     """
 
-    scope: str = Field(None, description="Scope associated with the secret")
-    key: str = Field(None, description="Key associated with the secret.")
-    value: str = Field(None, description="Value associated with the secret")
+    scope: str | None = Field(None, description="Name of the secret scope")
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -29,19 +27,3 @@ class Secret(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_resource_type(self) -> str:
         return "databricks:Secret"
-
-    @property
-    def pulumi_renames(self) -> dict[str, str]:
-        return {"value": "string_value"}
-
-    # ----------------------------------------------------------------------- #
-    # Terraform Properties                                                    #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_secret"
-
-    @property
-    def terraform_renames(self) -> dict[str, str]:
-        return self.pulumi_renames

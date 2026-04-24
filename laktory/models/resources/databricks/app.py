@@ -6,132 +6,126 @@ from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
+from laktory.models.resources.databricks.app_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.app_base import AppBase
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
 class AppGitRepository(BaseModel):
-    """App Git Repository settings"""
-
-    provider: str = Field(..., description="")
-    url: str = Field(..., description="")
+    provider: str = Field(..., description="Git provider (e.g. gitHub).")
+    url: str = Field(..., description="URL of the Git repository.")
 
 
-# class AppProviderConfig(BaseModel):
-#     """App Provider Configuration"""
-#     workspace_id: str = Field(..., description="")
+class AppResourceApp(BaseModel):
+    name: str | None = Field(None, description="Name of the app resource.")
+    permission: str | None = Field(None, description="Permission to grant.")
 
 
 class AppResourceDatabase(BaseModel):
-    """App Resource Database Configuration"""
-
-    database_name: str = Field(..., description="The name of database.")
-    instance_name: str = Field(..., description="The name of database instance.")
-    permission: str = Field(
-        ...,
-        description="Permission to grant on database. Supported permissions are: CAN_CONNECT_AND_CREATE.",
-    )
+    database_name: str = Field(..., description="Name of the database.")
+    instance_name: str = Field(..., description="Name of the database instance.")
+    permission: str = Field(..., description="Permission to grant.")
 
 
 class AppResourceExperiment(BaseModel):
-    """App Resource Experiment Configuration"""
-
-    experiment_id: str = Field(..., description="")
-    permission: str = Field(..., description="")
+    experiment_id: str = Field(..., description="ID of the MLflow experiment.")
+    permission: str = Field(..., description="Permission to grant.")
 
 
 class AppResourceGenieSpace(BaseModel):
-    """App Resource Genie Space Configuration"""
-
-    name: str = Field(..., description="The name of Genie Space.")
-    permission: str = Field(..., description="")
-    space_id: str = Field(..., description="The unique ID of Genie Space.")
+    name: str = Field(..., description="Name of the Genie space.")
+    permission: str = Field(..., description="Permission to grant.")
+    space_id: str = Field(..., description="ID of the Genie space.")
 
 
 class AppResourceJob(BaseModel):
-    """App Resource Job Configuration"""
+    id: str = Field(..., description="ID of the Databricks job.")
+    permission: str = Field(..., description="Permission to grant.")
 
-    id: str = Field(..., description="Id of the job to grant permission on.")
-    permission: str = Field(
-        ...,
-        description="Permissions to grant on the Job. Supported permissions are: `CAN_MANAGE`, `IS_OWNER`, `CAN_MANAGE_RUN`, `CAN_VIEW`.",
-    )
+
+class AppResourcePostgres(BaseModel):
+    branch: str | None = Field(None, description="Branch name.")
+    database: str | None = Field(None, description="Database name.")
+    permission: str | None = Field(None, description="Permission to grant.")
 
 
 class AppResourceSecret(BaseModel):
-    """App Resource Secret Configuration"""
-
-    key: str = Field(..., description="Key of the secret to grant permission on.")
-    permission: str = Field(
-        ...,
-        description="Permission to grant on the secret scope. For secrets, only one permission is allowed. Permission must be one of: `READ`, `WRITE`, `MANAGE`.",
-    )
-    scope: str = Field(..., description="Scope of the secret to grant permission on.")
+    key: str = Field(..., description="Secret key.")
+    permission: str = Field(..., description="Permission to grant.")
+    scope: str = Field(..., description="Secret scope.")
 
 
 class AppResourceServingEndpoint(BaseModel):
-    """App Resource Serving Endpoint Configuration"""
-
-    name: str = Field(
-        ..., description="Name of the serving endpoint to grant permission on."
-    )
-    permission: str = Field(
-        ...,
-        description="Permission to grant on the serving endpoint. Supported permissions are: `CAN_MANAGE`, `CAN_QUERY`, `CAN_VIEW`.",
-    )
+    name: str = Field(..., description="Name of the serving endpoint.")
+    permission: str = Field(..., description="Permission to grant.")
 
 
 class AppResourceSqlWarehouse(BaseModel):
-    """App Resource SQL Warehouse Configuration"""
-
-    id: str = Field(..., description="Id of the SQL warehouse to grant permission on.")
-    permission: str = Field(
-        ...,
-        description="Permission to grant on the SQL warehouse. Supported permissions are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`.",
-    )
+    id: str = Field(..., description="ID of the SQL warehouse.")
+    permission: str = Field(..., description="Permission to grant.")
 
 
 class AppResourceUcSecurable(BaseModel):
-    """App Resource Unity Catalog Securable Configuration"""
-
-    permission: str = Field(
-        ...,
-        description="Permissions to grant on UC securable, i.e. `READ_VOLUME`, `WRITE_VOLUME`.",
-    )
-    securable_full_name: str = Field(
-        ...,
-        description="the full name of UC securable, i.e. `my-catalog.my-schema.my-volume`.",
-    )
-    securable_type: str = Field(
-        ..., description="the type of UC securable, i.e. `VOLUME`."
-    )
-    securable_kind: str = Field(None, description="")
+    permission: str = Field(..., description="Permission to grant.")
+    securable_full_name: str = Field(..., description="Full name of the UC securable.")
+    securable_type: str = Field(..., description="Type of the UC securable.")
 
 
 class AppResource(BaseModel):
-    """App Resource Configuration"""
-
-    name: str = Field(..., description="The name of the resource.")
-    # app: AppResourceApp = Field(None, description="")
-    database: AppResourceDatabase = Field(None, description="")
-    description: str = Field(
-        None,
-        description="The description of the resource. Exactly one of the following attributes must be provided.",
+    name: str = Field(
+        ..., description="Name used to refer to this resource inside the app."
     )
-    experiment: AppResourceExperiment = Field(None, description="")
-    genie_space: AppResourceGenieSpace = Field(None, description="attribute")
-    job: AppResourceJob = Field(None, description="attribute")
-    secret: AppResourceSecret = Field(None, description="attribute")
-    serving_endpoint: AppResourceServingEndpoint = Field(None, description="attribute")
-    sql_warehouse: AppResourceSqlWarehouse = Field(None, description="attribute")
-    uc_securable: AppResourceUcSecurable = Field(
-        None,
-        description="attribute (see the API docs for full list of supported UC objects)",
+    app: AppResourceApp | None = Field(None, description="App resource reference.")
+    database: AppResourceDatabase | None = Field(
+        None, description="Database resource reference."
+    )
+    description: str | None = Field(None, description="Description of the resource.")
+    experiment: AppResourceExperiment | None = Field(
+        None, description="MLflow experiment resource reference."
+    )
+    genie_space: AppResourceGenieSpace | None = Field(
+        None, description="Genie space resource reference."
+    )
+    job: AppResourceJob | None = Field(
+        None, description="Databricks job resource reference."
+    )
+    postgres: AppResourcePostgres | None = Field(
+        None, description="Postgres resource reference."
+    )
+    secret: AppResourceSecret | None = Field(
+        None, description="Secret resource reference."
+    )
+    serving_endpoint: AppResourceServingEndpoint | None = Field(
+        None, description="Serving endpoint resource reference."
+    )
+    sql_warehouse: AppResourceSqlWarehouse | None = Field(
+        None, description="SQL warehouse resource reference."
+    )
+    uc_securable: AppResourceUcSecurable | None = Field(
+        None, description="Unity Catalog securable resource reference."
     )
 
 
-class App(BaseModel, PulumiResource, TerraformResource):
+class AppTelemetryExportDestinationUnityCatalog(BaseModel):
+    logs_table: str = Field(
+        ..., description="Full name of the Unity Catalog table for logs."
+    )
+    metrics_table: str = Field(
+        ..., description="Full name of the Unity Catalog table for metrics."
+    )
+    traces_table: str = Field(
+        ..., description="Full name of the Unity Catalog table for traces."
+    )
+
+
+class AppTelemetryExportDestination(BaseModel):
+    unity_catalog: AppTelemetryExportDestinationUnityCatalog | None = Field(
+        None, description="Unity Catalog telemetry destination."
+    )
+
+
+class App(AppBase, PulumiResource):
     """
     Databricks App
 
@@ -160,29 +154,20 @@ class App(BaseModel, PulumiResource, TerraformResource):
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")
-    budget_policy_id: str = Field(
-        None, description="The Budget Policy ID set for this resource."
-    )
-    compute_size: str = Field(
-        None,
-        description="A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`.",
-    )
 
-    description: str = Field(None, description="The description of the app.")
-
-    git_repository: AppGitRepository = Field(None, description="")
-    name: str = Field(
-        None,
-        description="The name of the app. The name must contain only lowercase alphanumeric characters and hyphens. It must be unique within the workspace.",
+    git_repository: AppGitRepository | None = Field(
+        None, description="Git repository configuration."
     )
     name_prefix: str = Field(None, description="Prefix added to the app name")
     name_suffix: str = Field(None, description="Suffix added to the app name")
-
-    no_compute: bool = Field(None, description="")
-    # provider_config: AppProviderConfig = Field(None, description="")
-    resources: list[AppResource] = Field(
-        None, description="A list of resources that the app have access to."
+    resources: list[AppResource] | None = Field(
+        None, description="A list of resources that the app has access to."
     )
+    telemetry_export_destinations: list[AppTelemetryExportDestination] | None = Field(
+        None, description="Telemetry export destinations."
+    )
+
+    # provider_config: AppProviderConfig = Field(None, description="")
 
     @model_validator(mode="after")
     def update_name(self) -> Any:
@@ -234,16 +219,6 @@ class App(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "resources": "resources",
-        }
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_app"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

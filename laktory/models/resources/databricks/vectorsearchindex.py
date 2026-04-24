@@ -6,8 +6,11 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.vectorsearchindex_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.vectorsearchindex_base import (
+    VectorSearchIndexBase,
+)
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
 class VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn(BaseModel):
@@ -31,13 +34,6 @@ class VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn(BaseModel):
 
 
 class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "embedding_source_columns": "embedding_source_columns",
-            "embedding_vector_columns": "embedding_vector_columns",
-        }
-
     embedding_source_columns: list[
         VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn
     ] = Field(
@@ -72,13 +68,6 @@ class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
 
 
 class VectorSearchIndexDirectAccessIndexSpec(BaseModel):
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "embedding_source_columns": "embedding_source_columns",
-            "embedding_vector_columns": "embedding_vector_columns",
-        }
-
     embedding_source_columns: list[
         VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn
     ] = Field(
@@ -97,7 +86,7 @@ class VectorSearchIndexDirectAccessIndexSpec(BaseModel):
     # schema_json: str
 
 
-class VectorSearchIndex(BaseModel, PulumiResource, TerraformResource):
+class VectorSearchIndex(VectorSearchIndexBase, PulumiResource):
     """
     Databricks Warehouse
 
@@ -123,35 +112,6 @@ class VectorSearchIndex(BaseModel, PulumiResource, TerraformResource):
     """
 
     # access_controls: list[AccessControl] = []
-    endpoint_name: str = Field(
-        ...,
-        description="The name of the Vector Search Endpoint that will be used for indexing the data.",
-    )
-    index_type: Literal["DELTA_SYNC", "DIRECT_ACCESS"] = Field(
-        ...,
-        description="""
-    Vector Search index type. Currently supported values are:
-        - DELTA_SYNC: An index that automatically syncs with a source Delta Table, automatically and incrementally 
-          updating the index as the underlying data in the Delta Table changes.
-        - DIRECT_ACCESS: An index that supports the direct read and write of vectors and metadata through our REST and 
-          SDK APIs. With this model, the user manages index updates.
-    """,
-    )
-    primary_key: str = Field(
-        ..., description="The column name that will be used as a primary key."
-    )
-    delta_sync_index_spec: VectorSearchIndexDeltaSyncIndexSpec = Field(
-        None,
-        description="Specification for Delta Sync Index. Required if index_type is DELTA_SYNC.",
-    )
-    direct_access_index_spec: VectorSearchIndexDirectAccessIndexSpec = Field(
-        None,
-        description="Specification for Direct Vector Access Index. Required if index_type is DIRECT_ACCESS.",
-    )
-    name: str = Field(
-        ...,
-        description="Three-level name of the Vector Search Index to create (catalog.schema.index_name).",
-    )
 
     @model_validator(mode="after")
     def check_index_spec(self) -> Any:
@@ -182,10 +142,6 @@ class VectorSearchIndex(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_vector_search_index"
 
     # @property
     # def terraform_resource_lookup_type(self) -> str:

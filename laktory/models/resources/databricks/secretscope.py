@@ -8,8 +8,9 @@ from pydantic import model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.secret import Secret
 from laktory.models.resources.databricks.secretacl import SecretAcl
+from laktory.models.resources.databricks.secretscope_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.secretscope_base import SecretScopeBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
 class SecretScopePermission(BaseModel):
@@ -21,12 +22,7 @@ class SecretScopePermission(BaseModel):
     )
 
 
-class SecretScopeKeyvaultMetadata(BaseModel):
-    dns_name: str = Field(None, description="")
-    resource_id: str = Field(None, description="Id of the keyvault resource")
-
-
-class SecretScope(BaseModel, PulumiResource, TerraformResource):
+class SecretScope(SecretScopeBase, PulumiResource):
     """
     Databricks secret scope
 
@@ -38,8 +34,14 @@ class SecretScope(BaseModel, PulumiResource, TerraformResource):
     ss = models.resources.databricks.SecretScope(
         name="azure",
         secrets=[
-            {"key": "keyvault-url", "value": "https://my-secrets.vault.azure.net/"},
-            {"key": "client-id", "value": "f461daa2-c281-4166-bc3e-538b90223184"},
+            {
+                "key": "keyvault-url",
+                "string_value": "https://my-secrets.vault.azure.net/",
+            },
+            {
+                "key": "client-id",
+                "string_value": "f461daa2-c281-4166-bc3e-538b90223184",
+            },
         ],
         permissions=[
             {"permission": "READ", "principal": "role-metastore-admins"},
@@ -49,13 +51,6 @@ class SecretScope(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    backend_type: Literal["DATABRICKS", "AZURE_KEYVAULT"] = Field(
-        "DATABRICKS", description="Backend for managing the secrets inside the scope"
-    )
-    keyvault_metadata: SecretScopeKeyvaultMetadata = Field(
-        None, description="Keyvault specifications if used as a scope backend"
-    )
-    name: str = Field(..., description="Secret scope name")
     permissions: list[SecretScopePermission] = Field(
         [], description="Permissions given to the secret scope"
     )
@@ -84,7 +79,7 @@ class SecretScope(BaseModel, PulumiResource, TerraformResource):
             resources += [
                 Secret(
                     key=s.key,
-                    value=s.value,
+                    string_value=s.string_value,
                     scope=f"${{resources.{self.resource_name}.id}}",
                 )
             ]
@@ -116,16 +111,6 @@ class SecretScope(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "keyvault_metadata": "keyvault_metadata",
-        }
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_secret_scope"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

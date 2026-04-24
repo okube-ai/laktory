@@ -7,14 +7,14 @@ from pydantic import Field
 from pydantic import computed_field
 
 from laktory import settings
-from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
+from laktory.models.resources.databricks.workspacefile_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.workspacefile_base import WorkspaceFileBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
+class WorkspaceFile(WorkspaceFileBase, PulumiResource):
     """
     Databricks Workspace File
 
@@ -60,14 +60,6 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
         description="Path to file on local filesystem.",
         validation_alias=AliasChoices("source", "source_"),
         exclude=True,
-    )
-    content_base64: str = Field(
-        None,
-        description="""
-    The base64-encoded file content. Conflicts with source. Use of content_base64 is discouraged, as it's increasing 
-    memory footprint of Pulumi state and should only be used in exceptional circumstances, like creating a workspace 
-    file with configuration properties for a data pipeline.
-    """,
     )
 
     @computed_field(description="source")
@@ -140,10 +132,6 @@ class WorkspaceFile(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_workspace_file"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

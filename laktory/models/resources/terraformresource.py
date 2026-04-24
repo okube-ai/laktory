@@ -57,7 +57,9 @@ class TerraformResource(BaseResource):
         # we set default values to facilitate instantiation of models within
         # other models (permissions in MwsPermissionAssignment for example).
         # A better approach should be used.
-        d = super().model_dump(exclude=self.terraform_excludes, exclude_none=True)
+        d = super().model_dump(
+            by_alias=True, exclude=self.terraform_excludes, exclude_none=True
+        )
         for k, v in self.terraform_renames.items():
             if k in d:
                 d[v] = d.pop(k)

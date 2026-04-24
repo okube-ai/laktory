@@ -1,3 +1,4 @@
+<!-- GENERATED FILE — DO NOT EDIT -->
 ::: laktory.models.resources.databricks.Recipient
 
 ---
@@ -6,8 +7,8 @@
 
 ---
 
-::: laktory.models.resources.databricks.recipient.RecipientPropertyKvPairs
+::: laktory.models.resources.databricks.recipient.RecipientPropertiesKvpairs
 
 ---
 
-::: laktory.models.resources.databricks.recipient.RecipientToken
+::: laktory.models.resources.databricks.recipient.RecipientTokens

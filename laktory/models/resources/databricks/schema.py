@@ -3,17 +3,17 @@ from typing import Union
 from pydantic import Field
 from pydantic import model_validator
 
-from laktory.models.basemodel import BaseModel
 from laktory.models.grants.schemagrant import SchemaGrant
+from laktory.models.resources.databricks.schema_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.schema_base import SchemaBase
 from laktory.models.resources.databricks.table import Table
 from laktory.models.resources.databricks.volume import Volume
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class Schema(BaseModel, PulumiResource, TerraformResource):
+class Schema(SchemaBase, PulumiResource):
     """
-    A schema (also called a database) is the second layer of Unity Catalog’s
+    A schema (also called a database) is the second layer of Unity Catalog's
     three-level namespace. A schema organizes tables and views.
 
     Examples
@@ -35,15 +35,17 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     * [Pulumi Databricks Schema](https://www.pulumi.com/registry/packages/databricks/api-docs/schema/)
     """
 
-    catalog_name: Union[str, None] = Field(
+    # Relax fields the base marks required but Laktory fills via parent validators
+    catalog_name: str = Field(
         None, description="Name of the catalog storing the schema"
     )
-    comment: Union[str, None] = Field(
-        None, description="Text description of the catalog"
-    )
+
+    # Override base default (None → True)
     force_destroy: bool = Field(
-        True, description="If `True` catalog can be deleted, even when not empty"
+        True, description="If `True` schema can be deleted, even when not empty"
     )
+
+    # Laktory-specific
     grant: Union[SchemaGrant, list[SchemaGrant]] = Field(
         None,
         description="""
@@ -54,16 +56,8 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     grants: list[SchemaGrant] = Field(
         None,
         description="""
-    Grants operating on the Schema and authoritative for all principals. Replaces any existing grants defined inside 
+    Grants operating on the Schema and authoritative for all principals. Replaces any existing grants defined inside
     or outside of Laktory. Mutually exclusive with `grant`.
-    """,
-    )
-    name: str = Field(..., description="Name of the schema")
-    storage_root: str = Field(
-        None,
-        description="""
-    Managed location of the schema. Location in cloud storage where data for managed tables will be stored. If not
-    specified, the location will default to the catalog root location.
     """,
     )
     tables: list[Table] = Field([], description="List of tables stored in the schema")
@@ -148,10 +142,6 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_schema"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

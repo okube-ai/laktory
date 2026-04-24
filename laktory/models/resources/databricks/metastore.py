@@ -2,13 +2,13 @@ from typing import Union
 
 from pydantic import Field
 
-from laktory.models.basemodel import BaseModel
 from laktory.models.grants.metastoregrant import MetastoreGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks.metastore_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.metastore_base import MetastoreBase
 from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
 class MetastoreLookup(ResourceLookup):
@@ -17,7 +17,7 @@ class MetastoreLookup(ResourceLookup):
     )
 
 
-class Metastore(BaseModel, PulumiResource, TerraformResource):
+class Metastore(MetastoreBase, PulumiResource):
     """
     Databricks Metastore
 
@@ -27,36 +27,8 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    created_at: int = Field(None, description="")
-    created_by: str = Field(None, description="")
     data_accesses: list[MetastoreDataAccess] = Field(
         None, description="List of data accesses (storage credentials)"
-    )
-    default_data_access_config_id: str = Field(None, description="")
-    delta_sharing_organization_name: str = Field(
-        None,
-        description="""
-    The organization name of a Delta Sharing entity. This field is used for Databricks to Databricks sharing. Once 
-    this is set it cannot be removed and can only be modified to another valid value. To delete this value please 
-    taint and recreate the resource.
-    """,
-    )
-    delta_sharing_recipient_token_lifetime_in_seconds: int = Field(
-        None,
-        description="""
-    Required along with `delta_sharing_scope`. Used to set expiration duration in seconds on recipient data access 
-    tokens. Set to 0 for unlimited duration.
-    """,
-    )
-    delta_sharing_scope: str = Field(
-        None,
-        description="""
-    Required along with delta_sharing_recipient_token_lifetime_in_seconds. Used to enable delta sharing on the 
-    metastore. Valid values: INTERNAL, INTERNAL_AND_EXTERNAL.
-    """,
-    )
-    force_destroy: bool = Field(
-        None, description="Destroy metastore regardless of its contents."
     )
     global_metastore_id: str = Field(None, description="")
     grant: Union[MetastoreGrant, list[MetastoreGrant]] = Field(
@@ -79,22 +51,6 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         exclude=True,
         description="Specifications for looking up existing resource. Other attributes will be ignored.",
     )
-    metastore_id: str = Field(None, description="")
-    name: str = Field(None, description="Name of metastore.")
-    owner: str = Field(
-        None, description="Username/groupname/sp application_id of the metastore owner."
-    )
-    region: str = Field(None, description="The region of the metastore")
-    storage_root: str = Field(
-        None,
-        description="""
-    Path on cloud storage account, where managed databricks.Table are stored. Change forces creation of a new resource.
-     If no storage_root is defined for the metastore, each catalog must have a storage_root defined.
-    """,
-    )
-    storage_root_credential_id: Union[str, None] = Field(None, description="")
-    updated_at: int = Field(None, description="")
-    updated_by: str = Field(None, description="")
     workspace_assignments: list[MetastoreAssignment] = Field(
         None, description="List of workspace to which metastore is assigned to"
     )
@@ -175,10 +131,6 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_metastore"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

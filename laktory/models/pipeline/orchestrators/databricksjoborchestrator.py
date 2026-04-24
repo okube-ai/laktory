@@ -7,13 +7,13 @@ from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
 )
 from laktory.models.pipelinechild import PipelineChild
-from laktory.models.resources.databricks.cluster import ClusterLibrary
-from laktory.models.resources.databricks.cluster import ClusterLibraryPypi
 from laktory.models.resources.databricks.job import Job
 from laktory.models.resources.databricks.job import JobEnvironment
 from laktory.models.resources.databricks.job import JobEnvironmentSpec
 from laktory.models.resources.databricks.job import JobParameter
 from laktory.models.resources.databricks.job import JobTask
+from laktory.models.resources.databricks.job import JobTaskLibrary
+from laktory.models.resources.databricks.job import JobTaskLibraryPypi
 from laktory.models.resources.databricks.job import JobTaskPythonWheelTask
 from laktory.models.resources.pulumiresource import PulumiResource
 
@@ -62,28 +62,29 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             for r in _requirements:
                 is_var = "${vars." in r
                 if r.endswith(".whl") or (is_var and "wheel" in r or "whl" in r):
-                    l = ClusterLibrary(whl=r)
+                    l = JobTaskLibrary(whl=r)
                 else:
-                    l = ClusterLibrary(pypi=ClusterLibraryPypi(package=r))
+                    l = JobTaskLibrary(pypi=JobTaskLibraryPypi(package=r))
                 libraries += [l]
 
             task.job_cluster_key = "node-cluster"
-            task.libraries = libraries
+            task.library = libraries
         return task
 
     def update_from_parent(self):
         serverless = True
-        for c in self.job_clusters:
-            if c.job_cluster_key == "node-cluster":
-                serverless = False
-        if len(self.job_clusters) > 0 and serverless:
-            raise ValueError(
-                "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
-            )
+        if self.job_cluster:
+            for c in self.job_cluster:
+                if c.job_cluster_key == "node-cluster":
+                    serverless = False
+            if len(self.job_cluster) > 0 and serverless:
+                raise ValueError(
+                    "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
+                )
 
         pl = self.parent_pipeline
 
-        self.tasks = []
+        self.task = []
 
         # Requirements and path
         _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
@@ -94,7 +95,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         # Environment
         env_found = False
-        envs = self.environments
+        envs = self.environment
         if envs is None:
             envs = []
         for env in envs:
@@ -120,7 +121,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                     ),
                 )
             ]
-            self.environments = envs
+            self.environment = envs
 
         # Sorting Node Names to prevent job update trigger with Pulumi
         plan = pl.get_execution_plan()
@@ -142,14 +143,14 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                         "selects": ",".join(pl_task.node_names),
                     },
                 ),
-                depends_ons=depends_on,
+                depends_on=depends_on,
             )
             task = self._set_task_compute(task, serverless, _requirements)
 
             if self.node_max_retries:
                 task.max_retries = self.node_max_retries
 
-            self.tasks += [task]
+            self.task += [task]
 
         if pl.databricks_quality_monitor_enabled:
             task = JobTask(
@@ -163,15 +164,15 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                         "quality_monitors": "true",  # this has been already update in the pl.execute()
                     },
                 ),
-                depends_ons=[{"task_key": t.task_key} for t in self.tasks],
+                depends_on=[{"task_key": t.task_key} for t in self.task],
             )
             task = self._set_task_compute(task, serverless, _requirements)
-            self.tasks += [task]
+            self.task += [task]
 
-        self.sort_tasks(self.tasks)
+        self.sort_tasks(self.task)
 
         # Update job parameters
-        self.parameters = [
+        self.parameter = [
             JobParameter(name="full_refresh", default="false"),
         ]
 
@@ -192,15 +193,25 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         from databricks.bundles.jobs import Job as DabsJob
 
         d = self.model_dump(
-            exclude=self.terraform_excludes, exclude_unset=True, by_alias=True
+            exclude=self.terraform_excludes, exclude_unset=True, by_alias=False
         )
-        for k, v in self.terraform_renames.items():
-            if k in d:
-                d[v] = d.pop(k)
-        # depends_ons → depends_on in all tasks (DABs API field name)
-        for task in d.get("tasks", []):
-            if "depends_ons" in task:
-                task["depends_on"] = task.pop("depends_ons")
+        for task in d.get("task", []):
+            # schema_ is a Python workaround for the reserved name; DABs expects "schema"
+            if "dbt_task" in task and "schema_" in task["dbt_task"]:
+                task["dbt_task"]["schema"] = task["dbt_task"].pop("schema_")
+            # DABs SDK uses plural names for list fields
+            if "library" in task:
+                task["libraries"] = task.pop("library")
+
+        # DABs SDK uses plural names for top-level list fields
+        for singular, plural in [
+            ("task", "tasks"),
+            ("job_cluster", "job_clusters"),
+            ("environment", "environments"),
+            ("parameter", "parameters"),
+        ]:
+            if singular in d:
+                d[plural] = d.pop(singular)
 
         return DabsJob.from_dict(d)
 

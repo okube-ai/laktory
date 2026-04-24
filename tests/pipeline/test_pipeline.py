@@ -137,7 +137,7 @@ def test_update_from_parent():
     # Test
     assert pl.orchestrator.parent == pl
     assert pl.orchestrator.parent_pipeline == pl
-    assert len(pl.orchestrator.parameters) == 1
+    assert len(pl.orchestrator.parameter) == 1
 
     # Assign As Model
     pl = get_pl("")
@@ -146,7 +146,7 @@ def test_update_from_parent():
     # Test
     assert pl.orchestrator.parent == pl
     assert pl.orchestrator.parent_pipeline == pl
-    assert len(pl.orchestrator.parameters) == 1
+    assert len(pl.orchestrator.parameter) == 1
 
 
 def test_root_path(tmp_path):

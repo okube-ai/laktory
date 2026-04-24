@@ -2,14 +2,14 @@ from typing import Union
 
 from pydantic import Field
 
-from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks.group_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.group_base import GroupBase
 from laktory.models.resources.databricks.groupmember import GroupMember
 from laktory.models.resources.databricks.mwspermissionassignment import (
     MwsPermissionAssignment,
 )
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
 class GroupLookup(ResourceLookup):
@@ -22,7 +22,7 @@ class GroupLookup(ResourceLookup):
     )
 
 
-class Group(BaseModel, PulumiResource, TerraformResource):
+class Group(GroupBase, PulumiResource):
     """
     Databricks group
 
@@ -35,45 +35,6 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    acl_principal_id: str = Field(
-        None,
-        description="Identifier for use in databricks_access_control_rule_set, e.g. `groups/Some Group`.",
-    )
-    allow_cluster_create: bool = Field(
-        False,
-        description="""
-    This is a field to allow the group to have cluster create privileges. More fine grained permissions could be 
-    assigned with databricks.Permissions and cluster_id argument. Everyone without `allow_cluster_create` argument set,
-    but with permission to use Cluster Policy would be able to create clusters, but within boundaries of that specific 
-    policy.
-    """,
-    )
-    allow_instance_pool_create: bool = Field(
-        None,
-        description="""
-    This is a field to allow the group to have instance pool create privileges. More fine grained permissions could 
-    be assigned with databricks.Permissions and instance_pool_id argument.
-    """,
-    )
-    databricks_sql_access: bool = Field(
-        None,
-        description="""
-    This is a field to allow the group to have access to Databricks SQL feature in User Interface and through 
-    databricks_sql_endpoint.
-    """,
-    )
-    display_name: str = Field(None, description="Display name for the group.")
-    external_id: str = Field(
-        None, description="ID of the group in an external identity provider."
-    )
-    force: bool = Field(
-        None,
-        description="""
-    Ignore `cannot create group: Group with name X already exists.` errors and implicitly import the specific group 
-    into IaC state, enforcing entitlements defined in the instance of resource. This functionality is experimental and 
-    is designed to simplify corner cases, like Azure Active Directory synchronisation.
-    """,
-    )
     lookup_existing: GroupLookup = Field(
         None,
         exclude=True,
@@ -82,10 +43,6 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     member_ids: list[str] = Field(
         [],
         description="A list of all member ids of the group. Can be users, groups or service principals",
-    )
-    url: str = Field(None, description="")
-    workspace_access: bool = Field(
-        None, description="When `True`, the group is allowed to have workspace access"
     )
     workspace_permission_assignments: list[MwsPermissionAssignment] = Field(
         None, description="Workspace access privileges"
@@ -161,10 +118,6 @@ class Group(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_group"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

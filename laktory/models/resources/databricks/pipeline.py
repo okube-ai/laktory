@@ -1,479 +1,16 @@
 from typing import Any
-from typing import Literal
-from typing import Union
 
-from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import model_validator
 
-from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
-from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.permissions import Permissions
+from laktory.models.resources.databricks.pipeline_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.pipeline_base import PipelineBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 
-class PipelineTriggerCron(BaseModel):
-    quartz_cron_schedule: str = Field(None, description="")
-    timezone_id: str = Field(None, description="")
-
-
-class PipelineTrigger(BaseModel):
-    cron: PipelineTriggerCron = Field(None, description="")
-    # manual:
-
-
-class PipelineRunAs(BaseModel):
-    service_principal_name: str = Field(None, description="")
-    user_name: str = Field(None, description="")
-
-
-class PipelineRestartWindow(BaseModel):
-    start_hour: int = Field(..., description="")
-    days_of_weeks: list[str] = Field(None, description="")
-    time_zone_id: str = Field(None, description="")
-
-
-class PipelineLatestUpdate(BaseModel):
-    creation_time: str = Field(None, description="")
-    state: str = Field(None, description="")
-    update_id: str = Field(None, description="")
-
-
-class PipelineGatewayDefinition(BaseModel):
-    connection_id: str = Field(
-        None,
-        description="Immutable. The Unity Catalog connection this gateway pipeline uses to communicate with the source.",
-    )
-    connection_name: str = Field(..., description="")
-    gateway_storage_catalog: str = Field(
-        ...,
-        description="Required, Immutable. The name of the catalog for the gateway pipeline's storage location.",
-    )
-    gateway_storage_name: str = Field(
-        None,
-        description="""
-        Required. The Unity Catalog-compatible naming for the gateway storage location. This is the destination to use 
-        for the data that is extracted by the gateway. Delta Live Tables system will automatically create the storage 
-        location under the catalog and schema.
-        """,
-    )
-    gateway_storage_schema: str = Field(
-        ...,
-        description="Required, Immutable. The name of the schema for the gateway pipelines's storage location.",
-    )
-
-
-class PipelineDeployment(BaseModel):
-    kind: str = Field(
-        ..., description="The deployment method that manages the pipeline."
-    )
-    metadata_file_path: str = Field(
-        ...,
-        description="The path to the file containing metadata about the deployment.",
-    )
-
-
-class PipelineEventLog(BaseModel):
-    name: str = Field(
-        ..., description="The table name the event log is published to in UC."
-    )
-    catalog: str = Field(
-        ..., description="The UC catalog the event log is published under."
-    )
-    schema_: str = Field(
-        ...,
-        description="The UC schema the event log is published under.",
-        validation_alias=AliasChoices("schema", "schema_"),
-    )
-
-
-class PipelineFilters(BaseModel):
-    excludes: str = Field(..., description="Paths to exclude.")
-    includes: str = Field(..., description="Paths to include.")
-
-
-class PipelineIngestionDefinitionDataStagingOptions(BaseModel):
-    catalog_name: str = Field(...)
-    schema_name: str = Field(...)
-    volume_name: str = Field(None, description="")
-
-
-class PipelineIngestionDefinitionFullRefreshWindow(BaseModel):
-    days_of_week: list[str] = Field(None, description="")
-    start_hour: int = Field(...)
-    time_zone_id: str = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsReportTableConfigurationAutoFullRefreshPolicy(
-    BaseModel
-):
-    enabled: bool = Field(...)
-    min_interval_hours: int = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsReportTableConfigurationQueryBasedConnectorConfig(
-    BaseModel
-):
-    cursor_columns: list[str] = Field(None, description="")
-    deletion_condition: str = Field(None, description="")
-    hard_deletion_sync_min_interval_in_seconds: int = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsReportTableConfigurationWorkdayReportParametersReportParameters(
-    BaseModel
-):
-    key: str = Field(None, description="")
-    value: str = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsReportTableConfigurationWorkdayReportParameters(
-    BaseModel
-):
-    incremental: bool = Field(None, description="")
-    parameters: dict[str, str] = Field(None, description="")
-    report_parameters: list[
-        PipelineIngestionDefinitionObjectsReportTableConfigurationWorkdayReportParametersReportParameters
-    ] = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsReportTableConfiguration(BaseModel):
-    exclude_columns: list[str] = Field(None, description="")
-    include_columns: list[str] = Field(None, description="")
-    primary_keys: list[str] = Field(None, description="")
-    row_filter: str = Field(None, description="")
-    salesforce_include_formula_fields: bool = Field(None, description="")
-    scd_type: str = Field(None, description="")
-    sequence_by: list[str] = Field(None, description="")
-    auto_full_refresh_policy: PipelineIngestionDefinitionObjectsReportTableConfigurationAutoFullRefreshPolicy = Field(
-        None, description=""
-    )
-    query_based_connector_config: PipelineIngestionDefinitionObjectsReportTableConfigurationQueryBasedConnectorConfig = Field(
-        None, description=""
-    )
-    workday_report_parameters: PipelineIngestionDefinitionObjectsReportTableConfigurationWorkdayReportParameters = Field(
-        None, description=""
-    )
-
-
-class PipelineIngestionDefinitionObjectsReport(BaseModel):
-    destination_catalog: str = Field(...)
-    destination_schema: str = Field(...)
-    destination_table: str = Field(None, description="")
-    source_url: str = Field(...)
-    table_configuration: PipelineIngestionDefinitionObjectsReportTableConfiguration = (
-        Field(None, description="")
-    )
-
-
-class PipelineIngestionDefinitionObjectsSchemaTableConfigurationAutoFullRefreshPolicy(
-    BaseModel
-):
-    enabled: bool = Field(...)
-    min_interval_hours: int = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsSchemaTableConfigurationQueryBasedConnectorConfig(
-    BaseModel
-):
-    cursor_columns: list[str] = Field(None, description="")
-    deletion_condition: str = Field(None, description="")
-    hard_deletion_sync_min_interval_in_seconds: int = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsSchemaTableConfigurationWorkdayReportParametersReportParameters(
-    BaseModel
-):
-    key: str = Field(None, description="")
-    value: str = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsSchemaTableConfigurationWorkdayReportParameters(
-    BaseModel
-):
-    incremental: bool = Field(None, description="")
-    parameters: dict[str, str] = Field(None, description="")
-    report_parameters: list[
-        PipelineIngestionDefinitionObjectsSchemaTableConfigurationWorkdayReportParametersReportParameters
-    ] = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsSchemaTableConfiguration(BaseModel):
-    exclude_columns: list[str] = Field(None, description="")
-    include_columns: list[str] = Field(None, description="")
-    primary_keys: list[str] = Field(None, description="")
-    row_filter: str = Field(None, description="")
-    salesforce_include_formula_fields: bool = Field(None, description="")
-    scd_type: str = Field(None, description="")
-    sequence_by: list[str] = Field(None, description="")
-    auto_full_refresh_policy: PipelineIngestionDefinitionObjectsSchemaTableConfigurationAutoFullRefreshPolicy = Field(
-        None, description=""
-    )
-    query_based_connector_config: PipelineIngestionDefinitionObjectsSchemaTableConfigurationQueryBasedConnectorConfig = Field(
-        None, description=""
-    )
-    workday_report_parameters: PipelineIngestionDefinitionObjectsSchemaTableConfigurationWorkdayReportParameters = Field(
-        None, description=""
-    )
-
-
-class PipelineIngestionDefinitionObjectsSchema(BaseModel):
-    destination_catalog: str = Field(...)
-    destination_schema: str = Field(...)
-    source_catalog: str = Field(None, description="")
-    source_schema: str = Field(...)
-    table_configuration: PipelineIngestionDefinitionObjectsSchemaTableConfiguration = (
-        Field(None, description="")
-    )
-
-
-class PipelineIngestionDefinitionObjectsTableTableConfigurationAutoFullRefreshPolicy(
-    BaseModel
-):
-    enabled: bool = Field(...)
-    min_interval_hours: int = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsTableTableConfigurationQueryBasedConnectorConfig(
-    BaseModel
-):
-    cursor_columns: list[str] = Field(None, description="")
-    deletion_condition: str = Field(None, description="")
-    hard_deletion_sync_min_interval_in_seconds: int = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportParametersReportParameters(
-    BaseModel
-):
-    key: str = Field(None, description="")
-    value: str = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportParameters(
-    BaseModel
-):
-    incremental: bool = Field(None, description="")
-    parameters: dict[str, str] = Field(None, description="")
-    report_parameters: list[
-        PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportParametersReportParameters
-    ] = Field(None, description="")
-
-
-class PipelineIngestionDefinitionObjectsTableTableConfiguration(BaseModel):
-    exclude_columns: list[str] = Field(None, description="")
-    include_columns: list[str] = Field(None, description="")
-    primary_keys: list[str] = Field(None, description="")
-    row_filter: str = Field(None, description="")
-    salesforce_include_formula_fields: bool = Field(None, description="")
-    scd_type: str = Field(None, description="")
-    sequence_by: list[str] = Field(None, description="")
-    auto_full_refresh_policy: PipelineIngestionDefinitionObjectsTableTableConfigurationAutoFullRefreshPolicy = Field(
-        None, description=""
-    )
-    query_based_connector_config: PipelineIngestionDefinitionObjectsTableTableConfigurationQueryBasedConnectorConfig = Field(
-        None, description=""
-    )
-    workday_report_parameters: PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportParameters = Field(
-        None, description=""
-    )
-
-
-class PipelineIngestionDefinitionObjectsTable(BaseModel):
-    destination_catalog: str = Field(...)
-    destination_schema: str = Field(...)
-    destination_table: str = Field(None, description="")
-    source_catalog: str = Field(None, description="")
-    source_schema: str = Field(None, description="")
-    source_table: str = Field(...)
-    table_configuration: PipelineIngestionDefinitionObjectsTableTableConfiguration = (
-        Field(None, description="")
-    )
-
-
-class PipelineIngestionDefinitionObjects(BaseModel):
-    report: PipelineIngestionDefinitionObjectsReport = Field(None, description="")
-    schema: PipelineIngestionDefinitionObjectsSchema = Field(None, description="")
-    table: PipelineIngestionDefinitionObjectsTable = Field(None, description="")
-
-
-class PipelineIngestionDefinitionSourceConfigurationsCatalogPostgresSlotConfig(
-    BaseModel
-):
-    publication_name: str = Field(None, description="")
-    slot_name: str = Field(None, description="")
-
-
-class PipelineIngestionDefinitionSourceConfigurationsCatalogPostgres(BaseModel):
-    slot_config: PipelineIngestionDefinitionSourceConfigurationsCatalogPostgresSlotConfig = Field(
-        None, description=""
-    )
-
-
-class PipelineIngestionDefinitionSourceConfigurationsCatalog(BaseModel):
-    source_catalog: str = Field(None, description="")
-    postgres: PipelineIngestionDefinitionSourceConfigurationsCatalogPostgres = Field(
-        None, description=""
-    )
-
-
-class PipelineIngestionDefinitionSourceConfigurations(BaseModel):
-    catalog: PipelineIngestionDefinitionSourceConfigurationsCatalog = Field(
-        None, description=""
-    )
-
-
-class PipelineIngestionDefinitionTableConfigurationAutoFullRefreshPolicy(BaseModel):
-    enabled: bool = Field(...)
-    min_interval_hours: int = Field(None, description="")
-
-
-class PipelineIngestionDefinitionTableConfigurationQueryBasedConnectorConfig(BaseModel):
-    cursor_columns: list[str] = Field(None, description="")
-    deletion_condition: str = Field(None, description="")
-    hard_deletion_sync_min_interval_in_seconds: int = Field(None, description="")
-
-
-class PipelineIngestionDefinitionTableConfigurationWorkdayReportParametersReportParameters(
-    BaseModel
-):
-    key: str = Field(None, description="")
-    value: str = Field(None, description="")
-
-
-class PipelineIngestionDefinitionTableConfigurationWorkdayReportParameters(BaseModel):
-    incremental: bool = Field(None, description="")
-    parameters: dict[str, str] = Field(None, description="")
-    report_parameters: list[
-        PipelineIngestionDefinitionTableConfigurationWorkdayReportParametersReportParameters
-    ] = Field(None, description="")
-
-
-class PipelineIngestionDefinitionTableConfiguration(BaseModel):
-    exclude_columns: list[str] = Field(None, description="")
-    include_columns: list[str] = Field(None, description="")
-    primary_keys: list[str] = Field(None, description="")
-    row_filter: str = Field(None, description="")
-    salesforce_include_formula_fields: bool = Field(None, description="")
-    scd_type: str = Field(None, description="")
-    sequence_by: list[str] = Field(None, description="")
-    auto_full_refresh_policy: PipelineIngestionDefinitionTableConfigurationAutoFullRefreshPolicy = Field(
-        None, description=""
-    )
-    query_based_connector_config: PipelineIngestionDefinitionTableConfigurationQueryBasedConnectorConfig = Field(
-        None, description=""
-    )
-    workday_report_parameters: PipelineIngestionDefinitionTableConfigurationWorkdayReportParameters = Field(
-        None, description=""
-    )
-
-
-class PipelineIngestionDefinition(BaseModel):
-    connection_name: str = Field(None, description="")
-    connector_type: str = Field(None, description="")
-    ingest_from_uc_foreign_catalog: bool = Field(None, description="")
-    ingestion_gateway_id: str = Field(None, description="")
-    netsuite_jar_path: str = Field(None, description="")
-    source_type: str = Field(None, description="")
-    data_staging_options: PipelineIngestionDefinitionDataStagingOptions = Field(
-        None, description=""
-    )
-    full_refresh_window: PipelineIngestionDefinitionFullRefreshWindow = Field(
-        None, description=""
-    )
-    objects: list[PipelineIngestionDefinitionObjects] = Field(None, description="")
-    source_configurations: list[PipelineIngestionDefinitionSourceConfigurations] = (
-        Field(None, description="")
-    )
-    table_configuration: PipelineIngestionDefinitionTableConfiguration = Field(
-        None, description=""
-    )
-
-
-class PipelineLibraryFile(BaseModel):
-    path: str = Field(..., description="")
-
-
-class PipelineLibraryNotebook(BaseModel):
-    path: str = Field(..., description="Workspace notebook filepath")
-
-
-class PipelineLibrary(BaseModel):
-    file: str = Field(None, description="File specifications")
-    notebook: PipelineLibraryNotebook = Field(
-        None, description="Notebook specifications"
-    )
-
-
-class PipelineNotifications(BaseModel):
-    alerts: list[
-        Literal[
-            "on-update-success",
-            "on-update-failure",
-            "on-update-fatal-failure",
-            "on-flow-failure",
-        ]
-    ] = Field(..., description="Alert types")
-    recipients: list[str] = Field(
-        ..., description="List of user/group/service principal names"
-    )
-
-
-class PipelineCluster(Cluster):
-    """
-    Pipeline Cluster. Same attributes as `laktory.models.Cluster`, except for
-
-    * `autotermination_minutes`
-    * `cluster_id`
-    * `data_security_mode`
-    * `enable_elastic_disk`
-    * `idempotency_token`
-    * `is_pinned`
-    * `libraries`
-    * `no_wait`
-    * `node_type_id`
-    * `runtime_engine`
-    * `single_user_name`
-    * `spark_version`
-
-    that are not allowed.
-    """
-
-    autotermination_minutes: int = Field(None, exclude=True)
-    cluster_id: str = Field(None, exclude=True)
-    data_security_mode: str = Field(None, exclude=True)
-    enable_elastic_disk: bool = Field(None, exclude=True)
-    idempotency_token: str = Field(None, exclude=True)
-    is_pinned: bool = Field(None, exclude=True)
-    libraries: list[Any] = Field(None, exclude=True)
-    node_type_id: str = None
-    no_wait: bool = Field(None, exclude=True)
-    runtime_engine: str = Field(None, exclude=True)
-    single_user_name: str = Field(None, exclude=True)
-    spark_version: str = Field(None, exclude=True)
-
-    @model_validator(mode="after")
-    def excluded_fields(self) -> Any:
-        for f in [
-            "autotermination_minutes",
-            "cluster_id",
-            "data_security_mode",
-            "enable_elastic_disk",
-            "idempotency_token",
-            "is_pinned",
-            "libraries",
-            "no_wait",
-            "runtime_engine",
-            "single_user_name",
-            "spark_version",
-        ]:
-            if getattr(self, f, None) not in [None, [], {}]:
-                raise ValueError(f"Field {f} should be null")
-
-        return self
-
-
-class Pipeline(BaseModel, PulumiResource, TerraformResource):
+class Pipeline(PipelineBase, PulumiResource):
     """
     Databricks Lakeflow Declarative Pipeline (formerly Delta Live Tables)
 
@@ -490,11 +27,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     name: pl-stock-prices
 
     catalog: dev
-    target: finance
+    schema: finance
 
     clusters:
-      - name : default
-        node_type_id: Standard_DS3_v2
+      - node_type_id: Standard_DS3_v2
         autoscale:
           min_workers: 1
           max_workers: 2
@@ -529,124 +65,8 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     access_controls: list[AccessControl] = Field(
         [], description="Pipeline access controls"
     )
-    allow_duplicate_names: bool = Field(
-        None,
-        description="""
-        If `False`, deployment will fail if name conflicts with that of another pipeline.
-        """,
-    )
-    budget_policy_id: str = Field(
-        None,
-        description="optional string specifying ID of the budget policy for this DLT pipeline.",
-    )
-    catalog: Union[str, None] = Field(
-        None, description="Name of the unity catalog storing the pipeline tables"
-    )
-    cause: str = Field(None, description="")
-    channel: Literal["CURRENT", "PREVIEW"] = Field(
-        "PREVIEW",
-        description="Name of the release channel for Spark version used by DLT pipeline.",
-    )
-    cluster_id: str = Field(None, description="")
-    clusters: list[PipelineCluster] = Field(
-        [],
-        description="""
-        Clusters to run the pipeline. If none is specified, pipelines will automatically select a default cluster 
-        configuration for the pipeline.
-        """,
-    )
-    creator_user_name: str = Field(None, description="")
-    configuration: dict[str, str] = Field(
-        {},
-        description="List of values to apply to the entire pipeline. Elements must be formatted as key:value pairs",
-    )
-    continuous: bool = Field(
-        None, description="If `True`, the pipeline is run continuously."
-    )
-    deployment: PipelineDeployment = Field(
-        None, description="Deployment type of this pipeline."
-    )
-    development: bool = Field(
-        None, description="If `True` the pipeline is run in development mode"
-    )
-    edition: Literal["CORE", "PRO", "ADVANCED"] = Field(
-        None, description="Name of the product edition"
-    )
-    event_log: PipelineEventLog = Field(
-        None,
-        description="An optional block specifying a table where DLT Event Log will be stored.",
-    )
-    expected_last_modified: int = Field(None, description="")
-    filters: PipelineFilters = Field(
-        None,
-        description="Filters on which Pipeline packages to include in the deployed graph.",
-    )
-    gateway_definition: PipelineGatewayDefinition = Field(
-        None, description="The definition of a gateway pipeline to support CDC."
-    )
-    health: str = Field(None, description="")
-    ingestion_definition: PipelineIngestionDefinition = Field(
-        None, description="Lakeflow Ingestion Pipeline definition"
-    )
-    last_modified: int = Field(None, description="")
-    latest_updates: list[PipelineLatestUpdate] = Field(None, description="")
-    libraries: list[PipelineLibrary] = Field(
-        None, description="Specifies pipeline code (notebooks) and required artifacts."
-    )
-    name: str = Field(..., description="Pipeline name")
     name_prefix: str = Field(None, description="Prefix added to the DLT pipeline name")
     name_suffix: str = Field(None, description="Suffix added to the DLT pipeline name")
-    notifications: list[PipelineNotifications] = Field(
-        [], description="Notifications specifications"
-    )
-    photon: bool = Field(None, description="If `True`, Photon engine enabled.")
-    restart_window: PipelineRestartWindow = Field(None, description="")
-    root_path: str = Field(
-        None,
-        description="""
-        An optional string specifying the root path for this pipeline. This is used as the root directory when editing
-        the pipeline in the Databricks user interface and it is added to sys.path when executing Python sources during 
-        pipeline execution.
-        """,
-    )
-    run_as: PipelineRunAs = Field(None, description="")
-    run_as_user_name: str = Field(None, description="")
-    schema_: str = Field(
-        None,
-        description="""
-        The default schema (database) where tables are read from or published to. The presence of this
-        attribute implies that the pipeline is in direct publishing mode.
-        """,
-        validation_alias=AliasChoices("schema", "schema_"),
-    )
-    serverless: bool = Field(None, description="If `True`, serverless is enabled")
-    state: str = Field(None, description="")
-    storage: str = Field(
-        None,
-        description="""
-        A location on DBFS or cloud storage where output data and metadata required for pipeline execution are stored.
-        By default, tables are stored in a subdirectory of this location. Change of this parameter forces recreation of
-        the pipeline. (Conflicts with `catalog`).
-        """,
-    )
-    tags: dict[str, str] = Field(
-        None,
-        description="""
-        A map of tags associated with the pipeline. These are forwarded to the cluster as cluster tags, and are 
-        therefore subject to the same limitations. A maximum of 25 tags can be added to the pipeline.
-        """,
-    )
-    target: str = Field(
-        None,
-        description="""
-        The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data.
-        Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
-        """,
-    )
-    trigger: PipelineTrigger = Field(None, description="")
-    url: str = Field(
-        None, description="URL of the DLT pipeline on the given workspace."
-    )
 
     @model_validator(mode="after")
     def update_name(self) -> Any:
@@ -694,7 +114,10 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_renames(self) -> dict[str, str]:
-        return {"schema_": "schema"}
+        return {
+            "schema_": "schema",
+            "library": "libraries",
+        }
 
     @property
     def pulumi_resource_type(self) -> str:
@@ -704,47 +127,20 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource):
     def pulumi_excludes(self) -> list[str] | dict[str, bool]:
         return {
             "access_controls": True,
-            "clusters": {"__all__": {"access_controls"}},
             "name_prefix": True,
             "name_suffix": True,
         }
-
-    @property
-    def pulumi_properties(self):
-        d = super().pulumi_properties
-        k = "clusters"
-        if k in d:
-            _clusters = []
-            for c in d[k]:
-                c["label"] = c.pop("clusterName")
-                _clusters += [c]
-            d[k] = _clusters
-        return d
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_pipeline"
-
-    @property
     def terraform_renames(self) -> dict[str, str]:
-        return self.pulumi_renames
+        return {
+            "schema_": "schema",
+        }
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return self.pulumi_excludes
-
-    @property
-    def terraform_properties(self) -> dict:
-        d = super().terraform_properties
-        k = "cluster"
-        if k in d:
-            _clusters = []
-            for c in d[k]:
-                c["label"] = c.pop("cluster_name")
-                _clusters += [c]
-            d[k] = _clusters
-        return d

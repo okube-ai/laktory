@@ -33,12 +33,6 @@ class TerraformConfig(BaseModel):
     required_providers: dict[str, TerraformRequiredProvider] = None
     backend: Union[dict[str, Any], None] = None
 
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "required_providers": "required_providers",
-        }
-
 
 class TerraformStack(BaseModel):
     """
@@ -58,13 +52,6 @@ class TerraformStack(BaseModel):
     providers: dict[str, Any] = {}
     resources: dict[str, Any] = {}
 
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "providers": "provider",
-            "resources": "resource",
-        }
-
     @model_validator(mode="after")
     def required_providers(self) -> Any:
         if self.terraform.required_providers is None:
@@ -79,9 +66,12 @@ class TerraformStack(BaseModel):
 
     def model_dump(self, *args, **kwargs) -> dict[str, Any]:
         """Serialize model to match the structure of a Terraform json file."""
-        self._configure_serializer(singular=True)
         kwargs["exclude_none"] = kwargs.get("exclude_none", True)
         d = super().model_dump(*args, **kwargs)
+
+        # Terraform uses singular top-level block names
+        d["provider"] = d.pop("providers", {})
+        d.pop("resources", None)
 
         # Special treatment of resources
         d["resource"] = defaultdict(lambda: {})
@@ -103,7 +93,6 @@ class TerraformStack(BaseModel):
         if len(d["data"]) == 0:
             del d["data"]
         d["resource"] = dict(d["resource"])
-        self._configure_serializer(singular=False)
 
         # Special treatment of moved
         # `moved_from` should generally be used with Terraform, but we also

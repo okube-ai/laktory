@@ -301,7 +301,7 @@ class Stack(BaseModel):
                         },
                         {
                             "task_key": "pipeline",
-                            "depends_ons": [{"task_key": "ingest"}],
+                            "depends_on": [{"task_key": "ingest"}],
                             "pipeline_task": {
                                 "pipeline_id": "${resources.dlt-pl-stock-prices.id}",
                             },

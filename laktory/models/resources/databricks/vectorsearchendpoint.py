@@ -1,11 +1,10 @@
-from typing import Literal
 from typing import Union
 
-from pydantic import Field
-
-from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.vectorsearchendpoint_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.vectorsearchendpoint_base import (
+    VectorSearchEndpointBase,
+)
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 # class VectorSearchEndpointLookup(ResourceLookup):
 #     """
@@ -18,7 +17,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 #     id: str = Field(serialization_alias="id")
 
 
-class VectorSearchEndpoint(BaseModel, PulumiResource, TerraformResource):
+class VectorSearchEndpoint(VectorSearchEndpointBase, PulumiResource):
     """
     Databricks Warehouse
 
@@ -33,12 +32,6 @@ class VectorSearchEndpoint(BaseModel, PulumiResource, TerraformResource):
     )
     ```
     """
-
-    endpoint_type: Literal["STANDARD"] = Field(
-        "STANDARD",
-        description="Type of Vector Search Endpoint. Currently only accepting single value: STANDARD",
-    )  # required
-    name: str = Field(None, description="Name of the Vector Search Endpoint to create.")
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -59,10 +52,6 @@ class VectorSearchEndpoint(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_vector_search_endpoint"
 
     # @property
     # def terraform_resource_lookup_type(self) -> str:

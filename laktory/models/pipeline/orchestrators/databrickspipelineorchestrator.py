@@ -70,6 +70,8 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
             "/Workspace"
             + self.inject_vars_into_dump({"path": self.config_file.path})["path"]
         )
+        if self.configuration is None:
+            self.configuration = {}
         self.configuration["pipeline_name"] = pl.name  # only for reference
         self.configuration["requirements"] = json.dumps(_requirements)
         self.configuration["config_filepath"] = _path
@@ -94,11 +96,11 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         from databricks.bundles.pipelines import Pipeline as DabsPipeline
 
         d = self.model_dump(
-            exclude=self.terraform_excludes, exclude_unset=True, by_alias=True
+            exclude=self.terraform_excludes, exclude_unset=True, by_alias=False
         )
-        for k, v in self.terraform_renames.items():
-            if k in d:
-                d[v] = d.pop(k)
+        # schema_ is a Python workaround for the reserved name; DABs expects "schema"
+        if "schema_" in d:
+            d["schema"] = d.pop("schema_")
 
         # Pipeline notebook
         source_filepath = (

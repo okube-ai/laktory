@@ -1,3 +1,4 @@
+<!-- GENERATED FILE — DO NOT EDIT -->
 ::: laktory.models.resources.databricks.App
 
 ---
@@ -7,6 +8,10 @@
 ---
 
 ::: laktory.models.resources.databricks.app.AppResource
+
+---
+
+::: laktory.models.resources.databricks.app.AppResourceApp
 
 ---
 
@@ -26,6 +31,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.app.AppResourcePostgres
+
+---
+
 ::: laktory.models.resources.databricks.app.AppResourceSecret
 
 ---
@@ -39,3 +48,11 @@
 ---
 
 ::: laktory.models.resources.databricks.app.AppResourceUcSecurable
+
+---
+
+::: laktory.models.resources.databricks.app.AppTelemetryExportDestination
+
+---
+
+::: laktory.models.resources.databricks.app.AppTelemetryExportDestinationUnityCatalog

@@ -1,6 +1,6 @@
 from laktory.models.resources.databricks import Schema
 from laktory.models.resources.databricks import Table
-from laktory.models.resources.databricks.table import TableColumn
+from laktory.models.resources.databricks.table_base import TableColumn
 
 schema = Schema(
     name="flights",
@@ -8,6 +8,8 @@ schema = Schema(
     tables=[
         Table(
             name="f1549",
+            data_source_format="DELTA",
+            table_type="MANAGED",
             columns=[
                 {
                     "name": "airspeed",
@@ -21,6 +23,8 @@ schema = Schema(
         ),
         Table(
             name="f0002",
+            data_source_format="DELTA",
+            table_type="MANAGED",
             columns=[
                 {
                     "name": "airspeed",
@@ -37,8 +41,8 @@ schema = Schema(
 
 
 def test_model():
-    assert schema.tables[0].columns[0].name == "airspeed"
-    assert isinstance(schema.tables[0].columns[0], TableColumn)
+    assert schema.tables[0].column[0].name == "airspeed"
+    assert isinstance(schema.tables[0].column[0], TableColumn)
     assert schema.name == "flights"
     assert schema.full_name == "laktory_testing.flights"
 

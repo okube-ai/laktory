@@ -14,8 +14,9 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks.qualitymonitor_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.qualitymonitor_base import QualityMonitorBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
 
 if TYPE_CHECKING:
     from databricks.sdk import WorkspaceClient
@@ -198,19 +199,6 @@ class QualityMonitorSDKClient:
             pass
 
 
-class QualityMonitorCustomMetric(BaseModel):
-    definition: str = Field(..., description="Create metric definition")
-    input_columns: list[str] = Field(
-        ...,
-        description="Columns on the monitored table to apply the custom metrics to.",
-    )
-    name: str = Field(..., description="Name of the custom metric.")
-    output_data_type: str = Field(
-        ..., description="The output type of the custom metric."
-    )
-    type: str = Field(..., description="The type of the custom metric.")
-
-
 class QualityMonitorDataClassificationConfig(BaseModel):
     enabled: bool = Field(..., description="")
 
@@ -278,7 +266,7 @@ class QualityMonitorSchedule(BaseModel):
     )
 
 
-class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
+class QualityMonitor(QualityMonitorBase, PulumiResource):
     """
     Databricks Quality Monitor
 
@@ -296,11 +284,6 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    assets_dir: str = Field(
-        ...,
-        description="The directory to store the monitoring assets (Eg. Dashboard and Metric Tables)",
-    )
-
     output_schema_name_: str = Field(
         None,
         description="""
@@ -317,21 +300,12 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
         validation_alias=AliasChoices("table_name", "table_name_"),
         exclude=True,
     )
-    baseline_table_name: str = Field(
-        None,
-        description="Name of the baseline table from which drift metrics are computed from.Columns in the monitored table should also be present in the baseline table.",
-    )
-    custom_metrics: list[QualityMonitorCustomMetric] = Field(
-        None,
-        description="Custom metrics to compute on the monitored table. These can be aggregate metrics, derived metrics (from already computed aggregate metrics), or drift metrics (comparing metrics across time windows).",
-    )
     data_classification_config: QualityMonitorDataClassificationConfig = Field(
         None, description="The data classification config for the monitor"
     )
     inference_log: QualityMonitorInferenceLog = Field(
         None, description="Configuration for the inference log monitor"
     )
-    latest_monitor_failure_msg: str = Field(None, description="")
     monitor_id: str = Field(
         None,
         description="ID of this monitor is the same as the full table name of the format {catalog}.{schema_name}.{table_name}",
@@ -343,23 +317,11 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
         None,
         description="The schedule for automatically updating and refreshing metric tables.",
     )
-    skip_builtin_dashboard: bool = Field(
-        None,
-        description="Whether to skip creating a default dashboard summarizing data quality metrics. (Can't be updated after creation).",
-    )
-    slicing_exprs: list[str] = Field(
-        None,
-        description="List of column expressions to slice data with for targeted analysis. The data is grouped by each expression independently, resulting in a separate slice for each predicate and its complements. For high-cardinality columns, only the top 100 unique values by frequency will generate slices.",
-    )
     snapshot: QualityMonitorSnapshot = Field(
         None, description="Configuration for monitoring snapshot tables."
     )
     time_series: QualityMonitorTimeSeries = Field(
         None, description="Configuration for monitoring timeseries tables."
-    )
-    warehouse_id: str = Field(
-        None,
-        description="Optional argument to specify the warehouse for dashboard creation. If not specified, the first running warehouse will be used. (Can't be updated after creation)",
     )
     _table: Any = None
 
@@ -421,10 +383,6 @@ class QualityMonitor(BaseModel, PulumiResource, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_quality_monitor"
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

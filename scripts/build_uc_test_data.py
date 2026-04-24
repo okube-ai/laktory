@@ -1,5 +1,5 @@
-import polars as pl
 import numpy as np
+import polars as pl
 
 # Parameters
 table_name = "sin"
@@ -28,13 +28,9 @@ for id_val in ids:
     # Categories
     c = np.random.choice(["a", "b", "c", "d", "e"], size=n)
 
-    df = pl.DataFrame({
-        "tstamp": tstamps,
-        "id": np.full(n, id_val),
-        "sin": x,
-        "cos": y,
-        "cat": c
-    })
+    df = pl.DataFrame(
+        {"tstamp": tstamps, "id": np.full(n, id_val), "sin": x, "cos": y, "cat": c}
+    )
     dfs.append(df)
 
 df = pl.concat(dfs, how="vertical")

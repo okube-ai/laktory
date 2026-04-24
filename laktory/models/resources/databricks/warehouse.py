@@ -1,31 +1,15 @@
 from typing import Any
-from typing import Literal
 from typing import Union
 
 from pydantic import Field
 from pydantic import model_validator
 
-from laktory.models.basemodel import BaseModel
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
+from laktory.models.resources.databricks.sqlendpoint_base import *  # NOQA: F403 required for documentation
+from laktory.models.resources.databricks.sqlendpoint_base import SqlEndpointBase
 from laktory.models.resources.pulumiresource import PulumiResource
-from laktory.models.resources.terraformresource import TerraformResource
-
-
-class WarehouseCustomTag(BaseModel):
-    key: str = Field(..., description="Tag key")
-    value: str = Field(..., description="Tag value")
-
-
-class WarehouseTags(BaseModel):
-    custom_tags: list[WarehouseCustomTag] = Field([], description="Tags specifications")
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "custom_tags": "custom_tags",
-        }
 
 
 class WarehouseLookup(ResourceLookup):
@@ -53,7 +37,7 @@ class WarehouseLookup(ResourceLookup):
         return self
 
 
-class Warehouse(BaseModel, PulumiResource, TerraformResource):
+class Warehouse(SqlEndpointBase, PulumiResource):
     """
     Databricks Warehouse
 
@@ -76,59 +60,11 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    cluster_size: Literal[
-        "2X-Small",
-        "X-Small",
-        "Small",
-        "Medium",
-        "Large",
-        "X-Large",
-        "2X-Large",
-        "3X-Large",
-        "4X-Large",
-    ] = Field(..., description="The size of the clusters allocated to the endpoint")
     access_controls: list[AccessControl] = Field([], description="Access controls list")
-    auto_stop_mins: int = Field(
-        None,
-        description="Time in minutes until an idle SQL warehouse terminates all clusters and stops.",
-    )
-    channel_name: Union[
-        Literal["CHANNEL_NAME_CURRENT", "CHANNEL_NAME_PREVIEW"], str
-    ] = Field(None, description="Channel specifications")
-    # data_source_id
-    enable_photon: bool = Field(None, description="If `True`, photon is enabled")
-    enable_serverless_compute: bool = Field(
-        None, description="If `True`, warehouse is serverless."
-    )
-    instance_profile_arn: str = Field(None, description="")
-    jdbc_url: str = Field(None, description="JDBC connection string.")
     lookup_existing: WarehouseLookup = Field(
         None,
         exclude=True,
         description="Specifications for looking up existing resource. Other attributes will be ignored.",
-    )
-    max_num_clusters: int = Field(
-        None,
-        description="Maximum number of clusters available when a SQL warehouse is running.",
-    )
-    min_num_clusters: int = Field(
-        None,
-        description="Minimum number of clusters available when a SQL warehouse is running.",
-    )
-    name: str = Field(..., description="Warehouse name")
-    num_clusters: int = Field(
-        None, description="Fixed number of clusters when autoscaling is not enabled."
-    )
-    # odbc_params
-    spot_instance_policy: Literal["COST_OPTIMIZED", "RELIABILITY_OPTIMIZED"] = Field(
-        None, description="The spot policy to use for allocating instances to clusters."
-    )
-    # state
-    tags: WarehouseTags = Field(
-        None, description="Databricks tags all endpoint resources with these tags."
-    )
-    warehouse_type: Literal["CLASSIC", "PRO"] = Field(
-        None, description="SQL warehouse type."
     )
 
     # ----------------------------------------------------------------------- #
@@ -166,25 +102,11 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_properties(self):
         d = super().pulumi_properties
-        if self._camel_serialization:
-            d["channel"] = {"name": d.pop("channelName", None)}
-        else:
-            d["channel"] = {"name": d.pop("channel_name", None)}
         return d
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def singularizations(self) -> dict[str, str]:
-        return {
-            "tags": "tags",
-        }
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return "databricks_sql_endpoint"
 
     @property
     def terraform_resource_lookup_type(self) -> str:
@@ -197,5 +119,4 @@ class Warehouse(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_properties(self) -> dict:
         d = super().terraform_properties
-        d["channel"] = {"name": d.pop("channel_name", None)}
         return d

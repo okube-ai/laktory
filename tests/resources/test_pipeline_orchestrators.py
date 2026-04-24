@@ -65,20 +65,21 @@ def test_databricks_job():
     data = job.model_dump(exclude_unset=True)
     print(data)
     assert data == {
-        "environments": [
+        "name": "pl-job",
+        "environment": [
             {
                 "environment_key": "laktory",
                 "spec": {
-                    "environment_version": "5",
                     "dependencies": [
                         "requests>=2.0",
                         "./wheels/lake-0.0.1-py3-none-any.whl",
                         "laktory==__version__",
                     ],
+                    "environment_version": "5",
                 },
             }
         ],
-        "job_clusters": [
+        "job_cluster": [
             {
                 "job_cluster_key": "node-cluster",
                 "new_cluster": {
@@ -87,13 +88,13 @@ def test_databricks_job():
                 },
             }
         ],
-        "name": "pl-job",
-        "parameters": [{"default": "false", "name": "full_refresh"}],
-        "tasks": [
+        "parameter": [{"default": "false", "name": "full_refresh"}],
+        "task": [
             {
-                "depends_ons": [],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "task_key": "node-brz",
+                "depends_on": [],
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -106,12 +107,12 @@ def test_databricks_job():
                     },
                     "package_name": "laktory",
                 },
-                "task_key": "node-brz",
             },
             {
-                "depends_ons": [{"task_key": "node-slv"}],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "task_key": "node-gld",
+                "depends_on": [{"task_key": "node-slv"}],
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -124,12 +125,12 @@ def test_databricks_job():
                     },
                     "package_name": "laktory",
                 },
-                "task_key": "node-gld",
             },
             {
-                "depends_ons": [{"task_key": "node-gld"}],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "task_key": "node-gld_a",
+                "depends_on": [{"task_key": "node-gld"}],
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -142,12 +143,12 @@ def test_databricks_job():
                     },
                     "package_name": "laktory",
                 },
-                "task_key": "node-gld_a",
             },
             {
-                "depends_ons": [{"task_key": "node-gld_a"}, {"task_key": "node-gld_b"}],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "task_key": "node-gld_ab",
+                "depends_on": [{"task_key": "node-gld_a"}, {"task_key": "node-gld_b"}],
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -160,12 +161,12 @@ def test_databricks_job():
                     },
                     "package_name": "laktory",
                 },
-                "task_key": "node-gld_ab",
             },
             {
-                "depends_ons": [{"task_key": "node-gld"}],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "task_key": "node-gld_b",
+                "depends_on": [{"task_key": "node-gld"}],
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -178,12 +179,12 @@ def test_databricks_job():
                     },
                     "package_name": "laktory",
                 },
-                "task_key": "node-gld_b",
             },
             {
-                "depends_ons": [{"task_key": "node-brz"}],
                 "job_cluster_key": "node-cluster",
-                "libraries": [
+                "task_key": "node-slv",
+                "depends_on": [{"task_key": "node-brz"}],
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -196,10 +197,11 @@ def test_databricks_job():
                     },
                     "package_name": "laktory",
                 },
-                "task_key": "node-slv",
             },
             {
-                "depends_ons": [
+                "job_cluster_key": "node-cluster",
+                "task_key": "post-execute",
+                "depends_on": [
                     {"task_key": "node-brz"},
                     {"task_key": "node-gld"},
                     {"task_key": "node-gld_a"},
@@ -207,8 +209,7 @@ def test_databricks_job():
                     {"task_key": "node-gld_b"},
                     {"task_key": "node-slv"},
                 ],
-                "job_cluster_key": "node-cluster",
-                "libraries": [
+                "library": [
                     {"pypi": {"package": "requests>=2.0"}},
                     {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                     {"pypi": {"package": "laktory==__version__"}},
@@ -222,11 +223,10 @@ def test_databricks_job():
                     },
                     "package_name": "laktory",
                 },
-                "task_key": "post-execute",
             },
         ],
         "type": "DATABRICKS_JOB",
-        "dataframe_backend": "PYSPARK",
+        "dataframe_backend": DataFrameBackends.PYSPARK,
         "dataframe_api": "NARWHALS",
     }
 
@@ -444,20 +444,21 @@ def test_databricks_job():
         "dataframe_api": "NARWHALS",
         "root_path": "/.laktory/pipelines/pl-job",
         "orchestrator": {
-            "environments": [
+            "name": "pl-job",
+            "environment": [
                 {
                     "environment_key": "laktory",
                     "spec": {
-                        "environment_version": "5",
                         "dependencies": [
                             "requests>=2.0",
                             "./wheels/lake-0.0.1-py3-none-any.whl",
                             "laktory==__version__",
                         ],
+                        "environment_version": "5",
                     },
                 }
             ],
-            "job_clusters": [
+            "job_cluster": [
                 {
                     "job_cluster_key": "node-cluster",
                     "new_cluster": {
@@ -466,13 +467,13 @@ def test_databricks_job():
                     },
                 }
             ],
-            "name": "pl-job",
-            "parameters": [{"default": "false", "name": "full_refresh"}],
-            "tasks": [
+            "parameter": [{"default": "false", "name": "full_refresh"}],
+            "task": [
                 {
-                    "depends_ons": [],
                     "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "task_key": "node-brz",
+                    "depends_on": [],
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -485,12 +486,12 @@ def test_databricks_job():
                         },
                         "package_name": "laktory",
                     },
-                    "task_key": "node-brz",
                 },
                 {
-                    "depends_ons": [{"task_key": "node-slv"}],
                     "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "task_key": "node-gld",
+                    "depends_on": [{"task_key": "node-slv"}],
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -503,12 +504,12 @@ def test_databricks_job():
                         },
                         "package_name": "laktory",
                     },
-                    "task_key": "node-gld",
                 },
                 {
-                    "depends_ons": [{"task_key": "node-gld"}],
                     "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "task_key": "node-gld_a",
+                    "depends_on": [{"task_key": "node-gld"}],
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -521,15 +522,15 @@ def test_databricks_job():
                         },
                         "package_name": "laktory",
                     },
-                    "task_key": "node-gld_a",
                 },
                 {
-                    "depends_ons": [
+                    "job_cluster_key": "node-cluster",
+                    "task_key": "node-gld_ab",
+                    "depends_on": [
                         {"task_key": "node-gld_a"},
                         {"task_key": "node-gld_b"},
                     ],
-                    "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -542,12 +543,12 @@ def test_databricks_job():
                         },
                         "package_name": "laktory",
                     },
-                    "task_key": "node-gld_ab",
                 },
                 {
-                    "depends_ons": [{"task_key": "node-gld"}],
                     "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "task_key": "node-gld_b",
+                    "depends_on": [{"task_key": "node-gld"}],
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -560,12 +561,12 @@ def test_databricks_job():
                         },
                         "package_name": "laktory",
                     },
-                    "task_key": "node-gld_b",
                 },
                 {
-                    "depends_ons": [{"task_key": "node-brz"}],
                     "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "task_key": "node-slv",
+                    "depends_on": [{"task_key": "node-brz"}],
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -578,10 +579,11 @@ def test_databricks_job():
                         },
                         "package_name": "laktory",
                     },
-                    "task_key": "node-slv",
                 },
                 {
-                    "depends_ons": [
+                    "job_cluster_key": "node-cluster",
+                    "task_key": "post-execute",
+                    "depends_on": [
                         {"task_key": "node-brz"},
                         {"task_key": "node-gld"},
                         {"task_key": "node-gld_a"},
@@ -589,8 +591,7 @@ def test_databricks_job():
                         {"task_key": "node-gld_b"},
                         {"task_key": "node-slv"},
                     ],
-                    "job_cluster_key": "node-cluster",
-                    "libraries": [
+                    "library": [
                         {"pypi": {"package": "requests>=2.0"}},
                         {"whl": "./wheels/lake-0.0.1-py3-none-any.whl"},
                         {"pypi": {"package": "laktory==__version__"}},
@@ -604,7 +605,6 @@ def test_databricks_job():
                         },
                         "package_name": "laktory",
                     },
-                    "task_key": "post-execute",
                 },
             ],
             "type": "DATABRICKS_JOB",
@@ -702,10 +702,11 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
         "budget_policy_id": None,
         "catalog": "dev",
         "cause": None,
-        "channel": "PREVIEW",
+        "channel": None,
         "cluster_id": None,
-        "clusters": [],
+        "cluster": None,
         "creator_user_name": None,
+        "environment": None,
         "configuration": {
             "pipeline_name": "pl-dlt",
             "requirements": '["laktory==<version>"]',
@@ -723,11 +724,11 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
         "ingestion_definition": None,
         "last_modified": None,
         "latest_updates": None,
-        "libraries": None,
+        "library": None,
         "name": "pl-dlt",
         "name_prefix": None,
         "name_suffix": None,
-        "notifications": [],
+        "notification": None,
         "photon": None,
         "restart_window": None,
         "root_path": None,
@@ -739,8 +740,10 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
         "storage": None,
         "tags": None,
         "target": None,
+        "timeouts": None,
         "trigger": None,
         "url": None,
+        "usage_policy_id": None,
         "type": "DATABRICKS_PIPELINE",
         "config_file": {
             "access_controls": [
@@ -751,9 +754,11 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                     "user_name": None,
                 }
             ],
-            "dirpath": None,
-            "path": "/.laktory/pipelines/pl-dlt.json",
             "content_base64": None,
+            "dirpath": None,
+            "md5": None,
+            "object_id": None,
+            "path": "/.laktory/pipelines/pl-dlt.json",
             "dataframe_backend": "PYSPARK",
             "dataframe_api": "NARWHALS",
             "source": "/tmp/laktory/cache/pipelines/pl-dlt.json",

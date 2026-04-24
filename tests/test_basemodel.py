@@ -137,14 +137,6 @@ def test_camelize(m):
     assert "v1" in dump["aModels"][0]
 
 
-def test_singular(m):
-    m._configure_serializer(singular=True)
-    dump = m.model_dump()
-
-    assert "values" in dump
-    assert "a_model" in dump
-
-
 def test_update(m1):
     # # Simple field
     m = m1.model_copy()
