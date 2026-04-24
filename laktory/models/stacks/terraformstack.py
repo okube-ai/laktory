@@ -94,18 +94,10 @@ class TerraformStack(BaseModel):
             del d["data"]
         d["resource"] = dict(d["resource"])
 
-        # Special treatment of moved
-        # `moved_from` should generally be used with Terraform, but we also
-        # support aliases (Pulumi) for better user experience
+        # Special treatment of moved blocks
         i = -1
         for r in self.resources.values():
-            moved_from = r.options.moved_from
-            aliases = r.options.aliases
-            _from = None
-            if moved_from:
-                _from = moved_from
-            elif aliases:
-                _from = aliases[0]
+            _from = r.options.moved_from
             if _from:
                 i += 1
                 d[f"moved_{i:05d}"] = {
@@ -226,7 +218,7 @@ class TerraformStack(BaseModel):
         Parameters
         ----------
         flags:
-            List of flags / options for pulumi plan
+            List of flags / options for terraform plan
         """
         self._call("init", flags=flags)
 
@@ -237,7 +229,7 @@ class TerraformStack(BaseModel):
         Parameters
         ----------
         flags:
-            List of flags / options for pulumi plan
+            List of flags / options for terraform plan
         """
         self._call("plan", flags=flags)
 

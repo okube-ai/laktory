@@ -66,7 +66,6 @@ from laktory.models.resources.databricks.workspacefile import WorkspaceFile
 from laktory.models.resources.databricks.workspacetree import WorkspaceTree
 from laktory.models.resources.providers.awsprovider import AWSProvider
 from laktory.models.resources.providers.azureprovider import AzureProvider
-from laktory.models.resources.providers.azurepulumiprovider import AzurePulumiProvider
 from laktory.models.resources.providers.baseprovider import BaseProvider
 from laktory.models.resources.providers.databricksprovider import DatabricksProvider
 
@@ -123,24 +122,6 @@ class LaktorySettings(BaseModel):
         return self
 
 
-class Pulumi(BaseModel):
-    """
-    References
-    ----------
-    - Pulumi [configuration](https://www.pulumi.com/docs/concepts/config/)
-    - Pulumi [outputs](https://www.pulumi.com/docs/concepts/inputs-outputs/#outputs)
-    """
-
-    config: dict[str, str] = Field(
-        {},
-        description="Pulumi configuration settings. Generally used to configure providers. See references for more details.",
-    )
-    outputs: dict[str, str] = Field(
-        {},
-        description="Requested resources-related outputs. See references for details.",
-    )
-
-
 class StackResources(BaseModel):
     """
     Resources definition for a given stack or stack environment.
@@ -194,9 +175,7 @@ class StackResources(BaseModel):
     databricks_workspacefiles: dict[str, WorkspaceFile | PythonPackage] = {}
     databricks_workspacetrees: dict[str, WorkspaceTree | PythonPackage] = {}
     pipelines: dict[str, Pipeline] = {}
-    providers: dict[
-        str, Union[AWSProvider, AzureProvider, AzurePulumiProvider, DatabricksProvider]
-    ] = {}
+    providers: dict[str, Union[AWSProvider, AzureProvider, DatabricksProvider]] = {}
 
     @model_validator(mode="after")
     def update_resource_names(self) -> Any:
@@ -262,13 +241,6 @@ class Stack(BaseModel):
 
     stack = models.Stack(
         name="workspace",
-        backend="pulumi",
-        pulumi={
-            "config": {
-                "databricks:host": "${vars.DATABRICKS_HOST}",
-                "databricks:token": "${vars.DATABRICKS_TOKEN}",
-            },
-        },
         resources={
             "databricks_pipelines": {
                 "pl-stock-prices": {
@@ -332,8 +304,8 @@ class Stack(BaseModel):
     * [Stack](https://www.laktory.ai/concepts/stack/)
     """
 
-    backend: Literal["pulumi", "terraform"] = Field(
-        None, description="IaC backend used for deployment."
+    backend: Literal["terraform"] = Field(
+        "terraform", description="IaC backend used for deployment."
     )
     description: str = Field(None, description="Description of the stack")
     environments: dict[str, EnvironmentSettings] = Field(
@@ -342,10 +314,9 @@ class Stack(BaseModel):
     )
     name: str = Field(
         ...,
-        description="Name of the stack. If Pulumi is used as a backend, it should match the name of the Pulumi project.",
+        description="Name of the stack.",
     )
     organization: Union[str, None] = Field(None, description="Organization")
-    pulumi: Pulumi = Field(Pulumi(), description="Pulumi-specific settings")
     resources: Union[StackResources, None] = Field(
         StackResources(),
         description="""
@@ -447,44 +418,6 @@ class Stack(BaseModel):
         env = self.model_copy(update={"environments": {}})
         env.update(self.environments[env_name].model_dump(exclude_unset=True))
         return env
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Methods                                                          #
-    # ----------------------------------------------------------------------- #
-
-    def to_pulumi(self, env_name: Union[str, None] = None):
-        """
-        Create a pulumi stack for a given environment `env`.
-
-        Parameters
-        ----------
-        env_name:
-            Target environment. If `None`, used default stack values only.
-
-        Returns
-        -------
-        : PulumiStack
-            Pulumi-specific stack definition
-        """
-        from laktory.models.stacks.pulumistack import PulumiStack
-
-        env = self.get_env(env_name=env_name).inject_vars()
-        env.build(env_name=None, inject_vars=False)
-
-        # Resources
-        resources = {}
-        for r in env.resources._get_all().values():
-            for _r in r.core_resources:
-                resources[_r.resource_name] = _r
-
-        return PulumiStack(
-            name=env.name,
-            organization=env.organization,
-            config=env.pulumi.config,
-            description=env.description,
-            resources=resources,
-            outputs=env.pulumi.outputs,
-        )
 
     # ----------------------------------------------------------------------- #
     # Terraform Methods                                                       #
