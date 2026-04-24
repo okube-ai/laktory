@@ -4,7 +4,6 @@ from laktory.models.resources.databricks.vectorsearchendpoint_base import *  # N
 from laktory.models.resources.databricks.vectorsearchendpoint_base import (
     VectorSearchEndpointBase,
 )
-from laktory.models.resources.pulumiresource import PulumiResource
 
 # class VectorSearchEndpointLookup(ResourceLookup):
 #     """
@@ -17,7 +16,7 @@ from laktory.models.resources.pulumiresource import PulumiResource
 #     id: str = Field(serialization_alias="id")
 
 
-class VectorSearchEndpoint(VectorSearchEndpointBase, PulumiResource):
+class VectorSearchEndpoint(VectorSearchEndpointBase):
     """
     Databricks Warehouse
 
@@ -38,18 +37,6 @@ class VectorSearchEndpoint(VectorSearchEndpointBase, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:VectorSearchEndpoint"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
@@ -59,4 +46,4 @@ class VectorSearchEndpoint(VectorSearchEndpointBase, PulumiResource):
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["access_controls"]
