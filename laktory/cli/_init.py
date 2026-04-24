@@ -49,7 +49,7 @@ def init(
     )
 
     # Call
-    if controller.backend == "terraform":
+    if controller.iac_backend == "terraform":
         controller.terraform_call("init")
     else:
         raise ValueError("backend should be ['terraform']")

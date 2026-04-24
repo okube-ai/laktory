@@ -92,8 +92,8 @@ class CLIController(BaseModel):
             self.stack = Stack.model_validate_yaml(fp, vars=vars)
 
     @property
-    def backend(self) -> str:
-        return self.stack.backend
+    def iac_backend(self) -> str:
+        return self.stack.iac_backend
 
     @property
     def organization(self) -> str:

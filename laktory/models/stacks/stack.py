@@ -304,8 +304,10 @@ class Stack(BaseModel):
     * [Stack](https://www.laktory.ai/concepts/stack/)
     """
 
-    backend: Literal["terraform"] = Field(
-        "terraform", description="IaC backend used for deployment."
+    iac_backend: Literal["terraform"] = Field(
+        "terraform",
+        description="IaC backend used for deployment.",
+        validation_alias="backend",  # TODO: Supported for backward compatibility
     )
     description: str = Field(None, description="Description of the stack")
     environments: dict[str, EnvironmentSettings] = Field(

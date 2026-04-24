@@ -50,7 +50,7 @@ def preview(
     )
 
     # Call
-    if controller.backend == "terraform":
+    if controller.iac_backend == "terraform":
         controller.terraform_call("plan")
     else:
         raise ValueError(f"backend should be {SUPPORTED_BACKENDS}")

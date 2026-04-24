@@ -115,7 +115,7 @@ class Dispatcher:
     @property
     def _workspace_arguments(self):
         data = {}
-        if self.stack.backend == "terraform":
+        if self.stack.iac_backend == "terraform":
             providers = self.stack.to_terraform(env_name=self.env).model_dump()[
                 "provider"
             ]
