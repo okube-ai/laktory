@@ -56,10 +56,6 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         if not pl:
             return None
 
-        # Overwrite serialization options
-        cs0 = self._camel_serialization
-        pl._configure_serializer(camel=False)
-
         # Orchestrator (which includes WorkspaceFile) needs to be excluded to avoid
         # infinite re-cursive loop
         _config = self.inject_vars_into_dump(
@@ -72,9 +68,6 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         _config["orchestrator"] = pl.orchestrator.model_dump(
             exclude_unset=True, exclude="config_file", mode="json"
         )
-
-        # Reset serialization options
-        pl._configure_serializer(camel=cs0)
 
         return _config
 
@@ -95,11 +88,8 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_excludes(self) -> list[str] | dict[str, bool]:
-        return super().pulumi_excludes + [
-            "dataframe_backend",
-            "dataframe_api",
-        ]
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
+        return super().terraform_excludes + ["dataframe_backend", "dataframe_api"]
 
     @property
     def resource_type_id(self):
