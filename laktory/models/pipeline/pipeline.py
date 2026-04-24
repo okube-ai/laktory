@@ -30,7 +30,6 @@ from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import
 )
 from laktory.models.pipeline.pipelinenode import PipelineNode
 from laktory.models.pipelinechild import PipelineChild
-from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 from laktory.typing import AnyFrame
 
@@ -41,7 +40,6 @@ if TYPE_CHECKING:
     from laktory.models.pipeline.pipelineexecutionplan import PipelineExecutionPlan
 
 logger = get_logger(__name__)
-
 
 # --------------------------------------------------------------------------- #
 # Helper Functions                                                            #
@@ -88,7 +86,7 @@ def parse_requirement_name(req: str) -> str | None:
 # --------------------------------------------------------------------------- #
 
 
-class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
+class Pipeline(BaseModel, TerraformResource, PipelineChild):
     """
     Pipeline model to manage a data pipeline including reading from data sources,
     applying data transformations and outputting to data sinks.
@@ -753,7 +751,7 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
         return "pl"
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         if orchestrator is `DLT`:
 
@@ -770,14 +768,6 @@ class Pipeline(BaseModel, PulumiResource, TerraformResource, PipelineChild):
             resources += [self.orchestrator]
 
         return resources
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return ""
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
