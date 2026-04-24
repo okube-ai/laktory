@@ -140,7 +140,7 @@ you can get involved:
 A comprehensive template on how to deploy a lakehouse as code using Laktory is maintained here:
 https://github.com/okube-ai/lakehouse-as-code
 
-In this template, 4 pulumi projects are used to:
+In this template, 4 stacks are used to:
 - `{cloud_provider}_infra`: Deploy the required resources on your cloud provider
 - `unity-catalog`: Setup users, groups, catalogs, schemas and manage grants
 - `workspace`: Setup secrets, clusters and warehouses and common files/notebooks

@@ -74,12 +74,6 @@ dev = [
 #    "mkdocs-snippets",
 ]
 
-# IaC
-pulumi = [
-    "pulumi",
-    "pulumi_databricks>=1.49",  # required to support Databricks Lakeview Dashboard
-]
-
 # Orchestrators
 airflow = [
     "apache-airflow",
