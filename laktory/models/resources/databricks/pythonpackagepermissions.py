@@ -7,13 +7,12 @@ from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.basemodel import PluralField
 from laktory.models.resources.databricks.accesscontrol import AccessControl
-from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
 logger = get_logger(__name__)
 
 
-class PythonPackagePermissions(BaseModel, PulumiResource, TerraformResource):
+class PythonPackagePermissions(BaseModel, TerraformResource):
     access_control: list[AccessControl] = PluralField(
         ...,
         description="Access controls list",
@@ -26,18 +25,6 @@ class PythonPackagePermissions(BaseModel, PulumiResource, TerraformResource):
     @property
     def workspace_file_path(self) -> str:
         return self.get_workspace_file_path()
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Methods                                                          #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_renames(self) -> dict[str, str]:
-        return {"access_control": "access_controls"}
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Permissions"
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

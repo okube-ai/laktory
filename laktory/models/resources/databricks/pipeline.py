@@ -7,10 +7,9 @@ from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.pipeline_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.pipeline_base import PipelineBase
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class Pipeline(PipelineBase, PulumiResource):
+class Pipeline(PipelineBase):
     """
     Databricks Lakeflow Declarative Pipeline (formerly Delta Live Tables)
 
@@ -59,7 +58,6 @@ class Pipeline(PipelineBase, PulumiResource):
     ----------
 
     * [Databricks Pipeline](https://docs.databricks.com/api/workspace/pipelines/create)
-    * [Pulumi Databricks Pipeline](https://www.pulumi.com/registry/packages/databricks/api-docs/pipeline/)
     """
 
     access_controls: list[AccessControl] = Field(
@@ -91,7 +89,7 @@ class Pipeline(PipelineBase, PulumiResource):
         return "dlt-pipeline"
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - permissions
         """
@@ -109,29 +107,6 @@ class Pipeline(PipelineBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_renames(self) -> dict[str, str]:
-        return {
-            "schema_": "schema",
-            "library": "libraries",
-        }
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Pipeline"
-
-    @property
-    def pulumi_excludes(self) -> list[str] | dict[str, bool]:
-        return {
-            "access_controls": True,
-            "name_prefix": True,
-            "name_suffix": True,
-        }
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
@@ -143,4 +118,8 @@ class Pipeline(PipelineBase, PulumiResource):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return self.pulumi_excludes
+        return {
+            "access_controls": True,
+            "name_prefix": True,
+            "name_suffix": True,
+        }

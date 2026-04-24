@@ -10,13 +10,12 @@ from laktory import settings
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
-from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
 logger = get_logger(__name__)
 
 
-class PythonPackage(BaseModel, PulumiResource, TerraformResource):
+class PythonPackage(BaseModel, TerraformResource):
     """
     Python Package built and deployed as a wheel file.
 
@@ -156,7 +155,7 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
         return self.package_name
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         resources = []
         if self.access_controls:
             from laktory.models.resources.databricks.pythonpackagepermissions import (
@@ -173,25 +172,6 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:WorkspaceFile"
-
-    @property
-    def pulumi_excludes(self) -> list[str] | dict[str, bool]:
-        return [
-            "access_controls",
-            "build_command",
-            "config_filepath",
-            "dirpath",
-            "package_name",
-            "wheel_filename",
-        ]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
@@ -201,4 +181,11 @@ class PythonPackage(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return [
+            "access_controls",
+            "build_command",
+            "config_filepath",
+            "dirpath",
+            "package_name",
+            "wheel_filename",
+        ]
