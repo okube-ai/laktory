@@ -7,10 +7,9 @@ from laktory.models.resources.databricks.mwsnetworkconnectivityconfig_base impor
 from laktory.models.resources.databricks.mwsnetworkconnectivityconfig_base import (
     MwsNetworkConnectivityConfigBase,
 )
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class MwsNetworkConnectivityConfig(MwsNetworkConnectivityConfigBase, PulumiResource):
+class MwsNetworkConnectivityConfig(MwsNetworkConnectivityConfigBase):
     """
     Databricks Mws Network Connectivity Config
 
@@ -27,7 +26,7 @@ class MwsNetworkConnectivityConfig(MwsNetworkConnectivityConfigBase, PulumiResou
     # ----------------------------------------------------------------------- #
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - workspace bindings
         """
@@ -41,23 +40,11 @@ class MwsNetworkConnectivityConfig(MwsNetworkConnectivityConfigBase, PulumiResou
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:MwsNetworkConnectivityConfig"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return [
-            "workspace_bindings",
-        ]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return [
+            "workspace_bindings",
+        ]
