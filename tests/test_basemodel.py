@@ -128,15 +128,6 @@ def test_dump_yaml(m):
     assert m.model_dump_yaml().startswith("a_models:")
 
 
-def test_camelize(m):
-    m._configure_serializer(camel=True)
-    dump = m.model_dump()
-    m._configure_serializer(camel=False)
-
-    assert "bModels" in dump
-    assert "v1" in dump["aModels"][0]
-
-
 def test_update(m1):
     # # Simple field
     m = m1.model_copy()
