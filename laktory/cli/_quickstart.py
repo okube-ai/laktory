@@ -7,11 +7,9 @@ from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 
 from laktory._version import VERSION
-from laktory.cli._common import BackendValidator
 from laktory.cli._common import TemplateValidator
 from laktory.cli.app import app
 from laktory.constants import QUICKSTART_TEMPLATES
-from laktory.constants import SUPPORTED_BACKENDS
 
 
 @app.command()
@@ -24,9 +22,6 @@ def quickstart(
             help="Template [unity-catalog, workspace, workflows, local-pipeline]",
         ),
     ] = None,
-    backend: Annotated[
-        str, typer.Option("--backend", "-b", help="IaC backend [terraform, pulumi]")
-    ] = None,
 ):
     """
     Build get started stack in the calling directory.
@@ -35,8 +30,6 @@ def quickstart(
     ----------
     template:
         Stack template [unity-catalog, workspace, workflows]
-    backend:
-        IaC backend [pulumi, terraform]
 
     Examples
     --------
@@ -58,15 +51,6 @@ def quickstart(
             validator=TemplateValidator(),
         )
 
-    # Backend (not needed for local-pipeline or workflows-dab templates)
-    completer = WordCompleter(SUPPORTED_BACKENDS, ignore_case=True)
-    if backend is None and template not in ["local-pipeline", "workflows-dab"]:
-        backend = prompt(
-            f"Select IaC backend {SUPPORTED_BACKENDS}: ",
-            completer=completer,
-            validator=BackendValidator(),
-        )
-
     # Copy template
     stacks_dir = os.path.join(
         os.path.dirname(__file__), "../resources/quickstart-stacks/"
@@ -83,38 +67,16 @@ def quickstart(
 
         # Copy each file
         for filename in filenames:
-            if (
-                filename
-                in [
-                    "read_env.sh",
-                    "stack.yaml",  # stack_terra.yaml or stack_pulumi.yaml will be used instead
-                ]
-            ):
+            if filename in [
+                "read_env.sh",
+            ]:
                 continue
 
             # TODO: ADD FILTERING BASED IN GITIGNORE?
-
             source_filepath = os.path.join(root, filename)
             target_filepath = os.path.join(_target_dir, filename)
 
             print(f"Writing {target_filepath}...")
-
-            # Rename stack files
-            if filename == "stack_pulumi.yaml":
-                if backend == "terraform":
-                    continue
-                else:
-                    target_filepath = target_filepath.replace(
-                        "stack_pulumi.yaml", "stack.yaml"
-                    )
-
-            elif filename == "stack_terra.yaml":
-                if backend == "pulumi":
-                    continue
-                else:
-                    target_filepath = target_filepath.replace(
-                        "stack_terra.yaml", "stack.yaml"
-                    )
 
             # Copy file
             shutil.copy2(source_filepath, target_filepath)
@@ -132,18 +94,6 @@ def quickstart(
 
                 with open(target_filepath, "w") as fp:
                     fp.write(data.replace("<laktory_version>", VERSION))
-
-            if backend == "pulumi" and target_filepath.endswith("catalogs.yaml"):
-                with open(target_filepath, "r") as fp:
-                    data = fp.read()
-
-                with open(target_filepath, "w") as fp:
-                    fp.write(
-                        data.replace(
-                            "provider: ${resources.databricks.",
-                            "provider: ${resources.provider-databricks-",
-                        )
-                    )
 
     if template == "workflows-dab":
         print(
