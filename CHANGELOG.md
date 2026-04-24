@@ -9,6 +9,7 @@
 * All Databricks resource models are now derived from auto-generated files built directly from the Terraform provider schema, ensuring fields stay in sync with the provider and reducing manual maintenance
 ### Breaking changes
 * Dropped support for Pulumi IaC backend
+* Renamed stack `backend` property to `iac_backend`
 * Several Databricks resource fields renamed to align with Terraform and Databricks API conventions
 
 ## [0.10.0] - 2026-04-16

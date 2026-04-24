@@ -45,7 +45,7 @@ def test_read(monkeypatch, template, env, tmp_path):
         return
 
     resource_keys = list(data["resources"].keys())
-    assert stack.backend == "terraform"
+    assert stack.iac_backend == "terraform"
     if template == "workflows":
         target = [
             "databricks_dbfsfiles",

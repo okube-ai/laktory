@@ -28,7 +28,7 @@ def stack():
 
 def test_workspace_client(monkeypatch, stack):
     tstack = stack.model_copy()
-    tstack.backend = "terraform"
+    tstack.iac_backend = "terraform"
 
     # Using a dummy host results in taking a long time (minutes)
     # to resolve host metadata. We use an actual one.
