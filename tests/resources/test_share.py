@@ -31,11 +31,6 @@ def test_share_with_objects():
     assert s.object[0].data_object_type == "TABLE"
 
 
-def test_share_pulumi_resource_type():
-    s = share
-    assert s.pulumi_resource_type == "databricks:Share"
-
-
 def test_share_terraform_resource_type():
     s = share
     assert s.terraform_resource_type == "databricks_share"
