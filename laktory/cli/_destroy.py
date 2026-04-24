@@ -52,7 +52,6 @@ def destroy(
     ----------
     * [CLI](https://www.laktory.ai/concepts/cli/)
     * terraform [destroy](https://developer.hashicorp.com/terraform/cli/commands/destroy)
-    * pulumi [destroy](https://www.pulumi.com/docs/cli/commands/pulumi_destroy/)
     """
     controller = CLIController(
         env=environment,
@@ -62,9 +61,7 @@ def destroy(
     )
 
     # Call
-    if controller.backend == "pulumi":
-        controller.pulumi_call("destroy")
-    elif controller.backend == "terraform":
+    if controller.backend == "terraform":
         controller.terraform_call("destroy")
     else:
         raise ValueError(f"backend should be {SUPPORTED_BACKENDS}")
