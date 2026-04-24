@@ -12,7 +12,6 @@ from laktory.models.resources.databricks.mwspermissionassignment import (
 from laktory.models.resources.databricks.user_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.user_base import UserBase
 from laktory.models.resources.databricks.userrole import UserRole
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class UserLookup(ResourceLookup):
@@ -38,7 +37,7 @@ class UserLookup(ResourceLookup):
         return self
 
 
-class User(UserBase, PulumiResource):
+class User(UserBase):
     """
     Databricks user
 
@@ -83,7 +82,7 @@ class User(UserBase, PulumiResource):
         return self.user_name
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - user roles
         - user group members
@@ -115,21 +114,9 @@ class User(UserBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:User"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["groups", "roles", "group_ids", "workspace_permission_assignments"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["groups", "roles", "group_ids", "workspace_permission_assignments"]
