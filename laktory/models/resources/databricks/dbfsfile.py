@@ -11,7 +11,6 @@ from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.dbfsfile_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.dbfsfile_base import DbfsFileBase
 from laktory.models.resources.databricks.permissions import Permissions
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class DbfsFileLookup(ResourceLookup):
@@ -24,7 +23,7 @@ class DbfsFileLookup(ResourceLookup):
     )
 
 
-class DbfsFile(DbfsFileBase, PulumiResource):
+class DbfsFile(DbfsFileBase):
     """
     Databricks DBFS File
 
@@ -108,7 +107,7 @@ class DbfsFile(DbfsFileBase, PulumiResource):
         return self.path
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         resources = []
         if self.access_controls:
             resources += [
@@ -121,21 +120,9 @@ class DbfsFile(DbfsFileBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:DbfsFile"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "dirpath"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["access_controls", "dirpath"]
