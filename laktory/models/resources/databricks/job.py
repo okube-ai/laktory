@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Union
 
 from pydantic import Field
 from pydantic import field_validator
@@ -15,7 +14,6 @@ from laktory.models.resources.databricks.job_base import JobBase
 from laktory.models.resources.databricks.job_base import JobTask
 from laktory.models.resources.databricks.job_base import JobTaskForEachTaskTask
 from laktory.models.resources.databricks.permissions import Permissions
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 def _inject_field_validator(model_cls, field_name, method_name, func):
@@ -61,7 +59,7 @@ class JobLookup(ResourceLookup):
     )
 
 
-class Job(JobBase, PulumiResource):
+class Job(JobBase):
     """
     Databricks Job
 
@@ -125,7 +123,6 @@ class Job(JobBase, PulumiResource):
     ----------
 
     * [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
-    * [Pulumi Databricks Job](https://www.pulumi.com/registry/packages/databricks/api-docs/job/#databricks-job)
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")
@@ -160,7 +157,7 @@ class Job(JobBase, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - permissions
         """
@@ -177,80 +174,12 @@ class Job(JobBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_renames(self) -> dict[str, str]:
-        return {
-            "task": "tasks",
-            "environment": "environments",
-            "parameter": "parameters",
-            "job_cluster": "job_clusters",
-        }
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Job"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "name_prefix", "name_suffix"]
-
-    @property
-    def pulumi_properties(self):
-        d = super().pulumi_properties
-
-        # Rename dependsOn → dependsOns; library → libraries within tasks
-        for task in d["tasks"]:
-            if "dependsOn" in task:
-                task["dependsOns"] = task.pop("dependsOn")
-            if "library" in task:
-                task["libraries"] = task.pop("library")
-
-        # Rename environmentVersion → client within each environment spec
-        if "environments" in d:
-            for env in d["environments"]:
-                if "spec" in env:
-                    if "environmentVersion" in env["spec"]:
-                        env["spec"]["client"] = env["spec"].pop("environmentVersion")
-
-        # Pluralize email notification list fields (Pulumi uses onFailures, onStarts, etc.)
-        _notif_renames = {
-            "onFailure": "onFailures",
-            "onStart": "onStarts",
-            "onSuccess": "onSuccesses",
-            "onDurationWarningThresholdExceeded": "onDurationWarningThresholdExceededs",
-        }
-        if "emailNotifications" in d:
-            for old, new in _notif_renames.items():
-                if old in d["emailNotifications"]:
-                    d["emailNotifications"][new] = d["emailNotifications"].pop(old)
-        for task in d["tasks"]:
-            if "emailNotifications" in task:
-                for old, new in _notif_renames.items():
-                    if old in task["emailNotifications"]:
-                        task["emailNotifications"][new] = task[
-                            "emailNotifications"
-                        ].pop(old)
-
-        # Rename dbt task schema
-        if "tasks" in d:
-            for task in d["tasks"]:
-                if "dbt_task" in task:
-                    if "schema_" in task["dbt_task"]:
-                        task["dbt_task"]["schema"] = task["dbt_task"]["schema_"]
-                        del task["dbt_task"]["schema_"]
-
-        return d
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return self.pulumi_excludes
+        return ["access_controls", "name_prefix", "name_suffix"]
 
     @property
     def terraform_properties(self) -> dict:
