@@ -7,10 +7,9 @@ from laktory.models.resources.databricks.metastoredataaccess_base import *  # NO
 from laktory.models.resources.databricks.metastoredataaccess_base import (
     MetastoreDataAccessBase,
 )
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class MetastoreDataAccess(MetastoreDataAccessBase, PulumiResource):
+class MetastoreDataAccess(MetastoreDataAccessBase):
     """
     Databricks Metastore Data Access
 
@@ -41,7 +40,7 @@ class MetastoreDataAccess(MetastoreDataAccessBase, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - metastore data access credential grants
         """
@@ -53,21 +52,9 @@ class MetastoreDataAccess(MetastoreDataAccessBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:MetastoreDataAccess"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grant", "grants"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["grant", "grants"]
