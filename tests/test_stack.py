@@ -235,7 +235,7 @@ def test_pulumi_stack(monkeypatch, stack):
                     "name": "job-stock-prices-ut-stack",
                     "tasks": [
                         {
-                            "library": [
+                            "libraries": [
                                 {"pypi": {"package": "laktory==0.0.27"}},
                                 {"pypi": {"package": "yfinance"}},
                             ],
@@ -250,7 +250,7 @@ def test_pulumi_stack(monkeypatch, stack):
                             "pipelineTask": {"pipelineId": "${dlt-custom-name.id}"},
                         },
                     ],
-                    "jobCluster": [
+                    "jobClusters": [
                         {
                             "jobClusterKey": "main",
                             "newCluster": {
@@ -388,7 +388,7 @@ def test_pulumi_stack(monkeypatch, stack):
                     "name": "job-stock-prices-ut-stack",
                     "tasks": [
                         {
-                            "library": [
+                            "libraries": [
                                 {"pypi": {"package": "laktory==0.0.27"}},
                                 {"pypi": {"package": "yfinance"}},
                             ],
@@ -403,7 +403,7 @@ def test_pulumi_stack(monkeypatch, stack):
                             "pipelineTask": {"pipelineId": "${dlt-custom-name.id}"},
                         },
                     ],
-                    "jobCluster": [
+                    "jobClusters": [
                         {
                             "jobClusterKey": "main",
                             "newCluster": {

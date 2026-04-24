@@ -444,16 +444,6 @@ def test_job_pulumi():
             "on_start": ["info@okube.ai"],
             "on_success": ["info@okube.ai"],
         },
-        "job_cluster": [
-            {
-                "job_cluster_key": "main",
-                "new_cluster": {
-                    "node_type_id": "Standard_DS3_v2",
-                    "spark_version": "16.3.x-scala2.12",
-                    "init_scripts": [{"volumes": {"destination": "Volumes/some/path"}}],
-                },
-            }
-        ],
         "tasks": [
             {
                 "job_cluster_key": "main",
@@ -469,6 +459,16 @@ def test_job_pulumi():
                 "task_key": "view",
                 "sql_task": {"warehouse_id": "123", "query": {"query_id": "456"}},
             },
+        ],
+        "job_clusters": [
+            {
+                "job_cluster_key": "main",
+                "new_cluster": {
+                    "node_type_id": "Standard_DS3_v2",
+                    "spark_version": "16.3.x-scala2.12",
+                    "init_scripts": [{"volumes": {"destination": "Volumes/some/path"}}],
+                },
+            }
         ],
     }
 

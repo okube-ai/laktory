@@ -29,7 +29,7 @@ class Grants(GrantsBase, PulumiResource):
     # ----------------------------------------------------------------------- #
     @property
     def pulumi_renames(self) -> dict[str, str]:
-        return {"schema_": "schema"}
+        return {"schema_": "schema", "grant": "grants"}
 
     @property
     def pulumi_resource_type(self) -> str:
@@ -45,7 +45,7 @@ class Grants(GrantsBase, PulumiResource):
 
     @property
     def terraform_renames(self) -> dict[str, str]:
-        return self.pulumi_renames
+        return {"schema_": "schema"}
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

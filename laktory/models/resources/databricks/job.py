@@ -201,10 +201,12 @@ class Job(JobBase, PulumiResource):
     def pulumi_properties(self):
         d = super().pulumi_properties
 
-        # Rename dependsOn → dependsOns within tasks
+        # Rename dependsOn → dependsOns; library → libraries within tasks
         for task in d["tasks"]:
             if "dependsOn" in task:
                 task["dependsOns"] = task.pop("dependsOn")
+            if "library" in task:
+                task["libraries"] = task.pop("library")
 
         # Rename environmentVersion → client within each environment spec
         if "environments" in d:
@@ -212,6 +214,25 @@ class Job(JobBase, PulumiResource):
                 if "spec" in env:
                     if "environmentVersion" in env["spec"]:
                         env["spec"]["client"] = env["spec"].pop("environmentVersion")
+
+        # Pluralize email notification list fields (Pulumi uses onFailures, onStarts, etc.)
+        _notif_renames = {
+            "onFailure": "onFailures",
+            "onStart": "onStarts",
+            "onSuccess": "onSuccesses",
+            "onDurationWarningThresholdExceeded": "onDurationWarningThresholdExceededs",
+        }
+        if "emailNotifications" in d:
+            for old, new in _notif_renames.items():
+                if old in d["emailNotifications"]:
+                    d["emailNotifications"][new] = d["emailNotifications"].pop(old)
+        for task in d["tasks"]:
+            if "emailNotifications" in task:
+                for old, new in _notif_renames.items():
+                    if old in task["emailNotifications"]:
+                        task["emailNotifications"][new] = task[
+                            "emailNotifications"
+                        ].pop(old)
 
         # Rename dbt task schema
         if "tasks" in d:
