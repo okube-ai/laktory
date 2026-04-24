@@ -233,7 +233,7 @@ def test_pulumi_stack(monkeypatch, stack):
                 "type": "databricks:Job",
                 "properties": {
                     "name": "job-stock-prices-ut-stack",
-                    "task": [
+                    "tasks": [
                         {
                             "library": [
                                 {"pypi": {"package": "laktory==0.0.27"}},
@@ -274,7 +274,7 @@ def test_pulumi_stack(monkeypatch, stack):
             "permissions-notebook-external": {
                 "type": "databricks:Permissions",
                 "properties": {
-                    "accessControl": [
+                    "accessControls": [
                         {"groupName": "role-analysts", "permissionLevel": "CAN_READ"}
                     ],
                     "notebookPath": "${notebook-external.path}",
@@ -284,7 +284,7 @@ def test_pulumi_stack(monkeypatch, stack):
             "permissions_test": {
                 "type": "databricks:Permissions",
                 "properties": {
-                    "accessControl": [
+                    "accessControls": [
                         {"permissionLevel": "CAN_MANAGE", "userName": "user1"},
                         {"permissionLevel": "CAN_RUN", "userName": "user2"},
                     ],
@@ -300,7 +300,7 @@ def test_pulumi_stack(monkeypatch, stack):
             "permissions-warehouse-external": {
                 "type": "databricks:Permissions",
                 "properties": {
-                    "accessControl": [
+                    "accessControls": [
                         {"groupName": "role-analysts", "permissionLevel": "CAN_USE"}
                     ],
                     "sqlEndpointId": "${warehouse-external.id}",
@@ -318,7 +318,7 @@ def test_pulumi_stack(monkeypatch, stack):
                         "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     },
                     "name": "pl-stock-prices-ut-stack",
-                    "library": [
+                    "libraries": [
                         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
                     ],
                 },
@@ -327,7 +327,7 @@ def test_pulumi_stack(monkeypatch, stack):
             "permissions-dlt-custom-name": {
                 "type": "databricks:Permissions",
                 "properties": {
-                    "accessControl": [
+                    "accessControls": [
                         {"groupName": "account users", "permissionLevel": "CAN_VIEW"},
                         {"groupName": "role-engineers", "permissionLevel": "CAN_RUN"},
                     ],
@@ -352,7 +352,7 @@ def test_pulumi_stack(monkeypatch, stack):
             "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:Permissions",
                 "properties": {
-                    "accessControl": [
+                    "accessControls": [
                         {"groupName": "users", "permissionLevel": "CAN_READ"}
                     ],
                     "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
@@ -386,7 +386,7 @@ def test_pulumi_stack(monkeypatch, stack):
                 "type": "databricks:Job",
                 "properties": {
                     "name": "job-stock-prices-ut-stack",
-                    "task": [
+                    "tasks": [
                         {
                             "library": [
                                 {"pypi": {"package": "laktory==0.0.27"}},
@@ -427,7 +427,7 @@ def test_pulumi_stack(monkeypatch, stack):
             "permissions-notebook-external": {
                 "type": "databricks:Permissions",
                 "properties": {
-                    "accessControl": [
+                    "accessControls": [
                         {"groupName": "role-analysts", "permissionLevel": "CAN_READ"}
                     ],
                     "notebookPath": "${notebook-external.path}",
@@ -437,7 +437,7 @@ def test_pulumi_stack(monkeypatch, stack):
             "permissions_test": {
                 "type": "databricks:Permissions",
                 "properties": {
-                    "accessControl": [
+                    "accessControls": [
                         {"permissionLevel": "CAN_MANAGE", "userName": "user1"},
                         {"permissionLevel": "CAN_RUN", "userName": "user2"},
                     ],
@@ -453,7 +453,7 @@ def test_pulumi_stack(monkeypatch, stack):
             "permissions-warehouse-external": {
                 "type": "databricks:Permissions",
                 "properties": {
-                    "accessControl": [
+                    "accessControls": [
                         {"groupName": "role-analysts", "permissionLevel": "CAN_USE"}
                     ],
                     "sqlEndpointId": "${warehouse-external.id}",
@@ -472,7 +472,7 @@ def test_pulumi_stack(monkeypatch, stack):
                     },
                     "development": False,
                     "name": "pl-stock-prices-ut-stack",
-                    "library": [
+                    "libraries": [
                         {"notebook": {"path": "/pipelines/dlt_brz_template.py"}}
                     ],
                 },
@@ -481,7 +481,7 @@ def test_pulumi_stack(monkeypatch, stack):
             "permissions-dlt-custom-name": {
                 "type": "databricks:Permissions",
                 "properties": {
-                    "accessControl": [
+                    "accessControls": [
                         {"groupName": "account users", "permissionLevel": "CAN_VIEW"},
                         {"groupName": "role-engineers", "permissionLevel": "CAN_RUN"},
                     ],
@@ -506,7 +506,7 @@ def test_pulumi_stack(monkeypatch, stack):
             "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
                 "type": "databricks:Permissions",
                 "properties": {
-                    "accessControl": [
+                    "accessControls": [
                         {"groupName": "users", "permissionLevel": "CAN_READ"}
                     ],
                     "workspaceFilePath": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",

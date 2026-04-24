@@ -79,7 +79,7 @@ def test_pipeline_pulumi():
     assert pl.pulumi_properties == {
         "catalog": "dev1",
         "name": "pl-stock-prices",
-        "library": [{"notebook": {"path": "/pipelines/dlt_brz_template.py"}}],
+        "libraries": [{"notebook": {"path": "/pipelines/dlt_brz_template.py"}}],
         "schema": "markets1",
     }
 

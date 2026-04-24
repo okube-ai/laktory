@@ -114,7 +114,10 @@ class Pipeline(PipelineBase, PulumiResource):
 
     @property
     def pulumi_renames(self) -> dict[str, str]:
-        return {"schema_": "schema"}
+        return {
+            "schema_": "schema",
+            "library": "libraries",
+        }
 
     @property
     def pulumi_resource_type(self) -> str:
@@ -134,7 +137,9 @@ class Pipeline(PipelineBase, PulumiResource):
 
     @property
     def terraform_renames(self) -> dict[str, str]:
-        return self.pulumi_renames
+        return {
+            "schema_": "schema",
+        }
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:

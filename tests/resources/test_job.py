@@ -454,7 +454,7 @@ def test_job_pulumi():
                 },
             }
         ],
-        "task": [
+        "tasks": [
             {
                 "job_cluster_key": "main",
                 "task_key": "ingestion",
@@ -488,7 +488,7 @@ def test_job_task_dbt():
     )
     assert job.pulumi_properties == {
         "name": "job-stock-prices",
-        "task": [
+        "tasks": [
             {
                 "task_key": "dbt-task",
                 "dbt_task": {"commands": ["dbt build", "dbt run"], "schema": "finance"},

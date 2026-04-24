@@ -181,6 +181,15 @@ class Job(JobBase, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def pulumi_renames(self) -> dict[str, str]:
+        return {
+            "task": "tasks",
+            "environment": "environments",
+            "parameter": "parameters",
+            "job_cluster": "job_clusters",
+        }
+
+    @property
     def pulumi_resource_type(self) -> str:
         return "databricks:Job"
 
@@ -192,20 +201,26 @@ class Job(JobBase, PulumiResource):
     def pulumi_properties(self):
         d = super().pulumi_properties
 
-        # Rename dbt task schema
-        for task in d["task"]:
-            if "dbt_task" in task:
-                if "schema_" in task["dbt_task"]:
-                    task["dbt_task"]["schema"] = task["dbt_task"]["schema_"]
-                    del task["dbt_task"]["schema_"]
+        # Rename dependsOn → dependsOns within tasks
+        for task in d["tasks"]:
+            if "dependsOn" in task:
+                task["dependsOns"] = task.pop("dependsOn")
 
-        # Rename environment environment version
-        if "environment" in d:
-            for env in d["environment"]:
+        # Rename environmentVersion → client within each environment spec
+        if "environments" in d:
+            for env in d["environments"]:
                 if "spec" in env:
                     if "environmentVersion" in env["spec"]:
-                        env["spec"]["client"] = env["spec"]["environmentVersion"]
-                        del env["spec"]["environmentVersion"]
+                        env["spec"]["client"] = env["spec"].pop("environmentVersion")
+
+        # Rename dbt task schema
+        if "tasks" in d:
+            for task in d["tasks"]:
+                if "dbt_task" in task:
+                    if "schema_" in task["dbt_task"]:
+                        task["dbt_task"]["schema"] = task["dbt_task"]["schema_"]
+                        del task["dbt_task"]["schema_"]
+
         return d
 
     # ----------------------------------------------------------------------- #

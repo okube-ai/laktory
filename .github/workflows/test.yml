@@ -56,18 +56,6 @@ jobs:
           python -c "import laktory; print(laktory.__version__)" 
           laktory --version
 
-
-      - name: Get version
-        id: get_version
-        run: |
-          import os          
-          t = os.getenv('PULUMI_ACCESS_TOKEN')
-          t2 = '___'.join(t)
-          print(f"PULUMI TOKEN {t2}")
-        shell: python
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-
       - name: Run tests
         if: ${{ env.run_tests == 'true' && success()}}
         run: make install-dev test

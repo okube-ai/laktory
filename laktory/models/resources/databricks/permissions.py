@@ -16,5 +16,9 @@ class Permissions(PermissionsBase, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
+    def pulumi_renames(self) -> dict[str, str]:
+        return {"access_control": "access_controls"}
+
+    @property
     def pulumi_resource_type(self) -> str:
         return "databricks:Permissions"
