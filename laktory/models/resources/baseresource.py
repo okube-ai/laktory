@@ -76,54 +76,25 @@ class ResourceOptions(BaseModel):
         """,
     )
 
-    # pulumi + terraform
     depends_on: list[str] = Field(
         [],
-        description="Explicit list of resources dependencies. Supported by both pulumi and terraform.",
+        description="Explicit list of resource dependencies.",
     )
     provider: str = Field(
         None,
-        description="Explicit declaration of resources provider. Supported by both pulumi and terraform.",
+        description="Explicit declaration of resource provider.",
     )
     ignore_changes: list[str] = Field(
         None,
         description="Declare that changes to certain properties should be ignored during a diff.",
     )
-
-    # pulumi only
-    aliases: list[str] = Field(
-        None,
-        description="Specify aliases for this resource, so that renaming or refactoring doesn’t replace it. Pulumi only.",
+    import_: str = Field(
+        None, description="Bring an existing cloud resource into Laktory management."
     )
-    delete_before_replace: bool = Field(
-        True,
-        description="Override the default create-before-delete behavior when replacing a resource. Pulumi only.",
-    )
-    import_: str = Field(None, description="Bring an existing cloud resource.")
-    parent: str = None
-    replace_on_changes: list[str] = Field(
-        None,
-        description="Declare that changes to certain properties should be treated as forcing a replacement. Pulumi only.",
-    )
-
-    # terraform only
     moved_from: str = Field(
         None,
-        description="Establish a parent/child relationship between resources. Pulumi only.",
+        description="Declare that a resource was moved from another address.",
     )
-
-    @property
-    def pulumi_options(self) -> list[str]:
-        return [
-            "depends_on",
-            "provider",
-            "ignore_changes",
-            "aliases",
-            "delete_before_replace",
-            "import_",
-            "parent",
-            "replace_on_changes",
-        ]
 
     @property
     def terraform_options(self) -> list[str]:
@@ -137,11 +108,7 @@ class ResourceOptions(BaseModel):
 
 
 class ResourceLookup(BaseModel):
-    # model_config = ConfigDict(populate_by_name=True)
-    def pulumi_dump(self, *args, **kwargs):
-        kwargs["by_alias"] = kwargs.get("by_alias", True)
-        kwargs["exclude_unset"] = kwargs.get("exclude_unset", True)
-        return self.model_dump(*args, **kwargs)
+    pass
 
 
 class BaseResource(_BaseModel, metaclass=ModelMetaclass):
