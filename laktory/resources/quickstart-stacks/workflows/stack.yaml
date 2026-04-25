@@ -1,6 +1,5 @@
 name: workflows
 description: Lakehouse - Workflows
-backend: terraform
 
 # List of Resources to deploy
 resources:

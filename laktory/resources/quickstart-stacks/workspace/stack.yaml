@@ -1,6 +1,5 @@
 name: workspace
 description: Lakehouse - Workspace Configuration
-backend: terraform
 
 # List of Resources to deploy
 resources:
