@@ -22,19 +22,12 @@ of both cloud and on-premises infrastructure. While Laktory currently supports m
 capabilities may be added in the future.
 
 
-### Pulumi <img src="../../images/logos/pulumi.png" alt="pulumi" width="16"/> 
-
-[Pulumi](https://www.pulumi.com/) is gaining momentum as a flexible IaC tool, supporting multiple programming languages 
-such as Python, Node.js, Go, and Java. In the context of Laktory, Pulumi offers a strong alternative by enabling the use
-of Python for configuration, instead of a YAML file. However, only YAML is currently supported through Laktory.
-
 ## Terraform
 Deploying resources is achieved by creating a [stack](stack.md) in a yaml file and using laktory [CLI](cli.md)
 to run the deployment.
 
 ```yaml title="stack.yaml"
 name: workspace
-backend: terraform
 resources:
   providers:
     databricks:
@@ -63,39 +56,6 @@ If your stack defines multiple environments, you can target a specific environme
 laktory deploy --env dev
 ```
 
-
-
-## Pulumi
-To use Pulumi as the backend, simply change the backend field and configure the default providers using the config field.
-
-```yaml title="stack.yaml"
-name: workspace
-organization: okube
-backend: pulumi
-config:
-  databricks:host: ${vars.DATABRICKS_HOST}
-  databricks:token: ${vars.DATABRICKS_TOKEN}
-resources:
-  pipelines:
-    pl-stock-prices:
-      name: pl-stock-prices
-      libraries:
-        - notebook:
-            path: /pipelines/dlt_brz_template.py
-```
- 
-The CLI commands remain the same regardless of the backend, with slight differences in the arguments.
-
-When using Pulumi, the organization must be specified in the stack file or during execution, along with the environment. 
-This fully qualifies the underlying Pulumi stack.
-```cmd
-laktory preview --org okube --env dev
-```
-This command is equivalent to running `pulumi preview --stack okube/dev`. Ensure that the Pulumi project name matches the
-`name` specified in the `stack.yaml` file.
-
-Refer to pulumi [stacks](https://www.pulumi.com/learn/building-with-pulumi/understanding-stacks/)
-for more information.
 
 
 ## Declarative Automation Bundles
