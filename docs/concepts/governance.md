@@ -56,7 +56,6 @@ groups = [
 ]
 group_ids = {}
 for g in groups:
-    g.to_pulumi()
     group_ids[g.display_name] = g.id
 
 # Set users
