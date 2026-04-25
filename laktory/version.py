@@ -25,8 +25,6 @@ def show_version_info() -> str:
         "plotly",
         "polars",
         "prompt_toolkit",
-        "pulumi",
-        "pulumi_databricks",
         "pyarrow",
         "pydantic",
         "pyspark",

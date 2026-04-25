@@ -16,11 +16,6 @@ def test_recipient_model():
     assert r.owner == "user@example.com"
 
 
-def test_recipient_pulumi_resource_type():
-    r = recipient
-    assert r.pulumi_resource_type == "databricks:Recipient"
-
-
 def test_recipient_terraform_resource_type():
     r = recipient
     assert r.terraform_resource_type == "databricks_recipient"

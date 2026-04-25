@@ -12,10 +12,9 @@ from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.query_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.query_base import QueryBase
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class Query(QueryBase, PulumiResource):
+class Query(QueryBase):
     """
     Databricks Query
 
@@ -77,7 +76,7 @@ class Query(QueryBase, PulumiResource):
         return self.display_name
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - permissions
         - alert
@@ -95,33 +94,17 @@ class Query(QueryBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
+    # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_renames(self) -> dict[str, str]:
-        return {"schema_": "schema"}
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Query"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
             "access_controls",
             "name_prefix",
             "name_suffix",
         ]
 
-    # ----------------------------------------------------------------------- #
-    # Terraform Properties                                                    #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
-
     @property
     def terraform_renames(self) -> dict[str, str]:
-        return self.pulumi_renames
+        return {"schema_": "schema"}

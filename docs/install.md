@@ -70,14 +70,7 @@ Available options are `pyspark` and `polars`.
   ```
 
 ### Infrastructure as Code
-If you use Pulumi as the IaC backend, you will want to run 
-
-```cmd
-uv pip install laktory[pulumi]
-```
-
-If you use `Terraform`, it has to be [installed manually](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli) because it's not python-based and can't be installed from 
-`pip`.
+Laktory uses Terraform as its IaC backend. Terraform must be [installed manually](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli) because it is not Python-based and cannot be installed from `pip`.
 
 ### Orchestrator
 If you want to run your pipeline remotely using one of the supported 

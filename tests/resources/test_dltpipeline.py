@@ -65,31 +65,3 @@ def test_pipeline():
         "name_prefix": None,
         "name_suffix": None,
     }
-
-
-def test_pipeline_pulumi():
-    print(pl.resource_name)
-    assert pl.resource_name == "dlt-pipeline-pl-stock-prices"
-    assert pl.options.model_dump(exclude_none=True) == {
-        "depends_on": [],
-        "delete_before_replace": True,
-        "is_enabled": True,
-    }
-
-    assert pl.pulumi_properties == {
-        "catalog": "dev1",
-        "name": "pl-stock-prices",
-        "libraries": [{"notebook": {"path": "/pipelines/dlt_brz_template.py"}}],
-        "schema": "markets1",
-    }
-
-    # Resources
-    assert len(pl.core_resources) == 1
-    r = pl.core_resources[-1]
-    r.options.aliases = ["my-file"]
-    assert pl.core_resources[-1].options.aliases == ["my-file"]
-
-
-if __name__ == "__main__":
-    test_pipeline()
-    test_pipeline_pulumi()

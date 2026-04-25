@@ -12,9 +12,6 @@ After you followed the installation [instructions](../install.md), open a comman
 ```cmd
 laktory quickstart 
 ```
-For the `workflows-dab` and `local-pipeline` templates, no IaC backend selection is needed.
-For all other templates, you will also be prompted to select an Infrastructure as Code backend:
-`terraform` or `pulumi`.
 
 ### Templates
 

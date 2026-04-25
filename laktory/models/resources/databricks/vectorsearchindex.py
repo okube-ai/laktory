@@ -1,92 +1,14 @@
 from typing import Any
-from typing import Literal
-from typing import Union
 
-from pydantic import Field
 from pydantic import model_validator
 
-from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.vectorsearchindex_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.vectorsearchindex_base import (
     VectorSearchIndexBase,
 )
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn(BaseModel):
-    embedding_model_endpoint_name: str = Field(
-        ..., description="The name of the embedding model endpoint"
-    )
-    name: str = Field(
-        ...,
-        description="Three-level name of the Vector Search Index to create (catalog.schema.index_name).",
-    )
-
-
-class VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn(BaseModel):
-    embedding_dimension: int = Field(
-        ..., description="Dimension of the embedding vector."
-    )
-    name: str = Field(
-        ...,
-        description="Three-level name of the Vector Search Index to create (catalog.schema.index_name).",
-    )
-
-
-class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
-    embedding_source_columns: list[
-        VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn
-    ] = Field(
-        None,
-        description="Array of objects representing columns that contain the embedding source",
-    )
-    embedding_vector_columns: list[
-        VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn
-    ] = Field(
-        None,
-        description="""
-    (required if embedding_source_columns isn't provided) array of objects representing columns that contain the 
-    embedding vectors.
-    """,
-    )
-    embedding_writeback_table: str = Field(None, description="")
-    pipeline_id: str = Field(
-        None, description="ID of the associated Declarative Pipeline."
-    )
-    pipeline_type: Literal["TRIGGERED", "CONTINUOUS"] = Field(None, description="")
-    source_table: str = Field(
-        None,
-        description="""
-    Pipeline execution mode. Possible values are:
-    - TRIGGERED: If the pipeline uses the triggered execution mode, the system stops processing after successfully 
-      refreshing the source table in the pipeline once, ensuring the table is updated based on the data available when 
-      the update started.
-    - CONTINUOUS: If the pipeline uses continuous execution, the pipeline processes new data as it arrives in the 
-      source table to keep the vector index fresh.
-    """,
-    )
-
-
-class VectorSearchIndexDirectAccessIndexSpec(BaseModel):
-    embedding_source_columns: list[
-        VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumn
-    ] = Field(
-        None,
-        description="Array of objects representing columns that contain the embedding source",
-    )
-    embedding_vector_columns: list[
-        VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumn
-    ] = Field(
-        None,
-        description="""
-        (required if embedding_source_columns isn't provided) array of objects representing columns that contain the
-        embedding vectors.
-        """,
-    )
-    # schema_json: str
-
-
-class VectorSearchIndex(VectorSearchIndexBase, PulumiResource):
+class VectorSearchIndex(VectorSearchIndexBase):
     """
     Databricks Warehouse
 
@@ -132,21 +54,5 @@ class VectorSearchIndex(VectorSearchIndexBase, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:VectorSearchIndex"
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
-
-    # @property
-    # def terraform_resource_lookup_type(self) -> str:
-    #     return "databricks_sql_warehouse"
-
-    @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes

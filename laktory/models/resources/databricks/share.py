@@ -3,7 +3,6 @@ from pydantic import Field
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.share_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.share_base import ShareBase
-from laktory.models.resources.pulumiresource import PulumiResource
 
 #
 # __all__ = [
@@ -23,7 +22,7 @@ class ShareProviderConfig(BaseModel):
     )
 
 
-class Share(ShareBase, PulumiResource):
+class Share(ShareBase):
     """
     Databricks Share for Delta Sharing
 
@@ -37,11 +36,3 @@ class Share(ShareBase, PulumiResource):
     """
 
     provider_config: ShareProviderConfig = Field(None, description="Provider config")
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Share"

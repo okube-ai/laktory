@@ -12,7 +12,6 @@ from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.notebook_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.notebook_base import NotebookBase
 from laktory.models.resources.databricks.permissions import Permissions
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class NotebookLookup(ResourceLookup):
@@ -25,7 +24,7 @@ class NotebookLookup(ResourceLookup):
     )
 
 
-class Notebook(NotebookBase, PulumiResource):
+class Notebook(NotebookBase):
     """
     Databricks Notebook
 
@@ -105,7 +104,7 @@ class Notebook(NotebookBase, PulumiResource):
         return self.path
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - permissions
         """
@@ -122,21 +121,9 @@ class Notebook(NotebookBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Notebook"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls", "dirpath"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["access_controls", "dirpath"]

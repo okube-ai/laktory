@@ -4,10 +4,9 @@ from laktory.models.resources.databricks.mwspermissionassignment_base import *  
 from laktory.models.resources.databricks.mwspermissionassignment_base import (
     MwsPermissionAssignmentBase,
 )
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class MwsPermissionAssignment(MwsPermissionAssignmentBase, PulumiResource):
+class MwsPermissionAssignment(MwsPermissionAssignmentBase):
     """
     Databricks Mws Permission Assignment
 
@@ -34,14 +33,6 @@ class MwsPermissionAssignment(MwsPermissionAssignmentBase, PulumiResource):
     @property
     def resource_key(self):
         return f"{self.principal_id}-{self.workspace_id}"
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:MwsPermissionAssignment"
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

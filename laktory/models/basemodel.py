@@ -19,13 +19,11 @@ from pydantic import AliasChoices
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import model_serializer
 from pydantic import model_validator
 from pydantic._internal._model_construction import ModelMetaclass as _ModelMetaclass
 
 from laktory._parsers import _resolve_value
 from laktory._parsers import _resolve_values
-from laktory._parsers import _snake_to_camel
 from laktory.typing import VariableType
 from laktory.yaml.recursiveloader import RecursiveLoader
 
@@ -159,37 +157,6 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         exclude=True,
         description="Dict of variables to be injected in the model at runtime",
     )
-    _camel_serialization: bool = False
-
-    @model_serializer(mode="wrap")
-    def custom_serializer(self, handler) -> dict[str, Any]:
-        dump = handler(self)
-        if dump is None:
-            return dump
-
-        camel_serialization = self._camel_serialization
-
-        fields = {k: v for k, v in type(self).model_fields.items()}
-        fields = fields | {k: v for k, v in self.model_computed_fields.items()}
-        if camel_serialization:
-            keys = list(dump.keys())
-            for k in keys:
-                k_camel = _snake_to_camel(k)
-                if k_camel != k:
-                    dump[_snake_to_camel(k)] = dump.pop(k)
-                    fields[_snake_to_camel(k)] = fields[k]
-                    k = _snake_to_camel(k)
-
-                # TODO: Review and optimize (probably brittle)
-                #       This is used to rename properties names from snake to
-                #       camel keys when using Pulumi backend. Probably also
-                #       need to parse list and dicts.
-                if isinstance(dump[k], str) and dump[k].startswith("${resources."):
-                    values = dump[k].split(".")
-                    values[-1] = _snake_to_camel(values[-1])
-                    dump[k] = ".".join(values)
-
-        return dump
 
     @model_validator(mode="after")
     def variables_self_reference(self) -> Any:
@@ -335,21 +302,6 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     # ----------------------------------------------------------------------- #
     # Serialization                                                           #
     # ----------------------------------------------------------------------- #
-
-    def _configure_serializer(self, camel=False):
-        self._camel_serialization = camel
-        for k in type(self).model_fields:
-            f = getattr(self, k)
-            if isinstance(f, BaseModel):
-                f._configure_serializer(camel)
-            elif isinstance(f, list):
-                for i in f:
-                    if isinstance(i, BaseModel):
-                        i._configure_serializer(camel)
-            elif isinstance(f, dict):
-                for i in f.values():
-                    if isinstance(i, BaseModel):
-                        i._configure_serializer(camel)
 
     # ----------------------------------------------------------------------- #
     # Validation ByPass                                                       #

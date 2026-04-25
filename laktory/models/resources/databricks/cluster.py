@@ -8,7 +8,6 @@ from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.cluster_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.cluster_base import ClusterBase
 from laktory.models.resources.databricks.permissions import Permissions
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class ClusterLookup(ResourceLookup):
@@ -17,7 +16,7 @@ class ClusterLookup(ResourceLookup):
     )
 
 
-class Cluster(ClusterBase, PulumiResource):
+class Cluster(ClusterBase):
     """
     Databricks cluster
 
@@ -52,7 +51,6 @@ class Cluster(ClusterBase, PulumiResource):
     ----------
 
     * [Databricks Cluster](https://docs.databricks.com/en/compute/configure.html#autoscaling-local-storage-1)
-    * [Pulumi Databricks Cluster](https://www.pulumi.com/registry/packages/databricks/api-docs/cluster/)
 
     """
 
@@ -75,7 +73,7 @@ class Cluster(ClusterBase, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - permissions
         """
@@ -91,21 +89,9 @@ class Cluster(ClusterBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Cluster"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["access_controls"]

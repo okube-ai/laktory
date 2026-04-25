@@ -15,17 +15,6 @@ def test_permissions_initialization():
     assert permissions.cluster_id is None
 
 
-def test_permissions_pulumi_resource_type():
-    permissions = Permissions(access_controls=[])
-    assert permissions.pulumi_resource_type == "databricks:Permissions"
-
-
 def test_permissions_terraform_resource_type():
     permissions = Permissions(access_controls=[])
     assert permissions.terraform_resource_type == "databricks_permissions"
-
-
-if __name__ == "__main__":
-    test_permissions_initialization()
-    test_permissions_pulumi_resource_type()
-    test_permissions_terraform_resource_type()

@@ -2,15 +2,13 @@ from laktory.models.resources.databricks.workspacebinding_base import *  # NOQA:
 from laktory.models.resources.databricks.workspacebinding_base import (
     WorkspaceBindingBase,
 )
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class WorkspaceBinding(WorkspaceBindingBase, PulumiResource):
+class WorkspaceBinding(WorkspaceBindingBase):
     """
     Databricks Workspace Binding
 
     A binding of a workspace to some Databricks resource, such as catalog.
-
 
     Examples
     --------
@@ -25,11 +23,3 @@ class WorkspaceBinding(WorkspaceBindingBase, PulumiResource):
     @property
     def resource_key(self):
         return f"{self.securable_name}-{self.workspace_id}"
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:WorkspaceBinding"

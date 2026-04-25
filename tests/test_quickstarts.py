@@ -5,7 +5,6 @@ from typer.testing import CliRunner
 
 from laktory import models
 from laktory import settings
-from laktory._testing import skip_pulumi_preview
 from laktory._testing import skip_terraform_plan
 from laktory.cli import app
 
@@ -13,18 +12,15 @@ runner = CliRunner()
 
 
 @pytest.mark.parametrize(
-    ["template", "backend", "env"],
+    ["template", "env"],
     [
-        ("local-pipeline", None, None),
-        ("workflows", "terraform", "dev"),
-        ("workflows", "pulumi", "dev"),
-        ("workspace", "terraform", "dev"),
-        ("workspace", "pulumi", "dev"),
-        ("unity-catalog", "terraform", None),
-        ("unity-catalog", "pulumi", "global"),
+        ("local-pipeline", None),
+        ("workflows", "dev"),
+        ("workspace", "dev"),
+        ("unity-catalog", None),
     ],
 )
-def test_read(monkeypatch, template, backend, env, tmp_path):
+def test_read(monkeypatch, template, env, tmp_path):
     monkeypatch.chdir(tmp_path)
 
     stack_filepath = tmp_path / "stack.yaml"
@@ -35,7 +31,7 @@ def test_read(monkeypatch, template, backend, env, tmp_path):
 
     _ = runner.invoke(
         app,
-        ["quickstart", "--template", template, "--backend", backend],
+        ["quickstart", "--template", template],
     )
 
     # Read Stack
@@ -49,9 +45,7 @@ def test_read(monkeypatch, template, backend, env, tmp_path):
         return
 
     resource_keys = list(data["resources"].keys())
-    assert stack.backend == backend
-    if backend == "pulumi":
-        assert stack.organization == "my_organization"
+    assert stack.iac_backend == "terraform"
     if template == "workflows":
         target = [
             "databricks_dbfsfiles",
@@ -59,20 +53,25 @@ def test_read(monkeypatch, template, backend, env, tmp_path):
             "databricks_pythonpackages",
             "databricks_workspacetrees",
             "pipelines",
+            "providers",
         ]
     elif template == "workspace":
         target = [
             "databricks_directories",
             "databricks_secretscopes",
             "databricks_warehouses",
+            "providers",
         ]
     elif template == "unity-catalog":
-        target = ["databricks_catalogs", "databricks_groups", "databricks_users"]
+        target = [
+            "databricks_catalogs",
+            "databricks_groups",
+            "databricks_users",
+            "providers",
+        ]
     else:
         raise ValueError(template)
 
-    if backend == "terraform" or template == "unity-catalog":
-        target += ["providers"]
     assert set(resource_keys) == set(target)
 
 
@@ -93,7 +92,6 @@ def test_terraform_plan(monkeypatch, template, env, tmp_path):
 
     stack_filepath = tmp_path / "stack.yaml"
 
-    # Pulumi requires valid Databricks Host and Token and Pulumi Token to run a preview.
     extras = None
     if template == "unity-catalog":
         monkeypatch.setenv("DATABRICKS_HOST_DEV", os.getenv("DATABRICKS_HOST"))
@@ -109,7 +107,7 @@ def test_terraform_plan(monkeypatch, template, env, tmp_path):
     # Generate stack
     _ = runner.invoke(
         app,
-        ["quickstart", "--template", template, "--backend", "terraform"],
+        ["quickstart", "--template", template],
     )
 
     # Read stack
@@ -119,53 +117,6 @@ def test_terraform_plan(monkeypatch, template, env, tmp_path):
     # Preview
     stack.init(flags=["-reconfigure"])
     stack.plan()
-
-    # Reset context
-    settings.cli_raise_external_exceptions = c0
-
-
-@pytest.mark.parametrize(
-    ["template", "env"],
-    [
-        ("workflows", "dev"),
-        ("workspace", "dev"),
-        ("unity-catalog", "global"),
-    ],
-)
-def test_pulumi_preview(monkeypatch, template, env, tmp_path):
-    # Set context
-    c0 = settings.cli_raise_external_exceptions
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setenv("LAKTORY_CLI_RAISE_EXTERNAL_EXCEPTIONS", "true")
-    settings.cli_raise_external_exceptions = True
-
-    stack_filepath = tmp_path / "stack.yaml"
-
-    # Pulumi requires valid Databricks Host and Token and Pulumi Token to run a preview.
-    extras = None
-    if template == "unity-catalog":
-        monkeypatch.setenv("DATABRICKS_HOST_DEV", os.getenv("DATABRICKS_HOST"))
-        monkeypatch.setenv("DATABRICKS_TOKEN_DEV", os.getenv("DATABRICKS_TOKEN"))
-        extras = [
-            "AZURE_CLIENT_ID",
-            "AZURE_CLIENT_SECRET",
-            "AZURE_TENANT_ID",
-            "DATABRICKS_ACCOUNT_ID",
-        ]
-    skip_pulumi_preview(extras=extras)
-
-    # Generate stack
-    _ = runner.invoke(
-        app,
-        ["quickstart", "--template", template, "--backend", "pulumi"],
-    )
-
-    # Read stack
-    with open(stack_filepath, "r") as fp:
-        stack = models.Stack.model_validate_yaml(fp).to_pulumi(env_name=env)
-
-    # Preview
-    stack.preview(stack=f"okube/{env}")
 
     # Reset context
     settings.cli_raise_external_exceptions = c0

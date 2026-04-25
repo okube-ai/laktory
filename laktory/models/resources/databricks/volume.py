@@ -6,10 +6,9 @@ from pydantic import Field
 from laktory.models.grants.volumegrant import VolumeGrant
 from laktory.models.resources.databricks.volume_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.volume_base import VolumeBase
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class Volume(VolumeBase, PulumiResource):
+class Volume(VolumeBase):
     """
     Volumes are Unity Catalog objects representing a logical volume of storage
     in a cloud object storage location. Volumes provide capabilities for
@@ -45,7 +44,6 @@ class Volume(VolumeBase, PulumiResource):
     ----------
 
     * [Databricks Volume](https://docs.databricks.com/en/sql/language-manual/sql-ref-volumes.html)
-    * [Pulumi Databricks Volume](https://www.pulumi.com/registry/packages/databricks/api-docs/volume/)
     """
 
     # Relax fields the base marks required but Laktory fills via parent validators
@@ -117,7 +115,7 @@ class Volume(VolumeBase, PulumiResource):
         return self.full_name
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - volume grants
         """
@@ -130,21 +128,9 @@ class Volume(VolumeBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Volume"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grant", "grants"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["grant", "grants"]

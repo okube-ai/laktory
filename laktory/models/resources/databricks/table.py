@@ -7,7 +7,6 @@ from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.table_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.table_base import TableBase
-from laktory.models.resources.pulumiresource import PulumiResource
 
 logger = get_logger(__name__)
 
@@ -19,7 +18,7 @@ class TableLookup(ResourceLookup):
     )
 
 
-class Table(TableBase, PulumiResource):
+class Table(TableBase):
     """
     A table resides in the third layer of Unity Catalog’s three-level namespace. It contains rows of data.
 
@@ -38,7 +37,6 @@ class Table(TableBase, PulumiResource):
     ----------
 
     * [Databricks Unity Table](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#tables)
-    * [Pulumi Databricks Table](https://www.pulumi.com/registry/packages/databricks/api-docs/sqltable/)
     """
 
     catalog_name: str | None = Field(
@@ -126,7 +124,7 @@ class Table(TableBase, PulumiResource):
         return self.full_name
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - table grants
         """
@@ -139,25 +137,6 @@ class Table(TableBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_renames(self) -> dict[str, str]:
-        return {"column": "columns"}
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:SqlTable"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return [
-            "grant",
-            "grants",
-        ]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
@@ -167,4 +146,7 @@ class Table(TableBase, PulumiResource):
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return [
+            "grant",
+            "grants",
+        ]

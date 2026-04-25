@@ -44,13 +44,11 @@ htmlcov
 
 # Test data
 .terraform*
-Pulumi.yaml
 stack.tf.json
 tests/**/metastore_db/**
 tests/**/spark-warehouse/**
 tests/*terraform*
 tests/.terraform/
-tests/Pulumi.yaml
 tests/pipeline/node*
 tests/pipeline/tmp/*
 tests/stack.tf.json

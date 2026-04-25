@@ -3,7 +3,6 @@ from pydantic import Field
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.directory_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.directory_base import DirectoryBase
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class DirectoryLookup(ResourceLookup):
@@ -13,7 +12,7 @@ class DirectoryLookup(ResourceLookup):
     )
 
 
-class Directory(DirectoryBase, PulumiResource):
+class Directory(DirectoryBase):
     """
     Databricks Directory
 
@@ -25,7 +24,7 @@ class Directory(DirectoryBase, PulumiResource):
     d = models.resources.databricks.Directory(path="/queries/views")
     print(d)
     '''
-    resource_name_=None options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None, moved_from=None) lookup_existing=None variables={} path='/queries/views' delete_recursive=None object_id=None
+    resource_name_=None options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, import_=None, moved_from=None) lookup_existing=None variables={} path='/queries/views' delete_recursive=None object_id=None
     '''
     print(d.resource_key)
     # > /queries/views
@@ -48,14 +47,6 @@ class Directory(DirectoryBase, PulumiResource):
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Directory"
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

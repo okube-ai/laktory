@@ -12,10 +12,9 @@ from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.dashboard_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.dashboard_base import DashboardBase
 from laktory.models.resources.databricks.permissions import Permissions
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class Dashboard(DashboardBase, PulumiResource):
+class Dashboard(DashboardBase):
     """
     Databricks Lakeview Dashboard
 
@@ -92,7 +91,7 @@ class Dashboard(DashboardBase, PulumiResource):
         return self.display_name
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - permissions
         """
@@ -108,25 +107,13 @@ class Dashboard(DashboardBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Dashboard"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return [
-            "access_controls",
-            "name_prefix",
-            "name_suffix",
-        ]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return [
+            "access_controls",
+            "name_prefix",
+            "name_suffix",
+        ]

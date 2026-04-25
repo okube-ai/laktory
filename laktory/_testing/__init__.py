@@ -21,17 +21,6 @@ def skip_test(required, extras=None):
         pytest.skip(f"{missing} not available.")
 
 
-def skip_pulumi_preview(extras=None):
-    skip_test(
-        required=[
-            "PULUMI_ACCESS_TOKEN",
-            "DATABRICKS_HOST",
-            "DATABRICKS_TOKEN",
-        ],
-        extras=extras,
-    )
-
-
 def skip_terraform_plan(extras=None):
     skip_test(
         required=[

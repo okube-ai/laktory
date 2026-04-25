@@ -16,7 +16,6 @@ from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.qualitymonitor_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.qualitymonitor_base import QualityMonitorBase
-from laktory.models.resources.pulumiresource import PulumiResource
 
 if TYPE_CHECKING:
     from databricks.sdk import WorkspaceClient
@@ -266,7 +265,7 @@ class QualityMonitorSchedule(BaseModel):
     )
 
 
-class QualityMonitor(QualityMonitorBase, PulumiResource):
+class QualityMonitor(QualityMonitorBase):
     """
     Databricks Quality Monitor
 
@@ -363,22 +362,10 @@ class QualityMonitor(QualityMonitorBase, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """ """
         resources = []
         return resources
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:QualityMonitor"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["_table"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
@@ -386,7 +373,7 @@ class QualityMonitor(QualityMonitorBase, PulumiResource):
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["_table"]
 
     # ----------------------------------------------------------------------- #
     # SDK Client                                                              #

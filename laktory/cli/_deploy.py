@@ -51,7 +51,6 @@ def deploy(
     References
     ----------
     * [CLI](https://www.laktory.ai/concepts/cli/)
-    * pulumi [up](https://www.pulumi.com/docs/cli/commands/pulumi_up/)
     * terraform [apply](https://developer.hashicorp.com/terraform/cli/commands/apply)
     """
     controller = CLIController(
@@ -62,9 +61,7 @@ def deploy(
     )
 
     # Call
-    if controller.backend == "pulumi":
-        controller.pulumi_call("up")
-    elif controller.backend == "terraform":
+    if controller.iac_backend == "terraform":
         controller.terraform_call("apply")
     else:
         raise ValueError(f"backend should be {SUPPORTED_BACKENDS}")

@@ -7,7 +7,6 @@ from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.repo_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.repo_base import RepoBase
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class RepoSparseCheckout(BaseModel):
@@ -20,7 +19,7 @@ class RepoSparseCheckout(BaseModel):
     )
 
 
-class Repo(RepoBase, PulumiResource):
+class Repo(RepoBase):
     """
     Databricks Repo
 
@@ -43,7 +42,6 @@ class Repo(RepoBase, PulumiResource):
     ----------
 
     * [Databricks Repo](https://www.databricks.com/product/repos)
-    * [Pulumi Databricks Repo](https://www.pulumi.com/registry/packages/databricks/api-docs/repo)
 
     """
 
@@ -56,7 +54,7 @@ class Repo(RepoBase, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - permissions
         """
@@ -72,21 +70,9 @@ class Repo(RepoBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Repo"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["access_controls"]

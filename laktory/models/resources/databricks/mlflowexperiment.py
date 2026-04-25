@@ -8,10 +8,9 @@ from laktory.models.resources.databricks.mlflowexperiment_base import (
     MlflowExperimentBase,
 )
 from laktory.models.resources.databricks.permissions import Permissions
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class MLflowExperiment(MlflowExperimentBase, PulumiResource):
+class MLflowExperiment(MlflowExperimentBase):
     """
     MLflow Experiment
 
@@ -45,7 +44,7 @@ class MLflowExperiment(MlflowExperimentBase, PulumiResource):
         return self.name
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - permissions
         """
@@ -62,21 +61,9 @@ class MLflowExperiment(MlflowExperimentBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:MlflowExperiment"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["access_controls"]

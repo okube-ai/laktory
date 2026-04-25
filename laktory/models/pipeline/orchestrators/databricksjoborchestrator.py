@@ -15,7 +15,6 @@ from laktory.models.resources.databricks.job import JobTask
 from laktory.models.resources.databricks.job import JobTaskLibrary
 from laktory.models.resources.databricks.job import JobTaskLibraryPypi
 from laktory.models.resources.databricks.job import JobTaskPythonWheelTask
-from laktory.models.resources.pulumiresource import PulumiResource
 
 logger = get_logger(__name__)
 
@@ -123,7 +122,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             ]
             self.environment = envs
 
-        # Sorting Node Names to prevent job update trigger with Pulumi
+        # Sorting Node Names to prevent spurious job update triggers
         plan = pl.get_execution_plan()
         pl_tasks = plan.tasks_dict
         pl_task_names = list(pl_tasks.keys())
@@ -232,8 +231,8 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         return "job"
 
     @property
-    def pulumi_excludes(self) -> list[str] | dict[str, bool]:
-        return super().pulumi_excludes + [
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
+        return super().terraform_excludes + [
             "config_file",
             "node_max_retries",
             "type",
@@ -243,7 +242,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         ]
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - configuration workspace file
         - configuration workspace file permissions

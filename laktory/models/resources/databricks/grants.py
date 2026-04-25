@@ -2,10 +2,9 @@ from typing import Union
 
 from laktory.models.resources.databricks.grants_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.grants_base import GrantsBase
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class Grants(GrantsBase, PulumiResource):
+class Grants(GrantsBase):
     """
     Databricks Grants
 
@@ -25,21 +24,6 @@ class Grants(GrantsBase, PulumiResource):
     """
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Methods                                                          #
-    # ----------------------------------------------------------------------- #
-    @property
-    def pulumi_renames(self) -> dict[str, str]:
-        return {"schema_": "schema", "grant": "grants"}
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Grants"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return []
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
@@ -49,4 +33,4 @@ class Grants(GrantsBase, PulumiResource):
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return []

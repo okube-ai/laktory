@@ -8,7 +8,6 @@ QUICKSTART_TEMPLATES = [
 
 # Convert to enums?
 SUPPORTED_BACKENDS = [
-    "pulumi",
     "terraform",
 ]
 

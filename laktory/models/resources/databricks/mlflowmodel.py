@@ -7,7 +7,6 @@ from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.mlflowmodel_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.mlflowmodel_base import MlflowModelBase
 from laktory.models.resources.databricks.permissions import Permissions
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class MlflowModelTag(BaseModel):
@@ -15,7 +14,7 @@ class MlflowModelTag(BaseModel):
     value: str = Field(..., description="")
 
 
-class MLflowModel(MlflowModelBase, PulumiResource):
+class MLflowModel(MlflowModelBase):
     """
     MLflow Model
 
@@ -52,7 +51,7 @@ class MLflowModel(MlflowModelBase, PulumiResource):
         return self.name
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - permissions
         """
@@ -69,21 +68,9 @@ class MLflowModel(MlflowModelBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:MlflowModel"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["access_controls"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["access_controls"]
