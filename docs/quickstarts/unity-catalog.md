@@ -27,7 +27,7 @@ deployed. Each file specifies one or more resources.
 
 #### Stack Providers
 In the `stack.yaml`, you will find the definition for two providers: `databricks` (for the account) and `databricks.dev`
-(for the workspace). These may be formatted slightly differently if you’re using Pulumi.
+(for the workspace).
 ```yaml
 providers:
     
