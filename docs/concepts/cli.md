@@ -30,16 +30,16 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 `laktory init` setups IaC backend and download required resources. Only available with Terraform backend.
 
 #### preview
-`laktory preview` validates your yaml stack and describe new resources to be deployed or changes to existing ones.  Similar to `pulumi preview` or `terraform validate/plan`.
+`laktory preview` validates your yaml stack and describe new resources to be deployed or changes to existing ones.  Similar to `terraform validate/plan`.
 
 #### deploy
-`laktory deploy` executes the deployment by creating or updating resources.  Similar to `pulumi up` or `terraform apply`.
+`laktory deploy` executes the deployment by creating or updating resources.  Similar to `terraform apply`.
 
 #### run
 `laktory run` execute remote job or declarative pipeline and monitor failures until completion. Local execution (without an orchestrator) of a pipeline is not yet supported.
 
 #### destroy
-`laktory destroy` destroy all resources declared in your stack. Similar to `pulumi destroy` or `terraform destroy`
+`laktory destroy` destroy all resources declared in your stack. Similar to `terraform destroy`
 
 ### CI/CD
 These commands can be run locally, but really start to provide value in the context of a CI/CD pipeline in which 
@@ -105,7 +105,7 @@ jobs:
       working-directory: ./workspace
       databricks_host: 'adb-1985337240298151.azuredatabricks.net'
     secrets:
-      pulumi_access_token: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
       azure_client_id: ${{ secrets.AZURE_CLIENT_ID_PRD }}
       azure_client_secret: ${{ secrets.AZURE_CLIENT_SECRET_PRD }}
       azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
