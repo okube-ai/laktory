@@ -8,13 +8,12 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.notebook import Notebook
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
-from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
 logger = get_logger(__name__)
 
 
-class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
+class WorkspaceTree(BaseModel, TerraformResource):
     """
     Databricks Workspace Tree (collections of directories, notebooks and
     workspace files)
@@ -29,7 +28,7 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
     )
     print(tree)
     '''
-    resource_name_=None options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, aliases=None, delete_before_replace=True, import_=None, parent=None, replace_on_changes=None, moved_from=None) lookup_existing=None variables={} access_controls=[] path=None source='./source/'
+    resource_name_=None options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, import_=None, moved_from=None) lookup_existing=None variables={} access_controls=[] path=None source='./source/'
     '''
     ```
     """
@@ -53,7 +52,7 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
         return False
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         resources = []
 
         # Get file paths
@@ -113,14 +112,6 @@ class WorkspaceTree(BaseModel, PulumiResource, TerraformResource):
             resources += [r]
 
         return resources
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str | None:
-        return None
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

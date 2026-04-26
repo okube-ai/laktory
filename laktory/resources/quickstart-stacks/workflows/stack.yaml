@@ -1,13 +1,5 @@
 name: workflows
-organization: my_organization  # Will be used as Pulumi organization
 description: Lakehouse - Workflows
-backend: pulumi
-
-# Databricks Provider Configuration
-pulumi:
-  config:
-    databricks:host: ${vars.DATABRICKS_HOST}
-    databricks:token: ${vars.DATABRICKS_TOKEN}
 
 # List of Resources to deploy
 resources:
@@ -34,6 +26,12 @@ resources:
   pipelines:
     pl-stocks-job: !use resources/pl-stocks-job.yaml
     pl-stocks-dlt: !use resources/pl-stocks-dlt.yaml
+
+  # Databricks Provider Configuration
+  providers:
+    databricks:
+      host: ${vars.DATABRICKS_HOST}
+      token: ${vars.DATABRICKS_TOKEN}
 
   variables:
     wheel_filepath: /Workspace${vars.workspace_root}wheels/lake-0.0.1-py3-none-any.whl

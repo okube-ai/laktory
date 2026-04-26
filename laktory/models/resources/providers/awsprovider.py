@@ -2,7 +2,6 @@ from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.resources.providers.baseprovider import BaseProvider
-from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -37,7 +36,7 @@ class ProviderAssumeRoleWithWebIdentity(BaseModel):
     web_identity_token_file: str = None
 
 
-class AWSProvider(BaseProvider, PulumiResource, TerraformResource):
+class AWSProvider(BaseProvider, TerraformResource):
     """
     AWS Provider
 
@@ -222,11 +221,3 @@ class AWSProvider(BaseProvider, PulumiResource, TerraformResource):
     # @property
     # def resource_key(self) -> str:
     #     return self.display_name
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "pulumi:providers:aws"

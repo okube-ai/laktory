@@ -7,10 +7,9 @@ from laktory.models.resources.databricks.externallocation_base import *  # NOQA:
 from laktory.models.resources.databricks.externallocation_base import (
     ExternalLocationBase,
 )
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class ExternalLocation(ExternalLocationBase, PulumiResource):
+class ExternalLocation(ExternalLocationBase):
     """
     Databricks External Location
 
@@ -39,7 +38,7 @@ class ExternalLocation(ExternalLocationBase, PulumiResource):
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - external location grants
         """
@@ -52,21 +51,9 @@ class ExternalLocation(ExternalLocationBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:ExternalLocation"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grant", "grants"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["grant", "grants"]

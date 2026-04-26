@@ -1,13 +1,5 @@
 name: workspace
-organization: my_organization  # Will be used as Pulumi organization
 description: Lakehouse - Workspace Configuration
-backend: pulumi
-
-# Databricks Provider Configuration
-pulumi:
-  config:
-    databricks:host: ${vars.DATABRICKS_HOST}
-    databricks:token: ${vars.DATABRICKS_TOKEN}
 
 # List of Resources to deploy
 resources:
@@ -20,6 +12,12 @@ resources:
 
   # SQL Warehouses
   databricks_warehouses: !use resources/warehouses.yaml
+
+  # Databricks Provider Configuration
+  providers:
+    databricks:
+      host: ${vars.DATABRICKS_HOST}
+      token: ${vars.DATABRICKS_TOKEN}
 
 # Environment Specific Settings
 environments:

@@ -10,14 +10,13 @@ from laktory.models.resources.databricks.catalog_base import *  # NOQA: F403 req
 from laktory.models.resources.databricks.catalog_base import CatalogBase
 from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.databricks.workspacebinding import WorkspaceBinding
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class CatalogLookup(ResourceLookup):
     name: str = Field(serialization_alias="id", description="Catalog name")
 
 
-class Catalog(CatalogBase, PulumiResource):
+class Catalog(CatalogBase):
     """
     A catalog is the first layer of Unity Catalog's three-level namespace. It's
     used to organize your data assets.
@@ -66,7 +65,6 @@ class Catalog(CatalogBase, PulumiResource):
     ----------
 
     * [Databricks Unity Catalog](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#catalogs)
-    * [Pulumi Databricks Catalog](https://www.pulumi.com/registry/packages/databricks/api-docs/catalog/)
     """
 
     # Restore required constraint (base has name: str | None = None)
@@ -84,9 +82,10 @@ class Catalog(CatalogBase, PulumiResource):
     """,
     )
 
-    # foreign_options: Laktory name for the Terraform/Pulumi "options" field.
+    # foreign_options: Laktory name for the Terraform "options" field.
     # The base has `options_` with serialization_alias="options" for Terraform;
     # "options_" is added to excludes below to prevent double output.
+    # TODO: Rename options to resource_options? and rename this one to options?
     foreign_options: dict[str, str] = Field(
         None,
         description="For Foreign Catalogs: the name of the entity from an external data source that maps to a catalog. For example, the database name in a PostgreSQL server.",
@@ -152,7 +151,7 @@ class Catalog(CatalogBase, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - catalog grants
         - schemas resources
@@ -175,20 +174,11 @@ class Catalog(CatalogBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
+    # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
-    def pulumi_renames(self) -> dict[str, str]:
-        return {"foreign_options": "options"}
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Catalog"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        # "options_" suppresses the base field so only foreign_options → "options" is used
+    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
             "schemas",
             "is_unity",
@@ -198,14 +188,6 @@ class Catalog(CatalogBase, PulumiResource):
             "options_",
         ]
 
-    # ----------------------------------------------------------------------- #
-    # Terraform Properties                                                    #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
-
     @property
     def terraform_renames(self) -> dict[str, str]:
-        return self.pulumi_renames
+        return {"foreign_options": "options"}

@@ -14,7 +14,6 @@ from laktory.models.resources.databricks.serviceprincipal_base import (
 from laktory.models.resources.databricks.serviceprincipalrole import (
     ServicePrincipalRole,
 )
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class ServicePrincipalLookup(ResourceLookup):
@@ -24,7 +23,7 @@ class ServicePrincipalLookup(ResourceLookup):
     )
 
 
-class ServicePrincipal(ServicePrincipalBase, PulumiResource):
+class ServicePrincipal(ServicePrincipalBase):
     """
     Databricks account service principal
 
@@ -71,7 +70,7 @@ class ServicePrincipal(ServicePrincipalBase, PulumiResource):
         return self.display_name
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - service principal roles
         - service principal group members
@@ -103,21 +102,9 @@ class ServicePrincipal(ServicePrincipalBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:ServicePrincipal"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["groups", "roles", "group_ids", "workspace_permission_assignments"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["groups", "roles", "group_ids", "workspace_permission_assignments"]

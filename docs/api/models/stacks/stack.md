@@ -14,10 +14,6 @@
 
 ---
 
-::: laktory.models.stacks.stack.Pulumi
-
----
-
 ::: laktory.models.stacks.stack.Terraform
 
 

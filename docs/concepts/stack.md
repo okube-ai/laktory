@@ -8,10 +8,6 @@ multiple environments.
 
 ```yaml
 name: workspace
-backend: pulumi
-config:
-  databricks:host: ${vars.DATABRICKS_HOST}
-  databricks:token: ${vars.DATABRICKS_TOKEN}
 resources:
   pipelines:
     pl-stock-prices:
@@ -33,6 +29,7 @@ resources:
               notebook_path: /.laktory/jobs/ingest_stock_prices.py
 variables:
   org: okube
+
 environments:
   dev:
     resources:
@@ -44,11 +41,13 @@ environments:
       pipelines:
         pl-stock-prices:
           development: False
-```
-### Backend configuration
-The `name`, `backend`, and `config` attributes define the Infrastructure-as-Code (IaC) backend to use, and how to 
-configure resource providers (such as Azure, AWS, GCP, Databricks) for secure access.
 
+terraform:
+  backend:
+    local:
+        path: terraform.tfstate
+
+```
 ### Resources
 The `resources` attribute lists the Laktory models or resources to be deployed. This is structured as nested
 dictionaries with three levels: `resource_type.resource_name.resource_properties`.
@@ -64,3 +63,8 @@ For example, both the `dev` and `prod` environments will include a pipeline name
 notebook. However, in the `dev` environment, the `development` property will be set to `True`.
 
 Each environment will be deployed as a standalone set of resources or stack.
+
+### Backend configuration
+The `terraform` block attributes define the Infrastructure-as-Code (IaC) configuration, and how to 
+configure resource providers (such as Azure, AWS, GCP, Databricks) for secure access.
+

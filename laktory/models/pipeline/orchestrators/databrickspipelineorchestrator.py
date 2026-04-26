@@ -13,7 +13,6 @@ from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
 )
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.pipeline import Pipeline
-from laktory.models.resources.pulumiresource import PulumiResource
 
 logger = get_logger(__name__)
 
@@ -29,7 +28,6 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
     Selecting this orchestrator requires to add the supporting
     [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py)
     to the stack.
-
 
     References
     ----------
@@ -144,17 +142,16 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         return "dlt-pipeline"
 
     @property
-    def pulumi_excludes(self) -> list[str] | dict[str, bool]:
-        excludes = super().pulumi_excludes
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
+        excludes = dict(super().terraform_excludes)
         excludes["config_file"] = True
         excludes["type"] = True
         excludes["dataframe_backend"] = True
         excludes["dataframe_api"] = True
-
         return excludes
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - configuration workspace file
         - configuration workspace file permissions

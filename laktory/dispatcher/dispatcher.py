@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from laktory._useragent import DATABRICKS_USER_AGENT
 from laktory._useragent import VERSION
+from laktory.constants import SUPPORTED_BACKENDS
 from laktory.dispatcher.databricksjobrunner import DatabricksJobRunner
 from laktory.dispatcher.databrickspipelinerunner import DatabricksPipelineRunner
 from laktory.models.stacks.stack import Stack
@@ -114,13 +115,7 @@ class Dispatcher:
     @property
     def _workspace_arguments(self):
         data = {}
-        if self.stack.backend == "pulumi":
-            config = self.stack.to_pulumi(env_name=self.env).model_dump()["config"]
-            for k, v in config.items():
-                if k.startswith("databricks"):
-                    _k = k.split(":")[1]
-                    data[_k] = v
-        elif self.stack.backend == "terraform":
+        if self.stack.iac_backend == "terraform":
             providers = self.stack.to_terraform(env_name=self.env).model_dump()[
                 "provider"
             ]
@@ -128,6 +123,8 @@ class Dispatcher:
                 if "databricks" in k.lower():
                     data = providers[k]
                     break
+        else:
+            raise ValueError(f"backend should be {SUPPORTED_BACKENDS}")
 
         kwargs = {}
         for k in [

@@ -1,9 +1,8 @@
 from laktory.models.resources.databricks.secretacl_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.secretacl_base import SecretAclBase
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class SecretAcl(SecretAclBase, PulumiResource):
+class SecretAcl(SecretAclBase):
     """
     Databricks secret ACL
     """
@@ -15,11 +14,3 @@ class SecretAcl(SecretAclBase, PulumiResource):
     @property
     def resource_key(self) -> str:
         return f"{self.scope}-{self.principal}"
-
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:SecretAcl"

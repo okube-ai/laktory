@@ -9,20 +9,17 @@ from laktory.models.resources.databricks.groupmember import GroupMember
 from laktory.models.resources.databricks.mwspermissionassignment import (
     MwsPermissionAssignment,
 )
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class GroupLookup(ResourceLookup):
-    id: str = Field(
-        None, description="Id of the group. Only supported when using Pulumi backend."
-    )
+    id: str = Field(None, description="Id of the group.")
     display_name: str = Field(
         None,
         description="Display name of the group. Only support when using Terraform backend",
     )
 
 
-class Group(GroupBase, PulumiResource):
+class Group(GroupBase):
     """
     Databricks group
 
@@ -73,20 +70,8 @@ class Group(GroupBase, PulumiResource):
             "",
         )
 
-    # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
     @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:Group"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["member_ids", "workspace_permission_assignments"]
-
-    @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - workspace permission assignments
         """
@@ -108,17 +93,10 @@ class Group(GroupBase, PulumiResource):
                 resources += [a]
         return resources
 
-    # TODO:
-    # if group.id is None:
-    #     self.group = databricks.Group(name, opts=opts, **group.model_pulumi_dump())
-    #     group.id = self.group.id
-    # else:
-    #     self.group = databricks.Group.get(name, id=group.id)
-
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["member_ids", "workspace_permission_assignments"]

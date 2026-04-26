@@ -1,6 +1,5 @@
 name: unity-catalog
 description: Lakehouse - Unity Catalog Configuration
-backend: terraform
 
 # List of Resources to deploy
 resources:

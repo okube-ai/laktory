@@ -427,52 +427,6 @@ def test_job_for_each_task():
     }
 
 
-def test_job_pulumi():
-    assert job.resource_name == "osoucy-job-stock-prices"
-    assert job.options.model_dump(exclude_none=True) == {
-        "depends_on": [],
-        "delete_before_replace": True,
-        "is_enabled": True,
-    }
-    data = job.pulumi_properties
-    print(data)
-    assert data == {
-        "name": "osoucy]job-stock-prices",
-        "email_notifications": {
-            "on_duration_warning_threshold_exceeded": ["info@okube.ai"],
-            "on_failure": ["info@okube.ai"],
-            "on_start": ["info@okube.ai"],
-            "on_success": ["info@okube.ai"],
-        },
-        "tasks": [
-            {
-                "job_cluster_key": "main",
-                "task_key": "ingestion",
-                "notebook_task": {"notebook_path": "job/ingest_stock_prices"},
-            },
-            {
-                "task_key": "pipeline",
-                "depends_on": [{"task_key": "ingestion"}],
-                "pipeline_task": {"pipeline_id": "${resources.dlt-pipeline-pl-dlt.id}"},
-            },
-            {
-                "task_key": "view",
-                "sql_task": {"warehouse_id": "123", "query": {"query_id": "456"}},
-            },
-        ],
-        "job_clusters": [
-            {
-                "job_cluster_key": "main",
-                "new_cluster": {
-                    "node_type_id": "Standard_DS3_v2",
-                    "spark_version": "16.3.x-scala2.12",
-                    "init_scripts": [{"volumes": {"destination": "Volumes/some/path"}}],
-                },
-            }
-        ],
-    }
-
-
 def test_job_task_dbt():
     job = Job(
         name="job-stock-prices",
@@ -486,9 +440,9 @@ def test_job_task_dbt():
             },
         ],
     )
-    assert job.pulumi_properties == {
+    assert job.terraform_properties == {
         "name": "job-stock-prices",
-        "tasks": [
+        "task": [
             {
                 "task_key": "dbt-task",
                 "dbt_task": {"commands": ["dbt build", "dbt run"], "schema": "finance"},

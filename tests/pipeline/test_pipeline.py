@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 import networkx as nx
+import pandas as pd
 import polars
 import pytest
 
@@ -413,7 +414,7 @@ def test_update_metadata(backend, tmp_path, spark):
     )
     dtypes = meta["data_type"].to_dict()
     comments = meta["comment"].to_dict()
-    assert comments["id"] is None
+    assert pd.isna(comments["id"]) or comments["id"] is None
     assert dtypes.get("Comment", None) is None
 
     # Update metadata

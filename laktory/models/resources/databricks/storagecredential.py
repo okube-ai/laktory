@@ -8,7 +8,6 @@ from laktory.models.resources.databricks.storagecredential_base import *  # NOQA
 from laktory.models.resources.databricks.storagecredential_base import (
     StorageCredentialBase,
 )
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
 class AwsIamRole(BaseModel):
@@ -46,7 +45,7 @@ class GcpServiceAccountKey(BaseModel):
     private_key_id: str = Field(None, description="")
 
 
-class StorageCredential(StorageCredentialBase, PulumiResource):
+class StorageCredential(StorageCredentialBase):
     """
     Databricks Storage Credential
 
@@ -76,7 +75,7 @@ class StorageCredential(StorageCredentialBase, PulumiResource):
     # ----------------------------------------------------------------------- #
 
     @property
-    def additional_core_resources(self) -> list[PulumiResource]:
+    def additional_core_resources(self) -> list:
         """
         - storage credential grants
         """
@@ -89,21 +88,9 @@ class StorageCredential(StorageCredentialBase, PulumiResource):
         return resources
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:StorageCredential"
-
-    @property
-    def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grant", "grants"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     @property
     def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return self.pulumi_excludes
+        return ["grant", "grants"]

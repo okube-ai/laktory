@@ -2,10 +2,9 @@ from pydantic import ConfigDict
 
 from laktory.models.resources.databricks.mlflowwebhook_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.mlflowwebhook_base import MlflowWebhookBase
-from laktory.models.resources.pulumiresource import PulumiResource
 
 
-class MLflowWebhook(MlflowWebhookBase, PulumiResource):
+class MLflowWebhook(MlflowWebhookBase):
     """
     MLflow Model
 
@@ -44,29 +43,11 @@ class MLflowWebhook(MlflowWebhookBase, PulumiResource):
         return key
 
     # ----------------------------------------------------------------------- #
-    # Pulumi Properties                                                       #
-    # ----------------------------------------------------------------------- #
-
-    # @property
-    # def pulumi_renames(self) -> dict[str, str]:
-    #     return {"modelname": "model_name"}
-
-    @property
-    def pulumi_resource_type(self) -> str:
-        return "databricks:MlflowWebhook"
-
-    # @property
-    # def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-    #     return ["access_controls"]
-
-    # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #
 
     # @property
     # def terraform_renames(self) -> dict[str, str]:
-    #     return self.pulumi_renames
 
     # @property
     # def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
-    #     return self.pulumi_excludes

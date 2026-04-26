@@ -232,7 +232,7 @@ Here:
 
 - `pipeline_id` dynamically references `my-pipeline`'s ID.
 
-**Note:** Resource variables are automatically populated by Laktory based on the selected IaC backend (Pulumi or Terraform). The resource must be deployed as part of the current stack.
+**Note:** Resource variables are automatically populated by Laktory based on the Terraform backend. The resource must be deployed as part of the current stack.
 
 ## Variable Injection
 

@@ -92,23 +92,12 @@ class CLIController(BaseModel):
             self.stack = Stack.model_validate_yaml(fp, vars=vars)
 
     @property
-    def backend(self) -> str:
-        return self.stack.backend
+    def iac_backend(self) -> str:
+        return self.stack.iac_backend
 
     @property
     def organization(self) -> str:
         return self.stack.organization
-
-    @property
-    def pulumi_options(self):
-        options = []
-        if self.auto_approve:
-            options += ["--yes"]
-
-        if self.options_str:
-            options += self.options_str.split(",")
-
-        return options
 
     @property
     def terraform_options(self):
@@ -120,17 +109,6 @@ class CLIController(BaseModel):
             options += self.options_str.split(",")
 
         return options
-
-    @property
-    def pulumi_stack_name(self):
-        return self.organization + "/" + self.env
-
-    def pulumi_call(self, cmd):
-        if self.pulumi_stack_name is None:
-            raise ValueError("Argument `stack` must be specified with pulumi backend")
-
-        pstack = self.stack.to_pulumi(env_name=self.env)
-        getattr(pstack, cmd)(stack=self.pulumi_stack_name, flags=self.pulumi_options)
 
     def terraform_call(self, cmd):
         pstack = self.stack.to_terraform(env_name=self.env)
@@ -162,21 +140,11 @@ class Worker:
                     and "The system cannot find the file specified".lower()
                     in str(e).lower()
                 )
-                c2 = (
-                    _cmd.startswith("pulumi")
-                    and "The system cannot find the file specified".lower()
-                    in str(e).lower()
-                )
 
                 # Mac/Linux
-                c3 = "No such file or directory: 'terraform'".lower() in str(e).lower()
-                c4 = "No such file or directory: 'pulumi'".lower() in str(e).lower()
+                c2 = "No such file or directory: 'terraform'".lower() in str(e).lower()
 
-                if c1 or c3:
+                if c1 or c2:
                     print(
-                        "Terraform is selected as IaC backend. Make sure it is installed and part of the PATH"
-                    )
-                elif c2 or c4:
-                    print(
-                        "Pulumi is selected as IaC backend. Make sure it is installed and part of the PATH"
+                        "Terraform could not be found. Make sure it is installed and part of the PATH"
                     )
