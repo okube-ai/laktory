@@ -32,6 +32,7 @@ secrets/*.*
 build
 dist
 /site/
+uv.lock
 
 # --------------------------------------------------------------------------- #
 # Testing and coverage                                                        #
