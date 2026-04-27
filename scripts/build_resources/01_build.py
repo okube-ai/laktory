@@ -237,10 +237,36 @@ def field_default(attr: dict) -> str:
 # ---------------------------------------------------------------------------
 
 
+def get_desc(
+    descriptions: dict[str, str],
+    block_path: str,
+    attr_name: str,
+    attr: dict,
+) -> str:
+    """
+    Resolve a field description using a three-level priority chain:
+      1. Path-qualified key  (e.g. "parameter.name")
+      2. Bare key            (e.g. "name")
+      3. TF schema text      (attr["description"])
+
+    block_path is the dotted path from the resource root to the *current*
+    block, e.g. "" for top-level, "parameter" one level in,
+    "task.webhook_notifications.on_failure" deeper still.
+    """
+    qualified = f"{block_path}.{attr_name}" if block_path else attr_name
+    raw = (
+        descriptions.get(qualified)
+        or descriptions.get(attr_name)
+        or attr.get("description", "")
+    )
+    return raw.strip().replace('"', "'")
+
+
 def emit_block_class(
     class_name: str,
     block: dict,
     descriptions: dict[str, str],
+    block_path: str = "",
     indent: int = 0,
 ) -> tuple[list[str], list[str], list[str]]:
     """
@@ -269,11 +295,7 @@ def emit_block_class(
 
         py_type = tf_type_to_python(attr.get("type", "dynamic"))
         default = field_default(attr)
-        description = (
-            (descriptions.get(attr_name) or attr.get("description", ""))
-            .strip()
-            .replace('"', "'")
-        )
+        description = get_desc(descriptions, block_path, attr_name, attr)
         field_name = safe_field_name(attr_name)
 
         if default == "...":
@@ -299,9 +321,10 @@ def emit_block_class(
         if bt_name in ALWAYS_SKIP_BLOCK_TYPES:
             continue
 
+        nested_path = f"{block_path}.{bt_name}" if block_path else bt_name
         nested_class = block_class_name(class_name, bt_name)
         nested_pre, nested_lines, nested_names = emit_block_class(
-            nested_class, bt_def["block"], descriptions
+            nested_class, bt_def["block"], descriptions, block_path=nested_path
         )
         pre_classes.extend(nested_pre)
         pre_classes.append("\n".join(nested_lines))
@@ -319,11 +342,8 @@ def emit_block_class(
             default = "None"
 
         bt_field_name = safe_field_name(bt_name)
-        desc_snippet = (
-            f', description="{descriptions[bt_name]}"'
-            if bt_name in descriptions
-            else ""
-        )
+        desc = get_desc(descriptions, block_path, bt_name, {})
+        desc_snippet = f', description="{desc}"' if desc else ""
         plural = pluralize(bt_field_name)
         if type_str.startswith("list[") and bt_field_name != plural:
             lines.append(
@@ -378,7 +398,7 @@ def emit_resource_module(
 
         nested_class = block_class_name(class_name, bt_name)
         nested_pre, nested_lines, nested_names = emit_block_class(
-            nested_class, bt_def["block"], descriptions
+            nested_class, bt_def["block"], descriptions, block_path=bt_name
         )
         pre_classes.extend(nested_pre)
         pre_classes.append("\n".join(nested_lines))
@@ -396,11 +416,8 @@ def emit_resource_module(
             default_val = "None"
 
         bt_field_name = safe_field_name(bt_name)
-        desc_snippet = (
-            f', description="{descriptions[bt_name]}"'
-            if bt_name in descriptions
-            else ""
-        )
+        desc = get_desc(descriptions, "", bt_name, {})
+        desc_snippet = f', description="{desc}"' if desc else ""
         plural = pluralize(bt_field_name)
         if type_str.startswith("list[") and plural != bt_field_name:
             nested_field_lines.append(
@@ -448,11 +465,7 @@ def emit_resource_module(
 
     for attr_name, attr in sorted(required_attrs.items()):
         py_type = tf_type_to_python(attr.get("type", "dynamic"))
-        description = (
-            (descriptions.get(attr_name) or attr.get("description", ""))
-            .strip()
-            .replace('"', "'")
-        )
+        description = get_desc(descriptions, "", attr_name, attr)
         field_name = safe_field_name(attr_name)
         desc_snippet = f', description="{description}"' if description else ""
         if needs_alias(attr_name):
@@ -476,11 +489,7 @@ def emit_resource_module(
 
     for attr_name, attr in sorted(optional_attrs.items()):
         py_type = tf_type_to_python(attr.get("type", "dynamic"))
-        description = (
-            (descriptions.get(attr_name) or attr.get("description", ""))
-            .strip()
-            .replace('"', "'")
-        )
+        description = get_desc(descriptions, "", attr_name, attr)
         field_name = safe_field_name(attr_name)
         desc_snippet = f', description="{description}"' if description else ""
         if needs_alias(attr_name):

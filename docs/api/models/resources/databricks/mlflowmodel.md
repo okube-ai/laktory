@@ -3,4 +3,8 @@
 
 ---
 
+::: laktory.models.resources.databricks.mlflowmodel.MlflowModelTag
+
+---
+
 ::: laktory.models.resources.databricks.mlflowmodel.MlflowModelTags
