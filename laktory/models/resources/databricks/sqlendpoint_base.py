@@ -45,7 +45,7 @@ class SqlEndpointBase(BaseModel, TerraformResource):
         ...,
         description="Name of the Databricks SQL release channel. Possible values are: `CHANNEL_NAME_PREVIEW` and `CHANNEL_NAME_CURRENT`. Default is `CHANNEL_NAME_CURRENT`",
     )
-    auto_stop_mins: float | None = Field(
+    auto_stop_mins: int | None = Field(
         None,
         description="Time in minutes until an idle SQL warehouse terminates all clusters and stops. This field is optional. The default is 120, set to 0 to disable the auto stop",
     )
@@ -62,11 +62,11 @@ class SqlEndpointBase(BaseModel, TerraformResource):
         description="Whether this SQL warehouse is a serverless endpoint. See below for details about the default values. To avoid ambiguity, especially for organizations with many workspaces, Databricks recommends that you always set this field explicitly",
     )
     instance_profile_arn: str | None = Field(None)
-    max_num_clusters: float | None = Field(
+    max_num_clusters: int | None = Field(
         None,
         description="Maximum number of clusters available when a SQL warehouse is running. This field is required. If multi-cluster load balancing is not enabled, this is default to `1`",
     )
-    min_num_clusters: float | None = Field(
+    min_num_clusters: int | None = Field(
         None,
         description="Minimum number of clusters available when a SQL warehouse is running. The default is `1`",
     )

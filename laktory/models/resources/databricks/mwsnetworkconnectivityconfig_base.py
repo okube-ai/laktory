@@ -46,11 +46,11 @@ class MwsNetworkConnectivityConfigEgressConfigTargetRulesAwsPrivateEndpointRules
 ):
     account_id: str | None = Field(None)
     connection_state: str | None = Field(None)
-    creation_time: float | None = Field(
+    creation_time: int | None = Field(
         None, description="time in epoch milliseconds when this object was created"
     )
     deactivated: bool | None = Field(None)
-    deactivated_at: float | None = Field(None)
+    deactivated_at: int | None = Field(None)
     domain_names: list[str] | None = Field(None)
     enabled: bool | None = Field(None)
     endpoint_service: str | None = Field(None)
@@ -61,7 +61,7 @@ class MwsNetworkConnectivityConfigEgressConfigTargetRulesAwsPrivateEndpointRules
     )
     resource_names: list[str] | None = Field(None)
     rule_id: str | None = Field(None)
-    updated_time: float | None = Field(
+    updated_time: int | None = Field(
         None, description="time in epoch milliseconds when this object was updated"
     )
     vpc_endpoint_id: str | None = Field(None)
@@ -71,11 +71,11 @@ class MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRul
     BaseModel
 ):
     connection_state: str | None = Field(None)
-    creation_time: float | None = Field(
+    creation_time: int | None = Field(
         None, description="time in epoch milliseconds when this object was created"
     )
     deactivated: bool | None = Field(None)
-    deactivated_at: float | None = Field(None)
+    deactivated_at: int | None = Field(None)
     domain_names: list[str] | None = Field(None)
     endpoint_name: str | None = Field(None)
     error_message: str | None = Field(None)
@@ -86,7 +86,7 @@ class MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRul
     )
     resource_id: str | None = Field(None)
     rule_id: str | None = Field(None)
-    updated_time: float | None = Field(
+    updated_time: int | None = Field(
         None, description="time in epoch milliseconds when this object was updated"
     )
 
@@ -132,14 +132,14 @@ class MwsNetworkConnectivityConfigBase(BaseModel, TerraformResource):
         description="Region of the Network Connectivity Config. NCCs can only be referenced by your workspaces in the same region. Change forces creation of a new resource",
     )
     account_id: str | None = Field(None)
-    creation_time: float | None = Field(
+    creation_time: int | None = Field(
         None, description="time in epoch milliseconds when this object was created"
     )
     network_connectivity_config_id: str | None = Field(
         None,
         description="Canonical unique identifier of Network Connectivity Config in Databricks Account",
     )
-    updated_time: float | None = Field(
+    updated_time: int | None = Field(
         None, description="time in epoch milliseconds when this object was updated"
     )
     egress_config: MwsNetworkConnectivityConfigEgressConfig | None = Field(

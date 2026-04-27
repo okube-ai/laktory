@@ -80,7 +80,7 @@ class AlertBase(BaseModel, TerraformResource):
         description="Whether to notify alert subscribers when alert returns back to normal",
     )
     owner_user_name: str | None = Field(None, description="Alert owner's username")
-    seconds_to_retrigger: float | None = Field(
+    seconds_to_retrigger: int | None = Field(
         None,
         description="Number of seconds an alert must wait after being triggered to rearm itself. After rearming, it can be triggered again. If 0 or not specified, the alert will not be triggered again",
     )

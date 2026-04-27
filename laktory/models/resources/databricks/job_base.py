@@ -154,7 +154,7 @@ class JobHealthRules(BaseModel):
         ...,
         description="string specifying the operation used to evaluate the given metric. The only supported operation is `GREATER_THAN`",
     )
-    value: float = Field(
+    value: int = Field(
         ..., description="integer value used to compare to the given metric"
     )
 
@@ -167,20 +167,20 @@ class JobHealth(BaseModel):
 
 
 class JobJobClusterNewClusterAutoscale(BaseModel):
-    max_workers: float | None = Field(None)
-    min_workers: float | None = Field(None)
+    max_workers: int | None = Field(None)
+    min_workers: int | None = Field(None)
 
 
 class JobJobClusterNewClusterAwsAttributes(BaseModel):
     availability: str | None = Field(None)
-    ebs_volume_count: float | None = Field(None)
-    ebs_volume_iops: float | None = Field(None)
-    ebs_volume_size: float | None = Field(None)
-    ebs_volume_throughput: float | None = Field(None)
+    ebs_volume_count: int | None = Field(None)
+    ebs_volume_iops: int | None = Field(None)
+    ebs_volume_size: int | None = Field(None)
+    ebs_volume_throughput: int | None = Field(None)
     ebs_volume_type: str | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    first_on_demand: int | None = Field(None)
     instance_profile_arn: str | None = Field(None)
-    spot_bid_price_percent: float | None = Field(None)
+    spot_bid_price_percent: int | None = Field(None)
     zone_id: str | None = Field(None)
 
 
@@ -191,7 +191,7 @@ class JobJobClusterNewClusterAzureAttributesLogAnalyticsInfo(BaseModel):
 
 class JobJobClusterNewClusterAzureAttributes(BaseModel):
     availability: str | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    first_on_demand: int | None = Field(None)
     spot_bid_max_price: float | None = Field(None)
     log_analytics_info: (
         JobJobClusterNewClusterAzureAttributesLogAnalyticsInfo | None
@@ -251,10 +251,10 @@ class JobJobClusterNewClusterDriverNodeTypeFlexibility(BaseModel):
 
 class JobJobClusterNewClusterGcpAttributes(BaseModel):
     availability: str | None = Field(None)
-    boot_disk_size: float | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    boot_disk_size: int | None = Field(None)
+    first_on_demand: int | None = Field(None)
     google_service_account: str | None = Field(None)
-    local_ssd_count: float | None = Field(None)
+    local_ssd_count: int | None = Field(None)
     use_preemptible_executors: bool | None = Field(None)
     zone_id: str | None = Field(None)
 
@@ -359,16 +359,16 @@ class JobJobClusterNewCluster(BaseModel):
     is_single_node: bool | None = Field(None)
     kind: str | None = Field(None)
     node_type_id: str | None = Field(None)
-    num_workers: float | None = Field(None)
+    num_workers: int | None = Field(None)
     policy_id: str | None = Field(None)
-    remote_disk_throughput: float | None = Field(None)
+    remote_disk_throughput: int | None = Field(None)
     runtime_engine: str | None = Field(None)
     single_user_name: str | None = Field(None)
     spark_conf: dict[str, str] | None = Field(None)
     spark_env_vars: dict[str, str] | None = Field(None)
     spark_version: str | None = Field(None)
     ssh_public_keys: list[str] | None = Field(None)
-    total_initial_remote_disk_size: float | None = Field(None)
+    total_initial_remote_disk_size: int | None = Field(None)
     use_ml_runtime: bool | None = Field(None)
     autoscale: JobJobClusterNewClusterAutoscale | None = Field(None)
     aws_attributes: JobJobClusterNewClusterAwsAttributes | None = Field(None)
@@ -434,20 +434,20 @@ class JobLibrary(BaseModel):
 
 
 class JobNewClusterAutoscale(BaseModel):
-    max_workers: float | None = Field(None)
-    min_workers: float | None = Field(None)
+    max_workers: int | None = Field(None)
+    min_workers: int | None = Field(None)
 
 
 class JobNewClusterAwsAttributes(BaseModel):
     availability: str | None = Field(None)
-    ebs_volume_count: float | None = Field(None)
-    ebs_volume_iops: float | None = Field(None)
-    ebs_volume_size: float | None = Field(None)
-    ebs_volume_throughput: float | None = Field(None)
+    ebs_volume_count: int | None = Field(None)
+    ebs_volume_iops: int | None = Field(None)
+    ebs_volume_size: int | None = Field(None)
+    ebs_volume_throughput: int | None = Field(None)
     ebs_volume_type: str | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    first_on_demand: int | None = Field(None)
     instance_profile_arn: str | None = Field(None)
-    spot_bid_price_percent: float | None = Field(None)
+    spot_bid_price_percent: int | None = Field(None)
     zone_id: str | None = Field(None)
 
 
@@ -458,7 +458,7 @@ class JobNewClusterAzureAttributesLogAnalyticsInfo(BaseModel):
 
 class JobNewClusterAzureAttributes(BaseModel):
     availability: str | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    first_on_demand: int | None = Field(None)
     spot_bid_max_price: float | None = Field(None)
     log_analytics_info: JobNewClusterAzureAttributesLogAnalyticsInfo | None = Field(
         None
@@ -518,10 +518,10 @@ class JobNewClusterDriverNodeTypeFlexibility(BaseModel):
 
 class JobNewClusterGcpAttributes(BaseModel):
     availability: str | None = Field(None)
-    boot_disk_size: float | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    boot_disk_size: int | None = Field(None)
+    first_on_demand: int | None = Field(None)
     google_service_account: str | None = Field(None)
-    local_ssd_count: float | None = Field(None)
+    local_ssd_count: int | None = Field(None)
     use_preemptible_executors: bool | None = Field(None)
     zone_id: str | None = Field(None)
 
@@ -626,16 +626,16 @@ class JobNewCluster(BaseModel):
     is_single_node: bool | None = Field(None)
     kind: str | None = Field(None)
     node_type_id: str | None = Field(None)
-    num_workers: float | None = Field(None)
+    num_workers: int | None = Field(None)
     policy_id: str | None = Field(None)
-    remote_disk_throughput: float | None = Field(None)
+    remote_disk_throughput: int | None = Field(None)
     runtime_engine: str | None = Field(None)
     single_user_name: str | None = Field(None)
     spark_conf: dict[str, str] | None = Field(None)
     spark_env_vars: dict[str, str] | None = Field(None)
     spark_version: str | None = Field(None)
     ssh_public_keys: list[str] | None = Field(None)
-    total_initial_remote_disk_size: float | None = Field(None)
+    total_initial_remote_disk_size: int | None = Field(None)
     use_ml_runtime: bool | None = Field(None)
     autoscale: JobNewClusterAutoscale | None = Field(None)
     aws_attributes: JobNewClusterAwsAttributes | None = Field(None)
@@ -738,7 +738,7 @@ class JobRunAs(BaseModel):
 
 
 class JobRunJobTask(BaseModel):
-    job_id: float = Field(..., description="(String) ID of the job")
+    job_id: int = Field(..., description="(String) ID of the job")
     job_parameters: dict[str, str] | None = Field(
         None, description="(Map) Job parameters for the task"
     )
@@ -874,7 +874,7 @@ class JobTaskDashboardTask(BaseModel):
 
 class JobTaskDbtCloudTask(BaseModel):
     connection_resource_name: str | None = Field(None)
-    dbt_cloud_job_id: float | None = Field(None)
+    dbt_cloud_job_id: int | None = Field(None)
 
 
 class JobTaskDbtPlatformTask(BaseModel):
@@ -1031,7 +1031,7 @@ class JobTaskForEachTaskTaskDashboardTask(BaseModel):
 
 class JobTaskForEachTaskTaskDbtCloudTask(BaseModel):
     connection_resource_name: str | None = Field(None)
-    dbt_cloud_job_id: float | None = Field(None)
+    dbt_cloud_job_id: int | None = Field(None)
 
 
 class JobTaskForEachTaskTaskDbtPlatformTask(BaseModel):
@@ -1108,7 +1108,7 @@ class JobTaskForEachTaskTaskEmailNotifications(BaseModel):
 class JobTaskForEachTaskTaskGenAiComputeTaskCompute(BaseModel):
     gpu_node_pool_id: str | None = Field(None)
     gpu_type: str | None = Field(None)
-    num_gpus: float = Field(...)
+    num_gpus: int = Field(...)
 
 
 class JobTaskForEachTaskTaskGenAiComputeTask(BaseModel):
@@ -1137,7 +1137,7 @@ class JobTaskForEachTaskTaskHealthRules(BaseModel):
         ...,
         description="string specifying the operation used to evaluate the given metric. The only supported operation is `GREATER_THAN`",
     )
-    value: float = Field(
+    value: int = Field(
         ..., description="integer value used to compare to the given metric"
     )
 
@@ -1176,20 +1176,20 @@ class JobTaskForEachTaskTaskLibrary(BaseModel):
 
 
 class JobTaskForEachTaskTaskNewClusterAutoscale(BaseModel):
-    max_workers: float | None = Field(None)
-    min_workers: float | None = Field(None)
+    max_workers: int | None = Field(None)
+    min_workers: int | None = Field(None)
 
 
 class JobTaskForEachTaskTaskNewClusterAwsAttributes(BaseModel):
     availability: str | None = Field(None)
-    ebs_volume_count: float | None = Field(None)
-    ebs_volume_iops: float | None = Field(None)
-    ebs_volume_size: float | None = Field(None)
-    ebs_volume_throughput: float | None = Field(None)
+    ebs_volume_count: int | None = Field(None)
+    ebs_volume_iops: int | None = Field(None)
+    ebs_volume_size: int | None = Field(None)
+    ebs_volume_throughput: int | None = Field(None)
     ebs_volume_type: str | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    first_on_demand: int | None = Field(None)
     instance_profile_arn: str | None = Field(None)
-    spot_bid_price_percent: float | None = Field(None)
+    spot_bid_price_percent: int | None = Field(None)
     zone_id: str | None = Field(None)
 
 
@@ -1200,7 +1200,7 @@ class JobTaskForEachTaskTaskNewClusterAzureAttributesLogAnalyticsInfo(BaseModel)
 
 class JobTaskForEachTaskTaskNewClusterAzureAttributes(BaseModel):
     availability: str | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    first_on_demand: int | None = Field(None)
     spot_bid_max_price: float | None = Field(None)
     log_analytics_info: (
         JobTaskForEachTaskTaskNewClusterAzureAttributesLogAnalyticsInfo | None
@@ -1262,10 +1262,10 @@ class JobTaskForEachTaskTaskNewClusterDriverNodeTypeFlexibility(BaseModel):
 
 class JobTaskForEachTaskTaskNewClusterGcpAttributes(BaseModel):
     availability: str | None = Field(None)
-    boot_disk_size: float | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    boot_disk_size: int | None = Field(None)
+    first_on_demand: int | None = Field(None)
     google_service_account: str | None = Field(None)
-    local_ssd_count: float | None = Field(None)
+    local_ssd_count: int | None = Field(None)
     use_preemptible_executors: bool | None = Field(None)
     zone_id: str | None = Field(None)
 
@@ -1370,16 +1370,16 @@ class JobTaskForEachTaskTaskNewCluster(BaseModel):
     is_single_node: bool | None = Field(None)
     kind: str | None = Field(None)
     node_type_id: str | None = Field(None)
-    num_workers: float | None = Field(None)
+    num_workers: int | None = Field(None)
     policy_id: str | None = Field(None)
-    remote_disk_throughput: float | None = Field(None)
+    remote_disk_throughput: int | None = Field(None)
     runtime_engine: str | None = Field(None)
     single_user_name: str | None = Field(None)
     spark_conf: dict[str, str] | None = Field(None)
     spark_env_vars: dict[str, str] | None = Field(None)
     spark_version: str | None = Field(None)
     ssh_public_keys: list[str] | None = Field(None)
-    total_initial_remote_disk_size: float | None = Field(None)
+    total_initial_remote_disk_size: int | None = Field(None)
     use_ml_runtime: bool | None = Field(None)
     autoscale: JobTaskForEachTaskTaskNewClusterAutoscale | None = Field(None)
     aws_attributes: JobTaskForEachTaskTaskNewClusterAwsAttributes | None = Field(None)
@@ -1508,7 +1508,7 @@ class JobTaskForEachTaskTaskRunJobTaskPipelineParams(BaseModel):
 class JobTaskForEachTaskTaskRunJobTask(BaseModel):
     dbt_commands: list[str] | None = Field(None)
     jar_params: list[str] | None = Field(None)
-    job_id: float = Field(..., description="(String) ID of the job")
+    job_id: int = Field(..., description="(String) ID of the job")
     job_parameters: dict[str, str] | None = Field(
         None, description="(Map) Job parameters for the task"
     )
@@ -1727,11 +1727,11 @@ class JobTaskForEachTaskTask(BaseModel):
         None,
         description="Identifier that can be referenced in `task` block, so that cluster is shared between tasks",
     )
-    max_retries: float | None = Field(
+    max_retries: int | None = Field(
         None,
         description="(Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a `FAILED` or `INTERNAL_ERROR` lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle state: `PENDING`, `RUNNING`, `TERMINATING`, `TERMINATED`, `SKIPPED` or `INTERNAL_ERROR`",
     )
-    min_retry_interval_millis: float | None = Field(
+    min_retry_interval_millis: int | None = Field(
         None,
         description="(Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried",
     )
@@ -1744,7 +1744,7 @@ class JobTaskForEachTaskTask(BaseModel):
         description="An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. One of `ALL_SUCCESS`, `AT_LEAST_ONE_SUCCESS`, `NONE_FAILED`, `ALL_DONE`, `AT_LEAST_ONE_FAILED` or `ALL_FAILED`. When omitted, defaults to `ALL_SUCCESS`",
     )
     task_key: str = Field(..., description="The name of the task this task depends on")
-    timeout_seconds: float | None = Field(
+    timeout_seconds: int | None = Field(
         None,
         description="(Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout",
     )
@@ -1804,7 +1804,7 @@ class JobTaskForEachTaskTask(BaseModel):
 
 
 class JobTaskForEachTask(BaseModel):
-    concurrency: float | None = Field(
+    concurrency: int | None = Field(
         None,
         description="Controls the number of active iteration task runs. Default is 20, maximum allowed is 100",
     )
@@ -1820,7 +1820,7 @@ class JobTaskForEachTask(BaseModel):
 class JobTaskGenAiComputeTaskCompute(BaseModel):
     gpu_node_pool_id: str | None = Field(None)
     gpu_type: str | None = Field(None)
-    num_gpus: float = Field(...)
+    num_gpus: int = Field(...)
 
 
 class JobTaskGenAiComputeTask(BaseModel):
@@ -1849,7 +1849,7 @@ class JobTaskHealthRules(BaseModel):
         ...,
         description="string specifying the operation used to evaluate the given metric. The only supported operation is `GREATER_THAN`",
     )
-    value: float = Field(
+    value: int = Field(
         ..., description="integer value used to compare to the given metric"
     )
 
@@ -1888,20 +1888,20 @@ class JobTaskLibrary(BaseModel):
 
 
 class JobTaskNewClusterAutoscale(BaseModel):
-    max_workers: float | None = Field(None)
-    min_workers: float | None = Field(None)
+    max_workers: int | None = Field(None)
+    min_workers: int | None = Field(None)
 
 
 class JobTaskNewClusterAwsAttributes(BaseModel):
     availability: str | None = Field(None)
-    ebs_volume_count: float | None = Field(None)
-    ebs_volume_iops: float | None = Field(None)
-    ebs_volume_size: float | None = Field(None)
-    ebs_volume_throughput: float | None = Field(None)
+    ebs_volume_count: int | None = Field(None)
+    ebs_volume_iops: int | None = Field(None)
+    ebs_volume_size: int | None = Field(None)
+    ebs_volume_throughput: int | None = Field(None)
     ebs_volume_type: str | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    first_on_demand: int | None = Field(None)
     instance_profile_arn: str | None = Field(None)
-    spot_bid_price_percent: float | None = Field(None)
+    spot_bid_price_percent: int | None = Field(None)
     zone_id: str | None = Field(None)
 
 
@@ -1912,7 +1912,7 @@ class JobTaskNewClusterAzureAttributesLogAnalyticsInfo(BaseModel):
 
 class JobTaskNewClusterAzureAttributes(BaseModel):
     availability: str | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    first_on_demand: int | None = Field(None)
     spot_bid_max_price: float | None = Field(None)
     log_analytics_info: JobTaskNewClusterAzureAttributesLogAnalyticsInfo | None = Field(
         None
@@ -1972,10 +1972,10 @@ class JobTaskNewClusterDriverNodeTypeFlexibility(BaseModel):
 
 class JobTaskNewClusterGcpAttributes(BaseModel):
     availability: str | None = Field(None)
-    boot_disk_size: float | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    boot_disk_size: int | None = Field(None)
+    first_on_demand: int | None = Field(None)
     google_service_account: str | None = Field(None)
-    local_ssd_count: float | None = Field(None)
+    local_ssd_count: int | None = Field(None)
     use_preemptible_executors: bool | None = Field(None)
     zone_id: str | None = Field(None)
 
@@ -2080,16 +2080,16 @@ class JobTaskNewCluster(BaseModel):
     is_single_node: bool | None = Field(None)
     kind: str | None = Field(None)
     node_type_id: str | None = Field(None)
-    num_workers: float | None = Field(None)
+    num_workers: int | None = Field(None)
     policy_id: str | None = Field(None)
-    remote_disk_throughput: float | None = Field(None)
+    remote_disk_throughput: int | None = Field(None)
     runtime_engine: str | None = Field(None)
     single_user_name: str | None = Field(None)
     spark_conf: dict[str, str] | None = Field(None)
     spark_env_vars: dict[str, str] | None = Field(None)
     spark_version: str | None = Field(None)
     ssh_public_keys: list[str] | None = Field(None)
-    total_initial_remote_disk_size: float | None = Field(None)
+    total_initial_remote_disk_size: int | None = Field(None)
     use_ml_runtime: bool | None = Field(None)
     autoscale: JobTaskNewClusterAutoscale | None = Field(None)
     aws_attributes: JobTaskNewClusterAwsAttributes | None = Field(None)
@@ -2214,7 +2214,7 @@ class JobTaskRunJobTaskPipelineParams(BaseModel):
 class JobTaskRunJobTask(BaseModel):
     dbt_commands: list[str] | None = Field(None)
     jar_params: list[str] | None = Field(None)
-    job_id: float = Field(..., description="(String) ID of the job")
+    job_id: int = Field(..., description="(String) ID of the job")
     job_parameters: dict[str, str] | None = Field(
         None, description="(Map) Job parameters for the task"
     )
@@ -2419,11 +2419,11 @@ class JobTask(BaseModel):
         None,
         description="Identifier that can be referenced in `task` block, so that cluster is shared between tasks",
     )
-    max_retries: float | None = Field(
+    max_retries: int | None = Field(
         None,
         description="(Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a `FAILED` or `INTERNAL_ERROR` lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle state: `PENDING`, `RUNNING`, `TERMINATING`, `TERMINATED`, `SKIPPED` or `INTERNAL_ERROR`",
     )
-    min_retry_interval_millis: float | None = Field(
+    min_retry_interval_millis: int | None = Field(
         None,
         description="(Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried",
     )
@@ -2436,7 +2436,7 @@ class JobTask(BaseModel):
         description="An optional value indicating the condition that determines whether the task should be run once its dependencies have been completed. One of `ALL_SUCCESS`, `AT_LEAST_ONE_SUCCESS`, `NONE_FAILED`, `ALL_DONE`, `AT_LEAST_ONE_FAILED` or `ALL_FAILED`. When omitted, defaults to `ALL_SUCCESS`",
     )
     task_key: str = Field(..., description="The name of the task this task depends on")
-    timeout_seconds: float | None = Field(
+    timeout_seconds: int | None = Field(
         None,
         description="(Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout",
     )
@@ -2504,12 +2504,12 @@ class JobTimeouts(BaseModel):
 
 
 class JobTriggerFileArrival(BaseModel):
-    min_time_between_triggers_seconds: float | None = Field(
+    min_time_between_triggers_seconds: int | None = Field(
         None,
         description="If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds",
     )
     url: str = Field(..., description="URL of the job on the given workspace")
-    wait_after_last_change_seconds: float | None = Field(
+    wait_after_last_change_seconds: int | None = Field(
         None,
         description="If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds",
     )
@@ -2521,19 +2521,19 @@ class JobTriggerModel(BaseModel):
         ...,
         description="The table(s) condition based on which to trigger a job run.  Possible values are `ANY_UPDATED`, `ALL_UPDATED`",
     )
-    min_time_between_triggers_seconds: float | None = Field(
+    min_time_between_triggers_seconds: int | None = Field(
         None,
         description="If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds",
     )
     securable_name: str | None = Field(None)
-    wait_after_last_change_seconds: float | None = Field(
+    wait_after_last_change_seconds: int | None = Field(
         None,
         description="If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds",
     )
 
 
 class JobTriggerPeriodic(BaseModel):
-    interval: float = Field(
+    interval: int = Field(
         ..., description="Specifies the interval at which the job should run"
     )
     unit: str = Field(
@@ -2547,7 +2547,7 @@ class JobTriggerTableUpdate(BaseModel):
         None,
         description="The table(s) condition based on which to trigger a job run.  Possible values are `ANY_UPDATED`, `ALL_UPDATED`",
     )
-    min_time_between_triggers_seconds: float | None = Field(
+    min_time_between_triggers_seconds: int | None = Field(
         None,
         description="If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds",
     )
@@ -2555,7 +2555,7 @@ class JobTriggerTableUpdate(BaseModel):
         ...,
         description="A non-empty list of tables to monitor for changes. The table name must be in the format `catalog_name.schema_name.table_name`",
     )
-    wait_after_last_change_seconds: float | None = Field(
+    wait_after_last_change_seconds: int | None = Field(
         None,
         description="If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds",
     )
@@ -2665,15 +2665,15 @@ class JobBase(BaseModel, TerraformResource):
         description="Identifier of the [interactive cluster](cluster.md) to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*",
     )
     format: str | None = Field(None)
-    max_concurrent_runs: float | None = Field(
+    max_concurrent_runs: int | None = Field(
         None,
         description="(Integer) An optional maximum allowed number of concurrent runs of the job. Defaults to *1*",
     )
-    max_retries: float | None = Field(
+    max_retries: int | None = Field(
         None,
         description="(Integer) An optional maximum number of times to retry an unsuccessful run. A run is considered to be unsuccessful if it completes with a `FAILED` or `INTERNAL_ERROR` lifecycle state. The value -1 means to retry indefinitely and the value 0 means to never retry. The default behavior is to never retry. A run can have the following lifecycle state: `PENDING`, `RUNNING`, `TERMINATING`, `TERMINATED`, `SKIPPED` or `INTERNAL_ERROR`",
     )
-    min_retry_interval_millis: float | None = Field(
+    min_retry_interval_millis: int | None = Field(
         None,
         description="(Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried",
     )
@@ -2690,7 +2690,7 @@ class JobBase(BaseModel, TerraformResource):
         None,
         description="An optional map of the tags associated with the job. See [tags Configuration Map](#tags-configuration-map)",
     )
-    timeout_seconds: float | None = Field(
+    timeout_seconds: int | None = Field(
         None,
         description="(Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout",
     )

@@ -155,14 +155,25 @@ DEFAULT_TARGETS = [
 # Type mapping
 # ---------------------------------------------------------------------------
 
+# Terraform's "number" type covers both int and float.  The vast majority of
+# Databricks provider fields are integers (counts, durations, sizes, IDs…).
+# Only these field names represent genuine decimal values and should stay float.
+FLOAT_FIELDS: frozenset[str] = frozenset(
+    {
+        "double_value",  # alert threshold: "double value to compare against integer and double results"
+        "spot_bid_max_price",  # Azure spot instance price in USD (can be e.g. 0.05)
+    }
+)
 
-def tf_type_to_python(tf_type) -> str:
+
+def tf_type_to_python(tf_type, field_name: str = "") -> str:
     """Convert a Terraform type descriptor to a Python type annotation string."""
     if isinstance(tf_type, str):
+        if tf_type == "number":
+            return "float" if field_name in FLOAT_FIELDS else "int"
         mapping = {
             "string": "str",
             "bool": "bool",
-            "number": "float",
             "dynamic": "Any",
         }
         return mapping.get(tf_type, "Any")
@@ -293,7 +304,7 @@ def emit_block_class(
         if is_computed_only(attr):
             continue
 
-        py_type = tf_type_to_python(attr.get("type", "dynamic"))
+        py_type = tf_type_to_python(attr.get("type", "dynamic"), field_name=attr_name)
         default = field_default(attr)
         description = get_desc(descriptions, block_path, attr_name, attr)
         field_name = safe_field_name(attr_name)
@@ -464,7 +475,7 @@ def emit_resource_module(
     }
 
     for attr_name, attr in sorted(required_attrs.items()):
-        py_type = tf_type_to_python(attr.get("type", "dynamic"))
+        py_type = tf_type_to_python(attr.get("type", "dynamic"), field_name=attr_name)
         description = get_desc(descriptions, "", attr_name, attr)
         field_name = safe_field_name(attr_name)
         desc_snippet = f', description="{description}"' if description else ""
@@ -488,7 +499,7 @@ def emit_resource_module(
         has_fields = True
 
     for attr_name, attr in sorted(optional_attrs.items()):
-        py_type = tf_type_to_python(attr.get("type", "dynamic"))
+        py_type = tf_type_to_python(attr.get("type", "dynamic"), field_name=attr_name)
         description = get_desc(descriptions, "", attr_name, attr)
         field_name = safe_field_name(attr_name)
         desc_snippet = f', description="{description}"' if description else ""

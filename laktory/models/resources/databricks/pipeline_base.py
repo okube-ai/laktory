@@ -11,21 +11,21 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class PipelineClusterAutoscale(BaseModel):
-    max_workers: float = Field(...)
-    min_workers: float = Field(...)
+    max_workers: int = Field(...)
+    min_workers: int = Field(...)
     mode: str | None = Field(None)
 
 
 class PipelineClusterAwsAttributes(BaseModel):
     availability: str | None = Field(None)
-    ebs_volume_count: float | None = Field(None)
-    ebs_volume_iops: float | None = Field(None)
-    ebs_volume_size: float | None = Field(None)
-    ebs_volume_throughput: float | None = Field(None)
+    ebs_volume_count: int | None = Field(None)
+    ebs_volume_iops: int | None = Field(None)
+    ebs_volume_size: int | None = Field(None)
+    ebs_volume_throughput: int | None = Field(None)
     ebs_volume_type: str | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    first_on_demand: int | None = Field(None)
     instance_profile_arn: str | None = Field(None)
-    spot_bid_price_percent: float | None = Field(None)
+    spot_bid_price_percent: int | None = Field(None)
     zone_id: str | None = Field(None)
 
 
@@ -36,7 +36,7 @@ class PipelineClusterAzureAttributesLogAnalyticsInfo(BaseModel):
 
 class PipelineClusterAzureAttributes(BaseModel):
     availability: str | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    first_on_demand: int | None = Field(None)
     spot_bid_max_price: float | None = Field(None)
     log_analytics_info: PipelineClusterAzureAttributesLogAnalyticsInfo | None = Field(
         None
@@ -69,9 +69,9 @@ class PipelineClusterClusterLogConf(BaseModel):
 
 class PipelineClusterGcpAttributes(BaseModel):
     availability: str | None = Field(None)
-    first_on_demand: float | None = Field(None)
+    first_on_demand: int | None = Field(None)
     google_service_account: str | None = Field(None)
-    local_ssd_count: float | None = Field(None)
+    local_ssd_count: int | None = Field(None)
     zone_id: str | None = Field(None)
 
 
@@ -131,7 +131,7 @@ class PipelineCluster(BaseModel):
     instance_pool_id: str | None = Field(None)
     label: str | None = Field(None)
     node_type_id: str | None = Field(None)
-    num_workers: float | None = Field(None)
+    num_workers: int | None = Field(None)
     policy_id: str | None = Field(None)
     spark_conf: dict[str, str] | None = Field(None)
     spark_env_vars: dict[str, str] | None = Field(None)
@@ -220,7 +220,7 @@ class PipelineIngestionDefinitionDataStagingOptions(BaseModel):
 
 class PipelineIngestionDefinitionFullRefreshWindow(BaseModel):
     days_of_week: list[str] | None = Field(None)
-    start_hour: float = Field(...)
+    start_hour: int = Field(...)
     time_zone_id: str | None = Field(None)
 
 
@@ -228,7 +228,7 @@ class PipelineIngestionDefinitionObjectsReportTableConfigurationAutoFullRefreshP
     BaseModel
 ):
     enabled: bool = Field(...)
-    min_interval_hours: float | None = Field(None)
+    min_interval_hours: int | None = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsReportTableConfigurationQueryBasedConnectorConfig(
@@ -236,7 +236,7 @@ class PipelineIngestionDefinitionObjectsReportTableConfigurationQueryBasedConnec
 ):
     cursor_columns: list[str] | None = Field(None)
     deletion_condition: str | None = Field(None)
-    hard_deletion_sync_min_interval_in_seconds: float | None = Field(None)
+    hard_deletion_sync_min_interval_in_seconds: int | None = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsReportTableConfigurationWorkdayReportParametersReportParameters(
@@ -338,7 +338,7 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptions(Base
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGoogleAdsOptions(
     BaseModel
 ):
-    lookback_window_days: float | None = Field(None)
+    lookback_window_days: int | None = Field(None)
     manager_account_id: str = Field(...)
     sync_start_date: str | None = Field(None)
 
@@ -391,7 +391,7 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsTiktokAdsOptions(
 ):
     data_level: str | None = Field(None)
     dimensions: list[str] | None = Field(None)
-    lookback_window_days: float | None = Field(None)
+    lookback_window_days: int | None = Field(None)
     metrics: list[str] | None = Field(None)
     query_lifetime: bool | None = Field(None)
     report_type: str | None = Field(None)
@@ -417,7 +417,7 @@ class PipelineIngestionDefinitionObjectsSchemaTableConfigurationAutoFullRefreshP
     BaseModel
 ):
     enabled: bool = Field(...)
-    min_interval_hours: float | None = Field(None)
+    min_interval_hours: int | None = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsSchemaTableConfigurationQueryBasedConnectorConfig(
@@ -425,7 +425,7 @@ class PipelineIngestionDefinitionObjectsSchemaTableConfigurationQueryBasedConnec
 ):
     cursor_columns: list[str] | None = Field(None)
     deletion_condition: str | None = Field(None)
-    hard_deletion_sync_min_interval_in_seconds: float | None = Field(None)
+    hard_deletion_sync_min_interval_in_seconds: int | None = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsSchemaTableConfigurationWorkdayReportParametersReportParameters(
@@ -530,7 +530,7 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptions(BaseM
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsGoogleAdsOptions(
     BaseModel
 ):
-    lookback_window_days: float | None = Field(None)
+    lookback_window_days: int | None = Field(None)
     manager_account_id: str = Field(...)
     sync_start_date: str | None = Field(None)
 
@@ -583,7 +583,7 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsTiktokAdsOptions(
 ):
     data_level: str | None = Field(None)
     dimensions: list[str] | None = Field(None)
-    lookback_window_days: float | None = Field(None)
+    lookback_window_days: int | None = Field(None)
     metrics: list[str] | None = Field(None)
     query_lifetime: bool | None = Field(None)
     report_type: str | None = Field(None)
@@ -609,7 +609,7 @@ class PipelineIngestionDefinitionObjectsTableTableConfigurationAutoFullRefreshPo
     BaseModel
 ):
     enabled: bool = Field(...)
-    min_interval_hours: float | None = Field(None)
+    min_interval_hours: int | None = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsTableTableConfigurationQueryBasedConnectorConfig(
@@ -617,7 +617,7 @@ class PipelineIngestionDefinitionObjectsTableTableConfigurationQueryBasedConnect
 ):
     cursor_columns: list[str] | None = Field(None)
     deletion_condition: str | None = Field(None)
-    hard_deletion_sync_min_interval_in_seconds: float | None = Field(None)
+    hard_deletion_sync_min_interval_in_seconds: int | None = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportParametersReportParameters(
@@ -716,13 +716,13 @@ class PipelineIngestionDefinitionSourceConfigurations(BaseModel):
 
 class PipelineIngestionDefinitionTableConfigurationAutoFullRefreshPolicy(BaseModel):
     enabled: bool = Field(...)
-    min_interval_hours: float | None = Field(None)
+    min_interval_hours: int | None = Field(None)
 
 
 class PipelineIngestionDefinitionTableConfigurationQueryBasedConnectorConfig(BaseModel):
     cursor_columns: list[str] | None = Field(None)
     deletion_condition: str | None = Field(None)
-    hard_deletion_sync_min_interval_in_seconds: float | None = Field(None)
+    hard_deletion_sync_min_interval_in_seconds: int | None = Field(None)
 
 
 class PipelineIngestionDefinitionTableConfigurationWorkdayReportParametersReportParameters(
@@ -846,7 +846,7 @@ class PipelineNotification(BaseModel):
 
 class PipelineRestartWindow(BaseModel):
     days_of_week: list[str] | None = Field(None)
-    start_hour: float = Field(...)
+    start_hour: int = Field(...)
     time_zone_id: str | None = Field(None)
 
 
@@ -921,9 +921,9 @@ class PipelineBase(BaseModel, TerraformResource):
         None,
         description="optional name of the [product edition](https://docs.databricks.com/aws/en/dlt/configure-pipeline#choose-a-product-edition). Supported values are: `CORE`, `PRO`, `ADVANCED` (default).  Not required when `serverless` is set to `true`",
     )
-    expected_last_modified: float | None = Field(None)
+    expected_last_modified: int | None = Field(None)
     health: str | None = Field(None)
-    last_modified: float | None = Field(None)
+    last_modified: int | None = Field(None)
     name: str | None = Field(
         None, description="The table name the event log is published to in UC"
     )

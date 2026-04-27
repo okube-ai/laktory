@@ -26,9 +26,7 @@ class NotebookBase(BaseModel, TerraformResource):
         description="(required with `content_base64`) One of `SCALA`, `PYTHON`, `SQL`, `R`",
     )
     md5: str | None = Field(None)
-    object_id: float | None = Field(
-        None, description="Unique identifier for a NOTEBOOK"
-    )
+    object_id: int | None = Field(None, description="Unique identifier for a NOTEBOOK")
     object_type: str | None = Field(None)
     source: str | None = Field(
         None,

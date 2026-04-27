@@ -32,10 +32,10 @@ class MlflowExperimentBase(BaseModel, TerraformResource):
     artifact_location: str | None = Field(
         None, description="Path to artifact location of the MLflow experiment"
     )
-    creation_time: float | None = Field(None)
+    creation_time: int | None = Field(None)
     description: str | None = Field(None)
     experiment_id: str | None = Field(None)
-    last_update_time: float | None = Field(None)
+    last_update_time: int | None = Field(None)
     lifecycle_stage: str | None = Field(None)
     tags: list[MlflowExperimentTags] | None = Field(
         None, description="Tags for the MLflow experiment"

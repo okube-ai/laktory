@@ -24,7 +24,7 @@ class OboTokenBase(BaseModel, TerraformResource):
         None,
         description="(String, Optional) Comment that describes the purpose of the token",
     )
-    lifetime_seconds: float | None = Field(
+    lifetime_seconds: int | None = Field(
         None,
         description="(Integer, Optional) The number of seconds before the token expires. Token resource is re-created when it expires. If no lifetime is specified, the token remains valid indefinitely",
     )

@@ -18,7 +18,7 @@ class DirectoryBase(BaseModel, TerraformResource):
 
     path: str = Field(...)
     delete_recursive: bool | None = Field(None)
-    object_id: float | None = Field(None)
+    object_id: int | None = Field(None)
 
     @property
     def terraform_resource_type(self) -> str:

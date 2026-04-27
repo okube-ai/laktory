@@ -49,7 +49,7 @@ class ClusterPolicyBase(BaseModel, TerraformResource):
     description: str | None = Field(
         None, description="Additional human-readable description of the cluster policy"
     )
-    max_clusters_per_user: float | None = Field(
+    max_clusters_per_user: int | None = Field(
         None,
         description="Maximum number of clusters allowed per user. When omitted, there is no limit. If specified, value must be greater than zero. * `policy_family_definition_overrides`(Optional) Policy definition JSON document expressed in Databricks Policy Definition Language. The JSON document must be passed as a string and cannot be embedded in the requests. You can use this to customize the policy definition inherited from the policy family. Policy rules specified here are merged into the inherited policy definition. * `policy_family_id` (Optional) ID of the policy family. The cluster policy's policy definition inherits the policy family's policy definition. Cannot be used with `definition`. Use `policy_family_definition_overrides` instead to customize the policy definition",
     )

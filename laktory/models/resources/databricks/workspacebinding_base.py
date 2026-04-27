@@ -16,7 +16,7 @@ class WorkspaceBindingBase(BaseModel, TerraformResource):
 
     __doc_generated_base__ = True
 
-    workspace_id: float = Field(
+    workspace_id: int = Field(
         ...,
         description="Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with",
     )

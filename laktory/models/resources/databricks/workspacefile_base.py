@@ -21,7 +21,7 @@ class WorkspaceFileBase(BaseModel, TerraformResource):
         description="The base64-encoded file content. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a workspace file with configuration properties for a data pipeline",
     )
     md5: str | None = Field(None)
-    object_id: float | None = Field(
+    object_id: int | None = Field(
         None, description="Unique identifier for a workspace file"
     )
 

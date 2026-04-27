@@ -9,7 +9,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class VectorSearchEndpointScalingInfo(BaseModel):
-    requested_min_qps: float | None = Field(None)
+    requested_min_qps: int | None = Field(None)
     state: str | None = Field(
         None,
         description="Current state of the endpoint. Currently following values are supported: `PROVISIONING`, `ONLINE`, and `OFFLINE`",

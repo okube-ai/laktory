@@ -19,7 +19,7 @@ class MetastoreAssignmentBase(BaseModel, TerraformResource):
     metastore_id: str = Field(
         ..., description="Unique identifier of the parent Metastore"
     )
-    workspace_id: float = Field(
+    workspace_id: int = Field(
         ...,
         description="Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with",
     )

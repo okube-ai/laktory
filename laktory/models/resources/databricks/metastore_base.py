@@ -28,7 +28,7 @@ class MetastoreBase(BaseModel, TerraformResource):
         None,
         description="The organization name of a Delta Sharing entity, to be used in Databricks-to-Databricks Delta Sharing as the official name.",
     )
-    delta_sharing_recipient_token_lifetime_in_seconds: float | None = Field(
+    delta_sharing_recipient_token_lifetime_in_seconds: int | None = Field(
         None, description="The lifetime of delta sharing recipient token in seconds."
     )
     delta_sharing_scope: str | None = Field(

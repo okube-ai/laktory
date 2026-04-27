@@ -20,7 +20,7 @@ class MwsNccBindingBase(BaseModel, TerraformResource):
         ...,
         description="Canonical unique identifier of Network Connectivity Config in Databricks Account",
     )
-    workspace_id: float = Field(
+    workspace_id: int = Field(
         ...,
         description="Identifier of the workspace to attach the NCC to. Change forces creation of a new resource",
     )

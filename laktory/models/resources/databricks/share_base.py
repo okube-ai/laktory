@@ -55,7 +55,7 @@ class ShareObject(BaseModel):
         None,
         description="A user-provided alias name for **table-like data objects** within the share. Use this field for: `TABLE`, `VIEW`, `MATERIALIZED_VIEW`, `STREAMING_TABLE`, `FOREIGN_TABLE`. **Do not use this field for volumes, models, notebooks, or functions** (use `string_shared_as` instead). If not provided, the object's original name will be used. Must be a 2-part name `<schema>.<table>` containing only alphanumeric characters and underscores. The `shared_as` name must be unique within a share. Change forces creation of a new resource",
     )
-    start_version: float | None = Field(
+    start_version: int | None = Field(
         None,
         description="The start version associated with the object for cdf. This allows data providers to control the lowest object version that is accessible by clients",
     )

@@ -21,7 +21,7 @@ class VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumns(BaseModel):
 
 
 class VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumns(BaseModel):
-    embedding_dimension: float | None = Field(
+    embedding_dimension: int | None = Field(
         None, description="Dimension of the embedding vector"
     )
     name: str | None = Field(None, description="The name of the column")
@@ -63,7 +63,7 @@ class VectorSearchIndexDirectAccessIndexSpecEmbeddingSourceColumns(BaseModel):
 
 
 class VectorSearchIndexDirectAccessIndexSpecEmbeddingVectorColumns(BaseModel):
-    embedding_dimension: float | None = Field(
+    embedding_dimension: int | None = Field(
         None, description="Dimension of the embedding vector"
     )
     name: str | None = Field(None, description="The name of the column")

@@ -41,7 +41,7 @@ class RecipientBase(BaseModel, TerraformResource):
     data_recipient_global_metastore_id: str | None = Field(
         None, description="Required when `authentication_type` is `DATABRICKS`"
     )
-    expiration_time: float | None = Field(
+    expiration_time: int | None = Field(
         None, description="Expiration timestamp of the token in epoch milliseconds"
     )
     owner: str | None = Field(

@@ -24,7 +24,7 @@ class QueryParameterDateRangeValue(BaseModel):
         None,
         description="Date-time precision to format the value into when the query is run.  Possible values are `DAY_PRECISION`, `MINUTE_PRECISION`, `SECOND_PRECISION`.  Defaults to `DAY_PRECISION` (`YYYY-MM-DD`)",
     )
-    start_day_of_week: float | None = Field(
+    start_day_of_week: int | None = Field(
         None, description="Specify what day that starts the week"
     )
     date_range_value: QueryParameterDateRangeValueDateRangeValue | None = Field(
@@ -75,7 +75,7 @@ class QueryParameterEnumValue(BaseModel):
 
 
 class QueryParameterNumericValue(BaseModel):
-    value: float = Field(..., description="- actual numeric value")
+    value: int = Field(..., description="- actual numeric value")
 
 
 class QueryParameterQueryBackedValueMultiValuesOptions(BaseModel):
