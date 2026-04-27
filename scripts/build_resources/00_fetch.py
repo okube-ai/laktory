@@ -9,9 +9,12 @@ Steps:
      field descriptions.
 
 Usage:
+    python scripts/build_resources/00_fetch.py [version]
     python scripts/build_resources/00_fetch.py 1.81.1
     python scripts/build_resources/00_fetch.py 1.81.1 --schema-only
     python scripts/build_resources/00_fetch.py 1.81.1 --descriptions-only
+
+    If version is omitted, defaults to 1.113.0.
 
 Outputs (written to the same directory as this script):
     databricks_schema.json
@@ -22,9 +25,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import tempfile
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed
 from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).parent
@@ -34,6 +40,8 @@ DESCRIPTIONS_PATH = SCRIPTS_DIR / "databricks_descriptions.json"
 GITHUB_RAW = (
     "https://raw.githubusercontent.com/databricks/terraform-provider-databricks"
 )
+
+DEFAULT_VERSION = "1.113.0"
 
 # Resources whose descriptions come from Go model struct comments.
 # Format: resource_key → {service dir, primary struct, fallback structs}
@@ -182,8 +190,7 @@ def generate_schema(version: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Description fetching (duplicated/inlined from 00_fetch.py
-# so this script is self-contained)
+# Description fetching
 # ---------------------------------------------------------------------------
 
 
@@ -193,8 +200,6 @@ def fetch_text(url: str) -> str:
 
 
 def parse_all_structs(go_source: str) -> dict[str, dict[str, str]]:
-    import re
-
     structs: dict[str, dict[str, str]] = {}
     current_struct: str | None = None
     lines = go_source.splitlines()
@@ -265,8 +270,6 @@ def parse_md_descriptions(md_source: str) -> dict[str, str]:
     Nested bullets (indented) are included using the parent heading as context
     but are stored under their own field name.
     """
-    import re
-
     descriptions: dict[str, str] = {}
     in_ref_section = False
     pending_field: str | None = None
@@ -362,13 +365,16 @@ def generate_descriptions(version: str) -> None:
         cache[resource_key] = descs
         print(f"    {resource_key}: {len(descs)} field descriptions (go structs)")
 
-    # --- Markdown docs approach (Phase 1 and beyond) ---
-    print("\n  Fetching descriptions from provider docs markdown ...")
-    for resource_key in MARKDOWN_TARGETS:
-        if resource_key in cache:
-            continue  # already covered by Go struct approach
-        descs = fetch_md_descriptions(resource_key, tag)
-        cache[resource_key] = descs
+    # --- Markdown docs approach — fetch all remaining resources in parallel ---
+    remaining = [rk for rk in MARKDOWN_TARGETS if rk not in cache]
+    print(f"\n  Fetching {len(remaining)} markdown description files in parallel ...")
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {
+            executor.submit(fetch_md_descriptions, rk, tag): rk for rk in remaining
+        }
+        for future in as_completed(futures):
+            rk = futures[future]
+            cache[rk] = future.result()
 
     DESCRIPTIONS_PATH.write_text(json.dumps(cache, indent=2, sort_keys=True))
     print(f"  Saved → {DESCRIPTIONS_PATH.name}")
@@ -383,7 +389,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Refresh Databricks provider schema and field descriptions."
     )
-    # parser.add_argument("version", help="Provider version, e.g. 1.81.1")
+    parser.add_argument(
+        "version",
+        nargs="?",
+        default=DEFAULT_VERSION,
+        help=f"Provider version, e.g. 1.81.1 (default: {DEFAULT_VERSION})",
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "--schema-only",
@@ -397,13 +408,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    version = "1.113.0"
-
     if not args.descriptions_only:
-        generate_schema(version)
+        generate_schema(args.version)
 
     if not args.schema_only:
-        generate_descriptions(version)
+        generate_descriptions(args.version)
 
     print(
         "\nDone. Run `python scripts/build_resources/01_build.py` to regenerate base classes."

@@ -10,9 +10,15 @@ from __future__ import annotations
 
 import json
 import keyword
+import subprocess
 import sys
-import textwrap
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from _config import DEFAULT_TARGETS  # noqa: E402
+from _config import RESOURCE_NAME_OVERRIDES  # noqa: E402
+from _config import base_file_stem  # noqa: E402
+from _config import resource_to_class_name  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Config
@@ -83,72 +89,9 @@ IRREGULAR_PLURALS: dict[str, str] = {
 }
 
 
-# Maps a resource_key to an alternate naming key used for class/file naming.
-# The terraform_resource_type property still returns the original resource_key.
-RESOURCE_NAME_OVERRIDES: dict[str, str] = {
-    "databricks_sql_table": "databricks_table",
-}
-
-
 def pluralize(name: str) -> str:
     """Derive plural form of a field name. Returns explicit mapping or name + 's'."""
     return IRREGULAR_PLURALS.get(name, name if name.endswith("s") else name + "s")
-
-
-# Default generation targets
-DEFAULT_TARGETS = [
-    "databricks_access_control_rule_set",
-    "databricks_alert",
-    "databricks_app",
-    "databricks_catalog",
-    "databricks_cluster",
-    "databricks_cluster_policy",
-    "databricks_current_user",
-    "databricks_dashboard",
-    "databricks_dbfs_file",
-    "databricks_directory",
-    "databricks_external_location",
-    "databricks_grant",
-    "databricks_grants",
-    "databricks_group",
-    "databricks_group_member",
-    "databricks_job",
-    "databricks_metastore",
-    "databricks_metastore_assignment",
-    "databricks_metastore_data_access",
-    "databricks_mlflow_experiment",
-    "databricks_mlflow_model",
-    "databricks_mlflow_webhook",
-    "databricks_mws_ncc_binding",
-    "databricks_mws_network_connectivity_config",
-    "databricks_mws_permission_assignment",
-    "databricks_notebook",
-    "databricks_notification_destination",
-    "databricks_obo_token",
-    "databricks_permissions",
-    "databricks_pipeline",
-    "databricks_quality_monitor",
-    "databricks_query",
-    "databricks_recipient",
-    "databricks_repo",
-    "databricks_schema",
-    "databricks_secret",
-    "databricks_secret_acl",
-    "databricks_secret_scope",
-    "databricks_service_principal",
-    "databricks_service_principal_role",
-    "databricks_share",
-    "databricks_sql_endpoint",  # Warehouse
-    "databricks_sql_table",
-    "databricks_storage_credential",
-    "databricks_user",
-    "databricks_user_role",
-    "databricks_vector_search_endpoint",
-    "databricks_vector_search_index",
-    "databricks_volume",
-    "databricks_workspace_binding",
-    "databricks_workspace_file",
-]
 
 
 # ---------------------------------------------------------------------------
@@ -196,12 +139,6 @@ def tf_type_to_python(tf_type, field_name: str = "") -> str:
 # ---------------------------------------------------------------------------
 
 
-def resource_to_class_name(resource_key: str) -> str:
-    """databricks_catalog -> Catalog"""
-    name = resource_key.removeprefix("databricks_")
-    return "".join(part.capitalize() for part in name.split("_"))
-
-
 def block_class_name(parent_class: str, block_key: str) -> str:
     """Catalog + effective_predictive_optimization_flag -> CatalogEffectivePredictiveOptimizationFlag"""
     suffix = "".join(part.capitalize() for part in block_key.split("_"))
@@ -236,13 +173,6 @@ def is_computed_only(attr: dict) -> bool:
     )
 
 
-def field_default(attr: dict) -> str:
-    """Return the Field(...) default expression for an attribute."""
-    if attr.get("required"):
-        return "..."
-    return "None"
-
-
 # ---------------------------------------------------------------------------
 # Code emitters
 # ---------------------------------------------------------------------------
@@ -273,12 +203,46 @@ def get_desc(
     return raw.strip().replace('"', "'")
 
 
+def _attr_field_line(
+    attr_name: str,
+    attr: dict,
+    descriptions: dict[str, str],
+    block_path: str,
+    required: bool,
+    plural_fields: bool = True,
+) -> str:
+    """Return a single `field_name: type = Field(...)` assignment for a Pydantic model."""
+    py_type = tf_type_to_python(attr.get("type", "dynamic"), field_name=attr_name)
+    description = get_desc(descriptions, block_path, attr_name, attr)
+    field_name = safe_field_name(attr_name)
+    desc_snippet = f', description="{description}"' if description else ""
+    alias_snippet = (
+        f', serialization_alias="{attr_name}", '
+        f'validation_alias=AliasChoices("{attr_name}", "{field_name}")'
+        if needs_alias(attr_name)
+        else ""
+    )
+
+    if required:
+        type_str, default = py_type, "..."
+    else:
+        type_str, default = f"{py_type} | None", "None"
+
+    if plural_fields:
+        plural = pluralize(field_name)
+        if py_type.startswith("list[") and field_name != plural:
+            return f'    {field_name}: {type_str} = PluralField({default}, plural="{plural}"{desc_snippet}{alias_snippet})'
+
+    return (
+        f"    {field_name}: {type_str} = Field({default}{desc_snippet}{alias_snippet})"
+    )
+
+
 def emit_block_class(
     class_name: str,
     block: dict,
     descriptions: dict[str, str],
     block_path: str = "",
-    indent: int = 0,
 ) -> tuple[list[str], list[str], list[str]]:
     """
     Recursively emit a nested block as a Pydantic BaseModel class.
@@ -303,27 +267,15 @@ def emit_block_class(
             continue
         if is_computed_only(attr):
             continue
-
-        py_type = tf_type_to_python(attr.get("type", "dynamic"), field_name=attr_name)
-        default = field_default(attr)
-        description = get_desc(descriptions, block_path, attr_name, attr)
-        field_name = safe_field_name(attr_name)
-
-        if default == "...":
-            type_str = py_type
-        else:
-            type_str = f"{py_type} | None"
-
-        desc_snippet = f', description="{description}"' if description else ""
-        if needs_alias(attr_name):
-            alias_snippet = (
-                f', serialization_alias="{attr_name}", '
-                f'validation_alias=AliasChoices("{attr_name}", "{field_name}")'
-            )
-        else:
-            alias_snippet = ""
         lines.append(
-            f"    {field_name}: {type_str} = Field({default}{desc_snippet}{alias_snippet})"
+            _attr_field_line(
+                attr_name,
+                attr,
+                descriptions,
+                block_path,
+                required=attr.get("required", False),
+                plural_fields=False,
+            )
         )
         has_fields = True
 
@@ -387,11 +339,10 @@ def emit_resource_module(
     attrs = block.get("attributes", {})
     block_types = block.get("block_types", {})
 
-    # Determine if Any is needed
     needs_any = any(
         "Any" in tf_type_to_python(a.get("type", "dynamic"))
-        for a in attrs.values()
-        if not is_computed_only(a) and a.get("name") not in ALWAYS_SKIP_ATTRS
+        for an, a in attrs.items()
+        if not is_computed_only(a) and an not in ALWAYS_SKIP_ATTRS
     )
 
     per_resource_skip = PER_RESOURCE_SKIP_ATTRS.get(resource_key, set())
@@ -453,9 +404,6 @@ def emit_resource_module(
     main_lines.append("    __doc_generated_base__ = True")
     main_lines.append("")
 
-    has_fields = False
-
-    # Required fields first
     required_attrs = {
         k: v
         for k, v in attrs.items()
@@ -475,58 +423,18 @@ def emit_resource_module(
     }
 
     for attr_name, attr in sorted(required_attrs.items()):
-        py_type = tf_type_to_python(attr.get("type", "dynamic"), field_name=attr_name)
-        description = get_desc(descriptions, "", attr_name, attr)
-        field_name = safe_field_name(attr_name)
-        desc_snippet = f', description="{description}"' if description else ""
-        if needs_alias(attr_name):
-            alias_snippet = (
-                f', serialization_alias="{attr_name}", '
-                f'validation_alias=AliasChoices("{attr_name}", "{field_name}")'
-            )
-        else:
-            alias_snippet = ""
-
-        plural = pluralize(field_name)
-        if py_type.startswith("list[") and field_name != plural:
-            main_lines.append(
-                f'    {field_name}: {py_type} = PluralField(..., plural="{plural}"{desc_snippet}{alias_snippet})'
-            )
-        else:
-            main_lines.append(
-                f"    {field_name}: {py_type} = Field(...{desc_snippet}{alias_snippet})"
-            )
-        has_fields = True
+        main_lines.append(
+            _attr_field_line(attr_name, attr, descriptions, "", required=True)
+        )
 
     for attr_name, attr in sorted(optional_attrs.items()):
-        py_type = tf_type_to_python(attr.get("type", "dynamic"), field_name=attr_name)
-        description = get_desc(descriptions, "", attr_name, attr)
-        field_name = safe_field_name(attr_name)
-        desc_snippet = f', description="{description}"' if description else ""
-        if needs_alias(attr_name):
-            alias_snippet = (
-                f', serialization_alias="{attr_name}", '
-                f'validation_alias=AliasChoices("{attr_name}", "{field_name}")'
-            )
-        else:
-            alias_snippet = ""
-        plural = pluralize(field_name)
-        if py_type.startswith("list[") and plural != field_name:
-            main_lines.append(
-                f'    {field_name}: {py_type} | None = PluralField(None, plural="{plural}"{desc_snippet}{alias_snippet})'
-            )
-        else:
-            main_lines.append(
-                f"    {field_name}: {py_type} | None = Field(None{desc_snippet}{alias_snippet})"
-            )
-        has_fields = True
+        main_lines.append(
+            _attr_field_line(attr_name, attr, descriptions, "", required=False)
+        )
 
-    # Nested block fields
     main_lines.extend(nested_field_lines)
-    if nested_field_lines:
-        has_fields = True
 
-    if not has_fields:
+    if not (required_attrs or optional_attrs or nested_field_lines):
         main_lines.append("    pass")
 
     main_lines.append("")
@@ -542,21 +450,27 @@ def emit_resource_module(
     body_parts.append("\n".join(main_lines))
     body = "\n".join(body_parts)
 
-    any_import = "Any, " if needs_any else ""
     alias_choices_import = ", AliasChoices" if "AliasChoices(" in body else ""
-    header = textwrap.dedent(f"""\
-        # GENERATED FILE — DO NOT EDIT
-        # Regenerate with: python scripts/build_resources/01_build.py {resource_key}
-        from __future__ import annotations
-
-        from typing import {any_import}Union
-
-        from pydantic import Field{alias_choices_import}
-
-        from laktory.models.basemodel import BaseModel, PluralField
-        from laktory.models.resources.terraformresource import TerraformResource
-
-    """)
+    header_lines = [
+        "# GENERATED FILE — DO NOT EDIT",
+        f"# Regenerate with: python scripts/build_resources/01_build.py {resource_key}",
+        "from __future__ import annotations",
+        "",
+    ]
+    if needs_any:
+        header_lines.append("from typing import Any")
+        header_lines.append("")
+    header_lines.extend(
+        [
+            f"from pydantic import Field{alias_choices_import}",
+            "",
+            "from laktory.models.basemodel import BaseModel, PluralField",
+            "from laktory.models.resources.terraformresource import TerraformResource",
+            "",
+            "",
+        ]
+    )
+    header = "\n".join(header_lines)
 
     all_str = ", ".join(f'"{n}"' for n in all_class_names)
     all_decl = f"__all__ = [{all_str}]"
@@ -572,8 +486,6 @@ def emit_resource_module(
 
 
 def main():
-    import subprocess
-
     schema = json.loads(SCHEMA_PATH.read_text())
     resource_schemas = schema["provider_schemas"][PROVIDER_KEY]["resource_schemas"]
 
@@ -602,7 +514,7 @@ def main():
             descriptions,
             name_key=naming_key,
         )
-        fname = f"{naming_key.removeprefix('databricks_').replace('_', '')}_base.py"
+        fname = f"{base_file_stem(naming_key)}_base.py"
         out_path = out_dir / fname
         out_path.write_text(code)
         written.append(out_path)
