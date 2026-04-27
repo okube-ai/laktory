@@ -139,6 +139,38 @@ Follow these guidelines:
 1. Start your pull request title with one of these prefixes: `[feat]`, `[fix]`, `[exp]`, `[test]`, `[docs]`.
 2. Complete the pull request form and submit.
 
+## Databricks Resource Model Generation
+
+The 50+ classes under `laktory/models/resources/databricks/` that end in `_base.py`
+(e.g. `catalog_base.py`, `job_base.py`) are **auto-generated** from the Databricks
+Terraform provider schema. Do not edit them by hand — they will be overwritten on the
+next run.
+
+### Scripts
+
+All scripts live in `scripts/build_resources/`:
+
+| Script             | Purpose                                                                                                                                                                |
+|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `_config.py`       | Shared constants (`DEFAULT_TARGETS`, `RESOURCE_NAME_OVERRIDES`) and naming helpers (`resource_to_class_name`, `base_file_stem`). Imported by the other scripts.        |
+| `00_fetch.py`      | Downloads the Terraform provider schema and fetches field descriptions from GitHub. Writes `databricks_schema.json` and `databricks_descriptions.json`.                |
+| `01_build.py`      | Reads the schema + descriptions and generates one `*_base.py` file per resource. Runs `ruff format` + `ruff check --fix` on the output, then calls `02_update_api.py`. |
+| `02_update_api.py` | Updates the MkDocs API stub `.md` files under `docs/api/models/resources/databricks/` to reflect the latest base classes and override files.                           |
+
+### When to regenerate
+
+Regenerate when upgrading the Databricks Terraform provider version (set in `DEFAULT_VERSION` inside `00_fetch.py`):
+
+```bash
+# Step 1 — fetch schema + descriptions for the new provider version
+python scripts/build_resources/00_fetch.py 1.120.0
+
+# Step 2 — regenerate *_base.py files and update API docs
+#           (02_update_api.py is called automatically at the end)
+python scripts/build_resources/01_build.py
+```
+
+
 ## Happy Contributing!
 
 Remember to abide by the code of conduct, or you may be kindly escorted out of the project.

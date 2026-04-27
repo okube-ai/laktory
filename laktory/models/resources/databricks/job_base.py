@@ -1463,7 +1463,10 @@ class JobTaskForEachTaskTaskPowerBiTaskTables(BaseModel):
     catalog: str | None = Field(
         None, description="The name of the catalog to use inside Unity Catalog"
     )
-    name: str | None = Field(None, description="The name of the job")
+    name: str | None = Field(
+        None,
+        description="The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`",
+    )
     schema_: str | None = Field(
         None,
         description="The name of the schema dbt should run in. Defaults to `default`",
@@ -1708,9 +1711,7 @@ class JobTaskForEachTaskTaskWebhookNotifications(BaseModel):
 
 
 class JobTaskForEachTaskTask(BaseModel):
-    description: str | None = Field(
-        None, description="An optional description for the task"
-    )
+    description: str | None = Field(None, description="description for this task")
     disable_auto_optimization: bool | None = Field(
         None, description="A flag to disable auto optimization in serverless tasks"
     )
@@ -2169,7 +2170,10 @@ class JobTaskPowerBiTaskTables(BaseModel):
     catalog: str | None = Field(
         None, description="The name of the catalog to use inside Unity Catalog"
     )
-    name: str | None = Field(None, description="The name of the job")
+    name: str | None = Field(
+        None,
+        description="The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`",
+    )
     schema_: str | None = Field(
         None,
         description="The name of the schema dbt should run in. Defaults to `default`",
@@ -2400,9 +2404,7 @@ class JobTaskWebhookNotifications(BaseModel):
 
 
 class JobTask(BaseModel):
-    description: str | None = Field(
-        None, description="An optional description for the task"
-    )
+    description: str | None = Field(None, description="description for this task")
     disable_auto_optimization: bool | None = Field(
         None, description="A flag to disable auto optimization in serverless tasks"
     )
@@ -2653,9 +2655,7 @@ class JobBase(BaseModel, TerraformResource):
         None,
         description="(Bool) If true, the Databricks provider will stop and start the job as needed to ensure that the active run for the job reflects the deployed configuration. For continuous jobs, the provider respects the `pause_status` by stopping the current active run. This flag cannot be set for non-continuous jobs",
     )
-    description: str | None = Field(
-        None, description="An optional description for the job"
-    )
+    description: str | None = Field(None, description="description for this task")
     edit_mode: str | None = Field(
         None,
         description="If `'UI_LOCKED'`, the user interface for the job will be locked. If `'EDITABLE'` (the default), the user interface will be editable",
@@ -2677,7 +2677,10 @@ class JobBase(BaseModel, TerraformResource):
         None,
         description="(Integer) An optional minimal interval in milliseconds between the start of the failed run and the subsequent retry run. The default behavior is that unsuccessful runs are immediately retried",
     )
-    name: str | None = Field(None, description="The name of the job")
+    name: str | None = Field(
+        None,
+        description="The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`",
+    )
     performance_target: str | None = Field(
         None,
         description="The performance mode on a serverless job. The performance target determines the level of compute performance or cost-efficiency for the run.  Supported values are: * `PERFORMANCE_OPTIMIZED`: (default value) Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance. * `STANDARD`: Enables cost-efficient execution of serverless workloads",
