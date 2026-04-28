@@ -322,14 +322,17 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         """
         cls = self.__class__
         original_state = cls.model_config["validate_assignment"]
-        original_handlers = dict(cls.__pydantic_setattr_handlers__)
+        handlers = getattr(cls, "__pydantic_setattr_handlers__", None)
+        original_handlers = dict(handlers) if handlers is not None else None
         cls.model_config["validate_assignment"] = False
-        cls.__pydantic_setattr_handlers__.clear()
+        if handlers is not None:
+            handlers.clear()
         try:
             yield
         finally:
             cls.model_config["validate_assignment"] = original_state
-            cls.__pydantic_setattr_handlers__.update(original_handlers)
+            if handlers is not None and original_handlers is not None:
+                handlers.update(original_handlers)
 
     # ----------------------------------------------------------------------- #
     # Variables Injection                                                     #
