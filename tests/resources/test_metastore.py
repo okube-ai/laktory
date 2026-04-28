@@ -45,7 +45,3 @@ def test_terraform_plan():
         region="eastus",
     )
     plan_resource(metastore_simple)
-
-
-if __name__ == "__main__":
-    test_metastore()

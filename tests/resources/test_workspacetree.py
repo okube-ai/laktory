@@ -23,9 +23,6 @@ def test_workspace_tree():
     resources = tree.core_resources
     assert len(resources) == 6
 
-    for r in resources:
-        print(r.source)
-
     r = resources[0]
     assert r.source.endswith("/tests/data/tree/notebooks/listfiles.py")
     assert isinstance(r, lk.models.resources.databricks.WorkspaceFile)
@@ -65,9 +62,6 @@ def test_workspace_tree_rel():
 
     resources = tree.core_resources
     assert len(resources) == 6
-
-    for r in resources:
-        print(r.source)
 
     r = resources[0]
     assert r.source == tree.source + "/notebooks/listfiles.py"

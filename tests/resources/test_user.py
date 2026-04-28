@@ -45,9 +45,3 @@ def test_terraform_plan():
     skip_terraform_plan()
     user_simple = User(user_name="test@example.com")
     plan_resource(user_simple)
-
-
-if __name__ == "__main__":
-    test_user_group()
-    test_both_user_id_and_user_name()
-    test_neither_user_id_and_user_name()

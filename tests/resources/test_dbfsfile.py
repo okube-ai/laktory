@@ -11,11 +11,9 @@ dbfs_file = DbfsFile(
 
 
 def test_dbfs_file():
-    print(dbfs_file)
     assert dbfs_file.filename == "test_workspacefile.py"
     assert dbfs_file.path == "/tmp/test_workspacefile.py"
     assert dbfs_file.resource_safe_key == "tmp-test_workspacefile-py"
-    print(dbfs_file.resource_name)
     assert dbfs_file.resource_name == "dbfs-file-tmp-test_workspacefile-py"
 
     assert dbfs_file.access_controls[0].permission_level == "CAN_READ"
@@ -30,7 +28,3 @@ def test_dbfsfile_additional_resources():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(dbfs_file)
-
-
-if __name__ == "__main__":
-    test_dbfs_file()

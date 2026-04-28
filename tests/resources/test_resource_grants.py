@@ -122,7 +122,3 @@ def test_terraform_plan_with_grant():
         grant={"principal": "users", "privileges": ["SELECT"]},
     )
     plan_resource(t)
-
-
-if __name__ == "__main__":
-    test_grants()

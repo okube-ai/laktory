@@ -23,7 +23,3 @@ def test_repo_additional_resources():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(repo)
-
-
-if __name__ == "__main__":
-    test_repo()

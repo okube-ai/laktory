@@ -64,7 +64,3 @@ def test_cluster_policy_additional_resources():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(cluster_policy)
-
-
-if __name__ == "__main__":
-    test_policy_cluster()

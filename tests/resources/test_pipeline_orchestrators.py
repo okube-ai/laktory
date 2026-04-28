@@ -65,7 +65,6 @@ def test_databricks_job():
     # Test job
     job = get_pl_job().orchestrator
     data = job.model_dump(exclude_unset=True)
-    print(data)
     assert data == {
         "name": "pl-job",
         "environment": [
@@ -242,7 +241,6 @@ def test_databricks_job():
     hash_object = hashlib.sha1(table_fullname.encode())
     hash_digest = hash_object.hexdigest()
     assert checkpoint_path.endswith(str(uuid.UUID(hash_digest[:32])))
-    print(data)
     assert data == {
         "dependencies": ["requests>=2.0", "./wheels/lake-0.0.1-py3-none-any.whl"],
         "imports": ["re"],
@@ -636,7 +634,6 @@ def test_databricks_job_execute(mocker):
     mocker.patch.object(sys, "argv", test_args)
 
     # Run function
-    print(lk.models.pipeline)
     lk.models.pipeline._execute()
 
 
@@ -672,7 +669,6 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
     )
     data = sink_source.model_dump()
     assert data.pop("dataframe_backend") == DataFrameBackends.PYSPARK
-    print(data)
     assert data == {
         "as_stream": False,
         "drop_duplicates": None,
@@ -690,7 +686,6 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
     }
 
     data = pl.orchestrator.model_dump(mode="json")
-    print(data)
     assert data == {
         "access_controls": [
             {
@@ -789,7 +784,6 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
     assert dltp.options.depends_on == ["${resources.dlt-pipeline-pl-dlt}"]
 
     data = dlt.config_file.content_dict
-    print(data)
     assert data == {
         "name": "pl-dlt",
         "nodes": [

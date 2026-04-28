@@ -50,7 +50,3 @@ def test_catalog_additional_resources():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(catalog)
-
-
-if __name__ == "__main__":
-    test_model()

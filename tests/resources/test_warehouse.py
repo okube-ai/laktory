@@ -42,9 +42,3 @@ def test_warehouse_additional_resources():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(warehouse)
-
-
-if __name__ == "__main__":
-    test_warehouse()
-    test_both_warehouse_id_and_warehouse_name()
-    test_neither_warehouse_id_and_warehouse_name()

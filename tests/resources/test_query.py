@@ -29,7 +29,3 @@ def test_query_additional_resources():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(query)
-
-
-if __name__ == "__main__":
-    test_query()

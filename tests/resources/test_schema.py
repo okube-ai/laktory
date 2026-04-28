@@ -59,7 +59,3 @@ def test_terraform_plan():
     skip_terraform_plan()
     schema_simple = Schema(name="test", catalog_name="dev")
     plan_resource(schema_simple)
-
-
-if __name__ == "__main__":
-    test_model()

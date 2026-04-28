@@ -13,7 +13,6 @@ dashboard = Dashboard(
 
 
 def test_dashboard():
-    print(dashboard)
     assert dashboard.display_name == "databricks-costs"
     assert dashboard.access_controls[0].permission_level == "CAN_READ"
     assert dashboard.access_controls[0].group_name == "account users"
@@ -27,7 +26,3 @@ def test_dashboard_additional_resources():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(dashboard)
-
-
-if __name__ == "__main__":
-    test_dashboard()

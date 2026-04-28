@@ -22,7 +22,3 @@ def test_mlflow_webhook():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(mlwebhook)
-
-
-if __name__ == "__main__":
-    test_mlflow_webhook()

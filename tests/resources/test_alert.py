@@ -21,7 +21,3 @@ def test_alert():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(alert)
-
-
-if __name__ == "__main__":
-    test_alert()

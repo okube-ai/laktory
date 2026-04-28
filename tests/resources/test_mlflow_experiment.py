@@ -29,7 +29,3 @@ def test_mlflow_experiment_additional_resources():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(mlexp)
-
-
-if __name__ == "__main__":
-    test_mlflow_experiment()
