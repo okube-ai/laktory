@@ -25,22 +25,26 @@ class Dashboard(DashboardBase):
 
     from laktory import models
 
-    # Define job
-    job_yaml = '''
+    dashboard_yaml = '''
     display_name: databricks-costs
     file_path: ./dashboards/databricks_costs.json
     parent_path: /.laktory/dashboards
     warehouse_id: a7d9f2kl8mp3q6rt
     access_controls:
-        - group_name: account users
-          permission_level: CAN_READ
-        - group_name: account users
-          permission_level: CAN_RUN
+    - group_name: account users
+      permission_level: CAN_VIEW
+    - group_name: role-engineers
+      permission_level: CAN_RUN
     '''
     dashboard = models.resources.databricks.Dashboard.model_validate_yaml(
-        io.StringIO(job_yaml)
+        io.StringIO(dashboard_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [Databricks Lakeview Dashboard](https://docs.databricks.com/en/dashboards/index.html)
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")

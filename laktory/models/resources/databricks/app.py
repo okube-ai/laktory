@@ -135,8 +135,7 @@ class App(AppBase):
 
     from laktory import models
 
-    # Define App
-    job_yaml = '''
+    app_yaml = '''
     name: stocks-dash
     description: A dashboard app for visualizing stock prices.
     resources:
@@ -145,11 +144,16 @@ class App(AppBase):
         id: warehouse_id
         permission: CAN_USE
     access_controls:
-        - group_name: account users
-          permission_level: CAN_USE
+    - group_name: account users
+      permission_level: CAN_USE
     '''
-    app = models.resources.databricks.App.model_validate_yaml(io.StringIO(job_yaml))
+    app = models.resources.databricks.App.model_validate_yaml(io.StringIO(app_yaml))
     ```
+
+    References
+    ----------
+
+    * [Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html)
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")

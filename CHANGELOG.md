@@ -3,8 +3,6 @@
 ## [0.11.0] - Unreleased
 ### Added
 * Build tooling (`scripts/build_resources/`) to auto-generate Databricks resource models from the Terraform provider schema
-### Fixed
-* n/a
 ### Updated
 * All Databricks resource models are now derived from auto-generated files built directly from the Terraform provider schema, ensuring fields stay in sync with the provider and reducing manual maintenance
 ### Breaking changes
