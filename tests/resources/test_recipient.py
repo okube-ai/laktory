@@ -1,3 +1,5 @@
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks.recipient import Recipient
 
 recipient = Recipient(
@@ -27,3 +29,8 @@ def test_recipient_model_dump():
     assert data["name"] == "test-recipient"
     assert data["comment"] == "Test recipient for Delta Sharing"
     assert data["authentication_type"] == "TOKEN"
+
+
+def test_terraform_plan():
+    skip_terraform_plan()
+    plan_resource(recipient)

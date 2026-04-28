@@ -10,7 +10,11 @@
 ### Breaking changes
 * Dropped support for Pulumi IaC backend
 * Renamed stack `backend` property to `iac_backend`
+* Removed `data_accesses` attribute to `Metastore` resource
 * Several Databricks resource fields renamed to align with Terraform and Databricks API conventions
+  * `secret` `value` attribute renamed to `string_value`
+  * `warehouse` `channel_name` replaced `channel` model
+  * `group.workspace_permission_assignments` `permissions` is now mandatory 
 
 ## [0.10.0] - 2026-04-16
 ### Added

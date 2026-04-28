@@ -7,7 +7,6 @@ from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.metastore_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.metastore_base import MetastoreBase
 from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
-from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
 
 
 class MetastoreLookup(ResourceLookup):
@@ -26,10 +25,6 @@ class Metastore(MetastoreBase):
     ```
     """
 
-    data_accesses: list[MetastoreDataAccess] = Field(
-        None, description="List of data accesses (storage credentials)"
-    )
-    global_metastore_id: str = Field(None, description="")
     grant: Union[MetastoreGrant, list[MetastoreGrant]] = Field(
         None,
         description="""
@@ -95,17 +90,6 @@ class Metastore(MetastoreBase):
         for r in _resources:
             depends_on += [f"${{resources.{r.resource_name}}}"]
         resources += _resources
-
-        if self.data_accesses:
-            for data_access in self.data_accesses:
-                data_access.metastore_id = f"${{resources.{self.resource_name}.id}}"
-                _core_resources = data_access.core_resources
-                for r in _core_resources[1:]:
-                    if r.options.provider is None:
-                        r.options.provider = self.grants_provider
-                    if depends_on:
-                        r.options.depends_on = depends_on
-                resources += _core_resources
 
         return resources
 

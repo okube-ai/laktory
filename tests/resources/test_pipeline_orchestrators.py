@@ -7,6 +7,8 @@ from pathlib import Path
 import laktory as lk
 from laktory import models
 from laktory._settings import settings
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.enums import DataFrameBackends
 
 data_dirpath = Path(__file__).parent.parent / "data"
@@ -1005,3 +1007,15 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
 def test_databricks_pipeline_execute():
     # TODO
     pass
+
+
+def test_databricks_job_terraform_plan():
+    skip_terraform_plan()
+    pl = get_pl_job()
+    plan_resource(pl.orchestrator)
+
+
+def test_databricks_pipeline_terraform_plan():
+    skip_terraform_plan()
+    pl = get_pl_dlt()
+    plan_resource(pl.orchestrator)

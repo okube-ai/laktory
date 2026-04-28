@@ -1,6 +1,9 @@
 import json
 
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import ClusterPolicy
+from laktory.models.resources.databricks.permissions import Permissions
 
 definition = {
     "dbus_per_hour": {
@@ -51,6 +54,16 @@ def test_policy_cluster_as_dict():
 
     assert cluster_policy.name == "okube"
     assert cp.definition == json.dumps(definition)
+
+
+def test_cluster_policy_additional_resources():
+    assert len(cluster_policy.additional_core_resources) == 1
+    assert isinstance(cluster_policy.additional_core_resources[0], Permissions)
+
+
+def test_terraform_plan():
+    skip_terraform_plan()
+    plan_resource(cluster_policy)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,5 @@
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks.share import Share
 from laktory.models.resources.databricks.share_base import ShareObject
 
@@ -42,3 +44,8 @@ def test_share_model_dump():
     assert data["name"] == "test-share"
     assert data["comment"] == "Test share for Delta Sharing"
     assert data["owner"] == "user@example.com"
+
+
+def test_terraform_plan():
+    skip_terraform_plan()
+    plan_resource(share)

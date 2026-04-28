@@ -1,3 +1,5 @@
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import NotificationDestination
 
 nd_emails = NotificationDestination(
@@ -21,3 +23,8 @@ def test_destinations():
     assert nd_emails.config.email.addresses == ["notifications@okube.ai"]
     assert nd_teams.config.microsoft_teams.url == "teams.webhook.com"
     assert nd_slack.config.slack.url == "slack.webhook.com"
+
+
+def test_terraform_plan():
+    skip_terraform_plan()
+    plan_resource(nd_emails)

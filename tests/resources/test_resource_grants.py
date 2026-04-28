@@ -1,6 +1,8 @@
 import pytest
 from pydantic import ValidationError
 
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.grants import TableGrant
 from laktory.models.resources.databricks import Table
 from laktory.models.resources.databricks.grant import Grant
@@ -108,6 +110,18 @@ def test_grants():
                 },
             ],
         )
+
+
+def test_terraform_plan_with_grant():
+    skip_terraform_plan()
+    t = Table(
+        name="slv_prices",
+        catalog_name="dev",
+        schema_name="markets",
+        table_type="MANAGED",
+        grant={"principal": "users", "privileges": ["SELECT"]},
+    )
+    plan_resource(t)
 
 
 if __name__ == "__main__":

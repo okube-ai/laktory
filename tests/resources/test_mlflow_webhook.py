@@ -1,3 +1,5 @@
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import MLflowWebhook
 
 mlwebhook = MLflowWebhook(
@@ -15,6 +17,11 @@ mlwebhook = MLflowWebhook(
 def test_mlflow_webhook():
     assert mlwebhook.events == ["TRANSITION_REQUEST_CREATED"]
     assert mlwebhook.status == "ACTIVE"
+
+
+def test_terraform_plan():
+    skip_terraform_plan()
+    plan_resource(mlwebhook)
 
 
 if __name__ == "__main__":

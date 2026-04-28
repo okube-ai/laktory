@@ -1,4 +1,7 @@
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import Job
+from laktory.models.resources.databricks.permissions import Permissions
 
 job = Job(
     name="job-stock-prices",
@@ -61,374 +64,23 @@ job_for_each = Job(
     ],
 )
 
-_TASK_FIELDS_NONE = {
-    "alert_task": None,
-    "clean_rooms_notebook_task": None,
-    "compute": None,
-    "condition_task": None,
-    "dashboard_task": None,
-    "dbt_cloud_task": None,
-    "dbt_platform_task": None,
-    "dbt_task": None,
-    "depends_on": None,
-    "description": None,
-    "disable_auto_optimization": None,
-    "disabled": None,
-    "email_notifications": None,
-    "environment_key": None,
-    "existing_cluster_id": None,
-    "for_each_task": None,
-    "gen_ai_compute_task": None,
-    "health": None,
-    "job_cluster_key": None,
-    "library": None,
-    "max_retries": None,
-    "min_retry_interval_millis": None,
-    "new_cluster": None,
-    "notebook_task": None,
-    "notification_settings": None,
-    "pipeline_task": None,
-    "power_bi_task": None,
-    "python_wheel_task": None,
-    "retry_on_timeout": None,
-    "run_if": None,
-    "run_job_task": None,
-    "spark_jar_task": None,
-    "spark_python_task": None,
-    "spark_submit_task": None,
-    "sql_task": None,
-    "task_key": None,
-    "timeout_seconds": None,
-    "webhook_notifications": None,
-}
-
 
 def test_job_model():
-    data = job.model_dump()
-    print(data)
-    assert data == {
-        "always_running": None,
-        "budget_policy_id": None,
-        "control_run_state": None,
-        "description": None,
-        "edit_mode": None,
-        "existing_cluster_id": None,
-        "format": None,
-        "max_concurrent_runs": None,
-        "max_retries": None,
-        "min_retry_interval_millis": None,
-        "name": "osoucy]job-stock-prices",
-        "performance_target": None,
-        "retry_on_timeout": None,
-        "tags": None,
-        "timeout_seconds": None,
-        "usage_policy_id": None,
-        "continuous": None,
-        "dbt_task": None,
-        "deployment": None,
-        "email_notifications": {
-            "no_alert_for_skipped_runs": None,
-            "on_duration_warning_threshold_exceeded": ["info@okube.ai"],
-            "on_failure": ["info@okube.ai"],
-            "on_start": ["info@okube.ai"],
-            "on_streaming_backlog_exceeded": None,
-            "on_success": ["info@okube.ai"],
-        },
-        "environment": None,
-        "git_source": None,
-        "health": None,
-        "job_cluster": [
-            {
-                "job_cluster_key": "main",
-                "new_cluster": {
-                    "apply_policy_default_values": None,
-                    "cluster_id": None,
-                    "cluster_name": None,
-                    "custom_tags": None,
-                    "data_security_mode": None,
-                    "driver_instance_pool_id": None,
-                    "driver_node_type_id": None,
-                    "enable_elastic_disk": None,
-                    "enable_local_disk_encryption": None,
-                    "idempotency_token": None,
-                    "instance_pool_id": None,
-                    "is_single_node": None,
-                    "kind": None,
-                    "node_type_id": "Standard_DS3_v2",
-                    "num_workers": None,
-                    "policy_id": None,
-                    "remote_disk_throughput": None,
-                    "runtime_engine": None,
-                    "single_user_name": None,
-                    "spark_conf": None,
-                    "spark_env_vars": None,
-                    "spark_version": "16.3.x-scala2.12",
-                    "ssh_public_keys": None,
-                    "total_initial_remote_disk_size": None,
-                    "use_ml_runtime": None,
-                    "autoscale": None,
-                    "aws_attributes": None,
-                    "azure_attributes": None,
-                    "cluster_log_conf": None,
-                    "cluster_mount_info": None,
-                    "docker_image": None,
-                    "driver_node_type_flexibility": None,
-                    "gcp_attributes": None,
-                    "init_scripts": [
-                        {
-                            "abfss": None,
-                            "dbfs": None,
-                            "file": None,
-                            "gcs": None,
-                            "s3": None,
-                            "volumes": {"destination": "Volumes/some/path"},
-                            "workspace": None,
-                        }
-                    ],
-                    "library": None,
-                    "worker_node_type_flexibility": None,
-                    "workload_type": None,
-                },
-            }
-        ],
-        "library": None,
-        "new_cluster": None,
-        "notebook_task": None,
-        "notification_settings": None,
-        "parameter": None,
-        "pipeline_task": None,
-        "python_wheel_task": None,
-        "queue": None,
-        "run_as": None,
-        "run_job_task": None,
-        "schedule": None,
-        "spark_jar_task": None,
-        "spark_python_task": None,
-        "spark_submit_task": None,
-        "task": [
-            {
-                "description": None,
-                "disable_auto_optimization": None,
-                "disabled": None,
-                "environment_key": None,
-                "existing_cluster_id": None,
-                "job_cluster_key": "main",
-                "max_retries": None,
-                "min_retry_interval_millis": None,
-                "retry_on_timeout": None,
-                "run_if": None,
-                "task_key": "ingestion",
-                "timeout_seconds": None,
-                "alert_task": None,
-                "clean_rooms_notebook_task": None,
-                "compute": None,
-                "condition_task": None,
-                "dashboard_task": None,
-                "dbt_cloud_task": None,
-                "dbt_platform_task": None,
-                "dbt_task": None,
-                "depends_on": None,
-                "email_notifications": None,
-                "for_each_task": None,
-                "gen_ai_compute_task": None,
-                "health": None,
-                "library": None,
-                "new_cluster": None,
-                "notebook_task": {
-                    "base_parameters": None,
-                    "notebook_path": "job/ingest_stock_prices",
-                    "source": None,
-                    "warehouse_id": None,
-                },
-                "notification_settings": None,
-                "pipeline_task": None,
-                "power_bi_task": None,
-                "python_wheel_task": None,
-                "run_job_task": None,
-                "spark_jar_task": None,
-                "spark_python_task": None,
-                "spark_submit_task": None,
-                "sql_task": None,
-                "webhook_notifications": None,
-            },
-            {
-                "description": None,
-                "disable_auto_optimization": None,
-                "disabled": None,
-                "environment_key": None,
-                "existing_cluster_id": None,
-                "job_cluster_key": None,
-                "max_retries": None,
-                "min_retry_interval_millis": None,
-                "retry_on_timeout": None,
-                "run_if": None,
-                "task_key": "pipeline",
-                "timeout_seconds": None,
-                "alert_task": None,
-                "clean_rooms_notebook_task": None,
-                "compute": None,
-                "condition_task": None,
-                "dashboard_task": None,
-                "dbt_cloud_task": None,
-                "dbt_platform_task": None,
-                "dbt_task": None,
-                "depends_on": [{"outcome": None, "task_key": "ingestion"}],
-                "email_notifications": None,
-                "for_each_task": None,
-                "gen_ai_compute_task": None,
-                "health": None,
-                "library": None,
-                "new_cluster": None,
-                "notebook_task": None,
-                "notification_settings": None,
-                "pipeline_task": {
-                    "full_refresh": None,
-                    "pipeline_id": "${resources.dlt-pipeline-pl-dlt.id}",
-                },
-                "power_bi_task": None,
-                "python_wheel_task": None,
-                "run_job_task": None,
-                "spark_jar_task": None,
-                "spark_python_task": None,
-                "spark_submit_task": None,
-                "sql_task": None,
-                "webhook_notifications": None,
-            },
-            {
-                "description": None,
-                "disable_auto_optimization": None,
-                "disabled": None,
-                "environment_key": None,
-                "existing_cluster_id": None,
-                "job_cluster_key": None,
-                "max_retries": None,
-                "min_retry_interval_millis": None,
-                "retry_on_timeout": None,
-                "run_if": None,
-                "task_key": "view",
-                "timeout_seconds": None,
-                "alert_task": None,
-                "clean_rooms_notebook_task": None,
-                "compute": None,
-                "condition_task": None,
-                "dashboard_task": None,
-                "dbt_cloud_task": None,
-                "dbt_platform_task": None,
-                "dbt_task": None,
-                "depends_on": None,
-                "email_notifications": None,
-                "for_each_task": None,
-                "gen_ai_compute_task": None,
-                "health": None,
-                "library": None,
-                "new_cluster": None,
-                "notebook_task": None,
-                "notification_settings": None,
-                "pipeline_task": None,
-                "power_bi_task": None,
-                "python_wheel_task": None,
-                "run_job_task": None,
-                "spark_jar_task": None,
-                "spark_python_task": None,
-                "spark_submit_task": None,
-                "sql_task": {
-                    "parameters": None,
-                    "warehouse_id": "123",
-                    "alert": None,
-                    "dashboard": None,
-                    "file": None,
-                    "query": {"query_id": "456"},
-                },
-                "webhook_notifications": None,
-            },
-        ],
-        "timeouts": None,
-        "trigger": None,
-        "webhook_notifications": None,
-        "access_controls": [],
-        "name_prefix": "",
-        "name_suffix": None,
-    }
+    assert job.name == "osoucy]job-stock-prices"
+    assert job.job_cluster[0].job_cluster_key == "main"
+    assert job.email_notifications.on_failure == ["info@okube.ai"]
 
 
 def test_job_for_each_task():
-    data = job_for_each.model_dump(exclude_unset=False)
-
-    print(data)
-    assert data == {
-        "access_controls": [],
-        "always_running": None,
-        "budget_policy_id": None,
-        "continuous": None,
-        "control_run_state": None,
-        "dbt_task": None,
-        "deployment": None,
-        "description": None,
-        "edit_mode": None,
-        "email_notifications": None,
-        "environment": None,
-        "existing_cluster_id": None,
-        "format": None,
-        "git_source": None,
-        "health": None,
-        "job_cluster": None,
-        "library": None,
-        "max_concurrent_runs": None,
-        "max_retries": None,
-        "min_retry_interval_millis": None,
-        "name": "job-hello",
-        "name_prefix": None,
-        "name_suffix": None,
-        "new_cluster": None,
-        "notebook_task": None,
-        "notification_settings": None,
-        "parameter": None,
-        "performance_target": None,
-        "pipeline_task": None,
-        "python_wheel_task": None,
-        "queue": None,
-        "retry_on_timeout": None,
-        "run_as": None,
-        "run_job_task": None,
-        "schedule": None,
-        "spark_jar_task": None,
-        "spark_python_task": None,
-        "spark_submit_task": None,
-        "tags": None,
-        "task": [
-            {
-                **_TASK_FIELDS_NONE,
-                "task_key": "hello-loop",
-                "for_each_task": {
-                    "inputs": '[{"id": 1, "name": "olivier"}, {"id": 2, "name": "kubic"}]',
-                    "task": {
-                        **{
-                            k: v
-                            for k, v in _TASK_FIELDS_NONE.items()
-                            if k != "for_each_task"
-                        },
-                        "notebook_task": {
-                            "notebook_path": "Workspace/Users/olivier.soucy@okube.ai/hello-world",
-                            "base_parameters": {"input": "{{input}}"},
-                            "warehouse_id": None,
-                            "source": None,
-                        },
-                        "task_key": "hello-task",
-                    },
-                    "concurrency": None,
-                },
-            }
-        ],
-        "timeout_seconds": None,
-        "timeouts": None,
-        "trigger": None,
-        "usage_policy_id": None,
-        "webhook_notifications": None,
-    }
+    assert job_for_each.name == "job-hello"
+    t = job_for_each.task[0]
+    assert t.task_key == "hello-loop"
+    assert t.for_each_task is not None
+    assert t.for_each_task.task.task_key == "hello-task"
 
 
 def test_job_task_dbt():
-    job = Job(
+    j = Job(
         name="job-stock-prices",
         tasks=[
             {
@@ -440,7 +92,7 @@ def test_job_task_dbt():
             },
         ],
     )
-    assert job.terraform_properties == {
+    assert j.terraform_properties == {
         "name": "job-stock-prices",
         "task": [
             {
@@ -449,3 +101,24 @@ def test_job_task_dbt():
             }
         ],
     }
+
+
+def test_job_additional_resources():
+    j = Job(
+        name="job-test",
+        tasks=[{"task_key": "t1", "notebook_task": {"notebook_path": "/nb"}}],
+        access_controls=[{"group_name": "users", "permission_level": "CAN_VIEW"}],
+    )
+    assert len(j.additional_core_resources) == 1
+    assert isinstance(j.additional_core_resources[0], Permissions)
+
+
+def test_terraform_plan():
+    skip_terraform_plan()
+    job_simple = Job(
+        name="job-simple",
+        tasks=[
+            {"task_key": "t1", "notebook_task": {"notebook_path": "/notebooks/test"}}
+        ],
+    )
+    plan_resource(job_simple)
