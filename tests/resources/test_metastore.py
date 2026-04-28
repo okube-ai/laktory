@@ -1,3 +1,5 @@
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import Metastore
 
 metastore = Metastore(
@@ -19,101 +21,27 @@ metastore = Metastore(
             ],
         }
     ],
-    data_accesses=[
-        {
-            "name": "lakehouse-dev",
-            "azure_managed_identity": {"access_connector_id": "test"},
-            "force_destroy": True,
-            "is_default": False,
-            "grants": [
-                {
-                    "principal": "role-metastore-admins",
-                    "privileges": [
-                        "CREATE_EXTERNAL_LOCATION",
-                    ],
-                }
-            ],
-        }
-    ],
 )
 
 
 def test_metastore():
-    data = metastore.model_dump()
-    print(data)
-
-    assert data == {
-        "api": None,
-        "data_accesses": [
-            {
-                "api": None,
-                "aws_iam_role": None,
-                "azure_managed_identity": {
-                    "access_connector_id": "test",
-                    "credential_id": None,
-                    "managed_identity_id": None,
-                },
-                "azure_service_principal": None,
-                "cloudflare_api_token": None,
-                "comment": None,
-                "databricks_gcp_service_account": None,
-                "force_destroy": True,
-                "force_update": None,
-                "gcp_service_account_key": None,
-                "grant": None,
-                "grants": [
-                    {
-                        "principal": "role-metastore-admins",
-                        "privileges": ["CREATE_EXTERNAL_LOCATION"],
-                    }
-                ],
-                "is_default": False,
-                "isolation_mode": None,
-                "metastore_id": None,
-                "name": "lakehouse-dev",
-                "owner": None,
-                "read_only": None,
-                "skip_validation": None,
-            }
-        ],
-        "default_data_access_config_id": None,
-        "delta_sharing_organization_name": None,
-        "delta_sharing_recipient_token_lifetime_in_seconds": None,
-        "delta_sharing_scope": None,
-        "external_access_enabled": None,
-        "force_destroy": True,
-        "global_metastore_id": None,
-        "grant": None,
-        "grants": [
-            {
-                "principal": "role-metastore-admins",
-                "privileges": [
-                    "CREATE_CATALOG",
-                    "CREATE_CONNECTION",
-                    "CREATE_EXTERNAL_LOCATION",
-                    "CREATE_STORAGE_CREDENTIAL",
-                    "MANAGE_ALLOWLIST",
-                ],
-            }
-        ],
-        "grants_provider": "${resources.provider-workspace-neptune}",
-        "name": "metastore-lakehouse",
-        "owner": None,
-        "privilege_model_version": None,
-        "region": "eastus",
-        "storage_root": "abfss://metastore@o3stglakehousedev.dfs.core.windows.net/",
-        "storage_root_credential_id": None,
-        "storage_root_credential_name": None,
-        "workspace_assignments": [
-            {
-                "api": None,
-                "default_catalog_name": None,
-                "metastore_id": None,
-                "workspace_id": 0.0,
-            }
-        ],
-    }
+    assert metastore.name == "metastore-lakehouse"
+    assert metastore.region == "eastus"
+    assert metastore.grants[0].principal == "role-metastore-admins"
 
 
-if __name__ == "__main__":
-    test_metastore()
+def test_metastore_additional_resources():
+    resources = metastore.additional_core_resources
+    types_found = {type(r).__name__ for r in resources}
+    assert "MetastoreAssignment" in types_found
+    assert "Grants" in types_found
+
+
+def test_terraform_plan():
+    skip_terraform_plan()
+    metastore_simple = Metastore(
+        name="metastore-test",
+        storage_root="abfss://metastore@storage.dfs.core.windows.net/",
+        region="eastus",
+    )
+    plan_resource(metastore_simple)

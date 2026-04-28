@@ -1,3 +1,5 @@
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import Schema
 from laktory.models.resources.databricks import Table
 from laktory.models.resources.databricks.table_base import TableColumn
@@ -47,5 +49,13 @@ def test_model():
     assert schema.full_name == "laktory_testing.flights"
 
 
-if __name__ == "__main__":
-    test_model()
+def test_schema_additional_resources():
+    resources = schema.additional_core_resources
+    types_found = {type(r).__name__ for r in resources}
+    assert "Table" in types_found
+
+
+def test_terraform_plan():
+    skip_terraform_plan()
+    schema_simple = Schema(name="test", catalog_name="dev")
+    plan_resource(schema_simple)

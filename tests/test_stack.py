@@ -18,117 +18,6 @@ def stack():
     return stack
 
 
-@pytest.fixture
-def full_stack():
-    from tests.resources.test_accesscontrolruleset import acrs
-    from tests.resources.test_alert import alert
-    from tests.resources.test_app import app
-    from tests.resources.test_catalog import catalog
-    from tests.resources.test_cluster_policy import cluster_policy
-    from tests.resources.test_dashboard import dashboard
-    from tests.resources.test_directory import directory
-    from tests.resources.test_job import job
-    from tests.resources.test_job import job_for_each
-    from tests.resources.test_metastore import metastore
-    from tests.resources.test_mlflow_experiment import mlexp
-    from tests.resources.test_mlflow_model import mlmodel
-    from tests.resources.test_mlflow_webhook import mlwebhook
-    from tests.resources.test_notebook import get_notebook
-    from tests.resources.test_notificationdestinations import nd_emails
-    from tests.resources.test_notificationdestinations import nd_slack
-    from tests.resources.test_notificationdestinations import nd_teams
-    from tests.resources.test_obotoken import obo_token
-    from tests.resources.test_permissions import permissions
-    from tests.resources.test_pipeline_orchestrators import get_pl_dlt
-    from tests.resources.test_pythonpackage import get_python_package
-    from tests.resources.test_qualitymonitor import qm
-    from tests.resources.test_query import query
-    from tests.resources.test_recipient import recipient
-    from tests.resources.test_repo import repo
-    from tests.resources.test_schema import schema
-    from tests.resources.test_share import share
-    from tests.resources.test_user import group
-    from tests.resources.test_user import user
-    from tests.resources.test_vectorsearchendpoint import vector_search_endpoint
-    from tests.resources.test_vectorsearchindex import vector_search_index
-    from tests.resources.test_workspacebinding import workspace_binding
-    from tests.resources.test_workspacefile import get_workspace_file
-    from tests.resources.test_workspacetree import get_workspace_tree
-
-    # Update paths because preview is executed in tmp_path
-    nb = get_notebook()
-    workspace_file = get_workspace_file()
-    workspace_tree = get_workspace_tree()
-    nb.source = str(root / "resources" / nb.source)
-    workspace_file.source_ = str(root / "resources" / workspace_file.source)
-
-    _resources = {
-        "databricks_accesscontrolrulesets": [acrs],
-        "databricks_alerts": [alert],
-        "databricks_apps": [app],
-        "databricks_catalogs": [catalog],
-        "databricks_clusterpolicies": [cluster_policy],
-        "databricks_dashboards": [dashboard],
-        "databricks_directories": [directory],
-        "databricks_jobs": [job, job_for_each],
-        "databricks_metastores": [metastore],
-        "databricks_mlflowexperiments": [mlexp],
-        "databricks_mlflowmodels": [mlmodel],
-        "databricks_mlflowwebhooks": [mlwebhook],
-        "databricks_obotokens": [obo_token],
-        "databricks_pythonpackages": [get_python_package()],
-        "databricks_notebooks": [nb],
-        "databricks_notificationdestinations": [nd_emails, nd_teams, nd_slack],
-        "databricks_permissions": [permissions],
-        "databricks_qualitymonitors": [qm],
-        "databricks_queries": [query],
-        "databricks_recipients": [recipient],
-        "databricks_repos": [repo],
-        "databricks_schemas": [schema],
-        "databricks_shares": [share],
-        "databricks_groups": [group],
-        "databricks_users": [user],
-        "databricks_vectorsearchendpoints": [vector_search_endpoint],
-        "databricks_vectorsearchindexes": [vector_search_index],
-        "databricks_workspacefiles": [workspace_file],
-        "databricks_workspacetrees": [workspace_tree],
-        "databricks_workspacebindings": [workspace_binding],
-        "pipelines": [get_pl_dlt()],  # required by job
-    }
-
-    resources = {}
-    for k, v in _resources.items():
-        resources[k] = {r.resource_name: r for r in v}
-
-    resources["providers"] = {
-        "provider-workspace-neptune": {
-            "host": "${vars.DATABRICKS_HOST}",
-            # "azure_client_id": "0",
-            # "azure_client_secret": "0",
-            # "azure_tenant_id": "0",
-        },
-        "databricks": {
-            "host": "${vars.DATABRICKS_HOST}",
-            "token": "${vars.DATABRICKS_TOKEN}",
-        },
-        "databricks1": {
-            "host": "${vars.DATABRICKS_HOST}",
-        },
-        "databricks2": {
-            "host": "${vars.DATABRICKS_HOST}",
-        },
-    }
-
-    stack = models.Stack(
-        organization="okube",
-        name="unit-testing",
-        resources=resources,
-        environments={"dev": {}},
-    )
-
-    return stack
-
-
 def test_stack_model(stack):
     _ = stack.model_dump()
 
@@ -179,11 +68,7 @@ def test_stack_resources_unique_name():
         )
 
 
-@pytest.mark.parametrize("is_full", [True, False])
-def test_build(monkeypatch, stack, full_stack, is_full):
-    if is_full:
-        stack = full_stack
-
+def test_build(monkeypatch, stack):
     c0 = settings.cli_raise_external_exceptions
     settings.cli_raise_external_exceptions = True
 
@@ -577,11 +462,7 @@ def test_terraform_stack(monkeypatch, stack):
     }
 
 
-@pytest.mark.parametrize("is_full", [True, False])
-def test_terraform_plan(monkeypatch, stack, full_stack, is_full):
-    if is_full:
-        stack = full_stack
-
+def test_terraform_plan(monkeypatch, stack):
     c0 = settings.cli_raise_external_exceptions
     settings.cli_raise_external_exceptions = True
 

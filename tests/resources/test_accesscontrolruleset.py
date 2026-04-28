@@ -1,3 +1,5 @@
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import AccessControlRuleSet
 
 acrs = AccessControlRuleSet(
@@ -8,3 +10,8 @@ acrs = AccessControlRuleSet(
 
 def test_accesscontrolruleset():
     assert acrs.name == "test"
+
+
+def test_terraform_plan():
+    skip_terraform_plan()
+    plan_resource(acrs)

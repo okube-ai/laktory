@@ -21,15 +21,28 @@ class Query(QueryBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    query = models.resources.databricks.Query(
-        display_name="google-prices",
-        parent_path="/queries",
-        query_text="SELECT * FROM dev.finance.slv_stock_prices",
-        warehouse_id="12345",
+    query_yaml = '''
+    display_name: stock-prices
+    parent_path: /queries
+    query_text: SELECT * FROM dev.finance.slv_stock_prices
+    warehouse_id: a7d9f2kl8mp3q6rt
+    access_controls:
+    - group_name: account users
+      permission_level: CAN_RUN
+    '''
+    query = models.resources.databricks.Query.model_validate_yaml(
+        io.StringIO(query_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [Databricks SQL Query](https://docs.databricks.com/api/workspace/queries/create)
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")

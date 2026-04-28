@@ -12,7 +12,24 @@ class Recipient(RecipientBase):
     Examples
     --------
     ```py
+    import io
+
+    from laktory import models
+
+    recipient_yaml = '''
+    name: partner-org
+    authentication_type: TOKEN
+    comment: External partner for data sharing
+    '''
+    recipient = models.resources.databricks.Recipient.model_validate_yaml(
+        io.StringIO(recipient_yaml)
+    )
     ```
+
+    References
+    ----------
+
+    * [Databricks Delta Sharing Recipient](https://docs.databricks.com/en/data-sharing/create-recipient.html)
     """
 
     # ----------------------------------------------------------------------- #

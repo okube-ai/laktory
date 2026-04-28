@@ -9,7 +9,23 @@ class MwsNccBinding(MwsNccBindingBase):
     Examples
     --------
     ```py
+    import io
+
+    from laktory import models
+
+    binding_yaml = '''
+    network_connectivity_config_id: ${resources.ncc-prod.network_connectivity_config_id}
+    workspace_id: 1234567890
+    '''
+    binding = models.resources.databricks.MwsNccBinding.model_validate_yaml(
+        io.StringIO(binding_yaml)
+    )
     ```
+
+    References
+    ----------
+
+    * [Databricks MWS NCC Binding](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_ncc_binding)
     """
 
     # ----------------------------------------------------------------------- #

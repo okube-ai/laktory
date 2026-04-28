@@ -14,13 +14,30 @@ class Grants(GrantsBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    grants = models.resources.databricks.Grants(
-        catalog="dev",
-        grants=[{"principal": "metastore-admins", "privileges": ["CREATE_SCHEMA"]}],
+    grants_yaml = '''
+    catalog: dev
+    grants:
+    - principal: metastore-admins
+      privileges:
+      - CREATE_SCHEMA
+    - principal: account users
+      privileges:
+      - USE_CATALOG
+      - USE_SCHEMA
+    '''
+    grants = models.resources.databricks.Grants.model_validate_yaml(
+        io.StringIO(grants_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [Databricks Privileges](https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/privileges.html)
     """
 
     # ----------------------------------------------------------------------- #

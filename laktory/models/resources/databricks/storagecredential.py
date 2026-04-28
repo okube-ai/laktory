@@ -52,7 +52,28 @@ class StorageCredential(StorageCredentialBase):
     Examples
     --------
     ```py
+    import io
+
+    from laktory import models
+
+    cred_yaml = '''
+    name: prod-azure-mi
+    azure_managed_identity:
+      access_connector_id: /subscriptions/sub-id/resourceGroups/rg/providers/Microsoft.Databricks/accessConnectors/connector
+    grants:
+    - principal: account users
+      privileges:
+      - READ_FILES
+    '''
+    cred = models.resources.databricks.StorageCredential.model_validate_yaml(
+        io.StringIO(cred_yaml)
+    )
     ```
+
+    References
+    ----------
+
+    * [Databricks Storage Credential](https://docs.databricks.com/en/connect/unity-catalog/storage-credentials.html)
     """
 
     grant: Union[StorageCredentialGrant, list[StorageCredentialGrant]] = Field(

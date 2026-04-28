@@ -49,18 +49,3 @@ def test_user():
 
 def test_warehouse():
     _ = models.resources.databricks.Warehouse(lookup_existing={"id": "0"})
-
-
-if __name__ == "__main__":
-    test_catalog()
-    test_cluster()
-    test_dbfsfile()
-    test_directory()
-    test_group()
-    test_job()
-    test_metastore()
-    test_notebook()
-    test_serviceprincipal()
-    test_table()
-    test_user()
-    test_warehouse()

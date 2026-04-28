@@ -13,7 +13,27 @@ class MwsPermissionAssignment(MwsPermissionAssignmentBase):
     Examples
     --------
     ```py
+    import io
+
+    from laktory import models
+
+    assignment_yaml = '''
+    workspace_id: 1234567890
+    principal_id: 9876543210
+    permissions:
+    - USER
+    '''
+    assignment = (
+        models.resources.databricks.MwsPermissionAssignment.model_validate_yaml(
+            io.StringIO(assignment_yaml)
+        )
+    )
     ```
+
+    References
+    ----------
+
+    * [Databricks MWS Permission Assignment](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_permission_assignment)
     """
 
     principal_id: int = Field(

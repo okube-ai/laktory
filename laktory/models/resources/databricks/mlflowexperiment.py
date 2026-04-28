@@ -17,20 +17,27 @@ class MLflowExperiment(MlflowExperimentBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    exp = models.resources.databricks.MLflowExperiment(
-        name="/.laktory/Sample",
-        artifact_location="dbfs:/tmp/my-experiment",
-        description="My MLflow experiment description",
-        access_controls=[
-            {
-                "group_name": "account users",
-                "permission_level": "CAN_MANAGE",
-            }
-        ],
+    exp_yaml = '''
+    name: /.laktory/Sample
+    artifact_location: dbfs:/tmp/my-experiment
+    description: My MLflow experiment description
+    access_controls:
+    - group_name: account users
+      permission_level: CAN_MANAGE
+    '''
+    exp = models.resources.databricks.MLflowExperiment.model_validate_yaml(
+        io.StringIO(exp_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [MLflow Experiment](https://mlflow.org/docs/latest/tracking.html)
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")

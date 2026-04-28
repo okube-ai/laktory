@@ -43,20 +43,30 @@ class Warehouse(SqlEndpointBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    warehouse = models.resources.databricks.Warehouse(
-        name="default",
-        cluster_size="2X-Small",
-        auto_stop_mins=30,
-        channel_name="CHANNEL_NAME_PREVIEW",
-        enable_photon=True,
-        enable_serverless_compute=True,
-        access_controls=[
-            {"group_name": "account users", "permission_level": "CAN_USE"}
-        ],
+    warehouse_yaml = '''
+    name: default
+    cluster_size: 2X-Small
+    auto_stop_mins: 30
+    channel_name: CHANNEL_NAME_PREVIEW
+    enable_photon: true
+    enable_serverless_compute: true
+    access_controls:
+    - group_name: account users
+      permission_level: CAN_USE
+    '''
+    warehouse = models.resources.databricks.Warehouse.model_validate_yaml(
+        io.StringIO(warehouse_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [Databricks SQL Warehouse](https://docs.databricks.com/en/compute/sql-warehouse/index.html)
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")

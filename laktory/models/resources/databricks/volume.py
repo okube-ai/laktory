@@ -20,19 +20,27 @@ class Volume(VolumeBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    volume = models.resources.databricks.Volume(
-        name="landing",
-        catalog_name="dev",
-        comment="Landing zone for raw data",
-        schema_name="sources",
-        volume_type="EXTERNAL",
-        storage_location="abfss://landing@lakehouse-storage.dfs.core.windows.net/",
-        grants=[
-            {"principal": "account users", "privileges": ["READ_VOLUME"]},
-            {"principal": "role-metastore-admins", "privileges": ["WRITE_VOLUME"]},
-        ],
+    volume_yaml = '''
+    name: landing
+    catalog_name: dev
+    schema_name: sources
+    comment: Landing zone for raw data
+    volume_type: EXTERNAL
+    storage_location: abfss://landing@lakehouse-storage.dfs.core.windows.net/
+    grants:
+    - principal: account users
+      privileges:
+      - READ_VOLUME
+    - principal: role-metastore-admins
+      privileges:
+      - WRITE_VOLUME
+    '''
+    volume = models.resources.databricks.Volume.model_validate_yaml(
+        io.StringIO(volume_yaml)
     )
     print(volume.full_name)
     # > dev.sources.landing

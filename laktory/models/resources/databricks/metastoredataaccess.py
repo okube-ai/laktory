@@ -16,7 +16,28 @@ class MetastoreDataAccess(MetastoreDataAccessBase):
     Examples
     --------
     ```py
+    import io
+
+    from laktory import models
+
+    dac_yaml = '''
+    name: prod-azure-mi
+    azure_managed_identity:
+      access_connector_id: /subscriptions/sub-id/resourceGroups/rg/providers/Microsoft.Databricks/accessConnectors/connector
+    grants:
+    - principal: account users
+      privileges:
+      - READ_FILES
+    '''
+    dac = models.resources.databricks.MetastoreDataAccess.model_validate_yaml(
+        io.StringIO(dac_yaml)
+    )
     ```
+
+    References
+    ----------
+
+    * [Databricks Metastore Data Access](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/metastore_data_access)
     """
 
     # Laktory-specific

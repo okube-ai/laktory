@@ -16,24 +16,40 @@ from laktory.models.resources.databricks.permissions import Permissions
 
 class Alert(AlertBase):
     """
-    Databricks SQL Query
+    Databricks SQL Alert
 
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    alert = models.resources.databricks.Alert(
-        display_name="My Alert",
-        parent_path="/alerts",
-        query_id="1",
-        condition={
-            "op": "GREATER_THAN",
-            "operand": {"column": {"name": "value"}},
-            "threshold": {"value": {"double_value": 42.0}},
-        },
+    alert_yaml = '''
+    display_name: high-stock-price
+    parent_path: /alerts
+    query_id: ${resources.query-stock-prices.id}
+    condition:
+      op: GREATER_THAN
+      operand:
+        column:
+          name: close
+      threshold:
+        value:
+          double_value: 500.0
+    access_controls:
+    - group_name: account users
+      permission_level: CAN_VIEW
+    '''
+    alert = models.resources.databricks.Alert.model_validate_yaml(
+        io.StringIO(alert_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [Databricks SQL Alert](https://docs.databricks.com/api/workspace/alerts/create)
     """
 
     access_controls: list[AccessControl] = Field(

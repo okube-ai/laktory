@@ -3,6 +3,8 @@ from pathlib import Path
 
 import laktory as lk
 from laktory._testing import Paths
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 
 paths = Paths(__file__)
 
@@ -20,9 +22,6 @@ def test_workspace_tree():
 
     resources = tree.core_resources
     assert len(resources) == 6
-
-    for r in resources:
-        print(r.source)
 
     r = resources[0]
     assert r.source.endswith("/tests/data/tree/notebooks/listfiles.py")
@@ -64,9 +63,6 @@ def test_workspace_tree_rel():
     resources = tree.core_resources
     assert len(resources) == 6
 
-    for r in resources:
-        print(r.source)
-
     r = resources[0]
     assert r.source == tree.source + "/notebooks/listfiles.py"
 
@@ -107,3 +103,8 @@ def test_access_controls():
     assert isinstance(r1, lk.models.resources.databricks.Permissions)
     assert r1.access_control[0].permission_level == "CAN_READ"
     assert r1.workspace_file_path == "/.laktory/notebooks/listfiles.py"
+
+
+def test_terraform_plan():
+    skip_terraform_plan()
+    plan_resource(get_workspace_tree())

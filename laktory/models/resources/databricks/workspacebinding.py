@@ -13,7 +13,25 @@ class WorkspaceBinding(WorkspaceBindingBase):
     Examples
     --------
     ```py
+    import io
+
+    from laktory import models
+
+    binding_yaml = '''
+    workspace_id: 1234567890
+    securable_name: dev
+    securable_type: catalog
+    binding_type: BINDING_TYPE_READ_WRITE
+    '''
+    binding = models.resources.databricks.WorkspaceBinding.model_validate_yaml(
+        io.StringIO(binding_yaml)
+    )
     ```
+
+    References
+    ----------
+
+    * [Databricks Workspace Binding](https://docs.databricks.com/en/data-governance/unity-catalog/binding.html)
     """
 
     # ----------------------------------------------------------------------- #

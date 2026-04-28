@@ -10,27 +10,36 @@ from laktory.models.resources.databricks.vectorsearchindex_base import (
 
 class VectorSearchIndex(VectorSearchIndexBase):
     """
-    Databricks Warehouse
+    Databricks Vector Search Index
 
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    index = models.resources.databricks.VectorSearchIndex(
-        name="dev.finances.market_news_vs_index",
-        primary_key="id",
-        endpoint_name="default",
-        index_type="DELTA_SYNC",
-        delta_sync_index_spec={
-            "source_table": "dev.finances.market_news",
-            "embedding_vector_columns": [
-                {"name": "embedding", "embedding_dimension": 4095}
-            ],
-            "pipeline_type": "TRIGGERED",
-        },
+    index_yaml = '''
+    name: dev.finance.market_news_vs_index
+    primary_key: id
+    endpoint_name: default
+    index_type: DELTA_SYNC
+    delta_sync_index_spec:
+      source_table: dev.finance.market_news
+      embedding_vector_columns:
+      - name: embedding
+        embedding_dimension: 4095
+      pipeline_type: TRIGGERED
+    '''
+    index = models.resources.databricks.VectorSearchIndex.model_validate_yaml(
+        io.StringIO(index_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [Databricks Vector Search](https://docs.databricks.com/en/generative-ai/vector-search.html)
     """
 
     # access_controls: list[AccessControl] = []

@@ -18,12 +18,20 @@ class Schema(SchemaBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    schema = models.resources.databricks.Schema(
-        catalog_name="dev",
-        name="engineering",
-        grants=[{"principal": "domain-engineering", "privileges": ["SELECT"]}],
+    schema_yaml = '''
+    catalog_name: dev
+    name: engineering
+    grants:
+    - principal: domain-engineering
+      privileges:
+      - SELECT
+    '''
+    schema = models.resources.databricks.Schema.model_validate_yaml(
+        io.StringIO(schema_yaml)
     )
     ```
 

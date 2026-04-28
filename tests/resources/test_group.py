@@ -1,3 +1,5 @@
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import Group
 from laktory.models.resources.databricks.groupmember import GroupMember
 
@@ -10,6 +12,8 @@ group = Group(
         "${resources.user-4.id}",
     ],
 )
+
+group_simple = Group(display_name="role-engineers")
 
 
 def test_group_members():
@@ -27,5 +31,6 @@ def test_group_members():
         assert r.resource_key == f"{r.group_id}-{r.member_id}"
 
 
-if __name__ == "__main__":
-    test_group_members()
+def test_terraform_plan():
+    skip_terraform_plan()
+    plan_resource(group_simple)

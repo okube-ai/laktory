@@ -16,7 +16,23 @@ class MwsNetworkConnectivityConfig(MwsNetworkConnectivityConfigBase):
     Examples
     --------
     ```py
+    import io
+
+    from laktory import models
+
+    ncc_yaml = '''
+    name: ncc-prod
+    region: eastus
+    '''
+    ncc = models.resources.databricks.MwsNetworkConnectivityConfig.model_validate_yaml(
+        io.StringIO(ncc_yaml)
+    )
     ```
+
+    References
+    ----------
+
+    * [Databricks MWS Network Connectivity Config](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_network_connectivity_config)
     """
 
     workspace_bindings: list[MwsNccBinding] = Field(None, description="")

@@ -18,18 +18,28 @@ from laktory.models.resources.databricks.vectorsearchendpoint_base import (
 
 class VectorSearchEndpoint(VectorSearchEndpointBase):
     """
-    Databricks Warehouse
+    Databricks Vector Search Endpoint
 
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    endpoint = models.resources.databricks.VectorSearchEndpoint(
-        endpoint_type="STANDARD",
-        name="default",
+    endpoint_yaml = '''
+    name: default
+    endpoint_type: STANDARD
+    '''
+    endpoint = models.resources.databricks.VectorSearchEndpoint.model_validate_yaml(
+        io.StringIO(endpoint_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [Databricks Vector Search](https://docs.databricks.com/en/generative-ai/vector-search.html)
     """
 
     # ----------------------------------------------------------------------- #

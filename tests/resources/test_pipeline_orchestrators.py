@@ -7,6 +7,8 @@ from pathlib import Path
 import laktory as lk
 from laktory import models
 from laktory._settings import settings
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.enums import DataFrameBackends
 
 data_dirpath = Path(__file__).parent.parent / "data"
@@ -63,7 +65,6 @@ def test_databricks_job():
     # Test job
     job = get_pl_job().orchestrator
     data = job.model_dump(exclude_unset=True)
-    print(data)
     assert data == {
         "name": "pl-job",
         "environment": [
@@ -240,7 +241,6 @@ def test_databricks_job():
     hash_object = hashlib.sha1(table_fullname.encode())
     hash_digest = hash_object.hexdigest()
     assert checkpoint_path.endswith(str(uuid.UUID(hash_digest[:32])))
-    print(data)
     assert data == {
         "dependencies": ["requests>=2.0", "./wheels/lake-0.0.1-py3-none-any.whl"],
         "imports": ["re"],
@@ -634,7 +634,6 @@ def test_databricks_job_execute(mocker):
     mocker.patch.object(sys, "argv", test_args)
 
     # Run function
-    print(lk.models.pipeline)
     lk.models.pipeline._execute()
 
 
@@ -670,7 +669,6 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
     )
     data = sink_source.model_dump()
     assert data.pop("dataframe_backend") == DataFrameBackends.PYSPARK
-    print(data)
     assert data == {
         "as_stream": False,
         "drop_duplicates": None,
@@ -688,7 +686,6 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
     }
 
     data = pl.orchestrator.model_dump(mode="json")
-    print(data)
     assert data == {
         "access_controls": [
             {
@@ -787,7 +784,6 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
     assert dltp.options.depends_on == ["${resources.dlt-pipeline-pl-dlt}"]
 
     data = dlt.config_file.content_dict
-    print(data)
     assert data == {
         "name": "pl-dlt",
         "nodes": [
@@ -1005,3 +1001,15 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
 def test_databricks_pipeline_execute():
     # TODO
     pass
+
+
+def test_databricks_job_terraform_plan():
+    skip_terraform_plan()
+    pl = get_pl_job()
+    plan_resource(pl.orchestrator)
+
+
+def test_databricks_pipeline_terraform_plan():
+    skip_terraform_plan()
+    pl = get_pl_dlt()
+    plan_resource(pl.orchestrator)

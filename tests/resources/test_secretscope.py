@@ -1,3 +1,5 @@
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import SecretScope
 
 scope = SecretScope(
@@ -15,3 +17,8 @@ def test_secret_scope():
     s2 = scope.additional_core_resources[1]
     assert s1.resource_name == "secret-scope-my-scope-s1"
     assert s2.resource_name == "secret-scope-my-scope-s2"
+
+
+def test_terraform_plan():
+    skip_terraform_plan()
+    plan_resource(scope)

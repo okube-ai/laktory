@@ -28,26 +28,32 @@ class SecretScope(SecretScopeBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    ss = models.resources.databricks.SecretScope(
-        name="azure",
-        secrets=[
-            {
-                "key": "keyvault-url",
-                "string_value": "https://my-secrets.vault.azure.net/",
-            },
-            {
-                "key": "client-id",
-                "string_value": "f461daa2-c281-4166-bc3e-538b90223184",
-            },
-        ],
-        permissions=[
-            {"permission": "READ", "principal": "role-metastore-admins"},
-            {"permission": "READ", "principal": "role-workspace-admins"},
-        ],
+    scope_yaml = '''
+    name: azure
+    secrets:
+    - key: keyvault-url
+      string_value: https://my-secrets.vault.azure.net/
+    - key: client-id
+      string_value: f461daa2-c281-4166-bc3e-538b90223184
+    permissions:
+    - permission: READ
+      principal: role-metastore-admins
+    - permission: READ
+      principal: role-workspace-admins
+    '''
+    scope = models.resources.databricks.SecretScope.model_validate_yaml(
+        io.StringIO(scope_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [Databricks Secret Scope](https://docs.databricks.com/en/security/secrets/secret-scopes.html)
     """
 
     permissions: list[SecretScopePermission] = Field(

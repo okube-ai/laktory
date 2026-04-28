@@ -1,3 +1,5 @@
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import WorkspaceBinding
 
 workspace_binding = WorkspaceBinding(
@@ -9,7 +11,6 @@ workspace_binding = WorkspaceBinding(
 
 
 def test_workspace_binding():
-    print(workspace_binding)
     assert workspace_binding.securable_name == "credential"
     assert workspace_binding.workspace_id == "11111111"
     assert workspace_binding.securable_type == "catalog"
@@ -18,5 +19,6 @@ def test_workspace_binding():
     assert workspace_binding.resource_name == "workspace-binding-credential-11111111"
 
 
-if __name__ == "__main__":
-    test_workspace_binding()
+def test_terraform_plan():
+    skip_terraform_plan()
+    plan_resource(workspace_binding)

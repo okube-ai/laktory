@@ -1,3 +1,5 @@
+from laktory._testing import plan_resource
+from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import VectorSearchIndex
 
 vector_search_index = VectorSearchIndex(
@@ -16,10 +18,10 @@ vector_search_index = VectorSearchIndex(
 
 
 def test_vector_search_index():
-    print(vector_search_index)
     assert vector_search_index.name == "dev.finances.market_news_vs_index"
     assert vector_search_index.delta_sync_index_spec.pipeline_type == "TRIGGERED"
 
 
-if __name__ == "__main__":
-    test_vector_search_index()
+def test_terraform_plan():
+    skip_terraform_plan()
+    plan_resource(vector_search_index)
