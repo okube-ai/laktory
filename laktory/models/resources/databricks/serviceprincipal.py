@@ -30,20 +30,28 @@ class ServicePrincipal(ServicePrincipalBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    sp = models.resources.databricks.ServicePrincipal(
-        display_name="neptune",
-        application_id="baf147d1-a856-4de0-a570-8a56dbd7e234",
-        group_ids=[
-            "${resources.group-role-engineer.id}",
-            "${resources.group-role-analyst.id}",
-            "${resources.group-domain-finance.id}",
-            "${resources.group-domain-engineering.id}",
-        ],
-        roles=["account_admin"],
+    sp_yaml = '''
+    display_name: neptune
+    application_id: baf147d1-a856-4de0-a570-8a56dbd7e234
+    group_ids:
+    - ${resources.group-role-engineer.id}
+    - ${resources.group-domain-finance.id}
+    roles:
+    - account_admin
+    '''
+    sp = models.resources.databricks.ServicePrincipal.model_validate_yaml(
+        io.StringIO(sp_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [Databricks Service Principal](https://docs.databricks.com/en/administration-guide/users-groups/service-principals.html)
     """
 
     lookup_existing: ServicePrincipalLookup = Field(

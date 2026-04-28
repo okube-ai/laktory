@@ -22,7 +22,30 @@ class Metastore(MetastoreBase):
     Examples
     --------
     ```py
+    import io
+
+    from laktory import models
+
+    metastore_yaml = '''
+    name: prod
+    region: eastus
+    grants:
+    - principal: account users
+      privileges:
+      - CREATE_CATALOG
+    workspace_assignments:
+    - workspace_id: 1234567890
+      default_catalog_name: dev
+    '''
+    metastore = models.resources.databricks.Metastore.model_validate_yaml(
+        io.StringIO(metastore_yaml)
+    )
     ```
+
+    References
+    ----------
+
+    * [Databricks Metastore](https://docs.databricks.com/en/data-governance/unity-catalog/create-metastore.html)
     """
 
     grant: Union[MetastoreGrant, list[MetastoreGrant]] = Field(

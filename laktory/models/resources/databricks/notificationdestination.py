@@ -11,13 +11,25 @@ class NotificationDestination(NotificationDestinationBase):
     Examples
     --------
     ```py
-    import laktory as lk
+    import io
 
-    nd_slack = lk.models.resources.databricks.NotificationDestination(
-        display_name="slack",
-        config={"slack": {"url": "slack.webhook.com"}},
+    from laktory import models
+
+    nd_yaml = '''
+    display_name: slack
+    config:
+      slack:
+        url: https://hooks.slack.com/services/T00000000/B00000000/XXXX
+    '''
+    nd = models.resources.databricks.NotificationDestination.model_validate_yaml(
+        io.StringIO(nd_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [Databricks Notification Destination](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/notification_destination)
     """
 
     # ----------------------------------------------------------------------- #

@@ -15,7 +15,24 @@ class MetastoreAssignment(MetastoreAssignmentBase):
     Examples
     --------
     ```py
+    import io
+
+    from laktory import models
+
+    assignment_yaml = '''
+    metastore_id: ${resources.metastore-prod.metastore_id}
+    workspace_id: 1234567890
+    default_catalog_name: dev
+    '''
+    assignment = models.resources.databricks.MetastoreAssignment.model_validate_yaml(
+        io.StringIO(assignment_yaml)
+    )
     ```
+
+    References
+    ----------
+
+    * [Databricks Metastore Assignment](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/metastore_assignment)
     """
 
     # Laktory injects metastore_id from the parent Metastore resource

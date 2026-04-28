@@ -44,18 +44,26 @@ class User(UserBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    u = models.resources.databricks.User(
-        user_name="john.doe@okube.ai",
-        display_name="John Doe",
-        group_ids=[
-            "${resources.group-role-engineer.id}",
-            "${resources.group-domain-finance.id}",
-        ],
-        roles=["account_admin"],
-    )
+    user_yaml = '''
+    user_name: john.doe@okube.ai
+    display_name: John Doe
+    group_ids:
+    - ${resources.group-role-engineer.id}
+    - ${resources.group-domain-finance.id}
+    roles:
+    - account_admin
+    '''
+    user = models.resources.databricks.User.model_validate_yaml(io.StringIO(user_yaml))
     ```
+
+    References
+    ----------
+
+    * [Databricks User](https://docs.databricks.com/en/administration-guide/users-groups/users.html)
     """
 
     group_ids: list[str] = Field(

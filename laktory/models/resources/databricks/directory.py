@@ -19,18 +19,24 @@ class Directory(DirectoryBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    d = models.resources.databricks.Directory(path="/queries/views")
-    print(d)
+    dir_yaml = '''
+    path: /queries/views
     '''
-    resource_name_=None options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, import_=None, moved_from=None) lookup_existing=None variables={} path='/queries/views' delete_recursive=None object_id=None
-    '''
+    d = models.resources.databricks.Directory.model_validate_yaml(io.StringIO(dir_yaml))
     print(d.resource_key)
     # > /queries/views
     print(d.resource_name)
     # > directory-queries-views
     ```
+
+    References
+    ----------
+
+    * [Databricks Directory](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/directory)
     """
 
     lookup_existing: DirectoryLookup = Field(

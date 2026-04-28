@@ -18,31 +18,32 @@ class ClusterPolicy(ClusterPolicyBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    cluster = models.resources.databricks.ClusterPolicy(
-        name="okube",
-        definition={
-            "dbus_per_hour": {
-                "type": "range",
-                "maxValue": 10,
-            },
-            "autotermination_minutes": {"type": "fixed", "value": 30, "hidden": True},
-            "custom_tags.team": {
-                "type": "fixed",
-                "value": "okube",
-            },
-        },
-        libraries=[
-            {
-                "pypi": {
-                    "package": "laktory==0.5.0",
-                }
-            }
-        ],
-        access_controls=[
-            {"permission_level": "CAN_USE", "group_name": "account users"}
-        ],
+    policy_yaml = '''
+    name: okube
+    definition:
+      dbus_per_hour:
+        type: range
+        maxValue: 10
+      autotermination_minutes:
+        type: fixed
+        value: 30
+        hidden: true
+      custom_tags.team:
+        type: fixed
+        value: okube
+    libraries:
+    - pypi:
+        package: laktory==0.5.0
+    access_controls:
+    - group_name: account users
+      permission_level: CAN_USE
+    '''
+    policy = models.resources.databricks.ClusterPolicy.model_validate_yaml(
+        io.StringIO(policy_yaml)
     )
     ```
 

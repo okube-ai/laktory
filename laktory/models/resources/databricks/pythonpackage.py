@@ -25,12 +25,17 @@ class PythonPackage(BaseModel, TerraformResource):
     Examples
     --------
     ```py
-    import laktory as lk
+    import io
 
-    pp = lk.models.resources.databricks.PythonPackage(
-        package_name="lake",
-        config_filepath="lake/pyproject.toml",
-        dirpath="/wheels/",
+    from laktory import models
+
+    pkg_yaml = '''
+    package_name: lake
+    config_filepath: lake/pyproject.toml
+    dirpath: /wheels/
+    '''
+    pkg = models.resources.databricks.PythonPackage.model_validate_yaml(
+        io.StringIO(pkg_yaml)
     )
     ```
     """

@@ -20,27 +20,25 @@ class WorkspaceFile(WorkspaceFileBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    file = models.resources.databricks.WorkspaceFile(
-        source="./notebooks/dlt/dlt_laktory_pl.py",
-    )
-    print(file.path)
-    # > /.laktory/dlt_laktory_pl.py
-
-    file = models.resources.databricks.WorkspaceFile(
-        source="./notebooks/dlt/dlt_laktory_pl.py",
-    )
-    print(file.path)
-    # > /.laktory/dlt_laktory_pl.py
-
-    file = models.resources.databricks.WorkspaceFile(
-        source="./notebooks/dlt/dlt_laktory_pl.py",
-        dirpath="notebooks/dlt/",
+    file_yaml = '''
+    source: ./notebooks/dlt/dlt_laktory_pl.py
+    dirpath: notebooks/dlt/
+    '''
+    file = models.resources.databricks.WorkspaceFile.model_validate_yaml(
+        io.StringIO(file_yaml)
     )
     print(file.path)
     # > /.laktory/notebooks/dlt/dlt_laktory_pl.py
     ```
+
+    References
+    ----------
+
+    * [Databricks Workspace File](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/workspace_file)
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")

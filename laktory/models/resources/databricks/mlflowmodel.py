@@ -21,23 +21,31 @@ class MLflowModel(MlflowModelBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    mlmodel = models.resources.databricks.MLflowModel(
-        name="My MLflow Model",
-        description="My MLflow model description",
-        tags=[
-            {"key": "key1", "value": "value1"},
-            {"key": "key2", "value": "value2"},
-        ],
-        access_controls=[
-            {
-                "group_name": "account users",
-                "permission_level": "CAN_MANAGE_PRODUCTION_VERSIONS",
-            }
-        ],
+    model_yaml = '''
+    name: my-mlflow-model
+    description: My MLflow model description
+    tags:
+    - key: key1
+      value: value1
+    - key: key2
+      value: value2
+    access_controls:
+    - group_name: account users
+      permission_level: CAN_MANAGE_PRODUCTION_VERSIONS
+    '''
+    mlmodel = models.resources.databricks.MLflowModel.model_validate_yaml(
+        io.StringIO(model_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [MLflow Model Registry](https://mlflow.org/docs/latest/model-registry.html)
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")

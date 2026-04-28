@@ -272,15 +272,25 @@ class QualityMonitor(QualityMonitorBase):
     Examples
     --------
     ```py
-    import laktory as lk
+    import io
 
-    qm = lk.models.resources.databricks.QualityMonitor(
-        assets_dir="/.laktory/qualitymonitors",
-        output_schema_name="dev.monitoring",
-        table_name="dev.slv_stock_prices",
-        snapshot={},
+    from laktory import models
+
+    qm_yaml = '''
+    assets_dir: /.laktory/qualitymonitors
+    output_schema_name: dev.monitoring
+    table_name: dev.finance.slv_stock_prices
+    snapshot: {}
+    '''
+    qm = models.resources.databricks.QualityMonitor.model_validate_yaml(
+        io.StringIO(qm_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [Databricks Lakehouse Monitoring](https://docs.databricks.com/en/lakehouse-monitoring/index.html)
     """
 
     output_schema_name_: str = Field(

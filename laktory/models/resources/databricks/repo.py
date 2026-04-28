@@ -26,16 +26,19 @@ class Repo(RepoBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    repo = models.resources.databricks.Repo(
-        url="https://github.com/okube-ai/laktory",
-        path="/Users/olivier.soucy@okube.ai/laktory-repo",
-        branch="main",
-        access_controls=[
-            {"permission_level": "CAN_READ", "group_name": "account users"}
-        ],
-    )
+    repo_yaml = '''
+    url: https://github.com/okube-ai/laktory
+    path: /Users/olivier.soucy@okube.ai/laktory-repo
+    branch: main
+    access_controls:
+    - group_name: account users
+      permission_level: CAN_READ
+    '''
+    repo = models.resources.databricks.Repo.model_validate_yaml(io.StringIO(repo_yaml))
     ```
 
     References

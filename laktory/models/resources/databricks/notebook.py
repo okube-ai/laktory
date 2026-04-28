@@ -31,27 +31,28 @@ class Notebook(NotebookBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    notebook = models.resources.databricks.Notebook(
-        source="./notebooks/dlt/dlt_laktory_pl.py",
-    )
-    print(notebook.path)
-    # > /.laktory/dlt_laktory_pl.py
-
-    notebook = models.resources.databricks.Notebook(
-        source="./notebooks/dlt/dlt_laktory_pl.py",
-    )
-    print(notebook.path)
-    # > /.laktory/dlt_laktory_pl.py
-
-    notebook = models.resources.databricks.Notebook(
-        source="./notebooks/dlt/dlt_laktory_pl.py",
-        dirpath="notebooks/dlt/",
+    notebook_yaml = '''
+    source: ./notebooks/dlt/dlt_laktory_pl.py
+    dirpath: notebooks/dlt/
+    access_controls:
+    - group_name: role-engineers
+      permission_level: CAN_RUN
+    '''
+    notebook = models.resources.databricks.Notebook.model_validate_yaml(
+        io.StringIO(notebook_yaml)
     )
     print(notebook.path)
     # > /.laktory/notebooks/dlt/dlt_laktory_pl.py
     ```
+
+    References
+    ----------
+
+    * [Databricks Notebook](https://docs.databricks.com/en/notebooks/index.html)
     """
 
     access_controls: list[AccessControl] = Field(

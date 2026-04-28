@@ -6,24 +6,34 @@ from laktory.models.resources.databricks.mlflowwebhook_base import MlflowWebhook
 
 class MLflowWebhook(MlflowWebhookBase):
     """
-    MLflow Model
+    MLflow Webhook
 
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    mlwebhook = models.resources.databricks.MLflowWebhook(
-        events=["TRANSITION_REQUEST_CREATED"],
-        description="Databricks Job webhook trigger",
-        status="ACTIVE",
-        job_spec={
-            "job_id": "some_id",
-            "workspace_url": "some_url",
-            "access_token": "some_token",
-        },
+    webhook_yaml = '''
+    events:
+    - TRANSITION_REQUEST_CREATED
+    description: Databricks Job webhook trigger
+    status: ACTIVE
+    job_spec:
+      job_id: some_id
+      workspace_url: https://adb-1234567890.azuredatabricks.net
+      access_token: some_token
+    '''
+    webhook = models.resources.databricks.MLflowWebhook.model_validate_yaml(
+        io.StringIO(webhook_yaml)
     )
     ```
+
+    References
+    ----------
+
+    * [MLflow Webhook](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mlflow_webhook)
     """
 
     model_config = ConfigDict(protected_namespaces=())

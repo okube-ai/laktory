@@ -17,10 +17,16 @@ class AccessControl(BaseModel):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    p = models.resources.databricks.AccessControl(
-        group_name="role-engineers", permission_level="READ"
+    ac_yaml = '''
+    group_name: role-engineers
+    permission_level: CAN_READ
+    '''
+    ac = models.resources.databricks.AccessControl.model_validate_yaml(
+        io.StringIO(ac_yaml)
     )
     ```
     """

@@ -21,15 +21,17 @@ class WorkspaceTree(BaseModel, TerraformResource):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    tree = models.resources.databricks.WorkspaceTree(
-        source="./source/",
+    tree_yaml = '''
+    source: ./source/
+    path: /.laktory/source
+    '''
+    tree = models.resources.databricks.WorkspaceTree.model_validate_yaml(
+        io.StringIO(tree_yaml)
     )
-    print(tree)
-    '''
-    resource_name_=None options=ResourceOptions(variables={}, is_enabled=True, depends_on=[], provider=None, ignore_changes=None, import_=None, moved_from=None) lookup_existing=None variables={} access_controls=[] path=None source='./source/'
-    '''
     ```
     """
 

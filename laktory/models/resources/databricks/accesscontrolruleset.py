@@ -8,9 +8,30 @@ class AccessControlRuleSet(AccessControlRuleSetBase):
     """
     Databricks Access Control Rule Set
 
+    Examples
+    --------
+    ```py
+    import io
+
+    from laktory import models
+
+    ruleset_yaml = '''
+    name: accounts/acct-id/groups/group-id
+    grant_rules:
+    - role: roles/servicePrincipal.user
+      principals:
+      - users/user1@okube.ai
+      - serviceAccounts/neptune@acct-id.iam.gserviceaccount.com
+    '''
+    ruleset = models.resources.databricks.AccessControlRuleSet.model_validate_yaml(
+        io.StringIO(ruleset_yaml)
+    )
+    ```
+
     References
     ----------
-    * [terraform](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/access_control_rule_set)
+
+    * [Databricks Access Control Rule Set](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/access_control_rule_set)
     """
 
     # ----------------------------------------------------------------------- #

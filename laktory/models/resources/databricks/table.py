@@ -25,11 +25,22 @@ class Table(TableBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    table = models.resources.databricks.Table(
-        name="slv_stock_prices",
-        table_type="MANAGED",
+    table_yaml = '''
+    name: slv_stock_prices
+    catalog_name: dev
+    schema_name: finance
+    table_type: MANAGED
+    grants:
+    - principal: account users
+      privileges:
+      - SELECT
+    '''
+    table = models.resources.databricks.Table.model_validate_yaml(
+        io.StringIO(table_yaml)
     )
     ```
 

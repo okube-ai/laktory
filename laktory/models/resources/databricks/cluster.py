@@ -23,27 +23,29 @@ class Cluster(ClusterBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    cluster = models.resources.databricks.Cluster(
-        name="default",
-        spark_version="16.3.x-scala2.12",
-        data_security_mode="USER_ISOLATION",
-        node_type_id="Standard_DS3_v2",
-        autoscale={
-            "min_workers": 1,
-            "max_workers": 4,
-        },
-        num_workers=0,
-        autotermination_minutes=30,
-        libraries=[{"pypi": {"package": "laktory==0.0.23"}}],
-        access_controls=[
-            {
-                "group_name": "role-engineers",
-                "permission_level": "CAN_RESTART",
-            }
-        ],
-        is_pinned=True,
+    cluster_yaml = '''
+    name: default
+    spark_version: 16.3.x-scala2.12
+    data_security_mode: USER_ISOLATION
+    node_type_id: Standard_DS3_v2
+    autoscale:
+      min_workers: 1
+      max_workers: 4
+    autotermination_minutes: 30
+    libraries:
+    - pypi:
+        package: laktory==0.0.23
+    access_controls:
+    - group_name: role-engineers
+      permission_level: CAN_RESTART
+    is_pinned: true
+    '''
+    cluster = models.resources.databricks.Cluster.model_validate_yaml(
+        io.StringIO(cluster_yaml)
     )
     ```
 

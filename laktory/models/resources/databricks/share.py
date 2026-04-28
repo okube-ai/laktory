@@ -32,7 +32,27 @@ class Share(ShareBase):
     Examples
     --------
     ```py
+    import io
+
+    from laktory import models
+
+    share_yaml = '''
+    name: finance-share
+    comment: Share for the finance domain data
+    objects:
+    - name: dev.finance.slv_stock_prices
+      data_object_type: TABLE
+      comment: Silver stock prices table
+    '''
+    share = models.resources.databricks.Share.model_validate_yaml(
+        io.StringIO(share_yaml)
+    )
     ```
+
+    References
+    ----------
+
+    * [Databricks Delta Sharing Share](https://docs.databricks.com/en/data-sharing/create-share.html)
     """
 
     provider_config: ShareProviderConfig = Field(None, description="Provider config")

@@ -30,27 +30,25 @@ class DbfsFile(DbfsFileBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    file = models.resources.databricks.DbfsFile(
-        source="./data/stock_prices/prices.json",
-    )
-    print(file.path)
-    # > /prices.json
-
-    file = models.resources.databricks.DbfsFile(
-        source="./data/stock_prices/prices.json",
-    )
-    print(file.path)
-    # > /prices.json
-
-    file = models.resources.databricks.DbfsFile(
-        source="./data/stock_prices/prices.json",
-        dirpath="stock_prices/",
+    file_yaml = '''
+    source: ./data/stock_prices/prices.json
+    dirpath: stock_prices/
+    '''
+    file = models.resources.databricks.DbfsFile.model_validate_yaml(
+        io.StringIO(file_yaml)
     )
     print(file.path)
     # > /stock_prices/prices.json
     ```
+
+    References
+    ----------
+
+    * [Databricks DBFS File](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/dbfs_file)
     """
 
     access_controls: list[AccessControl] = Field(

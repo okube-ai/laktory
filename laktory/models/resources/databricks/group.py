@@ -26,10 +26,25 @@ class Group(GroupBase):
     Examples
     --------
     ```py
+    import io
+
     from laktory import models
 
-    d = models.resources.databricks.Group(display_name="role-engineers")
+    group_yaml = '''
+    display_name: role-engineers
+    member_ids:
+    - ${resources.user-john.id}
+    - ${resources.sp-neptune.id}
+    '''
+    group = models.resources.databricks.Group.model_validate_yaml(
+        io.StringIO(group_yaml)
+    )
     ```
+
+    References
+    ----------
+
+    * [Databricks Group](https://docs.databricks.com/en/administration-guide/users-groups/groups.html)
     """
 
     lookup_existing: GroupLookup = Field(

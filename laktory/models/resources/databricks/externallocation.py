@@ -16,7 +16,33 @@ class ExternalLocation(ExternalLocationBase):
     Examples
     --------
     ```py
+    import io
+
+    from laktory import models
+
+    location_yaml = '''
+    name: landing
+    credential_name: prod-azure-mi
+    url: abfss://landing@lakehouse-storage.dfs.core.windows.net/
+    comment: External location for raw landing data
+    grants:
+    - principal: account users
+      privileges:
+      - READ_FILES
+    - principal: role-data-engineers
+      privileges:
+      - READ_FILES
+      - WRITE_FILES
+    '''
+    location = models.resources.databricks.ExternalLocation.model_validate_yaml(
+        io.StringIO(location_yaml)
+    )
     ```
+
+    References
+    ----------
+
+    * [Databricks External Location](https://docs.databricks.com/en/connect/unity-catalog/external-locations.html)
     """
 
     grant: Union[ExternalLocationGrant, list[ExternalLocationGrant]] = Field(
