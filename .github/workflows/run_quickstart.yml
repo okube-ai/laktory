@@ -18,7 +18,7 @@ on:
       destroy:
         type: boolean
         description: 'Destroy stack after deployment'
-        default: true
+        default: false
 env:
 
   LAKTORY_CLI_RAISE_EXTERNAL_EXCEPTIONS: "true"
