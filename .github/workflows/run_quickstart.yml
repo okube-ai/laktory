@@ -79,7 +79,7 @@ jobs:
       - name: laktory init
         run: |
           source ../.venv/bin/activate
-          laktory init
+          laktory init --options -reconfigure
         working-directory: ${{ env.CWD }}
 
       - name: laktory preview
