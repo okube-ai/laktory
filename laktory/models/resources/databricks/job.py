@@ -1,3 +1,4 @@
+import inspect
 from typing import Any
 
 from pydantic import Field
@@ -15,6 +16,18 @@ from laktory.models.resources.databricks.job_base import JobTask
 from laktory.models.resources.databricks.job_base import JobTaskForEachTaskTask
 from laktory.models.resources.databricks.permissions import Permissions
 
+_fvdi_supports_json_schema_input_type = (
+    "json_schema_input_type"
+    in inspect.signature(FieldValidatorDecoratorInfo.__init__).parameters
+)
+
+
+def _make_field_validator_info(field_name):
+    kwargs = dict(fields=(field_name,), mode="after", check_fields=None)
+    if _fvdi_supports_json_schema_input_type:
+        kwargs["json_schema_input_type"] = PydanticUndefined
+    return FieldValidatorDecoratorInfo(**kwargs)
+
 
 def _inject_field_validator(model_cls, field_name, method_name, func):
     """Duck-type a field validator onto an existing Pydantic model class."""
@@ -24,12 +37,7 @@ def _inject_field_validator(model_cls, field_name, method_name, func):
         cls_var_name=method_name,
         func=classmethod(func).__get__(model_cls),
         shim=None,
-        info=FieldValidatorDecoratorInfo(
-            fields=(field_name,),
-            mode="after",
-            check_fields=None,
-            json_schema_input_type=PydanticUndefined,
-        ),
+        info=_make_field_validator_info(field_name),
     )
     model_cls.model_rebuild(force=True)
 
