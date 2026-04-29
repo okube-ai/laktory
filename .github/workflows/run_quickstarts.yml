@@ -24,6 +24,7 @@ jobs:
       cwd:  ./run_quickstart_unity_catalog
       template: unity-catalog
       run_workflows: false
+      destroy: true
     secrets: inherit
 
 #  laktory-quickstart-workspace:
