@@ -5,7 +5,9 @@ import re
 
 
 def main(branch_name: str, stack_root: str):
-    for dirpath, dirnames, filenames in os.walk(stack_root):
+    stack_root = pathlib.Path(stack_root)
+
+    for dirpath, dirnames, filenames in os.walk(stack_root.as_posix()):
         dirpath = pathlib.Path(dirpath)
 
         # Update Laktory Version
@@ -42,7 +44,7 @@ def main(branch_name: str, stack_root: str):
             "          resource_group_name: o3-rg-laktory-dev\n",
             "          storage_account_name: o3stglaktorydev\n",
             "          container_name: terraform\n",
-            f'          key: "states/{dirpath.name}/terraform.tfstate"\n',
+            f'          key: "states/{stack_root.name}/terraform.tfstate"\n',
             "          use_azuread_auth: true\n",
             "          client_id: ${vars.AZURE_CLIENT_ID}\n",
             "          client_secret: ${vars.AZURE_CLIENT_SECRET}\n",
