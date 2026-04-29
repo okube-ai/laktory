@@ -35,19 +35,19 @@ def main(branch_name: str, stack_root: str):
         # Update terraform backend
         filepath = dirpath / "stack.yaml"
         newlines = [
-            "",
-            "terraform:",
-            "   backend:",
-            "      azurerm:",
-            "          resource_group_name: o3-rg-laktory-dev",
-            "          storage_account_name: o3stglaktorydev",
-            "          container_name: terraform",
-            f'          key: "states/{dirpath.name}/terraform.tfstate"',
-            "          use_azuread_auth: true",
-            "          client_id: ${vars.AZURE_CLIENT_ID}",
-            "          client_secret: ${vars.AZURE_CLIENT_SECRET}",
-            "          tenant_id: ${vars.AZURE_TENANT_ID}",
-            "          subscription_id: c8b10a15-5bb2-4c3f-988a-8ec6e60614bb",
+            "\n",
+            "terraform:\n",
+            "   backend:\n",
+            "      azurerm:\n",
+            "          resource_group_name: o3-rg-laktory-dev\n",
+            "          storage_account_name: o3stglaktorydev\n",
+            "          container_name: terraform\n",
+            f'          key: "states/{dirpath.name}/terraform.tfstate"\n',
+            "          use_azuread_auth: true\n",
+            "          client_id: ${vars.AZURE_CLIENT_ID}\n",
+            "          client_secret: ${vars.AZURE_CLIENT_SECRET}\n",
+            "          tenant_id: ${vars.AZURE_TENANT_ID}\n",
+            "          subscription_id: c8b10a15-5bb2-4c3f-988a-8ec6e60614bb\n",
         ]
 
         with open(filepath, "r") as fp:
