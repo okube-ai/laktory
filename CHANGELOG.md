@@ -1,6 +1,16 @@
 # Release History
 
-## [0.11.0] - Unreleased
+## [0.11.1] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.11.0] - 2026-04-29
 ### Added
 * Build tooling (`scripts/build_resources/`) to auto-generate Databricks resource models from the Terraform provider schema
 ### Updated
