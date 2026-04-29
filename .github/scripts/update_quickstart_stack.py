@@ -7,6 +7,8 @@ import re
 def main(branch_name: str, stack_root: str):
     stack_root = pathlib.Path(stack_root)
 
+    print(f"Updating stack files at {stack_root}")
+
     for dirpath, dirnames, filenames in os.walk(stack_root.as_posix()):
         dirpath = pathlib.Path(dirpath)
 
@@ -35,7 +37,6 @@ def main(branch_name: str, stack_root: str):
                     fp.write(data)
 
         # Update terraform backend
-        filepath = dirpath / "stack.yaml"
         newlines = [
             "\n",
             "terraform:\n",
@@ -52,13 +53,12 @@ def main(branch_name: str, stack_root: str):
             "          subscription_id: c8b10a15-5bb2-4c3f-988a-8ec6e60614bb\n",
         ]
 
+        filepath = dirpath / "stack.yaml"
         with open(filepath, "r") as fp:
             lines = fp.readlines()
 
-        lines = lines + newlines
-
         with open(filepath, "w") as fp:
-            fp.writelines(lines)
+            fp.writelines(lines + newlines)
 
 
 if __name__ == "__main__":
