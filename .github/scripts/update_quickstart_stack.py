@@ -63,6 +63,18 @@ def main(branch_name: str, template: str, stack_root: str):
             with open(filepath, "w") as fp:
                 fp.writelines(lines + newlines)
 
+            for line in lines + newlines:
+                print(line)
+
+            print()
+            for k in [
+                "AZURE_CLIENT_ID",
+                "AZURE_CLIENT_SECRET",
+                "AZURE_TENANT_ID",
+            ]:
+                value = os.getenv(k)
+                print(k, "___".join(value))
+
 
 if __name__ == "__main__":
     # Parse arguments
