@@ -64,7 +64,7 @@ jobs:
       - name: run quickstart
         run: |
           source ../.venv/bin/activate
-          laktory quickstart -t ${{ inputs.template }} -b terraform
+          laktory quickstart -t ${{ inputs.template }}
         working-directory: ${{ env.CWD }}
 
       - name: update stack
