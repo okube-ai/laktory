@@ -8,6 +8,7 @@ def main(branch_name: str, stack_root: str):
     for dirpath, dirnames, filenames in os.walk(stack_root):
         dirpath = pathlib.Path(dirpath)
 
+        # Update Laktory Version
         for filename in filenames:
             filepath = dirpath / filename
 
@@ -30,6 +31,32 @@ def main(branch_name: str, stack_root: str):
 
                 with open(filepath, "w") as fp:
                     fp.write(data)
+
+        # Update terraform backend
+        filepath = dirpath / "stack.yaml"
+        newlines = [
+            "",
+            "terraform:",
+            "   backend:",
+            "      azurerm:",
+            "          resource_group_name: o3-rg-laktory-dev",
+            "          storage_account_name: o3stglaktorydev",
+            "          container_name: terraform",
+            f'          key: "states/{dirpath.name}/terraform.tfstate"',
+            "          use_azuread_auth: true",
+            "          client_id: ${vars.AZURE_CLIENT_ID}",
+            "          client_secret: ${vars.AZURE_CLIENT_SECRET}",
+            "          tenant_id: ${vars.AZURE_TENANT_ID}",
+            "          subscription_id: c8b10a15-5bb2-4c3f-988a-8ec6e60614bb",
+        ]
+
+        with open(filepath, "r") as fp:
+            lines = fp.readlines()
+
+        lines = lines + newlines
+
+        with open(filepath, "w") as fp:
+            fp.writelines(lines)
 
 
 if __name__ == "__main__":
