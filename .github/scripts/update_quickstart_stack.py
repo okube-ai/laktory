@@ -34,46 +34,34 @@ def main(branch_name: str, template: str, stack_root: str):
                 with open(filepath, "w") as fp:
                     fp.write(data)
 
-        # Update terraform backend
-        if template in [
-            "unity-catalog",
-            "workspace",
-            "workflows",
-        ]:
-            newlines = [
-                "\n",
-                "terraform:\n",
-                "   backend:\n",
-                "      azurerm:\n",
-                "          resource_group_name: o3-rg-laktory-dev\n",
-                "          storage_account_name: o3stglaktorydev\n",
-                "          container_name: terraform\n",
-                f'          key: "states/{template}/terraform.tfstate"\n',
-                "          use_azuread_auth: true\n",
-                "          client_id: ${vars.AZURE_CLIENT_ID}\n",
-                "          client_secret: ${vars.AZURE_CLIENT_SECRET}\n",
-                "          tenant_id: ${vars.AZURE_TENANT_ID}\n",
-                "          subscription_id: c8b10a15-5bb2-4c3f-988a-8ec6e60614bb\n",
-            ]
+    # Update terraform backend
+    if template in [
+        "unity-catalog",
+        "workspace",
+        "workflows",
+    ]:
+        newlines = [
+            "\n",
+            "terraform:\n",
+            "   backend:\n",
+            "      azurerm:\n",
+            "          resource_group_name: o3-rg-laktory-dev\n",
+            "          storage_account_name: o3stglaktorydev\n",
+            "          container_name: terraform\n",
+            f'          key: "states/{template}/terraform.tfstate"\n',
+            "          use_azuread_auth: true\n",
+            "          client_id: ${vars.AZURE_CLIENT_ID}\n",
+            "          client_secret: ${vars.AZURE_CLIENT_SECRET}\n",
+            "          tenant_id: ${vars.AZURE_TENANT_ID}\n",
+            "          subscription_id: c8b10a15-5bb2-4c3f-988a-8ec6e60614bb\n",
+        ]
 
-            filepath = stack_root / "stack.yaml"
-            with open(filepath, "r") as fp:
-                lines = fp.readlines()
+        filepath = stack_root / "stack.yaml"
+        with open(filepath, "r") as fp:
+            lines = fp.readlines()
 
-            with open(filepath, "w") as fp:
-                fp.writelines(lines + newlines)
-
-            for line in lines + newlines:
-                print(line)
-
-            print()
-            for k in [
-                "AZURE_CLIENT_ID",
-                "AZURE_CLIENT_SECRET",
-                "AZURE_TENANT_ID",
-            ]:
-                value = os.getenv(k)
-                print(k, "___".join(value))
+        with open(filepath, "w") as fp:
+            fp.writelines(lines + newlines)
 
 
 if __name__ == "__main__":
