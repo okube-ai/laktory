@@ -117,7 +117,7 @@ jobs:
         working-directory: ${{ env.CWD }}
 
       - name: laktory destroy
-        if: ${{ inputs.destroy }}
+        if: ${{ inputs.destroy && always() }}
         run: |
           source ../.venv/bin/activate
           laktory destroy -y
