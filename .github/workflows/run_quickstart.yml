@@ -11,16 +11,16 @@ on:
         type: string
         description: 'Quickstart Template'
         required: true
-      run_workflows:
-        type: boolean
-        description: 'Run workflows or not'
+      action:
+        type: string
+        description: 'Action to perform: deploy | destroy | run-job | run-dlt'
         required: true
-      destroy:
-        type: boolean
-        description: 'Destroy stack after deployment'
-        default: false
-env:
+      resource_name:
+        type: string
+        description: 'Job or pipeline name (for run-job and run-dlt actions)'
+        default: ''
 
+env:
   LAKTORY_CLI_RAISE_EXTERNAL_EXCEPTIONS: "true"
 
   # UC Only
@@ -57,7 +57,7 @@ jobs:
         shell: python
 
       - name: Install Laktory
-        run: | 
+        run: |
           make install-with-dbks
 
       - name: make dir
@@ -77,12 +77,14 @@ jobs:
         working-directory: ${{ env.CWD }}
 
       - name: laktory init
+        if: ${{ inputs.action == 'deploy' || inputs.action == 'destroy' }}
         run: |
           source ../.venv/bin/activate
           laktory init --options -reconfigure
         working-directory: ${{ env.CWD }}
 
       - name: laktory preview
+        if: ${{ inputs.action == 'deploy' }}
         run: |
           source ../.venv/bin/activate
           set -e
@@ -90,35 +92,29 @@ jobs:
         working-directory: ${{ env.CWD }}
 
       - name: laktory deploy
+        if: ${{ inputs.action == 'deploy' }}
         run: |
           source ../.venv/bin/activate
           laktory deploy -y
         working-directory: ${{ env.CWD }}
 
-      - name: laktory run hello
-        if: ${{ inputs.run_workflows }}
-        run: |
-          source ../.venv/bin/activate
-          laktory run --dbks-job job-hello
-        working-directory: ${{ env.CWD }}
-
-      - name: laktory run job
-        if: ${{ inputs.run_workflows }}
-        run: |
-          source ../.venv/bin/activate
-          laktory run --dbks-job pl-stocks-job
-        working-directory: ${{ env.CWD }}
-
-      - name: laktory run dlt
-        if: ${{ inputs.run_workflows }}
-        run: |
-          source ../.venv/bin/activate
-          laktory run --dbks-pipeline pl-stocks-dlt
-        working-directory: ${{ env.CWD }}
-
       - name: laktory destroy
-        if: ${{ inputs.destroy && always() }}
+        if: ${{ inputs.action == 'destroy' }}
         run: |
           source ../.venv/bin/activate
           laktory destroy -y
+        working-directory: ${{ env.CWD }}
+
+      - name: laktory run job
+        if: ${{ inputs.action == 'run-job' }}
+        run: |
+          source ../.venv/bin/activate
+          laktory run --dbks-job ${{ inputs.resource_name }}
+        working-directory: ${{ env.CWD }}
+
+      - name: laktory run dlt
+        if: ${{ inputs.action == 'run-dlt' }}
+        run: |
+          source ../.venv/bin/activate
+          laktory run --dbks-pipeline ${{ inputs.resource_name }}
         working-directory: ${{ env.CWD }}
