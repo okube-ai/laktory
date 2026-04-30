@@ -2,8 +2,8 @@
 # dev                                                                         #
 # --------------------------------------------------------------------------- #
 
-catalog-lqs-dev:
-  name: lqs-dev
+catalog-dev:
+  name: dev
   isolation_mode: OPEN
   grants:
     - principal: account users
@@ -33,8 +33,8 @@ catalog-lqs-dev:
 # prod                                                                        #
 # --------------------------------------------------------------------------- #
 
-catalog-lqs-prd:
-  name: lqs-prd
+catalog-prd:
+  name: prd
   isolation_mode: OPEN
   grants:
     - principal: account users
@@ -56,6 +56,6 @@ catalog-lqs-prd:
     # workspace level. If the catalog is isolated
     # (https://learn.microsoft.com/en-us/azure/databricks/catalogs/binding),
     # it will only be available in the workspace designated by the provider.
-    # Typically, the lqs-prd catalog would be deployed with
+    # Typically, the prd catalog would be deployed with
     # ${resources.databricks.prd}, but for simplicity, we used dev.
     provider: ${resources.databricks.dev}

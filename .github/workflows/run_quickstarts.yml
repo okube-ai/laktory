@@ -1,16 +1,7 @@
 name: run-quickstarts
 
 on:
-#  pull_request:
-#    types:
-#      - opened
-#      - synchronize
   workflow_dispatch:
-    logLevel:
-      description: 'Log level'
-      default: 'info'
-    branches:
-      - main
   workflow_call:
     inputs:
       env:
@@ -18,33 +9,108 @@ on:
         required: true
 
 jobs:
-  laktory-quickstart-unity-catalog:
+
+  # ── Tier 1: independent deploys ────────────────────────────────────────────
+
+  deploy-unity-catalog:
     uses: ./.github/workflows/run_quickstart.yml
     with:
-      cwd:  ./run_quickstart_unity_catalog
+      cwd: ./run_quickstart_unity_catalog
       template: unity-catalog
-      run_workflows: false
+      action: deploy
     secrets: inherit
 
-  laktory-quickstart-workspace:
+  deploy-workspace:
     uses: ./.github/workflows/run_quickstart.yml
     with:
-      cwd:  ./run_quickstart_workspace
+      cwd: ./run_quickstart_workspace
       template: workspace
-      run_workflows: false
+      action: deploy
     secrets: inherit
 
-  laktory-quickstart-workflows:
+  # ── Tier 2: deploy workflows ───────────────────────────────────────────────
+
+  deploy-workflows:
+    needs: [deploy-unity-catalog]
     uses: ./.github/workflows/run_quickstart.yml
     with:
-      cwd:  ./run_quickstart_workflows
+      cwd: ./run_quickstart_workflows
       template: workflows
-      run_workflows: true
+      action: deploy
     secrets: inherit
 
-  laktory-quickstart-workflows-dab:
-    uses: ./.github/workflows/run_quickstart_dab.yml
+  # ── Tier 3: run jobs (parallel) ────────────────────────────────────────────
+
+  run-job-hello:
+    needs: [deploy-workflows]
+    uses: ./.github/workflows/run_quickstart.yml
     with:
-      cwd:  ./run_quickstart_workflows_dab
-      run_workflows: true
+      cwd: ./run_quickstart_workflows
+      template: workflows
+      action: run-job
+      resource_name: job-hello
+    secrets: inherit
+
+  run-job-pl-stocks:
+    needs: [deploy-workflows]
+    uses: ./.github/workflows/run_quickstart.yml
+    with:
+      cwd: ./run_quickstart_workflows
+      template: workflows
+      action: run-job
+      resource_name: pl-stocks-job
+    secrets: inherit
+
+  run-dlt-pl-stocks:
+    needs: [deploy-workflows]
+    uses: ./.github/workflows/run_quickstart.yml
+    with:
+      cwd: ./run_quickstart_workflows
+      template: workflows
+      action: run-dlt
+      resource_name: pl-stocks-dlt
+    secrets: inherit
+
+  # ── Tier 4a: destroy workflows ─────────────────────────────────────────────
+  # Runs if deploy-workflows succeeded, even if run-job/run-dlt jobs failed.
+
+  destroy-workflows:
+    needs: [deploy-workflows, run-job-hello, run-job-pl-stocks, run-dlt-pl-stocks]
+    if: always() && needs.deploy-workflows.result == 'success'
+    uses: ./.github/workflows/run_quickstart.yml
+    with:
+      cwd: ./run_quickstart_workflows
+      template: workflows
+      action: destroy
+    secrets: inherit
+
+  # ── Tier 4b: destroy workspace ─────────────────────────────────────────────
+  # Independent of workflows; runs if deploy-workspace succeeded.
+
+  destroy-workspace:
+    needs: [deploy-workspace]
+    if: always() && needs.deploy-workspace.result == 'success'
+    uses: ./.github/workflows/run_quickstart.yml
+    with:
+      cwd: ./run_quickstart_workspace
+      template: workspace
+      action: destroy
+    secrets: inherit
+
+  # ── Tier 5: destroy unity-catalog ──────────────────────────────────────────
+  # Waits for both destroy-workflows and destroy-workspace to complete.
+  # Accepts 'skipped' for either destroy (meaning its deploy failed — nothing to wait for).
+
+  destroy-unity-catalog:
+    needs: [deploy-unity-catalog, destroy-workflows, destroy-workspace]
+    if: |
+      always() &&
+      needs.deploy-unity-catalog.result == 'success' &&
+      (needs.destroy-workflows.result == 'success' || needs.destroy-workflows.result == 'skipped') &&
+      (needs.destroy-workspace.result == 'success' || needs.destroy-workspace.result == 'skipped')
+    uses: ./.github/workflows/run_quickstart.yml
+    with:
+      cwd: ./run_quickstart_unity_catalog
+      template: unity-catalog
+      action: destroy
     secrets: inherit

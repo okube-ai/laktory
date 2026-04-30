@@ -1,14 +1,9 @@
 # Release History
 
 ## [0.11.1] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Support for 2.0<=pydantic<2.9
+
 
 ## [0.11.0] - 2026-04-29
 ### Added

@@ -100,14 +100,14 @@ Terraform used the selected providers to generate the following execution plan. 
 
 Terraform will perform the following actions:
 
-  # databricks_catalog.catalog-lqs-dev will be created
-  + resource "databricks_catalog" "catalog-lqs-dev" {
+  # databricks_catalog.catalog-dev will be created
+  + resource "databricks_catalog" "catalog-dev" {
       + enable_predictive_optimization = (known after apply)
       + force_destroy                  = true
       + id                             = (known after apply)
       + isolation_mode                 = "OPEN"
       + metastore_id                   = (known after apply)
-      + name                           = "lqs-dev"
+      + name                           = "dev"
       + owner                          = (known after apply)
     }
 
@@ -128,8 +128,8 @@ Do you want to perform these actions?
 
   Enter a value: yes
 
-databricks_catalog.catalog-lqs-prd: Creating...
-databricks_catalog.catalog-lqs-dev: Creating...
+databricks_catalog.catalog-prd: Creating...
+databricks_catalog.catalog-dev: Creating...
 databricks_group.group-metastore-admins: Creating...
 databricks_group.group-workspace-admins: Creating...
 databricks_user.user-jane-doe-okube-ai: Creating...
@@ -138,7 +138,7 @@ databricks_user.user-kubic-okube-ai: Creating...
 databricks_user.user-john-doe-okube-ai: Creating...
 databricks_group.group-laktory-friends: Creation complete after 1s [id=978906969228198]
 [...]
-databricks_grants.grants-schema-lqs-prd-sandbox: Creation complete after 1s [id=schema/lqs-prd.sandbox]
+databricks_grants.grants-schema-prd-sandbox: Creation complete after 1s [id=schema/lqs-prd.sandbox]
 ```
 </div>
 
