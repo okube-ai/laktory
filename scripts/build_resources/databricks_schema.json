@@ -5514,6 +5514,7 @@
               },
               "databricks_account_id": {
                 "deprecated": true,
+                "deprecation_message": "databricks_account_id will be will be removed in the next major release.",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "string"
@@ -5560,6 +5561,7 @@
               },
               "databricks_account_id": {
                 "deprecated": true,
+                "deprecation_message": "databricks_account_id will be will be removed in the next major release.",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "string"
@@ -7470,6 +7472,7 @@
                                       }
                                     },
                                     "deprecated": true,
+                                    "deprecation_message": "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'.",
                                     "description_kind": "plain"
                                   },
                                   "max_items": 1,
@@ -7586,6 +7589,7 @@
                               "attributes": {
                                 "egg": {
                                   "deprecated": true,
+                                  "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                                   "description_kind": "plain",
                                   "optional": true,
                                   "type": "string"
@@ -15869,6 +15873,7 @@
               "members": {
                 "computed": true,
                 "deprecated": true,
+                "deprecation_message": "Please use `users`, `service_principals`, and `child_groups` instead",
                 "description_kind": "plain",
                 "optional": true,
                 "type": [
@@ -17360,6 +17365,7 @@
                               "attributes": {
                                 "egg": {
                                   "deprecated": true,
+                                  "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                                   "description_kind": "plain",
                                   "optional": true,
                                   "type": "string"
@@ -18898,6 +18904,7 @@
                                                 "attributes": {
                                                   "egg": {
                                                     "deprecated": true,
+                                                    "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                                                     "description_kind": "plain",
                                                     "optional": true,
                                                     "type": "string"
@@ -20132,6 +20139,7 @@
                                     "attributes": {
                                       "egg": {
                                         "deprecated": true,
+                                        "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                                         "description_kind": "plain",
                                         "optional": true,
                                         "type": "string"
@@ -22978,6 +22986,7 @@
               },
               "graviton": {
                 "deprecated": true,
+                "deprecation_message": "Use `arm` instead",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "bool"
@@ -28488,6 +28497,7 @@
               },
               "graviton": {
                 "deprecated": true,
+                "deprecation_message": "Not required anymore - it's automatically enabled on the Graviton-based node types",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "bool"
@@ -28515,6 +28525,7 @@
               },
               "photon": {
                 "deprecated": true,
+                "deprecation_message": "Specify runtime_engine=\"PHOTON\" in the cluster configuration",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "bool"
@@ -35073,6 +35084,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "Resource is deprecated and will be removed in further versions. Please rewrite configuration using `databricks_mount` resource. More info at https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mount#migration-from-other-mount-resources",
             "description_kind": "plain"
           },
           "version": 2
@@ -35139,6 +35151,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "Resource is deprecated and will be removed in further versions. Please rewrite configuration using `databricks_mount` resource. More info at https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mount#migration-from-other-mount-resources",
             "description_kind": "plain"
           },
           "version": 2
@@ -35215,6 +35228,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "Resource is deprecated and will be removed in further versions. Please rewrite configuration using `databricks_mount` resource. More info at https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mount#migration-from-other-mount-resources",
             "description_kind": "plain"
           },
           "version": 2
@@ -35276,6 +35290,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "Resource is deprecated and will be removed in further versions. Please rewrite configuration using `databricks_mount` resource. More info at https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mount#migration-from-other-mount-resources",
             "description_kind": "plain"
           },
           "version": 2
@@ -35743,6 +35758,7 @@
               },
               "catalog_name": {
                 "deprecated": true,
+                "deprecation_message": "Please use 'securable_name' and 'securable_type instead.",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "string"
@@ -35787,6 +35803,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "Use `databricks_workspace_binding` instead.",
             "description_kind": "plain"
           },
           "version": 1
@@ -36345,6 +36362,7 @@
                           }
                         },
                         "deprecated": true,
+                        "deprecation_message": "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'.",
                         "description_kind": "plain"
                       },
                       "max_items": 1,
@@ -36461,6 +36479,7 @@
                   "attributes": {
                     "egg": {
                       "deprecated": true,
+                      "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                       "description_kind": "plain",
                       "optional": true,
                       "type": "string"
@@ -36692,6 +36711,7 @@
                   "attributes": {
                     "egg": {
                       "deprecated": true,
+                      "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                       "description_kind": "plain",
                       "optional": true,
                       "type": "string"
@@ -41308,6 +41328,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "Please migrate to `databricks_group_role`",
             "description_kind": "plain"
           },
           "version": 0
@@ -41828,6 +41849,7 @@
             "attributes": {
               "always_running": {
                 "deprecated": true,
+                "deprecation_message": "always_running will be replaced by control_run_state in the next major release.",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "bool"
@@ -41876,12 +41898,14 @@
               },
               "max_retries": {
                 "deprecated": true,
+                "deprecation_message": "should be used inside a task block and not inside a job block",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "number"
               },
               "min_retry_interval_millis": {
                 "deprecated": true,
+                "deprecation_message": "should be used inside a task block and not inside a job block",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "number"
@@ -41898,6 +41922,7 @@
               },
               "retry_on_timeout": {
                 "deprecated": true,
+                "deprecation_message": "should be used inside a task block and not inside a job block",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "bool"
@@ -41989,6 +42014,7 @@
                     }
                   },
                   "deprecated": true,
+                  "deprecation_message": "should be used inside a task block and not inside a job block",
                   "description_kind": "plain"
                 },
                 "max_items": 1,
@@ -42779,6 +42805,7 @@
                                       }
                                     },
                                     "deprecated": true,
+                                    "deprecation_message": "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'.",
                                     "description_kind": "plain"
                                   },
                                   "max_items": 1,
@@ -42895,6 +42922,7 @@
                               "attributes": {
                                 "egg": {
                                   "deprecated": true,
+                                  "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                                   "description_kind": "plain",
                                   "optional": true,
                                   "type": "string"
@@ -43077,6 +43105,7 @@
                   "attributes": {
                     "egg": {
                       "deprecated": true,
+                      "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                       "description_kind": "plain",
                       "optional": true,
                       "type": "string"
@@ -43697,6 +43726,7 @@
                                 }
                               },
                               "deprecated": true,
+                              "deprecation_message": "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'.",
                               "description_kind": "plain"
                             },
                             "max_items": 1,
@@ -43813,6 +43843,7 @@
                         "attributes": {
                           "egg": {
                             "deprecated": true,
+                            "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                             "description_kind": "plain",
                             "optional": true,
                             "type": "string"
@@ -44012,6 +44043,7 @@
                     }
                   },
                   "deprecated": true,
+                  "deprecation_message": "should be used inside a task block and not inside a job block",
                   "description_kind": "plain"
                 },
                 "max_items": 1,
@@ -44069,6 +44101,7 @@
                     }
                   },
                   "deprecated": true,
+                  "deprecation_message": "should be used inside a task block and not inside a job block",
                   "description_kind": "plain"
                 },
                 "max_items": 1,
@@ -44119,6 +44152,7 @@
                     }
                   },
                   "deprecated": true,
+                  "deprecation_message": "should be used inside a task block and not inside a job block",
                   "description_kind": "plain"
                 },
                 "max_items": 1,
@@ -44180,6 +44214,7 @@
                     }
                   },
                   "deprecated": true,
+                  "deprecation_message": "should be used inside a task block and not inside a job block",
                   "description_kind": "plain"
                 },
                 "max_items": 1,
@@ -44232,6 +44267,7 @@
                     }
                   },
                   "deprecated": true,
+                  "deprecation_message": "should be used inside a task block and not inside a job block",
                   "description_kind": "plain"
                 },
                 "max_items": 1,
@@ -44260,6 +44296,7 @@
                     }
                   },
                   "deprecated": true,
+                  "deprecation_message": "should be used inside a task block and not inside a job block",
                   "description_kind": "plain"
                 },
                 "max_items": 1,
@@ -44278,6 +44315,7 @@
                     }
                   },
                   "deprecated": true,
+                  "deprecation_message": "should be used inside a task block and not inside a job block",
                   "description_kind": "plain"
                 },
                 "max_items": 1,
@@ -45216,6 +45254,7 @@
                                     "attributes": {
                                       "egg": {
                                         "deprecated": true,
+                                        "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                                         "description_kind": "plain",
                                         "optional": true,
                                         "type": "string"
@@ -45836,6 +45875,7 @@
                                                   }
                                                 },
                                                 "deprecated": true,
+                                                "deprecation_message": "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'.",
                                                 "description_kind": "plain"
                                               },
                                               "max_items": 1,
@@ -45952,6 +45992,7 @@
                                           "attributes": {
                                             "egg": {
                                               "deprecated": true,
+                                              "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                                               "description_kind": "plain",
                                               "optional": true,
                                               "type": "string"
@@ -46826,6 +46867,7 @@
                         "attributes": {
                           "egg": {
                             "deprecated": true,
+                            "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                             "description_kind": "plain",
                             "optional": true,
                             "type": "string"
@@ -47454,6 +47496,7 @@
                                       }
                                     },
                                     "deprecated": true,
+                                    "deprecation_message": "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'.",
                                     "description_kind": "plain"
                                   },
                                   "max_items": 1,
@@ -47570,6 +47613,7 @@
                               "attributes": {
                                 "egg": {
                                   "deprecated": true,
+                                  "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                                   "description_kind": "plain",
                                   "optional": true,
                                   "type": "string"
@@ -49058,6 +49102,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "Use `databricks_quality_monitor` instead.",
             "description_kind": "plain"
           },
           "version": 0
@@ -49072,6 +49117,7 @@
               },
               "egg": {
                 "deprecated": true,
+                "deprecation_message": "The `egg` library type is deprecated. Please use `whl` or `pypi` instead.",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "string"
@@ -49364,6 +49410,7 @@
               "default_catalog_name": {
                 "computed": true,
                 "deprecated": true,
+                "deprecation_message": "Use databricks_default_namespace_setting resource instead",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "string"
@@ -49657,6 +49704,7 @@
               },
               "description": {
                 "deprecated": true,
+                "deprecation_message": "Remove the description attribute as it no longer is used and will be removed in a future version.",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "string"
@@ -49972,6 +50020,7 @@
                               "attributes": {
                                 "invalid_keywords": {
                                   "deprecated": true,
+                                  "deprecation_message": "Please use 'pii' and 'safety' instead.",
                                   "description_kind": "plain",
                                   "optional": true,
                                   "type": [
@@ -49986,6 +50035,7 @@
                                 },
                                 "valid_topics": {
                                   "deprecated": true,
+                                  "deprecation_message": "Please use 'pii' and 'safety' instead.",
                                   "description_kind": "plain",
                                   "optional": true,
                                   "type": [
@@ -50020,6 +50070,7 @@
                               "attributes": {
                                 "invalid_keywords": {
                                   "deprecated": true,
+                                  "deprecation_message": "Please use 'pii' and 'safety' instead.",
                                   "description_kind": "plain",
                                   "optional": true,
                                   "type": [
@@ -50034,6 +50085,7 @@
                                 },
                                 "valid_topics": {
                                   "deprecated": true,
+                                  "deprecation_message": "Please use 'pii' and 'safety' instead.",
                                   "description_kind": "plain",
                                   "optional": true,
                                   "type": [
@@ -50689,6 +50741,7 @@
                           }
                         },
                         "deprecated": true,
+                        "deprecation_message": "Please use 'config.served_entities' instead of 'config.served_models'.",
                         "description_kind": "plain"
                       },
                       "nesting_mode": "list"
@@ -50790,6 +50843,7 @@
                     }
                   },
                   "deprecated": true,
+                  "deprecation_message": "Please use AI Gateway to manage rate limits.",
                   "description_kind": "plain"
                 },
                 "nesting_mode": "list"
@@ -51484,6 +51538,7 @@
             "attributes": {
               "account_id": {
                 "deprecated": true,
+                "deprecation_message": "`account_id` should be set as part of the Databricks Config, not in the resource.",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "string"
@@ -52213,12 +52268,14 @@
                     },
                     "pod_ip_range_name": {
                       "deprecated": true,
+                      "deprecation_message": "gcp_network_info.pod_ip_range_name is deprecated and will be removed in a future release. For more information, review the documentation at https://registry.terraform.io/providers/databricks/databricks/1.113.0/docs/guides/gcp-workspace#creating-a-vpc",
                       "description_kind": "plain",
                       "optional": true,
                       "type": "string"
                     },
                     "service_ip_range_name": {
                       "deprecated": true,
+                      "deprecation_message": "gcp_network_info.service_ip_range_name is deprecated and will be removed in a future release. For more information, review the documentation at https://registry.terraform.io/providers/databricks/databricks/1.113.0/docs/guides/gcp-workspace#creating-a-vpc",
                       "description_kind": "plain",
                       "optional": true,
                       "type": "string"
@@ -52312,6 +52369,7 @@
               "account_id": {
                 "computed": true,
                 "deprecated": true,
+                "deprecation_message": "Configuring `account_id` at the resource-level is deprecated; please specify it in the `provider {}` configuration block instead",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "string"
@@ -52554,6 +52612,7 @@
               },
               "customer_managed_key_id": {
                 "deprecated": true,
+                "deprecation_message": "Use managed_services_customer_managed_key_id instead",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "string"
@@ -52715,12 +52774,14 @@
                   "attributes": {
                     "gke_cluster_pod_ip_range": {
                       "deprecated": true,
+                      "deprecation_message": "gcp_managed_network_config.gke_cluster_pod_ip_range is deprecated and will be removed in a future release. For more information, review the documentation at https://registry.terraform.io/providers/databricks/databricks/1.113.0/docs/guides/gcp-workspace#creating-a-databricks-workspace",
                       "description_kind": "plain",
                       "optional": true,
                       "type": "string"
                     },
                     "gke_cluster_service_ip_range": {
                       "deprecated": true,
+                      "deprecation_message": "gcp_managed_network_config.gke_cluster_service_ip_range is deprecated and will be removed in a future release. For more information, review the documentation at https://registry.terraform.io/providers/databricks/databricks/1.113.0/docs/guides/gcp-workspace#creating-a-databricks-workspace",
                       "description_kind": "plain",
                       "optional": true,
                       "type": "string"
@@ -52751,6 +52812,7 @@
                     }
                   },
                   "deprecated": true,
+                  "deprecation_message": "gke_config is deprecated and will be removed in a future release. For more information, review the documentation at https://registry.terraform.io/providers/databricks/databricks/1.113.0/docs/guides/gcp-workspace#creating-a-databricks-workspace",
                   "description_kind": "plain"
                 },
                 "max_items": 1,
@@ -52856,6 +52918,7 @@
               "object_type": {
                 "computed": true,
                 "deprecated": true,
+                "deprecation_message": "Always is a notebook",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "string"
@@ -54232,6 +54295,7 @@
                                 }
                               },
                               "deprecated": true,
+                              "deprecation_message": "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'.",
                               "description_kind": "plain"
                             },
                             "max_items": 1,
@@ -55960,6 +56024,7 @@
                     },
                     "whl": {
                       "deprecated": true,
+                      "deprecation_message": "The 'whl' field is deprecated",
                       "description_kind": "plain",
                       "optional": true,
                       "type": "string"
@@ -59925,6 +59990,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "This resource is deprecated and will be removed in the future. Please use the `databricks_alert` resource instead.",
             "description_kind": "plain"
           },
           "version": 0
@@ -59996,6 +60062,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "This resource is deprecated and will be removed in the future. Please use the `databricks_dashboard` resource.",
             "description_kind": "plain"
           },
           "version": 0
@@ -60237,6 +60304,7 @@
               "enable_serverless_compute": {
                 "computed": true,
                 "deprecated": true,
+                "deprecation_message": "This field is intended as an internal API and may be removed from the Databricks Terraform provider in the future",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "bool"
@@ -60834,6 +60902,7 @@
                     }
                   },
                   "deprecated": true,
+                  "deprecation_message": "Operations on `databricks_sql_query` schedules are deprecated. Please use `databricks_job` resource to schedule a `sql_task`.",
                   "description_kind": "plain"
                 },
                 "max_items": 1,
@@ -60841,6 +60910,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "This resource is deprecated and will be removed in the future. Please use the `databricks_query` resource instead.",
             "description_kind": "plain"
           },
           "version": 0
@@ -61086,6 +61156,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "This resource is deprecated and will be removed in future. Please switch to databricks_dashboard to author new AI/BI dashboards using the latest tooling.",
             "description_kind": "plain"
           },
           "version": 0
@@ -61223,6 +61294,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "This resource is deprecated and will be removed in future. Please switch to databricks_dashboard to author new AI/BI dashboards using the latest tooling.",
             "description_kind": "plain"
           },
           "version": 0
@@ -61668,6 +61740,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "databricks_table is deprecated in favor of databricks_sql_table. Please see https://registry.terraform.io/providers/databricks/databricks/1.113.0/docs/resources/sql_table for more information.",
             "description_kind": "plain"
           },
           "version": 0
@@ -61962,6 +62035,7 @@
               }
             },
             "deprecated": true,
+            "deprecation_message": "Please migrate to `databricks_user_role`. This resource will be removed in v0.5.x",
             "description_kind": "plain"
           },
           "version": 0
@@ -62481,6 +62555,7 @@
               },
               "catalog_name": {
                 "deprecated": true,
+                "deprecation_message": "Please use 'securable_name' and 'securable_type instead.",
                 "description_kind": "plain",
                 "optional": true,
                 "type": "string"

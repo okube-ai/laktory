@@ -124,7 +124,7 @@ def emit_doc(public_class: str, module_stem: str, nested_classes: list[str]) -> 
     for cls in sorted(nested_classes):
         entries.append(f"::: {LAKTORY_PKG}.{module_stem}.{cls}")
     return (
-        "<!-- GENERATED FILE — DO NOT EDIT -->\n" + "\n\n---\n\n".join(entries) + "\n"
+        "<!-- GENERATED FILE - DO NOT EDIT -->\n" + "\n\n---\n\n".join(entries) + "\n"
     )
 
 

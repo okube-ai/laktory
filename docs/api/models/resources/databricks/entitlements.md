@@ -1,2 +1,2 @@
-<!-- GENERATED FILE — DO NOT EDIT -->
+<!-- GENERATED FILE - DO NOT EDIT -->
 ::: laktory.models.resources.databricks.Entitlements

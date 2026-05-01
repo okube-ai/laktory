@@ -451,7 +451,7 @@ def emit_resource_module(
 
     alias_choices_import = ", AliasChoices" if "AliasChoices(" in body else ""
     header_lines = [
-        "# GENERATED FILE — DO NOT EDIT",
+        "# GENERATED FILE - DO NOT EDIT",
         f"# Regenerate with: python scripts/build_resources/01_build.py {resource_key}",
         "from __future__ import annotations",
         "",
