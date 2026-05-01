@@ -1,4 +1,5 @@
 import re
+import warnings
 from typing import Any
 from typing import Literal
 from typing import get_args
@@ -148,16 +149,15 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
         if not isinstance(data, dict) or "options" not in data:
             return data
         # Only redirect "options" → "deployment_options" for classes that don't
-        # have a native Terraform "options" field (detected via AliasChoices on options_)
-        for fname, field_info in cls.model_fields.items():
-            if fname == "deployment_options":
-                continue
-            alias = field_info.validation_alias
-            if alias is None:
-                continue
-            choices = alias.choices if isinstance(alias, AliasChoices) else [alias]
-            if any(c == "options" for c in choices if isinstance(c, str)):
-                return data  # native options field present — leave as-is
+        # have a native Terraform "options" field (i.e. a Python field named "options")
+        if "options" in cls.model_fields:
+            return data  # native options field present — leave as-is
+        warnings.warn(
+            "Field `options` is deprecated and will be removed in the next major version. "
+            "Use `deployment_options` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         data["deployment_options"] = data.pop("options")
         return data
 
