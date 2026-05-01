@@ -27,7 +27,7 @@ def test_grants():
     assert len(table.additional_core_resources) == 1
     for r in table.additional_core_resources:
         assert isinstance(r, Grant)
-        assert r.resource_name_ == "grant-table-dev-markets-slv_stock_prices-users"
+        assert r.resource_name == "grant-table-dev-markets-slv_stock_prices-users"
 
     # Grant x 2
     table = Table(
@@ -82,7 +82,7 @@ def test_grants():
     assert len(table.additional_core_resources) == 1
     for r in table.additional_core_resources:
         assert isinstance(r, Grants)
-        assert r.resource_name_ == "grants-table-dev-markets-slv_stock_prices"
+        assert r.resource_name == "grants-table-dev-markets-slv_stock_prices"
 
     with pytest.raises(ValidationError):
         Table(

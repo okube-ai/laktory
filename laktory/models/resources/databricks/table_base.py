@@ -2,7 +2,6 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_sql_table
 from __future__ import annotations
 
-from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
@@ -61,11 +60,9 @@ class TableBase(BaseModel, TerraformResource):
         None,
         description="External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, and `TEXT`. Change forces the creation of a new resource. Not supported for `MANAGED` tables or `VIEW`",
     )
-    options_: dict[str, str] | None = Field(
+    options: dict[str, str] | None = Field(
         None,
         description="Map of user defined table options. Change forces creation of a new resource",
-        serialization_alias="options",
-        validation_alias=AliasChoices("options", "options_"),
     )
     owner: str | None = Field(
         None, description="User name/group name/sp application_id of the table owner"

@@ -66,7 +66,7 @@ class Dispatcher:
         )
 
         for k, pl in self.stack.resources.pipelines.items():
-            if not pl.options.is_enabled:
+            if not pl.resource_options.is_enabled:
                 continue
 
             if isinstance(pl.orchestrator, DatabricksPipelineOrchestrator):
@@ -80,14 +80,14 @@ class Dispatcher:
                 )
 
         for k, pl in self.stack.resources.databricks_pipelines.items():
-            if not pl.options.is_enabled:
+            if not pl.resource_options.is_enabled:
                 continue
             self.resources[pl.name] = DatabricksPipelineRunner(
                 dispatcher=self, name=pl.name
             )
 
         for k, job in self.stack.resources.databricks_jobs.items():
-            if not job.options.is_enabled:
+            if not job.resource_options.is_enabled:
                 continue
             self.resources[job.name] = DatabricksJobRunner(
                 dispatcher=self, name=job.name

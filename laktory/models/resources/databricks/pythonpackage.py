@@ -169,7 +169,7 @@ class PythonPackage(BaseModel, TerraformResource):
 
             resources += [
                 PythonPackagePermissions(
-                    resource_name=f"permissions-{self.resource_name}",
+                    resource_options={"name": f"permissions-{self.resource_name}"},
                     access_controls=self.access_controls,
                     get_workspace_file_path=self.get_path,
                 )

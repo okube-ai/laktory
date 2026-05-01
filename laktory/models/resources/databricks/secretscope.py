@@ -92,7 +92,9 @@ class SecretScope(SecretScopeBase):
         for p in self.permissions:
             resources += [
                 SecretAcl(
-                    resource_name=f"secret-scope-acl-{self.name}-{p.principal}",
+                    resource_options={
+                        "name": f"secret-scope-acl-{self.name}-{p.principal}"
+                    },
                     permission=p.permission,
                     principal=p.principal,
                     scope=self.name,

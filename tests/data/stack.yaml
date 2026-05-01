@@ -15,7 +15,9 @@ resources:
         configuration:
           business_unit: ${vars.business_unit}
           workflow_name: ${vars.workflow_name}
-        resource_name: dlt-custom-name
+        resource_options:
+          name: dlt-custom-name
+          provider: ${resources.databricks}
         libraries:
           - notebook:
               path: /pipelines/dlt_brz_template.py
@@ -24,8 +26,6 @@ resources:
             permission_level: CAN_VIEW
           - group_name: role-engineers
             permission_level: CAN_RUN
-        options:
-          provider: ${resources.databricks}
       nodes:
         - name: first_node
           source:
@@ -62,7 +62,7 @@ resources:
 
     job-disabled:
         name: job-disabled
-        options:
+        resource_options:
           is_enabled: False
         tasks:
           - task_key: ingest-metadata
@@ -80,7 +80,7 @@ resources:
     warehouse-disabled:
       name: disabled
       cluster_size: "X-Small"
-      options:
+      resource_options:
         is_enabled: False
 
   databricks_notebooks:

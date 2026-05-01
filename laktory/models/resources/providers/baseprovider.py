@@ -16,10 +16,7 @@ class BaseProvider(BaseModel):
         dots (.) are allowed to support terraform aliases
         """
 
-        # if self.resource_name_:
-        name = self.resource_name_
-        # else:
-        #     name = self.default_resource_name
+        name = self.resource_options.name
 
         if name is None:
             return None

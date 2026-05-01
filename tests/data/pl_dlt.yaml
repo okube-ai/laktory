@@ -7,10 +7,10 @@ orchestrator:
   access_controls:
     - group_name: account users
       permission_level: CAN_VIEW
-  options:
+  resource_options:
     provider: "${resources.databricks2}"
 
-options:
+resource_options:
   provider: "${resources.databricks1}"
 
 nodes:

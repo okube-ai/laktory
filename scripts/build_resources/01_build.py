@@ -43,7 +43,6 @@ ALWAYS_SKIP_ATTRS = {"id"}
 # Format: {terraform_attr_name: python_field_name}
 # The generated class will use `serialization_alias` so Terraform output is unchanged.
 RESERVED_FIELD_RENAMES: dict[str, str] = {
-    "options": "options_",
     "variables": "variables_",
     "lookup_existing": "lookup_existing_",
     "schema": "schema_",  # shadows Pydantic BaseModel.schema()
