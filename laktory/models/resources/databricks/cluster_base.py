@@ -1,12 +1,10 @@
-# GENERATED FILE — DO NOT EDIT
+# GENERATED FILE - DO NOT EDIT
 # Regenerate with: python scripts/build_resources/01_build.py databricks_cluster
 from __future__ import annotations
 
-from pydantic import AliasChoices
-from pydantic import Field
+from pydantic import Field, AliasChoices
 
-from laktory.models.basemodel import BaseModel
-from laktory.models.basemodel import PluralField
+from laktory.models.basemodel import BaseModel, PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -197,7 +195,7 @@ class ClusterWorkloadType(BaseModel):
 class ClusterBase(BaseModel, TerraformResource):
     """
     Generated base class for `databricks_cluster`.
-    DO NOT EDIT — regenerate from `scripts/build_resources/01_build.py`.
+    DO NOT EDIT - regenerate from `scripts/build_resources/01_build.py`.
     """
 
     __doc_generated_base__ = True

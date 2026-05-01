@@ -244,6 +244,7 @@ nav:
           - api/models/resources/databricks/directory.md
           - Declarative Pipeline:
             - api/models/resources/databricks/pipeline.md
+          - Entitlements: api/models/resources/databricks/entitlements.md
           - ExternalLocation: api/models/resources/databricks/externallocation.md
           - api/models/resources/databricks/grant.md
           - api/models/resources/databricks/grants.md

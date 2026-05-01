@@ -1,10 +1,10 @@
-# GENERATED FILE — DO NOT EDIT
+# GENERATED FILE - DO NOT EDIT
 # Regenerate with: python scripts/build_resources/01_build.py databricks_quality_monitor
 from __future__ import annotations
 
 from pydantic import Field
 
-from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import BaseModel, PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -26,7 +26,7 @@ class QualityMonitorCustomMetrics(BaseModel):
 class QualityMonitorBase(BaseModel, TerraformResource):
     """
     Generated base class for `databricks_quality_monitor`.
-    DO NOT EDIT — regenerate from `scripts/build_resources/01_build.py`.
+    DO NOT EDIT - regenerate from `scripts/build_resources/01_build.py`.
     """
 
     __doc_generated_base__ = True

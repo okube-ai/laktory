@@ -2,13 +2,10 @@
 
 ## [0.11.2] - Unreleased
 ### Added
-* n/a
+* Databricks `Entitlements` resource.
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Replaced non-ASCII em-dashes with standard hyphens in generated resource models to prevent UnicodeDecodeError on non-UTF-8 systems.
+* Missing `databricks_connect` pytest marker registration in `pyproject.toml`.
 
 ## [0.11.1] - 2026-05-01
 ### Added

@@ -10,6 +10,7 @@ from .currentuser import CurrentUser
 from .dashboard import Dashboard
 from .dbfsfile import DbfsFile
 from .directory import Directory
+from .entitlements import Entitlements
 from .externallocation import ExternalLocation
 from .grant import Grant
 from .grants import Grants

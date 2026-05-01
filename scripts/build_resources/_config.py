@@ -23,6 +23,7 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_dashboard",
     "databricks_dbfs_file",
     "databricks_directory",
+    "databricks_entitlements",
     "databricks_external_location",
     "databricks_grant",
     "databricks_grants",

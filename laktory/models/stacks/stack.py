@@ -22,6 +22,7 @@ from laktory.models.resources.databricks.currentuser import CurrentUser
 from laktory.models.resources.databricks.dashboard import Dashboard
 from laktory.models.resources.databricks.dbfsfile import DbfsFile
 from laktory.models.resources.databricks.directory import Directory
+from laktory.models.resources.databricks.entitlements import Entitlements
 from laktory.models.resources.databricks.externallocation import ExternalLocation
 from laktory.models.resources.databricks.grant import Grant
 from laktory.models.resources.databricks.grants import Grants
@@ -139,6 +140,7 @@ class StackResources(BaseModel):
     databricks_dashboards: dict[str, Dashboard] = {}
     databricks_dbfsfiles: dict[str, DbfsFile] = {}
     databricks_directories: dict[str, Directory] = {}
+    databricks_entitlements: dict[str, Entitlements] = {}
     databricks_pipelines: dict[str, DatabricksPipeline] = {}
     databricks_externallocations: dict[str, ExternalLocation] = {}
     databricks_grant: dict[str, Grant] = {}
