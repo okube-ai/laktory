@@ -1,6 +1,8 @@
 # Release History
 
 ## [0.11.1] - Unreleased
+### Added
+* Databricks `Entitlements` resource
 ### Fixed
 * Support for 2.0<=pydantic<2.9
 ### Updated
