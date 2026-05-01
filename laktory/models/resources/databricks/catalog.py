@@ -79,15 +79,6 @@ class Catalog(CatalogBase):
     """,
     )
 
-    # foreign_options: Laktory name for the Terraform "options" field.
-    # The base has `options_` with serialization_alias="options" for Terraform;
-    # "options_" is added to excludes below to prevent double output.
-    # TODO: Rename options to resource_options? and rename this one to options?
-    foreign_options: dict[str, str] = Field(
-        None,
-        description="For Foreign Catalogs: the name of the entity from an external data source that maps to a catalog. For example, the database name in a PostgreSQL server.",
-    )
-
     # Laktory-specific
     grant: Union[CatalogGrant, list[CatalogGrant]] = Field(
         None,
@@ -182,9 +173,4 @@ class Catalog(CatalogBase):
             "grants",
             "grant",
             "workspace_bindings",
-            "options_",
         ]
-
-    @property
-    def terraform_renames(self) -> dict[str, str]:
-        return {"foreign_options": "options"}

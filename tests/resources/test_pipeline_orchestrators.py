@@ -777,11 +777,11 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
     assert dlt.resource_name == "dlt-pipeline-pl-dlt"
     assert dltp.resource_name == "permissions-dlt-pipeline-pl-dlt"
 
-    assert dlt.options.provider == "${resources.databricks2}"
-    assert dltp.options.provider == "${resources.databricks2}"
+    assert dlt.deployment_options.provider == "${resources.databricks2}"
+    assert dltp.deployment_options.provider == "${resources.databricks2}"
 
-    assert dlt.options.depends_on == []
-    assert dltp.options.depends_on == ["${resources.dlt-pipeline-pl-dlt}"]
+    assert dlt.deployment_options.depends_on == []
+    assert dltp.deployment_options.depends_on == ["${resources.dlt-pipeline-pl-dlt}"]
 
     data = dlt.config_file.content_dict
     assert data == {

@@ -129,8 +129,10 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
         instead.
         """,
     )
-    options: ResourceOptions = Field(
-        ResourceOptions(), exclude=True, description="Resources options specifications"
+    deployment_options: ResourceOptions = Field(
+        ResourceOptions(),
+        exclude=True,
+        description="Resources deployment options specifications",
     )
     lookup_existing: ResourceLookup = Field(
         None,
@@ -139,6 +141,25 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
         description="Lookup resource instead of creating a new one.",
     )
     _core_resources: list[Any] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def options_compat(cls, data: Any) -> Any:
+        if not isinstance(data, dict) or "options" not in data:
+            return data
+        # Only redirect "options" → "deployment_options" for classes that don't
+        # have a native Terraform "options" field (detected via AliasChoices on options_)
+        for fname, field_info in cls.model_fields.items():
+            if fname == "deployment_options":
+                continue
+            alias = field_info.validation_alias
+            if alias is None:
+                continue
+            choices = alias.choices if isinstance(alias, AliasChoices) else [alias]
+            if any(c == "options" for c in choices if isinstance(c, str)):
+                return data  # native options field present — leave as-is
+        data["deployment_options"] = data.pop("options")
+        return data
 
     @model_validator(mode="before")
     @classmethod
@@ -232,7 +253,7 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
                     {"principal": g.principal, "privileges": g.privileges}
                     for g in self.grants
                 ],
-                options=options,
+                deployment_options=options,
                 **object,
             ).core_resources
 
@@ -250,7 +271,7 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
                     resource_name=f"grant-{self.resource_name}-{sanitized_principal}",
                     principal=g.principal,
                     privileges=g.privileges,
-                    options=options,
+                    deployment_options=options,
                     **object,
                 ).core_resources
 
@@ -304,39 +325,42 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
         if self._core_resources is None:
             # Add self
             self._core_resources = []
-            if self.self_as_core_resources and self.options.is_enabled:
+            if self.self_as_core_resources and self.deployment_options.is_enabled:
                 self._core_resources += [self]
 
             # Add additional
             def get_additional_resources(r):
                 resources = []
 
-                provider = r.options.provider
+                provider = r.deployment_options.provider
                 k0 = f"${{resources.{r.resource_name}}}"
 
                 for _r in r.additional_core_resources:
-                    if not (r.options.is_enabled and _r.options.is_enabled):
+                    if not (
+                        r.deployment_options.is_enabled
+                        and _r.deployment_options.is_enabled
+                    ):
                         continue
 
                     _options_updated = False
                     if provider:
-                        if _r.options.provider is None:
+                        if _r.deployment_options.provider is None:
                             _options_updated = True
-                            _r.options.provider = provider
+                            _r.deployment_options.provider = provider
 
-                    do = _r.options.depends_on
+                    do = _r.deployment_options.depends_on
                     l0 = len(do)
                     if r.self_as_core_resources and k0 not in do:
                         do += [k0]
-                    _r.options.depends_on = do
+                    _r.deployment_options.depends_on = do
                     l1 = len(do)
                     if l1 != l0:
                         _options_updated = True
 
-                    # This is to ensure options is flagged as set and part of
+                    # This is to ensure deployment_options is flagged as set and part of
                     # model_fields_set when injecting variables.
                     if _options_updated:
-                        _r.options = _r.options
+                        _r.deployment_options = _r.deployment_options
 
                     if _r.self_as_core_resources:
                         resources += [_r]
