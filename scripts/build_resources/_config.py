@@ -17,6 +17,7 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_app",
     "databricks_catalog",
     "databricks_cluster",
+    "databricks_connection",
     "databricks_cluster_policy",
     "databricks_current_user",
     "databricks_dashboard",

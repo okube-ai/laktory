@@ -237,6 +237,7 @@ nav:
           - api/models/resources/databricks/catalog.md
           - api/models/resources/databricks/cluster.md
           - ClusterPolicy: api/models/resources/databricks/clusterpolicy.md
+          - Connection: api/models/resources/databricks/connection.md
           - CurrentUser: api/models/resources/databricks/currentuser.md
           - Dashboard: api/models/resources/databricks/dashboard.md
           - DbfsFile: api/models/resources/databricks/dbfsfile.md
