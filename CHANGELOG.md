@@ -1,6 +1,16 @@
 # Release History
 
-## [0.11.1] - Unreleased
+## [0.11.2] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.11.1] - 2026-05-01
 ### Added
 * Databrbicks `connection` resource.
 ### Fixed
