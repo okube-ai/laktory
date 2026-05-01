@@ -17,6 +17,7 @@ from laktory.models.resources.databricks.app import App
 from laktory.models.resources.databricks.catalog import Catalog
 from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.clusterpolicy import ClusterPolicy
+from laktory.models.resources.databricks.connection import Connection
 from laktory.models.resources.databricks.currentuser import CurrentUser
 from laktory.models.resources.databricks.dashboard import Dashboard
 from laktory.models.resources.databricks.dbfsfile import DbfsFile
@@ -133,6 +134,7 @@ class StackResources(BaseModel):
     databricks_catalogs: dict[str, Catalog] = {}
     databricks_clusterpolicies: dict[str, ClusterPolicy] = {}
     databricks_clusters: dict[str, Cluster] = {}
+    databricks_connections: dict[str, Connection] = {}
     databricks_currentusers: dict[str, CurrentUser] = {}
     databricks_dashboards: dict[str, Dashboard] = {}
     databricks_dbfsfiles: dict[str, DbfsFile] = {}
