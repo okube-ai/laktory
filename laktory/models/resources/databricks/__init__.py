@@ -5,6 +5,7 @@ from .app import App
 from .catalog import Catalog
 from .cluster import Cluster
 from .clusterpolicy import ClusterPolicy
+from .connection import Connection
 from .currentuser import CurrentUser
 from .dashboard import Dashboard
 from .dbfsfile import DbfsFile
