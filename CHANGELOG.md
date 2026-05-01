@@ -1,6 +1,16 @@
 # Release History
 
-## [0.11.2] - Unreleased
+## [0.11.3] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.11.2] - 2026-05-01
 ### Added
 * Databricks `Entitlements` resource.
 ### Fixed
