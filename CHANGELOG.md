@@ -3,7 +3,10 @@
 ## [0.11.1] - Unreleased
 ### Fixed
 * Support for 2.0<=pydantic<2.9
-
+### Updated
+* Renamed resource field `options` to `resource_options`. `options` is still supported.
+### Breaking changes
+* Renamed resource field `resource_name` to `resource_options.name`
 
 ## [0.11.0] - 2026-04-29
 ### Added
