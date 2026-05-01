@@ -82,7 +82,7 @@ class TerraformStack(BaseModel):
                 d["data"][r.terraform_resource_lookup_type][r.resource_name] = (
                     r.lookup_existing.model_dump()
                 )
-                for k in r.deployment_options.terraform_options:
+                for k in r.resource_options.terraform_options:
                     if k in _d:
                         d["data"][r.terraform_resource_lookup_type][r.resource_name][
                             k
@@ -97,7 +97,7 @@ class TerraformStack(BaseModel):
         # Special treatment of moved blocks
         i = -1
         for r in self.resources.values():
-            _from = r.deployment_options.moved_from
+            _from = r.resource_options.moved_from
             if _from:
                 i += 1
                 d[f"moved_{i:05d}"] = {
@@ -108,7 +108,7 @@ class TerraformStack(BaseModel):
         # Special treatment of import
         i = -1
         for r in self.resources.values():
-            import_ = r.deployment_options.import_
+            import_ = r.resource_options.import_
             if import_:
                 i += 1
                 d[f"import_{i:05d}"] = {

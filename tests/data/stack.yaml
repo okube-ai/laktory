@@ -24,7 +24,7 @@ resources:
             permission_level: CAN_VIEW
           - group_name: role-engineers
             permission_level: CAN_RUN
-        deployment_options:
+        resource_options:
           provider: ${resources.databricks}
       nodes:
         - name: first_node
@@ -62,7 +62,7 @@ resources:
 
     job-disabled:
         name: job-disabled
-        deployment_options:
+        resource_options:
           is_enabled: False
         tasks:
           - task_key: ingest-metadata
@@ -80,7 +80,7 @@ resources:
     warehouse-disabled:
       name: disabled
       cluster_size: "X-Small"
-      deployment_options:
+      resource_options:
         is_enabled: False
 
   databricks_notebooks:

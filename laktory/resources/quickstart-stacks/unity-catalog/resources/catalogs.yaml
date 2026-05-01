@@ -20,7 +20,7 @@ catalog-dev:
     # for a complete example, refer to:
     # https://github.com/okube-ai/lakehouse-as-code/blob/main/unity-catalog/resources/catalogs.yaml
 
-  deployment_options:
+  resource_options:
     # The provider must be specified because catalogs are deployed at the
     # workspace level. If the catalog is isolated
     # (https://learn.microsoft.com/en-us/azure/databricks/catalogs/binding),
@@ -51,7 +51,7 @@ catalog-prd:
     # for a complete example, refer to:
     # https://github.com/okube-ai/lakehouse-as-code/blob/main/unity-catalog/resources/catalogs.yaml
 
-  deployment_options:
+  resource_options:
     # The provider must be specified because catalogs are deployed at the
     # workspace level. If the catalog is isolated
     # (https://learn.microsoft.com/en-us/azure/databricks/catalogs/binding),

@@ -65,14 +65,15 @@ class TerraformResource(BaseResource):
                 d[v] = d.pop(k)
 
         # Add options
+        values = self.resource_options.model_dump(exclude_unset=True)
         for k in ["depends_on", "provider"]:
-            value = self.deployment_options.model_dump(exclude_unset=True).get(k, None)
+            value = values.get(k, None)
             if value:
                 d[k] = value
 
         d["lifecycle"] = {}
         for k in ["ignore_changes"]:
-            value = self.deployment_options.model_dump(exclude_unset=True).get(k, None)
+            value = values.get(k, None)
             if value:
                 d["lifecycle"][k] = value
         if d["lifecycle"] == {}:

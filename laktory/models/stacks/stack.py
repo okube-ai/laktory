@@ -180,11 +180,11 @@ class StackResources(BaseModel):
     @model_validator(mode="after")
     def update_resource_names(self) -> Any:
         for k, r in self._get_all().items():
-            if r.resource_name_ and k != r.resource_name_:
+            if r.resource_options.name and k != r.resource_options.name:
                 raise ValueError(
-                    f"Provided resource name {r.resource_name_} does not match provided key {k}"
+                    f"Provided resource name {r.resource_options.name} does not match provided key {k}"
                 )
-            r.resource_name_ = k
+            r.resource_options.name = k
         return self
 
     def _get_all(self, providers_excluded=False, providers_only=False):
