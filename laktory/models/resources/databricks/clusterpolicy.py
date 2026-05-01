@@ -81,7 +81,7 @@ class ClusterPolicy(ClusterPolicyBase):
         if self.access_controls:
             resources += [
                 Permissions(
-                    resource_name=f"permissions-{self.resource_name}",
+                    resource_options={"name": f"permissions-{self.resource_name}"},
                     access_controls=self.access_controls,
                     cluster_policy_id=f"${{resources.{self.resource_name}.id}}",
                 )
