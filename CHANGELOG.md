@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* `workspace_bindings` for `NetworkConnectivityConfig` resource to accept 
 ### Updated
 * n/a
 ### Breaking changes

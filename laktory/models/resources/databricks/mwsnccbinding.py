@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from laktory.models.resources.databricks.mwsnccbinding_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.mwsnccbinding_base import MwsNccBindingBase
 
@@ -27,6 +29,11 @@ class MwsNccBinding(MwsNccBindingBase):
 
     * [Databricks MWS NCC Binding](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_ncc_binding)
     """
+
+    network_connectivity_config_id: str | None = Field(
+        ...,
+        description="Canonical unique identifier of Network Connectivity Config in Databricks Account",
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
