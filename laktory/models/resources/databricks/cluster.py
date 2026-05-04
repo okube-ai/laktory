@@ -27,7 +27,7 @@ class Cluster(ClusterBase):
     from laktory import models
 
     cluster_yaml = '''
-    name: default
+    cluster_name: default
     spark_version: 16.3.x-scala2.12
     data_security_mode: USER_ISOLATION
     node_type_id: Standard_DS3_v2
