@@ -304,7 +304,7 @@ def test_var_syntax():
 
     # Simple substitution
     c = Cluster(
-        cluster_name="${var.my_cluster}",
+        name="${var.my_cluster}",
         id="${var.cluster_id}",
         variables={
             "my_cluster": "laktory-cluster",
