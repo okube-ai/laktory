@@ -1,6 +1,16 @@
 # Release History
 
-## [0.11.3] - Unreleased
+## [0.11.4] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.11.3] - 2026-05-04
 ### Fixed
 * `workspace_bindings` for `NetworkConnectivityConfig` resource to accept 
 ### Updated
