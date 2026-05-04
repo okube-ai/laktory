@@ -94,6 +94,23 @@ class ModelMetaclass(_ModelMetaclass):
                 fi._attributes_set["validation_alias"] = alias
                 namespace[fname] = fi
 
+        # __optional_fields__: make specified inherited fields optional without re-declaring them
+        optional_fields = namespace.get("__optional_fields__", [])
+        if optional_fields:
+            annotations = namespace.setdefault("__annotations__", {})
+            remaining = set(optional_fields)
+            for base in bases:
+                if not remaining:
+                    break
+                if not hasattr(base, "model_fields"):
+                    continue
+                for fname in list(remaining):
+                    if fname in base.model_fields and fname not in annotations:
+                        fi = base.model_fields[fname]
+                        annotations[fname] = Union[fi.annotation, None]
+                        namespace[fname] = Field(None, description=fi.description)
+                        remaining.discard(fname)
+
         # Add var as a possible type hint of each model field to support variables injection
         for field_name in namespace.get("__annotations__", {}):
             type_hint = namespace["__annotations__"][field_name]

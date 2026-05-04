@@ -257,7 +257,7 @@ def test_dump():
 
 def test_stack():
     cluster = models.resources.databricks.Cluster(
-        name="cl",
+        cluster_name="cl",
         spark_version="3.12",
         node_type_id="xs",
         custom_tags={

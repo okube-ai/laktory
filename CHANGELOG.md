@@ -1,14 +1,10 @@
 # Release History
 
 ## [0.11.3] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
+* `workspace_bindings` for `NetworkConnectivityConfig` resource to accept 
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* Introduced `__optional_fields__` in BaseModel
 
 ## [0.11.2] - 2026-05-01
 ### Added

@@ -1,5 +1,3 @@
-from pydantic import Field
-
 from laktory.models.resources.databricks.secret_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.secret_base import SecretBase
 
@@ -31,7 +29,7 @@ class Secret(SecretBase):
     * [Databricks Secrets](https://docs.databricks.com/en/security/secrets/index.html)
     """
 
-    scope: str | None = Field(None, description="Name of the secret scope")
+    __optional_fields__ = ["scope"]
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

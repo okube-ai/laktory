@@ -1,6 +1,5 @@
 from typing import Union
 
-from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.resources.baseresource import ResourceLookup
@@ -28,7 +27,7 @@ class Cluster(ClusterBase):
     from laktory import models
 
     cluster_yaml = '''
-    name: default
+    cluster_name: default
     spark_version: 16.3.x-scala2.12
     data_security_mode: USER_ISOLATION
     node_type_id: Standard_DS3_v2
@@ -58,11 +57,6 @@ class Cluster(ClusterBase):
 
     access_controls: list[AccessControl] = Field(
         [], description="List of access controls"
-    )
-    cluster_name: str | None = Field(
-        None,
-        description="Cluster name, which doesn't have to be unique.",
-        validation_alias=AliasChoices("cluster_name", "name"),
     )
     lookup_existing: ClusterLookup = Field(
         None,
