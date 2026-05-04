@@ -50,9 +50,7 @@ class Table(TableBase):
     * [Databricks Unity Table](https://docs.databricks.com/en/data-governance/unity-catalog/index.html#tables)
     """
 
-    catalog_name: str | None = Field(
-        None, description="Name of the catalog storing the table"
-    )
+    __optional_fields__ = ["catalog_name", "schema_name"]
     grant: Union[TableGrant, list[TableGrant]] = Field(
         None,
         description="""
@@ -72,10 +70,6 @@ class Table(TableBase):
         exclude=True,
         description="Specifications for looking up existing resource. Other attributes will be ignored.",
     )
-    schema_name: str | None = Field(
-        None, description="Name of the schema storing the table"
-    )
-
     # ----------------------------------------------------------------------- #
     # Validators                                                              #
     # ----------------------------------------------------------------------- #
