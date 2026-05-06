@@ -10,7 +10,8 @@ pydantic.BaseModel
         ├── PipelineChild (laktory/models/pipelinechild.py) — tracks pipeline context
         ├── BaseChild (laktory/models/basechild.py) — tracks parent reference
         └── BaseResource (laktory/models/resources/baseresource.py) — adds options, lookup_existing
-              └── Xyz(BaseModel, PulumiResource, TerraformResource) — concrete resources
+              └── XyzBase(BaseModel, TerraformResource) — generated base (e.g. catalog_base.py)
+                    └── Xyz(XyzBase) — hand-written override (e.g. catalog.py)
 ```
 
 - `BaseModel` uses a custom metaclass (`ModelMetaclass`) that injects `VariableType` into every field, enabling `${vars.x}` substitution in all string values.
@@ -21,19 +22,23 @@ Key files: `laktory/models/basemodel.py`, `laktory/models/basechild.py`, `laktor
 
 ---
 
-## 2. Dual IaC Backend (Pulumi + Terraform)
+## 2. IaC Backend (Terraform)
 
-Every Databricks resource uses multiple inheritance to support both IaC backends simultaneously:
+All Databricks resource base classes inherit from `TerraformResource`:
 
 ```python
-class Catalog(BaseModel, PulumiResource, TerraformResource):
+# generated — laktory/models/resources/databricks/catalog_base.py
+class CatalogBase(BaseModel, TerraformResource):
+    ...
+
+# hand-written — laktory/models/resources/databricks/catalog.py
+class Catalog(CatalogBase):
     ...
 ```
 
-- `PulumiResource` (`laktory/models/resources/pulumiresource.py`) — provides `pulumi_dump()` and Pulumi resource registration
-- `TerraformResource` (`laktory/models/resources/terraformresource.py`) — provides `terraform_dump()` and HCL serialization
-
-Both mixins rely on `pulumi_dump()` / `terraform_dump()` using `model_dump(by_alias=True, exclude_unset=True)` with backend-specific transforms.
+- `TerraformResource` (`laktory/models/resources/terraformresource.py`) — provides `terraform_dump()`, HCL serialization, and the `terraform_resource_type` property
+- Pulumi was dropped in v0.11 (PR #537). There is no `PulumiResource` mixin.
+- The `iac_backend` property on `Stack` identifies which backend to use (only `"terraform"` is valid now)
 
 ---
 
@@ -91,7 +96,7 @@ Applies consistently to: `Catalog`, `Schema`, `Table`, `Volume`, `Function`, `Gr
 Every resource has an optional `lookup_existing` field (typed as `XyzLookup`) to reference a pre-existing cloud resource instead of creating a new one:
 
 ```python
-class Table(BaseModel, PulumiResource, TerraformResource):
+class Table(TableBase):
     lookup_existing: TableLookup | None = Field(None, exclude=True)
 ```
 
@@ -158,9 +163,85 @@ A `Stack` (`laktory/models/stacks/stack.py`) is the top-level deployment unit co
 
 This flat dictionary structure (rather than nesting) means all resources are directly addressable and can be iterated uniformly.
 
+`TerraformStack` (`laktory/models/stacks/terraformstack.py`) wraps `Stack` for Terraform-specific output. There is no `PulumiStack`.
+
 ---
 
-## 11. Testing Patterns
+## 11. Generated Base Class Pattern
+
+All Databricks resource models follow a two-file split: a generated base and a hand-written override.
+
+**Generated base** (`*_base.py`) — produced by `scripts/build_resources/01_build.py`:
+```python
+class CatalogBase(BaseModel, TerraformResource):
+    """Generated base class for `databricks_catalog`."""
+    __doc_generated_base__ = True
+
+    name: str | None = None
+    comment: str | None = None
+    force_destroy: bool | None = None
+    ...
+
+    @property
+    def terraform_resource_type(self) -> str:
+        return "databricks_catalog"
+```
+
+**Hand-written override** (`catalog.py`) — adds Laktory-specific logic:
+```python
+from laktory.models.resources.databricks.catalog_base import *  # NOQA: F403
+from laktory.models.resources.databricks.catalog_base import CatalogBase
+
+class Catalog(CatalogBase):
+    # grants, full_name, custom validators, doc examples, default overrides
+```
+
+Rules:
+- **Never hand-edit `*_base.py` files** — they are overwritten the next time `01_build.py` runs
+- To add or fix a field, either update the generation script or override it in the hand-written class
+- `__doc_generated_base__ = True` on the base class tells the griffe extension to split documentation into "Base" and "Laktory" field sections
+
+Generation workflow:
+```bash
+cd scripts/build_resources
+python 00_fetch.py   # fetch terraform provider schema + descriptions
+python 01_build.py   # regenerate all *_base.py files
+python 02_update_api.py  # regenerate docs/api/models/resources/databricks/*.md stubs
+```
+
+Key files: `scripts/build_resources/`, `laktory/models/resources/databricks/*_base.py`
+
+---
+
+## 12. DABs Deployment Path
+
+Databricks Declarative Automation Bundles (DABs) is a second deployment path for pipeline-level resources (Jobs, DLT Pipelines). Unity Catalog and account-level resources still require Terraform.
+
+**Entry point**: `laktory/dab.py` — exports `build_resources(bundle)`, which the Databricks CLI calls via `databricks.yml`:
+
+```yaml
+variables:
+  laktory_pipelines_dir: ./laktory/pipelines/
+  dab_workspace_root: ${workspace.root_path}
+python:
+  venv_path: .venv
+  resources:
+    - 'laktory.dab:build_resources'
+```
+
+**What `build_resources` does**:
+1. Discovers Laktory pipeline YAML files in the configured directory
+2. Injects DAB bundle variables into pipelines
+3. Writes pipeline JSON config files to the build directory for workspace sync
+4. Returns a DABs `Resources` object with all Job and DLT Pipeline definitions
+
+**Orchestrator integration**: `DatabricksJobOrchestrator` and `DatabricksPipelineOrchestrator` both have `to_dab_resource()` methods that convert Laktory orchestrator definitions to DAB-compatible resource dicts.
+
+Key files: `laktory/dab.py`, `laktory/models/orchestrators/databricksjoborchestrator.py`, `laktory/models/orchestrators/databrickspipelineorchestrator.py`
+
+---
+
+## 13. Testing Patterns
 
 - Tests are parametrized over backends: `@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])`
 - Databricks-only tests are marked: `@pytest.mark.databricks_connect` and excluded from standard test run

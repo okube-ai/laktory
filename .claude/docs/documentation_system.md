@@ -131,11 +131,22 @@ class MyModel(SomeParent):
 
 This accumulates across the MRO — each class in the chain can add its own set.
 
-### 3. Sort fields alphabetically
+### 3. Split fields by origin for generated resource classes (`__doc_generated_base__`)
 
-All visible fields (own + inherited, after hiding) are sorted alphabetically within their parameter/attribute section. This gives consistent ordering across all model documentation pages.
+Resource classes that inherit from a generated base (e.g. `Catalog(CatalogBase)`) have their visible fields split into two labeled parameter sections:
 
-### 4. Fix `VariableType` hyperlinks (issue #444)
+- **Base** — fields whose names appear in the `*Base` class (i.e., come from the Terraform schema)
+- **Laktory** — fields defined only in the hand-written override class
+
+The split is triggered by `__doc_generated_base__ = True` on the base class. The extension walks the MRO to find the nearest such base, collects its annotated field names, and uses that set to partition the fields.
+
+If a resource class has no `__doc_generated_base__` ancestor, all visible fields are sorted alphabetically in a single section (the original behavior).
+
+### 4. Sort fields alphabetically
+
+All visible fields within each section (Base, Laktory, or unsplit) are sorted alphabetically. This gives consistent ordering across all model documentation pages.
+
+### 5. Fix `VariableType` hyperlinks (issue #444)
 
 **Root cause**: `laktory.typing.VariableType` is a custom `str` subclass injected at runtime into all Pydantic model field types by `ModelMetaclass` (in `basemodel.py`). Source files declare `path: str` but at runtime it becomes `Union[str, VariableType]`. griffe_fieldz reads runtime field types and correctly identifies the union, but its `display_as_type()` function strips module prefixes, producing the string `"bool | VariableType"`. When parsed into a griffe `ExprName('VariableType')`, there is no `parent` context pointing to `laktory.typing`, so autorefs can't resolve the link.
 
@@ -152,7 +163,30 @@ All visible fields (own + inherited, after hiding) are sorted alphabetically wit
 
 ---
 
+## Resource Doc Stub Generation
+
+`docs/api/models/resources/databricks/*.md` stubs are **auto-generated** by `scripts/build_resources/02_update_api.py`. Do not hand-edit them — they are overwritten the next time the generation pipeline runs.
+
+The script is part of the resource build workflow:
+```bash
+python scripts/build_resources/00_fetch.py   # fetch schema
+python scripts/build_resources/01_build.py   # regenerate *_base.py files
+python scripts/build_resources/02_update_api.py  # regenerate doc stubs
+```
+
+After running `02_update_api.py`, verify docs still build cleanly:
+```bash
+mkdocs build --strict
+```
+
+Non-Databricks resource stubs (e.g. `docs/api/models/stacks/`, `docs/api/models/pipeline/`) are still managed by `docs/gen_api_docs.py`.
+
+---
+
 ## Model Class Conventions for Documentation
+
+### `__doc_generated_base__ = True`
+Add to auto-generated base classes (i.e., all `*Base` resource classes in `*_base.py`). Tells the griffe extension to split the child class's fields into "Base" (Terraform-originated) and "Laktory" (hand-written) sections. Set by `scripts/build_resources/01_build.py` — do not add or remove manually.
 
 ### `__doc_hide_base__ = True`
 Add to a base class when ALL its fields and methods should be invisible in child class docs. The base class gets its own documentation page (its fields are shown there), but children don't repeat them.
