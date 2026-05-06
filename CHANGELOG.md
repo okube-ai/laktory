@@ -7,7 +7,7 @@
 * Definition of grants on Databricks `Connection` resources
 * Dependency between secret scope and its ACL
 ### Updated
-* n/a
+* Better error messages on recursive loader and identification of circular dependencies
 ### Breaking changes
 * n/a
 
