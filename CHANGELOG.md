@@ -4,7 +4,8 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* Definition of grants on Databricks `Connection` resources
+* Dependency between secret scope and its ACL
 ### Updated
 * n/a
 ### Breaking changes

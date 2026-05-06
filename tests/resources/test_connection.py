@@ -33,6 +33,9 @@ def test_additional_resources():
     assert len(resources) == 1
     assert isinstance(resources[0], Grants)
     assert resources[0].resource_name == "grants-connection-my-mysql"
+    assert (
+        resources[0].foreign_connection == "${resources.connection-my-mysql.full_name}"
+    )
 
 
 def test_grant():

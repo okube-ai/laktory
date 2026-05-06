@@ -69,7 +69,9 @@ class Connection(ConnectionBase):
         resources = []
 
         resources += self.get_grants_additional_resources(
-            object={"foreign_connection": f"${{resources.{self.resource_name}.id}}"}
+            object={
+                "foreign_connection": f"${{resources.{self.resource_name}.full_name}}"
+            }
         )
         return resources
 
