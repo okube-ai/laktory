@@ -10,34 +10,41 @@ def show_version_info() -> str:
     from importlib.metadata import version
 
     package_names = {
-        "databricks-sdk",
-        "delta-spark",
-        "deltalake",
+        # core
         "inflect",
+        "narwhals",
+        "networkx",
+        "planck",
+        "platformdirs",
+        "prompt_toolkit",
+        "pydantic",
+        "pydantic-settings",
+        "pyyaml",
+        "sqlglot",
+        "sqlglotc",
+        "typer",
+        # polars extra
+        "deltalake",
+        "polars",
+        "sqlparse",
+        # pyspark extra
+        "delta-spark",
+        "pyarrow",
+        "pyspark",
+        # databricks extra
+        "databricks-bundles",
+        "databricks-sdk",
+        # dev
         "mkdocs",
         "mkdocs-material",
         "mkdocs-video",
         "mkdocstrings",
-        "narwhals",
-        "networkx",
-        "numpy",
         "pandas",
-        "planck",
         "plotly",
-        "polars",
-        "prompt_toolkit",
-        "pyarrow",
-        "pydantic",
-        "pyspark",
         "pytest",
         "pytest-cov",
         "pytest-examples",
-        "python-dateutil",
-        "pyyaml",
-        "sqlglotsqlparse",
-        "typer",
-        "typing_extensions",
-        "uv",
+        "pytest-mock",
     }
     packages = {}
 
