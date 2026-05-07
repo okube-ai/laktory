@@ -16,7 +16,7 @@ class TerraformResource(BaseResource):
 
     @property
     @abstractmethod
-    def terraform_resource_type(self) -> str:
+    def terraform_resource_type(self) -> str | None:
         raise NotImplementedError()
 
     @property

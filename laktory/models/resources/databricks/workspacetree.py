@@ -8,12 +8,12 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.notebook import Notebook
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
-from laktory.models.resources.terraformresource import TerraformResource
+from laktory.models.resources.virtualterraformresource import VirtualTerraformResource
 
 logger = get_logger(__name__)
 
 
-class WorkspaceTree(BaseModel, TerraformResource):
+class WorkspaceTree(BaseModel, VirtualTerraformResource):
     """
     Databricks Workspace Tree (collections of directories, notebooks and
     workspace files)
@@ -48,10 +48,6 @@ class WorkspaceTree(BaseModel, TerraformResource):
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def self_as_core_resources(self) -> bool:
-        return False
 
     @property
     def additional_core_resources(self) -> list:
@@ -114,11 +110,3 @@ class WorkspaceTree(BaseModel, TerraformResource):
             resources += [r]
 
         return resources
-
-    # ----------------------------------------------------------------------- #
-    # Terraform Properties                                                    #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str | None:
-        return None

@@ -30,7 +30,7 @@ from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import
 )
 from laktory.models.pipeline.pipelinenode import PipelineNode
 from laktory.models.pipelinechild import PipelineChild
-from laktory.models.resources.terraformresource import TerraformResource
+from laktory.models.resources.virtualterraformresource import VirtualTerraformResource
 from laktory.typing import AnyFrame
 
 if TYPE_CHECKING:
@@ -86,7 +86,7 @@ def parse_requirement_name(req: str) -> str | None:
 # --------------------------------------------------------------------------- #
 
 
-class Pipeline(BaseModel, TerraformResource, PipelineChild):
+class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
     """
     Pipeline model to manage a data pipeline including reading from data sources,
     applying data transformations and outputting to data sinks.
@@ -743,10 +743,6 @@ class Pipeline(BaseModel, TerraformResource, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def self_as_core_resources(self):
-        return False
-
-    @property
     def resource_type_id(self) -> str:
         """
         pl
@@ -771,11 +767,3 @@ class Pipeline(BaseModel, TerraformResource, PipelineChild):
             resources += [self.orchestrator]
 
         return resources
-
-    # ----------------------------------------------------------------------- #
-    # Terraform Properties                                                    #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def terraform_resource_type(self) -> str:
-        return ""
