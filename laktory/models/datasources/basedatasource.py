@@ -44,9 +44,6 @@ class BaseDataSource(BaseModel, PipelineChild):
         False,
         description="If `True`source is read as a streaming DataFrame. Currently only supported by Spark DataFrame backend.",
     )
-    # broadcast: bool = Field(
-    #         False, description="If `True` DataFrame is broadcasted."
-    #     )
     drop_duplicates: bool | list[str] = Field(
         None,
         description="Remove duplicated rows from source using all columns if `True` or only the provided column names.",
@@ -63,12 +60,10 @@ class BaseDataSource(BaseModel, PipelineChild):
         None,
         description="Mapping between the source column names and desired column names",
     )
-    # sample: DataFrameSample = None
     selects: list[str] | dict[str, str] = Field(
         None,
         description="Columns to select from the source. Can be specified as a list or as a dictionary to rename the source columns",
     )
-    # watermark: Watermark | None = Field(None, description="Spark structured streaming watermark specifications")
     type: Literal["CUSTOM", "DATAFRAME", "FILE", "UNITY_CATALOG", "HIVE_METASTORE"] = (
         Field(..., description="Name of the data source type")
     )

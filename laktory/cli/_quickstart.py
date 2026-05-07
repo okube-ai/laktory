@@ -59,7 +59,7 @@ def quickstart(
     target_dir = "./"
 
     # Iterate through files
-    for root, dits, filenames in os.walk(source_dir):
+    for root, dirs, filenames in os.walk(source_dir):
         _target_dir = os.path.join(target_dir, os.path.relpath(root, source_dir))
 
         # Build directories
