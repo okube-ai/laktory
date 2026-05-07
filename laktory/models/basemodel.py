@@ -4,7 +4,6 @@ import copy
 import json
 import re
 import typing
-from contextlib import contextmanager
 from copy import deepcopy
 from typing import Any
 from typing import TextIO
@@ -324,35 +323,25 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     # ----------------------------------------------------------------------- #
 
     # ----------------------------------------------------------------------- #
-    # Validation ByPass                                                       #
+    # Field Assignment                                                        #
     # ----------------------------------------------------------------------- #
 
-    @contextmanager
-    def validate_assignment_disabled(self):
+    def _setattr(self, name: str, value: Any) -> None:
         """
-        Updating a model attribute inside a model validator when `validate_assignment`
-        is `True` causes an infinite recursion by design and must be turned off
-        temporarily.
+        Set a field value bypassing Pydantic's ``validate_assignment`` machinery.
 
-        Pydantic v2 memoizes setattr handlers at the class level. If a field's handler
-        was memoized as the validate_assignment handler (because a previous setattr ran
-        while validate_assignment=True), it would still call validate_assignment() even
-        after setting model_config["validate_assignment"] = False. We clear and restore
-        the memoized handlers to force re-evaluation with the disabled config.
+        Use this inside ``@model_validator(mode="after")`` bodies when you need
+        to write back to a field without re-triggering the validator chain.
+        Calling ``self.field = value`` there would cause infinite recursion
+        because ``validate_assignment=True`` re-runs all model validators on
+        every attribute write. ``object.__setattr__`` sidesteps that by going
+        directly to Python's base attribute-setting primitive, which Pydantic
+        does not intercept.
+
+        Do not use this outside of model validators — prefer normal attribute
+        assignment so that validation stays active.
         """
-        cls = self.__class__
-        original_state = cls.model_config["validate_assignment"]
-        handlers = getattr(cls, "__pydantic_setattr_handlers__", None)
-        original_handlers = dict(handlers) if handlers is not None else None
-        cls.model_config["validate_assignment"] = False
-        if handlers is not None:
-            handlers.clear()
-        try:
-            yield
-        finally:
-            cls.model_config["validate_assignment"] = original_state
-            if handlers is not None and original_handlers is not None:
-                handlers.update(original_handlers)
+        object.__setattr__(self, name, value)
 
     # ----------------------------------------------------------------------- #
     # Variables Injection                                                     #

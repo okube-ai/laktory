@@ -100,8 +100,9 @@ class DataFrameDataSource(BaseDataSource):
             if not isinstance(self.df, (nw.DataFrame, nw.LazyFrame)):
                 self.df = nw.from_native(self.df)
 
-            with self.validate_assignment_disabled():
-                self.dataframe_backend_ = DataFrameBackends(self.df.implementation)
+            self._setattr(
+                "dataframe_backend_", DataFrameBackends(self.df.implementation)
+            )
 
         return self
 

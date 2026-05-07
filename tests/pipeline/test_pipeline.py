@@ -489,9 +489,8 @@ def test_inject_vars(tmp_path):
     node = pl.nodes[0]
     sink = node.sinks[0]
 
-    with sink.validate_assignment_disabled():
-        sink.schema_name = "${{ pipeline_node.name }}"
-        sink.table_name = "${{ pipeline.name }}"
+    sink._setattr("schema_name", "${{ pipeline_node.name }}")
+    sink._setattr("table_name", "${{ pipeline.name }}")
 
     pl2 = pl.inject_vars()
 
