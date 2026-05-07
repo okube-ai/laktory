@@ -70,18 +70,15 @@ class BaseDataSource(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def options(self) -> Any:
-        with self.validate_assignment_disabled():
-            if self.dataframe_backend == DataFrameBackends.PYSPARK:
-                pass
-            elif self.dataframe_backend == DataFrameBackends.POLARS:
-                if self.as_stream:
-                    raise ValueError(
-                        "Streaming read is not supported with Polars Backend."
-                    )
-                # if self.watermark:
-                #     raise ValueError("Polars DataFrames don't support watermarking.")
-                # if self.broadcast:
-                #     raise ValueError("Polars DataFrames don't support broadcasting.")
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
+            pass
+        elif self.dataframe_backend == DataFrameBackends.POLARS:
+            if self.as_stream:
+                raise ValueError("Streaming read is not supported with Polars Backend.")
+            # if self.watermark:
+            #     raise ValueError("Polars DataFrames don't support watermarking.")
+            # if self.broadcast:
+            #     raise ValueError("Polars DataFrames don't support broadcasting.")
 
         return self
 

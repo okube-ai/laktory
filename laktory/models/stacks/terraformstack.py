@@ -7,7 +7,6 @@ from typing import Any
 from pydantic import model_validator
 
 from laktory._logger import get_logger
-from laktory._parsers import _resolve_values
 from laktory._settings import settings
 from laktory._useragent import set_databricks_sdk_upstream
 from laktory.constants import CACHE_ROOT
@@ -15,6 +14,26 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.resources.providers.baseprovider import BaseProvider
 
 logger = get_logger(__name__)
+
+
+def _substitute_terraform_refs(obj, simple_map, property_patterns):
+    if isinstance(obj, str):
+        for literal, replacement in simple_map.items():
+            obj = obj.replace(literal, replacement)
+        if isinstance(obj, str):
+            for pattern, replacement_fn in property_patterns:
+                obj = re.sub(pattern, replacement_fn, obj)
+        return obj
+    elif isinstance(obj, dict):
+        return {
+            k: _substitute_terraform_refs(v, simple_map, property_patterns)
+            for k, v in obj.items()
+        }
+    elif isinstance(obj, list):
+        return [
+            _substitute_terraform_refs(v, simple_map, property_patterns) for v in obj
+        ]
+    return obj
 
 
 class ConfigValue(BaseModel):
@@ -115,33 +134,29 @@ class TerraformStack(BaseModel):
                     "to": f"{r.terraform_resource_type}.{r.resource_name}",
                 }
 
-        # Terraform JSON requires the keyword "resources." to be removed and the
-        # resource_name to be replaced with resource_type.resource_name.
-        _vars = {}
+        # Translate ${resources.xxx} references into Terraform cross-references.
+        # Simple refs use str.replace (no regex) to avoid metacharacter issues.
+        # Property refs use re.escape on the resource name and a lambda replacement
+        # to avoid backreference ambiguity in the substitution string.
+        simple_map = {}
+        property_patterns = []
         for r in list(self.resources.values()) + list(self.providers.values()):
             k0 = r.resource_name
-
             k1 = f"{r.terraform_resource_type}.{r.resource_name}"
-            # special treatment for data sources
             if r.lookup_existing:
                 k1 = f"data.{r.terraform_resource_lookup_type}.{r.resource_name}"
 
+            literal = f"${{resources.{k0}}}"
             if isinstance(r, BaseProvider):
-                pattern = r"\$\{resources." + k0 + "}"
-                _vars[pattern] = k0
-
+                simple_map[literal] = k0
             else:
-                # ${resources.resource_name} -> resource_type.resource_name
-                pattern = r"\$\{resources\." + k0 + r"\}"
-                _vars[pattern] = k1
+                simple_map[literal] = k1
+                pattern = r"\$\{resources\." + re.escape(k0) + r"\.(.*?)\}"
+                property_patterns.append(
+                    (pattern, lambda m, k1=k1: f"${{{k1}.{m.group(1)}}}")
+                )
 
-                # ${resources.resource_name.property} -> ${resource_type.resource_name.property}
-                pattern = r"\$\{resources\." + k0 + r"\.(.*?)\}"
-                _vars[pattern] = rf"${{{k1}.\1}}"
-
-        # Because all variables are mapped to a string, it is more efficient
-        # (>10x) to convert the dict to string before substitution.
-        d = json.loads(_resolve_values(json.dumps(d), vars=_vars, objs={}))
+        d = _substitute_terraform_refs(d, simple_map, property_patterns)
 
         return d
 

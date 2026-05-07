@@ -79,30 +79,26 @@ class PipelineChild(BaseChild):
     def parent_pipeline(self):
         from laktory.models.pipeline.pipeline import Pipeline
 
-        def _get_pl(o):
-            parent = getattr(o, "_parent", None)
+        node = self
+        for _ in range(50):
+            parent = getattr(node, "_parent", None)
             if parent is None:
                 return None
-
             if isinstance(parent, Pipeline):
                 return parent
-
-            return _get_pl(parent)
-
-        return _get_pl(self)
+            node = parent
+        return None
 
     @property
     def parent_pipeline_node(self):
         from laktory.models.pipeline.pipelinenode import PipelineNode
 
-        def _get_pl(o):
-            parent = getattr(o, "_parent", None)
+        node = self
+        for _ in range(50):
+            parent = getattr(node, "_parent", None)
             if parent is None:
                 return None
-
             if isinstance(parent, PipelineNode):
                 return parent
-
-            return _get_pl(parent)
-
-        return _get_pl(self)
+            node = parent
+        return None

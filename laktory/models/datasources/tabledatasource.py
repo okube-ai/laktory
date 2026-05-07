@@ -47,12 +47,11 @@ class TableDataSource(BaseDataSource):
         # names = re.findall(r"\$\{vars\.[^}]+\}|[^.]+", name)
         names = re.split(r"\.(?![^{}]*})", name)
 
-        with self.validate_assignment_disabled():
-            self.table_name = names[-1]
-            if len(names) > 1:
-                self.schema_name = names[-2]
-            if len(names) > 2:
-                self.catalog_name = names[-3]
+        self._setattr("table_name", names[-1])
+        if len(names) > 1:
+            self._setattr("schema_name", names[-2])
+        if len(names) > 2:
+            self._setattr("catalog_name", names[-3])
 
         return self
 

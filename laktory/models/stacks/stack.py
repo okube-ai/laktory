@@ -1,3 +1,4 @@
+import re
 from typing import Any
 from typing import Literal
 
@@ -397,6 +398,25 @@ class Stack(BaseModel):
 
         logger.info("Build completed.")
 
+    def _apply_env_overrides(self, env: EnvironmentSettings) -> "Stack":
+        """
+        Return a new Stack where *env*'s settings are merged on top of this
+        stack's defaults.
+
+        Merge rules
+        -----------
+        - ``variables``: key-by-key merge; env values take precedence over
+          stack defaults.  Keys present only in the stack are preserved; keys
+          present only in the env are added; keys present in both use the env
+          value.
+        - All other fields (``resources``, ``terraform``, …): env value
+          replaces the stack default entirely when set.
+        - ``environments`` is cleared on the returned copy (already resolved).
+        """
+        merged = self.model_copy(update={"environments": {}})
+        merged.update(env.model_dump(exclude_unset=True))
+        return merged
+
     def get_env(self, env_name: str | None):
         """
         Complete definition the stack for a given environment. It takes into
@@ -420,9 +440,26 @@ class Stack(BaseModel):
         if env_name not in self.environments.keys():
             raise ValueError(f"Environment '{env_name}' is not declared in the stack.")
 
-        env = self.model_copy(update={"environments": {}})
-        env.update(self.environments[env_name].model_dump(exclude_unset=True))
-        return env
+        return self._apply_env_overrides(self.environments[env_name])
+
+    # ----------------------------------------------------------------------- #
+    # Helpers                                                                 #
+    # ----------------------------------------------------------------------- #
+
+    @staticmethod
+    def _check_depends_on(resources: dict, providers: dict) -> None:
+        """Warn when a depends_on entry references a ${resources.X} name that
+        does not exist in the stack, catching typos before Terraform apply."""
+        known = set(resources) | set(providers)
+        pattern = re.compile(r"\$\{resources\.([^}.]+)")
+        for _r in resources.values():
+            for dep in _r.resource_options.depends_on:
+                m = pattern.search(dep)
+                if m and m.group(1) not in known:
+                    logger.warning(
+                        f"Resource '{_r.resource_options.name}' has depends_on "
+                        f"entry '{dep}' that references unknown resource '{m.group(1)}'."
+                    )
 
     # ----------------------------------------------------------------------- #
     # Terraform Methods                                                       #
@@ -459,6 +496,8 @@ class Stack(BaseModel):
         for r in env.resources._get_all(providers_excluded=True).values():
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
+
+        self._check_depends_on(resources, providers)
 
         # Update terraform
         return TerraformStack(

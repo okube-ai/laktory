@@ -8,6 +8,10 @@ from laktory._settings import DEFAULT_WORKSPACE_ROOT
 
 logger = get_logger(__name__)
 
+# DABs always places synced files under {workspace.root_path}/files/
+# https://docs.databricks.com/aws/en/dev-tools/bundles/settings#sync
+_DAB_FILES_SUBDIR = "files"
+
 
 def build_resources(bundle):
     """
@@ -91,7 +95,9 @@ def build_resources(bundle):
         # Build Path relative to Bundle root
         build_root_abs = settings.build_root
         build_root_rel = os.path.relpath(build_root_abs, bundle_dirpath)
-        settings.workspace_root = f"{dab_workspace_root}/files/{build_root_rel}/"
+        settings.workspace_root = (
+            f"{dab_workspace_root}/{_DAB_FILES_SUBDIR}/{build_root_rel}/"
+        )
 
     # Laktory expect the workspace root to exclude "/Workspace/"
     settings.workspace_root = settings.workspace_root.replace("/Workspace/", "/")

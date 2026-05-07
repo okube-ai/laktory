@@ -3,6 +3,7 @@ from pydantic import Field
 from laktory._logger import get_logger
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks._unitycatalogmixin import UnityCatalogMixin
 from laktory.models.resources.databricks.table_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.table_base import TableBase
 
@@ -16,7 +17,7 @@ class TableLookup(ResourceLookup):
     )
 
 
-class Table(TableBase):
+class Table(UnityCatalogMixin, TableBase):
     """
     A table resides in the third layer of Unity Catalog’s three-level namespace. It contains rows of data.
 
@@ -77,31 +78,11 @@ class Table(TableBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def parent_full_name(self) -> str:
-        """Schema full name `{catalog_name}.{schema_name}`"""
-        _id = ""
-        if self.catalog_name:
-            _id += self.catalog_name
-
-        if self.schema_name:
-            if _id == "":
-                _id = self.schema_name
-            else:
-                _id += f".{self.schema_name}"
-
-        return _id
-
-    @property
     def full_name(self) -> str:
         """Table full name `{catalog_name}.{schema_name}.{table_name}`"""
-
         if self.lookup_existing:
             return self.lookup_existing.name
-
-        _id = self.name
-        if self.parent_full_name is not None:
-            _id = f"{self.parent_full_name}.{_id}"
-        return _id
+        return super().full_name
 
     @property
     def column_names(self) -> list[str]:
@@ -120,11 +101,6 @@ class Table(TableBase):
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def resource_key(self) -> str:
-        """Table full name (catalog.schema.table)"""
-        return self.full_name
 
     @property
     def additional_core_resources(self) -> list:

@@ -68,13 +68,12 @@ class Pipeline(PipelineBase):
 
     @model_validator(mode="after")
     def update_name(self) -> Any:
-        with self.validate_assignment_disabled():
-            if self.name_prefix:
-                self.name = self.name_prefix + self.name
-                self.name_prefix = ""
-            if self.name_suffix:
-                self.name = self.name + self.name_suffix
-                self.name_suffix = ""
+        if self.name_prefix:
+            self._setattr("name", self.name_prefix + self.name)
+            self._setattr("name_prefix", "")
+        if self.name_suffix:
+            self._setattr("name", self.name + self.name_suffix)
+            self._setattr("name_suffix", "")
         return self
 
     # ----------------------------------------------------------------------- #
