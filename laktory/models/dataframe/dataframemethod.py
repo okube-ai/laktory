@@ -3,8 +3,6 @@ from typing import Any
 
 # from typing import Callable
 # from typing import Literal
-from typing import Union
-
 import narwhals as nw
 from pydantic import Field
 from pydantic import model_validator
@@ -263,7 +261,7 @@ class DataFrameMethod(BaseModel, PipelineChild):
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
 
-    def execute(self, df: AnyFrame) -> Union[AnyFrame]:
+    def execute(self, df: AnyFrame) -> AnyFrame:
         """
         Execute method on provided DataFrame `df`.
 

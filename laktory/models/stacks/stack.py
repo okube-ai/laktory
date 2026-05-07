@@ -1,6 +1,5 @@
 from typing import Any
 from typing import Literal
-from typing import Union
 
 from pydantic import Field
 from pydantic import model_validator
@@ -77,7 +76,7 @@ DIRPATH = "./"
 
 
 class Terraform(BaseModel):
-    backend: Union[dict[str, Any], None] = None
+    backend: dict[str, Any] | None = None
 
 
 class LaktorySettings(BaseModel):
@@ -179,7 +178,7 @@ class StackResources(BaseModel):
     databricks_workspacefiles: dict[str, WorkspaceFile | PythonPackage] = {}
     databricks_workspacetrees: dict[str, WorkspaceTree | PythonPackage] = {}
     pipelines: dict[str, Pipeline] = {}
-    providers: dict[str, Union[AWSProvider, AzureProvider, DatabricksProvider]] = {}
+    providers: dict[str, AWSProvider | AzureProvider | DatabricksProvider] = {}
 
     @model_validator(mode="after")
     def update_resource_names(self) -> Any:
@@ -322,8 +321,8 @@ class Stack(BaseModel):
         ...,
         description="Name of the stack.",
     )
-    organization: Union[str, None] = Field(None, description="Organization")
-    resources: Union[StackResources, None] = Field(
+    organization: str | None = Field(None, description="Organization")
+    resources: StackResources | None = Field(
         StackResources(),
         description="""
     Dictionary of resources to be deployed. Each key should be a resource type and each value should be a dictionary of
@@ -429,7 +428,7 @@ class Stack(BaseModel):
     # Terraform Methods                                                       #
     # ----------------------------------------------------------------------- #
 
-    def to_terraform(self, env_name: Union[str, None] = None):
+    def to_terraform(self, env_name: str | None = None):
         """
         Create a terraform stack for a given environment `env`.
 

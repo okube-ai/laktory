@@ -1,5 +1,4 @@
 from typing import Literal
-from typing import Union
 
 from pydantic import Field
 
@@ -71,7 +70,7 @@ class Volume(VolumeBase):
     )
 
     # Laktory-specific
-    grant: Union[VolumeGrant, list[VolumeGrant]] = Field(
+    grant: VolumeGrant | list[VolumeGrant] = Field(
         None,
         description="""
     Grant(s) operating on the Volume and authoritative for a specific principal. Other principals within the grants are
@@ -140,5 +139,5 @@ class Volume(VolumeBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["grant", "grants"]

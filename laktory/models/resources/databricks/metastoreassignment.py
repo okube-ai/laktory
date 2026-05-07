@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic import Field
 
 from laktory.models.resources.databricks.metastoreassignment_base import *  # NOQA: F403 required for documentation
@@ -36,7 +34,7 @@ class MetastoreAssignment(MetastoreAssignmentBase):
     """
 
     # Laktory injects metastore_id from the parent Metastore resource
-    metastore_id: Union[int, str, None] = Field(None, description="ID of the metastore")
+    metastore_id: int | str | None = Field(None, description="ID of the metastore")
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

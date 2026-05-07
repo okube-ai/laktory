@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Union
 
 from pydantic import AliasChoices
 from pydantic import Field
@@ -185,7 +184,7 @@ class PythonPackage(BaseModel, TerraformResource):
         return "databricks_workspace_file"
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return [
             "access_controls",
             "build_command",

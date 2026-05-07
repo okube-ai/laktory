@@ -1,6 +1,5 @@
 import json
 from typing import Any
-from typing import Union
 
 from pydantic import Field
 from pydantic import field_validator
@@ -57,13 +56,13 @@ class ClusterPolicy(ClusterPolicyBase):
     access_controls: list[AccessControl] = Field(
         [], description="List of access controls"
     )
-    definition: Union[str, dict[str, Any]] = Field(
+    definition: str | dict[str, Any] = Field(
         None,
         description="Policy definition: JSON document expressed in Databricks Policy Definition Language.",
     )
 
     @field_validator("definition")
-    def validate_type(cls, v: Union[str, dict[str, str]]) -> str:
+    def validate_type(cls, v: str | dict[str, str]) -> str:
         if isinstance(v, dict):
             v = json.dumps(v)
         return v
@@ -93,5 +92,5 @@ class ClusterPolicy(ClusterPolicyBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["access_controls"]

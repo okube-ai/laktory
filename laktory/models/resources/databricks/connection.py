@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic import Field
 
 from laktory.models.grants.connectiongrant import ConnectionGrant
@@ -42,7 +40,7 @@ class Connection(ConnectionBase):
     * [Databricks Connection](https://docs.databricks.com/en/query-federation/index.html)
     """
 
-    grant: Union[ConnectionGrant, list[ConnectionGrant]] = Field(
+    grant: ConnectionGrant | list[ConnectionGrant] = Field(
         None,
         description="""
     Grant(s) operating on the Connection and authoritative for a specific principal.
@@ -80,5 +78,5 @@ class Connection(ConnectionBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["grant", "grants"]

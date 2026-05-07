@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Union
 
 from pydantic import Field
 from pydantic import model_validator
@@ -105,7 +104,7 @@ class Warehouse(SqlEndpointBase):
         return "databricks_sql_warehouse"
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["access_controls"]
 
     @property

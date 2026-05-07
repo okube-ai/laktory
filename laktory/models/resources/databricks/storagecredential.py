@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
@@ -76,7 +74,7 @@ class StorageCredential(StorageCredentialBase):
     * [Databricks Storage Credential](https://docs.databricks.com/en/connect/unity-catalog/storage-credentials.html)
     """
 
-    grant: Union[StorageCredentialGrant, list[StorageCredentialGrant]] = Field(
+    grant: StorageCredentialGrant | list[StorageCredentialGrant] = Field(
         None,
         description="""
     Grant(s) operating on the Storage Credential and authoritative for a specific principal. Other principals within 
@@ -113,5 +111,5 @@ class StorageCredential(StorageCredentialBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["grant", "grants"]

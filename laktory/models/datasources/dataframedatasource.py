@@ -8,10 +8,9 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.datasources.basedatasource import BaseDataSource
+from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
-
-AnyFrame = nw.DataFrame | nw.LazyFrame
 
 
 class DataFrameDataSource(BaseDataSource):

@@ -1,6 +1,5 @@
 import os
 import subprocess
-from typing import Union
 
 from prompt_toolkit.validation import ValidationError
 from prompt_toolkit.validation import Validator
@@ -36,11 +35,11 @@ class BackendValidator(Validator):
 
 
 class CLIController(BaseModel):
-    stack_filepath: Union[str, None] = None
-    env: Union[str, None] = None
-    auto_approve: Union[bool, None] = False
-    options_str: Union[str, None] = None
-    stack: Union[Stack, None] = None
+    stack_filepath: str | None = None
+    env: str | None = None
+    auto_approve: bool | None = False
+    options_str: str | None = None
+    stack: Stack | None = None
 
     def model_post_init(self, __context):
         super().model_post_init(__context)

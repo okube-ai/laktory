@@ -1,13 +1,12 @@
 from datetime import date
 from datetime import datetime
 from datetime import timezone
-from typing import Union
 
 from planck import units
 
 
 def unix_timestamp(
-    dt: Union[str, int, float, datetime, date] = None,
+    dt: str | int | float | datetime | date = None,
     unit: str = "s",
     as_int: bool = False,
 ) -> float:
@@ -95,7 +94,7 @@ def unix_timestamp(
 
 
 def utc_datetime(
-    unixtime: Union[datetime, date, str, float, int] = None,
+    unixtime: datetime | date | str | float | int = None,
 ) -> datetime:
     """
     Convert a unix timestamp into a datetime object. If `None` is provided,

@@ -57,7 +57,7 @@ Anti-patterns, dead code, deprecated usage, naming inconsistencies.
 
 | # | File | Issue |
 |---|------|-------|
-| Q8 | `laktory/models/datasources/filedatasource.py:23` + `laktory/models/datasinks/filedatasink.py:16` | `SUPPORTED_FORMATS` dict defined identically in both files — extract to a shared module |
+| ~~Q8~~ | `laktory/models/datasources/filedatasource.py:23` + `laktory/models/datasinks/filedatasink.py:16` | **Won't fix** — kept separate intentionally to allow sources and sinks to diverge on supported formats independently |
 | Q9 | `laktory/typing.py` + `laktory/models/datasources/dataframedatasource.py:14` | `AnyFrame` type alias defined in both places — use the one from `laktory.typing` everywhere |
 
 ### Style inconsistencies

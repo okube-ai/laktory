@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic import Field
 
 from laktory.models.grants.metastoregrant import MetastoreGrant
@@ -48,7 +46,7 @@ class Metastore(MetastoreBase):
     * [Databricks Metastore](https://docs.databricks.com/en/data-governance/unity-catalog/create-metastore.html)
     """
 
-    grant: Union[MetastoreGrant, list[MetastoreGrant]] = Field(
+    grant: MetastoreGrant | list[MetastoreGrant] = Field(
         None,
         description="""
     Grant(s) operating on the Metastore and authoritative for a specific principal. Other principals within the grants 
@@ -121,7 +119,7 @@ class Metastore(MetastoreBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return [
             "workspace_assignments",
             "grant",

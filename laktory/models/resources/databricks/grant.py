@@ -1,5 +1,3 @@
-from typing import Union
-
 from laktory.models.resources.databricks.grant_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.grant_base import GrantBase
 
@@ -44,5 +42,5 @@ class Grant(GrantBase):
         return {"schema_": "schema"}
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return []
