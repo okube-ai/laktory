@@ -158,39 +158,50 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
 
         return data
 
+    @classmethod
+    def _apply_lookup_placeholders(cls, data: dict) -> dict:
+        for fname, f in cls.model_fields.items():
+            if fname in data or not f.is_required():
+                continue
+            # Since all field type hints include `var`, we need to isolate
+            # the intended type hint
+            ann = get_args(f.annotation)[0]
+            origin = get_origin(ann)
+            args = get_args(ann)
+            if ann == str:  # noqa: E721
+                data[fname] = ""
+            elif origin == Literal:
+                data[fname] = args[0]
+            elif str(f.annotation).startswith("list"):
+                data[fname] = []
+        for k, v in cls.lookup_defaults().items():
+            if k not in data:
+                data[k] = v
+        return data
+
     @model_validator(mode="before")
     @classmethod
     def base_lookup(cls, data: Any) -> Any:
-        if data is None:
-            return data
-
         if not isinstance(data, dict):
-            # TODO: Add support if data is a Base Resource instance
             return data
-
-        lookup_existing = data.get("lookup_existing", None)
-        if not lookup_existing:
+        if not data.get("lookup_existing"):
             return data
+        return cls._apply_lookup_placeholders(data)
 
-        for fname, f in cls.model_fields.items():
-            if f.is_required():
-                # Since all field type hints include `var`, we need to isolate
-                # intended type hint
-                ann = get_args(f.annotation)[0]
-                origin = get_origin(ann)
-                args = get_args(ann)
+    @classmethod
+    def lookup(
+        cls, lookup_existing: "ResourceLookup | dict", **kwargs
+    ) -> "BaseResource":
+        """
+        Create an instance that references an existing resource without managing it.
 
-                if ann == str:  # noqa: E721
-                    data[fname] = ""
-                elif origin == Literal:
-                    data[fname] = args[0]
-                elif str(f.annotation).startswith("list"):
-                    data[fname] = []
-
-        for k, v in cls.lookup_defaults().items():
-            data[k] = v
-
-        return data
+        Required fields are filled with placeholder values so Pydantic validation
+        passes — only `lookup_existing` is used at deploy time. Prefer this over
+        passing `lookup_existing` directly to the constructor to make the intent
+        explicit.
+        """
+        data = {"lookup_existing": lookup_existing, **kwargs}
+        return cls.model_validate(cls._apply_lookup_placeholders(data))
 
     @model_validator(mode="after")
     def grants_validator(self) -> Any:
