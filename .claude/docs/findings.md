@@ -43,7 +43,7 @@ Anti-patterns, dead code, deprecated usage, naming inconsistencies.
 | Q1 | `laktory/models/datasources/basedatasource.py:47-71` | Large `broadcast` / `sample` blocks commented out with no plan — remove or open a tracking issue |
 | Q2 | `laktory/narwhals_ext/dataframe/__init__.py` | `stream_join` fully commented out — complete it or formally remove it |
 | Q3 | `laktory/models/resources/databricks/mlflowwebhook.py:62-64` | Commented-out `terraform_renames` / `terraform_excludes` stubs — remove |
-| Q4 | `laktory/models/resources/databricks/table.py:53` | `__optional_fields__ = ["catalog_name", "schema_name"]` defined but never referenced anywhere — remove |
+| ~~Q4~~ | ~~`laktory/models/resources/databricks/table.py:53`~~ | **False positive** — `__optional_fields__` is consumed by `ModelMetaclass.__new__` in `basemodel.py:99` to make inherited required fields optional in subclasses without re-declaring them |
 | Q5 | `laktory/cli/_quickstart.py:62` | Loop variable named `dits` — typo for `dirs` |
 
 ### Mutable defaults
