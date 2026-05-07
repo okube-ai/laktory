@@ -398,6 +398,25 @@ class Stack(BaseModel):
 
         logger.info("Build completed.")
 
+    def _apply_env_overrides(self, env: EnvironmentSettings) -> "Stack":
+        """
+        Return a new Stack where *env*'s settings are merged on top of this
+        stack's defaults.
+
+        Merge rules
+        -----------
+        - ``variables``: key-by-key merge; env values take precedence over
+          stack defaults.  Keys present only in the stack are preserved; keys
+          present only in the env are added; keys present in both use the env
+          value.
+        - All other fields (``resources``, ``terraform``, …): env value
+          replaces the stack default entirely when set.
+        - ``environments`` is cleared on the returned copy (already resolved).
+        """
+        merged = self.model_copy(update={"environments": {}})
+        merged.update(env.model_dump(exclude_unset=True))
+        return merged
+
     def get_env(self, env_name: str | None):
         """
         Complete definition the stack for a given environment. It takes into
@@ -421,9 +440,7 @@ class Stack(BaseModel):
         if env_name not in self.environments.keys():
             raise ValueError(f"Environment '{env_name}' is not declared in the stack.")
 
-        env = self.model_copy(update={"environments": {}})
-        env.update(self.environments[env_name].model_dump(exclude_unset=True))
-        return env
+        return self._apply_env_overrides(self.environments[env_name])
 
     # ----------------------------------------------------------------------- #
     # Helpers                                                                 #
