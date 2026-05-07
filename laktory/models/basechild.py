@@ -16,7 +16,7 @@ class BaseChild(BaseModel, metaclass=ModelMetaclass):
         extra="forbid",
         validate_assignment=True,
     )
-    _parent: Any = None
+    _parent: "BaseChild | None" = None
 
     @model_validator(mode="after")
     def assign_parent_to_children(self) -> Any:
