@@ -1,0 +1,2 @@
+name: b
+child: !use circular_a.yaml

@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import yaml
@@ -12,6 +13,9 @@ VARIABLES_KEY = "variables"
 class RecursiveLoader(yaml.SafeLoader):
     def __init__(self, stream, parent_loader=None, vars=None):
         self.dirpath = Path("./")
+        self._loading_paths: set[str] = (
+            set(parent_loader._loading_paths) if parent_loader else set()
+        )
         stream = self.preprocess_stream(stream)
 
         self.variables = []
@@ -26,6 +30,7 @@ class RecursiveLoader(yaml.SafeLoader):
 
         if hasattr(stream, "name"):
             self.dirpath = Path(stream.name).parent
+            self._loading_paths.add(str(Path(stream.name).resolve()))
 
         _lines = []
         for line in stream.readlines():
@@ -33,7 +38,9 @@ class RecursiveLoader(yaml.SafeLoader):
                 raise ValueError(
                     "The `${include.}` syntax has been deprecated in laktory 0.6.0. Please use `!use`, `!update` and `!extend` tags instead."
                 )
-            _lines += [line.replace("<<:", MERGE_KEY + ":")]
+            # Only replace <<: at the start of line content (after optional
+            # whitespace) — the only valid YAML position for a merge key.
+            _lines += [re.sub(r"^(\s*)<<:", r"\g<1>" + MERGE_KEY + ":", line)]
 
         return "\n".join(_lines)
 
@@ -128,8 +135,13 @@ class RecursiveLoader(yaml.SafeLoader):
         filepath = Path(loader.get_path(loader, node))
 
         if filepath.as_posix().endswith(".sql"):
-            with filepath.open("r", encoding="utf-8") as _fp:
-                data = _fp.read()
+            try:
+                with filepath.open("r", encoding="utf-8") as _fp:
+                    data = _fp.read()
+            except FileNotFoundError:
+                raise FileNotFoundError(
+                    f"!use target not found: '{filepath}' (referenced from '{loader.dirpath}')"
+                )
             return data
 
         if filepath.is_dir():
@@ -141,21 +153,46 @@ class RecursiveLoader(yaml.SafeLoader):
                 ):
                     continue
 
+                abs_path = str(_filepath.resolve())
+                if abs_path in loader._loading_paths:
+                    raise ValueError(
+                        f"Circular !use reference: '{_filepath}' is already being loaded"
+                    )
                 with _filepath.open("r") as f:
                     objs += [RecursiveLoader.load(f, parent_loader=loader)]
             return objs
 
         else:
-            with filepath.open("r") as f:
-                return RecursiveLoader.load(f, parent_loader=loader)
+            abs_path = str(filepath.resolve())
+            if abs_path in loader._loading_paths:
+                raise ValueError(
+                    f"Circular !use reference: '{filepath}' is already being loaded"
+                )
+            try:
+                with filepath.open("r") as f:
+                    return RecursiveLoader.load(f, parent_loader=loader)
+            except FileNotFoundError:
+                raise FileNotFoundError(
+                    f"!use target not found: '{filepath}' (referenced from '{loader.dirpath}')"
+                )
 
     @staticmethod
     def merge_constructor(loader, node):
         """Merge content of another YAML file into the current dictionary."""
 
         filepath = loader.get_path(loader, node)
-        with open(filepath, "r") as f:
-            merge_data = RecursiveLoader.load(f, parent_loader=loader)
+        abs_path = str(Path(filepath).resolve())
+        if abs_path in loader._loading_paths:
+            raise ValueError(
+                f"Circular !update reference: '{filepath}' is already being loaded"
+            )
+        try:
+            with open(filepath, "r") as f:
+                merge_data = RecursiveLoader.load(f, parent_loader=loader)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"!update target not found: '{filepath}' (referenced from '{loader.dirpath}')"
+            )
 
         if not isinstance(merge_data, dict):
             raise TypeError(
@@ -168,8 +205,18 @@ class RecursiveLoader(yaml.SafeLoader):
         """Append content of another YAML file to the current list."""
 
         filepath = loader.get_path(loader, node)
-        with open(filepath, "r") as f:
-            append_data = RecursiveLoader.load(f, parent_loader=loader)
+        abs_path = str(Path(filepath).resolve())
+        if abs_path in loader._loading_paths:
+            raise ValueError(
+                f"Circular !extend reference: '{filepath}' is already being loaded"
+            )
+        try:
+            with open(filepath, "r") as f:
+                append_data = RecursiveLoader.load(f, parent_loader=loader)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"!extend target not found: '{filepath}' (referenced from '{loader.dirpath}')"
+            )
         if not isinstance(append_data, list):
             raise TypeError(
                 f"Expected a list in {filepath}, but got {type(append_data).__name__}"
@@ -190,18 +237,19 @@ class RecursiveLoader(yaml.SafeLoader):
         loader.variables += [_vars]
 
         # read include and merge
-        mapping = {}
-        for key_node, value_node in node.value:
-            key = loader.construct_object(key_node)
-            value = loader.construct_object(value_node)
-            if key == MERGE_KEY and isinstance(value, dict):
-                # Merge the dictionary directly into the parent mapping
-                mapping.update(value)
-            else:
-                mapping[key] = value
-
-        # remove variables
-        del loader.variables[-1]
+        try:
+            mapping = {}
+            for key_node, value_node in node.value:
+                key = loader.construct_object(key_node)
+                value = loader.construct_object(value_node)
+                if key == MERGE_KEY and isinstance(value, dict):
+                    # Merge the dictionary directly into the parent mapping
+                    mapping.update(value)
+                else:
+                    mapping[key] = value
+        finally:
+            # Always restore the variables stack, even if construction fails
+            del loader.variables[-1]
 
         return mapping
 
