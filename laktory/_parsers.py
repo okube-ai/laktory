@@ -203,8 +203,9 @@ def _resolve_expression(expression, vars, objs):
         r"\bvars?\.([a-zA-Z_][a-zA-Z0-9_]*)\b", r"variables_map['\1']", expression
     )
 
-    # Prepare a safe evaluation context
-    local_context = copy.deepcopy(vars)
+    # Prepare a safe evaluation context — shallow copy is sufficient because
+    # eval() only reads from variables_map and never mutates var values.
+    local_context = dict(vars)
 
     locals = {"variables_map": local_context}
 
