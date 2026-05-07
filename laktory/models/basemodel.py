@@ -13,6 +13,7 @@ from typing import Union
 from typing import get_args
 from typing import get_origin
 
+import pydantic
 import yaml  # TODO: Move into functions?
 from pydantic import AliasChoices
 from pydantic import BaseModel as _BaseModel
@@ -26,6 +27,18 @@ from laktory._parsers import _resolve_value
 from laktory._parsers import _resolve_values
 from laktory.typing import VariableType
 from laktory.yaml.recursiveloader import RecursiveLoader
+
+# ModelMetaclass relies on pydantic._internal internals; alert on untested upgrades.
+_KNOWN_PYDANTIC_MINOR = (2, 13)
+_pydantic_minor = tuple(int(x) for x in pydantic.__version__.split(".")[:2])
+if _pydantic_minor != _KNOWN_PYDANTIC_MINOR:
+    pass
+    # warnings.warn(
+    #     f"laktory uses pydantic._internal internals; tested against "
+    #     f"{'.'.join(str(x) for x in _KNOWN_PYDANTIC_MINOR)}.x, "
+    #     f"found {pydantic.__version__} — run the full test suite before deploying.",
+    #     stacklevel=2,
+    # )
 
 Model = TypeVar("Model", bound="BaseModel")
 
@@ -73,6 +86,78 @@ def annotation_contains_list_of_basemodel(annotation, mymodel_cls) -> bool:
     return False
 
 
+# Fields always excluded from VariableType injection.
+_VARTYPE_EXCLUDED_FIELDS: set[str] = {"variables", "dataframe_backend"}
+
+# Per-class fields excluded from VariableType injection (e.g. discriminator fields
+# that Pydantic uses to select a union variant — injecting VariableType breaks the
+# discriminator logic at class-construction time).
+_VARTYPE_EXCLUDED_CLASS_FIELDS: dict[str, set[str]] = {
+    "UnityCatalogDataSink": {"type"},
+    "HiveMetastoreDataSink": {"type"},
+}
+
+
+def _resolve_plural_fields(namespace: dict[str, Any]) -> None:
+    for fname in list(namespace.keys()):
+        value = namespace[fname]
+        if isinstance(value, _PluralFieldSpec):
+            plural = value.plural or (fname if fname.endswith("s") else (fname + "s"))
+            fi = value.field_info
+            alias = AliasChoices(plural)
+            fi.validation_alias = alias
+            fi._attributes_set["validation_alias"] = alias
+            namespace[fname] = fi
+
+
+def _expand_optional_fields(
+    namespace: dict[str, Any], bases: tuple[type[Any], ...]
+) -> None:
+    optional_fields = namespace.get("__optional_fields__", [])
+    if not optional_fields:
+        return
+    annotations = namespace.setdefault("__annotations__", {})
+    remaining = set(optional_fields)
+    for base in bases:
+        if not remaining:
+            break
+        if not hasattr(base, "model_fields"):
+            continue
+        for fname in list(remaining):
+            if fname in base.model_fields and fname not in annotations:
+                fi = base.model_fields[fname]
+                annotations[fname] = Union[fi.annotation, None]
+                namespace[fname] = Field(None, description=fi.description)
+                remaining.discard(fname)
+
+
+def _inject_variable_types(namespace: dict[str, Any], cls_name: str) -> None:
+    excluded_class_fields = _VARTYPE_EXCLUDED_CLASS_FIELDS.get(cls_name, set())
+    for field_name in namespace.get("__annotations__", {}):
+        type_hint = namespace["__annotations__"][field_name]
+
+        if field_name.startswith("_"):
+            continue
+        if field_name in _VARTYPE_EXCLUDED_FIELDS:
+            continue
+        if field_name in excluded_class_fields:
+            continue
+        if type_hint is None or type_hint is typing.Any:
+            continue
+
+        origin = get_origin(type_hint)
+        args = get_args(type_hint)
+        new_type_hint = type_hint
+
+        if origin is list:
+            new_type_hint = list[args[0] | VariableType]
+        elif origin is dict:
+            new_type_hint = dict[args[0] | VariableType, args[1] | VariableType]
+
+        new_type_hint = Union[new_type_hint, VariableType]
+        namespace["__annotations__"][field_name] = new_type_hint
+
+
 class ModelMetaclass(_ModelMetaclass):
     def __new__(
         mcs,
@@ -81,75 +166,9 @@ class ModelMetaclass(_ModelMetaclass):
         namespace: dict[str, Any],
         **kwargs: Any,
     ) -> type:
-        # Resolve PluralField specs: inject plural validation alias using the field name
-        for fname in list(namespace.keys()):
-            value = namespace[fname]
-            if isinstance(value, _PluralFieldSpec):
-                plural = value.plural or (
-                    fname if fname.endswith("s") else (fname + "s")
-                )
-                fi = value.field_info
-                alias = AliasChoices(plural)
-                fi.validation_alias = alias
-                fi._attributes_set["validation_alias"] = alias
-                namespace[fname] = fi
-
-        # __optional_fields__: make specified inherited fields optional without re-declaring them
-        optional_fields = namespace.get("__optional_fields__", [])
-        if optional_fields:
-            annotations = namespace.setdefault("__annotations__", {})
-            remaining = set(optional_fields)
-            for base in bases:
-                if not remaining:
-                    break
-                if not hasattr(base, "model_fields"):
-                    continue
-                for fname in list(remaining):
-                    if fname in base.model_fields and fname not in annotations:
-                        fi = base.model_fields[fname]
-                        annotations[fname] = Union[fi.annotation, None]
-                        namespace[fname] = Field(None, description=fi.description)
-                        remaining.discard(fname)
-
-        # Add var as a possible type hint of each model field to support variables injection
-        for field_name in namespace.get("__annotations__", {}):
-            type_hint = namespace["__annotations__"][field_name]
-
-            if field_name.startswith("_"):
-                continue
-
-            if field_name in [
-                "variables",
-                "dataframe_backend",  # TODO: Review why this is required
-            ]:
-                continue
-
-            if cls_name in ["UnityCatalogDataSink", "HiveMetastoreDataSink"]:
-                if field_name in [
-                    "type",  # this is required to properly select the type of sink
-                ]:
-                    continue
-
-            if type_hint is None:
-                continue
-
-            if type_hint is typing.Any:
-                continue
-
-            origin = get_origin(type_hint)
-            args = get_args(type_hint)
-            new_type_hint = type_hint
-
-            if origin is list:
-                new_type_hint = list[tuple([args[0] | VariableType])]
-
-            elif origin is dict:
-                new_type_hint = dict[args[0] | VariableType, args[1] | VariableType]
-
-            new_type_hint = Union[new_type_hint, VariableType]
-
-            namespace["__annotations__"][field_name] = new_type_hint
-
+        _resolve_plural_fields(namespace)
+        _expand_optional_fields(namespace, bases)
+        _inject_variable_types(namespace, cls_name)
         return super().__new__(mcs, cls_name, bases, namespace, **kwargs)
 
 
