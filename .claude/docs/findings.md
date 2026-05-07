@@ -65,7 +65,7 @@ Anti-patterns, dead code, deprecated usage, naming inconsistencies.
 | # | Issue |
 |---|-------|
 | Q10 | Mixed `Union[X, Y]` (old) vs. `X \| Y` (Python 3.10+) syntax throughout the codebase — standardise on `X \| Y` |
-| Q11 | `laktory/models/resources/databricks/*.py` (20+ files) — wildcard `from .xxx_base import *` makes it impossible to see what each class adds vs. inherits; document or restrict |
+| ~~Q11~~ | `laktory/models/resources/databricks/*.py` (20+ files) | **Won't fix — by design.** Each `*_base.py` defines the main base class plus several nested helper classes. The wildcard brings all helpers into the child module's namespace so griffe can resolve field types for documentation (`griffe_fieldz include_inherited=True` + `__doc_generated_base__` splitting). The `# NOQA: F403 required for documentation` comment already explains this. |
 
 ---
 
