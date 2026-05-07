@@ -8,6 +8,7 @@
 * Dependency between secret scope and its ACL
 ### Updated
 * Better error messages on recursive loader and identification of circular dependencies
+* Optimized variables injection
 ### Breaking changes
 * n/a
 

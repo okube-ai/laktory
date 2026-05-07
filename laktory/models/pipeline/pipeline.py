@@ -332,6 +332,9 @@ class Pipeline(BaseModel, TerraformResource, PipelineChild):
     def children_names(self):
         return ["nodes", "orchestrator"]
 
+    def _inject_vars_objs(self) -> dict:
+        return {"pipeline": self}
+
     # ----------------------------------------------------------------------- #
     # ID                                                                      #
     # ----------------------------------------------------------------------- #
