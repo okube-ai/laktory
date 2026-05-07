@@ -15,7 +15,7 @@ Issues that should be fixed before the next release — production bugs, footgun
 | C3 | `laktory/cli/_common.py:77` | `logger.warn()` deprecated since Python 3.2 — replace with `logger.warning()` |
 | C4 | `laktory/cli/_common.py:135,148` | `print()` statements in CLI error-handling paths — route through logger for consistent output control |
 | C5 | `laktory/version.py:52` | Bare `except:` (noqa'd) swallows `SystemExit` and `KeyboardInterrupt` — catch `ModuleNotFoundError` specifically |
-| C6 | `laktory/models/datasinks/mergecdcoptions.py:512` | `except Exception` too broad; catches `AttributeError`, `ImportError`, etc. silently — narrow to specific Spark exceptions |
+| C6 | `laktory/models/datasinks/mergecdcoptions.py:512` | `except Exception` too broad; catches `AttributeError`, `ImportError`, etc. silently — **won't fix**: different Spark versions (including Spark Connect) raise different exception types for a missing table; narrowing risks swallowing a legitimate "table not found" on an untested version |
 
 ---
 

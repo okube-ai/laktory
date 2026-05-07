@@ -6,6 +6,7 @@ from laktory._version import VERSION
 
 
 def show_version_info() -> str:
+    from importlib.metadata import PackageNotFoundError
     from importlib.metadata import version
 
     package_names = {
@@ -49,7 +50,7 @@ def show_version_info() -> str:
     for name in package_names:
         try:
             packages[name] = version(name)
-        except:  # noqa: E722
+        except PackageNotFoundError:
             packages[name] = "NOT FOUND"
     packages = dict(sorted(packages.items()))
 
