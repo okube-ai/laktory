@@ -2,13 +2,14 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.grants.schemagrant import SchemaGrant
+from laktory.models.resources.databricks._unitycatalogmixin import UnityCatalogMixin
 from laktory.models.resources.databricks.schema_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.schema_base import SchemaBase
 from laktory.models.resources.databricks.table import Table
 from laktory.models.resources.databricks.volume import Volume
 
 
-class Schema(SchemaBase):
+class Schema(UnityCatalogMixin, SchemaBase):
     """
     A schema (also called a database) is the second layer of Unity Catalog's
     three-level namespace. A schema organizes tables and views.
@@ -82,30 +83,8 @@ class Schema(SchemaBase):
         return self
 
     # ----------------------------------------------------------------------- #
-    # Computed fields                                                         #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def parent_full_name(self) -> str:
-        """Catalog full name `{catalog_name}`"""
-        return self.catalog_name
-
-    @property
-    def full_name(self) -> str:
-        """Schema full name `{catalog_name}.{schema_name}`"""
-        _id = self.name
-        if self.parent_full_name is not None:
-            _id = f"{self.parent_full_name}.{_id}"
-        return _id
-
-    # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def resource_key(self) -> str:
-        """Schema full name (catalog.schema)"""
-        return self.full_name
 
     @property
     def additional_core_resources(self) -> list:

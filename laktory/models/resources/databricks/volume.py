@@ -3,11 +3,12 @@ from typing import Literal
 from pydantic import Field
 
 from laktory.models.grants.volumegrant import VolumeGrant
+from laktory.models.resources.databricks._unitycatalogmixin import UnityCatalogMixin
 from laktory.models.resources.databricks.volume_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.volume_base import VolumeBase
 
 
-class Volume(VolumeBase):
+class Volume(UnityCatalogMixin, VolumeBase):
     """
     Volumes are Unity Catalog objects representing a logical volume of storage
     in a cloud object storage location. Volumes provide capabilities for
@@ -86,40 +87,8 @@ class Volume(VolumeBase):
     )
 
     # ----------------------------------------------------------------------- #
-    # Computed fields                                                         #
-    # ----------------------------------------------------------------------- #
-
-    @property
-    def parent_full_name(self) -> str:
-        """Schema full name `{catalog_name}.{schema_name}`"""
-        _id = ""
-        if self.catalog_name:
-            _id += self.catalog_name
-
-        if self.schema_name:
-            if _id == "":
-                _id = self.schema_name
-            else:
-                _id += f".{self.schema_name}"
-
-        return _id
-
-    @property
-    def full_name(self) -> str:
-        """Volume full name `{catalog_name}.{schema_name}.{volume_name}`"""
-        _id = self.name
-        if self.parent_full_name is not None:
-            _id = f"{self.parent_full_name}.{_id}"
-        return _id
-
-    # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def resource_key(self) -> str:
-        """Table full name (catalog.schema.volume)"""
-        return self.full_name
 
     @property
     def additional_core_resources(self) -> list:
