@@ -266,6 +266,9 @@ class PipelineNode(BaseModel, PipelineChild):
             "sinks",
         ]
 
+    def _inject_vars_objs(self) -> dict:
+        return {"pipeline_node": self}
+
     # ----------------------------------------------------------------------- #
     # Orchestrator                                                            #
     # ----------------------------------------------------------------------- #

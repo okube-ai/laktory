@@ -178,6 +178,31 @@ def test_objects():
     assert _resolve_expression("a+owner.id", {}, {"a": 2, "owner": owner}) == 11
 
 
+def test_pipeline_node_context_obj():
+    """pipeline_node is auto-injected as an expression context object."""
+    node = models.PipelineNode(
+        name="brz_stock",
+        comment="${{ pipeline_node.name }}_output",
+    )
+    result = node.inject_vars()
+    assert result.comment == "brz_stock_output"
+
+
+def test_pipeline_context_obj():
+    """pipeline is auto-injected so node expressions can reference it."""
+    pl = models.Pipeline(
+        name="my-pipeline",
+        nodes=[
+            models.PipelineNode(
+                name="brz",
+                comment="${{ pipeline.name }}-node",
+            )
+        ],
+    )
+    result = pl.inject_vars()
+    assert result.nodes[0].comment == "my-pipeline-node"
+
+
 def test_self_referencing():
     with pytest.raises(ValueError):
         Cluster(

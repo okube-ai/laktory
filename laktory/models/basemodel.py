@@ -19,6 +19,7 @@ from pydantic import AliasChoices
 from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import PrivateAttr
 from pydantic import model_validator
 from pydantic._internal._model_construction import ModelMetaclass as _ModelMetaclass
 
@@ -174,6 +175,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         exclude=True,
         description="Dict of variables to be injected in the model at runtime",
     )
+    _inject_vars_cache_key: str | None = PrivateAttr(default=None)
+    _inject_vars_cache_value: Any = PrivateAttr(default=None)
 
     @model_validator(mode="after")
     def variables_self_reference(self) -> Any:
@@ -355,6 +358,9 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     # Variables Injection                                                     #
     # ----------------------------------------------------------------------- #
 
+    def _inject_vars_objs(self) -> dict:
+        return {}
+
     def push_vars(self, update_core_resources=False) -> Any:
         """Push variable values to all child recursively"""
 
@@ -436,28 +442,27 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         """
 
         # Fetching vars
-        if vars is None:
-            vars = {}
-
-        vars = deepcopy(vars)
+        vars = deepcopy(vars or {})
         vars.update(self.variables)
 
-        # Fetching objs
+        # Fetching objs — subclasses override _inject_vars_objs() to inject
+        # context objects (e.g. pipeline, pipeline_node) without circular imports
+        _caller_objs = objs
         if objs is None:
-            objs = {}
+            objs = self._inject_vars_objs()
+        else:
+            objs = {**self._inject_vars_objs(), **objs}
 
-        # TODO: Review implementation as it results in serious performance hits
-        from laktory.models.pipeline import Pipeline
-        from laktory.models.pipeline import PipelineNode
-
-        if isinstance(self, Pipeline):
-            objs["pipeline"] = self
-
-        if isinstance(self, PipelineNode):
-            objs["pipeline_node"] = self
+        # Cache check: skip re-resolution when vars and objs haven't changed
+        cache_key = None
+        if not inplace and _caller_objs is None:
+            cache_key = json.dumps(vars, sort_keys=True, default=repr)
+            if self._inject_vars_cache_key == cache_key:
+                return self._inject_vars_cache_value.model_copy(deep=True)
 
         # Create copy
         if not inplace:
+            original = self
             self = self.model_copy(deep=True)
 
         # Inject into field values
@@ -481,6 +486,9 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                 r.inject_vars(vars=vars, inplace=True, objs=objs)
 
         if not inplace:
+            if cache_key is not None:
+                original._inject_vars_cache_key = cache_key
+                original._inject_vars_cache_value = self
             return self
 
     def inject_vars_into_dump(
