@@ -51,13 +51,3 @@ class MLflowWebhook(MlflowWebhookBase):
             key += e + "-"
 
         return key
-
-    # ----------------------------------------------------------------------- #
-    # Terraform Properties                                                    #
-    # ----------------------------------------------------------------------- #
-
-    # @property
-    # def terraform_renames(self) -> dict[str, str]:
-
-    # @property
-    # def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:

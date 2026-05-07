@@ -134,7 +134,6 @@ class TableDataSource(BaseDataSource):
 
         # Apply methods
         for m in methods:
-            print("Adding method", m.name)
             reader = getattr(reader, m.name)(*m.args, **m.kwargs)
 
         # Load

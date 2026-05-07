@@ -382,7 +382,7 @@ class QualityMonitor(QualityMonitorBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["_table"]
 
     # ----------------------------------------------------------------------- #

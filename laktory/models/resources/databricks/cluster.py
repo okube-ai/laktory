@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic import Field
 
 from laktory.models.resources.baseresource import ResourceLookup
@@ -89,5 +87,5 @@ class Cluster(ClusterBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["access_controls"]

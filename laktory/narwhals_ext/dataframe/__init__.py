@@ -5,8 +5,6 @@ from laktory.narwhals_ext.dataframe.groupby_and_agg import groupby_and_agg
 from laktory.narwhals_ext.dataframe.has_column import has_column
 from laktory.narwhals_ext.dataframe.schema_flat import schema_flat
 from laktory.narwhals_ext.dataframe.signature import signature
-
-# from laktory.narwhals_ext.dataframe._stream_join import stream_join
 from laktory.narwhals_ext.dataframe.union import union
 from laktory.narwhals_ext.dataframe.window_filter import window_filter
 from laktory.narwhals_ext.dataframe.with_row_index import with_row_index
@@ -38,10 +36,6 @@ class LaktoryDataFrame:  # noqa: F811
     @wraps(signature)
     def signature(self, *args, **kwargs):
         return signature(self, *args, **kwargs)
-
-    # @wraps(stream_join)
-    # def stream_join(self, *args, **kwargs):
-    #     return stream_join(self, *args, **kwargs)
 
     @wraps(union)
     def union(self, *args, **kwargs):

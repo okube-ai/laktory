@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Union
 
 from pydantic import Field
 from pydantic import model_validator
@@ -15,7 +14,7 @@ from laktory.models.resources.databricks.userrole import UserRole
 
 
 class UserLookup(ResourceLookup):
-    user_id: Union[int, str] = Field(
+    user_id: int | str = Field(
         serialization_alias="id", default=None, description="ID of the user"
     )
     user_name: str = Field(
@@ -126,5 +125,5 @@ class User(UserBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["groups", "roles", "group_ids", "workspace_permission_assignments"]

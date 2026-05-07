@@ -54,11 +54,11 @@ class CustomReader(BaseModel, PipelineChild):
     """
 
     func_args: list[Any] = Field(
-        [],
+        default_factory=list,
         description="Positional arguments passed to the function.",
     )
     func_kwargs: dict[str, Any] = Field(
-        {},
+        default_factory=dict,
         description="Keyword arguments passed to the function.",
     )
     func_name: str = Field(

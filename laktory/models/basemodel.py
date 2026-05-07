@@ -442,8 +442,12 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         """
 
         # Fetching vars
-        vars = deepcopy(vars or {})
-        vars.update(self.variables)
+        # Merge first, deep-copy once: _resolve_values mutates mutable values
+        # (list/dict) in-place when resolving nested variable references, so both
+        # the caller's vars and self.variables values must be protected. Two
+        # separate deepcopies (caller then update) would leave self.variables
+        # unprotected; merging into a new dict first and copying once covers both.
+        vars = deepcopy({**(vars or {}), **self.variables})
 
         # Fetching objs — subclasses override _inject_vars_objs() to inject
         # context objects (e.g. pipeline, pipeline_node) without circular imports
@@ -456,7 +460,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         # Cache check: skip re-resolution when vars and objs haven't changed
         cache_key = None
         if not inplace and _caller_objs is None:
-            cache_key = json.dumps(vars, sort_keys=True, default=repr)
+            cache_key = json.dumps(vars, sort_keys=True)
             if self._inject_vars_cache_key == cache_key:
                 return self._inject_vars_cache_value.model_copy(deep=True)
 
@@ -544,11 +548,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         * [variables](https://www.laktory.ai/concepts/variables/)
         """
 
-        # Setting vars
-        if vars is None:
-            vars = {}
-        vars = deepcopy(vars)
-        vars.update(self.variables)
+        # Setting vars — same merge-then-copy pattern as inject_vars()
+        vars = deepcopy({**(vars or {}), **self.variables})
 
         # Create copy
         if not inplace:

@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic import Field
 
 from laktory.models.resources.baseresource import ResourceLookup
@@ -114,5 +112,5 @@ class ServicePrincipal(ServicePrincipalBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["groups", "roles", "group_ids", "workspace_permission_assignments"]

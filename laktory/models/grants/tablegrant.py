@@ -18,6 +18,3 @@ class TableGrant(BaseModel):
     privileges: list[Literal["ALL_PRIVILEGES", "SELECT", "MODIFY"]] = Field(
         ..., description="List of allowed privileges"
     )
-
-
-t = TableGrant(principal="a", privileges=["SELECT"])

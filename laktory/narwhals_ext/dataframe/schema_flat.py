@@ -51,18 +51,23 @@ def schema_flat(self) -> list[str]:
     ```
     """
 
-    def get_fields(schema):
+    def get_fields(schema, _depth=0):
+        if _depth > 30:
+            raise ValueError(
+                "schema_flat() exceeded maximum nesting depth (20). "
+                "Schema may be pathologically nested."
+            )
         field_names = []
         for f_name, f_type in schema.items():
             if isinstance(f_type, nw.Struct):
-                _field_names = get_fields(dict(f_type))
+                _field_names = get_fields(dict(f_type), _depth=_depth + 1)
                 field_names += [f_name]
                 field_names += [f"{f_name}.{v}" for v in _field_names]
 
             elif isinstance(f_type, nw.List):
                 field_names += [f_name]
                 if isinstance(f_type.inner, nw.Struct):
-                    _field_names = get_fields(dict(f_type.inner))
+                    _field_names = get_fields(dict(f_type.inner), _depth=_depth + 1)
                     field_names += [f"{f_name}[*].{v}" for v in _field_names]
 
             else:

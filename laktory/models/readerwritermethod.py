@@ -22,8 +22,10 @@ class ReaderWriterMethod(BaseModel):
     """
 
     name: str = Field(..., description="Method name")
-    args: list[Any] = Field([], description="Method arguments")
-    kwargs: dict[str, Any] = Field({}, description="Method keyword arguments")
+    args: list[Any] = Field(default_factory=list, description="Method arguments")
+    kwargs: dict[str, Any] = Field(
+        default_factory=dict, description="Method keyword arguments"
+    )
 
     @property
     def as_string(self) -> str:

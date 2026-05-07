@@ -1,5 +1,4 @@
 from typing import Literal
-from typing import Union
 
 from pydantic import Field
 from pydantic import model_validator
@@ -80,7 +79,7 @@ class Catalog(CatalogBase):
     )
 
     # Laktory-specific
-    grant: Union[CatalogGrant, list[CatalogGrant]] = Field(
+    grant: CatalogGrant | list[CatalogGrant] = Field(
         None,
         description="""
      Grant(s) operating on the Catalog and authoritative for a specific principal. Other principals within the grants
@@ -166,7 +165,7 @@ class Catalog(CatalogBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return [
             "schemas",
             "is_unity",

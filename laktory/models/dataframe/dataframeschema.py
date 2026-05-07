@@ -1,6 +1,5 @@
 import json
 from typing import Any
-from typing import Union
 
 import narwhals as nw
 from pydantic import Field
@@ -29,9 +28,9 @@ class DataFrameSchema(BaseModel):
     ```
     """
 
-    columns: Union[
-        dict[str, Union[str, DType, DataFrameColumn]], list[DataFrameColumn]
-    ] = Field(..., description="Dict or list of columns")
+    columns: dict[str, str | DType | DataFrameColumn] | list[DataFrameColumn] = Field(
+        ..., description="Dict or list of columns"
+    )
     _native_schema: Any = PrivateAttr(None)
 
     @model_validator(mode="before")

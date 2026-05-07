@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic import Field
 
 from laktory.models.grants.storagecredentialgrant import StorageCredentialGrant
@@ -41,7 +39,7 @@ class MetastoreDataAccess(MetastoreDataAccessBase):
     """
 
     # Laktory-specific
-    grant: Union[StorageCredentialGrant, list[StorageCredentialGrant]] = Field(
+    grant: StorageCredentialGrant | list[StorageCredentialGrant] = Field(
         None,
         description="""
     Grant(s) operating on the Metastore Data Access and authoritative for a specific principal.
@@ -77,5 +75,5 @@ class MetastoreDataAccess(MetastoreDataAccessBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["grant", "grants"]

@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic import Field
 
 from laktory.models.grants.externallocationgrant import ExternalLocationGrant
@@ -45,7 +43,7 @@ class ExternalLocation(ExternalLocationBase):
     * [Databricks External Location](https://docs.databricks.com/en/connect/unity-catalog/external-locations.html)
     """
 
-    grant: Union[ExternalLocationGrant, list[ExternalLocationGrant]] = Field(
+    grant: ExternalLocationGrant | list[ExternalLocationGrant] = Field(
         None,
         description="""
     Grant(s) operating on the External Location and authoritative for a specific principal.
@@ -81,5 +79,5 @@ class ExternalLocation(ExternalLocationBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["grant", "grants"]

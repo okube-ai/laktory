@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from typing import Union
 
 from laktory.models.resources.baseresource import BaseResource
 
@@ -25,7 +24,7 @@ class TerraformResource(BaseResource):
         return self.terraform_resource_type
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         """List of fields to exclude when dumping model to terraform"""
         return []
 

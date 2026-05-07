@@ -1,6 +1,5 @@
 from typing import Any
 from typing import Literal
-from typing import Union
 
 from pydantic import Field
 from pydantic import model_validator
@@ -109,5 +108,5 @@ class SecretScope(SecretScopeBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["permissions", "secrets"]

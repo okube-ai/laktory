@@ -510,6 +510,10 @@ class DataSinkMergeCDCOptions(BaseModel):
             try:
                 spark.catalog.getTable(self.target_name)
             except Exception:
+                # Intentionally broad: different Spark versions (including Spark
+                # Connect) raise different exception types when a table doesn't
+                # exist. Narrowing to a specific type risks missing a legitimate
+                # "table not found" on an untested version.
                 self._init_target(source)
 
         if source.isStreaming:

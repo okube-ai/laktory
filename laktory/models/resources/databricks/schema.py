@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic import Field
 from pydantic import model_validator
 
@@ -52,7 +50,7 @@ class Schema(SchemaBase):
     )
 
     # Laktory-specific
-    grant: Union[SchemaGrant, list[SchemaGrant]] = Field(
+    grant: SchemaGrant | list[SchemaGrant] = Field(
         None,
         description="""
     Grant(s) operating on the Schema and authoritative for a specific principal. Other principals within the grants are
@@ -138,5 +136,5 @@ class Schema(SchemaBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["tables", "volumes", "grant", "grants"]

@@ -1,5 +1,4 @@
 from typing import Any
-from typing import Union
 
 from pydantic import Field
 from pydantic import field_validator
@@ -28,7 +27,7 @@ class DataFrameColumn(BaseModel):
     """
 
     name: str = Field(None, description="Column name")
-    dtype: Union[str, DType] = Field(..., description="Column data type")
+    dtype: str | DType = Field(..., description="Column data type")
     nullable: bool = Field(True, description="Column is nullable")
     is_primary: bool = Field(False, description="Column is a primary key")
 

@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Union
 
 from pydantic import AliasChoices
 from pydantic import Field
@@ -119,5 +118,5 @@ class WorkspaceFile(WorkspaceFileBase):
     # ----------------------------------------------------------------------- #
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return ["access_controls", "dirpath"]

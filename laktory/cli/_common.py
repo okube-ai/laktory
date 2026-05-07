@@ -1,6 +1,5 @@
 import os
 import subprocess
-from typing import Union
 
 from prompt_toolkit.validation import ValidationError
 from prompt_toolkit.validation import Validator
@@ -36,11 +35,11 @@ class BackendValidator(Validator):
 
 
 class CLIController(BaseModel):
-    stack_filepath: Union[str, None] = None
-    env: Union[str, None] = None
-    auto_approve: Union[bool, None] = False
-    options_str: Union[str, None] = None
-    stack: Union[Stack, None] = None
+    stack_filepath: str | None = None
+    env: str | None = None
+    auto_approve: bool | None = False
+    options_str: str | None = None
+    stack: Stack | None = None
 
     def model_post_init(self, __context):
         super().model_post_init(__context)
@@ -74,7 +73,7 @@ class CLIController(BaseModel):
         # Check environment
         if self.env is None:
             if env_names:
-                logger.warn(
+                logger.warning(
                     f"Environment not specified, defaulting to first available ({env_names[0]})"
                 )
                 self.env = env_names[0]
@@ -132,7 +131,7 @@ class Worker:
             if raise_exceptions:
                 raise e
             else:
-                print(f"An error occurred while executing '{_cmd}': {str(e)}")
+                logger.error(f"An error occurred while executing '{_cmd}': {str(e)}")
 
                 # Windows
                 c1 = (
@@ -145,6 +144,6 @@ class Worker:
                 c2 = "No such file or directory: 'terraform'".lower() in str(e).lower()
 
                 if c1 or c2:
-                    print(
+                    logger.error(
                         "Terraform could not be found. Make sure it is installed and part of the PATH"
                     )

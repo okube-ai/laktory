@@ -1,5 +1,3 @@
-from typing import Union
-
 from pydantic import Field
 
 from laktory._logger import get_logger
@@ -51,7 +49,7 @@ class Table(TableBase):
     """
 
     __optional_fields__ = ["catalog_name", "schema_name"]
-    grant: Union[TableGrant, list[TableGrant]] = Field(
+    grant: TableGrant | list[TableGrant] = Field(
         None,
         description="""
     Grant(s) operating on the Table and authoritative for a specific principal. Other principals within the grants are
@@ -150,7 +148,7 @@ class Table(TableBase):
         return "databricks_table"
 
     @property
-    def terraform_excludes(self) -> Union[list[str], dict[str, bool]]:
+    def terraform_excludes(self) -> list[str] | dict[str, bool]:
         return [
             "grant",
             "grants",

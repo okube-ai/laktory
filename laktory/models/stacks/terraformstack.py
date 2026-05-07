@@ -3,7 +3,6 @@ import os
 import re
 from collections import defaultdict
 from typing import Any
-from typing import Union
 
 from pydantic import model_validator
 
@@ -26,12 +25,12 @@ class ConfigValue(BaseModel):
 
 class TerraformRequiredProvider(BaseModel):
     source: str
-    version: Union[str, None] = None
+    version: str | None = None
 
 
 class TerraformConfig(BaseModel):
     required_providers: dict[str, TerraformRequiredProvider] = None
-    backend: Union[dict[str, Any], None] = None
+    backend: dict[str, Any] | None = None
 
 
 class TerraformStack(BaseModel):
