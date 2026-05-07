@@ -462,6 +462,60 @@ def test_terraform_stack(monkeypatch, stack):
     }
 
 
+def test_substitute_terraform_refs():
+    from laktory.models.stacks.terraformstack import _substitute_terraform_refs
+
+    simple_map = {
+        "${resources.my_cat}": "databricks_catalog.my_cat",
+        "${resources.my.cat}": "databricks_catalog.my_dot_cat",
+        "${resources.foo}": "databricks_schema.foo",
+        "${resources.foobar}": "databricks_schema.foobar",
+    }
+    property_patterns = []
+    for k0, k1 in [
+        ("my_cat", "databricks_catalog.my_cat"),
+        ("my.cat", "databricks_catalog.my_dot_cat"),
+        ("foo", "databricks_schema.foo"),
+        ("foobar", "databricks_schema.foobar"),
+    ]:
+        import re
+
+        pattern = r"\$\{resources\." + re.escape(k0) + r"\.(.*?)\}"
+        property_patterns.append((pattern, lambda m, k1=k1: f"${{{k1}.{m.group(1)}}}"))
+
+    obj = {
+        "simple": "${resources.my_cat}",
+        "property": "${resources.my_cat.id}",
+        "dot_name_simple": "${resources.my.cat}",
+        "dot_name_property": "${resources.my.cat.name}",
+        "prefix_simple": "${resources.foo}",
+        "prefix_longer": "${resources.foobar}",
+        "prefix_property": "${resources.foo.id}",
+        "nested": {"inner": "${resources.my_cat.url}"},
+        "list_val": ["${resources.foo}", "${resources.foobar.id}"],
+        "unchanged": "no-substitution-needed",
+    }
+
+    result = _substitute_terraform_refs(obj, simple_map, property_patterns)
+
+    assert result["simple"] == "databricks_catalog.my_cat"
+    assert result["property"] == "${databricks_catalog.my_cat.id}"
+    assert result["dot_name_simple"] == "databricks_catalog.my_dot_cat"
+    assert result["dot_name_property"] == "${databricks_catalog.my_dot_cat.name}"
+    # dot in resource name must NOT match the underscore variant
+    assert result["dot_name_simple"] != "databricks_catalog.my_cat"
+    # prefix collision: ${resources.foo} must not corrupt ${resources.foobar}
+    assert result["prefix_simple"] == "databricks_schema.foo"
+    assert result["prefix_longer"] == "databricks_schema.foobar"
+    assert result["prefix_property"] == "${databricks_schema.foo.id}"
+    assert result["nested"]["inner"] == "${databricks_catalog.my_cat.url}"
+    assert result["list_val"] == [
+        "databricks_schema.foo",
+        "${databricks_schema.foobar.id}",
+    ]
+    assert result["unchanged"] == "no-substitution-needed"
+
+
 def test_terraform_plan(monkeypatch, stack):
     c0 = settings.cli_raise_external_exceptions
     settings.cli_raise_external_exceptions = True
