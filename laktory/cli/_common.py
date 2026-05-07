@@ -74,7 +74,7 @@ class CLIController(BaseModel):
         # Check environment
         if self.env is None:
             if env_names:
-                logger.warn(
+                logger.warning(
                     f"Environment not specified, defaulting to first available ({env_names[0]})"
                 )
                 self.env = env_names[0]
@@ -132,7 +132,7 @@ class Worker:
             if raise_exceptions:
                 raise e
             else:
-                print(f"An error occurred while executing '{_cmd}': {str(e)}")
+                logger.error(f"An error occurred while executing '{_cmd}': {str(e)}")
 
                 # Windows
                 c1 = (
@@ -145,6 +145,6 @@ class Worker:
                 c2 = "No such file or directory: 'terraform'".lower() in str(e).lower()
 
                 if c1 or c2:
-                    print(
+                    logger.error(
                         "Terraform could not be found. Make sure it is installed and part of the PATH"
                     )
