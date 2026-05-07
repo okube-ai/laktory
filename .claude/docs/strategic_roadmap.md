@@ -1,6 +1,6 @@
 # Laktory Strategic Roadmap
 
-_Updated May 2026. The four decisions from the March 2026 session are complete._
+_Updated May 2026. All six decisions are complete — no remaining work items._
 
 ---
 
@@ -10,21 +10,5 @@ _Updated May 2026. The four decisions from the March 2026 session are complete._
 - **Declared Databricks first-class** (design): the codebase is officially Databricks-focused. The Narwhals dataframe layer stays platform-agnostic; the resource/IaC layer does not.
 - **Added DABs as a deployment path** (PR #533): `laktory/dab.py` exposes `build_resources(bundle)` for the Databricks CLI. Jobs and DLT Pipelines can now be deployed via `databricks.yml` without Terraform.
 - **Generated resource models from Terraform schema** (PR #536): `scripts/build_resources/` generates `*_base.py` files from `terraform providers schema -json`. Hand-maintaining 50+ resource fields is no longer needed.
-
----
-
-## Remaining Work
-
-### 1. Fix `RecursiveLoader` robustness _(high risk, low effort)_
-
-File: `laktory/yaml/recursiveloader.py`
-
-- Add `try/finally` around `loader.variables` state mutation so variables are always restored on error
-- Add circular reference detection to prevent infinite `!use` loops
-- Improve error messages for missing `!use` targets
-- Guard the `<<:` string replacement against false positives (currently a plain string replace)
-
-### 2. Address `inject_vars` performance _(quality of life)_
-
-- Profile `inject_vars` / `push_vars` with a realistic large pipeline
-- The current implementation deep-copies on every call; replace with lazy or cached evaluation
+- **Hardened `RecursiveLoader`** (PR #551): added `try/finally` variable-state restoration so `loader.variables` is always reset on error; circular-reference detection for both `!use` and `<<:` merge keys; improved error messages for missing `!use` targets; guarded `<<:` string replacement against false positives.
+- **Fixed `inject_vars` performance** (PR #552): replaced `isinstance(Pipeline/PipelineNode)` checks (which forced circular imports on every call) with a `_inject_vars_objs()` override pattern on `Pipeline` and `PipelineNode`; added a cache keyed on serialized `vars` so repeated calls with unchanged variables skip re-resolution entirely.
