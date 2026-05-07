@@ -460,7 +460,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         # Cache check: skip re-resolution when vars and objs haven't changed
         cache_key = None
         if not inplace and _caller_objs is None:
-            cache_key = json.dumps(vars, sort_keys=True, default=repr)
+            cache_key = json.dumps(vars, sort_keys=True)
             if self._inject_vars_cache_key == cache_key:
                 return self._inject_vars_cache_value.model_copy(deep=True)
 
