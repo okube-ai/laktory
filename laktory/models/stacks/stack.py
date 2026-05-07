@@ -1,3 +1,4 @@
+import re
 from typing import Any
 from typing import Literal
 
@@ -425,6 +426,25 @@ class Stack(BaseModel):
         return env
 
     # ----------------------------------------------------------------------- #
+    # Helpers                                                                 #
+    # ----------------------------------------------------------------------- #
+
+    @staticmethod
+    def _check_depends_on(resources: dict, providers: dict) -> None:
+        """Warn when a depends_on entry references a ${resources.X} name that
+        does not exist in the stack, catching typos before Terraform apply."""
+        known = set(resources) | set(providers)
+        pattern = re.compile(r"\$\{resources\.([^}.]+)")
+        for _r in resources.values():
+            for dep in _r.resource_options.depends_on:
+                m = pattern.search(dep)
+                if m and m.group(1) not in known:
+                    logger.warning(
+                        f"Resource '{_r.resource_options.name}' has depends_on "
+                        f"entry '{dep}' that references unknown resource '{m.group(1)}'."
+                    )
+
+    # ----------------------------------------------------------------------- #
     # Terraform Methods                                                       #
     # ----------------------------------------------------------------------- #
 
@@ -459,6 +479,8 @@ class Stack(BaseModel):
         for r in env.resources._get_all(providers_excluded=True).values():
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
+
+        self._check_depends_on(resources, providers)
 
         # Update terraform
         return TerraformStack(

@@ -2,7 +2,7 @@
 
 ## [0.11.5] - Unreleased
 ### Added
-* n/a
+* Resources cross-reference validation. When a `depends_on` entry references a `${resources.X}` name that does not exist in the stack, a warning is issued.
 ### Fixed
 * n/a
 ### Updated

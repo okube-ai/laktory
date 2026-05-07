@@ -516,6 +516,35 @@ def test_substitute_terraform_refs():
     assert result["unchanged"] == "no-substitution-needed"
 
 
+def test_check_depends_on():
+    from unittest.mock import patch
+
+    from laktory.models.resources.baseresource import ResourceOptions
+
+    class _R:
+        def __init__(self, name, depends_on):
+            self.resource_options = ResourceOptions(depends_on=depends_on)
+            self.resource_options.name = name
+
+    resources = {
+        # valid ${resources.X} reference — should not warn
+        "child": _R("child", ["${resources.parent}"]),
+        # unknown ${resources.X} reference — should warn
+        "orphan": _R("orphan", ["${resources.does-not-exist}"]),
+        # non-${resources.X} string (Terraform data source) — should not warn
+        "external": _R("external", ["data.databricks_notebook.foo"]),
+    }
+    providers = {"parent": _R("parent", [])}
+
+    with patch("laktory.models.stacks.stack.logger") as mock_logger:
+        models.Stack._check_depends_on(resources, providers)
+
+    warned = [str(call) for call in mock_logger.warning.call_args_list]
+    assert any("does-not-exist" in m for m in warned)
+    assert not any("parent" in m for m in warned)
+    assert not any("external" in m for m in warned)
+
+
 def test_terraform_plan(monkeypatch, stack):
     c0 = settings.cli_raise_external_exceptions
     settings.cli_raise_external_exceptions = True

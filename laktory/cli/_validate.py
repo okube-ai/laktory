@@ -35,7 +35,10 @@ def validate(
     ----------
     * [CLI](https://www.laktory.ai/concepts/cli/)
     """
-    CLIController(
+    controller = CLIController(
         env=environment,
         stack_filepath=filepath,
     )
+
+    # Shortcut to call resources cross-reference validation (_check_depends_on)
+    controller.stack.to_terraform(env_name=controller.env)
