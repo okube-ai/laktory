@@ -146,13 +146,9 @@ class RecursiveLoader(yaml.SafeLoader):
 
         if filepath.is_dir():
             objs = []
-            for _filepath in sorted(filepath.rglob("*")):
-                if not (
-                    _filepath.as_posix().endswith(".yaml")
-                    or _filepath.as_posix().endswith(".yml")
-                ):
-                    continue
-
+            for _filepath in sorted(
+                set(filepath.rglob("*.yaml")) | set(filepath.rglob("*.yml"))
+            ):
                 abs_path = str(_filepath.resolve())
                 if abs_path in loader._loading_paths:
                     raise ValueError(
