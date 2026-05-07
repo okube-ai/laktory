@@ -1,16 +1,13 @@
 # Release History
 
 ## [0.11.4] - Unreleased
-### Added
-* n/a
 ### Fixed
 * Definition of grants on Databricks `Connection` resources
 * Dependency between secret scope and its ACL
+* CLI `run` command not parsing stack variables
 ### Updated
 * Better error messages on recursive loader and identification of circular dependencies
 * Optimized variables injection
-### Breaking changes
-* n/a
 
 ## [0.11.3] - 2026-05-04
 ### Fixed

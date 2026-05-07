@@ -90,7 +90,7 @@ def run(
         env=environment,
         stack_filepath=filepath,
     )
-    dispatcher = Dispatcher(stack=controller.stack)
+    dispatcher = Dispatcher(stack=controller.stack, env=controller.env)
     dispatcher.get_resource_ids()
 
     if databricks_job:
