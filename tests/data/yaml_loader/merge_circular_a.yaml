@@ -1,0 +1,2 @@
+name: a
+<<: !update merge_circular_b.yaml
