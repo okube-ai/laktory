@@ -6,6 +6,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory.enums import DataFrameBackends
 from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.resources.databricks.qualitymonitor import QualityMonitor
 
@@ -46,6 +47,10 @@ class UnityCatalogDataSink(TableDataSink):
 
     @model_validator(mode="after")
     def validate_qm(self) -> Any:
+        if self.dataframe_backend == DataFrameBackends.POLARS:
+            raise ValueError(
+                "Unity Catalog data sink does not support the Polars backend."
+            )
         if self.databricks_quality_monitor is not None:
             if (
                 self.parent_pipeline
