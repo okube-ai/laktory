@@ -8,11 +8,12 @@ Planned features, bug fixes and architectural changes
 
 Things that would be nice for the user and enhance usability.
 
-| #  | Description                                                                         |
-|----|-------------------------------------------------------------------------------------|
-| F1 | Add the ability to deploy the terraform state file to Databricks workspace like DAB |
-| F2 | Add the ability to register Spark Extensions                                        |
-| F3 | Add lookup existing resources on all relevant resources                             |
+| #  | Description                                                                                                                                          |
+|----|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| F1 | Add the ability to deploy the terraform state file to Databricks workspace like DAB                                                                  |
+| F2 | Add the ability to register Spark Extensions                                                                                                         |
+| F3 | Add lookup existing resources on all relevant resources                                                                                              |
+| F4 | Better error message. During validation, it's almost impossible to understand what's going on because multiple models are possible (sources / sinks) |
 
 
 ---
