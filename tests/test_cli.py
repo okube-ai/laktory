@@ -67,6 +67,20 @@ def test_validate_missing_file():
     assert result.exit_code != 0
 
 
+def test_validate_malformed_yaml(tmp_path):
+    bad = tmp_path / "stack.yaml"
+    bad.write_text("name: test\norganization: {unclosed\n")
+    result = runner.invoke(app, ["validate", "--filepath", str(bad)])
+    assert result.exit_code != 0
+
+
+def test_validate_invalid_model(tmp_path):
+    bad = tmp_path / "stack.yaml"
+    bad.write_text("name:\n  - not_a_string\norganization: o\n")
+    result = runner.invoke(app, ["validate", "--filepath", str(bad)])
+    assert result.exit_code != 0
+
+
 def test_validate_bad_env(monkeypatch, tmp_path):
     monkeypatch.setenv("DATABRICKS_HOST", "mock-host")
     monkeypatch.setenv("DATABRICKS_TOKEN", "mock-token")

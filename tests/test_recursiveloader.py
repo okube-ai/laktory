@@ -156,6 +156,13 @@ def test_variables_stack_restored_on_error():
     assert len(loader.variables) == initial_len
 
 
+def test_malformed_yaml_syntax():
+    data = "key: {unclosed\n"
+    with pytest.raises(Exception) as exc_info:
+        RecursiveLoader.load(io.StringIO(data))
+    assert "yaml" in type(exc_info.value).__module__
+
+
 def test_merge_key_in_quoted_string():
     # <<: inside a quoted string value must NOT be corrupted by preprocessing.
     # The old str.replace would turn it into __merge_here: inside the string.
