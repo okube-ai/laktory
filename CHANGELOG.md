@@ -7,6 +7,7 @@
 * n/a
 ### Updated
 * `TerraformStack.model_dump()`: resource reference substitution (`${resources.xxx}`) now uses structured dict traversal with `str.replace` for simple refs and `re.escape` + lambda for property refs, fixing incorrect matches when resource names contain regex metacharacters (e.g. a dot)
+* Improved documentation review as per 2026/05/08 audit.
 ### Breaking changes
 * n/a
 
