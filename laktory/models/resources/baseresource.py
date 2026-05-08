@@ -70,8 +70,23 @@ class ResourceOptions(BaseModel):
     name: str = Field(
         None,
         description="""
-        Name of the resource in the context of infrastructure as code. If `None`, a default name is derived from the
-        resource type and key.
+        Logical name of the resource within the stack. Used by the IaC backend to track the
+        resource across deployments, and as the key for cross-referencing this resource from
+        other resources or YAML configs via `${resources.<name>.<property>}` (e.g.,
+        `${resources.catalog-dev.id}`).
+
+        If `None`, the name is auto-generated as `{type_id}-{resource_key}` where:
+        - `type_id` is the class name in kebab-case (e.g., `Catalog` → `catalog`, `SecretScope` → `secret-scope`)
+        - `resource_key` is the resource `name` property with special characters replaced by `-`
+
+        Examples of auto-generated names:
+        - `Catalog(name="dev")` → `catalog-dev`
+        - `Schema(name="finance", catalog_name="dev")` → `schema-dev-finance`
+        - `Table(name="slv_stock_prices", catalog_name="dev", schema_name="finance")` → `table-dev-finance-slv_stock_prices`
+
+        Set this explicitly to pin the resource address and prevent destroy-and-recreate when the
+        resource `name` property changes. The value must start with a letter and contain only
+        letters, digits, hyphens, underscores, or `${vars.*}` placeholders.
         """,
     )
     is_enabled: bool = Field(
@@ -219,6 +234,12 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
 
     @property
     def resource_name(self) -> str:
+        """
+        Logical name of the resource within the stack — auto-generated as
+        `{resource_type_id}-{resource_safe_key}` unless overridden via
+        `resource_options.name`. Used as the IaC state address and as the key
+        for `${resources.<name>.<property>}` cross-references.
+        """
         if self.resource_options.name:
             name = self.resource_options.name
         else:

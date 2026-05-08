@@ -241,7 +241,65 @@ Key files: `laktory/dab.py`, `laktory/models/orchestrators/databricksjoborchestr
 
 ---
 
-## 13. Grant Model
+## 13. Resource Naming
+
+Every resource has a `resource_name` property that serves two roles:
+1. **IaC state address** — the IaC backend uses it to track the resource across deployments. Renaming a resource causes destroy-and-recreate.
+2. **Cross-reference key** — other resources and YAML configs reference this resource via `${resources.<name>.<property>}` (e.g., `${resources.catalog-dev.id}`).
+
+### Auto-generated name algorithm
+
+If `resource_options.name` is not set, the name is built as:
+
+```
+{resource_type_id}-{resource_safe_key}
+```
+
+- `resource_type_id` = class name converted to kebab-case (`SecretScope` → `secret-scope`)
+- `resource_safe_key` = the resource's `name` property with special characters (`.`, `@`, spaces, etc.) replaced by `-`
+- If `resource_safe_key` is empty → use `resource_type_id` alone
+- If `resource_type_id` is already a prefix of `resource_safe_key` → skip the prefix (avoids `catalog-catalog-dev`)
+
+Examples:
+
+| Resource | Auto-generated name |
+|----------|-------------------|
+| `Catalog(name="dev")` | `catalog-dev` |
+| `Schema(name="finance", catalog_name="dev")` | `schema-dev-finance` |
+| `Table(name="slv_stock_prices", catalog_name="dev", schema_name="finance")` | `table-dev-finance-slv_stock_prices` |
+| `SecretScope(name="my-scope")` | `secret-scope-my-scope` |
+
+### Overriding the name
+
+Set `resource_options.name` to pin the address and decouple it from the resource's `name` property:
+
+```yaml
+name: dev
+resource_options:
+  name: catalog-prod   # IaC address stays "catalog-prod" even if name changes
+```
+
+The override value must start with a letter and contain only letters, digits, hyphens, underscores, or `${vars.*}` placeholders.
+
+### Cross-referencing resources
+
+Use `${resources.<name>.<property>}` to inject a resource attribute as the value of another field:
+
+```yaml
+# In stack.yaml — reference the catalog's id in a grant
+grant:
+  principal: account users
+  privileges: [USE_CATALOG]
+catalog: ${resources.catalog-dev.id}
+```
+
+Common properties: `.id`, `.name`, `.full_name`, `.path`. The available properties depend on the resource type.
+
+Key files: `laktory/models/resources/baseresource.py` — `resource_name`, `resource_type_id`, `resource_key`, `to_safe_name()`
+
+---
+
+## 14. Grant Model
 
 Unity Catalog access control is expressed through four overlapping constructs. Understanding which to use prevents accidental privilege loss.
 

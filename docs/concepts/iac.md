@@ -90,3 +90,58 @@ databricks bundle deploy --target dev
 ```
 
 See the [DAB concept page](dab.md) for full details including orchestrator options, variable injection, and settings.
+
+---
+
+## Resource names
+
+Every resource in a Laktory stack has a **logical name** that serves two purposes:
+
+1. **State tracking** — the IaC backend uses it to identify the resource across deployments. Changing the name is treated as a deletion + recreation.
+2. **Cross-referencing** — other resources can reference this resource's attributes using `${resources.<name>.<property>}` (e.g., `${resources.catalog-dev.id}`).
+
+### Auto-generated names
+
+If you don't set a name explicitly, Laktory generates one from the resource type and its `name` field:
+
+| Resource | Auto-generated name |
+|----------|---------------------|
+| `Catalog(name="dev")` | `catalog-dev` |
+| `Schema(name="finance", catalog_name="dev")` | `schema-dev-finance` |
+| `Table(name="slv_stock_prices", catalog_name="dev", schema_name="finance")` | `table-dev-finance-slv_stock_prices` |
+| `SecretScope(name="my-scope")` | `secret-scope-my-scope` |
+
+The pattern is `{resource-type}-{name}` where the name is flattened from all identity fields and special characters are replaced with `-`.
+
+### Cross-referencing resources
+
+Use `${resources.<name>.<property>}` to inject a resource attribute into another resource's field:
+
+```yaml title="stack.yaml"
+resources:
+  catalogs:
+    my-catalog:
+      name: dev
+
+  schemas:
+    my-schema:
+      name: finance
+      catalog_name: ${resources.catalog-dev.id}
+```
+
+Common properties are `.id`, `.name`, and `.full_name`. The available properties depend on the resource type.
+
+### Pinning a name
+
+If you need to control the exact name — for example, to keep a stable reference when the `name` field changes, or to use a shorter key for frequent cross-references — set `resource_options.name`:
+
+```yaml title="stack.yaml"
+resources:
+  catalogs:
+    my-catalog:
+      name: dev
+      resource_options:
+        name: main-catalog   # cross-reference as ${resources.main-catalog.id}
+```
+
+The value must start with a letter and contain only letters, digits, hyphens, and underscores.
