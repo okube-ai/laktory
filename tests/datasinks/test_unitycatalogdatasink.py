@@ -41,6 +41,17 @@ def test_write(backend, tmp_path):
     assert not sink.exists()
 
 
+def test_polars_backend_rejected():
+    with pytest.raises(ValueError, match="does not support the Polars backend"):
+        UnityCatalogDataSink(
+            catalog_name="sandbox",
+            schema_name="default",
+            table_name="df",
+            mode="OVERWRITE",
+            dataframe_backend="POLARS",
+        )
+
+
 def test_full_name():
     sink = UnityCatalogDataSink(
         table_name="sandbox.default.df",

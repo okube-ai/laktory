@@ -62,7 +62,11 @@ def with_row_index(
     is_lazy = isinstance(df, nw.LazyFrame)
 
     if is_lazy and order_by is None:
-        raise ValueError("Argument `order_by` required to LazyFrame")
+        raise ValueError(
+            "Argument `order_by` is required for LazyFrames. "
+            "Lazy evaluation does not guarantee row order, so an explicit sort column must be provided to produce deterministic results. "
+            "Pass one or more column names, e.g. `order_by='timestamp'` or `order_by=['date', 'id']`."
+        )
 
     # Narwhals base with_row_index method.
     if not (order_by or partition_by):

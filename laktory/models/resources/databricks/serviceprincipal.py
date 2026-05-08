@@ -55,7 +55,7 @@ class ServicePrincipal(ServicePrincipalBase):
     lookup_existing: ServicePrincipalLookup = Field(
         None,
         exclude=True,
-        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+        description="Import a pre-existing ServicePrincipal by `application_id` instead of creating it. The service principal becomes available for cross-referencing and child resource deployment (grants, etc.); its own field values are not written to the existing resource.",
     )
     group_ids: list[str] = Field(
         [], description="List of the group ids that the user should be member of."

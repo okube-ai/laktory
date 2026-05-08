@@ -60,6 +60,23 @@ uv build
 uv publish
 ```
 
+## Cross-repo access
+
+The sibling okube-growth repo lives at `../okube-growth/`
+
+**You are allowed to read and write `.md` files in `../okube-growth/` from this repo's context.** Use this when:
+- A Laktory technical decision, new feature, or positioning change should be reflected in the growth strategy or content calendar
+- A release or milestone should be logged as a content opportunity in `../okube-growth/strategy/content_calendar.md`
+- Laktory's public messaging (README, docs) should stay in sync with the growth strategy in `../okube-growth/strategy/positioning.md`
+
+Do not touch okube-growth's tooling code or LinkedIn config files from this context — only `.md` strategy and documentation files.
+
+The okube-growth CLAUDE.md has a reciprocal instruction allowing it to write into this repo.
+
+## Git policy
+
+**Never run `git commit`, `git push`, or any git write operation** — make file edits locally and let the user decide when to commit and push.
+
 ## Additional Documentation
 
 Check these files when working on related topics:

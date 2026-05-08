@@ -71,7 +71,7 @@ class User(UserBase):
     lookup_existing: UserLookup = Field(
         None,
         exclude=True,
-        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+        description="Import a pre-existing User by `user_id` or `user_name` instead of creating it. The user becomes available for cross-referencing and child resource deployment (grants, etc.); its own field values are not written to the existing resource.",
     )
     roles: list[str] = Field(
         [], description="List of roles assigned to the user e.g. ('account_admin')"

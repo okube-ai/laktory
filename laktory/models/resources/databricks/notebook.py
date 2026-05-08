@@ -64,7 +64,7 @@ class Notebook(NotebookBase):
     lookup_existing: NotebookLookup = Field(
         None,
         exclude=True,
-        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+        description="Import a pre-existing Notebook by `path` instead of creating it. The notebook becomes available for cross-referencing; its own field values are not written to the existing resource.",
     )
     path_: str = Field(
         None,

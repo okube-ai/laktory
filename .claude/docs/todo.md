@@ -12,6 +12,7 @@ Things that would be nice for the user and enhance usability.
 |----|-------------------------------------------------------------------------------------|
 | F1 | Add the ability to deploy the terraform state file to Databricks workspace like DAB |
 | F2 | Add the ability to register Spark Extensions                                        |
+| F3 | Add lookup existing resources on all relevant resources                             |
 
 
 ---

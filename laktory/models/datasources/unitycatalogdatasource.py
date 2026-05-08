@@ -1,9 +1,12 @@
+from typing import Any
 from typing import Literal
 
 from narwhals import LazyFrame
 from pydantic import Field
+from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory.enums import DataFrameBackends
 from laktory.models.datasources.tabledatasource import TableDataSource
 
 logger = get_logger(__name__)
@@ -43,6 +46,14 @@ class UnityCatalogDataSource(TableDataSource):
     type: Literal["UNITY_CATALOG"] = Field(
         "UNITY_CATALOG", frozen=True, description="Source Type"
     )
+
+    @model_validator(mode="after")
+    def validate_backend(self) -> Any:
+        if self.dataframe_backend == DataFrameBackends.POLARS:
+            raise ValueError(
+                "Unity Catalog data source does not support the Polars backend."
+            )
+        return self
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #

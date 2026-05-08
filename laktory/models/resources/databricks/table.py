@@ -53,21 +53,23 @@ class Table(UnityCatalogMixin, TableBase):
     grant: TableGrant | list[TableGrant] = Field(
         None,
         description="""
-    Grant(s) operating on the Table and authoritative for a specific principal. Other principals within the grants are
-    preserved. Mutually exclusive with `grants`.
+    Non-destructive grant for specific principal(s). Adds or updates privileges for the listed principal(s) and leaves
+    grants for all other principals untouched. Use when access is managed from multiple sources (Laktory, Databricks
+    UI, etc.). Mutually exclusive with `grants`.
     """,
     )
     grants: list[TableGrant] = Field(
         None,
         description="""
-    Grants operating on the Table and authoritative for all principals. Replaces any existing grants defined inside or
-    outside of Laktory. Mutually exclusive with `grant`.
+    Authoritative grant list for all principals. Replaces every existing grant on this Table — including those set
+    outside Laktory — with only the entries listed here. Use only when Laktory owns all access management for this
+    resource. Mutually exclusive with `grant`.
     """,
     )
     lookup_existing: TableLookup = Field(
         None,
         exclude=True,
-        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+        description="Import a pre-existing Table by full `name` (`catalog.schema.table`) instead of creating it. The table becomes available for cross-referencing and child resource deployment (grants, etc.); its own field values are not written to the existing resource.",
     )
     # ----------------------------------------------------------------------- #
     # Validators                                                              #

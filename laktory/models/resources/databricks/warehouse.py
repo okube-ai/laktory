@@ -72,7 +72,7 @@ class Warehouse(SqlEndpointBase):
     lookup_existing: WarehouseLookup = Field(
         None,
         exclude=True,
-        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+        description="Import a pre-existing SQL Warehouse by `id` instead of creating it. The warehouse becomes available for cross-referencing; its own field values are not written to the existing resource.",
     )
 
     # ----------------------------------------------------------------------- #

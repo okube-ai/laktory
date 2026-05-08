@@ -241,7 +241,112 @@ Key files: `laktory/dab.py`, `laktory/models/orchestrators/databricksjoborchestr
 
 ---
 
-## 13. Testing Patterns
+## 13. Resource Naming
+
+Every resource has a `resource_name` property that serves two roles:
+1. **IaC state address** — the IaC backend uses it to track the resource across deployments. Renaming a resource causes destroy-and-recreate.
+2. **Cross-reference key** — other resources and YAML configs reference this resource via `${resources.<name>.<property>}` (e.g., `${resources.catalog-dev.id}`).
+
+### Auto-generated name algorithm
+
+If `resource_options.name` is not set, the name is built as:
+
+```
+{resource_type_id}-{resource_safe_key}
+```
+
+- `resource_type_id` = class name converted to kebab-case (`SecretScope` → `secret-scope`)
+- `resource_safe_key` = the resource's `name` property with special characters (`.`, `@`, spaces, etc.) replaced by `-`
+- If `resource_safe_key` is empty → use `resource_type_id` alone
+- If `resource_type_id` is already a prefix of `resource_safe_key` → skip the prefix (avoids `catalog-catalog-dev`)
+
+Examples:
+
+| Resource | Auto-generated name |
+|----------|-------------------|
+| `Catalog(name="dev")` | `catalog-dev` |
+| `Schema(name="finance", catalog_name="dev")` | `schema-dev-finance` |
+| `Table(name="slv_stock_prices", catalog_name="dev", schema_name="finance")` | `table-dev-finance-slv_stock_prices` |
+| `SecretScope(name="my-scope")` | `secret-scope-my-scope` |
+
+### Overriding the name
+
+Set `resource_options.name` to pin the address and decouple it from the resource's `name` property:
+
+```yaml
+name: dev
+resource_options:
+  name: catalog-prod   # IaC address stays "catalog-prod" even if name changes
+```
+
+The override value must start with a letter and contain only letters, digits, hyphens, underscores, or `${vars.*}` placeholders.
+
+### Cross-referencing resources
+
+Use `${resources.<name>.<property>}` to inject a resource attribute as the value of another field:
+
+```yaml
+# In stack.yaml — reference the catalog's id in a grant
+grant:
+  principal: account users
+  privileges: [USE_CATALOG]
+catalog: ${resources.catalog-dev.id}
+```
+
+Common properties: `.id`, `.name`, `.full_name`, `.path`. The available properties depend on the resource type.
+
+Key files: `laktory/models/resources/baseresource.py` — `resource_name`, `resource_type_id`, `resource_key`, `to_safe_name()`
+
+---
+
+## 14. Grant Model
+
+Unity Catalog access control is expressed through four overlapping constructs. Understanding which to use prevents accidental privilege loss.
+
+### The two authority modes
+
+| Field / Class | Authority scope | Terraform resource | Behaviour |
+|---|---|---|---|
+| `Resource.grant` (embedded) | Per-principal | `databricks_grant` | Adds/updates privileges for listed principal(s); all other principals untouched |
+| `Resource.grants` (embedded) | All principals | `databricks_grants` | Replaces **every** grant on the resource, including those set outside Laktory |
+| Standalone `Grant` resource | Per-principal | `databricks_grant` | Same as embedded `grant` |
+| Standalone `Grants` resource | All principals | `databricks_grants` | Same as embedded `grants` |
+
+### Decision guide
+
+**Use `grant` (singular) when:**
+- Access is also managed from other sources (Databricks UI, another tool, another stack)
+- You want to add Laktory-managed principals without disturbing existing grants
+- Safe default: no risk of accidentally revoking access
+
+**Use `grants` (plural) when:**
+- Laktory is the single source of truth for all access on this resource
+- You want a "complete picture" declaration — exactly this list, nothing more
+- Be aware: any grant not in the list is deleted on the next `terraform apply`
+
+**Use standalone `Grant` / `Grants` when:**
+- The target securable is not created by Laktory (pre-existing catalog, external table)
+- You need to manage grants without owning the resource definition
+
+**For resources Laktory creates, always prefer the embedded fields** (`Catalog.grant`, `Schema.grants`, etc.) — they render the same Terraform resource but keep grants co-located with the resource definition.
+
+### Mutual exclusivity
+
+`grant` and `grants` are mutually exclusive on any resource. Setting both raises a `ValidationError` at construction time (enforced by `BaseResource.grants_validator` in `laktory/models/resources/baseresource.py`).
+
+### Key files
+
+| File | Purpose |
+|------|---------|
+| `laktory/models/resources/baseresource.py` | `grants_validator()` (mutual exclusivity), `get_grants_additional_resources()` (renders embedded fields into TF resources) |
+| `laktory/models/resources/databricks/grant.py` | Standalone per-principal grant resource |
+| `laktory/models/resources/databricks/grants.py` | Standalone all-principals grant resource |
+| `laktory/models/grants/` | Per-resource grant types (`CatalogGrant`, `SchemaGrant`, etc.) |
+| `tests/resources/test_resource_grants.py` | Behaviour tests for all three patterns |
+
+---
+
+## 14. Testing Patterns
 
 - Tests are parametrized over backends: `@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])`
 - Databricks-only tests are marked: `@pytest.mark.databricks_connect` and excluded from standard test run

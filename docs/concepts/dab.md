@@ -10,6 +10,22 @@ If your team already uses the Databricks CLI and `databricks.yml` to manage work
 resources, DABs integration get your started quickly.
 
 
+## Deployment strategies
+
+Laktory supports two approaches:
+
+**1. DABs + Laktory stack (hybrid)**
+
+Use DABs to manage workspace-level resources (jobs, clusters, SQL warehouses, dashboards, etc. — see the [full DABs resource list](https://docs.databricks.com/aws/en/dev-tools/bundles/resources)) and the Laktory DABs integration to deploy your data pipelines. Manage resources outside DABs' scope — in particular account-level resources like users, groups, metastore configuration, and the Unity Catalog hierarchy — separately with a Laktory [stack](stack.md) backed by Terraform.
+
+**2. Laktory stack only**
+
+Use a Laktory stack backed by Terraform for all resources, including workspace resources, pipelines, and account-level infrastructure.
+
+The two deployments in strategy 1 are independent — run them in whichever order suits your CI/CD workflow. Unity Catalog infrastructure is typically deployed first so catalogs and schemas exist before pipelines run.
+
+---
+
 ## How It Works
 
 When `databricks bundle deploy` is executed, the Databricks CLI calls the registered Python hook 
