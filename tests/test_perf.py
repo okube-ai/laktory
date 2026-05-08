@@ -56,6 +56,9 @@ def test_inject_vars_large_pipeline():
 
 
 def test_inject_vars_large_stack():
+    # 10 variables so each lookup scans a realistic-sized dict
+    variables = {f"var_{k}": f"value_{k}" for k in range(10)}
+
     n_pipelines, n_nodes = 10, 100
     stack = models.Stack(
         name="perf-stack",
@@ -65,25 +68,31 @@ def test_inject_vars_large_stack():
                 f"pl-{j:03d}": models.Pipeline(
                     name=f"pl-{j:03d}",
                     nodes=[
-                        models.PipelineNode(name=f"node_{i:03d}", comment="${vars.env}")
+                        models.PipelineNode(
+                            name=f"node_{i:03d}",
+                            # 4 variable references per node across 2 fields
+                            comment="${vars.var_0}/${vars.var_1}/${vars.var_2}",
+                            dlt_template="${vars.var_3}",
+                        )
                         for i in range(n_nodes)
                     ],
                 )
                 for j in range(n_pipelines)
             }
         },
-        variables={"env": "dev"},
+        variables=variables,
         environments={"dev": {}},
     )
     t0 = time.perf_counter()
     result = stack.get_env("dev").inject_vars()
-    print("ACTUAL TIME", time.perf_counter() - t0)
-    assert time.perf_counter() - t0 < 1.0  # generous; actual ~0.05 s
+    assert time.perf_counter() - t0 < 1.0  # actual ~0.13 s; generous for slow CI
 
     pls = result.resources.pipelines
     assert len(pls) == n_pipelines
     assert all(len(pl.nodes) == n_nodes for pl in pls.values())
-    assert all(n.comment == "dev" for pl in pls.values() for n in pl.nodes)
+    assert all(
+        n.comment == "value_0/value_1/value_2" for pl in pls.values() for n in pl.nodes
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -93,22 +102,27 @@ def test_inject_vars_large_stack():
 
 def test_inject_vars_cache_speedup():
     nodes = [
-        models.PipelineNode(name=f"node_{i:03d}", comment="${vars.env}")
+        models.PipelineNode(
+            name=f"node_{i:03d}",
+            comment="${vars.var_0}/${vars.var_1}/${vars.var_2}",
+            dlt_template="${vars.var_3}",
+        )
         for i in range(100)
     ]
     pipeline = models.Pipeline(name="large-pl", nodes=nodes)
     n = 20
 
-    pipeline.inject_vars(vars={"env": "dev"})  # warm — populates cache
+    vars_fixed = {f"var_{k}": f"value_{k}" for k in range(10)}
+    pipeline.inject_vars(vars=vars_fixed)  # warm — populates cache
 
     t0 = time.perf_counter()
     for _ in range(n):
-        pipeline.inject_vars(vars={"env": "dev"})  # cache hits
+        pipeline.inject_vars(vars=vars_fixed)  # cache hits
     cached_time = time.perf_counter() - t0
 
     t0 = time.perf_counter()
     for i in range(n):
-        pipeline.inject_vars(vars={"env": f"env_{i}"})  # cache misses
+        pipeline.inject_vars(vars={**vars_fixed, "var_0": f"miss_{i}"})  # cache misses
     uncached_time = time.perf_counter() - t0
 
     assert cached_time < uncached_time
