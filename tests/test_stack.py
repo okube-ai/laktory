@@ -69,12 +69,8 @@ def test_stack_resources_unique_name():
 
 
 def test_build(monkeypatch, stack):
-    c0 = settings.cli_raise_external_exceptions
-    settings.cli_raise_external_exceptions = True
-
+    monkeypatch.setattr(settings, "cli_raise_external_exceptions", True)
     stack.build(env_name="dev")
-
-    settings.cli_raise_external_exceptions = c0
 
 
 def test_terraform_stack(monkeypatch, stack):
@@ -546,28 +542,22 @@ def test_check_depends_on():
 
 
 def test_terraform_plan(monkeypatch, stack):
-    c0 = settings.cli_raise_external_exceptions
-    settings.cli_raise_external_exceptions = True
-
+    monkeypatch.setattr(settings, "cli_raise_external_exceptions", True)
     skip_terraform_plan()
 
     tstack = stack.to_terraform(env_name="dev")
     tstack.init(flags=["-reconfigure"])
     tstack.plan()
 
-    settings.cli_raise_external_exceptions = c0
 
-
-def test_stack_settings():
-    current_root = settings.runtime_root
+def test_stack_settings(monkeypatch):
     custom_root = "/custom/path/"
-
     assert settings.runtime_root != custom_root
 
+    monkeypatch.setattr(settings, "runtime_root", settings.runtime_root)
     _ = models.Stack(name="one_stack", settings={"runtime_root": custom_root})
 
     assert settings.runtime_root == custom_root
-    settings.runtime_root = current_root
 
 
 def test_get_env():
