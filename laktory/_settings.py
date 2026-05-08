@@ -38,6 +38,9 @@ class Settings(BaseSettings):
         alias="LAKTORY_BUILD_ROOT",
     )
 
+    # Narwhals extensions
+    register_nw_extensions: bool = Field(True, alias="LAKTORY_REGISTER_NW_EXTENSIONS")
+
     # Logging
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")
 

@@ -1,7 +1,6 @@
 from typing import Any
 from typing import Literal
 
-from narwhals import LazyFrame
 from pydantic import Field
 from pydantic import model_validator
 
@@ -60,18 +59,3 @@ class UnityCatalogDataSink(TableDataSink):
                     "`databricks_quality_monitor_enabled` must be set to `True` to use quality monitor on Unity Catalog data sinks."
                 )
         return self
-
-    # ----------------------------------------------------------------------- #
-    # Properties                                                              #
-    # ----------------------------------------------------------------------- #
-
-    # ----------------------------------------------------------------------- #
-    # Readers                                                                 #
-    # ----------------------------------------------------------------------- #
-
-    def _write_polars(self, df) -> LazyFrame:
-        # TODO
-        # https://docs.pola.rs/api/python/stable/reference/catalog/api/polars.Catalog.scan_table.html#polars.Catalog.scan_table
-        raise NotImplementedError(
-            "Unity Catalog data sink is not yet implemented for Polars"
-        )

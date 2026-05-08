@@ -84,11 +84,9 @@ def test_read(monkeypatch, template, env, tmp_path):
     ],
 )
 def test_terraform_plan(monkeypatch, template, env, tmp_path):
-    # Set context
-    c0 = settings.cli_raise_external_exceptions
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("LAKTORY_CLI_RAISE_EXTERNAL_EXCEPTIONS", "true")
-    settings.cli_raise_external_exceptions = True
+    monkeypatch.setattr(settings, "cli_raise_external_exceptions", True)
 
     stack_filepath = tmp_path / "stack.yaml"
 
@@ -117,9 +115,6 @@ def test_terraform_plan(monkeypatch, template, env, tmp_path):
     # Preview
     stack.init(flags=["-reconfigure"])
     stack.plan()
-
-    # Reset context
-    settings.cli_raise_external_exceptions = c0
 
 
 def test_run(monkeypatch, tmp_path):
