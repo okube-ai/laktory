@@ -9,6 +9,9 @@ from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
+# Update this when the test workspace changes.
+DATABRICKS_HOST = "https://adb-2211091707396001.1.azuredatabricks.net/"
+
 # --------------------------------------------------------------------------- #
 # Databricks                                                                  #
 # --------------------------------------------------------------------------- #
@@ -24,20 +27,19 @@ def get_databricks_config() -> Config:
         except ValueError:
             pass
 
-    host = "https://adb-2211091707396001.1.azuredatabricks.net/"
     token = os.getenv("DATABRICKS_TOKEN")
     secret = os.getenv("AZURE_CLIENT_SECRET")
 
     if token:
         return Config(
-            host=host,
+            host=DATABRICKS_HOST,
             auth_type="pat",
             serverless_compute_id="auto",
         )
 
     if secret:
         return Config(
-            host=host,
+            host=DATABRICKS_HOST,
             auth_type="azure-client-secret",
             azure_tenant_id=os.getenv("AZURE_TENANT_ID"),
             azure_client_id=os.getenv("AZURE_CLIENT_ID"),

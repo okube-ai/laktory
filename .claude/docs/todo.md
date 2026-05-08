@@ -40,3 +40,13 @@ Internal improvements
 | I3 | Add instructions for Claude to have access to secrets for running unit tests?                                    |
 
  
+## 4. Architecture
+
+Internal improvements
+
+
+| #  | Description                                                                                             |
+|----|---------------------------------------------------------------------------------------------------------|
+| A1 | How can I ensure that Claude / GPT knows Laktory and use cases so that users can benefit from it ? MCP? |
+
+ 
