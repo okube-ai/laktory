@@ -1,3 +1,5 @@
+import time
+
 import narwhals as nw
 import polars as pl
 import pytest
@@ -5,6 +7,12 @@ import yaml
 
 from laktory import models
 from laktory.yaml import RecursiveLoader
+
+# Future improvement: replace time.perf_counter() thresholds with
+# pytest-benchmark (https://pytest-benchmark.readthedocs.io). It auto-calibrates
+# iteration counts and compares against a saved baseline, catching gradual creep
+# rather than only catastrophic regressions. Deferred because it requires
+# committing a baseline file and updating it after intentional speedups.
 
 # --------------------------------------------------------------------------- #
 # inject_vars cache (P1 / P2)                                                 #
@@ -40,6 +48,70 @@ def test_inject_vars_large_pipeline():
     result = pipeline.inject_vars(vars={"env": "dev"})
     assert len(result.nodes) == 100
     assert all(n.comment == "dev" for n in result.nodes)
+
+
+# --------------------------------------------------------------------------- #
+# Large stack inject_vars (many pipelines × many nodes)                       #
+# --------------------------------------------------------------------------- #
+
+
+def test_inject_vars_large_stack():
+    n_pipelines, n_nodes = 10, 100
+    stack = models.Stack(
+        name="perf-stack",
+        organization="test",
+        resources={
+            "pipelines": {
+                f"pl-{j:03d}": models.Pipeline(
+                    name=f"pl-{j:03d}",
+                    nodes=[
+                        models.PipelineNode(name=f"node_{i:03d}", comment="${vars.env}")
+                        for i in range(n_nodes)
+                    ],
+                )
+                for j in range(n_pipelines)
+            }
+        },
+        variables={"env": "dev"},
+        environments={"dev": {}},
+    )
+    t0 = time.perf_counter()
+    result = stack.get_env("dev").inject_vars()
+    print("ACTUAL TIME", time.perf_counter() - t0)
+    assert time.perf_counter() - t0 < 1.0  # generous; actual ~0.05 s
+
+    pls = result.resources.pipelines
+    assert len(pls) == n_pipelines
+    assert all(len(pl.nodes) == n_nodes for pl in pls.values())
+    assert all(n.comment == "dev" for pl in pls.values() for n in pl.nodes)
+
+
+# --------------------------------------------------------------------------- #
+# inject_vars cache speedup (P1 / P2)                                         #
+# --------------------------------------------------------------------------- #
+
+
+def test_inject_vars_cache_speedup():
+    nodes = [
+        models.PipelineNode(name=f"node_{i:03d}", comment="${vars.env}")
+        for i in range(100)
+    ]
+    pipeline = models.Pipeline(name="large-pl", nodes=nodes)
+    n = 20
+
+    pipeline.inject_vars(vars={"env": "dev"})  # warm — populates cache
+
+    t0 = time.perf_counter()
+    for _ in range(n):
+        pipeline.inject_vars(vars={"env": "dev"})  # cache hits
+    cached_time = time.perf_counter() - t0
+
+    t0 = time.perf_counter()
+    for i in range(n):
+        pipeline.inject_vars(vars={"env": f"env_{i}"})  # cache misses
+    uncached_time = time.perf_counter() - t0
+
+    assert cached_time < uncached_time
 
 
 # --------------------------------------------------------------------------- #
