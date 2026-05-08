@@ -43,15 +43,17 @@ class Connection(ConnectionBase):
     grant: ConnectionGrant | list[ConnectionGrant] = Field(
         None,
         description="""
-    Grant(s) operating on the Connection and authoritative for a specific principal.
-    Other principals within the grants are preserved. Mutually exclusive with `grants`.
+    Non-destructive grant for specific principal(s). Adds or updates privileges for the listed principal(s) and leaves
+    grants for all other principals untouched. Use when access is managed from multiple sources (Laktory, Databricks
+    UI, etc.). Mutually exclusive with `grants`.
     """,
     )
     grants: list[ConnectionGrant] = Field(
         None,
         description="""
-    Grants operating on the Connection and authoritative for all principals. Replaces any existing grants
-    defined inside or outside of Laktory. Mutually exclusive with `grant`.
+    Authoritative grant list for all principals. Replaces every existing grant on this Connection — including those
+    set outside Laktory — with only the entries listed here. Use only when Laktory owns all access management for
+    this resource. Mutually exclusive with `grant`.
     """,
     )
 

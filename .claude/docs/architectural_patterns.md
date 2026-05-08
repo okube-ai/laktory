@@ -241,7 +241,54 @@ Key files: `laktory/dab.py`, `laktory/models/orchestrators/databricksjoborchestr
 
 ---
 
-## 13. Testing Patterns
+## 13. Grant Model
+
+Unity Catalog access control is expressed through four overlapping constructs. Understanding which to use prevents accidental privilege loss.
+
+### The two authority modes
+
+| Field / Class | Authority scope | Terraform resource | Behaviour |
+|---|---|---|---|
+| `Resource.grant` (embedded) | Per-principal | `databricks_grant` | Adds/updates privileges for listed principal(s); all other principals untouched |
+| `Resource.grants` (embedded) | All principals | `databricks_grants` | Replaces **every** grant on the resource, including those set outside Laktory |
+| Standalone `Grant` resource | Per-principal | `databricks_grant` | Same as embedded `grant` |
+| Standalone `Grants` resource | All principals | `databricks_grants` | Same as embedded `grants` |
+
+### Decision guide
+
+**Use `grant` (singular) when:**
+- Access is also managed from other sources (Databricks UI, another tool, another stack)
+- You want to add Laktory-managed principals without disturbing existing grants
+- Safe default: no risk of accidentally revoking access
+
+**Use `grants` (plural) when:**
+- Laktory is the single source of truth for all access on this resource
+- You want a "complete picture" declaration — exactly this list, nothing more
+- Be aware: any grant not in the list is deleted on the next `terraform apply`
+
+**Use standalone `Grant` / `Grants` when:**
+- The target securable is not created by Laktory (pre-existing catalog, external table)
+- You need to manage grants without owning the resource definition
+
+**For resources Laktory creates, always prefer the embedded fields** (`Catalog.grant`, `Schema.grants`, etc.) — they render the same Terraform resource but keep grants co-located with the resource definition.
+
+### Mutual exclusivity
+
+`grant` and `grants` are mutually exclusive on any resource. Setting both raises a `ValidationError` at construction time (enforced by `BaseResource.grants_validator` in `laktory/models/resources/baseresource.py`).
+
+### Key files
+
+| File | Purpose |
+|------|---------|
+| `laktory/models/resources/baseresource.py` | `grants_validator()` (mutual exclusivity), `get_grants_additional_resources()` (renders embedded fields into TF resources) |
+| `laktory/models/resources/databricks/grant.py` | Standalone per-principal grant resource |
+| `laktory/models/resources/databricks/grants.py` | Standalone all-principals grant resource |
+| `laktory/models/grants/` | Per-resource grant types (`CatalogGrant`, `SchemaGrant`, etc.) |
+| `tests/resources/test_resource_grants.py` | Behaviour tests for all three patterns |
+
+---
+
+## 14. Testing Patterns
 
 - Tests are parametrized over backends: `@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])`
 - Databricks-only tests are marked: `@pytest.mark.databricks_connect` and excluded from standard test run

@@ -95,8 +95,8 @@ Issues that make Laktory harder to use correctly.
 
 | # | File | Issue |
 |---|------|-------|
-| U1 | `laktory/models/datasources/unitycatalogdatasource.py` + `unitycatalogdatasink.py` | `_read_polars()` / `_write_polars()` raise `NotImplementedError` at runtime — the unsupported backend should be rejected at construction time with a clear message |
-| U2 | `laktory/models/resources/databricks/` (all securable resources) | Three-way grant model (`grant` field / `grants` field / standalone `Grant` resource) requires users to understand subtle authoritativeness semantics before they can manage permissions correctly |
+| ~~U1~~ | ~~`laktory/models/datasources/unitycatalogdatasource.py` + `unitycatalogdatasink.py`~~ | **Done** — `@model_validator` added to both classes; Polars backend rejected at construction time with `ValueError` |
+| ~~U2~~ | ~~`laktory/models/resources/databricks/` (all securable resources)~~ | **Done** — rewrote `grant`/`grants` field descriptions across all 9 resource files (plain-language "when to use" replacing "authoritative" jargon); improved `Grant`/`Grants` standalone class docstrings; added "Grant Model" section to architectural_patterns.md |
 | U3 | `laktory/models/resources/baseresource.py:283-292` | Auto-generated Terraform resource name (`{type_id}-{key}`) is opaque; users can't easily predict or control Terraform state names — document prominently |
 | U4 | Multiple resources | `lookup_existing` supported on roughly half of all resource types with no clear documentation of which ones — create an explicit compatibility matrix |
 | U5 | `laktory/dab.py:130-152` | DABs integration covers only `Pipeline` / `Job` objects; full UC infrastructure (catalogs, schemas, grants) still requires Terraform — hybrid deployments are entirely manual |
