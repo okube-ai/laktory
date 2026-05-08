@@ -73,6 +73,10 @@ Do not touch okube-growth's tooling code or LinkedIn config files from this cont
 
 The okube-growth CLAUDE.md has a reciprocal instruction allowing it to write into this repo.
 
+## Git policy
+
+**Never run `git commit`, `git push`, or any git write operation** — make file edits locally and let the user decide when to commit and push.
+
 ## Additional Documentation
 
 Check these files when working on related topics:
