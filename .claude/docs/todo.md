@@ -45,8 +45,9 @@ Internal improvements
 Internal improvements
 
 
-| #  | Description                                                                                             |
-|----|---------------------------------------------------------------------------------------------------------|
-| A1 | How can I ensure that Claude / GPT knows Laktory and use cases so that users can benefit from it ? MCP? |
+| #  | Description                                                                                                       |
+|----|-------------------------------------------------------------------------------------------------------------------|
+| A1 | How can I ensure that Claude / GPT knows Laktory and use cases so that users can benefit from it ? MCP?           |
+| A2 | How can I offer an AI first solution? Agents that understand lineage and proposes solutions from natural language |
 
  
