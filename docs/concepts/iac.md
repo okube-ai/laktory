@@ -145,3 +145,20 @@ resources:
 ```
 
 The value must start with a letter and contain only letters, digits, hyphens, and underscores.
+
+---
+
+## Importing existing resources
+
+`lookup_existing` lets you import a pre-existing Databricks resource into your stack without recreating it. When set, Laktory reads the resource's state from the platform and makes it available for cross-referencing (`${resources.<name>.<property>}`) and child resource deployment (grants, schemas, etc.). The resource's own field values are not written back to the existing resource.
+
+```yaml title="stack.yaml"
+resources:
+  groups:
+    my-group:
+      display_name: admins
+      lookup_existing:
+        display_name: admins
+```
+
+Which fields to provide in `lookup_existing` depends on the resource type — each resource's API reference documents the available lookup key(s) on its `lookup_existing` field.

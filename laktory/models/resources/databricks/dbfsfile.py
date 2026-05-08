@@ -62,7 +62,7 @@ class DbfsFile(DbfsFileBase):
     lookup_existing: DbfsFileLookup = Field(
         None,
         exclude=True,
-        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+        description="Import a pre-existing DBFS file by `path` instead of creating it. The file becomes available for cross-referencing; its own field values are not written to the existing resource.",
     )
     path_: str = Field(
         None,

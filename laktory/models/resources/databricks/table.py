@@ -69,7 +69,7 @@ class Table(UnityCatalogMixin, TableBase):
     lookup_existing: TableLookup = Field(
         None,
         exclude=True,
-        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+        description="Import a pre-existing Table by full `name` (`catalog.schema.table`) instead of creating it. The table becomes available for cross-referencing and child resource deployment (grants, etc.); its own field values are not written to the existing resource.",
     )
     # ----------------------------------------------------------------------- #
     # Validators                                                              #

@@ -98,9 +98,7 @@ class Catalog(CatalogBase):
     lookup_existing: CatalogLookup = Field(
         None,
         exclude=True,
-        description="""
-    Specifications for looking up existing resource. Other attributes will be ignored.
-    """,
+        description="Import a pre-existing Catalog by `name` instead of creating it. The catalog becomes available for cross-referencing and child resource deployment (grants, schemas, etc.); its own field values are not written to the existing resource.",
     )
     schemas: list[Schema] = Field(
         [], description="List of schemas stored in the catalog"

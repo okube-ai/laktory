@@ -48,7 +48,7 @@ class Group(GroupBase):
     lookup_existing: GroupLookup = Field(
         None,
         exclude=True,
-        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+        description="Import a pre-existing Group by `id` or `display_name` instead of creating it. The group becomes available for cross-referencing and child resource deployment (grants, etc.); its own field values are not written to the existing resource.",
     )
     member_ids: list[str] = Field(
         [],

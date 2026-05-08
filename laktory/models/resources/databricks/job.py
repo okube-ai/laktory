@@ -138,7 +138,7 @@ class Job(JobBase):
     lookup_existing: JobLookup = Field(
         None,
         exclude=True,
-        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+        description="Import a pre-existing Job by `id` instead of creating it. The job becomes available for cross-referencing; its own field values are not written to the existing resource.",
     )
     name_prefix: str = Field(None, description="Prefix added to the job name")
     name_suffix: str = Field(None, description="Suffix added to the job name")

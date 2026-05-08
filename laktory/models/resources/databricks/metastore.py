@@ -66,7 +66,7 @@ class Metastore(MetastoreBase):
     lookup_existing: MetastoreLookup = Field(
         None,
         exclude=True,
-        description="Specifications for looking up existing resource. Other attributes will be ignored.",
+        description="Import a pre-existing Metastore by `metastore_id` instead of creating it. The metastore becomes available for cross-referencing and child resource deployment (grants, workspace assignments, etc.); its own field values are not written to the existing resource.",
     )
     workspace_assignments: list[MetastoreAssignment] = Field(
         None, description="List of workspace to which metastore is assigned to"

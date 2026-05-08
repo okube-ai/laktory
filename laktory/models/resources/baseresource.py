@@ -149,7 +149,7 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
         None,
         exclude=True,
         frozen=False,
-        description="Lookup resource instead of creating a new one.",
+        description="Import a pre-existing resource instead of creating a new one. The resource becomes available for cross-referencing (`${resources.<name>.<property>}`) and child resource deployment (grants, schemas, etc.); its own field values are not written to the existing resource.",
     )
     _core_resources: list[Any] = None
 
