@@ -62,7 +62,7 @@ uv publish
 
 ## Cross-repo access
 
-The sibling okube-growth repo lives at `../okube-growth/` (`/Users/osoucy/Documents/sources/okube/okube-growth/`).
+The sibling okube-growth repo lives at `../okube-growth/`
 
 **You are allowed to read and write `.md` files in `../okube-growth/` from this repo's context.** Use this when:
 - A Laktory technical decision, new feature, or positioning change should be reflected in the growth strategy or content calendar
