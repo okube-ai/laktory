@@ -1,7 +1,6 @@
 from typing import Any
 from typing import Literal
 
-from narwhals import LazyFrame
 from pydantic import Field
 from pydantic import model_validator
 
@@ -54,18 +53,3 @@ class UnityCatalogDataSource(TableDataSource):
                 "Unity Catalog data source does not support the Polars backend."
             )
         return self
-
-    # ----------------------------------------------------------------------- #
-    # Properties                                                              #
-    # ----------------------------------------------------------------------- #
-
-    # ----------------------------------------------------------------------- #
-    # Readers                                                                 #
-    # ----------------------------------------------------------------------- #
-
-    def _read_polars(self) -> LazyFrame:
-        # TODO
-        # https://docs.pola.rs/api/python/stable/reference/catalog/api/polars.Catalog.scan_table.html#polars.Catalog.scan_table
-        raise NotImplementedError(
-            "Unity Catalog data source is not yet implemented for Polars"
-        )

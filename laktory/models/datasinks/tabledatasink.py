@@ -45,6 +45,15 @@ class TableDataSink(BaseDataSink):
     )
 
     @model_validator(mode="after")
+    def validate_backend(self) -> Any:
+        if self.dataframe_backend == DataFrameBackends.POLARS:
+            raise ValueError(
+                "Table data sink does not support the Polars backend. "
+                "Use FileDataSink with DELTA format for Polars file-based writes."
+            )
+        return self
+
+    @model_validator(mode="after")
     def validate_table_full_name(self) -> Any:
         name = self.table_name
         if name is None:
