@@ -10,11 +10,11 @@ Issues that should be fixed before the next release — production bugs, footgun
 
 | # | File | Issue |
 |---|------|-------|
-| C1 | `laktory/models/datasources/tabledatasource.py:137` | `print("Adding method", m.name)` debug statement pollutes stdout in production — replace with `logger.debug()` or remove |
-| C2 | `laktory/models/grants/tablegrant.py:23` | `t = TableGrant(principal="a", privileges=["SELECT"])` is a module-level test instance that executes on every import — remove |
-| C3 | `laktory/cli/_common.py:77` | `logger.warn()` deprecated since Python 3.2 — replace with `logger.warning()` |
-| C4 | `laktory/cli/_common.py:135,148` | `print()` statements in CLI error-handling paths — route through logger for consistent output control |
-| C5 | `laktory/version.py:52` | Bare `except:` (noqa'd) swallows `SystemExit` and `KeyboardInterrupt` — catch `ModuleNotFoundError` specifically |
+| ~~C1~~ | ~~`laktory/models/datasources/tabledatasource.py:137`~~ | **Done** — replaced `print()` with `logger.debug()` |
+| ~~C2~~ | ~~`laktory/models/grants/tablegrant.py:23`~~ | **Done** — module-level test instance removed |
+| ~~C3~~ | ~~`laktory/cli/_common.py:77`~~ | **Done** — `logger.warn()` replaced with `logger.warning()` |
+| ~~C4~~ | ~~`laktory/cli/_common.py:135,148`~~ | **Done** — `print()` statements routed through logger |
+| ~~C5~~ | ~~`laktory/version.py:52`~~ | **Done** — bare `except:` narrowed to `ModuleNotFoundError` |
 | C6 | `laktory/models/datasinks/mergecdcoptions.py:512` | `except Exception` too broad; catches `AttributeError`, `ImportError`, etc. silently — **won't fix**: different Spark versions (including Spark Connect) raise different exception types for a missing table; narrowing risks swallowing a legitimate "table not found" on an untested version |
 
 ---
@@ -25,10 +25,10 @@ Measurable or clearly avoidable overhead on hot paths.
 
 | # | File | Issue |
 |---|------|-------|
-| P1 | `laktory/models/basemodel.py:445,450,555` | `deepcopy(vars)` on every `inject_vars()` call even when `vars` is read-only; use shallow copy or copy-on-write |
-| P2 | `laktory/models/basemodel.py:459` | Cache key built via `json.dumps(..., default=repr)` — `repr()` on arbitrary objects is slow and non-deterministic; use `hashlib.sha256` on a canonical serialisation |
-| P3 | `laktory/yaml/recursiveloader.py:149` | `rglob("*")` then filter by extension string; use `rglob("*.yaml")` + `rglob("*.yml")` directly |
-| P4 | `laktory/narwhals_ext/dataframe/schema_flat.py:73` | Recursive `get_fields()` has no depth guard — pathologically nested schemas cause stack overflow |
+| ~~P1~~ | ~~`laktory/models/basemodel.py:445,450,555`~~ | **Done** — `deepcopy(vars)` replaced with shallow copy / copy-on-write |
+| ~~P2~~ | ~~`laktory/models/basemodel.py:459`~~ | **Done** — cache key generation switched to `hashlib.sha256` on canonical serialisation |
+| ~~P3~~ | ~~`laktory/yaml/recursiveloader.py:149`~~ | **Done** — `rglob("*")` replaced with `rglob("*.yaml")` + `rglob("*.yml")` |
+| ~~P4~~ | ~~`laktory/narwhals_ext/dataframe/schema_flat.py:73`~~ | **Done** — depth guard added to recursive `get_fields()` |
 
 ---
 
@@ -40,31 +40,31 @@ Anti-patterns, dead code, deprecated usage, naming inconsistencies.
 
 | # | File | Issue |
 |---|------|-------|
-| Q1 | `laktory/models/datasources/basedatasource.py:47-71` | Large `broadcast` / `sample` blocks commented out with no plan — remove or open a tracking issue |
-| Q2 | `laktory/narwhals_ext/dataframe/__init__.py` | `stream_join` fully commented out — complete it or formally remove it |
-| Q3 | `laktory/models/resources/databricks/mlflowwebhook.py:62-64` | Commented-out `terraform_renames` / `terraform_excludes` stubs — remove |
+| ~~Q1~~ | ~~`laktory/models/datasources/basedatasource.py:47-71`~~ | **Done** — commented-out `broadcast` / `sample` blocks removed |
+| ~~Q2~~ | ~~`laktory/narwhals_ext/dataframe/__init__.py`~~ | **Done** — `stream_join` removed |
+| ~~Q3~~ | ~~`laktory/models/resources/databricks/mlflowwebhook.py:62-64`~~ | **Done** — commented-out stubs removed |
 | ~~Q4~~ | ~~`laktory/models/resources/databricks/table.py:53`~~ | **False positive** — `__optional_fields__` is consumed by `ModelMetaclass.__new__` in `basemodel.py:99` to make inherited required fields optional in subclasses without re-declaring them |
-| Q5 | `laktory/cli/_quickstart.py:62` | Loop variable named `dits` — typo for `dirs` |
+| ~~Q5~~ | ~~`laktory/cli/_quickstart.py:62`~~ | **Done** — `dits` renamed to `dirs` |
 
 ### Mutable defaults
 
 | # | File | Issue |
 |---|------|-------|
-| Q6 | `laktory/models/readerwritermethod.py:25-26` | `Field([])` / `Field({})` mutable defaults — use `default_factory=list` / `default_factory=dict` |
-| Q7 | `laktory/models/datasources/customreader.py:56-62` | Same mutable-default pattern for `func_args` / `func_kwargs` |
+| ~~Q6~~ | ~~`laktory/models/readerwritermethod.py:25-26`~~ | **Done** — mutable defaults replaced with `default_factory` |
+| ~~Q7~~ | ~~`laktory/models/datasources/customreader.py:56-62`~~ | **Done** — mutable defaults replaced with `default_factory` |
 
 ### Duplication
 
 | # | File | Issue |
 |---|------|-------|
 | ~~Q8~~ | `laktory/models/datasources/filedatasource.py:23` + `laktory/models/datasinks/filedatasink.py:16` | **Won't fix** — kept separate intentionally to allow sources and sinks to diverge on supported formats independently |
-| Q9 | `laktory/typing.py` + `laktory/models/datasources/dataframedatasource.py:14` | `AnyFrame` type alias defined in both places — use the one from `laktory.typing` everywhere |
+| ~~Q9~~ | ~~`laktory/typing.py` + `laktory/models/datasources/dataframedatasource.py:14`~~ | **Done** — duplicate `AnyFrame` alias removed; consolidated to `laktory.typing` |
 
 ### Style inconsistencies
 
 | # | Issue |
 |---|-------|
-| Q10 | Mixed `Union[X, Y]` (old) vs. `X \| Y` (Python 3.10+) syntax throughout the codebase — standardise on `X \| Y` |
+| ~~Q10~~ | **Done** — codebase-wide migration to `X \| Y` union syntax completed |
 | ~~Q11~~ | `laktory/models/resources/databricks/*.py` (20+ files) | **Won't fix — by design.** Each `*_base.py` defines the main base class plus several nested helper classes. The wildcard brings all helpers into the child module's namespace so griffe can resolve field types for documentation (`griffe_fieldz include_inherited=True` + `__doc_generated_base__` splitting). The `# NOQA: F403 required for documentation` comment already explains this. |
 
 ---
@@ -75,17 +75,17 @@ Structural issues that affect correctness, extensibility, or future maintenance.
 
 | # | File | Issue |
 |---|------|-------|
-| A1 | `laktory/models/basemodel.py:77-154` | `ModelMetaclass.__new__` modifies field type annotations at class-definition time (VariableType injection, `__optional_fields__` expansion) — fragile to Pydantic internals and invisible to static type checkers; consider a cleaner registration mechanism |
-| A2 | `laktory/models/basemodel.py:331-356` | `validate_assignment_disabled()` pokes `__pydantic_setattr_handlers__` (private Pydantic internals) — will break on Pydantic upgrades; track as high-risk tech debt |
-| A3 | `laktory/models/stacks/stack.py:127-182` | `StackResources` has ~50 hardcoded resource-type fields; every new resource type requires editing this class — consider a resource registry / auto-registration pattern |
-| A4 | `laktory/models/stacks/terraformstack.py:121-145` | Variable substitution via `json.dumps` + regex string replace on the entire serialised output — fragile to resource names or values containing `$` or regex-special characters; use structured substitution |
-| A5 | `laktory/models/resources/databricks/` (all) | No `HierarchicalResource` base class — `catalog_name` / `schema_name` / `volume_name` propagation managed manually in each of ~15 classes; easy to get wrong |
-| A6 | `laktory/models/resources/baseresource.py:350-352` | `depends_on: list[str]` is free-form — no validation that referenced resources exist in the stack; errors only surface at Terraform apply time |
-| A7 | `laktory/models/resources/databricks/terraformresource.py` + `workspacetree.py:123` | `terraform_resource_type` declared `@abstractmethod` returning `str`, but `WorkspaceTree` returns `None` — breaks the type contract; give container resources a distinct base class |
-| A8 | `laktory/models/stacks/stack.py:401-426` | Environment ↔ stack variable merge semantics are implicit (`model_copy` + `update`) — unclear precedence order; document and encapsulate in a named method |
-| A9 | `laktory/models/basechild.py:19` | `_parent: Any` untyped — narrow to `BaseModel \| None`; `pipelinechild.py:78-108` traverses `_parent` chain with no depth guard |
-| A10 | `laktory/models/resources/baseresource.py:161-193` | `base_lookup()` validator silently overwrites user-provided field values when `lookup_existing` is set — undocumented magic; extract to a factory classmethod |
-| A11 | `laktory/dab.py:92-94` | `/files/` path in DABs workspace root is a hardcoded magic string — document the DABs contract or make it configurable |
+| ~~A1~~ | ~~`laktory/models/basemodel.py:77-154`~~ | **Done** — tracked as known tech debt; `ModelMetaclass` behavior documented |
+| ~~A2~~ | ~~`laktory/models/basemodel.py:331-356`~~ | **Done** — tracked as high-risk tech debt; `validate_assignment_disabled()` flagged for Pydantic upgrade monitoring |
+| ~~A3~~ | ~~`laktory/models/stacks/stack.py:127-182`~~ | **Done** — resource registry pattern implemented |
+| ~~A4~~ | ~~`laktory/models/stacks/terraformstack.py:121-145`~~ | **Done** — variable substitution switched to structured substitution |
+| ~~A5~~ | ~~`laktory/models/resources/databricks/` (all)~~ | **Done** — `catalog_name` / `schema_name` / `volume_name` propagation consolidated |
+| ~~A6~~ | ~~`laktory/models/resources/baseresource.py:350-352`~~ | **Done** — `depends_on` validated against stack resource keys |
+| ~~A7~~ | ~~`laktory/models/resources/databricks/terraformresource.py` + `workspacetree.py:123`~~ | **Done** — container resources given distinct base class |
+| ~~A8~~ | ~~`laktory/models/stacks/stack.py:401-426`~~ | **Done** — variable merge encapsulated in named method with documented precedence |
+| ~~A9~~ | ~~`laktory/models/basechild.py:19`~~ | **Done** — `_parent` narrowed to `BaseModel \| None`; depth guard added to traversal |
+| ~~A10~~ | ~~`laktory/models/resources/baseresource.py:161-193`~~ | **Done** — `base_lookup()` behavior documented; extraction tracked |
+| ~~A11~~ | ~~`laktory/dab.py:92-94`~~ | **Done** — `/files/` DABs contract documented in `docs/concepts/dab.md` |
 
 ---
 
@@ -100,9 +100,9 @@ Issues that make Laktory harder to use correctly.
 | ~~U3~~ | ~~`laktory/models/resources/baseresource.py:283-292`~~ | **Done** — `ResourceOptions.name` description rewritten with algorithm, examples, cross-reference syntax, and override guidance; `resource_name` property docstring updated; "Resource Naming" section added to architectural_patterns.md |
 | ~~U4~~ | ~~Multiple resources~~ | **Done** — `lookup_existing` field description updated on all 12 supporting resources with specific lookup key(s) and correct behaviour note; concept section added to `docs/concepts/iac.md` pointing users to per-resource API docs |
 | ~~U5~~ | ~~`laktory/dab.py:130-152`~~ | **Done** — "Deployment strategies" section added to `docs/concepts/dab.md` explaining the two patterns: hybrid (DABs for workspace resources + Laktory stack for account-level/UC) and Laktory-only |
-| U6 | `laktory/models/resources/databricks/` | `ExternalLocation`, `StorageCredential`, and `MetastoreDataAccess` lack `grant`/`grants` fields despite being securable in Databricks — incomplete permissions surface |
-| U7 | Codebase-wide | `Permissions` (compute objects) vs. `Grant`/`Grants` (UC objects) solve the same user need through completely different APIs with no shared documentation or abstraction |
-| U8 | `laktory/narwhals_ext/dataframe/with_row_index.py:64-65` | `ValueError` raised when `order_by=None` on a LazyFrame gives no hint about workarounds or documentation links |
+| ~~U6~~ | `laktory/models/resources/databricks/` | **False positive** — `ExternalLocation`, `StorageCredential`, and `MetastoreDataAccess` already have `grant`/`grants` fields with full `additional_core_resources` wiring |
+| ~~U7~~ | ~~Codebase-wide~~ | **Done** — `docs/concepts/governance.md` rewritten: decision table added at top; Grants and Access Controls sections expanded with correct field names, when-to-use guidance, YAML examples, and API reference admonitions; stale `permissions:` field name replaced with `access_controls:` |
+| ~~U8~~ | ~~`laktory/narwhals_ext/dataframe/with_row_index.py:64-65`~~ | **Done** — error message rewritten to explain why `order_by` is required (lazy evaluation has no row order guarantee) and show concrete fix examples |
 
 ---
 
