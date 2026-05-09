@@ -4,9 +4,13 @@ An open-source DataOps and dataframe-centric ETL framework for building
 lakehouses.
 
 ## What is it?
-Laktory is your all-in-one solution for defining both data transformations and 
-Databricks resources. Imagine if Terraform, Declarative Automation Bundles, and dbt
-combined forces and added support for DataFrame API—that’s essentially Laktory.
+Laktory is an all-in-one solution for defining both data transformations and Databricks
+resources. Imagine if Declarative Automation Bundles (DAB) supported any Databricks
+resources and offered a declarative approach to data transformations, that’s essentially
+Laktory.
+
+Deploy it standalone as your full Databricks DataOps platform, or add it alongside
+your existing DAB setup to manage pipeline definitions and the resources DAB doesn’t cover.
 
 This open-source framework streamlines the creation, deployment, and execution
 of data pipelines while adhering to essential DevOps practices such as version
@@ -36,14 +40,13 @@ operations by focusing on four key areas: simplicity, speed, scalability and
 quality.
 
 ### Simplicity
-With Laktory, managing both Databricks resources and data transformations is 
-streamlined into a single tool. This empowers your data team to take full 
+With Laktory, managing both Databricks resources and data transformations is
+streamlined into a single tool. This empowers your data team to take full
 ownership of the solution, eliminating the need to juggle multiple technologies.
-Say goodbye to relying on external Terraform experts to handle compute, workspace
-configuration, and Unity Catalog, while your data engineers and analysts try 
-to combine Declarative Automation Bundles and dbt to build data pipelines. Laktory
-consolidates these functions, simplifying the entire process and reducing
-the overall cost.
+
+No more splitting ownership between Terraform for infrastructure and DAB for
+workflows. With Laktory, the team that builds the pipelines can own the stack
+end to end.
 <img src="images/diagrams/why_simplicity.png" alt="dataops" width="500"/>
 
 ### Speed
@@ -66,7 +69,7 @@ large-scale needs without complexity.
 ### Quality
 Elevate data quality to a first-class citizen. Laktory integrates robust data 
 quality expectations at both row and aggregate levels, ensuring that only 
-trusted data reaches production analytics. Invalid records can trigger pipline
+trusted data reaches production analytics. Invalid records can trigger pipeline
 failure, be dropped, or automatically quarantined for later review.
 
 ## Who is using it?
@@ -164,7 +167,7 @@ Spark-based transformations.
     ```
 
 ### Debug
-Execute your pipline from your IDE using python and a local or remote Spark
+Execute your pipeline from your IDE using python and a local or remote Spark
 session.
 
 === "YAML"
@@ -276,10 +279,13 @@ See it in actions in this introduction video:
 
 
 ## Who is it for?
-Laktory is built by data engineers for data engineers. 
+Laktory is built by data engineers for data engineers.
 It does not have visual interface nor allow you to setup pipelines with a few clicks and some drag and drop.
-On the other hand, if you have minimal DevOps or programming experience, you will be able to efficiently scale, deploying hundreds of datasets and models without compromising data governance.
-It also provides you with the tools for building a UI within your organization for a fully self-served experience.
+On the other hand, if you have minimal DevOps or programming experience, you will be able to efficiently scale,
+deploying hundreds of datasets and models without compromising data governance.
+
+If your team is running multiple Databricks pipelines across environments and feeling the friction of managing
+Terraform, DAB, and other tools as separate concerns, Laktory is designed for you.
 
 ## Okube
 <img src="images/logos/okube_logo.png" alt="okube logo" width="85"/>

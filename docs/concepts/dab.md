@@ -7,7 +7,7 @@ files, generates the required configuration files, and returns Job and DLT Pipel
 deployment mechanism.
 
 If your team already uses the Databricks CLI and `databricks.yml` to manage workspace 
-resources, DABs integration get your started quickly.
+resources, DABs integration gets you started quickly.
 
 
 ## Deployment strategies
