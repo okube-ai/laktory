@@ -12,13 +12,13 @@ Use it standalone or extend your existing DABs setup with it.
 <img src="docs/images/logos/laktory_logo_sg.png" alt="laktory logo" width="85"/>
 
 Laktory is an all-in-one solution for defining both data transformations and Databricks
-resources. Imagine if Declarative Automation Bundles supported any Databricks resources
-and offered a dbt-like declarative approach to data transformations, that's essentially 
+resources. Imagine if Declarative Automation Bundles (DAB) supported any Databricks resources
+and offered a declarative approach to data transformations, that's essentially
 Laktory.
 
 Deploy it standalone as your full Databricks DataOps platform, or add it alongside
-your existing Declarative Automation Bundles (DABs) setup to manage the pipeline
-definitions.
+your existing DAB setup to manage pipeline definitions
+and the resources DAB doesn't cover.
 
 This open-source framework streamlines the creation, deployment, and execution
 of data pipelines while adhering to essential DevOps practices such as version
@@ -31,25 +31,23 @@ operations, reducing complexity and enhancing productivity.
 <img src="docs/images/diagrams/laktory_diagram.png" alt="what is laktory" width="800"/>
 
 Since Laktory pipelines are built on top of Narwhals, they can run in
-any environment that supports Python—from your local machine to a Kubernetes 
+any environment that supports Python, from your local machine to a Kubernetes 
 cluster. Pipelines can be orchestrated using tools like Apache Airflow or
 deployed directly as Databricks Jobs or
 [Declarative Pipelines](https://www.databricks.com/product/data-engineering/lakeflow-declarative-pipelines),
 offering both flexible and fully managed execution options.
 
-But Laktory goes beyond data pipelines. It integrates seamlessly with Databricks
-[Declarative Automation Bundles (DAB)](https://www.laktory.ai/concepts/dab/) by letting
-you deploy Laktory pipelines alongside your existing resources from your standard
-`databricks bundle deploy` .
+Pipelines definition work both in standalone or as a DAB extension.
 
-Beyond DAB, Laktory empowers you to define and deploy your entire Databricks data
-platform—from Unity Catalog and access grants to compute and quality monitoring—providing
-a complete, modern solution for data platform management. This empowers your data team to
-take full ownership of the solution, eliminating the need to juggle multiple technologies.
-Say goodbye to relying on external Terraform experts to handle compute, workspace
-configuration, and Unity Catalog, while your data engineers and analysts try to combine
-DAB and dbt to build data pipelines. Laktory consolidates these functions, simplifying
-the entire process and reducing the overall cost.
+But Laktory goes beyond data pipelines. It empowers you to define and deploy your entire
+Databricks data platform, from Unity Catalog and access grants to compute and quality
+monitoring, providing a complete, modern solution for data platform management. This
+empowers your data team to take full ownership of the solution, eliminating the need to
+juggle multiple technologies.
+
+No more splitting ownership between Terraform for infrastructure and DAB for
+workflows. With Laktory, the team that builds the pipelines can own the stack
+end to end.
 
 <img src="docs/images/diagrams/why_simplicity.png" alt="dataops" width="500"/>
 
