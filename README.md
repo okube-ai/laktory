@@ -37,22 +37,16 @@ deployed directly as Databricks Jobs or
 [Declarative Pipelines](https://www.databricks.com/product/data-engineering/lakeflow-declarative-pipelines),
 offering both flexible and fully managed execution options.
 
-Pipelines definition work both in standalone or as a DAB extension.
-
 But Laktory goes beyond data pipelines. It empowers you to define and deploy your entire
 Databricks data platform, from Unity Catalog and access grants to compute and quality
-monitoring, providing a complete, modern solution for data platform management. This
-empowers your data team to take full ownership of the solution, eliminating the need to
-juggle multiple technologies.
+monitoring. This empowers your data team to take full ownership of the solution,
+eliminating the need to juggle multiple technologies.
 
 No more splitting ownership between Terraform for infrastructure and DAB for
 workflows. With Laktory, the team that builds the pipelines can own the stack
 end to end.
 
 <img src="docs/images/diagrams/why_simplicity.png" alt="dataops" width="500"/>
-
-Laktory pipelines can run locally for development, or be orchestrated at scale
-using tools like Apache Airflow or Databricks Workflows.
 
 ## Help
 See [documentation](https://www.laktory.ai/) for more details.
