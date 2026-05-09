@@ -6,14 +6,19 @@
 [![versions](https://img.shields.io/pypi/pyversions/laktory.svg)](https://github.com/okube-ai/laktory)
 [![license](https://img.shields.io/github/license/okube-ai/laktory.svg)](https://github.com/okube-ai/laktory/blob/main/LICENSE)
 
-An open-source DataOps and dataframe-centric ETL framework for building 
-lakehouses.
+An open-source DataOps and dataframe-centric ETL framework for building lakehouses.
+Use it standalone or extend your existing DABs setup with it.
 
 <img src="docs/images/logos/laktory_logo_sg.png" alt="laktory logo" width="85"/>
 
-Laktory is your all-in-one solution for defining both data transformations and 
-Databricks resources. Imagine if Terraform, Declarative Automation Bundles, and dbt
-combined forces and added support for DataFrame API—that’s essentially Laktory.
+Laktory is an all-in-one solution for defining both data transformations and Databricks
+resources. Imagine if Declarative Automation Bundles supported any Databricks resources
+and offered a dbt-like declarative approach to data transformations, that's essentially 
+Laktory.
+
+Deploy it standalone as your full Databricks DataOps platform, or add it alongside
+your existing Declarative Automation Bundles (DABs) setup to manage the pipeline
+definitions.
 
 This open-source framework streamlines the creation, deployment, and execution
 of data pipelines while adhering to essential DevOps practices such as version
