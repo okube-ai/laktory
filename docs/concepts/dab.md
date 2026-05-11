@@ -7,8 +7,24 @@ files, generates the required configuration files, and returns Job and DLT Pipel
 deployment mechanism.
 
 If your team already uses the Databricks CLI and `databricks.yml` to manage workspace 
-resources, DABs integration get your started quickly.
+resources, DABs integration gets you started quickly.
 
+## When to use Laktory alongside DABs
+
+DAB is excellent at deploying Databricks Jobs and DLT Pipelines, but it has two gaps that Laktory fills:
+
+**1. Pipeline definitions and data transformations**
+DAB manages the *deployment* of a pipeline (compute, scheduling, target catalog/schema) but has no concept of the
+transformations that run inside it. Laktory adds a declarative, code-first layer for defining pipeline logic from
+DataFrame and SQL transformations to source/sink wiring. All testable locally.
+
+**2. Resources outside DAB's scope**
+DAB covers some workspace-level resources (jobs, clusters, dashboards, schemas, etc.), but it does not support others
+such as: users, groups, external locations, credentials, metastore, etc. Laktory handles all of these through a 
+Terraform-backed stack, giving your data team full ownership of the platform without a separate infrastructure team.
+
+A common adoption path: start by adding Laktory extension for pipeline definitions alongside your existing DAB setup,
+then build a Laktory stack to manage other missing resources.
 
 ## Deployment strategies
 
