@@ -8,6 +8,7 @@
 * Improved documentation review as per 2026/05/08 audit.
 * Documentation website
 * Exceptions reporting during validation of data sources and sinks
+* VariableType to only accept specific format instead of generic string.
 ### Breaking changes
 * n/a
 

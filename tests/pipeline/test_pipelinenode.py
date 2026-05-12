@@ -216,22 +216,8 @@ def test_purge_multisinks(backend, tmp_path):
 
 
 def test_source_sink_validation_errors():
-    models.PipelineNode.model_validate(
-        {
-            "name": "test",
-            "source": {"type": "FILE", "path": "/data", "format": "BADFORMAT"},
-        }
-    )
-
     # Bad field on a FILE source → error names FileDataSource, not all 6 union members
     with pytest.raises(ValidationError, match="FileDataSource"):
-        models.PipelineNode.model_validate(
-            {
-                "name": "test",
-                "source": {"type": "FILE", "path": "/data", "format": "BADFORMAT"},
-            }
-        )
-
         models.PipelineNode.model_validate(
             {
                 "name": "test",

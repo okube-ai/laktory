@@ -21,7 +21,7 @@ def test_write(backend, tmp_path):
         schema_name=schema,
         table_name=table,
         mode="OVERWRITE",
-        format="parquet",  # TODO: Review why delta format can't be read
+        format="PARQUET",  # TODO: Review why delta format can't be read
         writer_kwargs={"path": (tmp_path).as_posix()},
     )
     sink.write(df0)

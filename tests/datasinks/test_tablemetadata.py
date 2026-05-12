@@ -42,7 +42,7 @@ def test_hive_table(backend, tmp_path):
         schema_name=schema,
         table_name=table,
         mode="OVERWRITE",
-        format="delta",
+        format="DELTA",
         writer_kwargs={"path": tmp_path.as_posix()},
         metadata=lk.models.TableDataSinkMetadata(
             comment="unit test table",

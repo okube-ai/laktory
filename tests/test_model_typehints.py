@@ -22,9 +22,9 @@ def test_bool():
     m = MyModel(active=True)
     assert m.active
 
-    # string
-    m = MyModel(active="yes")
-    assert m.active == "yes"
+    # variable placeholder
+    m = MyModel(active="${vars.active}")
+    assert m.active == "${vars.active}"
 
     # annotation
     ann = type(m).model_fields["active"].annotation
@@ -36,9 +36,9 @@ def test_int():
     m = MyModel(id=5)
     assert m.id == 5
 
-    # string
-    m = MyModel(id="some_id")
-    assert m.id == "some_id"
+    # variable placeholder
+    m = MyModel(id="${vars.id}")
+    assert m.id == "${vars.id}"
 
     # annotation
     ann = type(m).model_fields["id"].annotation
@@ -79,13 +79,13 @@ def test_list():
     m = MyModel(ids=[1, 2, 3])
     assert m.ids == [1, 2, 3]
 
-    # string
-    m = MyModel(ids="ids")
-    assert m.ids == "ids"
+    # variable placeholder
+    m = MyModel(ids="${vars.ids}")
+    assert m.ids == "${vars.ids}"
 
-    # list of string
-    m = MyModel(ids=["id0", "id1", "id2"])
-    assert m.ids == ["id0", "id1", "id2"]
+    # list of variable placeholders
+    m = MyModel(ids=["${vars.id0}", "${vars.id1}", "${vars.id2}"])
+    assert m.ids == ["${vars.id0}", "${vars.id1}", "${vars.id2}"]
 
     # annotation
     ann = type(m).model_fields["ids"].annotation
@@ -102,13 +102,18 @@ def test_dict():
         2: Price(open=5.0, close=6.0),
     }
 
-    # string
-    m = MyModel(prices_dict="some_prices")
-    assert m.prices_dict == "some_prices"
+    # variable placeholder
+    m = MyModel(prices_dict="${vars.prices}")
+    assert m.prices_dict == "${vars.prices}"
 
-    # dict of strings
-    m = MyModel(prices_dict={"id1": "price1", "id2": "price2"})
-    assert m.prices_dict == {"id1": "price1", "id2": "price2"}
+    # dict of variable placeholders
+    m = MyModel(
+        prices_dict={"${vars.id1}": "${vars.price1}", "${vars.id2}": "${vars.price2}"}
+    )
+    assert m.prices_dict == {
+        "${vars.id1}": "${vars.price1}",
+        "${vars.id2}": "${vars.price2}",
+    }
 
     # annotation
     ann = type(m).model_fields["prices_dict"].annotation
