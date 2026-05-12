@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from laktory import get_spark_session
 from laktory import models
@@ -212,3 +213,65 @@ def test_purge_multisinks(backend, tmp_path):
     )
 
     node.purge()
+
+
+def test_source_sink_validation_errors():
+    models.PipelineNode.model_validate(
+        {
+            "name": "test",
+            "source": {"type": "FILE", "path": "/data", "format": "BADFORMAT"},
+        }
+    )
+
+    # Bad field on a FILE source → error names FileDataSource, not all 6 union members
+    with pytest.raises(ValidationError, match="FileDataSource"):
+        models.PipelineNode.model_validate(
+            {
+                "name": "test",
+                "source": {"type": "FILE", "path": "/data", "format": "BADFORMAT"},
+            }
+        )
+
+        models.PipelineNode.model_validate(
+            {
+                "name": "test",
+                "source": {"type": "FILE", "path": "/data", "format": "BADFORMAT"},
+            }
+        )
+
+    # Bad field on a FILE sink → error names FileDataSink and includes the index
+    with pytest.raises(ValidationError, match="FileDataSink"):
+        models.PipelineNode.model_validate(
+            {
+                "name": "test",
+                "sinks": [
+                    {
+                        "type": "FILE",
+                        "path": "/data",
+                        "format": "PARQUET",
+                        "bad_field": "x",
+                    }
+                ],
+            }
+        )
+
+    with pytest.raises(ValidationError, match=r"sinks\[0\]"):
+        models.PipelineNode.model_validate(
+            {
+                "name": "test",
+                "sinks": [
+                    {
+                        "type": "FILE",
+                        "path": "/data",
+                        "format": "PARQUET",
+                        "bad_field": "x",
+                    }
+                ],
+            }
+        )
+
+    # String variable placeholder on source passes through without error
+    node = models.PipelineNode.model_validate(
+        {"name": "test", "source": "${vars.my_source}"}
+    )
+    assert node.source == "${vars.my_source}"
