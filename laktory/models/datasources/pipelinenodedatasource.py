@@ -1,4 +1,5 @@
 from typing import Any
+from typing import Literal
 
 from pydantic import Field
 
@@ -70,7 +71,9 @@ class PipelineNodeDataSource(BaseDataSource):
     reader_methods: list[ReaderWriterMethod] = Field(
         [], description="DataFrame backend reader methods."
     )
-    type: str = Field("PIPELINE_NODE", frozen=True)
+    type: Literal["PIPELINE_NODE"] = Field(
+        "PIPELINE_NODE", frozen=True, description="Source Type"
+    )
 
     # ----------------------------------------------------------------------- #
     # Properties                                                              #
