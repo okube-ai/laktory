@@ -12,7 +12,7 @@ class Cluster(models.BaseModel):
     id: int = None
     name: str = None
     size: list[int] = None
-    tags: dict[str, int] = None
+    tags: dict[str, str] = None
     owner: Owner = None
     job_id: str = None
 

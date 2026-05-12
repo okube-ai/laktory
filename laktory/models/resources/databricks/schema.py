@@ -2,11 +2,19 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.grants.schemagrant import SchemaGrant
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks._unitycatalogmixin import UnityCatalogMixin
 from laktory.models.resources.databricks.schema_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.schema_base import SchemaBase
 from laktory.models.resources.databricks.table import Table
 from laktory.models.resources.databricks.volume import Volume
+
+
+class SchemaLookup(ResourceLookup):
+    name: str = Field(
+        serialization_alias="id",
+        description="Full name of the schema: `catalog`.`schema`",
+    )
 
 
 class Schema(UnityCatalogMixin, SchemaBase):
@@ -43,6 +51,11 @@ class Schema(UnityCatalogMixin, SchemaBase):
     # Relax fields the base marks required but Laktory fills via parent validators
     catalog_name: str = Field(
         None, description="Name of the catalog storing the schema"
+    )
+    lookup_existing: SchemaLookup = Field(
+        None,
+        exclude=True,
+        description="Import a pre-existing Schema by full `name` (`catalog.schema`) instead of creating it. The schema becomes available for cross-referencing and child resource deployment (grants, tables, volumes, etc.); its own field values are not written to the existing resource.",
     )
 
     # Override base default (None → True)
@@ -83,6 +96,17 @@ class Schema(UnityCatalogMixin, SchemaBase):
             volume.schema_name = self.name
 
         return self
+
+    # ----------------------------------------------------------------------- #
+    # Computed fields                                                         #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def full_name(self) -> str:
+        """Full schema name `{catalog_name}.{schema_name}`"""
+        if self.lookup_existing:
+            return self.lookup_existing.name
+        return super().full_name
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

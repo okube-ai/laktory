@@ -255,7 +255,7 @@ class QualityMonitorSnapshot(BaseModel):
 
 
 class QualityMonitorSchedule(BaseModel):
-    quartz_cron_expression: list[str] = Field(
+    quartz_cron_expression: str = Field(
         ...,
         description="string expression that determines when to run the monitor. See Quartz documentation for examples.",
     )

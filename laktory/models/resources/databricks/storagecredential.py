@@ -2,6 +2,7 @@ from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.storagecredentialgrant import StorageCredentialGrant
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.storagecredential_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.storagecredential_base import (
     StorageCredentialBase,
@@ -43,6 +44,13 @@ class GcpServiceAccountKey(BaseModel):
     private_key_id: str = Field(None, description="")
 
 
+class StorageCredentialLookup(ResourceLookup):
+    name: str = Field(
+        serialization_alias="id",
+        description="Name of the storage credential",
+    )
+
+
 class StorageCredential(StorageCredentialBase):
     """
     Databricks Storage Credential
@@ -74,6 +82,11 @@ class StorageCredential(StorageCredentialBase):
     * [Databricks Storage Credential](https://docs.databricks.com/en/connect/unity-catalog/storage-credentials.html)
     """
 
+    lookup_existing: StorageCredentialLookup = Field(
+        None,
+        exclude=True,
+        description="Import a pre-existing Storage Credential by `name` instead of creating it. The credential becomes available for cross-referencing and child resource deployment (grants, etc.); its own field values are not written to the existing resource.",
+    )
     grant: StorageCredentialGrant | list[StorageCredentialGrant] = Field(
         None,
         description="""

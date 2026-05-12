@@ -3,10 +3,13 @@
 ## [0.11.5] - Unreleased
 ### Added
 * Resources cross-reference validation. When a `depends_on` entry references a `${resources.X}` name that does not exist in the stack, a warning is issued.
+* `lookup_existing` field for all applicable resources
 ### Updated
 * `TerraformStack.model_dump()`: resource reference substitution (`${resources.xxx}`) now uses structured dict traversal with `str.replace` for simple refs and `re.escape` + lambda for property refs, fixing incorrect matches when resource names contain regex metacharacters (e.g. a dot)
 * Improved documentation review as per 2026/05/08 audit.
 * Documentation website
+* Exceptions reporting during validation of data sources and sinks
+* VariableType to only accept specific format instead of generic string.
 ### Breaking changes
 * n/a
 

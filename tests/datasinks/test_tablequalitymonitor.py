@@ -27,7 +27,7 @@ def test_create_or_update(wsclient):
         schema_name=schema,
         table_name=table,
         mode="OVERWRITE",
-        format="delta",
+        format="DELTA",
         databricks_quality_monitor=QualityMonitor(
             assets_dir="/Workspace/unit-tests/quality-monitors/",
             output_schema_name=f"{catalog}.{schema}",

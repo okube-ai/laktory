@@ -1,10 +1,18 @@
 from pydantic import Field
 
 from laktory.models.grants.externallocationgrant import ExternalLocationGrant
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.externallocation_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.externallocation_base import (
     ExternalLocationBase,
 )
+
+
+class ExternalLocationLookup(ResourceLookup):
+    name: str = Field(
+        serialization_alias="id",
+        description="Name of the external location",
+    )
 
 
 class ExternalLocation(ExternalLocationBase):
@@ -43,6 +51,11 @@ class ExternalLocation(ExternalLocationBase):
     * [Databricks External Location](https://docs.databricks.com/en/connect/unity-catalog/external-locations.html)
     """
 
+    lookup_existing: ExternalLocationLookup = Field(
+        None,
+        exclude=True,
+        description="Import a pre-existing External Location by `name` instead of creating it. The external location becomes available for cross-referencing and child resource deployment (grants, etc.); its own field values are not written to the existing resource.",
+    )
     grant: ExternalLocationGrant | list[ExternalLocationGrant] = Field(
         None,
         description="""

@@ -1,11 +1,16 @@
 from pydantic import Field
 
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.mlflowexperiment_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.mlflowexperiment_base import (
     MlflowExperimentBase,
 )
 from laktory.models.resources.databricks.permissions import Permissions
+
+
+class MLflowExperimentLookup(ResourceLookup):
+    name: str = Field(description="Name (path) of the MLflow experiment")
 
 
 class MLflowExperiment(MlflowExperimentBase):
@@ -39,6 +44,11 @@ class MLflowExperiment(MlflowExperimentBase):
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")
+    lookup_existing: MLflowExperimentLookup = Field(
+        None,
+        exclude=True,
+        description="Import a pre-existing MLflow Experiment by `name` instead of creating it. The experiment becomes available for cross-referencing; its own field values are not written to the existing resource.",
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

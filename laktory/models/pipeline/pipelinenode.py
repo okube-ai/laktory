@@ -8,8 +8,10 @@ from typing import Any
 import narwhals as nw
 from pydantic import AliasChoices
 from pydantic import Field
+from pydantic import ValidationError
 from pydantic import computed_field
 from pydantic import field_serializer
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -182,6 +184,75 @@ class PipelineNode(BaseModel, PipelineChild):
     _output_df: Any = None
     _quarantine_df: Any = None
 
+    @field_validator("source", mode="before")
+    @classmethod
+    def _validate_source_type(cls, v):
+        if not isinstance(v, dict):
+            return v
+        source_type = v.get("type")
+        if source_type is None:
+            return v
+        from laktory.models.datasources.customdatasource import CustomDataSource
+        from laktory.models.datasources.dataframedatasource import DataFrameDataSource
+        from laktory.models.datasources.filedatasource import FileDataSource
+        from laktory.models.datasources.hivemetastoredatasource import (
+            HiveMetastoreDataSource,
+        )
+        from laktory.models.datasources.pipelinenodedatasource import (
+            PipelineNodeDataSource,
+        )
+        from laktory.models.datasources.unitycatalogdatasource import (
+            UnityCatalogDataSource,
+        )
+
+        _source_map = {
+            "CUSTOM": CustomDataSource,
+            "DATAFRAME": DataFrameDataSource,
+            "FILE": FileDataSource,
+            "HIVE_METASTORE": HiveMetastoreDataSource,
+            "PIPELINE_NODE": PipelineNodeDataSource,
+            "UNITY_CATALOG": UnityCatalogDataSource,
+        }
+        target_cls = _source_map.get(source_type)
+        if target_cls is None:
+            return v
+        try:
+            return target_cls.model_validate(v)
+        except ValidationError as e:
+            raise ValueError(str(e)) from None
+
+    @field_validator("sinks", mode="before")
+    @classmethod
+    def _validate_sink_types(cls, v):
+        if not isinstance(v, list):
+            return v
+        from laktory.models.datasinks.filedatasink import FileDataSink
+        from laktory.models.datasinks.hivemetastoredatasink import HiveMetastoreDataSink
+        from laktory.models.datasinks.pipelineviewdatasink import PipelineViewDataSink
+        from laktory.models.datasinks.unitycatalogdatasink import UnityCatalogDataSink
+
+        _sink_map = {
+            "FILE": FileDataSink,
+            "HIVE_METASTORE": HiveMetastoreDataSink,
+            "PIPELINE_VIEW": PipelineViewDataSink,
+            "UNITY_CATALOG": UnityCatalogDataSink,
+        }
+        result = []
+        for i, item in enumerate(v):
+            if not isinstance(item, dict):
+                result.append(item)
+                continue
+            sink_type = item.get("type")
+            target_cls = _sink_map.get(sink_type)
+            if target_cls is None:
+                result.append(item)
+                continue
+            try:
+                result.append(target_cls.model_validate(item))
+            except ValidationError as e:
+                raise ValueError(f"sinks[{i}]: {e}") from None
+        return result
+
     @model_validator(mode="after")
     def push_primary_keys(self) -> Any:
         # Assign primary keys
@@ -195,7 +266,11 @@ class PipelineNode(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def validate_expectations(self):
-        if self.source and self.source.as_stream:
+        if (
+            self.source
+            and isinstance(self.source, BaseDataSource)
+            and self.source.as_stream
+        ):
             # Expectations type
             for e in self.expectations:
                 if not e.is_streaming_compatible:

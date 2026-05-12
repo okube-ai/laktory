@@ -12,7 +12,7 @@ workspace_binding = WorkspaceBinding(
 
 def test_workspace_binding():
     assert workspace_binding.securable_name == "credential"
-    assert workspace_binding.workspace_id == "11111111"
+    assert workspace_binding.workspace_id == 11111111
     assert workspace_binding.securable_type == "catalog"
     assert workspace_binding.binding_type == "BINDING_TYPE_READ_WRITE"
     assert workspace_binding.resource_key == "credential-11111111"

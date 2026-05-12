@@ -3,9 +3,17 @@ from typing import Literal
 from pydantic import Field
 
 from laktory.models.grants.volumegrant import VolumeGrant
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks._unitycatalogmixin import UnityCatalogMixin
 from laktory.models.resources.databricks.volume_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.volume_base import VolumeBase
+
+
+class VolumeLookup(ResourceLookup):
+    name: str = Field(
+        serialization_alias="id",
+        description="Full name of the volume: `catalog`.`schema`.`volume`",
+    )
 
 
 class Volume(UnityCatalogMixin, VolumeBase):
@@ -58,6 +66,11 @@ class Volume(UnityCatalogMixin, VolumeBase):
     catalog_name: str = Field(
         None, description="Name of the catalog storing the volume"
     )
+    lookup_existing: VolumeLookup = Field(
+        None,
+        exclude=True,
+        description="Import a pre-existing Volume by full `name` (`catalog.schema.volume`) instead of creating it. The volume becomes available for cross-referencing and child resource deployment (grants, etc.); its own field values are not written to the existing resource.",
+    )
     schema_name: str = Field(None, description="Name of the schema storing the volume")
 
     # Narrow the type from base's plain str
@@ -87,6 +100,17 @@ class Volume(UnityCatalogMixin, VolumeBase):
     resource. Mutually exclusive with `grant`.
     """,
     )
+
+    # ----------------------------------------------------------------------- #
+    # Computed fields                                                         #
+    # ----------------------------------------------------------------------- #
+
+    @property
+    def full_name(self) -> str:
+        """Full volume name `{catalog_name}.{schema_name}.{volume_name}`"""
+        if self.lookup_existing:
+            return self.lookup_existing.name
+        return super().full_name
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

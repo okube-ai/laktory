@@ -3,10 +3,15 @@ from typing import Any
 from pydantic import Field
 from pydantic import model_validator
 
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.pipeline_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.pipeline_base import PipelineBase
+
+
+class PipelineLookup(ResourceLookup):
+    pipeline_id: str = Field(description="ID of the pipeline")
 
 
 class Pipeline(PipelineBase):
@@ -62,6 +67,11 @@ class Pipeline(PipelineBase):
 
     access_controls: list[AccessControl] = Field(
         [], description="Pipeline access controls"
+    )
+    lookup_existing: PipelineLookup = Field(
+        None,
+        exclude=True,
+        description="Import a pre-existing Pipeline by `pipeline_id` instead of creating it. The pipeline becomes available for cross-referencing; its own field values are not written to the existing resource.",
     )
     name_prefix: str = Field(None, description="Prefix added to the DLT pipeline name")
     name_suffix: str = Field(None, description="Suffix added to the DLT pipeline name")
