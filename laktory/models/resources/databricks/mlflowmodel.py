@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.mlflowmodel_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.mlflowmodel_base import MlflowModelBase
@@ -10,6 +11,10 @@ from laktory.models.resources.databricks.permissions import Permissions
 class MlflowModelTag(BaseModel):
     key: str = Field(..., description="")
     value: str = Field(..., description="")
+
+
+class MLflowModelLookup(ResourceLookup):
+    name: str = Field(description="Name of the MLflow registered model")
 
 
 class MLflowModel(MlflowModelBase):
@@ -47,6 +52,11 @@ class MLflowModel(MlflowModelBase):
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")
+    lookup_existing: MLflowModelLookup = Field(
+        None,
+        exclude=True,
+        description="Import a pre-existing MLflow Model by `name` instead of creating it. The model becomes available for cross-referencing; its own field values are not written to the existing resource.",
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
