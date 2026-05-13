@@ -309,7 +309,7 @@ class PipelineNode(BaseModel, PipelineChild):
             raise ValueError(
                 f"{m}VIEW sink requires a transformer with single node expressed as SQL statement."
             )
-        if not self.transformer.is_valid_view_definition:
+        if not self.transformer.is_sql_expressible:
             raise ValueError(
                 f"{m}VIEW sink requires a transformer with single node expressed as SQL statement."
             )
@@ -404,6 +404,43 @@ class PipelineNode(BaseModel, PipelineChild):
                 is_view = True
                 break
         return is_view
+
+    @property
+    def is_sql_expressible(self) -> bool:
+        """`True` if the node can be executed on a SQL warehouse."""
+        if self.transformer is None:
+            return False
+        if not self.sinks:
+            return False
+        return self.transformer.is_sql_expressible and all(
+            s.is_sql_expressible for s in self.sinks
+        )
+
+    @property
+    def sql_statements(self) -> list[str]:
+        """
+        Generate one SQL statement per sink, suitable for execution on a SQL warehouse.
+
+        Raises ValueError if the node is not SQL-expressible.
+        """
+        if not self.is_sql_expressible:
+            raise ValueError(
+                f"Node '{self.name}' is not SQL-expressible. "
+                "Transformer must be a single SQL DataFrameExpr and all sinks must be "
+                "TableDataSink with mode OVERWRITE, APPEND, or None (VIEW)."
+            )
+
+        select_sql = self.view_definition.to_sql()
+        statements = []
+        for sink in self.sinks:
+            if sink.table_type == "VIEW":
+                stmt = f"CREATE OR REPLACE VIEW {sink.full_name} AS\n{select_sql}"
+            elif sink.mode == "APPEND":
+                stmt = f"INSERT INTO {sink.full_name}\n{select_sql}"
+            else:
+                stmt = f"CREATE OR REPLACE TABLE {sink.full_name} AS\n{select_sql}"
+            statements.append(stmt)
+        return statements
 
     @property
     def stage_df(self) -> AnyFrame:

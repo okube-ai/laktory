@@ -1,10 +1,14 @@
 from typing import Literal
 
 from pydantic import Field
+from pydantic import PrivateAttr
 
 from laktory._logger import get_logger
 from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
     PipelineConfigWorkspaceFile,
+)
+from laktory.models.pipeline.orchestrators.sqlexecutionworkspacefile import (
+    SqlExecutionWorkspaceFile,
 )
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.databricks.job import Job
@@ -15,6 +19,8 @@ from laktory.models.resources.databricks.job import JobTask
 from laktory.models.resources.databricks.job import JobTaskLibrary
 from laktory.models.resources.databricks.job import JobTaskLibraryPypi
 from laktory.models.resources.databricks.job import JobTaskPythonWheelTask
+from laktory.models.resources.databricks.job import JobTaskSqlTask
+from laktory.models.resources.databricks.job import JobTaskSqlTaskFile
 
 logger = get_logger(__name__)
 
@@ -48,6 +54,15 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
     serverless_environment_version: str = Field(
         None, description="Serverless environment version"
     )
+    warehouse_id: str | None = Field(
+        None,
+        description="ID of the SQL warehouse. When set, each pipeline execution task is automatically "
+        "assigned to the warehouse if all its nodes are SQL-compatible (single DataFrameExpr transformer "
+        "with TableDataSink sinks). Tasks with Python-based transformations fall back to "
+        "cluster or serverless compute.",
+    )
+    _sql_files: list = PrivateAttr(default_factory=list)
+    _needs_python: bool = PrivateAttr(default=True)
 
     # ----------------------------------------------------------------------- #
     # Update Job                                                              #
@@ -70,84 +85,122 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             task.library = libraries
         return task
 
-    def update_from_parent(self):
-        serverless = True
-        if self.job_cluster:
-            for c in self.job_cluster:
-                if c.job_cluster_key == "node-cluster":
-                    serverless = False
-            if len(self.job_cluster) > 0 and serverless:
-                raise ValueError(
-                    "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
-                )
+    def _build_sql_task(self, pl_task, depends_on):
+        sql_file = SqlExecutionWorkspaceFile(task_name=pl_task.name)
+        sql_file._parent = self
+        self._sql_files.append(sql_file)
 
-        pl = self.parent_pipeline
-
-        self.task = []
-
-        # Requirements and path
-        _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
-        _path = (
-            "/Workspace"
-            + self.inject_vars_into_dump({"path": self.config_file.path})["path"]
+        return JobTask(
+            task_key=pl_task.name,
+            sql_task=JobTaskSqlTask(
+                warehouse_id=self.warehouse_id,
+                file=JobTaskSqlTaskFile(
+                    path=f"/Workspace{sql_file.path}",
+                    source="WORKSPACE",
+                ),
+            ),
+            depends_on=depends_on,
         )
 
-        # Environment
-        env_found = False
-        envs = self.environment
-        if envs is None:
-            envs = []
-        for env in envs:
-            if env.environment_key == ENV_KEY:
-                env_found = True
-                break
+    def _build_python_task(self, pl_task, depends_on, _path, serverless, _requirements):
+        task = JobTask(
+            task_key=pl_task.name,
+            python_wheel_task=JobTaskPythonWheelTask(
+                entry_point="models.pipeline._execute",
+                package_name="laktory",
+                named_parameters={
+                    "filepath": _path,
+                    "selects": ",".join(pl_task.node_names),
+                },
+            ),
+            depends_on=depends_on,
+        )
+        task = self._set_task_compute(task, serverless, _requirements)
+        if self.node_max_retries:
+            task.max_retries = self.node_max_retries
+        return task
 
-        if not env_found:
-            _version = "5"
-            if serverless and not self.serverless_environment_version:
-                raise ValueError(
-                    "To use serverless a `serverless_environment_version` must be specified."
-                )
-            if self.serverless_environment_version:
-                _version = self.serverless_environment_version
+    def update_from_parent(self):
+        self._sql_files = []
+        pl = self.parent_pipeline
+        self.task = []
 
-            envs += [
-                JobEnvironment(
-                    environment_key=ENV_KEY,
-                    spec=JobEnvironmentSpec(
-                        dependencies=_requirements,
-                        environment_version=_version,
-                    ),
-                )
-            ]
-            self.environment = envs
-
-        # Sorting Node Names to prevent spurious job update triggers
+        # Execution plan (sorted for stable output)
         plan = pl.get_execution_plan()
         pl_tasks = plan.tasks_dict
-        pl_task_names = list(pl_tasks.keys())
-        pl_task_names.sort()
+        pl_task_names = sorted(pl_tasks.keys())
+
+        # Determine which tasks can run on a SQL warehouse
+        sql_task_names: set[str] = set()
+        if self.warehouse_id:
+            for name in pl_task_names:
+                if pl_tasks[name].is_sql_expressible:
+                    sql_task_names.add(name)
+
+        has_python_tasks = (
+            any(n not in sql_task_names for n in pl_task_names)
+            or pl.databricks_quality_monitor_enabled
+        )
+        self._needs_python = has_python_tasks
+
+        # Python compute setup (cluster or serverless) — only when needed
+        serverless = True
+        _requirements = []
+        _path = None
+        if has_python_tasks:
+            if self.job_cluster:
+                for c in self.job_cluster:
+                    if c.job_cluster_key == "node-cluster":
+                        serverless = False
+                if len(self.job_cluster) > 0 and serverless:
+                    raise ValueError(
+                        "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
+                    )
+
+            _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})[
+                "deps"
+            ]
+            _path = (
+                "/Workspace"
+                + self.inject_vars_into_dump({"path": self.config_file.path})["path"]
+            )
+
+            # Environment (serverless only)
+            env_found = False
+            envs = self.environment or []
+            for env in envs:
+                if env.environment_key == ENV_KEY:
+                    env_found = True
+                    break
+
+            if not env_found:
+                if serverless and not self.serverless_environment_version:
+                    raise ValueError(
+                        "To use serverless a `serverless_environment_version` must be specified."
+                    )
+                _version = self.serverless_environment_version or "5"
+                envs += [
+                    JobEnvironment(
+                        environment_key=ENV_KEY,
+                        spec=JobEnvironmentSpec(
+                            dependencies=_requirements,
+                            environment_version=_version,
+                        ),
+                    )
+                ]
+                self.environment = envs
+
+        # Build tasks
         for pl_task_name in pl_task_names:
             pl_task = pl_tasks[pl_task_name]
-
             depends_on = [{"task_key": n} for n in pl_task.upstream_task_names]
 
-            task = JobTask(
-                task_key=pl_task.name,
-                python_wheel_task=JobTaskPythonWheelTask(
-                    entry_point="models.pipeline._execute",
-                    package_name="laktory",
-                    named_parameters={
-                        "filepath": _path,
-                        "selects": ",".join(pl_task.node_names),
-                    },
-                ),
-                depends_on=depends_on,
-            )
-            task = self._set_task_compute(task, serverless, _requirements)
-
-            if self.node_max_retries:
-                task.max_retries = self.node_max_retries
+            if pl_task_name in sql_task_names:
+                task = self._build_sql_task(pl_task, depends_on)
+            else:
+                task = self._build_python_task(
+                    pl_task, depends_on, _path, serverless, _requirements
+                )
 
             self.task += [task]
 
@@ -159,8 +212,8 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                     package_name="laktory",
                     named_parameters={
                         "filepaths": _path,
-                        "tables_metadata": "false",  # this has been already update in the pl.execute()
-                        "quality_monitors": "true",  # this has been already update in the pl.execute()
+                        "tables_metadata": "false",
+                        "quality_monitors": "true",
                     },
                 ),
                 depends_on=[{"task_key": t.task_key} for t in self.task],
@@ -170,10 +223,10 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         self.sort_tasks(self.task)
 
-        # Update job parameters
-        self.parameter = [
-            JobParameter(name="full_refresh", default="false"),
-        ]
+        if has_python_tasks:
+            self.parameter = [
+                JobParameter(name="full_refresh", default="false"),
+            ]
 
     # ----------------------------------------------------------------------- #
     # DABs                                                                    #
@@ -239,16 +292,20 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             "dataframe_backend",
             "dataframe_api",
             "serverless_environment_version",
+            "warehouse_id",
         ]
 
     @property
     def additional_core_resources(self) -> list:
         """
-        - configuration workspace file
+        - configuration workspace file (python-wheel mode)
+        - SQL execution workspace files (warehouse mode)
         - configuration workspace file permissions
         """
 
         resources = super().additional_core_resources
-        resources += [self.config_file]
+        if self._needs_python:
+            resources += [self.config_file]
+        resources += self._sql_files
 
         return resources

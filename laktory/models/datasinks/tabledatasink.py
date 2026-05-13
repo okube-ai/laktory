@@ -82,6 +82,14 @@ class TableDataSink(BaseDataSink):
     # ----------------------------------------------------------------------- #
 
     @property
+    def is_sql_expressible(self) -> bool:
+        if self.merge_cdc_options is not None:
+            return False
+        if self.custom_writer is not None:
+            return False
+        return self.mode in (None, "OVERWRITE", "APPEND")
+
+    @property
     def full_name(self) -> str:
         """Table full name {catalog_name}.{schema_name}.{table_name}"""
         if self.table_name is None:

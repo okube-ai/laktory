@@ -100,3 +100,8 @@ class PipelineTask(BaseModel):
                 has_sinks = True
                 break
         return has_sinks
+
+    @property
+    def is_sql_expressible(self) -> bool:
+        """`True` if all nodes in the task can run on a SQL warehouse."""
+        return all(node.is_sql_expressible for node in self.nodes)

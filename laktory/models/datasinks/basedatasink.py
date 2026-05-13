@@ -226,6 +226,10 @@ class BaseDataSink(BaseModel, PipelineChild):
     # -------------------------------------------------------------------------------- #
 
     @property
+    def is_sql_expressible(self) -> bool:
+        return False
+
+    @property
     def is_cdc(self) -> bool:
         return self.merge_cdc_options is not None
 

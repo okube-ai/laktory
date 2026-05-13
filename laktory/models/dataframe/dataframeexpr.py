@@ -90,6 +90,10 @@ class DataFrameExpr(BaseModel, PipelineChild):
     _data_sources: list["PipelineNodeDataSource"] = None
 
     @property
+    def is_sql_expressible(self) -> bool:
+        return True
+
+    @property
     def upstream_node_names(self) -> list[str]:
         """Get all upstream nodes"""
         if self.expr is None:
