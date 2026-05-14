@@ -185,6 +185,10 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
         return self
 
+    @property
+    def is_sql_expressible(self) -> bool:
+        return False
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #

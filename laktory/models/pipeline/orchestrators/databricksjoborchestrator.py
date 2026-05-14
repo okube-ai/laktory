@@ -70,7 +70,34 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             task.library = libraries
         return task
 
+    def _build_python_task(self, pl_task, depends_on, _path, serverless, _requirements):
+        task = JobTask(
+            task_key=pl_task.name,
+            python_wheel_task=JobTaskPythonWheelTask(
+                entry_point="models.pipeline._execute",
+                package_name="laktory",
+                named_parameters={
+                    "filepath": _path,
+                    "selects": ",".join(pl_task.node_names),
+                },
+            ),
+            depends_on=depends_on,
+        )
+        task = self._set_task_compute(task, serverless, _requirements)
+        if self.node_max_retries:
+            task.max_retries = self.node_max_retries
+        return task
+
     def update_from_parent(self):
+        pl = self.parent_pipeline
+        self.task = []
+
+        # Execution plan (sorted for stable output)
+        plan = pl.get_execution_plan()
+        pl_tasks = plan.tasks_dict
+        pl_task_names = sorted(pl_tasks.keys())
+
+        # Cluster vs serverless
         serverless = True
         if self.job_cluster:
             for c in self.job_cluster:
@@ -81,36 +108,26 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                     "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
                 )
 
-        pl = self.parent_pipeline
-
-        self.task = []
-
-        # Requirements and path
         _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
         _path = (
             "/Workspace"
             + self.inject_vars_into_dump({"path": self.config_file.path})["path"]
         )
 
-        # Environment
+        # Environment (serverless only)
         env_found = False
-        envs = self.environment
-        if envs is None:
-            envs = []
+        envs = self.environment or []
         for env in envs:
             if env.environment_key == ENV_KEY:
                 env_found = True
                 break
 
         if not env_found:
-            _version = "5"
             if serverless and not self.serverless_environment_version:
                 raise ValueError(
                     "To use serverless a `serverless_environment_version` must be specified."
                 )
-            if self.serverless_environment_version:
-                _version = self.serverless_environment_version
-
+            _version = self.serverless_environment_version or "5"
             envs += [
                 JobEnvironment(
                     environment_key=ENV_KEY,
@@ -122,33 +139,13 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
             ]
             self.environment = envs
 
-        # Sorting Node Names to prevent spurious job update triggers
-        plan = pl.get_execution_plan()
-        pl_tasks = plan.tasks_dict
-        pl_task_names = list(pl_tasks.keys())
-        pl_task_names.sort()
+        # Build tasks
         for pl_task_name in pl_task_names:
             pl_task = pl_tasks[pl_task_name]
-
             depends_on = [{"task_key": n} for n in pl_task.upstream_task_names]
-
-            task = JobTask(
-                task_key=pl_task.name,
-                python_wheel_task=JobTaskPythonWheelTask(
-                    entry_point="models.pipeline._execute",
-                    package_name="laktory",
-                    named_parameters={
-                        "filepath": _path,
-                        "selects": ",".join(pl_task.node_names),
-                    },
-                ),
-                depends_on=depends_on,
+            task = self._build_python_task(
+                pl_task, depends_on, _path, serverless, _requirements
             )
-            task = self._set_task_compute(task, serverless, _requirements)
-
-            if self.node_max_retries:
-                task.max_retries = self.node_max_retries
-
             self.task += [task]
 
         if pl.databricks_quality_monitor_enabled:
@@ -159,8 +156,8 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                     package_name="laktory",
                     named_parameters={
                         "filepaths": _path,
-                        "tables_metadata": "false",  # this has been already update in the pl.execute()
-                        "quality_monitors": "true",  # this has been already update in the pl.execute()
+                        "tables_metadata": "false",
+                        "quality_monitors": "true",
                     },
                 ),
                 depends_on=[{"task_key": t.task_key} for t in self.task],
@@ -170,7 +167,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
 
         self.sort_tasks(self.task)
 
-        # Update job parameters
         self.parameter = [
             JobParameter(name="full_refresh", default="false"),
         ]
@@ -247,8 +243,6 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
         - configuration workspace file
         - configuration workspace file permissions
         """
-
         resources = super().additional_core_resources
         resources += [self.config_file]
-
         return resources
