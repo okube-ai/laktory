@@ -6,7 +6,7 @@ namespaces, and that user registrations do not affect the laktory namespace.
 import narwhals as nw
 import polars as pl
 
-from laktory.narwhals_ext.namespace import NameSpace
+from laktory.api.namespace import NameSpace
 
 
 def test_user_dataframe_namespace_coexists(monkeypatch):
