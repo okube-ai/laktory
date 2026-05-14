@@ -1,5 +1,6 @@
 from functools import wraps
 
+from laktory.api.namespace import register_anyframe_namespace
 from laktory.narwhals_ext.dataframe.display import display
 from laktory.narwhals_ext.dataframe.groupby_and_agg import groupby_and_agg
 from laktory.narwhals_ext.dataframe.has_column import has_column
@@ -8,7 +9,6 @@ from laktory.narwhals_ext.dataframe.signature import signature
 from laktory.narwhals_ext.dataframe.union import union
 from laktory.narwhals_ext.dataframe.window_filter import window_filter
 from laktory.narwhals_ext.dataframe.with_row_index import with_row_index
-from laktory.narwhals_ext.namespace import register_anyframe_namespace
 from laktory.typing import AnyFrame
 
 

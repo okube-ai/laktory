@@ -2,10 +2,10 @@ from functools import wraps
 
 import narwhals as nw
 
+from laktory.api.namespace import register_expr_namespace
 from laktory.narwhals_ext.expr.convert_units import convert_units
 from laktory.narwhals_ext.expr.roundp import roundp
 from laktory.narwhals_ext.expr.string_split import string_split
-from laktory.narwhals_ext.namespace import register_expr_namespace
 
 
 @register_expr_namespace("laktory")
