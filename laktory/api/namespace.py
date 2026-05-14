@@ -287,9 +287,7 @@ def register_spark_dataframe_namespace(name: str):
     ``__init__`` argument, so its methods are written in pure PySpark without
     any Narwhals knowledge.
 
-    A thin bridge is automatically registered on Narwhals ``DataFrame`` and
-    ``LazyFrame`` as well, so the same namespace works with both
-    ``DATAFRAME_API=NATIVE`` and ``DATAFRAME_API=NARWHALS`` in pipeline YAML.
+    Use with ``DATAFRAME_API=NATIVE`` in pipeline YAML.
 
     Parameters
     ----------
@@ -312,59 +310,28 @@ def register_spark_dataframe_namespace(name: str):
             return self._df.withColumn("x2", F.col("x1") * 2)
     ```
 
-    Use in a pipeline YAML (both APIs work):
-
     ```yaml
     transformer:
       nodes:
         - func_name: custom.with_x2
-          dataframe_api: NATIVE    # calls PySpark DataFrame directly
-
-        - func_name: custom.with_x2
-          dataframe_api: NARWHALS  # auto-bridged: nw.LazyFrame → native → nw.LazyFrame
+          dataframe_api: NATIVE
     ```
 
     References
     ----------
-    * [Spark Extension](https://www.laktory.ai/concepts/spark_extension/)
+    * [Spark Extension](https://www.laktory.ai/concepts/extension_custom/)
     """
 
     def wrapper(ns_cls: type):
-        # NATIVE mode: patch PySpark DataFrame directly
         from pyspark.sql import DataFrame as SparkDataFrame
 
         setattr(SparkDataFrame, name, SparkNameSpace(name, ns_cls))
+        try:
+            from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
 
-        # NARWHALS mode: auto-bridge via a proxy class
-        class _NarwhalsBridge:
-            """
-            Proxy that holds a Narwhals frame, creates the Spark namespace on the
-            underlying native PySpark DataFrame, and forwards method calls while
-            wrapping the result back into Narwhals.
-            """
-
-            def __init__(self, _df):
-                self._ns = ns_cls(_df.to_native())
-
-            def __getattr__(self, attr_name: str):
-                method = getattr(self._ns, attr_name)
-                if not callable(method):
-                    return method
-
-                def _wrapped(*args, **kwargs):
-                    result = method(*args, **kwargs)
-                    if not isinstance(result, (nw.DataFrame, nw.LazyFrame)):
-                        try:
-                            result = nw.from_native(result)
-                        except TypeError:
-                            pass
-                    return result
-
-                return _wrapped
-
-        setattr(nw.DataFrame, name, NameSpace(name, _NarwhalsBridge))
-        setattr(nw.LazyFrame, name, NameSpace(name, _NarwhalsBridge))
-
+            setattr(ConnectDataFrame, name, SparkNameSpace(name, ns_cls))
+        except ImportError:
+            pass
         return ns_cls
 
     return wrapper
@@ -418,13 +385,19 @@ def register_spark_column_namespace(name: str):
 
     References
     ----------
-    * [Spark Extension](https://www.laktory.ai/concepts/spark_extension/)
+    * [Spark Extension](https://www.laktory.ai/concepts/extension_custom/)
     """
 
     def wrapper(ns_cls: type):
         from pyspark.sql.column import Column
 
         setattr(Column, name, SparkNameSpace(name, ns_cls))
+        try:
+            from pyspark.sql.connect.column import Column as ConnectColumn
+
+            setattr(ConnectColumn, name, SparkNameSpace(name, ns_cls))
+        except ImportError:
+            pass
         return ns_cls
 
     return wrapper

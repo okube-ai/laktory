@@ -1,6 +1,5 @@
 """
-Tests for laktory.spark_ext.namespace — Spark DataFrame / Column namespace
-registration and the automatic Narwhals bridge.
+Tests for Spark DataFrame / Column namespace registration via laktory.api.
 """
 
 import pytest
@@ -62,30 +61,6 @@ def test_dataframe_namespace_native_mode(backend):
     node = lk.models.DataFrameMethod(
         func_name="spk_test.with_x2",
         dataframe_api="NATIVE",
-    )
-    result = node.execute(df0)
-
-    expected = nw.from_native(
-        get_df0(backend)
-        .to_native()
-        .withColumn(
-            "x2",
-            __import__("pyspark.sql.functions", fromlist=["col"]).col("x1") * 2,
-        )
-    )
-    assert_dfs_equal(result, expected)
-
-
-@pytest.mark.parametrize("backend", ["PYSPARK"])
-def test_dataframe_namespace_narwhals_mode(backend):
-    """The auto-bridge lets DATAFRAME_API=NARWHALS call the same Spark extension."""
-    import narwhals as nw
-
-    df0 = get_df0(backend)
-
-    node = lk.models.DataFrameMethod(
-        func_name="spk_test.with_x2",
-        dataframe_api="NARWHALS",
     )
     result = node.execute(df0)
 
