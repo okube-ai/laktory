@@ -589,3 +589,57 @@ def test_get_env():
 
     prd = stack.get_env("prd").inject_vars()
     assert prd.name == "stack-value0-prd"
+
+
+_DB_PROVIDER = {
+    "host": "https://adb-123.azuredatabricks.net",
+    "token": "dapi123",
+}
+
+
+def _minimal_stack(backend, with_envs=True):
+    envs = {"dev": {"variables": {}}, "prod": {"variables": {}}} if with_envs else {}
+    return models.Stack(
+        name="my-stack",
+        environments=envs,
+        resources={"providers": {"databricks": _DB_PROVIDER}},
+        terraform={"backend": backend},
+    )
+
+
+def test_terraform_stack_workspace_state():
+    # databricks_workspace: true → key uses stack name + env name
+    ts = _minimal_stack({"databricks_workspace": True}).to_terraform(env_name="dev")
+    backend = ts.terraform.backend["http"]
+    assert backend["address"] == (
+        "https://adb-123.azuredatabricks.net/api/2.0/terraform/state/my-stack/dev"
+    )
+    assert backend["lock_address"] == backend["address"]
+    assert backend["unlock_address"] == backend["address"]
+    assert backend["username"] == "token"
+    assert backend["password"] == "dapi123"
+    assert backend["lock_method"] == "POST"
+    assert backend["unlock_method"] == "DELETE"
+
+    # databricks_workspace: true without env_name → key is just stack name
+    ts_no_env = _minimal_stack(
+        {"databricks_workspace": True}, with_envs=False
+    ).to_terraform()
+    assert ts_no_env.terraform.backend["http"]["address"].endswith(
+        "/api/2.0/terraform/state/my-stack"
+    )
+
+    # databricks_workspace as explicit string → used verbatim regardless of env
+    ts_str = _minimal_stack({"databricks_workspace": "custom/key"}).to_terraform(
+        env_name="prod"
+    )
+    assert ts_str.terraform.backend["http"]["address"].endswith(
+        "/api/2.0/terraform/state/custom/key"
+    )
+
+    # other backend keys alongside databricks_workspace → those keys take precedence
+    ts_explicit = _minimal_stack(
+        {"databricks_workspace": True, "local": {}}
+    ).to_terraform(env_name="dev")
+    assert "local" in ts_explicit.terraform.backend
+    assert "http" not in ts_explicit.terraform.backend

@@ -76,8 +76,50 @@ logger = get_logger(__name__)
 DIRPATH = "./"
 
 
+def _resolve_db_token(provider) -> str:
+    """Return a concrete Databricks Bearer token for any supported auth method."""
+    if provider.token:
+        return provider.token
+
+    from databricks.sdk import WorkspaceClient
+
+    kwargs = {"host": provider.host}
+    for field in (
+        "client_id",
+        "client_secret",
+        "azure_client_id",
+        "azure_client_secret",
+        "azure_tenant_id",
+        "profile",
+    ):
+        v = getattr(provider, field, None)
+        if v:
+            kwargs[field] = v
+    try:
+        w = WorkspaceClient(**kwargs)
+        headers = w.config.authenticate()
+        auth = headers.get("Authorization", "")
+        return auth.removeprefix("Bearer ").removeprefix("Basic ")
+    except Exception as exc:
+        raise ValueError(
+            "backend.databricks_workspace: could not resolve a Databricks token from "
+            "the provider credentials. Ensure at least one auth method is configured "
+            "(token, client_id/secret, azure_client_id/secret, profile). "
+            f"Original error: {exc}"
+        ) from exc
+
+
 class Terraform(BaseModel):
-    backend: dict[str, Any] | None = None
+    backend: dict[str, Any] | None = Field(
+        None,
+        description=(
+            "Terraform backend configuration. Accepts any standard Terraform backend "
+            "block (e.g. `azurerm`, `s3`, `http`). Additionally, the special key "
+            "`databricks_workspace` configures a Databricks-hosted state backend "
+            "(same mechanism as DABs): set to `true` to auto-name the state key as "
+            "`{stack-name}/{env}`, or to an explicit string to use as the state key."
+        ),
+    )
 
 
 class LaktorySettings(BaseModel):
@@ -498,6 +540,59 @@ class Stack(BaseModel):
                 resources[_r.resource_name] = _r
 
         self._check_depends_on(resources, providers)
+
+        # Auto-configure Databricks workspace state backend when
+        # backend.databricks_workspace is set.
+        ws_backend = None
+        if env.terraform.backend and "databricks_workspace" in env.terraform.backend:
+            ws_backend = env.terraform.backend.pop("databricks_workspace")
+            if not env.terraform.backend:
+                env.terraform.backend = None
+
+        if ws_backend is not None:
+            if env.terraform.backend:
+                logger.warning(
+                    "'databricks_workspace' is set alongside other backend keys; "
+                    "the other keys take precedence and databricks_workspace is ignored."
+                )
+            else:
+                db_provider = next(
+                    (
+                        p
+                        for p in providers.values()
+                        if isinstance(p, DatabricksProvider)
+                    ),
+                    None,
+                )
+                if db_provider is None:
+                    raise ValueError(
+                        "backend.databricks_workspace requires a DatabricksProvider in the stack."
+                    )
+                host = (db_provider.host or "").rstrip("/")
+                if not host:
+                    raise ValueError(
+                        "DatabricksProvider.host is required when backend.databricks_workspace is set."
+                    )
+                token = _resolve_db_token(db_provider)
+
+                if isinstance(ws_backend, str):
+                    state_key = ws_backend
+                else:
+                    state_key = env.name if not env_name else f"{env.name}/{env_name}"
+
+                url = f"{host}/api/2.0/terraform/state/{state_key}"
+                env.terraform.backend = {
+                    "http": {
+                        "address": url,
+                        "lock_address": url,
+                        "unlock_address": url,
+                        "username": "token",
+                        "password": token,
+                        "lock_method": "POST",
+                        "unlock_method": "DELETE",
+                        "retry_wait_min": "5",
+                    }
+                }
 
         # Update terraform
         return TerraformStack(
