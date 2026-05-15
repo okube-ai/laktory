@@ -6,14 +6,13 @@
 * `lookup_existing` field for all applicable resources
 * Registration of Spark DataFrame / Column namespaces
 * Support for storing Terraform state file to Databricks workspace
+* Support for inject variables and/or variable files with CLI
 ### Updated
 * `TerraformStack.model_dump()`: resource reference substitution (`${resources.xxx}`) now uses structured dict traversal with `str.replace` for simple refs and `re.escape` + lambda for property refs, fixing incorrect matches when resource names contain regex metacharacters (e.g. a dot)
 * Improved documentation review as per 2026/05/08 audit.
 * Documentation website
 * Improved exceptions reporting during validation of data sources and sinks
 * VariableType to only accept specific format instead of generic string.
-### Breaking changes
-* n/a
 
 ## [0.11.4] - 2026-05-07
 ### Fixed

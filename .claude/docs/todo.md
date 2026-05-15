@@ -16,6 +16,7 @@ Things that would be nice for the user and enhance usability.
 | ~~F4~~ | ~~Better error message. During validation, it's almost impossible to understand what's going on because multiple models are possible (sources / sinks)~~ ✓ |
 | ~~F5~~ | ~~Let the user run SQL tasks on warehouse instead of job compute~~ Too complex (metadata, full refresh, local execution) for the added benefits.           |
 | F6     | Integration of Spark-native declarative piplines                                                                                                           |
+| ~~F7~~ | ~~Allow the user to pass variables through the CLI~~ `--var key=value` (repeatable) and `--var-file` (YAML); auto-discovers `variables.yaml` next to stack ✓ |
 
 
 ---

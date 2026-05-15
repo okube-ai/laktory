@@ -9,6 +9,17 @@ To use a variable, follow this syntax: `${vars.VARIABLE_NAME}` or `${var.VARIABL
 
 ## Declaration
 
+When the same variable is declared in multiple places, the following priority applies (highest wins):
+
+| Priority      | Source                                                                       | Example                                     |
+|---------------|------------------------------------------------------------------------------|---------------------------------------------|
+| 1 *(highest)* | CLI `--var` flags                                                            | `--var env=dev`                             |
+| 2             | CLI variable file (`--var-file` or auto-discovered `variables[.<env>].yaml`) | `--var-file my_secrets.yaml`                |
+| 3             | Stack environment variables (`environments.<env>.variables`)                 | `stack.yaml` → `environments.dev.variables` |
+| 4             | Stack-level variables (`variables`)                                          | `stack.yaml` → `variables`                  |
+| 5             | OS environment variables                                                     | `$DATABRICKS_HOST`                          |
+| 6 *(lowest)*  | Laktory settings                                                             | `laktory.settings`                          |
+
 ### From Model
 Any object declared with Laktory can receive variables as part of its data model:
 
@@ -32,7 +43,43 @@ When resolving a variable, Laktory first searches for declared model variables. 
 If a variable has not been resolved from model variables nor environment variables, it looks up `laktory.settings` values.
 
 ### From CLI
-Injecting variables via the CLI is **not currently supported**, but this feature will be available in the future.
+
+Variables can be injected at the CLI level, overriding anything declared in the stack YAML or variable files.
+
+**Inline flags** (`--var`, repeatable):
+```bash
+laktory deploy --env dev --var profile=MY_PROFILE --var node_type=Standard_DS3_v2
+```
+
+**Variable file** (`--var-file`):
+```bash
+laktory deploy --env dev --var-file variables.yaml
+```
+
+The file must be YAML and supports all variable types — including complex objects:
+
+```yaml title="variables.yaml"
+profile: MY_PROFILE
+node_type: Standard_DS3_v2
+default_cluster:
+  num_workers: 4
+  node_type_id: Standard_DS3_v2
+```
+
+**Auto-discovery** — when `--var-file` is not provided, Laktory automatically loads a variable file if one is present next to the stack file, in this order:
+
+1. `variables.<env>.yaml` — env-specific (e.g. `variables.dev.yaml`)
+2. `variables.yaml` — base fallback
+
+This makes per-environment secrets easy to manage: commit a `variables.yaml` template, add `variables.*.yaml` to `.gitignore`, and deploy with just:
+
+```bash
+laktory deploy --env dev
+```
+
+`--var` flags always take precedence over the variable file.
+
+These CLI options are available on all commands: `deploy`, `preview`, `destroy`, `validate`, `build`, and `run`.
 
 ## Properties
 

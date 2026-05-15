@@ -73,6 +73,48 @@ def test_build(monkeypatch, stack):
     stack.build(env_name="dev")
 
 
+def test_stack_to_terraform_cli_vars_override_stack_var(monkeypatch, stack):
+    # CLI vars must override stack-level variables (workflow_name defaults to UNDEFINED).
+    monkeypatch.setenv("DATABRICKS_HOST", "mock-host")
+    monkeypatch.setenv("DATABRICKS_TOKEN", "mock-token")
+
+    # Verify baseline: stack-level workflow_name is UNDEFINED
+    env_default = stack.get_env("dev")
+    assert env_default.variables["workflow_name"] == "UNDEFINED"
+
+    # After merging CLI vars, workflow_name on the env should be overridden
+    env_with_cli = env_default.model_copy(
+        update={"variables": {**env_default.variables, "workflow_name": "cli-wf"}}
+    )
+    env_injected = env_with_cli.inject_vars()
+    # The variable dict itself should reflect the CLI value
+    assert env_injected.variables["workflow_name"] == "cli-wf"
+
+
+def test_stack_to_terraform_cli_vars_override_env_var(monkeypatch, stack):
+    # CLI vars must win over env-level YAML variables (node_type_id is set per env).
+    monkeypatch.setenv("DATABRICKS_HOST", "mock-host")
+    monkeypatch.setenv("DATABRICKS_TOKEN", "mock-token")
+
+    import json
+
+    tf_stack_default = stack.to_terraform(env_name="dev")
+    tf_stack_override = stack.to_terraform(
+        env_name="dev", vars={"node_type_id": "Standard_DS5_v2"}
+    )
+
+    default_json = json.dumps(
+        {k: v.model_dump() for k, v in tf_stack_default.resources.items()}
+    )
+    override_json = json.dumps(
+        {k: v.model_dump() for k, v in tf_stack_override.resources.items()}
+    )
+
+    assert "Standard_DS3_v2" in default_json  # env-level default
+    assert "Standard_DS5_v2" in override_json  # CLI override wins
+    assert "Standard_DS3_v2" not in override_json
+
+
 def test_terraform_stack(monkeypatch, stack):
     # Mock laktory version to account for dynamically changing value
     lk.__version__ = "<version>"
