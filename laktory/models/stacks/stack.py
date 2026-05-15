@@ -452,7 +452,7 @@ class Stack(BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
-    def build(self, env_name: str | None, inject_vars: bool = True):
+    def build(self, env_name: str | None, inject_vars: bool = True, vars: dict = None):
         """
         Build stack artifacts before preview or deploy.
 
@@ -469,12 +469,16 @@ class Stack(BaseModel):
             Name of the environment
         inject_vars:
             Inject stack variables
+        vars:
+            Additional variables that override stack and environment variables.
         """
 
         logger.info("Building artifacts...")
 
         env = self.get_env(env_name=env_name)
         if inject_vars:
+            if vars:
+                env = env.model_copy(update={"variables": {**env.variables, **vars}})
             env = env.inject_vars()
 
         if env.resources is None:
@@ -564,7 +568,7 @@ class Stack(BaseModel):
     # Terraform Methods                                                       #
     # ----------------------------------------------------------------------- #
 
-    def to_terraform(self, env_name: str | None = None):
+    def to_terraform(self, env_name: str | None = None, vars: dict = None):
         """
         Create a terraform stack for a given environment `env`.
 
@@ -572,6 +576,8 @@ class Stack(BaseModel):
         ----------
         env_name:
             Target environment. If `None`, used default stack values only.
+        vars:
+            Additional variables that override stack and environment variables.
 
         Returns
         -------
@@ -580,7 +586,10 @@ class Stack(BaseModel):
         """
         from laktory.models.stacks.terraformstack import TerraformStack
 
-        env = self.get_env(env_name=env_name).inject_vars()
+        env = self.get_env(env_name=env_name)
+        if vars:
+            env = env.model_copy(update={"variables": {**env.variables, **vars}})
+        env = env.inject_vars()
         env.build(env_name=None, inject_vars=False)
 
         # Providers

@@ -6,10 +6,75 @@ from typer.testing import CliRunner
 from laktory._settings import settings
 from laktory._version import VERSION
 from laktory.cli import app
+from laktory.cli._common import parse_cli_vars
 
 runner = CliRunner()
 root = Path(__file__).parent
 stack_filepath = str(root / "data" / "stack.yaml")
+
+
+# --------------------------------------------------------------------------- #
+# parse_cli_vars                                                               #
+# --------------------------------------------------------------------------- #
+
+
+def test_parse_cli_vars_empty(tmp_path):
+    assert parse_cli_vars([], None, str(tmp_path)) == {}
+
+
+def test_parse_cli_vars_inline(tmp_path):
+    result = parse_cli_vars(["profile=MY_PROFILE", "env=dev"], None, str(tmp_path))
+    assert result == {"profile": "MY_PROFILE", "env": "dev"}
+
+
+def test_parse_cli_vars_value_with_equals(tmp_path):
+    # value itself contains '=' — only split on first '='
+    result = parse_cli_vars(["conn=host=localhost"], None, str(tmp_path))
+    assert result == {"conn": "host=localhost"}
+
+
+def test_parse_cli_vars_explicit_file(tmp_path):
+    var_file = tmp_path / "vars.yaml"
+    var_file.write_text("profile: MY_PROFILE\nnum_workers: 4\n")
+    result = parse_cli_vars([], str(var_file), str(tmp_path))
+    assert result == {"profile": "MY_PROFILE", "num_workers": 4}
+
+
+def test_parse_cli_vars_complex_values(tmp_path):
+    var_file = tmp_path / "vars.yaml"
+    var_file.write_text(
+        "cluster:\n  node_type: ds3\n  workers: 4\ntags:\n  - a\n  - b\n"
+    )
+    result = parse_cli_vars([], str(var_file), str(tmp_path))
+    assert result == {"cluster": {"node_type": "ds3", "workers": 4}, "tags": ["a", "b"]}
+
+
+def test_parse_cli_vars_auto_discover_base(tmp_path):
+    (tmp_path / "variables.yaml").write_text("profile: base_profile\n")
+    result = parse_cli_vars([], None, str(tmp_path))
+    assert result == {"profile": "base_profile"}
+
+
+def test_parse_cli_vars_auto_discover_env_wins(tmp_path):
+    (tmp_path / "variables.yaml").write_text("profile: base_profile\n")
+    (tmp_path / "variables.dev.yaml").write_text("profile: dev_profile\n")
+    result = parse_cli_vars([], None, str(tmp_path), env="dev")
+    assert result == {"profile": "dev_profile"}
+
+
+def test_parse_cli_vars_auto_discover_env_fallback(tmp_path):
+    # variables.dev.yaml absent → falls back to variables.yaml
+    (tmp_path / "variables.yaml").write_text("profile: base_profile\n")
+    result = parse_cli_vars([], None, str(tmp_path), env="dev")
+    assert result == {"profile": "base_profile"}
+
+
+def test_parse_cli_vars_inline_overrides_file(tmp_path):
+    var_file = tmp_path / "vars.yaml"
+    var_file.write_text("profile: file_profile\nenv: staging\n")
+    result = parse_cli_vars(["profile=cli_profile"], str(var_file), str(tmp_path))
+    assert result["profile"] == "cli_profile"
+    assert result["env"] == "staging"
 
 
 # --------------------------------------------------------------------------- #
@@ -89,6 +154,57 @@ def test_validate_bad_env(monkeypatch, tmp_path):
         app, ["validate", "--env", "nonexistent", "--filepath", stack_filepath]
     )
     assert result.exit_code != 0
+
+
+def test_validate_with_var(monkeypatch, tmp_path):
+    monkeypatch.setenv("DATABRICKS_HOST", "mock-host")
+    monkeypatch.setenv("DATABRICKS_TOKEN", "mock-token")
+    monkeypatch.setattr(settings, "build_root", str(tmp_path))
+    with patch("laktory.cli._validate.CLIController") as MockController:
+        MockController.return_value.env = "dev"
+        MockController.return_value.cli_vars = {"workflow_name": "my-wf"}
+        MockController.return_value.stack.to_terraform.return_value = None
+        result = runner.invoke(
+            app,
+            [
+                "validate",
+                "--env",
+                "dev",
+                "--filepath",
+                stack_filepath,
+                "--var",
+                "workflow_name=my-wf",
+            ],
+        )
+    assert result.exit_code == 0
+    _, kwargs = MockController.call_args
+    assert kwargs.get("var_list") == ["workflow_name=my-wf"]
+
+
+def test_validate_with_var_file(monkeypatch, tmp_path):
+    monkeypatch.setenv("DATABRICKS_HOST", "mock-host")
+    monkeypatch.setenv("DATABRICKS_TOKEN", "mock-token")
+    monkeypatch.setattr(settings, "build_root", str(tmp_path))
+    var_file = str(tmp_path / "vars.yaml")
+    with patch("laktory.cli._validate.CLIController") as MockController:
+        MockController.return_value.env = "dev"
+        MockController.return_value.cli_vars = {}
+        MockController.return_value.stack.to_terraform.return_value = None
+        result = runner.invoke(
+            app,
+            [
+                "validate",
+                "--env",
+                "dev",
+                "--filepath",
+                stack_filepath,
+                "--var-file",
+                var_file,
+            ],
+        )
+    assert result.exit_code == 0
+    _, kwargs = MockController.call_args
+    assert kwargs.get("var_file_path") == var_file
 
 
 # --------------------------------------------------------------------------- #
