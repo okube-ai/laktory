@@ -6,6 +6,7 @@ from typing import Any
 from typing import Literal
 
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -141,11 +142,11 @@ class Terraform(BaseModel):
         description=(
             "Terraform backend configuration. Accepts any standard Terraform backend "
             "block (e.g. `azurerm`, `s3`, `http`). Additionally, the special key "
-            "`databricks_workspace` auto-configures a Terraform HTTP backend that "
-            "stores state as a workspace file in the current Databricks user's "
-            "directory via the workspace-files API. No external storage account is "
-            "required. Set to `true` to auto-name the state key as "
-            "`{stack}/{env}`, or to an explicit string to use as the state key."
+            "`databricks_workspace: true` auto-configures a Terraform HTTP backend "
+            "that stores state as a workspace file in the current Databricks user's "
+            "directory at "
+            "`/Users/{user}/.laktory/{stack}/{env}/state/terraform.tfstate`. "
+            "No external storage account is required."
         ),
     )
 
@@ -250,6 +251,34 @@ class StackResources(BaseModel):
     databricks_workspacetrees: dict[str, WorkspaceTree | PythonPackage] = {}
     pipelines: dict[str, Pipeline] = {}
     providers: dict[str, AWSProvider | AzureProvider | DatabricksProvider] = {}
+
+    @field_validator("providers", mode="before")
+    @classmethod
+    def route_providers_by_key(cls, v):
+        """Use the provider key name (Terraform convention) as the discriminator.
+
+        AWSProvider and DatabricksProvider share fields like `profile` and `token`,
+        so Pydantic's union matching is ambiguous. The key name is the explicit
+        source of truth: "databricks[.*]" → DatabricksProvider, "aws[.*]" →
+        AWSProvider, "azure[rm][.*]" → AzureProvider.
+        """
+        if not isinstance(v, dict):
+            return v
+        result = {}
+        for key, value in v.items():
+            if not isinstance(value, dict):
+                result[key] = value
+                continue
+            base = key.split(".")[0].lower()
+            if base == "databricks":
+                result[key] = DatabricksProvider.model_validate(value)
+            elif base == "aws":
+                result[key] = AWSProvider.model_validate(value)
+            elif base in ("azure", "azurerm"):
+                result[key] = AzureProvider.model_validate(value)
+            else:
+                result[key] = value
+        return result
 
     @model_validator(mode="after")
     def update_resource_names(self) -> Any:
@@ -576,6 +605,8 @@ class Stack(BaseModel):
             ws_backend = env.terraform.backend.pop("databricks_workspace")
             if not env.terraform.backend:
                 env.terraform.backend = None
+            if ws_backend is False:
+                ws_backend = None
 
         if ws_backend is not None:
             if env.terraform.backend:
@@ -596,13 +627,15 @@ class Stack(BaseModel):
                     raise ValueError(
                         "backend.databricks_workspace requires a DatabricksProvider in the stack."
                     )
-                host = (db_provider.host or "").rstrip("/")
+                wc = db_provider.workspace_client
+                host = (db_provider.host or wc.config.host or "").rstrip("/")
                 if not host:
                     raise ValueError(
-                        "DatabricksProvider.host is required when backend.databricks_workspace is set."
+                        "Could not resolve Databricks host for backend.databricks_workspace. "
+                        "Set 'host' explicitly in the DatabricksProvider or ensure the profile "
+                        "in ~/.databrickscfg includes a host."
                     )
 
-                wc = db_provider.workspace_client
                 username = wc.current_user.me().user_name
 
                 # The Terraform HTTP backend uses Basic auth (Authorization:
@@ -635,16 +668,20 @@ class Stack(BaseModel):
                             f"Original error: {exc}"
                         ) from exc
 
-                if isinstance(ws_backend, str):
-                    state_key = ws_backend
-                else:
-                    state_key = env.name if not env_name else f"{env.name}/{env_name}"
+                if ws_backend is not True:
+                    raise ValueError(
+                        "backend.databricks_workspace must be set to `true`. "
+                        "To use a fully custom backend, configure the `http` backend directly."
+                    )
 
-                ws_file_path = f"/Users/{username}/.laktory/tfstate/{state_key}.tfstate"
-                ws_parent = ws_file_path.rsplit("/", 1)[0]
+                if env_name:
+                    state_path = f"/Users/{username}/.laktory/{self.name}/{env_name}/state/terraform.tfstate"
+                else:
+                    state_path = f"/Users/{username}/.laktory/{self.name}/state/terraform.tfstate"
+                ws_parent = state_path.rsplit("/", 1)[0]
                 wc.workspace.mkdirs(path=ws_parent)
 
-                url = f"{host}/api/2.0/workspace-files/Users/{username}/.laktory/tfstate/{state_key}.tfstate"
+                url = f"{host}/api/2.0/workspace-files{state_path}"
                 env.terraform.backend = {
                     "http": {
                         "address": url,

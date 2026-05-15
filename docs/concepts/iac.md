@@ -73,15 +73,7 @@ terraform:
 Laktory stores state at:
 
 ```
-/Users/{current-user}/.laktory/tfstate/{stack-name}/{env}.tfstate
-```
-
-To use a custom state key instead of the auto-generated `{stack-name}/{env}`:
-
-```yaml title="stack.yaml"
-terraform:
-  backend:
-    databricks_workspace: my-stack/prod
+/Users/{current-user}/.laktory/{stack-name}/{env}/state/terraform.tfstate
 ```
 
 Credentials are taken automatically from the `DatabricksProvider` already defined in your stack. Both PAT tokens and service principals (`client_id`/`client_secret` or Azure equivalents) are supported.
