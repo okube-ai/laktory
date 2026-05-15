@@ -56,6 +56,42 @@ If your stack defines multiple environments, you can target a specific environme
 laktory deploy --env dev
 ```
 
+### State management
+
+Terraform tracks deployed resources in a **state file**. By default the state is stored locally, which works for a single developer but is not suitable for teams or CI/CD pipelines. Laktory's `terraform.backend` field accepts any [Terraform backend configuration](https://developer.hashicorp.com/terraform/language/backend).
+
+#### Databricks workspace backend
+
+For Databricks users, Laktory provides a built-in shortcut that stores the state file directly in the Databricks workspace — the same mechanism used by Databricks Asset Bundles (DABs). No external storage account or additional credentials are required.
+
+```yaml title="stack.yaml"
+terraform:
+  backend:
+    databricks_workspace: true
+```
+
+Laktory stores state at:
+
+```
+/Users/{current-user}/.laktory/{stack-name}/{env}/state/terraform.tfstate
+```
+
+Credentials are taken automatically from the `DatabricksProvider` already defined in your stack. Both PAT tokens and service principals (`client_id`/`client_secret` or Azure equivalents) are supported.
+
+#### Other backends
+
+Any standard Terraform backend is also supported — just provide the backend block directly:
+
+```yaml title="stack.yaml"
+terraform:
+  backend:
+    azurerm:
+      resource_group_name: my-rg
+      storage_account_name: mystorageaccount
+      container_name: terraform
+      key: states/my-stack.tfstate
+```
+
 
 
 ## Declarative Automation Bundles

@@ -589,3 +589,94 @@ def test_get_env():
 
     prd = stack.get_env("prd").inject_vars()
     assert prd.name == "stack-value0-prd"
+
+
+_DB_PROVIDER = {
+    "host": "https://adb-123.azuredatabricks.net",
+    "token": "dapi123",
+}
+
+
+def _minimal_stack(backend, with_envs=True):
+    envs = {"dev": {"variables": {}}, "prod": {"variables": {}}} if with_envs else {}
+    return models.Stack(
+        name="my-stack",
+        environments=envs,
+        resources={"providers": {"databricks": _DB_PROVIDER}},
+        terraform={"backend": backend},
+    )
+
+
+def test_terraform_stack_workspace_state():
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        # true with PAT token → used directly (no token creation)
+        ts = _minimal_stack({"databricks_workspace": True}).to_terraform(env_name="dev")
+        backend = ts.terraform.backend["http"]
+        assert backend["address"] == (
+            "https://adb-123.azuredatabricks.net"
+            "/api/2.0/workspace-files/Users/user@test.com"
+            "/.laktory/my-stack/dev/state/terraform.tfstate"
+        )
+        assert backend["username"] == "token"
+        assert backend["password"] == "dapi123"
+        assert "lock_address" not in backend
+        mock_wc.workspace.mkdirs.assert_called_once_with(
+            path="/Users/user@test.com/.laktory/my-stack/dev/state"
+        )
+        mock_wc.tokens.create.assert_not_called()
+
+        # SP auth (no token) → cached PAT returned by _get_cached_ws_token
+        mock_wc.reset_mock()
+        mock_wc.current_user.me.return_value.user_name = "user@test.com"
+        sp_stack = models.Stack(
+            name="my-stack",
+            environments={"dev": {"variables": {}}},
+            resources={
+                "providers": {
+                    "databricks": {
+                        "host": "https://adb-123.azuredatabricks.net",
+                        "azure_client_id": "client-id",
+                        "azure_client_secret": "secret",
+                        "azure_tenant_id": "tenant-id",
+                    }
+                }
+            },
+            terraform={"backend": {"databricks_workspace": True}},
+        )
+        import laktory.models.stacks.stack as _stack_module
+
+        with patch.object(
+            _stack_module, "_get_cached_ws_token", return_value="dapi-sp-cached"
+        ):
+            ts_sp = sp_stack.to_terraform(env_name="dev")
+        assert ts_sp.terraform.backend["http"]["password"] == "dapi-sp-cached"
+
+        # without env_name → state key is just stack name
+        mock_wc.reset_mock()
+        mock_wc.current_user.me.return_value.user_name = "user@test.com"
+        ts_no_env = _minimal_stack(
+            {"databricks_workspace": True}, with_envs=False
+        ).to_terraform()
+        assert ts_no_env.terraform.backend["http"]["address"].endswith(
+            "/.laktory/my-stack/state/terraform.tfstate"
+        )
+
+    # other backend keys alongside databricks_workspace → those keys take precedence
+    ts_explicit = _minimal_stack(
+        {"databricks_workspace": True, "local": {}}
+    ).to_terraform(env_name="dev")
+    assert "local" in ts_explicit.terraform.backend
+    assert "http" not in ts_explicit.terraform.backend

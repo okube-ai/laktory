@@ -1,8 +1,12 @@
+import json
+import os
 import re
+import time
 from typing import Any
 from typing import Literal
 
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -75,9 +79,76 @@ logger = get_logger(__name__)
 
 DIRPATH = "./"
 
+_WS_TOKEN_CACHE = ".laktory.ws-backend-token.json"
+
+
+def _get_cached_ws_token(wc, cache_path: str) -> str:
+    """Return a Databricks PAT suitable for HTTP Basic auth, caching it on disk.
+
+    Creates a new PAT only when no cached token exists or the cached token
+    expires within 24 hours. The cache file lives alongside stack.tf.json so
+    it is scoped to the build directory and stays out of source control.
+    """
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path) as f:
+                cached = json.load(f)
+            expires_at = cached.get("expires_at")
+            if expires_at is None or expires_at > time.time() + 86400:
+                return cached["token"]
+            # Token expires within 24 hours — delete and rotate
+            try:
+                wc.tokens.delete(token_id=cached["token_id"])
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    result = wc.tokens.create(comment="laktory-tfstate (auto-generated)")
+    expiry_ms = result.token_info.expiry_time
+    cached = {
+        "token": result.token_value,
+        "token_id": result.token_info.token_id,
+        "expires_at": expiry_ms / 1000 if expiry_ms else None,
+    }
+    os.makedirs(os.path.dirname(cache_path) or ".", exist_ok=True)
+    with open(cache_path, "w") as f:
+        json.dump(cached, f, indent=2)
+
+    return result.token_value
+
+
+def _resolve_db_token(provider) -> str:
+    """Return a concrete Databricks Bearer token for any supported auth method."""
+    if provider.token:
+        return provider.token
+
+    try:
+        headers = provider.workspace_client.config.authenticate()
+        auth = headers.get("Authorization", "")
+        return auth.removeprefix("Bearer ").removeprefix("Basic ")
+    except Exception as exc:
+        raise ValueError(
+            "backend.databricks_workspace: could not resolve a Databricks token from "
+            "the provider credentials. Ensure at least one auth method is configured "
+            "(token, client_id/secret, azure_client_id/secret, profile). "
+            f"Original error: {exc}"
+        ) from exc
+
 
 class Terraform(BaseModel):
-    backend: dict[str, Any] | None = None
+    backend: dict[str, Any] | None = Field(
+        None,
+        description=(
+            "Terraform backend configuration. Accepts any standard Terraform backend "
+            "block (e.g. `azurerm`, `s3`, `http`). Additionally, the special key "
+            "`databricks_workspace: true` auto-configures a Terraform HTTP backend "
+            "that stores state as a workspace file in the current Databricks user's "
+            "directory at "
+            "`/Users/{user}/.laktory/{stack}/{env}/state/terraform.tfstate`. "
+            "No external storage account is required."
+        ),
+    )
 
 
 class LaktorySettings(BaseModel):
@@ -180,6 +251,34 @@ class StackResources(BaseModel):
     databricks_workspacetrees: dict[str, WorkspaceTree | PythonPackage] = {}
     pipelines: dict[str, Pipeline] = {}
     providers: dict[str, AWSProvider | AzureProvider | DatabricksProvider] = {}
+
+    @field_validator("providers", mode="before")
+    @classmethod
+    def route_providers_by_key(cls, v):
+        """Use the provider key name (Terraform convention) as the discriminator.
+
+        AWSProvider and DatabricksProvider share fields like `profile` and `token`,
+        so Pydantic's union matching is ambiguous. The key name is the explicit
+        source of truth: "databricks[.*]" → DatabricksProvider, "aws[.*]" →
+        AWSProvider, "azure[rm][.*]" → AzureProvider.
+        """
+        if not isinstance(v, dict):
+            return v
+        result = {}
+        for key, value in v.items():
+            if not isinstance(value, dict):
+                result[key] = value
+                continue
+            base = key.split(".")[0].lower()
+            if base == "databricks":
+                result[key] = DatabricksProvider.model_validate(value)
+            elif base == "aws":
+                result[key] = AWSProvider.model_validate(value)
+            elif base in ("azure", "azurerm"):
+                result[key] = AzureProvider.model_validate(value)
+            else:
+                result[key] = value
+        return result
 
     @model_validator(mode="after")
     def update_resource_names(self) -> Any:
@@ -498,6 +597,99 @@ class Stack(BaseModel):
                 resources[_r.resource_name] = _r
 
         self._check_depends_on(resources, providers)
+
+        # Auto-configure Databricks workspace state backend when
+        # backend.databricks_workspace is set.
+        ws_backend = None
+        if env.terraform.backend and "databricks_workspace" in env.terraform.backend:
+            ws_backend = env.terraform.backend.pop("databricks_workspace")
+            if not env.terraform.backend:
+                env.terraform.backend = None
+            if ws_backend is False:
+                ws_backend = None
+
+        if ws_backend is not None:
+            if env.terraform.backend:
+                logger.warning(
+                    "'databricks_workspace' is set alongside other backend keys; "
+                    "the other keys take precedence and databricks_workspace is ignored."
+                )
+            else:
+                db_provider = next(
+                    (
+                        p
+                        for p in providers.values()
+                        if isinstance(p, DatabricksProvider)
+                    ),
+                    None,
+                )
+                if db_provider is None:
+                    raise ValueError(
+                        "backend.databricks_workspace requires a DatabricksProvider in the stack."
+                    )
+                wc = db_provider.workspace_client
+                host = (db_provider.host or wc.config.host or "").rstrip("/")
+                if not host:
+                    raise ValueError(
+                        "Could not resolve Databricks host for backend.databricks_workspace. "
+                        "Set 'host' explicitly in the DatabricksProvider or ensure the profile "
+                        "in ~/.databrickscfg includes a host."
+                    )
+
+                username = wc.current_user.me().user_name
+
+                # The Terraform HTTP backend uses Basic auth (Authorization:
+                # Basic base64("token:{password}")). Databricks accepts this
+                # for PAT tokens but NOT for Azure AD / OAuth tokens, which
+                # require Bearer auth. When no PAT is configured, create a
+                # Databricks PAT via the Tokens API and cache it on disk so the
+                # backend configuration stays stable across laktory init / deploy
+                # invocations. The cache is scoped to CACHE_ROOT (next to
+                # stack.tf.json) and must be kept out of source control.
+                if db_provider.token:
+                    token = db_provider.token
+                else:
+                    from laktory.constants import CACHE_ROOT
+
+                    cache_path = os.path.join(CACHE_ROOT, ".terraform", _WS_TOKEN_CACHE)
+                    try:
+                        token = _get_cached_ws_token(wc, cache_path)
+                    except Exception as exc:
+                        raise ValueError(
+                            "backend.databricks_workspace: could not create or "
+                            "retrieve a Databricks PAT token for the Terraform "
+                            "HTTP backend. This is required when using service "
+                            "principal authentication because Azure AD tokens are "
+                            "not accepted via Basic auth. Ensure the service "
+                            "principal has permission to create tokens (workspace "
+                            "Admin Console > Settings > Advanced > 'Allow service "
+                            "principals to use personal access tokens'), or set an "
+                            "explicit 'token' in your DatabricksProvider. "
+                            f"Original error: {exc}"
+                        ) from exc
+
+                if ws_backend is not True:
+                    raise ValueError(
+                        "backend.databricks_workspace must be set to `true`. "
+                        "To use a fully custom backend, configure the `http` backend directly."
+                    )
+
+                if env_name:
+                    state_path = f"/Users/{username}/.laktory/{self.name}/{env_name}/state/terraform.tfstate"
+                else:
+                    state_path = f"/Users/{username}/.laktory/{self.name}/state/terraform.tfstate"
+                ws_parent = state_path.rsplit("/", 1)[0]
+                wc.workspace.mkdirs(path=ws_parent)
+
+                url = f"{host}/api/2.0/workspace-files{state_path}"
+                env.terraform.backend = {
+                    "http": {
+                        "address": url,
+                        "username": "token",
+                        "password": token,
+                        "retry_wait_min": "5",
+                    }
+                }
 
         # Update terraform
         return TerraformStack(

@@ -1,7 +1,15 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from typing import Any
+
 from pydantic import Field
 
 from laktory.models.resources.providers.baseprovider import BaseProvider
 from laktory.models.resources.terraformresource import TerraformResource
+
+if TYPE_CHECKING:
+    from databricks.sdk import WorkspaceClient
 
 
 class DatabricksProvider(BaseProvider, TerraformResource):
@@ -86,9 +94,46 @@ class DatabricksProvider(BaseProvider, TerraformResource):
     warehouse_id: str = Field(None, description="")
 
     # ----------------------------------------------------------------------- #
-    # Resource Properties                                                     #
+    # Properties                                                              #
     # ----------------------------------------------------------------------- #
 
-    # @property
-    # def resource_key(self) -> str:
-    #     return self.display_name
+    def workspace_client_kwargs(self) -> dict[str, Any]:
+        """
+        Return kwargs dict suitable for instantiating a Databricks SDK
+        ``WorkspaceClient``. Only fields that are explicitly set are included.
+        """
+        keys = (
+            "host",
+            "account_id",
+            "auth_type",
+            "azure_client_id",
+            "azure_client_secret",
+            "azure_environment",
+            "azure_tenant_id",
+            "azure_workspace_resource_id",
+            "client_id",
+            "client_secret",
+            "cluster_id",
+            "config_file",
+            "debug_headers",
+            "debug_truncate_bytes",
+            "google_credentials",
+            "google_service_account",
+            "password",
+            "profile",
+            "token",
+            "username",
+        )
+        return {k: v for k in keys if (v := getattr(self, k, None)) is not None}
+
+    @property
+    def workspace_client(self) -> "WorkspaceClient":
+        """Databricks SDK WorkspaceClient built from this provider's credentials."""
+        from databricks.sdk import WorkspaceClient
+
+        from laktory._useragent import DATABRICKS_USER_AGENT
+        from laktory._useragent import VERSION
+
+        wc = WorkspaceClient(**self.workspace_client_kwargs())
+        wc.config.with_user_agent_extra(key=DATABRICKS_USER_AGENT, value=VERSION)
+        return wc
