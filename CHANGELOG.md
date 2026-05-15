@@ -1,6 +1,16 @@
 # Release History
 
-## [0.11.5] - Unreleased
+## [0.11.6] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.11.5] - 2026-05-15
 ### Added
 * Resources cross-reference validation. When a `depends_on` entry references a `${resources.X}` name that does not exist in the stack, a warning is issued.
 * `lookup_existing` field for all applicable resources
