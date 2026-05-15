@@ -1,4 +1,7 @@
+import json
+import os
 import re
+import time
 from typing import Any
 from typing import Literal
 
@@ -74,6 +77,44 @@ from laktory.models.resources.providers.databricksprovider import DatabricksProv
 logger = get_logger(__name__)
 
 DIRPATH = "./"
+
+_WS_TOKEN_CACHE = ".laktory.ws-backend-token.json"
+
+
+def _get_cached_ws_token(wc, cache_path: str) -> str:
+    """Return a Databricks PAT suitable for HTTP Basic auth, caching it on disk.
+
+    Creates a new PAT only when no cached token exists or the cached token
+    expires within 24 hours. The cache file lives alongside stack.tf.json so
+    it is scoped to the build directory and stays out of source control.
+    """
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path) as f:
+                cached = json.load(f)
+            expires_at = cached.get("expires_at")
+            if expires_at is None or expires_at > time.time() + 86400:
+                return cached["token"]
+            # Token expires within 24 hours — delete and rotate
+            try:
+                wc.tokens.delete(token_id=cached["token_id"])
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    result = wc.tokens.create(comment="laktory-tfstate (auto-generated)")
+    expiry_ms = result.token_info.expiry_time
+    cached = {
+        "token": result.token_value,
+        "token_id": result.token_info.token_id,
+        "expires_at": expiry_ms / 1000 if expiry_ms else None,
+    }
+    os.makedirs(os.path.dirname(cache_path) or ".", exist_ok=True)
+    with open(cache_path, "w") as f:
+        json.dump(cached, f, indent=2)
+
+    return result.token_value
 
 
 def _resolve_db_token(provider) -> str:
@@ -563,7 +604,36 @@ class Stack(BaseModel):
 
                 wc = db_provider.workspace_client
                 username = wc.current_user.me().user_name
-                token = _resolve_db_token(db_provider)
+
+                # The Terraform HTTP backend uses Basic auth (Authorization:
+                # Basic base64("token:{password}")). Databricks accepts this
+                # for PAT tokens but NOT for Azure AD / OAuth tokens, which
+                # require Bearer auth. When no PAT is configured, create a
+                # Databricks PAT via the Tokens API and cache it on disk so the
+                # backend configuration stays stable across laktory init / deploy
+                # invocations. The cache is scoped to CACHE_ROOT (next to
+                # stack.tf.json) and must be kept out of source control.
+                if db_provider.token:
+                    token = db_provider.token
+                else:
+                    from laktory.constants import CACHE_ROOT
+
+                    cache_path = os.path.join(CACHE_ROOT, ".terraform", _WS_TOKEN_CACHE)
+                    try:
+                        token = _get_cached_ws_token(wc, cache_path)
+                    except Exception as exc:
+                        raise ValueError(
+                            "backend.databricks_workspace: could not create or "
+                            "retrieve a Databricks PAT token for the Terraform "
+                            "HTTP backend. This is required when using service "
+                            "principal authentication because Azure AD tokens are "
+                            "not accepted via Basic auth. Ensure the service "
+                            "principal has permission to create tokens (workspace "
+                            "Admin Console > Settings > Advanced > 'Allow service "
+                            "principals to use personal access tokens'), or set an "
+                            "explicit 'token' in your DatabricksProvider. "
+                            f"Original error: {exc}"
+                        ) from exc
 
                 if isinstance(ws_backend, str):
                     state_key = ws_backend

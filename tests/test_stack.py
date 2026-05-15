@@ -622,7 +622,7 @@ def test_terraform_stack_workspace_state():
     ) as mock_prop:
         mock_prop.return_value = mock_wc
 
-        # true → workspace file in user directory
+        # true with PAT token → used directly (no token creation)
         ts = _minimal_stack({"databricks_workspace": True}).to_terraform(env_name="dev")
         backend = ts.terraform.backend["http"]
         assert backend["address"] == (
@@ -636,6 +636,33 @@ def test_terraform_stack_workspace_state():
         mock_wc.workspace.mkdirs.assert_called_once_with(
             path="/Users/user@test.com/.laktory/tfstate/my-stack"
         )
+        mock_wc.tokens.create.assert_not_called()
+
+        # SP auth (no token) → cached PAT returned by _get_cached_ws_token
+        mock_wc.reset_mock()
+        mock_wc.current_user.me.return_value.user_name = "user@test.com"
+        sp_stack = models.Stack(
+            name="my-stack",
+            environments={"dev": {"variables": {}}},
+            resources={
+                "providers": {
+                    "databricks": {
+                        "host": "https://adb-123.azuredatabricks.net",
+                        "azure_client_id": "client-id",
+                        "azure_client_secret": "secret",
+                        "azure_tenant_id": "tenant-id",
+                    }
+                }
+            },
+            terraform={"backend": {"databricks_workspace": True}},
+        )
+        import laktory.models.stacks.stack as _stack_module
+
+        with patch.object(
+            _stack_module, "_get_cached_ws_token", return_value="dapi-sp-cached"
+        ):
+            ts_sp = sp_stack.to_terraform(env_name="dev")
+        assert ts_sp.terraform.backend["http"]["password"] == "dapi-sp-cached"
 
         # without env_name → state key is just stack name
         mock_wc.reset_mock()
