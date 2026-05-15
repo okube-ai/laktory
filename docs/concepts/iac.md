@@ -67,20 +67,24 @@ For Databricks users, Laktory provides a built-in shortcut that stores the state
 ```yaml title="stack.yaml"
 terraform:
   backend:
-    databricks_workspace: true   # state key = "{stack-name}/{env}"
+    databricks_workspace: true
 ```
 
-Laktory intercepts the credentials from the `DatabricksProvider` already defined in your stack.
+Laktory stores state at:
 
-Both PAT tokens and service principals (via `client_id`/`client_secret` or Azure equivalents) are supported.
+```
+/Users/{current-user}/.laktory/tfstate/{stack-name}/{env}.tfstate
+```
 
-To use an explicit state key instead of the auto-generated `{stack-name}/{env}`:
+To use a custom state key instead of the auto-generated `{stack-name}/{env}`:
 
 ```yaml title="stack.yaml"
 terraform:
   backend:
     databricks_workspace: my-stack/prod
 ```
+
+Credentials are taken automatically from the `DatabricksProvider` already defined in your stack. Both PAT tokens and service principals (`client_id`/`client_secret` or Azure equivalents) are supported.
 
 #### Other backends
 

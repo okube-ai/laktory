@@ -100,9 +100,11 @@ class Terraform(BaseModel):
         description=(
             "Terraform backend configuration. Accepts any standard Terraform backend "
             "block (e.g. `azurerm`, `s3`, `http`). Additionally, the special key "
-            "`databricks_workspace` configures a Databricks-hosted state backend "
-            "(same mechanism as DABs): set to `true` to auto-name the state key as "
-            "`{stack-name}/{env}`, or to an explicit string to use as the state key."
+            "`databricks_workspace` auto-configures a Terraform HTTP backend that "
+            "stores state as a workspace file in the current Databricks user's "
+            "directory via the workspace-files API. No external storage account is "
+            "required. Set to `true` to auto-name the state key as "
+            "`{stack}/{env}`, or to an explicit string to use as the state key."
         ),
     )
 
@@ -558,6 +560,9 @@ class Stack(BaseModel):
                     raise ValueError(
                         "DatabricksProvider.host is required when backend.databricks_workspace is set."
                     )
+
+                wc = db_provider.workspace_client
+                username = wc.current_user.me().user_name
                 token = _resolve_db_token(db_provider)
 
                 if isinstance(ws_backend, str):
@@ -565,16 +570,16 @@ class Stack(BaseModel):
                 else:
                     state_key = env.name if not env_name else f"{env.name}/{env_name}"
 
-                url = f"{host}/api/2.0/terraform/state/{state_key}"
+                ws_file_path = f"/Users/{username}/.laktory/tfstate/{state_key}.tfstate"
+                ws_parent = ws_file_path.rsplit("/", 1)[0]
+                wc.workspace.mkdirs(path=ws_parent)
+
+                url = f"{host}/api/2.0/workspace-files/Users/{username}/.laktory/tfstate/{state_key}.tfstate"
                 env.terraform.backend = {
                     "http": {
                         "address": url,
-                        "lock_address": url,
-                        "unlock_address": url,
                         "username": "token",
                         "password": token,
-                        "lock_method": "POST",
-                        "unlock_method": "DELETE",
                         "retry_wait_min": "5",
                     }
                 }

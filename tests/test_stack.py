@@ -608,34 +608,54 @@ def _minimal_stack(backend, with_envs=True):
 
 
 def test_terraform_stack_workspace_state():
-    # databricks_workspace: true → key uses stack name + env name
-    ts = _minimal_stack({"databricks_workspace": True}).to_terraform(env_name="dev")
-    backend = ts.terraform.backend["http"]
-    assert backend["address"] == (
-        "https://adb-123.azuredatabricks.net/api/2.0/terraform/state/my-stack/dev"
-    )
-    assert backend["lock_address"] == backend["address"]
-    assert backend["unlock_address"] == backend["address"]
-    assert backend["username"] == "token"
-    assert backend["password"] == "dapi123"
-    assert backend["lock_method"] == "POST"
-    assert backend["unlock_method"] == "DELETE"
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
 
-    # databricks_workspace: true without env_name → key is just stack name
-    ts_no_env = _minimal_stack(
-        {"databricks_workspace": True}, with_envs=False
-    ).to_terraform()
-    assert ts_no_env.terraform.backend["http"]["address"].endswith(
-        "/api/2.0/terraform/state/my-stack"
-    )
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
 
-    # databricks_workspace as explicit string → used verbatim regardless of env
-    ts_str = _minimal_stack({"databricks_workspace": "custom/key"}).to_terraform(
-        env_name="prod"
-    )
-    assert ts_str.terraform.backend["http"]["address"].endswith(
-        "/api/2.0/terraform/state/custom/key"
-    )
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        # true → workspace file in user directory
+        ts = _minimal_stack({"databricks_workspace": True}).to_terraform(env_name="dev")
+        backend = ts.terraform.backend["http"]
+        assert backend["address"] == (
+            "https://adb-123.azuredatabricks.net"
+            "/api/2.0/workspace-files/Users/user@test.com"
+            "/.laktory/tfstate/my-stack/dev.tfstate"
+        )
+        assert backend["username"] == "token"
+        assert backend["password"] == "dapi123"
+        assert "lock_address" not in backend
+        mock_wc.workspace.mkdirs.assert_called_once_with(
+            path="/Users/user@test.com/.laktory/tfstate/my-stack"
+        )
+
+        # without env_name → state key is just stack name
+        mock_wc.reset_mock()
+        mock_wc.current_user.me.return_value.user_name = "user@test.com"
+        ts_no_env = _minimal_stack(
+            {"databricks_workspace": True}, with_envs=False
+        ).to_terraform()
+        assert ts_no_env.terraform.backend["http"]["address"].endswith(
+            "/.laktory/tfstate/my-stack.tfstate"
+        )
+
+        # explicit string key → used verbatim as the state key
+        mock_wc.reset_mock()
+        mock_wc.current_user.me.return_value.user_name = "user@test.com"
+        ts_str = _minimal_stack({"databricks_workspace": "custom/key"}).to_terraform(
+            env_name="dev"
+        )
+        assert ts_str.terraform.backend["http"]["address"].endswith(
+            "/.laktory/tfstate/custom/key.tfstate"
+        )
 
     # other backend keys alongside databricks_workspace → those keys take precedence
     ts_explicit = _minimal_stack(
