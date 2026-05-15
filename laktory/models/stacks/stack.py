@@ -81,23 +81,8 @@ def _resolve_db_token(provider) -> str:
     if provider.token:
         return provider.token
 
-    from databricks.sdk import WorkspaceClient
-
-    kwargs = {"host": provider.host}
-    for field in (
-        "client_id",
-        "client_secret",
-        "azure_client_id",
-        "azure_client_secret",
-        "azure_tenant_id",
-        "profile",
-    ):
-        v = getattr(provider, field, None)
-        if v:
-            kwargs[field] = v
     try:
-        w = WorkspaceClient(**kwargs)
-        headers = w.config.authenticate()
+        headers = provider.workspace_client.config.authenticate()
         auth = headers.get("Authorization", "")
         return auth.removeprefix("Bearer ").removeprefix("Basic ")
     except Exception as exc:

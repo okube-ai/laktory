@@ -1,8 +1,5 @@
 from typing import TYPE_CHECKING
 
-from laktory._useragent import DATABRICKS_USER_AGENT
-from laktory._useragent import VERSION
-from laktory.constants import SUPPORTED_BACKENDS
 from laktory.dispatcher.databricksjobrunner import DatabricksJobRunner
 from laktory.dispatcher.databrickspipelinerunner import DatabricksPipelineRunner
 from laktory.models.stacks.stack import Stack
@@ -113,60 +110,26 @@ class Dispatcher:
     # ----------------------------------------------------------------------- #
 
     @property
-    def _workspace_arguments(self):
-        data = {}
-        if self.stack.iac_backend == "terraform":
-            providers = self.stack.to_terraform(env_name=self.env).model_dump()[
-                "provider"
-            ]
-            for k in providers:
-                if "databricks" in k.lower():
-                    data = providers[k]
-                    break
-        else:
-            raise ValueError(f"backend should be {SUPPORTED_BACKENDS}")
-
-        kwargs = {}
-        for k in [
-            "host",
-            "account_id",
-            "username",
-            "password",
-            "client_id",
-            "client_secret",
-            "token",
-            "profile",
-            "config_file",
-            "azure_workspace_resource_id",
-            "azure_client_secret",
-            "azure_client_id",
-            "azure_tenant_id",
-            "azure_environment",
-            "auth_type",
-            "cluster_id",
-            "google_credentials",
-            "google_service_account",
-            "debug_truncate_bytes",
-            "debug_headers",
-            "product",
-            "product_version",
-        ]:
-            if k in data:
-                kwargs[k] = data[k]
-
-        return kwargs
-
-    @property
     def wc(self) -> "WorkspaceClient":
         """Databricks Workspace Client"""
-        from databricks.sdk import WorkspaceClient
+        from laktory.models.resources.providers.databricksprovider import (
+            DatabricksProvider,
+        )
 
         if self._wc is None:
-            self._wc = WorkspaceClient(**self._workspace_arguments)
-            self._wc.config.with_user_agent_extra(
-                key=DATABRICKS_USER_AGENT,
-                value=VERSION,
+            env = self.stack.get_env(env_name=self.env).inject_vars()
+            db_provider = next(
+                (
+                    _r
+                    for r in env.resources._get_all(providers_only=True).values()
+                    for _r in r.core_resources
+                    if isinstance(_r, DatabricksProvider)
+                ),
+                None,
             )
+            if db_provider is None:
+                raise ValueError("No DatabricksProvider found in stack.")
+            self._wc = db_provider.workspace_client
         return self._wc
 
     # ----------------------------------------------------------------------- #

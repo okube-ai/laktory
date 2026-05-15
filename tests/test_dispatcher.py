@@ -39,42 +39,10 @@ def test_workspace_client(monkeypatch, stack):
 
     for _stack in [stack, tstack]:
         dispatcher = Dispatcher(stack=_stack)
-        assert f"okube-laktory/{VERSION}" in dispatcher.wc.config.user_agent
-
-        kwargs = dispatcher._workspace_arguments
-        assert kwargs == {
-            "host": host,
-            "token": "my-token",
-        }
-        assert dispatcher.wc is not None
-
-
-def test_workspace_arguments_env_vars():
-    stack = models.Stack(
-        name="test",
-        iac_backend="terraform",
-        resources={
-            "providers": {
-                "databricks": {
-                    "host": "${vars.databricks_host}",
-                    "token": "${vars.databricks_token}",
-                }
-            }
-        },
-        environments={
-            "dev": {
-                "variables": {
-                    "databricks_host": "https://adb-xxx.azuredatabricks.net",
-                    "databricks_token": "my-token",
-                }
-            }
-        },
-    )
-
-    dispatcher = Dispatcher(stack=stack, env="dev")
-    kwargs = dispatcher._workspace_arguments
-    assert kwargs["host"] == "https://adb-xxx.azuredatabricks.net"
-    assert kwargs["token"] == "my-token"
+        wc = dispatcher.wc
+        assert f"okube-laktory/{VERSION}" in wc.config.user_agent
+        assert wc.config.host == host
+        assert wc.config.token == "my-token"
 
 
 def test_resources(stack):
