@@ -34,9 +34,9 @@ Internal improvements
 
 | #  | Description                                                                                                      |
 |----|------------------------------------------------------------------------------------------------------------------|
-| I1 | Ask Claude to review its internal documentation, restructure and optimize. What are we missing?                  |
-| I2 | Always authorize Claud to Newline followed by # inside a quoted argument can hide arguments from path validation |
-| I3 | Add instructions for Claude to have access to secrets for running unit tests?                                    |
+| ~~I1~~ | ~~Ask Claude to review its internal documentation, restructure and optimize. What are we missing?~~ Created `testing.md`; archived roadmap and audit docs ✓ |
+| ~~I2~~ | ~~Always authorize Claude to [reduce permission prompts]~~ Replaced 96 one-off entries with 14 broad patterns in `settings.local.json` ✓                   |
+| ~~I3~~ | ~~Add instructions for Claude to have access to secrets for running unit tests?~~ Documented in `testing.md` + added `source secrets/.env.dev` permission ✓ |
 
  
 ## 4. Architecture

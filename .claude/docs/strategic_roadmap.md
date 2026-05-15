@@ -1,5 +1,7 @@
 # Laktory Strategic Roadmap
 
+> **Archived** — all six items are complete as of May 2026. This document is historical reference only; no further action is needed.
+
 _Updated May 2026. All six decisions are complete — no remaining work items._
 
 ---
