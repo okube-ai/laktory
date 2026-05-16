@@ -29,6 +29,7 @@ class MetastoreGrant(BaseModel):
             "CREATE_STORAGE_CREDENTIAL",
             "MANAGE_ALLOWLIST",
             "SET_SHARE_PERMISSION",
+            "USE_CONNECTION",
             "USE_MARKETPLACE_ASSETS",
             "USE_PROVIDER",
             "USE_RECIPIENT",
