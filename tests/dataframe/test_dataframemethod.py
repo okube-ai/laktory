@@ -174,6 +174,36 @@ def test_udf(backend):
     assert df.columns == ["m2"]
 
 
+@pytest.mark.parametrize("backend", ["PYSPARK"])
+def test_json_roundtrip(backend):
+    """
+    Regression: func_args must survive JSON serialize → deserialize without being
+    double-wrapped into DataFrameMethodArg(value=<dict>). When a pipeline is saved
+    to a JSON file and re-read at runtime, Pydantic v2 may resolve
+    list[DataFrameMethodArg | Any] by choosing Any for dict elements, leaving
+    serialized args as raw dicts. set_args must detect and re-parse them correctly.
+    """
+    df0 = get_df0(backend)
+
+    node = DataFrameMethod(
+        func_name="withColumn",
+        func_args=["y1", "F.greatest(F.least('x1', F.lit(2)), F.lit(0))"],
+        dataframe_api="NATIVE",
+    )
+    json_str = node.model_dump_json()
+    node2 = DataFrameMethod.model_validate_json(json_str)
+
+    assert isinstance(
+        node2.func_args[0].value, str
+    ), f"func_args[0].value should be str after round-trip, got {type(node2.func_args[0].value)}"
+    assert isinstance(
+        node2.func_args[1].value, str
+    ), f"func_args[1].value should be str after round-trip, got {type(node2.func_args[1].value)}"
+
+    df = node2.execute(df0)
+    assert_dfs_equal(df.select("y1"), pl.DataFrame({"y1": [1, 2, 2]}))
+
+
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_laktory_context(backend):
     df0 = get_df0(backend)

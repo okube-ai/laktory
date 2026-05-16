@@ -29,6 +29,18 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
 
     value: DataSourcesUnion | Any = Field(..., description="Function argument")
 
+    @model_validator(mode="before")
+    @classmethod
+    def wrap_scalar(cls, data: Any) -> Any:
+        # Dicts that already have a 'value' key are serialized DataFrameMethodArg
+        # instances — pass them through so Pydantic parses them normally.
+        # Everything else (scalars, DataSource dicts) is wrapped into {"value": ...}
+        # so Pydantic always resolves to DataFrameMethodArg rather than falling
+        # back to Any.
+        if isinstance(data, dict) and "value" in data:
+            return data
+        return {"value": data}
+
     def eval(self, backend: DataFrameBackends):
         from laktory.models.datasources.basedatasource import BaseDataSource
 
@@ -149,11 +161,11 @@ class DataFrameMethod(BaseModel, PipelineChild):
     ```
     """
 
-    func_args: list[DataFrameMethodArg | Any] = Field(
+    func_args: list[DataFrameMethodArg] = Field(
         [],
         description="Arguments passed to method. A `DataSource` model can be passed instead of a DataFrame.",
     )
-    func_kwargs: dict[str, DataFrameMethodArg | Any] = Field(
+    func_kwargs: dict[str, DataFrameMethodArg] = Field(
         {},
         description="Keyword arguments passed to method. A `DataSource` model can be passed instead of a DataFrame.",
     )
@@ -167,22 +179,12 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def set_args(self) -> Any:
-        for k, v in self.func_kwargs.items():
-            if not isinstance(v, DataFrameMethodArg):
-                self.func_kwargs[k] = DataFrameMethodArg(value=v)
-                # Because we don't set func_kwargs directly,
-                # assign_parent_to_children() is not triggered and we need to set
-                # parent explicitly
-                self.func_kwargs[k].parent = self
-
-        for i, v in enumerate(self.func_args):
-            if not isinstance(v, DataFrameMethodArg):
-                self.func_args[i] = DataFrameMethodArg(value=v)
-                # Because we don't set func_kwargs directly,
-                # assign_parent_to_children() is not triggered and we need to set
-                # parent explicitly
-                self.func_args[i].parent = self
-
+        # Pydantic does not trigger assign_parent_to_children() for mutations
+        # to func_args/func_kwargs, so we set parent explicitly here.
+        for v in self.func_args:
+            v.parent = self
+        for v in self.func_kwargs.values():
+            v.parent = self
         return self
 
     @property
