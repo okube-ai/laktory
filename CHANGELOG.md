@@ -1,6 +1,16 @@
 # Release History
 
-## [0.11.8] - Unreleased
+## [0.11.9] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.11.8] - 2026-05-16
 ### Fixed
 * DataFrame Method Argument parsing
 
