@@ -15,6 +15,12 @@ class RegisteredModelGrant(BaseModel):
     """
 
     principal: str = Field(..., description="User, group or service principal name")
-    privileges: list[Literal["ALL_PRIVILEGES", "EXECUTE"]] = Field(
-        ..., description="List of allowed privileges"
-    )
+    privileges: list[
+        Literal[
+            "ALL_PRIVILEGES",
+            "APPLY_TAG",
+            "CREATE_MODEL_VERSION",
+            "EXECUTE",
+            "MANAGE",
+        ]
+    ] = Field(..., description="List of allowed privileges")

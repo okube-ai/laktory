@@ -1,14 +1,8 @@
 # Release History
 
 ## [0.11.6] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* Added missing permissions to Databricks grants
 
 ## [0.11.5] - 2026-05-15
 ### Added

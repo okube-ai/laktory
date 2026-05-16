@@ -18,14 +18,18 @@ class SchemaGrant(BaseModel):
     privileges: list[
         Literal[
             "ALL_PRIVILEGES",
+            "APPLY_TAG",
             "CREATE_FUNCTION",
             "CREATE_MATERIALIZED_VIEW",
             "CREATE_MODEL",
             "CREATE_TABLE",
             "CREATE_VOLUME",
             "EXECUTE",
+            "EXTERNAL_USE_SCHEMA",
+            "MANAGE",
             "MODIFY",
             "READ_VOLUME",
+            "REFRESH",
             "SELECT",
             "USE_SCHEMA",
             "WRITE_VOLUME",

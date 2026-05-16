@@ -23,6 +23,8 @@ class ViewGrant(BaseModel):
     privileges: list[
         Literal[
             "ALL_PRIVILEGES",
+            "APPLY_TAG",
+            "MANAGE",
             "SELECT",
         ]
     ] = Field(..., description="List of allowed privileges")

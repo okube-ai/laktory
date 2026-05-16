@@ -18,10 +18,14 @@ class ExternalLocationGrant(BaseModel):
     privileges: list[
         Literal[
             "ALL_PRIVILEGES",
+            "BROWSE",
             "CREATE_EXTERNAL_TABLE",
             "CREATE_EXTERNAL_VOLUME",
+            "CREATE_FOREIGN_SECURABLE",
+            "CREATE_MANAGED_STORAGE",
+            "EXTERNAL_USE_LOCATION",
+            "MANAGE",
             "READ_FILES",
             "WRITE_FILES",
-            "CREATE_MANAGED_STORAGE",
         ]
     ] = Field(..., description="List of allowed privileges")

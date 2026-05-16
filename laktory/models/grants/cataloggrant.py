@@ -18,6 +18,8 @@ class CatalogGrant(BaseModel):
     privileges: list[
         Literal[
             "ALL_PRIVILEGES",
+            "APPLY_TAG",
+            "BROWSE",
             "CREATE_FUNCTION",
             "CREATE_MATERIALIZED_VIEW",
             "CREATE_MODEL",
@@ -25,8 +27,11 @@ class CatalogGrant(BaseModel):
             "CREATE_TABLE",
             "CREATE_VOLUME",
             "EXECUTE",
+            "EXTERNAL_USE_SCHEMA",
+            "MANAGE",
             "MODIFY",
             "READ_VOLUME",
+            "REFRESH",
             "SELECT",
             "USE_CATALOG",
             "USE_SCHEMA",
