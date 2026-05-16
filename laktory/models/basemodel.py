@@ -361,6 +361,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         assignment so that validation stays active.
         """
         object.__setattr__(self, name, value)
+        self.__pydantic_fields_set__.add(name)
 
     # ----------------------------------------------------------------------- #
     # Variables Injection                                                     #
