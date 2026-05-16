@@ -18,6 +18,8 @@ class VolumeGrant(BaseModel):
     privileges: list[
         Literal[
             "ALL_PRIVILEGES",
+            "APPLY_TAG",
+            "MANAGE",
             "READ_VOLUME",
             "WRITE_VOLUME",
         ]

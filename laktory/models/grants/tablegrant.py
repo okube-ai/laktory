@@ -15,6 +15,12 @@ class TableGrant(BaseModel):
     """
 
     principal: str = Field(..., description="User, group or service principal name")
-    privileges: list[Literal["ALL_PRIVILEGES", "SELECT", "MODIFY"]] = Field(
-        ..., description="List of allowed privileges"
-    )
+    privileges: list[
+        Literal[
+            "ALL_PRIVILEGES",
+            "APPLY_TAG",
+            "MANAGE",
+            "MODIFY",
+            "SELECT",
+        ]
+    ] = Field(..., description="List of allowed privileges")

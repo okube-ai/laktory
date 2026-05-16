@@ -19,6 +19,7 @@ class ConnectionGrant(BaseModel):
         Literal[
             "ALL_PRIVILEGES",
             "CREATE_FOREIGN_CATALOG",
+            "MANAGE",
             "USE_CONNECTION",
         ]
     ] = Field(..., description="List of allowed privileges")

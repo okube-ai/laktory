@@ -17,9 +17,10 @@ class StorageCredentialGrant(BaseModel):
     principal: str = Field(..., description="User, group or service principal name")
     privileges: list[
         Literal[
-            "ALL PRIVILEGES",
+            "ALL_PRIVILEGES",
             "CREATE_EXTERNAL_LOCATION",
             "CREATE_EXTERNAL_TABLE",
+            "MANAGE",
             "READ_FILES",
             "WRITE_FILES",
         ]

@@ -18,13 +18,15 @@ class MetastoreGrant(BaseModel):
     privileges: list[
         Literal[
             "CREATE_CATALOG",
+            "CREATE_CLEAN_ROOM",
             "CREATE_CONNECTION",
             "CREATE_EXTERNAL_LOCATION",
+            "CREATE_EXTERNAL_METADATA",
             "CREATE_PROVIDER",
             "CREATE_RECIPIENT",
+            "CREATE_SERVICE_CREDENTIAL",
             "CREATE_SHARE",
             "CREATE_STORAGE_CREDENTIAL",
-            "LOCATION",
             "MANAGE_ALLOWLIST",
             "SET_SHARE_PERMISSION",
             "USE_MARKETPLACE_ASSETS",
