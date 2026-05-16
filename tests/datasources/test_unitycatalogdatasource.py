@@ -46,3 +46,13 @@ def test_full_name():
     )
     assert source.schema_name == "default"
     assert source.table_name == "df"
+
+
+def test_full_name_serialization():
+    """Regression: catalog_name and schema_name must survive model_dump(exclude_unset=True)
+    when table_name is a fully-qualified three-part name."""
+    source = UnityCatalogDataSource(table_name="samples.nyctaxi.trips")
+    d = source.model_dump(exclude_unset=True, mode="json")
+    assert d["catalog_name"] == "samples"
+    assert d["schema_name"] == "nyctaxi"
+    assert d["table_name"] == "trips"
