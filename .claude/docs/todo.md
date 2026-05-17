@@ -33,11 +33,12 @@ Issues that need to be resolved
 Internal improvements
 
 
-| #  | Description                                                                                                      |
-|----|------------------------------------------------------------------------------------------------------------------|
+| #      | Description                                                                                                                                                 |
+|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | ~~I1~~ | ~~Ask Claude to review its internal documentation, restructure and optimize. What are we missing?~~ Created `testing.md`; archived roadmap and audit docs ✓ |
-| ~~I2~~ | ~~Always authorize Claude to [reduce permission prompts]~~ Replaced 96 one-off entries with 14 broad patterns in `settings.local.json` ✓                   |
+| ~~I2~~ | ~~Always authorize Claude to [reduce permission prompts]~~ Replaced 96 one-off entries with 14 broad patterns in `settings.local.json` ✓                    |
 | ~~I3~~ | ~~Add instructions for Claude to have access to secrets for running unit tests?~~ Documented in `testing.md` + added `source secrets/.env.dev` permission ✓ |
+| I4     | Run `run_quickstarts.yml`, `run_quickstart_da.yml` and ideally lakehouse-as-code as part of the release.yml to prevent regression.                          |
 
  
 ## 4. Architecture
