@@ -15,7 +15,8 @@ variables:
 
 # Configure Orchestrator
 orchestrator:
-  resource_name: pl-tpch
+  resource_options:
+    name: pl-tpch
   type: DATABRICKS_PIPELINE
   serverless: true
   catalog: ${var.catalog}
