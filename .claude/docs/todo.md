@@ -27,6 +27,7 @@ Issues that need to be resolved
 
 | # | Description                                          |
 |---|------------------------------------------------------|
+| ~~B1~~ | ~~`DataFrameMethodArg.value` deserialized as plain dict when `DataSourcesUnion \| Any` strict-mode enum coercion fails for `dataframe_backend` string — fixed via `parse_datasource_value` field_validator (PR #573)~~ ✓ |
 
 ## 3. Internal
 
@@ -50,3 +51,4 @@ Internal improvements
 |----|-------------------------------------------------------------------------------------------------------------------|
 | A1 | How can I ensure that Claude / GPT knows Laktory and use cases so that users can benefit from it ? MCP?           |
 | A2 | How can I offer an AI first solution? Agents that understand lineage and proposes solutions from natural language |
+| A3 | **Refactor `DataFrameMethodArg` / datasource argument parsing** — three structural tensions keep producing bugs at this seam: (1) `value: DataSourcesUnion \| Any` conflates two responsibilities (datasource reference vs. arbitrary expression value); Pydantic's union resolver wasn't designed for this and needs hand-written validator layers to compensate. (2) `DataFrameMethodArg.eval()` scans strings for magic tokens (`"F."`, `"col("`, …) and calls `eval()` — backend-coupled, validated only at runtime, fragile at the boundary; `DataFrameExpr` already exists for this. (3) `dataframe_backend`/`dataframe_api` are context fields (inherited via `PipelineChild`) but are serialized into every nested child, causing round-trip deserialization failures when a `PipelineNodeDataSource` lives inside a `func_kwarg`. Suggested direction: exclude context fields from child serialization; unify string expression handling under `DataFrameExpr`; add a Literal `type` to `CustomDataSource` to enable a Pydantic discriminated union on `DataSourcesUnion`. |

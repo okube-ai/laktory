@@ -16,7 +16,8 @@ variables:
 
 # Configure Orchestrator
 orchestrator:
-  resource_name: pl-taxi-trips
+  resource_options:
+    name: pl-taxi-trips
   type: DATABRICKS_JOB
   serverless_environment_version: "4"
   schedule:

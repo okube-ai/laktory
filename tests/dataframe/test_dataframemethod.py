@@ -9,6 +9,7 @@ from laktory.enums import DataFrameBackends
 from laktory.models import DataFrameDataSource
 from laktory.models import DataFrameMethod
 from laktory.models import LaktoryContext
+from laktory.models.datasources import PipelineNodeDataSource
 
 from ..conftest import assert_dfs_equal
 
@@ -202,6 +203,49 @@ def test_json_roundtrip(backend):
 
     df = node2.execute(df0)
     assert_dfs_equal(df.select("y1"), pl.DataFrame({"y1": [1, 2, 2]}))
+
+
+def test_json_roundtrip_datasource_kwarg():
+    """
+    Regression: a PipelineNodeDataSource in func_kwargs must survive the
+    pipeline config JSON serialize → deserialize round-trip as a
+    PipelineNodeDataSource instance, not a plain dict.
+
+    The pipeline config is serialized with exclude_unset=True (see
+    pipelineconfigworkspacefile.py), so the value dict contains only set fields
+    with dataframe_backend as a string ('PYSPARK'). Pydantic's smart-union uses
+    strict mode when trying each union candidate in DataSourcesUnion | Any, and
+    string-to-enum coercion fails in strict mode, causing it to fall through to
+    Any and return a plain dict. That dict is later passed directly to df.join()
+    raising: AttributeError: 'dict' object has no attribute '_jdf'.
+    """
+
+    node = DataFrameMethod(
+        func_name="join",
+        func_kwargs={
+            "other": PipelineNodeDataSource(
+                node_name="slv_stock_metadata",
+                selects=["symbol", "currency", "first_traded"],
+            ),
+            "on": ["symbol"],
+        },
+        dataframe_api="NATIVE",
+    )
+
+    # Replicate the pipeline config export path (exclude_unset=True, mode='json')
+    d = node.model_dump(exclude_unset=True, mode="json")
+    node2 = DataFrameMethod.model_validate(d)
+
+    assert isinstance(node2.func_kwargs["other"].value, PipelineNodeDataSource), (
+        f"func_kwargs['other'].value should be PipelineNodeDataSource after round-trip, "
+        f"got {type(node2.func_kwargs['other'].value)}"
+    )
+    assert node2.func_kwargs["other"].value.node_name == "slv_stock_metadata"
+    assert node2.func_kwargs["other"].value.selects == [
+        "symbol",
+        "currency",
+        "first_traded",
+    ]
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
