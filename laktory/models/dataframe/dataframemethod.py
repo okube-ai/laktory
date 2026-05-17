@@ -5,6 +5,7 @@ from typing import Any
 # from typing import Literal
 import narwhals as nw
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -40,6 +41,25 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
         if isinstance(data, dict) and "value" in data:
             return data
         return {"value": data}
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def parse_datasource_value(cls, v: Any) -> Any:
+        # Pydantic's smart-union uses strict mode when trying each union member,
+        # which means string-to-enum coercion (e.g. 'PYSPARK' → DataFrameBackends)
+        # fails and the match falls through to `Any`, leaving the value as a plain
+        # dict. Explicitly try each datasource class in lenient mode so that a
+        # serialized PipelineNodeDataSource (or any other BaseDataSource subclass)
+        # is correctly reconstructed even when dataframe_backend/api are present.
+        if isinstance(v, dict):
+            from laktory.models.datasources import classes as datasource_classes
+
+            for ds_cls in datasource_classes:
+                try:
+                    return ds_cls.model_validate(v)
+                except Exception:
+                    pass
+        return v
 
     def eval(self, backend: DataFrameBackends):
         from laktory.models.datasources.basedatasource import BaseDataSource
