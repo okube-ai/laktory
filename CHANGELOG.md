@@ -1,14 +1,9 @@
 # Release History
 
 ## [0.11.9] - Unreleased
-### Added
-* n/a
 ### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* DAB quickstart
+* Parsing of DataSource inside DataFrame method argument
 
 ## [0.11.8] - 2026-05-16
 ### Fixed
