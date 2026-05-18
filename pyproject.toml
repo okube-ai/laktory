@@ -51,7 +51,7 @@ polars = [
 pyspark = [
     "delta-spark",
     "pyarrow",
-    "pyspark[connect]<4.0",
+    "pyspark[connect]",
     "setuptools; python_version >= '3.12'"
 ]
 dev = [
@@ -96,6 +96,16 @@ include = ["laktory*"]
 
 [tool.hatch.version]
 path = "laktory/_version.py"
+
+[tool.uv]
+# Pin the dev environment to PySpark 4.0.0 — the only 4.x release that the
+# open-source delta-spark_2.13:4.0.0 Maven JAR is compatible with.
+# This does NOT affect the published package metadata; users can install any
+# PySpark version. When a newer compatible Delta JAR ships, update this pin.
+constraint-dependencies = [
+    "pyspark==4.0.0",
+    "delta-spark>=4.0.0,<4.1.0",
+]
 
 # CLI
 [project.scripts]
