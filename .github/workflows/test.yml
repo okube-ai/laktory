@@ -49,6 +49,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Set up Terraform
+        if: ${{ env.run_tests == 'true' && success()}}
+        uses: hashicorp/setup-terraform@v3
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
