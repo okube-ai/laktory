@@ -29,15 +29,27 @@ def register_spark_session(spark=None):
 
     _laktory = sys.modules[__name__]
     if spark is None:
+        from importlib.metadata import version as pkg_version
+
         from pyspark.sql import SparkSession
+
+        pyspark_ver = pkg_version("pyspark")
+        spark_major = int(pyspark_ver.split(".")[0])
+        scala = "2.13" if spark_major >= 4 else "2.12"
+
+        # delta-spark Python package versions and Maven JAR versions are not 1:1.
+        # Only delta-spark_2.13:4.0.0 exists on Maven Central for Spark 4.x.
+        # For Spark 3.x the Python version matches the Maven JAR version.
+        _delta_jvm = {"4": "4.0.0"}
+        delta_jvm_ver = _delta_jvm.get(str(spark_major), pkg_version("delta_spark"))
 
         spark = (
             SparkSession.builder.appName("laktory")
-            # TODO: Check if we can install on a need-basis
             .config(
                 "spark.jars.packages",
-                "org.apache.spark:spark-avro_2.12:3.5.5,io.delta:delta-spark_2.12:3.3.0",
-            )  # com.databricks:spark-xml_2.12:0.17.0
+                f"org.apache.spark:spark-avro_{scala}:{pyspark_ver},"
+                f"io.delta:delta-spark_{scala}:{delta_jvm_ver}",
+            )
             .config(
                 "spark.sql.catalog.spark_catalog",
                 "org.apache.spark.sql.delta.catalog.DeltaCatalog",
