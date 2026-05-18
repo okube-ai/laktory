@@ -11,7 +11,7 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-22.04  # ubuntu-latest does not seem to have Terraform available anymore
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -42,11 +42,18 @@ jobs:
         with:
           python-version: ${{ matrix.pyVersion }}
 
+      - name: Set up Java 17
+        if: ${{ env.run_tests == 'true' && success()}}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           version: "0.5.14"
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.pyVersion }}
 
       - name: Install and Import with core dependencies only
         if: ${{ env.run_tests == 'true' && success()}}
