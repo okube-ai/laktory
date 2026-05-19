@@ -1,2 +1,2 @@
-pyspark>=3.5,<4
+pyspark[connect]>=3.5,<4
 delta-spark>=3.3,<4
