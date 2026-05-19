@@ -116,6 +116,11 @@ def _resolve_value(o, vars, objs):
     if not isinstance(o, str):
         return o
 
+    # Fast exit: both ${vars.X} and ${{ expr }} require "${"; skip regex work
+    # for the vast majority of string fields that have no variable syntax.
+    if "${" not in o:
+        return o
+
     # Resolve custom patterns
     for pattern, repl in vars.items():
         if not is_pattern(pattern):

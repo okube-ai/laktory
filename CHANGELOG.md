@@ -4,6 +4,8 @@
 ### Updated
 * Added support for EXCEL read with `FileDataSource`
 * Changed LITERAL data type for FileDataSource/Sink to string to support future and custom formats.
+### Fixed
+* Regression in performance for stack with high number of resources
 
 ## [0.11.9] - 2026-05-17
 ### Fixed
