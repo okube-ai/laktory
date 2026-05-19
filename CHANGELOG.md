@@ -1,14 +1,9 @@
 # Release History
 
 ## [0.11.10] - Unreleased
-### Added
-* n/a
-### Fixed
-* n/a
 ### Updated
-* n/a
-### Breaking changes
-* n/a
+* Added support for EXCEL read with `FileDataSource`
+* Changed LITERAL data type for FileDataSource/Sink to string to support future and custom formats.
 
 ## [0.11.9] - 2026-05-17
 ### Fixed

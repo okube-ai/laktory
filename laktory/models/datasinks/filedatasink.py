@@ -42,8 +42,6 @@ SUPPORTED_FORMATS = {
     ],
 }
 
-ALL_SUPPORTED_FORMATS = tuple(sorted(set().union(*SUPPORTED_FORMATS.values())))
-
 logger = get_logger(__name__)
 
 
@@ -86,9 +84,7 @@ class FileDataSink(BaseDataSink):
     * [Data Sources and Sinks](https://www.laktory.ai/concepts/sourcessinks/)
     """
 
-    format: Literal.__getitem__(ALL_SUPPORTED_FORMATS) = Field(
-        ..., description="Format of the data files."
-    )
+    format: str = Field(..., description="Format of the data files.")
     path: str = Field(
         ...,
         description="File path on a local disk, remote storage or Databricks volume.",
@@ -176,9 +172,16 @@ class FileDataSink(BaseDataSink):
 
     def _validate_format(self) -> None:
         if self.format not in SUPPORTED_FORMATS[self.dataframe_backend]:
-            raise ValueError(
-                f"'{self.format}' format is not supported with {self.dataframe_backend}. Use one of {SUPPORTED_FORMATS[self.dataframe_backend]}"
-            )
+            if self.dataframe_backend == DataFrameBackends.PYSPARK:
+                logger.warning(
+                    f"'{self.format}' is not in Laktory's known PySpark formats "
+                    f"{SUPPORTED_FORMATS[self.dataframe_backend]}. Passing it through to Spark as-is."
+                )
+            else:
+                raise ValueError(
+                    f"'{self.format}' format is not supported with {self.dataframe_backend}. "
+                    f"Use one of {SUPPORTED_FORMATS[self.dataframe_backend]}"
+                )
         if self.mode == "MERGE" and self.format != "DELTA":
             raise ValueError("Only 'DELTA' format is supported with 'MERGE' mode.")
 
