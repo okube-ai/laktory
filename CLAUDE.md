@@ -87,3 +87,4 @@ Check these files when working on related topics:
 | `.claude/docs/strategic_roadmap.md` | Planned direction: dropping Pulumi, DABs integration, Terraform schema generation, scope decisions |
 | `.claude/docs/documentation_system.md` | Full reference for the MkDocs stack, griffe extension, doc stub automation, and VariableType fix — Claude owns this system |
 | `.claude/docs/testing.md` | Test setup, markers, fixtures, backend parametrization, and live test credentials |
+| `.claude/docs/spark_declarative_pipelines.md` | SDP (`pyspark.pipelines`) API, dependency tracking, read patterns, constraints, and F6 integration notes |
