@@ -518,7 +518,10 @@ def test_substitute_terraform_refs():
         "foo": "databricks_schema.foo",
         "foobar": "databricks_schema.foobar",
     }
-    names_alt = "|".join(re.escape(n) for n in resource_map)
+    # Sort longest-first, mirroring model_dump()'s alternation construction.
+    names_alt = "|".join(
+        re.escape(n) for n in sorted(resource_map, key=len, reverse=True)
+    )
     pattern = re.compile(r"\$\{resources\.(" + names_alt + r")(?:\.([^}]*))?\}")
 
     def replacer(m):
@@ -557,6 +560,43 @@ def test_substitute_terraform_refs():
         "${databricks_schema.foobar.id}",
     ]
     assert result["unchanged"] == "no-substitution-needed"
+
+
+def test_substitute_terraform_refs_provider_alias():
+    """
+    When a stack has both 'databricks' and 'databricks.dev' providers,
+    ${resources.databricks.dev} must resolve to bare 'databricks.dev' (provider
+    ref), not '${databricks.dev}' (which would happen if the shorter name wins
+    the regex alternation and '.dev' is misread as a property reference).
+    """
+    import re
+
+    from laktory.models.stacks.terraformstack import _substitute_terraform_refs
+
+    # Both the short base provider and an aliased workspace provider are present.
+    provider_refs = {
+        "databricks": "databricks",
+        "databricks.dev": "databricks.dev",
+    }
+    names_alt = "|".join(
+        re.escape(n) for n in sorted(provider_refs, key=len, reverse=True)
+    )
+    pattern = re.compile(r"\$\{resources\.(" + names_alt + r")(?:\.([^}]*))?\}")
+
+    def replacer(m):
+        name, prop = m.group(1), m.group(2)
+        base = provider_refs[name]  # providers: base = bare name
+        return f"${{{base}.{prop}}}" if prop is not None else base
+
+    obj = {
+        "base_provider": "${resources.databricks}",
+        "aliased_provider": "${resources.databricks.dev}",
+    }
+    result = _substitute_terraform_refs(obj, pattern, replacer)
+
+    assert result["base_provider"] == "databricks"
+    # Must be bare 'databricks.dev', NOT '${databricks.dev}'
+    assert result["aliased_provider"] == "databricks.dev"
 
 
 def test_check_depends_on():

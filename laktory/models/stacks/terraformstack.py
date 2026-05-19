@@ -136,7 +136,12 @@ class TerraformStack(BaseModel):
             for r in list(self.resources.values()) + list(self.providers.values())
         }
         if resource_lookup:
-            names_alt = "|".join(re.escape(n) for n in resource_lookup)
+            # Sort longest-first so that e.g. "databricks.dev" is tried before
+            # "databricks" — otherwise the shorter name wins in the alternation
+            # and ".dev" is misread as a property reference.
+            names_alt = "|".join(
+                re.escape(n) for n in sorted(resource_lookup, key=len, reverse=True)
+            )
             _pattern = re.compile(
                 r"\$\{resources\.(" + names_alt + r")(?:\.([^}]*))?\}"
             )
