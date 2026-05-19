@@ -20,6 +20,11 @@ jobs:
           - '3.11'
           - '3.12'
           - '3.13'
+        sparkVersion:
+          - '4'
+        include:
+          - pyVersion: '3.12'
+            sparkVersion: '3'
     steps:
       - name: Check if run tests
         env:
@@ -69,7 +74,9 @@ jobs:
 
       - name: Run tests
         if: ${{ env.run_tests == 'true' && success()}}
-        run: make install-dev test
+        run: |
+          uv sync --all-extras --override .github/constraints/spark${{ matrix.sparkVersion }}.txt
+          make test
         env:
 
           # Terraform Preview
