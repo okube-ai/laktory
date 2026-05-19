@@ -253,11 +253,22 @@ def test_non_applicable_options():
     FileDataSource(path="tmp", format="CSV", has_header=True)
     with pytest.raises(ValidationError):
         FileDataSource(path="tmp", format="JSON", has_header=True)
+    # EXCEL: applicable for PySpark only
+    FileDataSource(
+        path="tmp", format="EXCEL", has_header=True, dataframe_backend="PYSPARK"
+    )
+    with pytest.raises(ValidationError):
+        FileDataSource(
+            path="tmp", format="EXCEL", has_header=True, dataframe_backend="POLARS"
+        )
 
     # infer_schema
     FileDataSource(path="tmp", format="PARQUET", infer_schema=True, as_stream=True)
     with pytest.raises(ValidationError):
         FileDataSource(path="tmp", format="PARQUET", infer_schema=True, as_stream=False)
+    FileDataSource(path="tmp", format="EXCEL", infer_schema=True, as_stream=True)
+    with pytest.raises(ValidationError):
+        FileDataSource(path="tmp", format="EXCEL", infer_schema=True, as_stream=False)
 
     # schema_definition
     FileDataSource(
@@ -269,6 +280,9 @@ def test_non_applicable_options():
     FileDataSource(
         path="tmp", format="DELTA", schema={"columns": {}}, dataframe_backend="PYSPARK"
     )
+    FileDataSource(
+        path="tmp", format="EXCEL", schema={"columns": {}}, dataframe_backend="PYSPARK"
+    )
     with pytest.raises(ValidationError):
         FileDataSource(
             path="tmp",
@@ -276,3 +290,35 @@ def test_non_applicable_options():
             schema={"columns": {}},
             dataframe_backend="POLARS",
         )
+    with pytest.raises(ValidationError):
+        FileDataSource(
+            path="tmp",
+            format="EXCEL",
+            schema={"columns": {}},
+            dataframe_backend="POLARS",
+        )
+
+
+def test_unknown_format():
+    # Unknown PYSPARK format: should log a warning but not raise
+    src = FileDataSource(path="tmp", format="LANCE", dataframe_backend="PYSPARK")
+    assert src.format == "LANCE"
+
+    # Unknown POLARS format: should raise
+    with pytest.raises(ValidationError):
+        FileDataSource(path="tmp", format="LANCE", dataframe_backend="POLARS")
+
+
+def test_excel_spark_kwargs():
+    src = FileDataSource(path="tmp", format="EXCEL", dataframe_backend="PYSPARK")
+    kwargs, fmt = src._get_spark_kwargs()
+    assert fmt == "excel"
+    # has_header defaults to True → headerRows=1
+    assert kwargs.get("headerRows") == 1
+    assert "header" not in kwargs
+
+    src_no_header = FileDataSource(
+        path="tmp", format="EXCEL", dataframe_backend="PYSPARK", has_header=False
+    )
+    kwargs, _ = src_no_header._get_spark_kwargs()
+    assert kwargs.get("headerRows") == 0

@@ -26,6 +26,7 @@ SUPPORTED_FORMATS = {
         "BINARYFILE",
         "CSV",
         "DELTA",
+        "EXCEL",
         "JSON",
         "JSONL",
         "NDJSON",  # SAME AS JSONL
@@ -49,7 +50,53 @@ SUPPORTED_FORMATS = {
     ],
 }
 
-ALL_SUPPORTED_FORMATS = tuple(sorted(set().union(*SUPPORTED_FORMATS.values())))
+# Per-(backend, format) set of supported option names:
+#   has_header         - header row control (CSV) or headerRows (EXCEL/PySpark)
+#   infer_schema       - schema inference in batch mode
+#   infer_schema_stream - schema inference in streaming/Auto Loader mode
+#   schema_definition  - explicit schema specification
+FORMAT_CAPABILITIES: dict[tuple[DataFrameBackends, str], set[str]] = {
+    # fmt: off
+    (DataFrameBackends.PYSPARK, "AVRO"): {"infer_schema_stream", "schema_definition"},
+    (DataFrameBackends.PYSPARK, "BINARYFILE"): set(),
+    (DataFrameBackends.PYSPARK, "CSV"): {
+        "has_header",
+        "infer_schema",
+        "infer_schema_stream",
+        "schema_definition",
+    },
+    (DataFrameBackends.PYSPARK, "DELTA"): {"schema_definition"},
+    (DataFrameBackends.PYSPARK, "EXCEL"): {
+        "has_header",
+        "infer_schema_stream",
+        "schema_definition",
+    },
+    (DataFrameBackends.PYSPARK, "JSON"): {"infer_schema_stream", "schema_definition"},
+    (DataFrameBackends.PYSPARK, "JSONL"): {"infer_schema_stream", "schema_definition"},
+    (DataFrameBackends.PYSPARK, "NDJSON"): {"infer_schema_stream", "schema_definition"},
+    (DataFrameBackends.PYSPARK, "ORC"): {"schema_definition"},
+    (DataFrameBackends.PYSPARK, "PARQUET"): {
+        "infer_schema_stream",
+        "schema_definition",
+    },
+    (DataFrameBackends.PYSPARK, "TEXT"): set(),
+    (DataFrameBackends.PYSPARK, "XML"): {"infer_schema", "infer_schema_stream"},
+    (DataFrameBackends.POLARS, "AVRO"): set(),
+    (DataFrameBackends.POLARS, "CSV"): {
+        "has_header",
+        "infer_schema",
+        "schema_definition",
+    },
+    (DataFrameBackends.POLARS, "DELTA"): set(),
+    (DataFrameBackends.POLARS, "EXCEL"): set(),
+    (DataFrameBackends.POLARS, "IPC"): set(),
+    (DataFrameBackends.POLARS, "JSON"): {"schema_definition"},
+    (DataFrameBackends.POLARS, "JSONL"): {"schema_definition"},
+    (DataFrameBackends.POLARS, "NDJSON"): {"schema_definition"},
+    (DataFrameBackends.POLARS, "PARQUET"): {"schema_definition"},
+    (DataFrameBackends.POLARS, "PYARROW"): set(),
+    # fmt: on
+}
 
 
 class FileDataSource(BaseDataSource):
@@ -91,12 +138,10 @@ class FileDataSource(BaseDataSource):
     """
 
     model_config = ConfigDict(populate_by_name=True)
-    format: Literal.__getitem__(ALL_SUPPORTED_FORMATS) = Field(
-        ..., description="Format of the data files."
-    )
+    format: str = Field(..., description="Format of the data files.")
     has_header: bool = Field(
         True,
-        description="Indicate if the first row of the dataset is a header or not. Only applicable to 'CSV' format.",
+        description="Indicate if the first row of the dataset is a header or not. Applicable to 'CSV' format, and to 'EXCEL' when using the PySpark backend (mapped to the `headerRows` option).",
     )
     infer_schema: bool = Field(
         False,
@@ -145,9 +190,16 @@ class FileDataSource(BaseDataSource):
     @model_validator(mode="after")
     def validate_format(self) -> Any:
         if self.format not in SUPPORTED_FORMATS[self.dataframe_backend]:
-            raise ValueError(
-                f"'{self.format}' format is not supported with {self.dataframe_backend}. Use one of {SUPPORTED_FORMATS[self.dataframe_backend]}"
-            )
+            if self.dataframe_backend == DataFrameBackends.PYSPARK:
+                logger.warning(
+                    f"'{self.format}' is not in Laktory's known PySpark formats "
+                    f"{SUPPORTED_FORMATS[self.dataframe_backend]}. Passing it through to Spark as-is."
+                )
+            else:
+                raise ValueError(
+                    f"'{self.format}' format is not supported with {self.dataframe_backend}. "
+                    f"Use one of {SUPPORTED_FORMATS[self.dataframe_backend]}"
+                )
         return self
 
     @model_validator(mode="after")
@@ -190,49 +242,18 @@ class FileDataSource(BaseDataSource):
     # ----------------------------------------------------------------------- #
 
     def _is_applicable(self, key):
+        caps = FORMAT_CAPABILITIES.get((self.dataframe_backend, self.format), set())
+
         if key == "has_header":
-            if self.format == "CSV":
-                return True
-            return False
+            return "has_header" in caps
 
         if key == "infer_schema":
-            if self.format in ["CSV", "XML"]:
-                return True
-
-            if self.as_stream:
-                # https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema
-                if self.format in [
-                    "AVRO",
-                    "CSV",
-                    "JSON",
-                    "JSONL",
-                    "NDJSON",
-                    "PARQUET",
-                    "XML",
-                ]:
-                    return True
-
-            return False
+            return "infer_schema" in caps or (
+                self.as_stream and "infer_schema_stream" in caps
+            )
 
         if key == "schema_definition":
-            if self.dataframe_backend == DataFrameBackends.PYSPARK:
-                if self.format in [
-                    "AVRO",
-                    "CSV",
-                    "DELTA",
-                    "JSON",
-                    "JSONL",
-                    "NDJSON",
-                    "ORC",
-                    "PARQUET",
-                ]:
-                    return True
-
-            if self.dataframe_backend == DataFrameBackends.POLARS:
-                if self.format in ["CSV", "JSON", "JSONL", "NDJSON", "PARQUET"]:
-                    return True
-
-            return False
+            return "schema_definition" in caps
 
         if key == "schema_location":
             return self.is_cloud_files
@@ -256,7 +277,11 @@ class FileDataSource(BaseDataSource):
             kwargs["multiline"] = True
 
         if self._is_applicable("has_header"):
-            kwargs["header"] = self.has_header
+            if fmt == "excel":
+                # Databricks Excel reader uses headerRows (int), not header (bool)
+                kwargs["headerRows"] = 1 if self.has_header else 0
+            else:
+                kwargs["header"] = self.has_header
 
         if self._is_applicable("infer_schema"):
             if self.as_stream:
