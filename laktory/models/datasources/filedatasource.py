@@ -50,6 +50,54 @@ SUPPORTED_FORMATS = {
     ],
 }
 
+# Per-(backend, format) set of supported option names:
+#   has_header         - header row control (CSV) or headerRows (EXCEL/PySpark)
+#   infer_schema       - schema inference in batch mode
+#   infer_schema_stream - schema inference in streaming/Auto Loader mode
+#   schema_definition  - explicit schema specification
+FORMAT_CAPABILITIES: dict[tuple[DataFrameBackends, str], set[str]] = {
+    # fmt: off
+    (DataFrameBackends.PYSPARK, "AVRO"): {"infer_schema_stream", "schema_definition"},
+    (DataFrameBackends.PYSPARK, "BINARYFILE"): set(),
+    (DataFrameBackends.PYSPARK, "CSV"): {
+        "has_header",
+        "infer_schema",
+        "infer_schema_stream",
+        "schema_definition",
+    },
+    (DataFrameBackends.PYSPARK, "DELTA"): {"schema_definition"},
+    (DataFrameBackends.PYSPARK, "EXCEL"): {
+        "has_header",
+        "infer_schema_stream",
+        "schema_definition",
+    },
+    (DataFrameBackends.PYSPARK, "JSON"): {"infer_schema_stream", "schema_definition"},
+    (DataFrameBackends.PYSPARK, "JSONL"): {"infer_schema_stream", "schema_definition"},
+    (DataFrameBackends.PYSPARK, "NDJSON"): {"infer_schema_stream", "schema_definition"},
+    (DataFrameBackends.PYSPARK, "ORC"): {"schema_definition"},
+    (DataFrameBackends.PYSPARK, "PARQUET"): {
+        "infer_schema_stream",
+        "schema_definition",
+    },
+    (DataFrameBackends.PYSPARK, "TEXT"): set(),
+    (DataFrameBackends.PYSPARK, "XML"): {"infer_schema", "infer_schema_stream"},
+    (DataFrameBackends.POLARS, "AVRO"): set(),
+    (DataFrameBackends.POLARS, "CSV"): {
+        "has_header",
+        "infer_schema",
+        "schema_definition",
+    },
+    (DataFrameBackends.POLARS, "DELTA"): set(),
+    (DataFrameBackends.POLARS, "EXCEL"): set(),
+    (DataFrameBackends.POLARS, "IPC"): set(),
+    (DataFrameBackends.POLARS, "JSON"): {"schema_definition"},
+    (DataFrameBackends.POLARS, "JSONL"): {"schema_definition"},
+    (DataFrameBackends.POLARS, "NDJSON"): {"schema_definition"},
+    (DataFrameBackends.POLARS, "PARQUET"): {"schema_definition"},
+    (DataFrameBackends.POLARS, "PYARROW"): set(),
+    # fmt: on
+}
+
 
 class FileDataSource(BaseDataSource):
     """
@@ -194,57 +242,18 @@ class FileDataSource(BaseDataSource):
     # ----------------------------------------------------------------------- #
 
     def _is_applicable(self, key):
+        caps = FORMAT_CAPABILITIES.get((self.dataframe_backend, self.format), set())
+
         if key == "has_header":
-            if self.format == "CSV":
-                return True
-            # EXCEL uses `headerRows` option; only supported in PySpark (Polars read_excel has no equivalent)
-            if (
-                self.format == "EXCEL"
-                and self.dataframe_backend == DataFrameBackends.PYSPARK
-            ):
-                return True
-            return False
+            return "has_header" in caps
 
         if key == "infer_schema":
-            if self.format in ["CSV", "XML"]:
-                return True
-
-            if self.as_stream:
-                # https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/auto-loader/schema
-                if self.format in [
-                    "AVRO",
-                    "CSV",
-                    "EXCEL",
-                    "JSON",
-                    "JSONL",
-                    "NDJSON",
-                    "PARQUET",
-                    "XML",
-                ]:
-                    return True
-
-            return False
+            return "infer_schema" in caps or (
+                self.as_stream and "infer_schema_stream" in caps
+            )
 
         if key == "schema_definition":
-            if self.dataframe_backend == DataFrameBackends.PYSPARK:
-                if self.format in [
-                    "AVRO",
-                    "CSV",
-                    "DELTA",
-                    "EXCEL",
-                    "JSON",
-                    "JSONL",
-                    "NDJSON",
-                    "ORC",
-                    "PARQUET",
-                ]:
-                    return True
-
-            if self.dataframe_backend == DataFrameBackends.POLARS:
-                if self.format in ["CSV", "JSON", "JSONL", "NDJSON", "PARQUET"]:
-                    return True
-
-            return False
+            return "schema_definition" in caps
 
         if key == "schema_location":
             return self.is_cloud_files

@@ -3,6 +3,7 @@
 ## [0.11.10] - Unreleased
 ### Updated
 * Added support for EXCEL read with `FileDataSource`
+* Changed LITERAL data type for FileDataSource/Sink to string to support future and custom formats.
 
 ## [0.11.9] - 2026-05-17
 ### Fixed

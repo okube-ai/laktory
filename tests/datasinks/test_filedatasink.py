@@ -85,3 +85,14 @@ def test_write(backend, fmt, tmp_path):
 
     # Test purge
     sink.purge()
+
+
+def test_unknown_format():
+    # Both backends accept unknown formats at construction; format validation happens at write time.
+    # For PYSPARK, a warning is logged at write time and Spark handles the format natively.
+    # For POLARS, _validate_format raises ValueError at write time (no generic writer fallback).
+    sink = FileDataSink(path="tmp", format="LANCE", dataframe_backend="PYSPARK")
+    assert sink.format == "LANCE"
+
+    sink = FileDataSink(path="tmp", format="LANCE", dataframe_backend="POLARS")
+    assert sink.format == "LANCE"
