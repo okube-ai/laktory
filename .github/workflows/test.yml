@@ -75,7 +75,10 @@ jobs:
       - name: Run tests
         if: ${{ env.run_tests == 'true' && success()}}
         run: |
-          uv sync --all-extras --override .github/constraints/spark${{ matrix.sparkVersion }}.txt
+          uv sync --all-extras
+          if [[ "${{ matrix.sparkVersion }}" == "3" ]]; then
+            uv pip install --override .github/constraints/spark3.txt "pyspark[connect]" "delta-spark"
+          fi
           make test
         env:
 

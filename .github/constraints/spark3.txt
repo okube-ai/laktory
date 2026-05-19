@@ -1,2 +1,2 @@
-pyspark==3.5.5
-delta-spark==3.3.0
+pyspark>=3.5,<4
+delta-spark>=3.3,<4
