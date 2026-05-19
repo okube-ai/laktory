@@ -50,8 +50,6 @@ SUPPORTED_FORMATS = {
     ],
 }
 
-ALL_SUPPORTED_FORMATS = tuple(sorted(set().union(*SUPPORTED_FORMATS.values())))
-
 
 class FileDataSource(BaseDataSource):
     """
@@ -92,12 +90,10 @@ class FileDataSource(BaseDataSource):
     """
 
     model_config = ConfigDict(populate_by_name=True)
-    format: Literal.__getitem__(ALL_SUPPORTED_FORMATS) = Field(
-        ..., description="Format of the data files."
-    )
+    format: str = Field(..., description="Format of the data files.")
     has_header: bool = Field(
         True,
-        description="Indicate if the first row of the dataset is a header or not. Only applicable to 'CSV' format.",
+        description="Indicate if the first row of the dataset is a header or not. Applicable to 'CSV' format, and to 'EXCEL' when using the PySpark backend (mapped to the `headerRows` option).",
     )
     infer_schema: bool = Field(
         False,
@@ -146,9 +142,16 @@ class FileDataSource(BaseDataSource):
     @model_validator(mode="after")
     def validate_format(self) -> Any:
         if self.format not in SUPPORTED_FORMATS[self.dataframe_backend]:
-            raise ValueError(
-                f"'{self.format}' format is not supported with {self.dataframe_backend}. Use one of {SUPPORTED_FORMATS[self.dataframe_backend]}"
-            )
+            if self.dataframe_backend == DataFrameBackends.PYSPARK:
+                logger.warning(
+                    f"'{self.format}' is not in Laktory's known PySpark formats "
+                    f"{SUPPORTED_FORMATS[self.dataframe_backend]}. Passing it through to Spark as-is."
+                )
+            else:
+                raise ValueError(
+                    f"'{self.format}' format is not supported with {self.dataframe_backend}. "
+                    f"Use one of {SUPPORTED_FORMATS[self.dataframe_backend]}"
+                )
         return self
 
     @model_validator(mode="after")
