@@ -501,25 +501,30 @@ def test_terraform_stack(monkeypatch, stack):
 
 
 def test_substitute_terraform_refs():
+    import re
+
     from laktory.models.stacks.terraformstack import _substitute_terraform_refs
 
-    simple_map = {
-        "${resources.my_cat}": "databricks_catalog.my_cat",
-        "${resources.my.cat}": "databricks_catalog.my_dot_cat",
-        "${resources.foo}": "databricks_schema.foo",
-        "${resources.foobar}": "databricks_schema.foobar",
+    # Mirror the pattern+replacer construction that model_dump() uses.
+    resource_map = {
+        "my_cat": "databricks_catalog",
+        "my.cat": "databricks_catalog",  # dot in name — must not match my_cat
+        "foo": "databricks_schema",
+        "foobar": "databricks_schema",  # prefix of "foo" — must not corrupt foo
     }
-    property_patterns = []
-    for k0, k1 in [
-        ("my_cat", "databricks_catalog.my_cat"),
-        ("my.cat", "databricks_catalog.my_dot_cat"),
-        ("foo", "databricks_schema.foo"),
-        ("foobar", "databricks_schema.foobar"),
-    ]:
-        import re
+    tf_names = {
+        "my_cat": "databricks_catalog.my_cat",
+        "my.cat": "databricks_catalog.my_dot_cat",
+        "foo": "databricks_schema.foo",
+        "foobar": "databricks_schema.foobar",
+    }
+    names_alt = "|".join(re.escape(n) for n in resource_map)
+    pattern = re.compile(r"\$\{resources\.(" + names_alt + r")(?:\.([^}]*))?\}")
 
-        pattern = r"\$\{resources\." + re.escape(k0) + r"\.(.*?)\}"
-        property_patterns.append((pattern, lambda m, k1=k1: f"${{{k1}.{m.group(1)}}}"))
+    def replacer(m):
+        name, prop = m.group(1), m.group(2)
+        base = tf_names[name]
+        return f"${{{base}.{prop}}}" if prop is not None else base
 
     obj = {
         "simple": "${resources.my_cat}",
@@ -534,7 +539,7 @@ def test_substitute_terraform_refs():
         "unchanged": "no-substitution-needed",
     }
 
-    result = _substitute_terraform_refs(obj, simple_map, property_patterns)
+    result = _substitute_terraform_refs(obj, pattern, replacer)
 
     assert result["simple"] == "databricks_catalog.my_cat"
     assert result["property"] == "${databricks_catalog.my_cat.id}"

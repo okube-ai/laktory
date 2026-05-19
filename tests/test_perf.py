@@ -170,3 +170,71 @@ def test_schema_flat_within_limit():
     df = _make_deep_df(10)
     fields = df.laktory.schema_flat()
     assert "root" in fields
+
+
+# --------------------------------------------------------------------------- #
+# Terraform ref substitution at scale (A4 regression guard)                  #
+# --------------------------------------------------------------------------- #
+
+
+def test_terraform_ref_substitution_scale():
+    """
+    _substitute_terraform_refs must scale O(N), not O(N×M).
+
+    Regression guard for the bug introduced in 34daee53 (Code cleanup, between
+    v0.11.4 and v0.11.6) which replaced the single-pass JSON-string substitution
+    with a per-string loop over all resource patterns, degrading from O(N+M) to
+    O(N×M) for N string values and M resources.
+
+    300 resources × 5 fields = 1500 strings should complete in < 0.5 s with the
+    single combined-regex approach; the old O(N×M) implementation took ~3-5 s.
+    """
+    import re
+
+    from laktory.models.stacks.terraformstack import _substitute_terraform_refs
+
+    n = 300
+
+    class _MockResource:
+        def __init__(self, name):
+            self.resource_name = name
+            self.terraform_resource_type = "databricks_catalog"
+            self.lookup_existing = None
+
+    resource_lookup = {f"res_{i:03d}": _MockResource(f"res_{i:03d}") for i in range(n)}
+
+    names_alt = "|".join(re.escape(k) for k in resource_lookup)
+    pattern = re.compile(r"\$\{resources\.(" + names_alt + r")(?:\.([^}]*))?\}")
+
+    def replacer(m, _lookup=resource_lookup):
+        name, prop = m.group(1), m.group(2)
+        r = _lookup[name]
+        base = f"{r.terraform_resource_type}.{name}"
+        return f"${{{base}.{prop}}}" if prop is not None else base
+
+    # 300 resources × 5 fields (2 refs + 3 literals) = 1500 strings
+    d = {
+        f"res_{i:03d}": {
+            "depends_on": [f"${{resources.res_{(i - 1) % n:03d}}}"],
+            "catalog": "${resources.res_000.name}",
+            "no_ref_a": "some-literal-value",
+            "no_ref_b": "abcdefghijklmnopqrstuvwxyz",
+            "no_ref_c": f"static-{i}",
+        }
+        for i in range(n)
+    }
+
+    t0 = time.perf_counter()
+    result = _substitute_terraform_refs(d, pattern, replacer)
+    elapsed = time.perf_counter() - t0
+
+    assert elapsed < 0.5, (
+        f"_substitute_terraform_refs took {elapsed:.2f}s for {n} resources "
+        f"(threshold 0.5s — O(N×M) regression?)"
+    )
+
+    # Correctness spot-checks
+    assert result["res_001"]["depends_on"] == ["databricks_catalog.res_000"]
+    assert result["res_001"]["catalog"] == "${databricks_catalog.res_000.name}"
+    assert result["res_001"]["no_ref_a"] == "some-literal-value"
+    assert result["res_000"]["depends_on"] == [f"databricks_catalog.res_{n - 1:03d}"]

@@ -16,23 +16,17 @@ from laktory.models.resources.providers.baseprovider import BaseProvider
 logger = get_logger(__name__)
 
 
-def _substitute_terraform_refs(obj, simple_map, property_patterns):
+def _substitute_terraform_refs(obj, pattern, replacer):
     if isinstance(obj, str):
-        for literal, replacement in simple_map.items():
-            obj = obj.replace(literal, replacement)
-        if isinstance(obj, str):
-            for pattern, replacement_fn in property_patterns:
-                obj = re.sub(pattern, replacement_fn, obj)
-        return obj
+        if "${resources." not in obj:
+            return obj
+        return pattern.sub(replacer, obj)
     elif isinstance(obj, dict):
         return {
-            k: _substitute_terraform_refs(v, simple_map, property_patterns)
-            for k, v in obj.items()
+            k: _substitute_terraform_refs(v, pattern, replacer) for k, v in obj.items()
         }
     elif isinstance(obj, list):
-        return [
-            _substitute_terraform_refs(v, simple_map, property_patterns) for v in obj
-        ]
+        return [_substitute_terraform_refs(v, pattern, replacer) for v in obj]
     return obj
 
 
@@ -134,29 +128,31 @@ class TerraformStack(BaseModel):
                     "to": f"{r.terraform_resource_type}.{r.resource_name}",
                 }
 
-        # Translate ${resources.xxx} references into Terraform cross-references.
-        # Simple refs use str.replace (no regex) to avoid metacharacter issues.
-        # Property refs use re.escape on the resource name and a lambda replacement
-        # to avoid backreference ambiguity in the substitution string.
-        simple_map = {}
-        property_patterns = []
-        for r in list(self.resources.values()) + list(self.providers.values()):
-            k0 = r.resource_name
-            k1 = f"{r.terraform_resource_type}.{r.resource_name}"
-            if r.lookup_existing:
-                k1 = f"data.{r.terraform_resource_lookup_type}.{r.resource_name}"
+        # Translate ${resources.NAME} and ${resources.NAME.PROP} references into
+        # Terraform cross-references using a single combined regex so the dict is
+        # scanned once, not once per resource (O(N) vs the previous O(N×M)).
+        resource_lookup = {
+            r.resource_name: r
+            for r in list(self.resources.values()) + list(self.providers.values())
+        }
+        if resource_lookup:
+            names_alt = "|".join(re.escape(n) for n in resource_lookup)
+            _pattern = re.compile(
+                r"\$\{resources\.(" + names_alt + r")(?:\.([^}]*))?\}"
+            )
 
-            literal = f"${{resources.{k0}}}"
-            if isinstance(r, BaseProvider):
-                simple_map[literal] = k0
-            else:
-                simple_map[literal] = k1
-                pattern = r"\$\{resources\." + re.escape(k0) + r"\.(.*?)\}"
-                property_patterns.append(
-                    (pattern, lambda m, k1=k1: f"${{{k1}.{m.group(1)}}}")
-                )
+            def _replacer(m, _lookup=resource_lookup):
+                name, prop = m.group(1), m.group(2)
+                r = _lookup[name]
+                if isinstance(r, BaseProvider):
+                    base = name
+                elif r.lookup_existing:
+                    base = f"data.{r.terraform_resource_lookup_type}.{name}"
+                else:
+                    base = f"{r.terraform_resource_type}.{name}"
+                return f"${{{base}.{prop}}}" if prop is not None else base
 
-        d = _substitute_terraform_refs(d, simple_map, property_patterns)
+            d = _substitute_terraform_refs(d, _pattern, _replacer)
 
         return d
 
