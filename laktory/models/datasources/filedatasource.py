@@ -26,6 +26,7 @@ SUPPORTED_FORMATS = {
         "BINARYFILE",
         "CSV",
         "DELTA",
+        "EXCEL",
         "JSON",
         "JSONL",
         "NDJSON",  # SAME AS JSONL
@@ -193,6 +194,12 @@ class FileDataSource(BaseDataSource):
         if key == "has_header":
             if self.format == "CSV":
                 return True
+            # EXCEL uses `headerRows` option; only supported in PySpark (Polars read_excel has no equivalent)
+            if (
+                self.format == "EXCEL"
+                and self.dataframe_backend == DataFrameBackends.PYSPARK
+            ):
+                return True
             return False
 
         if key == "infer_schema":
@@ -204,6 +211,7 @@ class FileDataSource(BaseDataSource):
                 if self.format in [
                     "AVRO",
                     "CSV",
+                    "EXCEL",
                     "JSON",
                     "JSONL",
                     "NDJSON",
@@ -220,6 +228,7 @@ class FileDataSource(BaseDataSource):
                     "AVRO",
                     "CSV",
                     "DELTA",
+                    "EXCEL",
                     "JSON",
                     "JSONL",
                     "NDJSON",
@@ -256,7 +265,11 @@ class FileDataSource(BaseDataSource):
             kwargs["multiline"] = True
 
         if self._is_applicable("has_header"):
-            kwargs["header"] = self.has_header
+            if fmt == "excel":
+                # Databricks Excel reader uses headerRows (int), not header (bool)
+                kwargs["headerRows"] = 1 if self.has_header else 0
+            else:
+                kwargs["header"] = self.has_header
 
         if self._is_applicable("infer_schema"):
             if self.as_stream:
