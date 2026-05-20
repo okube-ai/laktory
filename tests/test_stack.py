@@ -501,25 +501,33 @@ def test_terraform_stack(monkeypatch, stack):
 
 
 def test_substitute_terraform_refs():
+    import re
+
     from laktory.models.stacks.terraformstack import _substitute_terraform_refs
 
-    simple_map = {
-        "${resources.my_cat}": "databricks_catalog.my_cat",
-        "${resources.my.cat}": "databricks_catalog.my_dot_cat",
-        "${resources.foo}": "databricks_schema.foo",
-        "${resources.foobar}": "databricks_schema.foobar",
+    # Mirror the pattern+replacer construction that model_dump() uses.
+    resource_map = {
+        "my_cat": "databricks_catalog",
+        "my.cat": "databricks_catalog",  # dot in name — must not match my_cat
+        "foo": "databricks_schema",
+        "foobar": "databricks_schema",  # prefix of "foo" — must not corrupt foo
     }
-    property_patterns = []
-    for k0, k1 in [
-        ("my_cat", "databricks_catalog.my_cat"),
-        ("my.cat", "databricks_catalog.my_dot_cat"),
-        ("foo", "databricks_schema.foo"),
-        ("foobar", "databricks_schema.foobar"),
-    ]:
-        import re
+    tf_names = {
+        "my_cat": "databricks_catalog.my_cat",
+        "my.cat": "databricks_catalog.my_dot_cat",
+        "foo": "databricks_schema.foo",
+        "foobar": "databricks_schema.foobar",
+    }
+    # Sort longest-first, mirroring model_dump()'s alternation construction.
+    names_alt = "|".join(
+        re.escape(n) for n in sorted(resource_map, key=len, reverse=True)
+    )
+    pattern = re.compile(r"\$\{resources\.(" + names_alt + r")(?:\.([^}]*))?\}")
 
-        pattern = r"\$\{resources\." + re.escape(k0) + r"\.(.*?)\}"
-        property_patterns.append((pattern, lambda m, k1=k1: f"${{{k1}.{m.group(1)}}}"))
+    def replacer(m):
+        name, prop = m.group(1), m.group(2)
+        base = tf_names[name]
+        return f"${{{base}.{prop}}}" if prop is not None else base
 
     obj = {
         "simple": "${resources.my_cat}",
@@ -534,7 +542,7 @@ def test_substitute_terraform_refs():
         "unchanged": "no-substitution-needed",
     }
 
-    result = _substitute_terraform_refs(obj, simple_map, property_patterns)
+    result = _substitute_terraform_refs(obj, pattern, replacer)
 
     assert result["simple"] == "databricks_catalog.my_cat"
     assert result["property"] == "${databricks_catalog.my_cat.id}"
@@ -552,6 +560,43 @@ def test_substitute_terraform_refs():
         "${databricks_schema.foobar.id}",
     ]
     assert result["unchanged"] == "no-substitution-needed"
+
+
+def test_substitute_terraform_refs_provider_alias():
+    """
+    When a stack has both 'databricks' and 'databricks.dev' providers,
+    ${resources.databricks.dev} must resolve to bare 'databricks.dev' (provider
+    ref), not '${databricks.dev}' (which would happen if the shorter name wins
+    the regex alternation and '.dev' is misread as a property reference).
+    """
+    import re
+
+    from laktory.models.stacks.terraformstack import _substitute_terraform_refs
+
+    # Both the short base provider and an aliased workspace provider are present.
+    provider_refs = {
+        "databricks": "databricks",
+        "databricks.dev": "databricks.dev",
+    }
+    names_alt = "|".join(
+        re.escape(n) for n in sorted(provider_refs, key=len, reverse=True)
+    )
+    pattern = re.compile(r"\$\{resources\.(" + names_alt + r")(?:\.([^}]*))?\}")
+
+    def replacer(m):
+        name, prop = m.group(1), m.group(2)
+        base = provider_refs[name]  # providers: base = bare name
+        return f"${{{base}.{prop}}}" if prop is not None else base
+
+    obj = {
+        "base_provider": "${resources.databricks}",
+        "aliased_provider": "${resources.databricks.dev}",
+    }
+    result = _substitute_terraform_refs(obj, pattern, replacer)
+
+    assert result["base_provider"] == "databricks"
+    # Must be bare 'databricks.dev', NOT '${databricks.dev}'
+    assert result["aliased_provider"] == "databricks.dev"
 
 
 def test_check_depends_on():

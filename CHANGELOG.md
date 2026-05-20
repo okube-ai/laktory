@@ -1,9 +1,25 @@
 # Release History
 
-## [0.11.10] - Unreleased
+## [0.11.11] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
 ### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.11.10] - 2026-05-20
+### Added
 * Added support for EXCEL read with `FileDataSource`
+* Variables injection for CLI `init` command
+* Support for Spark >= 4 testing
+### Updated
 * Changed LITERAL data type for FileDataSource/Sink to string to support future and custom formats.
+### Fixed
+* Regression in performance for stack with high number of resources
+* Issue with getting existing spark session on serverless workflows
 
 ## [0.11.9] - 2026-05-17
 ### Fixed

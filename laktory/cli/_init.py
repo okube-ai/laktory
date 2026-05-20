@@ -18,6 +18,17 @@ def init(
         str,
         typer.Option("--options", help="Comma separated IaC backend options (flags)."),
     ] = None,
+    var: Annotated[
+        list[str],
+        typer.Option("--var", help="Variable override as key=value. Can be repeated."),
+    ] = [],
+    var_file: Annotated[
+        str,
+        typer.Option(
+            "--var-file",
+            help="YAML file of variable overrides. Auto-discovers variables[.{env}].yaml if not set.",
+        ),
+    ] = None,
 ):
     """
     Initialize IaC backend
@@ -30,6 +41,13 @@ def init(
         Stack (yaml) filepath.
     options:
         Comma separated IaC backend options (flags).
+    var:
+        Variable override as `key=value`. Can be repeated. Overrides variables
+        defined in the stack YAML and in `--var-file`.
+    var_file:
+        Path to a YAML file of variable overrides. If not provided, a
+        `variables[.{env}].yaml` file next to the stack file is used automatically
+        when present.
 
     Examples
     --------
@@ -46,6 +64,8 @@ def init(
         env=environment,
         stack_filepath=filepath,
         options_str=options,
+        var_list=var,
+        var_file_path=var_file,
     )
 
     # Call
