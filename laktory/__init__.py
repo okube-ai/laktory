@@ -28,7 +28,17 @@ def register_spark_session(spark=None):
     import sys
 
     _laktory = sys.modules[__name__]
+
     if spark is None:
+        from pyspark.sql import SparkSession
+
+        spark = SparkSession.getActiveSession()
+
+    if spark is None:
+        # No active session — build one (local / test usage).
+        # Requires pyspark pip metadata to determine Scala / Delta JAR versions.
+        # In managed environments (DLT, Databricks Connect) a session is always
+        # active, so this branch is never reached there.
         from importlib.metadata import version as pkg_version
 
         from pyspark.sql import SparkSession
@@ -56,6 +66,7 @@ def register_spark_session(spark=None):
             )
             .getOrCreate()
         )
+
     _laktory._spark = spark
 
 
