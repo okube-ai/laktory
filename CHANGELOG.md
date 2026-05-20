@@ -1,6 +1,16 @@
 # Release History
 
-## [0.11.10] - Unreleased
+## [0.11.11] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.11.10] - 2026-05-20
 ### Added
 * Added support for EXCEL read with `FileDataSource`
 * Variables injection for CLI `init` command
