@@ -183,16 +183,48 @@ Tables are written to `spark-warehouse/<table_name>/` as Parquet (default) or De
 
 ## F6 integration implications
 
-1. **New orchestrator type** `SPARK_DECLARATIVE_PIPELINE` generates two artifacts per pipeline:
-   - A Python definition script (equivalent of `dlt_laktory_pl.py`) using `@dp.materialized_view` / `@dp.table`
-   - A `spark-pipeline.yml` spec file
+1. **New orchestrator type** `SPARK_DECLARATIVE_PIPELINE` (class `SparkDeclarativePipelineOrchestrator`) generates three artifacts per pipeline:
+   - `sdp_laktory_pl.py` — Python definition script using `@dp.materialized_view` / `@dp.table`
+   - `{pipeline_name}.json` — serialized pipeline config (reuses `PipelineConfigWorkspaceFile`)
+   - `{pipeline_name}-spec.yml` — SDP YAML spec pointing to the script and config
 
-2. **Local execution** shells out to `spark-pipelines run --spec <path>`; no programmatic runner possible
+2. **Local execution** — `pl.execute()` shells out via `subprocess.run(["spark-pipelines", "run", "--spec", spec_path])`. No programmatic Python runner exists; subprocess is the only viable approach.
 
-3. **Databricks deployment** submits the same Python script as a Databricks Job task on a cluster with PySpark 4.1+
+3. **Databricks deployment** — same Python script submitted as a Databricks Job task on a cluster with DBR 16.x (PySpark 4.1+). No DLT license required.
 
-4. **Narwhals fit:** unchanged — `node.execute()` runs inside the decorated function body; `node.output_df.to_native()` returns a PySpark DataFrame to SDP. Same boundary as DLT today.
+4. **Narwhals fit:** unchanged — `node.execute()` runs inside the decorated function body; `node.output_df.to_native()` returns a PySpark DataFrame to SDP. Same boundary as Lakeflow today.
 
-5. **Existing DLT orchestrator** (`DATABRICKS_PIPELINE`) stays unchanged — SDP coexists alongside it
+5. **SDP execution detection** — `is_sdp_execute()` checks:
+   - `spark.conf.get("spark.pipelines.flow.name")` — set by SDP runtime
+   - `spark.conf.get("laktory.is_sdp_execute")` — set via the generated YAML `configuration` block as fallback
 
 6. **Source handling:** only `PipelineNodeDataSource` needs SDP-specific logic (`spark.table()` for batch, `spark.readStream.table()` for streaming). All other source types use their existing `_read_spark()` unchanged.
+
+---
+
+## 0.12 naming decisions (2026-05-20)
+
+Part of a major 0.12 release with intentional breaking changes. Orchestrator type strings and class names are aligned with current Databricks product names.
+
+### Orchestrator type strings
+
+| 0.11 | 0.12 | Acronym | Class |
+|------|------|---------|-------|
+| `DATABRICKS_PIPELINE` | `LAKEFLOW_DECLARATIVE_PIPELINE` | LDP | `LakeflowDeclarativePipelineOrchestrator` |
+| `DATABRICKS_JOB` | `LAKEFLOW_JOB` | LJ | `LakeflowJobOrchestrator` |
+| *(new)* | `SPARK_DECLARATIVE_PIPELINE` | SDP | `SparkDeclarativePipelineOrchestrator` |
+
+**Rationale:** LDP/SDP pair cleanly — Lakeflow-hosted vs open-source Spark. "Lakeflow" encodes "Databricks + Spark + production." Including "SPARK" in the Databricks variant (`LAKEFLOW_SPARK_DECLARATIVE_PIPELINE`) would make the type string too long and produce an awkward LSDP acronym.
+
+### Migration (hard break)
+
+0.11 YAML files using `DATABRICKS_PIPELINE` or `DATABRICKS_JOB` raise a `ValueError` immediately on parse with a message pointing to the new name. No deprecation period.
+
+### Internal property renames
+
+| 0.11 | 0.12 |
+|------|------|
+| `pipeline.is_orchestrator_dlt` | `pipeline.is_orchestrator_lakeflow` |
+| `node.is_orchestrator_dlt` | `node.is_orchestrator_lakeflow` |
+| `node.is_dlt_execute` | `node.is_lakeflow_execute` |
+| `is_dlt_execute()` in `laktory/__init__` | `is_lakeflow_execute()` |
