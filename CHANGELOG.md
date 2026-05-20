@@ -1,8 +1,10 @@
 # Release History
 
 ## [0.11.10] - Unreleased
-### Updated
+### Added
 * Added support for EXCEL read with `FileDataSource`
+* Variables injection for CLI `init` command
+### Updated
 * Changed LITERAL data type for FileDataSource/Sink to string to support future and custom formats.
 ### Fixed
 * Regression in performance for stack with high number of resources
