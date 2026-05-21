@@ -122,31 +122,7 @@ class PipelineNodeDataSource(BaseDataSource):
             and self.node.source is not None
             and self.node.source.as_stream
         )
-        is_ldp = False
-
-        pl = self.parent_pipeline
-        is_orchestrator_ldp = pl is not None and pl.is_orchestrator_ldp
-
-        if is_orchestrator_ldp:
-            from laktory import is_ldp_execute
-
-            is_ldp = is_ldp_execute()
-
-        # Reading from Lakeflow Declarative Pipeline
-        if is_ldp:
-            from laktory import get_spark_session
-
-            spark = get_spark_session()
-            if self.as_stream:
-                logger.info(f"Reading pipeline node {self._id} with Lakeflow as stream")
-                df = spark.readStream.table(
-                    self.node.primary_sink.sdp_table_or_view_name
-                )
-            else:
-                logger.info(f"Reading pipeline node {self._id} with Lakeflow as static")
-                df = spark.table(self.node.primary_sink.sdp_table_or_view_name)
-
-        elif stream_to_batch or self.node.output_df is None:
+        if stream_to_batch or self.node.output_df is None:
             if self.node.has_sinks:
                 logger.info(f"Reading pipeline node {self._id} from primary sink")
                 df = self.node.primary_sink.read(
