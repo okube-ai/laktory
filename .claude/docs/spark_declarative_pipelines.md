@@ -117,6 +117,8 @@ SDP does NOT require explicit dependency declarations. Dependencies are inferred
 
 **Consequence:** `spark.table("brz")` inside `slv()` creates an `UnresolvedRelation ["brz"]` in the plan → server sees `slv` depends on `brz` → `brz` runs first.
 
+**Laktory implication:** `PipelineNodeDataSource._read_spark()` does NOT need special SDP/LDP handling. The normal reader path (`primary_sink.read()` → `spark.table(full_name)`) creates the right `UnresolvedRelation` during the registration phase. The old `is_ldp` branch was removed (2026-05-21).
+
 ---
 
 ## Inter-dataset read patterns
@@ -176,7 +178,7 @@ Tables are written to `spark-warehouse/<table_name>/` as Parquet (default) or De
 - **Isolated catalog:** external tables from other sessions are not visible; use `spark.read.*` for external data
 - **`spark` must be obtained explicitly:** `SparkSession.getActiveSession()` — it is not injected into the module namespace
 - **Glob paths are relative to spec file directory**, not the working directory where the CLI is invoked
-- **CDC / `apply_changes`:** not yet available in open-source SDP (Databricks-only via DLT)
+- **CDC / `apply_changes`:** not yet available in open-source SDP (Databricks-only via LDP)
 - **`collect()`, `count()`, `toPandas()`** are forbidden inside dataset functions (would trigger blocked RPCs)
 
 ---
@@ -211,7 +213,7 @@ The generated artifacts are identical in both modes — the orchestrator does no
    - `spark.conf.get("spark.pipelines.flow.name")` — set by SDP runtime
    - `spark.conf.get("laktory.is_sdp_execute")` — set via the generated YAML `configuration` block as fallback
 
-6. **Source handling:** only `PipelineNodeDataSource` needs SDP-specific logic (`spark.table()` for batch, `spark.readStream.table()` for streaming). All other source types use their existing `_read_spark()` unchanged.
+6. **Source handling:** no special SDP logic needed in `PipelineNodeDataSource._read_spark()` — the normal reader path (`primary_sink.read()`) produces the `spark.table()` call that SDP uses for dependency tracking.
 
 ---
 
@@ -231,7 +233,7 @@ Part of a major 0.12 release with intentional breaking changes. Orchestrator typ
 
 ### Migration (hard break)
 
-0.11 YAML files using `DATABRICKS_PIPELINE` or `DATABRICKS_JOB` raise a `ValueError` immediately on parse with a message pointing to the new name. No deprecation period.
+0.11 YAML files using `DATABRICKS_PIPELINE` or `DATABRICKS_JOB` raise a `ValueError` immediately on parse with a message pointing to the new name. No deprecation period. Same for `dlt_template` → `ldp_template`.
 
 ### Internal property renames
 
@@ -256,9 +258,9 @@ Internal property renames:
 |---------------|-----|-------|
 | `dlt_table_or_view_name` | `sdp_table_or_view_name` | SDP + LDP |
 | `dlt_table_or_view_kwargs` | `sdp_table_or_view_kwargs` | SDP + LDP |
-| `dlt_warning_expectations` | `sdp_warning_expectations` | LDP only |
-| `dlt_drop_expectations` | `sdp_drop_expectations` | LDP only |
-| `dlt_fail_expectations` | `sdp_fail_expectations` | LDP only |
+| `dlt_warning_expectations` | `ldp_warning_expectations` | LDP only |
+| `dlt_drop_expectations` | `ldp_drop_expectations` | LDP only |
+| `dlt_fail_expectations` | `ldp_fail_expectations` | LDP only |
 | `dlt_pre_merge_view_name` | `ldp_pre_merge_view_name` | LDP only |
 | `dlt_apply_changes_kwargs` | `ldp_apply_changes_kwargs` | LDP only |
 | `dlt_template` (YAML field) | `ldp_template` | LDP only |
@@ -270,3 +272,42 @@ Template notebook renamed: `dlt_laktory_pl.py` → `ldp_laktory_pl.py`.
 ### `apply_changes` → `auto_merge` (TODO)
 
 > **Revisit before shipping 0.12:** Databricks renamed `dlt.apply_changes()` to `dp.auto_merge()` in the new `pyspark.pipelines` API. The current code still calls `dp.apply_changes(...)` in `ldp_laktory_pl.py` and the associated `ldp_apply_changes_kwargs` property on `BaseDataSink`. These need to be updated once the exact `dp.auto_merge()` signature and kwargs are confirmed against the DBR 16.x release notes.
+
+---
+
+## Remaining work for 0.12 (as of 2026-05-21)
+
+### 1. `SparkDeclarativePipelineOrchestrator` (main task — not started)
+
+New class at `laktory/models/pipeline/orchestrators/sparkdeclarativepipelineorchestrator.py`.
+
+**Artifacts to generate** (written to `build_root/`):
+- `sdp_laktory_pl.py` — Python script using `@dp.materialized_view` / `@dp.table`; calls `node.execute()` inside each decorated function; loads pipeline config from `{pipeline_name}.json`
+- `{pipeline_name}.json` — serialized pipeline config (reuse `PipelineConfigWorkspaceFile` pattern from `LakeflowDeclarativePipelineOrchestrator`)
+- `{pipeline_name}-spec.yml` — SDP YAML spec; includes `laktory.is_sdp_execute: "true"` in `configuration` block
+
+**Model fields:**
+```python
+type: Literal["SPARK_DECLARATIVE_PIPELINE"] = "SPARK_DECLARATIVE_PIPELINE"
+config_file: PipelineConfigWorkspaceFile = PipelineConfigWorkspaceFile()
+```
+
+**`is_orchestrator_sdp` stub fix:** `pipeline.py` and `pipelinenode.py` currently return `False` — update to `isinstance(self.orchestrator, SparkDeclarativePipelineOrchestrator)` once the class exists.
+
+**Wire into `pipeline.py`:** add `SparkDeclarativePipelineOrchestrator` to the orchestrator union type and add to migration validator.
+
+### 2. `pl.execute()` for SDP
+
+In `laktory/models/pipeline/_execute.py`: when `is_orchestrator_sdp`, generate artifacts then run:
+```python
+subprocess.run(["spark-pipelines", "run", "--spec", spec_path], check=True)
+```
+
+### 3. `sdp_laktory_pl.py` template script
+
+Open-source only — no `dp.expect_all`, `dp.apply_changes`. Node streaming status determines decorator (`@dp.table` vs `@dp.materialized_view`).
+
+### 4. Tests
+
+- `test_pipeline_orchestrators.py`: parse `SPARK_DECLARATIVE_PIPELINE`, artifact generation, `is_orchestrator_sdp`
+- Local execution test: mock `subprocess.run`, verify spec file content and config JSON
