@@ -18,7 +18,7 @@ variables:
 orchestrator:
   resource_options:
     name: pl-taxi-trips
-  type: DATABRICKS_JOB
+  type: LAKEFLOW_JOB
   serverless_environment_version: "4"
   schedule:
     timezone_id: UTC

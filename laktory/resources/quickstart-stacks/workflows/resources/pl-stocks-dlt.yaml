@@ -12,7 +12,7 @@ dependencies:
 
 # Configure Orchestrator
 orchestrator:
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   development: ${vars.is_dev}
   serverless: true
   catalog: dev

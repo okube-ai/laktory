@@ -202,12 +202,12 @@ class DataQualityExpectation(BaseModel, PipelineChild):
         if pl is None:
             return False
 
-        if not pl.is_orchestrator_dlt:
+        if not pl.is_orchestrator_ldp:
             return False
 
-        from laktory import is_dlt_execute
+        from laktory import is_ldp_execute
 
-        return is_dlt_execute()
+        return is_ldp_execute()
 
     @property
     def is_streaming_compatible(self):

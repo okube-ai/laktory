@@ -2,8 +2,8 @@
 Tests for DABs integration features:
   - build_root setting
   - PipelineConfigWorkspaceFile.source / build()
-  - DatabricksPipelineOrchestrator.to_dab_resource()
-  - DatabricksJobOrchestrator.to_dab_resource()
+  - LakeflowDeclarativePipelineOrchestrator.to_dab_resource()
+  - LakeflowJobOrchestrator.to_dab_resource()
   - laktory.dab.build_resources() — folder-scan approach
   - ${var.x} syntax support (DABs-style variable prefix)
 """
@@ -87,7 +87,7 @@ def test_config_file_build_writes_json(monkeypatch, tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# DatabricksPipelineOrchestrator.to_dab_resource()
+# LakeflowDeclarativePipelineOrchestrator.to_dab_resource()
 # ---------------------------------------------------------------------------
 
 
@@ -126,7 +126,7 @@ def test_dlt_to_dab_resource_notebook_path(monkeypatch, tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# DatabricksJobOrchestrator.to_dab_resource()
+# LakeflowJobOrchestrator.to_dab_resource()
 # ---------------------------------------------------------------------------
 
 
@@ -157,7 +157,7 @@ _FAKE_WORKSPACE_ROOT = "/Workspace/Users/test/.bundle/myapp/dev"
 _PIPELINE_DLT_YAML = """\
 name: pl-stocks
 orchestrator:
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   catalog: dev
   schema: sandbox
 nodes:
@@ -172,7 +172,7 @@ nodes:
 _PIPELINE_WITH_VAR_YAML = """\
 name: pl-${var.env}
 orchestrator:
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   catalog: ${var.env}
   schema: sandbox
 nodes:
@@ -189,7 +189,7 @@ name: pl-${var.env}
 variables:
   env: prod
 orchestrator:
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   catalog: ${var.env}
   schema: sandbox
 nodes:

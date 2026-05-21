@@ -52,6 +52,7 @@ pyspark = [
     "delta-spark",
     "pyarrow",
     "pyspark[connect]",
+    "pyspark[pipelines]",
     "setuptools; python_version >= '3.12'"
 ]
 dev = [

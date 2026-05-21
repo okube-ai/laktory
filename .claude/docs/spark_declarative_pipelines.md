@@ -183,6 +183,19 @@ Tables are written to `spark-warehouse/<table_name>/` as Parquet (default) or De
 
 ## F6 integration implications
 
+### Dual-mode design
+
+`SPARK_DECLARATIVE_PIPELINE` is a **single orchestrator type that serves two execution contexts**:
+
+| Mode | Execution | Infrastructure |
+|------|-----------|----------------|
+| **Local** | `spark-pipelines run --spec …` via subprocess | Local PySpark 4.1+ install |
+| **Lakeflow Job** | Same Python script as a Databricks Job task | DBR 16.x cluster; **no DLT license required** |
+
+The generated artifacts are identical in both modes — the orchestrator does not branch on mode at artifact-generation time. The difference is only at execution time.
+
+> **Open question:** how the mode is selected (e.g. a field on the orchestrator, deploy-time flag, or inferred from context) is TBD pending testing of the Databricks Job path.
+
 1. **New orchestrator type** `SPARK_DECLARATIVE_PIPELINE` (class `SparkDeclarativePipelineOrchestrator`) generates three artifacts per pipeline:
    - `sdp_laktory_pl.py` — Python definition script using `@dp.materialized_view` / `@dp.table`
    - `{pipeline_name}.json` — serialized pipeline config (reuses `PipelineConfigWorkspaceFile`)
@@ -190,7 +203,7 @@ Tables are written to `spark-warehouse/<table_name>/` as Parquet (default) or De
 
 2. **Local execution** — `pl.execute()` shells out via `subprocess.run(["spark-pipelines", "run", "--spec", spec_path])`. No programmatic Python runner exists; subprocess is the only viable approach.
 
-3. **Databricks deployment** — same Python script submitted as a Databricks Job task on a cluster with DBR 16.x (PySpark 4.1+). No DLT license required.
+3. **Lakeflow Job execution** — the same `sdp_laktory_pl.py` script is submitted as a task in a Databricks Job on a DBR 16.x cluster (PySpark 4.1+). No DLT/Lakeflow Declarative Pipelines license required — this is plain Spark.
 
 4. **Narwhals fit:** unchanged — `node.execute()` runs inside the decorated function body; `node.output_df.to_native()` returns a PySpark DataFrame to SDP. Same boundary as Lakeflow today.
 
@@ -224,7 +237,11 @@ Part of a major 0.12 release with intentional breaking changes. Orchestrator typ
 
 | 0.11 | 0.12 |
 |------|------|
-| `pipeline.is_orchestrator_dlt` | `pipeline.is_orchestrator_lakeflow` |
-| `node.is_orchestrator_dlt` | `node.is_orchestrator_lakeflow` |
-| `node.is_dlt_execute` | `node.is_lakeflow_execute` |
-| `is_dlt_execute()` in `laktory/__init__` | `is_lakeflow_execute()` |
+| `pipeline.is_orchestrator_dlt` | `pipeline.is_orchestrator_ldp` |
+| `node.is_orchestrator_dlt` | `node.is_orchestrator_ldp` |
+| `node.is_dlt_execute` | `node.is_ldp_execute` |
+| `is_dlt_execute()` in `laktory/__init__` | `is_ldp_execute()` |
+| *(new)* | `pipeline.is_orchestrator_sdp` |
+| *(new)* | `node.is_orchestrator_sdp` |
+| *(new)* | `node.is_sdp_execute` |
+| *(new)* | `is_sdp_execute()` in `laktory/__init__` |

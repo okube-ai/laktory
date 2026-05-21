@@ -79,27 +79,32 @@ def get_spark_session():
     return _laktory._spark
 
 
-def is_dlt_execute() -> bool:
+def is_ldp_execute() -> bool:
     from pyspark.errors import AnalysisException
 
     spark = get_spark_session()
 
-    # TODO: Review and make more robust (transition to spark pipelines)
     try:
-        is_dlt = False
-        for k in [
-            "pipelines.dbrVersion",
-            "spark.pipelines.flow.name",
-        ]:
-            if spark.conf.get(k, "na") != "na":
-                is_dlt = True
-                break
-
+        is_ldp = spark.conf.get("pipelines.dbrVersion", "na") != "na"
     except AnalysisException:
         # Default value is not supported on earlier versions of serverless
-        is_dlt = False
+        is_ldp = False
 
-    return is_dlt
+    return is_ldp
+
+
+def is_sdp_execute() -> bool:
+    from pyspark.errors import AnalysisException
+
+    spark = get_spark_session()
+
+    try:
+        has_flow = spark.conf.get("spark.pipelines.flow.name", "na") != "na"
+        has_dbr = spark.conf.get("pipelines.dbrVersion", "na") != "na"
+        has_flag = spark.conf.get("laktory.is_sdp_execute", "false") == "true"
+        return (has_flow and not has_dbr) or has_flag
+    except AnalysisException:
+        return False
 
 
 def print_version():

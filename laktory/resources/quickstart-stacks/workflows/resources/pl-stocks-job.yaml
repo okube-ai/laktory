@@ -11,7 +11,7 @@ dependencies:
 
 # Configure Orchestrator
 orchestrator:
-  type: DATABRICKS_JOB
+  type: LAKEFLOW_JOB
   serverless_environment_version: "3"
 
 # Define nodes (each node is a table or a view)

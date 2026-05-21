@@ -355,20 +355,36 @@ class PipelineNode(BaseModel, PipelineChild):
         return f"node-{self.name}"
 
     @property
-    def is_orchestrator_dlt(self) -> bool:
-        """If `True`, pipeline node is used in the context of a DLT pipeline"""
+    def is_orchestrator_ldp(self) -> bool:
+        """If `True`, pipeline node is used in the context of a Lakeflow Declarative Pipeline"""
         pl = self.parent_pipeline
         if pl:
-            return pl.is_orchestrator_dlt
+            return pl.is_orchestrator_ldp
         return False
 
     @property
-    def is_dlt_execute(self) -> bool:
-        if not self.is_orchestrator_dlt:
-            return False
-        from laktory import is_dlt_execute
+    def is_orchestrator_sdp(self) -> bool:
+        """If `True`, pipeline node is used in the context of a Spark Declarative Pipeline"""
+        pl = self.parent_pipeline
+        if pl:
+            return pl.is_orchestrator_sdp
+        return False
 
-        return is_dlt_execute()
+    @property
+    def is_ldp_execute(self) -> bool:
+        if not self.is_orchestrator_ldp:
+            return False
+        from laktory import is_ldp_execute
+
+        return is_ldp_execute()
+
+    @property
+    def is_sdp_execute(self) -> bool:
+        if not self.is_orchestrator_sdp:
+            return False
+        from laktory import is_sdp_execute
+
+        return is_sdp_execute()
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
@@ -706,9 +722,11 @@ class PipelineNode(BaseModel, PipelineChild):
                     logger.info(f"Importing {package_name} failed.")
             pl._imports_imported = True
 
-        # Parse DLT
-        if self.is_orchestrator_dlt:
-            logger.info("DLT orchestrator selected. Sinks writing will be skipped.")
+        # Skip sink writes when a declarative pipeline framework owns them
+        if self.is_orchestrator_ldp or self.is_orchestrator_sdp:
+            logger.info(
+                "Declarative pipeline orchestrator selected. Sinks writing will be skipped."
+            )
             write_sinks = False
             full_refresh = False
 
@@ -748,7 +766,7 @@ class PipelineNode(BaseModel, PipelineChild):
                 s.create(df=_df)
 
                 _is_update_metadata = (
-                    update_tables_metadata and s.metadata and not self.is_dlt_execute
+                    update_tables_metadata and s.metadata and not self.is_ldp_execute
                 )
 
                 if self.is_view:
@@ -816,14 +834,14 @@ class PipelineNode(BaseModel, PipelineChild):
         else:
             skip = False
 
-            if self.is_dlt_execute:
+            if self.is_ldp_execute:
                 names = []
                 for e in self.expectations:
                     if not e.is_dlt_compatible:
                         names += [e.name]
                 if names:
                     raise TypeError(
-                        f"Expectations {names} are not natively supported by DLT and can't be computed on a streaming DataFrame with DLT executor."
+                        f"Expectations {names} are not natively supported by Lakeflow and can't be computed on a streaming DataFrame with Lakeflow executor."
                     )
 
                 skip = True

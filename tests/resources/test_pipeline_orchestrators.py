@@ -46,7 +46,7 @@ def get_pl_job():
             }
         ],
         "name": "pl-job",
-        "type": "DATABRICKS_JOB",
+        "type": "LAKEFLOW_JOB",
     }
 
     return pl
@@ -226,7 +226,7 @@ def test_databricks_job():
                 },
             },
         ],
-        "type": "DATABRICKS_JOB",
+        "type": "LAKEFLOW_JOB",
         "dataframe_backend": DataFrameBackends.PYSPARK,
         "dataframe_api": "NARWHALS",
     }
@@ -607,7 +607,7 @@ def test_databricks_job():
                     },
                 },
             ],
-            "type": "DATABRICKS_JOB",
+            "type": "LAKEFLOW_JOB",
             "dataframe_backend": "PYSPARK",
             "dataframe_api": "NARWHALS",
         },
@@ -741,7 +741,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
         "trigger": None,
         "url": None,
         "usage_policy_id": None,
-        "type": "DATABRICKS_PIPELINE",
+        "type": "LAKEFLOW_DECLARATIVE_PIPELINE",
         "config_file": {
             "access_controls": [
                 {
@@ -991,7 +991,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
             },
             "name": "pl-dlt",
             "schema_": "sandbox",
-            "type": "DATABRICKS_PIPELINE",
+            "type": "LAKEFLOW_DECLARATIVE_PIPELINE",
             "dataframe_backend": "PYSPARK",
             "dataframe_api": "NARWHALS",
         },

@@ -117,7 +117,7 @@ def test_children(tmp_path):
 
 
 def test_update_from_parent():
-    o = models.DatabricksJobOrchestrator(
+    o = models.LakeflowJobOrchestrator(
         name="pl-job",
         job_clusters=[
             {

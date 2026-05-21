@@ -17,11 +17,12 @@ from laktory.models.resources.databricks.pipeline import Pipeline
 logger = get_logger(__name__)
 
 
-class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
+class LakeflowDeclarativePipelineOrchestrator(Pipeline, PipelineChild):
     """
-    Databricks Pipeline used as an orchestrator to execute a Laktory pipeline.
+    Lakeflow Spark Declarative Pipeline used as an orchestrator to execute a
+    Laktory pipeline.
 
-    DLT orchestrator does not support pipeline nodes with views (as opposed to
+    LDP orchestrator does not support pipeline nodes with views (as opposed to
     materialized tables). Also, it does not support writing to multiple
     schemas within the same pipeline.
 
@@ -32,11 +33,11 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
     References
     ----------
     * [Data Pipeline](https://www.laktory.ai/concepts/pipeline/)
-    * [Databricks DLT](https://www.databricks.com/product/delta-live-tables)
+    * [Lakeflow Spark Declarative Pipelines](https://www.databricks.com/product/delta-live-tables)
     """
 
-    type: Literal["DATABRICKS_PIPELINE"] = Field(
-        "DATABRICKS_PIPELINE", description="Type of orchestrator"
+    type: Literal["LAKEFLOW_DECLARATIVE_PIPELINE"] = Field(
+        "LAKEFLOW_DECLARATIVE_PIPELINE", description="Type of orchestrator"
     )
     config_file: PipelineConfigWorkspaceFile = Field(
         PipelineConfigWorkspaceFile(),
@@ -44,7 +45,7 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
     )
 
     # ----------------------------------------------------------------------- #
-    # Update DLT                                                              #
+    # Update LDP                                                              #
     # ----------------------------------------------------------------------- #
 
     def update_from_parent(self):
@@ -53,7 +54,7 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         for node in pl.nodes:
             if node.is_view:
                 raise ValueError(
-                    f"Node '{node.name}' of pipeline '{pl.name}' is a view which is not supported with DLT orchestrator."
+                    f"Node '{node.name}' of pipeline '{pl.name}' is a view which is not supported with Lakeflow Declarative Pipeline orchestrator."
                 )
 
         for n in pl.nodes:

@@ -21,9 +21,9 @@ logger = get_logger(__name__)
 ENV_KEY = "laktory"
 
 
-class DatabricksJobOrchestrator(Job, PipelineChild):
+class LakeflowJobOrchestrator(Job, PipelineChild):
     """
-    Databricks job used as an orchestrator to execute a Laktory pipeline.
+    Lakeflow Job used as an orchestrator to execute a Laktory pipeline.
 
     Job orchestrator supports incremental workloads with Spark Structured
     Streaming, but it does not support continuous processing.
@@ -31,11 +31,11 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
     References
     ----------
     * [Data Pipeline](https://www.laktory.ai/concepts/pipeline/)
-    * [Databricks Job](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
+    * [Lakeflow Jobs](https://docs.databricks.com/en/workflows/jobs/create-run-jobs.html)
     """
 
-    type: Literal["DATABRICKS_JOB"] = Field(
-        "DATABRICKS_JOB", description="Type of orchestrator"
+    type: Literal["LAKEFLOW_JOB"] = Field(
+        "LAKEFLOW_JOB", description="Type of orchestrator"
     )
     config_file: PipelineConfigWorkspaceFile = Field(
         PipelineConfigWorkspaceFile(),
@@ -105,7 +105,7 @@ class DatabricksJobOrchestrator(Job, PipelineChild):
                     serverless = False
             if len(self.job_cluster) > 0 and serverless:
                 raise ValueError(
-                    "To use DATABRICKS_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
+                    "To use LAKEFLOW_JOB orchestrator, a cluster named `node-cluster` must be defined in the databricks_job attribute."
                 )
 
         _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]

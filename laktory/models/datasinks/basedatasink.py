@@ -136,15 +136,16 @@ class BaseDataSink(BaseModel, PipelineChild):
                     "`custom_writer` and `merge_cdc_options` are mutually exclusive."
                 )
 
-            from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
-                DatabricksPipelineOrchestrator,
+            from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
+                LakeflowDeclarativePipelineOrchestrator,
             )
 
             if (
                 self.parent_pipeline
                 and self.parent_pipeline.orchestrator
                 and isinstance(
-                    self.parent_pipeline.orchestrator, DatabricksPipelineOrchestrator
+                    self.parent_pipeline.orchestrator,
+                    LakeflowDeclarativePipelineOrchestrator,
                 )
             ):
                 raise ValueError(
@@ -162,15 +163,16 @@ class BaseDataSink(BaseModel, PipelineChild):
             else:
                 self.merge_cdc_options._parent = self
 
-            from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
-                DatabricksPipelineOrchestrator,
+            from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
+                LakeflowDeclarativePipelineOrchestrator,
             )
 
             if (
                 self.parent_pipeline
                 and self.parent_pipeline.orchestrator
                 and isinstance(
-                    self.parent_pipeline.orchestrator, DatabricksPipelineOrchestrator
+                    self.parent_pipeline.orchestrator,
+                    LakeflowDeclarativePipelineOrchestrator,
                 )
             ):
                 if self.merge_cdc_options.order_by is None:
