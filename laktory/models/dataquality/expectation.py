@@ -217,7 +217,9 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     @property
     def is_sdp_managed(self) -> bool:
         """Expectation is SDP-compatible and pipeline node is executing inside SDP"""
-        raise NotImplementedError()
+        # TODO: Check if orcherstrator is ldp and ldp managed
+        #    or check if orcherstrator is spd and spd managed
+        return self.is_ldp_managed
 
     @property
     def is_streaming_compatible(self):

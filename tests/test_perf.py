@@ -72,7 +72,7 @@ def test_inject_vars_large_stack():
                             name=f"node_{i:03d}",
                             # 4 variable references per node across 2 fields
                             comment="${vars.var_0}/${vars.var_1}/${vars.var_2}",
-                            dlt_template="${vars.var_3}",
+                            ldp_template="${vars.var_3}",
                         )
                         for i in range(n_nodes)
                     ],
@@ -105,7 +105,7 @@ def test_inject_vars_cache_speedup():
         models.PipelineNode(
             name=f"node_{i:03d}",
             comment="${vars.var_0}/${vars.var_1}/${vars.var_2}",
-            dlt_template="${vars.var_3}",
+            ldp_template="${vars.var_3}",
         )
         for i in range(100)
     ]

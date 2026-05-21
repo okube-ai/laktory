@@ -107,9 +107,9 @@ class PipelineNode(BaseModel, PipelineChild):
     * [Data Pipeline](https://www.laktory.ai/concepts/pipeline/)
     """
 
-    dlt_template: str | None = Field(
+    ldp_template: str | None = Field(
         "DEFAULT",
-        description="Specify which template (notebook) to use when Databricks pipeline is selected as the orchestrator.",
+        description="Specify which template (notebook) to use when Lakeflow Declarative Pipeline is selected as the orchestrator.",
     )
     execution_task_name_: str = Field(
         None,
@@ -183,6 +183,15 @@ class PipelineNode(BaseModel, PipelineChild):
     _stage_df: Any = None
     _output_df: Any = None
     _quarantine_df: Any = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _check_deprecated_dlt_template(cls, data):
+        if isinstance(data, dict) and "dlt_template" in data:
+            raise ValueError(
+                "'dlt_template' was renamed to 'ldp_template' in v0.12. Please update your YAML."
+            )
+        return data
 
     @field_validator("source", mode="before")
     @classmethod
@@ -538,26 +547,26 @@ class PipelineNode(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def dlt_warning_expectations(self) -> dict[str, str]:
+    def sdp_warning_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
-            if e.is_dlt_compatible and e.action == "WARN":
+            if e.is_ldp_compatible and e.action == "WARN":
                 expectations[e.name] = e.expr.expr
         return expectations
 
     @property
-    def dlt_drop_expectations(self) -> dict[str, str]:
+    def sdp_drop_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
-            if e.is_dlt_compatible and e.action in ["DROP", "QUARANTINE"]:
+            if e.is_ldp_compatible and e.action in ["DROP", "QUARANTINE"]:
                 expectations[e.name] = e.expr.expr
         return expectations
 
     @property
-    def dlt_fail_expectations(self) -> dict[str, str]:
+    def sdp_fail_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
-            if e.is_dlt_compatible and e.action == "FAIL":
+            if e.is_ldp_compatible and e.action == "FAIL":
                 expectations[e.name] = e.expr.expr
         return expectations
 
@@ -810,7 +819,7 @@ class PipelineNode(BaseModel, PipelineChild):
         def _batch_check(df, node):
             for e in node.expectations:
                 # Run Check: this only warn or raise exceptions.
-                if not e.is_dlt_managed:
+                if not e.is_sdp_managed:
                     e.run_check(
                         df,
                         raise_or_warn=True,
@@ -837,7 +846,7 @@ class PipelineNode(BaseModel, PipelineChild):
             if self.is_ldp_execute:
                 names = []
                 for e in self.expectations:
-                    if not e.is_dlt_compatible:
+                    if not e.is_ldp_compatible:
                         names += [e.name]
                 if names:
                     raise TypeError(
@@ -877,7 +886,7 @@ class PipelineNode(BaseModel, PipelineChild):
         # Build Filters
         for e in self.expectations:
             # Update Keep Filter
-            if not e.is_dlt_managed:
+            if not e.is_sdp_managed:
                 _filter = e.keep_filter
                 if _filter is not None:
                     if kfilter is None:

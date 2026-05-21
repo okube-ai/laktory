@@ -245,3 +245,28 @@ Part of a major 0.12 release with intentional breaking changes. Orchestrator typ
 | *(new)* | `node.is_orchestrator_sdp` |
 | *(new)* | `node.is_sdp_execute` |
 | *(new)* | `is_sdp_execute()` in `laktory/__init__` |
+
+### `import dlt` → `from pyspark import pipelines as dp`
+
+All direct `dlt.*` calls have been replaced with `dp.*` equivalents in `ldp_laktory_pl.py`. The `dlt` module is no longer imported anywhere in Laktory source. `dp.expect_all`, `dp.apply_changes`, etc. are Databricks-only extensions to `pyspark.pipelines` — not in open-source PySpark, but available on Databricks DBR 16.x via the same import.
+
+Internal property renames:
+
+| Old (`dlt_*`) | New | Scope |
+|---------------|-----|-------|
+| `dlt_table_or_view_name` | `sdp_table_or_view_name` | SDP + LDP |
+| `dlt_table_or_view_kwargs` | `sdp_table_or_view_kwargs` | SDP + LDP |
+| `dlt_warning_expectations` | `sdp_warning_expectations` | LDP only |
+| `dlt_drop_expectations` | `sdp_drop_expectations` | LDP only |
+| `dlt_fail_expectations` | `sdp_fail_expectations` | LDP only |
+| `dlt_pre_merge_view_name` | `ldp_pre_merge_view_name` | LDP only |
+| `dlt_apply_changes_kwargs` | `ldp_apply_changes_kwargs` | LDP only |
+| `dlt_template` (YAML field) | `ldp_template` | LDP only |
+| `is_dlt_compatible` | `is_ldp_compatible` | LDP only |
+| `is_dlt_managed` | `is_ldp_managed` | LDP only |
+
+Template notebook renamed: `dlt_laktory_pl.py` → `ldp_laktory_pl.py`.
+
+### `apply_changes` → `auto_merge` (TODO)
+
+> **Revisit before shipping 0.12:** Databricks renamed `dlt.apply_changes()` to `dp.auto_merge()` in the new `pyspark.pipelines` API. The current code still calls `dp.apply_changes(...)` in `ldp_laktory_pl.py` and the associated `ldp_apply_changes_kwargs` property on `BaseDataSink`. These need to be updated once the exact `dp.auto_merge()` signature and kwargs are confirmed against the DBR 16.x release notes.

@@ -104,12 +104,12 @@ def test_dlt_to_dab_resource_returns_pipeline_type(monkeypatch, tmp_path):
 
 
 def test_dlt_to_dab_resource_copies_notebook(monkeypatch, tmp_path):
-    """to_dab_resource() copies dlt_laktory_pl.py to build_root/pipelines/."""
+    """to_dab_resource() copies ldp_laktory_pl.py to build_root/pipelines/."""
     monkeypatch.setattr(settings, "build_root", str(tmp_path))
     (tmp_path / "pipelines").mkdir(parents=True, exist_ok=True)
 
     _get_pl_dlt().orchestrator.to_dab_resource()
-    assert (tmp_path / "pipelines" / "dlt_laktory_pl.py").exists()
+    assert (tmp_path / "pipelines" / "ldp_laktory_pl.py").exists()
 
 
 def test_dlt_to_dab_resource_notebook_path(monkeypatch, tmp_path):
@@ -122,7 +122,7 @@ def test_dlt_to_dab_resource_notebook_path(monkeypatch, tmp_path):
     resource = _get_pl_dlt().orchestrator.to_dab_resource()
     d = resource.as_dict()
     notebook_path = str(d["libraries"][0]["notebook"]["path"])
-    assert notebook_path == f"/Workspace{workspace_root}pipelines/dlt_laktory_pl"
+    assert notebook_path == f"/Workspace{workspace_root}pipelines/ldp_laktory_pl"
 
 
 # ---------------------------------------------------------------------------

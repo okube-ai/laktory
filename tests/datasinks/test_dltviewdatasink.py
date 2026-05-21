@@ -5,5 +5,5 @@ def test_view():
     sink = PipelineViewDataSink(
         pipeline_view_name="t",
     )
-    assert sink.dlt_table_or_view_name == "t"
-    assert sink.dlt_table_or_view_kwargs == {"name": "t"}
+    assert sink.sdp_table_or_view_name == "t"
+    assert sink.sdp_table_or_view_kwargs == {"name": "t"}

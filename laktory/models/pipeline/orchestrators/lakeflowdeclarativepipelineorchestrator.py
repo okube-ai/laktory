@@ -27,7 +27,7 @@ class LakeflowDeclarativePipelineOrchestrator(Pipeline, PipelineChild):
     schemas within the same pipeline.
 
     Selecting this orchestrator requires to add the supporting
-    [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py)
+    [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/ldp_laktory_pl.py)
     to the stack.
 
     References
@@ -109,9 +109,9 @@ class LakeflowDeclarativePipelineOrchestrator(Pipeline, PipelineChild):
             / "workflows"
             / "workspacefiles"
             / "notebooks"
-            / "dlt_laktory_pl.py"
+            / "ldp_laktory_pl.py"
         )
-        target_filepath = Path(settings.build_root) / "pipelines" / "dlt_laktory_pl.py"
+        target_filepath = Path(settings.build_root) / "pipelines" / "ldp_laktory_pl.py"
         shutil.copy(source_filepath, target_filepath)
 
         # Laktory pipelines use a common notebook (copied above). Its path is
@@ -120,7 +120,7 @@ class LakeflowDeclarativePipelineOrchestrator(Pipeline, PipelineChild):
         notebook_filepath = (
             Path("/Workspace" + settings.workspace_root)
             / "pipelines"
-            / "dlt_laktory_pl"
+            / "ldp_laktory_pl"
         )
         d["libraries"] = [{"notebook": {"path": notebook_filepath.as_posix()}}]
 

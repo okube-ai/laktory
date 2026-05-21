@@ -646,19 +646,19 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
     pl = get_pl_dlt()
 
     # Test node names
-    assert pl.nodes_dict["brz"].primary_sink.dlt_table_or_view_name == "dev.sandbox.brz"
-    assert pl.nodes_dict["slv"].primary_sink.dlt_table_or_view_name == "dev.sandbox.slv"
-    assert pl.nodes_dict["gld"].primary_sink.dlt_table_or_view_name == "gld"
+    assert pl.nodes_dict["brz"].primary_sink.sdp_table_or_view_name == "dev.sandbox.brz"
+    assert pl.nodes_dict["slv"].primary_sink.sdp_table_or_view_name == "dev.sandbox.slv"
+    assert pl.nodes_dict["gld"].primary_sink.sdp_table_or_view_name == "gld"
     assert (
-        pl.nodes_dict["gld_a"].primary_sink.dlt_table_or_view_name
+        pl.nodes_dict["gld_a"].primary_sink.sdp_table_or_view_name
         == "dev.sandbox2.gld_a"
     )
     assert (
-        pl.nodes_dict["gld_b"].primary_sink.dlt_table_or_view_name
+        pl.nodes_dict["gld_b"].primary_sink.sdp_table_or_view_name
         == "dev.sandbox2.gld_b"
     )
     assert (
-        pl.nodes_dict["gld_ab"].primary_sink.dlt_table_or_view_name
+        pl.nodes_dict["gld_ab"].primary_sink.sdp_table_or_view_name
         == "prd.sandbox2.gld_ab"
     )
 
