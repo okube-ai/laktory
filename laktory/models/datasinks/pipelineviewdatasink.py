@@ -77,12 +77,12 @@ class PipelineViewDataSink(BaseDataSink):
     # ----------------------------------------------------------------------- #
 
     @property
-    def dlt_table_or_view_name(self) -> str:
+    def sdp_table_or_view_name(self) -> str:
         return self.pipeline_view_name
 
     @property
-    def dlt_table_or_view_kwargs(self):
-        kwargs = {"name": self.dlt_table_or_view_name}
+    def sdp_table_or_view_kwargs(self):
+        kwargs = {"name": self.sdp_table_or_view_name}
         if self.metadata:
             if self.metadata.comment:
                 kwargs["comment"] = self.metadata.comment
@@ -91,22 +91,22 @@ class PipelineViewDataSink(BaseDataSink):
         return kwargs
 
     @property
-    def dlt_warning_expectations(self):
+    def sdp_warning_expectations(self):
         e = {}
         if not self.is_quarantine:
-            e = self.parent_pipeline_node.dlt_warning_expectations
+            e = self.parent_pipeline_node.sdp_warning_expectations
         return e
 
     @property
-    def dlt_drop_expectations(self):
+    def sdp_drop_expectations(self):
         e = {}
         if not self.is_quarantine:
-            e = self.parent_pipeline_node.dlt_drop_expectations
+            e = self.parent_pipeline_node.sdp_drop_expectations
         return e
 
     @property
-    def dlt_fail_expectations(self):
+    def sdp_fail_expectations(self):
         e = {}
         if not self.is_quarantine:
-            e = self.parent_pipeline_node.dlt_fail_expectations
+            e = self.parent_pipeline_node.sdp_fail_expectations
         return e

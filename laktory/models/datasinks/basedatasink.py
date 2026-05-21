@@ -236,17 +236,18 @@ class BaseDataSink(BaseModel, PipelineChild):
         return self.merge_cdc_options is not None
 
     @property
-    def dlt_pre_merge_view_name(self):
+    def sdp_pre_merge_view_name(self):
         """
-        DLT view applying node transformer prior to applying CDC changes.
+        SPD view applying node transformer prior to applying CDC changes.
         """
-        return "_" + self.dlt_table_or_view_name.split(".")[-1]
+        return "_" + self.sdp_table_or_view_name.split(".")[-1]
 
     @property
-    def dlt_apply_changes_kwargs(self) -> dict[str, str]:
+    def ldp_apply_changes_kwargs(self) -> dict[str, str]:
         """
-        Keyword arguments for dlt.apply_changes function
+        Keyword arguments for dp.apply_changes function
         """
+        # TODO: Rename to AUTO_MERGE
 
         # if not isinstance(self, TableDataSink):
         #     raise ValueError("DLT only supports `TableDataSink` class")
@@ -260,7 +261,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             "ignore_null_updates": cdc.ignore_null_updates,
             "keys": cdc.primary_keys,
             "sequence_by": cdc.order_by,
-            "source": self.dlt_pre_merge_view_name,
+            "source": self.sdp_pre_merge_view_name,
             "stored_as_scd_type": cdc.scd_type,
             "target": self.table_name,
             # "track_history_column_list": cdc.track_history_columns,  # NOT SUPPORTED
