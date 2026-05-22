@@ -25,6 +25,8 @@ jobs:
         include:
           - pyVersion: '3.12'
             sparkVersion: '3'
+          - pyVersion: '3.12'
+            sparkVersion: '41'
     steps:
       - name: Check if run tests
         env:
@@ -80,7 +82,12 @@ jobs:
           if [[ "${{ matrix.sparkVersion }}" == "3" ]]; then
             .venv/bin/pip install -r .github/constraints/spark3.txt
           fi
-          make test
+          if [[ "${{ matrix.sparkVersion }}" == "41" ]]; then
+            .venv/bin/pip install -r .github/constraints/spark41.txt
+            uv run pytest tests/pipeline/orchestrators/test_orchestrator_sdp.py -v
+          else
+            make test
+          fi
         env:
 
           # Terraform Preview

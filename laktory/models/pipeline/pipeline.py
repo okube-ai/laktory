@@ -28,6 +28,9 @@ from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrat
 from laktory.models.pipeline.orchestrators.lakeflowjoborchestrator import (
     LakeflowJobOrchestrator,
 )
+from laktory.models.pipeline.orchestrators.sparkdeclarativepipelineorchestrator import (
+    SparkDeclarativePipelineOrchestrator,
+)
 from laktory.models.pipeline.pipelinenode import PipelineNode
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.virtualterraformresource import VirtualTerraformResource
@@ -249,6 +252,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
     orchestrator: (
         LakeflowJobOrchestrator
         | LakeflowDeclarativePipelineOrchestrator
+        | SparkDeclarativePipelineOrchestrator
         | AirflowOrchestrator
     ) = Field(
         None,
@@ -416,7 +420,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
     @property
     def is_orchestrator_sdp(self) -> bool:
         """If `True`, pipeline orchestrator is Spark Declarative Pipelines"""
-        return False  # stub until SparkDeclarativePipelineOrchestrator is implemented
+        return isinstance(self.orchestrator, SparkDeclarativePipelineOrchestrator)
 
     def to_airflow_dag(self, **dag_kwargs):
         return self.orchestrator.to_airflow(**dag_kwargs)
@@ -437,7 +441,11 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             and self.orchestrator
             and isinstance(
                 self.orchestrator,
-                (LakeflowDeclarativePipelineOrchestrator, LakeflowJobOrchestrator),
+                (
+                    LakeflowDeclarativePipelineOrchestrator,
+                    LakeflowJobOrchestrator,
+                    SparkDeclarativePipelineOrchestrator,
+                ),
             )
         ):
             root = "/.laktory/"
@@ -638,6 +646,13 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         """
 
         logger.info(f"Executing pipeline '{self.name}'")
+
+        if self.is_orchestrator_sdp:
+            from laktory import is_sdp_execute
+
+            if not is_sdp_execute():
+                self.orchestrator.execute(full_refresh=full_refresh)
+                return
 
         plan = self.get_execution_plan(selects=selects)
         node_names = plan.node_names

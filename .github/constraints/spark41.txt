@@ -1,0 +1,1 @@
+pyspark[connect,pipelines]>=4.1
