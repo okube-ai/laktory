@@ -64,7 +64,7 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
     @computed_field(description="storage")
     def storage(self) -> str | None:
         if self.storage_:
-            return str(Path(self.storage_).absolute())
+            return self.storage_
 
         pl = self.parent_pipeline
         if not pl:
@@ -109,6 +109,7 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
                     "type",
                     "dataframe_backend",
                     "dataframe_api",
+                    "configuration",
                 ],
                 by_alias=True,
             ),
@@ -132,7 +133,7 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
     # Build                                                                   #
     # ----------------------------------------------------------------------- #
 
-    def build(self) -> Path:
+    def build(self) -> None:
         """
         Generate SDP artifacts into `build_root/pipelines/`.
 
