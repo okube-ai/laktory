@@ -1,16 +1,16 @@
+import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
 from typing import Literal
 
 import yaml
+from pydantic import AliasChoices
 from pydantic import Field
+from pydantic import computed_field
 
 from laktory._logger import get_logger
-from laktory._settings import settings
-from laktory.models.pipeline.orchestrators.pipelineconfigworkspacefile import (
-    PipelineConfigWorkspaceFile,
-)
 from laktory.models.pipelinechild import PipelineChild
 
 logger = get_logger(__name__)
@@ -37,17 +37,99 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
     type: Literal["SPARK_DECLARATIVE_PIPELINE"] = Field(
         "SPARK_DECLARATIVE_PIPELINE", description="Type of orchestrator"
     )
-    config_file: PipelineConfigWorkspaceFile = Field(
-        PipelineConfigWorkspaceFile(),
-        description="Pipeline configuration (json) file used by sdp_laktory_pl.py to read and execute the pipeline.",
+    catalog: str | None = Field(
+        None, description="The default target catalog for pipeline outputs."
     )
-    storage: str | None = Field(
+    configuration: dict[str, str] | None = Field(
         None,
-        description="URI for SDP checkpoint storage. Must include a scheme (file://, s3a://, hdfs://, etc.). Defaults to file:///tmp/{pipeline_safe_name}-sdp-checkpoints.",
+        description="Map of configuration properties",
+    )
+    schema_: str | None = Field(
+        None,
+        description="The default target schema for pipeline outputs. database can alternatively be used as an alias.",
+        serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_", "database"),
+    )
+    # config_file: PipelineConfigWorkspaceFile = Field(
+    #     PipelineConfigWorkspaceFile(),
+    #     description="Pipeline configuration (json) file used by sdp_laktory_pl.py to read and execute the pipeline.",
+    # )
+    storage_: str | None = Field(
+        None,
+        description="A directory to store checkpoints and configuration files. Must include a scheme (file://, s3a://, hdfs://, etc.). Defaults to file:///{self.parent_pipeline.root_path}.",
+        validation_alias=AliasChoices("storage", "storage_"),
+        exclude=True,
     )
 
+    @computed_field(description="storage")
+    def storage(self) -> str | None:
+        if self.storage_:
+            return str(Path(self.storage_).absolute())
+
+        pl = self.parent_pipeline
+        if not pl:
+            return None
+
+        return "file://" + str(pl.root_path.absolute())
+
+    @property
+    def config_dict(self):
+        pl = self.parent_pipeline
+        if not pl:
+            return None
+
+        return pl.model_dump(exclude_unset=True, mode="json")
+
+    @property
+    def config_filepath_abs(self) -> Path:
+        return (
+            self.parent_pipeline.root_path.absolute()
+            / f"{self.parent_pipeline.name}.json"
+        )
+
+    @property
+    def config_filepath_rel(self) -> Path:
+        return Path(
+            os.path.relpath(self.config_filepath_abs, self.parent_pipeline.root_path)
+        )
+
+    @property
+    def spec_dict(self):
+        _conf = dict(self.configuration or {})
+        _conf["laktory.is_sdp_execute"] = "true"
+        _conf["config_filepath"] = str(self.config_filepath_rel)
+
+        return {
+            "name": self.parent_pipeline.name,
+            "libraries": [{"glob": {"include": "sdp_laktory_pl.py"}}],
+            **self.model_dump(
+                mode="json",
+                exclude_unset=True,
+                exclude=[
+                    "type",
+                    "dataframe_backend",
+                    "dataframe_api",
+                ],
+                by_alias=True,
+            ),
+            "configuration": _conf,
+        }
+
+    @property
+    def spec_filepath_abs(self) -> Path:
+        return (
+            self.parent_pipeline.root_path.absolute()
+            / f"{self.parent_pipeline.name}-spec.yaml"
+        )
+
+    @property
+    def spec_filepath_rel(self) -> Path:
+        return Path(
+            os.path.relpath(self.spec_filepath_abs, self.parent_pipeline.root_path)
+        )
+
     # ----------------------------------------------------------------------- #
-    # Build                                                                    #
+    # Build                                                                   #
     # ----------------------------------------------------------------------- #
 
     def build(self) -> Path:
@@ -61,13 +143,20 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
         """
         pl = self.parent_pipeline
 
-        pipelines_dir = Path(settings.build_root) / "pipelines"
-        pipelines_dir.mkdir(parents=True, exist_ok=True)
+        root_dir = pl.root_path
+        root_dir.mkdir(parents=True, exist_ok=True)
 
-        # 1. Write pipeline config JSON
-        self.config_file.build()
+        logger.info(f"Writing SDP artifacts to {root_dir}")
 
-        # 2. Copy sdp_laktory_pl.py template
+        # Write laktory pipeline config JSON
+        with self.config_filepath_abs.open("w") as fp:
+            json.dump(self.config_dict, fp, indent=4)
+
+        # Write Spark pipeline spec file
+        with self.spec_filepath_abs.open("w") as fp:
+            yaml.dump(self.spec_dict, fp, default_flow_style=False, sort_keys=False)
+
+        # Copy python code
         source_script = (
             Path(__file__).parent.parent.parent.parent
             / "resources"
@@ -77,27 +166,8 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
             / "notebooks"
             / "sdp_laktory_pl.py"
         )
-        target_script = pipelines_dir / "sdp_laktory_pl.py"
+        target_script = root_dir / "sdp_laktory_pl.py"
         shutil.copy(source_script, target_script)
-
-        # 3. Write SDP spec YAML
-        config_path = pipelines_dir / f"{pl.name}.json"
-        storage = self.storage or f"file:///tmp/{pl.safe_name}-sdp-checkpoints"
-        spec = {
-            "name": pl.name,
-            "libraries": [{"glob": {"include": "sdp_laktory_pl.py"}}],
-            "storage": storage,
-            "configuration": {
-                "laktory.is_sdp_execute": "true",
-                "config_filepath": str(config_path),
-            },
-        }
-        spec_path = pipelines_dir / f"{pl.name}-spec.yml"
-        logger.debug(f"Writing SDP spec at {spec_path}")
-        with open(spec_path, "w") as fp:
-            yaml.dump(spec, fp, default_flow_style=False, sort_keys=False)
-
-        return spec_path
 
     def execute(self, full_refresh: bool = False, cwd: str | None = None):
         """
@@ -111,17 +181,22 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
             Working directory for the subprocess. Controls where `spark-warehouse/`
             is created. Defaults to the current process working directory.
         """
-        spec_path = self.build()
-        cmd = ["spark-pipelines", "run", "--spec", str(spec_path)]
+        self.build()
+        cmd = ["spark-pipelines", "run", "--spec", str(self.spec_filepath_rel)]
+        if cwd is None:
+            cwd = self.parent_pipeline.root_path.absolute()
         if full_refresh:
             cmd += ["--full-refresh"]
         logger.info(f"Running SDP pipeline: {' '.join(cmd)}")
         subprocess.run(cmd, check=True, cwd=cwd)
 
     # ----------------------------------------------------------------------- #
-    # Children                                                                 #
+    # Children                                                                #
     # ----------------------------------------------------------------------- #
 
     @property
     def children_names(self):
-        return ["config_file", "type"]
+        return [
+            # "config_file",
+            "type"
+        ]

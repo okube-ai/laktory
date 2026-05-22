@@ -52,7 +52,12 @@ pyspark = [
     "delta-spark",
     "pyarrow",
     "pyspark[connect]",
-    "pyspark[pipelines]",
+    "setuptools; python_version >= '3.12'"
+]
+pyspark-pipelines = [
+    "delta-spark",
+    "pyarrow",
+    "pyspark[connect,pipelines]>=4.1",
     "setuptools; python_version >= '3.12'"
 ]
 dev = [
@@ -104,7 +109,7 @@ path = "laktory/_version.py"
 # This does NOT affect the published package metadata; users can install any
 # PySpark version. When a newer compatible Delta JAR ships, update this pin.
 constraint-dependencies = [
-    "pyspark==4.0.0",
+    "pyspark>=4.0.0,<4.2.0",
     "delta-spark>=4.0.0,<4.1.0",
 ]
 

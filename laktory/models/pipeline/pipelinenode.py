@@ -812,9 +812,13 @@ class PipelineNode(BaseModel, PipelineChild):
         if self._stage_df is None:
             # Node without source or transformer
             return
-        is_streaming = getattr(nw.to_native(self._stage_df), "isStreaming", False)
         if not self.expectations:
             return
+        if self.is_sdp_execute:
+            # SDP blocks DataFrame analysis (AnalyzePlan RPCs) inside decorated
+            # functions; expectations are unsupported in open-source SDP anyway.
+            return
+        is_streaming = getattr(nw.to_native(self._stage_df), "isStreaming", False)
 
         def _batch_check(df, node):
             for e in node.expectations:
