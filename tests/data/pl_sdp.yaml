@@ -1,4 +1,5 @@
 name: pl-sdp
+root_path: {tmp_path}
 orchestrator:
   type: SPARK_DECLARATIVE_PIPELINE
   database: default
@@ -10,9 +11,9 @@ nodes:
     path: {tmp_path}/brz_source/
   sinks:
   - table_name: brz
-#
-#- name: slv
-#  source:
-#    node_name: brz
-#  sinks:
-#  - table_name: slv
+
+- name: slv
+  source:
+    node_name: brz
+  sinks:
+  - table_name: slv

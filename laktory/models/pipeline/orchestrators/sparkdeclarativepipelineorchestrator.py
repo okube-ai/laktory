@@ -11,6 +11,7 @@ from pydantic import Field
 from pydantic import computed_field
 
 from laktory._logger import get_logger
+from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipelinechild import PipelineChild
 
 logger = get_logger(__name__)
@@ -130,17 +131,48 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
         )
 
     # ----------------------------------------------------------------------- #
+    # Update LDP                                                              #
+    # ----------------------------------------------------------------------- #
+
+    def update_from_parent(self):
+        # TODO: Re-use the same function from the Lakeflow Declarative Pipeline?
+
+        pl = self.parent_pipeline
+
+        for node in pl.nodes:
+            if node.is_view:
+                raise ValueError(
+                    f"Node '{node.name}' of pipeline '{pl.name}' is a view which is not supported with Spark Declarative Pipeline orchestrator."
+                )
+
+        for n in pl.nodes:
+            for s in n.all_sinks:
+                if isinstance(s, TableDataSink):
+                    s.catalog_name = s.catalog_name or self.catalog
+                    s.schema_name = s.schema_name or self.schema_ or self.target
+
+        # Update pipeline config
+        # _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]
+        # _path = (
+        #     "/Workspace"
+        #     + self.inject_vars_into_dump({"path": self.config_file.path})["path"]
+        # )
+        # if self.configuration is None:
+        #     self.configuration = {}
+        # self.configuration["pipeline_name"] = pl.name  # only for reference
+        # # self.configuration["requirements"] = json.dumps(_requirements)
+        # # self.configuration["config_filepath"] = _path
+        # # This is to ensure configuration is flagged as set and part of
+        # # model_fields_set when injecting variables.
+        # self.configuration = self.configuration
+
+    # ----------------------------------------------------------------------- #
     # Build                                                                   #
     # ----------------------------------------------------------------------- #
 
     def build(self) -> None:
         """
-        Generate SDP artifacts into `build_root/pipelines/`.
-
-        Returns
-        -------
-        :
-            Path to the generated `{pipeline_name}-spec.yml` file.
+        Generate SDP artifacts into the pipeline root directory.
         """
         pl = self.parent_pipeline
 
@@ -170,7 +202,12 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
         target_script = root_dir / "sdp_laktory_pl.py"
         shutil.copy(source_script, target_script)
 
-    def execute(self, full_refresh: bool = False, cwd: str | None = None):
+    def execute(
+        self,
+        full_refresh: bool = False,
+        cwd: str | None = None,
+        read_output: bool = False,
+    ):
         """
         Build SDP artifacts then run the pipeline via `spark-pipelines run`.
 
@@ -180,8 +217,12 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
             If `True`, passes `--full-refresh` to the CLI.
         cwd:
             Working directory for the subprocess. Controls where `spark-warehouse/`
-            is created. Defaults to the current process working directory.
+            is created. Defaults to the pipeline root path.
+        read_output:
+            If `True` pipeline outputs are read and assigned to respective nodes (`pipeline.nodes[i].output_df`)
         """
+        from laktory import get_spark_session
+
         self.build()
         cmd = ["spark-pipelines", "run", "--spec", str(self.spec_filepath_rel)]
         if cwd is None:
@@ -191,13 +232,32 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
         logger.info(f"Running SDP pipeline: {' '.join(cmd)}")
         subprocess.run(cmd, check=True, cwd=cwd)
 
+        # Read back node outputs from the spark-warehouse written by SDP
+        if read_output:
+            spark = get_spark_session()
+            for node in self.parent_pipeline.nodes:
+                for sink in node.sinks:
+                    warehouse_root = Path(cwd) / "spark-warehouse"
+                    schema_name = sink.schema_name or "default"
+                    if schema_name != "default":
+                        warehouse_root = warehouse_root / f"{schema_name}.db"
+
+                    if sink.catalog_name:
+                        # Unity-Catalog (3-levels namespace)
+                        node._output_df = sink.as_source().read()
+                    else:
+                        delta_path = warehouse_root / sink.table_name
+                        if delta_path.exists():
+                            print(f"READING DELTA {delta_path}")
+
+                            node._output_df = spark.read.format("delta").load(
+                                str(delta_path)
+                            )
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #
 
     @property
     def children_names(self):
-        return [
-            # "config_file",
-            "type"
-        ]
+        return []
