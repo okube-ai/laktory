@@ -2,13 +2,15 @@ import io
 import shutil
 from pathlib import Path
 
-import polars
+import pyspark.sql.functions as F
 import pytest
 import yaml
 
 from laktory import models
 from laktory._settings import settings
 from laktory._testing import StreamingSource
+
+from ...conftest import assert_dfs_equal
 
 data_dirpath = Path(__file__).parent.parent.parent / "data"
 
@@ -82,14 +84,18 @@ def test_execute(tmp_path, monkeypatch, spark):
 
     # Write bronze source
     ss = StreamingSource("PYSPARK")
-    ss.write_to_json(tmp_path / "brz_source")
+    df0 = ss.write_to_json(tmp_path / "brz_source")
+    df0 = df0.to_native()
 
     # Get and execute pipeline
     pl = get_pl_sdp(tmp_path)
     pl.orchestrator.execute(cwd=str(tmp_path), read_output=True)
 
+    # Set targets
+    df_brz = df0.withColumn("zero", F.lit(0.0))
+    df_slv = df_brz.withColumn("x2", F.col("x1"))
+
     # Test Results
-    df = polars.read_parquet(tmp_path / "spark-warehouse" / "slv").sort("id")
-    assert df["id"].to_list() == ["a", "b", "c"]
-    assert df["x1"].to_list() == [1, 2, 3]
-    assert df["y1"].to_list() == [1, 2, 3]
+    df0.printSchema()
+    assert_dfs_equal(pl.nodes[0].output_df, df_brz)
+    assert_dfs_equal(pl.nodes[1].output_df, df_slv)

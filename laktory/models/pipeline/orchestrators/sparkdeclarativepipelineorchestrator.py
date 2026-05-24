@@ -243,16 +243,15 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
                         warehouse_root = warehouse_root / f"{schema_name}.db"
 
                     if sink.catalog_name:
-                        # Unity-Catalog (3-levels namespace)
+                        # Unity Catalog — table accessible via catalog directly
                         node._output_df = sink.as_source().read()
                     else:
-                        delta_path = warehouse_root / sink.table_name
-                        if delta_path.exists():
-                            print(f"READING DELTA {delta_path}")
-
-                            node._output_df = spark.read.format("delta").load(
-                                str(delta_path)
-                            )
+                        dataframe_path = warehouse_root / sink.table_name
+                        if dataframe_path.exists():
+                            # Hive tables can be saved as parquet or delta
+                            # We use parquet for simplicity because it will work in
+                            # both cases
+                            node._output_df = spark.read.parquet(str(dataframe_path))
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #

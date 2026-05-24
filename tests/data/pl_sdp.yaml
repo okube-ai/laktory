@@ -11,9 +11,25 @@ nodes:
     path: {tmp_path}/brz_source/
   sinks:
   - table_name: brz
+    format: PARQUET
+  transformer:
+    dataframe_api: NATIVE
+    nodes:
+    - func_name: with_column
+      func_args:
+        - zero
+        - F.lit(0.0)
 
 - name: slv
   source:
     node_name: brz
   sinks:
   - table_name: slv
+    format: PARQUET
+  transformer:
+    dataframe_api: NATIVE
+    nodes:
+    - func_name: with_column
+      func_args:
+        - x2
+        - F.col('x1')

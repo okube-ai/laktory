@@ -22,6 +22,7 @@ class TableDataSink(BaseDataSink):
         None,
         description="Sink table catalog name",
     )
+    # TODO: consider expanding to include ORC, AVRO (Spark USING clause supports them for managed tables)
     format: Literal["PARQUET", "DELTA"] = Field(
         "DELTA", description="Storage format for data table."
     )
@@ -338,6 +339,8 @@ class TableDataSink(BaseDataSink):
     @property
     def sdp_table_or_view_kwargs(self):
         kwargs = {"name": self.sdp_table_or_view_name}
+        if self.format and self.format.upper() != "DELTA":
+            kwargs["format"] = self.format.lower()
         if self.metadata:
             if self.metadata.comment:
                 kwargs["comment"] = self.metadata.comment
