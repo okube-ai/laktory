@@ -326,7 +326,9 @@ class DataFrameMethod(BaseModel, PipelineChild):
             if namespace:
                 f = getattr(getattr(df, namespace), func_name, None)
             else:
-                f = getattr(df, func_name, None)
+                # getattr requires schema analysis — which SDP blocks. hasattr is safe
+                if hasattr(type(df), func_name):
+                    f = getattr(df, func_name)
 
         if f is None:
             df_type = type(df)

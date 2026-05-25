@@ -96,6 +96,5 @@ def test_execute(tmp_path, monkeypatch, spark):
     df_slv = df_brz.withColumn("x2", F.col("x1"))
 
     # Test Results
-    df0.printSchema()
     assert_dfs_equal(pl.nodes[0].output_df, df_brz)
     assert_dfs_equal(pl.nodes[1].output_df, df_slv)

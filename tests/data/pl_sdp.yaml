@@ -15,7 +15,7 @@ nodes:
   transformer:
     dataframe_api: NATIVE
     nodes:
-    - func_name: with_column
+    - func_name: withColumn
       func_args:
         - zero
         - F.lit(0.0)
@@ -29,7 +29,7 @@ nodes:
   transformer:
     dataframe_api: NATIVE
     nodes:
-    - func_name: with_column
+    - func_name: withColumn
       func_args:
         - x2
         - F.col('x1')
