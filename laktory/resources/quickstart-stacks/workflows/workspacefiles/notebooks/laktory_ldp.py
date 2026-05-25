@@ -39,14 +39,11 @@ def define_table(node, sink):
         @dp.expect_all_or_drop(sink.sdp_drop_expectations)
         @dp.expect_all_or_fail(sink.sdp_fail_expectations)
         def get_df():
-            # Execute node
             node.execute()
             if sink.is_quarantine:
                 df = node.quarantine_df
             else:
                 df = node.output_df
-
-            # Return
             return df.to_native()
 
     else:

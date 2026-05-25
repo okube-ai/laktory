@@ -619,6 +619,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         named_dfs: dict[str, AnyFrame] = None,
         update_tables_metadata: bool = True,
         selects: list[str] | None = None,
+        use_orchestrator: bool = False,
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -643,15 +644,34 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             - `*{node_name}`: Execute the node and its upstream dependencies.
             - `{node_name}*`: Execute the node and its downstream dependencies.
             - `*{node_name}*`: Execute the node, its upstream, and downstream dependencies.
+        use_orchestrator:
+            If `True` and an orchestrator is configured, execution is
+            delegated to the orchestrator (e.g. `spark-pipelines run` for SDP)
+            instead of running the pure-Python path. Defaults to `False` so
+            that `pl.execute()` always runs in-process unless explicitly
+            requested. This flag is ignored when already running inside an
+            orchestrator context (e.g. inside `laktory_sdp.py`).
         """
 
         logger.info(f"Executing pipeline '{self.name}'")
 
-        if self.is_orchestrator_sdp:
+        if use_orchestrator:
+            if self.orchestrator is None:
+                raise NotImplementedError(
+                    "use_orchestrator=True requires an orchestrator to be configured."
+                )
+            if not self.is_orchestrator_sdp:
+                raise NotImplementedError(
+                    f"use_orchestrator=True is not supported for orchestrator type '{self.orchestrator.type}'. "
+                    "Only SPARK_DECLARATIVE_PIPELINE supports local execution via use_orchestrator."
+                )
             from laktory import is_sdp_execute
 
             if not is_sdp_execute():
-                self.orchestrator.execute(full_refresh=full_refresh)
+                self.orchestrator.execute(
+                    full_refresh=full_refresh,
+                    selects=selects,
+                )
                 return
 
         plan = self.get_execution_plan(selects=selects)

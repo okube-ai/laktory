@@ -5,7 +5,6 @@ from pathlib import Path
 
 import polars
 import pytest
-from pendulum.tz.timezone import UTC
 
 from laktory import models
 
@@ -46,6 +45,7 @@ def test_get_dag(tmp_path):
 
     import jinja2
     from airflow.timetables.interval import CronDataIntervalTimetable
+    from pendulum.tz.timezone import UTC
 
     pl = get_pl(tmp_path)
 

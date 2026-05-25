@@ -44,10 +44,10 @@ def test_spark_declarative_pipeline_build(tmp_path, monkeypatch):
 
     root_dir = pl.root_path
     assert (root_dir / "pl-sdp.json").exists()
-    assert (root_dir / "sdp_laktory_pl.py").exists()
+    assert (root_dir / "laktory_sdp.py").exists()
 
     spec_path = pl.orchestrator.spec_filepath_abs
-    assert spec_path == root_dir / "pl-sdp-spec.yaml"
+    assert spec_path == root_dir / "spark-pipeline.yaml"
     assert spec_path.exists()
 
     with open(spec_path) as fp:
@@ -56,7 +56,7 @@ def test_spark_declarative_pipeline_build(tmp_path, monkeypatch):
     assert spec["name"] == "pl-sdp"
     assert spec["schema"] == "default"
     assert spec["storage"] == "file://" + str(root_dir.absolute())
-    assert spec["libraries"] == [{"glob": {"include": "sdp_laktory_pl.py"}}]
+    assert spec["libraries"] == [{"glob": {"include": "laktory_sdp.py"}}]
     assert spec["configuration"]["laktory.is_sdp_execute"] == "true"
     assert "config_filepath" in spec["configuration"]
 
@@ -65,14 +65,38 @@ def test_spark_declarative_pipeline_execute(tmp_path, monkeypatch, mocker):
     monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
     pl = get_pl_sdp(tmp_path)
     mock_run = mocker.patch("subprocess.run")
-    pl.execute()
-    mock_run.assert_called_once()
+
+    # Default: no refresh flags
+    pl.execute(use_orchestrator=True)
     cmd = mock_run.call_args[0][0]
     assert cmd[0] == "spark-pipelines"
     assert cmd[1] == "run"
     assert "--spec" in cmd
-    assert cmd[cmd.index("--spec") + 1] == "pl-sdp-spec.yaml"
+    assert cmd[cmd.index("--spec") + 1] == "spark-pipeline.yaml"
     assert mock_run.call_args[1]["cwd"] == pl.root_path.absolute()
+    assert "--full-refresh-all" not in cmd
+    assert "--full-refresh" not in cmd
+    assert "--refresh" not in cmd
+
+    # full_refresh only → --full-refresh-all
+    mock_run.reset_mock()
+    pl.execute(use_orchestrator=True, full_refresh=True)
+    cmd = mock_run.call_args[0][0]
+    assert "--full-refresh-all" in cmd
+
+    # selects only → --refresh datasets
+    mock_run.reset_mock()
+    pl.execute(use_orchestrator=True, selects=["brz_prices", "slv_prices"])
+    cmd = mock_run.call_args[0][0]
+    assert "--refresh" in cmd
+    assert cmd[cmd.index("--refresh") + 1] == "brz_prices,slv_prices"
+
+    # full_refresh + selects → --full-refresh datasets
+    mock_run.reset_mock()
+    pl.execute(use_orchestrator=True, full_refresh=True, selects=["brz_prices"])
+    cmd = mock_run.call_args[0][0]
+    assert "--full-refresh" in cmd
+    assert cmd[cmd.index("--full-refresh") + 1] == "brz_prices"
 
 
 @pytest.mark.skipif(

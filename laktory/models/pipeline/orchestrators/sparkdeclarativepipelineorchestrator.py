@@ -25,7 +25,7 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
 
     Generates three artifacts into `build_root/pipelines/`:
 
-    - `sdp_laktory_pl.py` — Python definition script with `@dp.materialized_view` / `@dp.table` decorators
+    - `laktory_sdp.py` — Python definition script with `@dp.materialized_view` / `@dp.table` decorators
     - `{pipeline_name}.json` — serialized pipeline configuration
     - `{pipeline_name}-spec.yml` — SDP YAML spec pointing to the script and config
 
@@ -53,7 +53,7 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
     )
     # config_file: PipelineConfigWorkspaceFile = Field(
     #     PipelineConfigWorkspaceFile(),
-    #     description="Pipeline configuration (json) file used by sdp_laktory_pl.py to read and execute the pipeline.",
+    #     description="Pipeline configuration (json) file used by laktory_sdp.py to read and execute the pipeline.",
     # )
     storage_: str | None = Field(
         None,
@@ -102,7 +102,7 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
 
         return {
             "name": self.parent_pipeline.name,
-            "libraries": [{"glob": {"include": "sdp_laktory_pl.py"}}],
+            "libraries": [{"glob": {"include": "laktory_sdp.py"}}],
             **self.model_dump(
                 mode="json",
                 exclude_unset=True,
@@ -119,10 +119,7 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
 
     @property
     def spec_filepath_abs(self) -> Path:
-        return (
-            self.parent_pipeline.root_path.absolute()
-            / f"{self.parent_pipeline.name}-spec.yaml"
-        )
+        return self.parent_pipeline.root_path.absolute() / "spark-pipeline.yaml"
 
     @property
     def spec_filepath_rel(self) -> Path:
@@ -193,18 +190,16 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
         source_script = (
             Path(__file__).parent.parent.parent.parent
             / "resources"
-            / "quickstart-stacks"
-            / "workflows"
-            / "workspacefiles"
-            / "notebooks"
-            / "sdp_laktory_pl.py"
+            / "scripts"
+            / "laktory_sdp.py"
         )
-        target_script = root_dir / "sdp_laktory_pl.py"
+        target_script = root_dir / "laktory_sdp.py"
         shutil.copy(source_script, target_script)
 
     def execute(
         self,
         full_refresh: bool = False,
+        selects: list[str] | None = None,
         cwd: str | None = None,
         read_output: bool = False,
     ):
@@ -214,7 +209,14 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
         Parameters
         ----------
         full_refresh:
-            If `True`, passes `--full-refresh` to the CLI.
+            If `True` without `selects`, passes `--full-refresh-all` to the CLI
+            to reset and recompute all datasets. If combined with `selects`,
+            passes `--full-refresh DATASETS` for the specified datasets only.
+        selects:
+            Comma-joined and passed as `--refresh DATASETS` (or
+            `--full-refresh DATASETS` when `full_refresh=True`). Values must be
+            dataset names as they appear in the SDP pipeline (i.e. table/view
+            names), not Laktory node names.
         cwd:
             Working directory for the subprocess. Controls where `spark-warehouse/`
             is created. Defaults to the pipeline root path.
@@ -227,8 +229,14 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
         cmd = ["spark-pipelines", "run", "--spec", str(self.spec_filepath_rel)]
         if cwd is None:
             cwd = self.parent_pipeline.root_path.absolute()
-        if full_refresh:
-            cmd += ["--full-refresh"]
+
+        if full_refresh and selects:
+            cmd += ["--full-refresh", ",".join(selects)]
+        elif full_refresh:
+            cmd += ["--full-refresh-all"]
+        elif selects:
+            cmd += ["--refresh", ",".join(selects)]
+
         logger.info(f"Running SDP pipeline: {' '.join(cmd)}")
         subprocess.run(cmd, check=True, cwd=cwd)
 
