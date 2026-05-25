@@ -374,7 +374,6 @@ def test_single_node(backend, tmp_path):
     assert_dfs_equal(df, df0)
 
 
-@pytest.mark.delta_write
 @pytest.mark.parametrize("backend", ["PYSPARK"])
 def test_full(backend, tmp_path):
     pl = get_pl(tmp_path)
@@ -396,7 +395,6 @@ def test_full(backend, tmp_path):
     assert_dfs_equal(df, polars.DataFrame({"id": ["a", "b"], "max_x1": [1, 2]}))
 
 
-@pytest.mark.delta_write
 @pytest.mark.parametrize("backend", ["PYSPARK"])
 def test_update_metadata(backend, tmp_path, spark):
     pl = get_pl(tmp_path)

@@ -14,10 +14,6 @@ from laktory.models.datasinks.mergecdcoptions import SUPPORTED_BACKENDS
 
 spark = laktory.get_spark_session()
 
-
-# All merge operations require delta-spark; only PYSPARK backend needs it.
-_pyspark_delta = pytest.param("PYSPARK", marks=pytest.mark.delta_write)
-
 # --------------------------------------------------------------------------- #
 # Functions                                                                   #
 # --------------------------------------------------------------------------- #
@@ -216,7 +212,7 @@ def read(path):
 # --------------------------------------------------------------------------- #
 
 
-@pytest.mark.parametrize("backend", [_pyspark_delta, "POLARS"])
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_basic(tmp_path, backend):
     df = build_target(path=tmp_path, write_target=False, backend=backend)
 
@@ -274,7 +270,7 @@ def test_basic(tmp_path, backend):
     assert (df1["from"] == "source").sum() == 7  # 6 new + 1 updates
 
 
-@pytest.mark.parametrize("backend", [_pyspark_delta, "POLARS"])
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_out_of_sequence(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
@@ -321,7 +317,7 @@ def test_out_of_sequence(tmp_path, backend):
     }
 
 
-@pytest.mark.parametrize("backend", [_pyspark_delta, "POLARS"])
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_outdated(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
@@ -379,7 +375,7 @@ def test_outdated(tmp_path, backend):
     }
 
 
-@pytest.mark.parametrize("backend", [_pyspark_delta, "POLARS"])
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_delete_non_existent(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
@@ -419,7 +415,7 @@ def test_delete_non_existent(tmp_path, backend):
     assert len(df1) == df0.collect().shape[0]
 
 
-@pytest.mark.parametrize("backend", [_pyspark_delta, "POLARS"])
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_scd2(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
@@ -451,7 +447,7 @@ def test_scd2(tmp_path, backend):
     assert df1.loc[where]["__end_at"].fillna(-1).tolist() == [2, 3, 4, -1]
 
 
-@pytest.mark.parametrize("backend", [_pyspark_delta, "POLARS"])
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_scd2_with_delete(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
@@ -488,7 +484,7 @@ def test_scd2_with_delete(tmp_path, backend):
     assert df1.loc[where]["__end_at"].fillna(-1).tolist() == [2, 3, 4, -1]
 
 
-@pytest.mark.parametrize("backend", [_pyspark_delta, "POLARS"])
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_null_updates(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
@@ -547,7 +543,7 @@ def test_null_updates(tmp_path, backend):
     }
 
 
-@pytest.mark.parametrize("backend", [_pyspark_delta, "POLARS"])
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_stream(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
@@ -593,7 +589,7 @@ def test_stream(tmp_path, backend):
     assert (df1["from"] == "source").sum() == 7  # 6 new + 1 updates
 
 
-@pytest.mark.parametrize("backend", [_pyspark_delta, "POLARS"])
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_stream_scd2(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
@@ -636,7 +632,7 @@ def test_stream_scd2(tmp_path, backend):
     assert df1.loc[where]["__end_at"].fillna(-1).tolist() == [2, 3, 4, -1]
 
 
-@pytest.mark.parametrize("backend", [_pyspark_delta, "POLARS"])
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_dlt_kwargs(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")

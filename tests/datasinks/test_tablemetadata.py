@@ -24,9 +24,7 @@ def tags():
     }
 
 
-@pytest.mark.parametrize(
-    "backend", [pytest.param("PYSPARK", marks=pytest.mark.delta_write), "POLARS"]
-)
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_hive_table(backend, tmp_path):
     df0 = get_df0(backend)
     spark = get_spark_session()

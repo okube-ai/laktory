@@ -117,10 +117,9 @@ constraint-dependencies = [
 [project.scripts]
 laktory = "laktory.cli.app:app"
 
-[pytest]
+[tool.pytest.ini_options]
 markers = [
     "databricks_connect: marks tests requiring databricks_connect package to run",
-    "delta_write: marks tests requiring delta write support (delta-spark compatible with installed Spark version)",
 ]
 
 [tool.ruff]

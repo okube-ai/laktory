@@ -14,17 +14,9 @@ from laktory.models.datasources.filedatasource import SUPPORTED_FORMATS
 
 from ..conftest import assert_dfs_equal
 
-pl_read_tests = [
-    pytest.param("POLARS", fmt, marks=pytest.mark.delta_write)
-    if fmt == "DELTA"
-    else ("POLARS", fmt)
-    for fmt in SUPPORTED_FORMATS[DataFrameBackends.POLARS]
-]
+pl_read_tests = [("POLARS", fmt) for fmt in SUPPORTED_FORMATS[DataFrameBackends.POLARS]]
 spark_read_tests = [
-    pytest.param("PYSPARK", fmt, marks=pytest.mark.delta_write)
-    if fmt == "DELTA"
-    else ("PYSPARK", fmt)
-    for fmt in SUPPORTED_FORMATS[DataFrameBackends.PYSPARK]
+    ("PYSPARK", fmt) for fmt in SUPPORTED_FORMATS[DataFrameBackends.PYSPARK]
 ]
 
 
@@ -100,10 +92,10 @@ def test_read(backend, fmt, tmp_path):
     [
         ("POLARS", "CSV"),
         ("POLARS", "JSON"),
-        pytest.param("POLARS", "DELTA", marks=pytest.mark.delta_write),
+        ("POLARS", "DELTA"),
         ("PYSPARK", "CSV"),
         ("PYSPARK", "JSON"),
-        pytest.param("PYSPARK", "DELTA", marks=pytest.mark.delta_write),
+        ("PYSPARK", "DELTA"),
     ],
 )
 def test_read_stream(backend, fmt, tmp_path):

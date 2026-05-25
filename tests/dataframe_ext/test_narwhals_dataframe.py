@@ -47,7 +47,6 @@ def df0():
         ("PYSPARK", True),
     ],
 )
-@pytest.mark.delta_write
 def test_display(backend, is_streaming, tmp_path):
     if not is_streaming:
         df = get_df0(backend=backend)

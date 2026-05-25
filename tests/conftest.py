@@ -1,6 +1,4 @@
 import os
-import tempfile
-from functools import lru_cache
 
 import narwhals as nw
 import pytest
@@ -10,32 +8,6 @@ from laktory import get_spark_session
 from laktory._logger import get_logger
 
 logger = get_logger(__name__)
-
-
-# --------------------------------------------------------------------------- #
-# Delta write detection                                                       #
-# --------------------------------------------------------------------------- #
-
-
-@lru_cache(maxsize=1)
-def is_delta_write_supported() -> bool:
-    """Return True if delta format write works in the current Spark environment."""
-    try:
-        spark = get_spark_session()
-        df = spark.createDataFrame([(1,)], ["x"])
-        with tempfile.TemporaryDirectory() as t:
-            df.write.format("delta").mode("overwrite").save(t + "/delta_probe")
-        return True
-    except Exception:
-        return False
-
-
-def pytest_runtest_setup(item):
-    for _ in item.iter_markers("delta_write"):
-        if not is_delta_write_supported():
-            pytest.skip(
-                "Delta write not supported (delta-spark incompatible with this Spark version)"
-            )
 
 
 # Update this when the test workspace changes.
