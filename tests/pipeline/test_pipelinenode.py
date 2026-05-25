@@ -88,7 +88,9 @@ def test_execute(backend, tmp_path):
         assert not path.exists()
 
 
-@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+@pytest.mark.parametrize(
+    "backend", ["POLARS", pytest.param("PYSPARK", marks=pytest.mark.delta_write)]
+)
 def test_execute_stream(backend, tmp_path):
     if DataFrameBackends(backend) not in STREAMING_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")

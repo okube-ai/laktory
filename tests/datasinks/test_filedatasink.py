@@ -9,10 +9,16 @@ from laktory.models.datasources.filedatasource import SUPPORTED_FORMATS
 from ..conftest import assert_dfs_equal
 
 pl_write_tests = [
-    ("POLARS", fmt) for fmt in SUPPORTED_FORMATS[DataFrameBackends.POLARS]
+    pytest.param("POLARS", fmt, marks=pytest.mark.delta_write)
+    if fmt == "DELTA"
+    else ("POLARS", fmt)
+    for fmt in SUPPORTED_FORMATS[DataFrameBackends.POLARS]
 ]
 spark_write_tests = [
-    ("PYSPARK", fmt) for fmt in SUPPORTED_FORMATS[DataFrameBackends.PYSPARK]
+    pytest.param("PYSPARK", fmt, marks=pytest.mark.delta_write)
+    if fmt == "DELTA"
+    else ("PYSPARK", fmt)
+    for fmt in SUPPORTED_FORMATS[DataFrameBackends.PYSPARK]
 ]
 
 

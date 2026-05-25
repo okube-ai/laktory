@@ -23,6 +23,15 @@ def get_pl(tmp_path):
     return pl
 
 
+def is_airflow_available():
+    try:
+        import airflow  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
 def is_airflow_initialized():
     try:
         from airflow.configuration import conf
@@ -40,6 +49,7 @@ def is_airflow_initialized():
         return False
 
 
+@pytest.mark.skipif(not is_airflow_available(), reason="Airflow not installed")
 def test_get_dag(tmp_path):
     from datetime import timezone
 

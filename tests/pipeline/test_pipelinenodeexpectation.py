@@ -156,7 +156,9 @@ def test_multi(backend, node):
     assert q["x1"].min() >= 3
 
 
-@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+@pytest.mark.parametrize(
+    "backend", ["POLARS", pytest.param("PYSPARK", marks=pytest.mark.delta_write)]
+)
 def test_streaming_multi(backend, node, tmp_path):
     if DataFrameBackends(backend) not in STREAMING_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")

@@ -174,6 +174,7 @@ def _capture_context_write(df, laktory_context: LaktoryContext = None) -> None:
     df.to_native().write.format("DELTA").mode("APPEND").save(laktory_context.sink.path)
 
 
+@pytest.mark.delta_write
 def test_laktory_context(tmp_path):
     global _captured_context
     target_path = str(tmp_path / "target")
@@ -194,6 +195,7 @@ def test_laktory_context(tmp_path):
     assert _captured_context.pipeline is None
 
 
+@pytest.mark.delta_write
 def test_laktory_context_with_pipeline_node(tmp_path):
     global _captured_context
     target_path = str(tmp_path / "target")
@@ -220,6 +222,7 @@ def test_laktory_context_with_pipeline_node(tmp_path):
     assert _captured_context.pipeline is None
 
 
+@pytest.mark.delta_write
 def test_laktory_context_not_injected_when_not_declared(tmp_path):
     """Functions without laktory_context in their signature receive no injection."""
     target_path = str(tmp_path / "target")
@@ -245,6 +248,7 @@ def test_laktory_context_not_injected_when_not_declared(tmp_path):
 # --------------------------------------------------------------------------- #
 
 
+@pytest.mark.delta_write
 def test_batch(tmp_path):
     target_path = str(tmp_path / "target")
 
@@ -264,6 +268,7 @@ def test_batch(tmp_path):
     assert set(result["symbol"].tolist()) == {"S0", "S1", "S2"}
 
 
+@pytest.mark.delta_write
 def test_batch_native(tmp_path):
     target_path = str(tmp_path / "target")
 
@@ -288,6 +293,7 @@ def test_batch_native(tmp_path):
 # --------------------------------------------------------------------------- #
 
 
+@pytest.mark.delta_write
 def test_stream(tmp_path):
     source_path = str(tmp_path / "source")
     target_path = str(tmp_path / "target")
@@ -314,6 +320,7 @@ def test_stream(tmp_path):
     assert set(result["symbol"].tolist()) == {"S0", "S1", "S2"}
 
 
+@pytest.mark.delta_write
 def test_laktory_context_stream_with_pipeline_node(tmp_path):
     global _captured_context
     source_path = str(tmp_path / "source")
