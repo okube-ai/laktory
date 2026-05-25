@@ -44,6 +44,11 @@ SUPPORTED_MODES = tuple(set(SPARK_MODES + SPARK_STREAMING_MODES + POLARS_DELTA_M
 class BaseDataSink(BaseModel, PipelineChild):
     """Base class for data sinks"""
 
+    as_stream: bool | None = Field(
+        None,
+        description="If `True` output DataFrame is written as Streaming DataFrame. If `None`, write mode is derived from"
+        "DataFrame.",
+    )
     databricks_quality_monitor: Literal[None] = Field(
         None, description="Databricks Quality Monitor"
     )
@@ -223,6 +228,61 @@ class BaseDataSink(BaseModel, PipelineChild):
     def serialize_path(self, value: Path) -> str:
         return value.as_posix()
 
+    def is_streaming(self, df=None) -> bool:
+        """
+        Return `True` if the write should use Spark Structured Streaming.
+
+        Resolution order:
+        1. If a Narwhals-wrapped PySpark DataFrame is provided, read its native
+           ``isStreaming`` attribute.
+        2. Fall back to ``self.as_stream`` (explicit sink configuration).
+        3. Fall back to the parent node's source ``as_stream`` flag.
+        4. Default to ``False`` (static write).
+
+        If both the DataFrame state and the configuration are set and they
+        disagree, a ``TypeError`` is raised to surface the misconfiguration
+        early.
+
+        Parameters
+        ----------
+        df:
+            Optional Narwhals DataFrame or LazyFrame. Must be passed before
+            calling ``.to_native()`` so that the Narwhals ``implementation``
+            attribute is still available.
+        """
+        # Check if DataFrame is streaming
+        df_is_streaming = None
+        if df is not None:
+            df = nw.from_native(df)
+            dataframe_backend = DataFrameBackends(df.implementation)
+            if dataframe_backend == DataFrameBackends.PYSPARK:
+                df_is_streaming = df.to_native().isStreaming
+
+        # Check if configured as stream from writer or source
+        configured_as_stream = self.as_stream
+        if configured_as_stream is None:
+            node = self.parent_pipeline_node
+            if node is not None:
+                source = node.source
+                if source is not None:
+                    configured_as_stream = source.as_stream
+
+        # Resolve conflict
+        if df_is_streaming is not None and configured_as_stream is not None:
+            if df_is_streaming != configured_as_stream:
+                if df_is_streaming:
+                    raise TypeError(
+                        "Sink configured as static, but received dataframe is streaming."
+                    )
+                else:
+                    raise TypeError(
+                        "Sink configured as stream, but received dataframe is not streaming."
+                    )
+
+        is_streaming = df_is_streaming or configured_as_stream or False
+
+        return is_streaming
+
     # -------------------------------------------------------------------------------- #
     # CDC                                                                              #
     # -------------------------------------------------------------------------------- #
@@ -391,7 +451,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             # Special Treatment for Spark Streaming
             if (
                 self.dataframe_backend == DataFrameBackends.PYSPARK
-                and df_native.isStreaming
+                and self.is_streaming(df=df)
             ):
                 if self.checkpoint_path is None:
                     raise ValueError(
@@ -463,7 +523,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     # -------------------------------------------------------------------------------- #
 
     def _validate_mode_spark(self, mode, df):
-        if df.to_native().isStreaming:
+        if self.is_streaming(df=df):
             if mode not in SPARK_STREAMING_MODES:
                 raise ValueError(
                     f"Mode '{mode}' is not supported for Spark Streaming DataFrame. Choose from {SPARK_STREAMING_MODES}"
