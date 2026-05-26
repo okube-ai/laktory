@@ -194,7 +194,8 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     @property
     def is_sdp_compatible(self) -> bool:
         """Expectation is supported by SDP natively via @dp.expect_* decorators"""
-        raise NotImplementedError()
+        # Open-source SDP (pyspark.pipelines) does not expose @dp.expect_* decorators yet.
+        return False
 
     @property
     def is_ldp_managed(self) -> bool:
@@ -216,10 +217,20 @@ class DataQualityExpectation(BaseModel, PipelineChild):
 
     @property
     def is_sdp_managed(self) -> bool:
-        """Expectation is SDP-compatible and pipeline node is executing inside SDP"""
-        # TODO: Check if orcherstrator is ldp and ldp managed
-        #    or check if orcherstrator is spd and spd managed
-        return self.is_ldp_managed
+        """True when the expectation is delegated to the SDP runtime via @dp.expect_*."""
+        if not self.is_sdp_compatible:
+            return False
+
+        pl = self.parent_pipeline
+        if pl is None:
+            return False
+
+        if not pl.is_orchestrator_sdp:
+            return False
+
+        from laktory import is_sdp_execute
+
+        return is_sdp_execute()
 
     @property
     def is_streaming_compatible(self):

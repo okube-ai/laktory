@@ -27,6 +27,8 @@ def define_table(node, sink):
     elif sink.is_streaming():
         table_or_view = dp.table
 
+    # Expectations are not supported by SDP. If/when they are
+    # this decorator will be updated to take them into account.
     @table_or_view(**sink.sdp_table_or_view_kwargs)
     def get_df():
         node.execute()

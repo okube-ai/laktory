@@ -303,15 +303,10 @@ class BaseDataSink(BaseModel, PipelineChild):
         return "_" + self.sdp_table_or_view_name.split(".")[-1]
 
     @property
-    def ldp_apply_changes_kwargs(self) -> dict[str, str]:
+    def ldp_auto_cdc_flow_kwargs(self) -> dict[str, str]:
         """
-        Keyword arguments for dp.apply_changes function
+        Keyword arguments for dp.create_auto_cdc_flow function
         """
-        # TODO: Rename to AUTO_MERGE
-
-        # if not isinstance(self, TableDataSink):
-        #     raise ValueError("DLT only supports `TableDataSink` class")
-
         cdc = self.merge_cdc_options
         return {
             "apply_as_deletes": cdc.delete_where,

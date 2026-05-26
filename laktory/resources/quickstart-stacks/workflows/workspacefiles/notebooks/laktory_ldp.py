@@ -37,9 +37,9 @@ def define_table(node, sink):
     if not sink.is_cdc:
 
         @table_or_view(**sink.sdp_table_or_view_kwargs)
-        @dp.expect_all(sink.sdp_warning_expectations)
-        @dp.expect_all_or_drop(sink.sdp_drop_expectations)
-        @dp.expect_all_or_fail(sink.sdp_fail_expectations)
+        @dp.expect_all(sink.ldp_warning_expectations)
+        @dp.expect_all_or_drop(sink.ldp_drop_expectations)
+        @dp.expect_all_or_fail(sink.ldp_fail_expectations)
         def get_df():
             node.execute()
             if sink.is_quarantine:
@@ -56,7 +56,7 @@ def define_table(node, sink):
             return node.output_df.to_native()
 
         dp.create_streaming_table(**sink.sdp_table_or_view_kwargs)
-        dp.apply_changes(**sink.ldp_apply_changes_kwargs)
+        dp.create_auto_cdc_flow(**sink.ldp_auto_cdc_flow_kwargs)
 
 
 # --------------------------------------------------------------------------- #

@@ -36,6 +36,12 @@ def test_spark_declarative_pipeline(tmp_path):
     assert pl.orchestrator.schema_ == "default"
     assert pl.orchestrator.storage.startswith("file://")
 
+    # schema_ from orchestrator is propagated to sinks that don't set it explicitly
+    for node in pl.nodes:
+        for sink in node.all_sinks:
+            if isinstance(sink, models.TableDataSink):
+                assert sink.schema_name == "default"
+
 
 def test_spark_declarative_pipeline_build(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
@@ -97,6 +103,29 @@ def test_spark_declarative_pipeline_execute(tmp_path, monkeypatch, mocker):
     cmd = mock_run.call_args[0][0]
     assert "--full-refresh" in cmd
     assert cmd[cmd.index("--full-refresh") + 1] == "brz_prices"
+
+
+def test_spark_declarative_pipeline_incompatible_expectations(
+    tmp_path, monkeypatch, spark
+):
+    import laktory
+
+    monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
+    monkeypatch.setattr(laktory, "is_sdp_execute", lambda: True)
+
+    pl = get_pl_sdp(tmp_path)
+    node = pl.nodes[0]
+
+    # Provide a minimal _stage_df so check_expectations runs (skip real source read)
+    node._stage_df = spark.createDataFrame([(1, 1.0)], ["id", "x1"])
+
+    # Attach a non-SDP-compatible expectation
+    node.expectations = [
+        models.DataQualityExpectation(name="x1 positive", expr="x1 > 0")
+    ]
+
+    with pytest.raises(TypeError, match="not natively supported by SDP"):
+        node.check_expectations()
 
 
 @pytest.mark.skipif(
