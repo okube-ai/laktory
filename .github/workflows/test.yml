@@ -20,6 +20,8 @@ jobs:
           - '3.11'
           - '3.12'
           - '3.13'
+        sparkVersion:
+          - '4'
         include:
           - pyVersion: '3.12'
             sparkVersion: '3'
