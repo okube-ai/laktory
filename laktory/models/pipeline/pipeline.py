@@ -267,9 +267,9 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
           `PipelineNodeDataSource` as the source, the data will be read from
           the upstream node sink.
         - `LakeflowDeclarativePipelineOrchestrator`: When orchestrated through Lakeflow
-          Spark Declarative Pipelines, each pipeline node creates a table (or view,
-          if no sink is defined). Behind the scenes, `PipelineNodeDataSource` leverages
-          native `dlt` `read` and `read_stream` functions to define the
+          Spark Declarative Pipelines, each pipeline node creates a table (or view). 
+          Behind the scenes, `PipelineNodeDataSource` leverages
+          native `spark` `read` and `read_stream` functions to define the
           interdependencies between the tables as in a standard declarative pipeline.
         """,
         # discriminator="type",  # discriminator can't be used because BaseModel adds

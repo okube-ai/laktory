@@ -3,7 +3,7 @@
 
 [Declarative Automation Bundles (DAB)](https://docs.databricks.com/en/dev-tools/bundles/index.html) is Databricks' native 
 infrastructure-as-code solution. Laktory integrates with it through a Python resource hook that discovers pipeline YAML 
-files, generates the required configuration files, and returns Job and DLT Pipeline resources, bypassing Laktory's own 
+files, generates the required configuration files, and returns Lakeflow Job and Declarative Pipeline resources, bypassing Laktory's own 
 deployment mechanism.
 
 If your team already uses the Databricks CLI and `databricks.yml` to manage workspace 
@@ -50,9 +50,9 @@ When `databricks bundle deploy` is executed, the Databricks CLI calls the regist
 1. Scans the configured pipeline directory for `*.yaml` / `*.yml` files
 2. Loads each pipeline and injects bundle variables
 3. Writes a JSON config file per pipeline to `laktory/.build/pipelines/` for the pipeline executor to read at runtime
-4. Returns a DABs `Resources` object containing one Job or DLT Pipeline resource per pipeline
+4. Returns a DABs `Resources` object containing one Job or Declarative Pipeline resource per pipeline
 
-DABs then syncs the `laktory/.build/` directory (including the generated config files and the DLT notebook) to the 
+DABs then syncs the `laktory/.build/` directory (including the generated config files and the LDP notebook) to the 
 Databricks workspace, and deploys the Job/Pipeline resources.
 
 
@@ -79,7 +79,7 @@ python:
     - 'laktory.dab:build_resources'
 ```
 
-The `./laktory/.build/` directory contains generated files (pipeline config JSON, DLT notebook) and is typically added to 
+The `./laktory/.build/` directory contains generated files (pipeline config JSON, LDP notebook) and is typically added to 
 `.gitignore`. The `sync.include` directive tells DABs to sync it to the workspace regardless.
 
 The `dab_workspace_root` variable must be set to `${workspace.root_path}` so Laktory can compute the correct 
@@ -104,17 +104,17 @@ variables:
 
 Each pipeline declares its orchestrator type, which determines what DABs resource is created.
 
-### Databricks Pipeline (DLT)
+### Lakeflow Declarative Pipeline (LDP)
 
-Setting `type: DATABRICKS_PIPELINE` generates a `databricks.bundles.pipelines.Pipeline` resource. All Laktory DLT 
-pipelines share a single entry-point notebook (`dlt_laktory_pl.py`) that is automatically copied to the build directory 
+Setting `type: LAKEFLOW_DECLARATIVE_PIPELINE` generates a `databricks.bundles.pipelines.Pipeline` resource. All Laktory
+LDP pipelines share a single entry-point notebook (`laktory_ldp.py`) that is automatically copied to the build directory 
 and synced to the workspace.
 
 ```yaml title="laktory/pipelines/pl-stock-prices.yml"
 name: pl-stock-prices
 
 orchestrator:
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   serverless: true
   catalog: ${var.catalog}
   schema: market
@@ -138,20 +138,20 @@ nodes:
           func_type: SQL
 ```
 
-Limitations of DLT orchestrators:
+Limitations of LDP orchestrators:
 
 - Pipeline nodes with [views](sourcessinks.md) are not supported
 
-### Databricks Job
+### Lakeflow Job
 
-Setting `type: DATABRICKS_JOB` generates a `databricks.bundles.jobs.Job` resource. Each pipeline node becomes a 
+Setting `type: LAKEFLOW_JOB` generates a `databricks.bundles.jobs.Job` resource. Each pipeline node becomes a 
 separate job task, and task dependencies mirror the pipeline DAG.
 
 ```yaml title="laktory/pipelines/pl-taxi-trips.yml"
 name: pl-taxi-trips
 
 orchestrator:
-  type: DATABRICKS_JOB
+  type: LAKEFLOW_JOB
   serverless_environment_version: "2"
   name: pl-taxi-trips
 
@@ -205,7 +205,7 @@ targets:
 name: pl-stock-prices
 
 orchestrator:
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   catalog: ${var.catalog}   # resolved from bundle variable at deploy time
   schema: market
 ```
@@ -217,8 +217,8 @@ Two settings control where Laktory writes and reads files during bundle resoluti
 
 | Setting          | Environment variable     | Description                                                          |
 |------------------|--------------------------|----------------------------------------------------------------------|
-| `build_root`     | `LAKTORY_BUILD_ROOT`     | Local directory for generated config JSON files and the DLT notebook |
-| `workspace_root` | `LAKTORY_WORKSPACE_ROOT` | Workspace path where Laktory files are synced by DABs              |
+| `build_root`     | `LAKTORY_BUILD_ROOT`     | Local directory for generated config JSON files and the LDP notebook |
+| `workspace_root` | `LAKTORY_WORKSPACE_ROOT` | Workspace path where Laktory files are synced by DABs                |
 
 Both are auto-configured from the bundle context when left at their defaults. The `build_root` is set to 
 `{bundle_root}/laktory/.build/` and `workspace_root` is derived as 

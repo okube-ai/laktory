@@ -37,7 +37,7 @@ def register_spark_session(spark=None):
     if spark is None:
         # No active session — build one (local / test usage).
         # Requires pyspark pip metadata to determine Scala / Delta JAR versions.
-        # In managed environments (DLT, Databricks Connect) a session is always
+        # In managed environments (LDP, Databricks Connect) a session is always
         # active, so this branch is never reached there.
         from importlib.metadata import version as pkg_version
 

@@ -21,7 +21,7 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
     """
     Spark Declarative Pipeline used as an orchestrator to execute a Laktory
     pipeline locally (via `spark-pipelines run`) or as a plain Databricks Job
-    task on DBR 16.x (no DLT/Lakeflow license required).
+    task on DBR 16.x.
 
     Generates three artifacts into `build_root/pipelines/`:
 
@@ -146,7 +146,7 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
             for s in n.all_sinks:
                 if isinstance(s, TableDataSink):
                     s.catalog_name = s.catalog_name or self.catalog
-                    s.schema_name = s.schema_name or self.schema_ or self.target
+                    s.schema_name = s.schema_name or self.schema_
 
         # Update pipeline config
         # _requirements = self.inject_vars_into_dump({"deps": pl._dependencies})["deps"]

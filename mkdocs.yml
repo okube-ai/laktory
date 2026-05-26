@@ -223,8 +223,9 @@ nav:
         - PipelineExecutionPlan: api/models/pipeline/pipelineexecutionplan.md
         - Orchestrators:
             - Airflow: api/models/pipeline/orchestrators/airfloworchestrator.md
-            - Databricks Job: api/models/pipeline/orchestrators/databricksjoborchestrator.md
-            - Databricks Pipeline: api/models/pipeline/orchestrators/databrickspipelineorchestrator.md
+            - Lakeflow Declarative Pipeline: api/models/pipeline/orchestrators/lakeflowdeclarativepipelineorchestrator.md
+            - Lakeflow Job: api/models/pipeline/orchestrators/lakeflowjoborchestrator.md
+            - Spark Declarative Pipeline: api/models/pipeline/orchestrators/sparkdeclarativepipelineorchestrator.md
             - Pipeline Config Workspace File: api/models/pipeline/orchestrators/pipelineconfigworkspacefile.md
       - Resources:
         - BaseResource: api/models/resources/baseresource.md

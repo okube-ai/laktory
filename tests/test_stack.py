@@ -235,7 +235,7 @@ def test_terraform_stack(monkeypatch, stack):
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
-                }
+                },
             },
         },
         "data": {
@@ -360,7 +360,7 @@ def test_terraform_stack(monkeypatch, stack):
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
-                }
+                },
             },
         },
         "data": {
@@ -486,7 +486,7 @@ def test_terraform_stack(monkeypatch, stack):
                     "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
-                }
+                },
             },
         },
         "data": {

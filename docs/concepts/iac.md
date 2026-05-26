@@ -8,7 +8,7 @@ Infrastructure as Code (IaC) backends to provide a robust and proven experience.
 [Declarative Automation Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) is Databricks' native 
 IaC solution, built directly into the Databricks CLI. Laktory integrates with DAB through a Python resource hook: 
 declare your pipelines as individual YAML files, register the hook in `databricks.yml`, and run 
-`databricks bundle deploy`. Laktory generates the required Job and DLT Pipeline resources automatically — no 
+`databricks bundle deploy`. Laktory generates the required Job and Declarative Pipeline resources automatically — no 
 `stack.yaml` file required.
 
 If your team already uses the Databricks CLI and DAB to manage workspace resources, this is the fastest path to 
@@ -38,7 +38,7 @@ resources:
       name: pl-stock-prices
       libraries:
         - notebook:
-            path: /pipelines/dlt_brz_template.py
+            path: /pipelines/laktory_ldp.py
 ```
 
 To validate the configuration and preview the deployment, run:
@@ -118,7 +118,7 @@ python:
 ```
 
 Each pipeline YAML file in `laktory_pipelines_dir` is loaded automatically. Laktory generates the corresponding 
-Databricks Job or DLT Pipeline resource and writes the pipeline config to `laktory/.build/` for DAB to sync to the 
+Databricks Job or Declarative Pipeline resource and writes the pipeline config to `laktory/.build/` for DAB to sync to the 
 workspace. Then deploy as usual:
 
 ```cmd

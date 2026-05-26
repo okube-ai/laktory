@@ -547,7 +547,7 @@ class PipelineNode(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def sdp_warning_expectations(self) -> dict[str, str]:
+    def ldp_warning_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
             if e.is_ldp_compatible and e.action == "WARN":
@@ -555,7 +555,7 @@ class PipelineNode(BaseModel, PipelineChild):
         return expectations
 
     @property
-    def sdp_drop_expectations(self) -> dict[str, str]:
+    def ldp_drop_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
             if e.is_ldp_compatible and e.action in ["DROP", "QUARANTINE"]:
@@ -563,10 +563,34 @@ class PipelineNode(BaseModel, PipelineChild):
         return expectations
 
     @property
-    def sdp_fail_expectations(self) -> dict[str, str]:
+    def ldp_fail_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
             if e.is_ldp_compatible and e.action == "FAIL":
+                expectations[e.name] = e.expr.expr
+        return expectations
+
+    @property
+    def sdp_warning_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.is_sdp_compatible and e.action == "WARN":
+                expectations[e.name] = e.expr.expr
+        return expectations
+
+    @property
+    def sdp_drop_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.is_sdp_compatible and e.action in ["DROP", "QUARANTINE"]:
+                expectations[e.name] = e.expr.expr
+        return expectations
+
+    @property
+    def sdp_fail_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.is_sdp_compatible and e.action == "FAIL":
                 expectations[e.name] = e.expr.expr
         return expectations
 
@@ -800,10 +824,10 @@ class PipelineNode(BaseModel, PipelineChild):
         filtered and quarantine DataFrames.
 
         Some actions have to be disabled when selected orchestrator is
-        Databricks DLT:
+        Databricks LDP:
 
-        * Raising error on Failure when expectation is supported by DLT
-        * Dropping rows when expectation is supported by DLT
+        * Raising error on Failure when expectation is supported by LDP
+        * Dropping rows when expectation is supported by LDP
         """
 
         # Data Quality Checks
@@ -816,7 +840,14 @@ class PipelineNode(BaseModel, PipelineChild):
             return
         if self.is_sdp_execute:
             # SDP blocks DataFrame analysis (AnalyzePlan RPCs) inside decorated
-            # functions; expectations are unsupported in open-source SDP anyway.
+            # functions. SDP-compatible expectations are enforced via @dp.expect_*
+            # decorators in laktory_sdp.py; Laktory cannot run checks in-process.
+            names = [e.name for e in self.expectations if not e.is_sdp_compatible]
+            if names:
+                raise TypeError(
+                    f"Expectations {names} are not natively supported by SDP and "
+                    "cannot be enforced inside an SDP decorated function."
+                )
             return
         is_streaming = getattr(nw.to_native(self._stage_df), "isStreaming", False)
 

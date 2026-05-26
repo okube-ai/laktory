@@ -18,8 +18,8 @@ class DataSinkMergeCDCOptions(BaseModel):
     """
     Options for merging a change data capture (CDC).
 
-    They are also used to build the target using `apply_changes` method when
-    using Databricks DLT.
+    They are also used to build the target using `create_auto_cdc_flow` when
+    using Lakeflow Declarative Pipelines.
 
     Examples
     --------

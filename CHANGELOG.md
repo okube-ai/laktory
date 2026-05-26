@@ -5,7 +5,7 @@
 * Spark Declarative Pipeline Orchestrator
 ### Breaking changes
 * Renamed Databricks Pipelines orchestrator to Lakehouse Declarative Pipeline
-* Refactored Lakehouse Declarative Pipeline script
+* Refactored Lakehouse Declarative Pipeline script to use latest API (`apply_changes` -> `create_auto_cdc_flow`)
 
 ## [0.11.10] - 2026-05-20
 ### Added

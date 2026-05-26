@@ -323,14 +323,14 @@ class TableDataSink(BaseDataSink):
         return source
 
     # ----------------------------------------------------------------------- #
-    # Lakeflow Declarative Pipelines DLT                                      #
+    # Lakeflow Declarative Pipelines LDP                                      #
     # ----------------------------------------------------------------------- #
 
     @property
     def sdp_table_or_view_name(self) -> str:
         if self.catalog_name:
             # Unity catalog is used only when catalog is defined. In this case
-            # DLT allows full name specification
+            # LDP allows full name specification
             return self.full_name
 
         # If catalog is not defined, table is written to Hive Metastore and only table
@@ -348,6 +348,27 @@ class TableDataSink(BaseDataSink):
             if self.metadata.properties:
                 kwargs["table_properties"] = self.metadata.properties
         return kwargs
+
+    @property
+    def ldp_warning_expectations(self):
+        e = {}
+        if not self.is_quarantine:
+            e = self.parent_pipeline_node.ldp_warning_expectations
+        return e
+
+    @property
+    def ldp_drop_expectations(self):
+        e = {}
+        if not self.is_quarantine:
+            e = self.parent_pipeline_node.ldp_drop_expectations
+        return e
+
+    @property
+    def ldp_fail_expectations(self):
+        e = {}
+        if not self.is_quarantine:
+            e = self.parent_pipeline_node.ldp_fail_expectations
+        return e
 
     @property
     def sdp_warning_expectations(self):
