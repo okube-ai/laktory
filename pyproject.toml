@@ -104,12 +104,12 @@ include = ["laktory*"]
 path = "laktory/_version.py"
 
 [tool.uv]
-# Pin the dev environment to PySpark 4.0.0 — the only 4.x release that the
-# open-source delta-spark_2.13:4.0.0 Maven JAR is compatible with.
+# Pin the dev environment to PySpark 4.0.x + matching delta-spark 4.0.x.
+# PySpark 4.1.x is tested separately via the spark41 CI matrix entry.
 # This does NOT affect the published package metadata; users can install any
-# PySpark version. When a newer compatible Delta JAR ships, update this pin.
+# PySpark version.
 constraint-dependencies = [
-    "pyspark>=4.0.0,<4.2.0",
+    "pyspark>=4.0.0,<4.1.0",
     "delta-spark>=4.0.0,<4.1.0",
 ]
 

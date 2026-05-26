@@ -47,11 +47,7 @@ def register_spark_session(spark=None):
         spark_major = int(pyspark_ver.split(".")[0])
         scala = "2.13" if spark_major >= 4 else "2.12"
 
-        # delta-spark Python package versions and Maven JAR versions are not 1:1.
-        # Only delta-spark_2.13:4.0.0 exists on Maven Central for Spark 4.x.
-        # For Spark 3.x the Python version matches the Maven JAR version.
-        _delta_jvm = {"4": "4.0.0"}
-        delta_jvm_ver = _delta_jvm.get(str(spark_major), pkg_version("delta_spark"))
+        delta_jvm_ver = pkg_version("delta_spark")
 
         spark = (
             SparkSession.builder.appName("laktory")
