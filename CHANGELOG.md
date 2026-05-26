@@ -1,14 +1,11 @@
 # Release History
 
-## [0.11.11] - Unreleased
+## [0.12.0] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
+* Spark Declarative Pipeline Orchestrator
 ### Breaking changes
-* n/a
+* Renamed Databricks Pipelines orchestrator to Lakehouse Declarative Pipeline
+* Refactored Lakehouse Declarative Pipeline script
 
 ## [0.11.10] - 2026-05-20
 ### Added
