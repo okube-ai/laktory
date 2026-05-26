@@ -317,4 +317,3 @@ Changes applied:
 
 **Lakeflow Job dual-mode path** — how the SDP orchestrator selects between local (`spark-pipelines run`) and Databricks Job execution (DBR 16.x) is TBD. The generated artifacts are identical in both modes. Open question: orchestrator field, deploy-time flag, or context inference. Blocked on Databricks Job path testing.
 
-resources/databricks/pipeline.py -> resource_type_id(). Rename output to `dlp`? I think there is another one that needs to be renamed as well.
