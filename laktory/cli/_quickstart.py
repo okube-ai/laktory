@@ -95,6 +95,14 @@ def quickstart(
                 with open(target_filepath, "w") as fp:
                     fp.write(data.replace("<laktory_version>", VERSION))
 
+    if template == "workflows":
+        _ldp_src = os.path.join(
+            os.path.dirname(__file__), "../resources/scripts/laktory_ldp.py"
+        )
+        _ldp_dst = os.path.join(target_dir, "workspacefiles/notebooks/laktory_ldp.py")
+        print(f"Writing {_ldp_dst}...")
+        shutil.copy2(_ldp_src, _ldp_dst)
+
     if template == "workflows-dab":
         print(
             """
