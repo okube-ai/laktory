@@ -36,7 +36,7 @@ def is_airflow_initialized():
             c.execute(text("SELECT 1 FROM task_instance LIMIT 1"))
 
         return True
-    except ImportError:
+    except Exception:
         return False
 
 
