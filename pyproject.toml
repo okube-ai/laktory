@@ -104,13 +104,14 @@ include = ["laktory*"]
 path = "laktory/_version.py"
 
 [tool.uv]
-# Pin the dev environment to PySpark 4.0.x + matching delta-spark 4.0.x.
-# PySpark 4.1.x is tested separately via the spark41 CI matrix entry.
+# Pin the dev environment to PySpark 4.1.x + delta-spark 4.2.x (the latest
+# compatible pair). PySpark 3.x backward compatibility is verified separately
+# via the spark3 CI matrix entry.
 # This does NOT affect the published package metadata; users can install any
 # PySpark version.
 constraint-dependencies = [
-    "pyspark>=4.0.0,<4.1.0",
-    "delta-spark>=4.0.0,<4.1.0",
+    "pyspark>=4.1.0,<4.2.0",
+    "delta-spark>=4.2.0,<4.3.0",
 ]
 
 # CLI

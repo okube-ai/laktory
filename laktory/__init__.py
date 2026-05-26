@@ -44,17 +44,32 @@ def register_spark_session(spark=None):
         from pyspark.sql import SparkSession
 
         pyspark_ver = pkg_version("pyspark")
-        spark_major = int(pyspark_ver.split(".")[0])
+        spark_major, spark_minor = (
+            int(pyspark_ver.split(".")[0]),
+            int(pyspark_ver.split(".")[1]),
+        )
         scala = "2.13" if spark_major >= 4 else "2.12"
 
-        delta_jvm_ver = pkg_version("delta_spark")
+        delta_ver = pkg_version("delta_spark")
+        delta_major, delta_minor = (
+            int(delta_ver.split(".")[0]),
+            int(delta_ver.split(".")[1]),
+        )
+
+        # delta-spark >= 4.1 changed the Maven artifact ID to include the
+        # Spark major.minor version (e.g. delta-spark_4.1_2.13 for Spark 4.1.x).
+        # This matches the logic in delta-spark's own configure_spark_with_delta_pip.
+        if (delta_major, delta_minor) >= (4, 1):
+            delta_artifact_id = f"delta-spark_{spark_major}.{spark_minor}_{scala}"
+        else:
+            delta_artifact_id = f"delta-spark_{scala}"
 
         spark = (
             SparkSession.builder.appName("laktory")
             .config(
                 "spark.jars.packages",
                 f"org.apache.spark:spark-avro_{scala}:{pyspark_ver},"
-                f"io.delta:delta-spark_{scala}:{delta_jvm_ver}",
+                f"io.delta:{delta_artifact_id}:{delta_ver}",
             )
             .config(
                 "spark.sql.extensions",
