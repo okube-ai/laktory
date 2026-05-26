@@ -6,7 +6,7 @@ Laktory is a DataOps and ETL framework for building lakehouses on Databricks. It
 - **Data pipeline definitions** as code (transformations, sources, sinks)
 - **Infrastructure-as-Code** for Databricks resources (Unity Catalog, compute, access grants)
 - **Multi-backend dataframe support** via Narwhals (Spark and Polars)
-- **Multiple orchestrator support** (local, Databricks Jobs/DLT Pipelines, Apache Airflow)
+- **Multiple orchestrator support** (local, Databricks Jobs/Declarative Pipelines, Apache Airflow)
 
 ## Tech Stack
 

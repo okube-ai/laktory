@@ -201,13 +201,13 @@ mkdocstrings uses the **NumPy docstring convention** (`pydocstyle.convention = "
 
 ## Known Issues / Watch Points
 
-| Issue | Status | Notes |
-|-------|--------|-------|
-| `__doc_hide_base__` stub mechanism is fragile | Open | Depends on griffe internals; acceptable for now |
+| Issue                                                | Status | Notes |
+|------------------------------------------------------|--------|-------|
+| `__doc_hide_base__` stub mechanism is fragile        | Open | Depends on griffe internals; acceptable for now |
 | `laktory/models/__init__.py` uses `from .X import *` | By design | Prevents shortest `laktory.models.X` paths; would need explicit imports to fix |
-| `azurenative/` has no `__init__.py` | Open | Classes there can't be documented until a `__init__.py` is added |
-| MkDocs 2.0 migration | Deferred | Plan to migrate before ~Nov 2026; evaluate griffe_pydantic first |
-| Two `Pipeline` classes (Laktory vs DLT resource) | Known | Both named `Pipeline`; `resources/databricks/pipeline.md` must keep full module path |
+| `azurenative/` has no `__init__.py`                  | Open | Classes there can't be documented until a `__init__.py` is added |
+| MkDocs 2.0 migration                                 | Deferred | Plan to migrate before ~Nov 2026; evaluate griffe_pydantic first |
+| Two `Pipeline` classes (Laktory vs LDP resource)     | Known | Both named `Pipeline`; `resources/databricks/pipeline.md` must keep full module path |
 
 ---
 

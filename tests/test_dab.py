@@ -28,8 +28,8 @@ data_dir = Path(__file__).parent / "data"
 
 
 def _get_pl_dlt():
-    """Load DLT pipeline from pl_dlt.yaml."""
-    filepath = data_dir / "pl_dlt.yaml"
+    """Load LDP pipeline from pl_ldp.yaml."""
+    filepath = data_dir / "pl_ldp.yaml"
     with open(filepath) as fp:
         data = fp.read().replace("{tmp_path}", "")
     return models.Pipeline.model_validate_yaml(io.StringIO(data))

@@ -2,9 +2,11 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_pipeline
 from __future__ import annotations
 
-from pydantic import Field, AliasChoices
+from pydantic import AliasChoices
+from pydantic import Field
 
-from laktory.models.basemodel import BaseModel, PluralField
+from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -917,7 +919,7 @@ class PipelineBase(BaseModel, TerraformResource):
     )
     edition: str | None = Field(
         None,
-        description="optional name of the [product edition](https://docs.databricks.com/aws/en/dlt/configure-pipeline#choose-a-product-edition). Supported values are: `CORE`, `PRO`, `ADVANCED` (default).  Not required when `serverless` is set to `true`",
+        description="optional name of the [product edition](https://docs.databricks.com/aws/en/ldp/configure-pipeline#choose-a-product-edition). Supported values are: `CORE`, `PRO`, `ADVANCED` (default).  Not required when `serverless` is set to `true`",
     )
     expected_last_modified: int | None = Field(None)
     health: str | None = Field(None)

@@ -824,10 +824,10 @@ class PipelineNode(BaseModel, PipelineChild):
         filtered and quarantine DataFrames.
 
         Some actions have to be disabled when selected orchestrator is
-        Databricks DLT:
+        Databricks LDP:
 
-        * Raising error on Failure when expectation is supported by DLT
-        * Dropping rows when expectation is supported by DLT
+        * Raising error on Failure when expectation is supported by LDP
+        * Dropping rows when expectation is supported by LDP
         """
 
         # Data Quality Checks

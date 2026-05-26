@@ -20,7 +20,7 @@ class PipelineNodeDataSource(BaseDataSource):
 
     - memory
     - upstream node sink
-    - DLT table
+    - LDP table
 
     Examples
     ---------

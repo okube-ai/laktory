@@ -134,10 +134,6 @@ class LakeflowDeclarativePipelineOrchestrator(Pipeline, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def resource_type_id(self) -> str:
-        return "dlt-pipeline"
-
-    @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
         excludes = dict(super().terraform_excludes)
         excludes["config_file"] = True

@@ -41,9 +41,7 @@ class Pipeline(PipelineBase):
 
     libraries:
       - notebook:
-          path: /pipelines/dlt_brz_template.py
-      - notebook:
-          path: /pipelines/dlt_slv_template.py
+          path: /pipelines/laktory_dlp.py
       - notebook:
           path: /pipelines/dlt_gld_stock_performances.py
 
@@ -73,8 +71,8 @@ class Pipeline(PipelineBase):
         exclude=True,
         description="Import a pre-existing Pipeline by `pipeline_id` instead of creating it. The pipeline becomes available for cross-referencing; its own field values are not written to the existing resource.",
     )
-    name_prefix: str = Field(None, description="Prefix added to the DLT pipeline name")
-    name_suffix: str = Field(None, description="Suffix added to the DLT pipeline name")
+    name_prefix: str = Field(None, description="Prefix added to the DLP name")
+    name_suffix: str = Field(None, description="Suffix added to the DLP name")
 
     @model_validator(mode="after")
     def update_name(self) -> Any:
@@ -92,10 +90,7 @@ class Pipeline(PipelineBase):
 
     @property
     def resource_type_id(self) -> str:
-        """
-        dlt
-        """
-        return "dlt-pipeline"
+        return "pipeline"
 
     @property
     def additional_core_resources(self) -> list:

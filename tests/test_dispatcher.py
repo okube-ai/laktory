@@ -53,7 +53,7 @@ def test_resources(stack):
         "job-stock-prices-ut-stack",
     ]
     job = dispatcher.resources["job-stock-prices-ut-stack"]
-    dlt = dispatcher.resources["${vars.workflow_name}"]
+    ldp = dispatcher.resources["${vars.workflow_name}"]
 
     assert job.model_dump() == {"name": "job-stock-prices-ut-stack", "id": None}
-    assert dlt.model_dump() == {"name": "${vars.workflow_name}", "id": None}
+    assert ldp.model_dump() == {"name": "${vars.workflow_name}", "id": None}

@@ -15,10 +15,10 @@ data_dirpath = Path(__file__).parent.parent / "data"
 testdir_path = Path(__file__).parent
 
 
-def get_pl(tmp_path="", is_dlt=False):
+def get_pl(tmp_path="", is_ldp=False):
     filepath = data_dirpath / "pl.yaml"
-    if is_dlt:
-        filepath = data_dirpath / "pl_dlt.yaml"
+    if is_ldp:
+        filepath = data_dirpath / "pl_ldp.yaml"
 
     with open(filepath) as fp:
         data = fp.read()
@@ -52,9 +52,9 @@ def get_pl_job():
     return pl
 
 
-# DLT
-def get_pl_dlt():
-    pl = get_pl(is_dlt=True)
+# LDP
+def get_pl_ldp():
+    pl = get_pl(is_ldp=True)
     return pl
 
 
@@ -643,7 +643,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
 
     monkeypatch.setattr(settings, "build_root", "/tmp/laktory/cache")
 
-    pl = get_pl_dlt()
+    pl = get_pl_ldp()
 
     # Test node names
     assert pl.nodes_dict["brz"].primary_sink.sdp_table_or_view_name == "dev.sandbox.brz"
@@ -705,9 +705,9 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
         "creator_user_name": None,
         "environment": None,
         "configuration": {
-            "pipeline_name": "pl-dlt",
+            "pipeline_name": "pl-ldp",
             "requirements": '["laktory==<version>"]',
-            "config_filepath": "/Workspace/.laktory/pipelines/pl-dlt.json",
+            "config_filepath": "/Workspace/.laktory/pipelines/pl-ldp.json",
         },
         "continuous": None,
         "deployment": None,
@@ -722,7 +722,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
         "last_modified": None,
         "latest_updates": None,
         "library": None,
-        "name": "pl-dlt",
+        "name": "pl-ldp",
         "name_prefix": None,
         "name_suffix": None,
         "notification": None,
@@ -755,10 +755,10 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
             "dirpath": None,
             "md5": None,
             "object_id": None,
-            "path": "/.laktory/pipelines/pl-dlt.json",
+            "path": "/.laktory/pipelines/pl-ldp.json",
             "dataframe_backend": "PYSPARK",
             "dataframe_api": "NARWHALS",
-            "source": "/tmp/laktory/cache/pipelines/pl-dlt.json",
+            "source": "/tmp/laktory/cache/pipelines/pl-ldp.json",
         },
         "dataframe_backend": "PYSPARK",
         "dataframe_api": "NARWHALS",
@@ -768,24 +768,24 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
     resources = pl.core_resources
     assert len(resources) == 4
 
-    dlt = resources[0]
-    dltp = resources[1]
+    ldp = resources[0]
+    ldpp = resources[1]
 
-    assert isinstance(dlt, models.resources.databricks.Pipeline)
-    assert isinstance(dltp, models.resources.databricks.Permissions)
+    assert isinstance(ldp, models.resources.databricks.Pipeline)
+    assert isinstance(ldpp, models.resources.databricks.Permissions)
 
-    assert dlt.resource_name == "dlt-pipeline-pl-dlt"
-    assert dltp.resource_name == "permissions-dlt-pipeline-pl-dlt"
+    assert ldp.resource_name == "pipeline-pl-ldp"
+    assert ldpp.resource_name == "permissions-pipeline-pl-ldp"
 
-    assert dlt.resource_options.provider == "${resources.databricks2}"
-    assert dltp.resource_options.provider == "${resources.databricks2}"
+    assert ldp.resource_options.provider == "${resources.databricks2}"
+    assert ldpp.resource_options.provider == "${resources.databricks2}"
 
-    assert dlt.resource_options.depends_on == []
-    assert dltp.resource_options.depends_on == ["${resources.dlt-pipeline-pl-dlt}"]
+    assert ldp.resource_options.depends_on == []
+    assert ldpp.resource_options.depends_on == ["${resources.pipeline-pl-ldp}"]
 
-    data = dlt.config_file.content_dict
+    data = ldp.config_file.content_dict
     assert data == {
-        "name": "pl-dlt",
+        "name": "pl-ldp",
         "nodes": [
             {
                 "name": "gld_ab",
@@ -796,7 +796,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                         "table_name": "gld_ab",
                         "dataframe_backend": "PYSPARK",
                         "dataframe_api": "NARWHALS",
-                        "checkpoint_path": "/.laktory/pipelines/pl-dlt/gld_ab/checkpoints/sink-5cdb06e1-cf42-e0cd-6a89-893fc81d7cea",
+                        "checkpoint_path": "/.laktory/pipelines/pl-ldp/gld_ab/checkpoints/sink-5cdb06e1-cf42-e0cd-6a89-893fc81d7cea",
                     }
                 ],
                 "transformer": {
@@ -812,8 +812,8 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                 },
                 "dataframe_backend": "PYSPARK",
                 "dataframe_api": "NARWHALS",
-                "root_path": "/.laktory/pipelines/pl-dlt/gld_ab",
-                "expectations_checkpoint_path": "/.laktory/pipelines/pl-dlt/gld_ab/checkpoints/expectations",
+                "root_path": "/.laktory/pipelines/pl-ldp/gld_ab",
+                "expectations_checkpoint_path": "/.laktory/pipelines/pl-ldp/gld_ab/checkpoints/expectations",
             },
             {
                 "name": "brz",
@@ -831,13 +831,13 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                         "table_name": "brz",
                         "dataframe_backend": "PYSPARK",
                         "dataframe_api": "NARWHALS",
-                        "checkpoint_path": "/.laktory/pipelines/pl-dlt/brz/checkpoints/sink-eee3ef0d-a7d1-92f9-7391-77dbc5db4a9e",
+                        "checkpoint_path": "/.laktory/pipelines/pl-ldp/brz/checkpoints/sink-eee3ef0d-a7d1-92f9-7391-77dbc5db4a9e",
                     }
                 ],
                 "dataframe_backend": "PYSPARK",
                 "dataframe_api": "NARWHALS",
-                "root_path": "/.laktory/pipelines/pl-dlt/brz",
-                "expectations_checkpoint_path": "/.laktory/pipelines/pl-dlt/brz/checkpoints/expectations",
+                "root_path": "/.laktory/pipelines/pl-ldp/brz",
+                "expectations_checkpoint_path": "/.laktory/pipelines/pl-ldp/brz/checkpoints/expectations",
             },
             {
                 "name": "slv",
@@ -861,7 +861,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                         "table_name": "slv",
                         "dataframe_backend": "PYSPARK",
                         "dataframe_api": "NARWHALS",
-                        "checkpoint_path": "/.laktory/pipelines/pl-dlt/slv/checkpoints/sink-a3fab1a8-4625-8c55-1f12-05fb78637bf4",
+                        "checkpoint_path": "/.laktory/pipelines/pl-ldp/slv/checkpoints/sink-a3fab1a8-4625-8c55-1f12-05fb78637bf4",
                     }
                 ],
                 "transformer": {
@@ -889,8 +889,8 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                 },
                 "dataframe_backend": "PYSPARK",
                 "dataframe_api": "NARWHALS",
-                "root_path": "/.laktory/pipelines/pl-dlt/slv",
-                "expectations_checkpoint_path": "/.laktory/pipelines/pl-dlt/slv/checkpoints/expectations",
+                "root_path": "/.laktory/pipelines/pl-ldp/slv",
+                "expectations_checkpoint_path": "/.laktory/pipelines/pl-ldp/slv/checkpoints/expectations",
             },
             {
                 "name": "gld",
@@ -899,7 +899,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                         "pipeline_view_name": "gld",
                         "dataframe_backend": "PYSPARK",
                         "dataframe_api": "NARWHALS",
-                        "checkpoint_path": "/.laktory/pipelines/pl-dlt/gld/checkpoints/sink-24af5927-3fc7-a4d5-3faa-dacb37a99202",
+                        "checkpoint_path": "/.laktory/pipelines/pl-ldp/gld/checkpoints/sink-24af5927-3fc7-a4d5-3faa-dacb37a99202",
                     }
                 ],
                 "transformer": {
@@ -915,8 +915,8 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                 },
                 "dataframe_backend": "PYSPARK",
                 "dataframe_api": "NARWHALS",
-                "root_path": "/.laktory/pipelines/pl-dlt/gld",
-                "expectations_checkpoint_path": "/.laktory/pipelines/pl-dlt/gld/checkpoints/expectations",
+                "root_path": "/.laktory/pipelines/pl-ldp/gld",
+                "expectations_checkpoint_path": "/.laktory/pipelines/pl-ldp/gld/checkpoints/expectations",
             },
             {
                 "name": "gld_a",
@@ -927,7 +927,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                         "table_name": "gld_a",
                         "dataframe_backend": "PYSPARK",
                         "dataframe_api": "NARWHALS",
-                        "checkpoint_path": "/.laktory/pipelines/pl-dlt/gld_a/checkpoints/sink-5652ae1d-5db1-a374-273c-96eb6d007b36",
+                        "checkpoint_path": "/.laktory/pipelines/pl-ldp/gld_a/checkpoints/sink-5652ae1d-5db1-a374-273c-96eb6d007b36",
                     }
                 ],
                 "transformer": {
@@ -943,8 +943,8 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                 },
                 "dataframe_backend": "PYSPARK",
                 "dataframe_api": "NARWHALS",
-                "root_path": "/.laktory/pipelines/pl-dlt/gld_a",
-                "expectations_checkpoint_path": "/.laktory/pipelines/pl-dlt/gld_a/checkpoints/expectations",
+                "root_path": "/.laktory/pipelines/pl-ldp/gld_a",
+                "expectations_checkpoint_path": "/.laktory/pipelines/pl-ldp/gld_a/checkpoints/expectations",
             },
             {
                 "name": "gld_b",
@@ -955,7 +955,7 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                         "table_name": "gld_b",
                         "dataframe_backend": "PYSPARK",
                         "dataframe_api": "NARWHALS",
-                        "checkpoint_path": "/.laktory/pipelines/pl-dlt/gld_b/checkpoints/sink-cb6bf398-9ca1-ba30-d14a-cca856f3ce6b",
+                        "checkpoint_path": "/.laktory/pipelines/pl-ldp/gld_b/checkpoints/sink-cb6bf398-9ca1-ba30-d14a-cca856f3ce6b",
                     }
                 ],
                 "transformer": {
@@ -971,25 +971,25 @@ def test_databricks_pipeline(tmp_path, monkeypatch):
                 },
                 "dataframe_backend": "PYSPARK",
                 "dataframe_api": "NARWHALS",
-                "root_path": "/.laktory/pipelines/pl-dlt/gld_b",
-                "expectations_checkpoint_path": "/.laktory/pipelines/pl-dlt/gld_b/checkpoints/expectations",
+                "root_path": "/.laktory/pipelines/pl-ldp/gld_b",
+                "expectations_checkpoint_path": "/.laktory/pipelines/pl-ldp/gld_b/checkpoints/expectations",
             },
         ],
         "databricks_quality_monitor_enabled": True,
         "dataframe_backend": "PYSPARK",
         "dataframe_api": "NARWHALS",
-        "root_path": "/.laktory/pipelines/pl-dlt",
+        "root_path": "/.laktory/pipelines/pl-ldp",
         "orchestrator": {
             "access_controls": [
                 {"group_name": "account users", "permission_level": "CAN_VIEW"}
             ],
             "catalog": "dev",
             "configuration": {
-                "pipeline_name": "pl-dlt",
+                "pipeline_name": "pl-ldp",
                 "requirements": '["laktory==<version>"]',
-                "config_filepath": "/Workspace/.laktory/pipelines/pl-dlt.json",
+                "config_filepath": "/Workspace/.laktory/pipelines/pl-ldp.json",
             },
-            "name": "pl-dlt",
+            "name": "pl-ldp",
             "schema_": "sandbox",
             "type": "LAKEFLOW_DECLARATIVE_PIPELINE",
             "dataframe_backend": "PYSPARK",
@@ -1011,5 +1011,5 @@ def test_databricks_job_terraform_plan():
 
 def test_databricks_pipeline_terraform_plan():
     skip_terraform_plan()
-    pl = get_pl_dlt()
+    pl = get_pl_ldp()
     plan_resource(pl.orchestrator)

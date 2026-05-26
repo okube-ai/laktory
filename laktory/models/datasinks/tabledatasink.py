@@ -323,14 +323,14 @@ class TableDataSink(BaseDataSink):
         return source
 
     # ----------------------------------------------------------------------- #
-    # Lakeflow Declarative Pipelines DLT                                      #
+    # Lakeflow Declarative Pipelines LDP                                      #
     # ----------------------------------------------------------------------- #
 
     @property
     def sdp_table_or_view_name(self) -> str:
         if self.catalog_name:
             # Unity catalog is used only when catalog is defined. In this case
-            # DLT allows full name specification
+            # LDP allows full name specification
             return self.full_name
 
         # If catalog is not defined, table is written to Hive Metastore and only table

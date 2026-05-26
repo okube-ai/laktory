@@ -13,11 +13,11 @@ on:
         required: true
       action:
         type: string
-        description: 'Action to perform: deploy | destroy | run-job | run-dlt'
+        description: 'Action to perform: deploy | destroy | run-job | run-ldp'
         required: true
       resource_name:
         type: string
-        description: 'Job or pipeline name (for run-job and run-dlt actions)'
+        description: 'Job or pipeline name (for run-job and run-ldp actions)'
         default: ''
 
 env:
@@ -113,7 +113,7 @@ jobs:
         working-directory: ${{ env.CWD }}
 
       - name: laktory run dlt
-        if: ${{ inputs.action == 'run-dlt' }}
+        if: ${{ inputs.action == 'run-ldp' }}
         run: |
           source ../.venv/bin/activate
           laktory run --dbks-pipeline ${{ inputs.resource_name }}

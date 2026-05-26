@@ -286,7 +286,7 @@ configuration file which can be found in your workspace under `/Workspace/{runti
 offers features like automatic schema change management, continuous execution, advanced monitoring and 
 autoscaling. 
 
-![dlt](../images/screenshots/dlt_stock_prices.png)
+![ldp](../images/screenshots/ldp_stock_prices.png)
 
 Each pipeline node runs inside a `dp.materialized_view()` or `dp.table()` function. In the context of Declarative
 Pipelines, node execution does not trigger a sink write, as this operation is internally managed by Lakeflow. When
@@ -322,6 +322,60 @@ for node in pl.nodes:
 
 Selecting the `LAKEFLOW_DECLARATIVE_PIPELINE` orchestrator will deploy a pipeline json 
 configuration file which can be found in your workspace under `/Workspace/{runtime_root}/pipelines/{pipeline_name}/`.
+
+#### Spark Declarative Pipeline
+[Spark Declarative Pipelines](https://spark.apache.org/docs/latest/declarative-pipelines.html)
+is the open-source counterpart of Lakeflow Declarative Pipelines, available from PySpark 4.1+. It runs entirely 
+locally — no Databricks account is required. The pipeline is executed via the `spark-pipelines` CLI, which is 
+included in `pyspark>=4.1.1`.
+
+```yaml title="pipeline.yaml"
+orchestrator:
+  type: SPARK_DECLARATIVE_PIPELINE
+  catalog: dev        # optional default catalog
+  schema: finance     # optional default schema
+```
+
+Laktory generates three artifacts into the pipeline root directory when `pl.execute()` is called:
+
+- `laktory_sdp.py` — Python definition script using `@dp.materialized_view` / `@dp.table` decorators
+- `{pipeline_name}.json` — serialized pipeline configuration
+- `spark-pipeline.yaml` — SDP spec file pointing to the script
+
+Here is a simplified version of the generated definition script:
+```py title="laktory_sdp.py"
+from pyspark import pipelines as dp
+from pyspark.sql import SparkSession
+
+import laktory as lk
+
+spark = SparkSession.getActiveSession()
+config_filepath = spark.conf.get("config_filepath")
+
+with open(config_filepath) as fp:
+    pl = lk.models.Pipeline.model_validate_json(fp.read())
+
+
+def define_table(node, sink):
+    table_or_view = dp.materialized_view
+    if isinstance(sink, lk.models.PipelineViewDataSink):
+        table_or_view = dp.temporary_view
+    elif sink.is_streaming():
+        table_or_view = dp.table
+
+    @table_or_view(**sink.sdp_table_or_view_kwargs)
+    def get_df():
+        node.execute()
+        return node.output_df.to_native()
+
+
+for node in pl.nodes:
+    for sink in node.sinks:
+        define_table(node, sink)
+```
+
+`pl.execute()` builds the artifacts and shells out to `spark-pipelines run`. Outputs are written to
+`spark-warehouse/` in the working directory as Parquet or Delta tables.
 
 #### Apache Airflow
 Apache Airflow is a widely used orchestrator for scheduling, monitoring, and managing data workflows. When used with

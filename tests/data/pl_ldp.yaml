@@ -1,4 +1,4 @@
-name: pl-dlt
+name: pl-ldp
 databricks_quality_monitor_enabled: true
 orchestrator:
   type: LAKEFLOW_DECLARATIVE_PIPELINE

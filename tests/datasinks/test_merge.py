@@ -633,7 +633,7 @@ def test_stream_scd2(tmp_path, backend):
 
 
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
-def test_dlt_kwargs(tmp_path, backend):
+def test_ldp_kwargs(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
 

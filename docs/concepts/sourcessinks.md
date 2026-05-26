@@ -102,7 +102,7 @@ This type of data source adapts to its execution context.
   the upstream node.
 * Multi-Workers Execution: The source uses the upstream node sink as a source 
   for read the dataframe.
-* DLT Execution: The source uses `dlt.read()` and `dlt,read_stream()` to read 
+* Declarative Pipeline Execution: The source uses `spark.read()` and `spark.readStream()` to read 
   data from the upstream node.
      
 
