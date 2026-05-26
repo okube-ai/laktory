@@ -61,6 +61,10 @@ def register_spark_session(spark=None):
                 f"io.delta:delta-spark_{scala}:{delta_jvm_ver}",
             )
             .config(
+                "spark.sql.extensions",
+                "io.delta.sql.DeltaSparkSessionExtension",
+            )
+            .config(
                 "spark.sql.catalog.spark_catalog",
                 "org.apache.spark.sql.delta.catalog.DeltaCatalog",
             )
