@@ -104,17 +104,17 @@ variables:
 
 Each pipeline declares its orchestrator type, which determines what DABs resource is created.
 
-### Databricks Pipeline (DLT)
+### Lakeflow Declarative Pipeline (LDP)
 
-Setting `type: DATABRICKS_PIPELINE` generates a `databricks.bundles.pipelines.Pipeline` resource. All Laktory DLT 
-pipelines share a single entry-point notebook (`dlt_laktory_pl.py`) that is automatically copied to the build directory 
+Setting `type: LAKEFLOW_DECLARATIVE_PIPELINE` generates a `databricks.bundles.pipelines.Pipeline` resource. All Laktory
+LDP pipelines share a single entry-point notebook (`laktory_ldp.py`) that is automatically copied to the build directory 
 and synced to the workspace.
 
 ```yaml title="laktory/pipelines/pl-stock-prices.yml"
 name: pl-stock-prices
 
 orchestrator:
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   serverless: true
   catalog: ${var.catalog}
   schema: market
@@ -138,20 +138,20 @@ nodes:
           func_type: SQL
 ```
 
-Limitations of DLT orchestrators:
+Limitations of LDP orchestrators:
 
 - Pipeline nodes with [views](sourcessinks.md) are not supported
 
-### Databricks Job
+### Lakeflow Job
 
-Setting `type: DATABRICKS_JOB` generates a `databricks.bundles.jobs.Job` resource. Each pipeline node becomes a 
+Setting `type: LAKEFLOW_JOB` generates a `databricks.bundles.jobs.Job` resource. Each pipeline node becomes a 
 separate job task, and task dependencies mirror the pipeline DAG.
 
 ```yaml title="laktory/pipelines/pl-taxi-trips.yml"
 name: pl-taxi-trips
 
 orchestrator:
-  type: DATABRICKS_JOB
+  type: LAKEFLOW_JOB
   serverless_environment_version: "2"
   name: pl-taxi-trips
 
@@ -205,7 +205,7 @@ targets:
 name: pl-stock-prices
 
 orchestrator:
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   catalog: ${var.catalog}   # resolved from bundle variable at deploy time
   schema: market
 ```
