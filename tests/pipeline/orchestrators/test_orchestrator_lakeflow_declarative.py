@@ -9,9 +9,14 @@ Feature matrix:
   - is_streaming() on table sinks derived from source as_stream flag
   - LDP expectations: WARN/DROP/FAIL produce non-empty dicts on node and sink
   - LDP streaming context: incompatible expectation type raises TypeError
+  - LDP configuration: requirements (JSON list including laktory), config_filepath
+  - LDP guard: pipeline view nodes raise ValueError
 """
 
+import json
+
 import pytest
+from pydantic import ValidationError
 
 from laktory import models
 from laktory.models.datasinks.pipelineviewdatasink import PipelineViewDataSink
@@ -241,3 +246,80 @@ def test_ldp_streaming_incompatible_expectations_raise(monkeypatch, spark):
 
     with pytest.raises(TypeError, match="not natively supported by Lakeflow"):
         slv.check_expectations()
+
+
+# --------------------------------------------------------------------------- #
+# LDP configuration: requirements and config_filepath                         #
+# --------------------------------------------------------------------------- #
+
+
+def test_ldp_configuration_requirements():
+    """configuration['requirements'] is a JSON list that includes laktory."""
+    pl = _get_pl(_LDP_ORCH)
+    conf = pl.orchestrator.configuration
+
+    assert "requirements" in conf
+    reqs = json.loads(conf["requirements"])
+    assert isinstance(reqs, list)
+    assert any("laktory" in r for r in reqs)
+
+
+def test_ldp_configuration_requirements_custom_dep():
+    """Extra pipeline dependencies appear in configuration['requirements']."""
+    pl = models.Pipeline.model_validate(
+        {
+            "name": "pl-declarative",
+            "orchestrator": _LDP_ORCH,
+            "dependencies": ["my-package==1.2.3"],
+            "nodes": [
+                {
+                    "name": "brz",
+                    "source": {"format": "JSON", "path": "/src/"},
+                    "sinks": [{"table_name": "brz"}],
+                }
+            ],
+        }
+    )
+    reqs = json.loads(pl.orchestrator.configuration["requirements"])
+    assert any("my-package" in r for r in reqs)
+    assert any("laktory" in r for r in reqs)
+
+
+def test_ldp_configuration_filepath():
+    """configuration['config_filepath'] starts with /Workspace and encodes the pipeline name."""
+    pl = _get_pl(_LDP_ORCH)
+    conf = pl.orchestrator.configuration
+
+    assert "config_filepath" in conf
+    fp = conf["config_filepath"]
+    assert fp.startswith("/Workspace")
+    assert pl.name in fp
+    assert fp.endswith(".json")
+
+
+# --------------------------------------------------------------------------- #
+# LDP guard: view nodes are rejected                                          #
+# --------------------------------------------------------------------------- #
+
+
+def test_ldp_view_node_raises():
+    """A TableDataSink with table_type=VIEW (SQL view) must raise with LAKEFLOW_DECLARATIVE_PIPELINE."""
+    with pytest.raises((ValueError, ValidationError), match="view"):
+        models.Pipeline.model_validate(
+            {
+                "name": "pl-declarative",
+                "orchestrator": _LDP_ORCH,
+                "nodes": [
+                    {
+                        "name": "brz",
+                        "source": {"format": "JSON", "path": "/src/"},
+                        "sinks": [{"table_name": "brz"}],
+                    },
+                    {
+                        "name": "gld_view",
+                        "source": {"node_name": "brz"},
+                        "sinks": [{"table_name": "gld_view", "table_type": "VIEW"}],
+                    },
+                ],
+            }
+        )
