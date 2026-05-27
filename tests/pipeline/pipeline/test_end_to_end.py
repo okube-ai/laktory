@@ -1,9 +1,11 @@
 """End-to-end Pipeline execution tests."""
 
+import narwhals as nw
 import pytest
 
 from laktory import models
 from laktory._testing import StreamingSource
+from laktory._testing import get_df0
 
 from ...conftest import assert_dfs_equal
 
@@ -64,7 +66,7 @@ def test_mixed_write_modes(backend, tmp_path):
     )
 
     ss = StreamingSource(backend)
-    ss.write_to_json(tmp_path / "brz_source")
+    src_df = ss.write_to_json(tmp_path / "brz_source")
 
     pl = models.Pipeline(
         name="pl",
@@ -84,7 +86,7 @@ def test_mixed_write_modes(backend, tmp_path):
     )
     pl.execute()
     df = pl.nodes_dict["brz"].primary_sink.read()
-    assert sorted(df.columns) == ["_batch_id", "_idx", "id", "x1", "y1"]
+    assert_dfs_equal(df, src_df.with_columns(y1=nw.col("x1")))
 
 
 def test_streaming_e2e(tmp_path):
@@ -183,3 +185,85 @@ def test_full_refresh(backend, tmp_path):
     pl.execute(full_refresh=True)  # should not raise
     df = pl.nodes_dict["brz"].primary_sink.read()
     assert df.collect().shape[0] == 3
+
+
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_transformation_values(backend, tmp_path):
+    """Silver node transformation produces correct values, not just correct columns."""
+    ss = StreamingSource(backend)
+    src_df = ss.write_to_json(tmp_path / "brz_source")
+    src_path = (
+        str(tmp_path / "brz_source" / "000.json")
+        if backend == "POLARS"
+        else str(tmp_path / "brz_source") + "/"
+    )
+    brz_path = str(tmp_path / "brz_sink") + ("/" if backend == "PYSPARK" else "")
+    slv_path = str(tmp_path / "slv_sink") + ("/" if backend == "PYSPARK" else "")
+    mode = "OVERWRITE" if backend == "PYSPARK" else None
+
+    pl = models.Pipeline(
+        name="pl",
+        nodes=[
+            models.PipelineNode(
+                name="brz",
+                source={"format": "JSON", "path": src_path},
+                sinks=[_file_sink(brz_path, mode=mode)],
+            ),
+            models.PipelineNode(
+                name="slv",
+                source={"node_name": "brz"},
+                transformer={
+                    "nodes": [
+                        {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
+                        {"expr": "SELECT id, x1, y1 FROM {df}"},
+                    ]
+                },
+                sinks=[_file_sink(slv_path, mode=mode)],
+            ),
+        ],
+        dataframe_backend=backend,
+    )
+    pl.execute()
+
+    df = pl.nodes_dict["slv"].primary_sink.read()
+    expected = src_df.with_columns(y1=nw.col("x1")).select(["id", "x1", "y1"])
+    assert_dfs_equal(df, expected)
+
+
+def test_incremental_append(tmp_path):
+    """APPEND sinks accumulate rows across runs; transformation remains correct."""
+    brz_path = str(tmp_path / "brz_sink") + "/"
+    slv_path = str(tmp_path / "slv_sink") + "/"
+
+    pl = models.Pipeline(
+        name="pl",
+        nodes=[
+            models.PipelineNode(
+                name="brz",
+                source={"df": get_df0("PYSPARK")},
+                sinks=[{"format": "PARQUET", "path": brz_path, "mode": "APPEND"}],
+            ),
+            models.PipelineNode(
+                name="slv",
+                source={"node_name": "brz"},
+                transformer={
+                    "nodes": [
+                        {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
+                    ]
+                },
+                sinks=[{"format": "PARQUET", "path": slv_path, "mode": "APPEND"}],
+            ),
+        ],
+        dataframe_backend="PYSPARK",
+    )
+
+    pl.execute()
+    assert pl.nodes_dict["slv"].primary_sink.read().collect().shape[0] == 3
+
+    pl.execute()  # same source, APPEND: 3 more rows
+    df = pl.nodes_dict["slv"].primary_sink.read()
+    assert df.collect().shape[0] == 6
+
+    # y1 == x1 holds across all accumulated rows
+    pdf = df.collect().to_pandas()
+    assert (pdf["y1"] == pdf["x1"]).all()

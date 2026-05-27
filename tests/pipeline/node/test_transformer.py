@@ -1,16 +1,19 @@
 """Tests for DataFrameTransformer within PipelineNode: node refs, SQL placeholders, upstream names."""
 
+import narwhals as nw
 import pytest
 from pydantic import ValidationError
 
 from laktory import models
 from laktory._testing import StreamingSource
 
+from ...conftest import assert_dfs_equal
+
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_node_ref_in_func_args(backend, tmp_path):
     ss = StreamingSource(backend)
-    ss.write_to_json(tmp_path / "src")
+    brz_df = ss.write_to_json(tmp_path / "src")
     mode = "OVERWRITE" if backend == "PYSPARK" else None
     brz_path = str(tmp_path / "brz") + ("/" if backend == "PYSPARK" else "")
     slv_path = str(tmp_path / "slv") + ("/" if backend == "PYSPARK" else "")
@@ -39,13 +42,13 @@ def test_node_ref_in_func_args(backend, tmp_path):
     pl.execute()
 
     df = pl.nodes_dict["slv"].primary_sink.read()
-    assert sorted(df.columns) == ["_batch_id", "_idx", "id", "x1", "y1"]
+    assert_dfs_equal(df, brz_df.with_columns(y1=nw.col("x1")))
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_sql_node_placeholder(backend, tmp_path):
     ss = StreamingSource(backend)
-    ss.write_to_json(tmp_path / "src")
+    brz_df = ss.write_to_json(tmp_path / "src")
     mode = "OVERWRITE" if backend == "PYSPARK" else None
     brz_path = str(tmp_path / "brz") + ("/" if backend == "PYSPARK" else "")
     slv_path = str(tmp_path / "slv") + ("/" if backend == "PYSPARK" else "")
@@ -70,7 +73,7 @@ def test_sql_node_placeholder(backend, tmp_path):
     pl.execute()
 
     df = pl.nodes_dict["slv"].primary_sink.read()
-    assert df.columns == ["x1"]
+    assert_dfs_equal(df, brz_df.select("x1"))
 
 
 def test_upstream_node_names():

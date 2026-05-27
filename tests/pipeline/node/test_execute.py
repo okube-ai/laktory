@@ -1,5 +1,6 @@
 """Tests for PipelineNode.execute() — batch, streaming, and chaining."""
 
+import narwhals as nw
 import pytest
 
 from laktory import models
@@ -29,8 +30,8 @@ def test_batch_execute(backend, tmp_path):
     node.execute()
     df1 = node.primary_sink.read()
 
-    assert df1.columns == ["id", "x1", "y1"]
-    assert df1.collect().shape == (3, 3)
+    expected = get_df0(backend).with_columns(y1=nw.col("x1")).select(["id", "x1", "y1"])
+    assert_dfs_equal(df1, expected)
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
@@ -72,8 +73,10 @@ def test_streaming_execute(tmp_path):
     df1 = node.primary_sink.read()
 
     assert df.to_native().isStreaming
-    assert df1.columns == ["id", "x1", "y1"]
-    assert df1.collect().shape == (3, 3)
+    expected = (
+        get_df0("PYSPARK").with_columns(y1=nw.col("x1")).select(["id", "x1", "y1"])
+    )
+    assert_dfs_equal(df1, expected)
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
@@ -105,3 +108,20 @@ def test_node_chaining(backend, tmp_path):
 
     df = pl.nodes_dict["slv"].primary_sink.read()
     assert_dfs_equal(df, df0)
+
+
+def test_batch_append(tmp_path):
+    """APPEND mode accumulates rows across node executions (PySpark only)."""
+    sink_path = str(tmp_path / "sink") + "/"
+
+    node = models.PipelineNode(
+        name="node0",
+        source={"df": get_df0("PYSPARK")},
+        sinks=[{"path": sink_path, "format": "PARQUET", "mode": "APPEND"}],
+    )
+
+    node.execute()
+    assert node.primary_sink.read().collect().shape[0] == 3
+
+    node.execute()  # same source, APPEND: 3 more rows added
+    assert node.primary_sink.read().collect().shape[0] == 6
