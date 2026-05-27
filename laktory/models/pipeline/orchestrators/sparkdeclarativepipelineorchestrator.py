@@ -242,9 +242,15 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
 
         # Read back node outputs from the spark-warehouse written by SDP
         if read_output:
+            from laktory.models.datasinks.pipelineviewdatasink import (
+                PipelineViewDataSink,
+            )
+
             spark = get_spark_session()
             for node in self.parent_pipeline.nodes:
                 for sink in node.sinks:
+                    if isinstance(sink, PipelineViewDataSink):
+                        continue  # views are not persisted to disk
                     warehouse_root = Path(cwd) / "spark-warehouse"
                     schema_name = sink.schema_name or "default"
                     if schema_name != "default":

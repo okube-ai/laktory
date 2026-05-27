@@ -579,9 +579,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         logger.info("Purging Pipeline")
 
         for inode, node in enumerate(self.sorted_nodes):
-            node.purge(
-                spark=spark,
-            )
+            node.purge()
 
     def get_execution_plan(
         self,
