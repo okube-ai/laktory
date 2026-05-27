@@ -257,12 +257,15 @@ class DataFrameExpr(BaseModel, PipelineChild):
             #
             # {nodes.X} contains a dot which is not a valid Python kwarg key, so use
             # to_safe_expr() to rename: {df} → __df__, {nodes.X} → __nodes_X___.
+            # Escape all braces first so SQL patterns like {8,8} in regex literals
+            # are not treated as format placeholders by spark.sql(**kwargs), then
+            # restore only our known DataFrame placeholders as {safe_k}.
             sql_kwargs = {}
-            query = self.expr
+            query = self.expr.replace("{", "{{").replace("}", "}}")
             for k, v in dfs.items():
                 safe_k = to_safe_expr("{" + k + "}", df_names=[k])
                 sql_kwargs[safe_k] = v
-                query = query.replace("{" + k + "}", "{" + safe_k + "}")
+                query = query.replace("{{" + k + "}}", "{" + safe_k + "}")
 
             _df = None
             for stmt in query.split(";"):

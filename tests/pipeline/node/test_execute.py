@@ -125,3 +125,31 @@ def test_batch_append(tmp_path):
 
     node.execute()  # same source, APPEND: 3 more rows added
     assert node.primary_sink.read().collect().shape[0] == 6
+
+
+def test_batch_delta(tmp_path):
+    """Batch Delta read → transformer → Delta OVERWRITE write, values verified."""
+    source_path = str(tmp_path / "source")
+    sink_path = str(tmp_path / "sink")
+
+    ss = StreamingSource("PYSPARK")
+    ss.write_to_delta(source_path)
+
+    node = models.PipelineNode(
+        name="node0",
+        source={"format": "DELTA", "path": source_path},
+        transformer={
+            "nodes": [
+                {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
+                {"expr": "select id, x1, y1 from {df}"},
+            ]
+        },
+        sinks=[{"path": sink_path, "format": "DELTA", "mode": "OVERWRITE"}],
+    )
+    node.execute()
+    df1 = node.primary_sink.read()
+
+    expected = (
+        get_df0("PYSPARK").with_columns(y1=nw.col("x1")).select(["id", "x1", "y1"])
+    )
+    assert_dfs_equal(df1, expected)
