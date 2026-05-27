@@ -14,7 +14,7 @@ OPEN_FIGURES = False
 
 
 def get_pl(tmp_path):
-    with open(data_dirpath / "pl_simple.yaml") as fp:
+    with open(data_dirpath / "pl_airflow.yaml") as fp:
         data = fp.read()
         data = data.replace("{tmp_path}", str(tmp_path))
         pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
