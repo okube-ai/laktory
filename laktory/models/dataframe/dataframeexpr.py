@@ -250,21 +250,25 @@ class DataFrameExpr(BaseModel, PipelineChild):
         elif backend == DataFrameBackends.PYSPARK:
             _spark = df0.sparkSession
 
-            # Create views
-            # TODO: Using parametrized queries would be ideal, but it is not compatible
-            #       with older versions of spark or Delta Live Tables.
-            # Because PySpark does not support view names with {}, we replaced them
-            # with double underscores (__)
-            for k, _df in dfs.items():
-                _k = "{" + k + "}"
-                _df.createOrReplaceTempView(to_safe_expr(_k, df_names=[k]))
+            # Use spark.sql(query, **kwargs) with DataFrames passed as named parameters.
+            # In Spark Connect (SDP/LDP): PySpark creates SubqueryAlias plans internally
+            # — no createOrReplaceTempView, so this works inside SDP/LDP decorated functions.
+            # In classic Spark (local): PySpark auto-registers temp views scoped to each call.
+            #
+            # {nodes.X} contains a dot which is not a valid Python kwarg key, so use
+            # to_safe_expr() to rename: {df} → __df__, {nodes.X} → __nodes_X___.
+            sql_kwargs = {}
+            query = self.expr
+            for k, v in dfs.items():
+                safe_k = to_safe_expr("{" + k + "}", df_names=[k])
+                sql_kwargs[safe_k] = v
+                query = query.replace("{" + k + "}", "{" + safe_k + "}")
 
-            # Run query
             _df = None
-            for expr in self.expr.split(";"):
-                if expr.replace("\n", " ").strip() == "":
+            for stmt in query.split(";"):
+                if stmt.replace("\n", " ").strip() == "":
                     continue
-                _df = _spark.sql(to_safe_expr(expr, df_names=list(dfs.keys())))
+                _df = _spark.sql(stmt, **sql_kwargs)
             if _df is None:
                 raise ValueError(f"SQL Expression '{self.expr}' is invalid")
             return nw.from_native(_df)
