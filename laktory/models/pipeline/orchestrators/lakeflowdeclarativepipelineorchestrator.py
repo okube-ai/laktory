@@ -72,7 +72,7 @@ class LakeflowDeclarativePipelineOrchestrator(Pipeline, PipelineChild):
         if self.configuration is None:
             self.configuration = {}
         self.configuration["laktory.pipeline_name"] = pl.name  # only for reference
-        self.configuration["laktory.is_ldp_execute"] = "true"
+        self.configuration["laktory.executor"] = "LDP"
         self.configuration["laktory.requirements"] = json.dumps(_requirements)
         self.configuration["laktory.config_filepath"] = _path
         # This is to ensure configuration is flagged as set and part of

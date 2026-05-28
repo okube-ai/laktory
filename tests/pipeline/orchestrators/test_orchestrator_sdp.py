@@ -198,7 +198,7 @@ def test_spark_declarative_pipeline_build(tmp_path, monkeypatch):
     assert spec["schema"] == "default"
     assert spec["storage"] == "file://" + str(root_dir.absolute())
     assert spec["libraries"] == [{"glob": {"include": "laktory_sdp.py"}}]
-    assert spec["configuration"]["laktory.is_sdp_execute"] == "true"
+    assert spec["configuration"]["laktory.executor"] == "SDP"
     assert "laktory.config_filepath" in spec["configuration"]
 
 
@@ -215,7 +215,7 @@ def test_spec_dict(monkeypatch, tmp_path):
     assert spec["name"] == "pl-declarative"
     assert spec["schema"] == "default"
     assert spec["libraries"] == [{"glob": {"include": "laktory_sdp.py"}}]
-    assert spec["configuration"]["laktory.is_sdp_execute"] == "true"
+    assert spec["configuration"]["laktory.executor"] == "SDP"
     assert "laktory.config_filepath" in spec["configuration"]
 
 
@@ -231,27 +231,62 @@ def test_storage_default(monkeypatch, tmp_path):
 
 
 def test_is_sdp_execute_flag_true(spark):
-    """is_sdp_execute() returns True when laktory.is_sdp_execute=true is in Spark conf."""
+    """is_sdp_execute() returns True when laktory.executor=SDP is in Spark conf."""
     import laktory
 
     _spark = laktory.get_spark_session()
-    _spark.conf.set("laktory.is_sdp_execute", "true")
+    _spark.conf.set("laktory.executor", "SDP")
     try:
         assert laktory.is_sdp_execute() is True
     finally:
-        _spark.conf.unset("laktory.is_sdp_execute")
+        _spark.conf.unset("laktory.executor")
 
 
 def test_is_sdp_execute_flag_false_by_default(spark):
-    """is_sdp_execute() returns False when neither flag nor pipelines conf keys are set."""
+    """is_sdp_execute() returns False when laktory.executor is not set."""
     import laktory
 
     _spark = laktory.get_spark_session()
     try:
-        _spark.conf.unset("laktory.is_sdp_execute")
+        _spark.conf.unset("laktory.executor")
     except Exception:
         pass
     assert laktory.is_sdp_execute() is False
+
+
+# ---------------------------------------------------------------------------
+# is_declarative_execute: covers both SDP and LDP
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "executor,expected",
+    [
+        ("SDP", True),
+        ("LDP", True),
+        ("AIRFLOW", False),
+        ("", False),
+    ],
+)
+def test_is_declarative_execute(spark, executor, expected):
+    """is_declarative_execute() returns True for SDP and LDP, False otherwise."""
+    import laktory
+
+    _spark = laktory.get_spark_session()
+    if executor:
+        _spark.conf.set("laktory.executor", executor)
+    else:
+        try:
+            _spark.conf.unset("laktory.executor")
+        except Exception:
+            pass
+    try:
+        assert laktory.is_declarative_execute() is expected
+    finally:
+        try:
+            _spark.conf.unset("laktory.executor")
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------------------

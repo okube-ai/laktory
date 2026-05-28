@@ -253,31 +253,31 @@ def test_ldp_streaming_incompatible_expectations_raise(monkeypatch, spark):
 # --------------------------------------------------------------------------- #
 
 
-def test_ldp_configuration_is_ldp_execute_flag():
-    """configuration['laktory.is_ldp_execute'] is injected so the runtime can detect LDP context."""
+def test_ldp_configuration_executor_flag():
+    """configuration['laktory.executor'] is set to 'LDP' so the runtime can detect LDP context."""
     pl = _get_pl(_LDP_ORCH)
-    assert pl.orchestrator.configuration.get("laktory.is_ldp_execute") == "true"
+    assert pl.orchestrator.configuration.get("laktory.executor") == "LDP"
 
 
 def test_is_ldp_execute_flag_true(spark):
-    """is_ldp_execute() returns True when laktory.is_ldp_execute=true is in Spark conf."""
+    """is_ldp_execute() returns True when laktory.executor=LDP is in Spark conf."""
     import laktory
 
     _spark = laktory.get_spark_session()
-    _spark.conf.set("laktory.is_ldp_execute", "true")
+    _spark.conf.set("laktory.executor", "LDP")
     try:
         assert laktory.is_ldp_execute() is True
     finally:
-        _spark.conf.unset("laktory.is_ldp_execute")
+        _spark.conf.unset("laktory.executor")
 
 
 def test_is_ldp_execute_flag_false_by_default(spark):
-    """is_ldp_execute() returns False when neither flag nor pipelines.dbrVersion is set."""
+    """is_ldp_execute() returns False when laktory.executor is not set."""
     import laktory
 
     _spark = laktory.get_spark_session()
     try:
-        _spark.conf.unset("laktory.is_ldp_execute")
+        _spark.conf.unset("laktory.executor")
     except Exception:
         pass
     assert laktory.is_ldp_execute() is False

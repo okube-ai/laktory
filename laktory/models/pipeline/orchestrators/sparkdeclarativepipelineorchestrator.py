@@ -97,7 +97,7 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
     @property
     def spec_dict(self):
         _conf = dict(self.configuration or {})
-        _conf["laktory.is_sdp_execute"] = "true"
+        _conf["laktory.executor"] = "SDP"
         _conf["laktory.config_filepath"] = str(self.config_filepath_rel)
 
         return {

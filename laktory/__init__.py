@@ -94,27 +94,25 @@ def get_spark_session():
     return _laktory._spark
 
 
-def is_ldp_execute() -> bool:
+def _laktory_executor() -> str:
     from pyspark.errors import AnalysisException
 
-    spark = get_spark_session()
-
     try:
-        return spark.conf.get("laktory.is_ldp_execute", "false") == "true"
+        return get_spark_session().conf.get("laktory.executor", "")
     except AnalysisException:
-        return False
+        return ""
 
 
 def is_sdp_execute() -> bool:
-    from pyspark.errors import AnalysisException
+    return _laktory_executor() == "SDP"
 
-    spark = get_spark_session()
 
-    try:
-        has_flag = spark.conf.get("laktory.is_sdp_execute", "false") == "true"
-        return has_flag
-    except AnalysisException:
-        return False
+def is_ldp_execute() -> bool:
+    return _laktory_executor() == "LDP"
+
+
+def is_declarative_execute() -> bool:
+    return _laktory_executor() in ("SDP", "LDP")
 
 
 def print_version():
