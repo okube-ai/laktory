@@ -218,9 +218,10 @@ def test_terraform_stack(monkeypatch, stack):
                     "configuration": {
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
-                        "pipeline_name": "pl-stock-prices-ut-stack",
-                        "requirements": '["laktory==<version>"]',
-                        "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                        "laktory.pipeline_name": "pl-stock-prices-ut-stack",
+                        "laktory.executor": "LDP",
+                        "laktory.requirements": '["laktory==<version>"]',
+                        "laktory.config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     },
                     "name": "pl-stock-prices-ut-stack",
                     "library": [
@@ -343,9 +344,10 @@ def test_terraform_stack(monkeypatch, stack):
                     "configuration": {
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
-                        "pipeline_name": "pl-stock-prices-ut-stack",
-                        "requirements": '["laktory==<version>"]',
-                        "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                        "laktory.pipeline_name": "pl-stock-prices-ut-stack",
+                        "laktory.executor": "LDP",
+                        "laktory.requirements": '["laktory==<version>"]',
+                        "laktory.config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     },
                     "name": "pl-stock-prices-ut-stack",
                     "library": [
@@ -468,9 +470,10 @@ def test_terraform_stack(monkeypatch, stack):
                     "configuration": {
                         "business_unit": "laktory",
                         "workflow_name": "pl-stock-prices-ut-stack",
-                        "pipeline_name": "pl-stock-prices-ut-stack",
-                        "requirements": '["laktory==<version>"]',
-                        "config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                        "laktory.pipeline_name": "pl-stock-prices-ut-stack",
+                        "laktory.executor": "LDP",
+                        "laktory.requirements": '["laktory==<version>"]',
+                        "laktory.config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack.json",
                     },
                     "development": False,
                     "name": "pl-stock-prices-ut-stack",
