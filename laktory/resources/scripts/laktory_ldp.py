@@ -2,7 +2,7 @@
 # COMMAND ----------
 import json
 
-reqs = spark.conf.get("requirements")
+reqs = spark.conf.get("laktory.requirements")
 reqs = " ".join(json.loads(reqs))
 # MAGIC %pip install $reqs
 # MAGIC %restart_python
@@ -17,7 +17,7 @@ import laktory as lk  # noqa: E402
 # Read Pipeline                                                               #
 # --------------------------------------------------------------------------- #
 
-config_filepath = spark.conf.get("config_filepath")
+config_filepath = spark.conf.get("laktory.config_filepath")
 print(f"Reading pipeline at {config_filepath}")
 with open(config_filepath, "r") as fp:
     pl = lk.models.Pipeline.model_validate_json(fp.read())

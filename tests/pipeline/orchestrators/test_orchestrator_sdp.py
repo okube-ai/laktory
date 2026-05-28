@@ -199,7 +199,7 @@ def test_spark_declarative_pipeline_build(tmp_path, monkeypatch):
     assert spec["storage"] == "file://" + str(root_dir.absolute())
     assert spec["libraries"] == [{"glob": {"include": "laktory_sdp.py"}}]
     assert spec["configuration"]["laktory.is_sdp_execute"] == "true"
-    assert "config_filepath" in spec["configuration"]
+    assert "laktory.config_filepath" in spec["configuration"]
 
 
 # ---------------------------------------------------------------------------
@@ -216,13 +216,42 @@ def test_spec_dict(monkeypatch, tmp_path):
     assert spec["schema"] == "default"
     assert spec["libraries"] == [{"glob": {"include": "laktory_sdp.py"}}]
     assert spec["configuration"]["laktory.is_sdp_execute"] == "true"
-    assert "config_filepath" in spec["configuration"]
+    assert "laktory.config_filepath" in spec["configuration"]
 
 
 def test_storage_default(monkeypatch, tmp_path):
     monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
     pl = _get_pl(tmp_path)
     assert pl.orchestrator.storage == "file://" + str(pl.root_path.absolute())
+
+
+# ---------------------------------------------------------------------------
+# is_sdp_execute: Spark conf flag detection
+# ---------------------------------------------------------------------------
+
+
+def test_is_sdp_execute_flag_true(spark):
+    """is_sdp_execute() returns True when laktory.is_sdp_execute=true is in Spark conf."""
+    import laktory
+
+    _spark = laktory.get_spark_session()
+    _spark.conf.set("laktory.is_sdp_execute", "true")
+    try:
+        assert laktory.is_sdp_execute() is True
+    finally:
+        _spark.conf.unset("laktory.is_sdp_execute")
+
+
+def test_is_sdp_execute_flag_false_by_default(spark):
+    """is_sdp_execute() returns False when neither flag nor pipelines conf keys are set."""
+    import laktory
+
+    _spark = laktory.get_spark_session()
+    try:
+        _spark.conf.unset("laktory.is_sdp_execute")
+    except Exception:
+        pass
+    assert laktory.is_sdp_execute() is False
 
 
 # ---------------------------------------------------------------------------
@@ -378,6 +407,30 @@ def test_execute(tmp_path, monkeypatch, spark):
         nw.from_native(df_slv).select("id", "x2").with_columns(y1=nw.col("x2"))
     )
     assert_dfs_equal(nd["gld_join"].output_df, expected_gld)
+
+
+@pytest.mark.skipif(
+    not is_sdp_available(),
+    reason="spark-pipelines CLI not available (requires PySpark 4.1+)",
+)
+def test_is_sdp_execute_true_during_execution(tmp_path, monkeypatch, spark):
+    """
+    Verifies that is_sdp_execute() returns True inside the spark-pipelines subprocess.
+
+    laktory_sdp.py writes the return value of is_sdp_execute() to
+    .laktory_is_sdp_execute in root_path immediately after reading the pipeline
+    config.  Asserting that file contains "true" is a direct, robust check that
+    is independent of is_sdp_compatible or any expectation logic.
+    """
+    monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
+    StreamingSource("PYSPARK").write_to_json(tmp_path / "brz_source")
+
+    pl = _get_pl_exec(tmp_path)  # no expectations — pipeline completes successfully
+    pl.orchestrator.execute()
+
+    sentinel = pl.root_path / ".laktory_is_sdp_execute"
+    assert sentinel.exists(), "laktory_sdp.py did not write the sentinel file"
+    assert sentinel.read_text().strip() == "true"
 
 
 @pytest.mark.skipif(

@@ -1,3 +1,5 @@
+import pathlib
+
 import pyspark.sql.functions as F  # noqa: F401
 from pyspark import pipelines as dp
 from pyspark.sql import SparkSession
@@ -10,8 +12,13 @@ spark = SparkSession.getActiveSession()
 # Read Pipeline                                                               #
 # --------------------------------------------------------------------------- #
 
-config_filepath = spark.conf.get("config_filepath")
+config_filepath = spark.conf.get("laktory.config_filepath")
 print(f"Reading pipeline at {config_filepath}")
+
+# Write is_sdp_execute() result alongside the config for observability and testing.
+pathlib.Path(config_filepath).parent.joinpath(".laktory_is_sdp_execute").write_text(
+    "true" if lk.is_sdp_execute() else "false"
+)
 with open(config_filepath, "r") as fp:
     pl = lk.models.Pipeline.model_validate_json(fp.read())
 

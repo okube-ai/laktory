@@ -100,12 +100,9 @@ def is_ldp_execute() -> bool:
     spark = get_spark_session()
 
     try:
-        is_ldp = spark.conf.get("pipelines.dbrVersion", "na") != "na"
+        return spark.conf.get("laktory.is_ldp_execute", "false") == "true"
     except AnalysisException:
-        # Default value is not supported on earlier versions of serverless
-        is_ldp = False
-
-    return is_ldp
+        return False
 
 
 def is_sdp_execute() -> bool:
@@ -114,10 +111,8 @@ def is_sdp_execute() -> bool:
     spark = get_spark_session()
 
     try:
-        has_flow = spark.conf.get("spark.pipelines.flow.name", "na") != "na"
-        has_dbr = spark.conf.get("pipelines.dbrVersion", "na") != "na"
         has_flag = spark.conf.get("laktory.is_sdp_execute", "false") == "true"
-        return (has_flow and not has_dbr) or has_flag
+        return has_flag
     except AnalysisException:
         return False
 

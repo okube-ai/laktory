@@ -253,13 +253,43 @@ def test_ldp_streaming_incompatible_expectations_raise(monkeypatch, spark):
 # --------------------------------------------------------------------------- #
 
 
+def test_ldp_configuration_is_ldp_execute_flag():
+    """configuration['laktory.is_ldp_execute'] is injected so the runtime can detect LDP context."""
+    pl = _get_pl(_LDP_ORCH)
+    assert pl.orchestrator.configuration.get("laktory.is_ldp_execute") == "true"
+
+
+def test_is_ldp_execute_flag_true(spark):
+    """is_ldp_execute() returns True when laktory.is_ldp_execute=true is in Spark conf."""
+    import laktory
+
+    _spark = laktory.get_spark_session()
+    _spark.conf.set("laktory.is_ldp_execute", "true")
+    try:
+        assert laktory.is_ldp_execute() is True
+    finally:
+        _spark.conf.unset("laktory.is_ldp_execute")
+
+
+def test_is_ldp_execute_flag_false_by_default(spark):
+    """is_ldp_execute() returns False when neither flag nor pipelines.dbrVersion is set."""
+    import laktory
+
+    _spark = laktory.get_spark_session()
+    try:
+        _spark.conf.unset("laktory.is_ldp_execute")
+    except Exception:
+        pass
+    assert laktory.is_ldp_execute() is False
+
+
 def test_ldp_configuration_requirements():
     """configuration['requirements'] is a JSON list that includes laktory."""
     pl = _get_pl(_LDP_ORCH)
     conf = pl.orchestrator.configuration
 
-    assert "requirements" in conf
-    reqs = json.loads(conf["requirements"])
+    assert "laktory.requirements" in conf
+    reqs = json.loads(conf["laktory.requirements"])
     assert isinstance(reqs, list)
     assert any("laktory" in r for r in reqs)
 
@@ -280,7 +310,7 @@ def test_ldp_configuration_requirements_custom_dep():
             ],
         }
     )
-    reqs = json.loads(pl.orchestrator.configuration["requirements"])
+    reqs = json.loads(pl.orchestrator.configuration["laktory.requirements"])
     assert any("my-package" in r for r in reqs)
     assert any("laktory" in r for r in reqs)
 
@@ -290,8 +320,8 @@ def test_ldp_configuration_filepath():
     pl = _get_pl(_LDP_ORCH)
     conf = pl.orchestrator.configuration
 
-    assert "config_filepath" in conf
-    fp = conf["config_filepath"]
+    assert "laktory.config_filepath" in conf
+    fp = conf["laktory.config_filepath"]
     assert fp.startswith("/Workspace")
     assert pl.name in fp
     assert fp.endswith(".json")
