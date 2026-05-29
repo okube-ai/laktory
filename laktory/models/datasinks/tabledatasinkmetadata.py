@@ -240,7 +240,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                 f"Setting table '{table_full_name}' properties to ({props_string})"
             )
             spark.sql(
-                f"""ALTER TABLE {table_full_name} SET TBLPROPERTIES({props_string});"""
+                f"""ALTER {self.table_type} {table_full_name} SET TBLPROPERTIES({props_string});"""
             )
 
         # Unset only previously-managed keys that are no longer in config
@@ -253,7 +253,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                 f"Unsetting table '{table_full_name}' properties ({props_string})"
             )
             spark.sql(
-                f"""ALTER TABLE {table_full_name} UNSET TBLPROPERTIES IF EXISTS ({props_string});"""
+                f"""ALTER {self.table_type} {table_full_name} UNSET TBLPROPERTIES IF EXISTS ({props_string});"""
             )
 
         # Tags
