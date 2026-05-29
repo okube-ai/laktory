@@ -1,9 +1,37 @@
 import narwhals as nw
 import pytest
 
+import laktory
 from laktory import models
 from laktory._testing import get_df0
 from laktory.exceptions import DataQualityCheckFailedError
+
+_LDP_ORCH = {
+    "type": "LAKEFLOW_DECLARATIVE_PIPELINE",
+    "catalog": "dev",
+    "schema": "sandbox",
+}
+_SDP_ORCH = {"type": "SPARK_DECLARATIVE_PIPELINE", "database": "default"}
+
+_ROW_SQL = {"name": "x1 positive", "expr": "x1 > 0", "action": "WARN"}
+_AGG_SQL = {"name": "row count", "expr": "COUNT(*) > 0", "type": "AGGREGATE"}
+
+
+def _get_pl(orchestrator_dict, expectation_dict):
+    return models.Pipeline.model_validate(
+        {
+            "name": "pl-test",
+            "orchestrator": orchestrator_dict,
+            "nodes": [
+                {
+                    "name": "brz",
+                    "source": {"format": "JSON", "path": "/src/"},
+                    "sinks": [{"table_name": "brz"}],
+                    "expectations": [expectation_dict],
+                }
+            ],
+        }
+    )
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
@@ -164,3 +192,41 @@ def test_expectations_exceptions_warnings(backend):
     )
     with pytest.raises(DataQualityCheckFailedError):
         dqe.run_check(df0, raise_or_warn=True)
+
+
+# --------------------------------------------------------------------------- #
+# is_ldp_managed / is_sdp_managed                                            #
+# --------------------------------------------------------------------------- #
+
+
+def test_is_ldp_managed_true(monkeypatch):
+    """is_ldp_managed is True when: SQL ROW expectation + LDP orchestrator + ldp executing."""
+    monkeypatch.setattr(laktory, "is_ldp_execute", lambda: True)
+    e = _get_pl(_LDP_ORCH, _ROW_SQL).nodes[0].expectations[0]
+    assert e.is_ldp_managed is True
+
+
+def test_is_ldp_managed_false_not_compatible():
+    """is_ldp_managed is False for AGGREGATE expectations (not LDP-compatible)."""
+    e = _get_pl(_LDP_ORCH, _AGG_SQL).nodes[0].expectations[0]
+    assert e.is_ldp_managed is False
+
+
+def test_is_ldp_managed_false_wrong_orchestrator(monkeypatch):
+    """is_ldp_managed is False when orchestrator is SDP, not LDP."""
+    monkeypatch.setattr(laktory, "is_ldp_execute", lambda: True)
+    e = _get_pl(_SDP_ORCH, _ROW_SQL).nodes[0].expectations[0]
+    assert e.is_ldp_managed is False
+
+
+def test_is_ldp_managed_false_not_executing():
+    """is_ldp_managed is False at design-time (is_ldp_execute returns False by default)."""
+    e = _get_pl(_LDP_ORCH, _ROW_SQL).nodes[0].expectations[0]
+    assert e.is_ldp_managed is False
+
+
+def test_is_sdp_managed_always_false(monkeypatch):
+    """is_sdp_managed is always False: open-source SDP has no @dp.expect_* support yet."""
+    monkeypatch.setattr(laktory, "is_sdp_execute", lambda: True)
+    e = _get_pl(_SDP_ORCH, _ROW_SQL).nodes[0].expectations[0]
+    assert e.is_sdp_managed is False

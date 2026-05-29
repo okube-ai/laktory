@@ -122,7 +122,11 @@ class PipelineNodeDataSource(BaseDataSource):
             and self.node.source is not None
             and self.node.source.as_stream
         )
-        if stream_to_batch or self.node.output_df is None:
+        # When a streaming read is requested, always go to the primary sink so
+        # that spark.readStream.table() is called. Returning a cached batch
+        # output_df here would produce an invalid batch-relation-for-streaming-table
+        # error in SDP (and incorrect behavior in any streaming context).
+        if stream_to_batch or self.node.output_df is None or self.as_stream:
             if self.node.has_sinks:
                 logger.info(f"Reading pipeline node {self._id} from primary sink")
                 df = self.node.primary_sink.read(
@@ -135,12 +139,9 @@ class PipelineNodeDataSource(BaseDataSource):
                 self.node.execute()
                 df = self.node.output_df
 
-        elif self.node.output_df is not None:
+        else:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
             df = self.node.output_df
-
-        else:
-            raise ValueError(f"Pipeline Node {self._id} can't read DataFrame")
 
         return df
 

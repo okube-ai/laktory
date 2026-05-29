@@ -250,21 +250,46 @@ class DataFrameExpr(BaseModel, PipelineChild):
         elif backend == DataFrameBackends.PYSPARK:
             _spark = df0.sparkSession
 
-            # Create views
-            # TODO: Using parametrized queries would be ideal, but it is not compatible
-            #       with older versions of spark or Delta Live Tables.
-            # Because PySpark does not support view names with {}, we replaced them
-            # with double underscores (__)
-            for k, _df in dfs.items():
-                _k = "{" + k + "}"
-                _df.createOrReplaceTempView(to_safe_expr(_k, df_names=[k]))
+            from laktory import is_sdp_execute
 
-            # Run query
             _df = None
-            for expr in self.expr.split(";"):
-                if expr.replace("\n", " ").strip() == "":
-                    continue
-                _df = _spark.sql(to_safe_expr(expr, df_names=list(dfs.keys())))
+            if is_sdp_execute():
+                # Spark Connect (SDP): createOrReplaceTempView is forbidden inside
+                # @dp.* decorated functions. Use spark.sql(**kwargs) instead —
+                # PySpark creates SubqueryAlias plans internally without registering
+                # temp views.
+                #
+                # {nodes.X} contains a dot which is not a valid Python kwarg key, so
+                # use to_safe_expr(): {df} → __df__, {nodes.X} → __nodes_X___.
+                # Escape all braces first so SQL patterns like {8,8} in regex literals
+                # are not treated as format placeholders, then restore only our known
+                # DataFrame placeholders as {safe_k}.
+                sql_kwargs = {}
+                query = self.expr.replace("{", "{{").replace("}", "}}")
+                for k, v in dfs.items():
+                    safe_k = to_safe_expr("{" + k + "}", df_names=[k])
+                    sql_kwargs[safe_k] = v
+                    query = query.replace("{{" + k + "}}", "{" + safe_k + "}")
+
+                for stmt in query.split(";"):
+                    if stmt.replace("\n", " ").strip() == "":
+                        continue
+                    _df = _spark.sql(stmt, **sql_kwargs)
+            else:
+                # Local / LDP: use createOrReplaceTempView.
+                # LDP monkey-patches spark.sql() and does not support **kwargs.
+                # createOrReplaceTempView is safe outside Spark Connect.
+                query = self.expr
+                for k, v in dfs.items():
+                    safe_k = to_safe_expr("{" + k + "}", df_names=[k])
+                    query = query.replace("{" + k + "}", safe_k)
+                    v.createOrReplaceTempView(safe_k)
+
+                for stmt in query.split(";"):
+                    if stmt.replace("\n", " ").strip() == "":
+                        continue
+                    _df = _spark.sql(stmt)
+
             if _df is None:
                 raise ValueError(f"SQL Expression '{self.expr}' is invalid")
             return nw.from_native(_df)

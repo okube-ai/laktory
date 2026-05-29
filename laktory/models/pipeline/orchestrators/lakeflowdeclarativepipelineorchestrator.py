@@ -71,9 +71,10 @@ class LakeflowDeclarativePipelineOrchestrator(Pipeline, PipelineChild):
         )
         if self.configuration is None:
             self.configuration = {}
-        self.configuration["pipeline_name"] = pl.name  # only for reference
-        self.configuration["requirements"] = json.dumps(_requirements)
-        self.configuration["config_filepath"] = _path
+        self.configuration["laktory.pipeline_name"] = pl.name  # only for reference
+        self.configuration["laktory.executor"] = "LDP"
+        self.configuration["laktory.requirements"] = json.dumps(_requirements)
+        self.configuration["laktory.config_filepath"] = _path
         # This is to ensure configuration is flagged as set and part of
         # model_fields_set when injecting variables.
         self.configuration = self.configuration

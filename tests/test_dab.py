@@ -8,9 +8,7 @@ Tests for DABs integration features:
   - ${var.x} syntax support (DABs-style variable prefix)
 """
 
-import io
 import json
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -24,22 +22,60 @@ from laktory._settings import settings
 # Helpers
 # ---------------------------------------------------------------------------
 
-data_dir = Path(__file__).parent / "data"
+_LDP_ORCH = {
+    "type": "LAKEFLOW_DECLARATIVE_PIPELINE",
+    "catalog": "dev",
+    "schema": "sandbox",
+}
 
 
 def _get_pl_dlt():
-    """Load LDP pipeline from pl_ldp.yaml."""
-    filepath = data_dir / "pl_ldp.yaml"
-    with open(filepath) as fp:
-        data = fp.read().replace("{tmp_path}", "")
-    return models.Pipeline.model_validate_yaml(io.StringIO(data))
+    """Minimal LDP pipeline for DABs resource tests."""
+    return models.Pipeline.model_validate(
+        {
+            "name": "pl-declarative",
+            "orchestrator": _LDP_ORCH,
+            "nodes": [
+                {
+                    "name": "brz",
+                    "source": {"format": "JSON", "path": "/brz_source/"},
+                    "sinks": [{"table_name": "brz"}],
+                },
+                {
+                    "name": "slv",
+                    "source": {"node_name": "brz"},
+                    "sinks": [{"table_name": "slv"}],
+                },
+            ],
+        }
+    )
 
 
 def _get_pl_job():
-    """Load Job pipeline from test helpers."""
-    from tests.resources.test_pipeline_orchestrators import get_pl_job
-
-    return get_pl_job()
+    """Minimal pipeline with a LakeflowJobOrchestrator for DABs resource tests."""
+    return models.Pipeline(
+        name="pl-job",
+        nodes=[
+            models.PipelineNode(
+                name="brz",
+                source={"format": "JSON", "path": "/brz_source/"},
+                sinks=[{"format": "PARQUET", "mode": "APPEND", "path": "/brz_sink/"}],
+            ),
+        ],
+        orchestrator={
+            "type": "LAKEFLOW_JOB",
+            "name": "pl-job",
+            "job_clusters": [
+                {
+                    "job_cluster_key": "node-cluster",
+                    "new_cluster": {
+                        "node_type_id": "Standard_DS3_v2",
+                        "spark_version": "16.3.x-scala2.12",
+                    },
+                }
+            ],
+        },
+    )
 
 
 # ---------------------------------------------------------------------------

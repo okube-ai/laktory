@@ -50,8 +50,6 @@ tests/**/metastore_db/**
 tests/**/spark-warehouse/**
 tests/*terraform*
 tests/.terraform/
-tests/pipeline/node*
-tests/pipeline/tmp/*
 tests/stack.tf.json
 tests/tmp*
 tmp-*

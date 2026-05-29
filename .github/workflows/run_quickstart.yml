@@ -109,12 +109,12 @@ jobs:
         if: ${{ inputs.action == 'run-job' }}
         run: |
           source ../.venv/bin/activate
-          laktory run --dbks-job ${{ inputs.resource_name }}
+          laktory run --databricks-job ${{ inputs.resource_name }}
         working-directory: ${{ env.CWD }}
 
-      - name: laktory run dlt
+      - name: laktory run ldp
         if: ${{ inputs.action == 'run-ldp' }}
         run: |
           source ../.venv/bin/activate
-          laktory run --dbks-pipeline ${{ inputs.resource_name }}
+          laktory run --databricks-pipeline ${{ inputs.resource_name }}
         working-directory: ${{ env.CWD }}
