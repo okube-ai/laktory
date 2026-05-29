@@ -137,6 +137,13 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         return self._table_type
 
     @property
+    def _sql_alter_type(self):
+        """SQL keyword for ALTER statements (e.g. 'STREAMING TABLE' vs 'TABLE')."""
+        if self.table_type == "STREAMING_TABLE":
+            return "STREAMING TABLE"
+        return self.table_type
+
+    @property
     def is_uc(self):
         from laktory.models.datasinks.unitycatalogdatasink import UnityCatalogDataSink
 
@@ -209,7 +216,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         if self.owner and self.owner != self.current.owner:
             logger.info(f"Setting table '{table_full_name}' owner to '{self.owner}'")
             spark.sql(
-                f"""ALTER {self.table_type} {table_full_name} SET OWNER TO `{self.owner}`"""
+                f"""ALTER {self._sql_alter_type} {table_full_name} SET OWNER TO `{self.owner}`"""
             )
 
         # Options
@@ -240,7 +247,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                 f"Setting table '{table_full_name}' properties to ({props_string})"
             )
             spark.sql(
-                f"""ALTER {self.table_type} {table_full_name} SET TBLPROPERTIES({props_string});"""
+                f"""ALTER {self._sql_alter_type} {table_full_name} SET TBLPROPERTIES({props_string});"""
             )
 
         # Unset only previously-managed keys that are no longer in config
@@ -253,7 +260,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                 f"Unsetting table '{table_full_name}' properties ({props_string})"
             )
             spark.sql(
-                f"""ALTER {self.table_type} {table_full_name} UNSET TBLPROPERTIES IF EXISTS ({props_string});"""
+                f"""ALTER {self._sql_alter_type} {table_full_name} UNSET TBLPROPERTIES IF EXISTS ({props_string});"""
             )
 
         # Tags
