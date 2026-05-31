@@ -3,12 +3,15 @@
 ## [0.12.0] - Unreleased
 ### Added
 * Spark Declarative Pipeline Orchestrator
+* `PipelineNode.sources` — a named dict of data sources replacing the single `source` field. All existing `source:` YAML is automatically migrated to `sources: {df: ...}`.
 ### Updated
 * All laktory-injected Spark conf / pipeline configuration keys now use `laktory.` namespace prefix (`laktory.executor`, `laktory.requirements`, `laktory.config_filepath`, `laktory.pipeline_name`)
+* `PipelineNode.execute()` now reads all `sources` entries before invoking the transformer. Upstream nodes referenced via `{nodes.X}` SQL placeholders are pre-loaded here rather than inside `DataFrameExpr`
 ### Breaking changes
 * Renamed Databricks Pipelines orchestrator to Lakehouse Declarative Pipeline
 * Refactored Lakehouse Declarative Pipeline script to use latest API (`apply_changes` -> `create_auto_cdc_flow`)
 * CLI `--dbks-job` / `--dbks-pipeline` flags replaced by `--databricks-job` / `--databricks-pipeline`
+* `PipelineNode.source` field removed — use `PipelineNode.sources` (dict) instead. YAML using `source:` is automatically migrated; Python code accessing `.source` directly must be updated.
 
 ## [0.11.10] - 2026-05-20
 ### Added

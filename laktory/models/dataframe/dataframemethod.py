@@ -1,17 +1,16 @@
 # import abc
+import re
 from typing import Any
 
 # from typing import Callable
 # from typing import Literal
 import narwhals as nw
 from pydantic import Field
-from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
-from laktory.models.datasources import DataSourcesUnion
 from laktory.models.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
 
@@ -23,56 +22,50 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 
 
+_SOURCE_REF_PATTERN = re.compile(r"^\{(nodes\..+|[^{}]+)\}$")
+
+
 class DataFrameMethodArg(BaseModel, PipelineChild):
     """
-    DataFrame method argument expressed as a string or a serialized DataSource.
+    DataFrame method argument: a scalar, a column expression, or a
+    ``{key}`` / ``{nodes.X}`` reference to a pre-loaded named DataFrame.
     """
 
-    value: DataSourcesUnion | Any = Field(..., description="Function argument")
+    value: Any = Field(..., description="Function argument")
 
     @model_validator(mode="before")
     @classmethod
     def wrap_scalar(cls, data: Any) -> Any:
         # Dicts that already have a 'value' key are serialized DataFrameMethodArg
         # instances — pass them through so Pydantic parses them normally.
-        # Everything else (scalars, DataSource dicts) is wrapped into {"value": ...}
-        # so Pydantic always resolves to DataFrameMethodArg rather than falling
-        # back to Any.
+        # Everything else is wrapped into {"value": ...}.
         if isinstance(data, dict) and "value" in data:
             return data
         return {"value": data}
 
-    @field_validator("value", mode="before")
-    @classmethod
-    def parse_datasource_value(cls, v: Any) -> Any:
-        # Pydantic's smart-union uses strict mode when trying each union member,
-        # which means string-to-enum coercion (e.g. 'PYSPARK' → DataFrameBackends)
-        # fails and the match falls through to `Any`, leaving the value as a plain
-        # dict. Explicitly try each datasource class in lenient mode so that a
-        # serialized PipelineNodeDataSource (or any other BaseDataSource subclass)
-        # is correctly reconstructed even when dataframe_backend/api are present.
-        if isinstance(v, dict):
-            from laktory.models.datasources import classes as datasource_classes
-
-            for ds_cls in datasource_classes:
-                try:
-                    return ds_cls.model_validate(v)
-                except Exception:
-                    pass
-        return v
-
-    def eval(self, backend: DataFrameBackends):
-        from laktory.models.datasources.basedatasource import BaseDataSource
+    def eval(self, backend: DataFrameBackends, named_dfs: dict | None = None):
+        import narwhals as nw  # ensure nw is always bound before conditional imports below
 
         # TODO: Add supported for evaluating list or dict of strings.
         v = self.value
 
-        if isinstance(v, BaseDataSource):
-            v = self.value.read()
-            if self.dataframe_api == "NATIVE":
-                v = v.to_native()
+        if isinstance(v, str):
+            # {nodes.X} or {key} → resolve from pre-loaded named_dfs
+            m = _SOURCE_REF_PATTERN.match(v.strip())
+            if m:
+                key = m.group(1)
+                if named_dfs is None or key not in named_dfs:
+                    raise KeyError(
+                        f"Method arg '{v}' references '{key}' which is not available. "
+                        f"Available keys: {list(named_dfs or {})}"
+                    )
+                resolved = named_dfs[key]
+                if not isinstance(resolved, (nw.DataFrame, nw.LazyFrame)):
+                    resolved = nw.from_native(resolved)
+                return (
+                    resolved.to_native() if self.dataframe_api == "NATIVE" else resolved
+                )
 
-        elif isinstance(v, str):
             # Imports required to evaluate expressions
             if self.dataframe_api == "NARWHALS":
                 import narwhals as nw  # noqa: F401
@@ -119,19 +112,6 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
         return v
 
     def signature(self):
-        from laktory.models.datasources import DataFrameDataSource
-        from laktory.models.datasources import FileDataSource
-        from laktory.models.datasources import PipelineNodeDataSource
-        from laktory.models.datasources import TableDataSource
-
-        if isinstance(self.value, DataFrameDataSource):
-            return f"{self.value.df}"
-        elif isinstance(self.value, PipelineNodeDataSource):
-            return f"node.{self.value.node_name}"
-        elif isinstance(self.value, FileDataSource):
-            return f"file {self.value.path}"
-        elif isinstance(self.value, TableDataSource):
-            return f"table {self.value.full_name}"
         return str(self.value)
 
 
@@ -183,11 +163,11 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
     func_args: list[DataFrameMethodArg] = Field(
         [],
-        description="Arguments passed to method. A `DataSource` model can be passed instead of a DataFrame.",
+        description="Arguments passed to method. Use ``{nodes.X}`` or ``{key}`` strings to pass pre-loaded DataFrames by reference.",
     )
     func_kwargs: dict[str, DataFrameMethodArg] = Field(
         {},
-        description="Keyword arguments passed to method. A `DataSource` model can be passed instead of a DataFrame.",
+        description="Keyword arguments passed to method. Use ``{nodes.X}`` or ``{key}`` strings to pass pre-loaded DataFrames by reference.",
     )
     func_name: str = Field(
         ...,
@@ -245,21 +225,8 @@ class DataFrameMethod(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def data_sources(self) -> list[DataSourcesUnion]:
-        """Get all sources feeding the DataFrame Method"""
-
-        from laktory.models.datasources import BaseDataSource
-
-        sources = []
-        for a in self.func_args:
-            if isinstance(a.value, BaseDataSource):
-                sources += [a.value]
-
-        for a in self.func_kwargs.values():
-            if isinstance(a.value, BaseDataSource):
-                sources += [a.value]
-
-        return sources
+    def data_sources(self) -> list:
+        return []
 
     # ----------------------------------------------------------------------- #
     # Upstream Nodes                                                          #
@@ -267,27 +234,25 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
     @property
     def upstream_node_names(self) -> list[str]:
-        """Pipeline node names required to apply transformer node."""
-
-        from laktory.models.datasources.pipelinenodedatasource import (
-            PipelineNodeDataSource,
-        )
-
+        """Pipeline node names referenced via {nodes.X} in func_args / func_kwargs."""
         names = []
         for a in self.func_args:
-            if isinstance(a.value, PipelineNodeDataSource):
-                names += [a.value.node_name]
+            if isinstance(a.value, str):
+                m = _SOURCE_REF_PATTERN.match(a.value.strip())
+                if m and m.group(1).startswith("nodes."):
+                    names.append(m.group(1)[len("nodes.") :])
         for a in self.func_kwargs.values():
-            if isinstance(a.value, PipelineNodeDataSource):
-                names += [a.value.node_name]
-
+            if isinstance(a.value, str):
+                m = _SOURCE_REF_PATTERN.match(a.value.strip())
+                if m and m.group(1).startswith("nodes."):
+                    names.append(m.group(1)[len("nodes.") :])
         return names
 
     # ----------------------------------------------------------------------- #
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
 
-    def execute(self, df: AnyFrame) -> AnyFrame:
+    def execute(self, df: AnyFrame, named_dfs: dict | None = None) -> AnyFrame:
         """
         Execute method on provided DataFrame `df`.
 
@@ -295,6 +260,8 @@ class DataFrameMethod(BaseModel, PipelineChild):
         ----------
         df:
             Input dataframe
+        named_dfs:
+            Pre-loaded named DataFrames available for ``{nodes.X}`` / ``{key}`` arg references.
 
         Returns
         -------
@@ -351,12 +318,12 @@ class DataFrameMethod(BaseModel, PipelineChild):
         if df_as_input:
             args += [df]
         for i, _arg in enumerate(_args):
-            args += [_arg.eval(backend=backend)]
+            args += [_arg.eval(backend=backend, named_dfs=named_dfs)]
 
         # Build kwargs
         kwargs = {}
         for k, _arg in _kwargs.items():
-            kwargs[k] = _arg.eval(backend=backend)
+            kwargs[k] = _arg.eval(backend=backend, named_dfs=named_dfs)
 
         # Inject laktory_context if the function accepts it
         from laktory.models.laktorycontext import LaktoryContext

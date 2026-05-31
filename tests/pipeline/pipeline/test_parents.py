@@ -43,10 +43,10 @@ def test_node_parent():
 def test_source_parent():
     pl = _get_pl()
     for node in pl.nodes:
-        if node.source:
-            assert node.source.parent == node
-            assert node.source.parent_pipeline_node == node
-            assert node.source.parent_pipeline == pl
+        for src in node.sources.values():
+            assert src.parent == node
+            assert src.parent_pipeline_node == node
+            assert src.parent_pipeline == pl
 
 
 def test_sink_parent():

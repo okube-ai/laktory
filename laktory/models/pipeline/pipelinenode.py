@@ -150,8 +150,13 @@ class PipelineNode(BaseModel, PipelineChild):
         consistent and reliable.
         """,
     )
-    source: DataSourcesUnion | None = Field(
-        None, description="Definition of the data source(s)"
+    depends_on: list[str] = Field(
+        [],
+        description="Pipeline node names that must complete before this node executes. Use for DAG ordering when no data flows between nodes.",
+    )
+    sources: dict[str, DataSourcesUnion] = Field(
+        {},
+        description="Named data sources for this node. The 'df' key is the primary input fed into the transformer.",
     )
     sinks: list[DataSinksUnion] = Field(
         None,
@@ -193,13 +198,22 @@ class PipelineNode(BaseModel, PipelineChild):
             )
         return data
 
-    @field_validator("source", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def _validate_source_type(cls, v):
+    def _migrate_source(cls, data):
+        """Accept legacy `source` key and normalise it to `sources: {df: ...}`."""
+        if not isinstance(data, dict):
+            return data
+        if "source" in data and "sources" not in data:
+            source = data.pop("source")
+            if source is not None:
+                data["sources"] = {"df": source}
+        return data
+
+    @field_validator("sources", mode="before")
+    @classmethod
+    def _validate_sources_types(cls, v):
         if not isinstance(v, dict):
-            return v
-        source_type = v.get("type")
-        if source_type is None:
             return v
         from laktory.models.datasources.customdatasource import CustomDataSource
         from laktory.models.datasources.dataframedatasource import DataFrameDataSource
@@ -222,13 +236,24 @@ class PipelineNode(BaseModel, PipelineChild):
             "PIPELINE_NODE": PipelineNodeDataSource,
             "UNITY_CATALOG": UnityCatalogDataSource,
         }
-        target_cls = _source_map.get(source_type)
-        if target_cls is None:
-            return v
-        try:
-            return target_cls.model_validate(v)
-        except ValidationError as e:
-            raise ValueError(str(e)) from None
+        result = {}
+        for key, item in v.items():
+            if not isinstance(item, dict):
+                result[key] = item
+                continue
+            source_type = item.get("type")
+            if source_type is None:
+                result[key] = item
+                continue
+            target_cls = _source_map.get(source_type)
+            if target_cls is None:
+                result[key] = item
+                continue
+            try:
+                result[key] = target_cls.model_validate(item)
+            except ValidationError as e:
+                raise ValueError(f"sources[{key!r}]: {e}") from None
+        return result
 
     @field_validator("sinks", mode="before")
     @classmethod
@@ -275,11 +300,7 @@ class PipelineNode(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def validate_expectations(self):
-        if (
-            self.source
-            and isinstance(self.source, BaseDataSource)
-            and self.source.as_stream
-        ):
+        if self.has_streaming_source:
             # Expectations type
             for e in self.expectations:
                 if not e.is_streaming_compatible:
@@ -297,18 +318,20 @@ class PipelineNode(BaseModel, PipelineChild):
         if not self.is_view:
             return self
 
-        # Validate Source
-        if self.source:
+        # Validate Sources
+        for key, source in self.sources.items():
             if not (
-                isinstance(self.source, TableDataSource)
-                or isinstance(self.source, PipelineNodeDataSource)
+                isinstance(source, TableDataSource)
+                or isinstance(source, PipelineNodeDataSource)
             ):
                 raise ValueError(
-                    "VIEW sink only supports Table or Pipeline Node with Table sink Data Source"
+                    f"Source '{key}' for node '{self.name}' is not supported. VIEW sink only supports Table or Pipeline Node with a Table sink"
                 )
 
-            if self.source.as_stream:
-                raise ValueError("VIEW sink does not support stream read.")
+            if source.as_stream:
+                raise ValueError(
+                    f"Source '{key}' for node '{self.name}' is not supported. VIEW sink does not support streaming sources."
+                )
 
         # Validate Sinks
         m = f"node '{self.name}': "
@@ -330,6 +353,11 @@ class PipelineNode(BaseModel, PipelineChild):
         return self
 
     @property
+    def has_streaming_source(self) -> bool:
+        """True if any declared source is read as a stream."""
+        return any(s.as_stream for s in self.sources.values())
+
+    @property
     def view_definition(self):
         """Transformer View Definition (when applicable)"""
         if self.transformer is None:
@@ -343,7 +371,7 @@ class PipelineNode(BaseModel, PipelineChild):
     @property
     def children_names(self):
         return [
-            "source",
+            "sources",
             "data_sources",
             "expectations",
             "transformer",
@@ -616,19 +644,15 @@ class PipelineNode(BaseModel, PipelineChild):
     @property
     def upstream_node_names(self) -> list[str]:
         """Pipeline node names required to execute current node."""
-        from laktory.models.datasources.pipelinenodedatasource import (
-            PipelineNodeDataSource,
-        )
-
-        names = []
-
-        if isinstance(self.source, PipelineNodeDataSource):
-            names += [self.source.node_name]
-
+        names = [
+            src.node_name
+            for src in self.sources.values()
+            if isinstance(src, PipelineNodeDataSource)
+        ]
+        names += self.depends_on
         if self.transformer:
             names += self.transformer.upstream_node_names
-
-        return names
+        return list(dict.fromkeys(names))  # deduplicate, preserve order
 
     # ----------------------------------------------------------------------- #
     # Data Sources                                                            #
@@ -636,15 +660,10 @@ class PipelineNode(BaseModel, PipelineChild):
 
     @property
     def data_sources(self) -> list[BaseDataSource]:
-        """Get all sources feeding the pipeline node"""
+        """Get all sources feeding the pipeline node (transformer-level inline sources only)."""
         sources = []
-
-        if isinstance(self.source, BaseDataSource):
-            sources += [self.source]
-
         if self.transformer:
             sources += self.transformer.data_sources
-
         return sources
 
     # ----------------------------------------------------------------------- #
@@ -767,14 +786,50 @@ class PipelineNode(BaseModel, PipelineChild):
         if full_refresh:
             self.purge()
 
-        # Read Source
-        self._stage_df = None
-        if self.source:
-            self._stage_df = self.source.read()
-
-        # Apply transformer
+        # Read all declared sources into named_dfs with "sources." prefix
         if named_dfs is None:
             named_dfs = {}
+        for name, src in self.sources.items():
+            named_dfs[f"sources.{name}"] = src.read()
+
+        # Primary df: sources["df"] if present, else first source
+        if "sources.df" in named_dfs:
+            self._stage_df = named_dfs["sources.df"]
+        elif named_dfs:
+            self._stage_df = next(
+                v for k, v in named_dfs.items() if k.startswith("sources.")
+            )
+        else:
+            self._stage_df = None
+
+        # Pre-load upstream nodes referenced in transformer ({nodes.X} in SQL/method args)
+        if apply_transformer and self.transformer and self.parent_pipeline:
+            for upstream_name in self.transformer.upstream_node_names:
+                key = f"nodes.{upstream_name}"
+                if key not in named_dfs:
+                    # Reuse if already loaded via a sources entry for the same node
+                    existing = next(
+                        (
+                            df
+                            for k, df in named_dfs.items()
+                            if k.startswith("sources.")
+                            and isinstance(
+                                self.sources.get(k[len("sources.") :]),
+                                PipelineNodeDataSource,
+                            )
+                            and self.sources[k[len("sources.") :]].node_name
+                            == upstream_name
+                        ),
+                        None,
+                    )
+                    if existing is not None:
+                        named_dfs[key] = existing
+                    else:
+                        tmp = PipelineNodeDataSource(node_name=upstream_name)
+                        tmp._parent = self
+                        named_dfs[key] = tmp.read()
+
+        # Apply transformer
         if apply_transformer and self.transformer:
             self._stage_df = self.transformer.execute(
                 self._stage_df, named_dfs=named_dfs
