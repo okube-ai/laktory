@@ -19,12 +19,12 @@ from laktory import models
 _NODES = [
     {
         "name": "brz",
-        "source": {"format": "JSON", "path": "/brz_source/"},
+        "sources": {"df": {"format": "JSON", "path": "/brz_source/"}},
         "sinks": [{"format": "PARQUET", "mode": "APPEND", "path": "/brz_sink/"}],
     },
     {
         "name": "slv",
-        "source": {"node_name": "brz"},
+        "sources": {"df": {"node_name": "brz"}},
         "sinks": [{"format": "DELTA", "mode": "APPEND", "path": "/slv_sink/"}],
     },
 ]
@@ -45,17 +45,17 @@ def _get_pl():
         nodes=[
             models.PipelineNode(
                 name="brz",
-                source={"format": "JSON", "path": "/brz_source/"},
+                sources={"df": {"format": "JSON", "path": "/brz_source/"}},
                 sinks=[{"format": "PARQUET", "mode": "APPEND", "path": "/brz_sink/"}],
             ),
             models.PipelineNode(
                 name="slv",
-                source={"node_name": "brz"},
+                sources={"df": {"node_name": "brz"}},
                 sinks=[{"format": "DELTA", "mode": "APPEND", "path": "/slv_sink/"}],
             ),
             models.PipelineNode(
                 name="gld",
-                source={"node_name": "slv"},
+                sources={"df": {"node_name": "slv"}},
                 sinks=[
                     {"format": "PARQUET", "mode": "OVERWRITE", "path": "/gld_sink/"}
                 ],

@@ -15,7 +15,7 @@ def _get_pl():
         nodes=[
             models.PipelineNode(
                 name="brz",
-                source={"df": df0},
+                sources={"df": {"df": df0}},
                 transformer={
                     "nodes": [
                         {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
@@ -26,7 +26,7 @@ def _get_pl():
             ),
             models.PipelineNode(
                 name="slv",
-                source={"node_name": "brz"},
+                sources={"df": {"node_name": "brz"}},
                 sinks=[_SINK],
             ),
         ],
@@ -89,11 +89,22 @@ def test_orchestrator_parent():
     assert pl.orchestrator.parent_pipeline == pl
 
 
+def test_source_backward_compat():
+    """Legacy `source:` key is auto-migrated to `sources: {df: ...}`."""
+    df0 = get_df0("POLARS")
+    node = models.PipelineNode(
+        name="brz",
+        source={"df": df0},  # old API — must still work
+    )
+    assert "df" in node.sources
+    assert node.sources["df"].df is not None
+
+
 def test_bad_node_name_raises():
     pl = models.Pipeline(
         name="pl",
         nodes=[
-            models.PipelineNode(name="a", source={"node_name": "nonexistent"}),
+            models.PipelineNode(name="a", sources={"df": {"node_name": "nonexistent"}}),
         ],
     )
     with pytest.raises(ValueError, match="nonexistent"):

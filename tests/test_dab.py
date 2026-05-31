@@ -38,12 +38,12 @@ def _get_pl_dlt():
             "nodes": [
                 {
                     "name": "brz",
-                    "source": {"format": "JSON", "path": "/brz_source/"},
+                    "sources": {"df": {"format": "JSON", "path": "/brz_source/"}},
                     "sinks": [{"table_name": "brz"}],
                 },
                 {
                     "name": "slv",
-                    "source": {"node_name": "brz"},
+                    "sources": {"df": {"node_name": "brz"}},
                     "sinks": [{"table_name": "slv"}],
                 },
             ],
@@ -58,7 +58,7 @@ def _get_pl_job():
         nodes=[
             models.PipelineNode(
                 name="brz",
-                source={"format": "JSON", "path": "/brz_source/"},
+                sources={"df": {"format": "JSON", "path": "/brz_source/"}},
                 sinks=[{"format": "PARQUET", "mode": "APPEND", "path": "/brz_sink/"}],
             ),
         ],

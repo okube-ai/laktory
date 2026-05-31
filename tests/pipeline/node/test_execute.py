@@ -18,7 +18,7 @@ def test_batch_execute(backend, tmp_path):
 
     node = models.PipelineNode(
         name="node0",
-        source={"df": df0},
+        sources={"df": {"df": df0}},
         transformer={
             "nodes": [
                 {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
@@ -42,7 +42,7 @@ def test_full_refresh(backend, tmp_path):
 
     node = models.PipelineNode(
         name="node0",
-        source={"df": df0},
+        sources={"df": {"df": df0}},
         sinks=[{"path": sink_path, "format": "PARQUET", "mode": mode}],
     )
     node.execute()
@@ -58,7 +58,7 @@ def test_streaming_execute(tmp_path):
 
     node = models.PipelineNode(
         name="node0",
-        source={"path": source_path, "format": "DELTA", "as_stream": "True"},
+        sources={"df": {"path": source_path, "format": "DELTA", "as_stream": "True"}},
         transformer={
             "nodes": [
                 {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
@@ -95,12 +95,12 @@ def test_node_chaining(backend, tmp_path):
 
     brz = models.PipelineNode(
         name="brz",
-        source={"format": "JSON", "path": src_path},
+        sources={"df": {"format": "JSON", "path": src_path}},
         sinks=[{"format": "PARQUET", "path": brz_path, "mode": mode}],
     )
     slv = models.PipelineNode(
         name="slv",
-        source={"node_name": "brz"},
+        sources={"df": {"node_name": "brz"}},
         sinks=[{"format": "PARQUET", "path": slv_path, "mode": mode}],
     )
     pl = models.Pipeline(name="pl", nodes=[brz, slv], dataframe_backend=backend)
@@ -116,7 +116,7 @@ def test_batch_append(tmp_path):
 
     node = models.PipelineNode(
         name="node0",
-        source={"df": get_df0("PYSPARK")},
+        sources={"df": {"df": get_df0("PYSPARK")}},
         sinks=[{"path": sink_path, "format": "PARQUET", "mode": "APPEND"}],
     )
 
@@ -137,7 +137,7 @@ def test_batch_delta(tmp_path):
 
     node = models.PipelineNode(
         name="node0",
-        source={"format": "DELTA", "path": source_path},
+        sources={"df": {"format": "DELTA", "path": source_path}},
         transformer={
             "nodes": [
                 {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
